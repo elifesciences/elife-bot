@@ -2,8 +2,11 @@ import boto
 from boto.s3.connection import S3Connection
 import settings
 import json
+import datetime
 
-
+"""
+Polling s3 buckets and objects
+"""
 
 def main():
 	# Simple S3 connect
@@ -34,8 +37,18 @@ def main():
 	#debug_print(keys)
 	#debug_print(folders)
 
-	(keys, folders) = get_folders(bucket, folders[0].name, delimiter = settings.delimiter)
-	debug_print(keys)
+	for folder in folders:
+		(keys, folders) = get_folders(bucket, folder.name, delimiter = settings.delimiter)
+		# Debug print all keys found
+		debug_print(keys)
+		
+		# Super new test, print only those with date modified after
+		for key in keys:
+			if(datetime.datetime.strptime(key.last_modified, '%Y-%m-%dT%H:%M:%S.000Z') > datetime.datetime.strptime('2012-12-31T12:59:45.000Z', '%Y-%m-%dT%H:%M:%S.000Z')):
+				print key.name
+		
+
+		
 	
 	"""
 	for key in keys:

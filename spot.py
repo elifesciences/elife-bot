@@ -5,15 +5,24 @@ import settings
 import json
 import datetime
 
-
+"""
+A simple beginning to start and stop EC2 spot instances
+TODO:
+ - Better control features (rather than altering main and re-running)
+ - Label instances better to only turn off specific ones, not all (perhaps using CloudFront)
+"""
 
 def main():
 	# Simple EC2 connect
 	conn = EC2Connection(settings.aws_access_key_id, settings.aws_secret_access_key)
 	
+	# Total number of spots we want to run,
+	#  In test code: use 1 to start one, change to 0 to stop it
 	want_spots = 0
 	max_price = 0.02
-	price_start = '2012-12-04T00:00:00.000Z'
+	# Get 48 hours period for spot pricing history
+	two_days_ago = datetime.datetime.utcnow() - datetime.timedelta(days=2)
+	price_start = two_days_ago.strftime('%Y-%m-%dT%H:%M:%SZ')   # '2012-12-04T00:00:00.000Z'
 	# Reference: http://aws.amazon.com/amazon-linux-ami/
 	image = 'ami-e8249881'
 	key_name = 'aws'
