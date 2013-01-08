@@ -103,5 +103,7 @@ if __name__ == "__main__":
         print new_files 
     else:
         print "I'm going to get the files"
-        retreive_files(ftp, home, new_files)
-
+        new_files = list_new_ftp_files(all_ftp_files, current_file_numbers)
+        print new_files 
+        retreive_files(ftp, HOME, new_files)
+        print "files retrieved"
