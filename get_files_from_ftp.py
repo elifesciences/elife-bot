@@ -81,8 +81,18 @@ def retreive_files(ftp, home, files):
         print wants
         ftp.cwd(home)
 
+
+
 if __name__=="__main__":
-    print "hi"
+    # Add options
+    parser = OptionParser()
+    parser.add_option("-l", "--list", action="store_true", dest="list", help="lists new files to be retreived from ftp server", default="true")
+    parser.add_option("-g", "--get", action="store_false", dest="list", help="retreives new files from ftp server")
+    (options, args) = parser.parse_args()
+    if options.list: 
+        print "I'm going to list the files"
+    else:
+        print "I'm going to get the files"
 
 """
 home = "/For PMC/"
