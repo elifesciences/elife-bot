@@ -68,8 +68,8 @@ def list_new_ftp_files(all_files, old_files):
     return new_files
 
 def retreive_files(ftp, home, files):
-    for f in files:
-        ftp.cwd(f)
+    for filenum in files:
+        ftp.cwd(filenum)
         data = ftp.nlst()
         wants = []
         for representation in data:
@@ -81,9 +81,17 @@ def retreive_files(ftp, home, files):
         print wants
         ftp.cwd(home)
 
+def setup_ftp():
+    elife_ftp = FTP(FTP_AUTH.host, FTP_AUTH.user, FTP_AUTH.password)
+    elife_ftp.cwd(HOME)
+    return elife_ftp
 
+if __name__ == "__main__":
+    HOME = "/For PMC/"
+    ftp = setup_ftp()
+    all_ftp_files = ftp.nlst()
+    current_file_numbers = get_current_file_numbers()
 
-if __name__=="__main__":
     # Add options
     parser = OptionParser()
     parser.add_option("-l", "--list", action="store_true", dest="list", help="lists new files to be retreived from ftp server", default="true")
@@ -91,18 +99,9 @@ if __name__=="__main__":
     (options, args) = parser.parse_args()
     if options.list: 
         print "I'm going to list the files"
+        new_files = list_new_ftp_files(all_ftp_files, current_file_numbers)
+        print new_files 
     else:
         print "I'm going to get the files"
+        retreive_files(ftp, home, new_files)
 
-"""
-home = "/For PMC/"
-ftp = FTP(FtpAuth.host, FtpAuth.user, FtpAuth.password)
-ftp.cwd(home)
-
-all_ftp_files = ftp.nlst()
-current_file_numbers = get_current_file_numbers()
-
-new_files = list_new_ftp_files(all_ftp_files, current_file_numbers)
-print new_files 
-retreive_files(ftp, home, new_files)
-"""
