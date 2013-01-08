@@ -1,6 +1,8 @@
-# eLife Bot
+=======
+elife-bot
+=========
 
-Primarily to provide Amazon AWS processing to support eLife publishing workflow.
+tools for creating an automatic publishing workflow. 
 
 # Project dependencies (planned)
 
