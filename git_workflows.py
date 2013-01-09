@@ -10,11 +10,7 @@ xml_files = glob.glob("*.xml")
 
 def move_files_into_repo(files, path_to_repo):
     for filename in files:
-        shutil.move(filename, path_to_repo + "/" + f)   
-
-def set_repo(repo_base):
-    repo = Repo(repo_base)
-    return repo 
+        shutil.move(filename, path_to_repo + "/" + filename)   
 
 def update_local_and_remote(repo):
     git = repo.git
@@ -42,7 +38,7 @@ if __name__ == "__main__":
         files = glob.glob("*.xml")
         repo_base = XML_REPO_BASE
 
-    repo = set_repo(repo_base)
+    repo = Repo(repo_base)
 
     if options.list: 
         print "I'm going to list the files"
