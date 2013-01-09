@@ -1,6 +1,7 @@
 from git import *
 import glob
 import shutil
+from optparse import OptionParser
 
 XML_REPO_BASE = "/Users/ian/code/public-code/elife-articles"
 PDF_REPO_BASE = "/Users/ian/code/public-code/elife-pdfs"
@@ -9,16 +10,12 @@ xml_files = glob.glob("*.xml")
 
 def move_files_into_repo(files, path_to_repo):
     for filename in files:
-        shutil.move(filename, path_to_repo + "/" + f)   
-
-def set_repo(repo_base):
-    repo = Repo(repo_base)
-    return repo 
+        shutil.move(filename, path_to_repo + "/" + filename)
 
 def update_local_and_remote(repo):
     git = repo.git
     git.add("*")
-    print "adding pdf files to repo ..."
+    print "adding files to repo ..."
     print "comitting ..."
     git.commit(m="new batch")
     print "committed!"
@@ -41,14 +38,20 @@ if __name__ == "__main__":
         files = glob.glob("*.xml")
         repo_base = XML_REPO_BASE
 
+    repo = Repo(repo_base)
+
     if options.list: 
         print "I'm going to list the files"
         print files
     else:
-        print "I'm going to move the files, and commit the repo"
-        repo = set_repo(repo_base)
-        #move_files_into_repo(repo_base)
-        if repo_base.is_dirty():
+        print "I'm going to move the following files"
+        print files
+        print "into the following repo"
+        print repo_base
+        move_files_into_repo(files, repo_base)
+        print "files moved"
+        if repo.is_dirty():
             raise Exception("repo is dirty, aborting")
         else:
-            print "OK, things look OK for now"
+            print "OK, things look OK for now, am cout to add to repo and commmit"
+            update_local_and_remote(repo)
