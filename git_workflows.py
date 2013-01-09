@@ -10,12 +10,12 @@ xml_files = glob.glob("*.xml")
 
 def move_files_into_repo(files, path_to_repo):
     for filename in files:
-        shutil.move(filename, path_to_repo + "/" + filename)   
+        shutil.move(filename, path_to_repo + "/" + filename)
 
 def update_local_and_remote(repo):
     git = repo.git
     git.add("*")
-    print "adding pdf files to repo ..."
+    print "adding files to repo ..."
     print "comitting ..."
     git.commit(m="new batch")
     print "committed!"
@@ -44,9 +44,14 @@ if __name__ == "__main__":
         print "I'm going to list the files"
         print files
     else:
-        print "I'm going to move the files, and commit the repo"
-        #move_files_into_repo(repo_base)
+        print "I'm going to move the following files"
+        print files
+        print "into the following repo"
+        print repo_base
+        move_files_into_repo(files, repo_base)
+        print "files moved"
         if repo.is_dirty():
             raise Exception("repo is dirty, aborting")
         else:
-            print "OK, things look OK for now"
+            print "OK, things look OK for now, am cout to add to repo and commmit"
+            update_local_and_remote(repo)
