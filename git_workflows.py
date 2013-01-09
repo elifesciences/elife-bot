@@ -1,6 +1,7 @@
 from git import *
 import glob
 import shutil
+from optparse import OptionParser
 
 XML_REPO_BASE = "/Users/ian/code/public-code/elife-articles"
 PDF_REPO_BASE = "/Users/ian/code/public-code/elife-pdfs"
@@ -41,14 +42,15 @@ if __name__ == "__main__":
         files = glob.glob("*.xml")
         repo_base = XML_REPO_BASE
 
+    repo = set_repo(repo_base)
+
     if options.list: 
         print "I'm going to list the files"
         print files
     else:
         print "I'm going to move the files, and commit the repo"
-        repo = set_repo(repo_base)
         #move_files_into_repo(repo_base)
-        if repo_base.is_dirty():
+        if repo.is_dirty():
             raise Exception("repo is dirty, aborting")
         else:
             print "OK, things look OK for now"
