@@ -65,9 +65,13 @@ At the time of this writing, Vagrant using Chef Solo is used to configure a loca
 5. Simple test, using API prototype code:
     
     git clone git://github.com/elifesciences/elife-api-prototype.git
+    
     cd elife-api-prototype
+    
     cp settings-example.py settings.py
+    
     cd tests
+    
     lettuce
 
 6. To stop the VM, in console:
