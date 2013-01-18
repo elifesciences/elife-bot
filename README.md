@@ -38,3 +38,28 @@ Alternatively, place your AWS credentials in a file named .boto, or alternate me
 
 1. Poll eLife s3 bucket for new and updated objects, especially XML.
 2. Decoupled tasks to run via Amazon Simple Workflow (SWF)
+
+# Local development with Vagrant
+
+At the time of this writing, Vagrant using Chef Solo is used to configure a local virtual machine with standard attributes for development. Cookbooks, recipes and roles for Chef are included in the repository to load locally.
+
+## Initial config (done once)
+
+1. Download and install [Vagrant][vagrant].
+2. Define the base box (should download the machine image just once and then be reused):
+    vagrant box add base http://files.vagrantup.com/lucid32.box
+
+## Running Vagrant VM
+
+1. Go into /vagrant directory in console.
+2. Run
+    vagrant up
+3. Normal loading may take about 2-3 minutes.
+4. When completed, you can login via [SSH][vagrant_ssh]
+    vagrant ssh
+5. To stop the VM, in console:
+    vagrant destroy
+
+
+[vagrant]: http://www.vagrantup.com/
+[vagrant_ssh]: http://docs.vagrantup.com/v1/docs/getting-started/ssh.html
