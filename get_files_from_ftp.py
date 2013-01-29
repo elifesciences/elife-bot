@@ -87,7 +87,7 @@ def setup_ftp():
     return elife_ftp
 
 if __name__ == "__main__":
-    HOME = "/For PMC/"
+    HOME = "/"
     ftp = setup_ftp()
     all_ftp_files = ftp.nlst()
     current_file_numbers = get_current_file_numbers()
