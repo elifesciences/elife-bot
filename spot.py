@@ -1,7 +1,7 @@
 import boto
 from boto.s3.connection import S3Connection
 from boto.ec2.connection import EC2Connection
-import settings
+import settings as settingsLib
 import json
 import datetime
 
@@ -12,7 +12,10 @@ TODO:
  - Label instances better to only turn off specific ones, not all (perhaps using CloudFront)
 """
 
-def main():
+def main(ENV = "dev"):
+	# Specify run environment settings
+	settings = settingsLib.get_settings(ENV)
+	
 	# Simple EC2 connect
 	conn = EC2Connection(settings.aws_access_key_id, settings.aws_secret_access_key)
 	

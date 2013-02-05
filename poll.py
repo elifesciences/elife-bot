@@ -1,6 +1,6 @@
 import boto
 from boto.s3.connection import S3Connection
-import settings
+import settings as settingsLib
 import json
 import datetime
 
@@ -8,7 +8,10 @@ import datetime
 Polling s3 buckets and objects
 """
 
-def main():
+def main(ENV = "dev"):
+	# Specify run environment settings
+	settings = settingsLib.get_settings(ENV)
+	
 	# Simple S3 connect
 	conn = S3Connection(settings.aws_access_key_id, settings.aws_secret_access_key)
 
@@ -40,11 +43,11 @@ def main():
 	for folder in folders:
 		(keys, folders) = get_folders(bucket, folder.name, delimiter = settings.delimiter)
 		# Debug print all keys found
-		debug_print(keys)
+		#debug_print(keys)
 		
 		# Super new test, print only those with date modified after
 		for key in keys:
-			if(datetime.datetime.strptime(key.last_modified, '%Y-%m-%dT%H:%M:%S.000Z') > datetime.datetime.strptime('2012-12-31T12:59:45.000Z', '%Y-%m-%dT%H:%M:%S.000Z')):
+			if(datetime.datetime.strptime(key.last_modified, '%Y-%m-%dT%H:%M:%S.000Z') > datetime.datetime.strptime('2013-01-15T12:59:45.000Z', '%Y-%m-%dT%H:%M:%S.000Z')):
 				print key.name
 		
 
