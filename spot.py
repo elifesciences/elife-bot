@@ -9,7 +9,7 @@ import datetime
 A simple beginning to start and stop EC2 spot instances
 TODO:
  - Better control features (rather than altering main and re-running)
- - Label instances better to only turn off specific ones, not all (perhaps using CloudFront)
+ - Label instances better to only turn off specific ones, not all (perhaps using CloudFormation?)
 """
 
 def main(ENV = "dev"):
