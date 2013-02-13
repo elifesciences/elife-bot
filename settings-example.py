@@ -25,6 +25,9 @@ class dev():
 	domain = "Publish.dev"
 	default_task_list = "DefaultTaskList"
 	
+	# Logging
+	setLevel = "INFO"
+	
 class live():
 	# AWS settings
 	aws_access_key_id = '<your access key>'
@@ -38,6 +41,9 @@ class live():
 	# SWF queue settings
 	domain = "Publish"
 	default_task_list = "DefaultTaskList"
+	
+	# Logging
+	setLevel = "INFO"
 	
 def get_settings(ENV = "dev"):
 	"""
