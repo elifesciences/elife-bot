@@ -28,7 +28,7 @@ def work(ENV = "dev"):
 	while(True):
 		if(token == None):
 			logger.info('polling for activity...')
-			activity_task = conn.poll_for_activity_task(settings.domain, settings.default_task_list)
+			activity_task = conn.poll_for_activity_task(settings.domain, settings.default_task_list, identity)
 			logger.info('got activity: \n%s' % json.dumps(activity_task, sort_keys=True, indent=4))
 			
 			try:

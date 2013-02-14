@@ -81,3 +81,7 @@ At the time of this writing, Vagrant using Chef Solo is used to configure a loca
 
 [vagrant]: http://www.vagrantup.com/
 [vagrant_ssh]: http://docs.vagrantup.com/v1/docs/getting-started/ssh.html
+
+## Amazon SWF workflow notes
+
+* As of the time of this writing, the decider will only handle a maximum of 1,000 event history items as part of a poll for decisions (1,000 being the maximum set by Amazon in one poll). When this becomes an issue, pagination using the nextPageToken can be implemented.
