@@ -52,15 +52,21 @@ At the time of this writing, Vagrant using Chef Solo is used to configure a loca
 
 ## Running Vagrant VM
 
+0. Create a directory for working out of, e.g. "/vagrant"
 1. Go into /vagrant directory in console.
 2. Run
 
+    vagrant init
     vagrant up
 
 3. Normal loading may take about 2-3 minutes.
 4. When completed, you can login via [SSH][vagrant_ssh]
 
     vagrant ssh
+
+4.5 You can access the shared folder between the vagrant file system and the user system through
+
+    ls ~/vagrant
 
 5. Simple test, using API prototype code:
     
