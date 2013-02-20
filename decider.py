@@ -16,7 +16,7 @@ def decide(ENV = "dev"):
 	settings = settingsLib.get_settings(ENV)
 	
 	# Decider event history length requested
-	maximum_page_size = 1000
+	maximum_page_size = 100
 	
 	# Log
 	identity = "decider_%s" % int(random.random() * 1000)

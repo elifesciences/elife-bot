@@ -4,6 +4,9 @@ import log
 import json
 import random
 import datetime
+import os
+
+from activity import activity_PingWorker
 
 """
 Amazon SWF worker
@@ -47,14 +50,22 @@ def work(ENV = "dev"):
 				except KeyError:
 					continue
 				
-				# Call the function using eval
+				# Instantiate and object for the activity using eval
 				try:
-					function_name = "activity_" + activityType
-					f = eval(function_name)
-					success = f()
+					# Build a string for the object name
+					activity_name = "activity_" + activityType
+					# Concatenate the object_name.object_name as the callable
+					f = eval(activity_name + "." + activity_name)
+					# Create the object
+					activity_object = f(settings, logger)
+					
+					# Do the activity
+					data = None
+					success = activity_object.do_activity(data)
+					
 				except NameError:
 					success = False
-				logger.info('%s success %s' % (function_name, success))
+				logger.info('%s success %s' % (activity_name, success))
 				
 		
 				#------------------------------------------------------------------
@@ -69,12 +80,7 @@ def work(ENV = "dev"):
 		# Reset and loop
 		token = None
 		
-def activity_PingWorker(data = None):
-	"""
-	PingWorker activity, do the work, in this case
-	just return true
-	"""
-	return True
+
 		
 def respond_completed(conn, logger, token, message):
 	"""
