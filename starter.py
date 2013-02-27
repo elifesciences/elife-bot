@@ -23,13 +23,13 @@ def start(ENV = "dev"):
 	conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
 	# Start a workflow execution
-	workflow_id = "ping"
+	workflow_id = "sum"
 	#workflow_name = "PublishArticle"
-	workflow_name = "Ping"
+	workflow_name = "Sum"
 	workflow_version = "1"
 	child_policy = None
 	execution_start_to_close_timeout = None
-	input = '{"data": "none"}'
+	input = '{"data": [1,3,7,11]}'
 	
 	response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
 

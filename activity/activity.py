@@ -17,5 +17,6 @@ class activity(object):
 	def __init__(self, settings, logger):
 		self.settings = settings
 		self.logger = logger
+		self.result = None
 
 		

@@ -7,6 +7,7 @@ import random
 import datetime
 
 from workflow import workflow_Ping
+from workflow import workflow_Sum
 
 """
 Amazon SWF decider
@@ -54,21 +55,21 @@ def decide(ENV = "dev"):
 					continue
 				
 				# Instantiate and object for the workflow using eval
-				try:
-					# Build a string for the object name
-					workflow_name = "workflow_" + workflowType
-					# Concatenate the object_name.object_name as the callable
-					f = eval(workflow_name + "." + workflow_name)
-					# Create the object
-					workflow_object = f(settings, logger, conn, token, decision, maximum_page_size)
+				#try:
+				# Build a string for the object name
+				workflow_name = "workflow_" + workflowType
+				# Concatenate the object_name.object_name as the callable
+				f = eval(workflow_name + "." + workflow_name)
+				# Create the object
+				workflow_object = f(settings, logger, conn, token, decision, maximum_page_size)
+				
+				# Process the workflow
+				data = None
+				success = workflow_object.do_workflow(data)
 					
-					# Process the workflow
-					data = None
-					success = workflow_object.do_workflow(data)
-					
-				except NameError:
+				#except NameError:
 					# Workflow class of the type we want does not exist
-					success = False
+				#	success = False
 				logger.info('%s success %s' % (workflow_name, success))
 				
 		# Reset and loop

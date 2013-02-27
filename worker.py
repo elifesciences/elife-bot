@@ -7,6 +7,7 @@ import datetime
 import os
 
 from activity import activity_PingWorker
+from activity import activity_Sum
 
 """
 Amazon SWF worker
@@ -61,6 +62,10 @@ def work(ENV = "dev"):
 					
 					# Do the activity
 					data = None
+					try:
+						data = json.loads(activity_task["input"])
+					except KeyError:
+						data = None
 					success = activity_object.do_activity(data)
 					
 				except NameError:
@@ -72,7 +77,7 @@ def work(ENV = "dev"):
 				# Complete Activity task
 				#  - easy enough
 				if(success == True):
-					message = 'Thank-you, come again!'
+					message = activity_object.result
 					respond_completed(conn, logger, token, message)
 
 			#------------------------------------------------------------------
@@ -88,7 +93,7 @@ def respond_completed(conn, logger, token, message):
 	the token to specify an accepted activity and a message
 	to send, communicate with SWF that the activity was completed
 	"""
-	out = conn.respond_activity_task_completed(token,message)
+	out = conn.respond_activity_task_completed(token,str(message))
 	logger.info('respond_activity_task_completed returned %s' % out)
 
 if __name__ == "__main__":

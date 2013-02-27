@@ -11,15 +11,16 @@ os.sys.path.insert(0,parentdir)
 import activity
 
 """
-PingWorker activity
+Sum activity
 """
 
-class activity_PingWorker(activity.activity):
+class activity_Sum(activity.activity):
 	
 	def do_activity(self, data = None):
 		"""
-		PingWorker activity, do the work, in this case
-		just return true
+		Sum activity, do the work, in this case
+		sum the data and return true
 		"""
-		self.result = True
+		self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+		self.result = sum(data["data"])
 		return True
