@@ -4,10 +4,6 @@ import json
 import random
 import datetime
 
-# Add parent directory for imports
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0,parentdir)
-
 """
 Amazon SWF activity base class
 """
@@ -19,4 +15,4 @@ class activity(object):
 		self.logger = logger
 		self.result = None
 
-		
+

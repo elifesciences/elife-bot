@@ -5,9 +5,11 @@ import json
 import random
 import datetime
 import os
+import importlib
 
-from activity import activity_PingWorker
-from activity import activity_Sum
+import activity
+#from activity import activity_PingWorker
+#from activity import activity_Sum
 
 """
 Amazon SWF worker
@@ -35,57 +37,98 @@ def work(ENV = "dev"):
 			activity_task = conn.poll_for_activity_task(settings.domain, settings.default_task_list, identity)
 			logger.info('got activity: \n%s' % json.dumps(activity_task, sort_keys=True, indent=4))
 			
-			try:
-				token = activity_task["taskToken"]
-			except KeyError:
-				# No taskToken returned
-				pass
-	
+			token = get_taskToken(activity_task)
+
 			# Complete the activity based on data and activity type
 			success = False
 			if(token != None):
 				# Get the activityType and attempt to do the work
-				try:
-					activityType = activity_task["activityType"]["name"]
+				activityType = get_activityType(activity_task)
+				if(activityType != None):
 					logger.info('activityType: %s' % activityType)
-				except KeyError:
-					continue
 				
-				# Instantiate and object for the activity using eval
-				try:
 					# Build a string for the object name
 					activity_name = "activity_" + activityType
-					# Concatenate the object_name.object_name as the callable
-					f = eval(activity_name + "." + activity_name)
-					# Create the object
-					activity_object = f(settings, logger)
-					
-					# Do the activity
-					data = None
-					try:
-						data = json.loads(activity_task["input"])
-					except KeyError:
-						data = None
-					success = activity_object.do_activity(data)
-					
-				except NameError:
-					success = False
-				logger.info('%s success %s' % (activity_name, success))
 				
-		
-				#------------------------------------------------------------------
-				# Complete Activity task
-				#  - easy enough
-				if(success == True):
-					message = activity_object.result
-					respond_completed(conn, logger, token, message)
+					# Attempt to import the module for the activity
+					if(import_activity_class(activity_name)):
+						# Instantiate the activity object
+						activity_object = get_activity_object(activity_name, settings, logger)
+				
+						# Get the data to pass
+						data = get_input(activity_task)
+						
+						# Do the activity
+						success = activity_object.do_activity(data)
+						
+						# Print the result to the log
+						logger.info('got result: \n%s' % json.dumps(activity_object.result, sort_keys=True, indent=4))
 
-			#------------------------------------------------------------------
-		
+						# Complete the activity task if it was successful
+						if(success == True):
+							message = activity_object.result
+							respond_completed(conn, logger, token, message)
+						
+					else:
+						logger.info('error: could not load object %s\n' % activity_name)
+						
 		# Reset and loop
 		token = None
 		
+def get_input(activity_task):
+	"""
+	Given a response from polling for activity from SWF via boto,
+	extract the input from the json data
+	"""
+	try:
+		data = json.loads(activity_task["input"])
+	except KeyError:
+		data = None
+	return data
+		
+def get_taskToken(activity_task):
+	"""
+	Given a response from polling for activity from SWF via boto,
+	extract the taskToken from the json data, if present
+	"""
+	try:
+		return activity_task["taskToken"]
+	except KeyError:
+		# No taskToken returned
+		return None
+		
+def get_activityType(activity_task):
+	"""
+	Given a polling for activity response from SWF via boto,
+	extract the activityType from the json data
+	"""
+	try:
+		return activity_task["activityType"]["name"]
+	except KeyError:
+		# No activityType found
+		return None
+	
+def import_activity_class(activity_name):
+	"""
+	Given an activity subclass name as activity_name,
+	attempt to lazy load the class when needed
+	"""
+	try:
+		importlib.import_module("activity." + activity_name)
+		return True
+	except ImportError:
+		return False
 
+def get_activity_object(activity_name, settings, logger):
+	"""
+	Given an activity_name, and if the module class is already
+	imported, create an object an return it
+	"""
+	full_path = "activity." + activity_name + "." + activity_name
+	f = eval(full_path)
+	# Create the object
+	activity_object = f(settings, logger)
+	return activity_object
 		
 def respond_completed(conn, logger, token, message):
 	"""
