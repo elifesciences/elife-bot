@@ -5,6 +5,8 @@ import log
 import json
 import random
 import datetime
+import time
+from multiprocessing import Process
 
 from workflow import workflow_Ping
 from workflow import workflow_Sum
@@ -22,8 +24,8 @@ def decide(ENV = "dev"):
 	
 	# Log
 	identity = "decider_%s" % int(random.random() * 1000)
-	#logFile = "decider.log"
-	logFile = None
+	logFile = "decider.log"
+	#logFile = None
 	logger = log.logger(logFile, settings.setLevel, identity)
 	
 	# Simple connect
@@ -44,7 +46,8 @@ def decide(ENV = "dev"):
 				# No taskToken returned
 				pass
 			
-			logger.info('got decision: \n%s' % json.dumps(decision, sort_keys=True, indent=4))
+			logger.info('got decision: [json omitted]')
+			#logger.info('got decision: \n%s' % json.dumps(decision, sort_keys=True, indent=4))
 			
 			if(token != None):
 				# Get the workflowType and attempt to do the work
@@ -78,4 +81,26 @@ def decide(ENV = "dev"):
 
 
 if __name__ == "__main__":
-	decide()
+	forks = 10
+	ENV = "dev"
+
+	# Start multiple threads
+	pool = []
+	for num in range(forks):
+		p = Process(target=decide, args=(ENV,))
+		p.start()
+		pool.append(p)
+		print 'started decider thread'
+		
+	# Monitor for keyboard interrupt ctrl-C
+	loop = True
+	while(loop):
+		try:
+			time.sleep(10)
+		except KeyboardInterrupt:
+			print 'caught KeyboardInterrupt, terminating threads'
+			for p in pool:
+				p.terminate()
+			loop = False
+	
+	#decide()

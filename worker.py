@@ -6,6 +6,8 @@ import random
 import datetime
 import os
 import importlib
+import time
+from multiprocessing import Process
 
 import activity
 #from activity import activity_PingWorker
@@ -18,11 +20,11 @@ Amazon SWF worker
 def work(ENV = "dev"):
 	# Specify run environment settings
 	settings = settingsLib.get_settings(ENV)
-	
+
 	# Log
 	identity = "worker_%s" % int(random.random() * 1000)
-	#logFile = "worker.log"
-	logFile = None
+	logFile = "worker.log"
+	#logFile = None
 	logger = log.logger(logFile, settings.setLevel, identity)
 	
 	# Simple connect
@@ -35,7 +37,9 @@ def work(ENV = "dev"):
 		if(token == None):
 			logger.info('polling for activity...')
 			activity_task = conn.poll_for_activity_task(settings.domain, settings.default_task_list, identity)
-			logger.info('got activity: \n%s' % json.dumps(activity_task, sort_keys=True, indent=4))
+			
+			logger.info('got activity: [json omitted]')
+			#logger.info('got activity: \n%s' % json.dumps(activity_task, sort_keys=True, indent=4))
 			
 			token = get_taskToken(activity_task)
 
@@ -140,5 +144,27 @@ def respond_completed(conn, logger, token, message):
 	logger.info('respond_activity_task_completed returned %s' % out)
 
 if __name__ == "__main__":
-	work()
+	forks = 10
+	ENV = "dev"
+
+	# Start multiple threads
+	pool = []
+	for num in range(forks):
+		p = Process(target=work, args=(ENV,))
+		p.start()
+		pool.append(p)
+		print 'started worker thread'
+		
+	# Monitor for keyboard interrupt ctrl-C
+	loop = True
+	while(loop):
+		try:
+			time.sleep(10)
+		except KeyboardInterrupt:
+			print 'caught KeyboardInterrupt, terminating threads'
+			for p in pool:
+				p.terminate()
+			loop = False
+
+	#work()
 

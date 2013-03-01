@@ -15,25 +15,26 @@ def start(ENV = "dev"):
 	
 	# Log
 	identity = "starter_%s" % int(random.random() * 1000)
-	#logFile = "starter.log"
-	logFile = None
+	logFile = "starter.log"
+	#logFile = None
 	logger = log.logger(logFile, settings.setLevel, identity)
 	
 	# Simple connect
 	conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
-	# Start a workflow execution
-	workflow_id = "sum"
-	#workflow_name = "PublishArticle"
-	workflow_name = "Sum"
-	workflow_version = "1"
-	child_policy = None
-	execution_start_to_close_timeout = None
-	input = '{"data": [1,3,7,11]}'
+	for num in range(5):
+		# Start a workflow execution
+		workflow_id = "sum_%s" % int(random.random() * 10000)
+		#workflow_name = "PublishArticle"
+		workflow_name = "Sum"
+		workflow_version = "1"
+		child_policy = None
+		execution_start_to_close_timeout = None
+		input = '{"data": [1,3,7,11]}'
 	
-	response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
+		response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
 
-	logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+		logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
 	
 if __name__ == "__main__":
 	start()
