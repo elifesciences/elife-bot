@@ -143,28 +143,56 @@ def respond_completed(conn, logger, token, message):
 	out = conn.respond_activity_task_completed(token,str(message))
 	logger.info('respond_activity_task_completed returned %s' % out)
 
-if __name__ == "__main__":
-	forks = 10
-	ENV = "dev"
-
-	# Start multiple threads
+def start_single_thread(ENV):
+	"""
+	Start in single process / threaded mode, but
+	return a pool resource of None to indicate it
+	is running in a single thread
+	"""
+	work(ENV)
+	return None
+	
+def start_multiple_thread(ENV):
+	"""
+	Start multiple processes using a manual pool
+	"""
 	pool = []
 	for num in range(forks):
 		p = Process(target=work, args=(ENV,))
 		p.start()
 		pool.append(p)
 		print 'started worker thread'
-		
+	return pool
+
+def monitor_KeyboardInterrupt(pool = None):
+	# Monitor for keyboard interrupt ctrl-C
+	try:
+		time.sleep(10)
+	except KeyboardInterrupt:
+		print 'caught KeyboardInterrupt, terminating threads'
+		if(pool != None):
+			for p in pool:
+				p.terminate()
+		return False
+	return True
+
+if __name__ == "__main__":
+	forks = 10
+	ENV = "dev"
+
+	pool = None
+	try:
+		if(forks > 1):
+			pool = start_multiple_thread(ENV)
+		else:
+			pool = start_single_thread(ENV)
+	except:
+		# If forks is not specified start in single threaded mode
+		pool = start_single_thread(ENV)
+
 	# Monitor for keyboard interrupt ctrl-C
 	loop = True
 	while(loop):
-		try:
-			time.sleep(10)
-		except KeyboardInterrupt:
-			print 'caught KeyboardInterrupt, terminating threads'
-			for p in pool:
-				p.terminate()
-			loop = False
+		loop = monitor_KeyboardInterrupt(pool)
 
-	#work()
 
