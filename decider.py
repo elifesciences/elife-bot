@@ -46,7 +46,7 @@ def decide(ENV = "dev"):
 				# No taskToken returned
 				pass
 			
-			logger.info('got decision: [json omitted]')
+			logger.info('got decision: [json omitted], token %s' % token)
 			#logger.info('got decision: \n%s' % json.dumps(decision, sort_keys=True, indent=4))
 			
 			if(token != None):
@@ -97,6 +97,8 @@ def start_multiple_thread(ENV):
 		p.start()
 		pool.append(p)
 		print 'started decider thread'
+		# Sleep briefly so polling connections do not happen at once
+		time.sleep(0.5)
 	return pool
 
 def monitor_KeyboardInterrupt(pool = None):

@@ -37,11 +37,13 @@ def work(ENV = "dev"):
 		if(token == None):
 			logger.info('polling for activity...')
 			activity_task = conn.poll_for_activity_task(settings.domain, settings.default_task_list, identity)
+
+			token = get_taskToken(activity_task)
 			
-			logger.info('got activity: [json omitted]')
+			logger.info('got activity: [json omitted], token %s' % token)
 			#logger.info('got activity: \n%s' % json.dumps(activity_task, sort_keys=True, indent=4))
 			
-			token = get_taskToken(activity_task)
+
 
 			# Complete the activity based on data and activity type
 			success = False
@@ -162,6 +164,8 @@ def start_multiple_thread(ENV):
 		p.start()
 		pool.append(p)
 		print 'started worker thread'
+		# Sleep briefly so polling connections do not happen at once
+		time.sleep(0.5)
 	return pool
 
 def monitor_KeyboardInterrupt(pool = None):
