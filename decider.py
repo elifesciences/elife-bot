@@ -10,6 +10,7 @@ from multiprocessing import Process
 
 from workflow import workflow_Ping
 from workflow import workflow_Sum
+from workflow import workflow_PublishArticle
 
 """
 Amazon SWF decider

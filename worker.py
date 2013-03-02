@@ -12,6 +12,8 @@ from multiprocessing import Process
 import activity
 #from activity import activity_PingWorker
 #from activity import activity_Sum
+parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.sys.path.insert(0,parentdir)
 
 """
 Amazon SWF worker
@@ -181,7 +183,7 @@ def monitor_KeyboardInterrupt(pool = None):
 	return True
 
 if __name__ == "__main__":
-	forks = 10
+	forks = 40
 	ENV = "dev"
 
 	pool = None
