@@ -22,7 +22,7 @@ def start(ENV = "dev"):
 	# Simple connect
 	conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
-	for num in range(5):
+	for num in range(1):
 		# Start a workflow execution
 		workflow_id = "sum_%s" % int(random.random() * 10000)
 		#workflow_name = "PublishArticle"

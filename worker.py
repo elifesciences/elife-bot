@@ -122,10 +122,23 @@ def import_activity_class(activity_name):
 	attempt to lazy load the class when needed
 	"""
 	try:
-		importlib.import_module("activity." + activity_name)
+		module_name = "activity." + activity_name
+		importlib.import_module(module_name)
+		# Reload the module, in case it was imported before
+		reload_module(module_name)
 		return True
 	except ImportError:
 		return False
+	
+def reload_module(module_name):
+	"""
+	Given an module name,
+	attempt to reload the module
+	"""
+	try:
+		reload(eval(module_name))
+	except:
+		pass
 
 def get_activity_object(activity_name, settings, logger):
 	"""
@@ -183,7 +196,7 @@ def monitor_KeyboardInterrupt(pool = None):
 	return True
 
 if __name__ == "__main__":
-	forks = 40
+	forks = 10
 	ENV = "dev"
 
 	pool = None

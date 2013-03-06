@@ -106,6 +106,12 @@ def start(ENV = "dev"):
 	docs.append("elife00572.xml")
 	docs.append("elife00573.xml")
 	docs.append("elife00593.xml")
+	docs.append("elife00327.xml")
+	docs.append("elife00218.xml")
+	docs.append("elife00190.xml")
+	docs.append("elife00337.xml")
+	docs.append("elife00133.xml")
+	docs.append("elife00615.xml")
 	"""
 
 	for doc in docs:
