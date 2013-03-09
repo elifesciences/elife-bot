@@ -1,13 +1,8 @@
 import boto.swf
 from boto.swf.layer1_decisions import Layer1Decisions
-import os
 import json
 import random
 import datetime
-
-# Add parent directory for imports
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0,parentdir)
 
 import workflow
 

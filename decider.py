@@ -5,12 +5,11 @@ import log
 import json
 import random
 import datetime
+import importlib
 import time
 from multiprocessing import Process
 
-from workflow import workflow_Ping
-from workflow import workflow_Sum
-from workflow import workflow_PublishArticle
+import workflow
 
 """
 Amazon SWF decider
@@ -62,22 +61,61 @@ def decide(ENV = "dev"):
 				#try:
 				# Build a string for the object name
 				workflow_name = "workflow_" + workflowType
-				# Concatenate the object_name.object_name as the callable
-				f = eval(workflow_name + "." + workflow_name)
-				# Create the object
-				workflow_object = f(settings, logger, conn, token, decision, maximum_page_size)
 				
-				# Process the workflow
-				data = None
-				success = workflow_object.do_workflow(data)
+				# Attempt to import the module for the activity
+				if(import_workflow_class(workflow_name)):
+					# Instantiate the activity object
+					workflow_object = get_workflow_object(workflow_name, settings, logger, conn, token, decision, maximum_page_size)
+			
+					# Get the data to pass
+					data = workflow_object.get_input()
 					
-				#except NameError:
-					# Workflow class of the type we want does not exist
-				#	success = False
-				logger.info('%s success %s' % (workflow_name, success))
-				
+					# Do the activity
+					success = workflow_object.do_workflow(data)
+					
+					# Print the result to the log
+					logger.info('%s success %s' % (workflow_name, success))
+					
+				else:
+					logger.info('error: could not load object %s\n' % workflow_name)
+						
 		# Reset and loop
 		token = None
+		
+def import_workflow_class(workflow_name):
+	"""
+	Given an workflow subclass name as workflow_name,
+	attempt to lazy load the class when needed
+	"""
+	try:
+		module_name = "workflow." + workflow_name
+		importlib.import_module(module_name)
+		# Reload the module, in case it was imported before
+		reload_module(module_name)
+		return True
+	except ImportError:
+		return False
+	
+def reload_module(module_name):
+	"""
+	Given an module name,
+	attempt to reload the module
+	"""
+	try:
+		reload(eval(module_name))
+	except:
+		pass
+		
+def get_workflow_object(workflow_name, settings, logger, conn, token, decision, maximum_page_size):
+	"""
+	Given a workflow_name, and if the module class is already
+	imported, create an object an return it
+	"""
+	full_path = "workflow." + workflow_name + "." + workflow_name
+	f = eval(full_path)
+	# Create the object
+	workflow_object = f(settings, logger, conn, token, decision, maximum_page_size)
+	return workflow_object
 		
 def start_single_thread(ENV):
 	"""

@@ -10,8 +10,7 @@ import time
 from multiprocessing import Process
 
 import activity
-#from activity import activity_PingWorker
-#from activity import activity_Sum
+# Add parent directory for imports, so activity classes can use elife-api-prototype
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0,parentdir)
 

@@ -1,13 +1,8 @@
 import boto.swf
 from boto.swf.layer1_decisions import Layer1Decisions
-import os
 import json
 import random
 import datetime
-
-# Add parent directory for imports
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0,parentdir)
 
 """
 Amazon SWF workflow base class
@@ -57,6 +52,19 @@ class workflow(object):
 				pass
 		# Default
 		return False
+	
+	def get_input(self):
+		"""
+		From the decision variable, which is JSON data form SWF, get the
+		input data that started the workflow
+		"""
+		if(self.decision == None):
+			return None
+		try:
+			data = self.decision["events"][0]["workflowExecutionStartedEventAttributes"]["input"]
+		except KeyError:
+			data = None
+		return data
 	
 	def handle_nextPageToken(self):
 		# Quick test for nextPageToken

@@ -1,13 +1,8 @@
 import boto.swf
 from boto.swf.layer1_decisions import Layer1Decisions
-import os
 import json
 import random
 import datetime
-
-# Add parent directory for imports
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0,parentdir)
 
 import workflow
 
@@ -39,7 +34,7 @@ class workflow_PublishArticle(workflow.workflow):
 			if(self.activity_status("PingWorker", self.decision) == False):
 				activity_id='PingWorker.ActivityTask.' + self.get_time() + '.%s' % int(random.random() * 10000)
 				activity_type = 'PingWorker'
-				input = self.decision["events"][0]["workflowExecutionStartedEventAttributes"]["input"]
+
 				self.logger.info('scheduling task: %s' % activity_id)
 				d = Layer1Decisions()
 				d.schedule_activity_task(activity_id,           # Activity ID
@@ -51,7 +46,7 @@ class workflow_PublishArticle(workflow.workflow):
 																 '300',                 # schedule_to_close_timeout
 																 '300',                 # schedule_to_start_timeout
 																 '300',                  # start_to_close_timeout
-																 input)    # input: extra data to pass to activity
+																 data)    # input: extra data to pass to activity
 				
 				#------------------------------------------------------------------
 				# Complete Decision Task
@@ -65,7 +60,7 @@ class workflow_PublishArticle(workflow.workflow):
 			elif(self.activity_status("ArticleToFluidinfo", self.decision) == False):
 				activity_id='ArticleToFluidinfo.ActivityTask.' + self.get_time() + '.%s' % int(random.random() * 10000)
 				activity_type = 'ArticleToFluidinfo'
-				input = self.decision["events"][0]["workflowExecutionStartedEventAttributes"]["input"]
+
 				self.logger.info('scheduling task: %s' % activity_id)
 				d = Layer1Decisions()
 				d.schedule_activity_task(activity_id,           # Activity ID
@@ -77,7 +72,7 @@ class workflow_PublishArticle(workflow.workflow):
 																 '300',                 # schedule_to_close_timeout
 																 '300',                 # schedule_to_start_timeout
 																 '300',                  # start_to_close_timeout
-																 input)    # input: extra data to pass to activity
+																 data)    # input: extra data to pass to activity
 				
 				#------------------------------------------------------------------
 				# Complete Decision Task

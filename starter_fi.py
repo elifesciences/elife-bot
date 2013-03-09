@@ -112,7 +112,9 @@ def start(ENV = "dev"):
 	docs.append("elife00337.xml")
 	docs.append("elife00133.xml")
 	docs.append("elife00615.xml")
+	docs.append("elife00577.xml")
 	"""
+
 
 	for doc in docs:
 		# Start a workflow execution

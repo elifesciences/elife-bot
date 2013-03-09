@@ -1,5 +1,4 @@
 import boto.swf
-import os
 import json
 import random
 import datetime
