@@ -40,47 +40,81 @@ def decide(ENV = "dev"):
 			
 			decision = conn.poll_for_decision_task(settings.domain, settings.default_task_list, identity, maximum_page_size)
 			
-			try:
-				token = decision["taskToken"]
-			except KeyError:
-				# No taskToken returned
-				pass
+			token = get_taskToken(decision)
 			
 			logger.info('got decision: [json omitted], token %s' % token)
 			#logger.info('got decision: \n%s' % json.dumps(decision, sort_keys=True, indent=4))
-			
+
 			if(token != None):
 				# Get the workflowType and attempt to do the work
-				try:
-					workflowType = decision["workflowType"]["name"]
+				workflowType = get_workflowType(decision)
+				if(workflowType != None):
+
 					logger.info('workflowType: %s' % workflowType)
-				except KeyError:
-					continue
+
+					# Instantiate and object for the workflow using eval
+					# Build a string for the object name
+					workflow_name = get_workflow_name(workflowType)
+					
+					# Attempt to import the module for the workflow
+					if(import_workflow_class(workflow_name)):
+						# Instantiate the workflow object
+						workflow_object = get_workflow_object(workflow_name, settings, logger, conn, token, decision, maximum_page_size)
 				
-				# Instantiate and object for the workflow using eval
-				#try:
-				# Build a string for the object name
-				workflow_name = "workflow_" + workflowType
-				
-				# Attempt to import the module for the activity
-				if(import_workflow_class(workflow_name)):
-					# Instantiate the activity object
-					workflow_object = get_workflow_object(workflow_name, settings, logger, conn, token, decision, maximum_page_size)
-			
-					# Get the data to pass
-					data = workflow_object.get_input()
-					
-					# Do the activity
-					success = workflow_object.do_workflow(data)
-					
-					# Print the result to the log
-					logger.info('%s success %s' % (workflow_name, success))
-					
-				else:
-					logger.info('error: could not load object %s\n' % workflow_name)
+						# Get the data to pass
+						data = get_input(decision)
+						
+						# Process the workflow
+						success = workflow_object.do_workflow(data)
+						
+						# Print the result to the log
+						logger.info('%s success %s' % (workflow_name, success))
+						
+					else:
+						logger.info('error: could not load object %s\n' % workflow_name)
 						
 		# Reset and loop
 		token = None
+		
+def get_input(decision):
+	"""
+	From the decision response, which is JSON data form SWF, get the
+	input data that started the workflow
+	"""
+	try:
+		input = json.loads(decision["events"][0]["workflowExecutionStartedEventAttributes"]["input"])
+	except KeyError:
+		input = None
+	return input
+		
+def get_taskToken(decision):
+	"""
+	Given a response from polling for decision from SWF via boto,
+	extract the taskToken from the json data, if present
+	"""
+	try:
+		return decision["taskToken"]
+	except KeyError:
+		# No taskToken returned
+		return None
+		
+def get_workflowType(decision):
+	"""
+	Given a polling for decision response from SWF via boto,
+	extract the workflowType from the json data
+	"""
+	try:
+		return decision["workflowType"]["name"]
+	except KeyError:
+		# No workflowType found
+		return None
+
+def get_workflow_name(workflowType):
+	"""
+	Given a workflowType, return the name of a
+	corresponding workflow class to load
+	"""
+	return "workflow_" + workflowType
 		
 def import_workflow_class(workflow_name):
 	"""

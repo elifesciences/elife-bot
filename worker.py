@@ -55,7 +55,7 @@ def work(ENV = "dev"):
 					logger.info('activityType: %s' % activityType)
 				
 					# Build a string for the object name
-					activity_name = "activity_" + activityType
+					activity_name = get_activity_name(activityType)
 				
 					# Attempt to import the module for the activity
 					if(import_activity_class(activity_name)):
@@ -88,10 +88,10 @@ def get_input(activity_task):
 	extract the input from the json data
 	"""
 	try:
-		data = json.loads(activity_task["input"])
+		input = json.loads(activity_task["input"])
 	except KeyError:
-		data = None
-	return data
+		input = None
+	return input
 		
 def get_taskToken(activity_task):
 	"""
@@ -115,6 +115,13 @@ def get_activityType(activity_task):
 		# No activityType found
 		return None
 	
+def get_activity_name(activityType):
+	"""
+	Given an activityType, return the name of a
+	corresponding activity class to load
+	"""
+	return "activity_" + activityType
+
 def import_activity_class(activity_name):
 	"""
 	Given an activity subclass name as activity_name,

@@ -119,6 +119,8 @@ def start(ENV = "dev"):
 	docs.append("elife00378.xml")
 	docs.append("elife00354.xml")
 	docs.append("elife00336.xml")
+	docs.append("elife00312.xml")
+	docs.append("elife00605.xml")
 	"""
 
 

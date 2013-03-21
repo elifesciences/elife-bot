@@ -146,19 +146,6 @@ class workflow(object):
 		# Default
 		return False
 	
-	def get_input(self):
-		"""
-		From the decision variable, which is JSON data form SWF, get the
-		input data that started the workflow
-		"""
-		if(self.decision == None):
-			return None
-		try:
-			data = self.decision["events"][0]["workflowExecutionStartedEventAttributes"]["input"]
-		except KeyError:
-			data = None
-		return data
-	
 	def handle_nextPageToken(self):
 		# Quick test for nextPageToken
 		try:
