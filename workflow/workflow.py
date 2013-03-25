@@ -150,12 +150,12 @@ class workflow(object):
 		# Quick test for nextPageToken
 		try:
 			if self.decision["nextPageToken"]:
-				# Currently no pagination of event history implemented, so if we have
-				#  more than maximum_page_size of events, typically 1000, then assume
+				# nextPageToken should be paging if the decider is configured properly
+				#  If there is a nextPageToken
 				#  something has gone wrong and terminate the workflow execution with
 				#  extreme prejudice
 				d = Layer1Decisions()
-				reason="maximum_page_size of " + str(self.maximum_page_size) + " exceeded"
+				reason="nextPageToken found, maximum_page_size of " + str(self.maximum_page_size) + " exceeded"
 				d.fail_workflow_execution(reason)
 				out = self.conn.respond_decision_task_completed(self.token,d._data)
 				self.logger.info(reason)
