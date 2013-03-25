@@ -12,7 +12,7 @@ def import_settings_module(step):
 	assert imported is True, \
 		"Settings module was imported"
 	
-@step('And I have the settings environment (\S+)')
+@step('I have the settings environment (\S+)')
 def get_settings_environment(step, env):
 	world.env = env
 	assert world.env is not None, \
@@ -65,6 +65,42 @@ def describe_the_swf_domain(step):
 	dom_response = world.conn.describe_domain(world.settings.domain)
 	assert dom_response is not None, \
 		"The SWF domain is %s" % dom_response
+	
+@step('I have the workflow name (\S+)')
+def get_workflow_name(step, workflow_name):
+	world.workflow_name = workflow_name
+	assert world.workflow_name is not None, \
+		"Got workflow_name %s" % world.workflow_name 
+	
+@step('I have the workflow version (\S+)')
+def get_workflow_version(step, workflow_version):
+	world.workflow_version = workflow_version
+	assert world.workflow_version is not None, \
+		"Got workflow_version %s" % world.workflow_version
+	
+@step('I can describe the SWF workflow type')
+def describe_the_swf_workflow_type(step):
+	response = world.conn.describe_workflow_type(world.settings.domain, world.workflow_name, world.workflow_version)
+	assert response is not None, \
+		"The SWF workflow type responded %s" % response
+	
+@step('I have the activity name (\S+)')
+def get_activity_name(step, activity_name):
+	world.activity_name = activity_name
+	assert world.activity_name is not None, \
+		"Got activity_name %s" % world.activity_name 
+	
+@step('I have the activity version (\S+)')
+def get_activity_version(step, activity_version):
+	world.activity_version = activity_version
+	assert world.activity_version is not None, \
+		"Got activity_version %s" % world.activity_version
+	
+@step('I can describe the SWF activity type')
+def describe_the_swf_activity_type(step):
+	response = world.conn.describe_activity_type(world.settings.domain, world.activity_name, world.activity_version)
+	assert response is not None, \
+		"The SWF activity type responded %s" % response
 
 @step('Finally I can disconnect from Amazon SWF')
 def disconnect_from_amazon_swf(step):
