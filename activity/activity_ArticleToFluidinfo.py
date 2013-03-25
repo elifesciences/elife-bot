@@ -28,6 +28,7 @@ class activity_ArticleToFluidinfo(activity.activity):
 		load_article = elife_api_prototype.load_article
 
 		# Failsafe, set the fluidinfo namespace to dev while under development
+		#  !!!!!! Do not seem to work atm !!!!!!!!!!
 		settings = elife_api_prototype.settings
 		settings.namespace = 'elifesciences.org/api_dev'
 		

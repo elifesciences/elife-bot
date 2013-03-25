@@ -46,7 +46,7 @@ class workflow_PublishArticle(workflow.workflow):
 																 '300',                 # schedule_to_close_timeout
 																 '300',                 # schedule_to_start_timeout
 																 '300',                  # start_to_close_timeout
-																 data)    # input: extra data to pass to activity
+																 json.dumps(data))    # input: extra data to pass to activity
 				
 				#------------------------------------------------------------------
 				# Complete Decision Task
@@ -72,7 +72,7 @@ class workflow_PublishArticle(workflow.workflow):
 																 '300',                 # schedule_to_close_timeout
 																 '300',                 # schedule_to_start_timeout
 																 '300',                  # start_to_close_timeout
-																 data)    # input: extra data to pass to activity
+																 json.dumps(data))    # input: extra data to pass to activity
 				
 				#------------------------------------------------------------------
 				# Complete Decision Task
