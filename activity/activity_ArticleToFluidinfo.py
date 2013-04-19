@@ -18,23 +18,44 @@ class activity_ArticleToFluidinfo(activity.activity):
 		"""
 		self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 		
-		# Load the API prototype files from parent directory - hellish imports but they
-		#  seem to work now
-		elife_api_prototype = __import__("elife-api-prototype")
-		importlib.import_module("elife-api-prototype.load_article")
-
 		# Set the document path
 		document = '../elife-api-prototype/sample-xml/' + data["data"]["document"]
-		load_article = elife_api_prototype.load_article
 
-		# Failsafe, set the fluidinfo namespace to dev while under development
-		#  !!!!!! Do not seem to work atm !!!!!!!!!!
+		result = self.load_article(document)
+
+		return result
+	
+	def load_article(self, document):
+		"""
+		Customised load article function in order to override
+		the Fluidinfo namespace used by the default parseFI parser
+		MUST load settings module first, override the values (i.e. the namespace)
+		BEFORE loading anything else, or the override will not take effect
+		"""
+		doi = None
+		path = None
+
+		# Load the API prototype files from parent directory - hellish imports but they
+		#  seem to work now
+
+		elife_api_prototype = __import__("elife-api-prototype")
+		# Load external library settings
+		importlib.import_module("elife-api-prototype.settings")
 		settings = elife_api_prototype.settings
-		settings.namespace = 'elifesciences.org/api_dev'
-		
-		article = load_article.load_article(document)
-		load_article.load_article_into_fi(article)
+		# Override the namespace
+		settings.namespace = self.settings.fi_namespace
 
-		#print json.dumps(article.data(), sort_keys=True, indent=4)
+		# Now we can continue with imports
+		importlib.import_module("elife-api-prototype.article")
+		importlib.import_module("elife-api-prototype.load_article")
+		article = elife_api_prototype.article
+		load_article = elife_api_prototype.load_article
 		
+		# Can now specify to the article object our objects explicitly
+		a = article.article()
+		a.parse_document(path, document)
+		
+		#print json.dumps(load_article.settings.namespace, sort_keys=True, indent=4)
+		
+		load_article.load_article_into_fi(a)
 		return True

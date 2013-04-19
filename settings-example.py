@@ -25,6 +25,9 @@ class dev():
 	domain = "Publish.dev"
 	default_task_list = "DefaultTaskList"
 	
+	# Fluidinfo settings
+	fi_namespace = "elifesciences.org/api_dev"
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -41,6 +44,9 @@ class live():
 	# SWF queue settings
 	domain = "Publish"
 	default_task_list = "DefaultTaskList"
+	
+	# Fluidinfo settings
+	fi_namespace = "elifesciences.org/api_v1"
 	
 	# Logging
 	setLevel = "INFO"

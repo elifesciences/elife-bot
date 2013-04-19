@@ -5,6 +5,7 @@ import json
 import random
 import datetime
 import os
+from optparse import OptionParser
 
 """
 Amazon SWF workflow starter
@@ -121,8 +122,32 @@ def start(ENV = "dev"):
 	docs.append("elife00336.xml")
 	docs.append("elife00312.xml")
 	docs.append("elife00605.xml")
+	docs.append("elife00260.xml")
+	docs.append("elife00269.xml")
+	docs.append("elife00625.xml")
+	docs.append("elife00642.xml")
+	docs.append("elife00648.xml")
+	docs.append("elife00278.xml")
+	docs.append("elife00367.xml")
+	docs.append("elife00435.xml")
+	docs.append("elife00482.xml")
+	docs.append("elife00639.xml")
+	docs.append("elife00655.xml")
+	docs.append("elife00426.xml")
+	docs.append("elife00444.xml")
+	docs.append("elife00499.xml")
+	docs.append("elife00659.xml")
+	docs.append("elife00663.xml")
+	docs.append("elife00692.xml")
+	docs.append("elife00362.xml")
+	docs.append("elife00288.xml")
+	docs.append("elife00459.xml")
+	docs.append("elife00458.xml")
+	docs.append("elife00534.xml")
+	docs.append("elife00676.xml")
+	docs.append("elife00415.xml")
+	docs.append("elife00729.xml")
 	"""
-
 
 	for doc in docs:
 		# Start a workflow execution
@@ -143,4 +168,12 @@ def start(ENV = "dev"):
 			logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
 
 if __name__ == "__main__":
-	start()
+
+	# Add options
+	parser = OptionParser()
+	parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
+	(options, args) = parser.parse_args()
+	if options.env: 
+		ENV = options.env
+
+	start(ENV)

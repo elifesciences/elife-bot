@@ -8,6 +8,7 @@ import os
 import importlib
 import time
 from multiprocessing import Process
+from optparse import OptionParser
 
 import activity
 # Add parent directory for imports, so activity classes can use elife-api-prototype
@@ -172,6 +173,7 @@ def start_single_thread(ENV):
 	return a pool resource of None to indicate it
 	is running in a single thread
 	"""
+	print 'starting single thread'
 	work(ENV)
 	return None
 	
@@ -202,9 +204,17 @@ def monitor_KeyboardInterrupt(pool = None):
 	return True
 
 if __name__ == "__main__":
-	forks = 10
-	ENV = "dev"
 
+	# Add options
+	parser = OptionParser()
+	parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
+	parser.add_option("-f", "--forks", default=10, action="store", type="int", dest="forks", help="specify the number of forks to start")
+	(options, args) = parser.parse_args()
+	if options.env: 
+		ENV = options.env
+	if options.forks: 
+		forks = options.forks
+	
 	pool = None
 	try:
 		if(forks > 1):

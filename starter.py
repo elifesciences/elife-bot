@@ -4,6 +4,7 @@ import log
 import json
 import random
 import datetime
+from optparse import OptionParser
 
 """
 Amazon SWF workflow starter
@@ -37,4 +38,12 @@ def start(ENV = "dev"):
 		logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
 	
 if __name__ == "__main__":
-	start()
+	
+	# Add options
+	parser = OptionParser()
+	parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
+	(options, args) = parser.parse_args()
+	if options.env: 
+		ENV = options.env
+
+	start(ENV)
