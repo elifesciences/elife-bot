@@ -16,6 +16,24 @@ class workflow(object):
 		self.definition = None
 		if(definition != None):
 			self.load_definition(definition)
+			
+		# SWF Defaults, most are set in derived classes or at runtime
+		try:
+			self.domain = self.settings.domain
+		except KeyError:
+			self.domain = None
+			
+		try:
+			self.task_list = self.settings.default_task_list
+		except KeyError:
+			self.task_list = None
+
+		self.name = None
+		self.version = None
+		self.default_child_policy = "TERMINATE"
+		self.default_execution_start_to_close_timeout = 60*10
+		self.default_task_start_to_close_timeout = 30
+		self.description = None
 
 	def load_definition(self, definition):
 		"""
@@ -54,22 +72,31 @@ class workflow(object):
 
 	def is_workflow_complete(self):
 		"""
-		Stub - TO DO!!!
+		Check each step was completed to determine if workflow is complete
 		"""
-		if(self.activity_status("Sum", self.decision) == True):
-			return True
+		for step in self.definition["steps"]:
+			activityType = step["activity_type"]
+			activityID = step["activity_id"]
+			
+			if(self.activity_status(self.decision, activityType, activityID) == False):
+				return False
+			
+		return True
 
 	def get_next_activities(self):
 		"""
-		Stub - TO DO!!!
+		For each step of a workflow, determine which activities are completed
+		and return the activities to start next
 		"""
 		activities = []
 		
-		if(self.activity_status("PingWorker", self.decision) == False):
-			activities.append(self.definition["steps"][0]["step1"])
-		if(self.activity_status("Sum", self.decision) == False):
-			activities.append(self.definition["steps"][1]["step2a"])
+		for step in self.definition["steps"]:
+			activityType = step["activity_type"]
+			activityID = step["activity_id"]
 			
+			if(self.activity_status(self.decision, activityType, activityID) == False):
+				activities.append(step)
+
 		return activities
 		
 	def schedule_activity(self, activity, d = None):
@@ -113,21 +140,35 @@ class workflow(object):
 		"""
 		return datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 
-	def activity_status(self, activityType, decision):
+	def activity_status(self, decision, activityType = None, activityID = None):
 		"""
-		Given an activityType as the name of activity, and
+		Given an activityType and/or activityID as the activity details, and
 		a decision response from SWF, determine whether the
 		acitivity was successfully run
 		"""
-		eventId = None
+	
+		if(activityType is None and activityID is None):
+			return false
+		
 		for event in decision["events"]:
+			eventId = None
 			# Find the first matching eventID for the activityType
-			try:
-				if(event["activityTaskScheduledEventAttributes"]["activityType"]["name"] == activityType):
-					eventId = event["eventId"]
-					break
-			except KeyError:
-				pass
+			if(activityType is not None):
+				try:
+					if(event["activityTaskScheduledEventAttributes"]["activityType"]["name"] == activityType):
+						eventId = event["eventId"]
+				except KeyError:
+					pass
+			if(activityID is not None):
+				try:
+					if(event["activityTaskScheduledEventAttributes"]["activityType"]["activityID"] == activityID):
+						eventId = event["eventId"]
+				except KeyError:
+					pass
+			
+			if(eventId is not None):
+				break
+			
 		# Now if we have an eventId, find if in the decision history is was
 		#  successfully completed
 		if(eventId == None):
@@ -165,3 +206,14 @@ class workflow(object):
 		except KeyError:
 			# No nextPageToken, so we did not exceed the maximum_page_size, continue
 			pass
+		
+	def get_input(self):
+		"""
+		From the decision response, which is JSON data form SWF, get the
+		input data that started the workflow
+		"""
+		try:
+			input = json.loads(self.decision["events"][0]["workflowExecutionStartedEventAttributes"]["input"])
+		except KeyError:
+			input = None
+		return input

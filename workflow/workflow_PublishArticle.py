@@ -31,7 +31,7 @@ class workflow_PublishArticle(workflow.workflow):
 
 		# Schedule an activity
 		if(self.token != None):
-			if(self.activity_status("PingWorker", self.decision) == False):
+			if(self.activity_status(self.decision, activityType = "PingWorker") == False):
 				activity_id='PingWorker.ActivityTask.' + self.get_time() + '.%s' % int(random.random() * 10000)
 				activity_type = 'PingWorker'
 
@@ -57,7 +57,7 @@ class workflow_PublishArticle(workflow.workflow):
 				self.logger.info('respond_decision_task_completed returned %s' % out)
 				#------------------------------------------------------------------
 			
-			elif(self.activity_status("ArticleToFluidinfo", self.decision) == False):
+			elif(self.activity_status(self.decision, activityType = "ArticleToFluidinfo") == False):
 				activity_id='ArticleToFluidinfo.ActivityTask.' + self.get_time() + '.%s' % int(random.random() * 10000)
 				activity_type = 'ArticleToFluidinfo'
 
