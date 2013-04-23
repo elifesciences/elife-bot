@@ -255,6 +255,29 @@ class workflow(object):
 		if(self.conn == None or self.domain == None or self.name == None or self.version == None):
 			return None
 		
-		response = self.conn.describe_workflow_type(self.domain, self.name, self.version)
+		try:
+			response = self.conn.describe_workflow_type(self.domain, self.name, self.version)
+		except boto.exception.SWFResponseError:
+			response = None
 		
 		return response
+	
+	def register(self):
+		"""
+		Register the workflow type with SWF, if it does not already exist
+		Requires object to have an active connection to SWF using boto
+		"""
+		if(self.conn == None or self.domain == None or self.name == None or self.version == None):
+			return None
+		
+		if(self.describe() is None):
+			response = self.conn.register_workflow_type(
+				str(self.domain),
+				str(self.name),
+				str(self.version),
+				str(self.task_list),
+				str(self.default_child_policy),
+				str(self.default_execution_start_to_close_timeout),
+				str(self.default_task_start_to_close_timeout),
+				str(self.description))
+			return response
