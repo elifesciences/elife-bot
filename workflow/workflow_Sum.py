@@ -13,8 +13,8 @@ Sum workflow
 class workflow_Sum(workflow.workflow):
 	
 	def __init__(self, settings, logger, conn = None, token = None, decision = None, maximum_page_size = 100, definition = None):
-		self.settings = settings
-		self.logger = logger
+		workflow.workflow.__init__(self, settings, logger, conn = None, token = None, decision = None, maximum_page_size = 100)
+		
 		self.conn = conn
 		self.token = token
 		self.decision = decision

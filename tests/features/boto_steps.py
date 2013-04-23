@@ -1,4 +1,6 @@
 from lettuce import *
+import importlib
+import workflow
 
 @step('Given I have imported a settings module')
 def import_settings_module(step):
@@ -72,15 +74,29 @@ def get_workflow_name(step, workflow_name):
 	assert world.workflow_name is not None, \
 		"Got workflow_name %s" % world.workflow_name 
 	
-@step('I have the workflow version (\S+)')
-def get_workflow_version(step, workflow_version):
-	world.workflow_version = workflow_version
+@step('I have a workflow object')
+def get_workflow_object(step):
+	# Import the workflow libraries
+	workflow_class_name = "workflow_" + world.workflow_name
+	module_name = "workflow." + workflow_class_name
+	importlib.import_module(module_name)
+	full_path = "workflow." + workflow_class_name + "." + workflow_class_name
+	# Create the workflow object
+	f = eval(full_path)
+	logger = None
+	world.workflow_object = f(world.settings, logger, world.conn)
+	assert world.workflow_object is not None, \
+		"Got workflow_object %s" % world.workflow_object
+	
+@step('I have the workflow version')
+def get_workflow_version(step):
+	world.workflow_version = world.workflow_object.version
 	assert world.workflow_version is not None, \
 		"Got workflow_version %s" % world.workflow_version
 	
 @step('I can describe the SWF workflow type')
 def describe_the_swf_workflow_type(step):
-	response = world.conn.describe_workflow_type(world.settings.domain, world.workflow_name, world.workflow_version)
+	response = world.workflow_object.describe()
 	assert response is not None, \
 		"The SWF workflow type responded %s" % response
 	

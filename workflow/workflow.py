@@ -214,6 +214,8 @@ class workflow(object):
 		From the decision response, which is JSON data form SWF, get the
 		input data that started the workflow
 		"""
+		if(self.decision is None):
+			return None
 		try:
 			input = json.loads(self.decision["events"][0]["workflowExecutionStartedEventAttributes"]["input"])
 		except KeyError:
@@ -244,3 +246,15 @@ class workflow(object):
 				self.complete_decision(d)
 				
 		return True
+	
+	def describe(self):
+		"""
+		Describe workflow type from SWF, to confirm it exists
+		Requires object to have an active connection to SWF using boto
+		"""
+		if(self.conn == None or self.domain == None or self.name == None or self.version == None):
+			return None
+		
+		response = self.conn.describe_workflow_type(self.domain, self.name, self.version)
+		
+		return response

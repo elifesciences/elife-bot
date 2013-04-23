@@ -10,15 +10,16 @@ Feature: Workflow is configured at Amazon SWF
     And I have imported the boto module
     And I have imported the boto.swf module
 		And I have the workflow name <workflow_name>
-		And I have the workflow version <workflow_version>
 	  When I connect to Amazon SWF
+		And I have a workflow object
+		And I have the workflow version
 	  Then I can describe the SWF workflow type
 		Finally I can disconnect from Amazon SWF
 		
   Examples:
-    | env					| workflow_name				| workflow_version
-    | dev					| Ping								| 1
-    | dev					| Sum									| 1
-    | dev					| PublishArticle			| 1
-    | live				| Ping								| 1
-    | live				| PublishArticle			| 1
+    | env					| workflow_name	
+    | dev					| Ping
+    | dev					| Sum
+    | dev					| PublishArticle
+    | live				| Ping
+    | live				| PublishArticle
