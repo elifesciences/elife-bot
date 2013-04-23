@@ -95,7 +95,9 @@ class workflow(object):
 			activityID = step["activity_id"]
 			
 			if(self.activity_status(self.decision, activityType, activityID) == False):
-				activities.append(step)
+				# Only add one activity at a time, for now
+				if(len(activities) == 0):
+					activities.append(step)
 
 		return activities
 		
@@ -217,3 +219,28 @@ class workflow(object):
 		except KeyError:
 			input = None
 		return input
+
+	def do_workflow(self, data = None):
+		"""
+		Make decisions and process the workflow accordingly
+		"""
+		
+		# Quick test for nextPageToken
+		self.handle_nextPageToken()
+
+		# Schedule an activity
+		if(self.token != None):
+			# 1. Check if the workflow is completed
+			if(self.is_workflow_complete()):
+				# Complete the workflow execution
+				self.complete_workflow()
+			else:
+				# 2. Get the next activity
+				next_activities = self.get_next_activities()
+				d = None
+				for activity in next_activities:
+					# Schedule each activity
+					d = self.schedule_activity(activity, d)
+				self.complete_decision(d)
+				
+		return True

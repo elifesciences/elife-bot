@@ -20,75 +20,59 @@ class workflow_PublishArticle(workflow.workflow):
 		self.decision = decision
 		self.maximum_page_size = maximum_page_size
 		
+		# SWF Defaults
+		self.name = "PublishArticle"
+		self.version = "1"
+		self.description = "Publish article workflow"
+		self.default_execution_start_to_close_timeout = 60*5
+		self.default_task_start_to_close_timeout = 30
 
-	def do_workflow(self, data = None):
-		"""
-		Make decisions and process the workflow accordingly
-		"""
+		# Get the input from the JSON decision response
+		data = self.get_input()
 		
-		# Quick test for nextPageToken
-		self.handle_nextPageToken()
-
-		# Schedule an activity
-		if(self.token != None):
-			if(self.activity_status(self.decision, activityType = "PingWorker") == False):
-				activity_id='PingWorker.ActivityTask.' + self.get_time() + '.%s' % int(random.random() * 10000)
-				activity_type = 'PingWorker'
-
-				self.logger.info('scheduling task: %s' % activity_id)
-				d = Layer1Decisions()
-				d.schedule_activity_task(activity_id,           # Activity ID
-																 activity_type,         # Activity Type
-																 '1',                   # Activity Type Version
-																 self.settings.default_task_list,                  # Task List(use default)
-																 'control data',        # control
-																 '300',                 # Heartbeat in seconds
-																 '300',                 # schedule_to_close_timeout
-																 '300',                 # schedule_to_start_timeout
-																 '300',                  # start_to_close_timeout
-																 json.dumps(data))    # input: extra data to pass to activity
-				
-				#------------------------------------------------------------------
-				# Complete Decision Task
-				#  - easy enough
-				if(d is None):
-					d = Layer1Decisions()
-				out = self.conn.respond_decision_task_completed(self.token,d._data)
-				self.logger.info('respond_decision_task_completed returned %s' % out)
-				#------------------------------------------------------------------
+		# JSON format workflow definition, for now
+		workflow_definition = {
+			"name": self.name,
+			"version": self.version,
+			"task_list": self.settings.default_task_list,
+			"input": data,
+	
+			"start":
+			{
+				"requirements": None
+			},
 			
-			elif(self.activity_status(self.decision, activityType = "ArticleToFluidinfo") == False):
-				activity_id='ArticleToFluidinfo.ActivityTask.' + self.get_time() + '.%s' % int(random.random() * 10000)
-				activity_type = 'ArticleToFluidinfo'
-
-				self.logger.info('scheduling task: %s' % activity_id)
-				d = Layer1Decisions()
-				d.schedule_activity_task(activity_id,           # Activity ID
-																 activity_type,         # Activity Type
-																 '1',                   # Activity Type Version
-																 self.settings.default_task_list,                  # Task List(use default)
-																 'control data',        # control
-																 '300',                 # Heartbeat in seconds
-																 '300',                 # schedule_to_close_timeout
-																 '300',                 # schedule_to_start_timeout
-																 '300',                  # start_to_close_timeout
-																 json.dumps(data))    # input: extra data to pass to activity
-				
-				#------------------------------------------------------------------
-				# Complete Decision Task
-				#  - easy enough
-				if(d is None):
-					d = Layer1Decisions()
-				out = self.conn.respond_decision_task_completed(self.token,d._data)
-				self.logger.info('respond_decision_task_completed returned %s' % out)
-				#------------------------------------------------------------------
-				
-			
-			else:
-				# Complete the workflow execution
-				d = Layer1Decisions()
-				d.complete_workflow_execution()
-				out = self.conn.respond_decision_task_completed(self.token,d._data)
-				self.logger.info('respond_decision_task_completed returned %s' % out)
+			"steps":
+			[
+				{
+					"activity_type": "PingWorker",
+					"activity_id": "PingWorker",
+					"version": "1",
+					"input": data,
+					"control": None,
+					"heartbeat_timeout": 300,
+					"schedule_to_close_timeout": 300,
+					"schedule_to_start_timeout": 300,
+					"start_to_close_timeout": 300
+				},
+				{
+					"activity_type": "ArticleToFluidinfo",
+					"activity_id": "ArticleToFluidinfo",
+					"version": "1",
+					"input": data,
+					"control": None,
+					"heartbeat_timeout": 300,
+					"schedule_to_close_timeout": 300,
+					"schedule_to_start_timeout": 300,
+					"start_to_close_timeout": 300
+				}
+			],
 		
-		return True
+			"finish":
+			{
+				"requirements": None
+			}
+		}
+		
+		self.load_definition(workflow_definition)
+

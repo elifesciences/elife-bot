@@ -64,28 +64,3 @@ class workflow_Ping(workflow.workflow):
 		}
 		
 		self.load_definition(workflow_definition)
-
-	def do_workflow(self, data = None):
-		"""
-		Make decisions and process the workflow accordingly
-		"""
-		
-		# Quick test for nextPageToken
-		self.handle_nextPageToken()
-
-		# Schedule an activity
-		if(self.token != None):
-			# 1. Check if the workflow is completed
-			if(self.is_workflow_complete()):
-				# Complete the workflow execution
-				self.complete_workflow()
-			else:
-				# 2. Get the next activity
-				next_activities = self.get_next_activities()
-				d = None
-				for activity in next_activities:
-					# Schedule each activity
-					d = self.schedule_activity(activity, d)
-				self.complete_decision(d)
-				
-		return True
