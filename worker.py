@@ -61,8 +61,8 @@ def work(ENV = "dev"):
 					# Attempt to import the module for the activity
 					if(import_activity_class(activity_name)):
 						# Instantiate the activity object
-						activity_object = get_activity_object(activity_name, settings, logger)
-				
+						activity_object = get_activity_object(activity_name, settings, logger, conn, token, activity_task)
+
 						# Get the data to pass
 						data = get_input(activity_task)
 						
@@ -147,7 +147,7 @@ def reload_module(module_name):
 	except:
 		pass
 
-def get_activity_object(activity_name, settings, logger):
+def get_activity_object(activity_name, settings, logger, conn, token, activity_task):
 	"""
 	Given an activity_name, and if the module class is already
 	imported, create an object an return it
@@ -155,7 +155,7 @@ def get_activity_object(activity_name, settings, logger):
 	full_path = "activity." + activity_name + "." + activity_name
 	f = eval(full_path)
 	# Create the object
-	activity_object = f(settings, logger)
+	activity_object = f(settings, logger, conn, token, activity_task)
 	return activity_object
 		
 def respond_completed(conn, logger, token, message):

@@ -1,6 +1,7 @@
 from lettuce import *
 import importlib
 import workflow
+import activity
 
 @step('Given I have imported a settings module')
 def import_settings_module(step):
@@ -77,10 +78,10 @@ def get_workflow_name(step, workflow_name):
 @step('I have a workflow object')
 def get_workflow_object(step):
 	# Import the workflow libraries
-	workflow_class_name = "workflow_" + world.workflow_name
-	module_name = "workflow." + workflow_class_name
+	class_name = "workflow_" + world.workflow_name
+	module_name = "workflow." + class_name
 	importlib.import_module(module_name)
-	full_path = "workflow." + workflow_class_name + "." + workflow_class_name
+	full_path = "workflow." + class_name + "." + class_name
 	# Create the workflow object
 	f = eval(full_path)
 	logger = None
@@ -106,9 +107,23 @@ def get_activity_name(step, activity_name):
 	assert world.activity_name is not None, \
 		"Got activity_name %s" % world.activity_name 
 	
-@step('I have the activity version (\S+)')
-def get_activity_version(step, activity_version):
-	world.activity_version = activity_version
+@step('I have an activity object')
+def get_activity_object(step):
+	# Import the activity libraries
+	class_name = "activity_" + world.activity_name
+	module_name = "activity." + class_name
+	importlib.import_module(module_name)
+	full_path = "activity." + class_name + "." + class_name
+	# Create the workflow object
+	f = eval(full_path)
+	logger = None
+	world.activity_object = f(world.settings, logger, world.conn)
+	assert world.activity_object is not None, \
+		"Got activity_object %s" % world.activity_object
+	
+@step('I have the activity version')
+def get_activity_version(step):
+	world.activity_version = world.activity_object.version
 	assert world.activity_version is not None, \
 		"Got activity_version %s" % world.activity_version
 	

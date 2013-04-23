@@ -7,6 +7,7 @@ import datetime
 from optparse import OptionParser
 import importlib
 import workflow
+import activity
 
 """
 Amazon SWF register workflow or activity utility
@@ -26,10 +27,10 @@ def start(ENV = "dev"):
 
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
-		workflow_class_name = "workflow_" + workflow_name
-		module_name = "workflow." + workflow_class_name
+		class_name = "workflow_" + workflow_name
+		module_name = "workflow." + class_name
 		importlib.import_module(module_name)
-		full_path = "workflow." + workflow_class_name + "." + workflow_class_name
+		full_path = "workflow." + class_name + "." + class_name
 		# Create the workflow object
 		f = eval(full_path)
 		logger = None
@@ -37,6 +38,27 @@ def start(ENV = "dev"):
 		
 		# Now register it
 		response = workflow_object.register()
+	
+		print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
+		
+	activity_names = []
+	activity_names.append("PingWorker")
+	activity_names.append("Sum")
+	activity_names.append("ArticleToFluidinfo")
+
+	for activity_name in activity_names:
+		# Import the activity libraries
+		class_name = "activity_" + activity_name
+		module_name = "activity." + class_name
+		importlib.import_module(module_name)
+		full_path = "activity." + class_name + "." + class_name
+		# Create the workflow object
+		f = eval(full_path)
+		logger = None
+		activity_object = f(settings, logger, conn)
+		
+		# Now register it
+		response = activity_object.register()
 	
 		print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
 	

@@ -12,6 +12,17 @@ ArticleToFluidinfo activity
 
 class activity_ArticleToFluidinfo(activity.activity):
 	
+	def __init__(self, settings, logger, conn = None, token = None, activity_task = None):
+		activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+
+		self.name = "ArticleToFluidinfo"
+		self.version = "1"
+		self.default_task_heartbeat_timeout = 30
+		self.default_task_schedule_to_close_timeout = 60*10
+		self.default_task_schedule_to_start_timeout = 30
+		self.default_task_start_to_close_timeout= 60*5
+		self.description = "Publish article to Fluidinfo"
+	
 	def do_activity(self, data = None):
 		"""
 		ArticleToFluidinfo activity, do the work

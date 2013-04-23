@@ -15,11 +15,6 @@ class workflow_Ping(workflow.workflow):
 	def __init__(self, settings, logger, conn = None, token = None, decision = None, maximum_page_size = 100):
 		workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
 		
-		self.conn = conn
-		self.token = token
-		self.decision = decision
-		self.maximum_page_size = maximum_page_size
-				
 		# SWF Defaults
 		self.name = "Ping"
 		self.version = "1"

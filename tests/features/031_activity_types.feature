@@ -10,15 +10,16 @@ Feature: Activity type is configured at Amazon SWF
     And I have imported the boto module
     And I have imported the boto.swf module
 		And I have the activity name <activity_name>
-		And I have the activity version <activity_version>
 	  When I connect to Amazon SWF
+		And I have an activity object
+		And I have the activity version
 	  Then I can describe the SWF activity type
 		Finally I can disconnect from Amazon SWF
 		
   Examples:
-    | env					| activity_name				| activity_version
-    | dev					| PingWorker					| 1
-    | dev					| Sum									| 1
-    | dev					| ArticleToFluidinfo	| 1
-    | live				| Ping								| 1
-    | live				| ArticleToFluidinfo	| 1
+    | env					| activity_name				
+    | dev					| PingWorker					
+    | dev					| Sum									
+    | dev					| ArticleToFluidinfo	
+    | live				| PingWorker					
+    | live				| ArticleToFluidinfo	

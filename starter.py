@@ -25,16 +25,16 @@ def start(ENV = "dev"):
 
 	for num in range(1):
 		# Start a workflow execution
-		#workflow_id = "sum_%s" % int(random.random() * 10000)
-		workflow_id = "ping_%s" % int(random.random() * 10000)
+		workflow_id = "sum_%s" % int(random.random() * 10000)
+		#workflow_id = "ping_%s" % int(random.random() * 10000)
 		#workflow_name = "PublishArticle"
-		#workflow_name = "Sum"
-		workflow_name = "Ping"
+		workflow_name = "Sum"
+		#workflow_name = "Ping"
 		workflow_version = "1"
 		child_policy = None
 		execution_start_to_close_timeout = None
-		#input = '{"data": [1,3,7,11]}'
-		input = None
+		input = '{"data": [1,3,7,11]}'
+		#input = None
 	
 		response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
 

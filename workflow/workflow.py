@@ -13,6 +13,10 @@ class workflow(object):
 	def __init__(self, settings, logger, conn = None, token = None, decision = None, maximum_page_size = 100, definition = None):
 		self.settings = settings
 		self.logger = logger
+		self.conn = conn
+		self.token = token
+		self.decision = decision
+		self.maximum_page_size = maximum_page_size
 		self.definition = None
 		if(definition != None):
 			self.load_definition(definition)
