@@ -27,7 +27,8 @@ class activity_ArticleToFluidinfo(activity.activity):
 		"""
 		ArticleToFluidinfo activity, do the work
 		"""
-		self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+		if(self.logger):
+			self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 		
 		# Set the document path
 		document = '../elife-api-prototype/sample-xml/' + data["data"]["document"]

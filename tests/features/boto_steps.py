@@ -70,7 +70,7 @@ def describe_the_swf_domain(step):
 		"The SWF domain is %s" % dom_response
 	
 @step('I have the workflow name (\S+)')
-def get_workflow_name(step, workflow_name):
+def have_workflow_name(step, workflow_name):
 	world.workflow_name = workflow_name
 	assert world.workflow_name is not None, \
 		"Got workflow_name %s" % world.workflow_name 
@@ -85,6 +85,10 @@ def get_workflow_object(step):
 	# Create the workflow object
 	f = eval(full_path)
 	logger = None
+	try:
+		world.conn = world.conn
+	except AttributeError:
+		world.conn = None
 	world.workflow_object = f(world.settings, logger, world.conn)
 	assert world.workflow_object is not None, \
 		"Got workflow_object %s" % world.workflow_object
@@ -102,7 +106,7 @@ def describe_the_swf_workflow_type(step):
 		"The SWF workflow type responded %s" % response
 	
 @step('I have the activity name (\S+)')
-def get_activity_name(step, activity_name):
+def have_activity_name(step, activity_name):
 	world.activity_name = activity_name
 	assert world.activity_name is not None, \
 		"Got activity_name %s" % world.activity_name 
@@ -117,6 +121,10 @@ def get_activity_object(step):
 	# Create the workflow object
 	f = eval(full_path)
 	logger = None
+	try:
+		world.conn = world.conn
+	except AttributeError:
+		world.conn = None
 	world.activity_object = f(world.settings, logger, world.conn)
 	assert world.activity_object is not None, \
 		"Got activity_object %s" % world.activity_object

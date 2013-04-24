@@ -27,6 +27,7 @@ class activity_Sum(activity.activity):
 		Sum activity, do the work, in this case
 		sum the data and return true
 		"""
-		self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+		if(self.logger):
+			self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 		self.result = sum(data["data"])
 		return True
