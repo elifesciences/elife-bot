@@ -37,3 +37,21 @@ def get_task_list_from_workflow_object(step):
 def get_workflow_name(step, name):
 	assert world.workflow_object.name == name, \
 		"Got name %s" % world.workflow_object.name
+	
+@step('I have the document name (\S+)')
+def have_the_document_name(step, document_name):
+	world.document_name = document_name
+	assert world.document_name is not None, \
+		"Got document %s" % world.document_name 
+	
+@step('I parse the document name with ArticleToFluidinfo')
+def parse_the_document_name_with_ArticleToFluidinfo(step):
+	world.activity_object.parse_document(world.document_name)
+	assert world.activity_object.a is not None, \
+		"Got article %s" % world.activity_object.a
+
+@step('I get the DOI from the ArticleToFluidinfo article (\S+)')
+def parse_the_document_name_with_ArticleToFluidinfo(step, doi):
+	assert world.activity_object.a.doi == doi, \
+		"Got doi %s" % world.activity_object.a.doi
+	
