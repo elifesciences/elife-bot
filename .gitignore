@@ -3,3 +3,4 @@ ftp-credentials.txt
 *.pyc
 settings.py
 .boto
+tmp

@@ -3,6 +3,7 @@ import json
 import random
 import datetime
 import importlib
+import os
 
 import activity
 
@@ -25,6 +26,7 @@ class activity_ArticleToFluidinfo(activity.activity):
 		
 		# Activity specific properties
 		self.document = None
+		self.content = None
 		self.a = None
 		
 		# Where we specify the library to be imported
@@ -43,7 +45,11 @@ class activity_ArticleToFluidinfo(activity.activity):
 		# Set the document path
 		document = '../elife-api-prototype/sample-xml/' + data["data"]["document"]
 
-		self.parse_document(document)
+		# Read in the document and write it to the temp directory
+		self.read_document_to_content(document)
+		self.write_content_to_document(data["data"]["document"])
+
+		self.parse_document(self.document)
 		
 		result = None
 		if(self.a is not None):
@@ -51,6 +57,24 @@ class activity_ArticleToFluidinfo(activity.activity):
 
 		return result
 	
+	def read_document_to_content(self, document):
+		mode = "r"
+		
+		f = open(document, mode)
+		self.content = f.read()
+		f.close()
+
+	def write_content_to_document(self, filename):
+		mode = "w"
+		
+		f = self.open_file_from_tmp_dir(filename, mode)
+		f.write(self.content)
+		f.close()
+		
+		# Reset the object document
+		self.document = self.tmp_dir + os.sep + filename
+		print self.document
+
 	def parse_document(self, document):
 		"""
 		Parse the XML document into an article object
@@ -66,7 +90,7 @@ class activity_ArticleToFluidinfo(activity.activity):
 		# Can now specify to the article object our objects explicitly
 		self.a = article.article()
 		self.a.parse_document(path, self.document)
-
+				
 	def load_article(self):
 		"""
 		Customised load article function in order to override

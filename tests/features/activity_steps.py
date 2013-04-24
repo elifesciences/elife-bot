@@ -55,3 +55,15 @@ def parse_the_document_name_with_ArticleToFluidinfo(step, doi):
 	assert world.activity_object.a.doi == doi, \
 		"Got doi %s" % world.activity_object.a.doi
 	
+@step('I read the file named document name with ArticleToFluidinfo')
+def read_the_file_named_document_name_with_ArticleToFluidinfo(step):
+	world.activity_object.read_document_to_content(world.document_name)
+	assert world.activity_object.content is not None, \
+		"Got content %s" % world.activity_object.content
+	
+@step('I write the content from ArticleToFluidinfo to (\S+)')
+def write_the_content_from_ArticleToFluidinfo(step, filename):
+	world.activity_object.write_content_to_document(filename)
+	assert world.activity_object.document is not None, \
+		"Wrote document %s" % world.activity_object.document
+	

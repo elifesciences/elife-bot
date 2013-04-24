@@ -2,6 +2,7 @@ import boto.swf
 import json
 import random
 import datetime
+import os
 
 """
 Amazon SWF activity base class
@@ -35,6 +36,8 @@ class activity(object):
 		self.default_task_schedule_to_start_timeout = 30
 		self.default_task_start_to_close_timeout= 60*5
 		self.description = None
+		
+		self.tmp_dir = "tmp"
 
 	def describe(self):
 		"""
@@ -72,3 +75,18 @@ class activity(object):
 				str(self.description))
 			
 			return response
+
+	def open_file_from_tmp_dir(self, filename, mode = 'r'):
+		"""
+		Read the file from the tmp_dir
+		"""
+		# Try and make the directory, if it does not exist
+		try:
+			os.mkdir(self.tmp_dir)
+		except OSError:
+			pass
+		
+		full_filename = self.tmp_dir + os.sep + filename
+		f = open(full_filename, mode)
+		return f
+		
