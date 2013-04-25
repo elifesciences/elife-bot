@@ -3,6 +3,7 @@ import json
 import random
 import datetime
 import os
+import re
 
 """
 Amazon SWF activity base class
@@ -37,7 +38,8 @@ class activity(object):
 		self.default_task_start_to_close_timeout= 60*5
 		self.description = None
 		
-		self.tmp_dir = "tmp"
+		self.tmp_base_dir = "tmp"
+		self.tmp_dir = None
 
 	def describe(self):
 		"""
@@ -76,17 +78,75 @@ class activity(object):
 			
 			return response
 
+	def get_workflowId(self):
+		"""
+		Get the workflowId from the SWF activity_task
+		if it is available
+		"""
+		workflowId = None
+		if(self.activity_task is None):
+			return None
+		
+		try:
+			workflowId = self.activity_task["workflowExecution"]["workflowId"]
+		except KeyError:
+			workflowId = None
+
+		return workflowId
+
+	def make_tmp_dir(self):
+		"""
+		Check or create temporary directory for this activity
+		"""
+		# Try and make the based tmp directory, if it does not exist
+		if(self.tmp_base_dir):
+			try:
+				os.mkdir(self.tmp_base_dir)
+			except OSError:
+				pass
+
+		# Create a new directory specifically for this activity
+		dir_name = datetime.datetime.utcnow().strftime('%Y-%m-%d.%H.%M.%S')
+		workflowId = self.get_workflowId()
+		if(workflowId):
+			# Use regular expression to strip out messy symbols
+			workflowId_safe = re.sub(r'\W', '', workflowId)
+			dir_name += '.' + workflowId_safe
+		
+		if(self.tmp_base_dir):
+			full_dir_name = self.tmp_base_dir + os.sep + dir_name
+		else:
+			full_dir_name = dir_name
+
+		try:
+			os.mkdir(full_dir_name)
+			self.tmp_dir = full_dir_name
+		except OSError:
+			pass
+
+	def get_tmp_dir(self):
+		"""
+		Get the temporary file directory, but if not set
+		then make the directory
+		"""
+		if(self.tmp_dir):
+			return self.tmp_dir
+		else:
+			self.make_tmp_dir()
+			
+		return self.tmp_dir
+
 	def open_file_from_tmp_dir(self, filename, mode = 'r'):
 		"""
 		Read the file from the tmp_dir
 		"""
-		# Try and make the directory, if it does not exist
-		try:
-			os.mkdir(self.tmp_dir)
-		except OSError:
-			pass
+		tmp_dir = self.get_tmp_dir()
 		
-		full_filename = self.tmp_dir + os.sep + filename
+		if(tmp_dir):
+			full_filename = tmp_dir + os.sep + filename
+		else:
+			full_filename = filename
+		
 		f = open(full_filename, mode)
 		return f
 		

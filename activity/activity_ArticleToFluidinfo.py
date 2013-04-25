@@ -72,8 +72,10 @@ class activity_ArticleToFluidinfo(activity.activity):
 		f.close()
 		
 		# Reset the object document
-		self.document = self.tmp_dir + os.sep + filename
-		print self.document
+		if(self.tmp_dir):
+			self.document = self.tmp_dir + os.sep + filename
+		else:
+			self.document = filename
 
 	def parse_document(self, document):
 		"""
