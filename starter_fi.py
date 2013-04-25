@@ -6,6 +6,8 @@ import random
 import datetime
 import os
 from optparse import OptionParser
+import urlparse
+import re
 
 """
 Amazon SWF workflow starter
@@ -34,6 +36,8 @@ def start(ENV = "dev"):
 	"""
 	docs.append("elife00013.xml")
 	#docs.append("elife_2013_00415.xml.zip")
+	#docs.append("https://s3.amazonaws.com/elife-articles/00415/elife_2013_00415.xml.zip")
+	#docs.append("https://s3.amazonaws.com/elife-articles/00013/elife00013.xml")
 	"""
 	docs.append("elife00031.xml")
 	docs.append("elife00047.xml")
@@ -151,8 +155,21 @@ def start(ENV = "dev"):
 	"""
 
 	for doc in docs:
+		o = urlparse.urlparse(doc)
+		
+		start = False
+		id_string = ""
+		if(o.scheme == ""):
+			document = '../elife-api-prototype/sample-xml/' + doc
+			if(os.path.isfile(document)):
+				start = True
+				id_string = doc
+		else:
+			start = True
+			id_string = re.sub(r'\W', '', o.path)
+		
 		# Start a workflow execution
-		workflow_id = "PublishArticle_%s_%s" % (doc, int(random.random() * 10000))
+		workflow_id = "PublishArticle_%s_%s" % (id_string, int(random.random() * 10000))
 		#workflow_name = "PublishArticle"
 		workflow_name = "PublishArticle"
 		workflow_version = "1"
@@ -161,11 +178,18 @@ def start(ENV = "dev"):
 		input = '{"data": {"document": "' + doc + '"}}'
 
 		# Temporary: Quick check for whether document exists before we start a workflow
-		document = '../elife-api-prototype/sample-xml/' + doc
-
-		if(os.path.isfile(document)):
+		o = urlparse.urlparse(doc)
+		start = False
+		if(o.scheme == ""):
+			document = '../elife-api-prototype/sample-xml/' + doc
+			if(os.path.isfile(document)):
+				start = True
+		else:
+			start = True
+			
+		if(start):
 			response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
-	
+
 			logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
 
 if __name__ == "__main__":

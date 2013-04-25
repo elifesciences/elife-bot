@@ -33,7 +33,7 @@ Feature: ActivityToFluidinfo activity
     | env  				| document_name					        | filename					| doi
     | dev  				| test_data/elife00013.xml			| elife00013.xml		| 10.7554/eLife.00013
 
-	Scenario: Extract an article zip file, read and write the article XML file then parse it
+	Scenario: Optionally download S3 file, optionally extract a zip file, read and write the article XML file then parse it
     Given I have imported a settings module
 		And I have the settings environment <env>
 	  And I get the settings
@@ -46,5 +46,6 @@ Feature: ActivityToFluidinfo activity
 	  Then I get the DOI from the ArticleToFluidinfo article <doi>
 		
   Examples:
-    | env  				| document_name					        					| filename					| doi
-    | dev  				| test_data/elife_2013_00415.xml.zip			| elife00415.xml		| 10.7554/eLife.00415
+    | env  				| document_name																																| filename					| doi
+    | dev  				| test_data/elife_2013_00415.xml.zip																					| elife00415.xml		| 10.7554/eLife.00415
+    | dev  				| https://s3.amazonaws.com/elife-articles/00415/elife_2013_00415.xml.zip			| elife00415.xml		| 10.7554/eLife.00415

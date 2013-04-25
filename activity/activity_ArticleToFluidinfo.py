@@ -5,6 +5,8 @@ import datetime
 import importlib
 import os
 import zipfile
+import requests
+import urlparse
 
 import activity
 
@@ -43,12 +45,23 @@ class activity_ArticleToFluidinfo(activity.activity):
 		if(self.logger):
 			self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 		
-		# Set the document path
-		document = '../elife-api-prototype/sample-xml/' + data["data"]["document"]
-
+		filename = None
+		try:
+			o = urlparse.urlparse(data["data"]["document"])
+			if(o.scheme != ""):
+				document = data["data"]["document"]
+				path_array = o.path.split('/')
+				filename = path_array[-1]
+			else:
+				# Set the document path
+				document = '../elife-api-prototype/sample-xml/' + data["data"]["document"]
+				filename = data["data"]["document"]
+		except AttributeError:
+			pass
+		
 		# Read in the document and write it to the temp directory
 		self.read_document_to_content(document)
-		self.write_content_to_document(data["data"]["document"])
+		self.write_content_to_document(filename)
 
 		self.parse_document(self.document)
 		
@@ -60,6 +73,14 @@ class activity_ArticleToFluidinfo(activity.activity):
 	
 	def read_document_to_content(self, document):
 		mode = "r"
+		
+		try:
+			o = urlparse.urlparse(document)
+			if(o.scheme != ""):
+				document = self.download_document(document)
+				self.document = document
+		except AttributeError:
+			pass
 		
 		if(self.is_zip(document)):
 			document = self.unzip_document(document)
@@ -114,6 +135,35 @@ class activity_ArticleToFluidinfo(activity.activity):
 		else:
 			document = xml_filename
 		
+		return document
+
+	def download_document(self, document):
+		"""
+		Attempt to download the document
+		"""
+		o = urlparse.urlparse(document)
+		filename = ""
+		
+		if(o.scheme == "https" and o.netloc == "s3.amazonaws.com"):
+			
+			path_array = o.path.split('/')
+			filename = path_array[-1]
+			
+			r = requests.get(document, prefetch=False)
+			mode = "wb"
+			f = self.open_file_from_tmp_dir(filename, mode)
+			for block in r.iter_content(1024):
+				if not block:
+					break
+				f.write(block)
+			f.close()
+			
+		tmp_dir = self.get_tmp_dir()
+		if(tmp_dir):
+			document = tmp_dir + os.sep + filename
+		else:
+			document = filename
+
 		return document
 
 	def get_document(self):
