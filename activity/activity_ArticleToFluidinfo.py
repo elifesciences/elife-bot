@@ -4,6 +4,7 @@ import random
 import datetime
 import importlib
 import os
+import zipfile
 
 import activity
 
@@ -60,6 +61,10 @@ class activity_ArticleToFluidinfo(activity.activity):
 	def read_document_to_content(self, document):
 		mode = "r"
 		
+		if(self.is_zip(document)):
+			document = self.unzip_document(document)
+			self.document = document
+		
 		f = open(document, mode)
 		self.content = f.read()
 		f.close()
@@ -72,10 +77,50 @@ class activity_ArticleToFluidinfo(activity.activity):
 		f.close()
 		
 		# Reset the object document
-		if(self.tmp_dir):
-			self.document = self.tmp_dir + os.sep + filename
+		tmp_dir = self.get_tmp_dir()
+		if(tmp_dir):
+			self.document = tmp_dir + os.sep + filename
 		else:
 			self.document = filename
+			
+	def is_zip(self, document):
+		"""
+		Given a document name, determine if it a zip file
+		"""
+		fileName, fileExtension = os.path.splitext(document)
+		if(fileExtension == ".zip"):
+			return True
+		return False
+		
+	def unzip_document(self, document):
+		"""
+		Unzip the document if it is a zip,
+		and return the XML document name
+		"""
+		mode = "r"
+		tmp_dir = self.get_tmp_dir()
+		
+		z = zipfile.ZipFile(document)
+
+		xml_filename = None
+		for f in z.namelist():
+			z.extract(f, tmp_dir)
+			xml_filename = f
+		z.close()
+		
+		# Only handles one file at a time, for now
+		if(tmp_dir):
+			document = tmp_dir + os.sep + xml_filename
+		else:
+			document = xml_filename
+		
+		return document
+
+	def get_document(self):
+		"""
+		Return the object document name
+		"""
+		return self.document
 
 	def parse_document(self, document):
 		"""

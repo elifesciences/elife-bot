@@ -66,4 +66,15 @@ def write_the_content_from_ArticleToFluidinfo(step, filename):
 	world.activity_object.write_content_to_document(filename)
 	assert world.activity_object.document is not None, \
 		"Wrote document %s" % world.activity_object.document
+
+@step('I get the document name from ArticleToFluidinfo')
+def get_the_document_name_from_ArticleToFluidinfo(step):
+	world.document_name = world.activity_object.get_document()
+	assert world.document_name is not None, \
+		"Got document %s" % world.document_name
 	
+@step('I get the document name from ArticleToFluidinfo as (\S+)')
+def get_the_document_name_from_ArticleToFluidinfo_as(step, filename):
+	world.document_name = world.activity_object.get_document()
+	assert world.document_name == filename, \
+		"Got document %s" % world.document_name

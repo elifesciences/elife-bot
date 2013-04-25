@@ -33,6 +33,7 @@ def start(ENV = "dev"):
 	docs.append("elife00012.xml")
 	"""
 	docs.append("elife00013.xml")
+	#docs.append("elife_2013_00415.xml.zip")
 	"""
 	docs.append("elife00031.xml")
 	docs.append("elife00047.xml")
