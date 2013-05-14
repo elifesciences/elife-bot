@@ -28,6 +28,9 @@ class dev():
 	# Fluidinfo settings
 	fi_namespace = "elifesciences.org/api_dev"
 	
+	# SimpleDB settings
+	simpledb_S3File_domain = "S3File.dev"
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -47,6 +50,9 @@ class live():
 	
 	# Fluidinfo settings
 	fi_namespace = "elifesciences.org/api_v1"
+	
+	# SimpleDB settings
+	simpledb_S3File_domain = "S3File"
 	
 	# Logging
 	setLevel = "INFO"
