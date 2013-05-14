@@ -3,6 +3,7 @@ from boto.swf.layer1_decisions import Layer1Decisions
 import json
 import random
 import datetime
+import time
 
 """
 Amazon SWF workflow base class
@@ -150,7 +151,7 @@ class workflow(object):
 		"""
 		Given an activityType and/or activityID as the activity details, and
 		a decision response from SWF, determine whether the
-		acitivity was successfully run
+		activity was successfully run
 		"""
 	
 		if(activityType is None and activityID is None):
@@ -193,6 +194,23 @@ class workflow(object):
 		# Default
 		return False
 	
+	def last_activity_status(self, decision):
+		"""
+		Given a decision response from SWF, determine whether the
+		last run activity Failed or Completed
+		"""
+		status = None
+		# Traverse the array in reverse order
+		for event in decision["events"][::-1]:
+			if(event["eventType"] == "ActivityTaskCompleted"):
+				status = "ActivityTaskCompleted"
+				break
+			elif(event["eventType"] == "ActivityTaskFailed"):
+				status = "ActivityTaskFailed"
+				break
+				
+		return status
+	
 	def handle_nextPageToken(self):
 		# Quick test for nextPageToken
 		try:
@@ -225,6 +243,17 @@ class workflow(object):
 		except KeyError:
 			input = None
 		return input
+	
+	def rate_limit_failed_activity(self, decision):
+		"""
+		To slow down workflows with missing activity types,
+		if the previous activity failed, wait for a bit
+		"""
+		try:
+			if(self.last_activity_status(decision) == "ActivityTaskFailed"):
+				time.sleep(10)
+		except TypeError:
+			pass
 
 	def do_workflow(self, data = None):
 		"""
@@ -241,6 +270,7 @@ class workflow(object):
 				# Complete the workflow execution
 				self.complete_workflow()
 			else:
+				self.rate_limit_failed_activity(self.decision)
 				# 2. Get the next activity
 				next_activities = self.get_next_activities()
 				d = None

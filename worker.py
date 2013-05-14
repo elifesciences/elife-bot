@@ -78,6 +78,9 @@ def work(ENV = "dev"):
 							respond_completed(conn, logger, token, message)
 						
 					else:
+						reason = 'error: could not load object %s\n' % activity_name
+						detail = ''
+						respond_failed(conn, logger, token, detail, reason)
 						logger.info('error: could not load object %s\n' % activity_name)
 						
 		# Reset and loop
@@ -166,6 +169,15 @@ def respond_completed(conn, logger, token, message):
 	"""
 	out = conn.respond_activity_task_completed(token,str(message))
 	logger.info('respond_activity_task_completed returned %s' % out)
+
+def respond_failed(conn, logger, token, details, reason):
+	"""
+	Given an SWF connection and logger as resources,
+	the token to specify an accepted activity, details and a reason
+	to send, communicate with SWF that the activity failed
+	"""
+	out = conn.respond_activity_task_failed(token,str(details),str(reason))
+	logger.info('respond_activity_task_failed returned %s' % out)
 
 def start_single_thread(ENV):
 	"""
