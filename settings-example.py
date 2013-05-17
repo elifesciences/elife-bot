@@ -29,7 +29,8 @@ class dev():
 	fi_namespace = "elifesciences.org/api_dev"
 	
 	# SimpleDB settings
-	simpledb_S3File_domain = "S3File.dev"
+	simpledb_S3File_domain = "S3File_dev"
+	simpledb_S3FileLog_domain = "S3FileLog_dev"
 	
 	# Logging
 	setLevel = "INFO"
@@ -53,6 +54,7 @@ class live():
 	
 	# SimpleDB settings
 	simpledb_S3File_domain = "S3File"
+	simpledb_S3FileLog_domain = "S3FileLog"
 	
 	# Logging
 	setLevel = "INFO"

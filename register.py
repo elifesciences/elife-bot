@@ -29,7 +29,8 @@ def start(ENV = "dev"):
 	workflow_names.append("Ping")
 	workflow_names.append("Sum")
 	workflow_names.append("PublishArticle")
-
+	workflow_names.append("S3Monitor")
+	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
 		class_name = "workflow_" + workflow_name
@@ -50,6 +51,7 @@ def start(ENV = "dev"):
 	activity_names.append("PingWorker")
 	activity_names.append("Sum")
 	activity_names.append("ArticleToFluidinfo")
+	activity_names.append("S3Monitor")
 
 	for activity_name in activity_names:
 		# Import the activity libraries
