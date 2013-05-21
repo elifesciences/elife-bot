@@ -78,3 +78,25 @@ def get_the_document_name_from_ArticleToFluidinfo_as(step, filename):
 	world.document_name = world.activity_object.get_document()
 	assert world.document_name == filename, \
 		"Got document %s" % world.document_name
+	
+@step('I have the item name (\S+)')
+def have_the_item_name(step, item_name):
+	world.item_name = item_name
+	assert world.item_name is not None, \
+		"Got item name %s" % world.item_name
+	
+@step('I have the item attr last_modified_timestamp (\S+)')
+def have_the_item_attr_last_modified_timestamp(step, last_modified_timestamp):
+	world.item_attrs = {}
+	# Convert string to int to replicate real running action
+	world.item_attrs['last_modified_timestamp'] = int(last_modified_timestamp)
+	assert world.item_attrs is not None, \
+		"Got item attributes %s" % world.item_attrs
+	
+@step('I get the log_item_name from the S3Monitor (\S+)')
+def get_the_log_item_name_from_the_s3monitor(step, log_item_name):
+	world.log_item_name = world.activity_object.get_log_item_name(world.item_name, world.item_attrs)
+	assert world.log_item_name == log_item_name, \
+		"Got log_item_name %s" % world.log_item_name
+
+	
