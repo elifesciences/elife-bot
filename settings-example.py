@@ -29,8 +29,8 @@ class dev():
 	fi_namespace = "elifesciences.org/api_dev"
 	
 	# SimpleDB settings
-	simpledb_S3File_domain = "S3File_dev"
-	simpledb_S3FileLog_domain = "S3FileLog_dev"
+	simpledb_region = "us-east-1"
+	simpledb_domain_postfix = "_dev"
 	
 	# Logging
 	setLevel = "INFO"
@@ -53,8 +53,8 @@ class live():
 	fi_namespace = "elifesciences.org/api_v1"
 	
 	# SimpleDB settings
-	simpledb_S3File_domain = "S3File"
-	simpledb_S3FileLog_domain = "S3FileLog"
+	simpledb_region = "us-east-1"
+	simpledb_domain_postfix = ""
 	
 	# Logging
 	setLevel = "INFO"
