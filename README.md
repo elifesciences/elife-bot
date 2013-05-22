@@ -41,53 +41,36 @@ Alternatively, place your AWS credentials in a file named .boto, or alternate me
 
 # Local development with Vagrant
 
-At the time of this writing, Vagrant using Chef Solo is used to configure a local virtual machine with standard attributes for development. Cookbooks, recipes and roles for Chef are included in the repository to load locally.
+Vagrant is used to configure a local virtual machine with standard attributes for development. See the
+[elife-template-env][tmpl-env] repository for how to configure Vagrant.
 
-## Initial config (done once)
+[tmpl-env]: https://github.com/elifesciences/elife-template-env
 
-1. Download and install [Vagrant][vagrant].
-2. Define the base box (should download the machine image just once and then be reused):
+1. Start a local virtual machine with Vagrant, as specified in [elife-template-env][tmpl-env]. Depending on the recipes run, it may pull code automatically from the "elife-bot" and "elife-api-prototype" repositories. If the repositories were not pulled automatically:
 
-    vagrant box add base http://files.vagrantup.com/lucid32.box
-
-## Running Vagrant VM
-
-0. Create a directory for working out of, e.g. "/vagrant"
-1. Go into /vagrant directory in console.
-2. Run
-
-    vagrant init
-    vagrant up
-
-3. Normal loading may take about 2-3 minutes.
-4. When completed, you can login via [SSH][vagrant_ssh]
-
-    vagrant ssh
-
-4.5 You can access the shared folder between the vagrant file system and the user system through
-
-    ls ~/vagrant
-
-5. Simple test, using API prototype code:
-    
     git clone git://github.com/elifesciences/elife-api-prototype.git
     
+    git clone git://github.com/elifesciences/elife-bot.git
+
+2. To run tests, you must ensure the settings.py files exist and/or include the AWS credentials. At a minimum:
+
     cd elife-api-prototype
     
     cp settings-example.py settings.py
     
-    cd tests
+    cd elife-bot
+    
+    cp settings-example.py settings.py
+    
+    Edit the settings.py file to include your AWS credentials
+    
+3. Run tests:
+
+    cd elife-bot/tests
     
     lettuce
-
-6. To stop the VM, in console:
-
-    vagrant destroy
-
-
-[vagrant]: http://www.vagrantup.com/
-[vagrant_ssh]: http://docs.vagrantup.com/v1/docs/getting-started/ssh.html
-
+    
+    
 ## Amazon SWF workflow notes
 
-* As of the time of this writing, the decider will only handle a maximum of 1,000 event history items as part of a poll for decisions (1,000 being the maximum set by Amazon in one poll). When this becomes an issue, pagination using the nextPageToken can be implemented.
+* Deciders will handle more than the default 100 event history items returned by one polling request to SWF by following nextPageTokens until the complete event history is assembled.
