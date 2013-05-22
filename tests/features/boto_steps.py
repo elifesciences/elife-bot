@@ -146,5 +146,38 @@ def disconnect_from_amazon_swf(step):
 	# No disconnect required
 	pass
 
+@step('I have the simpledb region from the settings')
+def have_simpledb_region_from_the_settings(step):
+	assert world.settings.simpledb_region is not None, \
+		"Got simpledb_region %s" % world.settings.simpledb_region
+
+@step('I have imported the boto.sdb module')
+def import_boto_sdb_module(step):
+	imported = None
+	try:
+		import boto.sdb
+		world.boto.sdb = boto.sdb
+		imported = True
+	except:
+		imported = False
+	assert imported is True, \
+		"boto.sdb module was imported"
+
+@step('I connect to Amazon SimpleDB')
+def connect_to_amazon_simpledb(step):
+	world.db_conn = world.boto.sdb.connect_to_region(world.settings.simpledb_region, aws_access_key_id = world.settings.aws_access_key_id, aws_secret_access_key = world.settings.aws_secret_access_key)
+	assert world.db_conn is not None, \
+		"Connected to Amazon SimpleDB %s" % world.db_conn
+	
+@step('I can list the SimpleDB domains')
+def list_the_simpledb_domains(step):
+	world.sdb_domains = world.db_conn.get_all_domains()
+	assert world.sdb_domains is not None, \
+		"Got sdb domains %s" % world.sdb_domains
+
+@step('Finally I can disconnect from Amazon SimpleDB')
+def disconnect_from_amazon_simpledb(step):
+	# No disconnect required
+	pass
 	  
 		
