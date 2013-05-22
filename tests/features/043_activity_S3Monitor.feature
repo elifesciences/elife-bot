@@ -27,7 +27,7 @@ Feature: S3Monitor activity
 		And I have the timestamp <timestamp>
 		And I have the date format <date_format>
 		And I get the expanded date attributes from S3Monitor using a timestamp
-		#Then I have the timestamp attribute <timestamp>
+		Then I have the timestamp attribute <timestamp>
 		And I have the date attribute <date>
 		And I have the year attribute <year>
 		And I have the month attribute <month>
