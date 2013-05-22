@@ -114,15 +114,12 @@ class activity_S3Monitor(activity.activity):
 		item_attrs['bucket_name'] = bucket_name
 		
 		# Logging the activity runtime
+		# Get extended _runtime values
 		if(_runtime_timestamp):
-			item_attrs['_runtime_timestamp'] = _runtime_timestamp
-			time_tuple = time.gmtime(_runtime_timestamp)
-			item_attrs['_runtime_date'] = time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time_tuple)
-			item_attrs['_runtime_year'] = time.strftime("%Y", time_tuple)
-			item_attrs['_runtime_month'] = time.strftime("%m", time_tuple)
-			item_attrs['_runtime_day'] = time.strftime("%d", time_tuple)
-			item_attrs['_runtime_time'] = time.strftime("%H:%M:%S", time_tuple)
-		
+			date_attrs = self.get_expanded_date_attributes(base_name = '_runtime', date_format = "%Y-%m-%dT%H:%M:%S.000Z", timestamp = _runtime_timestamp, date_string = None)
+			for k, v in date_attrs.items():
+				item_attrs[k] = v
+
 		for folder in folders:
 			item_name = bucket_name + delimiter + folder.name
 			#print item_name
@@ -170,17 +167,12 @@ class activity_S3Monitor(activity.activity):
 					item_attrs[attr_name] = string_value
 					#print attr_name + ' = ' + item_attrs[attr_name]
 				
-			# Extended last_modified values
+			# Get extended last_modified values
 			# Example format: 2013-01-26T23:48:28.000Z
 			if(item_attrs['last_modified']):
-				date_string = time.strptime(item_attrs['last_modified'], "%Y-%m-%dT%H:%M:%S.000Z")
-				last_modified_timestamp = calendar.timegm(date_string)
-				item_attrs['last_modified_timestamp'] = last_modified_timestamp
-				time_tuple = time.gmtime(last_modified_timestamp)
-				item_attrs['last_modified_year'] = time.strftime("%Y", time_tuple)
-				item_attrs['last_modified_month'] = time.strftime("%m", time_tuple)
-				item_attrs['last_modified_day'] = time.strftime("%d", time_tuple)
-				item_attrs['last_modified_time'] = time.strftime("%H:%M:%S", time_tuple)
+				date_attrs = self.get_expanded_date_attributes(base_name = 'last_modified', date_format = "%Y-%m-%dT%H:%M:%S.000Z", timestamp = None, date_string = item_attrs['last_modified'])
+				for k, v in date_attrs.items():
+					item_attrs[k] = v
 
 			if(item is None):
 				# Create the item
@@ -201,6 +193,34 @@ class activity_S3Monitor(activity.activity):
 						# Create the new attribute
 						item.add_value(k, v)
 				item.save()
+				
+	def get_expanded_date_attributes(self, base_name = '', date_format = "%Y-%m-%dT%H:%M:%S.000Z", timestamp = None, date_string = None):
+		"""
+		Given a base_name as an identifier string, and either a timestamp or a
+		date_string value, slice and dice the date into an array of attributes
+		to be stored. Timestamp (UNIX seconds, GMT timezone) takes precedence over
+		a date string if both are supplied
+		"""
+		date_attrs = {}
+		
+		if(timestamp is None and date_string is None):
+			return None
+		
+		if(timestamp is None and date_string is not None):
+			# Only supplied date_string, parse a timestamp
+			date_str = time.strptime(date_string, date_format)
+			timestamp = calendar.timegm(date_str)
+			
+		time_tuple = time.gmtime(timestamp)
+
+		date_attrs[base_name + '_timestamp'] = timestamp
+		date_attrs[base_name + '_date']      = time.strftime(date_format, time_tuple)
+		date_attrs[base_name + '_year']      = time.strftime("%Y", time_tuple)
+		date_attrs[base_name + '_month']     = time.strftime("%m", time_tuple)
+		date_attrs[base_name + '_day']       = time.strftime("%d", time_tuple)
+		date_attrs[base_name + '_time']      = time.strftime("%H:%M:%S", time_tuple)
+		
+		return date_attrs
 				
 	def get_log_item_name(self, item_name, item_attrs):
 		"""

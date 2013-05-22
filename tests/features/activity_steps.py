@@ -99,4 +99,63 @@ def get_the_log_item_name_from_the_s3monitor(step, log_item_name):
 	assert world.log_item_name == log_item_name, \
 		"Got log_item_name %s" % world.log_item_name
 
+@step('I have the base name (\S+)')
+def have_the_base_name(step, base_name):
+	world.base_name = base_name
+	assert world.base_name is not None, \
+		"Got base_name %s" % world.base_name
+
+@step('I have the timestamp (\S+)')
+def have_the_timestamp(step, timestamp):
+	# Takes a float, apparently
+	world.timestamp = float(timestamp)
+	assert world.timestamp is not None, \
+		"Got timestamp %f" % world.timestamp
+
+@step('I have the date format (\S+)')
+def have_the_date_format(step, date_format):
+	world.date_format = date_format
+	assert world.date_format is not None, \
+		"Got date_format %s" % world.date_format
+
+@step('I get the expanded date attributes from S3Monitor using a timestamp')
+def get_the_expanded_date_attributes_from_S3Monitor_using_a_timestamp(step):
+	world.date_attrs = world.activity_object.get_expanded_date_attributes(world.base_name, world.date_format, world.timestamp)
+	assert world.date_attrs is not None, \
+		"Got date_attrs %s" % world.date_attrs
+
+@step('I have the timestamp attribute (\S+)')
+def have_the_timestamp_attribute(step, timestamp):
+	key_name = world.base_name + '_timestamp'
+	assert world.date_attrs[key_name] == float(timestamp), \
+		"Got timestamp %s" % world.date_attrs[key_name]
 	
+@step('I have the date attribute (\S+)')
+def have_the_date_attribute(step, date):
+	key_name = world.base_name + '_date'
+	assert world.date_attrs[key_name] == date, \
+		"Got date %s" % world.date_attrs[key_name]
+	
+@step('I have the year attribute (\S+)')
+def have_the_year_attribute(step, year):
+	key_name = world.base_name + '_year'
+	assert world.date_attrs[key_name] == year, \
+		"Got date %s" % world.date_attrs[key_name]
+	
+@step('I have the month attribute (\S+)')
+def have_the_month_attribute(step, month):
+	key_name = world.base_name + '_month'
+	assert world.date_attrs[key_name] == month, \
+		"Got date %s" % world.date_attrs[key_name]
+	
+@step('I have the day attribute (\S+)')
+def have_the_day_attribute(step, day):
+	key_name = world.base_name + '_day'
+	assert world.date_attrs[key_name] == day, \
+		"Got date %s" % world.date_attrs[key_name]
+	
+@step('I have the time attribute (\S+)')
+def have_the_time_attribute(step, time):
+	key_name = world.base_name + '_time'
+	assert world.date_attrs[key_name] == time, \
+		"Got time %s" % world.date_attrs[key_name]

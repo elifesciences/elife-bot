@@ -145,7 +145,7 @@ def start(ENV = "dev"):
 	docs.append("https://s3.amazonaws.com/elife-articles/00572/elife_2013_00572.xml.zip")
 	docs.append("https://s3.amazonaws.com/elife-articles/00573/elife_2013_00573.xml.zip")
 	docs.append("https://s3.amazonaws.com/elife-articles/00577/elife_2013_00577.xml.zip")
-	docs.append("https://s3.amazonaws.com/elife-articles/00592/elife_2013_00592.xml.zip")
+	docs.append("https://s3.amazonaws.com/elife-articles/00592/elife_2013_00592.xml.r1.zip")
 	docs.append("https://s3.amazonaws.com/elife-articles/00593/elife_2013_00593.xml.zip")
 	docs.append("https://s3.amazonaws.com/elife-articles/00605/elife_2013_00605.xml.zip")
 	docs.append("https://s3.amazonaws.com/elife-articles/00615/elife_2013_00615.xml.zip")
@@ -168,10 +168,11 @@ def start(ENV = "dev"):
 	docs.append("https://s3.amazonaws.com/elife-articles/00421/elife_2013_00421.xml.zip")
 	docs.append("https://s3.amazonaws.com/elife-articles/00422/elife_2013_00422.xml.zip")
 	docs.append("https://s3.amazonaws.com/elife-articles/00467/elife_2013_00467.xml.zip")
-	docs.append("https://s3.amazonaws.com/elife-articles/00631/elife_2013_00631.xml.zip")
+	docs.append("https://s3.amazonaws.com/elife-articles/00631/elife_2013_00631.xml.r1.zip")
 	docs.append("https://s3.amazonaws.com/elife-articles/00757/elife_2013_00757.xml.zip")
-	docs.append("https://s3.amazonaws.com/elife-articles/00804/elife_2013_00804.xml.zip")
+	docs.append("https://s3.amazonaws.com/elife-articles/00804/elife_2013_00804.xml.r1.zip")
 	docs.append("https://s3.amazonaws.com/elife-articles/00842/elife_2013_00842.xml.zip")
+	docs.append("https://s3.amazonaws.com/elife-articles/00855/elife_2013_00855.xml.zip")
 	"""
 	"""
 	docs.append("https://s3.amazonaws.com/elife-articles/00473/elife_2013_00473.xml.zip")
