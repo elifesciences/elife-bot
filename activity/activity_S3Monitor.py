@@ -77,17 +77,20 @@ class activity_S3Monitor(activity.activity):
 		Existing attributes for the item are not deleted.
 		"""
 		
-		item_attrs = {}
-		item_attrs['bucket_name'] = bucket_name
+		base_item_attrs = {}
+		base_item_attrs['bucket_name'] = bucket_name
 		
 		# Logging the activity runtime
 		# Get extended _runtime values
 		if(_runtime_timestamp):
 			date_attrs = self.get_expanded_date_attributes(base_name = '_runtime', date_format = "%Y-%m-%dT%H:%M:%S.000Z", timestamp = _runtime_timestamp, date_string = None)
 			for k, v in date_attrs.items():
-				item_attrs[k] = v
+				base_item_attrs[k] = v
 
 		for folder in folders:
+			# Reset attributes
+			item_attrs = base_item_attrs
+			
 			item_name = bucket_name + delimiter + folder.name
 			#print item_name
 			item = self.db.get_item("S3File", item_name, consistent_read=True)
@@ -109,6 +112,9 @@ class activity_S3Monitor(activity.activity):
 				item.save()
 				
 		for key in keys:
+			# Reset attributes
+			item_attrs = base_item_attrs
+			
 			item_name = bucket_name + delimiter + key.name
 			#print item_name
 			item = self.db.get_item("S3File", item_name, consistent_read=True)
@@ -218,9 +224,13 @@ class activity_S3Monitor(activity.activity):
 			diff = True
 		else:
 			# Got a log item, compare attributes to determine whether it is modified
-			if(item['name'] == log_item['name'] and
-				 item['last_modified_timestamp'] != item_attrs['last_modified_timestamp']):
-				diff = True
+			try:
+				if(item['item_name'] == log_item['item_name'] and
+					 item['last_modified_timestamp'] != item_attrs['last_modified_timestamp']):
+					diff = True
+			except KeyError:
+				# If last_modified does not exist
+				diff = False
 		
 		return diff
 				
