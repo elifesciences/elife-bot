@@ -8,7 +8,7 @@ Feature: Workflow class can be instantiated
 		And I have the settings environment <env>
 	  And I get the settings
 		And I have the workflow name <workflow_name>
-		And I have a workflow object
+		When I have a workflow object
 	  Then I can get a domain from the workflow
 		And I can get a task_list from the workflow
 		And I get the workflow name <workflow_name>

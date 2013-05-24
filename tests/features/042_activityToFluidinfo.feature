@@ -10,7 +10,7 @@ Feature: ActivityToFluidinfo activity
 		And I have the activity name ArticleToFluidinfo
 		And I have an activity object
     And I have the document name <document_name>
-		And I parse the document name with ArticleToFluidinfo
+		When I parse the document name with ArticleToFluidinfo
 	  Then I get the DOI from the ArticleToFluidinfo article <doi>
 		
   Examples:
@@ -24,7 +24,7 @@ Feature: ActivityToFluidinfo activity
 		And I have the activity name ArticleToFluidinfo
 		And I have an activity object
     And I have the document name <document_name>
-		And I read the file named document name with ArticleToFluidinfo
+		When I read the file named document name with ArticleToFluidinfo
 		And I write the content from ArticleToFluidinfo to <filename>
 		And I parse the document name with ArticleToFluidinfo
 	  Then I get the DOI from the ArticleToFluidinfo article <doi>
@@ -40,7 +40,7 @@ Feature: ActivityToFluidinfo activity
 		And I have the activity name ArticleToFluidinfo
 		And I have an activity object
     And I have the document name <document_name>
-		And I read the file named document name with ArticleToFluidinfo
+		When I read the file named document name with ArticleToFluidinfo
 		And I get the document name from ArticleToFluidinfo
 		And I parse the document name with ArticleToFluidinfo
 	  Then I get the DOI from the ArticleToFluidinfo article <doi>
