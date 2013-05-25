@@ -27,11 +27,11 @@ def get_the_settings(step):
 	assert world.settings is not None, \
 		"Got settings"
 
-@step('Then I have a setting for (\S+)')
+@step('I have a setting for (\S+)')
 def have_a_setting(step, identifier):
-	indent = eval("world.settings." + identifier)
-	assert indent is not None, \
-		"Got setting %s" % indent
+	ident = eval("world.settings." + identifier)
+	assert ident is not None, \
+		"Got setting %s" % ident
 	
 @step('I have imported the boto module')
 def import_boto_module(step):
