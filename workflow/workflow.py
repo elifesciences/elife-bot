@@ -80,11 +80,21 @@ class workflow(object):
 		Check each step was completed to determine if workflow is complete
 		"""
 		for step in self.definition["steps"]:
-			activityType = step["activity_type"]
-			activityID = step["activity_id"]
-			
-			if(self.activity_status(self.decision, activityType, activityID) == False):
-				return False
+			# Check for single or multiple activities in the step
+			if(type(step) == list):
+				# Is a list of activities to complete in parallel
+				for p_activity in step:
+					activityType = p_activity["activity_type"]
+					activityID = p_activity["activity_id"]
+					if(self.activity_status(self.decision, activityType, activityID) == False):
+						return False
+			else:
+				# A single activity
+				activityType = step["activity_type"]
+				activityID = step["activity_id"]
+				
+				if(self.activity_status(self.decision, activityType, activityID) == False):
+					return False
 			
 		return True
 
@@ -96,13 +106,37 @@ class workflow(object):
 		activities = []
 		
 		for step in self.definition["steps"]:
-			activityType = step["activity_type"]
-			activityID = step["activity_id"]
-			
-			if(self.activity_status(self.decision, activityType, activityID) == False):
-				# Only add one activity at a time, for now
-				if(len(activities) == 0):
+			# Check for single or multiple activities in the step
+			if(type(step) == list):
+				# Is a list of activities to complete in parallel
+				# Check if the entire list of activities is completed
+				all_completed = True
+				none_started = True
+				for p_activity in step:
+					activityType = p_activity["activity_type"]
+					activityID = p_activity["activity_id"]
+					if(self.activity_status(self.decision, activityType, activityID) == False):
+						all_completed = False
+					if(self.activity_status(self.decision, activityType, activityID) == True):
+						none_started = False
+				if(all_completed == False and none_started == True):
+					# A fresh step not started yet, add the activities
+					for p_activity in step:
+						activities.append(p_activity)
+				
+			else:
+				# A single activity
+				activityType = step["activity_type"]
+				activityID = step["activity_id"]
+				
+				if(self.activity_status(self.decision, activityType, activityID) == False):
+					# Only add one activity at a time, for now
+					#if(len(activities) == 0):
 					activities.append(step)
+			
+			# Return the activities not completed yet	
+			if(len(activities) > 0):
+				return activities
 
 		return activities
 		
