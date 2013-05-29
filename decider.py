@@ -65,11 +65,8 @@ def decide(ENV = "dev"):
 						# Instantiate the workflow object
 						workflow_object = get_workflow_object(workflow_name, settings, logger, conn, token, decision, maximum_page_size)
 				
-						# Get the data to pass
-						data = get_input(decision)
-						
 						# Process the workflow
-						success = workflow_object.do_workflow(data)
+						success = workflow_object.do_workflow()
 						
 						# Print the result to the log
 						logger.info('%s success %s' % (workflow_name, success))
