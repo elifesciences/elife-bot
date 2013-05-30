@@ -190,19 +190,26 @@ class workflow(object):
 	
 		if(activityType is None and activityID is None):
 			return false
-		
+
 		for event in decision["events"]:
 			eventId = None
-			# Find the first matching eventID for the activityType
-			if(activityType is not None):
+			# Find the first matching eventID for the activityType and/or activityID
+			if(activityType is not None and activityID is not None):
+				try:
+					if(event["activityTaskScheduledEventAttributes"]["activityType"]["name"] == activityType
+						 and event["activityTaskScheduledEventAttributes"]["activityId"] == activityID):
+						eventId = event["eventId"]
+				except KeyError:
+					pass
+			elif(activityType is not None and activityID is None):
 				try:
 					if(event["activityTaskScheduledEventAttributes"]["activityType"]["name"] == activityType):
 						eventId = event["eventId"]
 				except KeyError:
 					pass
-			if(activityID is not None):
+			elif(activityID is not None and activityType is None):
 				try:
-					if(event["activityTaskScheduledEventAttributes"]["activityType"]["activityID"] == activityID):
+					if(event["activityTaskScheduledEventAttributes"]["activityId"] == activityID):
 						eventId = event["eventId"]
 				except KeyError:
 					pass
