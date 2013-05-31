@@ -7,7 +7,7 @@ import datetime
 import workflow
 
 """
-Sum workflow
+S3Monitor workflow
 """
 
 class workflow_S3Monitor(workflow.workflow):

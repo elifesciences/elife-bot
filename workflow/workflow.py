@@ -191,47 +191,47 @@ class workflow(object):
 		if(activityType is None and activityID is None):
 			return false
 
+		eventId_list = []
+
 		for event in decision["events"]:
 			eventId = None
-			# Find the first matching eventID for the activityType and/or activityID
+			# Find the all matching eventID for the activityType and/or activityID
 			if(activityType is not None and activityID is not None):
 				try:
 					if(event["activityTaskScheduledEventAttributes"]["activityType"]["name"] == activityType
 						 and event["activityTaskScheduledEventAttributes"]["activityId"] == activityID):
-						eventId = event["eventId"]
+						eventId_list.append(event["eventId"])
 				except KeyError:
 					pass
 			elif(activityType is not None and activityID is None):
 				try:
 					if(event["activityTaskScheduledEventAttributes"]["activityType"]["name"] == activityType):
-						eventId = event["eventId"]
+						eventId_list.append(event["eventId"])
 				except KeyError:
 					pass
 			elif(activityID is not None and activityType is None):
 				try:
 					if(event["activityTaskScheduledEventAttributes"]["activityId"] == activityID):
-						eventId = event["eventId"]
+						eventId_list.append(event["eventId"])
 				except KeyError:
 					pass
 			
-			if(eventId is not None):
-				break
-			
 		# Now if we have an eventId, find if in the decision history is was
 		#  successfully completed
-		if(eventId == None):
+		if(len(eventId) <= 0):
 			return False
 		for event in decision["events"]:
-			# Find the first matching eventID for the activityType
-			try:
-				if(event["activityTaskCompletedEventAttributes"]["scheduledEventId"] == eventId):
-					# Found matching data, now check completion
-					if(event["eventType"] == "ActivityTaskCompleted"):
-						# Good!
-						return True
-					break
-			except KeyError:
-				pass
+			for eventId in eventId_list:
+				# Find the first matching eventID for the activityType
+				try:
+					if(event["activityTaskCompletedEventAttributes"]["scheduledEventId"] == eventId):
+						# Found matching data, now check completion
+						if(event["eventType"] == "ActivityTaskCompleted"):
+							# Good!
+							return True
+						break
+				except KeyError:
+					pass
 		# Default
 		return False
 	
