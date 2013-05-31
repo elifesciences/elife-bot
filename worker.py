@@ -76,6 +76,9 @@ def work(ENV = "dev"):
 						if(success == True):
 							message = activity_object.result
 							respond_completed(conn, logger, token, message)
+						elif(success == False):
+							message = activity_object.result
+							respond_failed(conn, logger, token, message)
 						
 					else:
 						reason = 'error: could not load object %s\n' % activity_name
@@ -167,8 +170,11 @@ def respond_completed(conn, logger, token, message):
 	the token to specify an accepted activity and a message
 	to send, communicate with SWF that the activity was completed
 	"""
-	out = conn.respond_activity_task_completed(token,str(message))
-	logger.info('respond_activity_task_completed returned %s' % out)
+	try:
+		out = conn.respond_activity_task_completed(token,str(message))
+		logger.info('respond_activity_task_completed returned %s' % out)
+	except boto.exception.SWFResponseError:
+		logger.info('SWFResponseError: SWFResponseError: 400 Bad Request on respond_completed')
 
 def respond_failed(conn, logger, token, details, reason):
 	"""
@@ -176,8 +182,11 @@ def respond_failed(conn, logger, token, details, reason):
 	the token to specify an accepted activity, details and a reason
 	to send, communicate with SWF that the activity failed
 	"""
-	out = conn.respond_activity_task_failed(token,str(details),str(reason))
-	logger.info('respond_activity_task_failed returned %s' % out)
+	try:
+		out = conn.respond_activity_task_failed(token,str(details),str(reason))
+		logger.info('respond_activity_task_failed returned %s' % out)
+	except boto.exception.SWFResponseError:
+		logger.info('SWFResponseError: SWFResponseError: 400 Bad Request on respond_failed')
 
 def start_single_thread(ENV):
 	"""
