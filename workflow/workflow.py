@@ -218,7 +218,7 @@ class workflow(object):
 			
 		# Now if we have an eventId, find if in the decision history is was
 		#  successfully completed
-		if(len(eventId) <= 0):
+		if(len(eventId_list) <= 0):
 			return False
 		for event in decision["events"]:
 			for eventId in eventId_list:
