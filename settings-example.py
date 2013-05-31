@@ -32,6 +32,10 @@ class dev():
 	simpledb_region = "us-east-1"
 	simpledb_domain_postfix = "_dev"
 	
+	# Converter settings
+	converter_url = ""
+	converter_token = "abcd"
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -51,6 +55,10 @@ class live():
 	
 	# Fluidinfo settings
 	fi_namespace = "elifesciences.org/api_v1"
+	
+	# Converter settings
+	converter_url = ""
+	converter_token = "abcd"
 	
 	# SimpleDB settings
 	simpledb_region = "us-east-1"
