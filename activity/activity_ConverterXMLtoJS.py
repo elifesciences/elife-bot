@@ -56,7 +56,11 @@ class activity_ConverterXMLtoJS(activity.activity):
 
 		if(r.status_code == requests.codes.ok):
 			# Good, now we can do a get request
-			get_json_url = self.settings.converter_url + '/documents/' + elife_id + '?callback=handleDoc'
+			
+			# Wait briefly for the converter to process the PUT completely
+			time.sleep(5)
+			
+			get_json_url = self.settings.converter_url + '/documents/' + elife_id
 			get_jsonp_url = self.settings.converter_url + '/documents/' + elife_id + '?callback=handleDoc'
 			
 			json_s3key = '/documents/elife/' + elife_id + '.json'
