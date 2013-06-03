@@ -94,6 +94,22 @@ class activity(object):
 
 		return workflowId
 
+	def get_activityId(self):
+		"""
+		Get the activityId from the SWF activity_task
+		if it is available
+		"""
+		activityId = None
+		if(self.activity_task is None):
+			return None
+		
+		try:
+			activityId = self.activity_task["activityId"]
+		except KeyError:
+			activityId = None
+
+		return activityId
+
 	def make_tmp_dir(self):
 		"""
 		Check or create temporary directory for this activity
@@ -108,10 +124,15 @@ class activity(object):
 		# Create a new directory specifically for this activity
 		dir_name = datetime.datetime.utcnow().strftime('%Y-%m-%d.%H.%M.%S')
 		workflowId = self.get_workflowId()
+		activityId = self.get_activityId()
 		if(workflowId):
 			# Use regular expression to strip out messy symbols
 			workflowId_safe = re.sub(r'\W', '', workflowId)
 			dir_name += '.' + workflowId_safe
+		if(activityId):
+			# Use regular expression to strip out messy symbols
+			activityId_safe = re.sub(r'\W', '', activityId)
+			dir_name += '.' + activityId_safe
 		
 		if(self.tmp_base_dir):
 			full_dir_name = self.tmp_base_dir + os.sep + dir_name
