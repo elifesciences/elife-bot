@@ -31,7 +31,8 @@ def start(ENV = "dev"):
 	workflow_names.append("PublishArticle")
 	workflow_names.append("S3Monitor")
 	workflow_names.append("LensArticlePublish")
-
+	workflow_names.append("LensIndexPublish")
+	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
 		class_name = "workflow_" + workflow_name
@@ -55,6 +56,9 @@ def start(ENV = "dev"):
 	activity_names.append("S3Monitor")
 	activity_names.append("UnzipArticleXML")
 	activity_names.append("ConverterXMLtoJS")
+	activity_names.append("LensDocumentsJS")
+	activity_names.append("LensXMLFilesList")
+	activity_names.append("LensCDNInvalidation")
 
 	for activity_name in activity_names:
 		# Import the activity libraries
