@@ -86,6 +86,8 @@ class activity_LensCDNInvalidation(activity.activity):
     url = 'documents/elife/documents.js'
     documents.append(url)
 
+    # Disabled invalidating all files as the default, can provide this as an option later
+    """
     for x in xml_item_list:
       doi_id = str(x['name']).split("/")[0]
       url = 'documents/elife/' + doi_id + '.json'
@@ -93,5 +95,6 @@ class activity_LensCDNInvalidation(activity.activity):
 
       url = 'documents/elife/' + doi_id + '.js'
       documents.append(url)
+    """
     
     return documents
