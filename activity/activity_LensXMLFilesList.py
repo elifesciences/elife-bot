@@ -50,7 +50,7 @@ class activity_LensXMLFilesList(activity.activity):
     xml_list_content = self.get_xml_list()
     
     filename = 'xml_files.txt'
-    mode = "w+"
+    mode = "wb"
     f = self.fs.open_file_from_tmp_dir(filename, mode)
     f.write(xml_list_content)
     f.close
@@ -66,9 +66,17 @@ class activity_LensXMLFilesList(activity.activity):
     # Create S3 key and save the file there
     s3key = boto.s3.key.Key(bucket)
     s3key.key = filename
+    # Disabled using set_contents_from_filename since it was unreliably stopping for this one file
+    """
     full_filename = self.get_tmp_dir() + os.sep + filename
     s3key.set_contents_from_filename(full_filename, replace=True)
-
+    """
+    mode = "rb"
+    f = self.fs.open_file_from_tmp_dir(filename, mode)
+    size = s3key.set_contents_from_file(f, replace=True)
+    f.close
+    #print size
+    
     if(self.logger):
       self.logger.info('LensXMLFilesList: %s' % filename)
     
