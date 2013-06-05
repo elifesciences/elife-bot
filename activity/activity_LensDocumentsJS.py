@@ -45,7 +45,7 @@ class activity_LensDocumentsJS(activity.activity):
     # We can do a get request
     
     get_json_url = self.settings.converter_url + '/documents'
-    get_jsonp_url = self.settings.converter_url + '/documents' + '?callback=handleDoc'
+    get_jsonp_url = self.settings.converter_url + '/documents' + '?callback=handleDocList'
       
     json_s3key = '/documents/elife/documents.json'
     jsonp_s3key = '/documents/elife/documents.js'
