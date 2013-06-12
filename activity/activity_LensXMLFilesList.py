@@ -88,7 +88,7 @@ class activity_LensXMLFilesList(activity.activity):
     """
     content = ""
     
-    xml_item_list = self.db.elife_get_article_S3_file_items(file_data_type = "xml", latest = "True")
+    xml_item_list = self.db.elife_get_article_S3_file_items(file_data_type = "xml", latest = True)
     sources = {}
     documents = []
     for x in xml_item_list:
