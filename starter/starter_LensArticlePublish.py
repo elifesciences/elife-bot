@@ -61,7 +61,7 @@ def start(ENV = "dev"):
 
 	db = dblib.SimpleDB(settings)
 	db.connect()
-	xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "xml", latest = "True")
+	xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "xml", latest = True)
 	for x in xml_item_list:
 		tmp = {}
 		elife_id = str(x['name']).split("/")[0]
