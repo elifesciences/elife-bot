@@ -36,6 +36,10 @@ class dev():
 	converter_url = ""
 	converter_token = "abcd"
 	
+	# SES settings
+	ses_region = "us-east-1"
+	ses_sender_email = "sender@example.com"
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -63,6 +67,10 @@ class live():
 	# SimpleDB settings
 	simpledb_region = "us-east-1"
 	simpledb_domain_postfix = ""
+	
+	# SES settings
+	ses_region = "us-east-1"
+	ses_sender_email = "sender@example.com"
 	
 	# Logging
 	setLevel = "INFO"
