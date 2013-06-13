@@ -39,6 +39,7 @@ class dev():
 	# SES settings
 	ses_region = "us-east-1"
 	ses_sender_email = "sender@example.com"
+	ses_admin_email = "admin@example.com"
 	
 	# Logging
 	setLevel = "INFO"
@@ -71,6 +72,7 @@ class live():
 	# SES settings
 	ses_region = "us-east-1"
 	ses_sender_email = "sender@example.com"
+	ses_admin_email = "admin@example.com"
 	
 	# Logging
 	setLevel = "INFO"
