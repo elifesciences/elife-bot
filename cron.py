@@ -89,7 +89,8 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       s.start(ENV = ENV, workflow = "S3Monitor")
     elif(starter_name == "starter_AdminEmail"):
       s.start(ENV = ENV, workflow = "AdminEmail")
-  
+    elif(starter_name == "cron_NewS3XML"):
+      s.start(ENV = ENV)
   
 if __name__ == "__main__":
 
