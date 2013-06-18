@@ -37,6 +37,7 @@ class dev():
 	converter_token = "abcd"
 	
 	# SES settings
+	# email needs to be verified by AWS
 	ses_region = "us-east-1"
 	ses_sender_email = "sender@example.com"
 	ses_admin_email = "admin@example.com"
@@ -70,6 +71,7 @@ class live():
 	simpledb_domain_postfix = ""
 	
 	# SES settings
+	# email needs to be verified by AWS
 	ses_region = "us-east-1"
 	ses_sender_email = "sender@example.com"
 	ses_admin_email = "admin@example.com"
