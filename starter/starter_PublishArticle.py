@@ -100,8 +100,11 @@ if __name__ == "__main__":
   # Add options
   parser = OptionParser()
   parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
+  parser.add_option("-u", "--last-updated-since", default=None, action="store", type="string", dest="last_updated_since", help="specify the datetime for last_updated_since")
   (options, args) = parser.parse_args()
   if options.env: 
     ENV = options.env
+  if options.last_updated_since: 
+    last_updated_since = options.last_updated_since
 
-  start(ENV)
+  start(ENV, last_updated_since = last_updated_since)
