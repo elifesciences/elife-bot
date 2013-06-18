@@ -51,6 +51,17 @@ class workflow_LensIndexPublish(workflow.workflow):
 					"start_to_close_timeout": 300
 				},
 				{
+					"activity_type": "WorkflowConflictCheck",
+					"activity_id": "WorkflowConflictCheck_LensIndexPublish",
+					"version": "1",
+					"input": {"data": {"workflow_name": "LensArticlePublish", "workflow_version": "1" }},
+					"control": None,
+					"heartbeat_timeout": 30,
+					"schedule_to_close_timeout": 60*30,
+					"schedule_to_start_timeout": 30,
+					"start_to_close_timeout": 60*30
+				},
+				{
 					"activity_type": "LensXMLFilesList",
 					"activity_id": "LensXMLFilesList",
 					"version": "1",
