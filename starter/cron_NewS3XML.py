@@ -65,7 +65,10 @@ def start(ENV = "dev"):
     s.start(ENV = ENV, all = True)
     
     # Start a LensIndexPublish starter
-    # To do
+    module_name = "starter.starter_LensIndexPublish"
+    importlib.import_module(module_name)
+    s = eval(module_name)
+    s.start(ENV = ENV, all = True)
 
 
 def start_ping_marker(workflow_id, ENV = "dev"):
