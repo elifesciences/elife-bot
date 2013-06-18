@@ -164,3 +164,98 @@ class SWFMeta(object):
         latest_startTimestamp = execution['startTimestamp']
     
     return latest_startTimestamp
+
+  def get_open_workflow_executionInfos(self, domain = None, workflow_id = None, workflow_name = None, workflow_version = None, oldest_date = None, latest_date = None, maximum_page_size = 100):
+    """
+    Get a list of open running workflow executions from SWF, limited to 90 days by Amazon,
+    for the criteria supplied
+    Relies on boto.swf.list_open_workflow_executions with some wrappers and
+    handling of the nextPageToken if encountered
+    """
+    if(self.conn is None):
+      self.connect()
+      
+    if(domain is None):
+      domain = self.settings.domain
+
+    # Use now as the start_latest_date if not supplied
+    if(latest_date is None):
+      latest_date = calendar.timegm(time.gmtime())
+    # Use full 90 day history if start_oldest_date is not supplied
+    if(oldest_date is None):
+      oldest_date = latest_date - (60*60*24*90)
+
+    # Still need to handle the nextPageToken
+    infos = self.conn.list_open_workflow_executions(
+      domain            = domain,
+      workflow_id       = workflow_id,
+      workflow_name     = workflow_name,
+      workflow_version  = workflow_version,
+      oldest_date       = oldest_date,
+      latest_date       = latest_date,
+      maximum_page_size = maximum_page_size)
+
+    # Check if there is no nextPageToken, if there is none
+    #  return the result, nothing to page
+    next_page_token = None
+    try:
+      next_page_token = infos["nextPageToken"]
+    except KeyError:
+      next_page_token = None
+
+    # Continue, we have a nextPageToken. Assemble a full array of events by continually polling
+    if(next_page_token is not None):
+      all_infos = infos["executionInfos"]
+      while(next_page_token is not None):
+        try:
+          next_page_token = infos["nextPageToken"]
+          if(next_page_token is not None):
+            infos = self.conn.list_open_workflow_executions(
+              domain            = domain,
+              workflow_id       = workflow_id,
+              workflow_name     = workflow_name,
+              workflow_version  = workflow_version,
+              oldest_date       = oldest_date,
+              latest_date       = latest_date,
+              maximum_page_size = maximum_page_size,
+              next_page_token   = next_page_token)
+            
+            for execution in infos["executionInfos"]:
+              all_infos.append(execution)
+        except KeyError:
+          next_page_token = None
+      
+      # Finally, reset the original decision response with the full set of events
+      infos["executionInfos"] = all_infos
+
+    self.infos = infos
+    return infos
+  
+  def is_workflow_open(self, domain = None, workflow_id = None, workflow_name = None, workflow_version = None):
+    """
+    For the specified workflow_id, or workflow_name + workflow_version,
+    check if the workflow is currently open, in order to check for workflow conflicts
+    Use the full 90 days of execution history provided by Amazon
+    """
+    
+    is_open = None
+    
+    latest_date = calendar.timegm(time.gmtime())
+    oldest_date = latest_date - (60*60*24*90)
+
+    infos = self.get_open_workflow_executionInfos(
+      domain            = domain,
+      workflow_id       = workflow_id,
+      workflow_name     = workflow_name,
+      workflow_version  = workflow_version,
+      latest_date       = latest_date,
+      oldest_date       = oldest_date)
+
+    if(len(infos["executionInfos"]) <= 0):
+      is_open = False
+    else:
+      # If there are any list items, then they should be OPEN status
+      #  so no need to explore further
+      is_open = True
+
+    return is_open
