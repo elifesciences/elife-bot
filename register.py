@@ -61,6 +61,7 @@ def start(ENV = "dev"):
 	activity_names.append("LensXMLFilesList")
 	activity_names.append("LensCDNInvalidation")
 	activity_names.append("AdminEmailHistory")
+	activity_names.append("WorkflowConflictCheck")
 
 	for activity_name in activity_names:
 		# Import the activity libraries
