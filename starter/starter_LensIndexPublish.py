@@ -36,7 +36,7 @@ def start(ENV = "dev"):
 	workflow_name = "LensIndexPublish"
 	workflow_version = "1"
 	child_policy = None
-	execution_start_to_close_timeout = str(60*15)
+	execution_start_to_close_timeout = str(60*45)
 	input = None
 
 	if(start):

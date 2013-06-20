@@ -52,7 +52,7 @@ def start(ENV = "dev", all = True, last_updated_since = None, docs = None):
 			workflow_name = "LensArticlePublish"
 			workflow_version = "1"
 			child_policy = None
-			execution_start_to_close_timeout = str(60*60*2)
+			execution_start_to_close_timeout = str(60*30)
 			input = '{"data": ' + json.dumps(doc) + '}'
 	
 			try:
