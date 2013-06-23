@@ -43,7 +43,7 @@ class activity_ConverterXMLtoJS(activity.activity):
 		
 		elife_id = data["data"]["elife_id"]
 		
-		url = "https://s3.amazonaws.com/elife-cdn/elife-articles/" + elife_id + "/elife" + elife_id + ".xml"
+		url = "https://s3.amazonaws.com/" + self.settings.cdn_bucket + "/elife-articles/" + elife_id + "/elife" + elife_id + ".xml"
 		token = self.settings.converter_token
 		
 		headers = {"Content-Type": "application/json"}
@@ -79,7 +79,7 @@ class activity_ConverterXMLtoJS(activity.activity):
 			"""
 			
 			# Save the document to the elife-cdn bucket
-			bucket_name = 'elife-cdn'
+			bucket_name = self.settings.cdn_bucket
 			# Connect to S3
 			s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
 			# Lookup bucket

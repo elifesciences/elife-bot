@@ -42,6 +42,16 @@ class dev():
 	ses_sender_email = "sender@example.com"
 	ses_admin_email = "admin@example.com"
 	
+	# CDN bucket settings
+	cdn_bucket = 'elife-cdn-dev'
+	cdn_distribution_id = u'E1HPZ2QWOYE9NX'
+	cdn_domain_name = 'dhkzd83nokruv.cloudfront.net'
+	
+	# Lens bucket settings
+	lens_bucket = 'elife-lens-dev'
+	lens_distribution_id = u'E30WWCB2DNEOKI'
+	lens_domain_name = 'd32g8kubfuccxs.cloudfront.net'
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -76,6 +86,15 @@ class live():
 	ses_sender_email = "sender@example.com"
 	ses_admin_email = "admin@example.com"
 	
+	# CDN bucket settings
+	cdn_bucket = 'elife-cdn'
+	cdn_distribution_id = u'E3EXVOTTI6XCOZ'
+	cdn_domain_name = 'cdn.elifesciences.org'
+	
+	# Lens bucket settings
+	lens_bucket = 'elife-lens'
+	lens_distribution_id = u'EK4HKRQWIF6B3'
+	cdn_domain_name = 'lens.elifesciences.org'
 	# Logging
 	setLevel = "INFO"
 	

@@ -56,7 +56,7 @@ class activity_LensXMLFilesList(activity.activity):
     f.close
     
     # Save the document to the elife-lens bucket
-    bucket_name = 'elife-lens'
+    bucket_name = self.settings.lens_bucket
     
     # Connect to S3
     s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
@@ -94,7 +94,7 @@ class activity_LensXMLFilesList(activity.activity):
     for x in xml_item_list:
       tmp = {}
       doi_id = str(x['name']).split("/")[0]
-      url = 'https://s3.amazonaws.com/elife-cdn/elife-articles/' + doi_id + '/elife' + doi_id + '.xml'
+      url = 'https://s3.amazonaws.com/' + self.settings.cdn_bucket + '/elife-articles/' + doi_id + '/elife' + doi_id + '.xml'
       tmp['xml_url'] = url
       documents.append(tmp)
 

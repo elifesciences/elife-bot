@@ -54,7 +54,7 @@ class activity_LensDocumentsJS(activity.activity):
     jsonp_filename = 'documents.js'
     
     # Save the document to the elife-cdn bucket
-    bucket_name = 'elife-cdn'
+    bucket_name = self.settings.cdn_bucket
     # Connect to S3
     s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
     # Lookup bucket

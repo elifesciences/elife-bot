@@ -43,7 +43,7 @@ class activity_LensCDNInvalidation(activity.activity):
     self.db.connect()
     
     # cdn.elifesciences.org CDN ID
-    distribution_id = u'E3EXVOTTI6XCOZ'
+    distribution_id = self.settings.cdn_distribution_id
     
     invalidation_list = self.get_invalidation_list()
     

@@ -28,7 +28,7 @@ def start(ENV = "dev", workflow = "S3Monitor"):
   # Simple connect
   conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
   if(workflow):
-    (workflow_id, workflow_name, workflow_version, child_policy, execution_start_to_close_timeout, input) = get_workflow_params(workflow)
+    (workflow_id, workflow_name, workflow_version, child_policy, execution_start_to_close_timeout, input) = get_workflow_params(workflow, settings)
 
     logger.info('Starting workflow: %s' % workflow_id)
     try:
@@ -42,10 +42,12 @@ def start(ENV = "dev", workflow = "S3Monitor"):
       print message
       logger.info(message)
 
-def get_workflow_params(workflow):
+def get_workflow_params(workflow, settings):
   
   workflow_id = workflow_name = workflow_version = child_policy = execution_start_to_close_timeout = None
   input = None
+  
+  bucket = settings.bucket
   
   if(workflow == "S3Monitor"):
     workflow_id = "S3Monitor"
@@ -53,7 +55,7 @@ def get_workflow_params(workflow):
     workflow_version = "1.1"
     child_policy = None
     execution_start_to_close_timeout = None
-    input = '{"data": {"bucket": "elife-articles"}}'
+    input = '{"data": {"bucket": "' + bucket + '"}}'
 
   return (workflow_id, workflow_name, workflow_version, child_policy, execution_start_to_close_timeout, input)
       

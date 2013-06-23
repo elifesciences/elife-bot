@@ -54,7 +54,7 @@ class activity_UnzipArticleXML(activity.activity):
 		s3key_name = self.get_xml_object_S3key_name(elife_id, tmp_document)
 		
 		# Create S3 key and save the file there
-		bucket_name = 'elife-cdn'
+		bucket_name = self.settings.cdn_bucket
 		s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
 		bucket = s3_conn.lookup(bucket_name)
 		s3key = boto.s3.key.Key(bucket)
