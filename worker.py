@@ -77,8 +77,9 @@ def work(ENV = "dev"):
 							message = activity_object.result
 							respond_completed(conn, logger, token, message)
 						elif(success == False):
-							message = activity_object.result
-							respond_failed(conn, logger, token, message)
+							reason = 'error: activity failed with result ' + str(activity_object.result)
+							detail = ''
+							respond_failed(conn, logger, token, detail, reason)
 						
 					else:
 						reason = 'error: could not load object %s\n' % activity_name
