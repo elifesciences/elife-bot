@@ -48,7 +48,7 @@ def start(ENV = "dev"):
   date_format = "%Y-%m-%dT%H:%M:%S.000Z"
   time_tuple = time.gmtime(last_startTimestamp)
   last_startDate = time.strftime(date_format, time_tuple)
-  last_startDate = '2013-06-03T09:05:00.000Z'
+
   xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "xml", latest = True, last_updated_since = last_startDate)
   if(len(xml_item_list) <= 0):
     # No new XML
