@@ -27,6 +27,10 @@ def start(ENV = "dev"):
   
   ping_marker_id = "cron_NewS3XML"
   
+  # Log
+  logFile = "starter.log"
+  logger = log.logger(logFile, settings.setLevel, ping_marker_id)
+  
   # Data provider
   db = dblib.SimpleDB(settings)
   db.connect()
@@ -44,7 +48,7 @@ def start(ENV = "dev"):
   date_format = "%Y-%m-%dT%H:%M:%S.000Z"
   time_tuple = time.gmtime(last_startTimestamp)
   last_startDate = time.strftime(date_format, time_tuple)
-
+  last_startDate = '2013-06-03T09:05:00.000Z'
   xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "xml", latest = True, last_updated_since = last_startDate)
   if(len(xml_item_list) <= 0):
     # No new XML
@@ -53,23 +57,31 @@ def start(ENV = "dev"):
     # Found new XML files
     
     # Start a Fluidinfo PublishArticle starter
-    module_name = "starter.starter_PublishArticle"
-    importlib.import_module(module_name)
-    s = eval(module_name)
-    s.start(ENV = ENV, last_updated_since = last_startDate)
+    try:
+      module_name = "starter.starter_PublishArticle"
+      importlib.import_module(module_name)
+      s = eval(module_name)
+      s.start(ENV = ENV, last_updated_since = last_startDate)
+    except:
+      logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
     
     # Start a LensArticlePublish starter
-    module_name = "starter.starter_LensArticlePublish"
-    importlib.import_module(module_name)
-    s = eval(module_name)
-    s.start(ENV = ENV, all = True)
+    try:
+      module_name = "starter.starter_LensArticlePublish"
+      importlib.import_module(module_name)
+      s = eval(module_name)
+      s.start(ENV = ENV, all = True)
+    except:
+      logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
     
     # Start a LensIndexPublish starter
-    module_name = "starter.starter_LensIndexPublish"
-    importlib.import_module(module_name)
-    s = eval(module_name)
-    s.start(ENV = ENV)
-
+    try:
+      module_name = "starter.starter_LensIndexPublish"
+      importlib.import_module(module_name)
+      s = eval(module_name)
+      s.start(ENV = ENV)
+    except:
+      logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
 
 def start_ping_marker(workflow_id, ENV = "dev"):
   """
