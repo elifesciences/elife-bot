@@ -54,7 +54,7 @@ Feature: Use SimpleDB as a data provider
 
   Examples:
     | document                                                  | count
-    | test_data/provider.simpleDB.elife_articles.latest01.json  | 20    
+    | test_data/provider.simpleDB.elife_articles.latest01.json  | 19   
     | test_data/provider.simpleDB.elife_articles.latest02.json  | 4     
     
   Scenario: Get the latest S3 files from SimpleDB provider and check values
@@ -68,7 +68,7 @@ Feature: Use SimpleDB as a data provider
     
   Examples:
     | document                                                  | index | key                     | value
-    | test_data/provider.simpleDB.elife_articles.latest01.json  | 10    | name                    | 00005/elife_2012_00005.video.zip
+    | test_data/provider.simpleDB.elife_articles.latest01.json  | 9     | name                    | 00005/elife_2012_00005.video.zip
     | test_data/provider.simpleDB.elife_articles.latest01.json  | 3     | name                    | 00003/elife_2012_00003.xml.zip
     | test_data/provider.simpleDB.elife_articles.latest01.json  | 7     | name                    | 00005/elife_2012_00005.pdf.zip
     | test_data/provider.simpleDB.elife_articles.latest01.json  | 7     | last_modified_timestamp | 1359244876

@@ -295,8 +295,8 @@ class SimpleDB(object):
 		# Fourth, remove the marked items from the list
 		#  Not great for speed but hopefully fast enough when
 		#  items to remove is small
-		for item in item_list:
-			for remove_item in items_to_remove:
+		for remove_item in items_to_remove:
+			for item in item_list:
 				if(item['item_name'] == remove_item['item_name']
 					 and item['last_modified_timestamp'] == remove_item['timestamp']
 					 ):
