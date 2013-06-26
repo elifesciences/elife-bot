@@ -78,7 +78,7 @@ def start(ENV = "dev"):
     
     # Start a LensIndexPublish starter
     try:
-      starter_name = "starter.starter_LensIndexPublish"
+      starter_name = "starter_LensIndexPublish"
       import_starter_module(starter_name)
       s = get_starter_module(starter_name)
       s.start(ENV = ENV)
