@@ -58,9 +58,9 @@ def start(ENV = "dev"):
     
     # Start a Fluidinfo PublishArticle starter
     try:
-      module_name = "starter.starter_PublishArticle"
-      importlib.import_module(module_name)
-      s = eval(module_name)
+      starter_name = "starter_PublishArticle"
+      import_starter_module(starter_name)
+      s = get_starter_module(starter_name)
       s.start(ENV = ENV, last_updated_since = last_startDate)
     except:
       logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
@@ -68,9 +68,9 @@ def start(ENV = "dev"):
     
     # Start a LensArticlePublish starter
     try:
-      module_name = "starter.starter_LensArticlePublish"
-      importlib.import_module(module_name)
-      s = eval(module_name)
+      starter_name = "starter_LensArticlePublish"
+      import_starter_module(starter_name)
+      s = get_starter_module(starter_name)
       s.start(ENV = ENV, all = True)
     except:
       logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
@@ -78,9 +78,9 @@ def start(ENV = "dev"):
     
     # Start a LensIndexPublish starter
     try:
-      module_name = "starter.starter_LensIndexPublish"
-      importlib.import_module(module_name)
-      s = eval(module_name)
+      starter_name = "starter.starter_LensIndexPublish"
+      import_starter_module(starter_name)
+      s = get_starter_module(starter_name)
       s.start(ENV = ENV)
     except:
       logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
@@ -110,6 +110,27 @@ def start_ping_marker(workflow_id, ENV = "dev"):
     # There is already a running workflow with that ID, cannot start another
     message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
     print message
+
+def get_starter_module(starter_name):
+  """
+  Given an starter_name, and if the starter module is already
+  imported, load the module and return it
+  """
+  full_path = "starter." + starter_name
+  f = eval(full_path)
+  return f
+
+def import_starter_module(starter_name):
+  """
+  Given an starter name as starter_name,
+  attempt to lazy load the module when needed
+  """
+  try:
+    module_name = "starter." + starter_name
+    importlib.import_module(module_name)
+    return True
+  except ImportError:
+    return False
 
 if __name__ == "__main__":
   
