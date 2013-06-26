@@ -64,6 +64,7 @@ def start(ENV = "dev"):
       s.start(ENV = ENV, last_updated_since = last_startDate)
     except:
       logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
+      logger.exception('')
     
     # Start a LensArticlePublish starter
     try:
@@ -73,6 +74,7 @@ def start(ENV = "dev"):
       s.start(ENV = ENV, all = True)
     except:
       logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
+      logger.exception('')
     
     # Start a LensIndexPublish starter
     try:
@@ -82,6 +84,7 @@ def start(ENV = "dev"):
       s.start(ENV = ENV)
     except:
       logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
+      logger.exception('')
 
 def start_ping_marker(workflow_id, ENV = "dev"):
   """
