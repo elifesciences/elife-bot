@@ -12,7 +12,7 @@ import datetime
 from optparse import OptionParser
 
 """
-Amazon SWF workflow starter
+Amazon SWF Ping workflow starter
 """
 
 def start(ENV = "dev", workflow = "Ping"):
@@ -47,14 +47,7 @@ def get_workflow_params(workflow):
 	workflow_id = workflow_name = workflow_version = child_policy = execution_start_to_close_timeout = None
 	input = None
 	
-	if(workflow == "Sum"):
-		workflow_id = "sum_%s" % int(random.random() * 10000)
-		workflow_name = "Sum"
-		workflow_version = "1"
-		child_policy = None
-		execution_start_to_close_timeout = None
-		input = '{"data": [1,3,7,11]}'
-	elif(workflow == "Ping"):
+	if(workflow == "Ping"):
 		workflow_id = "ping_%s" % int(random.random() * 10000)
 		workflow_name = "Ping"
 		workflow_version = "1"
@@ -69,11 +62,8 @@ if __name__ == "__main__":
 	# Add options
 	parser = OptionParser()
 	parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
-	parser.add_option("-w", "--workflow", default="Ping", action="store", type="string", dest="workflow", help="specify the workflow to start")
 	(options, args) = parser.parse_args()
 	if options.env: 
 		ENV = options.env
-	if options.workflow: 
-		workflow = options.workflow
 
-	start(ENV, workflow)
+	start(ENV)
