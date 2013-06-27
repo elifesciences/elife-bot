@@ -21,130 +21,132 @@ import starter
 Cron job to check for new article S3 XML and start workflows
 """
 
-def start(ENV = "dev"):
-  # Specify run environment settings
-  settings = settingsLib.get_settings(ENV)
-  
-  ping_marker_id = "cron_NewS3XML"
-  
-  # Log
-  logFile = "starter.log"
-  logger = log.logger(logFile, settings.setLevel, ping_marker_id)
-  
-  # Data provider
-  db = dblib.SimpleDB(settings)
-  db.connect()
-  
-  # SWF meta data provider
-  swfmeta = swfmetalib.SWFMeta(settings)
-  swfmeta.connect()
-  
-  last_startTimestamp = swfmeta.get_last_completed_workflow_execution_startTimestamp(workflow_id = ping_marker_id)
+class cron_NewS3XML(object):
 
-  # Start a ping workflow as a marker
-  start_ping_marker(ping_marker_id, ENV)
-
-  # Check for S3 XML files that were updated since the last run
-  date_format = "%Y-%m-%dT%H:%M:%S.000Z"
-  time_tuple = time.gmtime(last_startTimestamp)
-  last_startDate = time.strftime(date_format, time_tuple)
-  
-  logger.info('last run %s' % (last_startDate))
-  
-  xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "xml", latest = True, last_updated_since = last_startDate)
-  
-  logger.info('XML files updated since %s: %s' % (last_startDate, str(len(xml_item_list))))
-
-  if(len(xml_item_list) <= 0):
-    # No new XML
-    pass
-  else:
-    # Found new XML files
+  def start(self, ENV = "dev"):
+    # Specify run environment settings
+    settings = settingsLib.get_settings(ENV)
     
-    # Start a Fluidinfo PublishArticle starter
-    try:
-      starter_name = "starter_PublishArticle"
-      import_starter_module(starter_name, logger)
-      s = get_starter_module(starter_name, logger)
-      s.start(ENV = ENV, last_updated_since = last_startDate)
-    except:
-      logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
-      logger.exception('')
+    ping_marker_id = "cron_NewS3XML"
     
-    # Start a LensArticlePublish starter
-    try:
-      starter_name = "starter_LensArticlePublish"
-      import_starter_module(starter_name, logger)
-      s = get_starter_module(starter_name, logger)
-      s.start(ENV = ENV, all = True)
-    except:
-      logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
-      logger.exception('')
+    # Log
+    logFile = "starter.log"
+    logger = log.logger(logFile, settings.setLevel, ping_marker_id)
     
-    # Start a LensIndexPublish starter
+    # Data provider
+    db = dblib.SimpleDB(settings)
+    db.connect()
+    
+    # SWF meta data provider
+    swfmeta = swfmetalib.SWFMeta(settings)
+    swfmeta.connect()
+    
+    last_startTimestamp = swfmeta.get_last_completed_workflow_execution_startTimestamp(workflow_id = ping_marker_id)
+  
+    # Start a ping workflow as a marker
+    self.start_ping_marker(ping_marker_id, ENV)
+  
+    # Check for S3 XML files that were updated since the last run
+    date_format = "%Y-%m-%dT%H:%M:%S.000Z"
+    time_tuple = time.gmtime(last_startTimestamp)
+    last_startDate = time.strftime(date_format, time_tuple)
+    
+    logger.info('last run %s' % (last_startDate))
+    
+    xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "xml", latest = True, last_updated_since = last_startDate)
+    
+    logger.info('XML files updated since %s: %s' % (last_startDate, str(len(xml_item_list))))
+  
+    if(len(xml_item_list) <= 0):
+      # No new XML
+      pass
+    else:
+      # Found new XML files
+      
+      # Start a Fluidinfo PublishArticle starter
+      try:
+        starter_name = "starter_PublishArticle"
+        self.import_starter_module(starter_name, logger)
+        s = self.get_starter_module(starter_name, logger)
+        s.start(ENV = ENV, last_updated_since = last_startDate)
+      except:
+        logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
+        logger.exception('')
+      
+      # Start a LensArticlePublish starter
+      try:
+        starter_name = "starter_LensArticlePublish"
+        self.import_starter_module(starter_name, logger)
+        s = self.get_starter_module(starter_name, logger)
+        s.start(ENV = ENV, all = True)
+      except:
+        logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
+        logger.exception('')
+      
+      # Start a LensIndexPublish starter
+      try:
+        starter_name = "starter_LensIndexPublish"
+        self.import_starter_module(starter_name, logger)
+        s = self.get_starter_module(starter_name, logger)
+        s.start(ENV = ENV)
+      except:
+        logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
+        logger.exception('')
+  
+  def start_ping_marker(self, workflow_id, ENV = "dev"):
+    """
+    Start a ping workflow with a unique name to serve as a time marker
+    for determining last time this was run
+    """
+    
+    # Specify run environment settings
+    settings = settingsLib.get_settings(ENV)
+    
+    workflow_id = workflow_id
+    workflow_name = "Ping"
+    workflow_version = "1"
+    child_policy = None
+    execution_start_to_close_timeout = None
+    input = None
+  
+    conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
     try:
-      starter_name = "starter_LensIndexPublish"
-      import_starter_module(starter_name, logger)
-      s = get_starter_module(starter_name, logger)
-      s.start(ENV = ENV)
+      response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
+  
+    except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
+      # There is already a running workflow with that ID, cannot start another
+      message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
+      print message
+  
+  def get_starter_module(self, starter_name, logger = None):
+    """
+    Given an starter_name, and if the starter module is already
+    imported, load the module and return it
+    """
+    full_path = "starter." + starter_name + "." + starter_name
+    f = None
+    
+    try:
+      f = eval(full_path)
     except:
-      logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
-      logger.exception('')
-
-def start_ping_marker(workflow_id, ENV = "dev"):
-  """
-  Start a ping workflow with a unique name to serve as a time marker
-  for determining last time this was run
-  """
+      if(logger):
+        logger.exception('')
+    
+    return f
   
-  # Specify run environment settings
-  settings = settingsLib.get_settings(ENV)
-  
-  workflow_id = workflow_id
-  workflow_name = "Ping"
-  workflow_version = "1"
-  child_policy = None
-  execution_start_to_close_timeout = None
-  input = None
-
-  conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
-  try:
-    response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
-
-  except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-    # There is already a running workflow with that ID, cannot start another
-    message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
-    print message
-
-def get_starter_module(starter_name, logger = None):
-  """
-  Given an starter_name, and if the starter module is already
-  imported, load the module and return it
-  """
-  full_path = "starter." + starter_name + "." + starter_name
-  f = None
-  
-  try:
-    f = eval(full_path)
-  except:
-    if(logger):
-      logger.exception('')
-  
-  return f
-
-def import_starter_module(starter_name, logger = None):
-  """
-  Given an starter name as starter_name,
-  attempt to lazy load the module when needed
-  """
-  try:
-    module_name = "starter." + starter_name
-    importlib.import_module(module_name)
-    return True
-  except ImportError:
-    if(logger):
-      logger.exception('')
-    return False
+  def import_starter_module(self, starter_name, logger = None):
+    """
+    Given an starter name as starter_name,
+    attempt to lazy load the module when needed
+    """
+    try:
+      module_name = "starter." + starter_name
+      importlib.import_module(module_name)
+      return True
+    except ImportError:
+      if(logger):
+        logger.exception('')
+      return False
 
 if __name__ == "__main__":
   
@@ -155,4 +157,6 @@ if __name__ == "__main__":
   if options.env: 
     ENV = options.env
 
-  start(ENV)
+  o = cron_NewS3XML()
+
+  o.start(ENV)

@@ -80,9 +80,11 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
   if(diff_seconds >= 0 or last_startTimestamp is None):
     # Start a new workflow
     # Load the starter module
-    module_name = "starter." + starter_name + "." + starter_name
+    module_name = "starter." + starter_name
     importlib.import_module(module_name)
-    s = eval(module_name)
+    full_path = "starter." + starter_name + "." + starter_name
+    print full_path
+    s = eval(full_path)
     
     # Customised start functions
     if(starter_name == "starter_S3Monitor"):
