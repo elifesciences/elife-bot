@@ -48,8 +48,13 @@ def start(ENV = "dev"):
   date_format = "%Y-%m-%dT%H:%M:%S.000Z"
   time_tuple = time.gmtime(last_startTimestamp)
   last_startDate = time.strftime(date_format, time_tuple)
-
+  
+  logger.info('last run %s' % (last_startDate))
+  
   xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "xml", latest = True, last_updated_since = last_startDate)
+  
+  logger.info('XML files updated since %s: %s' % (last_startDate, str(len(xml_item_list))))
+
   if(len(xml_item_list) <= 0):
     # No new XML
     pass
@@ -59,8 +64,8 @@ def start(ENV = "dev"):
     # Start a Fluidinfo PublishArticle starter
     try:
       starter_name = "starter_PublishArticle"
-      import_starter_module(starter_name)
-      s = get_starter_module(starter_name)
+      import_starter_module(starter_name, logger)
+      s = get_starter_module(starter_name, logger)
       s.start(ENV = ENV, last_updated_since = last_startDate)
     except:
       logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
@@ -69,8 +74,8 @@ def start(ENV = "dev"):
     # Start a LensArticlePublish starter
     try:
       starter_name = "starter_LensArticlePublish"
-      import_starter_module(starter_name)
-      s = get_starter_module(starter_name)
+      import_starter_module(starter_name, logger)
+      s = get_starter_module(starter_name, logger)
       s.start(ENV = ENV, all = True)
     except:
       logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
@@ -79,8 +84,8 @@ def start(ENV = "dev"):
     # Start a LensIndexPublish starter
     try:
       starter_name = "starter_LensIndexPublish"
-      import_starter_module(starter_name)
-      s = get_starter_module(starter_name)
+      import_starter_module(starter_name, logger)
+      s = get_starter_module(starter_name, logger)
       s.start(ENV = ENV)
     except:
       logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
@@ -111,16 +116,23 @@ def start_ping_marker(workflow_id, ENV = "dev"):
     message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
     print message
 
-def get_starter_module(starter_name):
+def get_starter_module(starter_name, logger = None):
   """
   Given an starter_name, and if the starter module is already
   imported, load the module and return it
   """
   full_path = "starter." + starter_name
-  f = eval(full_path)
+  f = None
+  
+  try:
+    f = eval(full_path)
+  except:
+    if(logger):
+      logger.exception('')
+      
   return f
 
-def import_starter_module(starter_name):
+def import_starter_module(starter_name, logger = None):
   """
   Given an starter name as starter_name,
   attempt to lazy load the module when needed
@@ -130,6 +142,8 @@ def import_starter_module(starter_name):
     importlib.import_module(module_name)
     return True
   except ImportError:
+    if(logger):
+      logger.exception('')
     return False
 
 if __name__ == "__main__":
