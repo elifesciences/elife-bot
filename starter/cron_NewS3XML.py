@@ -68,7 +68,7 @@ def start(ENV = "dev"):
       s = get_starter_module(starter_name, logger)
       s.start(ENV = ENV, last_updated_since = last_startDate)
     except:
-      logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
+      logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
       logger.exception('')
     
     # Start a LensArticlePublish starter
@@ -78,7 +78,7 @@ def start(ENV = "dev"):
       s = get_starter_module(starter_name, logger)
       s.start(ENV = ENV, all = True)
     except:
-      logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
+      logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
       logger.exception('')
     
     # Start a LensIndexPublish starter
@@ -88,7 +88,7 @@ def start(ENV = "dev"):
       s = get_starter_module(starter_name, logger)
       s.start(ENV = ENV)
     except:
-      logger.info('Error: %s starting %s' % (ping_marker_id, module_name))
+      logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
       logger.exception('')
 
 def start_ping_marker(workflow_id, ENV = "dev"):
@@ -125,10 +125,15 @@ def get_starter_module(starter_name, logger = None):
   f = None
   
   try:
-    f = eval(full_path)
+    f = eval(starter_name)
   except:
     if(logger):
       logger.exception('')
+    try:
+      f = eval(full_path)
+    except:
+      if(logger):
+        logger.exception('')
       
   return f
 
