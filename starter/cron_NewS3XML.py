@@ -121,20 +121,15 @@ def get_starter_module(starter_name, logger = None):
   Given an starter_name, and if the starter module is already
   imported, load the module and return it
   """
-  full_path = "starter." + starter_name
+  full_path = "starter." + starter_name + "." + starter_name
   f = None
   
   try:
-    f = eval(starter_name)
+    f = eval(full_path)
   except:
     if(logger):
       logger.exception('')
-    try:
-      f = eval(full_path)
-    except:
-      if(logger):
-        logger.exception('')
-      
+  
   return f
 
 def import_starter_module(starter_name, logger = None):

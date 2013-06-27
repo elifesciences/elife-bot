@@ -18,53 +18,55 @@ import provider.simpleDB as dblib
 Amazon SWF LensArticlePublish starter
 """
 
-def start(ENV = "dev", all = True, last_updated_since = None, docs = None):
-	# Specify run environment settings
-	settings = settingsLib.get_settings(ENV)
-	
-	# Log
-	identity = "starter_%s" % int(random.random() * 1000)
-	logFile = "starter.log"
-	#logFile = None
-	logger = log.logger(logFile, settings.setLevel, identity)
-	
-	# Simple connect
-	conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+class starter_LensArticlePublish():
 
-	if(all == True):
-		# Publish all articles, use SimpleDB as the source
-		docs = get_docs_from_SimpleDB(ENV)
-
-	elif(last_updated_since is not None):
-		# Publish only articles since the last_modified date, use SimpleDB as the source
-		docs = get_docs_from_SimpleDB(ENV, last_updated_since)
+	def start(self, ENV = "dev", all = True, last_updated_since = None, docs = None):
+		# Specify run environment settings
+		settings = settingsLib.get_settings(ENV)
+		
+		# Log
+		identity = "starter_%s" % int(random.random() * 1000)
+		logFile = "starter.log"
+		#logFile = None
+		logger = log.logger(logFile, settings.setLevel, identity)
+		
+		# Simple connect
+		conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 	
-	if(docs):
-		for doc in docs:
-			
-			document = doc["document"]
-			elife_id = doc["elife_id"]
+		if(all == True):
+			# Publish all articles, use SimpleDB as the source
+			docs = get_docs_from_SimpleDB(ENV)
 	
-			id_string = elife_id
-	
-			# Start a workflow execution
-			workflow_id = "LensArticlePublish_%s" % (id_string)
-			workflow_name = "LensArticlePublish"
-			workflow_version = "1"
-			child_policy = None
-			execution_start_to_close_timeout = str(60*30)
-			input = '{"data": ' + json.dumps(doc) + '}'
-	
-			try:
-				response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
-	
-				logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+		elif(last_updated_since is not None):
+			# Publish only articles since the last_modified date, use SimpleDB as the source
+			docs = get_docs_from_SimpleDB(ENV, last_updated_since)
+		
+		if(docs):
+			for doc in docs:
 				
-			except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-				# There is already a running workflow with that ID, cannot start another
-				message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
-				print message
-				logger.info(message)
+				document = doc["document"]
+				elife_id = doc["elife_id"]
+		
+				id_string = elife_id
+		
+				# Start a workflow execution
+				workflow_id = "LensArticlePublish_%s" % (id_string)
+				workflow_name = "LensArticlePublish"
+				workflow_version = "1"
+				child_policy = None
+				execution_start_to_close_timeout = str(60*30)
+				input = '{"data": ' + json.dumps(doc) + '}'
+		
+				try:
+					response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
+		
+					logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+					
+				except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
+					# There is already a running workflow with that ID, cannot start another
+					message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
+					print message
+					logger.info(message)
 
 def get_docs_from_SimpleDB(ENV = "dev", last_updated_since = None):
 	"""
@@ -103,4 +105,6 @@ if __name__ == "__main__":
 	if options.env: 
 		ENV = options.env
 
-	start(ENV)
+	o = starter_LensArticlePublish()
+
+	o.start(ENV)

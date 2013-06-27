@@ -15,49 +15,51 @@ from optparse import OptionParser
 Amazon SWF S3Monitor starter
 """
 
-def start(ENV = "dev", workflow = "S3Monitor"):
-  # Specify run environment settings
-  settings = settingsLib.get_settings(ENV)
-  
-  # Log
-  identity = "starter_%s" % int(random.random() * 1000)
-  logFile = "starter.log"
-  #logFile = None
-  logger = log.logger(logFile, settings.setLevel, identity)
-  
-  # Simple connect
-  conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
-  if(workflow):
-    (workflow_id, workflow_name, workflow_version, child_policy, execution_start_to_close_timeout, input) = get_workflow_params(workflow, settings)
+class starter_S3Monitor():
 
-    logger.info('Starting workflow: %s' % workflow_id)
-    try:
-      response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
-
-      logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
-      
-    except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-      # There is already a running workflow with that ID, cannot start another
-      message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
-      print message
-      logger.info(message)
-
-def get_workflow_params(workflow, settings):
+  def start(self, ENV = "dev", workflow = "S3Monitor"):
+    # Specify run environment settings
+    settings = settingsLib.get_settings(ENV)
+    
+    # Log
+    identity = "starter_%s" % int(random.random() * 1000)
+    logFile = "starter.log"
+    #logFile = None
+    logger = log.logger(logFile, settings.setLevel, identity)
+    
+    # Simple connect
+    conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+    if(workflow):
+      (workflow_id, workflow_name, workflow_version, child_policy, execution_start_to_close_timeout, input) = self.get_workflow_params(workflow, settings)
   
-  workflow_id = workflow_name = workflow_version = child_policy = execution_start_to_close_timeout = None
-  input = None
+      logger.info('Starting workflow: %s' % workflow_id)
+      try:
+        response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
   
-  bucket = settings.bucket
+        logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+        
+      except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
+        # There is already a running workflow with that ID, cannot start another
+        message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
+        print message
+        logger.info(message)
   
-  if(workflow == "S3Monitor"):
-    workflow_id = "S3Monitor"
-    workflow_name = "S3Monitor"
-    workflow_version = "1.1"
-    child_policy = None
-    execution_start_to_close_timeout = None
-    input = '{"data": {"bucket": "' + bucket + '"}}'
-
-  return (workflow_id, workflow_name, workflow_version, child_policy, execution_start_to_close_timeout, input)
+  def get_workflow_params(self, workflow, settings):
+    
+    workflow_id = workflow_name = workflow_version = child_policy = execution_start_to_close_timeout = None
+    input = None
+    
+    bucket = settings.bucket
+    
+    if(workflow == "S3Monitor"):
+      workflow_id = "S3Monitor"
+      workflow_name = "S3Monitor"
+      workflow_version = "1.1"
+      child_policy = None
+      execution_start_to_close_timeout = None
+      input = '{"data": {"bucket": "' + bucket + '"}}'
+  
+    return (workflow_id, workflow_name, workflow_version, child_policy, execution_start_to_close_timeout, input)
       
       
 if __name__ == "__main__":
@@ -69,4 +71,6 @@ if __name__ == "__main__":
   if options.env: 
     ENV = options.env
 
-  start(ENV)
+  o = starter_S3Monitor()
+
+  o.start(ENV)
