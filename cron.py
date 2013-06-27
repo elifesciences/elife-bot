@@ -82,8 +82,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
     # Load the starter module
     module_name = "starter." + starter_name
     importlib.import_module(module_name)
-    full_path = "starter." + starter_name + "." + starter_name
-    print full_path
+    full_path = "starter." + starter_name + "." + starter_name + "()"
     s = eval(full_path)
     
     # Customised start functions
