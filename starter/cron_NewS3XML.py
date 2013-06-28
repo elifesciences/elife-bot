@@ -123,7 +123,7 @@ class cron_NewS3XML(object):
     Given an starter_name, and if the starter module is already
     imported, load the module and return it
     """
-    full_path = "starter." + starter_name + "." + starter_name
+    full_path = "starter." + starter_name + "." + starter_name + "()"
     f = None
     
     try:
