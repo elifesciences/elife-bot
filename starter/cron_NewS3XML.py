@@ -49,7 +49,7 @@ class cron_NewS3XML(object):
     # Check for S3 XML files that were updated since the last run
     date_format = "%Y-%m-%dT%H:%M:%S.000Z"
     
-    # Quick hack - subtract 30 minutes to not ignore the top fo the hour
+    # Quick hack - subtract 30 minutes to not ignore the top of the hour
     #   the time between S3Monitor running and this cron starter
     last_startTimestamp_minus_30 = last_startTimestamp - (60*30)
     time_tuple = time.gmtime(last_startTimestamp_minus_30)
