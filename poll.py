@@ -3,6 +3,7 @@ from boto.s3.connection import S3Connection
 import settings as settingsLib
 import json
 import datetime
+from optparse import OptionParser
 
 """
 Polling s3 buckets and objects
@@ -38,19 +39,41 @@ def main(ENV = "dev"):
 	# Get the folders from base folder specified by prefix
 	(keys, folders) = get_folders(bucket, prefix = settings.prefix, delimiter = settings.delimiter)
 	#debug_print(keys)
-	#debug_print(folders)
-
+	"""
+	debug_print(folders)
 	for folder in folders:
+		print folder.name
+		(keys2, folders2) = get_folders(bucket, prefix = folder.name, delimiter = settings.delimiter)
+		if(len(folders2) <= 0):
+			print 'Empty!'
+		else:
+			debug_print(folders2)
+	"""
+		
+	"""	
+	prefixes = get_all_prefixes(bucket, prefix = settings.prefix, delimiter = settings.delimiter)
+	print json.dumps(prefixes, sort_keys=True, indent=4)
+	"""
+
+	# Following needs work - needs to be parallelised based on the prefixes above
+	for folder in folders:
+		#print 'Checking folder ' + folder.name
 		(keys, folders) = get_folders(bucket, folder.name, delimiter = settings.delimiter)
 		# Debug print all keys found
 		#debug_print(keys)
 		
 		# Super new test, print only those with date modified after
 		for key in keys:
-			if(datetime.datetime.strptime(key.last_modified, '%Y-%m-%dT%H:%M:%S.000Z') > datetime.datetime.strptime('2013-01-15T12:59:45.000Z', '%Y-%m-%dT%H:%M:%S.000Z')):
-				print key.name
-		
-
+			#print 'Checking key ' + key.name + ', ' + key.last_modified
+			if(datetime.datetime.strptime(key.last_modified, '%Y-%m-%dT%H:%M:%S.000Z') > datetime.datetime.strptime('2013-07-17T15:30:00.000Z', '%Y-%m-%dT%H:%M:%S.000Z')):
+				print key.name + ', ' + key.last_modified
+				#print key.etag
+				#print key
+				#print json.dumps(key, sort_keys=True, indent=4)
+				#keyItem = bucket.get_key(key.name)
+				#debug_print([keyItem])
+	
+	
 		
 	
 	"""
@@ -120,7 +143,28 @@ def main(ENV = "dev"):
 		keyItem = bucket.get_key(key.name)
 		print keyItem.content_type
 	"""
+
+def get_all_prefixes(bucket, prefix = None, delimiter = '/', headers = None):
+	# For the bucket with optional prefix,
+	# get all the prefixes inside it and whether they contain no more subprefixes
+	# and are therefore final paths (with no "subfolders")
 	
+	prefixes = []
+	
+	# Get the folders from base folder specified by prefix
+	(keys, folders) = get_folders(bucket, prefix, delimiter = delimiter)
+	
+	for folder in folders:
+		final = False
+
+		(keys2, folders2) = get_folders(bucket, prefix = folder.name, delimiter = delimiter)
+		if(len(folders2) <= 0):
+			# Final prefix, no sub prefixes
+			final = True
+		prefixes.append({"name": folder.name, "final": final})
+
+	return prefixes
+
 
 def get_folders(bucket, prefix = None, delimiter = '/', headers = None):
 	# Get "folders" from the bucket, with optional
@@ -188,6 +232,8 @@ def debug_print(obj):
 			print '  size: ' + str(o.size or '')
 			print '  version_id: ' + str(o.version_id or '')
 			print '  encrypted: ' + str(o.encrypted or '')
+		else:
+			print 'Unknown instance type'
 
 
 # Get all buckets test
@@ -197,4 +243,12 @@ def debug_print(obj):
 #	print b.name
 
 if __name__ == "__main__":
-	main()
+	
+	# Add options
+	parser = OptionParser()
+	parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
+	(options, args) = parser.parse_args()
+	if options.env: 
+		ENV = options.env
+
+	main(ENV)
