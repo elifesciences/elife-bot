@@ -10,6 +10,8 @@ import urlparse
 
 import activity
 
+import provider.filesystem as fslib
+
 """
 ArticleToFluidinfo activity
 """
@@ -37,6 +39,9 @@ class activity_ArticleToFluidinfo(activity.activity):
 		
 		# Import the libraries we will need
 		self.import_imports()
+		
+		# Create the filesystem provider
+		self.fs = fslib.Filesystem(self.get_tmp_dir())
 	
 	def do_activity(self, data = None):
 		"""
@@ -60,10 +65,10 @@ class activity_ArticleToFluidinfo(activity.activity):
 			pass
 		
 		# Read in the document and write it to the temp directory
-		self.read_document_to_content(document)
-		self.write_content_to_document(filename)
+		self.fs.read_document_to_content(document)
+		self.fs.write_content_to_document(filename)
 
-		self.parse_document(self.document)
+		self.parse_document(self.fs.document)
 		
 		result = None
 		if(self.a is not None):
@@ -71,113 +76,12 @@ class activity_ArticleToFluidinfo(activity.activity):
 
 		return result
 	
-	def read_document_to_content(self, document):
-		mode = "r"
-		
-		try:
-			o = urlparse.urlparse(document)
-			if(o.scheme != ""):
-				document = self.download_document(document)
-				self.document = document
-		except AttributeError:
-			pass
-		
-		if(self.is_zip(document)):
-			document = self.unzip_document(document)
-			self.document = document
-		
-		f = open(document, mode)
-		self.content = f.read()
-		f.close()
-
-	def write_content_to_document(self, filename):
-		mode = "w"
-		
-		f = self.open_file_from_tmp_dir(filename, mode)
-		f.write(self.content)
-		f.close()
-		
-		# Reset the object document
-		tmp_dir = self.get_tmp_dir()
-		if(tmp_dir):
-			self.document = tmp_dir + os.sep + filename
-		else:
-			self.document = filename
-			
-	def is_zip(self, document):
-		"""
-		Given a document name, determine if it a zip file
-		"""
-		fileName, fileExtension = os.path.splitext(document)
-		if(fileExtension == ".zip"):
-			return True
-		return False
-		
-	def unzip_document(self, document):
-		"""
-		Unzip the document if it is a zip,
-		and return the XML document name
-		"""
-		mode = "r"
-		tmp_dir = self.get_tmp_dir()
-		
-		z = zipfile.ZipFile(document)
-
-		xml_filename = None
-		for f in z.namelist():
-			z.extract(f, tmp_dir)
-			xml_filename = f
-		z.close()
-		
-		# Only handles one file at a time, for now
-		if(tmp_dir):
-			document = tmp_dir + os.sep + xml_filename
-		else:
-			document = xml_filename
-		
-		return document
-
-	def download_document(self, document):
-		"""
-		Attempt to download the document
-		"""
-		o = urlparse.urlparse(document)
-		filename = ""
-		
-		if(o.scheme == "https" and o.netloc == "s3.amazonaws.com"):
-			
-			path_array = o.path.split('/')
-			filename = path_array[-1]
-			
-			r = requests.get(document, prefetch=False)
-			mode = "wb"
-			f = self.open_file_from_tmp_dir(filename, mode)
-			for block in r.iter_content(1024):
-				if not block:
-					break
-				f.write(block)
-			f.close()
-			
-		tmp_dir = self.get_tmp_dir()
-		if(tmp_dir):
-			document = tmp_dir + os.sep + filename
-		else:
-			document = filename
-
-		return document
-
-	def get_document(self):
-		"""
-		Return the object document name
-		"""
-		return self.document
-
 	def parse_document(self, document):
 		"""
 		Parse the XML document into an article object
 		"""
 
-		self.document = document
+		self.fs.document = document
 		
 		path = None
 
@@ -186,7 +90,7 @@ class activity_ArticleToFluidinfo(activity.activity):
 
 		# Can now specify to the article object our objects explicitly
 		self.a = article.article()
-		self.a.parse_document(path, self.document)
+		self.a.parse_document(path, self.fs.document)
 				
 	def load_article(self):
 		"""
