@@ -37,6 +37,20 @@ class Filesystem(object):
 		self.content = f.read()
 		f.close()
 
+	def write_content_to_document(self, filename):
+		mode = "w"
+		
+		f = self.open_file_from_tmp_dir(filename, mode)
+		f.write(self.content)
+		f.close()
+		
+		# Reset the object document
+		tmp_dir = self.get_tmp_dir()
+		if(tmp_dir):
+			self.document = tmp_dir + os.sep + filename
+		else:
+			self.document = filename
+
 	def download_document(self, document, filename = None, validate_url = True, scheme = None, netloc = None):
 		"""
 		Attempt to download the document, with some simple
