@@ -57,25 +57,25 @@ def parse_the_document_name_with_ArticleToFluidinfo(step, doi):
 	
 @step('I read the file named document name with ArticleToFluidinfo')
 def read_the_file_named_document_name_with_ArticleToFluidinfo(step):
-	world.activity_object.read_document_to_content(world.document_name)
-	assert world.activity_object.content is not None, \
-		"Got content %s" % world.activity_object.content
+	world.activity_object.fs.read_document_to_content(world.document_name)
+	assert world.activity_object.fs.content is not None, \
+		"Got content %s" % world.activity_object.fs.content
 	
 @step('I write the content from ArticleToFluidinfo to (\S+)')
 def write_the_content_from_ArticleToFluidinfo(step, filename):
-	world.activity_object.write_content_to_document(filename)
-	assert world.activity_object.document is not None, \
-		"Wrote document %s" % world.activity_object.document
+	world.activity_object.fs.write_content_to_document(filename)
+	assert world.activity_object.fs.document is not None, \
+		"Wrote document %s" % world.activity_object.fs.document
 
 @step('I get the document name from ArticleToFluidinfo')
 def get_the_document_name_from_ArticleToFluidinfo(step):
-	world.document_name = world.activity_object.get_document()
+	world.document_name = world.activity_object.fs.get_document()
 	assert world.document_name is not None, \
 		"Got document %s" % world.document_name
 	
 @step('I get the document name from ArticleToFluidinfo as (\S+)')
 def get_the_document_name_from_ArticleToFluidinfo_as(step, filename):
-	world.document_name = world.activity_object.get_document()
+	world.document_name = world.activity_object.fs.get_document()
 	assert world.document_name == filename, \
 		"Got document %s" % world.document_name
 	
