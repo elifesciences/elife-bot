@@ -15,7 +15,7 @@ CURRENT_XML_PATH = "/Users/ian/code/public-code/elife-articles"
 
 # pull ftp in credentials
 
-FTP_AUTH_INFO = "/Users/ian/code/private-code/elife-bot/ftp-credentials.txt"
+FTP_AUTH_INFO = "/Users/ian/code/public-code/elife-bot/ftp-credentials.txt"
 FTP_KEYS = namedtuple('Keys', "host user password")
 
 def get_value_from_line(line):
