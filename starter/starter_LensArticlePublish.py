@@ -20,7 +20,7 @@ Amazon SWF LensArticlePublish starter
 
 class starter_LensArticlePublish():
 
-	def start(self, ENV = "dev", all = True, last_updated_since = None, docs = None):
+	def start(self, ENV = "dev", all = True, last_updated_since = None, docs = None, doi_id = None):
 		# Specify run environment settings
 		settings = settingsLib.get_settings(ENV)
 		
@@ -37,9 +37,12 @@ class starter_LensArticlePublish():
 			# Publish all articles, use SimpleDB as the source
 			docs = get_docs_from_SimpleDB(ENV)
 	
+		elif(doi_id is not None):
+			docs = get_docs_from_SimpleDB(ENV, doi_id = doi_id)
+			
 		elif(last_updated_since is not None):
 			# Publish only articles since the last_modified date, use SimpleDB as the source
-			docs = get_docs_from_SimpleDB(ENV, last_updated_since)
+			docs = get_docs_from_SimpleDB(ENV, last_updated_since = last_updated_since)
 		
 		if(docs):
 			for doc in docs:
@@ -68,7 +71,7 @@ class starter_LensArticlePublish():
 					print message
 					logger.info(message)
 
-def get_docs_from_SimpleDB(ENV = "dev", last_updated_since = None):
+def get_docs_from_SimpleDB(ENV = "dev", last_updated_since = None, doi_id = None):
 	"""
 	Get the array of docs from the SimpleDB provider
 	"""
@@ -82,6 +85,8 @@ def get_docs_from_SimpleDB(ENV = "dev", last_updated_since = None):
 	
 	if(last_updated_since is not None):
 		xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "xml", latest = True, last_updated_since = last_updated_since)
+	elif(doi_id is not None):
+		xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "xml", latest = True, doi_id = doi_id)
 	else:
 		# Get all
 		xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "xml", latest = True)
@@ -98,20 +103,27 @@ def get_docs_from_SimpleDB(ENV = "dev", last_updated_since = None):
 
 if __name__ == "__main__":
 
+	doi_id = None
+	last_updated_since = None
+	all = False
+	
 	# Add options
 	parser = OptionParser()
 	parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
 	parser.add_option("-u", "--last-updated-since", default=None, action="store", type="string", dest="last_updated_since", help="specify the datetime for last_updated_since")
+	parser.add_option("-d", "--doi-id", default=None, action="store", type="string", dest="doi_id", help="specify the DOI id of a single article")
 	(options, args) = parser.parse_args()
 	if options.env: 
 		ENV = options.env
-	if options.last_updated_since: 
+	if options.last_updated_since:
 		last_updated_since = options.last_updated_since
-		all = False
-	else:
-		last_updated_since = None
+	if options.doi_id:
+		doi_id = options.doi_id
+		
+	# Publish all articles if no options provided
+	if last_updated_since is None and doi_id is None: 
 		all = True
 		
 	o = starter_LensArticlePublish()
 
-	o.start(ENV, last_updated_since = last_updated_since, all = all)
+	o.start(ENV, last_updated_since = last_updated_since, all = all, doi_id = doi_id)
