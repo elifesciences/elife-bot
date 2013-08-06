@@ -1,5 +1,5 @@
-Feature: ActivityToFluidinfo activity
-	In order to use the ActivityToFluidinfo activity
+Feature: ArticleToFluidinfo activity
+	In order to use the ArticleToFluidinfo activity
   As a user
 	I want to confirm the activity class can be used
 	
