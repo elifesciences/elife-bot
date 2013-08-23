@@ -58,7 +58,7 @@ class activity_ConverterXMLtoJS(activity.activity):
 			# Good, now we can do a get request
 			
 			# Wait briefly for the converter to process the PUT completely
-			time.sleep(5)
+			time.sleep(15)
 			
 			get_json_url = self.settings.converter_url + '/documents/' + elife_id
 			get_jsonp_url = self.settings.converter_url + '/documents/' + elife_id + '?callback=handleDoc'
