@@ -159,3 +159,47 @@ def have_the_time_attribute(step, time):
 	key_name = world.base_name + '_time'
 	assert world.date_attrs[key_name] == time, \
 		"Got time %s" % world.date_attrs[key_name]
+	
+@step('I get a filesystem provider from the activity object')
+def get_the_filesystem_provider_from_the_activity_object(step):
+	world.fs = world.activity_object.get_fs()
+	assert world.fs is not None, \
+		"Got filesystem provider %s" % world.fs
+	
+@step('I have the elife_id (\S+)')
+def have_the_elife_id_elife_id(step, elife_id):
+	world.elife_id = elife_id
+	assert world.elife_id is not None, \
+		"Got elife_id %s" % world.elife_id
+
+@step('I read document to content with the activity object')
+def read_document_to_content_with_the_activity_object(step):
+	world.activity_object.read_document_to_content(world.document_name)
+	content_present = False
+	if(world.fs.content is not None):
+		content_present = True
+	assert content_present, \
+		"Got content_present %s" % content_present
+
+@step('I get the document from the activity object')
+def get_the_document_from_the_activity_object(step):
+	world.document_path = world.activity_object.get_document()
+	assert world.document_path is not None, \
+		"Got document_path %s" % world.document_path
+
+@step('And I get the document name from path using the activity object')
+def get_the_document_name_from_path_using_the_activity_object(step):
+	world.document_name_from_path = world.activity_object.get_document_name_from_path(world.document_path)
+	assert world.document_name_from_path is not None, \
+		"Got document_name_from_path %s" % world.document_name_from_path
+	
+@step('I get the pdf object S3key name from the activity object')
+def get_the_pdf_object_s3key_name_from_the_activity_object(step):
+	world.S3key_name = world.activity_object.get_pdf_object_S3key_name(world.elife_id, world.document_name_from_path)
+	assert world.S3key_name is not None, \
+		"Got S3key_name %s" % world.S3key_name
+		
+@step('I have the S3key_name (\S+)')
+def have_the_s3key_name_s3key_name(step, S3key_name):
+	assert world.S3key_name == S3key_name, \
+		"Got S3key_name %s" % world.S3key_name
