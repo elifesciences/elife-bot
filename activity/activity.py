@@ -143,7 +143,9 @@ class activity(object):
 			os.mkdir(full_dir_name)
 			self.tmp_dir = full_dir_name
 		except OSError:
-			pass
+			# Directory may already exist, happens when running tests, check if it exists
+			if(os.path.isdir(full_dir_name)):
+				self.tmp_dir = full_dir_name
 
 	def get_tmp_dir(self):
 		"""
