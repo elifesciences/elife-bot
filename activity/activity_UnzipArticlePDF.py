@@ -104,7 +104,7 @@ class activity_UnzipArticlePDF(activity.activity):
     Given the elife_id (5 digits) and document name, assemble
     an S3 key (prefix for folder name, document for file name)
     """
-    
+    document = document.replace("/", '')
     delimiter = self.settings.delimiter
     prefix = delimiter + 'elife-articles' + delimiter + elife_id
     s3key_name = prefix + delimiter + self.subfolder + delimiter + document
