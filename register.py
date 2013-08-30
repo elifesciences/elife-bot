@@ -33,6 +33,7 @@ def start(ENV = "dev"):
 	workflow_names.append("LensArticlePublish")
 	workflow_names.append("LensIndexPublish")
 	workflow_names.append("AdminEmail")
+	workflow_names.append("PublishPDF")
 	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
@@ -62,7 +63,8 @@ def start(ENV = "dev"):
 	activity_names.append("LensCDNInvalidation")
 	activity_names.append("AdminEmailHistory")
 	activity_names.append("WorkflowConflictCheck")
-
+	activity_names.append("UnzipArticlePDF")
+	
 	for activity_name in activity_names:
 		# Import the activity libraries
 		class_name = "activity_" + activity_name
