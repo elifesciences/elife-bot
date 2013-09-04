@@ -36,6 +36,7 @@ In summary, our rough plan is:
 - Use existing data providers
 - Create a new activity, named ``activity_UnzipArticlePDF``
 - Create a new workflow, named ``workflow_PublishPDF``
+- Create a new starter, named ``starter_PublishPDF``
 - Create a new cron starter, named ``cron_NewS3PDF``
 - Add ``cron_NewS3PDF`` to the ``cron.py`` when we're done, to schedule it
 
