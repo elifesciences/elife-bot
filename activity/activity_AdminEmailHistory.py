@@ -95,7 +95,7 @@ class activity_AdminEmailHistory(activity.activity):
         format       = format)
     except boto.ses.exceptions.SESAddressNotVerifiedError:
       # For now, try to ask the recipient to verify
-      ses_conn.verify_email_address(self.settings.ses_sender_email)
+      ses_conn.verify_email_address(recipient_email)
 
   def get_workflow_count_by_closestatus(self, seconds):
     
