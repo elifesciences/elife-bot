@@ -110,7 +110,13 @@ def have_activity_name(step, activity_name):
 	world.activity_name = activity_name
 	assert world.activity_name is not None, \
 		"Got activity_name %s" % world.activity_name 
-	
+
+@step('I have the activityId (\S+)')
+def have_activity_name(step, activityId):
+	world.activityId = activityId
+	assert world.activityId is not None, \
+		"Got activityId %s" % world.activityId 
+
 @step('I have an activity object')
 def get_activity_object(step):
 	# Import the activity libraries
@@ -125,7 +131,17 @@ def get_activity_object(step):
 		world.conn = world.conn
 	except AttributeError:
 		world.conn = None
-	world.activity_object = f(world.settings, logger, world.conn)
+	# Assemble a tiny SWF activity_task to give it a specific ID
+	try:
+		world.activityId = world.activityId
+	except AttributeError:
+		world.activityId = None
+	if(world.activityId is not None):
+		world.activity_task = {}
+		world.activity_task["activityId"] = world.activityId
+	else:
+		world.activity_task = None
+	world.activity_object = f(world.settings, logger, world.conn, None, world.activity_task)
 	assert world.activity_object is not None, \
 		"Got activity_object %s" % world.activity_object
 	
