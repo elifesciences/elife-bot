@@ -20,6 +20,7 @@ Feature: UnzipArticlePDF activity
     And I have the settings environment <env>
     And I get the settings
     And I have the activity name UnzipArticlePDF
+    And I have the activityId <activityId>
     And I have an activity object
     And I have the elife_id <elife_id>
     And I have the document name <document_name>
@@ -31,5 +32,5 @@ Feature: UnzipArticlePDF activity
     Then I have the S3key_name <S3key_name>
     
   Examples:
-    | env          | elife_id    | document_name                      | S3key_name
-    | dev          | 00534       | test_data/elife_2013_00534.pdf.zip | /elife-articles/00534/pdf/elife00534.pdf
+    | env          | activityId             | elife_id    | document_name                      | S3key_name
+    | dev          | UnzipArticlePDF_00534  | 00534       | test_data/elife_2013_00534.pdf.zip | /elife-articles/00534/pdf/elife00534.pdf
