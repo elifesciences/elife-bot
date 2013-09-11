@@ -4,6 +4,7 @@ import random
 import datetime
 import calendar
 import time
+import os
 
 import activity
 
@@ -43,10 +44,10 @@ class activity_UnzipArticleXML(activity.activity):
 		
 		# Download the S3 object
 		document = data["data"]["document"]
-		self.fs.read_document_to_content(document)
+		self.fs.write_document_to_tmp_dir(document)
 		
 		# The document location on local file system
-		tmp_document_path = self.fs.get_document()
+		tmp_document_path = self.get_document()
 		# Clean up to get the filename alone
 		tmp_document = self.get_document_name_from_path(tmp_document_path)
 		
@@ -66,6 +67,17 @@ class activity_UnzipArticleXML(activity.activity):
 
 		return True
 	
+	def get_document(self):
+		"""
+		Exposed for running tests
+		"""
+		if(self.fs.tmp_dir):
+			full_filename = self.fs.tmp_dir + os.sep + self.fs.get_document()
+		else:
+			full_filename = self.fs.get_document()
+		
+		return full_filename
+
 	def get_xml_object_S3key_name(self, elife_id, document):
 		"""
 		Given the elife_id (5 digits) and document name, assemble

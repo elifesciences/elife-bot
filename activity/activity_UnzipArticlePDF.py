@@ -4,6 +4,7 @@ import random
 import datetime
 import calendar
 import time
+import os
 
 import activity
 
@@ -79,17 +80,24 @@ class activity_UnzipArticlePDF(activity.activity):
     """
     return self.fs
   
-  def read_document_to_content(self, document):
+  def read_document_to_content(self, document, filename = None):
     """
     Exposed for running tests
     """
-    self.fs.read_document_to_content(document)
-  
+    self.fs.write_document_to_tmp_dir(document, filename)
+    content = self.fs.read_document_from_tmp_dir(self.fs.get_document())
+    return content
+
   def get_document(self):
     """
     Exposed for running tests
     """
-    return self.fs.get_document()
+    if(self.fs.tmp_dir):
+      full_filename = self.fs.tmp_dir + os.sep + self.fs.get_document()
+    else:
+      full_filename = self.fs.get_document()
+
+    return full_filename
   
   def get_elife_id_from_data(self, data):
      self.elife_id = data["data"]["elife_id"]
