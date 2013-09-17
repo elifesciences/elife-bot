@@ -141,6 +141,8 @@ def get_activity_object(step):
 		world.activity_task["activityId"] = world.activityId
 	else:
 		world.activity_task = None
+	# Throw out and recreate the object
+	#world.activity_object = None
 	world.activity_object = f(world.settings, logger, world.conn, None, world.activity_task)
 	assert world.activity_object is not None, \
 		"Got activity_object %s" % world.activity_object
