@@ -61,21 +61,21 @@ class activity_LensDocumentsJS(activity.activity):
     bucket = s3_conn.lookup(bucket_name)
 
     # 1. JSON
-    document_name = self.fs.download_document(get_json_url, filename=json_filename, validate_url = False)
+    self.fs.document = self.fs.download_document(get_json_url, filename=json_filename, validate_url = False)
     # Create S3 key and save the file there
     s3key = boto.s3.key.Key(bucket)
     s3key.key = json_s3key
-    s3key.set_contents_from_filename(document_name, replace=True)
+    s3key.set_contents_from_filename(self.get_document(), replace=True)
     
     if(self.logger):
       self.logger.info('LensDocumentsJS: %s' % json_s3key)
     
     # 2. JSONP
-    document_name = self.fs.download_document(get_jsonp_url, filename=jsonp_filename, validate_url = False)
+    self.fs.document = self.fs.download_document(get_jsonp_url, filename=jsonp_filename, validate_url = False)
     # Create S3 key and save the file there
     s3key = boto.s3.key.Key(bucket)
     s3key.key = jsonp_s3key
-    s3key.set_contents_from_filename(document_name, replace=True)
+    s3key.set_contents_from_filename(self.get_document(), replace=True)
     
     if(self.logger):
       self.logger.info('LensDocumentsJS: %s' % jsonp_s3key)
@@ -84,3 +84,14 @@ class activity_LensDocumentsJS(activity.activity):
       return False
     
     return True
+  
+  def get_document(self):
+    """
+    Exposed for running tests
+    """
+    if(self.fs.tmp_dir):
+      full_filename = self.fs.tmp_dir + os.sep + self.fs.get_document()
+    else:
+      full_filename = self.fs.get_document()
+    
+    return full_filename

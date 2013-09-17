@@ -24,7 +24,6 @@ Feature: UnzipArticlePDF activity
     And I have an activity object
     And I have the elife_id <elife_id>
     And I have the document name <document_name>
-    And I get a filesystem provider from the activity object
     When I read document to content with the activity object
     And I get the document from the activity object
     And I get the document name from path using the activity object

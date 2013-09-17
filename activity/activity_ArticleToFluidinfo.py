@@ -65,24 +65,52 @@ class activity_ArticleToFluidinfo(activity.activity):
 			pass
 		
 		# Read in the document and write it to the temp directory
-		self.fs.read_document_to_content(document)
-		self.fs.write_content_to_document(filename)
+		#self.fs.write_document_to_tmp_dir(document)
+		#content = self.fs.read_document_from_tmp_dir(self.fs.get_document())
+		#self.fs.write_content_to_document(content, filename)
 
-		self.parse_document(self.fs.document)
+		# Download the S3 object
+		self.read_document_to_content(document)
+
+		self.parse_document(self.get_document())
 		
 		result = None
 		if(self.a is not None):
 			result = self.load_article()
 
 		return result
-	
+
+	def get_fs(self):
+		"""
+		For running tests, return the filesystem provider
+		so it can be interrogated
+		"""
+		return self.fs
+
+	def read_document_to_content(self, document, filename = None):
+		"""
+		Exposed for running tests
+		"""
+		self.fs.write_document_to_tmp_dir(document, filename)
+		content = self.fs.read_document_from_tmp_dir(self.fs.get_document())
+		return content
+
+	def get_document(self):
+		"""
+		Exposed for running tests
+		"""
+		if(self.fs.tmp_dir):
+			full_filename = self.fs.tmp_dir + os.sep + self.fs.get_document()
+		else:
+			full_filename = self.fs.get_document()
+
+		return full_filename
+
 	def parse_document(self, document):
 		"""
 		Parse the XML document into an article object
 		"""
 
-		self.fs.document = document
-		
 		path = None
 
 		# Article class from the library
@@ -90,7 +118,7 @@ class activity_ArticleToFluidinfo(activity.activity):
 
 		# Can now specify to the article object our objects explicitly
 		self.a = article.article()
-		self.a.parse_document(path, self.fs.document)
+		self.a.parse_document(path, document)
 				
 	def load_article(self):
 		"""

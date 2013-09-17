@@ -22,30 +22,34 @@ Feature: ArticleToFluidinfo activity
 		And I have the settings environment <env>
 	  And I get the settings
 		And I have the activity name ArticleToFluidinfo
+    And I have the activityId <activityId>
 		And I have an activity object
-    And I have the document name <document_name>
-		When I read the file named document name with ArticleToFluidinfo
-		And I write the content from ArticleToFluidinfo to <filename>
-		And I parse the document name with ArticleToFluidinfo
+		And I have the document name <document_name>
+		And I have the filename <filename>
+		When I read document to content with the activity object
+		And I get the document path from the activity object
+		And I parse the document path with ArticleToFluidinfo
 	  Then I get the DOI from the ArticleToFluidinfo article <doi>
 		
   Examples:
-    | env  				| document_name					        | filename					| doi
-    | dev  				| test_data/elife00013.xml			| elife00013.xml		| 10.7554/eLife.00013
+    | env  				| activityId                | document_name					        | filename					| doi
+    | dev  				| ArticleToFluidinfo_00013  | test_data/elife00013.xml			| elife00013.xml		| 10.7554/eLife.00013
 
 	Scenario: Optionally download S3 file, optionally extract a zip file, read and write the article XML file then parse it
     Given I have imported a settings module
 		And I have the settings environment <env>
 	  And I get the settings
 		And I have the activity name ArticleToFluidinfo
+    And I have the activityId <activityId>
 		And I have an activity object
     And I have the document name <document_name>
-		When I read the file named document name with ArticleToFluidinfo
-		And I get the document name from ArticleToFluidinfo
-		And I parse the document name with ArticleToFluidinfo
+		And I have the filename <filename>
+		When I read document to content with the activity object
+		And I get the document path from the activity object
+		And I parse the document path with ArticleToFluidinfo
 	  Then I get the DOI from the ArticleToFluidinfo article <doi>
 		
   Examples:
-    | env  				| document_name																																| filename					| doi
-    | dev  				| test_data/elife_2013_00415.xml.zip																					| elife00415.xml		| 10.7554/eLife.00415
-    | dev  				| https://s3.amazonaws.com/elife-articles/00415/elife_2013_00415.xml.zip			| elife00415.xml		| 10.7554/eLife.00415
+    | env  				| activityId                | document_name																															| filename			| doi
+    | dev  				| ArticleToFluidinfo_00415  | test_data/elife_2013_00415.xml.zip																				| None					| 10.7554/eLife.00415
+    | dev  				| ArticleToFluidinfo_00415  | https://s3.amazonaws.com/elife-articles/00415/elife_2013_00415.xml.zip		| None					| 10.7554/eLife.00415
