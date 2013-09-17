@@ -100,8 +100,10 @@ class activity_UnzipArticleSVG(activity.activity):
     """
     self.fs.write_document_to_tmp_dir(document, filename)
     content = []
+
     for doc in self.fs.get_document():
       content.append(doc)
+
     return content
 
   def get_document(self):
@@ -109,7 +111,15 @@ class activity_UnzipArticleSVG(activity.activity):
     Exposed for running tests
     """
     full_filename_list = []
-    for doc in self.fs.get_document():
+    
+    # Check for a list
+    doc_list = []
+    if (type(self.fs.get_document()) == list):
+      doc_list = self.fs.get_document()
+    else:
+      doc_list.append(self.fs.get_document())
+      
+    for doc in doc_list:
       full_filename = None
       if(self.fs.tmp_dir):
         full_filename = self.fs.tmp_dir + os.sep + doc
