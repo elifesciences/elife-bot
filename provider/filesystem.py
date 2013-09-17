@@ -119,7 +119,10 @@ class Filesystem(object):
 		Read the file from the tmp_dir
 		"""
 		tmp_dir = self.get_tmp_dir()
-		
+
+		# Create or check tmp_dir exists when we open files
+		self.make_tmp_dir()
+
 		if(tmp_dir):
 			full_filename = tmp_dir + os.sep + filename
 		else:
@@ -188,3 +191,18 @@ class Filesystem(object):
 		if(self.tmp_dir):
 			return self.tmp_dir
 		return None
+
+	def make_tmp_dir(self):
+		"""
+		Make the tmp_dir directory
+		"""
+		# Check if the tmp_dir exists, if not create it
+		if(self.tmp_dir):
+			try:
+				os.mkdir(self.tmp_dir)
+			except OSError:
+				# Directory may already exist, happens when running tests, check if it exists
+				if(os.path.isdir(self.tmp_dir)):
+					self.tmp_dir = self.tmp_dir
+				else:
+					self.tmp_dir = None
