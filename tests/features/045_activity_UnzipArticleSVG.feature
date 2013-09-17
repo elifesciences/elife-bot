@@ -35,4 +35,5 @@ Feature: UnzipArticleSVG activity
     | env          | activityId             | elife_id    | document_name                      | index | S3key_name
     | dev          | UnzipArticleSVG_00003  | 00003       | test_data/elife_2012_00003.svg.zip | 0     | /elife-articles/00003/svg/elife00003f005.svg
     | dev          | UnzipArticleSVG_00003  | 00003       | test_data/elife_2012_00003.svg.zip | 3     | /elife-articles/00003/svg/elife00003sf003_2.svg
+    | dev          | UnzipArticleSVG_00593  | 00593       | test_data/elife_2013_00593.svg.zip | 0     | /elife-articles/00593/svg/elife00593inf001.svg
 
