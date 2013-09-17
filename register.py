@@ -64,6 +64,7 @@ def start(ENV = "dev"):
 	activity_names.append("AdminEmailHistory")
 	activity_names.append("WorkflowConflictCheck")
 	activity_names.append("UnzipArticlePDF")
+	activity_names.append("UnzipArticleSVG")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries
