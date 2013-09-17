@@ -37,6 +37,7 @@ class activity_UnzipArticleSVG(activity.activity):
     self.document = None
     
     self.subfolder = 'svg'
+    self.content_type = 'image/svg+xml'
 
   def do_activity(self, data = None):
     """
@@ -76,6 +77,9 @@ class activity_UnzipArticleSVG(activity.activity):
       bucket = s3_conn.lookup(bucket_name)
       s3key = boto.s3.key.Key(bucket)
       s3key.key = s3key_name
+      # Set Content-type metadata prior to upload
+      if(self.content_type):
+        s3key.set_metadata('Content-Type', self.content_type)
       s3key.set_contents_from_filename(tmp_doc_path, replace=True)
     
     if(self.logger):
