@@ -211,7 +211,7 @@ def get_the_document_from_the_activity_object(step):
 		"Got document_path %s" % world.document_path
 
 @step('I set the document as list index (\d+)')
-def set_the_document_name_from_path_as_list_index(step, index):
+def set_the_document_as_list_index(step, index):
 	world.document_path = world.document_path[int(index)]
 	assert world.document_path is not None, \
 		"Got document_path %s" % world.document_path

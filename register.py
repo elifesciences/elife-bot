@@ -34,6 +34,7 @@ def start(ENV = "dev"):
 	workflow_names.append("LensIndexPublish")
 	workflow_names.append("AdminEmail")
 	workflow_names.append("PublishPDF")
+	workflow_names.append("PublishSVG")
 	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
