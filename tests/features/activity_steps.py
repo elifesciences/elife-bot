@@ -209,19 +209,31 @@ def get_the_document_from_the_activity_object(step):
 	world.document_path = world.activity_object.get_document()
 	assert world.document_path is not None, \
 		"Got document_path %s" % world.document_path
-	
+
+@step('I set the document as list index (\d+)')
+def set_the_document_as_list_index(step, index):
+	world.document_path = world.document_path[int(index)]
+	assert world.document_path is not None, \
+		"Got document_path %s" % world.document_path
+
 @step('And I get the document name from path using the activity object')
 def get_the_document_name_from_path_using_the_activity_object(step):
 	world.document_name_from_path = world.activity_object.get_document_name_from_path(world.document_path)
 	assert world.document_name_from_path is not None, \
 		"Got document_name_from_path %s" % world.document_name_from_path
-	
+
 @step('I get the pdf object S3key name from the activity object')
 def get_the_pdf_object_s3key_name_from_the_activity_object(step):
 	world.S3key_name = world.activity_object.get_pdf_object_S3key_name(world.elife_id, world.document_name_from_path)
 	assert world.S3key_name is not None, \
 		"Got S3key_name %s" % world.S3key_name
-		
+
+@step('I get the svg object S3key name from the activity object')
+def get_the_svg_object_s3key_name_from_the_activity_object(step):
+	world.S3key_name = world.activity_object.get_svg_object_S3key_name(world.elife_id, world.document_name_from_path)
+	assert world.S3key_name is not None, \
+		"Got S3key_name %s" % world.S3key_name
+	
 @step('I have the S3key_name (\S+)')
 def have_the_s3key_name_s3key_name(step, S3key_name):
 	assert world.S3key_name == S3key_name, \
