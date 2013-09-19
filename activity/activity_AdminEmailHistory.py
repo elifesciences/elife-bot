@@ -28,6 +28,9 @@ class activity_AdminEmailHistory(activity.activity):
     self.default_task_start_to_close_timeout= 60*5
     self.description = "Email administrators a workflow history status message."
     
+    # Default time period, in seconds
+    self.time_period = 60*60*4
+    
   def do_activity(self, data = None):
     """
     AdminEmailHistory activity, do the work
@@ -38,12 +41,15 @@ class activity_AdminEmailHistory(activity.activity):
     # Note: Create a verified sender email address, only done once
     #conn.verify_email_address(self.settings.ses_sender_email)
   
-    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-    datetime_string = time.strftime(date_format, time.gmtime())
+    current_time = time.gmtime()
+    current_timestamp = calendar.timegm(current_time)
 
-    time_period = 60*60*4
-    history_text = self.get_workflow_count_by_closestatus(time_period)
-    body = self.get_email_body(time_period, history_text)
+    workflow_count = self.get_workflow_count_by_closestatus(self.time_period, current_timestamp)
+    history_text = self.get_history_text(workflow_count)
+    body = self.get_email_body(self.time_period, history_text, current_time)
+    subject = self.get_email_subject(current_time, workflow_count)
+    sender_email = self.settings.ses_sender_email
+    
     recipient_email_list = []
     # Handle multiple recipients, if specified
     if(type(self.settings.ses_admin_email) == list):
@@ -52,15 +58,61 @@ class activity_AdminEmailHistory(activity.activity):
     else:
       recipient_email_list.append(self.settings.ses_admin_email)
 
-    sender_email = self.settings.ses_sender_email
-    subject = "eLife SWF workflow history " + datetime_string + ", domain: " + self.settings.domain
-
     for email in recipient_email_list:
       self.send_email(sender_email, email, subject, body, format = "text")
-
+      pass
+    
     return True
   
-  def get_email_body(self, time_period, history_text):
+  def get_history_text(self, workflow_count):
+    """
+    Given a dictionary of closed workflow executions and their count,
+    get the workflow history text to include in the email body
+    If no workflow_count is supplied, get it from the object time_period in seconds
+    """
+    
+    history_text = ""
+    
+    # Concatenate the message
+    for key in sorted(workflow_count.iterkeys()):
+      close_status = key
+      run_count = workflow_count[key]
+      
+      history_text = history_text + "\n" + close_status + ": " + str(run_count)
+
+    if(history_text == ""):
+      history_text = None
+    return history_text
+  
+  def get_email_subject(self, current_time, workflow_count):
+    """
+    Assemble the email subject
+    """
+    date_format = '%Y-%m-%d %H:%M'
+    datetime_string = time.strftime(date_format, current_time)
+    
+    history_text = ""
+    for key in sorted(workflow_count.iterkeys()):
+      close_status = key
+      run_count = workflow_count[key]
+      if(close_status == "COMPLETED"):
+        history_text += " c:" + str(run_count)
+      elif(close_status == "FAILED"):
+        history_text += " f:" + str(run_count)
+      elif(close_status == "CANCELED"):
+        pass
+      elif(close_status == "TERMINATED"):
+        pass
+      elif(close_status == "CONTINUED_AS_NEW"):
+        pass
+      elif(close_status == "TIMED_OUT"):
+        history_text += " to:" + str(run_count)
+   
+    subject = "eLife SWF " + datetime_string + history_text + ", domain: " + self.settings.domain
+    
+    return subject
+  
+  def get_email_body(self, time_period, history_text, current_time):
     """
     Format the body of the email
     """
@@ -68,7 +120,7 @@ class activity_AdminEmailHistory(activity.activity):
     body = ""
     
     date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-    datetime_string = time.strftime(date_format, time.gmtime())
+    datetime_string = time.strftime(date_format, current_time)
     
     body = "A short history of workflow executions\n"
     body += "As at " + datetime_string + "\n"
@@ -97,20 +149,21 @@ class activity_AdminEmailHistory(activity.activity):
       # For now, try to ask the recipient to verify
       ses_conn.verify_email_address(recipient_email)
 
-  def get_workflow_count_by_closestatus(self, seconds):
-    
-    history_text = ""
+  def get_workflow_count_by_closestatus(self, time_period, current_timestamp):
+    """
+    Given the time_period in seconds, and the current_timestamp
+    use the SWFMeta provider to count closed workflows
+    """
     
     close_status_list = ["COMPLETED", "FAILED", "CANCELED", "TERMINATED", "CONTINUED_AS_NEW", "TIMED_OUT"]
     
     swfmeta = swfmetalib.SWFMeta(self.settings)
     swfmeta.connect()
 
-    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-    current_timestamp = calendar.timegm(time.gmtime())
-    
     start_latest_date_timestamp = current_timestamp
-    start_oldest_date_timestamp = start_latest_date_timestamp - seconds
+    start_oldest_date_timestamp = start_latest_date_timestamp - time_period
+    
+    workflow_count = {}
     
     for close_status in close_status_list:
       count = swfmeta.get_closed_workflow_execution_count(
@@ -124,8 +177,10 @@ class activity_AdminEmailHistory(activity.activity):
         run_count = count["count"]
       except:
         run_count = None
-        
-      # Concatenate the message
-      history_text = history_text + "\n" + close_status + ": " + str(run_count)
       
-    return history_text
+      if(run_count):
+        workflow_count[close_status] = run_count
+      else:
+        workflow_count[close_status] = 0
+
+    return workflow_count
