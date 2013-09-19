@@ -35,15 +35,15 @@ class starter_PublishSVG():
 	
 		if(all == True):
 			# Publish all articles, use SimpleDB as the source
-			docs = get_docs_from_SimpleDB(ENV)
+			docs = self.get_docs_from_SimpleDB(ENV)
 	
 		elif(doi_id is not None):
-			docs = get_docs_from_SimpleDB(ENV, doi_id = doi_id)
+			docs = self.get_docs_from_SimpleDB(ENV, doi_id = doi_id)
 			
 		elif(last_updated_since is not None):
 			# Publish only articles since the last_modified date, use SimpleDB as the source
-			docs = get_docs_from_SimpleDB(ENV, last_updated_since = last_updated_since)
-		
+			docs = self.get_docs_from_SimpleDB(ENV, last_updated_since = last_updated_since)
+
 		if(docs):
 			for doc in docs:
 				
@@ -71,35 +71,35 @@ class starter_PublishSVG():
 					print message
 					logger.info(message)
 
-def get_docs_from_SimpleDB(ENV = "dev", last_updated_since = None, doi_id = None):
-	"""
-	Get the array of docs from the SimpleDB provider
-	"""
-	docs = []
-	
-	# Specify run environment settings
-	settings = settingsLib.get_settings(ENV)
-	
-	db = dblib.SimpleDB(settings)
-	db.connect()
-	
-	if(last_updated_since is not None):
-		xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "svg", latest = True, last_updated_since = last_updated_since)
-	elif(doi_id is not None):
-		xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "svg", latest = True, doi_id = doi_id)
-	else:
-		# Get all
-		xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "svg", latest = True)
+	def get_docs_from_SimpleDB(self, ENV = "dev", last_updated_since = None, doi_id = None):
+		"""
+		Get the array of docs from the SimpleDB provider
+		"""
+		docs = []
 		
-	for x in xml_item_list:
-		tmp = {}
-		elife_id = str(x['name']).split("/")[0]
-		document = 'https://s3.amazonaws.com/' + x['item_name']
-		tmp['elife_id'] = elife_id
-		tmp['document'] = document
-		docs.append(tmp)
-	
-	return docs
+		# Specify run environment settings
+		settings = settingsLib.get_settings(ENV)
+		
+		db = dblib.SimpleDB(settings)
+		db.connect()
+		
+		if(last_updated_since is not None):
+			xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "svg", latest = True, last_updated_since = last_updated_since)
+		elif(doi_id is not None):
+			xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "svg", latest = True, doi_id = doi_id)
+		else:
+			# Get all
+			xml_item_list = db.elife_get_article_S3_file_items(file_data_type = "svg", latest = True)
+			
+		for x in xml_item_list:
+			tmp = {}
+			elife_id = str(x['name']).split("/")[0]
+			document = 'https://s3.amazonaws.com/' + x['item_name']
+			tmp['elife_id'] = elife_id
+			tmp['document'] = document
+			docs.append(tmp)
+		
+		return docs
 
 if __name__ == "__main__":
 
@@ -112,6 +112,8 @@ if __name__ == "__main__":
 	parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
 	parser.add_option("-u", "--last-updated-since", default=None, action="store", type="string", dest="last_updated_since", help="specify the datetime for last_updated_since")
 	parser.add_option("-d", "--doi-id", default=None, action="store", type="string", dest="doi_id", help="specify the DOI id of a single article")
+	parser.add_option("-a", "--all", default=None, action="store_true", dest="all", help="start workflow for all files")
+	
 	(options, args) = parser.parse_args()
 	if options.env: 
 		ENV = options.env
@@ -119,11 +121,9 @@ if __name__ == "__main__":
 		last_updated_since = options.last_updated_since
 	if options.doi_id:
 		doi_id = options.doi_id
-		
-	# Publish all articles if no options provided
-	if last_updated_since is None and doi_id is None: 
-		all = True
-		
+	if options.all:
+		all = options.all
+
 	o = starter_PublishSVG()
 
 	o.start(ENV, last_updated_since = last_updated_since, all = all, doi_id = doi_id)
