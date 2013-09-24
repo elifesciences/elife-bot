@@ -20,9 +20,30 @@ In short,
 
 ## A workflow lifecycle example
 
-To do.
+A simple diagram follows to help describe the automated workflows:
 
 ![eLife bot cron diagram](images/elife-bot-cron.png)
+
+Overview:
+
+- An instance cron job executes ``cron.py`` every 5 minutes.
+- If it is the top half of the hour (i.e. if the time is 1:00 to 1:29, 2:00 to 2:29, etc.), it will execute ``S3Monitor`` if the last time ``S3Monitor`` was started is more than 31 minutes ago.
+- ``S3Monitor`` will poll the S3 bucket for objects and log any object modifications in SimpleDB. The green arrow, in the sample diagram, indicates if ``S3Monitor`` runs at 2:00, it will be aware of files updated since 1:00.
+- If it is the bottom half of the hour (i.e. if the time is 1:30 to 1:59, 2:30 to 2:59, etc.), it will execute ``cron_NewS3XML`` if the last time ``cron_NewS3XML`` was started is more than 31 minutes ago (as well as other executions)
+- ``cron_NewS3XML``, for example, decides whether it should start any workflows, based on whether it discovers new files were added or changed to the S3 bucket since a lastUpdated date. It calculates the lastUpdated date as the previous time itself was started, minus 30 minutes. The green arrow, in the sample diagram, shows how it calculates it should look at files updated since 1:00.
+- Because when ``S3Monitor`` ran at 2:00 it will only have logged objects updated until 2:00, the result will be ``cron_NewS3XML`` will operate on files updated between 1:00 an 2:00
+
+Caveats: A keen reader may wonder what happens if an S3 object is updated while the S3Monitor is running. In short, it still works: objects updated since the S3Monitor has already passed them will get logged in the next hour; objects updated before the S3Monitor reaches them will get logged that hour, due to the atomicity of S3Monitor operations.
+
+Continuing the workflow lifecycle:
+
+- Say that ``cron_NewS3XML`` finds 3 S3 objects were new or updated since 1:00 that contain new article XML
+- ``cron_NewS3XML`` will execute multiple starters, as many as are listed in the code to start when new XML is found. Some starters will be given the lastUpdated date, some may not require it.
+- Each starter, in turn, will start multiple SWF workflow executions, or a single workflow, depending on what the starter does. For example, 3 new XML objects will result in starting 3 PublishArticle workflows.
+- Once a workflow execution is started, the ``decider.py`` and ``worker.py`` processes that are listening on the job queue will process the business logic or activity steps, respectively.
+- Each workflow execution will progress as programmed until the workflow execution is COMPLETED, FAILED, or TIMED_OUT (the common status values expected in automated jobs)
+
+
 
 ## Performance notes
 
