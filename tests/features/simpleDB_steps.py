@@ -162,6 +162,28 @@ def i_have_the_recipient_email(step, recipient_email):
     assert world.recipient_email is not None, \
       "Got recipient_email %s" % world.recipient_email
 
+@step('I have the sort by (\S+)')
+def i_have_the_sort_by(step, sort_by):
+  if(sort_by == "None"):
+    world.sort_by = None
+    assert world.sort_by is None, \
+      "Got sort_by %s" % world.sort_by
+  else:
+    world.sort_by = sort_by
+    assert world.sort_by is not None, \
+      "Got sort_by %s" % world.sort_by
+
+@step('I have the limit (\S+)')
+def i_have_the_limit(step, limit):
+  if(limit == "None"):
+    world.limit = None
+    assert world.limit is None, \
+      "Got limit %s" % world.limit
+  else:
+    world.limit = limit
+    assert world.limit is not None, \
+      "Got limit %s" % world.limit
+
 @step('I get the query from the SimpleDB provider')
 def i_get_the_query_from_the_simpledb_provider(step):
   world.query = world.db.elife_get_article_S3_query(
@@ -180,6 +202,8 @@ def i_get_the_email_queue_query_from_the_simpledb_provider(step):
   world.query = world.db.elife_get_email_queue_query(
     date_format = world.date_format,
     domain_name = world.domain_name,
+    sort_by = world.sort_by,
+    limit = world.limit,
     sent_status = world.sent_status,
     email_type = world.email_type,
     doi_id = world.doi_id,

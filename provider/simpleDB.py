@@ -313,7 +313,7 @@ class SimpleDB(object):
 
 		return item_list
 	
-	def elife_get_email_queue_items(self, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
+	def elife_get_email_queue_items(self, sort_by = None, limit = None, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
 		"""
 		From the SimpleDB domain for the EmailQueue, return a list of matching item to the attributes
 			sent_status:              True, False, None - Booleans will be converted to strings for the query
@@ -334,6 +334,8 @@ class SimpleDB(object):
 		query = self.elife_get_email_queue_query(
 			date_format,
 			domain_name_env,
+			sort_by,
+			limit,
 			sent_status,
 			email_type,
 			doi_id,
@@ -350,7 +352,7 @@ class SimpleDB(object):
 
 		return item_list
 	
-	def elife_get_email_queue_query(self, date_format, domain_name, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
+	def elife_get_email_queue_query(self, date_format, domain_name, sort_by = None, limit = None, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
 		"""
 		Build a query for SimpleDB to get EmailQueue data
 		from the EmailQueue domain.
@@ -361,6 +363,8 @@ class SimpleDB(object):
 		# Assemble where clause
 		where_clause = ""
 		where_delimiter = " where"
+		order_by = ""
+		limit_clause = ""
 		
 		if(sent_status):
 			where_clause += where_delimiter + " sent_status = '" + str(sent_status) + "'"
@@ -398,12 +402,18 @@ class SimpleDB(object):
 			where_delimiter = " and"
 				
 		# Add a where clause if the field was added, or AWS complains about the orderby
-		where_clause += where_delimiter + " (date_added_timestamp is not null or date_added_timestamp is null)"
-		order_by = " order by date_added_timestamp asc"
+		if(sort_by):
+			where_clause += where_delimiter + " " + sort_by + " is not null"
+			order_by = " order by " + sort_by + " asc"
+			
+		# Add a limit
+		if(limit):
+			limit_clause += " limit " + limit
 		
 		# Assemble the query
 		query = 'select * from ' + domain_name + ''
 		query = query + where_clause
 		query = query + order_by
+		query = query + limit_clause
 
 		return query

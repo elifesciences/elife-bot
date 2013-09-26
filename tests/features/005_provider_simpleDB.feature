@@ -98,6 +98,8 @@ Feature: Use SimpleDB as a data provider
     Given I have imported the SimpleDB provider module
     And I have the domain name EmailQueue_dev
     And I have the date format %Y-%m-%dT%H:%M:%S.000Z
+    And I have the sort by <sort_by>
+    And I have the limit <limit>
     And I have the sent status <sent_status>
     And I have the email type <email_type>
     And I have the doi id <doi_id>
@@ -108,7 +110,7 @@ Feature: Use SimpleDB as a data provider
     Then I have the SimpleDB query <query>
   
   Examples:
-    | sent_status | email_type | doi_id | date_scheduled_before | date_sent_before   |  recipient_email   | query
-    | None        | None       | None   | None                  | None               | None               | select * from EmailQueue_dev where sent_status is null and (date_added_timestamp is not null or date_added_timestamp is null) order by date_added_timestamp asc
-
+    | sort_by              | limit  | sent_status | email_type | doi_id | date_scheduled_before | date_sent_before   | recipient_email   | query
+    | None                 | None   | None        | None       | None   | None                  | None               | None              | select * from EmailQueue_dev where sent_status is null
+    | date_added_timestamp | None   | None        | None       | None   | None                  | None               | None              | select * from EmailQueue_dev where sent_status is null and date_added_timestamp is not null order by date_added_timestamp asc
     
