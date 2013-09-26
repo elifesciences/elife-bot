@@ -3,6 +3,21 @@ Feature: Use SimpleDB as a data provider
   As a worker
   I want to access domains and process data
   
+  Scenario: Check SimpleDB apostrophe escape function
+    Given I have imported a settings module
+    And I have the settings environment <env>
+    And I get the settings
+    And I have imported the SimpleDB provider module
+    When I have the val <val>
+    And I use SimpleDB to escape the val
+    Then I have the escaped val <escaped_val>
+
+  Examples:
+    | env    | val           | escaped_val
+    | dev    | test          | test
+    | dev    | 123           | 123
+    | dev    | O'Reilly      | O''Reilly
+
   Scenario: Get a SimpleDB domain name for a particular environment
     Given I have imported a settings module
     And I have the settings environment <env>
@@ -79,4 +94,21 @@ Feature: Use SimpleDB as a data provider
     | test_data/provider.simpleDB.elife_articles.latest02.json  | 1     | name                    | 00005/elife00005.xml
     | test_data/provider.simpleDB.elife_articles.latest02.json  | 1     | last_modified_timestamp | 1359244983
     
+  Scenario: Build SimpleDB queries for email queue
+    Given I have imported the SimpleDB provider module
+    And I have the domain name EmailQueue_dev
+    And I have the date format %Y-%m-%dT%H:%M:%S.000Z
+    And I have the sent status <sent_status>
+    And I have the email type <email_type>
+    And I have the doi id <doi_id>
+    And I have the date scheduled before <date_scheduled_before>
+    And I have the date sent before <date_sent_before>
+    And I have the recipient email <recipient_email>
+    When I get the email queue query from the SimpleDB provider
+    Then I have the SimpleDB query <query>
+  
+  Examples:
+    | sent_status | email_type | doi_id | date_scheduled_before | date_sent_before   |  recipient_email   | query
+    | None        | None       | None   | None                  | None               | None               | select * from EmailQueue_dev where sent_status is null and (date_added_timestamp is not null or date_added_timestamp is null) order by date_added_timestamp asc
+
     

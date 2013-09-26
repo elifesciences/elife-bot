@@ -107,6 +107,61 @@ def i_have_the_latest_value(step, latest):
     assert world.latest is not None, \
       "Got latest %s" % world.latest
 
+@step('I have the sent status (\S+)')
+def i_have_the_sent_status(step, sent_status):
+  if(sent_status == "None"):
+    world.sent_status = None
+    assert world.sent_status is None, \
+      "Got sent_status %s" % world.sent_status
+  else:
+    world.sent_status = sent_status
+    assert world.sent_status is not None, \
+      "Got sent_status %s" % world.sent_status
+    
+@step('I have the email type (\S+)')
+def i_have_the_email_type(step, email_type):
+  if(email_type == "None"):
+    world.email_type = None
+    assert world.email_type is None, \
+      "Got email_type %s" % world.email_type
+  else:
+    world.email_type = email_type
+    assert world.email_type is not None, \
+      "Got email_type %s" % world.email_type
+      
+@step('I have the date scheduled before (\S+)')
+def i_have_the_date_scheduled_before(step, date_scheduled_before):
+  if(date_scheduled_before == "None"):
+    world.date_scheduled_before = None
+    assert world.date_scheduled_before is None, \
+      "Got date_scheduled_before %s" % world.date_scheduled_before
+  else:
+    world.date_scheduled_before = date_scheduled_before
+    assert world.date_scheduled_before is not None, \
+      "Got date_scheduled_before %s" % world.date_scheduled_before
+
+@step('I have the date sent before (\S+)')
+def i_have_the_date_sent_before(step, date_sent_before):
+  if(date_sent_before == "None"):
+    world.date_sent_before = None
+    assert world.date_sent_before is None, \
+      "Got date_sent_before %s" % world.date_sent_before
+  else:
+    world.date_sent_before = date_sent_before
+    assert world.date_sent_before is not None, \
+      "Got date_sent_before %s" % world.date_sent_before
+
+@step('I have the recipient email (\S+)')
+def i_have_the_recipient_email(step, recipient_email):
+  if(recipient_email == "None"):
+    world.recipient_email = None
+    assert world.recipient_email is None, \
+      "Got recipient_email %s" % world.recipient_email
+  else:
+    world.recipient_email = recipient_email
+    assert world.recipient_email is not None, \
+      "Got recipient_email %s" % world.recipient_email
+
 @step('I get the query from the SimpleDB provider')
 def i_get_the_query_from_the_simpledb_provider(step):
   world.query = world.db.elife_get_article_S3_query(
@@ -117,6 +172,20 @@ def i_get_the_query_from_the_simpledb_provider(step):
     file_data_type = world.file_data_type,
     doi_id = world.doi_id,
     last_updated_since = world.last_updated_since)
+  assert world.query is not None, \
+    "Got query %s" % world.query
+
+@step('I get the email queue query from the SimpleDB provider')
+def i_get_the_email_queue_query_from_the_simpledb_provider(step):
+  world.query = world.db.elife_get_email_queue_query(
+    date_format = world.date_format,
+    domain_name = world.domain_name,
+    sent_status = world.sent_status,
+    email_type = world.email_type,
+    doi_id = world.doi_id,
+    date_scheduled_before = world.date_scheduled_before,
+    date_sent_before = world.date_sent_before,
+    recipient_email = world.recipient_email)
   assert world.query is not None, \
     "Got query %s" % world.query
 
@@ -152,3 +221,20 @@ def and_the_item_list_index_key_is_value(step, index, key, value):
     match_value = None
   assert match_value == value, \
     "Got value %s" % match_value
+
+@step('I have the val (\S+)')
+def i_have_the_val(step, val):
+  world.val = val
+  assert world.val is not None, \
+    "Got val %s" % world.val
+
+@step('I use SimpleDB to escape the val')
+def i_use_simpledb_to_escape_the_val_val(step):
+  world.escaped_val = world.db.escape(world.val)
+  assert world.escaped_val is not None, \
+    "Got escaped_val %s" % world.escaped_val
+    
+@step('I have the escaped val (\S+)')
+def i_have_the_escaped_val_escaped_val(step, esc):
+  assert world.escaped_val == str(esc), \
+    "Got escaped_val %s" % world.escaped_val

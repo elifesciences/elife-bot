@@ -141,6 +141,15 @@ class SimpleDB(object):
 		self.domains[domain_name] = dom
 		
 		return dom
+	
+	def escape(self, val):
+		"""
+		Escape single apostrophe with double apostrophe
+		for strings used in SimpleDB queries
+		"""
+		if(val):
+			val = str(val).replace("'", "''")
+		return val
 
 	def elife_get_article_S3_file_items(self, file_data_type = None, doi_id = None, last_updated_since = None, latest = None):
 		"""
@@ -303,3 +312,98 @@ class SimpleDB(object):
 					item_list.remove(item)
 
 		return item_list
+	
+	def elife_get_email_queue_items(self, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
+		"""
+		From the SimpleDB domain for the EmailQueue, return a list of matching item to the attributes
+			sent_status:              True, False, None - Booleans will be converted to strings for the query
+			email_type:               template type or email type
+			doi_id:                   five digit numeric string as the unique portion of the DOI
+			date_scheduled_before:    only return items scheduled to send before the date provided
+			date_sent_before:         only return items that were sent before the date provided
+			recipient_email:
+		"""
+		
+		date_format = "%Y-%m-%dT%H:%M:%S.000Z"
+		
+		domain_name = "EmailQueue"
+		
+		item_list = []
+		
+		domain_name_env = self.get_domain_name(domain_name)
+		query = self.elife_get_email_queue_query(
+			date_format,
+			domain_name_env,
+			sent_status,
+			email_type,
+			doi_id,
+			date_scheduled_before,
+			date_sent_before,
+			recipient_email
+			)
+
+		dom = self.get_domain(domain_name)
+
+		rs = dom.select(query)
+		for j in rs:
+			item_list.append(j)
+
+		return item_list
+	
+	def elife_get_email_queue_query(self, date_format, domain_name, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
+		"""
+		Build a query for SimpleDB to get EmailQueue data
+		from the EmailQueue domain.
+		"""
+		
+		query = ""
+
+		# Assemble where clause
+		where_clause = ""
+		where_delimiter = " where"
+		
+		if(sent_status):
+			where_clause += where_delimiter + " sent_status = '" + str(sent_status) + "'"
+			where_delimiter = " and"
+		else:
+			where_clause += where_delimiter + " sent_status is null"
+			where_delimiter = " and"
+		
+		if(email_type):
+			where_clause += where_delimiter + " email_type = '" + escape(email_type) + "'"
+			where_delimiter = " and"
+		
+		if(doi_id):
+			where_clause += where_delimiter + " doi_id = '" + doi_id + "'"
+			where_delimiter = " and"
+
+		if(date_scheduled_before):
+			# Select based on timestamp
+			date_str = time.strptime(date_scheduled_before, date_format)
+			timestamp = calendar.timegm(date_str)
+			if(timestamp): 
+				where_clause += where_delimiter + " date_scheduled_timestamp < '" + str(timestamp) + "'"
+				where_delimiter = " and"
+				
+		if(date_sent_before):
+			# Select based on timestamp
+			date_str = time.strptime(date_sent_before, date_format)
+			timestamp = calendar.timegm(date_str)
+			if(timestamp): 
+				where_clause += where_delimiter + " date_sent_timestamp < '" + str(timestamp) + "'"
+				where_delimiter = " and"
+				
+		if(recipient_email):
+			where_clause += where_delimiter + " recipient_email = '" + recipient_email + "'"
+			where_delimiter = " and"
+				
+		# Add a where clause if the field was added, or AWS complains about the orderby
+		where_clause += where_delimiter + " (date_added_timestamp is not null or date_added_timestamp is null)"
+		order_by = " order by date_added_timestamp asc"
+		
+		# Assemble the query
+		query = 'select * from ' + domain_name + ''
+		query = query + where_clause
+		query = query + order_by
+
+		return query
