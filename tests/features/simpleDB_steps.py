@@ -184,17 +184,6 @@ def i_have_the_limit(step, limit):
     assert world.limit is not None, \
       "Got limit %s" % world.limit
     
-@step('I have the timestamp (\S+)')
-def i_have_the_timestamp(step, timestamp):
-  if(timestamp == "None"):
-    world.timestamp = None
-    assert world.timestamp is None, \
-      "Got timestamp %s" % world.timestamp
-  else:
-    world.timestamp = timestamp
-    assert world.timestamp is not None, \
-      "Got timestamp %s" % world.timestamp
-
 @step('I have the check is unique (\S+)')
 def i_have_the_check_is_unique(step, check_is_unique):
   if(check_is_unique == "None"):

@@ -436,7 +436,7 @@ class SimpleDB(object):
 		else:
 			current_timestamp = calendar.timegm(time.gmtime())
 
-		item_name = str(current_timestamp)
+		item_name = str(int(current_timestamp))
 		if(doi_id):
 			item_name += "__" + str(doi_id)
 		if(email_type):
