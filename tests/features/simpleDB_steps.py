@@ -183,6 +183,28 @@ def i_have_the_limit(step, limit):
     world.limit = limit
     assert world.limit is not None, \
       "Got limit %s" % world.limit
+    
+@step('I have the timestamp (\S+)')
+def i_have_the_timestamp(step, timestamp):
+  if(timestamp == "None"):
+    world.timestamp = None
+    assert world.timestamp is None, \
+      "Got timestamp %s" % world.timestamp
+  else:
+    world.timestamp = timestamp
+    assert world.timestamp is not None, \
+      "Got timestamp %s" % world.timestamp
+
+@step('I have the check is unique (\S+)')
+def i_have_the_check_is_unique(step, check_is_unique):
+  if(check_is_unique == "None"):
+    world.check_is_unique = None
+    assert world.check_is_unique is None, \
+      "Got check_is_unique %s" % world.check_is_unique
+  else:
+    world.check_is_unique = check_is_unique
+    assert world.check_is_unique is not None, \
+      "Got check_is_unique %s" % world.check_is_unique
 
 @step('I get the query from the SimpleDB provider')
 def i_get_the_query_from_the_simpledb_provider(step):
@@ -262,3 +284,26 @@ def i_use_simpledb_to_escape_the_val_val(step):
 def i_have_the_escaped_val_escaped_val(step, esc):
   assert world.escaped_val == str(esc), \
     "Got escaped_val %s" % world.escaped_val
+
+@step('I get the unique email queue item_name from the SimpleDB provider')
+def i_get_the_unique_email_queue_item_name_from_the_simpledb_provider(step):
+  world.unique_item_name = world.db.elife_get_unique_email_queue_item_name(
+    domain_name = str(world.domain_name),
+    check_is_unique = world.check_is_unique,
+    timestamp = world.timestamp,
+    doi_id = world.doi_id,
+    email_type = world.email_type,
+    recipient_email = world.recipient_email)
+  assert world.unique_item_name is not None, \
+    "Got unique_item_name %s" % world.unique_item_name
+  
+@step('I have the unique item name (\S+)')
+def i_have_the_unique_item_name(step, unique_item_name):
+  assert world.unique_item_name == unique_item_name, \
+    "Got unique_item_name %s" % len(world.unique_item_name)
+
+@step('I connect to SimpleDB using the SimpleDB provider')
+def i_connect_to_simpledb_using_the_simpledb_provider(step):
+  world.sdb_conn = world.db.connect()
+  assert world.sdb_conn is not None, \
+    "Got sdb_conn %s" % world.sdb_conn

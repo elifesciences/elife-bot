@@ -113,4 +113,25 @@ Feature: Use SimpleDB as a data provider
     | sort_by              | limit  | sent_status | email_type | doi_id | date_scheduled_before | date_sent_before   | recipient_email   | query
     | None                 | None   | None        | None       | None   | None                  | None               | None              | select * from EmailQueue_dev where sent_status is null
     | date_added_timestamp | None   | None        | None       | None   | None                  | None               | None              | select * from EmailQueue_dev where sent_status is null and date_added_timestamp is not null order by date_added_timestamp asc
-    
+
+  Scenario: Get a unique item_name for an email queue SimpleDB object
+    Given I have imported a settings module
+    And I have the settings environment <env>
+    And I get the settings
+    And I have imported the SimpleDB provider module
+    And I connect to SimpleDB using the SimpleDB provider
+    And I have the domain name EmailQueue
+    And I have the check is unique <check_is_unique>
+    And I have the timestamp <timestamp>
+    And I have the doi id <doi_id>
+    And I have the email type <email_type>
+    And I have the recipient email <recipient_email>
+    When I get the unique email queue item_name from the SimpleDB provider
+    Then I have the unique item name <unique_item_name>
+  
+  Examples:
+    | env  | timestamp | check_is_unique | doi_id   | email_type  | recipient_email    | unique_item_name
+    | dev  | 1         | None            | None     | None        | None               | 1
+    | dev  | 1         | None            | 00003    | example     | elife@example.com  | 1__00003__example__elife@example.com
+    # Next example checks live SimpleDB and expects a record with item_name = 1, disable for speed
+    # | dev  | 1         | True            | None     | None        | None               | 1__001

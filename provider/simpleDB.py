@@ -24,6 +24,7 @@ class SimpleDB(object):
 		# Set the names of domains = tables in SimpleDB for our data provider
 		self.domain_names['S3File'] = "S3File" + domain_postfix
 		self.domain_names['S3FileLog'] = "S3FileLog" + domain_postfix
+		self.domain_names['EmailQueue'] = "EmailQueue" + domain_postfix
 		
 		# Actual domain connections (boto objects), save them for future use once gotten
 		self.domains = {}
@@ -417,3 +418,59 @@ class SimpleDB(object):
 		query = query + limit_clause
 
 		return query
+	
+	def elife_get_unique_email_queue_item_name(self, domain_name = None, check_is_unique = None, timestamp = None, doi_id = None, email_type = None, recipient_email = None):
+		"""
+		Given a bunch of variables, assemble a SimpleDB item_name
+		that we can expect to be relatively unique for an email queue
+		item, check if it does not yet exist, if so, increment and make a new key
+
+		Supplying a timestamp is only needed for when running tests, otherwise the
+		current timestamp is used
+		
+		"""
+		item_name = ""
+		
+		if(timestamp):
+			current_timestamp = timestamp
+		else:
+			current_timestamp = calendar.timegm(time.gmtime())
+
+		item_name = str(current_timestamp)
+		if(doi_id):
+			item_name += "__" + str(doi_id)
+		if(email_type):
+			item_name += "__" + str(email_type)
+		if(recipient_email):
+			item_name += "__" + str(recipient_email)
+		
+		# Test if item already exists, if so add an increment to it and try again
+		unique_item_name = None
+		if(check_is_unique and domain_name is None):
+			# Cannot check if unique without supplying a domain name
+			# will end up returning null
+			pass
+		elif(check_is_unique is not None and domain_name is not None):
+			# Check the domain for a unique item name
+			simpledb_item = self.get_item(domain_name, item_name, consistent_read=True)
+			if(simpledb_item is None):
+				# Item does not exist, is unique
+				unique_item_name = item_name
+			if(unique_item_name is None):
+				# Item was not unique, try to create one
+				for i in range(1, 100):
+					new_item_name = item_name + "__" + str(i).zfill(3)
+					simpledb_item = self.get_item(domain_name, new_item_name, consistent_read=True)
+					if(simpledb_item is None):
+						# Item does not exist, is unique
+						unique_item_name = new_item_name
+					if(unique_item_name is not None):
+						break
+		else:
+			# Default
+			unique_item_name = item_name
+
+		return unique_item_name
+
+
+
