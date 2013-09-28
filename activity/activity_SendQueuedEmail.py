@@ -63,17 +63,23 @@ class activity_SendQueuedEmail(activity.activity):
     for e in email_items:
       item_name = e.name
       item_attrs = {}
-      result = self.send_email(
-        sender_email    = e["sender_email"],
-        recipient_email = e["recipient_email"],
-        subject         = e["subject"],
-        body            = e["body"],
-        format          = e["format"])
-      if(result):
+      try:
+        result = self.send_email(
+          sender_email    = e["sender_email"],
+          recipient_email = e["recipient_email"],
+          subject         = e["subject"],
+          body            = e["body"],
+          format          = e["format"])
+      except KeyError:
+        # Missing an expected value, handle exception and
+        #  continue the loop
+        continue
+        
+      if(result is True):
         item_attrs["date_sent_timestamp"] = calendar.timegm(time.gmtime())
         item_attrs["sent_status"] = True
         self.db.put_attributes(domain_name, item_name, item_attrs)
-      else:
+      elif(result is False):
         # Did not send correctly
         item_attrs["sent_status"] = False
         self.db.put_attributes(domain_name, item_name, item_attrs)
