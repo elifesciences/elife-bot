@@ -135,3 +135,20 @@ Feature: Use SimpleDB as a data provider
     | dev  | 1         | None            | 00003    | example     | elife@example.com  | 1__00003__example__elife@example.com
     # Next example checks live SimpleDB and expects a record with item_name = 1, disable for speed
     # | dev  | 1         | True            | None     | None        | None               | 1__001
+    
+  Scenario: Prepare an item to add to the email queue SimpleDB object
+    Given I have imported a settings module
+    And I have the settings environment <env>
+    And I get the settings
+    And I have imported the SimpleDB provider module
+    And I have add value <add>
+    And I have the email type <email_type>
+    And I have the recipient email <recipient_email>
+    And I have the sender email <sender_email>
+    When I add email to email queue with the SimpleDB provider
+    Then I get item attributes date_scheduled_timestamp <date_scheduled_timestamp>
+  
+  Examples:
+    | env  | add    | email_type | recipient_email   | sender_email      | date_scheduled_timestamp
+    | dev  | False  | test       | test@example.com  | test@example.com  | 0
+  

@@ -296,3 +296,39 @@ def i_connect_to_simpledb_using_the_simpledb_provider(step):
   world.sdb_conn = world.db.connect()
   assert world.sdb_conn is not None, \
     "Got sdb_conn %s" % world.sdb_conn
+  
+@step('I have the sender email (\S+)')
+def i_have_the_sender_email(step, sender_email):
+  world.sender_email = sender_email
+  assert world.sender_email is not None, \
+    "Got sender_email %s" % world.sender_email
+  
+@step('I have add value (\S+)')
+def i_have_add_value(step, add):
+  if(add == "None" or add == "False"):
+    world.add = False
+    assert world.add is False, \
+      "Got add %s" % world.add
+  elif(add == "True"):
+    world.add = True
+    assert world.add is True, \
+      "Got add %s" % world.add
+  else:
+    world.add = add
+    assert world.add is not None, \
+      "Got add %s" % world.add
+    
+@step('I add email to email queue with the SimpleDB provider')
+def i_add_email_to_email_queue_with_the_simpledb_provider(step):
+  world.item_attrs = world.db.elife_add_email_to_email_queue(
+    recipient_email = world.recipient_email,
+    sender_email    = world.sender_email,
+    email_type      = world.email_type,
+    add             = world.add)
+  assert world.item_attrs is not None, \
+    "Got item_attrs %s" % json.dumps(world.item_attrs)
+  
+@step('I get item attributes date_scheduled_timestamp (\S+)')
+def i_get_item_attributes_date_scheduled_timestamp(step, date_scheduled_timestamp):
+  assert str(world.item_attrs["date_scheduled_timestamp"]) == date_scheduled_timestamp, \
+    "Got date_scheduled_timestamp %s" % world.item_attrs["date_scheduled_timestamp"]

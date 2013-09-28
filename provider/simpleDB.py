@@ -431,6 +431,10 @@ class SimpleDB(object):
 		"""
 		item_name = ""
 		
+		# Default domain name
+		if(not domain_name):
+			domain_name = "EmailQueue"
+		
 		if(timestamp):
 			current_timestamp = timestamp
 		else:
@@ -472,5 +476,105 @@ class SimpleDB(object):
 
 		return unique_item_name
 
+	def elife_add_email_to_email_queue(self, recipient_email, sender_email, email_type, date_added_timestamp = None, date_scheduled_timestamp = 0, doi_id = None, format = "text", recipient_name = None, sender_name = None, subject = None, add = True):
+		"""
+		Given all the necessary details to send an email
+		add an email to the email queue
+		Body and subject must be ready to send, i.e. no template tags requiring replacement
+		All duplicate email checking, if necessary, must be done before adding it to the queue
+		  via this function
 
+		add = True - default is add the email; if false assemble the attributes and return them,
+		             for running tests
 
+		Some schema detail:
+		
+		body                      body of the message to send
+		date_added_timestamp      date added to the queue, current timestamp if not supplied
+		date_scheduled_timestamp  date scheduled to send, 0 if not supplied
+		date_sent_timestamp       None when added, since it is not sent yet
+		doi_id                    DOI 5 digits
+		email_type                Unique template or email type name for checking duplicates
+		format                    "text" or "html", as used by Amazon SES
+		recipient_email           Recipient email
+		recipient_name            Recipient name (optional)
+		sender_email              Sender email
+		sender_name               Sender name (optional)
+		sent_status               Sent status is None when first added to the queue
+		subject                   Subject of the email
+		
+		"""
+		
+		# Default SimpleDB domain
+		domain_name = "EmailQueue"
+		
+		item_attrs = {}
+		
+		# Mandatory
+		if(recipient_email):
+			item_attrs["recipient_email"] = recipient_email
+		else:
+			return None
+		
+		if(sender_email):
+			item_attrs["sender_email"] = sender_email
+		else:
+			return None
+		
+		if(email_type):
+			item_attrs["email_type"] = email_type
+		else:
+			return None
+		
+		# Default
+		if(format):
+			item_attrs["format"] = format
+		else:
+			item_attrs["format"] = "text"
+		
+		# Dates
+		if(date_added_timestamp):
+			item_attrs["date_added_timestamp"] = date_added_timestamp
+		else:
+			item_attrs["date_added_timestamp"] = calendar.timegm(time.gmtime())
+			
+		if(date_scheduled_timestamp):
+			item_attrs["date_scheduled_timestamp"] = date_scheduled_timestamp
+		else:
+			# Schedule immediately
+			item_attrs["date_scheduled_timestamp"] = 0
+
+		# Optional
+		item_attrs["doi_id"] = doi_id
+
+		if(recipient_name):
+			item_attrs["recipient_name"] = recipient_name
+			
+		if(sender_name):
+			item_attrs["sender_name"] = sender_name
+			
+		if(subject):
+			item_attrs["subject"] = subject
+
+		if(add is True):
+			# Add to the queue
+			# Get a unique item_name
+			unique_item_name = self.elife_get_unique_email_queue_item_name(
+				check_is_unique = True,
+				timestamp       = item_attrs["date_added_timestamp"],
+				doi_id          = item_attrs["doi_id"],
+				email_type      = item_attrs["email_type"],
+				recipient_email = item_attrs["recipient_email"])
+			
+			if(unique_item_name):
+				# Add the item to the SimpleDB
+				self.put_attributes(domain_name, unique_item_name, item_attrs)
+				return True
+			else:
+				return False
+			
+		else:
+			return item_attrs
+		
+		# Default
+		return None
