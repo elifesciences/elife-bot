@@ -409,7 +409,7 @@ class SimpleDB(object):
 			
 		# Add a limit
 		if(limit):
-			limit_clause += " limit " + limit
+			limit_clause += " limit " + str(limit)
 		
 		# Assemble the query
 		query = 'select * from ' + domain_name + ''
