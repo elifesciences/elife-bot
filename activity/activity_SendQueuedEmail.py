@@ -57,6 +57,7 @@ class activity_SendQueuedEmail(activity.activity):
     db_conn = self.db.connect()
 
     email_items = self.db.elife_get_email_queue_items(
+      query_type = "items",
       limit = limit,
       date_scheduled_before = date_scheduled_before)
     

@@ -314,14 +314,15 @@ class SimpleDB(object):
 
 		return item_list
 	
-	def elife_get_email_queue_items(self, sort_by = None, limit = None, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
+	def elife_get_email_queue_items(self, query_type = "items", sort_by = None, limit = None, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
 		"""
 		From the SimpleDB domain for the EmailQueue, return a list of matching item to the attributes
+		  query_type:               Type of query: "items" return items, "count" return a count of items
 			sent_status:              True, False, None - Booleans will be converted to strings for the query
 			email_type:               template type or email type
 			doi_id:                   five digit numeric string as the unique portion of the DOI
-			date_scheduled_before:    only return items scheduled to send before the date provided
-			date_sent_before:         only return items that were sent before the date provided
+			date_scheduled_before:    only return items scheduled to send before the date provided, in the date format
+			date_sent_before:         only return items that were sent before the date provided, in the date format
 			recipient_email:
 		"""
 		
@@ -335,6 +336,7 @@ class SimpleDB(object):
 		query = self.elife_get_email_queue_query(
 			date_format,
 			domain_name_env,
+			query_type,
 			sort_by,
 			limit,
 			sent_status,
@@ -353,13 +355,18 @@ class SimpleDB(object):
 
 		return item_list
 	
-	def elife_get_email_queue_query(self, date_format, domain_name, sort_by = None, limit = None, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
+	def elife_get_email_queue_query(self, date_format, domain_name, query_type = "items", sort_by = None, limit = None, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
 		"""
 		Build a query for SimpleDB to get EmailQueue data
 		from the EmailQueue domain.
 		"""
 		
 		query = ""
+
+		# Double-check the query_type if None is supplied
+		#  This helps when running tests and setting a default
+		if(query_type is None):
+			query_type = "items"
 
 		# Assemble where clause
 		where_clause = ""
@@ -412,7 +419,12 @@ class SimpleDB(object):
 			limit_clause += " limit " + str(limit)
 		
 		# Assemble the query
-		query = 'select * from ' + domain_name + ''
+		query = ""
+		if(query_type == "items"):
+			query = query + 'select * from '
+		elif(query_type == "count"):
+			query = query + 'select count(*) from '
+		query = query + domain_name + ''
 		query = query + where_clause
 		query = query + order_by
 		query = query + limit_clause

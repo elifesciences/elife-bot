@@ -195,6 +195,17 @@ def i_have_the_check_is_unique(step, check_is_unique):
     assert world.check_is_unique is not None, \
       "Got check_is_unique %s" % world.check_is_unique
 
+@step('I have the query type (\S+)')
+def i_have_the_query_type(step, query_type):
+  if(query_type == "None"):
+    world.query_type = None
+    assert world.query_type is None, \
+      "Got query_type %s" % world.query_type
+  else:
+    world.query_type = query_type
+    assert world.query_type is not None, \
+      "Got query_type %s" % world.query_type
+
 @step('I get the query from the SimpleDB provider')
 def i_get_the_query_from_the_simpledb_provider(step):
   world.query = world.db.elife_get_article_S3_query(
@@ -213,6 +224,7 @@ def i_get_the_email_queue_query_from_the_simpledb_provider(step):
   world.query = world.db.elife_get_email_queue_query(
     date_format = world.date_format,
     domain_name = world.domain_name,
+    query_type = world.query_type,
     sort_by = world.sort_by,
     limit = world.limit,
     sent_status = world.sent_status,
