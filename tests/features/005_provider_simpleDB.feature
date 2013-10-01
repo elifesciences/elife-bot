@@ -3,6 +3,21 @@ Feature: Use SimpleDB as a data provider
   As a worker
   I want to access domains and process data
   
+  Scenario: Check SimpleDB apostrophe escape function
+    Given I have imported a settings module
+    And I have the settings environment <env>
+    And I get the settings
+    And I have imported the SimpleDB provider module
+    When I have the val <val>
+    And I use SimpleDB to escape the val
+    Then I have the escaped val <escaped_val>
+
+  Examples:
+    | env    | val           | escaped_val
+    | dev    | test          | test
+    | dev    | 123           | 123
+    | dev    | O'Reilly      | O''Reilly
+
   Scenario: Get a SimpleDB domain name for a particular environment
     Given I have imported a settings module
     And I have the settings environment <env>
@@ -79,4 +94,64 @@ Feature: Use SimpleDB as a data provider
     | test_data/provider.simpleDB.elife_articles.latest02.json  | 1     | name                    | 00005/elife00005.xml
     | test_data/provider.simpleDB.elife_articles.latest02.json  | 1     | last_modified_timestamp | 1359244983
     
+  Scenario: Build SimpleDB queries for email queue
+    Given I have imported the SimpleDB provider module
+    And I have the domain name EmailQueue_dev
+    And I have the date format %Y-%m-%dT%H:%M:%S.000Z
+    And I have the sort by <sort_by>
+    And I have the query type <query_type>
+    And I have the limit <limit>
+    And I have the sent status <sent_status>
+    And I have the email type <email_type>
+    And I have the doi id <doi_id>
+    And I have the date scheduled before <date_scheduled_before>
+    And I have the date sent before <date_sent_before>
+    And I have the recipient email <recipient_email>
+    When I get the email queue query from the SimpleDB provider
+    Then I have the SimpleDB query <query>
+  
+  Examples:
+    | sort_by              | query_type | limit  | sent_status | email_type | doi_id | date_scheduled_before    | date_sent_before   | recipient_email   | query
+    | None                 | None       | None   | None        | None       | None   | None                     | None               | None              | select * from EmailQueue_dev where sent_status is null
+    | date_added_timestamp | items      | None   | None        | None       | None   | None                     | None               | None              | select * from EmailQueue_dev where sent_status is null and date_added_timestamp is not null order by date_added_timestamp asc
+    | None                 | count      | None   | None        | None       | None   | None                     | None               | None              | select count(*) from EmailQueue_dev where sent_status is null
+    | None                 | count      | None   | None        | None       | None   | 1970-01-01T00:00:01.000Z | None               | None              | select count(*) from EmailQueue_dev where sent_status is null and date_scheduled_timestamp < '1'
     
+  Scenario: Get a unique item_name for an email queue SimpleDB object
+    Given I have imported a settings module
+    And I have the settings environment <env>
+    And I get the settings
+    And I have imported the SimpleDB provider module
+    And I connect to SimpleDB using the SimpleDB provider
+    And I have the domain name EmailQueue
+    And I have the check is unique <check_is_unique>
+    And I have the timestamp <timestamp>
+    And I have the doi id <doi_id>
+    And I have the email type <email_type>
+    And I have the recipient email <recipient_email>
+    When I get the unique email queue item_name from the SimpleDB provider
+    Then I have the unique item name <unique_item_name>
+  
+  Examples:
+    | env  | timestamp | check_is_unique | doi_id   | email_type  | recipient_email    | unique_item_name
+    | dev  | 1         | None            | None     | None        | None               | 1
+    | dev  | 1         | None            | 00003    | example     | elife@example.com  | 1__00003__example__elife@example.com
+    # Next example checks live SimpleDB and expects a record with item_name = 1, disable for speed
+    # | dev  | 1         | True            | None     | None        | None               | 1__001
+    
+  Scenario: Prepare an item to add to the email queue SimpleDB object
+    Given I have imported a settings module
+    And I have the settings environment <env>
+    And I get the settings
+    And I have imported the SimpleDB provider module
+    And I have add value <add>
+    And I have the email type <email_type>
+    And I have the recipient email <recipient_email>
+    And I have the sender email <sender_email>
+    When I add email to email queue with the SimpleDB provider
+    Then I get item attributes date_scheduled_timestamp <date_scheduled_timestamp>
+  
+  Examples:
+    | env  | add    | email_type | recipient_email   | sender_email      | date_scheduled_timestamp
+    | dev  | False  | test       | test@example.com  | test@example.com  | 0
+  

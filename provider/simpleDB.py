@@ -24,6 +24,7 @@ class SimpleDB(object):
 		# Set the names of domains = tables in SimpleDB for our data provider
 		self.domain_names['S3File'] = "S3File" + domain_postfix
 		self.domain_names['S3FileLog'] = "S3FileLog" + domain_postfix
+		self.domain_names['EmailQueue'] = "EmailQueue" + domain_postfix
 		
 		# Actual domain connections (boto objects), save them for future use once gotten
 		self.domains = {}
@@ -141,6 +142,15 @@ class SimpleDB(object):
 		self.domains[domain_name] = dom
 		
 		return dom
+	
+	def escape(self, val):
+		"""
+		Escape single apostrophe with double apostrophe
+		for strings used in SimpleDB queries
+		"""
+		if(val):
+			val = str(val).replace("'", "''")
+		return val
 
 	def elife_get_article_S3_file_items(self, file_data_type = None, doi_id = None, last_updated_since = None, latest = None):
 		"""
@@ -303,3 +313,283 @@ class SimpleDB(object):
 					item_list.remove(item)
 
 		return item_list
+	
+	def elife_get_email_queue_items(self, query_type = "items", sort_by = None, limit = None, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
+		"""
+		From the SimpleDB domain for the EmailQueue, return a list of matching item to the attributes
+		  query_type:               Type of query: "items" return items, "count" return a count of items
+			sent_status:              True, False, None - Booleans will be converted to strings for the query
+			email_type:               template type or email type
+			doi_id:                   five digit numeric string as the unique portion of the DOI
+			date_scheduled_before:    only return items scheduled to send before the date provided, in the date format
+			date_sent_before:         only return items that were sent before the date provided, in the date format
+			recipient_email:
+		"""
+		
+		date_format = "%Y-%m-%dT%H:%M:%S.000Z"
+		
+		domain_name = "EmailQueue"
+		
+		item_list = []
+		
+		domain_name_env = self.get_domain_name(domain_name)
+		query = self.elife_get_email_queue_query(
+			date_format,
+			domain_name_env,
+			query_type,
+			sort_by,
+			limit,
+			sent_status,
+			email_type,
+			doi_id,
+			date_scheduled_before,
+			date_sent_before,
+			recipient_email
+			)
+
+		dom = self.get_domain(domain_name)
+
+		rs = dom.select(query)
+		for j in rs:
+			item_list.append(j)
+
+		return item_list
+	
+	def elife_get_email_queue_query(self, date_format, domain_name, query_type = "items", sort_by = None, limit = None, sent_status = None, email_type = None, doi_id = None, date_scheduled_before = None, date_sent_before = None, recipient_email = None):
+		"""
+		Build a query for SimpleDB to get EmailQueue data
+		from the EmailQueue domain.
+		"""
+		
+		query = ""
+
+		# Double-check the query_type if None is supplied
+		#  This helps when running tests and setting a default
+		if(query_type is None):
+			query_type = "items"
+
+		# Assemble where clause
+		where_clause = ""
+		where_delimiter = " where"
+		order_by = ""
+		limit_clause = ""
+		
+		if(sent_status):
+			where_clause += where_delimiter + " sent_status = '" + str(sent_status) + "'"
+			where_delimiter = " and"
+		else:
+			where_clause += where_delimiter + " sent_status is null"
+			where_delimiter = " and"
+		
+		if(email_type):
+			where_clause += where_delimiter + " email_type = '" + escape(email_type) + "'"
+			where_delimiter = " and"
+		
+		if(doi_id):
+			where_clause += where_delimiter + " doi_id = '" + doi_id + "'"
+			where_delimiter = " and"
+
+		if(date_scheduled_before):
+			# Select based on timestamp
+			date_str = time.strptime(date_scheduled_before, date_format)
+			timestamp = calendar.timegm(date_str)
+			if(timestamp): 
+				where_clause += where_delimiter + " date_scheduled_timestamp < '" + str(timestamp) + "'"
+				where_delimiter = " and"
+				
+		if(date_sent_before):
+			# Select based on timestamp
+			date_str = time.strptime(date_sent_before, date_format)
+			timestamp = calendar.timegm(date_str)
+			if(timestamp): 
+				where_clause += where_delimiter + " date_sent_timestamp < '" + str(timestamp) + "'"
+				where_delimiter = " and"
+				
+		if(recipient_email):
+			where_clause += where_delimiter + " recipient_email = '" + recipient_email + "'"
+			where_delimiter = " and"
+				
+		# Add a where clause if the field was added, or AWS complains about the orderby
+		if(sort_by):
+			where_clause += where_delimiter + " " + sort_by + " is not null"
+			order_by = " order by " + sort_by + " asc"
+			
+		# Add a limit
+		if(limit):
+			limit_clause += " limit " + str(limit)
+		
+		# Assemble the query
+		query = ""
+		if(query_type == "items"):
+			query = query + 'select * from '
+		elif(query_type == "count"):
+			query = query + 'select count(*) from '
+		query = query + domain_name + ''
+		query = query + where_clause
+		query = query + order_by
+		query = query + limit_clause
+
+		return query
+	
+	def elife_get_unique_email_queue_item_name(self, domain_name = None, check_is_unique = None, timestamp = None, doi_id = None, email_type = None, recipient_email = None):
+		"""
+		Given a bunch of variables, assemble a SimpleDB item_name
+		that we can expect to be relatively unique for an email queue
+		item, check if it does not yet exist, if so, increment and make a new key
+
+		Supplying a timestamp is only needed for when running tests, otherwise the
+		current timestamp is used
+		
+		"""
+		item_name = ""
+		
+		# Default domain name
+		if(not domain_name):
+			domain_name = "EmailQueue"
+		
+		if(timestamp):
+			current_timestamp = timestamp
+		else:
+			current_timestamp = calendar.timegm(time.gmtime())
+
+		item_name = str(int(current_timestamp))
+		if(doi_id):
+			item_name += "__" + str(doi_id)
+		if(email_type):
+			item_name += "__" + str(email_type)
+		if(recipient_email):
+			item_name += "__" + str(recipient_email)
+		
+		# Test if item already exists, if so add an increment to it and try again
+		unique_item_name = None
+		if(check_is_unique and domain_name is None):
+			# Cannot check if unique without supplying a domain name
+			# will end up returning null
+			pass
+		elif(check_is_unique is not None and domain_name is not None):
+			# Check the domain for a unique item name
+			simpledb_item = self.get_item(domain_name, item_name, consistent_read=True)
+			if(simpledb_item is None):
+				# Item does not exist, is unique
+				unique_item_name = item_name
+			if(unique_item_name is None):
+				# Item was not unique, try to create one
+				for i in range(1, 100):
+					new_item_name = item_name + "__" + str(i).zfill(3)
+					simpledb_item = self.get_item(domain_name, new_item_name, consistent_read=True)
+					if(simpledb_item is None):
+						# Item does not exist, is unique
+						unique_item_name = new_item_name
+					if(unique_item_name is not None):
+						break
+		else:
+			# Default
+			unique_item_name = item_name
+
+		return unique_item_name
+
+	def elife_add_email_to_email_queue(self, recipient_email, sender_email, email_type, date_added_timestamp = None, date_scheduled_timestamp = 0, doi_id = None, format = "text", recipient_name = None, sender_name = None, subject = None, body = None, add = True):
+		"""
+		Given all the necessary details to send an email
+		add an email to the email queue
+		Body and subject must be ready to send, i.e. no template tags requiring replacement
+		All duplicate email checking, if necessary, must be done before adding it to the queue
+		  via this function
+
+		add = True - default is add the email; if false assemble the attributes and return them,
+		             for running tests
+
+		Some schema detail:
+		
+		body                      body of the message to send
+		date_added_timestamp      date added to the queue, current timestamp if not supplied
+		date_scheduled_timestamp  date scheduled to send, 0 if not supplied
+		date_sent_timestamp       None when added, since it is not sent yet
+		doi_id                    DOI 5 digits
+		email_type                Unique template or email type name for checking duplicates
+		format                    "text" or "html", as used by Amazon SES
+		recipient_email           Recipient email
+		recipient_name            Recipient name (optional)
+		sender_email              Sender email
+		sender_name               Sender name (optional)
+		sent_status               Sent status is None when first added to the queue
+		subject                   Subject of the email
+		
+		"""
+		
+		# Default SimpleDB domain
+		domain_name = "EmailQueue"
+		
+		item_attrs = {}
+		
+		# Mandatory
+		if(recipient_email):
+			item_attrs["recipient_email"] = recipient_email
+		else:
+			return None
+		
+		if(sender_email):
+			item_attrs["sender_email"] = sender_email
+		else:
+			return None
+		
+		if(email_type):
+			item_attrs["email_type"] = email_type
+		else:
+			return None
+		
+		# Default
+		if(format):
+			item_attrs["format"] = format
+		else:
+			item_attrs["format"] = "text"
+		
+		# Dates
+		if(date_added_timestamp):
+			item_attrs["date_added_timestamp"] = date_added_timestamp
+		else:
+			item_attrs["date_added_timestamp"] = calendar.timegm(time.gmtime())
+			
+		if(date_scheduled_timestamp):
+			item_attrs["date_scheduled_timestamp"] = date_scheduled_timestamp
+		else:
+			# Schedule immediately
+			item_attrs["date_scheduled_timestamp"] = 0
+
+		# Optional
+		item_attrs["doi_id"] = doi_id
+
+		if(recipient_name):
+			item_attrs["recipient_name"] = recipient_name
+			
+		if(sender_name):
+			item_attrs["sender_name"] = sender_name
+			
+		if(subject):
+			item_attrs["subject"] = subject
+			
+		if(body):
+			item_attrs["body"] = body
+
+		if(add is True):
+			# Add to the queue
+			# Get a unique item_name
+			unique_item_name = self.elife_get_unique_email_queue_item_name(
+				check_is_unique = True,
+				timestamp       = item_attrs["date_added_timestamp"],
+				doi_id          = item_attrs["doi_id"],
+				email_type      = item_attrs["email_type"],
+				recipient_email = item_attrs["recipient_email"])
+			
+			if(unique_item_name):
+				# Add the item to the SimpleDB
+				self.put_attributes(domain_name, unique_item_name, item_attrs)
+				return True
+			else:
+				return False
+			
+		else:
+			return item_attrs
+		
+		# Default
+		return None
