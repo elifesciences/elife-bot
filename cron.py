@@ -24,6 +24,16 @@ def run_cron(ENV = "dev"):
   current_time = time.gmtime()
   
   # Based on the minutes of the current time, run certain starters
+  if(current_time.tm_min >= 0 and current_time.tm_min <= 59):
+    # Jobs to start at any time during the hour
+
+    workflow_conditional_start(
+      ENV           = ENV,
+      starter_name  = "cron_FiveMinute",
+      workflow_id   = "cron_FiveMinute",
+      start_seconds = 60*4)
+  
+  # Based on the minutes of the current time, run certain starters
   if(current_time.tm_min >= 0 and current_time.tm_min <= 29):
     # Jobs to start at the top of the hour
     #print "Top of the hour"
@@ -102,7 +112,11 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       s.start(ENV = ENV, workflow = "S3Monitor")
     elif(starter_name == "starter_AdminEmail"):
       s.start(ENV = ENV, workflow = "AdminEmail")
-    elif(starter_name == "cron_NewS3XML" or starter_name == "cron_NewS3PDF" or starter_name == "cron_NewS3SVG"):
+    elif(starter_name == "cron_NewS3XML"
+      or starter_name == "cron_NewS3PDF"
+      or starter_name == "cron_NewS3SVG"
+      or starter_name == "cron_FiveMinute"
+      ):
       s.start(ENV = ENV)
   
 if __name__ == "__main__":

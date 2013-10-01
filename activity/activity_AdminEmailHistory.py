@@ -10,6 +10,7 @@ import activity
 import boto.ses
 
 import provider.swfmeta as swfmetalib
+import provider.simpleDB as dblib
 
 """
 AdminEmailHistory activity
@@ -28,6 +29,9 @@ class activity_AdminEmailHistory(activity.activity):
     self.default_task_start_to_close_timeout= 60*5
     self.description = "Email administrators a workflow history status message."
     
+    # Data provider
+    self.db = dblib.SimpleDB(settings)
+    
     # Default time period, in seconds
     self.time_period = 60*60*4
     
@@ -37,6 +41,9 @@ class activity_AdminEmailHistory(activity.activity):
     """
     if(self.logger):
       self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+    
+    # Connect to DB
+    db_conn = self.db.connect()
     
     # Note: Create a verified sender email address, only done once
     #conn.verify_email_address(self.settings.ses_sender_email)
@@ -59,7 +66,14 @@ class activity_AdminEmailHistory(activity.activity):
       recipient_email_list.append(self.settings.ses_admin_email)
 
     for email in recipient_email_list:
-      self.send_email(sender_email, email, subject, body, format = "text")
+      # Add the email to the email queue
+      self.db.elife_add_email_to_email_queue(
+        recipient_email = email,
+        sender_email = sender_email,
+        email_type = "AdminEmailHistory",
+        format = "text",
+        subject = subject,
+        body = body)
       pass
     
     return True
@@ -130,24 +144,6 @@ class activity_AdminEmailHistory(activity.activity):
     body += "\n\nSincerely\n\neLife bot"
     
     return body
-
-  def send_email(self, sender_email, recipient_email, subject, body, format = "text"):
-    """
-    Using Amazon SES service
-    """
-    
-    ses_conn = boto.ses.connect_to_region(self.settings.simpledb_region, aws_access_key_id = self.settings.aws_access_key_id, aws_secret_access_key = self.settings.aws_secret_access_key)
-    
-    try:
-      ses_conn.send_email(
-        source       = sender_email,
-        to_addresses = recipient_email,
-        subject      = subject,
-        body         = body,
-        format       = format)
-    except boto.ses.exceptions.SESAddressNotVerifiedError:
-      # For now, try to ask the recipient to verify
-      ses_conn.verify_email_address(recipient_email)
 
   def get_workflow_count_by_closestatus(self, time_period, current_timestamp):
     """
