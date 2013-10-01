@@ -488,7 +488,7 @@ class SimpleDB(object):
 
 		return unique_item_name
 
-	def elife_add_email_to_email_queue(self, recipient_email, sender_email, email_type, date_added_timestamp = None, date_scheduled_timestamp = 0, doi_id = None, format = "text", recipient_name = None, sender_name = None, subject = None, add = True):
+	def elife_add_email_to_email_queue(self, recipient_email, sender_email, email_type, date_added_timestamp = None, date_scheduled_timestamp = 0, doi_id = None, format = "text", recipient_name = None, sender_name = None, subject = None, body = None, add = True):
 		"""
 		Given all the necessary details to send an email
 		add an email to the email queue
@@ -567,6 +567,9 @@ class SimpleDB(object):
 			
 		if(subject):
 			item_attrs["subject"] = subject
+			
+		if(body):
+			item_attrs["body"] = body
 
 		if(add is True):
 			# Add to the queue
