@@ -62,8 +62,8 @@ class workflow_LensArticlePublish(workflow.workflow):
 					"start_to_close_timeout": 60*5
 				},
 				{
-					"activity_type": "ConverterXMLtoJS",
-					"activity_id": "ConverterXMLtoJS",
+					"activity_type": "LensArticle",
+					"activity_id": "LensArticle",
 					"version": "1",
 					"input": data,
 					"control": None,

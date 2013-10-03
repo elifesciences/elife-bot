@@ -79,16 +79,14 @@ class cron_NewS3XML(object):
         logger.exception('')
       
       # Start a LensArticlePublish starter
-      """
       try:
         starter_name = "starter_LensArticlePublish"
         self.import_starter_module(starter_name, logger)
         s = self.get_starter_module(starter_name, logger)
-        s.start(ENV = ENV, all = True)
+        s.start(ENV = ENV, last_updated_since = last_startDate)
       except:
         logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
         logger.exception('')
-      """
       """
       # Start a LensIndexPublish starter
       try:

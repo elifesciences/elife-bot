@@ -51,6 +51,17 @@ class workflow_PublishArticle(workflow.workflow):
 					"start_to_close_timeout": 300
 				},
 				{
+					"activity_type": "UnzipArticleXML",
+					"activity_id": "UnzipArticleXML",
+					"version": "1",
+					"input": data,
+					"control": None,
+					"heartbeat_timeout": 60*5,
+					"schedule_to_close_timeout": 60*5,
+					"schedule_to_start_timeout": 300,
+					"start_to_close_timeout": 60*5
+				},
+				{
 					"activity_type": "ArticleToFluidinfo",
 					"activity_id": "ArticleToFluidinfo",
 					"version": "1",
@@ -60,6 +71,17 @@ class workflow_PublishArticle(workflow.workflow):
 					"schedule_to_close_timeout": 300,
 					"schedule_to_start_timeout": 300,
 					"start_to_close_timeout": 300
+				},
+				{
+					"activity_type": "LensArticle",
+					"activity_id": "LensArticle",
+					"version": "1",
+					"input": data,
+					"control": None,
+					"heartbeat_timeout": 60*5,
+					"schedule_to_close_timeout": 60*5,
+					"schedule_to_start_timeout": 300,
+					"start_to_close_timeout": 60*5
 				}
 			],
 		
