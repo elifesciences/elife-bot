@@ -57,7 +57,7 @@ class starter_PublishPDF():
 				workflow_name = "PublishPDF"
 				workflow_version = "1"
 				child_policy = None
-				execution_start_to_close_timeout = str(60*15)
+				execution_start_to_close_timeout = str(60*30)
 				input = '{"data": ' + json.dumps(doc) + '}'
 		
 				try:
