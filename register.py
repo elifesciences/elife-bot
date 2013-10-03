@@ -68,6 +68,7 @@ def start(ENV = "dev"):
 	activity_names.append("UnzipArticlePDF")
 	activity_names.append("UnzipArticleSVG")
 	activity_names.append("SendQueuedEmail")
+	activity_names.append("LensArticle")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries
