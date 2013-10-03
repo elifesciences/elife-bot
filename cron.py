@@ -75,7 +75,7 @@ def run_cron(ENV = "dev"):
         ENV           = ENV,
         starter_name  = "starter_AdminEmail",
         workflow_id   = "AdminEmail",
-        start_seconds = (60*60*4)-14)
+        start_seconds = (60*60*4)-(14*60))
 
 def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, workflow_id = None, workflow_name = None, workflow_version = None):
   """
