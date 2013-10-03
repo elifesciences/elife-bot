@@ -58,7 +58,7 @@ class starter_PublishArticle():
         workflow_version = "1"
         child_policy = None
         execution_start_to_close_timeout = None
-        input = '{"data": {"document": "' + document + '"}}'
+        input = '{"data": ' + json.dumps(doc) + '}'
     
         try:
           response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version, settings.default_task_list, child_policy, execution_start_to_close_timeout, input)
