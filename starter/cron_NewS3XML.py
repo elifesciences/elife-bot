@@ -79,6 +79,7 @@ class cron_NewS3XML(object):
         logger.exception('')
       
       # Start a LensArticlePublish starter
+      """
       try:
         starter_name = "starter_LensArticlePublish"
         self.import_starter_module(starter_name, logger)
@@ -87,7 +88,8 @@ class cron_NewS3XML(object):
       except:
         logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
         logger.exception('')
-      
+      """
+      """
       # Start a LensIndexPublish starter
       try:
         starter_name = "starter_LensIndexPublish"
@@ -97,6 +99,7 @@ class cron_NewS3XML(object):
       except:
         logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
         logger.exception('')
+      """
   
   def start_ping_marker(self, workflow_id, ENV = "dev"):
     """
