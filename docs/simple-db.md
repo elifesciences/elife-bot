@@ -117,7 +117,7 @@ Phew!
 
 Given the standard meta data recorded in the ``S3File`` and ``S3FileLog`` SimpleDB domains by the S3Monitor activity, we want to get:
 
-* the most recent S3 objects for each eLife article that stores the a) article XML, b) images, c) PDF, d) supplementary files or e) video
+* the most recent S3 objects for each eLife article that stores the a) article XML, b) images, c) PDF, d) supplementary files,  e) video, or f) SVG
 * all the S3 objects for a particular eLife article, given the unique five digits in the DOI
 * all the files updated since datetime X, optionally only returning the XML or PDF objects, for example
 
@@ -128,6 +128,8 @@ def elife_get_article_S3_file_items(self, file_data_type = None, doi_id = None, 
 ```
 
 # SimpleDB schemas
+
+## S3 object polling
 
 The current schemas in use for the S3Monitor are a domain for the current S3 bucket objects (``S3File`` and ``S3File_dev`` for the dev environment) and a domain for logging modifications to S3 objects (``S3FileLog`` adn ``S3FileLog_dev``). Both schemas are similar except log domain items will have a concatenated unique item name made up of the modified timestamp + item_name. For example,
 
@@ -269,4 +271,31 @@ last_modified_time
 last_modified_day
 last_modified_month
 last_modified_year
+```
+
+## Email Queue
+
+The eLife bot ``/provider/simpleDB.py`` data provider also understands the ``EmailQueue`` SimpleDB domain and its schema. The queue stores and logs emails sent via Amazon Simple Email Service (SES) by the SWF workflows.
+
+Sending email using the queue is done in two stages:
+
+1. Add an email to the queue.
+2. Send unsent email in queue.
+
+A basic set of fields for an item in the EmailQueue domain include:
+
+```
+body
+date_added_timestamp
+date_scheduled_timestamp
+date_sent_timestamp
+doi_id
+email_type
+format
+recipient_email
+recipient_name
+sender_email
+sender_name
+sent_status
+subject
 ```
