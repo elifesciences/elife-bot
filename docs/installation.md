@@ -42,26 +42,26 @@ Vagrant is used to configure a local virtual machine with standard attributes fo
 
 1. Start a local virtual machine with Vagrant, as specified in [elife-template-env][tmpl-env]. Depending on the recipes run, it may pull code automatically from the "elife-bot" and "elife-api-prototype" repositories. If the repositories were not pulled automatically:
 
-``
-    git clone git://github.com/elifesciences/elife-api-prototype.git
-    git clone git://github.com/elifesciences/elife-bot.git
-``
+  ```
+  git clone git://github.com/elifesciences/elife-api-prototype.git
+  git clone git://github.com/elifesciences/elife-bot.git
+  ```
 
 2. To run tests, you must ensure the settings.py files exist and/or include the AWS credentials. At a minimum:
 
-``
-    cd elife-api-prototype
-    cp settings-example.py settings.py
-    cd elife-bot
-    cp settings-example.py settings.py
-``
+  ```
+  cd elife-api-prototype
+  cp settings-example.py settings.py
+  cd elife-bot
+  cp settings-example.py settings.py
+  ```
 
-    Edit the settings.py file to include your AWS credentials
+  Edit the settings.py file to include your AWS credentials
     
 3. Run tests:
 
-``
-    cd elife-bot/tests
-    lettuce
-``
+  ```
+  cd elife-bot/tests
+  lettuce
+  ```
 
