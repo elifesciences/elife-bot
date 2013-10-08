@@ -158,7 +158,9 @@ ubuntu@domU:/home/localgit/elife-bot$
 # Troubleshooting scenarios
 
 __Symptom__: Workflows are not running, you can login via SSH.
+
 __Diagnosis__: The workers or deicders may have crashed.
+
 __Solution__: Restart the workers and deciders.
 
 1. Login to the instance via SSH as username "ubuntu" (with SSH key)
@@ -166,7 +168,7 @@ __Solution__: Restart the workers and deciders.
 ```
 ps aux | grep python
 ```
-Some processes may be listed as <defunct>, or no processes are listed at all.
+Some processes may be listed as &lt;defunct&gt;, or no processes are listed at all.
 
 3. Restart the workers and deciders:
 ```
@@ -176,7 +178,9 @@ sudo killall -u root python
 ```
 
 __Symptom__: Admin emails from the workflow have stopped, workflows are not running, you cannot login via SSH.
+
 __Diagnosis__: The instance may have stopped / crashed.
+
 __Solution__: Start the instance, then start workers and deciders.
 
 1. Login to AWS web console.
@@ -184,15 +188,18 @@ __Solution__: Start the instance, then start workers and deciders.
 3. Click on instances and start the stopped instance
 4. Once started, continue with restarting the workers and deciders as described above.
 
-__Symptom__: Workflows requiring disk fail but other workflows are completed
-__Diagnosis__: The instance may have run a long time and the 8GB disk on the migroinstance is getting full / is full
-__Solution__: Delete files from the tmp directory
+__Symptom__: Workflows requiring disk fail but other workflows are completed.
+
+__Diagnosis__: The instance may have run a long time and the 8GB disk on the migroinstance is getting full / is full.
+
+__Solution__: Delete files from the tmp directory.
 
 1. Login to the instance via SSH as username "ubuntu" (with SSH key)
 2. Check disk usage:
 ```
 df
 ```
+
 3. If full / getting full, delete the eLife bot tmp directory:
 ```
 cd /home/localgit/elife-bot
