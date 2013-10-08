@@ -206,6 +206,85 @@ cd /home/localgit/elife-bot
 sudo rm -Rf tmp
 ```
 
+# Launching a new Ec2 instance - Rough
 
+Start in the AWS web console. At this time, it's a manual process to configure a new instance, and requires to start from an existing AMI that includes the required python libraries.
+
+Basically,
+
+## Launch instance
+
+Choose an AMI: My AMIs, select the AMI saved after building an instance using vagrant-aws (currently ami-f7533f9e)
+Instance Details: If selecting a T1 Micro instance, you will later need to attach an EBS volume.
+Advanced Instance Options: No additional choices required, continue.
+Storage Device Configuration: Root volume use the one selected, continue
+Tags: continue
+Create a keypair: use "workflow", or another of your own
+Security group: use "workflow"
+Review: Launch!
+
+## Configuring
+
+Login via SSH (with SSH key)
+Before editing settings files, do a git pull to get fresh settings-example.py files
+
+```
+cd /home/localgit/elife-bot
+sudo git pull origin master
+```
+
+Set the bash script to executable, it's handy
+
+```
+sudo chmod 755 scripts/run_micro.sh
+```
+
+Two settings.py files need to be created, one in /home/localgit/elife-bot and one is /home/localgit/elife-api-prototype. Follow instructions on how to create those, which will involve entering AWS keys, usernames and passwords, tokens, email addresses. Maybe pull in a settings.py file from a running instance!
+
+```
+cd /home/localgit/elife-api-prototype
+sudo cp settings-example.py settings.py
+sudo vi settings.py
+_(edit)_
+cd /home/localgit/elife-bot
+sudo cp settings-example.py settings.py
+sudo vi settings.py
+```
+
+## Run tests
+
+```
+cd tests
+sudo lettuce
+```
+
+Enter a cron job, if you need one. __Currently, only one running instance should run cron jobs at one time__.
+
+```
+sudo crontab -e
+```
+
+Enter the following and save, to run both the dev and live environment cron:
+
+```
+*/5 * * * * cd /home/localgit/elife-bot && python /home/localgit/elife-bot/cron.py > /dev/null
+*/5 * * * * cd /home/localgit/elife-bot && python /home/localgit/elife-bot/cron.py -e live > /dev/null
+
+```
+
+## Start running workers and deciders
+
+```
+cd /home/localgit/elife-bot
+./scripts/run_micro.sh
+```
+
+Take a look at running python processes if want to confirm:
+
+```
+ps aux | grep python
+```
+
+You should see 5 worker.py for live environment, 5 worker.py for dev environment (the default), 3 decider.py for each environment.
 
 
