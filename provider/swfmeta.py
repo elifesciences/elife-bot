@@ -137,31 +137,41 @@ class SWFMeta(object):
     For the specified workflow_id, or workflow_name + workflow_version,
     get the startTimestamp for the last successfully completed workflow
     execution
-    Use the full 90 days of execution history provided by Amazon
+    Use up to the full 90 days of execution history provided by Amazon, but
+    first shorter periods of time as specified in days_list
     """
     
     latest_startTimestamp = None
     
     start_latest_date = calendar.timegm(time.gmtime())
-    start_oldest_date = start_latest_date - (60*60*24*90)
-    close_status = "COMPLETED"
-
-    infos = self.get_closed_workflow_executionInfos(
-      domain            = domain,
-      workflow_id       = workflow_id,
-      workflow_name     = workflow_name,
-      workflow_version  = workflow_version,
-      start_latest_date = start_latest_date,
-      start_oldest_date = start_oldest_date,
-      close_status      = close_status)
     
-    # Find the latest run
-    for execution in infos["executionInfos"]:
-      if(latest_startTimestamp is None):
-        latest_startTimestamp = execution['startTimestamp']
-        continue
-      if(execution['startTimestamp'] > latest_startTimestamp):
-        latest_startTimestamp = execution['startTimestamp']
+    # Number of days to check in successive calls to SWF history
+    days_list = [0.25, 1, 7, 90]
+    
+    for days in days_list:
+      
+      start_oldest_date = start_latest_date - int(60*60*24*days)
+      close_status = "COMPLETED"
+  
+      infos = self.get_closed_workflow_executionInfos(
+        domain            = domain,
+        workflow_id       = workflow_id,
+        workflow_name     = workflow_name,
+        workflow_version  = workflow_version,
+        start_latest_date = start_latest_date,
+        start_oldest_date = start_oldest_date,
+        close_status      = close_status)
+
+      # Find the latest run
+      for execution in infos["executionInfos"]:
+        if(latest_startTimestamp is None):
+          latest_startTimestamp = execution['startTimestamp']
+          continue
+        if(execution['startTimestamp'] > latest_startTimestamp):
+          latest_startTimestamp = execution['startTimestamp']
+      # Check if we found the last date
+      if latest_startTimestamp:
+        break
     
     return latest_startTimestamp
 
