@@ -71,9 +71,14 @@ def describe_the_swf_domain(step):
 	
 @step('I have the workflow name (\S+)')
 def have_workflow_name(step, workflow_name):
-	world.workflow_name = workflow_name
-	assert world.workflow_name is not None, \
-		"Got workflow_name %s" % world.workflow_name 
+	if(workflow_name == "None"):
+		world.workflow_name = None
+		assert world.workflow_name is None, \
+			"Got workflow_name %s" % world.workflow_name
+	else:
+		world.workflow_name = workflow_name
+		assert world.workflow_name is not None, \
+			"Got workflow_name %s" % world.workflow_name
 	
 @step('I have a workflow object')
 def get_workflow_object(step):

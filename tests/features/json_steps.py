@@ -1,6 +1,7 @@
 from lettuce import *
 import os
 import json
+import decimal
 
 @step('I have a response JSON document (\S+)')
 def have_a_response_JSON_document(step, document):
@@ -20,7 +21,7 @@ def get_JSON_from_the_document(step):
 
 @step('I parse the JSON string')
 def parse_the_JSON_string(step):
-	world.json = json.loads(world.json_string)
+	world.json = json.loads(world.json_string, parse_float = decimal.Decimal)
 	assert world.json is not None, \
 		"Got json %s" % json.dumps(world.json)
 

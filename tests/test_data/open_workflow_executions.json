@@ -1,0 +1,17 @@
+{
+    "executionInfos": [
+        {
+            "cancelRequested": false,
+            "execution": {
+                "runId": "12LwsAjESX4JPPUiC7kivsiCCZyxSUroB6oGMxQQG2iXA=",
+                "workflowId": "S3Monitor"
+            },
+            "executionStatus": "OPEN",
+            "startTimestamp": 1371508773.464,
+            "workflowType": {
+                "name": "S3Monitor",
+                "version": "1.1"
+            }
+        }
+    ]
+}
