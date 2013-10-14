@@ -31,7 +31,7 @@ def run_cron(ENV = "dev"):
       ENV           = ENV,
       starter_name  = "cron_FiveMinute",
       workflow_id   = "cron_FiveMinute",
-      start_seconds = 60*4)
+      start_seconds = 60*3)
   
   # Based on the minutes of the current time, run certain starters
   if(current_time.tm_min >= 0 and current_time.tm_min <= 29):
