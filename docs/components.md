@@ -43,7 +43,7 @@ Continuing the workflow lifecycle:
 - Once a workflow execution is started, the ``decider.py`` and ``worker.py`` processes that are listening on the job queue will process the business logic or activity steps, respectively.
 - Each workflow execution will progress as programmed until the workflow execution is COMPLETED, FAILED, or TIMED_OUT (the common status values expected in automated jobs)
 
-
+Note on time clocks: In comparing the time on an EC2 micro instance and the time used in the SWF queue, the times can differ by more than 60 seconds. Preliminary results from searching the AWS forums indicate there is no approved method to synchronize clocks with the clock used by SWF. When planning cron (scheduled) jobs and calculating time, this greater than 60 second disparity may matter.
 
 ## Performance notes
 
@@ -57,9 +57,9 @@ General performance notes:
 
 - Known to run for weeks uninterrupted between new code deployments
 - RAM Mem: 604348k total, 557244k used, after real work performed
-- S3Monitor, using a single worker, polls for modifications on 1,114 S3 objects in 2 min 44 sec
-- Full conversion of 237 articles into eLife lens completes in 14 minutes
+- S3Monitor, using a single worker, polls for modifications on 1,700 S3 objects in 4 to 8 minutes
 - Unzipping 230 PDF files and saving to S3, approx. 1.4 GB of data, takes 7 minutes
+- Publishing 6 articles worth of content (XML, PDF, SVG, eLife lens page, and Fluidinfo API) takes 48 seconds
 - Publishing 3 articles to Fluidinfo API takes 12 seconds
 
 
