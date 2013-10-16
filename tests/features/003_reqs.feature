@@ -3,7 +3,7 @@ Feature: Use python imports and requirements
   As a user
   I want to import packages
   
-  Scenario: Connect to Amazon SWF
+  Scenario: Import python packages by name
     Given I have the package name <package_name>
     When I import the package
     Then I get the package with name <package_name>
