@@ -1,0 +1,19 @@
+Feature: Use python imports and requirements
+  In order to use python
+  As a user
+  I want to import packages
+  
+  Scenario: Connect to Amazon SWF
+    Given I have the package name <package_name>
+    When I import the package
+    Then I get the package with name <package_name>
+
+  Examples:
+    | package_name
+    | requests
+    | boto
+    | jinja2
+    | lxml
+    | bs4
+    | fom
+    | elife-api-prototype
