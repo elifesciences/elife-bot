@@ -18,7 +18,7 @@ As an example, let's try adding something new. Expressed as a use case,
 
 Seems simple. This generally describes the first question - what activity does it perform. In answering more of our questions:
 
-- Events that trigger a workflow start are when a new pdf.zip file appears on S3, when an existing pdf.zip file is modified, or we may want to start it manually, perhaps running the activity on a single file, or all files
+- Events that trigger a workflow to start are when a new pdf.zip file appears on S3, when an existing pdf.zip file is modified, or we may want to start it manually, perhaps running the activity on a single file, or all files
 - When it runs automatically we want it to run as soon after the updated file appears as possible
 - There are no additional steps at this time, but in future we may want to save the PDF to more than one location or service after it's unzipped
 
