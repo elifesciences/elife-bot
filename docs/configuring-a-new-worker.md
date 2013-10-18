@@ -24,11 +24,20 @@ Seems simple. This generally describes the first question - what activity does i
 
 Knowing a little about the existing elife-bot code, we can assemble a rough plan:
 
-Q. How do we determine if a new or updated article ``pdf.zip`` file appears? A. The SimpleDB provider functions can tell us (as a result of the continually run S3Monitor)
-Q. How do we schedule it to run when a new file appears? A. We can add a cron starter to the list of scheduled tasks in ``cron.py``
-Q. Is there an existing workflow the activity can be added to? A. Perhaps. It depends on the business logic and how we decide to build the workflows. In this case we say no, because no workflow is specific to pdf.zip files.
-Q. Is there an existing activity that can be adapted? A. Maybe, but in this case we say no. There is an activity that unzips ``xml.zip`` files and saves them to S3, but for flexibility and to simplify our getting going, we can duplicate that activity and make it specific to processing ``pdf.zip`` files.
-Q. Do we need to supply additional settings or credentials for the activities to work? A. In this case no, because it uses the same input and output S3 buckets that are already specified in our ``settings.py`` file. We will hardcode a ``/pdf/`` subdirectory name into the activity, so settings do not need modification.
+Q. How do we determine if a new or updated article ``pdf.zip`` file appears?  
+A. The SimpleDB provider functions can tell us (as a result of the continually run S3Monitor)  
+
+Q. How do we schedule it to run when a new file appears?  
+A. We can add a cron starter to the list of scheduled tasks in ``cron.py``  
+
+Q. Is there an existing workflow the activity can be added to?   
+A. Perhaps. It depends on the business logic and how we decide to build the workflows. In this case we say no, because no workflow is specific to pdf.zip files.  
+
+Q. Is there an existing activity that can be adapted?  
+A. Maybe, but in this case we say no. There is an activity that unzips ``xml.zip`` files and saves them to S3, but for flexibility and to simplify our getting going, we can duplicate that activity and make it specific to processing ``pdf.zip`` files.  
+
+Q. Do we need to supply additional settings or credentials for the activities to work?  
+A. In this case no, because it uses the same input and output S3 buckets that are already specified in our ``settings.py`` file. We will hardcode a ``/pdf/`` subdirectory name into the activity, so settings do not need modification.  
 
 In summary, our rough plan is:
 
