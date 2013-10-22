@@ -12,11 +12,28 @@ In an effort to explain the components of the elife-bot, a diagram provided as p
 
 In short,
 
-- ``worker.py`` command-line utility polls SWF for activity tasks every 60 seconds, and instantiates an activity class when it receives a task
-- ``decider.py`` command-line utility polls SWF for decision tasks every 60 seconds, and instantiates an workflow class when it receives a task
+- ``worker.py`` command-line utility polls SWF for activity tasks every 60 seconds, and instantiates an ``activity`` class when it receives a task
+- ``decider.py`` command-line utility polls SWF for decision tasks every 60 seconds, and instantiates a ``workflow`` class when it receives a task
 - starters can start one or more workflows
 - ``cron.py`` is run every 5 minutes and will load one or more starters when required
 - additionally, a human operator can load a starter as required
+
+To keep things tidy, all the ``activity`` classes are in the activity folder of the codebase, and all ``workflow`` classes are stored in the workflow folder.
+
+The code components as part of eLife bot are primarily influenced by Amazon SWF and how it processes workflows. Please read the ``notes-on-swf.md`` page for more information about how workflows are processed by SWF.
+
+In addition to the components in the diagram above, code found in the ``providers`` folder is shared by many components. This includes getting data from SimpleDB, looking up SWF workflow history, and using the local filesystem, including the ability to unzip files.
+
+** ``filesystem.py`` can create a temporary directory, download files by URL, save files to disk, unzip zip files, read temporary directory contents, etc.
+** ``simpleDB.py`` connects to SimpleDB, specifies a domain or creates a domain, and has eLife specific functions to access S3 monitoring data, email queue data
+** ``swfmeta.py`` connects to Amazon SWF and can get lists of open workflows, closed workflows (by name, id or closed status), and also get the time a completed workflow was last started
+
+All connections made to Amazon AWS services are done using the ``boto`` library. The actions performed include:
+
+* Reading and writing files to S3
+* Reading and writing data to SimpleDB
+* Interfacing with Amazon SWF (using ``boto.swf``, ``boto.swf.layer1`` and ``boto.swf.layer1_decisions``), which essentially communicates with SWF via the RESTful API provided by Amazon
+
 
 ## A workflow lifecycle example
 
