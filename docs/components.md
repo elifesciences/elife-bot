@@ -20,6 +20,8 @@ In short,
 
 ## A workflow lifecycle example
 
+When eLife bot runs continuously and autonomously, it runs on an hourly schedule. In the first half of each hour it checks for new or updated files, and logs those changes to a DB. In the second half of each hour it will perform actions on those files.
+
 A simple diagram follows to help describe the automated workflows:
 
 ![eLife bot cron diagram](images/elife-bot-cron.png)

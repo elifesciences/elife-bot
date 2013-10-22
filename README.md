@@ -4,6 +4,10 @@ elife-bot Overview
 
 eLife Bot is a set of tools built on top of Amazon's [Simple Work Flow][swf] (SWF) to manage post-publication workflow. After we publish an article within eLife we want a number of processes to happen. eLife Bot mocks an event driven architecture by monitoring an S3 bucket hourly for the arrival of new files. History is stored in an AWS Simple DataBase. When a new or modified file is identified a workflow is trigged in [SWF][swf]. Our workflows have been configured to write logging information back into the Simple DB. 
 
+## Documentation
+
+There is more extensive documentation to be found in the ``docs`` folder. Start with ``overview.md`` and it should lead you to the particular documentation you are looking for.
+
 
 ## Installation and tests
 
