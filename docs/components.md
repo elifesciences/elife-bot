@@ -34,6 +34,67 @@ All connections made to Amazon AWS services are done using the ``boto`` library.
 - Reading and writing data to SimpleDB
 - Interfacing with Amazon SWF (using ``boto.swf``, ``boto.swf.layer1`` and ``boto.swf.layer1_decisions``), which essentially communicates with SWF via the RESTful API provided by Amazon
 
+## Components in detail
+
+Each of the important components of the system deserve an expanded description, included in the following.
+
+### Filesystem provider
+
+At first only one or two activities in the system did read and write of data to the file system. As the system expanded, the file system functions were spun off into a separate file for all to use.
+
+Each activity of each workflow execution gets its own temporary directory, inside the ``/tmp`` folder. The subfolder name will be unique and separate from any other activity.
+
+Writing data to disk: Primarily, the filesystem provider will take an S3 bucket URL to a file and download it, or you can use it to save data stored in memory to disk.
+
+If you download a ``.zip`` file, the filesystem provider will automatically unzip it. It will also know what files were inside the zip file so you can use them later.
+
+__Tests:__ In ``tests/features/006_provider_filesystem.feature`` there is (at the time of writing) one test that specifically unzips a file using the filesystem provider. But, other tests, such as ``tests/features/044_activity_UnzipArticlePDF.feature``, and many other tests depend on the filesystem provider to complete the testing steps. If you break the filesystem provider it should be evident with unsuccessful tests.
+
+### SimpleDB provider
+
+Querying SimpleDB data is much faster than relying on data in S3 storage. For that reason, eLife bot stores the result of polling S3 for file modifications, and keeps track of things like the email queue, in SimpleDB. It understands some simple SQL-like queries to quickly get the data you want fast.
+
+The SimpleDB provider connects to SimpleDB. It also has some presets for where it should find particular data. If the domain (like a database table) does not exist, it creates it and connects to it.
+
+There are some simple functions to get an item, or put item attributes.
+
+Specific to how eLife uses SimpleDB, there are functions to return specific S3 bucket results, and also to count unsent emails in the email queue.
+
+__Tests:__ In ``tests/features/005_provider_simpleDB.feature`` there are some example queries for running on S3 bucket logs data. The tests also load JSON data from the ``tests/test_data`` folder which simulates the results you would expect when querying SimpleDB using ``boto``. This saves having to write tests that connect live to AWS.
+
+### SWFMeta provider
+
+Amazon SWF keeps a maximum 90 day history of all workflow executions. The SWFMeta provider connects directly to SWF, via ``boto``, and issues requests on the open or closed workflow executions. The intention is this provider will provide any metadata about SWF, hence the name, SWFMeta.
+
+It will continue to page for results when a nextPageToken is returned by Amazon until the full history of executions is received. But, when looking up the last run time of a particular workflow, it uses speedy adaptable time period magic.
+
+Data comes straight from the "horses mouth", i.e. it is the official data returned directly by SWF service.
+
+It is currently used in two ways,
+
+- The cron (scheduled) jobs use it to keep track of when workflows were run and whether it is time to start a new workflow
+- The completed workflow executions over a 4 hour time period is requested and a text summary of the status is emailed to administrators
+
+__Tests:__ In ``tests/features/007_provider_swfmeta.feature`` there are some simple tests that load JSON data from the ``tests/test_data`` folder which simulates the results you would expect when querying SimpleDB using ``boto``.
+
+### workflow class
+
+A workflow represents the business logic that continues a workflow to completion (or failure).
+
+The ``decider.py`` command-line script receives JSON as part of a decision task from SWF. It instantiates a workflow object and gives it the JSON. The job of the worklfow object is to figure out what to do next.
+
+The plumbing in this procedure is in the base ``workflow/workflow.py`` class file. It looks at the JSON and figures out what activities are completed, what activities are not yet completed, and schedules the next activities to be done. It also may find all the activities were completed and subsequently it will close the workflow.
+
+__Tests:__ The ``tests/features/010_decider.feature`` tests load an example JSON file from the ``tests/test_data`` folder for a decision task and instantiates a workflow object. The tests ``tests/features/030_workflow_types.feature`` instantiate some workflow classes.
+
+### activity class
+
+An activity represents real work to do as part of a workflow execution. It also receives JSON data provided by SWF.
+
+The ``worker.py`` command-line script receives JSON as part of an activity task from SWF. It instantiates an activity object and gives it the JSON. The job of the activity object is to ``do_activity()`` using the data it is provided.
+
+__Tests:__  The ``tests/features/020_worker.feature`` loads an example JSON file from the ``tests/test_data`` folder for emulated activity task JSON. In ``tests/features/041_activity.feature`` the tests load data in the form of JSON from the ``tests/test_data`` folder and runs it. There are also a number of tests written for specific activity classes in the 040 range of file names in the test folder.
+
 
 ## A workflow lifecycle example
 
