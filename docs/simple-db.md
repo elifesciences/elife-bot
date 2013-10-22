@@ -26,6 +26,7 @@ For those who are familiar with traditional relational databases there is some t
 * There are no rows. The equivalent structure is an __item__.
 * There is no primary key column. Instead, each item needs a unique id for it to be individually distinguished.
 * There are no fields. There are __attributes__ (of an item), each of which has a __name__ and __value__.
+* All attribute values are stored as strings, i.e. there are no int, date, etc. types
 * There can be multiple attributes with the same name for a particular item. This is much like how XML can have multiple tags of the same type in a document.
 * There are no joins available in queries, but you can provide a where clause to filter results.
 
