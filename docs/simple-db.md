@@ -18,6 +18,54 @@ There is no interface for SimpleDB in the Amazon web console, and the user must 
 
 While the eLife bot is mostly made from stateless components, it was deemed beneficial to store the result of some activities in a persistent way. SimpleDB is fast, highly available and provided as a service that Amazon manages. The non-relational model makes it flexible to adapt to future schema changes. The ``boto`` library provides a simple object mapping functions that are very convenient when used appropriately.
 
+### Differences from relational databases
+
+For those who are familiar with traditional relational databases there is some terminology and some structural differences to note with SimpleDB.
+
+* There are no tables. The equivalent structure is called a __domain__.
+* There are no rows. The equivalent structure is an __item__.
+* There is no primary key column. Instead, each item needs a unique id for it to be individually distinguished.
+* There are no fields. There are __attributes__ (of an item), each of which has a __name__ and __value__.
+* There can be multiple attributes with the same name for a particular item. This is much like how XML can have multiple tags of the same type in a document.
+* There are no joins available in queries, but you can provide a where clause to filter results.
+
+### How eLife bot uses SimpleDB
+
+In summary, the python ``boto`` library is used to connect to SimpleDB, issue queries, put objects (with attributes) or set attributes of existing objects. Read [An Introduction to boto’s SimpleDB interface](http://boto.readthedocs.org/en/latest/simpledb_tut.html) found in the latest boto documentation for an overview.
+
+When working with a particular SimpleDB item, eLife bot relies on [boto.sdb.item](http://boto.readthedocs.org/en/latest/ref/sdb.html#module-boto.sdb.item) objects. A ``boto.sdb.item`` is a object representation of a SimpleDB item and can be manipulated and saved.
+
+Examples of select queries can be viewed in the lettuce tests in ``tests/features/005_provider_simpleDB.feature``. These queries are concatenated by the functions in the ``provider/simpleDB.py`` data provider.
+
+### Specifications and limitations in SimpleDB
+
+__Transactions and data consistency__
+
+There are no true transactions or data joins in SimpleDB, but it offers consistent reads.
+
+See: http://aws.amazon.com/simpledb/faqs/#Does_Amazon_SimpleDB_support_transactions
+See also: http://aws.amazon.com/simpledb/faqs/#What_does_consistency_mean
+
+__Write throughput__
+
+FAQs suggest a 25 write/second capacity.
+
+See: http://aws.amazon.com/simpledb/faqs/#How_does_Amazon_DynamoDB_differ_from_Amazon_SimpleDB_Which_should_I_use
+
+__Read throughput__
+
+SimpleDB can handle high traffic and spikes in traffic.
+
+See: http://aws.amazon.com/simpledb/faqs/#What_happens_if_traffic_from_my_application_suddenly_spikes
+
+__Space limitations__
+
+Max capacity of SimpleDB is 10GB.
+
+See: http://aws.amazon.com/running_databases/#simpledb
+See also: http://aws.amazon.com/simpledb/faqs/#How_does_Amazon_DynamoDB_differ_from_Amazon_SimpleDB_Which_should_I_use
+
+
 ### Scratchpad quickstart in the S3 monitor context
 
 The getting started guide is recommended reading, and references the Scratchpad in the examples.
