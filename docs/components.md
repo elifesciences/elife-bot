@@ -114,41 +114,41 @@ The console apps are something you typically run in the terminal using command-l
 
 ``decider.py`` and ``worker.py`` are console programs with these features in common:
 
-* Console programs that poll a SWF task list for tasks
-* By default they start 10 processes, or you can  specify how many processes to start in the `-f` `--forks` option.
-* A log file is used for all processes, ``decider.log`` for decider processes, and ``worker.log`` for worker processes
-* The default environment to run in is _dev_ (as specified in the ``settings.py`` file), which you can change with the `-e` `--env` option.
-* They listens for keyboard interrupt to stop polling immediately upon typing _ctrl-c_
+- Console programs that poll a SWF task list for tasks
+- By default they start 10 processes, or you can  specify how many processes to start in the `-f` `--forks` option.
+- A log file is used for all processes, ``decider.log`` for decider processes, and ``worker.log`` for worker processes
+- The default environment to run in is _dev_ (as specified in the ``settings.py`` file), which you can change with the `-e` `--env` option.
+- They listen for keyboard interrupt to stop polling immediately upon typing _ctrl-c_
 
 Specifically,
 
-  ``decider.py``
+``decider.py``
   
-  * Polls for __decision__ tasks. These are created by Amazon SWF as it processes a workflow.
-  * A task is accepted by a ``decider.py`` process, it will get a unique token for that __DecisionTask__
-  * The __workflowType name__ is extracted from the decision task JSON.
-  * It loads (or attempt to load) a workflow class of that name from the **/workflow** folder.
-  * The workflow definition will help it decide what activity to schedule next, or determine whether the workflow is completed.
-  * Data is passed using the _input_ variable
-  * It returns the token and a decision to SWF
+- Polls for __decision__ tasks. These are created by Amazon SWF as it processes a workflow.
+- A task is accepted by a ``decider.py`` process, it will get a unique token for that __DecisionTask__
+- The __workflowType name__ is extracted from the decision task JSON.
+- It loads (or attempt to load) a workflow class of that name from the ``/workflow`` folder.
+- The workflow definition will help it decide what activity to schedule next, or determine whether the workflow is completed.
+- Data is passed using the _input_ variable
+- It returns the token and a decision to SWF
 
-  ``worker.py``
+``worker.py``
 
-  * Polls for __activity__ tasks. These are added to the workflow's execution history by a decider.
-  * A task is accepted by a ``worker.py`` process, it will get a unique token for that __ActivityTask__
-  * The __activityType name__ is extracted from the activity task JSON.
-  * It loads an activity class from the **/activity** folder, and calls the **do_activity()** method
-  * Data is passed using the _input_ variable
-  * If do_activity() returns True, it returns the token to SWF stating the activity as Completed.
-  * If do_activity() returns False, it returns the token to SWF and that the activity Failed.
-  * Other return values, such as None, will cause the activity to remain open until it times out.
-  * Activities that time out are typically run again, depending on the particular workflow.
+- Polls for __activity__ tasks. These are added to the workflow's execution history by a decider.
+- A task is accepted by a ``worker.py`` process, it will get a unique token for that __ActivityTask__
+- The __activityType name__ is extracted from the activity task JSON.
+- It loads an activity class from the ``/activity`` folder, and calls the ``do_activity()`` method
+- Data is passed using the _input_ variable
+- If ``do_activity()`` returns True, it returns the token to SWF stating the activity as Completed.
+- If ``do_activity()`` returns False, it returns the token to SWF and that the activity Failed.
+- Other return values, such as None, will cause the activity to remain open until it times out.
+- Activities that time out are typically run again, depending on the particular workflow.
   
 ### Workflow starters
 
-To start a workflow execution, you signal Amazon SWF to start one. In eLife bot, there's generally one starter for each type of workflow, and the code is found in the ``starter`` folder. Although starting a workflow execution is as simple as one line of ``boto`` code, the starters are built to understand different running environment (dev and live), handle some basic errors, set some workflow execution defaults, and pass data to the workflow execution.
+To start a workflow execution, you signal Amazon SWF to start one. In eLife bot, there's generally one starter for each type of workflow, and the code is found in the ``starter`` folder. Although starting a workflow execution is as simple as one line of ``boto`` code, the starters are built to understand the different running environments (_dev_ and _live_), handle some basic errors, set some workflow execution defaults, and pass data to the workflow execution.
 
-The starter classes can be run as command-line apps, and are also imported by cron starters to start scheduled workflows. For the latter reason, the naming of the files and classes follow a specific pattern.
+The starter classes can be run as command-line apps, and are also imported by cron starters to start scheduled workflows.
 
 For example, to start a Ping workflow execution on the live environment from the eLife bot root directory:
 
@@ -156,17 +156,17 @@ For example, to start a Ping workflow execution on the live environment from the
 user@host:/elife-bot$ python starter/starter_Ping.py -e live
 ```
 
-Or, to start a PublishArticle workflow execution on the dev environment (the default) for the article http://dx.doi.org/10.7554/eLife.00778:
+Or, to start a PublishArticle workflow execution on the dev environment (the default) for the article dx.doi.org/10.7554/eLife.00778:
 
 ```
 user@host:/elife-bot$ python starter/starter_PublishArticle.py -d 00778
 ```
 
-View the particular starter for command-line options of each.
+Check code of the particular starter for command-line options of each.
 
 ### Cron
 
-As mentioned in ``installation.md`` notes, the ``cron.py`` is the command-line app to create as a cron task to run every 5 minutes. There are no messy cron jobs, just one! The code in ``cron.py`` is what determines what workflow executions it should start and when. It will consult the SWF workflow history and use the current time (on the machine where it is running), do some time computations, and start workflows or load other cron files as a result.
+As mentioned in ``installation.md``, ``cron.py`` is the command-line cron task to run every 5 minutes. There are no messy cron jobs, just this one! The code in ``cron.py`` is what determines what workflow executions it should start and when. It will consult the SWF workflow history and use the current time (on the machine where it is running), do some time computations, and start workflows or load other cron files as a result.
 
 In the ``starter`` folder there are also some files with a name starting with ``cron_``. These are loaded by ``cron.py`` on a schedule. For example, ``cron_NewS3XML`` is loaded and executed once per hour by ``cron.py`` on the schedule it is provided. The job of ``cron_NewS3XML`` is to determine whether there are actually new XML files in the S3 bucket since it was last run, and if so, it will start multiple workflow executions.
 
