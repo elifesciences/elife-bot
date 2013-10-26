@@ -89,15 +89,15 @@ eLife bot uses ``boto`` functions to connect to SWF, which in turn makes use of 
 
 ### Deciders and workers are independent
 
-Any worker may process an activity that is listening on the same SWF task list. The same is true for any decider that makes decision tasks.
+Any worker, listening on the same SWF task list, may process any activity. The same is true for any decider that is making decision tasks.
 
 - The machine executing step 1 of a workflow execution, for example, may not be the same machine that runs step 2 of that workflow execution.
 - Similarly, a decider that decides to schedule step 1 may not be the same decider that schedules step 2
-- Each activity gets its own temporary directory, so you can also be assured an activity run on the same machine will not read some other activity's files
+- Each activity gets its own temporary directory, so activities executed on the __same__ machine will not read some other activity's files
 
 ### Shared data and data persistence
 
-Any useful or important data must be stored outside of an eLife bot instance. Save data to S3 or SimpleDB so it can be used by the next worker or some time in the future.
+Any useful or important data must be stored outside of an eLife bot instance. Save data to S3 or SimpleDB so it can be used by the next worker or some time in the future. All workers will share the same S3 buckets and SimpleDB domains within the environment they are running (``dev`` or ``live``).
 
 The SWF execution history that is automatically created and stored by Amazon for up to 90 days also provides some semi-permanent data, though of course this is deleted automatically after 90 days.
 
@@ -110,7 +110,7 @@ Currently, when starting a workflow execution, you must provide the custom data 
 
 ### Making decisions
 
-- When eLife bot ``decider.py`` polls for decision tasks (using ``boto.swf.layer1.poll_for_activity_task), it will download a full workflow execution history if a ``next_page_token`` is provided by SWF. The default is to only return a maximum of 100 event history items returned in each poll request.
+- When eLife bot ``decider.py`` polls for decision tasks (using ``boto.swf.layer1.poll_for_activity_task``), it will download a full workflow execution history if a ``next_page_token`` is provided by SWF. The default is to only return a maximum of 100 event history items returned in each poll request.
 
 ### Hacks
 
