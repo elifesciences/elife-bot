@@ -2,6 +2,43 @@
 Adding a new workflow to the eLife Bot
 ======
 
+## Overview
+
+This page describes the recommended method to modify or add new workflows to the eLife bot.
+
+In order to run all the tests and get the code functioning correctly, you will need sufficient access to eLife S3 buckets, SimpleDB domains, etc. As an alternative, you can create your own running environment and create enter your particulars into the ``settings.py`` file for your own AWS services.
+
+A brief summary of the steps:
+
+### Planning
+
+If you don't already understand the fundamentals of SWF and how eLife bot runs, you may want to review the documentation in more depth. There are some already built components to incorporate into what you are planning to build.
+
+### Branch the code in git
+
+In using git-flow branching model procedure, your new feature will be encapsulated and easy to merge later.
+
+### Develop the activity
+
+You can write new activity code without running SWF workflows, and sometimes even without having Internet access. An activity is where the real work happens. You can hack it together and run it from the command-line using python __main__. Or, you can write lettuce tests for its unique functions and run the tests to validate its integrity. Basically, you can start with the most friction-less method you choose, as long as you end up with some automated tests by the end!
+
+### Run a mock workflow on your local computer
+
+By connecting to your own private SWF task list, you can run the ``decider.py``, ``worker.py`` and issue a workflow execution start using the ``dev`` workflow, entirely from your own computer. This is after you've adapted or added the workflow and starter classes to make it run. This should shake out many possible errors in integrating with the SWF service.
+
+### Add or modify a scheduled starter using cron
+
+Add or modify the cron code to automatically start your workflow when it should. 
+
+### Pull request in git
+
+When you are confident your new features are ready to review, submit a pull request. Another developer _should_ review your code, run lettuce tests and mock workflows using SWF. Cron components, at this time, generally require deploying to a running instance in order to fully test them in that situation.
+
+### Deploy
+
+Merge to master branch and deploy ASAP to the running instance. See ``installation.md`` for more on deployments.
+
+
 ## Step 1: Planning a new workflow
 
 Ask yourself the following:
@@ -58,6 +95,75 @@ In making the rough plan, it is probably easier to start top down: from where th
 In building the items themselves, a good way to implement it is bottom up. Start with the activity itself, which can even be hacked at outside of the workflow at first. Integrate it into a new activity task, and ideally create automated tests for it.
 
 You should be able to test almost everything via ``lettuce``, except for the ``do_activity()`` function, which is what a live workflow would run (unless it is safe to run, but tests are ideally do not make permanent changes to the system).
+
+
+## Step 2: Create a git branch
+
+Branch the elife-bot code with a descriptive feature name.
+
+## Step 3: Develop the activity
+
+You may have some existing code or you are starting from scratch. Described below is one recommended method to incorporate a new activity into eLife bot.
+
+### Create a new activity class
+
+Go into the __/activity__ folder, select an existing activity, save as a new file as you determined in the Step 1: Planning. File and class names are in the format ``activity_[ActivityType].py``. The activityType is the name you will register with SWF, and allows the ``worker.py`` to autoload the class by name.
+
+Rename the class in in the python code. In the ``__init__`` method, Customise the ``self.name``, ``self.description`` and comments. The classe's default timeout values may be sufficient (``self.default_task_schedule_to_close_timeout`` etc.) but they can be overridden later in the workflow definition if you get them wrong at this stage.
+
+### Modify the imports
+
+Check which python libraries it imports. Sometimes it may include a provider or two (``provider.swfmeta`` or ``provider.simpledb``), or ``boto.ses`` for email. You may not need these, or you may need to import a new code library for your activity.
+
+### Delete old code
+
+Since you started with an existing activity class as a template, you'll want to delete much of the code from your new class. In ``do_activity()``, delete everything after the ``self.logger`` instantiation down, until the ``return True``. Then, delete everything below that. The file will be virtually empty, but it's safer to tear everything out first and then add what you need back in.
+
+### Coding
+
+To be expanded
+
+- Can run as __main__
+- Lettuce tests
+- Note on reusable code
+
+### Register with SWF
+
+Add the ActivityType name to the ``register.py`` file, by appending the name to the ``activity_names`` list (you'll see a list in the code). Run it on the environment(s) you intend will schedule the activity. ``register.py`` will load your activity class, get the name, description, and timeout values and register it with SWF. It will also register all the activities listed in the file, but if they already exist, no modifications will be made.
+
+_dev_ environment:
+
+```
+python register.py
+```
+
+_live_ environment:
+
+```
+python register.py -e live
+```
+
+
+## Step 4: Assemble the workflow components and test locally
+
+- New workflow definition (Create a new workflow type) + starter, or
+- Edit an existing workflow definition
+- Register with SWF (if applicable)
+- How to use a different task list
+
+## Step 5: Add scheduled cron starter (if applicable)
+
+
+
+## Step 6: Pull request and review
+
+- Ready to deploy, but an option for someone else to also test your code locally, as described in Step 4, and get the green light
+- You may want to note the addition of any new ``settings.py`` credentials required to run a test on the new branch
+- Merge with master
+
+
+## Step 7: Deploy and test
+
 
 
 
