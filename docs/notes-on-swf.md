@@ -26,29 +26,33 @@ Amazon [Simple Workflow][swf] (SWF) service provides a structured approach to ex
 
 ### Domain
 
-An SWF domain is like a top level container. Inside, it holds a list of workflow types, activity types, and a workflow execution history. You specify a particular domain when you connect to SWF. A domain is only created once, either in the AWS console or programmatically.
+An SWF domain is like a top level container. Inside, it holds a list of workflow types, activity types, and a workflow execution history. You specify a particular domain when you connect to SWF. A domain is created only  once, either in the AWS console or programmatically.
 
-In eLife bot there are currently two domains, ``Publish`` and ``Publish.dev``.
+In eLife bot there are currently two domains: ``Publish`` and ``Publish.dev``.
 
 ### Workflow Types
 
-A workflow is the business logic. One part it provides is to schedule activity tasks or signal workflow execution completion. Another part is timeout values SWF uses to determine if a workflow failed due abandonment.
+A workflow is business logic alone. During expected workflow operation, it schedules activity tasks and signals the completion of a workflow execution. If something unexpected happens in a workflow, the worklfow timeout values allow SWF to determine if a workflow failed due abandonment or non-completion.
 
 A decider makes decisions about what activities to schedule, or when it is time to close a workflow execution. How a decider is implemented in code is entirely up to the developer.
 
-If a decider is not processing decision tasks, a workflow execution is never processed. Therefore, a decider must always be running and polling for decision tasks to continuously run in SWF.
+In eLife bot, all decisions are ultimately made by ``decider.py``, though it loads particular workflow classes for the logic of each workflow type.
 
-Each Workflow Type has a Name and Version. It also has default timeout values for different actions. __To use a Workflow Type, you must register it with SWF__. If SWF is not aware of a Workflow Type, it will not start workflow executions for it.
+If a decider does not process SWF decision tasks, a workflow execution does not proceed. Therefore, a decider must always be running and polling for decision tasks to continuously run in SWF.
+
+Each Workflow Type has a Name and Version. It also has default timeout values for different actions. __To use a Workflow Type, you must register it with SWF__. If SWF is not aware of a Workflow Type, it will not start workflow executions of that type.
 
 ### Activity Types
 
 An activity is where real processing is done.
 
-A worker, after receiving an activity task, will do something. Then it can signal back to SWF the action was completed or failed. If the activity timed out as part of a workflow, SWF will often attempt the activity again, if the workflow's timeout has not yet been reached.
+A worker, after receiving an activity task, will do something. Then, it can signal back to SWF whether the action was completed or failed. If the activity timed out as part of a workflow execution, SWF will often attempt the activity again, so long as the workflow's timeout has not yet been reached.
 
 If no worker is polling for activity tasks, a workflow will likely timeout and not reach completion. Certain, no work will ever get done in the workflow execution.
 
-Each Activity Type has a Name and Version. It also has default timeout values for different actions. __To use a Activity Type, you must register it with SWF__. If SWF is not aware of a Activity Type, it will not schedule activities for it.
+In eLife bot, all activities are ultimately processed by ``worker.py``, though it loads particular activity classes and calls the ``do_activity()`` function of the class to execute the activity.
+
+Each Activity Type has a Name and Version. It also has default timeout values for different actions. __To use a Activity Type, you must register it with SWF__. If SWF is not aware of a Activity Type, a decider will not be able to schedule activities of that type.
 
 ### Task list
 
@@ -64,17 +68,23 @@ By comparison with a Workflow Type, a workflow execution refers to a particular 
 - start date
 - closed date
 - closed status
-- list of events, such as decision tasks and scheduling activities
-- list of activities
+- list of events, such as decision tasks and activities scheduled
+- list of activities with their start and completion dates
 - and other metrics
 
 This data is stored in the Amazon SWF domain for up to 90 days, and can be accessed as part of the workflow execution history.
 
 In order to start a workflow execution, you issue a start workflow execution request.
 
+### Starters
+
+Very little is required to start a workflow execution. At the very least, you must specify the Workflow Type, Version and typically some input data. Specifying or overriding the default workflow timeout values is also an option.
+
+Regardless of starter simplicity, eLife bot expresses starters in class definitions. These provide a uniform starter function, allow a human operator to issue command-line workflow starts with minimal input, and allow scheduled workflows to be started by the cron. 
+
 ### Unique IDs
 
-Within an SWF domain, each running workflow execution must have a unique workflow_id. Closed workflow executions with the same name are ok.
+Within an SWF domain, each _running_ workflow execution must have a unique workflow_id. Closed workflow executions with the id are ok.
 
 Similarly, within a workflow execution, each activity must have a unique activity_id.
 
@@ -89,15 +99,15 @@ eLife bot uses ``boto`` functions to connect to SWF, which in turn makes use of 
 
 ### Deciders and workers are independent
 
-Any worker, listening on the same SWF task list, may process any activity. The same is true for any decider that is making decision tasks.
+Any worker, listening on the same SWF task list, may process any activity. The same is true for any decider that is making decision tasks. Consider a workflow with two activity steps: in a workflow execution,
 
-- The machine executing step 1 of a workflow execution, for example, may not be the same machine that runs step 2 of that workflow execution.
+- The machine executing step 1 may not be the same machine that executes step 2
 - Similarly, a decider that decides to schedule step 1 may not be the same decider that schedules step 2
-- Each activity gets its own temporary directory, so activities executed on the __same__ machine will not read some other activity's files
+- Each activity gets its own temporary directory, so activities executed on the __same__ machine will not read files saved by some other activity
 
 ### Shared data and data persistence
 
-Any useful or important data must be stored outside of an eLife bot instance. Save data to S3 or SimpleDB so it can be used by the next worker or some time in the future. All workers will share the same S3 buckets and SimpleDB domains within the environment they are running (``dev`` or ``live``).
+Any useful or important data must be stored outside of an eLife bot instance. Save data to S3 or SimpleDB so it can be used by the next worker or some time in the future. Each worker running in a particular environment (``dev`` or ``live``) will share the same S3 buckets and SimpleDB domains with all other workers in that environment.
 
 The SWF execution history that is automatically created and stored by Amazon for up to 90 days also provides some semi-permanent data, though of course this is deleted automatically after 90 days.
 
