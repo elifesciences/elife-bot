@@ -210,13 +210,13 @@ __Symptom__: Number of completed workflows every four hours as reported in the a
 
 __Diagnosis__: The cron_FiveMinute workflow is most susceptible to worker instance clock time drift; look at the closed workflow executions for this workflow in AWS console. If the start time is 00:07 or later, then the instance clock has drifted more than 2 minutes away from the SWF system clock. (cron_FiveMinute can account for up to 119 seconds of time drift, but no more than that at the time of writing)
 
-__Solution__: Change the instance clock to a time more closely aligned with the SWF clock. In this example, move it back a minute or more:
+__Solution__: Change the instance clock to a time more closely aligned with the SWF clock. In this example, move it forward a minute or more:
 
 ```
 ~$ date
-Thu Nov 14 16:58:29 UTC 2013
-~$ sudo date -s "Thu Nov 14 16:57:00 UTC 2013"
-Thu Nov 14 16:57:00 UTC 2013
+Thu Nov 14 16:56:29 UTC 2013
+~$ sudo date -s "Thu Nov 14 16:58:00 UTC 2013"
+Thu Nov 14 16:58:00 UTC 2013
 ```
 
 __Notes__: Micro instances are "[particularly sensitive to drift][time_drift]". 
