@@ -245,7 +245,25 @@ def get_the_suppl_object_s3key_name_from_the_activity_object(step):
 	assert world.S3key_name is not None, \
 		"Got S3key_name %s" % world.S3key_name
 	
+@step('I get the jpg object S3key name from the activity object')
+def get_the_jpg_object_s3key_name_from_the_activity_object(step):
+	world.S3key_name = world.activity_object.get_jpg_object_S3key_name(world.elife_id, world.document_name_from_path)
+	assert world.S3key_name is not None, \
+		"Got S3key_name %s" % world.S3key_name
+	
 @step('I have the S3key_name (\S+)')
 def have_the_s3key_name_s3key_name(step, S3key_name):
 	assert world.S3key_name == S3key_name, \
 		"Got S3key_name %s" % world.S3key_name
+	
+@step('I get a ejp provider from the activity object')
+def get_the_ejp_provider_from_the_activity_object(step):
+	world.ejp = world.activity_object.ejp
+	assert world.ejp is not None, \
+		"Got ejp provider %s" % world.ejp
+	
+@step('I get authors from the activity object')
+def i_get_authors_from_the_activity_object(step):
+	world.authors = world.activity_object.get_authors(document = world.document)
+	assert world.authors is not None, \
+		"Got authors %s" % json.dumps(world.authors)

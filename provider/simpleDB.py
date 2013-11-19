@@ -155,7 +155,7 @@ class SimpleDB(object):
 	def elife_get_article_S3_file_items(self, file_data_type = None, doi_id = None, last_updated_since = None, latest = None):
 		"""
 		From the SimpleDB domain for the S3FileLog, return a list of matching item to the attributes
-		  file_data_type options:   xml, pdf, img, suppl, video, svg
+		  file_data_type options:   xml, pdf, img, suppl, video, svg, jpg
 			doi_id:                   five digit numeric string as the unique portion of the DOI
 			last_updated_since:       only return items updated since the date provided
 			latest:                   only return the latest item of each type
@@ -163,7 +163,7 @@ class SimpleDB(object):
 		
 		date_format = "%Y-%m-%dT%H:%M:%S.000Z"
 		
-		file_data_types = ["xml", "pdf", "img", "suppl", "video", "svg"]
+		file_data_types = ["xml", "pdf", "img", "suppl", "video", "svg", "jpg"]
 		
 		domain_name = "S3FileLog"
 		
