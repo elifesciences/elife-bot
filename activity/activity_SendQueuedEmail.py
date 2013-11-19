@@ -9,6 +9,9 @@ import activity
 
 import boto.ses
 
+import boto.s3
+from boto.s3.connection import S3Connection
+
 import provider.simpleDB as dblib
 
 """
@@ -33,6 +36,9 @@ class activity_SendQueuedEmail(activity.activity):
     
     # Default limit of emails per activity
     self.limit = 100
+    
+    # S3 bucket where email body content is stored
+    self.email_body_bucket = settings.bot_bucket
     
   def do_activity(self, data = None):
     """
@@ -64,12 +70,24 @@ class activity_SendQueuedEmail(activity.activity):
     for e in email_items:
       item_name = e.name
       item_attrs = {}
+      
+      body = None
+      # Get the email body from S3
+      try:
+        body = self.get_email_body(e["body_s3key"])
+      except KeyError:
+        # Missing a body, skip it
+        continue
+      # Check for a blank body
+      if(body is None):
+        continue
+      
       try:
         result = self.send_email(
           sender_email    = e["sender_email"],
           recipient_email = e["recipient_email"],
           subject         = e["subject"],
-          body            = e["body"],
+          body            = body,
           format          = e["format"])
       except KeyError:
         # Missing an expected value, handle exception and
@@ -105,3 +123,23 @@ class activity_SendQueuedEmail(activity.activity):
       # For now, try to ask the recipient to verify
       ses_conn.verify_email_address(recipient_email)
       return False
+    
+  def get_email_body(self, body_s3key):
+    """
+    From the S3 bucket, get the object content for the body_s3key key
+    """
+    
+    body = None
+    
+    # Connect to S3 and the bucket
+    bucket_name = self.email_body_bucket
+    s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+    bucket = s3_conn.lookup(bucket_name)
+    
+    # Head request on the key
+    s3key = bucket.get_key(body_s3key)
+    if(s3key):
+      # The key exists, get the contents
+      body = s3key.get_contents_as_string()
+
+    return body
