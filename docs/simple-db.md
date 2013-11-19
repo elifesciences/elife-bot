@@ -331,10 +331,12 @@ Sending email using the queue is done in two stages:
 1. Add an email to the queue.
 2. Send unsent email in queue.
 
+Due to attribute value length limits of 1,024 bytes per SimpleDB attribute, email body content is stored in S3. The ``bot_bucket`` in the ``settings.py`` file specifies which bucket to use. The SimpleDB ``body_s3key`` attribute stores the S3 object name that contains the body content.
+
 A basic set of fields for an item in the EmailQueue domain include:
 
 ```
-body
+body_s3key
 date_added_timestamp
 date_scheduled_timestamp
 date_sent_timestamp
