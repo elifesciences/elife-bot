@@ -37,6 +37,7 @@ def start(ENV = "dev"):
 	workflow_names.append("PublishSVG")
 	workflow_names.append("SendQueuedEmail")
 	workflow_names.append("PublishSuppl")
+	workflow_names.append("PublishJPG")
 	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
@@ -71,6 +72,7 @@ def start(ENV = "dev"):
 	activity_names.append("SendQueuedEmail")
 	activity_names.append("LensArticle")
 	activity_names.append("UnzipArticleSuppl")
+	activity_names.append("UnzipArticleJPG")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries
