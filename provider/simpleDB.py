@@ -7,6 +7,9 @@ from operator import itemgetter, attrgetter
 
 import boto.sdb
 
+import boto.s3
+from boto.s3.connection import S3Connection
+
 """
 SimpleDB S3 data provider
 A home for SimpleDB functions so code is not duplicated
@@ -30,7 +33,9 @@ class SimpleDB(object):
 		self.domains = {}
 		
 		self.sdb_conn = None
-		
+
+		# S3 bucket where email body content is stored
+		self.email_body_bucket = settings.bot_bucket
 		
 	def connect(self):
 		if(self.settings.simpledb_region):
@@ -567,9 +572,6 @@ class SimpleDB(object):
 			
 		if(subject):
 			item_attrs["subject"] = subject
-			
-		if(body):
-			item_attrs["body"] = body
 
 		if(add is True):
 			# Add to the queue
@@ -582,6 +584,17 @@ class SimpleDB(object):
 				recipient_email = item_attrs["recipient_email"])
 			
 			if(unique_item_name):
+				
+				if(body):
+					# Save the email body to S3 bucket
+					delimiter = "/"
+					body_s3key = "email" + delimiter + email_type + delimiter + unique_item_name
+					self.elife_save_email_body_to_s3(
+						body_s3key = body_s3key,
+						body = body
+						)
+					item_attrs["body_s3key"] = body_s3key
+					
 				# Add the item to the SimpleDB
 				self.put_attributes(domain_name, unique_item_name, item_attrs)
 				return True
@@ -593,3 +606,18 @@ class SimpleDB(object):
 		
 		# Default
 		return None
+	
+	def elife_save_email_body_to_s3(self, body_s3key, body):
+		"""
+		From the S3 bucket, get the object content for the body_s3key key
+		"""
+		
+		# Connect to S3 and the bucket
+		bucket_name = self.email_body_bucket
+		s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+		bucket = s3_conn.lookup(bucket_name)
+		s3key = boto.s3.key.Key(bucket)
+		# Create the key and save to body to it
+		s3key.key = body_s3key
+		s3key.set_contents_from_string(body)
+
