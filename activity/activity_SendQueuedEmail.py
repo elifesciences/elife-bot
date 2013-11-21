@@ -122,6 +122,8 @@ class activity_SendQueuedEmail(activity.activity):
     except boto.ses.exceptions.SESAddressNotVerifiedError:
       # For now, try to ask the recipient to verify
       ses_conn.verify_email_address(recipient_email)
+      # Also verify the sender, that could be the problem
+      ses_conn.verify_email_address(sender_email)
       return False
     
   def get_email_body(self, body_s3key):
