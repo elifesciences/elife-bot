@@ -68,8 +68,7 @@ class Filesystem(object):
 		# Finally set the class variable with the result
 		self.document = document
 
-	def write_content_to_document(self, content, filename):
-		mode = "w"
+	def write_content_to_document(self, content, filename, mode = "w"):
 		
 		f = self.open_file_from_tmp_dir(filename, mode)
 		f.write(content)
