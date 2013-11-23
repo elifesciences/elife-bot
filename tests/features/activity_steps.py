@@ -2,6 +2,12 @@ from lettuce import *
 import activity
 import json
 
+@step('I convert the document name from path to jpg filename using the activity object')
+def i_convert_the_document_name_from_path_to_jpg_filename_using_the_activity_object(step):
+	world.document_name_from_path = world.activity_object.get_jpg_filename(world.document_name_from_path)
+	assert world.document_name_from_path is not None, \
+		"Got document_name_from_path %s" % world.document_name_from_path
+
 @step('I can get a domain from the activity')
 def get_domain_from_activity_object(step):
 	assert world.activity_object.domain is not None, \
