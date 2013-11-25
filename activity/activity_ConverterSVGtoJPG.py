@@ -82,24 +82,29 @@ class activity_ConverterSVGtoJPG(activity.activity):
         # Assemble the JPG file name
         jpg_filename = self.get_jpg_filename(tmp_document)
         # Decode the base64 encoded data to binary data
-        jpg_data = base64.decodestring(image_base64_data)
-        # Save the JPG file to disk
-        self.fs.write_content_to_document(jpg_data, jpg_filename, mode = "wb")
-        # Get the full path of the JPG file
-        jpg_doc_path = self.get_tmp_dir() + os.sep + jpg_filename
-        # Get an S3 key name for where to save each SVG file
-        s3key_name = self.get_jpg_object_S3key_name(elife_id, jpg_filename)
-        
-        # Create S3 key and save the file there
-        bucket_name = self.settings.cdn_bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-        s3key = boto.s3.key.Key(bucket)
-        s3key.key = s3key_name
-        # Set Content-type metadata prior to upload
-        if(self.content_type):
-          s3key.set_metadata('Content-Type', self.content_type)
-        s3key.set_contents_from_filename(jpg_doc_path, replace=True)
+        jpg_data = self.decode_base64_data(image_base64_data)
+        if(jpg_data is None):
+          # Something in the conversion went wrong
+          if(self.logger):
+            self.logger.info('ConverterSVGtoJPG: Error converting base64 data %s' % tmp_document)
+        else:
+          # Save the JPG file to disk
+          self.fs.write_content_to_document(jpg_data, jpg_filename, mode = "wb")
+          # Get the full path of the JPG file
+          jpg_doc_path = self.get_tmp_dir() + os.sep + jpg_filename
+          # Get an S3 key name for where to save each SVG file
+          s3key_name = self.get_jpg_object_S3key_name(elife_id, jpg_filename)
+          
+          # Create S3 key and save the file there
+          bucket_name = self.settings.cdn_bucket
+          s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+          bucket = s3_conn.lookup(bucket_name)
+          s3key = boto.s3.key.Key(bucket)
+          s3key.key = s3key_name
+          # Set Content-type metadata prior to upload
+          if(self.content_type):
+            s3key.set_metadata('Content-Type', self.content_type)
+          s3key.set_contents_from_filename(jpg_doc_path, replace=True)
     
     if(self.logger):
       self.logger.info('ConverterSVGtoJPG: %s' % elife_id)
@@ -220,6 +225,19 @@ class activity_ConverterSVGtoJPG(activity.activity):
       pass
   
     return image_base64_data
+
+  def decode_base64_data(self, image_base64_data):
+    """
+    Decode the base64 data
+    """
+    jpg_data = None
+    try:
+      jpg_data = base64.decodestring(image_base64_data)
+    except:
+      # Could be Incorrect padding error
+      # Do nothing for now
+      pass
+    return jpg_data
 
   def get_image_tags(self, soup):
      image_nodes = self.extract_nodes(soup, "image")
