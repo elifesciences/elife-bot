@@ -79,12 +79,14 @@ class activity_ConverterSVGtoJPG(activity.activity):
         if(self.logger):
           self.logger.info('ConverterSVGtoJPG: Error converting %s' % tmp_document)
       else:
+        # Assemble the JPG file name
         jpg_filename = self.get_jpg_filename(tmp_document)
+        # Decode the base64 encoded data to binary data
         jpg_data = base64.decodestring(image_base64_data)
+        # Save the JPG file to disk
         self.fs.write_content_to_document(jpg_data, jpg_filename, mode = "wb")
-        
+        # Get the full path of the JPG file
         jpg_doc_path = self.get_tmp_dir() + os.sep + jpg_filename
-        
         # Get an S3 key name for where to save each SVG file
         s3key_name = self.get_jpg_object_S3key_name(elife_id, jpg_filename)
         
