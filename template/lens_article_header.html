@@ -27,9 +27,16 @@
 
     <script>
 
+
+      if (window.Lens === undefined) {
+        window.Lens = require("/src/lens.js");
+      }
+
+      // Little helper used to parse query strings from urls
+      // --------
+      // 
+
       var qs = function () {
-        // This function is anonymous, is executed immediately and 
-        // the return value is assigned to QueryString!
         var query_string = {};
         var query = window.location.search.substring(1);
         var vars = query.split("&");
@@ -47,12 +54,13 @@
             query_string[pair[0]].push(pair[1]);
           }
         }
-          return query_string;
+        return query_string;
       } ();
 
-      if (window.Lens === undefined) {
-        window.Lens = require("/src/lens.js");
-      }
+
+      // Check for devices
+      // --------
+      // 
 
       function isIOSDevice() {
         var iPadAgent = navigator.userAgent.match(/iPad/i) != null;
@@ -78,20 +86,15 @@
         return 'ontouchstart' in document.documentElement;
       }
 
-      // Create a new Lens app instance
+      // Example documents
       // --------
-      //
-      // Injects itself into body
+      // 
+      // Uncomment the document you want see
 
-      // Lens About Document
-      // Deploy to: http://lens.elifesciences.org/about
-      // var documentURL = "data/about/index.xml";
-        
-      // Lens Article Description
-      // Deploy to: http://lens.elifesciences.org/lens_article
-      // var documentURL = "lens_article.xml";
+      // Remote Example 00005
+      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/00005/elife00005.xml";
 
-      // Remote Example 00924
-      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/00924/elife00924.xml";
+      // Remote Example 00311
+      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/00311/elife00311.xml";
 
       // Remote Example 00778

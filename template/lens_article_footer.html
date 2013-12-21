@@ -4,17 +4,37 @@
 
       // Remote Example 01541
       // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/01541/elife01541.xml";
-      
-      // Remote Example 00311
-      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/00311/elife00311.xml";
+
+      // Remote Example 01157
+      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/01157/elife01157.xml";
+
+      // Remote Example 00924
+      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/00924/elife00924.xml";
+
+      // Remote Example 00951
+      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/00951/elife00951.xml";
+
+      // Lens About Document
+      // Deploy to: http://lens.elifesciences.org/about
+      // var documentURL = "data/about/index.xml";
+        
+      // Lens Article Description
+      // Deploy to: http://lens.elifesciences.org/lens_article
+      // var documentURL = "lens_article.xml";
 
       // Local Example
       // var documentURL = "data/00778/index.xml";
+
+      // Kitchen Sink Example (contains a lot of edge cases)
       // var documentURL = "data/kitchen_sink/index.xml";
-      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/01157/elife01157.xml";
+
+
       
-      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/00951/elife00951.xml";
-      
+      // Create a new Lens app instance
+      // --------
+      //
+      // Injects itself into body
+
       var app = new Lens({
         document_url: qs.url ? decodeURIComponent(qs.url) : documentURL
       });
