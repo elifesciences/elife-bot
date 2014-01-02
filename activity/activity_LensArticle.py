@@ -112,7 +112,7 @@ class activity_LensArticle(activity.activity):
 		header_html = self.get_header_html()
 		footer_html = self.get_footer_html()
 		
-		document_url_html = "\n" + '        document_url: "' + xml_file_url + '"' + "\n"
+		document_url_html = "\n" + '      var documentURL = "' + xml_file_url + '";' + "\n"
 		
 		article_html = header_html + document_url_html + footer_html
 

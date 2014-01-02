@@ -3,33 +3,98 @@
   <head>
     <title>eLife Lens</title>
     <link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
-    <link href='../lens-elife/styles/font-awesome.css' rel='stylesheet' type='text/css'/>
+    <link href='../dist/styles/font-awesome.css' rel='stylesheet' type='text/css'/>
 
-    <link href='../lens-elife/lens.css' rel='stylesheet' type='text/css'/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
 
-    <script src="../lens-elife/lib/jquery-2.0.3.min.js"></script>
+    <link href='../dist/lens.css' rel='stylesheet' type='text/css'/>
+
+    <script src="../dist/lib/jquery-2.0.3.min.js"></script>
 
     <!-- MathJax -->
     <script type="text/x-mathjax-config">
     MathJax.Hub.Config({
       "HTML-CSS": { linebreaks: { automatic: true } },
              SVG: { linebreaks: { automatic: true } }
-   });
+    });
     </script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
-    <script src='../lens-elife/lens.min.js'></script>
+
+    <script src='../dist/lens.min.js'></script>
 
     <script>
+
 
       if (window.Lens === undefined) {
         window.Lens = require("/src/lens.js");
       }
 
-      // Create a new Lens app instance
+      // Little helper used to parse query strings from urls
       // --------
-      //
-      // Injects itself into body
+      // 
 
-      var app = new Lens({
-        // Endpoint must have CORS enabled, or file is served from the same domain as the app
+      var qs = function () {
+        var query_string = {};
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i=0;i<vars.length;i++) {
+          var pair = vars[i].split("=");
+            // If first entry with this name
+          if (typeof query_string[pair[0]] === "undefined") {
+            query_string[pair[0]] = pair[1];
+            // If second entry with this name
+          } else if (typeof query_string[pair[0]] === "string") {
+            var arr = [ query_string[pair[0]], pair[1] ];
+            query_string[pair[0]] = arr;
+            // If third or later entry with this name
+          } else {
+            query_string[pair[0]].push(pair[1]);
+          }
+        }
+        return query_string;
+      } ();
+
+
+      // Check for devices
+      // --------
+      // 
+
+      function isIOSDevice() {
+        var iPadAgent = navigator.userAgent.match(/iPad/i) != null;
+        var iPodAgent = navigator.userAgent.match(/iPhone/i) != null;
+        return iPadAgent || iPodAgent;
+      }
+
+      function isIphone() {
+        var iPhoneAgent = navigator.userAgent.match(/iPhone/i) != null;
+        return iPhoneAgent;
+      }
+
+      function isMobile() {
+        var iPadAgent = navigator.userAgent.match(/iPad/i) != null;
+        var iPodAgent = navigator.userAgent.match(/iPhone/i) != null;
+        var AndroidAgent = navigator.userAgent.match(/Android/i) != null;
+        var webOSAgent = navigator.userAgent.match(/webOS/i) != null;
+
+        return iPadAgent || iPodAgent || AndroidAgent || webOSAgent;
+      }
+
+      function isTouchDevice() {
+        return 'ontouchstart' in document.documentElement;
+      }
+
+      // Example documents
+      // --------
+      // 
+      // Uncomment the document you want see
+
+      // Remote Example 00005
+      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/00005/elife00005.xml";
+
+      // Remote Example 00311
+      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/00311/elife00311.xml";
+
+      // Remote Example 00778
