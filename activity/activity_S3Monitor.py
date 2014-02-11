@@ -27,7 +27,7 @@ class activity_S3Monitor(activity.activity):
 		self.default_task_heartbeat_timeout = 30
 		self.default_task_schedule_to_close_timeout = 60*15
 		self.default_task_schedule_to_start_timeout = 30
-		self.default_task_start_to_close_timeout= 60*15
+		self.default_task_start_to_close_timeout= 60*20
 		self.description = "S3Monitor activity: poll S3 bucket and save object metadata into SimpleDB."
 		
 		# Data provider
