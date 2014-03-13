@@ -55,6 +55,9 @@ class dev():
 	# Bot S3 settings
 	bot_bucket = 'elife-bot-dev'
 	
+	# POA delivery bucket
+	poa_bucket = 'elife-ejp-poa-delivery-dev'
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -101,6 +104,9 @@ class live():
 	
 	# Bot S3 settings
 	bot_bucket = 'elife-bot'
+	
+	# POA delivery bucket
+	poa_bucket = 'elife-ejp-poa-delivery'
 	
 	# Logging
 	setLevel = "INFO"
