@@ -40,7 +40,7 @@ class activity_S3Monitor(activity.activity):
 		if(self.logger):
 			self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 			
-		bucket_name = self.settings.bucket
+		bucket_name = data["data"]["bucket"]
 		prefix = self.settings.prefix
 		delimiter = self.settings.delimiter
 		
