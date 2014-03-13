@@ -122,6 +122,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
     # Customised start functions
     if(starter_name == "starter_S3Monitor"):
       s.start(ENV = ENV, workflow = "S3Monitor")
+      s.start(ENV = ENV, workflow = "S3Monitor_POA")
     elif(starter_name == "starter_AdminEmail"):
       s.start(ENV = ENV, workflow = "AdminEmail")
     elif(starter_name == "cron_NewS3XML"
