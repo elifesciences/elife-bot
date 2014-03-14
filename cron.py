@@ -44,6 +44,12 @@ def run_cron(ENV = "dev"):
       workflow_id   = "S3Monitor",
       start_seconds = 60*31)
     
+    workflow_conditional_start(
+      ENV           = ENV,
+      starter_name  = "starter_S3Monitor",
+      workflow_id   = "S3Monitor_POA",
+      start_seconds = 60*31)
+    
     pass
   
   elif(current_time.tm_min >= 30 and current_time.tm_min <= 59):
@@ -121,10 +127,15 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
     
     # Customised start functions
     if(starter_name == "starter_S3Monitor"):
-      s.start(ENV = ENV, workflow = "S3Monitor")
-      s.start(ENV = ENV, workflow = "S3Monitor_POA")
+      
+      if workflow_id == "S3Monitor":
+        s.start(ENV = ENV, workflow = "S3Monitor")
+      if workflow_id == "S3Monitor_POA":
+        s.start(ENV = ENV, workflow = "S3Monitor_POA")
+        
     elif(starter_name == "starter_AdminEmail"):
       s.start(ENV = ENV, workflow = "AdminEmail")
+      
     elif(starter_name == "cron_NewS3XML"
       or starter_name == "cron_NewS3PDF"
       or starter_name == "cron_NewS3SVG"
