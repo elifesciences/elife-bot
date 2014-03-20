@@ -58,6 +58,9 @@ class dev():
 	# POA delivery bucket
 	poa_bucket = 'elife-ejp-poa-delivery-dev'
 	
+	# EJP S3 settings
+	ejp_bucket = 'elife-ejp-ftp-dev'
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -107,6 +110,9 @@ class live():
 	
 	# POA delivery bucket
 	poa_bucket = 'elife-ejp-poa-delivery'
+	
+	# EJP S3 settings
+	ejp_bucket = 'elife-ejp-ftp'
 	
 	# Logging
 	setLevel = "INFO"

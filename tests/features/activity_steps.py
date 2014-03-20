@@ -273,3 +273,9 @@ def i_get_authors_from_the_activity_object(step):
 	world.authors = world.activity_object.get_authors(document = world.document)
 	assert world.authors is not None, \
 		"Got authors %s" % json.dumps(world.authors)
+	
+@step('I get editors from the activity object')
+def i_get_editors_from_the_activity_object(step):
+	world.editors = world.activity_object.get_editors(document = world.document)
+	assert world.editors is not None, \
+		"Got editors %s" % json.dumps(world.editors)

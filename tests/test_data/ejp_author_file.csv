@@ -1,0 +1,11 @@
+"Query: 15a) Accepted Paper Details"
+"Generated on October 1, 2013"
+
+"ms_no","ms_title","author_seq","first_nm","last_nm","author_type_cde","dual_corr_author_ind","e_mail"
+"3","Article Three","1","Author","One","Contributing Author"," ","author01@example.com"
+"3","Article Three","2","Author","Two","Contributing Author"," ","author02@example.org"
+"3","Article Three","3","Author","Three","Corresponding Author"," ","author03@example.com"
+"13","Article Thirteen","1","Author","Uno","Contributing Author"," ","author13-01@example.com"
+"13","Article Thirteen","2","Author","Dos","Contributing Author"," ","author13-02@example.com"
+"13","Article Thirteen","3","Author","Tres","Contributing Author","1","author13-03@example.com"
+"13","Article Thirteen","4","Author","Cuatro","Corresponding Author"," ","author13-04@example.com"
