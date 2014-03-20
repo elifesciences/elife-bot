@@ -294,6 +294,12 @@ class EJP(object):
     fn_fragment = {}
     fn_fragment["author"] = "ejp_query_tool_query_id_152_15a"
     fn_fragment["editor"] = "ejp_query_tool_query_id_158_15b"
+    fn_fragment["poa_manuscript"] = "ejp_query_tool_query_id_176_POA_Manuscript"
+    fn_fragment["poa_author"] = "ejp_query_tool_query_id_177_POA_Author"
+    fn_fragment["poa_license"] = "ejp_query_tool_query_id_178_POA_License"
+    fn_fragment["poa_subject_area"] = "ejp_query_tool_query_id_179_POA_Subject_Area"
+    fn_fragment["poa_received"] = "ejp_query_tool_query_id_180_POA_Received"
+    fn_fragment["poa_research_organism"] = "ejp_query_tool_query_id_182_POA_Research_Organism"
 
     if(file_list is None):
       file_list = self.ejp_bucket_file_list()

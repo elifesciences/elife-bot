@@ -63,10 +63,16 @@ Feature: Use EJP data provider
     Then I have s3 file name <s3_file_name>
 
   Examples:
-    | tmp_base_dir  | file_type | document                       | s3_file_name
-    | tmp           | author    | test_data/ejp_bucket_list.json | ejp_query_tool_query_id_152_15a)_Accepted_Paper_Details_2013_10_31_eLife.csv
-    | tmp           | editor    | test_data/ejp_bucket_list.json | ejp_query_tool_query_id_158_15b)_Accepted_Paper_Details_2013_10_31_eLife.csv
-
+    | tmp_base_dir  | file_type             | document                       | s3_file_name
+    | tmp           | author                | test_data/ejp_bucket_list.json | ejp_query_tool_query_id_152_15a)_Accepted_Paper_Details_2013_10_31_eLife.csv
+    | tmp           | editor                | test_data/ejp_bucket_list.json | ejp_query_tool_query_id_158_15b)_Accepted_Paper_Details_2013_10_31_eLife.csv
+    | tmp           | poa_manuscript        | test_data/ejp_bucket_list.json | ejp_query_tool_query_id_176_POA_Manuscript_2014_03_19_eLife.csv
+    | tmp           | poa_author            | test_data/ejp_bucket_list.json | ejp_query_tool_query_id_177_POA_Author_2014_03_19_eLife.csv
+    | tmp           | poa_license           | test_data/ejp_bucket_list.json | ejp_query_tool_query_id_178_POA_License_2014_03_19_eLife.csv
+    | tmp           | poa_subject_area      | test_data/ejp_bucket_list.json | ejp_query_tool_query_id_179_POA_Subject_Area_2014_03_19_eLife.csv
+    | tmp           | poa_received          | test_data/ejp_bucket_list.json | ejp_query_tool_query_id_180_POA_Received_2014_03_19_eLife.csv
+    | tmp           | poa_research_organism | test_data/ejp_bucket_list.json | ejp_query_tool_query_id_182_POA_Research_Organism_2014_03_19_eLife.csv
+    
   Scenario: Parse an editor file with EJP provider and check column headings
     Given I have a tmp_base_dir <tmp_base_dir>
     And I have test name <test_name>
