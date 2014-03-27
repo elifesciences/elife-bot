@@ -74,6 +74,7 @@ def start(ENV = "dev"):
 	activity_names.append("UnzipArticleSuppl")
 	activity_names.append("UnzipArticleJPG")
 	activity_names.append("ConverterSVGtoJPG")
+	activity_names.append("PackagePOA")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries
