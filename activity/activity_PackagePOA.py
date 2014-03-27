@@ -8,6 +8,8 @@ import importlib
 import zipfile
 import requests
 import urlparse
+import glob
+import shutil
 
 import activity
 
@@ -124,6 +126,12 @@ class activity_PackagePOA(activity.activity):
             zipfile_name = self.poa_zip_filename,
             output_dir   = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
         )
+        
+    def prepare_for_hw(self):
+        """
+        Using the POA prepare_xml_pdf_for_hw module
+        """
+        self.elife_poa_lib.prepare.prepare_pdf_xml_for_ftp()
     
     def download_latest_csv(self):
         """
@@ -163,6 +171,11 @@ class activity_PackagePOA(activity.activity):
         article XML from the CSV files
         """
         result = self.elife_poa_lib.xml_generation.build_xml_for_article(article_id)
+        
+        # Copy to STAGING_TO_HW_DIR because we need it there
+        xml_files = glob.glob(self.elife_poa_lib.settings.TARGET_OUTPUT_DIR + "/*.xml")
+        for f in xml_files:
+            shutil.copy(f, self.elife_poa_lib.settings.STAGING_TO_HW_DIR)
 
     def import_imports(self):
         """
@@ -220,6 +233,7 @@ class activity_PackagePOA(activity.activity):
         # Now we can continue with imports
         importlib.import_module(dir_name + ".xml_generation")
         self.elife_poa_lib.transform = importlib.import_module(dir_name + ".transform-ejp-zip-to-hw-zip")
+        self.elife_poa_lib.prepare = importlib.import_module(dir_name + ".prepare_xml_pdf_for_hw")
         
     def create_activity_directories(self):
         """
