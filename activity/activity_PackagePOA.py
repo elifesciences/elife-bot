@@ -11,6 +11,9 @@ import urlparse
 
 import activity
 
+import boto.s3
+from boto.s3.connection import S3Connection
+
 import provider.ejp as ejplib
 
 """
@@ -44,6 +47,10 @@ class activity_PackagePOA(activity.activity):
         
         # Create an EJP provider to access S3 bucket holding CSV files
         self.ejp = ejplib.EJP(settings, self.get_tmp_dir())
+        
+        # Some values to set later
+        self.poa_zip_filename = None
+        self.doi = None
     
     def do_activity(self, data = None):
         """
@@ -58,6 +65,66 @@ class activity_PackagePOA(activity.activity):
 
         return result
 
+    def get_doi_id_from_doi(self, doi):
+        """
+        Extract just the integer doi_id value from the DOI string
+        """
+        return int(doi.split(".")[-1])
+
+    def download_poa_zip(self, document, bucket_name = None):
+        """
+        Given the s3 object name as document, download it from the
+        POA delivery bucket and save file to disk in the EJP_INPUT_DIR
+        """
+        if bucket_name is None:
+            # Default bucket
+            bucket_name = self.settings.poa_bucket
+            
+        #print bucket_name
+        #print document
+
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        # Get the S3 object key
+        s3_key = bucket.get_key(document)
+        
+        # Download and save to disk
+        contents = s3_key.get_contents_as_string()
+        filename_plus_path = self.elife_poa_lib.settings.EJP_INPUT_DIR + os.sep + document
+        mode = "wb"
+        f = open(filename_plus_path, mode)
+        f.write(contents)
+        f.close()
+        
+        # Save the zip file name for later use
+        self.poa_zip_filename = filename_plus_path
+            
+    def get_doi_from_zip_file(self, filename = None):
+        """
+        Get the DOI from the zip file manifest.xml using the POA library
+        Use the object variable as the default if not specified
+        """
+        if filename is None:
+            filename = self.poa_zip_filename
+        if filename is None:
+            return None
+        
+        # Good, continue
+        current_zipfile = zipfile.ZipFile(filename, 'r')
+        doi = self.elife_poa_lib.transform.get_doi_from_zipfile(current_zipfile)
+        
+        self.doi = doi
+    
+    def process_poa_zipfile(self):
+        """
+        Using the POA transform-ejp-zip-to-hw-zip module
+        """
+        self.elife_poa_lib.transform.process_zipfile(
+            zipfile_name = self.poa_zip_filename,
+            output_dir   = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
+        )
+    
     def download_latest_csv(self):
         """
         Download the latest CSV files from S3, rename them, and
@@ -152,6 +219,7 @@ class activity_PackagePOA(activity.activity):
 
         # Now we can continue with imports
         importlib.import_module(dir_name + ".xml_generation")
+        self.elife_poa_lib.transform = importlib.import_module(dir_name + ".transform-ejp-zip-to-hw-zip")
         
     def create_activity_directories(self):
         """
