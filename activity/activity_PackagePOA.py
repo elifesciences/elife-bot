@@ -61,9 +61,30 @@ class activity_PackagePOA(activity.activity):
         if(self.logger):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
         
-        # Coming soon!
+        # Download the S3 object
+        document = data["data"]["document"]
         
-        result = None
+        # Download POA zip file
+        self.download_poa_zip(document)
+        
+        # Get the DOI from the zip file
+        self.get_doi_from_zip_file()
+        
+        # Transform zip file
+        self.process_poa_zipfile()
+        
+        # Set the DOI and generate XML
+        doi_id = self.get_doi_id_from_doi(self.doi)
+        self.download_latest_csv()
+        self.generate_xml(doi_id)
+    
+        # Prepare for HW
+        self.prepare_for_hw()
+        
+        # TODO! Copy finished files to S3 outbox
+        
+        # TODO!  Assume all worked for now
+        result = True
 
         return result
 
