@@ -50,6 +50,10 @@ class activity_PackagePOA(activity.activity):
         # Create an EJP provider to access S3 bucket holding CSV files
         self.ejp = ejplib.EJP(settings, self.get_tmp_dir())
         
+        # Bucket for outgoing files
+        self.publish_bucket = settings.bot_bucket
+        self.outbox_folder = "poa/outbox/"
+        
         # Some values to set later
         self.poa_zip_filename = None
         self.doi = None
@@ -78,10 +82,8 @@ class activity_PackagePOA(activity.activity):
         self.download_latest_csv()
         self.generate_xml(doi_id)
     
-        # Prepare for HW
-        self.prepare_for_hw()
-        
-        # TODO! Copy finished files to S3 outbox
+        # Copy finished files to S3 outbox
+        self.copy_files_to_s3_outbox()
         
         # TODO!  Assume all worked for now
         result = True
@@ -148,12 +150,6 @@ class activity_PackagePOA(activity.activity):
             output_dir   = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
         )
         
-    def prepare_for_hw(self):
-        """
-        Using the POA prepare_xml_pdf_for_hw module
-        """
-        self.elife_poa_lib.prepare.prepare_pdf_xml_for_ftp()
-    
     def download_latest_csv(self):
         """
         Download the latest CSV files from S3, rename them, and
@@ -197,6 +193,42 @@ class activity_PackagePOA(activity.activity):
         xml_files = glob.glob(self.elife_poa_lib.settings.TARGET_OUTPUT_DIR + "/*.xml")
         for f in xml_files:
             shutil.copy(f, self.elife_poa_lib.settings.STAGING_TO_HW_DIR)
+
+    def copy_files_to_s3_outbox(self):
+        """
+        Copy local files to the S3 bucket outbox
+        """
+
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(self.publish_bucket)
+        
+        pdf_files = glob.glob(self.elife_poa_lib.settings.STAGING_DECAPITATE_PDF_DIR  + "/*.pdf")
+        for absname in pdf_files:
+            # Copy decap PDF to S3 outbox
+            self.copy_file_to_bucket(bucket, absname)
+
+        xml_files = glob.glob(self.elife_poa_lib.settings.TARGET_OUTPUT_DIR  + "/*.xml")
+        for absname in xml_files:
+            # Copy XML file to S3 outbox
+            self.copy_file_to_bucket(bucket, absname)
+            
+        zip_files = glob.glob(self.elife_poa_lib.settings.FTP_TO_HW_DIR  + "/*.zip")
+        for absname in zip_files:
+            # Copy supplements zip file to S3 outbox
+            self.copy_file_to_bucket(bucket, absname)
+        
+    def copy_file_to_bucket(self, bucket, absname):
+        """
+        Given a boto bucket (already connected) and path to the file,
+        copy the file to the publish_bucket using the same filename
+        """
+        # Get the file name from the full file path
+        arcname = absname.split(os.sep)[-1]
+        s3_key_name = self.outbox_folder + arcname
+        # Create S3 object and save
+        s3key = boto.s3.key.Key(bucket)
+        s3key.key = s3_key_name
+        s3key.set_contents_from_filename(absname, replace=True)
 
     def import_imports(self):
         """
@@ -254,7 +286,6 @@ class activity_PackagePOA(activity.activity):
         # Now we can continue with imports
         importlib.import_module(dir_name + ".xml_generation")
         self.elife_poa_lib.transform = importlib.import_module(dir_name + ".transform-ejp-zip-to-hw-zip")
-        self.elife_poa_lib.prepare = importlib.import_module(dir_name + ".prepare_xml_pdf_for_hw")
         
     def create_activity_directories(self):
         """
