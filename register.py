@@ -38,6 +38,7 @@ def start(ENV = "dev"):
 	workflow_names.append("SendQueuedEmail")
 	workflow_names.append("PublishSuppl")
 	workflow_names.append("PublishJPG")
+	workflow_names.append("PackagePOA")
 	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
