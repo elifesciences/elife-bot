@@ -10,6 +10,7 @@ import requests
 import urlparse
 import glob
 import shutil
+import re
 
 import activity
 
@@ -57,17 +58,116 @@ class activity_PublishPOA(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
         
         # Download the S3 objects
-        # TODO!!!
+        self.download_files_from_s3_outbox()
         
         # Prepare for HW
         self.prepare_for_hw()
         
         # TODO!!! Publish files
         
+        # TODO!!! Clean up outbox
+        
         # TODO!  Assume all worked for now
         result = True
 
         return result
+
+    def download_files_from_s3_outbox(self):
+        """
+        Connect to the S3 bucket, and from the outbox folder,
+        download the .xml and .pdf files to be bundled.
+        """
+        file_extensions = []
+        file_extensions.append(".xml")
+        file_extensions.append(".pdf")
+        file_extensions.append(".zip")
+        
+        bucket_name = self.publish_bucket
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        s3_key_names = self.get_s3_key_names_from_bucket(
+            bucket          = bucket,
+            prefix          = self.outbox_folder,
+            file_extensions = file_extensions)
+        
+        for name in s3_key_names:
+            # Download objects from S3 and save to disk
+            s3_key = bucket.get_key(name)
+            print name
+            
+            filename = name.split("/")[-1]
+            
+            print "filename before " + filename
+        
+            # Save .xml and .pdf to different folders
+            if re.search(".*\\.pdf$", name):
+                dirname = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
+                # Special on decap PDF file names, remove the _decap
+                if re.search("decap\_", filename):
+                    filename = filename.split("decap_")[-1]
+            elif re.search(".*\\.xml$", name):
+                dirname = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
+            elif re.search(".*\\.zip$", name):
+                dirname = self.elife_poa_lib.settings.FTP_TO_HW_DIR
+            print "filename after " + filename
+        
+            contents = s3_key.get_contents_as_string()
+            filename_plus_path = dirname + os.sep + filename
+            mode = "wb"
+            f = open(filename_plus_path, mode)
+            f.write(contents)
+            f.close()
+        
+    def get_s3_key_names_from_bucket(self, bucket, prefix = None, delimiter = '/', headers = None, file_extensions = None):
+        """
+        Given a connected boto bucket object, and optional parameters,
+        from the prefix (folder name), get the s3 key names for
+        non-folder objects, optionally that match a particular
+        list of file extensions
+        """
+        s3_keys = []
+        s3_key_names = []
+        
+        # Get a list of S3 objects
+        bucketList = bucket.list(prefix = prefix, delimiter = delimiter, headers = headers)
+
+        for item in bucketList:
+          if(isinstance(item, boto.s3.key.Key)):
+            # Can loop through each prefix and search for objects
+            s3_keys.append(item)
+        
+        # Convert to key names instead of objects to make it testable later
+        for key in s3_keys:
+            s3_key_names.append(key.name)
+        
+        # Filter by file_extension
+        if file_extensions is not None:
+            s3_key_names = self.filter_list_by_file_extensions(s3_key_names, file_extensions)
+            
+        return s3_key_names
+    
+    def filter_list_by_file_extensions(self, s3_key_names, file_extensions):
+        """
+        Given a list of s3_key_names, and a list of file_extensions
+        filter out all but the allowed file extensions
+        Each file extension should start with a . dot
+        """
+        good_s3_key_names = []
+        for name in s3_key_names:
+            match = False
+            for ext in file_extensions:
+                # Match file extension as the end of the string and escape the dot
+                pattern = ".*\\" + ext + "$"
+                if(re.search(pattern, name) is not None):
+                    match = True
+            if match is True:
+                good_s3_key_names.append(name)
+        
+        return good_s3_key_names
+        
 
     def prepare_for_hw(self):
         """
