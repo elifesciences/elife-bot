@@ -96,12 +96,9 @@ class activity_PublishPOA(activity.activity):
         for name in s3_key_names:
             # Download objects from S3 and save to disk
             s3_key = bucket.get_key(name)
-            print name
-            
+
             filename = name.split("/")[-1]
-            
-            print "filename before " + filename
-        
+
             # Save .xml and .pdf to different folders
             if re.search(".*\\.pdf$", name):
                 dirname = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
@@ -112,8 +109,7 @@ class activity_PublishPOA(activity.activity):
                 dirname = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
             elif re.search(".*\\.zip$", name):
                 dirname = self.elife_poa_lib.settings.FTP_TO_HW_DIR
-            print "filename after " + filename
-        
+
             contents = s3_key.get_contents_as_string()
             filename_plus_path = dirname + os.sep + filename
             mode = "wb"
