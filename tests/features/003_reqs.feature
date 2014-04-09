@@ -17,3 +17,9 @@ Feature: Use python imports and requirements
     | bs4
     | fom
     | elife-api-prototype
+    | elife-poa-xml-generation
+    | git
+    | arrow
+    | elementtree
+    | PyPDF2
+    | wsgiref
