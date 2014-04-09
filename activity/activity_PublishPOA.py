@@ -63,7 +63,10 @@ class activity_PublishPOA(activity.activity):
         # Prepare for HW
         self.prepare_for_hw()
         
-        # TODO!!! Publish files
+        # Publish files
+        self.ftp_files_to_endpoint()
+        
+        # TODO!!! add go.xml file
         
         # TODO!!! Clean up outbox
         
@@ -171,6 +174,13 @@ class activity_PublishPOA(activity.activity):
         """
         self.elife_poa_lib.prepare.prepare_pdf_xml_for_ftp()
 
+    def ftp_files_to_endpoint(self):
+        """
+        Using the POA module, FTP files to endpoint
+        """
+        zipfiles = glob.glob(self.elife_poa_lib.settings.FTP_TO_HW_DIR + "/*.zip")
+        self.elife_poa_lib.ftp.ftp_to_endpoint(zipfiles)
+
     def import_imports(self):
         """
         Customised importing of the external library
@@ -219,6 +229,7 @@ class activity_PublishPOA(activity.activity):
 
         # Now we can continue with imports
         self.elife_poa_lib.prepare = importlib.import_module(dir_name + ".prepare_xml_pdf_for_hw")
+        self.elife_poa_lib.ftp = importlib.import_module(dir_name + ".ftp_to_highwire")
         
     def create_activity_directories(self):
         """
