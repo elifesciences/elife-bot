@@ -47,8 +47,8 @@ class activity_PublishPOA(activity.activity):
         self.create_activity_directories()
         
         # Bucket for outgoing files
-        self.publish_bucket = settings.bot_bucket
-        self.outbox_folder = "poa/outbox/"
+        self.publish_bucket = settings.poa_packaging_bucket
+        self.outbox_folder = "outbox/"
     
     def do_activity(self, data = None):
         """

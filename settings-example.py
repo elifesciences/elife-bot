@@ -58,6 +58,9 @@ class dev():
 	# POA delivery bucket
 	poa_bucket = 'elife-ejp-poa-delivery-dev'
 	
+	# POA packaging bucket
+	poa_packaging_bucket = 'elife-poa-packaging-dev'
+	
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp-dev'
 	
@@ -110,6 +113,9 @@ class live():
 	
 	# POA delivery bucket
 	poa_bucket = 'elife-ejp-poa-delivery'
+	
+	# POA packaging bucket
+	poa_packaging_bucket = 'elife-poa-packaging'
 	
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp'

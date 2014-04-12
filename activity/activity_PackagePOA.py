@@ -51,8 +51,8 @@ class activity_PackagePOA(activity.activity):
         self.ejp = ejplib.EJP(settings, self.get_tmp_dir())
         
         # Bucket for outgoing files
-        self.publish_bucket = settings.bot_bucket
-        self.outbox_folder = "poa/outbox/"
+        self.publish_bucket = settings.poa_packaging_bucket
+        self.outbox_folder = "outbox/"
         
         # Some values to set later
         self.poa_zip_filename = None
