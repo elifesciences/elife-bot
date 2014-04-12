@@ -213,6 +213,12 @@ class activity_PublishPOA(activity.activity):
         
         settings = self.elife_poa_lib.settings
         
+        # Reload the module fresh, so original directory names are reset
+        try:
+            reload(settings)
+        except:
+            pass
+        
         # Override the settings
         settings.XLS_PATH                   = self.get_tmp_dir() + os.sep + 'ejp-csv' + os.sep
         settings.TARGET_OUTPUT_DIR          = self.get_tmp_dir() + os.sep + settings.TARGET_OUTPUT_DIR
