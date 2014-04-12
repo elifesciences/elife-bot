@@ -202,6 +202,7 @@ class activity_PublishPOA(activity.activity):
         POA lib import Step 1: import external library by directory name
         """
         self.elife_poa_lib = __import__(dir_name)
+        self.reload_module(self.elife_poa_lib)
         
     def override_poa_settings(self, dir_name):
         """
@@ -210,15 +211,11 @@ class activity_PublishPOA(activity.activity):
 
         # Load external library settings
         importlib.import_module(dir_name + ".settings")
+        # Reload the module fresh, so original directory names are reset
+        self.reload_module(self.elife_poa_lib.settings)
         
         settings = self.elife_poa_lib.settings
-        
-        # Reload the module fresh, so original directory names are reset
-        try:
-            reload(settings)
-        except:
-            pass
-        
+
         # Override the settings
         settings.XLS_PATH                   = self.get_tmp_dir() + os.sep + 'ejp-csv' + os.sep
         settings.TARGET_OUTPUT_DIR          = self.get_tmp_dir() + os.sep + settings.TARGET_OUTPUT_DIR
@@ -235,7 +232,18 @@ class activity_PublishPOA(activity.activity):
 
         # Now we can continue with imports
         self.elife_poa_lib.prepare = importlib.import_module(dir_name + ".prepare_xml_pdf_for_hw")
+        self.reload_module(self.elife_poa_lib.prepare)
         self.elife_poa_lib.ftp = importlib.import_module(dir_name + ".ftp_to_highwire")
+        self.reload_module(self.elife_poa_lib.ftp)
+        
+    def reload_module(self, module):
+        """
+        Attempt to reload an imported module to reset it
+        """
+        try:
+            reload(module)
+        except:
+            pass
         
     def create_activity_directories(self):
         """

@@ -251,6 +251,7 @@ class activity_PackagePOA(activity.activity):
         POA lib import Step 1: import external library by directory name
         """
         self.elife_poa_lib = __import__(dir_name)
+        self.reload_module(self.elife_poa_lib)
         
     def override_poa_settings(self, dir_name):
         """
@@ -258,15 +259,11 @@ class activity_PackagePOA(activity.activity):
         """
 
         # Load external library settings
-        importlib.import_module(dir_name + ".settings")
+        self.elife_poa_lib.settings = importlib.import_module(dir_name + ".settings")
+        # Reload the module fresh, so original directory names are reset
+        self.reload_module(self.elife_poa_lib.settings)
         
         settings = self.elife_poa_lib.settings
-        
-        # Reload the module fresh, so original directory names are reset
-        try:
-            reload(settings)
-        except:
-            pass
         
         # Override the settings
         settings.XLS_PATH                   = self.get_tmp_dir() + os.sep + 'ejp-csv' + os.sep
@@ -290,9 +287,20 @@ class activity_PackagePOA(activity.activity):
         """
 
         # Now we can continue with imports
-        importlib.import_module(dir_name + ".xml_generation")
+        self.elife_poa_lib.xml = importlib.import_module(dir_name + ".xml_generation")
+        self.reload_module(self.elife_poa_lib.xml)
         self.elife_poa_lib.transform = importlib.import_module(dir_name + ".transform-ejp-zip-to-hw-zip")
-        
+        self.reload_module(self.elife_poa_lib.transform)
+    
+    def reload_module(self, module):
+        """
+        Attempt to reload an imported module to reset it
+        """
+        try:
+            reload(module)
+        except:
+            pass
+    
     def create_activity_directories(self):
         """
         Create the directories in the activity tmp_dir
