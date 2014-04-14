@@ -39,6 +39,7 @@ def start(ENV = "dev"):
 	workflow_names.append("PublishSuppl")
 	workflow_names.append("PublishJPG")
 	workflow_names.append("PackagePOA")
+	workflow_names.append("PublishPOA")
 	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
@@ -76,6 +77,7 @@ def start(ENV = "dev"):
 	activity_names.append("UnzipArticleJPG")
 	activity_names.append("ConverterSVGtoJPG")
 	activity_names.append("PackagePOA")
+	activity_names.append("PublishPOA")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries
