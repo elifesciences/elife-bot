@@ -225,6 +225,12 @@ class activity_PublishPOA(activity.activity):
         settings.EJP_INPUT_DIR              = self.get_tmp_dir() + os.sep + settings.EJP_INPUT_DIR
         settings.STAGING_DECAPITATE_PDF_DIR = self.get_tmp_dir() + os.sep + settings.STAGING_DECAPITATE_PDF_DIR
         
+        # Override the FTP settings with the bot environment settings
+        settings.FTP_URI = self.settings.POA_FTP_URI
+        settings.FTP_USERNAME = self.settings.POA_FTP_USERNAME
+        settings.FTP_PASSWORD = self.settings.POA_FTP_PASSWORD
+        settings.FTP_CWD = self.settings.POA_FTP_CWD
+         
     def import_poa_modules(self, dir_name = "elife-poa-xml-generation"):
         """
         POA lib import Step 3: import modules now that settings are overridden

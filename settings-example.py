@@ -61,6 +61,12 @@ class dev():
 	# POA packaging bucket
 	poa_packaging_bucket = 'elife-poa-packaging-dev'
 	
+	# POA FTP settings
+	POA_FTP_URI = ""
+	POA_FTP_USERNAME = ""
+	POA_FTP_PASSWORD = ""
+	POA_FTP_CWD = ""
+	
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp-dev'
 	
@@ -116,6 +122,12 @@ class live():
 	
 	# POA packaging bucket
 	poa_packaging_bucket = 'elife-poa-packaging'
+	
+	# POA FTP settings
+	POA_FTP_URI = ""
+	POA_FTP_USERNAME = ""
+	POA_FTP_PASSWORD = ""
+	POA_FTP_CWD = ""
 	
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp'
