@@ -64,7 +64,7 @@ class activity_PublishPOA(activity.activity):
         self.prepare_for_hw()
         
         # Publish files
-        self.ftp_files_to_endpoint()
+        self.ftp_files_to_endpoint("/*.zip")
         
         # TODO!!! add go.xml file
         
@@ -174,11 +174,13 @@ class activity_PublishPOA(activity.activity):
         """
         self.elife_poa_lib.prepare.prepare_pdf_xml_for_ftp()
 
-    def ftp_files_to_endpoint(self):
+    def ftp_files_to_endpoint(self, file_type):
         """
         Using the POA module, FTP files to endpoint
+        as specified by the file_type to use in the glob
+        e.g. "/*.zip"
         """
-        zipfiles = glob.glob(self.elife_poa_lib.settings.FTP_TO_HW_DIR + "/*.zip")
+        zipfiles = glob.glob(self.elife_poa_lib.settings.FTP_TO_HW_DIR + file_type)
         self.elife_poa_lib.ftp.ftp_to_endpoint(zipfiles)
 
     def import_imports(self):
