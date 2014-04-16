@@ -49,6 +49,10 @@ class activity_PublishPOA(activity.activity):
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
         self.outbox_folder = "outbox/"
+        
+        # Subfolders on the FTP site to deliver into
+        self.ftp_subfolder_poa = "poa"
+        self.ftp_subfolder_ds = "ds"
     
     def do_activity(self, data = None):
         """
@@ -64,9 +68,14 @@ class activity_PublishPOA(activity.activity):
         self.prepare_for_hw()
         
         # Publish files
-        self.ftp_files_to_endpoint("/*.zip")
+        self.ftp_files_to_endpoint(file_type = "/*_ds.zip", sub_dir = self.ftp_subfolder_ds)
+        self.ftp_files_to_endpoint(file_type = "/*[0-9].zip", sub_dir = self.ftp_subfolder_poa)
         
-        # TODO!!! add go.xml file
+        # Add go.xml files
+        self.create_go_xml_file("pap", self.ftp_subfolder_poa)
+        self.create_go_xml_file("ds", self.ftp_subfolder_ds)
+        self.ftp_go_xml_to_endpoint("pap", self.ftp_subfolder_poa)
+        self.ftp_go_xml_to_endpoint("ds", self.ftp_subfolder_ds)
         
         # TODO!!! Clean up outbox
         
@@ -174,14 +183,80 @@ class activity_PublishPOA(activity.activity):
         """
         self.elife_poa_lib.prepare.prepare_pdf_xml_for_ftp()
 
-    def ftp_files_to_endpoint(self, file_type):
+    def ftp_files_to_endpoint(self, file_type, sub_dir = None):
         """
         Using the POA module, FTP files to endpoint
         as specified by the file_type to use in the glob
         e.g. "/*.zip"
         """
         zipfiles = glob.glob(self.elife_poa_lib.settings.FTP_TO_HW_DIR + file_type)
-        self.elife_poa_lib.ftp.ftp_to_endpoint(zipfiles)
+        self.elife_poa_lib.ftp.ftp_to_endpoint(zipfiles, sub_dir)
+        
+    def ftp_go_xml_to_endpoint(self, go_type, sub_dir):
+        """
+        Using the POA module, FTP the go.xml file
+        """
+        from_dir = self.get_go_xml_dir(sub_dir)
+        go_xml_filename = from_dir + os.sep + "go.xml"
+        
+        zipfiles = []
+        zipfiles.append(go_xml_filename)
+        
+        self.elife_poa_lib.ftp.ftp_to_endpoint(zipfiles, sub_dir)
+        
+    def get_go_xml_dir(self, sub_dir):
+        """
+        Given the sub_dir name, return the folder name
+        based on the FTP_TO_HW_DIR directory. If the sub_dir
+        does not exist, create it
+        """
+        from_dir = self.elife_poa_lib.settings.FTP_TO_HW_DIR + os.sep + sub_dir
+        
+        # Create the directory if not exists
+        try:
+            os.mkdir(from_dir)
+        except OSError:
+            pass
+        
+        return from_dir
+        
+    def create_go_xml_file(self, go_type, sub_dir):
+        """
+        Create a go.xml file of the particular type and save it
+        to the particular sub directory
+        """
+        go_xml_content = ""
+        if go_type == "pap":
+            go_xml_content = self.get_go_xml_content(go_type)
+        elif go_type == "ds":
+            go_xml_content = self.get_go_xml_content(go_type)
+        
+        # Prepare folder to store it in
+        from_dir = self.get_go_xml_dir(sub_dir)
+        
+        # Write to disk
+        go_xml_filename = from_dir + os.sep + "go.xml"
+        f = open(go_xml_filename, "w")
+        f.write(go_xml_content)
+        f.close()
+        
+    def get_go_xml_content(self, go_type):
+        """
+        Given the type of go.xml file, return the content for it
+        """
+        go_xml_content = ('<?xml version="1.0"?>'
+            '<!DOCTYPE HWExpress PUBLIC "-//HIGHWIRE//DTD HighWire Express Marker DTD v1.1.2HW//EN"'
+            ' "marker.dtd">')
+        
+        if go_type == "pap":
+            go_xml_content += '<HWExpress type="pap">'
+        elif go_type == "ds":
+            go_xml_content += '<HWExpress type="ds">'
+            
+        go_xml_content += '  <site>elife</site>'
+        go_xml_content += '</HWExpress>'
+        
+        return go_xml_content
 
     def import_imports(self):
         """
