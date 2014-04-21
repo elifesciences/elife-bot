@@ -73,28 +73,44 @@ class activity_PackagePOA(activity.activity):
         
         # Get the DOI from the zip file
         self.get_doi_from_zip_file()
-        
-        # Transform zip file
-        self.process_poa_zipfile()
-        
-        # Set the DOI and generate XML
         doi_id = self.get_doi_id_from_doi(self.doi)
-        self.download_latest_csv()
-        self.generate_xml(doi_id)
-    
-        # Copy finished files to S3 outbox
-        self.copy_files_to_s3_outbox()
         
-        # TODO!  Assume all worked for now
-        result = True
+        if self.approve_for_packaging(doi_id) is False:
+            # Bad. Fail the activity
+            result = False
+            
+        else:
+            # Good, continue
+            
+            # Transform zip file
+            self.process_poa_zipfile()
+            
+            # Set the DOI and generate XML
+            
+            self.download_latest_csv()
+            self.generate_xml(doi_id)
+        
+            # Copy finished files to S3 outbox
+            self.copy_files_to_s3_outbox()
+            
+            # TODO!  Assume all worked for now
+            result = True
+            
+        # Send email - TODO!!!
 
+        # Return the activity result, True or False
         return result
 
     def get_doi_id_from_doi(self, doi):
         """
         Extract just the integer doi_id value from the DOI string
         """
-        return int(doi.split(".")[-1])
+        try:
+            doi_id = int(doi.split(".")[-1])
+        except:
+            doi_id = None
+            
+        return doi_id
 
     def download_poa_zip(self, document, bucket_name = None):
         """
@@ -140,6 +156,15 @@ class activity_PackagePOA(activity.activity):
         doi = self.elife_poa_lib.transform.get_doi_from_zipfile(current_zipfile)
         
         self.doi = doi
+    
+    def approve_for_packaging(self, doi_id):
+        """
+        After downloading the zip file but before starting to package it,
+        do all the pre-packaging steps and checks, including to have a DOI
+        """
+        if doi_id is None:
+            return False
+        return True
     
     def process_poa_zipfile(self):
         """
