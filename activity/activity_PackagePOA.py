@@ -55,8 +55,15 @@ class activity_PackagePOA(activity.activity):
         self.outbox_folder = "outbox/"
         
         # Some values to set later
+        self.document = None
         self.poa_zip_filename = None
         self.doi = None
+        
+        # Track the success of some steps
+        self.approve_status = None
+        self.process_status = None
+        self.generate_xml_status = None
+        self.pdf_decap_status = None
     
     def do_activity(self, data = None):
         """
@@ -66,16 +73,19 @@ class activity_PackagePOA(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
         
         # Download the S3 object
-        document = data["data"]["document"]
+        self.document = data["data"]["document"]
         
         # Download POA zip file
-        self.download_poa_zip(document)
+        self.download_poa_zip(self.document)
         
         # Get the DOI from the zip file
         self.get_doi_from_zip_file()
         doi_id = self.get_doi_id_from_doi(self.doi)
         
-        if self.approve_for_packaging(doi_id) is False:
+        # Approve the DOI for packaging
+        self.approve_status = self.approve_for_packaging(doi_id)
+        
+        if self.approve_status is False:
             # Bad. Fail the activity
             result = False
             
@@ -83,20 +93,27 @@ class activity_PackagePOA(activity.activity):
             # Good, continue
             
             # Transform zip file
-            self.process_poa_zipfile()
+            self.process_status = self.process_poa_zipfile()
+            self.pdf_decap_status = self.check_pdf_decap_failure()
             
             # Set the DOI and generate XML
-            
             self.download_latest_csv()
-            self.generate_xml(doi_id)
+            self.generate_xml_status = self.generate_xml(doi_id)
         
             # Copy finished files to S3 outbox
             self.copy_files_to_s3_outbox()
             
-            # TODO!  Assume all worked for now
-            result = True
+            # Set the result of this activity based on successes
+            if self.process_status is True and self.generate_xml_status is True:
+                result = True
+            else:
+                result = False
             
         # Send email - TODO!!!
+        print "approve_status: " + str(self.approve_status)
+        print "process_status: " + str(self.process_status)
+        print "pdf_decap_status: " + str(self.pdf_decap_status)
+        print "generate_xml_status: " + str(self.generate_xml_status)
 
         # Return the activity result, True or False
         return result
@@ -170,10 +187,25 @@ class activity_PackagePOA(activity.activity):
         """
         Using the POA transform-ejp-zip-to-hw-zip module
         """
-        self.elife_poa_lib.transform.process_zipfile(
-            zipfile_name = self.poa_zip_filename,
-            output_dir   = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
-        )
+        try:
+            self.elife_poa_lib.transform.process_zipfile(
+                zipfile_name = self.poa_zip_filename,
+                output_dir   = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
+            )
+            return True
+        except:
+            return False
+        
+    def check_pdf_decap_failure(self):
+        """
+        After processing the zipfile there should be a PDF present, as a
+        result of decapitating the file. If not, return false
+        """
+        pdf_files = glob.glob(self.elife_poa_lib.settings.STAGING_DECAPITATE_PDF_DIR  + "/*.pdf")
+        if len(pdf_files) <= 0:
+            return False
+        elif len(pdf_files) > 0:
+            return True
         
     def download_latest_csv(self):
         """
@@ -212,12 +244,18 @@ class activity_PackagePOA(activity.activity):
         Given DOI number as article_id, use the POA library to generate
         article XML from the CSV files
         """
-        result = self.elife_poa_lib.xml_generation.build_xml_for_article(article_id)
+        result = None
+        try:
+            result = self.elife_poa_lib.xml_generation.build_xml_for_article(article_id)
+        except:
+            result = False
         
         # Copy to STAGING_TO_HW_DIR because we need it there
         xml_files = glob.glob(self.elife_poa_lib.settings.TARGET_OUTPUT_DIR + "/*.xml")
         for f in xml_files:
             shutil.copy(f, self.elife_poa_lib.settings.STAGING_TO_HW_DIR)
+            
+        return result
 
     def copy_files_to_s3_outbox(self):
         """
