@@ -67,6 +67,7 @@ class activity_PackagePOA(activity.activity):
         self.doi = None
         
         # Track the success of some steps
+        self.activity_status = None
         self.approve_status = None
         self.process_status = None
         self.generate_xml_status = None
@@ -94,7 +95,7 @@ class activity_PackagePOA(activity.activity):
         
         if self.approve_status is False:
             # Bad. Fail the activity
-            result = False
+            self.activity_status = False
             
         else:
             # Good, continue
@@ -110,16 +111,17 @@ class activity_PackagePOA(activity.activity):
             # Copy finished files to S3 outbox
             self.copy_files_to_s3_outbox()
             
-            # Set the result of this activity based on successes
+            # Set the activity status of this activity based on successes
             if self.process_status is True and self.generate_xml_status is True:
-                result = True
+                self.activity_status = True
             else:
-                result = False
+                self.activity_status = False
             
         # Send email
-        self.add_email_to_queue(result)
+        self.add_email_to_queue()
 
         # Return the activity result, True or False
+        result = True
         return result
 
     def get_doi_id_from_doi(self, doi):
@@ -297,7 +299,7 @@ class activity_PackagePOA(activity.activity):
         s3key.key = s3_key_name
         s3key.set_contents_from_filename(absname, replace=True)
 
-    def add_email_to_queue(self, result):
+    def add_email_to_queue(self):
         """
         After do_activity is finished, send emails to recipients
         on the status
@@ -310,8 +312,8 @@ class activity_PackagePOA(activity.activity):
       
         current_time = time.gmtime()
         
-        body = self.get_email_body(result, current_time)
-        subject = self.get_email_subject(result, current_time)
+        body = self.get_email_body(current_time)
+        subject = self.get_email_subject(current_time)
         sender_email = self.settings.ses_poa_sender_email
         
         recipient_email_list = []
@@ -335,35 +337,35 @@ class activity_PackagePOA(activity.activity):
         
         return True
 
-    def get_email_result_text(self, result):
+    def get_activity_status_text(self, activity_status):
         """
-        Given the activity result boolean, return a humanr
+        Given the activity status boolean, return a human
         readable text version
         """
-        if result is True:
-            result_text = "Success!"
+        if activity_status is True:
+            activity_status_text = "Success!"
         else:
-            result_text = "FAILED."
+            activity_status_text = "FAILED."
             
-        return result_text
+        return activity_status_text
 
-    def get_email_subject(self, result, current_time):
+    def get_email_subject(self, current_time):
         """
         Assemble the email subject
         """
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
         
-        result_text = self.get_email_result_text(result)
+        activity_status_text = self.get_activity_status_text(self.activity_status)
       
-        subject = ( self.name + " " + result_text +
+        subject = ( self.name + " " + activity_status_text +
                     " doi: " + self.doi +
                     ", " + datetime_string +
                     ", eLife SWF domain: " + self.settings.domain)
         
         return subject
   
-    def get_email_body(self, result, current_time):
+    def get_email_body(self, current_time):
         """
         Format the body of the email
         """
@@ -373,12 +375,12 @@ class activity_PackagePOA(activity.activity):
         date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         datetime_string = time.strftime(date_format, current_time)
         
-        result_text = self.get_email_result_text(result)
+        activity_status_text = self.get_activity_status_text(self.activity_status)
         
         # Bulk of body
         body += "self.name status:" + "\n"
         body += "\n"
-        body += result_text + "\n"
+        body += activity_status_text + "\n"
         body += "\n"
         body += "document: " + str(self.document) + "\n"
         body += "doi: " + str(self.doi) + "\n"
@@ -387,7 +389,6 @@ class activity_PackagePOA(activity.activity):
         body += "process_status: " + str(self.process_status) + "\n"
         body += "pdf_decap_status: " + str(self.pdf_decap_status) + "\n"
         body += "generate_xml_status: " + str(self.generate_xml_status) + "\n"
-        body += "activity result: " + str(result) + "\n"
 
         body += "\n"
         body += "SWF workflow details: " + "\n"
