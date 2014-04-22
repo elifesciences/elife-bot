@@ -4,6 +4,8 @@ import json
 import random
 import datetime
 import importlib
+import calendar
+import time
 
 import zipfile
 import requests
@@ -13,10 +15,12 @@ import shutil
 
 import activity
 
+import boto.ses
 import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.ejp as ejplib
+import provider.simpleDB as dblib
 
 """
 PackagePOA activity
@@ -49,6 +53,9 @@ class activity_PackagePOA(activity.activity):
         
         # Create an EJP provider to access S3 bucket holding CSV files
         self.ejp = ejplib.EJP(settings, self.get_tmp_dir())
+        
+        # Data provider where email body is saved
+        self.db = dblib.SimpleDB(settings)
         
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
@@ -109,11 +116,8 @@ class activity_PackagePOA(activity.activity):
             else:
                 result = False
             
-        # Send email - TODO!!!
-        print "approve_status: " + str(self.approve_status)
-        print "process_status: " + str(self.process_status)
-        print "pdf_decap_status: " + str(self.pdf_decap_status)
-        print "generate_xml_status: " + str(self.generate_xml_status)
+        # Send email
+        self.add_email_to_queue(result)
 
         # Return the activity result, True or False
         return result
@@ -292,6 +296,111 @@ class activity_PackagePOA(activity.activity):
         s3key = boto.s3.key.Key(bucket)
         s3key.key = s3_key_name
         s3key.set_contents_from_filename(absname, replace=True)
+
+    def add_email_to_queue(self, result):
+        """
+        After do_activity is finished, send emails to recipients
+        on the status
+        """
+        # Connect to DB
+        db_conn = self.db.connect()
+        
+        # Note: Create a verified sender email address, only done once
+        #conn.verify_email_address(self.settings.ses_sender_email)
+      
+        current_time = time.gmtime()
+        
+        body = self.get_email_body(result, current_time)
+        subject = self.get_email_subject(result, current_time)
+        sender_email = self.settings.ses_poa_sender_email
+        
+        recipient_email_list = []
+        # Handle multiple recipients, if specified
+        if(type(self.settings.ses_poa_recipient_email) == list):
+          for email in self.settings.ses_poa_recipient_email:
+            recipient_email_list.append(email)
+        else:
+          recipient_email_list.append(self.settings.ses_poa_recipient_email)
+    
+        for email in recipient_email_list:
+          # Add the email to the email queue
+          self.db.elife_add_email_to_email_queue(
+            recipient_email = email,
+            sender_email = sender_email,
+            email_type = "PackagePOA",
+            format = "text",
+            subject = subject,
+            body = body)
+          pass
+        
+        return True
+
+    def get_email_result_text(self, result):
+        """
+        Given the activity result boolean, return a humanr
+        readable text version
+        """
+        if result is True:
+            result_text = "Success!"
+        else:
+            result_text = "FAILED."
+            
+        return result_text
+
+    def get_email_subject(self, result, current_time):
+        """
+        Assemble the email subject
+        """
+        date_format = '%Y-%m-%d %H:%M'
+        datetime_string = time.strftime(date_format, current_time)
+        
+        result_text = self.get_email_result_text(result)
+      
+        subject = ( self.name + " " + result_text +
+                    " doi: " + self.doi +
+                    ", " + datetime_string +
+                    ", eLife SWF domain: " + self.settings.domain)
+        
+        return subject
+  
+    def get_email_body(self, result, current_time):
+        """
+        Format the body of the email
+        """
+        
+        body = ""
+        
+        date_format = '%Y-%m-%dT%H:%M:%S.000Z'
+        datetime_string = time.strftime(date_format, current_time)
+        
+        result_text = self.get_email_result_text(result)
+        
+        # Bulk of body
+        body += "self.name status:" + "\n"
+        body += "\n"
+        body += result_text + "\n"
+        body += "\n"
+        body += "document: " + str(self.document) + "\n"
+        body += "doi: " + str(self.doi) + "\n"
+        body += "\n"
+        body += "approve_status: " + str(self.approve_status) + "\n"
+        body += "process_status: " + str(self.process_status) + "\n"
+        body += "pdf_decap_status: " + str(self.pdf_decap_status) + "\n"
+        body += "generate_xml_status: " + str(self.generate_xml_status) + "\n"
+        body += "activity result: " + str(result) + "\n"
+
+        body += "\n"
+        body += "SWF workflow details: " + "\n"
+        body += "activityId: " + str(self.get_activityId()) + "\n"
+        body += "As part of workflowId: " + str(self.get_workflowId()) + "\n"
+        body += "As at " + datetime_string + "\n"
+        body += "Domain: " + self.settings.domain + "\n"
+
+        body += "\n"
+        
+        body += "\n\nSincerely\n\neLife bot"
+        
+        return body
 
     def import_imports(self):
         """

@@ -67,6 +67,10 @@ class dev():
 	POA_FTP_PASSWORD = ""
 	POA_FTP_CWD = ""
 	
+	# POA email settings
+	ses_poa_sender_email = "sender@example.com"
+	ses_poa_recipient_email = "admin@example.com"
+	
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp-dev'
 	
@@ -128,6 +132,10 @@ class live():
 	POA_FTP_USERNAME = ""
 	POA_FTP_PASSWORD = ""
 	POA_FTP_CWD = ""
+	
+	# POA email settings
+	ses_poa_sender_email = "sender@example.com"
+	ses_poa_recipient_email = "admin@example.com"
 	
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp'
