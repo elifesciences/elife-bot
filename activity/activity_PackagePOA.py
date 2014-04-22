@@ -112,7 +112,9 @@ class activity_PackagePOA(activity.activity):
             self.copy_files_to_s3_outbox()
             
             # Set the activity status of this activity based on successes
-            if self.process_status is True and self.generate_xml_status is True:
+            if (self.process_status is True and
+                self.pdf_decap_status is True and
+                self.generate_xml_status is True):
                 self.activity_status = True
             else:
                 self.activity_status = False
@@ -378,7 +380,7 @@ class activity_PackagePOA(activity.activity):
         activity_status_text = self.get_activity_status_text(self.activity_status)
         
         # Bulk of body
-        body += "self.name status:" + "\n"
+        body += self.name + " status:" + "\n"
         body += "\n"
         body += activity_status_text + "\n"
         body += "\n"
