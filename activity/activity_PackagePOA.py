@@ -15,7 +15,6 @@ import shutil
 
 import activity
 
-import boto.ses
 import boto.s3
 from boto.s3.connection import S3Connection
 
