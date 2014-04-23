@@ -53,6 +53,9 @@ class activity_PublishPOA(activity.activity):
         # Subfolders on the FTP site to deliver into
         self.ftp_subfolder_poa = "poa"
         self.ftp_subfolder_ds = "ds"
+        
+        # Track the success of some steps
+        self.publish_status = None
     
     def do_activity(self, data = None):
         """
@@ -67,17 +70,23 @@ class activity_PublishPOA(activity.activity):
         # Prepare for HW
         self.prepare_for_hw()
         
-        # Publish files
-        self.ftp_files_to_endpoint(file_type = "/*_ds.zip", sub_dir = self.ftp_subfolder_ds)
-        self.ftp_files_to_endpoint(file_type = "/*[0-9].zip", sub_dir = self.ftp_subfolder_poa)
+        # Approve files for publishing
+        self.publish_status = self.approve_for_publishing()
         
-        # Add go.xml files
-        self.create_go_xml_file("pap", self.ftp_subfolder_poa)
-        self.create_go_xml_file("ds", self.ftp_subfolder_ds)
-        self.ftp_go_xml_to_endpoint("pap", self.ftp_subfolder_poa)
-        self.ftp_go_xml_to_endpoint("ds", self.ftp_subfolder_ds)
+        if self.publish_status is True:
+            # Publish files
+            self.ftp_files_to_endpoint(file_type = "/*_ds.zip", sub_dir = self.ftp_subfolder_ds)
+            self.ftp_files_to_endpoint(file_type = "/*[0-9].zip", sub_dir = self.ftp_subfolder_poa)
+            
+            # Add go.xml files
+            self.create_go_xml_file("pap", self.ftp_subfolder_poa)
+            self.create_go_xml_file("ds", self.ftp_subfolder_ds)
+            self.ftp_go_xml_to_endpoint("pap", self.ftp_subfolder_poa)
+            self.ftp_go_xml_to_endpoint("ds", self.ftp_subfolder_ds)
         
-        # TODO!!! Clean up outbox
+            # TODO!!! Clean up outbox
+
+        print str(self.publish_status)
         
         # TODO!  Assume all worked for now
         result = True
@@ -182,6 +191,58 @@ class activity_PublishPOA(activity.activity):
         Using the POA prepare_xml_pdf_for_hw module
         """
         self.elife_poa_lib.prepare.prepare_pdf_xml_for_ftp()
+        
+    def get_made_ftp_ready_dir_name(self):
+        """
+        After running the prepare_for_hw, there should should be a subfolder in the
+        MADE_FTP_READY directory, based on the run date. Return the name of it
+        """
+        numeric_folder_names = glob.glob(self.elife_poa_lib.settings.MADE_FTP_READY + "/[0-9]*")
+        try:
+            # There should be only one subdirectory with an all numeric name
+            folder_name = numeric_folder_names[0]
+        except:
+            folder_name = None
+        
+        return folder_name
+
+    def is_made_ftp_ready_dir_not_empty(self):
+        """
+        Lookup the numeric folder based on the date
+        and check if it is empty
+        """
+        # Get the subfolder name for the made_ftp_ready_dir
+        made_ftp_ready_dir_name = self.get_made_ftp_ready_dir_name()
+        
+        # Check for empty directory
+        try:
+            dir_list = os.listdir(made_ftp_ready_dir_name)
+            if len(dir_list) > 0:
+                return True
+        except:
+            return None
+        
+        return False
+
+    def approve_for_publishing(self):
+        """
+        Final checks before publishing files to the FTP endpoint
+        Check for empty made_ftp_ready_dir
+        Also, remove files that should not be uploaded due to incomplete
+        sets of files per article
+        """
+        status = None
+        # Get the subfolder name for the made_ftp_ready_dir
+        made_ftp_ready_dir_name = self.get_made_ftp_ready_dir_name()
+        
+        # Check for empty directory
+        if self.is_made_ftp_ready_dir_not_empty() is not True:
+            status = False
+            
+        # Default until full sets of files checker is built
+        status = True
+
+        return status
 
     def ftp_files_to_endpoint(self, file_type, sub_dir = None):
         """
