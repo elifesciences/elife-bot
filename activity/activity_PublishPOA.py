@@ -49,6 +49,7 @@ class activity_PublishPOA(activity.activity):
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
         self.outbox_folder = "outbox/"
+        self.published_folder = "published/"
         
         # Subfolders on the FTP site to deliver into
         self.ftp_subfolder_poa = "poa"
@@ -84,7 +85,9 @@ class activity_PublishPOA(activity.activity):
             self.ftp_go_xml_to_endpoint("pap", self.ftp_subfolder_poa)
             self.ftp_go_xml_to_endpoint("ds", self.ftp_subfolder_ds)
         
-            # TODO!!! Clean up outbox
+            # Clean up outbox
+            print "Moving files from outbox folder to published folder"
+            self.clean_outbox()
 
         print str(self.publish_status)
         
@@ -238,9 +241,9 @@ class activity_PublishPOA(activity.activity):
         # Check for empty directory
         if self.is_made_ftp_ready_dir_not_empty() is not True:
             status = False
-            
-        # Default until full sets of files checker is built
-        status = True
+        else:
+            # Default until full sets of files checker is built
+            status = True
 
         return status
 
@@ -318,6 +321,50 @@ class activity_PublishPOA(activity.activity):
         go_xml_content += '</HWExpress>'
         
         return go_xml_content
+
+    def move_files_from_s3_folder_to_folder(self, from_folder, to_folder):
+        """
+        Connect to the S3 bucket, and from the from_folder,
+        move all the objects to the to_folder
+        """
+        
+        bucket_name = self.publish_bucket
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        s3_key_names = self.get_s3_key_names_from_bucket(
+            bucket          = bucket,
+            prefix          = from_folder)
+        
+        for name in s3_key_names:
+            # Download objects from S3 and save to disk
+
+            filename = name.split("/")[-1]
+            new_s3_key_name = to_folder + filename
+            
+            # First copy
+            new_s3_key = None
+            try:
+                new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
+            except:
+                pass
+            
+            # Then delete the old key if successful
+            if(isinstance(new_s3_key, boto.s3.key.Key)):
+                old_s3_key = bucket.get_key(name)
+                old_s3_key.delete()
+            
+    def clean_outbox(self):
+        """
+        Clean out the S3 outbox folder
+        """
+        made_ftp_ready_dir_name = self.get_made_ftp_ready_dir_name()
+        if made_ftp_ready_dir_name:
+            date_folder_name = made_ftp_ready_dir_name.split(os.sep)[-1]
+            to_folder = self.published_folder + date_folder_name + "/"
+            self.move_files_from_s3_folder_to_folder(self.outbox_folder, to_folder)
 
     def import_imports(self):
         """
