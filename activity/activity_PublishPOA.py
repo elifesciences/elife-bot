@@ -4,6 +4,8 @@ import json
 import random
 import datetime
 import importlib
+import calendar
+import time
 
 import zipfile
 import requests
@@ -16,6 +18,8 @@ import activity
 
 import boto.s3
 from boto.s3.connection import S3Connection
+
+import provider.simpleDB as dblib
 
 """
 PublishPOA activity
@@ -46,6 +50,9 @@ class activity_PublishPOA(activity.activity):
         # Create output directories
         self.create_activity_directories()
         
+        # Data provider where email body is saved
+        self.db = dblib.SimpleDB(settings)
+        
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
         self.outbox_folder = "outbox/"
@@ -56,7 +63,15 @@ class activity_PublishPOA(activity.activity):
         self.ftp_subfolder_ds = "ds"
         
         # Track the success of some steps
+        self.activity_status = None
+        self.prepare_status = None
+        self.approve_status = None
+        self.ftp_status = None
+        self.go_status = None
+        self.outbox_status = None
         self.publish_status = None
+        
+        self.outbox_s3_key_names = None
     
     def do_activity(self, data = None):
         """
@@ -69,29 +84,56 @@ class activity_PublishPOA(activity.activity):
         self.download_files_from_s3_outbox()
         
         # Prepare for HW
-        self.prepare_for_hw()
+        self.prepare_status = self.prepare_for_hw()
         
         # Approve files for publishing
-        self.publish_status = self.approve_for_publishing()
+        self.approve_status = self.approve_for_publishing()
         
-        if self.publish_status is True:
-            # Publish files
-            self.ftp_files_to_endpoint(file_type = "/*_ds.zip", sub_dir = self.ftp_subfolder_ds)
-            self.ftp_files_to_endpoint(file_type = "/*[0-9].zip", sub_dir = self.ftp_subfolder_poa)
+        if self.approve_status is True:
+            try:
+                # Publish files
+                self.ftp_files_to_endpoint(file_type = "/*_ds.zip", sub_dir = self.ftp_subfolder_ds)
+                self.ftp_files_to_endpoint(file_type = "/*[0-9].zip", sub_dir = self.ftp_subfolder_poa)
+                self.ftp_status = True
+            except:
+                self.ftp_status = False
+                
+            if self.ftp_status is True:
+                try:
+                    # Add go.xml files
+                    self.create_go_xml_file("pap", self.ftp_subfolder_poa)
+                    self.create_go_xml_file("ds", self.ftp_subfolder_ds)
+                    self.ftp_go_xml_to_endpoint("pap", self.ftp_subfolder_poa)
+                    self.ftp_go_xml_to_endpoint("ds", self.ftp_subfolder_ds)
+                    self.go_status = True
+                except:
+                    self.go_status = False
             
-            # Add go.xml files
-            self.create_go_xml_file("pap", self.ftp_subfolder_poa)
-            self.create_go_xml_file("ds", self.ftp_subfolder_ds)
-            self.ftp_go_xml_to_endpoint("pap", self.ftp_subfolder_poa)
-            self.ftp_go_xml_to_endpoint("ds", self.ftp_subfolder_ds)
-        
-            # Clean up outbox
-            print "Moving files from outbox folder to published folder"
-            self.clean_outbox()
+            if self.ftp_status is True and self.go_status is True:
+                # Clean up outbox
+                print "Moving files from outbox folder to published folder"
+                self.clean_outbox()
+                self.outbox_status = True
+                
+            # Set the activity status of this activity based on successes
+            if (self.prepare_status is True and
+                self.ftp_status is True and
+                self.go_status is True):
+                # Published!
+                self.publish_status = True
+            else:
+                self.publish_status = False
+            
+        # Set the activity status of this activity based on successes
+        if self.publish_status is not False:
+            self.activity_status = True
+        else:
+            self.activity_status = False
 
-        print str(self.publish_status)
-        
-        # TODO!  Assume all worked for now
+        # Send email
+        self.add_email_to_queue()
+
+        # Return the activity result, True or False
         result = True
 
         return result
@@ -193,8 +235,12 @@ class activity_PublishPOA(activity.activity):
         """
         Using the POA prepare_xml_pdf_for_hw module
         """
-        self.elife_poa_lib.prepare.prepare_pdf_xml_for_ftp()
-        
+        try:
+            self.elife_poa_lib.prepare.prepare_pdf_xml_for_ftp()
+            return True
+        except:
+            return False
+
     def get_made_ftp_ready_dir_name(self):
         """
         After running the prepare_for_hw, there should should be a subfolder in the
@@ -341,30 +387,207 @@ class activity_PublishPOA(activity.activity):
         for name in s3_key_names:
             # Download objects from S3 and save to disk
 
-            filename = name.split("/")[-1]
-            new_s3_key_name = to_folder + filename
-            
-            # First copy
-            new_s3_key = None
+            # Do not delete the from_folder itself, if it is in the list
+            if name != from_folder:
+                filename = name.split("/")[-1]
+                new_s3_key_name = to_folder + filename
+                
+                # First copy
+                new_s3_key = None
+                try:
+                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
+                except:
+                    pass
+                
+                # Then delete the old key if successful
+                if(isinstance(new_s3_key, boto.s3.key.Key)):
+                    old_s3_key = bucket.get_key(name)
+                    old_s3_key.delete()
+    
+    def get_outbox_s3_key_names(self, force = None):
+        """
+        Separately get a list of S3 key names form the outbox
+        for reporting purposes, excluding the outbox folder itself
+        """
+        
+        # Return cached values if available
+        if self.outbox_s3_key_names and not force:
+            return self.outbox_s3_key_names
+        
+        bucket_name = self.publish_bucket
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        s3_key_names = self.get_s3_key_names_from_bucket(
+            bucket          = bucket,
+            prefix          = self.outbox_folder)
+        
+        # Remove the outbox_folder from the list, if present
+        try:
+            s3_key_names.remove(self.outbox_folder)
+        except:
+            pass
+        
+        self.outbox_s3_key_names = s3_key_names
+        
+        return self.outbox_s3_key_names
+    
+    def get_to_folder_name(self):
+        """
+        From the made_ftp_ready_dir_name and self.published_folder
+        return the S3 folder name to save published files into
+        """
+        to_folder = None
+        
+        made_ftp_ready_dir_name = self.get_made_ftp_ready_dir_name()
+        if made_ftp_ready_dir_name:
             try:
-                new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
+                date_folder_name = made_ftp_ready_dir_name.split(os.sep)[-1]
+                to_folder = self.published_folder + date_folder_name + "/"
             except:
                 pass
-            
-            # Then delete the old key if successful
-            if(isinstance(new_s3_key, boto.s3.key.Key)):
-                old_s3_key = bucket.get_key(name)
-                old_s3_key.delete()
-            
+        
+        return to_folder
+    
     def clean_outbox(self):
         """
         Clean out the S3 outbox folder
         """
-        made_ftp_ready_dir_name = self.get_made_ftp_ready_dir_name()
-        if made_ftp_ready_dir_name:
-            date_folder_name = made_ftp_ready_dir_name.split(os.sep)[-1]
-            to_folder = self.published_folder + date_folder_name + "/"
+        if self.get_made_ftp_ready_dir_name():
+            to_folder = self.get_to_folder_name()
             self.move_files_from_s3_folder_to_folder(self.outbox_folder, to_folder)
+
+    def add_email_to_queue(self):
+        """
+        After do_activity is finished, send emails to recipients
+        on the status
+        """
+        # Connect to DB
+        db_conn = self.db.connect()
+        
+        # Note: Create a verified sender email address, only done once
+        #conn.verify_email_address(self.settings.ses_sender_email)
+      
+        current_time = time.gmtime()
+        
+        body = self.get_email_body(current_time)
+        subject = self.get_email_subject(current_time)
+        sender_email = self.settings.ses_poa_sender_email
+        
+        recipient_email_list = []
+        # Handle multiple recipients, if specified
+        if(type(self.settings.ses_poa_recipient_email) == list):
+          for email in self.settings.ses_poa_recipient_email:
+            recipient_email_list.append(email)
+        else:
+          recipient_email_list.append(self.settings.ses_poa_recipient_email)
+    
+        for email in recipient_email_list:
+          # Add the email to the email queue
+          self.db.elife_add_email_to_email_queue(
+            recipient_email = email,
+            sender_email = sender_email,
+            email_type = "PublishPOA",
+            format = "text",
+            subject = subject,
+            body = body)
+          pass
+        
+        return True
+
+    def get_activity_status_text(self, activity_status):
+        """
+        Given the activity status boolean, return a human
+        readable text version
+        """
+        if activity_status is True:
+            activity_status_text = "Success!"
+        else:
+            activity_status_text = "FAILED."
+            
+        return activity_status_text
+
+    def get_email_subject(self, current_time):
+        """
+        Assemble the email subject
+        """
+        date_format = '%Y-%m-%d %H:%M'
+        datetime_string = time.strftime(date_format, current_time)
+        
+        activity_status_text = self.get_activity_status_text(self.activity_status)
+        
+        # Count the files moved from the outbox, the files that were processed
+        files_count = 0
+        outbox_s3_key_names = self.get_outbox_s3_key_names()
+        if outbox_s3_key_names:
+            files_count = len(outbox_s3_key_names)
+        
+        subject = ( self.name + " " + activity_status_text +
+                    " files: " + str(files_count) +
+                    ", " + datetime_string +
+                    ", eLife SWF domain: " + self.settings.domain)
+        
+        return subject
+  
+    def get_email_body(self, current_time):
+        """
+        Format the body of the email
+        """
+        
+        body = ""
+        
+        date_format = '%Y-%m-%dT%H:%M:%S.000Z'
+        datetime_string = time.strftime(date_format, current_time)
+        
+        activity_status_text = self.get_activity_status_text(self.activity_status)
+        
+        # Bulk of body
+        body += self.name + " status:" + "\n"
+        body += "\n"
+        body += activity_status_text + "\n"
+        body += "\n"
+        
+        body += "prepare_status: " + str(self.prepare_status) + "\n"
+        body += "approve_status: " + str(self.approve_status) + "\n"
+        body += "ftp_status: " + str(self.ftp_status) + "\n"
+        body += "go_status: " + str(self.go_status) + "\n"
+        body += "publish_status: " + str(self.publish_status) + "\n"
+        body += "outbox_status: " + str(self.outbox_status) + "\n"
+        
+        body += "\n"
+        body += "Outbox files: " + "\n"
+        
+        outbox_s3_key_names = self.get_outbox_s3_key_names()
+        files_count = 0
+        if outbox_s3_key_names:
+            files_count = len(outbox_s3_key_names)
+        if files_count > 0:
+            for name in outbox_s3_key_names:
+                body += name + "\n"
+        else:
+            body += "No files in outbox." + "\n"
+        
+        if self.outbox_status is True and files_count > 0:
+            made_ftp_ready_dir_name = self.get_made_ftp_ready_dir_name()
+            if made_ftp_ready_dir_name:
+                to_folder = self.get_to_folder_name()
+                body += "\n"
+                body += "Files moved to: " + str(to_folder) + "\n"
+        
+        body += "\n"
+        body += "SWF workflow details: " + "\n"
+        body += "activityId: " + str(self.get_activityId()) + "\n"
+        body += "As part of workflowId: " + str(self.get_workflowId()) + "\n"
+        body += "As at " + datetime_string + "\n"
+        body += "Domain: " + self.settings.domain + "\n"
+
+        body += "\n"
+        
+        body += "\n\nSincerely\n\neLife bot"
+        
+        return body
 
     def import_imports(self):
         """
