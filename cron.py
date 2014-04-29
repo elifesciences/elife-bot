@@ -50,6 +50,14 @@ def run_cron(ENV = "dev"):
     # Jobs to start at the bottom of the hour
     #print "Bottom of the hour"
     
+    # POA Publish once per day 11:30 UTC
+    if(current_time.tm_hour == 11):
+      workflow_conditional_start(
+        ENV           = ENV,
+        starter_name  = "starter_PublishPOA",
+        workflow_id   = "PublishPOA",
+        start_seconds = 60*31)
+    
     # POA bucket polling
     workflow_conditional_start(
       ENV           = ENV,
@@ -143,6 +151,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       or starter_name == "cron_FiveMinute"
       or starter_name == "cron_NewS3Suppl"
       or starter_name == "cron_NewS3JPG"
+      or starter_name == "starter_PublishPOA"
       ):
       s.start(ENV = ENV)
   
