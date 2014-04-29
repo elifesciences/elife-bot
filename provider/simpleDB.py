@@ -213,7 +213,7 @@ class SimpleDB(object):
 		if(last_updated_since_present == False):
 			where_clause += where_delimiter + " last_modified_timestamp is not null"
 			
-		order_by = " order by last_modified_timestamp asc"
+		order_by = " order by last_modified_timestamp desc"
 		
 		# Assemble the query
 		query = 'select * from ' + domain_name + ''

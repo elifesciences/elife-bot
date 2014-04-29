@@ -166,7 +166,7 @@ Feature: Use SimpleDB as a data provider
   
   Examples:
     | last_updated_since       | query
-    | None                     | select * from S3FileLog_dev where bucket_name = 'elife-ejp-poa-delivery-dev' and last_modified_timestamp is not null order by last_modified_timestamp asc
-    | 2014-04-20T00:00:00.000Z | select * from S3FileLog_dev where bucket_name = 'elife-ejp-poa-delivery-dev' and last_modified_timestamp > '1397952000' order by last_modified_timestamp asc
+    | None                     | select * from S3FileLog_dev where bucket_name = 'elife-ejp-poa-delivery-dev' and last_modified_timestamp is not null order by last_modified_timestamp desc
+    | 2014-04-20T00:00:00.000Z | select * from S3FileLog_dev where bucket_name = 'elife-ejp-poa-delivery-dev' and last_modified_timestamp > '1397952000' order by last_modified_timestamp desc
 
   
