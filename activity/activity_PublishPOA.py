@@ -552,6 +552,7 @@ class activity_PublishPOA(activity.activity):
         body += activity_status_text + "\n"
         body += "\n"
         
+        body += "activity_status: " + str(self.activity_status) + "\n"
         body += "prepare_status: " + str(self.prepare_status) + "\n"
         body += "approve_status: " + str(self.approve_status) + "\n"
         body += "ftp_status: " + str(self.ftp_status) + "\n"

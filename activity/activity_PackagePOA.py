@@ -386,6 +386,7 @@ class activity_PackagePOA(activity.activity):
         body += "document: " + str(self.document) + "\n"
         body += "doi: " + str(self.doi) + "\n"
         body += "\n"
+        body += "activity_status: " + str(self.activity_status) + "\n"
         body += "approve_status: " + str(self.approve_status) + "\n"
         body += "process_status: " + str(self.process_status) + "\n"
         body += "pdf_decap_status: " + str(self.pdf_decap_status) + "\n"
