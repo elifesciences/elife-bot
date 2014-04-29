@@ -455,6 +455,9 @@ class activity_PublishPOA(activity.activity):
         """
         Clean out the S3 outbox folder
         """
+        # Save the list of outbox contents to report on later
+        outbox_s3_key_names = self.get_outbox_s3_key_names()
+        
         if self.get_made_ftp_ready_dir_name():
             to_folder = self.get_to_folder_name()
             self.move_files_from_s3_folder_to_folder(self.outbox_folder, to_folder)
