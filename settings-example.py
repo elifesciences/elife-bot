@@ -58,6 +58,19 @@ class dev():
 	# POA delivery bucket
 	poa_bucket = 'elife-ejp-poa-delivery-dev'
 	
+	# POA packaging bucket
+	poa_packaging_bucket = 'elife-poa-packaging-dev'
+	
+	# POA FTP settings
+	POA_FTP_URI = ""
+	POA_FTP_USERNAME = ""
+	POA_FTP_PASSWORD = ""
+	POA_FTP_CWD = ""
+	
+	# POA email settings
+	ses_poa_sender_email = "sender@example.com"
+	ses_poa_recipient_email = "admin@example.com"
+	
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp-dev'
 	
@@ -110,6 +123,19 @@ class live():
 	
 	# POA delivery bucket
 	poa_bucket = 'elife-ejp-poa-delivery'
+	
+	# POA packaging bucket
+	poa_packaging_bucket = 'elife-poa-packaging'
+	
+	# POA FTP settings
+	POA_FTP_URI = ""
+	POA_FTP_USERNAME = ""
+	POA_FTP_PASSWORD = ""
+	POA_FTP_CWD = ""
+	
+	# POA email settings
+	ses_poa_sender_email = "sender@example.com"
+	ses_poa_recipient_email = "admin@example.com"
 	
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp'
