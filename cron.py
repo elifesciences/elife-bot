@@ -44,17 +44,18 @@ def run_cron(ENV = "dev"):
       workflow_id   = "S3Monitor",
       start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "starter_S3Monitor",
-      workflow_id   = "S3Monitor_POA",
-      start_seconds = 60*31)
-    
     pass
   
   elif(current_time.tm_min >= 30 and current_time.tm_min <= 59):
     # Jobs to start at the bottom of the hour
     #print "Bottom of the hour"
+    
+    # POA bucket polling
+    workflow_conditional_start(
+      ENV           = ENV,
+      starter_name  = "starter_S3Monitor",
+      workflow_id   = "S3Monitor_POA",
+      start_seconds = 60*31)
     
     workflow_conditional_start(
       ENV           = ENV,
