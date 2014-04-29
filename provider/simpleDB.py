@@ -157,6 +157,71 @@ class SimpleDB(object):
 			val = str(val).replace("'", "''")
 		return val
 
+	def elife_get_POA_delivery_S3_file_items(self, last_updated_since = None):
+		"""
+		From the SimpleDB domain for the S3FileLog, return a list of matching item to the attributes
+			last_updated_since:       only return items updated since the date provided
+		"""
+		
+		date_format = "%Y-%m-%dT%H:%M:%S.000Z"
+		
+		domain_name = "S3FileLog"
+		
+		item_list = []
+		
+		domain_name_env = self.get_domain_name(domain_name)
+		bucket_name = self.settings.poa_bucket
+		query = self.elife_get_POA_delivery_S3_query(date_format, domain_name_env, bucket_name, last_updated_since)
+
+		dom = self.get_domain(domain_name)
+
+		rs = dom.select(query)
+		for j in rs:
+			item_list.append(j)
+		
+		return item_list
+
+	def elife_get_POA_delivery_S3_query(self, date_format, domain_name, bucket_name = None, last_updated_since = None):
+		"""
+		Build a query for SimpleDB to get S3 poa_bucket bucket data
+		from the S3FileLog domain.
+		"""
+		
+		query = ""
+
+		# Assemble where clause
+		where_clause = ""
+		where_delimiter = " where"
+		
+		# Constrain to the specified bucket
+		if(bucket_name):
+			where_clause += where_delimiter + " bucket_name = '" + bucket_name + "'"
+			where_delimiter = " and"
+		
+		last_updated_since_present = False
+
+		if(last_updated_since):
+			# Select based on timestamp
+			date_str = time.strptime(last_updated_since, date_format)
+			timestamp = calendar.timegm(date_str)
+			if(timestamp): 
+				where_clause += where_delimiter + " last_modified_timestamp > '" + str(timestamp) + "'"
+				where_delimiter = " and"
+				last_updated_since_present = True
+				
+		# Add a name clause if none was added, or AWS complains about the orderby
+		if(last_updated_since_present == False):
+			where_clause += where_delimiter + " last_modified_timestamp is not null"
+			
+		order_by = " order by last_modified_timestamp asc"
+		
+		# Assemble the query
+		query = 'select * from ' + domain_name + ''
+		query = query + where_clause
+		query = query + order_by
+
+		return query
+
 	def elife_get_article_S3_file_items(self, file_data_type = None, doi_id = None, last_updated_since = None, latest = None):
 		"""
 		From the SimpleDB domain for the S3FileLog, return a list of matching item to the attributes
@@ -621,3 +686,4 @@ class SimpleDB(object):
 		s3key.key = body_s3key
 		s3key.set_contents_from_string(body)
 
+	

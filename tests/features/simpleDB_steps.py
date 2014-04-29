@@ -344,3 +344,13 @@ def i_add_email_to_email_queue_with_the_simpledb_provider(step):
 def i_get_item_attributes_date_scheduled_timestamp(step, date_scheduled_timestamp):
   assert str(world.item_attrs["date_scheduled_timestamp"]) == date_scheduled_timestamp, \
     "Got date_scheduled_timestamp %s" % world.item_attrs["date_scheduled_timestamp"]
+  
+@step(u'I get the POA bucket query from the SimpleDB provider')
+def i_get_the_poa_bucket_query_from_the_simpledb_provider(step):
+  world.query = world.db.elife_get_POA_delivery_S3_query(
+    date_format = world.date_format,
+    domain_name = world.domain_name,
+    bucket_name = world.bucket_name,
+    last_updated_since = world.last_updated_since)
+  assert world.query is not None, \
+    "Got query %s" % world.query

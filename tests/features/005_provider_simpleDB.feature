@@ -154,4 +154,19 @@ Feature: Use SimpleDB as a data provider
   Examples:
     | env  | add    | email_type | recipient_email   | sender_email      | date_scheduled_timestamp
     | dev  | False  | test       | test@example.com  | test@example.com  | 0
+
+  Scenario: Build SimpleDB queries for elife POA bucket
+    Given I have imported the SimpleDB provider module
+    And I have the domain name S3FileLog_dev
+    And I have the date format %Y-%m-%dT%H:%M:%S.000Z
+    And I have the bucket name elife-ejp-poa-delivery-dev
+    And I have the last updated since <last_updated_since>
+    When I get the POA bucket query from the SimpleDB provider
+    Then I have the SimpleDB query <query>
+  
+  Examples:
+    | last_updated_since       | query
+    | None                     | select * from S3FileLog_dev where bucket_name = 'elife-ejp-poa-delivery-dev' and last_modified_timestamp is not null order by last_modified_timestamp asc
+    | 2014-04-20T00:00:00.000Z | select * from S3FileLog_dev where bucket_name = 'elife-ejp-poa-delivery-dev' and last_modified_timestamp > '1397952000' order by last_modified_timestamp asc
+
   
