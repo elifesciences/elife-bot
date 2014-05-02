@@ -125,6 +125,14 @@ class activity(object):
 		dir_name = datetime.datetime.utcnow().strftime('%Y-%m-%d.%H.%M.%S')
 		workflowId = self.get_workflowId()
 		activityId = self.get_activityId()
+		try:
+			domain = self.settings.domain
+		except:
+			domain = None
+		if(domain):
+			# Use regular expression to strip out messy symbols
+			domain_safe = re.sub(r'\W', '', domain)
+			dir_name += '.' + domain_safe
 		if(workflowId):
 			# Use regular expression to strip out messy symbols
 			workflowId_safe = re.sub(r'\W', '', workflowId)
