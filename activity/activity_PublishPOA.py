@@ -295,12 +295,18 @@ class activity_PublishPOA(activity.activity):
         file_type = "/*_ds.zip"
         zipfiles = glob.glob(self.elife_poa_lib.settings.FTP_TO_HW_DIR + file_type)
         for input_zipfile in zipfiles:
-            current_zipfile = zipfile.ZipFile(zipfile_name, 'r')
+            badfile = None
+            current_zipfile = zipfile.ZipFile(input_zipfile, 'r')
+            
             if self.manifest_xml_not_empty(current_zipfile) is not True:
+                badfile = True
+            
+            if badfile:
                 # File is not good, move it somewhere
                 current_zipfile.close()
-                shutil.move(input_zipfile, "..")
+                shutil.move(input_zipfile, self.elife_poa_lib.settings.FTP_TO_HW_DIR + "/..")
             else:
+                # File is ok, close zip
                 current_zipfile.close()
             
         return status
