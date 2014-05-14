@@ -290,8 +290,43 @@ class activity_PublishPOA(activity.activity):
         else:
             # Default until full sets of files checker is built
             status = True
-
+            
+        # For each data supplements file, remove those with empty manifest.xml
+        file_type = "/*_ds.zip"
+        zipfiles = glob.glob(self.elife_poa_lib.settings.FTP_TO_HW_DIR + file_type)
+        for input_zipfile in zipfiles:
+            current_zipfile = zipfile.ZipFile(zipfile_name, 'r')
+            if self.manifest_xml_not_empty(current_zipfile) is not True:
+                # File is not good, move it somewhere
+                current_zipfile.close()
+                shutil.move(input_zipfile, "..")
+            else:
+                current_zipfile.close()
+            
         return status
+    
+    def manifest_xml_not_empty(self, input_zipfile):
+        """
+        Given a zipfile.ZipFile object, check if it contains a
+        manifest.xml file and it is non-empty (has a size greater than zero)
+        """
+        manifest = None
+        try:
+            manifest = input_zipfile.read("manifest.xml")
+        except:
+            return False
+        
+        if manifest:
+            if len(str(manifest)) > 0:
+                # Has some content
+                return True
+            else:
+                return False
+        else:
+            return False
+        
+        # Default return
+        return None
 
     def ftp_files_to_endpoint(self, file_type, sub_dir = None):
         """
