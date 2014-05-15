@@ -176,11 +176,10 @@ class activity_PublishPOA(activity.activity):
             elif re.search(".*\\.zip$", name):
                 dirname = self.elife_poa_lib.settings.FTP_TO_HW_DIR
 
-            contents = s3_key.get_contents_as_string()
             filename_plus_path = dirname + os.sep + filename
             mode = "wb"
             f = open(filename_plus_path, mode)
-            f.write(contents)
+            s3_key.get_contents_to_file(f)
             f.close()
         
     def get_s3_key_names_from_bucket(self, bucket, prefix = None, delimiter = '/', headers = None, file_extensions = None):
