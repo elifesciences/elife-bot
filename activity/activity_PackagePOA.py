@@ -155,11 +155,10 @@ class activity_PackagePOA(activity.activity):
         s3_key = bucket.get_key(document)
         
         # Download and save to disk
-        contents = s3_key.get_contents_as_string()
         filename_plus_path = self.elife_poa_lib.settings.EJP_INPUT_DIR + os.sep + document
         mode = "wb"
         f = open(filename_plus_path, mode)
-        f.write(contents)
+        s3_key.get_contents_to_file(f)
         f.close()
         
         # Save the zip file name for later use
