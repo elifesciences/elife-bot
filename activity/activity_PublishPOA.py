@@ -635,6 +635,7 @@ class activity_PublishPOA(activity.activity):
         settings.MADE_FTP_READY             = self.get_tmp_dir() + os.sep + settings.MADE_FTP_READY
         settings.EJP_INPUT_DIR              = self.get_tmp_dir() + os.sep + settings.EJP_INPUT_DIR
         settings.STAGING_DECAPITATE_PDF_DIR = self.get_tmp_dir() + os.sep + settings.STAGING_DECAPITATE_PDF_DIR
+        settings.TMP_DIR                    = self.get_tmp_dir() + os.sep + settings.TMP_DIR
         
         # Override the FTP settings with the bot environment settings
         settings.FTP_URI = self.settings.POA_FTP_URI
@@ -678,5 +679,6 @@ class activity_PublishPOA(activity.activity):
             os.mkdir(self.elife_poa_lib.settings.MADE_FTP_READY)
             os.mkdir(self.elife_poa_lib.settings.EJP_INPUT_DIR)
             os.mkdir(self.elife_poa_lib.settings.STAGING_DECAPITATE_PDF_DIR)
+            os.mkdir(self.elife_poa_lib.settings.TMP_DIR)
         except:
             pass
