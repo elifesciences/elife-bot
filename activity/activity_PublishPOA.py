@@ -72,6 +72,11 @@ class activity_PublishPOA(activity.activity):
         self.publish_status = None
         
         self.outbox_s3_key_names = None
+        
+        # More file status tracking for reporting in email
+        self.malformed_ds_file_names = []
+        self.empty_ds_file_names = []
+        self.unmatched_ds_file_names = []
     
     def do_activity(self, data = None):
         """
@@ -291,24 +296,41 @@ class activity_PublishPOA(activity.activity):
             # Default until full sets of files checker is built
             status = True
             
-        # For each data supplements file, remove those with empty manifest.xml
+        # For each data supplements file, move invalid ones to not publish by FTP
         file_type = "/*_ds.zip"
         zipfiles = glob.glob(self.elife_poa_lib.settings.FTP_TO_HW_DIR + file_type)
         for input_zipfile in zipfiles:
             badfile = None
-            current_zipfile = zipfile.ZipFile(input_zipfile, 'r')
             
-            if self.manifest_xml_not_empty(current_zipfile) is not True:
+            try:
+                current_zipfile = zipfile.ZipFile(input_zipfile, 'r')
+            except:
                 badfile = True
-            
+                self.malformed_ds_file_names.append(input_zipfile)
+                current_zipfile = None
+
+            if current_zipfile:
+                # Check for those with missing or empty manifest.xml
+                if self.manifest_xml_not_empty(current_zipfile) is not True:
+                    badfile = True
+                    self.malformed_ds_file_names.append(current_zipfile.filename)
+    
+                # Check for those with no zipped folder contents
+                if self.check_empty_supplemental_files(current_zipfile) is not True:
+                    badfile = True
+                    self.empty_ds_file_names.append(current_zipfile.filename)
+    
+                # Check for a file with no matching XML document
+                if self.check_matching_xml_file(current_zipfile) is not True:
+                    badfile = True
+                    self.unmatched_ds_file_names.append(current_zipfile.filename)
+                    
+                current_zipfile.close()
+                
             if badfile:
                 # File is not good, move it somewhere
-                current_zipfile.close()
-                shutil.move(input_zipfile, self.elife_poa_lib.settings.FTP_TO_HW_DIR + "/..")
-            else:
-                # File is ok, close zip
-                current_zipfile.close()
-            
+                shutil.move(input_zipfile, self.elife_poa_lib.settings.DO_NOT_FTP_TO_HW_DIR + "/")
+
         return status
     
     def manifest_xml_not_empty(self, input_zipfile):
@@ -333,6 +355,51 @@ class activity_PublishPOA(activity.activity):
         
         # Default return
         return None
+    
+    def check_empty_supplemental_files(self, input_zipfile):
+        """
+        Given a zipfile.ZipFile object, look inside the internal zipped folder
+        and asses the zipextfile object length to see whether it is empty
+        """
+        zipextfile_line_count = 0
+        sub_folder_name = None
+    
+        for name in input_zipfile.namelist():
+            if re.match("^.*\.zip$", name):
+                sub_folder_name = name
+                
+        if sub_folder_name:
+            zipextfile = input_zipfile.open(sub_folder_name)
+        
+            while zipextfile.readline():
+                zipextfile_line_count += 1
+
+        # Empty subfolder zipextfile object will have only 1 line
+        #  Non-empty file will have more than 1 line
+        if zipextfile_line_count <= 1:
+            return False
+        elif zipextfile_line_count > 1:
+            return True
+
+    def check_matching_xml_file(self, input_zipfile):
+        """
+        Given a zipfile.ZipFile object, check if for the DOI it represents
+        there is a matching XML file for that DOI
+        """
+        zip_file_article_number = self.get_filename_from_path(input_zipfile.filename, "_ds.zip")
+        #print zip_file_article_number
+
+        file_type = "/*.xml"
+        xml_files = glob.glob(self.get_made_ftp_ready_dir_name() + file_type)
+        xml_file_articles_numbers = []
+        for f in xml_files: xml_file_articles_numbers.append(self.get_filename_from_path(f, ".xml"))
+        #print xml_file_articles_numbers
+        
+        if zip_file_article_number in xml_file_articles_numbers:
+            return True
+
+        # Default return
+        return False
 
     def ftp_files_to_endpoint(self, file_type, sub_dir = None):
         """
@@ -342,6 +409,20 @@ class activity_PublishPOA(activity.activity):
         """
         zipfiles = glob.glob(self.elife_poa_lib.settings.FTP_TO_HW_DIR + file_type)
         self.elife_poa_lib.ftp.ftp_to_endpoint(zipfiles, sub_dir)
+        
+    def get_filename_from_path(self, f, extension):
+        """
+        Get a filename minus the supplied file extension
+        and without any folder or path
+        """
+        filename = f.split(extension)[0]
+        # Remove path if present
+        try:
+            filename = filename.split(os.sep)[-1]
+        except:
+            pass
+        
+        return filename
         
     def ftp_go_xml_to_endpoint(self, go_type, sub_dir):
         """
@@ -613,6 +694,24 @@ class activity_PublishPOA(activity.activity):
                 body += name + "\n"
         else:
             body += "No files in outbox." + "\n"
+            
+        if files_count > 0:
+            # Report on any empty or unmatched supplement files
+            if len(self.malformed_ds_file_names) > 0:
+                body += "\n"
+                body += "Note: Malformed ds files not sent by ftp: " + "\n"
+                for name in self.malformed_ds_file_names:
+                    body += name + "\n"
+            if len(self.empty_ds_file_names) > 0:
+                body += "\n"
+                body += "Note: Empty ds files not sent by ftp: " + "\n"
+                for name in self.empty_ds_file_names:
+                    body += name + "\n"
+            if len(self.unmatched_ds_file_names) > 0:
+                body += "\n"
+                body += "Note: Unmatched ds files not sent by ftp: " + "\n"
+                for name in self.unmatched_ds_file_names:
+                    body += name + "\n"
         
         if self.outbox_status is True and files_count > 0:
             made_ftp_ready_dir_name = self.get_made_ftp_ready_dir_name()
@@ -677,6 +776,7 @@ class activity_PublishPOA(activity.activity):
         settings.MADE_FTP_READY             = self.get_tmp_dir() + os.sep + settings.MADE_FTP_READY
         settings.EJP_INPUT_DIR              = self.get_tmp_dir() + os.sep + settings.EJP_INPUT_DIR
         settings.STAGING_DECAPITATE_PDF_DIR = self.get_tmp_dir() + os.sep + settings.STAGING_DECAPITATE_PDF_DIR
+        settings.DO_NOT_FTP_TO_HW_DIR       = self.get_tmp_dir() + os.sep + 'do-not-ftp-to-hw' + os.sep
         
         # Override the FTP settings with the bot environment settings
         settings.FTP_URI = self.settings.POA_FTP_URI
@@ -710,6 +810,7 @@ class activity_PublishPOA(activity.activity):
         """
         try:
             os.mkdir(self.elife_poa_lib.settings.XLS_PATH)
+            os.mkdir(self.elife_poa_lib.settings.DO_NOT_FTP_TO_HW_DIR)
         except:
             pass
         
