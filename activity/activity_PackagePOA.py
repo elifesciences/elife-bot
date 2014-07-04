@@ -155,11 +155,10 @@ class activity_PackagePOA(activity.activity):
         s3_key = bucket.get_key(document)
         
         # Download and save to disk
-        contents = s3_key.get_contents_as_string()
         filename_plus_path = self.elife_poa_lib.settings.EJP_INPUT_DIR + os.sep + document
         mode = "wb"
         f = open(filename_plus_path, mode)
-        f.write(contents)
+        s3_key.get_contents_to_file(f)
         f.close()
         
         # Save the zip file name for later use
@@ -226,7 +225,9 @@ class activity_PackagePOA(activity.activity):
                           "poa_manuscript"         : "poa_manuscript.csv",
                           "poa_received"           : "poa_received.csv",
                           "poa_subject_area"       : "poa_subject_area.csv",
-                          "poa_research_organism"  : "poa_research_organism.csv"
+                          "poa_research_organism"  : "poa_research_organism.csv",
+                          "poa_abstract"           : "poa_abstract.csv",
+                          "poa_title"              : "poa_title.csv"
                         }
         
         for file_type,filename in file_types.items():
@@ -448,13 +449,16 @@ class activity_PackagePOA(activity.activity):
         settings.MADE_FTP_READY             = self.get_tmp_dir() + os.sep + settings.MADE_FTP_READY
         settings.EJP_INPUT_DIR              = self.get_tmp_dir() + os.sep + settings.EJP_INPUT_DIR
         settings.STAGING_DECAPITATE_PDF_DIR = self.get_tmp_dir() + os.sep + settings.STAGING_DECAPITATE_PDF_DIR
+        settings.TMP_DIR                    = self.get_tmp_dir() + os.sep + settings.TMP_DIR
 
         settings.XLS_FILES = {  "authors"    : "poa_author.csv",
                                 "license"    : "poa_license.csv",
                                 "manuscript" : "poa_manuscript.csv",
                                 "received"   : "poa_received.csv",
                                 "subjects"   : "poa_subject_area.csv",
-                                "organisms"  : "poa_research_organism.csv"}
+                                "organisms"  : "poa_research_organism.csv",
+                                "abstract"   : "poa_abstract.csv",
+                                "title"      : "poa_title.csv"}
         
     def import_poa_modules(self, dir_name = "elife-poa-xml-generation"):
         """
@@ -492,5 +496,6 @@ class activity_PackagePOA(activity.activity):
             os.mkdir(self.elife_poa_lib.settings.MADE_FTP_READY)
             os.mkdir(self.elife_poa_lib.settings.EJP_INPUT_DIR)
             os.mkdir(self.elife_poa_lib.settings.STAGING_DECAPITATE_PDF_DIR)
+            os.mkdir(self.elife_poa_lib.settings.TMP_DIR)
         except:
             pass

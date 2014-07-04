@@ -181,11 +181,10 @@ class activity_PublishPOA(activity.activity):
             elif re.search(".*\\.zip$", name):
                 dirname = self.elife_poa_lib.settings.FTP_TO_HW_DIR
 
-            contents = s3_key.get_contents_as_string()
             filename_plus_path = dirname + os.sep + filename
             mode = "wb"
             f = open(filename_plus_path, mode)
-            f.write(contents)
+            s3_key.get_contents_to_file(f)
             f.close()
         
     def get_s3_key_names_from_bucket(self, bucket, prefix = None, delimiter = '/', headers = None, file_extensions = None):
@@ -776,6 +775,7 @@ class activity_PublishPOA(activity.activity):
         settings.MADE_FTP_READY             = self.get_tmp_dir() + os.sep + settings.MADE_FTP_READY
         settings.EJP_INPUT_DIR              = self.get_tmp_dir() + os.sep + settings.EJP_INPUT_DIR
         settings.STAGING_DECAPITATE_PDF_DIR = self.get_tmp_dir() + os.sep + settings.STAGING_DECAPITATE_PDF_DIR
+        settings.TMP_DIR                    = self.get_tmp_dir() + os.sep + settings.TMP_DIR
         settings.DO_NOT_FTP_TO_HW_DIR       = self.get_tmp_dir() + os.sep + 'do-not-ftp-to-hw' + os.sep
         
         # Override the FTP settings with the bot environment settings
@@ -821,5 +821,6 @@ class activity_PublishPOA(activity.activity):
             os.mkdir(self.elife_poa_lib.settings.MADE_FTP_READY)
             os.mkdir(self.elife_poa_lib.settings.EJP_INPUT_DIR)
             os.mkdir(self.elife_poa_lib.settings.STAGING_DECAPITATE_PDF_DIR)
+            os.mkdir(self.elife_poa_lib.settings.TMP_DIR)
         except:
             pass
