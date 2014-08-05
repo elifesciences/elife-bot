@@ -320,7 +320,8 @@ class activity_PublishPOA(activity.activity):
                     self.empty_ds_file_names.append(current_zipfile.filename)
     
                 # Check for a file with no matching XML document
-                if self.check_matching_xml_file(current_zipfile) is not True:
+                if (self.check_matching_xml_file(current_zipfile) is not True or
+                    self.check_matching_pdf_file(current_zipfile) is not True):
                     badfile = True
                     self.unmatched_ds_file_names.append(current_zipfile.filename)
                     
@@ -395,6 +396,28 @@ class activity_PublishPOA(activity.activity):
         #print xml_file_articles_numbers
         
         if zip_file_article_number in xml_file_articles_numbers:
+            return True
+
+        # Default return
+        return False
+
+    def check_matching_pdf_file(self, input_zipfile):
+        """
+        Given a zipfile.ZipFile object, check if for the DOI it represents
+        there is a matching PDF file for that DOI
+        """
+        zip_file_article_number = self.get_filename_from_path(input_zipfile.filename, "_ds.zip")
+
+        file_type = "/*.pdf"
+        pdf_files = glob.glob(self.get_made_ftp_ready_dir_name() + file_type)
+        pdf_file_articles_numbers = []
+        for f in pdf_files:
+            pdf_file_name = self.get_filename_from_path(f, ".pdf")
+            # Remove the decap_ from the start of the file name before comparing
+            pdf_file_name = pdf_file_name.replace('decap_', '')
+            pdf_file_articles_numbers.append(pdf_file_name)
+        
+        if zip_file_article_number in pdf_file_articles_numbers:
             return True
 
         # Default return
