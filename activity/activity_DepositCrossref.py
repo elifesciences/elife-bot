@@ -248,7 +248,23 @@ class activity_DepositCrossref(activity.activity):
         Using an HTTP POST, deposit the file to the endpoint
         """
         
-        # TODO!!!!
+        url = self.settings.crossref_url
+        payload = {'operation':    'doMDUpload',
+                   'login_id':     self.settings.crossref_login_id,
+                   'login_passwd': self.settings.crossref_login_passwd
+                   }
+        
+        # Crossref XML, should be only one but check for multiple
+        xml_files = glob.glob(sub_dir + file_type)
+        
+        for xml_file in xml_files:
+            files = {'file': open(xml_file, 'rb')}
+            
+            r = requests.post(url, data=payload, files=files)
+ 
+            # TODO!!! Handle any non-success error codes
+            print r.status_code
+            print r.text
 
 
     def move_files_from_s3_folder_to_folder(self, from_folder, to_folder):
