@@ -67,6 +67,10 @@ class activity_DepositCrossref(activity.activity):
         self.outbox_status = None
         self.publish_status = None
         
+        # HTTP requests status
+        self.http_request_status_code = []
+        self.http_request_status_text = []
+        
         self.outbox_s3_key_names = None
             
     def do_activity(self, data = None):
@@ -106,6 +110,9 @@ class activity_DepositCrossref(activity.activity):
             self.activity_status = True
         else:
             self.activity_status = False
+
+        # Send email
+        self.add_email_to_queue()
 
         # Return the activity result, True or False
         result = True
@@ -268,6 +275,8 @@ class activity_DepositCrossref(activity.activity):
             if r.status_code != requests.codes.ok:
                 status = False
             #print r.text
+            self.http_request_status_code.append(r.status_code)
+            self.http_request_status_text.append(r.text)
             
         return status
 
@@ -378,6 +387,137 @@ class activity_DepositCrossref(activity.activity):
             s3key = boto.s3.key.Key(bucket)
             s3key.key = s3_folder_name + self.get_filename_from_path(xml_file, '.xml') + '.xml'
             s3key.set_contents_from_filename(xml_file, replace=True)
+
+    def add_email_to_queue(self):
+        """
+        After do_activity is finished, send emails to recipients
+        on the status
+        """
+        # Connect to DB
+        db_conn = self.db.connect()
+        
+        # Note: Create a verified sender email address, only done once
+        #conn.verify_email_address(self.settings.ses_sender_email)
+      
+        current_time = time.gmtime()
+        
+        body = self.get_email_body(current_time)
+        subject = self.get_email_subject(current_time)
+        sender_email = self.settings.ses_poa_sender_email
+        
+        recipient_email_list = []
+        # Handle multiple recipients, if specified
+        if(type(self.settings.ses_poa_recipient_email) == list):
+          for email in self.settings.ses_poa_recipient_email:
+            recipient_email_list.append(email)
+        else:
+          recipient_email_list.append(self.settings.ses_poa_recipient_email)
+    
+        for email in recipient_email_list:
+          # Add the email to the email queue
+          self.db.elife_add_email_to_email_queue(
+            recipient_email = email,
+            sender_email = sender_email,
+            email_type = "DepositCrossref",
+            format = "text",
+            subject = subject,
+            body = body)
+          pass
+        
+        return True
+
+    def get_activity_status_text(self, activity_status):
+        """
+        Given the activity status boolean, return a human
+        readable text version
+        """
+        if activity_status is True:
+            activity_status_text = "Success!"
+        else:
+            activity_status_text = "FAILED."
+            
+        return activity_status_text
+
+    def get_email_subject(self, current_time):
+        """
+        Assemble the email subject
+        """
+        date_format = '%Y-%m-%d %H:%M'
+        datetime_string = time.strftime(date_format, current_time)
+        
+        activity_status_text = self.get_activity_status_text(self.activity_status)
+        
+        # Count the files moved from the outbox, the files that were processed
+        files_count = 0
+        outbox_s3_key_names = self.get_outbox_s3_key_names()
+        if outbox_s3_key_names:
+            files_count = len(outbox_s3_key_names)
+        
+        subject = ( self.name + " " + activity_status_text +
+                    " files: " + str(files_count) +
+                    ", " + datetime_string +
+                    ", eLife SWF domain: " + self.settings.domain)
+        
+        return subject
+  
+    def get_email_body(self, current_time):
+        """
+        Format the body of the email
+        """
+        
+        body = ""
+        
+        date_format = '%Y-%m-%dT%H:%M:%S.000Z'
+        datetime_string = time.strftime(date_format, current_time)
+        
+        activity_status_text = self.get_activity_status_text(self.activity_status)
+        
+        # Bulk of body
+        body += self.name + " status:" + "\n"
+        body += "\n"
+        body += activity_status_text + "\n"
+        body += "\n"
+        
+        body += "activity_status: " + str(self.activity_status) + "\n"
+        body += "generate_status: " + str(self.generate_status) + "\n"
+        body += "approve_status: " + str(self.approve_status) + "\n"
+        body += "publish_status: " + str(self.publish_status) + "\n"
+        body += "outbox_status: " + str(self.outbox_status) + "\n"
+        
+        body += "\n"
+        body += "Outbox files: " + "\n"
+        
+        outbox_s3_key_names = self.get_outbox_s3_key_names()
+        files_count = 0
+        if outbox_s3_key_names:
+            files_count = len(outbox_s3_key_names)
+        if files_count > 0:
+            for name in outbox_s3_key_names:
+                body += name + "\n"
+        else:
+            body += "No files in outbox." + "\n"
+            
+        body += "\n"
+        body += "-------------------------------\n"
+        body += "HTTP deposit details: " + "\n"
+        for code in self.http_request_status_code:
+            body += "Status code: " + str(code) + "\n"
+        for text in self.http_request_status_text:
+            body += "Response text: " + str(text) + "\n"
+            
+        body += "\n"
+        body += "-------------------------------\n"
+        body += "SWF workflow details: " + "\n"
+        body += "activityId: " + str(self.get_activityId()) + "\n"
+        body += "As part of workflowId: " + str(self.get_workflowId()) + "\n"
+        body += "As at " + datetime_string + "\n"
+        body += "Domain: " + self.settings.domain + "\n"
+
+        body += "\n"
+        
+        body += "\n\nSincerely\n\neLife bot"
+
+        return body
 
     def import_imports(self):
         """
