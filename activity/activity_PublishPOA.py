@@ -824,8 +824,6 @@ class activity_PublishPOA(activity.activity):
         
         body += "\n\nSincerely\n\neLife bot"
         
-        print body
-        
         return body
 
     def import_imports(self):
