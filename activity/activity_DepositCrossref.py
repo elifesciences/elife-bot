@@ -88,10 +88,9 @@ class activity_DepositCrossref(activity.activity):
         if self.approve_status is True:
             try:
                 # Publish files
-                self.deposit_files_to_endpoint(
+                self.publish_status = self.deposit_files_to_endpoint(
                     file_type = "/*.xml",
                     sub_dir = self.elife_poa_lib.settings.TMP_DIR)
-                self.publish_status = True
             except:
                 self.publish_status = False
                             
@@ -248,6 +247,9 @@ class activity_DepositCrossref(activity.activity):
         Using an HTTP POST, deposit the file to the endpoint
         """
         
+        # Default return status
+        status = True
+        
         url = self.settings.crossref_url
         payload = {'operation':    'doMDUpload',
                    'login_id':     self.settings.crossref_login_id,
@@ -262,10 +264,12 @@ class activity_DepositCrossref(activity.activity):
             
             r = requests.post(url, data=payload, files=files)
  
-            # TODO!!! Handle any non-success error codes
-            print r.status_code
-            print r.text
-
+            # Check for good HTTP status code
+            if r.status_code != requests.codes.ok:
+                status = False
+            #print r.text
+            
+        return status
 
     def move_files_from_s3_folder_to_folder(self, from_folder, to_folder):
         """
