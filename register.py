@@ -40,6 +40,7 @@ def start(ENV = "dev"):
 	workflow_names.append("PublishJPG")
 	workflow_names.append("PackagePOA")
 	workflow_names.append("PublishPOA")
+	workflow_names.append("DepositCrossref")
 	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
@@ -78,6 +79,7 @@ def start(ENV = "dev"):
 	activity_names.append("ConverterSVGtoJPG")
 	activity_names.append("PackagePOA")
 	activity_names.append("PublishPOA")
+	activity_names.append("DepositCrossref")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries

@@ -74,6 +74,11 @@ class dev():
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp-dev'
 	
+	# Crossref
+	crossref_url = 'http://test.crossref.org/servlet/deposit'
+	crossref_login_id = ''
+	crossref_login_passwd = ''
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -139,6 +144,11 @@ class live():
 	
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp'
+	
+	# Crossref
+	crossref_url = 'http://doi.crossref.org/servlet/deposit'
+	crossref_login_id = ''
+	crossref_login_passwd = ''
 	
 	# Logging
 	setLevel = "INFO"

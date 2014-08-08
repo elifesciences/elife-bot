@@ -58,6 +58,9 @@ class activity_PublishPOA(activity.activity):
         self.outbox_folder = "outbox/"
         self.published_folder = "published/"
         
+        # Folder for crossref XML
+        self.crossref_outbox_folder = "crossref/outbox/"
+        
         # Subfolders on the FTP site to deliver into
         self.ftp_subfolder_poa = "poa"
         self.ftp_subfolder_ds = "ds"
@@ -72,6 +75,10 @@ class activity_PublishPOA(activity.activity):
         self.publish_status = None
         
         self.outbox_s3_key_names = None
+        
+        # Track XML files selected for crossref XML
+        self.crossref_outbox_s3_key_names = None
+        self.crossref_articles_not_uploaded_to_outbox = None
         
         # More file status tracking for reporting in email
         self.malformed_ds_file_names = []
@@ -118,6 +125,7 @@ class activity_PublishPOA(activity.activity):
                 # Clean up outbox
                 print "Moving files from outbox folder to published folder"
                 self.clean_outbox()
+                self.upload_xml_to_crossref_outbox_s3()
                 self.outbox_status = True
                 
             # Set the activity status of this activity based on successes
@@ -606,6 +614,46 @@ class activity_PublishPOA(activity.activity):
             to_folder = self.get_to_folder_name()
             self.move_files_from_s3_folder_to_folder(self.outbox_folder, to_folder)
 
+    def upload_xml_to_crossref_outbox_s3(self):
+        """
+        Upload a copy of the article XML to the crossref outbox on S3
+        for ingestion by the next workflow activity
+        Do not upload any v2, or version 2, XML for an article, based on the file name
+        """
+            
+        made_ftp_ready_dir_name = self.get_made_ftp_ready_dir_name()
+        xml_files = glob.glob(made_ftp_ready_dir_name + "/*.xml")
+
+        bucket_name = self.publish_bucket
+
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        s3_folder_name = self.crossref_outbox_folder
+
+        self.crossref_outbox_s3_key_names = []
+        self.crossref_articles_not_uploaded_to_outbox = []
+
+        for xml_file in xml_files:
+            # Check for v2 or naming format
+            # Very simple, checks for the letter v
+            if self.get_filename_from_path(xml_file, '.xml').find('v') > -1:
+                # Do not upload
+                self.crossref_articles_not_uploaded_to_outbox.append(xml_file)
+                continue
+
+            s3key = boto.s3.key.Key(bucket)
+            s3key.key = s3_folder_name + self.get_filename_from_path(xml_file, '.xml') + '.xml'
+            s3key.set_contents_from_filename(xml_file, replace=True)
+            self.crossref_outbox_s3_key_names.append(s3key.key)
+        
+        # Final check for empty lists of files
+        if len(self.crossref_outbox_s3_key_names) <= 0:
+            self.crossref_outbox_s3_key_names = None
+        if len(self.crossref_articles_not_uploaded_to_outbox) <= 0:
+            self.crossref_articles_not_uploaded_to_outbox = None
+
     def add_email_to_queue(self):
         """
         After do_activity is finished, send emails to recipients
@@ -743,6 +791,29 @@ class activity_PublishPOA(activity.activity):
                 body += "Files moved to: " + str(to_folder) + "\n"
         
         body += "\n"
+        body += "-------------------------------\n"
+        body += "Crossref outbox status details: " + "\n"
+        
+        if self.crossref_outbox_s3_key_names:
+            body += "\n"
+            body += "Files uploaded to crossref outbox:" + "\n"
+            for name in self.crossref_outbox_s3_key_names:
+                body += name + "\n"
+        else:
+            body += "\n"
+            body += "No files uploaded to crossref outbox." + "\n"
+            
+        if self.crossref_articles_not_uploaded_to_outbox:
+            body += "\n"
+            body += "Files NOT uploaded to crossref outbox:" + "\n"
+            for name in self.crossref_articles_not_uploaded_to_outbox:
+                body += name + "\n"
+        else:
+            body += "\n"
+            body += "No files omitted when uploading to crossref outbox." + "\n"
+
+        body += "\n"
+        body += "-------------------------------\n"
         body += "SWF workflow details: " + "\n"
         body += "activityId: " + str(self.get_activityId()) + "\n"
         body += "As part of workflowId: " + str(self.get_workflowId()) + "\n"

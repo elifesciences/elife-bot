@@ -7,18 +7,18 @@ import datetime
 import workflow
 
 """
-PublishPOA workflow
+DepositCrossref workflow
 """
 
-class workflow_PublishPOA(workflow.workflow):
+class workflow_DepositCrossref(workflow.workflow):
 	
 	def __init__(self, settings, logger, conn = None, token = None, decision = None, maximum_page_size = 100):
 		workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
 
 		# SWF Defaults
-		self.name = "PublishPOA"
+		self.name = "DepositCrossref"
 		self.version = "1"
-		self.description = "Publish POA articles workflow"
+		self.description = "Deposit crossref XML workflow"
 		self.default_execution_start_to_close_timeout = 60*20
 		self.default_task_start_to_close_timeout = 30
 
@@ -49,17 +49,6 @@ class workflow_PublishPOA(workflow.workflow):
 					"schedule_to_close_timeout": 300,
 					"schedule_to_start_timeout": 300,
 					"start_to_close_timeout": 300
-				},
-				{
-					"activity_type": "PublishPOA",
-					"activity_id": "PublishPOA",
-					"version": "1",
-					"input": data,
-					"control": None,
-					"heartbeat_timeout": 60*15,
-					"schedule_to_close_timeout": 60*15,
-					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 60*15
 				},
 				{
 					"activity_type": "DepositCrossref",
