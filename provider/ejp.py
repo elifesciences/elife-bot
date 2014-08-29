@@ -302,6 +302,7 @@ class EJP(object):
     fn_fragment["poa_research_organism"] = "ejp_query_tool_query_id_182_POA_Research_Organism"
     fn_fragment["poa_abstract"] = "ejp_query_tool_query_id_196_POA_Abstract"
     fn_fragment["poa_title"] = "ejp_query_tool_query_id_191_POA_Title"
+    fn_fragment["poa_keywords"] = "ejp_query_tool_query_id_226_POA_Keywords"
 
     if(file_list is None):
       file_list = self.ejp_bucket_file_list()

@@ -227,7 +227,8 @@ class activity_PackagePOA(activity.activity):
                           "poa_subject_area"       : "poa_subject_area.csv",
                           "poa_research_organism"  : "poa_research_organism.csv",
                           "poa_abstract"           : "poa_abstract.csv",
-                          "poa_title"              : "poa_title.csv"
+                          "poa_title"              : "poa_title.csv",
+                          "poa_keywords"           : "poa_keywords.csv"
                         }
         
         for file_type,filename in file_types.items():
@@ -458,7 +459,8 @@ class activity_PackagePOA(activity.activity):
                                 "subjects"   : "poa_subject_area.csv",
                                 "organisms"  : "poa_research_organism.csv",
                                 "abstract"   : "poa_abstract.csv",
-                                "title"      : "poa_title.csv"}
+                                "title"      : "poa_title.csv",
+                                "keywords"   : "poa_keywords.csv"}
         
     def import_poa_modules(self, dir_name = "elife-poa-xml-generation"):
         """
