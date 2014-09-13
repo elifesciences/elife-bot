@@ -9,6 +9,8 @@ from optparse import OptionParser
 import settings as settingsLib
 
 import boto.swf
+import boto.s3
+from boto.s3.connection import S3Connection
 
 import provider.swfmeta as swfmetalib
 import starter
@@ -105,6 +107,12 @@ def run_cron(ENV = "dev"):
           starter_name  = "cron_NewS3POA",
           workflow_id   = "cron_NewS3POA",
           start_seconds = 60*31)
+        
+      workflow_conditional_start(
+        ENV           = ENV,
+        starter_name  = "starter_PubmedArticleDeposit",
+        workflow_id   = "starter_PubmedArticleDeposit",
+        start_seconds = 60*31)
       
       workflow_conditional_start(
         ENV           = ENV,
@@ -153,6 +161,22 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
     elif(starter_name == "starter_AdminEmail"):
       s.start(ENV = ENV, workflow = "AdminEmail")
       
+    elif(starter_name == "starter_PubmedArticleDeposit"):
+      # Special for pubmed, only start a workflow if the outbox is not empty
+      bucket_name = settings.poa_packaging_bucket
+      outbox_folder = "pubmed/outbox/"
+      
+      # Connect to S3 and bucket
+      s3_conn = S3Connection(settings.aws_access_key_id, settings.aws_secret_access_key)
+      bucket = s3_conn.lookup(bucket_name)
+      
+      s3_key_names = get_s3_key_names_from_bucket(
+        bucket = bucket,
+        prefix = outbox_folder
+        )
+      if len(s3_key_names) > 0:
+        s.start(ENV = ENV, workflow = "PubmedArticleDeposit")
+
     elif(starter_name == "cron_NewS3XML"
       or starter_name == "cron_NewS3PDF"
       or starter_name == "cron_NewS3SVG"
@@ -163,6 +187,34 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       or starter_name == "cron_NewS3POA"
       ):
       s.start(ENV = ENV)
+      
+def get_s3_key_names_from_bucket(self, bucket, prefix = None, delimiter = '/', headers = None, file_extensions = None):
+    """
+    Given a connected boto bucket object, and optional parameters,
+    from the prefix (folder name), get the s3 key names for
+    non-folder objects, optionally that match a particular
+    list of file extensions
+    """
+    s3_keys = []
+    s3_key_names = []
+    
+    # Get a list of S3 objects
+    bucketList = bucket.list(prefix = prefix, delimiter = delimiter, headers = headers)
+
+    for item in bucketList:
+      if(isinstance(item, boto.s3.key.Key)):
+        # Can loop through each prefix and search for objects
+        s3_keys.append(item)
+    
+    # Convert to key names instead of objects to make it testable later
+    for key in s3_keys:
+        s3_key_names.append(key.name)
+    
+    # Filter by file_extension
+    if file_extensions is not None:
+        s3_key_names = self.filter_list_by_file_extensions(s3_key_names, file_extensions)
+        
+    return s3_key_names
   
 if __name__ == "__main__":
 

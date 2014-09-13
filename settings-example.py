@@ -79,6 +79,12 @@ class dev():
 	crossref_login_id = ''
 	crossref_login_passwd = ''
 	
+	# PubMed FTP settings
+	PUBMED_FTP_URI = ""
+	PUBMED_FTP_USERNAME = ""
+	PUBMED_FTP_PASSWORD = ""
+	PUBMED_FTP_CWD = ""
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -149,6 +155,12 @@ class live():
 	crossref_url = 'http://doi.crossref.org/servlet/deposit'
 	crossref_login_id = ''
 	crossref_login_passwd = ''
+	
+	# PubMed FTP settings
+	PUBMED_FTP_URI = ""
+	PUBMED_FTP_USERNAME = ""
+	PUBMED_FTP_PASSWORD = ""
+	PUBMED_FTP_CWD = ""
 	
 	# Logging
 	setLevel = "INFO"
