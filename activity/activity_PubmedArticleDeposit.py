@@ -110,7 +110,7 @@ class activity_PubmedArticleDeposit(activity.activity):
             if self.ftp_status is True:
                 # Clean up outbox
                 print "Moving files from outbox folder to published folder"
-                #self.clean_outbox()
+                self.clean_outbox()
                 self.upload_pubmed_xml_to_s3()
                 self.outbox_status = True
                 
@@ -495,7 +495,12 @@ class activity_PubmedArticleDeposit(activity.activity):
                 self.article_not_published_file_names.append(xml_file_name)
                 
         # Will write the XML to the TMP_DIR
-        self.elife_poa_lib.generate.build_pubmed_xml_for_articles(published_articles)
+        if len(published_articles) > 0:
+            try:
+                self.elife_poa_lib.generate.build_pubmed_xml_for_articles(published_articles)
+            except:
+                return False
+            
         return True
 
     def approve_for_publishing(self):
@@ -537,42 +542,6 @@ class activity_PubmedArticleDeposit(activity.activity):
         zipfiles = glob.glob(from_dir + file_type)
         self.elife_poa_lib.ftp.ftp_to_endpoint(zipfiles, sub_dir)
 
-    def move_files_from_s3_folder_to_folder(self, from_folder, to_folder):
-        """
-        Connect to the S3 bucket, and from the from_folder,
-        move all the objects to the to_folder
-        """
-        
-        bucket_name = self.publish_bucket
-        
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-        
-        s3_key_names = self.get_s3_key_names_from_bucket(
-            bucket          = bucket,
-            prefix          = from_folder)
-        
-        for name in s3_key_names:
-            # Download objects from S3 and save to disk
-
-            # Do not delete the from_folder itself, if it is in the list
-            if name != from_folder:
-                filename = name.split("/")[-1]
-                new_s3_key_name = to_folder + filename
-                
-                # First copy
-                new_s3_key = None
-                try:
-                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
-                except:
-                    pass
-                
-                # Then delete the old key if successful
-                if(isinstance(new_s3_key, boto.s3.key.Key)):
-                    old_s3_key = bucket.get_key(name)
-                    old_s3_key.delete()
-    
     def get_outbox_s3_key_names(self, force = None):
         """
         Separately get a list of S3 key names form the outbox
@@ -623,7 +592,40 @@ class activity_PubmedArticleDeposit(activity.activity):
         outbox_s3_key_names = self.get_outbox_s3_key_names()
         
         to_folder = self.get_to_folder_name()
-        self.move_files_from_s3_folder_to_folder(self.outbox_folder, to_folder)
+        
+        # Move only the published files from the S3 outbox to the published folder
+        bucket_name = self.publish_bucket
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        # Concatenate the expected S3 outbox file names
+        s3_key_names = []
+        for name in self.article_published_file_names:
+            filename = name.split(os.sep)[-1]
+            s3_key_name = self.outbox_folder + filename
+            s3_key_names.append(s3_key_name)
+        
+        for name in s3_key_names:
+            # Download objects from S3 and save to disk
+
+            # Do not delete the from_folder itself, if it is in the list
+            if name != self.outbox_folder:
+                filename = name.split("/")[-1]
+                new_s3_key_name = to_folder + filename
+                
+                # First copy
+                new_s3_key = None
+                try:
+                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
+                except:
+                    pass
+                
+                # Then delete the old key if successful
+                if(isinstance(new_s3_key, boto.s3.key.Key)):
+                    old_s3_key = bucket.get_key(name)
+                    old_s3_key.delete()
         
     def upload_pubmed_xml_to_s3(self):
         """
@@ -760,14 +762,14 @@ class activity_PubmedArticleDeposit(activity.activity):
             body += "\n"
             body += "Published files included in pubmed XML: " + "\n"
             for name in self.article_published_file_names:
-                body += name + "\n"
+                body += name.split(os.sep)[-1] + "\n"
 
         # Report on not published files
         if len(self.article_not_published_file_names) > 0:
             body += "\n"
             body += "Files in pubmed outbox not yet published: " + "\n"
             for name in self.article_not_published_file_names:
-                body += name + "\n"
+                body += name.split(os.sep)[-1] + "\n"
             
         body += "\n"
         body += "-------------------------------\n"
