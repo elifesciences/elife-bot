@@ -82,6 +82,7 @@ def start(ENV = "dev"):
 	activity_names.append("PublishPOA")
 	activity_names.append("DepositCrossref")
 	activity_names.append("PubmedArticleDeposit")
+	activity_names.append("ArticleToOutbox")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries
