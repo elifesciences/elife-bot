@@ -61,6 +61,9 @@ class activity_PublishPOA(activity.activity):
         # Folder for crossref XML
         self.crossref_outbox_folder = "crossref/outbox/"
         
+        # Folder for pubmed XML
+        self.pubmed_outbox_folder = "pubmed/outbox/"
+        
         # Subfolders on the FTP site to deliver into
         self.ftp_subfolder_poa = "poa"
         self.ftp_subfolder_ds = "ds"
@@ -79,6 +82,10 @@ class activity_PublishPOA(activity.activity):
         # Track XML files selected for crossref XML
         self.crossref_outbox_s3_key_names = None
         self.crossref_articles_not_uploaded_to_outbox = None
+        
+        # Track XML files selected for pubmed XML
+        self.pubmed_outbox_s3_key_names = None
+        self.pubmed_articles_not_uploaded_to_outbox = None
         
         # More file status tracking for reporting in email
         self.malformed_ds_file_names = []
@@ -126,6 +133,7 @@ class activity_PublishPOA(activity.activity):
                 print "Moving files from outbox folder to published folder"
                 self.clean_outbox()
                 self.upload_xml_to_crossref_outbox_s3()
+                self.upload_xml_to_pubmed_outbox_s3()
                 self.outbox_status = True
                 
             # Set the activity status of this activity based on successes
@@ -618,6 +626,28 @@ class activity_PublishPOA(activity.activity):
         """
         Upload a copy of the article XML to the crossref outbox on S3
         for ingestion by the next workflow activity
+        """
+        s3_folder_name = self.crossref_outbox_folder
+        
+        (self.crossref_outbox_s3_key_names,
+         self.crossref_articles_not_uploaded_to_outbox) \
+          = self.upload_xml_to_an_outbox_s3(s3_folder_name)
+        
+    def upload_xml_to_pubmed_outbox_s3(self):
+        """
+        Upload a copy of the article XML to the pubmed outbox on S3
+        for ingestion by the next workflow activity
+        """
+        s3_folder_name = self.pubmed_outbox_folder
+        
+        (self.pubmed_outbox_s3_key_names,
+         self.pubmed_articles_not_uploaded_to_outbox) \
+          = self.upload_xml_to_an_outbox_s3(s3_folder_name)
+        
+    def upload_xml_to_an_outbox_s3(self, s3_folder_name):
+        """
+        Upload a copy of the article XML to the s3_folder_name,
+        used by upload to crossref outbox and pubmed outbox functions
         Do not upload any v2, or version 2, XML for an article, based on the file name
         """
             
@@ -630,29 +660,29 @@ class activity_PublishPOA(activity.activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
         
-        s3_folder_name = self.crossref_outbox_folder
-
-        self.crossref_outbox_s3_key_names = []
-        self.crossref_articles_not_uploaded_to_outbox = []
+        outbox_s3_key_names = []
+        articles_not_uploaded_to_outbox = []
 
         for xml_file in xml_files:
             # Check for v2 or naming format
             # Very simple, checks for the letter v
             if self.get_filename_from_path(xml_file, '.xml').find('v') > -1:
                 # Do not upload
-                self.crossref_articles_not_uploaded_to_outbox.append(xml_file)
+                articles_not_uploaded_to_outbox.append(xml_file)
                 continue
 
             s3key = boto.s3.key.Key(bucket)
             s3key.key = s3_folder_name + self.get_filename_from_path(xml_file, '.xml') + '.xml'
             s3key.set_contents_from_filename(xml_file, replace=True)
-            self.crossref_outbox_s3_key_names.append(s3key.key)
+            outbox_s3_key_names.append(s3key.key)
         
         # Final check for empty lists of files
-        if len(self.crossref_outbox_s3_key_names) <= 0:
-            self.crossref_outbox_s3_key_names = None
-        if len(self.crossref_articles_not_uploaded_to_outbox) <= 0:
-            self.crossref_articles_not_uploaded_to_outbox = None
+        if len(outbox_s3_key_names) <= 0:
+            outbox_s3_key_names = None
+        if len(articles_not_uploaded_to_outbox) <= 0:
+            articles_not_uploaded_to_outbox = None
+            
+        return (outbox_s3_key_names, articles_not_uploaded_to_outbox)
 
     def add_email_to_queue(self):
         """
@@ -811,6 +841,28 @@ class activity_PublishPOA(activity.activity):
         else:
             body += "\n"
             body += "No files omitted when uploading to crossref outbox." + "\n"
+
+        body += "\n"
+        body += "-------------------------------\n"
+        body += "Pubmed outbox status details: " + "\n"
+        
+        if self.pubmed_outbox_s3_key_names:
+            body += "\n"
+            body += "Files uploaded to pubmed outbox:" + "\n"
+            for name in self.pubmed_outbox_s3_key_names:
+                body += name + "\n"
+        else:
+            body += "\n"
+            body += "No files uploaded to pubmed outbox." + "\n"
+            
+        if self.pubmed_articles_not_uploaded_to_outbox:
+            body += "\n"
+            body += "Files NOT uploaded to pubmed outbox:" + "\n"
+            for name in self.pubmed_articles_not_uploaded_to_outbox:
+                body += name + "\n"
+        else:
+            body += "\n"
+            body += "No files omitted when uploading to pubmed outbox." + "\n"
 
         body += "\n"
         body += "-------------------------------\n"
