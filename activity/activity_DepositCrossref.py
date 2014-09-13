@@ -106,7 +106,7 @@ class activity_DepositCrossref(activity.activity):
                 self.outbox_status = True
                             
         # Set the activity status of this activity based on successes
-        if self.publish_status is not False:
+        if self.publish_status is not False and self.generate_status is not False:
             self.activity_status = True
         else:
             self.activity_status = False
