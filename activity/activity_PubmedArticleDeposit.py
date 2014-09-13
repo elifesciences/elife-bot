@@ -755,6 +755,20 @@ class activity_PubmedArticleDeposit(activity.activity):
         else:
             body += "No files in outbox." + "\n"
             
+        # Report on published files
+        if len(self.article_published_file_names) > 0:
+            body += "\n"
+            body += "Published files included in pubmed XML: " + "\n"
+            for name in self.article_published_file_names:
+                body += name + "\n"
+
+        # Report on not published files
+        if len(self.article_not_published_file_names) > 0:
+            body += "\n"
+            body += "Files in pubmed outbox not yet published: " + "\n"
+            for name in self.article_not_published_file_names:
+                body += name + "\n"
+            
         body += "\n"
         body += "-------------------------------\n"
         body += "SWF workflow details: " + "\n"
