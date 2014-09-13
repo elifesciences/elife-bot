@@ -248,7 +248,7 @@ class activity_PubmedArticleDeposit(activity.activity):
             return None
 
         if (is_poa is True or
-            is_poa is False and was_ever_poa is False):
+            (is_poa is False and was_ever_poa is False)):
             # In this case, any URL is sufficient
             if article_url:
                 return True
