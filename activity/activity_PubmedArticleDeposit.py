@@ -74,6 +74,11 @@ class activity_PubmedArticleDeposit(activity.activity):
         self.publish_status = None
                 
         self.outbox_s3_key_names = None
+        
+        # Track XML files selected for pubmed XML
+        self.xml_file_to_doi_map = {}
+        self.article_published_file_names = []
+        self.article_not_published_file_names = []
             
     def do_activity(self, data = None):
         """
@@ -102,12 +107,17 @@ class activity_PubmedArticleDeposit(activity.activity):
             except:
                 self.ftp_status = False
                        
-            if self.publish_status is True:
+            if self.ftp_status is True:
                 # Clean up outbox
                 print "Moving files from outbox folder to published folder"
                 #self.clean_outbox()
                 self.upload_pubmed_xml_to_s3()
                 self.outbox_status = True
+                
+            if self.ftp_status is True:
+                self.publish_status = True
+            elif self.ftp_status is False:
+                self.publish_status = False
                             
         # Set the activity status of this activity based on successes
         if self.publish_status is not False:
@@ -116,7 +126,9 @@ class activity_PubmedArticleDeposit(activity.activity):
             self.activity_status = False
 
         # Send email
-        self.add_email_to_queue()
+        # Only if there were files approved for publishing
+        if len(self.article_published_file_names) > 0:
+            self.add_email_to_queue()
 
         # Return the activity result, True or False
         result = True
@@ -422,19 +434,46 @@ class activity_PubmedArticleDeposit(activity.activity):
         else:
             return False
 
+    def parse_article_xml(self, article_xml_files):
+        """
+        Given a list of article XML files, parse them into objects
+        and save the file name for later use
+        """
+        
+        # For each article XML file, parse it and save the filename for later
+        articles = []
+        for article_xml in article_xml_files:
+            article_list = None
+            article_xml_list = [article_xml]
+            try:
+                # Convert the XML files to article objects
+                article_list = self.elife_poa_lib.parse.build_articles_from_article_xmls(article_xml_list)
+            except:
+                continue
+            
+            if len(article_list) > 0:
+                article = article_list[0]
+                articles.append(article)
+                # Add article to the DOI to file name map
+                self.xml_file_to_doi_map[article.doi] = article_xml
+        
+        return articles
+
     def generate_pubmed_xml(self):
         """
         Using the POA generatePubMedXml module
         """
         article_xml_files = glob.glob(self.elife_poa_lib.settings.STAGING_TO_HW_DIR + "/*.xml")
-        #try:
-        # Convert the XML files to article objects
-        articles = self.elife_poa_lib.parse.build_articles_from_article_xmls(article_xml_files)
-        # For each VoR article, set was_ever_poa property
         
+        articles = self.parse_article_xml(article_xml_files)
+
+        # For each VoR article, set was_ever_poa property
         published_articles = []
         
         for article in articles:
+            
+            xml_file_name = self.xml_file_to_doi_map[article.doi]
+            
             # Check if article was ever poa
             if (article.is_poa() is False and
                 self.check_was_ever_poa(article.doi) is True):
@@ -445,14 +484,19 @@ class activity_PubmedArticleDeposit(activity.activity):
                 doi = article.doi,
                 is_poa = article.is_poa(),
                 was_ever_poa = article.was_ever_poa) is True:
-                # Delete article object that is not published yet
+                
+                # Add published article object to be processed
                 published_articles.append(article)
-        
+                
+                # Add filename to the list of published files
+                self.article_published_file_names.append(xml_file_name)
+            else:
+                # Add the file to the list of not published articles, may be used later
+                self.article_not_published_file_names.append(xml_file_name)
+                
         # Will write the XML to the TMP_DIR
         self.elife_poa_lib.generate.build_pubmed_xml_for_articles(published_articles)
         return True
-        #except:
-        #    return False
 
     def approve_for_publishing(self):
         """
