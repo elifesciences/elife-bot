@@ -111,7 +111,7 @@ def run_cron(ENV = "dev"):
       workflow_conditional_start(
         ENV           = ENV,
         starter_name  = "starter_PubmedArticleDeposit",
-        workflow_id   = "starter_PubmedArticleDeposit",
+        workflow_id   = "PubmedArticleDeposit",
         start_seconds = 60*31)
       
       workflow_conditional_start(
@@ -210,10 +210,6 @@ def get_s3_key_names_from_bucket(self, bucket, prefix = None, delimiter = '/', h
     for key in s3_keys:
         s3_key_names.append(key.name)
     
-    # Filter by file_extension
-    if file_extensions is not None:
-        s3_key_names = self.filter_list_by_file_extensions(s3_key_names, file_extensions)
-        
     return s3_key_names
   
 if __name__ == "__main__":
