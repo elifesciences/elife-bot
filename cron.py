@@ -111,7 +111,7 @@ def run_cron(ENV = "dev"):
       workflow_conditional_start(
         ENV           = ENV,
         starter_name  = "starter_PubmedArticleDeposit",
-        workflow_id   = "starter_PubmedArticleDeposit",
+        workflow_id   = "PubmedArticleDeposit",
         start_seconds = 60*31)
       
       workflow_conditional_start(
@@ -175,7 +175,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
         prefix = outbox_folder
         )
       if len(s3_key_names) > 0:
-        s.start(ENV = ENV, workflow = "PubmedArticleDeposit")
+        s.start(ENV = ENV)
 
     elif(starter_name == "cron_NewS3XML"
       or starter_name == "cron_NewS3PDF"
@@ -188,7 +188,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       ):
       s.start(ENV = ENV)
       
-def get_s3_key_names_from_bucket(self, bucket, prefix = None, delimiter = '/', headers = None, file_extensions = None):
+def get_s3_key_names_from_bucket(bucket, prefix = None, delimiter = '/', headers = None):
     """
     Given a connected boto bucket object, and optional parameters,
     from the prefix (folder name), get the s3 key names for
@@ -210,10 +210,6 @@ def get_s3_key_names_from_bucket(self, bucket, prefix = None, delimiter = '/', h
     for key in s3_keys:
         s3_key_names.append(key.name)
     
-    # Filter by file_extension
-    if file_extensions is not None:
-        s3_key_names = self.filter_list_by_file_extensions(s3_key_names, file_extensions)
-        
     return s3_key_names
   
 if __name__ == "__main__":
