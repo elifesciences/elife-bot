@@ -475,9 +475,13 @@ class activity_PubmedArticleDeposit(activity.activity):
             xml_file_name = self.xml_file_to_doi_map[article.doi]
             
             # Check if article was ever poa
+            # Must be set to True or False to get it published
             if (article.is_poa() is False and
                 self.check_was_ever_poa(article.doi) is True):
                 article.was_ever_poa = True
+            elif (article.is_poa() is False and
+                self.check_was_ever_poa(article.doi) is False):
+                article.was_ever_poa = False
                 
             # Check if each article is published
             if self.check_is_article_published(
