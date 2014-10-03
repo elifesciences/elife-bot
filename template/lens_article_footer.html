@@ -26,21 +26,28 @@
       // var documentURL = "data/00778/index.xml";
 
       // Kitchen Sink Example (contains a lot of edge cases)
-      // var documentURL = "data/kitchen_sink/index.xml";
+      // var documentURL = "data/kitchen_sink_jats/index.xml";
 
+      // About document
+      // var documentURL = "data/about/index.xml";
 
-      
-      // Create a new Lens app instance
-      // --------
-      //
-      // Injects itself into body
-
-      var app = new Lens({
-        document_url: qs.url ? decodeURIComponent(qs.url) : documentURL
-      });
+      // Local doc that has group authors
+      // var documentURL = "data/04024_has_group_authors/index.xml";
 
       $(function() {
+
+        // Create a new Lens app instance
+        // --------
+        //
+        // Injects itself into body
+
+        var app = new window.Lens({
+          document_url: qs.url ? decodeURIComponent(qs.url) : documentURL
+        });
+
         app.start();
+
+        window.app = app;
 
         if (isTouchDevice()) {
           $('#container').addClass('touchable');
@@ -60,7 +67,7 @@
     <script src="../ga.js"></script>
     
   </head>
-  <body>
+  <body class="loading">
     
   </body>
 </html>
