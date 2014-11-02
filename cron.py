@@ -52,8 +52,9 @@ def run_cron(ENV = "dev"):
     # Jobs to start at the bottom of the hour
     #print "Bottom of the hour"
     
-    # POA Publish once per day 11:30 UTC
-    if(current_time.tm_hour == 11):
+    # POA Publish once per day 12:30 UTC
+    #  Set to 11:30 UTC during daylight savings for 12:30 local UK time
+    if(current_time.tm_hour == 12):
       workflow_conditional_start(
         ENV           = ENV,
         starter_name  = "starter_PublishPOA",
@@ -100,8 +101,9 @@ def run_cron(ENV = "dev"):
     if(current_time.tm_min >= 45 and current_time.tm_min <= 59):
       # Bottom quarter of the hour
       
-      # POA Package once per day 10:45 UTC
-      if(current_time.tm_hour == 10):
+      # POA Package once per day 11:45 UTC
+      # Set to 10:45 UTC during daylight savings for 11:45 local UK time
+      if(current_time.tm_hour == 11):
         workflow_conditional_start(
           ENV           = ENV,
           starter_name  = "cron_NewS3POA",
