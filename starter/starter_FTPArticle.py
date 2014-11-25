@@ -111,7 +111,7 @@ if __name__ == "__main__":
   # Add options
   parser = OptionParser()
   parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
-  parser.add_option("-w", "--workflow-name", default="S3Monitor", action="store", type="string", dest="workflow", help="specify the workflow name to start")
+  parser.add_option("-w", "--workflow-name", default=None, action="store", type="string", dest="workflow", help="specify the workflow name to start")
   parser.add_option("-d", "--doi-id", default=None, action="store", type="string", dest="doi_id", help="specify the DOI id of a single article")
   
   (options, args) = parser.parse_args()
