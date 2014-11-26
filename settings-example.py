@@ -85,6 +85,12 @@ class dev():
 	PUBMED_FTP_PASSWORD = ""
 	PUBMED_FTP_CWD = ""
 	
+	# HWX FTP settings
+	HWX_FTP_URI = ""
+	HWX_FTP_USERNAME = ""
+	HWX_FTP_PASSWORD = ""
+	HWX_FTP_CWD = ""
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -161,6 +167,12 @@ class live():
 	PUBMED_FTP_USERNAME = ""
 	PUBMED_FTP_PASSWORD = ""
 	PUBMED_FTP_CWD = ""
+	
+	# HWX FTP settings
+	HWX_FTP_URI = ""
+	HWX_FTP_USERNAME = ""
+	HWX_FTP_PASSWORD = ""
+	HWX_FTP_CWD = ""
 	
 	# Logging
 	setLevel = "INFO"
