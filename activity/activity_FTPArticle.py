@@ -142,6 +142,67 @@ class activity_FTPArticle(activity.activity):
             self.download_data_file_from_s3(doi_id, 'img')
             self.download_data_file_from_s3(doi_id, 'suppl')
             self.download_data_file_from_s3(doi_id, 'video')
+            
+            # Create the inline-media zip file
+            self.create_inline_media_zip(doi_id)
+
+            
+    def create_inline_media_zip(self, doi_id):
+        """
+        If there is a video and/or suppl file downloaded,
+        then create a new inline-media.zip file and add
+        the contents of them to the new file
+        """
+        
+        file_types = ["/*.video.zip", "/*.suppl.zip"]
+        zip_temp_dir = self.get_tmp_dir() + os.sep + self.TMP_DIR + os.sep + 'zip_tmp'
+        output_dir = self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR
+        
+        # Create the zip temp directory if it does not exist
+        try:
+            os.mkdir(zip_temp_dir)
+        except:
+            pass
+        
+        # Move the files to the temp directory
+        movefiles = []
+        for file_type in file_types:
+            dirfiles = (glob.glob(output_dir + file_type))
+            movefiles = movefiles + dirfiles
+            
+        for mf in movefiles:
+            file_name = zip_temp_dir + os.sep + mf.split(os.sep)[-1]
+            shutil.move(mf, file_name)
+        
+        # Get a list of zip files providing the input
+        inputfiles = []
+        for file_type in file_types:
+            dirfiles = (glob.glob(zip_temp_dir + file_type))
+            inputfiles = inputfiles + dirfiles
+        
+        # Create the inline-media zip file and open it
+        inlinemedia_filename = 'elife' + str(doi_id).zfill(5) + '.inline-media.zip'
+        inlinemedia_filename_plus_path = (output_dir
+                                          + os.sep + inlinemedia_filename)
+        inlinemedia_zipfile = zipfile.ZipFile(inlinemedia_filename_plus_path, 'w')
+        
+        # For each of the zip input files, extract the contents and
+        #  add them to the inline-media zip file
+        for zipfile_name in inputfiles:
+            current_zipfile = zipfile.ZipFile(zipfile_name, 'r')
+            
+            filelist = current_zipfile.namelist()
+            for filename in filelist:
+                path = zip_temp_dir + os.sep
+                filename_plus_path = path + filename
+                
+                current_zipfile.extract(filename, path)
+                
+                inlinemedia_zipfile.write(filename_plus_path, filename)
+                
+            current_zipfile.close()
+            
+        inlinemedia_zipfile.close()
         
     def download_jats_xml_from_s3(self, doi_id):
         """
