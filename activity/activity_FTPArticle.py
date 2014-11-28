@@ -165,20 +165,37 @@ class activity_FTPArticle(activity.activity):
         f.close()
         
         # Zip it and save to ftp_outbox
-        volume = self.get_volume_from_xml(doi_id)
-        if volume == 1:
-            year = 2012
-        elif volume == 2:
-            year = 2013
-        elif volume == 3:
-            year = 2014
+        new_zipfile_name = self.get_filename_from_s3(doi_id, 'xml')
+        
         new_zipfile_name_plus_path = (self.get_tmp_dir() + os.sep +
                                       self.FTP_TO_SOMEWHERE_DIR + os.sep +
-                                      'elife_' + str(year) + '_' +
-                                      str(doi_id).zfill(5) + '.xml.zip')
+                                      new_zipfile_name)
+        
         new_zipfile = zipfile.ZipFile(new_zipfile_name_plus_path, 'w')
         new_zipfile.write(filename_plus_path, filename)
         new_zipfile.close()
+        
+    def get_filename_from_s3(self, doi_id, file_data_type):
+        """
+        In order to get the XML file revision file name,
+        get the filename of the XML zip file from the bucket
+        Expect to find only one result per request
+        """
+        filename = None
+        
+        item_list = self.db.elife_get_article_S3_file_items(
+            file_data_type = file_data_type,
+            doi_id = str(doi_id).zfill(5),
+            latest = True)
+        
+        for item in item_list:
+            # Download objects from S3 and save to disk
+            s3_key_name = item['name']
+            
+            filename = s3_key_name.split("/")[-1]
+        
+        return filename
+        
         
     def download_data_file_from_s3(self, doi_id, file_data_type):
         """
