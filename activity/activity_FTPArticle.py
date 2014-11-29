@@ -180,6 +180,10 @@ class activity_FTPArticle(activity.activity):
             dirfiles = (glob.glob(zip_temp_dir + file_type))
             inputfiles = inputfiles + dirfiles
         
+        # Do not contine if there are no input files
+        if len(inputfiles) <= 0:
+            return
+        
         # Create the inline-media zip file and open it
         inlinemedia_filename = 'elife' + str(doi_id).zfill(5) + '.inline-media.zip'
         inlinemedia_filename_plus_path = (output_dir
