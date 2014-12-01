@@ -136,7 +136,7 @@ class activity_FTPArticle(activity.activity):
         
         if workflow == 'HWX':
             # Download XML
-            self.download_jats_xml_from_s3(doi_id)
+            self.download_jats_xml_from_s3(doi_id, workflow)
             # Downlaod other files
             self.download_data_file_from_s3(doi_id, 'pdf')
             self.download_data_file_from_s3(doi_id, 'img')
@@ -208,7 +208,7 @@ class activity_FTPArticle(activity.activity):
             
         inlinemedia_zipfile.close()
         
-    def download_jats_xml_from_s3(self, doi_id):
+    def download_jats_xml_from_s3(self, doi_id, workflow):
         """
         Download the JATS XML from S3, used temporarily
         as a source of XML during resupply process
@@ -230,7 +230,13 @@ class activity_FTPArticle(activity.activity):
         f.close()
         
         # Zip it and save to ftp_outbox
+        
+        # Set the file name based on the workflow type
         new_zipfile_name = self.get_filename_from_s3(doi_id, 'xml')
+        
+        if workflow == 'HWX':
+            # HWX workflow does not want the r1.xml.zip, r2.xml.zip style filename ending
+            new_zipfile_name = new_zipfile_name.split(".")[0] + '.xml.zip'
         
         new_zipfile_name_plus_path = (self.get_tmp_dir() + os.sep +
                                       self.FTP_TO_SOMEWHERE_DIR + os.sep +
