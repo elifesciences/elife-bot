@@ -236,7 +236,14 @@ class activity_FTPArticle(activity.activity):
         
         if workflow == 'HWX':
             # HWX workflow does not want the r1.xml.zip, r2.xml.zip style filename ending
-            new_zipfile_name = new_zipfile_name.split(".")[0] + '.xml.zip'
+            year = None
+            volume = self.get_volume_from_xml(doi_id)
+            if   volume == 1: year = 2012
+            elif volume == 2: year = 2013
+            elif volume == 3: year = 2014
+            
+            if year:
+                new_zipfile_name = 'elife_' + str(year) + '_' + str(doi_id).zfill(5) + '.xml.zip'
         
         new_zipfile_name_plus_path = (self.get_tmp_dir() + os.sep +
                                       self.FTP_TO_SOMEWHERE_DIR + os.sep +
