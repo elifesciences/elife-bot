@@ -145,7 +145,40 @@ class activity_FTPArticle(activity.activity):
             
             # Create the inline-media zip file
             self.create_inline_media_zip(doi_id)
+            
+            # If the PDF file is not zipped, zip it
+            self.create_pdf_zip(doi_id)
 
+
+    def create_pdf_zip(self, doi_id):
+        """
+        Older articles PDF file was supplied loose and not zipped,
+        zip it with appropriate file name for HWX delivery
+        """
+        
+        file_type = "/*.pdf"
+        temp_dir = self.get_tmp_dir() + os.sep + self.TMP_DIR
+        output_dir = self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR
+        
+        dirfiles = (glob.glob(output_dir + file_type))
+        for df in dirfiles:
+            file_name = temp_dir + os.sep + df.split(os.sep)[-1]
+            shutil.move(df, file_name)
+            
+        # Create the  zip file and open it
+        zip_filename = self.get_hwx_zip_file_name(doi_id, 'pdf')
+        zip_filename_plus_path = (output_dir
+                                  + os.sep + zip_filename)
+
+        pdf_zipfile = zipfile.ZipFile(zip_filename_plus_path, 'w')
+        
+        dirfiles = (glob.glob(temp_dir + file_type))
+        for df in dirfiles:
+            filename = df.split(os.sep)[-1]
+            filename_plus_path = temp_dir + os.sep + filename
+            pdf_zipfile.write(filename_plus_path, filename)
+        
+        pdf_zipfile.close()
             
     def create_inline_media_zip(self, doi_id):
         """
