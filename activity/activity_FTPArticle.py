@@ -138,10 +138,10 @@ class activity_FTPArticle(activity.activity):
             # Download XML
             self.download_jats_xml_from_s3(doi_id, workflow)
             # Downlaod other files
-            self.download_data_file_from_s3(doi_id, 'pdf')
-            self.download_data_file_from_s3(doi_id, 'img')
-            self.download_data_file_from_s3(doi_id, 'suppl')
-            self.download_data_file_from_s3(doi_id, 'video')
+            self.download_data_file_from_s3(doi_id, 'pdf', workflow)
+            self.download_data_file_from_s3(doi_id, 'img', workflow)
+            self.download_data_file_from_s3(doi_id, 'suppl', workflow)
+            self.download_data_file_from_s3(doi_id, 'video', workflow)
             
             # Create the inline-media zip file
             self.create_inline_media_zip(doi_id)
@@ -232,18 +232,12 @@ class activity_FTPArticle(activity.activity):
         # Zip it and save to ftp_outbox
         
         # Set the file name based on the workflow type
-        new_zipfile_name = self.get_filename_from_s3(doi_id, 'xml')
+        file_data_type = 'xml'
+        new_zipfile_name = self.get_filename_from_s3(doi_id, file_data_type)
         
         if workflow == 'HWX':
             # HWX workflow does not want the r1.xml.zip, r2.xml.zip style filename ending
-            year = None
-            volume = self.get_volume_from_xml(doi_id)
-            if   volume == 1: year = 2012
-            elif volume == 2: year = 2013
-            elif volume == 3: year = 2014
-            
-            if year:
-                new_zipfile_name = 'elife_' + str(year) + '_' + str(doi_id).zfill(5) + '.xml.zip'
+            new_zipfile_name = self.get_hwx_zip_file_name(doi_id, file_data_type)
         
         new_zipfile_name_plus_path = (self.get_tmp_dir() + os.sep +
                                       self.FTP_TO_SOMEWHERE_DIR + os.sep +
@@ -252,6 +246,27 @@ class activity_FTPArticle(activity.activity):
         new_zipfile = zipfile.ZipFile(new_zipfile_name_plus_path, 'w')
         new_zipfile.write(filename_plus_path, filename)
         new_zipfile.close()
+        
+    def get_hwx_zip_file_name(self, doi_id, file_data_type):
+        """
+        In supplying file names to HWX do not include the revision (r1, r2, etc.)
+        portion, and base the name on the article volume
+        """
+        
+        zipfile_name = None
+        
+        year = None
+        volume = self.get_volume_from_xml(doi_id)
+        if   volume == 1: year = 2012
+        elif volume == 2: year = 2013
+        elif volume == 3: year = 2014
+        
+        if year:
+            zipfile_name = ('elife_' + str(year) + '_'
+                            + str(doi_id).zfill(5) + '.'
+                            + file_data_type + '.zip')
+            
+        return zipfile_name
         
     def get_filename_from_s3(self, doi_id, file_data_type):
         """
@@ -275,7 +290,7 @@ class activity_FTPArticle(activity.activity):
         return filename
         
         
-    def download_data_file_from_s3(self, doi_id, file_data_type):
+    def download_data_file_from_s3(self, doi_id, file_data_type, workflow):
         """
         Find the file of type file_data_type from the simpleDB provider
         If it exists, download it
@@ -296,6 +311,9 @@ class activity_FTPArticle(activity.activity):
             s3_key = bucket.get_key(s3_key_name)
 
             filename = s3_key_name.split("/")[-1]
+            if workflow == 'HWX' and filename.split(".")[-1] == 'zip':
+                # HWX workflow does not want the r1.xml.zip, r2.xml.zip style filename ending
+                filename = self.get_hwx_zip_file_name(doi_id, file_data_type)
 
             filename_plus_path = (self.get_tmp_dir() + os.sep +
                                   self.FTP_TO_SOMEWHERE_DIR + os.sep + filename)
