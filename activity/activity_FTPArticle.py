@@ -161,6 +161,10 @@ class activity_FTPArticle(activity.activity):
         output_dir = self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR
         
         dirfiles = (glob.glob(output_dir + file_type))
+        # Check for PDF files, if none, return
+        if len(dirfiles) <= 0:
+            return
+        
         for df in dirfiles:
             file_name = temp_dir + os.sep + df.split(os.sep)[-1]
             shutil.move(df, file_name)
