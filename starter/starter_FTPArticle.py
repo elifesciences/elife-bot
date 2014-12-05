@@ -54,6 +54,8 @@ class starter_FTPArticle():
   def get_workflow_params(self, workflow, doi_id, settings):
     
     workflow_id = workflow_name = workflow_version = child_policy = execution_start_to_close_timeout = None
+    # Setting timeout to 23 hours temporarily during article resupply
+    execution_start_to_close_timeout = str(60*60*23)
     input = None
     
     if workflow == "HWX":
