@@ -91,6 +91,12 @@ class dev():
 	HWX_FTP_PASSWORD = ""
 	HWX_FTP_CWD = ""
 	
+	# HW Archive FTP settings
+	HWARCHIVE_FTP_URI = ""
+	HWARCHIVE_FTP_USERNAME = ""
+	HWARCHIVE_FTP_PASSWORD = ""
+	HWARCHIVE_FTP_CWD = ""
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -173,6 +179,12 @@ class live():
 	HWX_FTP_USERNAME = ""
 	HWX_FTP_PASSWORD = ""
 	HWX_FTP_CWD = ""
+	
+	# HWX Archive FTP settings
+	HWARCHIVE_FTP_URI = ""
+	HWARCHIVE_FTP_USERNAME = ""
+	HWARCHIVE_FTP_PASSWORD = ""
+	HWARCHIVE_FTP_CWD = ""
 	
 	# Logging
 	setLevel = "INFO"

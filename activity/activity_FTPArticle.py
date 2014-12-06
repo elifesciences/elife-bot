@@ -103,15 +103,16 @@ class activity_FTPArticle(activity.activity):
         self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR)
         
         # Add the go.xml file
-        self.create_go_xml_file(
-            "coll",
-            self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR,
-            self.get_volume_from_xml(elife_id)
-            )
-        file_type = "/*.xml"
-        zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-        self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR)
-        
+        if workflow == 'HWX':
+            self.create_go_xml_file(
+                "coll",
+                self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR,
+                self.get_volume_from_xml(elife_id)
+                )
+            file_type = "/*.xml"
+            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+            self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR)
+            
         # Return the activity result, True or False
         result = True
 
@@ -131,10 +132,18 @@ class activity_FTPArticle(activity.activity):
             # Subfolders to create when FTPing
             self.FTP_SUBDIR.append('volume' + str(volume))
             self.FTP_SUBDIR.append(str(doi_id).zfill(5))
+            
+        if workflow == 'HWArchive':
+            self.FTP_URI = self.settings.HWARCHIVE_FTP_URI
+            self.FTP_USERNAME = self.settings.HWARCHIVE_FTP_USERNAME
+            self.FTP_PASSWORD = self.settings.HWARCHIVE_FTP_PASSWORD
+            self.FTP_CWD =  self.settings.HWARCHIVE_FTP_CWD
+            # Subfolders to create when FTPing
+            self.FTP_SUBDIR.append(str(doi_id).zfill(5)) 
         
     def download_files_from_s3(self, doi_id, workflow):
         
-        if workflow == 'HWX':
+        if workflow == 'HWX' or workflow == 'HWArchive':
             # Download XML
             self.download_jats_xml_from_s3(doi_id, workflow)
             # Downlaod other files
@@ -272,7 +281,7 @@ class activity_FTPArticle(activity.activity):
         file_data_type = 'xml'
         new_zipfile_name = self.get_filename_from_s3(doi_id, file_data_type)
         
-        if workflow == 'HWX':
+        if workflow == 'HWX' or workflow == 'HWArchive':
             # HWX workflow does not want the r1.xml.zip, r2.xml.zip style filename ending
             new_zipfile_name = self.get_hwx_zip_file_name(doi_id, file_data_type)
         
@@ -348,7 +357,8 @@ class activity_FTPArticle(activity.activity):
             s3_key = bucket.get_key(s3_key_name)
 
             filename = s3_key_name.split("/")[-1]
-            if workflow == 'HWX' and filename.split(".")[-1] == 'zip':
+            if ((workflow == 'HWX' or workflow == 'HWArchive')
+                and filename.split(".")[-1] == 'zip'):
                 # HWX workflow does not want the r1.xml.zip, r2.xml.zip style filename ending
                 filename = self.get_hwx_zip_file_name(doi_id, file_data_type)
 
