@@ -150,7 +150,8 @@ class activity_FTPArticle(activity.activity):
             self.download_data_file_from_s3(doi_id, 'pdf', workflow)
             self.download_data_file_from_s3(doi_id, 'img', workflow)
             self.download_data_file_from_s3(doi_id, 'suppl', workflow)
-            self.download_data_file_from_s3(doi_id, 'video', workflow)
+            # Video file is not required
+            # self.download_data_file_from_s3(doi_id, 'video', workflow)
             
             # Create the inline-media zip file
             self.create_inline_media_zip(doi_id)
@@ -183,7 +184,7 @@ class activity_FTPArticle(activity.activity):
         zip_filename_plus_path = (output_dir
                                   + os.sep + zip_filename)
 
-        pdf_zipfile = zipfile.ZipFile(zip_filename_plus_path, 'w')
+        pdf_zipfile = zipfile.ZipFile(zip_filename_plus_path, 'w', zipfile.ZIP_DEFLATED)
         
         dirfiles = (glob.glob(temp_dir + file_type))
         for df in dirfiles:
@@ -234,7 +235,7 @@ class activity_FTPArticle(activity.activity):
         inlinemedia_filename = 'elife' + str(doi_id).zfill(5) + '.inline-media.zip'
         inlinemedia_filename_plus_path = (output_dir
                                           + os.sep + inlinemedia_filename)
-        inlinemedia_zipfile = zipfile.ZipFile(inlinemedia_filename_plus_path, 'w')
+        inlinemedia_zipfile = zipfile.ZipFile(inlinemedia_filename_plus_path, 'w', zipfile.ZIP_DEFLATED)
         
         # For each of the zip input files, extract the contents and
         #  add them to the inline-media zip file
@@ -289,7 +290,7 @@ class activity_FTPArticle(activity.activity):
                                       self.FTP_TO_SOMEWHERE_DIR + os.sep +
                                       new_zipfile_name)
         
-        new_zipfile = zipfile.ZipFile(new_zipfile_name_plus_path, 'w')
+        new_zipfile = zipfile.ZipFile(new_zipfile_name_plus_path, 'w', zipfile.ZIP_DEFLATED)
         new_zipfile.write(filename_plus_path, filename)
         new_zipfile.close()
         
