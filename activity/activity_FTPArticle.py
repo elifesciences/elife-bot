@@ -98,9 +98,13 @@ class activity_FTPArticle(activity.activity):
         self.set_ftp_settings(elife_id, workflow, volume)
         
         # FTP to endpoint
-        file_type = "/*.zip"
-        zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-        self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR)
+        if workflow == 'HWX' or workflow == 'HWArchive':
+            file_type = "/*.zip"
+            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+            self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR)
+        elif workflow == 'PMCArchive':
+            # For the PMC Archive file replacement do something different
+            self.replace_in_elife_articles_bucket(elife_id)
         
         # Add the go.xml file
         if workflow == 'HWX':
@@ -158,6 +162,10 @@ class activity_FTPArticle(activity.activity):
             
             # If the PDF file is not zipped, zip it
             self.create_pdf_zip(doi_id)
+            
+        elif workflow == 'PMCArchive':
+            # Download XML
+            self.download_jats_xml_from_s3(doi_id, workflow)
 
 
     def create_pdf_zip(self, doi_id):
@@ -284,6 +292,9 @@ class activity_FTPArticle(activity.activity):
         
         if workflow == 'HWX' or workflow == 'HWArchive':
             # HWX workflow does not want the r1.xml.zip, r2.xml.zip style filename ending
+            new_zipfile_name = self.get_hwx_zip_file_name(doi_id, file_data_type)
+        elif new_zipfile_name.split('.')[-1] == 'xml':
+            # If the old file name ends in .xml then also rename the file
             new_zipfile_name = self.get_hwx_zip_file_name(doi_id, file_data_type)
         
         new_zipfile_name_plus_path = (self.get_tmp_dir() + os.sep +
@@ -492,7 +503,38 @@ class activity_FTPArticle(activity.activity):
             self.ftp_upload(ftp, uploadfile)
             ftp.quit()
         
+    def replace_in_elife_articles_bucket(self, doi_id):
+        """
+        Simple elife-articles bucket object overwriting for the XML file
+        Find the .xml or .zip file in the FTP_TO_SOMEWHERE_DIR
+        Connect to S3 and write the file to the object
+        """
+        
+        file_types = ["/*.xml.zip", "/*.xml"]
+        output_dir = self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR
+        
+        uploadfiles = []
+        for file_type in file_types:
+            dirfiles = (glob.glob(output_dir + file_type))
+            uploadfiles = uploadfiles + dirfiles
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(self.article_bucket)
+    
+        for uf in uploadfiles:
+            filename = uf.split(os.sep)[-1]
+            filename_plus_path = uf
+            s3_key_name = str(doi_id).zfill(5) + '/' + filename
             
+            s3_key = bucket.get_key(s3_key_name)
+            if s3_key is None:
+                # The key we expect may not exist when renaming it, create a new S3 key
+                s3_key = boto.s3.key.Key(bucket)
+                s3_key.key = s3_key_name
+
+            s3_key.set_contents_from_filename(filename_plus_path, replace=True)
+                
     def create_activity_directories(self):
         """
         Create the directories in the activity tmp_dir
