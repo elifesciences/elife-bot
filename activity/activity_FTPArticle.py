@@ -510,7 +510,7 @@ class activity_FTPArticle(activity.activity):
         Connect to S3 and write the file to the object
         """
         
-        file_types = ["/*.xml.zip", "/*.xml"]
+        file_types = ["/*.zip", "/*.xml"]
         output_dir = self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR
         
         uploadfiles = []
