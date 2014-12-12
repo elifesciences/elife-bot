@@ -152,7 +152,8 @@ class activity_FTPArticle(activity.activity):
             self.download_jats_xml_from_s3(doi_id, workflow)
             # Downlaod other files
             self.download_data_file_from_s3(doi_id, 'pdf', workflow)
-            self.download_data_file_from_s3(doi_id, 'img', workflow)
+            if int(doi_id) != 855:
+                self.download_data_file_from_s3(doi_id, 'img', workflow)
             self.download_data_file_from_s3(doi_id, 'suppl', workflow)
             # Video file is not required
             # self.download_data_file_from_s3(doi_id, 'video', workflow)
