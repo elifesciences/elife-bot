@@ -58,7 +58,10 @@ class starter_FTPArticle():
     execution_start_to_close_timeout = str(60*60*23)
     input = None
     
-    if workflow == "HWX" or workflow == "HWArchive" or workflow == 'PMCArchive':
+    if (workflow == "HWX"
+        or workflow == "HWArchive"
+        or workflow == 'PMCArchive'
+        or workflow == 'NLMArchive'):
       # Standard article bucket monitor
       bucket = settings.bucket
       workflow_id = "FTPArticle_" + workflow + "_" + str(doi_id)

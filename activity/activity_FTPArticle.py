@@ -45,6 +45,8 @@ class activity_FTPArticle(activity.activity):
         self.xml_bucket = settings.bot_bucket
         self.xml_folder = "jats/"
         self.article_bucket = settings.bucket
+        self.cdn_bucket = settings.cdn_bucket
+        self.nlm_archive_folder = "elife-articles-nlm/"
         
         # Local directory settings
         self.TMP_DIR = "tmp_dir"
@@ -105,6 +107,9 @@ class activity_FTPArticle(activity.activity):
         elif workflow == 'PMCArchive':
             # For the PMC Archive file replacement do something different
             self.replace_in_elife_articles_bucket(elife_id)
+        elif workflow == 'NLMArchive':
+            # For the NLM Archive add to S3 archive folder
+            self.upload_to_nlm_archive_bucket(elife_id)
         
         # Add the go.xml file
         if workflow == 'HWX':
@@ -167,6 +172,10 @@ class activity_FTPArticle(activity.activity):
         elif workflow == 'PMCArchive':
             # Download XML
             self.download_jats_xml_from_s3(doi_id, workflow)
+            
+        elif workflow == 'NLMArchive':
+            # Download old NLM XML from the articles bucket
+            self.download_data_file_from_s3(doi_id, 'xml', workflow)
 
 
     def create_pdf_zip(self, doi_id):
@@ -519,23 +528,69 @@ class activity_FTPArticle(activity.activity):
             dirfiles = (glob.glob(output_dir + file_type))
             uploadfiles = uploadfiles + dirfiles
         
+        self.upload_files_to_bucket(doi_id, uploadfiles, self.article_bucket,
+                                    subfolder = None, overwrite = True)
+        
+        
+    def upload_to_nlm_archive_bucket(self, doi_id):
+        """
+        Upload the XML to the NLM article archive bucket
+        but do not overwrite if the file already exists
+        (so it does not overwritten with JATS by accident)
+        
+        Find the .xml or .zip file in the FTP_TO_SOMEWHERE_DIR
+        Connect to S3 and write the file to the object
+        """
+        
+        file_types = ["/*.zip", "/*.xml"]
+        output_dir = self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR
+        
+        uploadfiles = []
+        for file_type in file_types:
+            dirfiles = (glob.glob(output_dir + file_type))
+            uploadfiles = uploadfiles + dirfiles
+        
+        self.upload_files_to_bucket(doi_id, uploadfiles, self.cdn_bucket,
+                                    subfolder = self.nlm_archive_folder, overwrite = False)
+    
+    def upload_files_to_bucket(self, doi_id, files, bucket_name, subfolder = None, overwrite = False):
+        """
+        Given a doi_id, a list of one or more local files (with path included),
+        a bucket name and whether or not to overwrite the existing S3 key,
+        upload it to S3
+        Refactored so two workflows can use it
+        """
+        
         # Connect to S3 and bucket
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(self.article_bucket)
+        bucket = s3_conn.lookup(bucket_name)
     
-        for uf in uploadfiles:
+        for uf in files:
             filename = uf.split(os.sep)[-1]
             filename_plus_path = uf
-            s3_key_name = str(doi_id).zfill(5) + '/' + filename
+            
+            s3_key_name = ''
+            if subfolder:
+                s3_key_name = s3_key_name + subfolder
+            s3_key_name = s3_key_name + str(doi_id).zfill(5) + '/' + filename
             
             s3_key = bucket.get_key(s3_key_name)
-            if s3_key is None:
+            
+            if s3_key is not None and overwrite is True:
+                # Key exists, overwrite it
+                s3_key.set_contents_from_filename(filename_plus_path, replace=True)
+                
+            elif s3_key is not None and overwrite is False:
+                # Do not overwrite, do nothing
+                pass
+                
+            elif s3_key is None:
                 # The key we expect may not exist when renaming it, create a new S3 key
                 s3_key = boto.s3.key.Key(bucket)
                 s3_key.key = s3_key_name
 
-            s3_key.set_contents_from_filename(filename_plus_path, replace=True)
-                
+                s3_key.set_contents_from_filename(filename_plus_path, replace=True)
+
     def create_activity_directories(self):
         """
         Create the directories in the activity tmp_dir
