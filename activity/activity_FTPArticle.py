@@ -100,7 +100,7 @@ class activity_FTPArticle(activity.activity):
         self.set_ftp_settings(elife_id, workflow, volume)
         
         # FTP to endpoint
-        if workflow == 'HWX' or workflow == 'HWArchive':
+        if workflow == 'HWX' or workflow == 'HWArchive' or workflow == 'HEFCE':
             file_type = "/*.zip"
             zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
             self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR)
@@ -148,6 +148,14 @@ class activity_FTPArticle(activity.activity):
             self.FTP_PASSWORD = self.settings.HWARCHIVE_FTP_PASSWORD
             self.FTP_CWD =  self.settings.HWARCHIVE_FTP_CWD
             # Subfolders to create when FTPing
+            self.FTP_SUBDIR.append(str(doi_id).zfill(5))
+            
+        if workflow == 'HEFCE':
+            self.FTP_URI = self.settings.HEFCE_FTP_URI
+            self.FTP_USERNAME = self.settings.HEFCE_FTP_USERNAME
+            self.FTP_PASSWORD = self.settings.HEFCE_FTP_PASSWORD
+            self.FTP_CWD =  self.settings.HEFCE_FTP_CWD
+            # Subfolders to create when FTPing
             self.FTP_SUBDIR.append(str(doi_id).zfill(5)) 
         
     def download_files_from_s3(self, doi_id, workflow):
@@ -177,6 +185,19 @@ class activity_FTPArticle(activity.activity):
             # Download old NLM XML from the articles bucket
             self.download_data_file_from_s3(doi_id, 'xml', workflow)
 
+        elif workflow == 'HEFCE':
+            # Download files from the articles bucket
+            self.download_data_file_from_s3(doi_id, 'xml', workflow)
+            self.download_data_file_from_s3(doi_id, 'pdf', workflow)
+            if int(doi_id) != 855:
+                self.download_data_file_from_s3(doi_id, 'img', workflow)
+            self.download_data_file_from_s3(doi_id, 'suppl', workflow)
+            self.download_data_file_from_s3(doi_id, 'video', workflow)
+            self.download_data_file_from_s3(doi_id, 'jpg', workflow)
+            
+            # Zip files that are not zipped
+            self.create_pdf_zip(doi_id)
+            self.create_xml_zip(doi_id)
 
     def create_pdf_zip(self, doi_id):
         """
@@ -185,10 +206,43 @@ class activity_FTPArticle(activity.activity):
         """
         
         file_type = "/*.pdf"
-        temp_dir = self.get_tmp_dir() + os.sep + self.TMP_DIR
+        file_data_type = 'pdf'
+
         output_dir = self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR
         
-        dirfiles = (glob.glob(output_dir + file_type))
+        self.zip_unzipped_files(doi_id = doi_id,
+                                input_dir = output_dir,
+                                file_type = file_type,
+                                file_data_type = file_data_type)
+        
+    def create_xml_zip(self, doi_id):
+        """
+        Older articles XML file was supplied loose and not zipped,
+        zip it with appropriate file name for HWX delivery
+        """
+        
+        file_type = "/*.xml"
+        file_data_type = 'xml'
+
+        output_dir = self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR
+        
+        self.zip_unzipped_files(doi_id = doi_id,
+                                input_dir = output_dir,
+                                file_type = file_type,
+                                file_data_type = file_data_type)
+        
+    def zip_unzipped_files(self, doi_id, input_dir, file_type, file_data_type):
+        """
+        If a loose PDF or XML file is found, use this to move it out of the input_dir,
+        zip it with an appropriate name and add it to the input_dir
+        input_dir is a full path to the folder
+        file_type is a string for glob file matching
+        file_data_type is the type of eLife file, 'pdf', 'xml', etc. to generate the zip filename
+        """
+
+        temp_dir = self.get_tmp_dir() + os.sep + self.TMP_DIR
+
+        dirfiles = (glob.glob(input_dir + file_type))
         # Check for PDF files, if none, return
         if len(dirfiles) <= 0:
             return
@@ -198,19 +252,20 @@ class activity_FTPArticle(activity.activity):
             shutil.move(df, file_name)
             
         # Create the  zip file and open it
-        zip_filename = self.get_hwx_zip_file_name(doi_id, 'pdf')
-        zip_filename_plus_path = (output_dir
+        zip_filename = self.get_hwx_zip_file_name(doi_id, file_data_type)
+        zip_filename_plus_path = (input_dir
                                   + os.sep + zip_filename)
 
-        pdf_zipfile = zipfile.ZipFile(zip_filename_plus_path, 'w', zipfile.ZIP_DEFLATED)
+        new_zipfile = zipfile.ZipFile(zip_filename_plus_path, 'w', zipfile.ZIP_DEFLATED)
         
         dirfiles = (glob.glob(temp_dir + file_type))
         for df in dirfiles:
             filename = df.split(os.sep)[-1]
             filename_plus_path = temp_dir + os.sep + filename
-            pdf_zipfile.write(filename_plus_path, filename)
+            new_zipfile.write(filename_plus_path, filename)
         
-        pdf_zipfile.close()
+        new_zipfile.close()
+        
             
     def create_inline_media_zip(self, doi_id):
         """

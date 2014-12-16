@@ -97,6 +97,12 @@ class dev():
 	HWARCHIVE_FTP_PASSWORD = ""
 	HWARCHIVE_FTP_CWD = ""
 	
+	# HEFCE Archive FTP settings
+	HEFCE_FTP_URI = ""
+	HEFCE_FTP_USERNAME = ""
+	HEFCE_FTP_PASSWORD = ""
+	HEFCE_FTP_CWD = ""
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -185,6 +191,12 @@ class live():
 	HWARCHIVE_FTP_USERNAME = ""
 	HWARCHIVE_FTP_PASSWORD = ""
 	HWARCHIVE_FTP_CWD = ""
+	
+	# HEFCE Archive FTP settings
+	HEFCE_FTP_URI = ""
+	HEFCE_FTP_USERNAME = ""
+	HEFCE_FTP_PASSWORD = ""
+	HEFCE_FTP_CWD = ""
 	
 	# Logging
 	setLevel = "INFO"
