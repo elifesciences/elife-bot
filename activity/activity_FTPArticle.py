@@ -106,10 +106,13 @@ class activity_FTPArticle(activity.activity):
             self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR)
         elif workflow == 'PMCArchive':
             # For the PMC Archive file replacement do something different
-            self.replace_in_elife_articles_bucket(elife_id)
+            self.replace_in_elife_articles_bucket(elife_id, True)
         elif workflow == 'NLMArchive':
             # For the NLM Archive add to S3 archive folder
             self.upload_to_nlm_archive_bucket(elife_id)
+        elif workflow == 'RepackageJPG':
+            # For the NLM Archive add to S3 archive folder
+            self.replace_in_elife_articles_bucket(elife_id, False)
         
         # Add the go.xml file
         if workflow == 'HWX':
@@ -198,6 +201,13 @@ class activity_FTPArticle(activity.activity):
             # Zip files that are not zipped
             self.create_pdf_zip(doi_id)
             self.create_xml_zip(doi_id)
+            
+        elif workflow == 'RepackageJPG':
+            # Download files from the CDN
+            self.download_files_from_s3_cdn(doi_id, 'xml', workflow)
+            
+            # Zip files that are not zipped
+            self.create_jpg_zip(doi_id)
 
     def create_pdf_zip(self, doi_id):
         """
@@ -223,6 +233,22 @@ class activity_FTPArticle(activity.activity):
         
         file_type = "/*.xml"
         file_data_type = 'xml'
+
+        output_dir = self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR
+        
+        self.zip_unzipped_files(doi_id = doi_id,
+                                input_dir = output_dir,
+                                file_type = file_type,
+                                file_data_type = file_data_type)
+        
+    def create_jpg_zip(self, doi_id):
+        """
+        Some articles JPG file were not supplied (instead were SVG that were converted later)
+        zip them with appropriate file name for HWX delivery
+        """
+        
+        file_type = "/*.jpg"
+        file_data_type = 'jpg'
 
         output_dir = self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR
         
@@ -445,6 +471,30 @@ class activity_FTPArticle(activity.activity):
             f = open(filename_plus_path, mode)
             s3_key.get_contents_to_file(f)
             f.close()
+            
+    def download_files_from_s3_cdn(self, doi_id, file_data_type, workflow):
+        """
+        Used for repackaging JPG files into a jpg.zip for articles missing this type of file,
+        download files from the article folder on the CDN
+        """
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(self.cdn_bucket)
+        
+        prefix = 'elife-articles/' + str(doi_id).zfill(5) + '/jpg/'
+        s3_key_list = bucket.list(prefix)
+
+        for s3_key in s3_key_list:
+            # Download objects from S3 and save to disk
+            filename = s3_key.name.split("/")[-1]
+
+            filename_plus_path = (self.get_tmp_dir() + os.sep +
+                                  self.FTP_TO_SOMEWHERE_DIR + os.sep + filename)
+            mode = "wb"
+            f = open(filename_plus_path, mode)
+            s3_key.get_contents_to_file(f)
+            f.close()
         
     def get_volume_from_xml(self, doi_id):
         """
@@ -568,7 +618,7 @@ class activity_FTPArticle(activity.activity):
             self.ftp_upload(ftp, uploadfile)
             ftp.quit()
         
-    def replace_in_elife_articles_bucket(self, doi_id):
+    def replace_in_elife_articles_bucket(self, doi_id, overwrite = True):
         """
         Simple elife-articles bucket object overwriting for the XML file
         Find the .xml or .zip file in the FTP_TO_SOMEWHERE_DIR
@@ -584,7 +634,7 @@ class activity_FTPArticle(activity.activity):
             uploadfiles = uploadfiles + dirfiles
         
         self.upload_files_to_bucket(doi_id, uploadfiles, self.article_bucket,
-                                    subfolder = None, overwrite = True)
+                                    subfolder = None, overwrite = overwrite)
         
         
     def upload_to_nlm_archive_bucket(self, doi_id):

@@ -62,7 +62,8 @@ class starter_FTPArticle():
         or workflow == "HWArchive"
         or workflow == 'PMCArchive'
         or workflow == 'NLMArchive'
-        or workflow == 'HEFCE'):
+        or workflow == 'HEFCE'
+        or workflow == 'RepackageJPG'):
       # Standard article bucket monitor
       bucket = settings.bucket
       workflow_id = "FTPArticle_" + workflow + "_" + str(doi_id)
