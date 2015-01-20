@@ -2,34 +2,41 @@
 <html xmlns:mml="http://www.w3.org/1998/Math/MathML">
   <head>
     <title>eLife Lens</title>
-    <link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
-    <link href='../dist/styles/font-awesome.css' rel='stylesheet' type='text/css'/>
+    <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,400italic,600italic' rel='stylesheet' type='text/css'>
+    
+    <link rel="stylesheet" type="text/css" media="all" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" />
 
+    <!-- Settings for mobile -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
+    <!-- A combined lens.css will be generated in the bundling process --> 
+    <!-- While in development, separate links for each CSS file are added, so we don't need a source map -->
     <link href='../dist/lens.css' rel='stylesheet' type='text/css'/>
 
-    <script src="../dist/lib/jquery-2.0.3.min.js"></script>
+    <script src="../dist/lib/jquery.min.js"></script>
 
-    <!-- MathJax -->
+    <!-- MathJax Configuration -->
     <script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-      "HTML-CSS": { linebreaks: { automatic: true } },
-             SVG: { linebreaks: { automatic: true } }
-    });
+      MathJax.Hub.Config({
+        jax: ["input/TeX", "input/MathML","output/HTML-CSS"],
+        SVG: { linebreaks: { automatic: true }, EqnChunk: 9999  },
+        "displayAlign": "left",
+        styles: {".MathJax_Display": {padding: "0em 0em 0em 3em" },".MathJax_SVG_Display": {padding: "0em 0em 0em 3em" }}
+      });
     </script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
-
-    <script src='../dist/lens.js'></script>
+    <script src='../dist/lens.min.js'></script>
 
     <script>
 
       // Little helper used to parse query strings from urls
       // --------
-      // 
+      //
+      // This is needed to support switching to other documents using
+      // a url fragment `?url=http://path.to/jats-conforming.xml`
 
       var qs = function () {
         var query_string = {};
@@ -50,46 +57,4 @@
           }
         }
         return query_string;
-      } ();
-
-
-      // Check for devices
-      // --------
-      // 
-
-      function isIOSDevice() {
-        var iPadAgent = navigator.userAgent.match(/iPad/i) != null;
-        var iPodAgent = navigator.userAgent.match(/iPhone/i) != null;
-        return iPadAgent || iPodAgent;
-      }
-
-      function isIphone() {
-        var iPhoneAgent = navigator.userAgent.match(/iPhone/i) != null;
-        return iPhoneAgent;
-      }
-
-      function isMobile() {
-        var iPadAgent = navigator.userAgent.match(/iPad/i) != null;
-        var iPodAgent = navigator.userAgent.match(/iPhone/i) != null;
-        var AndroidAgent = navigator.userAgent.match(/Android/i) != null;
-        var webOSAgent = navigator.userAgent.match(/webOS/i) != null;
-
-        return iPadAgent || iPodAgent || AndroidAgent || webOSAgent;
-      }
-
-      function isTouchDevice() {
-        return 'ontouchstart' in document.documentElement;
-      }
-
-      // Example documents
-      // --------
-      // 
-      // Uncomment the document you want see
-
-      // Remote Example 00005
-      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/00005/elife00005.xml";
-
-      // Remote Example 00311
-      // var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/00311/elife00311.xml";
-
-      // Remote Example 00778
+      }();
