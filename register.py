@@ -42,6 +42,7 @@ def start(ENV = "dev"):
 	workflow_names.append("PublishPOA")
 	workflow_names.append("DepositCrossref")
 	workflow_names.append("PubmedArticleDeposit")
+	workflow_names.append("PublishFiguresPDF")
 	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
@@ -83,6 +84,7 @@ def start(ENV = "dev"):
 	activity_names.append("DepositCrossref")
 	activity_names.append("PubmedArticleDeposit")
 	activity_names.append("ArticleToOutbox")
+	activity_names.append("UnzipArticleFiguresPDF")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries
