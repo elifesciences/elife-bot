@@ -38,7 +38,7 @@ Feature: Use SimpleDB as a data provider
   Scenario: Build SimpleDB queries for elife articles bucket
     Given I have imported the SimpleDB provider module
     And I have the domain name S3FileLog_dev
-    And I have the file data types ["xml", "pdf", "img", "suppl", "video", "svg"]
+    And I have the file data types ["xml", "pdf", "img", "suppl", "video", "svg", "figures"]
     And I have the date format %Y-%m-%dT%H:%M:%S.000Z
     And I have the bucket name elife-articles
     And I have the file data type <file_data_type>
@@ -51,6 +51,7 @@ Feature: Use SimpleDB as a data provider
     | file_data_type | doi_id | last_updated_since       | query
     | None           | None   | None                     | select * from S3FileLog_dev where bucket_name = 'elife-articles' and name is not null order by name asc
     | xml            | None   | None                     | select * from S3FileLog_dev where bucket_name = 'elife-articles' and name like '%.xml%' order by name asc
+    | figures        | None   | None                     | select * from S3FileLog_dev where bucket_name = 'elife-articles' and name like '%figures%' order by name asc
     | None           | 00013  | None                     | select * from S3FileLog_dev where bucket_name = 'elife-articles' and name like '00013/%' order by name asc
     | None           | None   | 2013-01-01T00:00:00.000Z | select * from S3FileLog_dev where bucket_name = 'elife-articles' and last_modified_timestamp > '1356998400' and name is not null order by name asc
     | xml            | 00013  | None                     | select * from S3FileLog_dev where bucket_name = 'elife-articles' and name like '%.xml%' and name like '00013/%' order by name asc
@@ -59,6 +60,7 @@ Feature: Use SimpleDB as a data provider
     | xml            | None   | 2013-01-01T00:00:00.000Z | select * from S3FileLog_dev where bucket_name = 'elife-articles' and name like '%.xml%' and last_modified_timestamp > '1356998400' order by name asc
     | xml            | 00013  | 2013-01-01T00:00:00.000Z | select * from S3FileLog_dev where bucket_name = 'elife-articles' and name like '%.xml%' and name like '00013/%' and last_modified_timestamp > '1356998400' order by name asc
     | svg            | 00013  | 2013-01-01T00:00:00.000Z | select * from S3FileLog_dev where bucket_name = 'elife-articles' and name like '%.svg%' and name like '00013/%' and last_modified_timestamp > '1356998400' order by name asc
+    | figures        | 00778  | 2013-01-01T00:00:00.000Z | select * from S3FileLog_dev where bucket_name = 'elife-articles' and name like '%figures%' and name like '00778/%' and last_modified_timestamp > '1356998400' order by name asc
     
   Scenario: Get the latest S3 files from SimpleDB provider and count results
     Given I have imported the SimpleDB provider module
