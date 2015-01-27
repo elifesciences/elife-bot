@@ -45,7 +45,7 @@ class cron_NewS3FiguresPDF(object):
     last_startTimestamp = 0
     
     # Get the last time this cron was run
-    #last_startTimestamp = swfmeta.get_last_completed_workflow_execution_startTimestamp(workflow_id = ping_marker_id)
+    last_startTimestamp = swfmeta.get_last_completed_workflow_execution_startTimestamp(workflow_id = ping_marker_id)
   
     # Start a ping workflow as a marker
     self.start_ping_marker(ping_marker_id, ENV)
