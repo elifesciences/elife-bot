@@ -225,7 +225,7 @@ class SimpleDB(object):
 	def elife_get_article_S3_file_items(self, file_data_type = None, doi_id = None, last_updated_since = None, latest = None):
 		"""
 		From the SimpleDB domain for the S3FileLog, return a list of matching item to the attributes
-		  file_data_type options:   xml, pdf, img, suppl, video, svg, jpg
+		  file_data_type options:   xml, pdf, img, suppl, video, svg, jpg, figures
 			doi_id:                   five digit numeric string as the unique portion of the DOI
 			last_updated_since:       only return items updated since the date provided
 			latest:                   only return the latest item of each type
@@ -233,7 +233,7 @@ class SimpleDB(object):
 		
 		date_format = "%Y-%m-%dT%H:%M:%S.000Z"
 		
-		file_data_types = ["xml", "pdf", "img", "suppl", "video", "svg", "jpg"]
+		file_data_types = ["xml", "pdf", "img", "suppl", "video", "svg", "jpg", "figures"]
 		
 		domain_name = "S3FileLog"
 		
@@ -279,7 +279,11 @@ class SimpleDB(object):
 			
 			for data_type in file_data_types:
 				if(file_data_type == data_type):
-					data_type_match = "'%." + data_type + "%'"
+					if data_type == "figures":
+						# May be no leading dot on the figures PDF zip file name
+						data_type_match = "'%" + data_type + "%'"
+					else:
+						data_type_match = "'%." + data_type + "%'"
 
 			if(data_type_match):
 				where_clause += where_delimiter + " name like " + data_type_match
