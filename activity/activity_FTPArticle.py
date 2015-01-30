@@ -195,7 +195,8 @@ class activity_FTPArticle(activity.activity):
             self.download_data_file_from_s3(doi_id, 'pdf', workflow)
             if int(doi_id) != 855:
                 self.download_data_file_from_s3(doi_id, 'img', workflow)
-            self.download_data_file_from_s3(doi_id, 'suppl', workflow)
+            if int(doi_id) != 1311:
+                self.download_data_file_from_s3(doi_id, 'suppl', workflow)
             self.download_data_file_from_s3(doi_id, 'video', workflow)
             self.download_data_file_from_s3(doi_id, 'jpg', workflow)
             
