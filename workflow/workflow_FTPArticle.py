@@ -56,7 +56,7 @@ class workflow_FTPArticle(workflow.workflow):
 					"version": "1",
 					"input": data,
 					"control": None,
-					"heartbeat_timeout": 60*15,
+					"heartbeat_timeout": 60*30,
 					"schedule_to_close_timeout": 60*30,
 					"schedule_to_start_timeout": 300,
 					"start_to_close_timeout": 60*30
