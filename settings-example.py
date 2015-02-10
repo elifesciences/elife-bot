@@ -25,9 +25,6 @@ class dev():
 	domain = "Publish.dev"
 	default_task_list = "DefaultTaskList"
 	
-	# Fluidinfo settings
-	fi_namespace = "elifesciences.org/api_dev"
-	
 	# SimpleDB settings
 	simpledb_region = "us-east-1"
 	simpledb_domain_postfix = "_dev"
@@ -119,9 +116,6 @@ class live():
 	# SWF queue settings
 	domain = "Publish"
 	default_task_list = "DefaultTaskList"
-	
-	# Fluidinfo settings
-	fi_namespace = "elifesciences.org/api_v1"
 	
 	# Converter settings
 	converter_url = ""

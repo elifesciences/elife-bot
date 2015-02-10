@@ -1,5 +1,5 @@
 import os
-# Add parent directory for imports, so activity classes can use elife-api-prototype
+# Add parent directory for imports
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0,parentdir)
 

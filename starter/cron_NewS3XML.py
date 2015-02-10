@@ -1,5 +1,5 @@
 import os
-# Add parent directory for imports, so activity classes can use elife-api-prototype
+# Add parent directory for imports
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0,parentdir)
 
@@ -68,7 +68,7 @@ class cron_NewS3XML(object):
     else:
       # Found new XML files
       
-      # Start a Fluidinfo PublishArticle starter
+      # Start a PublishArticle workflow
       try:
         starter_name = "starter_PublishArticle"
         self.import_starter_module(starter_name, logger)
