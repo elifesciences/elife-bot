@@ -203,10 +203,10 @@ def have_the_elife_id_elife_id(step, elife_id):
 
 @step('I read document to content with the activity object')
 def read_document_to_content_with_the_activity_object(step):
-	try:
-		world.filename = world.filename
-	except AttributeError:
-		world.filename = None
+	#try:
+	#	world.filename = world.filename
+	#except AttributeError:
+	world.filename = None
 	world.content = world.activity_object.read_document_to_content(world.document_name, world.filename)
 	content_present = False
 	if(world.content is not None):

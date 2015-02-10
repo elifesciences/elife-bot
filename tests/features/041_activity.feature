@@ -17,10 +17,8 @@ Feature: Activity class can be instantiated
     | env					| activity_name				
     | dev					| PingWorker					
     | dev					| Sum									
-    | dev					| ArticleToFluidinfo	
     | live				| PingWorker
     | live				| Sum		
-    | live				| ArticleToFluidinfo	
 
 	Scenario: Check individual activity do_action results
 		Given I have the activity name <activity_name>
