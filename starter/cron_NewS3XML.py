@@ -68,7 +68,7 @@ class cron_NewS3XML(object):
     else:
       # Found new XML files
       
-      # Start a Fluidinfo PublishArticle starter
+      # Start a PublishArticle workflow
       try:
         starter_name = "starter_PublishArticle"
         self.import_starter_module(starter_name, logger)

@@ -15,7 +15,7 @@ from optparse import OptionParser
 import provider.simpleDB as dblib
 
 """
-Amazon SWF PublishArticle starter, for Fluidinfo API publishing
+Amazon SWF PublishArticle starter, for API and Lens publishing etc.
 """
 
 class starter_PublishArticle():
