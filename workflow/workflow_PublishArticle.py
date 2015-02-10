@@ -93,17 +93,3 @@ class workflow_PublishArticle(workflow.workflow):
 		
 		self.load_definition(workflow_definition)
 
-		"""
-		# Removed from before LensArticle temporarily
-				{
-					"activity_type": "ArticleToFluidinfo",
-					"activity_id": "ArticleToFluidinfo",
-					"version": "1",
-					"input": data,
-					"control": None,
-					"heartbeat_timeout": 300,
-					"schedule_to_close_timeout": 300,
-					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 300
-				},
-		"""

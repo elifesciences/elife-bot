@@ -20,6 +20,5 @@ Feature: Activity type is configured at Amazon SWF
     | env					| activity_name				
     | dev					| PingWorker					
     | dev					| Sum									
-    | dev					| ArticleToFluidinfo	
     | live				| PingWorker					
-    | live				| ArticleToFluidinfo	
+
