@@ -266,7 +266,7 @@ class article(object):
         doi = tag.text
     return doi
   
-  def parse_pub_date(self, soup, pub_type = "ppub"):
+  def parse_pub_date(self, soup, date_type = "pub"):
     """
     Find the publishing date for populating
     pub_date_date, pub_date_day, pub_date_month, pub_date_year, pub_date_timestamp
@@ -275,11 +275,11 @@ class article(object):
     tz = "UTC"
     
     try:
-      pub_date_section = self.extract_nodes(soup, "pub-date", attr = "pub-type", value = pub_type)
+      pub_date_section = self.extract_nodes(soup, "pub-date", attr = "date-type", value = date_type)
       if(len(pub_date_section) == 0):
         if(pub_type == "ppub"):
           pub_type = "epub"
-        pub_date_section = self.extract_nodes(soup, "pub-date", attr = "pub-type", value = pub_type)
+        pub_date_section = self.extract_nodes(soup, "pub-date", attr = "pub-type", value = date_type)
       (day, month, year) = self.get_ymd(pub_date_section[0])
   
     except(IndexError):
