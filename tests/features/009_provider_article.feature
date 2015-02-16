@@ -35,7 +35,8 @@ Feature: Use article provider
     And I have the article lens_url <lens_url>
     And I have the article tweet_url <tweet_url>
     And I have the article pub_date_timestamp <pub_date_timestamp>
-    
+    And I have the article article_type <article_type>
+
   Examples:
-    | env | tmp_base_dir  | test_name        | document_name	          | doi                  | doi_id  | doi_url                               | lens_url                            | tweet_url                                                                            | pub_date_timestamp
-    | dev | tmp           | article_provider | test_data/elife00013.xml	| 10.7554/eLife.00013  | 00013   | http://dx.doi.org/10.7554/eLife.00013 | http://lens.elifesciences.org/00013 | http://twitter.com/intent/tweet?text=http%3A%2F%2Fdx.doi.org%2F10.7554%2FeLife.00013 | 1350259200
+    | env | tmp_base_dir  | test_name        | document_name	          | doi                  | doi_id  | doi_url                               | lens_url                            | tweet_url                                                                            | pub_date_timestamp | article_type
+    | dev | tmp           | article_provider | test_data/elife00013.xml	| 10.7554/eLife.00013  | 00013   | http://dx.doi.org/10.7554/eLife.00013 | http://lens.elifesciences.org/00013 | http://twitter.com/intent/tweet?text=http%3A%2F%2Fdx.doi.org%2F10.7554%2FeLife.00013 | 1350259200         | research-article

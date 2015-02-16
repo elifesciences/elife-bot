@@ -124,6 +124,7 @@ class article(object):
         self.pub_date_timestamp = self.get_pub_date_timestamp(self.pub_date)
       
       self.article_title = self.parse_article_title(soup)
+      self.article_type = self.parse_article_type(soup)
       
       return True
     except:
@@ -354,4 +355,17 @@ class article(object):
     month = self.extract_node_text(soup, "month")
     year = self.extract_node_text(soup, "year")
     return (day, month, year)
+      
+  def parse_article_type(self, soup):
+      """
+      Find the article_type from the article tag root XML attribute
+      """
+      article_type = None
+      article = self.extract_nodes(soup, "article")
+      #try:
+      article_type = article[0]['article-type']    
+      #except(KeyError,IndexError):
+          # Attribute or tag not found
+      #    return None
+      return article_type
       
