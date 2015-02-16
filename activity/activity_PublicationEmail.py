@@ -39,10 +39,7 @@ class activity_PublicationEmail(activity.activity):
 
     # EJP data provider
     self.ejp = ejplib.EJP(settings, self.get_tmp_dir())
-    
-    # elife data provider
-    self.elife = elifelib.elife(settings)
-    
+        
     # article data provider
     self.article = articlelib.article(settings, self.get_tmp_dir())
     
@@ -106,7 +103,6 @@ class activity_PublicationEmail(activity.activity):
         email_type = email_type,
         author = author,
         article = self.article,
-        elife = self.elife,
         format = "html")
       
       # Duplicate email check, can bypass with allow_duplicates = True
@@ -128,14 +124,13 @@ class activity_PublicationEmail(activity.activity):
           author  = author,
           headers = headers,
           article = self.article,
-          elife   = self.elife,
           doi_id  = elife_id,
           date_scheduled_timestamp = date_scheduled_timestamp,
           format  = "html")
 
     return True
   
-  def queue_author_email(self, email_type, author, headers, article, elife, doi_id, date_scheduled_timestamp, format = "html"):
+  def queue_author_email(self, email_type, author, headers, article, doi_id, date_scheduled_timestamp, format = "html"):
     """
     Format the email body and add it to the live queue
     Only call this to send actual emails!
