@@ -41,6 +41,7 @@ Feature: Use Templates provider
   Examples:
     | tmp_base_dir  | test_name     | base_dir             | author_json          | article_json                   | email_type               | email_body
     | tmp           | tmpl_provider | test_data/templates/ | {"first_nm": "Test"} | {"doi_url": "http://doi.org/"} | author_publication_email | Header\n<p>Dear Test, <a href="http://doi.org/">read it</a> online.</p>\nFooter
+    | tmp           | tmpl_provider | test_data/templates/ | {"first_nm": "Test"} | {"doi_url": "http://doi.org/", "related_insight_article": {"article_title": "test"}} | author_publication_email | Header\n<p>Dear Test, <a href="http://doi.org/">read it</a> online. A related article "test".</p>\nFooter
     
   Scenario: Render email templates using the templates provider, elife and article objects
     Given I have imported a settings module

@@ -48,6 +48,7 @@ class article(object):
     
     # Some defaults
     self.article_data = None
+    self.related_insight_article = None
         
   def connect(self):
     """
@@ -246,6 +247,13 @@ class article(object):
       # Date did not convert
       pass
     return timestamp
+    
+  def set_related_insight_article(self, article):
+    """
+    If this article is type insight, then set the article
+    the insight relates to here
+    """
+    self.related_insight_article = article
     
   """
   Some quick copy and paste from elife-api-prototype parseNLM.py parser to get the basics for now

@@ -1,1 +1,1 @@
-{% include "email_header.html" %}<p>Dear {{ author.first_nm }}, <a href="{{ article.doi_url }}">read it</a> online.</p>{% include "email_footer.html" %}
+{% include "email_header.html" %}<p>Dear {{ author.first_nm }}, <a href="{{ article.doi_url }}">read it</a> online.{% if article.related_insight_article %} A related article "{{article.related_insight_article.article_title}}".{% endif %}</p>{% include "email_footer.html" %}
