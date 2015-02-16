@@ -30,16 +30,17 @@ Feature: Use Templates provider
     And I have a base directory <base_dir>
     And I have the author json <author_json>
     And I have the article json <article_json>
+    And I have the email type <email_type>
     And I get email templates list from the template provider
     And I get a filesystem provider from the templates provider
     When I read each base dir plus templates list document to content
     And I set the templates provider email templates warmed to True
-    And I get author publication email body from the templates provider
+    And I get email body from the templates provider
     Then I have the email body <email_body>
 
   Examples:
-    | tmp_base_dir  | test_name     | base_dir             | author_json          | article_json                   | email_body
-    | tmp           | tmpl_provider | test_data/templates/ | {"first_nm": "Test"} | {"doi_url": "http://doi.org/"} | Header\n<p>Dear Test, <a href="http://doi.org/">read it</a> online.</p>\nFooter
+    | tmp_base_dir  | test_name     | base_dir             | author_json          | article_json                   | email_type               | email_body
+    | tmp           | tmpl_provider | test_data/templates/ | {"first_nm": "Test"} | {"doi_url": "http://doi.org/"} | author_publication_email | Header\n<p>Dear Test, <a href="http://doi.org/">read it</a> online.</p>\nFooter
     
   Scenario: Render email templates using the templates provider, elife and article objects
     Given I have imported a settings module
@@ -54,15 +55,16 @@ Feature: Use Templates provider
     And I have the author json <author_json>
     And I create an article provider
     And I have the document name <document_name>
+    And I have the email type <email_type>
     And I parse the document with the article provider
     And I get email templates list from the template provider
     And I get a filesystem provider from the templates provider
     When I read each base dir plus templates list document to content
     And I set the templates provider email templates warmed to True
-    And I get author publication email body from the templates provider
+    And I get email body from the templates provider
     Then I have the email body <email_body>
   
   Examples:
-    | env | tmp_base_dir  | test_name     | base_dir             | author_json          | document_name	           | email_body
-    | dev | tmp           | tmpl_provider | test_data/templates/ | {"first_nm": "Test"} | test_data/elife00013.xml | Header\n<p>Dear Test, <a href="http://dx.doi.org/10.7554/eLife.00013">read it</a> online.</p>\nFooter
+    | env | tmp_base_dir  | test_name     | base_dir             | author_json          | document_name	           | email_type               | email_body
+    | dev | tmp           | tmpl_provider | test_data/templates/ | {"first_nm": "Test"} | test_data/elife00013.xml | author_publication_email | Header\n<p>Dear Test, <a href="http://dx.doi.org/10.7554/eLife.00013">read it</a> online.</p>\nFooter
     

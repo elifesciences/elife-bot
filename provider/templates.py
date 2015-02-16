@@ -218,9 +218,9 @@ class Templates(object):
     
     return template
   
-  def get_author_publication_email_body(self, author, article, format = "html"):
+  def get_email_body(self, email_type, author, article, format = "html"):
     """
-    Given data objects, load the jinja environment,
+    Given the email type and data objects, load the jinja environment,
     get the template, render it and return the
     email body
     """
@@ -229,23 +229,25 @@ class Templates(object):
     if(self.email_templates_warmed is not True):
       self.download_email_templates_from_s3()
       
+    if(format == "html"):
+      template_name = email_type + ".html"
+    elif(format == "text"):
+      template_name = email_type + ".txt"
+      
     # Check again, in case the template warm was not successful
     if(self.email_templates_warmed is True):
   
       jinja_env = self.get_jinja_env()
-      if(format == "html"):
-        template_name = "author_publication_email.html"
-      elif(format == "text"):
-        template_name = "author_publication_email.txt"
       tmpl = self.get_jinja_template(jinja_env, template_name)
       body = tmpl.render(author = author, article = article)
       return body
+    
     else:
       return None
-    
-  def get_author_publication_email_headers(self, author, article, format = "html"):
+      
+  def get_email_headers(self, email_type, author, article, format = "html"):
     """
-    Given data objects, load the jinja environment,
+    Given the email type and data objects, load the jinja environment,
     get the template, render it and return the
     email headers
     """
@@ -254,11 +256,11 @@ class Templates(object):
     if(self.email_templates_warmed is not True):
       self.download_email_templates_from_s3()
       
+    template_name = email_type + ".json"
+      
     # Check again, in case the template warm was not successful
     if(self.email_templates_warmed is True):
   
-      jinja_env = self.get_jinja_env()
-      tmpl = self.get_jinja_template(jinja_env, "author_publication_email.json")
       headers_str = tmpl.render(author = author, article = article)
       headers = json.loads(headers_str)
       # Add the email format as specified

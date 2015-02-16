@@ -96,9 +96,9 @@ def i_have_the_elife(step, elife_json):
   assert world.elife is not None, \
     "Got elife %s" % world.elife
 
-@step('I get author publication email body from the templates provider')
+@step('I get email body from the templates provider')
 def i_get_author_publication_email_body_from_the_templates_provider(step):
-  world.email_body = world.templates.get_author_publication_email_body(world.author, world.article)
+  world.email_body = world.templates.get_email_body(world.email_type, world.author, world.article)
   assert world.email_body is not None, \
     "Got email_body %s" % world.email_body
     
