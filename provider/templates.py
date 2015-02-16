@@ -117,7 +117,15 @@ class Templates(object):
     template_list.append("email_footer.html")
     template_list.append("author_publication_email.html")
     template_list.append("author_publication_email.json")
-    
+    template_list.append("author_publication_email_Insight_to_VOR.html")
+    template_list.append("author_publication_email_Insight_to_VOR.json")
+    template_list.append("author_publication_email_POA.html")
+    template_list.append("author_publication_email_POA.json")
+    template_list.append("author_publication_email_VOR_after_POA.html")
+    template_list.append("author_publication_email_VOR_after_POA.json")
+    template_list.append("author_publication_email_VOR_no_POA.html")
+    template_list.append("author_publication_email_VOR_no_POA.json")
+
     return template_list
   
   def download_email_templates_from_s3(self):
