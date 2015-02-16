@@ -84,6 +84,7 @@ def start(ENV = "dev"):
 	activity_names.append("PubmedArticleDeposit")
 	activity_names.append("ArticleToOutbox")
 	activity_names.append("UnzipArticleFiguresPDF")
+	activity_names.append("PublicationEmail")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries
