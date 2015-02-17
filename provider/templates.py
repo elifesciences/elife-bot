@@ -273,7 +273,6 @@ class Templates(object):
       tmpl = self.get_jinja_template(jinja_env, template_name)
       headers_str = tmpl.render(author = author, article = article)
       headers = json.loads(headers_str)
-      print headers
       # Add the email format as specified
       headers["format"] = format
       return headers
