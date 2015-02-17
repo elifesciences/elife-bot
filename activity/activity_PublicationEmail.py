@@ -121,6 +121,7 @@ class activity_PublicationEmail(activity.activity):
       elif(duplicate is False):
         # Queue the email
         self.queue_author_email(
+          email_type = email_type,
           author  = author,
           headers = headers,
           article = self.article,
