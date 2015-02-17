@@ -107,3 +107,24 @@ def i_have_the_email_body_email_body(step, email_body):
   email_body_newline_replaced = world.email_body.replace("\n", "\\n")
   assert email_body_newline_replaced == email_body, \
     "Got email_body %s" % email_body_newline_replaced
+
+@step(u'I get email headers from the templates provider')
+def i_get_email_headers_from_the_templates_provider(step):
+  world.email_headers = world.templates.get_email_headers(world.email_type, world.author, world.article)
+  assert world.email_headers is not None, \
+    "Got email_headers %s" % world.email_headers
+
+@step(u'I have the email headers email_type (\S+)')
+def i_have_the_email_headers_email_type(step, email_type):
+  assert world.email_headers['email_type'] == email_type, \
+    "Got email_type %s" % world.email_headers['email_type']
+
+@step(u'I have the email headers sender_email (\S+)')
+def i_have_the_email_headers_sender_email(step, sender_email):
+  assert world.email_headers['sender_email'] == sender_email, \
+    "Got sender_email %s" % world.email_headers['sender_email']
+  
+@step(u'I have the email headers subject (.*)')
+def i_have_the_email_headers_subject(step, subject):
+  assert world.email_headers['subject'] == subject, \
+    "Got subject %s" % world.email_headers['subject']

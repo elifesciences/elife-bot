@@ -43,6 +43,30 @@ Feature: Use Templates provider
     | tmp           | tmpl_provider | test_data/templates/ | {"first_nm": "Test"} | {"doi_url": "http://doi.org/"} | author_publication_email | Header\n<p>Dear Test, <a href="http://doi.org/">read it</a> online.</p>\nFooter
     | tmp           | tmpl_provider | test_data/templates/ | {"first_nm": "Test"} | {"doi_url": "http://doi.org/", "related_insight_article": {"article_title": "test"}} | author_publication_email | Header\n<p>Dear Test, <a href="http://doi.org/">read it</a> online. A related article "test".</p>\nFooter
     
+  Scenario: Render email template headers using the templates provider
+    Given I have a tmp_base_dir <tmp_base_dir>
+    And I have test name <test_name>
+    And I get the current datetime
+    And I get the tmp_dir from the world
+    And I create a templates provider
+    And I have a base directory <base_dir>
+    And I have the author json <author_json>
+    And I have the article json <article_json>
+    And I have the email type <email_type>
+    And I get email templates list from the template provider
+    And I get a filesystem provider from the templates provider
+    And I read each base dir plus templates list document to content
+    And I set the templates provider email templates warmed to True
+    And I get email body from the templates provider
+    When I get email headers from the templates provider
+    Then I have the email headers email_type <email_type>
+    And I have the email headers sender_email <sender_email>
+    And I have the email headers subject <subject>
+
+  Examples:
+    | tmp_base_dir  | test_name     | base_dir             | author_json          | article_json                   | email_type               | sender_email            | subject 
+    | tmp           | tmpl_provider | test_data/templates/ | {"first_nm": "Test"} | {"doi_url": "http://doi.org/"} | author_publication_email | press@elifesciences.org | Test, Your eLife paper is now online
+    
   Scenario: Render email templates using the templates provider, elife and article objects
     Given I have imported a settings module
     And I have the settings environment <env>

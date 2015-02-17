@@ -269,8 +269,11 @@ class Templates(object):
     # Check again, in case the template warm was not successful
     if(self.email_templates_warmed is True):
   
+      jinja_env = self.get_jinja_env()
+      tmpl = self.get_jinja_template(jinja_env, template_name)
       headers_str = tmpl.render(author = author, article = article)
       headers = json.loads(headers_str)
+      print headers
       # Add the email format as specified
       headers["format"] = format
       return headers
