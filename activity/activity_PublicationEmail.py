@@ -140,7 +140,6 @@ class activity_PublicationEmail(activity.activity):
       email_type = email_type,
       author  = author,
       article = article,
-      elife   = elife,
       format  = format)
 
     # Add the email to the email queue
