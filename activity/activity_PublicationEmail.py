@@ -82,15 +82,6 @@ class activity_PublicationEmail(activity.activity):
     # Get and parse the article XML for data
     article = self.article.get_article_data(doi_id = elife_id)
     
-    # Get the article published date timestamp
-    pub_date_timestamp = None
-    date_scheduled_timestamp = 0
-    try:
-      pub_date_timestamp = self.article.pub_date_timestamp
-      date_scheduled_timestamp = pub_date_timestamp
-    except:
-      pass
-    
     # Ready to format emails and queue them
     
     # First send author emails
@@ -118,6 +109,15 @@ class activity_PublicationEmail(activity.activity):
       author = author,
       article = self.article,
       format = "html")
+    
+    # Get the article published date timestamp
+    pub_date_timestamp = None
+    date_scheduled_timestamp = 0
+    try:
+      pub_date_timestamp = self.article.pub_date_timestamp
+      date_scheduled_timestamp = pub_date_timestamp
+    except:
+      pass
     
     # Duplicate email check, can bypass with allow_duplicates = True
     if(self.allow_duplicates is True):
