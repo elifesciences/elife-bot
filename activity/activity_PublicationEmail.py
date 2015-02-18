@@ -104,7 +104,7 @@ class activity_PublicationEmail(activity.activity):
         self.send_email(email_type, elife_id, author)
       
       # For testing set the article as its own related article then send again
-      self.article.related_insight_article = self.article
+      self.article.set_related_insight_article(article)
       for email_type in ['author_publication_email_VOR_no_POA',
                          'author_publication_email_VOR_after_POA']:
         self.send_email(email_type, elife_id, author)
