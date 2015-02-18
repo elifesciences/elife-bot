@@ -101,11 +101,11 @@ class activity_PublicationEmail(activity.activity):
 
     # Send an email to each author
     for author in authors:
-      self.send_email(email_type, author)
+      self.send_email(email_type, elife_id, author)
       
     return True
   
-  def send_email(self, email_type, author):
+  def send_email(self, email_type, elife_id, author):
     """
     Given the email type and author,
     decide whether to send the email (after checking for duplicates)
