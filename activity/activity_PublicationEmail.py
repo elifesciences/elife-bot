@@ -192,16 +192,22 @@ class activity_PublicationEmail(activity.activity):
     """
     duplicate = None
     try:
-      result_list = self.db.elife_get_email_queue_items(
-        query_type = "count",
-        doi_id     = doi_id,
-        email_type = email_type,
-        recipient_email = recipient_email
-        )
-
-      count_result = result_list[0]
-      count = int(count_result["Count"])
+      count = 0
+      
+      # Count all emails of all sent statuses
+      for sent_status in True,False,None:
+        result_list = self.db.elife_get_email_queue_items(
+          query_type = "count",
+          doi_id     = doi_id,
+          email_type = email_type,
+          recipient_email = recipient_email,
+          sent_status = sent_status
+          )
   
+        count_result = result_list[0]
+        count += int(count_result["Count"])
+  
+      # Now make a decision on how many emails counted
       if(count > 0):
         duplicate = True
       elif(count == 0):
