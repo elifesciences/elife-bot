@@ -46,6 +46,13 @@ class activity_PublicationEmail(activity.activity):
     # Default is do not send duplicate emails
     self.allow_duplicates = False
     
+    # Email types, for sending previews of each template
+    self.email_types = []
+    self.email_types.append('author_publication_email_POA')
+    self.email_types.append('author_publication_email_VOR_after_POA')
+    self.email_types.append('author_publication_email_VOR_no_POA')
+    self.email_types.append('author_publication_email_Insight_to_VOR')
+    
   def do_activity(self, data = None):
     """
     PublicationEmail activity, do the work
@@ -92,7 +99,15 @@ class activity_PublicationEmail(activity.activity):
 
     # Send an email to each author
     for author in authors:
-      self.send_email(email_type, elife_id, author)
+      # Test sending each type of template
+      for email_type in self.email_types:
+        self.send_email(email_type, elife_id, author)
+      
+      # For testing set the article as its own related article then send again
+      self.article.related_insight_article = self.article
+      for email_type in ['author_publication_email_VOR_no_POA',
+                         'author_publication_email_VOR_after_POA']:
+        self.send_email(email_type, elife_id, author)
       
     return True
   
