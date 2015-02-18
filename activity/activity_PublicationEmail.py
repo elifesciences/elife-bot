@@ -43,6 +43,9 @@ class activity_PublicationEmail(activity.activity):
     # article data provider
     self.article = articlelib.article(settings, self.get_tmp_dir())
     
+    # Default is do not send duplicate emails
+    self.allow_duplicates = False
+    
   def do_activity(self, data = None):
     """
     PublicationEmail activity, do the work
@@ -59,9 +62,8 @@ class activity_PublicationEmail(activity.activity):
     elife_id = data["data"]["elife_id"]
     # Check for whether the workflow execution was told to allow duplicate emails
     #  default is False
-    allow_duplicates = False
     try:
-      allow_duplicates = data["data"]["allow_duplicates"]
+      self.allow_duplicates = data["data"]["allow_duplicates"]
     except KeyError:
       # Not specified? Ok, just use the default
       pass
@@ -97,39 +99,50 @@ class activity_PublicationEmail(activity.activity):
     # TODO!! Determine which email type to send
     email_type = "author_publication_email_VOR_no_POA"
 
+    # Send an email to each author
     for author in authors:
-
-      headers = self.templates.get_email_headers(
-        email_type = email_type,
-        author = author,
-        article = self.article,
-        format = "html")
+      self.send_email(email_type, author)
       
-      # Duplicate email check, can bypass with allow_duplicates = True
-      if(allow_duplicates is True):
-        duplicate = False
-      else:
-        duplicate = self.is_duplicate_email(
-          doi_id          = elife_id,
-          email_type      = headers["email_type"],
-          recipient_email = author.e_mail)
-      
-      if(duplicate is True):
-        if(self.logger):
-          self.logger.info('Duplicate email: doi_id: %s email_type: %s recipient_email: %s' % (elife_id, headers["email_type"], author.e_mail))
-          
-      elif(duplicate is False):
-        # Queue the email
-        self.queue_author_email(
-          email_type = email_type,
-          author  = author,
-          headers = headers,
-          article = self.article,
-          doi_id  = elife_id,
-          date_scheduled_timestamp = date_scheduled_timestamp,
-          format  = "html")
-
     return True
+  
+  def send_email(self, email_type, author):
+    """
+    Given the email type and author,
+    decide whether to send the email (after checking for duplicates)
+    and queue the email
+    """
+    
+    # First process the headers
+    headers = self.templates.get_email_headers(
+      email_type = email_type,
+      author = author,
+      article = self.article,
+      format = "html")
+    
+    # Duplicate email check, can bypass with allow_duplicates = True
+    if(self.allow_duplicates is True):
+      duplicate = False
+    else:
+      duplicate = self.is_duplicate_email(
+        doi_id          = elife_id,
+        email_type      = headers["email_type"],
+        recipient_email = author.e_mail)
+    
+    if(duplicate is True):
+      if(self.logger):
+        self.logger.info('Duplicate email: doi_id: %s email_type: %s recipient_email: %s' % (elife_id, headers["email_type"], author.e_mail))
+        
+    elif(duplicate is False):
+      # Queue the email
+      self.queue_author_email(
+        email_type = email_type,
+        author  = author,
+        headers = headers,
+        article = self.article,
+        doi_id  = elife_id,
+        date_scheduled_timestamp = date_scheduled_timestamp,
+        format  = "html")
+    
   
   def queue_author_email(self, email_type, author, headers, article, doi_id, date_scheduled_timestamp, format = "html"):
     """
