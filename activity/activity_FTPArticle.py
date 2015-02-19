@@ -199,6 +199,7 @@ class activity_FTPArticle(activity.activity):
                 self.download_data_file_from_s3(doi_id, 'suppl', workflow)
             self.download_data_file_from_s3(doi_id, 'video', workflow)
             self.download_data_file_from_s3(doi_id, 'jpg', workflow)
+            self.download_data_file_from_s3(doi_id, 'figures', workflow)
             
             # Zip files that are not zipped
             self.create_pdf_zip(doi_id)
