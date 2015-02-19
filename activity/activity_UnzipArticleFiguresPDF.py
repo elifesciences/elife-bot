@@ -38,16 +38,6 @@ class activity_UnzipArticleFiguresPDF(activity.activity):
     
     self.subfolder = 'figures-pdf'
     
-    # Temporary settings for old figures-pdf bucket to unzip to until February 2015
-    self.figures_pdf_bucket_name = None
-    if self.settings.bucket == 'elife-articles':
-      # Live environment
-      self.figures_pdf_bucket_name = 'elife-figure-pdfs'
-    elif self.settings.bucket == 'elife-articles-dev':
-      # Dev environment
-      self.figures_pdf_bucket_name = 'elife-bot-dev'
-    self.figures_pdf_bucket_name_subfolder = 'figure-pdf'
-
   def do_activity(self, data = None):
     """
     Do the work
@@ -77,17 +67,6 @@ class activity_UnzipArticleFiguresPDF(activity.activity):
     s3key = boto.s3.key.Key(bucket)
     s3key.key = s3key_name
     s3key.set_contents_from_filename(tmp_document_path, replace=True)
-    
-    # TEMPORARY for figures-pdf bucket until February 2015
-    if self.figures_pdf_bucket_name:
-      s3key_name = self.get_figures_pdf_object_S3key_name(elife_id, tmp_document)
-      bucket_name = self.figures_pdf_bucket_name
-      
-      s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-      bucket = s3_conn.lookup(bucket_name)
-      s3key = boto.s3.key.Key(bucket)
-      s3key.key = s3key_name
-      s3key.set_contents_from_filename(tmp_document_path, replace=False)
     
     if(self.logger):
       self.logger.info('UnzipArticleFiguresPDF: %s' % elife_id)
@@ -140,19 +119,6 @@ class activity_UnzipArticleFiguresPDF(activity.activity):
     
     return s3key_name
   
-  def get_figures_pdf_object_S3key_name(self, elife_id, document):
-    """
-    TEMPORARY - Will not be required once API spec is updated c. February 2015
-    For unzipping the file to the second bucket named 
-    Given the elife_id (5 digits) and document name, assemble
-    an S3 key (prefix for folder name, document for file name)
-    """
-    document = document.replace("/", '')
-    delimiter = self.settings.delimiter
-    s3key_name = delimiter + self.figures_pdf_bucket_name_subfolder + delimiter + document
-
-    return s3key_name
-    
   def get_document_name_from_path(self, document_path):
     """
     Given a document location in the tmp directory
