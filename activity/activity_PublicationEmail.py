@@ -93,18 +93,8 @@ class activity_PublicationEmail(activity.activity):
     # TODO!! Determine which email type to send
     email_type = "author_publication_email_VOR_no_POA"
 
-    # Send an email to each author
-    for author in authors:
-      # Test sending each type of template
-      for email_type in self.email_types:
-        self.send_email(email_type, elife_id, author, article)
-      
-      # For testing set the article as its own related article then send again
-      related_article = self.create_article(elife_id)
-      article.set_related_insight_article(related_article)
-      for email_type in ['author_publication_email_VOR_no_POA',
-                         'author_publication_email_VOR_after_POA']:
-        self.send_email(email_type, elife_id, author, article)
+    # Temporary for testing, send a test run
+    self.send_email_testrun(self.email_types, elife_id, authors, article)
       
     return True
   
@@ -122,6 +112,37 @@ class activity_PublicationEmail(activity.activity):
       article.get_article_data(doi_id = elife_id)
     
     return article
+  
+  def send_email_testrun(self, email_types, elife_id, authors, article):
+    """
+    For testing the workflow and the templates
+    Given an article (and its elife_id), list of email types and
+    list of authors, it will send lots of emails
+    and also bypass the default allow_duplicates value
+    Should only be run on the dev environment which should not have live email addresses on it
+    """
+    
+    # Failsafe check, do not continue if we think we are not on the dev environment
+    # Expecting    self.settings.bucket = 'elife-articles-dev'  look for the dev at the end
+    if self.settings.bucket.split('-')[-1] != 'dev':
+      return
+    
+    # Allow duplicates, will send
+    self.allow_duplicates = True
+    
+    # Send an email to each author
+    for author in authors:
+      # Test sending each type of template
+      for email_type in self.email_types:
+        self.send_email(email_type, elife_id, author, article)
+      
+      # For testing set the article as its own related article then send again
+      related_article = self.create_article(elife_id)
+      article.set_related_insight_article(related_article)
+      for email_type in ['author_publication_email_VOR_no_POA',
+                         'author_publication_email_VOR_after_POA']:
+        self.send_email(email_type, elife_id, author, article)
+    
   
   def send_email(self, email_type, elife_id, author, article):
     """
