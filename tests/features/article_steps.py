@@ -91,3 +91,15 @@ def i_have_the_article_pub_date_timestamp(step, pub_date_timestamp):
 def i_have_the_article_article_type(step, article_type):
   assert world.article.article_type == article_type, \
   "Got article_type %s" % world.article.article_type
+
+@step(u'I count the total related articles as (\d+)')
+def i_count_the_total_related_articles_as(step, number):
+  count = len(world.article.related_articles)
+  assert count == int(number), \
+  "Got related_articles count %d" % count
+  
+@step(u'I have the article related article index (\d+) xlink_href (\S+)')
+def i_have_the_article_related_article_index_index_xlink_href(step, index, xlink_href):
+  href = world.article.related_articles[int(index)]["xlink_href"]
+  assert xlink_href == href, \
+  "Got xlink_href %s" % href

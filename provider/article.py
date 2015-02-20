@@ -127,6 +127,8 @@ class article(object):
       self.article_title = self.parse_article_title(soup)
       self.article_type = self.parse_article_type(soup)
       
+      self.related_articles = self.parse_related_article(soup)
+      
       return True
     except:
       return False
@@ -263,7 +265,7 @@ class article(object):
     return self.parse_xml(self.fs.read_document_from_tmp_dir(document))
   
   def parse_xml(self, xml):
-    soup = BeautifulSoup(xml, "lxml")
+    soup = BeautifulSoup(xml, ["lxml", "xml"])
     return soup
   
   def parse_doi(self, soup):
@@ -377,3 +379,17 @@ class article(object):
       #    return None
       return article_type
       
+  def parse_related_article(self, soup):
+    related_articles = []
+    # Only look for type DOI for now, to find commentary articles
+    related_article_tags = self.extract_nodes(soup, "related-article", attr = "ext-link-type", value = "doi")
+    for tag in related_article_tags:
+      # Only look at the doi tag directly inside the article-meta section
+      if (tag.parent.name == "article-meta"):
+        ra = {}
+        ra["ext_link_type"] = tag["ext-link-type"]
+        ra["related_article_type"] = tag["related-article-type"]
+        ra["xlink_href"] = tag["xlink:href"]
+        related_articles.append(ra)
+        
+    return related_articles
