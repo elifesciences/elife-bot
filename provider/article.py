@@ -14,6 +14,7 @@ from boto.s3.connection import S3Connection
 
 import filesystem as fslib
 import simpleDB as dblib
+import provider.s3lib as s3lib
 
 """
 Article data provider
@@ -49,6 +50,9 @@ class article(object):
     # Some defaults
     self.article_data = None
     self.related_insight_article = None
+    
+    # Store the list of DOI id that was ever PoA
+    self.was_poa_doi_ids = None
         
   def connect(self):
     """
@@ -256,6 +260,93 @@ class article(object):
     the insight relates to here
     """
     self.related_insight_article = article
+    
+  def get_was_poa_doi_ids(self, force = False):
+      """
+      Connect to the S3 bucket, and from the files in the published folder,
+      get a list of .xml files, and then parse out the article id
+      """
+      # Return from cached values if not force
+      if force is False and self.was_poa_doi_ids is not None:
+          return self.was_poa_doi_ids
+      
+      was_poa_doi_ids = []
+      poa_published_folder = "published/"
+
+      file_extensions = []
+      file_extensions.append(".xml")
+      
+      bucket_name = self.settings.poa_packaging_bucket
+      
+      # Connect to S3 and bucket
+      s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+      bucket = s3_conn.lookup(bucket_name)
+      
+      delimiter = '/'
+      headers = None
+      
+      # Step one, get all the subfolder names
+      folders = []
+      bucketList = bucket.list(prefix = poa_published_folder, delimiter = delimiter, headers = headers)
+      for item in bucketList:
+          if(isinstance(item, boto.s3.prefix.Prefix)):
+              folders.append(item)
+
+      # Step two, for each subfolder get the keys inside it
+      s3_poa_key_names = []
+      for folder_name in folders:
+          prefix = folder_name.name
+          
+          # print "getting s3 keys from " + prefix
+          
+          s3_key_names = s3lib.get_s3_key_names_from_bucket(
+              bucket          = bucket,
+              prefix          = prefix,
+              file_extensions = file_extensions)
+          for s3_key_name in s3_key_names:
+              s3_poa_key_names.append(s3_key_name)
+
+      # Extract just the doi_id portion
+      for s3_key_name in s3_poa_key_names:
+          doi_id = self.get_doi_id_from_poa_s3_key_name(s3_key_name)
+          if doi_id:
+              was_poa_doi_ids.append(doi_id)
+              
+      # Remove duplicates and sort it
+      was_poa_doi_ids = list(set(was_poa_doi_ids))
+      was_poa_doi_ids.sort()
+      
+      # Cache it
+      self.was_poa_doi_ids = was_poa_doi_ids
+      
+      # Return it
+      return was_poa_doi_ids
+    
+  def get_doi_id_from_poa_s3_key_name(self, s3_key_name):
+      """
+      Extract just the integer doi_id value from the S3 key name
+      of the article XML file
+      E.g.
+        published/20140508/elife_poa_e02419.xml = 2419
+        published/20140508/elife_poa_e02444v2.xml = 2444
+      """
+      
+      doi_id = None
+      delimiter = '/'
+      file_name_prefix = "elife_poa_e"
+      try:
+          # Split on delimiter
+          file_name_with_extension = s3_key_name.split(delimiter)[-1]
+          # Remove file extension
+          file_name = file_name_with_extension.split(".")[0]
+          # Remove file name prefix
+          file_name_id = file_name.split(file_name_prefix)[-1]
+          # Get the numeric part of the file name
+          doi_id = int("".join(re.findall(r'^\d+', file_name_id)))
+      except:
+          doi_id = None
+          
+      return doi_id
     
   """
   Some quick copy and paste from elife-api-prototype parseNLM.py parser to get the basics for now
