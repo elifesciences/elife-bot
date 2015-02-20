@@ -39,9 +39,6 @@ class activity_PublicationEmail(activity.activity):
 
     # EJP data provider
     self.ejp = ejplib.EJP(settings, self.get_tmp_dir())
-        
-    # article data provider
-    self.article = articlelib.article(settings, self.get_tmp_dir())
     
     # Default is do not send duplicate emails
     self.allow_duplicates = False
@@ -86,8 +83,7 @@ class activity_PublicationEmail(activity.activity):
       if(self.logger):
         self.logger.info('PublicationEmail email templates warmed')
     
-    # Get and parse the article XML for data
-    article = self.article.get_article_data(doi_id = elife_id)
+    article = self.create_article(elife_id)
     
     # Ready to format emails and queue them
     
@@ -101,17 +97,33 @@ class activity_PublicationEmail(activity.activity):
     for author in authors:
       # Test sending each type of template
       for email_type in self.email_types:
-        self.send_email(email_type, elife_id, author)
+        self.send_email(email_type, elife_id, author, article)
       
       # For testing set the article as its own related article then send again
-      self.article.set_related_insight_article(article)
+      related_article = self.create_article(elife_id)
+      article.set_related_insight_article(related_article)
       for email_type in ['author_publication_email_VOR_no_POA',
                          'author_publication_email_VOR_after_POA']:
-        self.send_email(email_type, elife_id, author)
+        self.send_email(email_type, elife_id, author, article)
       
     return True
   
-  def send_email(self, email_type, elife_id, author):
+  def create_article(self, elife_id = None):
+    """
+    Instantiate an article object and optionally populate it with
+    data for the elife_id (doi_id) supplied
+    """
+    
+    # Instantiate a new article object
+    article = articlelib.article(self.settings, self.get_tmp_dir())
+    
+    if elife_id:
+      # Get and parse the article XML for data
+      article.get_article_data(doi_id = elife_id)
+    
+    return article
+  
+  def send_email(self, email_type, elife_id, author, article):
     """
     Given the email type and author,
     decide whether to send the email (after checking for duplicates)
@@ -122,14 +134,14 @@ class activity_PublicationEmail(activity.activity):
     headers = self.templates.get_email_headers(
       email_type = email_type,
       author = author,
-      article = self.article,
+      article = article,
       format = "html")
     
     # Get the article published date timestamp
     pub_date_timestamp = None
     date_scheduled_timestamp = 0
     try:
-      pub_date_timestamp = self.article.pub_date_timestamp
+      pub_date_timestamp = article.pub_date_timestamp
       date_scheduled_timestamp = pub_date_timestamp
     except:
       pass
@@ -153,7 +165,7 @@ class activity_PublicationEmail(activity.activity):
         email_type = email_type,
         author  = author,
         headers = headers,
-        article = self.article,
+        article = article,
         doi_id  = elife_id,
         date_scheduled_timestamp = date_scheduled_timestamp,
         format  = "html")
