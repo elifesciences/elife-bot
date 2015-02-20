@@ -197,12 +197,6 @@ def get_the_pdf_object_s3key_name_from_the_activity_object(step):
 	assert world.S3key_name is not None, \
 		"Got S3key_name %s" % world.S3key_name
 
-@step(u'I get the figures pdf object S3key name from the activity object')
-def and_i_get_the_figures_pdf_object_s3key_name_from_the_activity_object(step):
-	world.S3key_name = world.activity_object.get_figures_pdf_object_S3key_name(world.elife_id, world.document_name_from_path)
-	assert world.S3key_name is not None, \
-		"Got S3key_name %s" % world.S3key_name
-
 @step('I get the svg object S3key name from the activity object')
 def get_the_svg_object_s3key_name_from_the_activity_object(step):
 	world.S3key_name = world.activity_object.get_svg_object_S3key_name(world.elife_id, world.document_name_from_path)
