@@ -322,6 +322,18 @@ class article(object):
       # Return it
       return was_poa_doi_ids
     
+  def check_was_ever_poa(self, doi):
+      """
+      For each article XML downloaded from S3, check if it is published
+      """
+      
+      doi_id = self.get_doi_id(doi)
+      
+      if int(doi_id) in self.get_was_poa_doi_ids():
+          return True
+      else:
+          return False
+    
   def get_doi_id_from_poa_s3_key_name(self, s3_key_name):
       """
       Extract just the integer doi_id value from the S3 key name

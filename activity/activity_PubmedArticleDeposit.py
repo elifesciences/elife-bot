@@ -112,8 +112,8 @@ class activity_PubmedArticleDeposit(activity.activity):
             if self.ftp_status is True:
                 # Clean up outbox
                 print "Moving files from outbox folder to published folder"
-                #self.clean_outbox()
-                #self.upload_pubmed_xml_to_s3()
+                self.clean_outbox()
+                self.upload_pubmed_xml_to_s3()
                 self.outbox_status = True
                 
             if self.ftp_status is True:
@@ -196,23 +196,12 @@ class activity_PubmedArticleDeposit(activity.activity):
         
         return good_s3_key_names
         
-    def get_doi_id_from_doi(self, doi):
-        """
-        Extract just the integer doi_id value from the DOI string
-        """
-        try:
-            doi_id = int(doi.split(".")[-1])
-        except:
-            doi_id = None
-            
-        return doi_id
-        
     def check_is_article_published(self, doi, is_poa, was_ever_poa):
         """
         For each article XML downloaded from S3, check if it is published
         """
         
-        doi_id = self.get_doi_id_from_doi(doi)
+        doi_id = int(self.article.get_doi_id(doi))
 
         article_url = self.get_article_canonical_url(doi_id)
         #print article_url
@@ -261,18 +250,6 @@ class activity_PubmedArticleDeposit(activity.activity):
         lookup_url = self.lookup_url_prefix + str(doi_id).zfill(5)
         return lookup_url
         
-    def check_was_ever_poa(self, doi):
-        """
-        For each article XML downloaded from S3, check if it is published
-        """
-        
-        doi_id = self.get_doi_id_from_doi(doi)
-        
-        if int(doi_id) in self.article.get_was_poa_doi_ids():
-            return True
-        else:
-            return False
-
     def parse_article_xml(self, article_xml_files):
         """
         Given a list of article XML files, parse them into objects
@@ -316,10 +293,10 @@ class activity_PubmedArticleDeposit(activity.activity):
             # Check if article was ever poa
             # Must be set to True or False to get it published
             if (article.is_poa() is False and
-                self.check_was_ever_poa(article.doi) is True):
+                self.article.check_was_ever_poa(article.doi) is True):
                 article.was_ever_poa = True
             elif (article.is_poa() is False and
-                self.check_was_ever_poa(article.doi) is False):
+                self.article.check_was_ever_poa(article.doi) is False):
                 article.was_ever_poa = False
                 
             # Check if each article is published
