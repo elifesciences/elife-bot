@@ -39,8 +39,9 @@ Feature: Use article provider
     And I count the total related articles as <related_article_count>
     And I have the article related article index 0 xlink_href <xlink_href>
     And I have the article is poa <is_poa>
+    And I have the article related insight doi <insight_doi>
 
   Examples:
-    | env | tmp_base_dir  | test_name        | document_name                  | doi                  | doi_id  | doi_url                               | lens_url                            | tweet_url                                                                            | pub_date_timestamp | article_type     | related_article_count | xlink_href          | is_poa
-    | dev | tmp           | article_provider | test_data/elife00013.xml	      | 10.7554/eLife.00013  | 00013   | http://dx.doi.org/10.7554/eLife.00013 | http://lens.elifesciences.org/00013 | http://twitter.com/intent/tweet?text=http%3A%2F%2Fdx.doi.org%2F10.7554%2FeLife.00013 | 1350259200           | research-article | 1                     | 10.7554/eLife.00242 | False
-    | dev | tmp           | article_provider | test_data/elife_poa_e03977.xml	| 10.7554/eLife.03977  | 03977   | http://dx.doi.org/10.7554/eLife.03977 | http://lens.elifesciences.org/03977 | http://twitter.com/intent/tweet?text=http%3A%2F%2Fdx.doi.org%2F10.7554%2FeLife.03977 | 0                   | research-article | 0                     | None                | True
+    | env | tmp_base_dir  | test_name        | document_name                  | doi                  | doi_id  | doi_url                               | lens_url                            | tweet_url                                                                            | pub_date_timestamp | article_type     | related_article_count | xlink_href          | is_poa  | insight_doi
+    | dev | tmp           | article_provider | test_data/elife00013.xml	      | 10.7554/eLife.00013  | 00013   | http://dx.doi.org/10.7554/eLife.00013 | http://lens.elifesciences.org/00013 | http://twitter.com/intent/tweet?text=http%3A%2F%2Fdx.doi.org%2F10.7554%2FeLife.00013 | 1350259200           | research-article | 1                     | 10.7554/eLife.00242 | False   | 10.7554/eLife.00242
+    | dev | tmp           | article_provider | test_data/elife_poa_e03977.xml	| 10.7554/eLife.03977  | 03977   | http://dx.doi.org/10.7554/eLife.03977 | http://lens.elifesciences.org/03977 | http://twitter.com/intent/tweet?text=http%3A%2F%2Fdx.doi.org%2F10.7554%2FeLife.03977 | 0                   | research-article | 0                     | None                | True    | None

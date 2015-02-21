@@ -377,6 +377,26 @@ class article(object):
         # Article XML was never parsed
         return None
     
+  def get_article_related_insight_doi(self):
+    """
+    Given an article object, depending on the article_type,
+    look in the list of related_articles for a particular related_article_type
+    and return one article DOI only (if there are multiple return the first)
+    """
+    
+    if self.article_type == "research-article":
+      for related in self.related_articles:
+        if related["related_article_type"] == "commentary":
+          return related["xlink_href"]
+          
+    elif self.article_type == "insight":
+      for related in self.related_articles:
+        if related["related_article_type"] == "commentary-article":
+          return related["xlink_href"]
+          
+    # Default
+    return None
+    
   """
   Some quick copy and paste from elife-api-prototype parseNLM.py parser to get the basics for now
   """
