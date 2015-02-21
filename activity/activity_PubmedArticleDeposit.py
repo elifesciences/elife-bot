@@ -112,8 +112,8 @@ class activity_PubmedArticleDeposit(activity.activity):
             if self.ftp_status is True:
                 # Clean up outbox
                 print "Moving files from outbox folder to published folder"
-                self.clean_outbox()
-                self.upload_pubmed_xml_to_s3()
+                #self.clean_outbox()
+                #self.upload_pubmed_xml_to_s3()
                 self.outbox_status = True
                 
             if self.ftp_status is True:

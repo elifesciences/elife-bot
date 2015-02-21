@@ -84,8 +84,14 @@ def i_have_the_article_tweet_url(step, tweet_url):
 
 @step('I have the article pub_date_timestamp (\d+)')
 def i_have_the_article_pub_date_timestamp(step, pub_date_timestamp):
-  assert int(world.article.pub_date_timestamp) == int(pub_date_timestamp), \
-  "Got pub_date_timestamp %s" % world.article.pub_date_timestamp 
+  # Possible there is no pub date
+  if hasattr(world.article, "pub_date_timestamp"):
+    assert int(world.article.pub_date_timestamp) == int(pub_date_timestamp), \
+    "Got pub_date_timestamp %s" % world.article.pub_date_timestamp
+  else:
+    # Using 0 as the value to compare when there is no pub_date_timestamp
+    assert 0 == int(pub_date_timestamp), \
+    "Got pub_date_timestamp %s" % world.article.pub_date_timestamp
 
 @step('I have the article article_type (\S+)')
 def i_have_the_article_article_type(step, article_type):
@@ -100,6 +106,22 @@ def i_count_the_total_related_articles_as(step, number):
   
 @step(u'I have the article related article index (\d+) xlink_href (\S+)')
 def i_have_the_article_related_article_index_index_xlink_href(step, index, xlink_href):
-  href = world.article.related_articles[int(index)]["xlink_href"]
-  assert xlink_href == href, \
-  "Got xlink_href %s" % href
+  
+  if xlink_href == "None":
+    # If value to test is None then check length of array is 0 just to be sure
+    assert len(world.article.related_articles) == 0, \
+    "Got a non-None value for the related articles"
+  else:
+    href = world.article.related_articles[int(index)]["xlink_href"]
+    assert xlink_href == href, \
+    "Got xlink_href %s" % href
+
+@step(u'I have the article is poa (\S+)')
+def i_have_the_article_is_poa(step, is_poa):
+  # Allow boolean or None comparison
+  if is_poa == "True": is_poa = True
+  if is_poa == "False": is_poa = False
+  if is_poa == "None": is_poa = None
+      
+  assert world.article.is_poa() == is_poa, \
+  "Got is_poa %s" % world.article.is_poa()

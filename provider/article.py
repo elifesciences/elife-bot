@@ -348,6 +348,22 @@ class article(object):
           
       return doi_id
     
+  def is_poa(self):
+      # Based the presence of an pub date whether it is a
+      #  PoA article or VoR article
+      date_type = "pub"
+
+      if hasattr(self, "pub_date"):
+        if self.pub_date is None:
+          # No date means is POA
+          return True
+        else:
+          # Found a date is not POA
+          return False
+      else:
+        # Article XML was never parsed
+        return None
+    
   """
   Some quick copy and paste from elife-api-prototype parseNLM.py parser to get the basics for now
   """
@@ -379,8 +395,8 @@ class article(object):
     try:
       pub_date_section = self.extract_nodes(soup, "pub-date", attr = "date-type", value = date_type)
       if(len(pub_date_section) == 0):
-        if(pub_type == "ppub"):
-          pub_type = "epub"
+        if(date_type == "ppub"):
+          date_type = "epub"
         pub_date_section = self.extract_nodes(soup, "pub-date", attr = "pub-type", value = date_type)
       (day, month, year) = self.get_ymd(pub_date_section[0])
   
