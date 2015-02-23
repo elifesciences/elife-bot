@@ -26,6 +26,12 @@ def i_have_a_doi(step, doi):
   world.doi = doi
   assert world.doi is not None, \
     "Got doi %s" % world.doi
+  
+@step('I have a doi_id (\d+)')
+def i_have_a_doi_id(step, doi_id):
+  world.doi_id = int(doi_id)
+  assert world.doi_id is not None, \
+    "Got doi_id %s" % world.doi_id
     
 @step('I get a doi id from the article provider (\S+)')
 def i_get_a_doi_id_from_the_article_provider_doi_id(step, doi_id):
@@ -134,3 +140,50 @@ def i_have_the_article_related_insight_doi(step, insight_doi):
   related_insight_doi = world.article.get_article_related_insight_doi()
   assert insight_doi == related_insight_doi, \
   "Got related_insight_doi %s" % related_insight_doi
+  
+@step(u'I get article lookup url with the article provider')
+def i_get_article_lookup_url_with_the_article_provider(step):
+  world.lookup_url = world.article.get_article_lookup_url(world.doi_id)
+  assert world.lookup_url is not None, \
+    "Got lookup_url %s" % world.lookup_url
+    
+@step(u'I have lookup url (\S+)')
+def i_have_lookup_url_lookup_url(step, lookup_url):
+  assert world.lookup_url == lookup_url, \
+  "Got world.lookup_url %s" % world.lookup_url
+    
+@step(u'I have is poa (\S+)')
+def i_have_is_poa(step, is_poa):
+  if is_poa == "True":  world.is_poa = True
+  if is_poa == "False": world.is_poa = False
+  assert world.is_poa is not None, \
+    "Got is_poa %s" % world.is_poa
+    
+@step(u'I have was ever poa (\S+)')
+def i_have_was_ever_poa(step, was_ever_poa):
+  if was_ever_poa == "True":  world.was_ever_poa = True
+  if was_ever_poa == "False": world.was_ever_poa = False
+  assert world.was_ever_poa is not None, \
+    "Got was_ever_poa %s" % world.was_ever_poa
+    
+@step(u'I have the article url (\S+)')
+def i_have_the_article_url(step, article_url):
+  world.article_url = article_url
+  assert world.article_url is not None, \
+    "Got article_url %s" % world.article_url
+    
+@step(u'I check is article published with the article provider')
+def i_check_is_article_published_with_the_article_provider(step):
+  world.is_published = world.article.check_is_article_published(
+    world.doi,
+    world.is_poa,
+    world.was_ever_poa,
+    world.article_url)
+  assert world.is_published is not None, \
+    "Got is_published %s" % world.is_published
+    
+@step(u'I have is published (\S+)')
+def i_have_is_published(step, is_published):
+  assert str(world.is_published) == is_published, \
+    "Got is_published %s" % world.is_published
+  

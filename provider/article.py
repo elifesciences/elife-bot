@@ -6,6 +6,7 @@ import calendar
 import time
 import os
 import re
+import requests
 from operator import itemgetter, attrgetter
 
 import urllib
@@ -54,6 +55,9 @@ class article(object):
     
     # Store the list of DOI id that was ever PoA
     self.was_poa_doi_ids = None
+    
+    # For checking published articles need a URL prefix for where to check
+    self.lookup_url_prefix = "http://elifesciences.org/lookup/doi/10.7554/eLife."
         
   def connect(self):
     """
@@ -396,6 +400,73 @@ class article(object):
           
     # Default
     return None
+    
+  def check_is_article_published(self, doi, is_poa, was_ever_poa, article_url = None):
+      """
+      For each article XML downloaded from S3, check if it is published
+      Also needs to know whether the article is POA or was ever POA'ed
+        article_url can be supplied for testing without making live HTTP requests
+          and also accepts the value "Test_None" for running tests on a value of None
+      """
+      
+      doi_id = int(self.get_doi_id(doi))
+
+      if article_url == "Test_None":
+        # For running tests, convert this value to None now it is important
+        article_url = None
+      else:
+        # Not running tests
+        if article_url is None:
+          article_url = self.get_article_canonical_url(doi_id)
+        #print article_url
+        
+        # Parse the URL based on the type of article
+        if article_url is None:
+            return None
+          
+          
+      # Knowing the article_url status now continue with additional comparisons
+      if (is_poa is True or
+          (is_poa is False and was_ever_poa is False)):
+          # In this case, any URL is sufficient
+          if article_url:
+              return True
+          else:
+              return False
+      elif is_poa is False and was_ever_poa is True:
+          # In the case of was ever PoA but is not PoA
+          #  check the URL does not contain the string "early"
+          if article_url:
+              if re.match('.*early.*', article_url) is None:
+                  return True
+              else:
+                  return False
+          else:
+            return False
+      
+  def get_article_canonical_url(self, doi_id):
+      """
+      Given the doi_id, and using the lookup URL prefix,
+      make an HTTP head request and return the URL after
+      all redirects are followed
+      """
+      # Construct the lookup URL on the HW site
+      lookup_url = self.get_article_lookup_url(doi_id)
+      #print lookup_url
+      
+      r = requests.head(lookup_url, allow_redirects=True)
+      if r.status_code == requests.codes.ok:
+          return r.url
+      else:
+          return None
+      return None
+  
+  def get_article_lookup_url(self, doi_id):
+      """
+      Given the doi_id, create the lookup URL
+      """
+      lookup_url = self.lookup_url_prefix + str(doi_id).zfill(5)
+      return lookup_url
     
   """
   Some quick copy and paste from elife-api-prototype parseNLM.py parser to get the basics for now
