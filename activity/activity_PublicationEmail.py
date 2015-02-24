@@ -63,7 +63,9 @@ class activity_PublicationEmail(activity.activity):
     current_time = time.gmtime()
     current_timestamp = calendar.timegm(current_time)
     
-    elife_id = data["data"]["elife_id"]
+    # Temporary for testing while in development, set the elife_id
+    elife_id = "00003"
+    
     # Check for whether the workflow execution was told to allow duplicate emails
     #  default is False
     try:
