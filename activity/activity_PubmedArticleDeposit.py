@@ -175,25 +175,6 @@ class activity_PubmedArticleDeposit(activity.activity):
             s3_key.get_contents_to_file(f)
             f.close()
             
-    def filter_list_by_file_extensions(self, s3_key_names, file_extensions):
-        """
-        Given a list of s3_key_names, and a list of file_extensions
-        filter out all but the allowed file extensions
-        Each file extension should start with a . dot
-        """
-        good_s3_key_names = []
-        for name in s3_key_names:
-            match = False
-            for ext in file_extensions:
-                # Match file extension as the end of the string and escape the dot
-                pattern = ".*\\" + ext + "$"
-                if(re.search(pattern, name) is not None):
-                    match = True
-            if match is True:
-                good_s3_key_names.append(name)
-        
-        return good_s3_key_names
-        
     def parse_article_xml(self, article_xml_files):
         """
         Given a list of article XML files, parse them into objects
