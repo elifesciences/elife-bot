@@ -43,6 +43,7 @@ def start(ENV = "dev"):
 	workflow_names.append("DepositCrossref")
 	workflow_names.append("PubmedArticleDeposit")
 	workflow_names.append("PublishFiguresPDF")
+	workflow_names.append("PublicationEmail")
 	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries

@@ -7,19 +7,19 @@ import datetime
 import workflow
 
 """
-PublishArticle workflow
+PublicationEmail workflow
 """
 
-class workflow_PublishArticle(workflow.workflow):
+class workflow_PublicationEmail(workflow.workflow):
 	
 	def __init__(self, settings, logger, conn = None, token = None, decision = None, maximum_page_size = 100):
 		workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
 
 		# SWF Defaults
-		self.name = "PublishArticle"
+		self.name = "PublicationEmail"
 		self.version = "1"
-		self.description = "Publish article workflow"
-		self.default_execution_start_to_close_timeout = 60*5
+		self.description = "Send emails upon publication of each article"
+		self.default_execution_start_to_close_timeout = 60*20
 		self.default_task_start_to_close_timeout = 30
 
 		# Get the input from the JSON decision response
@@ -51,30 +51,8 @@ class workflow_PublishArticle(workflow.workflow):
 					"start_to_close_timeout": 300
 				},
 				{
-					"activity_type": "UnzipArticleXML",
-					"activity_id": "UnzipArticleXML",
-					"version": "1",
-					"input": data,
-					"control": None,
-					"heartbeat_timeout": 60*5,
-					"schedule_to_close_timeout": 60*5,
-					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 60*5
-				},
-				{
-					"activity_type": "LensArticle",
-					"activity_id": "LensArticle",
-					"version": "1",
-					"input": data,
-					"control": None,
-					"heartbeat_timeout": 60*5,
-					"schedule_to_close_timeout": 60*5,
-					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 60*5
-				},
-				{
-					"activity_type": "ArticleToOutbox",
-					"activity_id": "ArticleToOutbox",
+					"activity_type": "PublicationEmail",
+					"activity_id": "PublicationEmail",
 					"version": "1",
 					"input": data,
 					"control": None,
