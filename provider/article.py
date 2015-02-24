@@ -7,6 +7,7 @@ import time
 import os
 import re
 import requests
+import zipfile
 from operator import itemgetter, attrgetter
 
 import urllib
@@ -14,7 +15,6 @@ import urllib
 import boto.s3
 from boto.s3.connection import S3Connection
 
-import filesystem as fslib
 import simpleDB as dblib
 import provider.s3lib as s3lib
 
@@ -40,9 +40,6 @@ class article(object):
     
     # S3 connection
     self.s3_conn = None
-    
-    # Filesystem provider
-    self.fs = None
     
     # Default S3 bucket name
     self.bucket_name = None
@@ -97,20 +94,15 @@ class article(object):
     
     return s3key
 
-  def parse_article_file(self, document, filename = None):
+  def parse_article_file(self, filename):
     """
-    Given a filename to an article file, download
-    or copy it using the filesystem provider,
-    then parse it
+    Given a filename to an article XML
+    parse it
     """
-
-    if(self.fs is None):
-      self.fs = self.get_fs()
     
-    # Save the document to the tmp_dir
-    self.fs.write_document_to_tmp_dir(document, filename)
-
-    parsed = self.parse_article_xml(self.fs.document)
+    document = open(filename, "rb")
+    parsed = self.parse_article_xml(document)
+    document.close()
     
     return parsed
 
@@ -142,62 +134,45 @@ class article(object):
     except:
       return False
   
-  def get_article_data(self, doi_id = None, document = None):
+  def download_article_xml_from_s3(self, doi_id = None):
     """
     Return the article data for use in templates
     """
     
-    filename = None
+    download_dir = "s3_download"
+    xml_filename = None
     # Check for the document
-    if(document is None):
-      # No document? Find it on S3, save the content to
-      #  the tmp_dir
-      if(self.fs is None):
-        self.fs = self.get_fs()
-      # Connect to SimpleDB and get the latest article XML S3 object name
-      self.db.connect()
-      # Look up the latest XMl file by doi_id, should return a list of 1
-      log_item = self.db.elife_get_article_S3_file_items(file_data_type = "xml", doi_id = doi_id, latest = True)
-      s3_key_name = None
-      
-      try:
-        s3_key_name = log_item[0]["name"]
-      except IndexError:
-        return False
 
-      s3_key = self.get_s3key(s3_key_name)
-      contents = s3_key.get_contents_as_string()
-      
-      # Get the filename from the s3_key_name
-      try:
-        path_array = s3_key_name.split('/')
-        filename = path_array[-1]
-      except:
-        filename = "s3_article.zip"
+    # Connect to SimpleDB and get the latest article XML S3 object name
+    self.db.connect()
+    # Look up the latest XMl file by doi_id, should return a list of 1
+    log_item = self.db.elife_get_article_S3_file_items(file_data_type = "xml", doi_id = doi_id, latest = True)
+    s3_key_name = None
+    
+    try:
+      s3_key_name = log_item[0]["name"]
+    except IndexError:
+      return False
+    #print s3_key_name
 
-      self.fs.write_content_to_document(content = contents, filename = filename, mode = "wb")
-      document = self.fs.get_document()
-    else:
-      # Write it with the filesystem provider
-      self.fs.write_document_to_tmp_dir(document)
+    # Download from S3
+    s3_key = self.get_s3key(s3_key_name)
+    filename = s3_key_name.split('/')[-1]
+    filename_plus_path = self.get_tmp_dir() + os.sep + filename
+    #print filename_plus_path
+    f = open(filename_plus_path, "wb")
+    s3_key.get_contents_to_file(f)
+    f.close()
     
-    # Make a copy_of the filename, to retain the file extension of the original, but not have a file overwrite itself
-    filename = "copy_of_" + self.fs.get_document()
-    document = self.fs.get_tmp_dir() + os.sep + self.fs.get_document()
+    # Unzip
+    z = zipfile.ZipFile(filename_plus_path)
+    for f in z.namelist():
+      # Expecting one file only per zip file in article XML zip
+      z.extract(f, self.get_tmp_dir())
+      xml_filename = f
+
+    return xml_filename
     
-    # Parse the file
-    parsed = self.parse_article_file(document, filename)
-    return parsed
-    
-  def get_fs(self):
-    """
-    For running tests, return the filesystem provider
-    so it can be interrogated
-    """
-    if(self.fs is None):
-      # Create the filesystem provider
-      self.fs = fslib.Filesystem(self.get_tmp_dir())
-    return self.fs
   
   def get_tmp_dir(self):
     """
@@ -473,7 +448,7 @@ class article(object):
   """
   
   def parse_document(self, document):
-    return self.parse_xml(self.fs.read_document_from_tmp_dir(document))
+    return self.parse_xml(document)
   
   def parse_xml(self, xml):
     soup = BeautifulSoup(xml, ["lxml", "xml"])
