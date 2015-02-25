@@ -4,15 +4,20 @@ import random
 import datetime
 import calendar
 import time
+import os
 
 from collections import namedtuple
 
 import activity
 
+import boto.s3
+from boto.s3.connection import S3Connection
+
 import provider.simpleDB as dblib
 import provider.templates as templatelib
 import provider.ejp as ejplib
 import provider.article as articlelib
+import provider.s3lib as s3lib
 
 """
 PublicationEmail activity
@@ -40,6 +45,18 @@ class activity_PublicationEmail(activity.activity):
     # EJP data provider
     self.ejp = ejplib.EJP(settings, self.get_tmp_dir())
     
+    # Bucket for outgoing files
+    self.publish_bucket = settings.poa_packaging_bucket
+    self.outbox_folder = "publication_email/outbox/"
+    self.published_folder = "publication_email/published/"
+    
+    # Track XML files selected for publication
+    self.article_xml_filenames = []
+    self.related_article_xml_file_to_doi_map = {}
+    self.xml_file_to_doi_map = {}
+    self.article_published_file_names = []
+    self.article_not_published_file_names = []
+    
     # Default is do not send duplicate emails
     self.allow_duplicates = False
     
@@ -60,12 +77,6 @@ class activity_PublicationEmail(activity.activity):
     # Connect to DB
     db_conn = self.db.connect()
     
-    current_time = time.gmtime()
-    current_timestamp = calendar.timegm(current_time)
-    
-    # Temporary for testing while in development, set the elife_id
-    elife_id = "00003"
-    
     # Check for whether the workflow execution was told to allow duplicate emails
     #  default is False
     try:
@@ -73,6 +84,91 @@ class activity_PublicationEmail(activity.activity):
     except KeyError:
       # Not specified? Ok, just use the default
       pass
+    
+    # Download templates
+    templates_downloaded = self.download_templates()
+    if templates_downloaded is True:
+      
+      # Download the article XML from S3 and parse them
+      self.article_xml_filenames = self.download_files_from_s3_outbox()
+      self.parse_article_xml(self.article_xml_filenames)
+      
+      for doi, article in self.xml_file_to_doi_map.items():
+        
+        # Ready to format emails and queue them
+        
+        # First send author emails
+        authors = self.get_authors(article.doi_id)
+
+        # TODO!! Determine which email type to send
+        #email_type = "author_publication_email_VOR_no_POA"
+    
+        # Temporary for testing, send a test run
+        #self.send_email_testrun(self.email_types, article.doi_id, authors, article)
+      
+    return True
+  
+  def download_files_from_s3_outbox(self):
+      """
+      Connect to the S3 bucket, and from the outbox folder,
+      download the .xml to be processed
+      """
+      filenames = []
+      
+      file_extensions = []
+      file_extensions.append(".xml")
+      
+      bucket_name = self.publish_bucket
+      
+      # Connect to S3 and bucket
+      s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+      bucket = s3_conn.lookup(bucket_name)
+      
+      s3_key_names = s3lib.get_s3_key_names_from_bucket(
+          bucket          = bucket,
+          prefix          = self.outbox_folder,
+          file_extensions = file_extensions)
+      
+      for name in s3_key_names:
+          # Download objects from S3 and save to disk
+          s3_key = bucket.get_key(name)
+
+          filename = name.split("/")[-1]
+          
+          # Download to the activity temp directory
+          dirname = self.get_tmp_dir()
+
+          filename_plus_path = dirname + os.sep + filename
+          
+          mode = "wb"
+          f = open(filename_plus_path, mode)
+          s3_key.get_contents_to_file(f)
+          f.close()
+          
+          filenames.append(filename_plus_path)
+          
+      return filenames
+
+  def parse_article_xml(self, article_xml_filenames):
+    """
+    Given a list of article XML filenames,
+    parse the files and add the article object to our article map
+    """
+  
+    for article_xml_filename in article_xml_filenames:
+  
+      article = self.create_article()
+      article.parse_article_file(article_xml_filename)
+      if(self.logger):
+        self.logger.info("Parsed " + article.doi_url)
+
+      # Add article to the DOI to file name map
+      self.xml_file_to_doi_map[article.doi] = article
+
+  def download_templates(self):
+    """
+    Download the email templates from s3    
+    """
     
     # Prepare email templates
     self.templates.download_email_templates_from_s3()
@@ -84,35 +180,48 @@ class activity_PublicationEmail(activity.activity):
     else:
       if(self.logger):
         self.logger.info('PublicationEmail email templates warmed')
-    
-    article = self.create_article(elife_id)
-    
-    # Ready to format emails and queue them
-    
-    # First send author emails
-    authors = self.get_authors(doi_id = elife_id)
+      return True
 
-    # TODO!! Determine which email type to send
-    email_type = "author_publication_email_VOR_no_POA"
-
-    # Temporary for testing, send a test run
-    self.send_email_testrun(self.email_types, elife_id, authors, article)
-      
-    return True
-  
-  def create_article(self, elife_id = None):
+  def create_article(self, doi_id = None):
     """
     Instantiate an article object and optionally populate it with
-    data for the elife_id (doi_id) supplied
+    data for the doi_id (int) supplied
     """
     
     # Instantiate a new article object
     article = articlelib.article(self.settings, self.get_tmp_dir())
     
-    if elife_id:
+    if doi_id:
       # Get and parse the article XML for data
-      article.get_article_data(doi_id = elife_id)
+      # Convert the doi_id to 5 digit string in case it was an integer
+      if type(doi_id) == int:
+        doi_id = str(doi_id).zfill(5)
+      article_xml_filename = article.download_article_xml_from_s3(doi_id)
+      article.parse_article_file(self.get_tmp_dir() + os.sep + article_xml_filename)
+    return article
+  
+  def get_related_article(self, doi):
+    """
+    When populating related articles, given a DOI,
+    download the article XML and parse it,
+    return a previously parsed article object if it exists
+    """
     
+    article = None
+    
+    if doi in self.related_article_xml_file_to_doi_map.keys():
+      # Return an existing article object
+      article = self.related_article_xml_file_to_doi_map[doi]
+      if(self.logger):
+        self.logger.info("Hit the article cache on " + doi)
+    else:
+      # Article for this DOI does not exist, populate it
+      doi_id = int(doi.split(".")[-1])
+      article = self.create_article(doi_id)
+      self.related_article_xml_file_to_doi_map[doi] = article
+      if(self.logger):
+        self.logger.info("Building article for " + doi)
+
     return article
   
   def send_email_testrun(self, email_types, elife_id, authors, article):
@@ -145,9 +254,7 @@ class activity_PublicationEmail(activity.activity):
       if related_article_doi is None:
         related_article_doi = article.doi_url
         
-      related_doi_id = article.get_doi_id(related_article_doi)
-      
-      related_article = self.create_article(related_doi_id)
+      related_article = self.get_related_article(related_article_doi)
       article.set_related_insight_article(related_article)
       for email_type in ['author_publication_email_VOR_no_POA',
                          'author_publication_email_VOR_after_POA']:
