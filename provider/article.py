@@ -143,6 +143,10 @@ class article(object):
     xml_filename = None
     # Check for the document
 
+    # Convert the value just in case
+    if type(doi_id) == int:
+      doi_id = str(doi_id).zfill(5)
+
     # Connect to SimpleDB and get the latest article XML S3 object name
     self.db.connect()
     # Look up the latest XMl file by doi_id, should return a list of 1
