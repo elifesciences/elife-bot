@@ -161,10 +161,15 @@ def i_have_is_poa(step, is_poa):
     
 @step(u'I have was ever poa (\S+)')
 def i_have_was_ever_poa(step, was_ever_poa):
-  if was_ever_poa == "True":  world.was_ever_poa = True
-  if was_ever_poa == "False": world.was_ever_poa = False
-  assert world.was_ever_poa is not None, \
-    "Got was_ever_poa %s" % world.was_ever_poa
+  if was_ever_poa == "None":
+    world.was_ever_poa = None
+    assert world.was_ever_poa is None, \
+      "Got was_ever_poa %s" % world.was_ever_poa
+  else:
+    if was_ever_poa == "True":  world.was_ever_poa = True
+    if was_ever_poa == "False": world.was_ever_poa = False
+    assert world.was_ever_poa is not None, \
+      "Got was_ever_poa %s" % world.was_ever_poa
     
 @step(u'I have the article url (\S+)')
 def i_have_the_article_url(step, article_url):

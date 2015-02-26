@@ -47,8 +47,8 @@ class article(object):
       self.bucket_name = self.settings.bucket
     
     # Some defaults
-    self.article_data = None
     self.related_insight_article = None
+    self.was_ever_poa = None    
     
     # Store the list of DOI id that was ever PoA
     self.was_poa_doi_ids = None
@@ -408,7 +408,8 @@ class article(object):
           
       # Knowing the article_url status now continue with additional comparisons
       if (is_poa is True or
-          (is_poa is False and was_ever_poa is False)):
+          (is_poa is False and was_ever_poa is False) or
+          (is_poa is False and was_ever_poa is None)):
           # In this case, any URL is sufficient
           if article_url:
               return True

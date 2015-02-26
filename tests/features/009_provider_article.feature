@@ -48,9 +48,13 @@ Feature: Use article provider
     | dev | 10.7554/eLife.00003  | True     | True          | Test_None                                                      | False
     | dev | 10.7554/eLife.00003  | False    | False         | Test_None                                                      | False
     | dev | 10.7554/eLife.00003  | False    | True          | Test_None                                                      | False
+    | dev | 10.7554/eLife.00003  | False    | None          | Test_None                                                      | False
     | dev | 10.7554/eLife.00003  | True     | True          | http://elifesciences.org/content/early/2012/01/01/eLife.00003  | True
     | dev | 10.7554/eLife.00003  | False    | False         | http://elifesciences.org/content/1/e00003                      | True
+    | dev | 10.7554/eLife.00003  | False    | None          | http://elifesciences.org/content/1/e00003                      | True
     | dev | 10.7554/eLife.00003  | False    | True          | http://elifesciences.org/content/early/2012/01/01/eLife.00003  | False
+    | dev | 10.7554/eLife.00003  | True     | None          | http://elifesciences.org/content/early/2012/01/01/eLife.00003  | True
+    | dev | 10.7554/eLife.00003  | True     | None          | Test_None                                                      | False
 
   Scenario: Given an article XML, parse it and return some values
     Given I have imported a settings module

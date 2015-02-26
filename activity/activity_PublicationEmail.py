@@ -273,6 +273,9 @@ class activity_PublicationEmail(activity.activity):
       #  using the blank article object to hopefully make only one S3 connection
       was_ever_poa = blank_article.check_was_ever_poa(article.doi)
       
+      # Set the value on the article object for later, it is useful
+      article.was_ever_poa = was_ever_poa
+      
       # Now can check if published
       is_published = blank_article.check_is_article_published(article.doi, is_poa, was_ever_poa)
       if is_published is not True:
