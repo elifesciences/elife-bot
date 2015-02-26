@@ -128,6 +128,8 @@ class article(object):
       self.article_title = self.parse_article_title(soup)
       self.article_type = self.parse_article_type(soup)
       
+      self.authors_string = self.parse_authors_string(soup)
+      
       self.related_articles = self.parse_related_article(soup)
       
       return True
@@ -447,6 +449,20 @@ class article(object):
       lookup_url = self.lookup_url_prefix + str(doi_id).zfill(5)
       return lookup_url
     
+  def parse_authors_string(self, soup):
+    """
+    Return a string for all the article authors    
+    """
+    authors = self.authors(soup)
+    
+    authors_string = ""
+    for author in authors:
+      if authors_string != "":
+        authors_string += ", "
+      authors_string += author["given_names"] + " " + author["surname"]
+      
+    return authors_string
+    
   """
   Some quick copy and paste from elife-api-prototype parseNLM.py parser to get the basics for now
   """
@@ -583,3 +599,199 @@ class article(object):
         related_articles.append(ra)
         
     return related_articles
+
+
+  def authors(self, soup):
+    """Find and return all the authors"""
+    tags = self.extract_nodes(soup, "contrib", attr = "contrib-type", value = "author")
+    authors = []
+    position = 1
+    
+    article_doi = self.parse_doi(soup)
+    
+    for tag in tags:
+        author = {}
+        
+        # Person id
+        try:
+            person_id = tag["id"]
+            person_id = person_id.replace("author-", "")
+            author['person_id'] = int(person_id)
+        except(KeyError):
+            pass
+  
+        # Equal contrib
+        try:
+            equal_contrib = tag["equal-contrib"]
+            if(equal_contrib == 'yes'):
+                author['equal_contrib'] = True
+        except(KeyError):
+            pass
+        
+        # Correspondence
+        try:
+            corresponding = tag["corresp"]
+            if(corresponding == 'yes'):
+                author['corresponding'] = True
+        except(KeyError):
+            pass
+        
+        # Surname
+        surname = self.extract_node_text(tag, "surname")
+        if(surname != None):
+            author['surname'] = surname
+  
+        # Given names
+        given_names = self.extract_node_text(tag, "given-names")
+        if(given_names != None):
+            author['given_names'] = given_names
+        
+        # Find and parse affiliations
+        affs = self.extract_nodes(tag, "xref", attr = "ref-type", value = "aff")
+        if(len(affs) > 0):
+            # One or more affiliations
+            if(len(affs) > 1):
+                # Prepare for multiple affiliations if multiples found
+                author['country'] = []
+                author['institution'] = []
+                author['department'] = []
+                author['city'] = []
+                
+            for aff in affs:
+                # Find the matching affiliation detail
+                rid = aff['rid']
+  
+                aff_node = self.extract_nodes(soup, "aff", attr = "id", value = rid)
+                country = self.extract_node_text(aff_node[0], "country")
+                institution = self.extract_node_text(aff_node[0], "institution")
+                department = self.extract_node_text(aff_node[0], "named-content", attr = "content-type", value = "department")
+                city = self.extract_node_text(aff_node[0], "named-content", attr = "content-type", value = "city")
+                
+                # Convert None to empty string if there is more than one affiliation
+                if((country == None) and (len(affs) > 1)):
+                    country = ''
+                if((institution == None) and (len(affs) > 1)):
+                    institution = ''
+                if((department == None) and (len(affs) > 1)):
+                    department = ''
+                if((city == None) and (len(affs) > 1)):
+                    city = ''
+                    
+                # Append values
+                try:
+                    # Multiple values
+                    author['country'].append(country)
+                except(KeyError):
+                    author['country'] = country
+                try:
+                    # Multiple values
+                    author['institution'].append(institution)
+                except(KeyError):
+                    author['institution'] = institution
+                try:
+                    # Multiple values
+                    author['department'].append(department)
+                except(KeyError):
+                    author['department'] = department
+                try:
+                    # Multiple values
+                    author['city'].append(city)
+                except(KeyError):
+                    author['city'] = city
+  
+        # Author - given names + surname
+        author_name = ""
+        if(given_names != None):
+            author_name += given_names + " "
+        if(surname != None):
+            author_name += surname
+        author['author'] = author_name
+        
+        # Add xref linked correspondence author notes if applicable
+        cors = self.extract_nodes(tag, "xref", attr = "ref-type", value = "corresp")
+        if(len(cors) > 0):
+            # One or more 
+            if(len(cors) > 1):
+                # Prepare for multiple values if multiples found
+                author['notes_correspondence'] = []
+                
+            for cor in cors:
+                # Find the matching affiliation detail
+                rid = cor['rid']
+  
+                # Find elements by id
+                try:
+                    corresp_node = soup.select("#" + rid)
+                    author_notes = corresp_node[0].get_text(" ")
+                    author_notes = strip_strings(author_notes)
+                except:
+                    continue
+                try:
+                    # Multiple values
+                    author['notes_correspondence'].append(author_notes)
+                except(KeyError):
+                    author['notes_correspondence'] = author_notes
+                    
+        # Add xref linked footnotes if applicable
+        fns = self.extract_nodes(tag, "xref", attr = "ref-type", value = "fn")
+        if(len(fns) > 0):
+            # One or more 
+            if(len(fns) > 1):
+                # Prepare for multiple values if multiples found
+                author['notes_footnotes'] = []
+                
+            for fn in fns:
+                # Find the matching affiliation detail
+                rid = fn['rid']
+  
+                # Find elements by id
+                try:
+                    fn_node = soup.select("#" + rid)
+                    fn_text = fn_node[0].get_text(" ")
+                    fn_text = strip_strings(fn_text)
+                except:
+                    continue
+                try:
+                    # Multiple values
+                    author['notes_footnotes'].append(fn_text)
+                except(KeyError):
+                    author['notes_footnotes'] = fn_text
+                    
+        # Add xref linked other notes if applicable, such as funding detail
+        others = self.extract_nodes(tag, "xref", attr = "ref-type", value = "other")
+        if(len(others) > 0):
+            # One or more 
+            if(len(others) > 1):
+                # Prepare for multiple values if multiples found
+                author['notes_other'] = []
+                
+            for other in others:
+                # Find the matching affiliation detail
+                rid = other['rid']
+  
+                # Find elements by id
+                try:
+                    other_node = soup.select("#" + rid)
+                    other_text = other_node[0].get_text(" ")
+                    other_text = strip_strings(other_text)
+                except:
+                    continue
+                try:
+                    # Multiple values
+                    author['notes_other'].append(other_text)
+                except(KeyError):
+                    author['notes_other'] = other_text	
+  
+        # If not empty, add position value, append, then increment the position counter
+        if(len(author) > 0):
+            author['article_doi'] = article_doi
+            
+            author['position'] = position
+            
+            # Create a unique about tag value to make fom objects function
+            author['about'] = 'author' + '_' + str(position) + '_' + article_doi
+            
+            authors.append(author)
+            position += 1
+        
+    return authors

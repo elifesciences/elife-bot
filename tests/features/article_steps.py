@@ -187,3 +187,8 @@ def i_have_is_published(step, is_published):
   assert str(world.is_published) == is_published, \
     "Got is_published %s" % world.is_published
   
+@step(u'I have the article authors string (.*)')
+def i_have_the_article_authors_string_authors_string(step, authors_string):
+  assert world.article.authors_string == authors_string, \
+    "Got authors_string %s" % world.article.authors_string
+  
