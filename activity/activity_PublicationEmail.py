@@ -52,14 +52,19 @@ class activity_PublicationEmail(activity.activity):
     
     # Track XML files selected for publication
     self.article_xml_filenames = []
-    self.related_article_xml_file_to_doi_map = {}
     self.xml_file_to_doi_map = {}
-    self.article_published_file_names = []
-    self.article_not_published_file_names = []
+    self.articles = []
+    self.related_articles = []
+    self.articles_approved = []
     
     # Default is do not send duplicate emails
     self.allow_duplicates = False
     
+    # Article types for which not to send emails
+    self.article_types_do_not_send = []
+    self.article_types_do_not_send.append('editorial')
+    self.article_types_do_not_send.append('correction')
+    self.article_types_do_not_send.append('discussion')
     # Email types, for sending previews of each template
     self.email_types = []
     self.email_types.append('author_publication_email_POA')
@@ -91,9 +96,15 @@ class activity_PublicationEmail(activity.activity):
       
       # Download the article XML from S3 and parse them
       self.article_xml_filenames = self.download_files_from_s3_outbox()
-      self.parse_article_xml(self.article_xml_filenames)
+      self.articles = self.parse_article_xml(self.article_xml_filenames)
       
-      for doi, article in self.xml_file_to_doi_map.items():
+      self.articles_approved = self.approve_articles(self.articles)
+      
+      if(self.logger):
+        self.logger.info("Total parsed articles: " + str(len(self.articles)))
+        self.logger.info("Total approved articles " + str(len(self.articles_approved)))
+      
+      for article in self.articles_approved:
         
         # Ready to format emails and queue them
         
@@ -154,16 +165,22 @@ class activity_PublicationEmail(activity.activity):
     Given a list of article XML filenames,
     parse the files and add the article object to our article map
     """
-  
+    
+    articles = []
+    
     for article_xml_filename in article_xml_filenames:
   
       article = self.create_article()
       article.parse_article_file(article_xml_filename)
       if(self.logger):
         self.logger.info("Parsed " + article.doi_url)
+      # Add article object to the object list
+      articles.append(article)
 
       # Add article to the DOI to file name map
-      self.xml_file_to_doi_map[article.doi] = article
+      self.xml_file_to_doi_map[article.doi] = article_xml_filename
+    
+    return articles
 
   def download_templates(self):
     """
@@ -209,20 +226,62 @@ class activity_PublicationEmail(activity.activity):
     
     article = None
     
-    if doi in self.related_article_xml_file_to_doi_map.keys():
-      # Return an existing article object
-      article = self.related_article_xml_file_to_doi_map[doi]
-      if(self.logger):
-        self.logger.info("Hit the article cache on " + doi)
-    else:
-      # Article for this DOI does not exist, populate it
-      doi_id = int(doi.split(".")[-1])
-      article = self.create_article(doi_id)
-      self.related_article_xml_file_to_doi_map[doi] = article
-      if(self.logger):
-        self.logger.info("Building article for " + doi)
+    for article in self.related_articles:
+      if article.doi_url == doi:
+        # Return an existing article object
+        if(self.logger):
+          self.logger.info("Hit the article cache on " + doi)
+        return article
+    
+    # Article for this DOI does not exist, populate it
+    doi_id = int(doi.split(".")[-1])
+    article = self.create_article(doi_id)
+    
+    self.related_articles.append(article)
+    
+    if(self.logger):
+      self.logger.info("Building article for " + doi)
 
     return article
+  
+  def approve_articles(self, articles):
+    """
+    Given a list of article objects, approve them for processing    
+    """
+    
+    approved_articles = []
+    
+    # Approach this by adding all the articles at first, then remove the unwanted ones
+    approved_articles = list(articles)
+    
+    # Remove based on article type
+    for i, article in enumerate(approved_articles):
+      if article.article_type in self.article_types_do_not_send:
+        if(self.logger):
+          self.logger.info("Removing based on article type " + article.doi)
+        del approved_articles[i]
+        
+
+    # Create a blank article object to use its functions
+    blank_article = self.create_article()
+    # Remove based on published status
+    for i, article in enumerate(approved_articles):
+
+      # Article object knows if it is POA or not
+      is_poa = article.is_poa()
+      # Need to check S3 for whether the DOI was ever POA
+      #  using the blank article object to hopefully make only one S3 connection
+      was_ever_poa = blank_article.check_was_ever_poa(article.doi)
+      
+      # Now can check if published
+      is_published = blank_article.check_is_article_published(article.doi, is_poa, was_ever_poa)
+      if is_published is not True:
+        if(self.logger):
+          self.logger.info("Removing because it is not published " + article.doi)
+        del approved_articles[i]
+    
+    return approved_articles
+    
   
   def send_email_testrun(self, email_types, elife_id, authors, article):
     """
@@ -378,6 +437,13 @@ class activity_PublicationEmail(activity.activity):
     """
     author_list = []
     (column_headings, authors) = self.ejp.get_authors(doi_id = doi_id, corresponding = corresponding, document = document)
+    
+    # Authors will be none if there is not data
+    if authors is None:
+      if(self.logger):
+        self.logger.info("No authors found for article doi id " + doi_id)
+      return None
+    
     for author in authors:
       i = 0
       temp = {}
