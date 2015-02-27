@@ -104,20 +104,51 @@ class activity_PublicationEmail(activity.activity):
         self.logger.info("Total parsed articles: " + str(len(self.articles)))
         self.logger.info("Total approved articles " + str(len(self.articles_approved)))
       
-      for article in self.articles_approved:
-        
-        # Ready to format emails and queue them
-        
-        # First send author emails
-        authors = self.get_authors(article.doi_id)
+    # For the set of articles now select the template, authors and queue the emails
+    for article in self.articles_approved:
+      
+      # Determine which email type or template to send
+      email_type = self.choose_email_type(
+          article_type = article.article_type,
+          is_poa       = article.is_poa(),
+          was_ever_poa = article.was_ever_poa
+        )
+      # Ready to format emails and queue them
+      
+      # First send author emails
+      authors = self.get_authors(article.doi_id)
 
-        # TODO!! Determine which email type to send
-        #email_type = "author_publication_email_VOR_no_POA"
-    
-        # Temporary for testing, send a test run
-        #self.send_email_testrun(self.email_types, article.doi_id, authors, article)
+      # Temporary for testing, send a test run
+      #self.send_email_testrun(self.email_types, article.doi_id, authors, article)
       
     return True
+  
+  def choose_email_type(self, article_type, is_poa, was_ever_poa):
+    """
+    Given some article details, we can choose the
+    appropriate email template
+    """
+    email_type = None
+    
+    if article_type == "article-commentary":
+      # Insight
+      email_type = "author_publication_email_Insight_to_VOR"
+      
+    elif article_type == "research-article":
+      if is_poa is True:
+        # POA article
+        email_type = "author_publication_email_POA"
+        
+      elif is_poa is False:
+        # VOR article, decide based on if it was ever POA
+        if was_ever_poa is True:
+          email_type = "author_publication_email_VOR_after_POA"
+          
+        else:
+          # False or None is allowed here
+          email_type = "author_publication_email_VOR_no_POA"
+    
+    return email_type
   
   def download_files_from_s3_outbox(self):
       """
