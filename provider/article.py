@@ -374,7 +374,7 @@ class article(object):
         if related["related_article_type"] == "commentary":
           return related["xlink_href"]
           
-    elif self.article_type == "insight":
+    elif self.article_type == "article-commentary":
       for related in self.related_articles:
         if related["related_article_type"] == "commentary-article":
           return related["xlink_href"]

@@ -100,12 +100,15 @@ class activity_PublicationEmail(activity.activity):
       
       self.articles_approved = self.approve_articles(self.articles)
       
+      self.articles_approved_prepared = self.prepare_articles(self.articles_approved)
+      
       if(self.logger):
         self.logger.info("Total parsed articles: " + str(len(self.articles)))
         self.logger.info("Total approved articles " + str(len(self.articles_approved)))
+        self.logger.info("Total prepared articles " + str(len(self.articles_approved_prepared)))
       
     # For the set of articles now select the template, authors and queue the emails
-    for article in self.articles_approved:
+    for article in self.articles_approved_prepared:
       
       # Determine which email type or template to send
       email_type = self.choose_email_type(
@@ -113,12 +116,19 @@ class activity_PublicationEmail(activity.activity):
           is_poa       = article.is_poa(),
           was_ever_poa = article.was_ever_poa
         )
-      # Ready to format emails and queue them
       
-      # First send author emails
-      authors = self.get_authors(article.doi_id)
+      # Get the authors depending on the article type
+      if article.article_type == "article-commentary":
+        authors = self.get_authors(article.related_insight_article.doi_id)
+      else:
+        authors = self.get_authors(article.doi_id)
+      
+      # Send an email to each author
+      for author in authors:
+        self.send_email(email_type, article.doi_id, author, article)
+      
 
-      # Temporary for testing, send a test run
+      # Temporary for testing, send a test run - LATER FOR TESTING TEMPLATES
       #self.send_email_testrun(self.email_types, article.doi_id, authors, article)
       
     return True
@@ -149,6 +159,66 @@ class activity_PublicationEmail(activity.activity):
           email_type = "author_publication_email_VOR_no_POA"
     
     return email_type
+  
+  def prepare_articles(self, articles):
+    """
+    Given a set of article objects,
+    decide whether its related article should be set
+    Based on at least two factors,
+      If the article is an Insight type of article,
+      If both an Insight and its matching research article is in the set of articles
+    Some Insight articles may be removed too
+    """
+    
+    # Make a copy of the list
+    prepared_articles = list(articles)
+    
+    # Get a list of article DOIs for comparison later
+    article_non_insight_doi_list = []
+    article_insight_doi_list = []
+    for article in prepared_articles:
+      if article.article_type == "article-commentary":
+        article_insight_doi_list.append(article.doi)
+      else:
+        article_non_insight_doi_list.append(article.doi)
+    
+    #print "Non-insight " + json.dumps(article_non_insight_doi_list)
+    #print "Insight " + json.dumps(article_insight_doi_list)
+    
+    # Process or delete articles as required
+    for i, article in enumerate(prepared_articles):
+      print article.doi + " is type " + article.article_type
+      if article.article_type == "article-commentary":
+        # Insight
+        
+        # Set the related article only if its related article is
+        #  NOT in the list of articles DOIs
+        # This means it is an insight for a VOR that was published previously
+        related_article_doi = article.get_article_related_insight_doi()
+        if related_article_doi in article_non_insight_doi_list:
+          
+          #print "Article match on " + article.doi
+          
+          # We do not want to send for this insight
+          del prepared_articles[i]
+          # We do want to set the related article for its match
+          for research_article in prepared_articles:
+            if research_article.doi == related_article_doi:
+              print "Setting match on " + related_article_doi
+              research_article.set_related_insight_article(article)
+          
+        else:
+          # Set this insights related article
+          
+          #print "No article match on " + article.doi
+          
+          related_article_doi = article.get_article_related_insight_doi()
+          if related_article_doi:
+            related_article = self.get_related_article(related_article_doi)
+            article.set_related_insight_article(related_article)
+            
+    return prepared_articles
+    
   
   def download_files_from_s3_outbox(self):
       """
