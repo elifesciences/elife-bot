@@ -220,7 +220,7 @@ class activity_PublicationEmail(activity.activity):
           
           
           # We do want to set the related article for its match
-          for research_article in prepared_articles:
+          for research_article in articles:
             if research_article.doi == related_article_doi:
               print "Setting match on " + related_article_doi
               research_article.set_related_insight_article(article)
