@@ -5,6 +5,7 @@ import datetime
 import calendar
 import time
 import os
+import arrow
 
 from collections import namedtuple
 
@@ -56,6 +57,8 @@ class activity_PublicationEmail(activity.activity):
     self.articles = []
     self.related_articles = []
     self.articles_approved = []
+    self.articles_approved_prepared = []
+    self.insight_articles_to_remove_from_outbox = []
     
     # Default is do not send duplicate emails
     self.allow_duplicates = False
@@ -71,6 +74,8 @@ class activity_PublicationEmail(activity.activity):
     self.email_types.append('author_publication_email_VOR_after_POA')
     self.email_types.append('author_publication_email_VOR_no_POA')
     self.email_types.append('author_publication_email_Insight_to_VOR')
+    
+    self.date_stamp = self.set_datestamp()
     
   def do_activity(self, data = None):
     """
@@ -130,8 +135,16 @@ class activity_PublicationEmail(activity.activity):
 
       # Temporary for testing, send a test run - LATER FOR TESTING TEMPLATES
       #self.send_email_testrun(self.email_types, article.doi_id, authors, article)
-      
+    
+    # Clean the outbox
+    self.clean_outbox()
+    
     return True
+  
+  def set_datestamp(self):
+      a = arrow.utcnow()
+      date_stamp = str(a.datetime.year) + str(a.datetime.month).zfill(2) + str(a.datetime.day).zfill(2)
+      return date_stamp
   
   def choose_email_type(self, article_type, is_poa, was_ever_poa):
     """
@@ -201,8 +214,11 @@ class activity_PublicationEmail(activity.activity):
           #print "Article match on " + article.doi
           
           # We do not want to send for this insight
-          
           remove_article_doi.append(article.doi)
+          # We also do not want to leave it in the outbox, add it to the removal list
+          self.insight_articles_to_remove_from_outbox.append(article)
+          
+          
           # We do want to set the related article for its match
           for research_article in prepared_articles:
             if research_article.doi == related_article_doi:
@@ -559,7 +575,73 @@ class activity_PublicationEmail(activity.activity):
       pass
     
     return duplicate
+     
+  def get_to_folder_name(self):
+      """
+      From the date_stamp
+      return the S3 folder name to save published files into
+      """
+      to_folder = None
+      
+      date_folder_name = self.date_stamp
+      to_folder = self.published_folder + date_folder_name + "/"
+
+      return to_folder
                       
+  def clean_outbox(self):
+    """
+    Clean out the S3 outbox folder
+    """
+    
+    to_folder = self.get_to_folder_name()
+    
+    # Move only the published files from the S3 outbox to the published folder
+    bucket_name = self.publish_bucket
+    
+    # Connect to S3 and bucket
+    s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+    bucket = s3_conn.lookup(bucket_name)
+    
+    # Concatenate the expected S3 outbox file names
+    s3_key_names = []
+    
+    # Compile a list of the published file names
+    remove_doi_list = []
+    processed_file_names = []
+    for article in self.articles_approved_prepared:
+      remove_doi_list.append(article.doi)
+    for article in self.insight_articles_to_remove_from_outbox:
+      remove_doi_list.append(article.doi)
+      
+    for k, v in self.xml_file_to_doi_map.items():
+      if k in remove_doi_list:
+        processed_file_names.append(v)
+    
+    for name in processed_file_names:
+        filename = name.split(os.sep)[-1]
+        s3_key_name = self.outbox_folder + filename
+        s3_key_names.append(s3_key_name)
+    
+    for name in s3_key_names:
+        # Download objects from S3 and save to disk
+
+        # Do not delete the from_folder itself, if it is in the list
+        if name != self.outbox_folder:
+            filename = name.split("/")[-1]
+            new_s3_key_name = to_folder + filename
+            
+            # First copy
+            new_s3_key = None
+            try:
+                new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
+            except:
+                pass
+            
+            # Then delete the old key if successful
+            if(isinstance(new_s3_key, boto.s3.key.Key)):
+                old_s3_key = bucket.get_key(name)
+                old_s3_key.delete()
+    
   
   def get_authors(self, doi_id = None, corresponding = None, document = None):
     """
