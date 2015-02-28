@@ -38,6 +38,7 @@ class activity_ArticleToOutbox(activity.activity):
 		
 		# Folder for pubmed XML
 		self.pubmed_outbox_folder = "pubmed/outbox/"
+		self.publication_email_outbox_folder = "publication_email/outbox/"
 
 	def do_activity(self, data = None):
 		"""
@@ -63,20 +64,17 @@ class activity_ArticleToOutbox(activity.activity):
 		# Clean up to get the filename alone
 		tmp_document = self.get_document_name_from_path(tmp_document_path)
 		
-		# Get an S3 key name for where to save the XML
-		delimiter = self.settings.delimiter
-		prefix = self.pubmed_outbox_folder
-		s3key_name = prefix + tmp_document
+		# 1. Send the file to the pubmed outbox
+		self.copy_document_to_outbox(
+			path = tmp_document_path,
+			document = tmp_document,
+			outbox_folder = self.pubmed_outbox_folder)
 		
-		# Create S3 key and save the file there
-		bucket_name = self.publish_bucket
-		
-		s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-		bucket = s3_conn.lookup(bucket_name)
-		
-		s3key = boto.s3.key.Key(bucket)
-		s3key.key = s3key_name
-		s3key.set_contents_from_filename(tmp_document_path, replace=True)
+		# 2. Send the file to the publication email outbox
+		self.copy_document_to_outbox(
+			path = tmp_document_path,
+			document = tmp_document,
+			outbox_folder = self.publication_email_outbox_folder)
 		
 		if(self.logger):
 			self.logger.info('ArticleToOutbox: %s' % elife_id)
@@ -103,6 +101,27 @@ class activity_ArticleToOutbox(activity.activity):
 		document = document.replace("", '')
 		document = document.replace("\\", '')
 		return document
+
+	def copy_document_to_outbox(self, path, document, outbox_folder):
+		"""
+		Given the document name and the outbox folder
+		On S3 copy the document to the folder
+		"""
+
+		# Get an S3 key name for where to save the XML
+		delimiter = self.settings.delimiter
+		prefix = outbox_folder
+		s3key_name = prefix + document
+		
+		# Create S3 key and save the file there
+		bucket_name = self.publish_bucket
+		
+		s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+		bucket = s3_conn.lookup(bucket_name)
+		
+		s3key = boto.s3.key.Key(bucket)
+		s3key.key = s3key_name
+		s3key.set_contents_from_filename(path, replace=True)
 
 	def is_resupply(self, doi_id):
 		"""

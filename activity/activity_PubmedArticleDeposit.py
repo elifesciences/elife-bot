@@ -21,6 +21,8 @@ import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.simpleDB as dblib
+import provider.article as articlelib
+import provider.s3lib as s3lib
 
 """
 PubmedArticleDeposit activity
@@ -52,13 +54,11 @@ class activity_PubmedArticleDeposit(activity.activity):
         self.create_activity_directories()
         self.date_stamp = self.set_datestamp()
         
-        # Store the list of DOI id that was ever PoA
-        self.was_poa_doi_ids = None
-        
-        self.lookup_url_prefix = "http://elifesciences.org/lookup/doi/10.7554/eLife."
-        
         # Data provider where email body is saved
         self.db = dblib.SimpleDB(settings)
+        
+        # Instantiate a new article object to provide some helper functions
+        self.article = articlelib.article(self.settings, self.get_tmp_dir())
         
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
@@ -154,7 +154,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
         
-        s3_key_names = self.get_s3_key_names_from_bucket(
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(
             bucket          = bucket,
             prefix          = self.outbox_folder,
             file_extensions = file_extensions)
@@ -174,266 +174,7 @@ class activity_PubmedArticleDeposit(activity.activity):
             f = open(filename_plus_path, mode)
             s3_key.get_contents_to_file(f)
             f.close()
-        
-    def get_s3_key_names_from_bucket(self, bucket, prefix = None, delimiter = '/', headers = None, file_extensions = None):
-        """
-        Given a connected boto bucket object, and optional parameters,
-        from the prefix (folder name), get the s3 key names for
-        non-folder objects, optionally that match a particular
-        list of file extensions
-        """
-        s3_keys = []
-        s3_key_names = []
-        
-        # Get a list of S3 objects
-        bucketList = bucket.list(prefix = prefix, delimiter = delimiter, headers = headers)
-
-        for item in bucketList:
-          if(isinstance(item, boto.s3.key.Key)):
-            # Can loop through each prefix and search for objects
-            s3_keys.append(item)
-        
-        # Convert to key names instead of objects to make it testable later
-        for key in s3_keys:
-            s3_key_names.append(key.name)
-        
-        # Filter by file_extension
-        if file_extensions is not None:
-            s3_key_names = self.filter_list_by_file_extensions(s3_key_names, file_extensions)
             
-        return s3_key_names
-    
-    def filter_list_by_file_extensions(self, s3_key_names, file_extensions):
-        """
-        Given a list of s3_key_names, and a list of file_extensions
-        filter out all but the allowed file extensions
-        Each file extension should start with a . dot
-        """
-        good_s3_key_names = []
-        for name in s3_key_names:
-            match = False
-            for ext in file_extensions:
-                # Match file extension as the end of the string and escape the dot
-                pattern = ".*\\" + ext + "$"
-                if(re.search(pattern, name) is not None):
-                    match = True
-            if match is True:
-                good_s3_key_names.append(name)
-        
-        return good_s3_key_names
-        
-    def get_doi_id_from_doi(self, doi):
-        """
-        Extract just the integer doi_id value from the DOI string
-        """
-        try:
-            doi_id = int(doi.split(".")[-1])
-        except:
-            doi_id = None
-            
-        return doi_id
-        
-    def check_is_article_published(self, doi, is_poa, was_ever_poa):
-        """
-        For each article XML downloaded from S3, check if it is published
-        """
-        
-        doi_id = self.get_doi_id_from_doi(doi)
-
-        article_url = self.get_article_canonical_url(doi_id)
-        #print article_url
-        
-        # Parse the URL based on the type of article
-        if article_url is None:
-            return None
-
-        if (is_poa is True or
-            (is_poa is False and was_ever_poa is False)):
-            # In this case, any URL is sufficient
-            if article_url:
-                return True
-            else:
-                return False
-        elif is_poa is False and was_ever_poa is True:
-            # In the case of was ever PoA but is not PoA
-            #  check the URL does not contain the string "early"
-            if article_url:
-                if re.match('.*early.*', article_url) is None:
-                    return True
-                else:
-                    return False
-        
-    def get_article_canonical_url(self, doi_id):
-        """
-        Given the doi_id, and using the lookup URL prefix,
-        make an HTTP head request and return the URL after
-        all redirects are followed
-        """
-        # Construct the lookup URL on the HW site
-        lookup_url = self.get_article_lookup_url(doi_id)
-        #print lookup_url
-        
-        r = requests.head(lookup_url, allow_redirects=True)
-        if r.status_code == requests.codes.ok:
-            return r.url
-        else:
-            return None
-        return None
-    
-    def get_article_lookup_url(self, doi_id):
-        """
-        Given the doi_id, create the lookup URL
-        """
-        lookup_url = self.lookup_url_prefix + str(doi_id).zfill(5)
-        return lookup_url
-        
-    def get_was_poa_doi_ids(self, force = False):
-        """
-        Connect to the S3 bucket, and from the files in the published folder,
-        get a list of .xml files, and then parse out the article id
-        """
-        # Return from cached values if not force
-        if force is False and self.was_poa_doi_ids is not None:
-            return self.was_poa_doi_ids
-        
-        was_poa_doi_ids = []
-        poa_published_folder = "published/"
-
-        file_extensions = []
-        file_extensions.append(".xml")
-        
-        bucket_name = self.publish_bucket
-        
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-        
-        delimiter = '/'
-        headers = None
-        
-        # Step one, get all the subfolder names
-        folders = []
-        bucketList = bucket.list(prefix = poa_published_folder, delimiter = delimiter, headers = headers)
-        for item in bucketList:
-            if(isinstance(item, boto.s3.prefix.Prefix)):
-                folders.append(item)
-
-        # Step two, for each subfolder get the keys inside it
-        s3_poa_key_names = []
-        for folder_name in folders:
-            prefix = folder_name.name
-            
-            # print "getting s3 keys from " + prefix
-            
-            s3_key_names = self.get_s3_key_names_from_bucket(
-                bucket          = bucket,
-                prefix          = prefix,
-                file_extensions = file_extensions)
-            for s3_key_name in s3_key_names:
-                s3_poa_key_names.append(s3_key_name)
-
-        # Extract just the doi_id portion
-        for s3_key_name in s3_poa_key_names:
-            doi_id = self.get_doi_id_from_poa_s3_key_name(s3_key_name)
-            if doi_id:
-                was_poa_doi_ids.append(doi_id)
-                
-        # Remove duplicates and sort it
-        was_poa_doi_ids = list(set(was_poa_doi_ids))
-        was_poa_doi_ids.sort()
-        
-        # Cache it
-        self.was_poa_doi_ids = was_poa_doi_ids
-        
-        # Return it
-        return was_poa_doi_ids
-          
-    def get_doi_id_from_poa_s3_key_name(self, s3_key_name):
-        """
-        Extract just the integer doi_id value from the S3 key name
-        of the article XML file
-        E.g.
-          published/20140508/elife_poa_e02419.xml = 2419
-          published/20140508/elife_poa_e02444v2.xml = 2444
-        """
-        
-        doi_id = None
-        delimiter = '/'
-        file_name_prefix = "elife_poa_e"
-        try:
-            # Split on delimiter
-            file_name_with_extension = s3_key_name.split(delimiter)[-1]
-            # Remove file extension
-            file_name = file_name_with_extension.split(".")[0]
-            # Remove file name prefix
-            file_name_id = file_name.split(file_name_prefix)[-1]
-            # Get the numeric part of the file name
-            doi_id = int("".join(re.findall(r'^\d+', file_name_id)))
-        except:
-            doi_id = None
-            
-        return doi_id
-          
-    def get_s3_key_names_from_bucket(self, bucket, prefix = None, delimiter = '/', headers = None, file_extensions = None):
-        """
-        Given a connected boto bucket object, and optional parameters,
-        from the prefix (folder name), get the s3 key names for
-        non-folder objects, optionally that match a particular
-        list of file extensions
-        """
-        s3_keys = []
-        s3_key_names = []
-        
-        # Get a list of S3 objects
-        bucketList = bucket.list(prefix = prefix, delimiter = delimiter, headers = headers)
-
-        for item in bucketList:
-          if(isinstance(item, boto.s3.key.Key)):
-            # Can loop through each prefix and search for objects
-            s3_keys.append(item)
-        
-        # Convert to key names instead of objects to make it testable later
-        for key in s3_keys:
-            s3_key_names.append(key.name)
-        
-        # Filter by file_extension
-        if file_extensions is not None:
-            s3_key_names = self.filter_list_by_file_extensions(s3_key_names, file_extensions)
-            
-        return s3_key_names
-    
-    def filter_list_by_file_extensions(self, s3_key_names, file_extensions):
-        """
-        Given a list of s3_key_names, and a list of file_extensions
-        filter out all but the allowed file extensions
-        Each file extension should start with a . dot
-        """
-        good_s3_key_names = []
-        for name in s3_key_names:
-            match = False
-            for ext in file_extensions:
-                # Match file extension as the end of the string and escape the dot
-                pattern = ".*\\" + ext + "$"
-                if(re.search(pattern, name) is not None):
-                    match = True
-            if match is True:
-                good_s3_key_names.append(name)
-        
-        return good_s3_key_names
-        
-          
-    def check_was_ever_poa(self, doi):
-        """
-        For each article XML downloaded from S3, check if it is published
-        """
-        
-        doi_id = self.get_doi_id_from_doi(doi)
-        
-        if int(doi_id) in self.get_was_poa_doi_ids():
-            return True
-        else:
-            return False
-
     def parse_article_xml(self, article_xml_files):
         """
         Given a list of article XML files, parse them into objects
@@ -477,14 +218,14 @@ class activity_PubmedArticleDeposit(activity.activity):
             # Check if article was ever poa
             # Must be set to True or False to get it published
             if (article.is_poa() is False and
-                self.check_was_ever_poa(article.doi) is True):
+                self.article.check_was_ever_poa(article.doi) is True):
                 article.was_ever_poa = True
             elif (article.is_poa() is False and
-                self.check_was_ever_poa(article.doi) is False):
+                self.article.check_was_ever_poa(article.doi) is False):
                 article.was_ever_poa = False
                 
             # Check if each article is published
-            if self.check_is_article_published(
+            if self.article.check_is_article_published(
                 doi = article.doi,
                 is_poa = article.is_poa(),
                 was_ever_poa = article.was_ever_poa) is True:
@@ -562,7 +303,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
         
-        s3_key_names = self.get_s3_key_names_from_bucket(
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(
             bucket          = bucket,
             prefix          = self.outbox_folder)
         
