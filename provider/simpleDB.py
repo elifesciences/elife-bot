@@ -456,7 +456,7 @@ class SimpleDB(object):
 			where_delimiter = " and"
 		
 		if(email_type):
-			where_clause += where_delimiter + " email_type = '" + escape(email_type) + "'"
+			where_clause += where_delimiter + " email_type = '" + self.escape(email_type) + "'"
 			where_delimiter = " and"
 		
 		if(doi_id):

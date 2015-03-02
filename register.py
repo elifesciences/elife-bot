@@ -43,6 +43,7 @@ def start(ENV = "dev"):
 	workflow_names.append("DepositCrossref")
 	workflow_names.append("PubmedArticleDeposit")
 	workflow_names.append("PublishFiguresPDF")
+	workflow_names.append("PublicationEmail")
 	workflow_names.append("FTPArticle")
 	
 	for workflow_name in workflow_names:
@@ -85,6 +86,7 @@ def start(ENV = "dev"):
 	activity_names.append("PubmedArticleDeposit")
 	activity_names.append("ArticleToOutbox")
 	activity_names.append("UnzipArticleFiguresPDF")
+	activity_names.append("PublicationEmail")
 	activity_names.append("FTPArticle")
 	
 	for activity_name in activity_names:

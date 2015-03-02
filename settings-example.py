@@ -71,6 +71,9 @@ class dev():
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp-dev'
 	
+	# Templates S3 settings
+	templates_bucket = 'elife-bot-dev'
+	
 	# Crossref
 	crossref_url = 'http://test.crossref.org/servlet/deposit'
 	crossref_login_id = ''
@@ -162,6 +165,9 @@ class live():
 	
 	# EJP S3 settings
 	ejp_bucket = 'elife-ejp-ftp'
+	
+	# Templates S3 settings
+	templates_bucket = 'elife-bot'
 	
 	# Crossref
 	crossref_url = 'http://doi.crossref.org/servlet/deposit'

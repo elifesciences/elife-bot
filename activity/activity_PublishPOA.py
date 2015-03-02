@@ -64,6 +64,9 @@ class activity_PublishPOA(activity.activity):
         # Folder for pubmed XML
         self.pubmed_outbox_folder = "pubmed/outbox/"
         
+        # Folder for publication email
+        self.publication_email_outbox_folder = "publication_email/outbox/"
+        
         # Subfolders on the FTP site to deliver into
         self.ftp_subfolder_poa = "poa"
         self.ftp_subfolder_ds = "ds"
@@ -86,6 +89,10 @@ class activity_PublishPOA(activity.activity):
         # Track XML files selected for pubmed XML
         self.pubmed_outbox_s3_key_names = None
         self.pubmed_articles_not_uploaded_to_outbox = None
+        
+        # Track XML files selected for publication email
+        self.publication_email_outbox_s3_key_names = None
+        self.publication_email_articles_not_uploaded_to_outbox = None
         
         # More file status tracking for reporting in email
         self.malformed_ds_file_names = []
@@ -134,6 +141,7 @@ class activity_PublishPOA(activity.activity):
                 self.clean_outbox()
                 self.upload_xml_to_crossref_outbox_s3()
                 self.upload_xml_to_pubmed_outbox_s3()
+                self.upload_xml_to_publication_email_outbox_s3()
                 self.outbox_status = True
                 
             # Set the activity status of this activity based on successes
@@ -644,6 +652,17 @@ class activity_PublishPOA(activity.activity):
          self.pubmed_articles_not_uploaded_to_outbox) \
           = self.upload_xml_to_an_outbox_s3(s3_folder_name)
         
+    def upload_xml_to_publication_email_outbox_s3(self):
+        """
+        Upload a copy of the article XML to the publication email outbox on S3
+        for ingestion by the next workflow activity
+        """
+        s3_folder_name = self.publication_email_outbox_folder
+        
+        (self.publication_email_outbox_s3_key_names,
+         self.publication_email_articles_not_uploaded_to_outbox) \
+          = self.upload_xml_to_an_outbox_s3(s3_folder_name)
+        
     def upload_xml_to_an_outbox_s3(self, s3_folder_name):
         """
         Upload a copy of the article XML to the s3_folder_name,
@@ -859,6 +878,24 @@ class activity_PublishPOA(activity.activity):
             body += "\n"
             body += "Files NOT uploaded to pubmed outbox:" + "\n"
             for name in self.pubmed_articles_not_uploaded_to_outbox:
+                body += name + "\n"
+        else:
+            body += "\n"
+            body += "No files omitted when uploading to pubmed outbox." + "\n"
+
+        if self.publication_email_outbox_s3_key_names:
+            body += "\n"
+            body += "Files uploaded to publication email outbox:" + "\n"
+            for name in self.publication_email_outbox_s3_key_names:
+                body += name + "\n"
+        else:
+            body += "\n"
+            body += "No files uploaded to publication email outbox." + "\n"
+            
+        if self.publication_email_articles_not_uploaded_to_outbox:
+            body += "\n"
+            body += "Files NOT uploaded to publication email outbox:" + "\n"
+            for name in self.publication_email_articles_not_uploaded_to_outbox:
                 body += name + "\n"
         else:
             body += "\n"
