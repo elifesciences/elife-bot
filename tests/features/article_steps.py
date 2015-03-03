@@ -197,3 +197,13 @@ def i_have_the_article_authors_string_authors_string(step, authors_string):
   assert world.article.authors_string == authors_string, \
     "Got authors_string %s" % world.article.authors_string
   
+@step(u'I have the article is in display channel "([^"]*)" (\S+)')
+def i_have_the_article_is_in_display_channel_group(step, display_channel_name, is_in_display_channel):
+  if is_in_display_channel == "True":  is_in_display_channel = True
+  if is_in_display_channel == "False": is_in_display_channel = False
+  
+  is_in = world.article.is_in_display_channel(display_channel_name)
+  assert is_in == is_in_display_channel, \
+    "Got is_in_display_channel %s" % is_in
+
+    
