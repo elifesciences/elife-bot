@@ -132,6 +132,10 @@ class article(object):
       
       self.related_articles = self.parse_related_article(soup)
       
+      #self.subject_area = self.parse_subject_area(soup)
+      
+      self.display_channel = self.parse_subject_area(soup, subj_group_type = "display-channel")
+          
       return True
     except:
       return False
@@ -463,6 +467,23 @@ class article(object):
       authors_string += author["given_names"] + " " + author["surname"]
       
     return authors_string
+  
+  def is_in_display_channel(self, display_channel):
+    """
+    Given a display channel to match, return True or False if
+    the article display_channel list includes it
+    """
+    
+    if not hasattr(self, "display_channel"):
+      # Display channel was never set
+      return None
+    
+    if display_channel in self.display_channel:
+      return True
+    else:
+      return False
+    
+    
     
   """
   Some quick copy and paste from elife-api-prototype parseNLM.py parser to get the basics for now
@@ -796,3 +817,32 @@ class article(object):
             position += 1
         
     return authors
+
+  def parse_subject_area(self, soup, subj_group_type = None):
+    """
+    Find the subject areas from article-categories subject tags
+    """
+    subject_area = []
+    try:
+      article_meta = self.extract_nodes(soup, "article-meta")
+      
+      article_categories = self.extract_nodes(article_meta[0], "article-categories")
+    
+      if subj_group_type is None:
+        subj_group = self.extract_nodes(article_categories[0], "subj-group")
+      else:
+        subj_group = self.extract_nodes(article_categories[0], "subj-group",
+                                                attr="subj-group-type", value=subj_group_type)
+        
+      for tag in subj_group:
+        tags = self.extract_nodes(tag, "subject")
+        for t in tags:
+          subject_area.append(t.text)
+
+    except(IndexError):
+      # Tag not found
+      return None
+    
+    # Remove duplicates
+    subject_area = list(set(subject_area))
+    return subject_area
