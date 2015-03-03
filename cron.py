@@ -116,6 +116,15 @@ def run_cron(ENV = "dev"):
           workflow_id   = "cron_NewS3POA",
           start_seconds = 60*31)
         
+      # Author emails once per day 17:45 UTC
+      # Set to 16:45 UTC during daylight savings for 17:45 local UK time
+      if(current_time.tm_hour == 17):
+        workflow_conditional_start(
+          ENV           = ENV,
+          starter_name  = "starter_PublicationEmail",
+          workflow_id   = "PublicationEmail",
+          start_seconds = 60*31)
+        
       workflow_conditional_start(
         ENV           = ENV,
         starter_name  = "starter_PubmedArticleDeposit",
@@ -194,6 +203,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       or starter_name == "starter_PublishPOA"
       or starter_name == "cron_NewS3POA"
       or starter_name == "cron_NewS3FiguresPDF"
+      or starter_name == "starter_PublicationEmail"
       ):
       s.start(ENV = ENV)
       
