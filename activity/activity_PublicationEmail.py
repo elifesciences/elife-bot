@@ -385,6 +385,12 @@ class activity_PublicationEmail(activity.activity):
           self.logger.info("Removing based on article type " + article.doi)
         remove_article_doi.append(article.doi)
         
+    # Remove if display channel is "Feature article"
+    for article in articles:
+      if article.is_in_display_channel("Feature article") is True:
+        if(self.logger):
+          self.logger.info("Removing because display channel is Feature article " + article.doi)
+        remove_article_doi.append(article.doi)  
 
     # Create a blank article object to use its functions
     blank_article = self.create_article()
