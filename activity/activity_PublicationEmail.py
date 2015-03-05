@@ -62,6 +62,7 @@ class activity_PublicationEmail(activity.activity):
     self.articles_approved = []
     self.articles_approved_prepared = []
     self.insight_articles_to_remove_from_outbox = []
+    self.articles_do_not_remove_from_outbox = []
     
     # Default is do not send duplicate emails
     self.allow_duplicates = False
@@ -136,8 +137,17 @@ class activity_PublicationEmail(activity.activity):
         authors = self.get_authors(article.doi_id)
       
       # Send an email to each author
-      for author in authors:
-        self.send_email(email_type, article.doi_id, author, article)
+      if authors is None:
+        if(self.logger):
+          log_info = "Leaving article in the outbox because we cannot find its authors: " + article.doi
+          self.admin_email_content += "\n" + log_info
+          self.logger.info(log_info)
+        # Make a note of this and we will not remove from the outbox, save for a later day
+        self.articles_do_not_remove_from_outbox.append(article.doi)
+      else:
+        # Good, we can send emails
+        for author in authors:
+          self.send_email(email_type, article.doi_id, author, article)
       
 
       # Temporary for testing, send a test run - LATER FOR TESTING TEMPLATES
@@ -651,7 +661,9 @@ class activity_PublicationEmail(activity.activity):
     remove_doi_list = []
     processed_file_names = []
     for article in self.articles_approved_prepared:
-      remove_doi_list.append(article.doi)
+      if article.doi not in self.articles_do_not_remove_from_outbox:
+        remove_doi_list.append(article.doi)
+        
     for article in self.insight_articles_to_remove_from_outbox:
       remove_doi_list.append(article.doi)
       
