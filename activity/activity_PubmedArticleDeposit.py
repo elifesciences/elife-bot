@@ -217,17 +217,17 @@ class activity_PubmedArticleDeposit(activity.activity):
             
             # Check if article was ever poa
             # Must be set to True or False to get it published
-            if (article.is_poa() is False and
+            if (article.is_poa is False and
                 self.article.check_was_ever_poa(article.doi) is True):
                 article.was_ever_poa = True
-            elif (article.is_poa() is False and
+            elif (article.is_poa is False and
                 self.article.check_was_ever_poa(article.doi) is False):
                 article.was_ever_poa = False
                 
             # Check if each article is published
             if self.article.check_is_article_published(
                 doi = article.doi,
-                is_poa = article.is_poa(),
+                is_poa = article.is_poa,
                 was_ever_poa = article.was_ever_poa) is True:
                 
                 # Add published article object to be processed

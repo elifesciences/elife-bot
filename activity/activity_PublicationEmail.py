@@ -126,7 +126,7 @@ class activity_PublicationEmail(activity.activity):
       # Determine which email type or template to send
       email_type = self.choose_email_type(
           article_type = article.article_type,
-          is_poa       = article.is_poa(),
+          is_poa       = article.is_poa,
           was_ever_poa = article.was_ever_poa
         )
       
@@ -436,7 +436,7 @@ class activity_PublicationEmail(activity.activity):
     
     for article in articles:
       # Article object knows if it is POA or not
-      is_poa = article.is_poa()
+      is_poa = article.is_poa
       # Need to check S3 for whether the DOI was ever POA
       #  using the blank article object to hopefully make only one S3 connection
       was_ever_poa = blank_article.check_was_ever_poa(article.doi)
