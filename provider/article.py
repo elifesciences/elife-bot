@@ -48,7 +48,8 @@ class article(object):
     
     # Some defaults
     self.related_insight_article = None
-    self.was_ever_poa = None    
+    self.was_ever_poa = None
+    self.is_poa = None
     
     # Store the list of DOI id that was ever PoA
     self.was_poa_doi_ids = None
@@ -131,6 +132,8 @@ class article(object):
       self.authors_string = self.parse_authors_string(soup)
       
       self.related_articles = self.parse_related_article(soup)
+      
+      self.is_poa = self.parse_is_poa(soup)
       
       #self.subject_area = self.parse_subject_area(soup)
       
@@ -349,23 +352,7 @@ class article(object):
           doi_id = None
           
       return doi_id
-    
-  def is_poa(self):
-      # Based the presence of an pub date whether it is a
-      #  PoA article or VoR article
-      date_type = "pub"
-
-      if hasattr(self, "pub_date"):
-        if self.pub_date is None:
-          # No date means is POA
-          return True
-        else:
-          # Found a date is not POA
-          return False
-      else:
-        # Article XML was never parsed
-        return None
-    
+        
   def get_article_related_insight_doi(self):
     """
     Given an article object, depending on the article_type,
@@ -846,3 +833,25 @@ class article(object):
     # Remove duplicates
     subject_area = list(set(subject_area))
     return subject_area
+
+  def parse_is_poa(self, soup):
+    """
+    Using the same method as done in the elife-poa-xml-generation code,
+    looks for
+    pub-date pub-type="collection"
+    if present then is_poa is false, if not present then is_poa is True
+    """
+    # Default value
+    is_poa = True
+    
+    pub_dates = self.extract_nodes(soup, "pub-date")
+
+    for pub_date in pub_dates:
+      try:
+        if pub_date["pub-type"] == "collection":
+          is_poa = False
+      except KeyError:
+        # This pub date does not have the attribute, continue
+        pass
+
+    return is_poa
