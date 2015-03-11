@@ -51,6 +51,9 @@ class activity_PublicationEmail(activity.activity):
     self.outbox_folder = "publication_email/outbox/"
     self.published_folder = "publication_email/published/"
     
+    # Track the success of some steps
+    self.activity_status = None
+    
     # Track XML files selected for publication
     self.article_xml_filenames = []
     self.xml_file_to_doi_map = {}
@@ -59,6 +62,7 @@ class activity_PublicationEmail(activity.activity):
     self.articles_approved = []
     self.articles_approved_prepared = []
     self.insight_articles_to_remove_from_outbox = []
+    self.articles_do_not_remove_from_outbox = []
     
     # Default is do not send duplicate emails
     self.allow_duplicates = False
@@ -76,6 +80,8 @@ class activity_PublicationEmail(activity.activity):
     self.email_types.append('author_publication_email_Insight_to_VOR')
     
     self.date_stamp = self.set_datestamp()
+    
+    self.admin_email_content = ''
     
   def do_activity(self, data = None):
     """
@@ -108,9 +114,11 @@ class activity_PublicationEmail(activity.activity):
       self.articles_approved_prepared = self.prepare_articles(self.articles_approved)
       
       if(self.logger):
-        self.logger.info("Total parsed articles: " + str(len(self.articles)))
-        self.logger.info("Total approved articles " + str(len(self.articles_approved)))
-        self.logger.info("Total prepared articles " + str(len(self.articles_approved_prepared)))
+        log_info = "Total parsed articles: " + str(len(self.articles))
+        log_info += "\n" + "Total approved articles " + str(len(self.articles_approved))
+        log_info += "\n" + "Total prepared articles " + str(len(self.articles_approved_prepared))
+        self.admin_email_content += "\n" + log_info
+        self.logger.info(log_info)
       
     # For the set of articles now select the template, authors and queue the emails
     for article in self.articles_approved_prepared:
@@ -118,7 +126,7 @@ class activity_PublicationEmail(activity.activity):
       # Determine which email type or template to send
       email_type = self.choose_email_type(
           article_type = article.article_type,
-          is_poa       = article.is_poa(),
+          is_poa       = article.is_poa,
           was_ever_poa = article.was_ever_poa
         )
       
@@ -129,8 +137,17 @@ class activity_PublicationEmail(activity.activity):
         authors = self.get_authors(article.doi_id)
       
       # Send an email to each author
-      for author in authors:
-        self.send_email(email_type, article.doi_id, author, article)
+      if authors is None:
+        if(self.logger):
+          log_info = "Leaving article in the outbox because we cannot find its authors: " + article.doi
+          self.admin_email_content += "\n" + log_info
+          self.logger.info(log_info)
+        # Make a note of this and we will not remove from the outbox, save for a later day
+        self.articles_do_not_remove_from_outbox.append(article.doi)
+      else:
+        # Good, we can send emails
+        for author in authors:
+          self.send_email(email_type, article.doi_id, author, article)
       
 
       # Temporary for testing, send a test run - LATER FOR TESTING TEMPLATES
@@ -138,6 +155,10 @@ class activity_PublicationEmail(activity.activity):
     
     # Clean the outbox
     self.clean_outbox()
+    
+    # Send email to admins with the status
+    self.activity_status = True
+    self.send_admin_email()
     
     return True
   
@@ -222,7 +243,10 @@ class activity_PublicationEmail(activity.activity):
           # We do want to set the related article for its match
           for research_article in articles:
             if research_article.doi == related_article_doi:
-              print "Setting match on " + related_article_doi
+              if(self.logger):
+                log_info = "Setting match on " + related_article_doi + " to " + article.doi
+                self.admin_email_content += "\n" + log_info
+                self.logger.info(log_info)
               research_article.set_related_insight_article(article)
           
         else:
@@ -297,7 +321,9 @@ class activity_PublicationEmail(activity.activity):
       article = self.create_article()
       article.parse_article_file(article_xml_filename)
       if(self.logger):
-        self.logger.info("Parsed " + article.doi_url)
+        log_info = "Parsed " + article.doi_url
+        self.admin_email_content += "\n" + log_info
+        self.logger.info(log_info)
       # Add article object to the object list
       articles.append(article)
 
@@ -315,12 +341,16 @@ class activity_PublicationEmail(activity.activity):
     self.templates.download_email_templates_from_s3()
     if(self.templates.email_templates_warmed is not True):
       if(self.logger):
-        self.logger.info('PublicationEmail email templates did not warm successfully')
+        log_info = 'PublicationEmail email templates did not warm successfully'
+        self.admin_email_content += "\n" + log_info
+        self.logger.info(log_info)
       # Stop now! Return False if we do not have the necessary files
       return False
     else:
       if(self.logger):
-        self.logger.info('PublicationEmail email templates warmed')
+        log_info = 'PublicationEmail email templates warmed'
+        self.admin_email_content += "\n" + log_info
+        self.logger.info(log_info)
       return True
 
   def create_article(self, doi_id = None):
@@ -354,7 +384,9 @@ class activity_PublicationEmail(activity.activity):
       if article.doi_url == doi:
         # Return an existing article object
         if(self.logger):
-          self.logger.info("Hit the article cache on " + doi)
+          log_info = "Hit the article cache on " + doi
+          self.admin_email_content += "\n" + log_info
+          self.logger.info(log_info)
         return article
     
     # Article for this DOI does not exist, populate it
@@ -364,7 +396,9 @@ class activity_PublicationEmail(activity.activity):
     self.related_articles.append(article)
     
     if(self.logger):
-      self.logger.info("Building article for " + doi)
+      log_info = "Building article for " + doi
+      self.admin_email_content += "\n" + log_info
+      self.logger.info(log_info)
 
     return article
   
@@ -382,14 +416,18 @@ class activity_PublicationEmail(activity.activity):
     for article in articles:
       if article.article_type in self.article_types_do_not_send:
         if(self.logger):
-          self.logger.info("Removing based on article type " + article.doi)
+          log_info = "Removing based on article type " + article.doi
+          self.admin_email_content += "\n" + log_info
+          self.logger.info(log_info)
         remove_article_doi.append(article.doi)
         
     # Remove if display channel is "Feature article"
     for article in articles:
       if article.is_in_display_channel("Feature article") is True:
         if(self.logger):
-          self.logger.info("Removing because display channel is Feature article " + article.doi)
+          log_info = "Removing because display channel is Feature article " + article.doi
+          self.admin_email_content += "\n" + log_info
+          self.logger.info(log_info)
         remove_article_doi.append(article.doi)  
 
     # Create a blank article object to use its functions
@@ -398,7 +436,7 @@ class activity_PublicationEmail(activity.activity):
     
     for article in articles:
       # Article object knows if it is POA or not
-      is_poa = article.is_poa()
+      is_poa = article.is_poa
       # Need to check S3 for whether the DOI was ever POA
       #  using the blank article object to hopefully make only one S3 connection
       was_ever_poa = blank_article.check_was_ever_poa(article.doi)
@@ -410,7 +448,9 @@ class activity_PublicationEmail(activity.activity):
       is_published = blank_article.check_is_article_published(article.doi, is_poa, was_ever_poa)
       if is_published is not True:
         if(self.logger):
-          self.logger.info("Removing because it is not published " + article.doi)
+          log_info = "Removing because it is not published " + article.doi
+          self.admin_email_content += "\n" + log_info
+          self.logger.info(log_info)
         remove_article_doi.append(article.doi)
     
     # Can remove the articles now without affecting the loops using del
@@ -492,8 +532,10 @@ class activity_PublicationEmail(activity.activity):
     
       if(duplicate is True):
         if(self.logger):
-          self.logger.info('Duplicate email: doi_id: %s email_type: %s recipient_email: %s'
+          log_info = ('Duplicate email: doi_id: %s email_type: %s recipient_email: %s'
                            % (elife_id, headers["email_type"], author.e_mail))
+          self.admin_email_content += "\n" + log_info
+          self.logger.info(log_info)
           
     # Secondly, check if article is on the do not send list
     if duplicate is False and self.allow_duplicates is not True:
@@ -501,16 +543,20 @@ class activity_PublicationEmail(activity.activity):
       
       if(duplicate is True):
         if(self.logger):
-          self.logger.info('Article on do not send list for DOI: doi_id: %s email_type: %s recipient_email: %s'
+          log_info = ('Article on do not send list for DOI: doi_id: %s email_type: %s recipient_email: %s'
                            % (elife_id, headers["email_type"], author.e_mail))
+          self.admin_email_content += "\n" + log_info
+          self.logger.info(log_info)
     
     # Now we can actually queue the email to be sent
     if(duplicate is False):
       # Queue the email
       if(self.logger):
-        self.logger.info("Sending " + email_type + " type email" +
+        log_info = ("Sending " + email_type + " type email" +
                          " for article " + elife_id +
                          " to recipient_email " + author.e_mail)
+        self.admin_email_content += "\n" + log_info
+        self.logger.info(log_info)
       
       self.queue_author_email(
         email_type = email_type,
@@ -615,7 +661,9 @@ class activity_PublicationEmail(activity.activity):
     remove_doi_list = []
     processed_file_names = []
     for article in self.articles_approved_prepared:
-      remove_doi_list.append(article.doi)
+      if article.doi not in self.articles_do_not_remove_from_outbox:
+        remove_doi_list.append(article.doi)
+        
     for article in self.insight_articles_to_remove_from_outbox:
       remove_doi_list.append(article.doi)
       
@@ -661,7 +709,9 @@ class activity_PublicationEmail(activity.activity):
     # Authors will be none if there is not data
     if authors is None:
       if(self.logger):
-        self.logger.info("No authors found for article doi id " + doi_id)
+        log_info = "No authors found for article doi id " + doi_id
+        self.admin_email_content += "\n" + log_info
+        self.logger.info(log_info)
       return None
     
     for author in authors:
@@ -837,6 +887,106 @@ class activity_PublicationEmail(activity.activity):
     
     return do_not_send_list
     
+  def send_admin_email(self):
+      """
+      After do_activity is finished, send emails to recipients
+      on the status of the activity
+      """
+      # Connect to DB
+      db_conn = self.db.connect()
+      
+      # Note: Create a verified sender email address, only done once
+      #conn.verify_email_address(self.settings.ses_sender_email)
+    
+      current_time = time.gmtime()
+      
+      body = self.get_admin_email_body(current_time)
+      subject = self.get_admin_email_subject(current_time)
+      sender_email = self.settings.ses_poa_sender_email
+      
+      recipient_email_list = []
+      # Handle multiple recipients, if specified
+      if(type(self.settings.ses_poa_recipient_email) == list):
+        for email in self.settings.ses_poa_recipient_email:
+          recipient_email_list.append(email)
+      else:
+        recipient_email_list.append(self.settings.ses_poa_recipient_email)
+  
+      for email in recipient_email_list:
+        # Add the email to the email queue
+        self.db.elife_add_email_to_email_queue(
+          recipient_email = email,
+          sender_email = sender_email,
+          email_type = "PublicationEmail",
+          format = "text",
+          subject = subject,
+          body = body)
+        pass
+      
+      return True
+    
+  def get_activity_status_text(self, activity_status):
+      """
+      Given the activity status boolean, return a human
+      readable text version
+      """
+      if activity_status is True:
+          activity_status_text = "Success!"
+      else:
+          activity_status_text = "FAILED."
+          
+      return activity_status_text
+    
+  def get_admin_email_subject(self, current_time):
+      """
+      Assemble the email subject
+      """
+      date_format = '%Y-%m-%d %H:%M'
+      datetime_string = time.strftime(date_format, current_time)
+      
+      activity_status_text = self.get_activity_status_text(self.activity_status)
+      
+      subject = ( self.name + " " + activity_status_text +
+                  ", " + datetime_string +
+                  ", eLife SWF domain: " + self.settings.domain)
+      
+      return subject
+
+  def get_admin_email_body(self, current_time):
+      """
+      Format the body of the email
+      """
+      
+      body = ""
+      
+      date_format = '%Y-%m-%dT%H:%M:%S.000Z'
+      datetime_string = time.strftime(date_format, current_time)
+      
+      activity_status_text = self.get_activity_status_text(self.activity_status)
+      
+      # Bulk of body
+      body += self.name + " status:" + "\n"
+      body += "\n"
+      body += activity_status_text + "\n"
+      body += "\n"
+      body += "Details:" + "\n"
+      body += "\n"
+      body += self.admin_email_content + "\n"
+      body += "\n"
+            
+      body += "\n"
+      body += "-------------------------------\n"
+      body += "SWF workflow details: " + "\n"
+      body += "activityId: " + str(self.get_activityId()) + "\n"
+      body += "As part of workflowId: " + str(self.get_workflowId()) + "\n"
+      body += "As at " + datetime_string + "\n"
+      body += "Domain: " + self.settings.domain + "\n"
+
+      body += "\n"
+      
+      body += "\n\nSincerely\n\neLife bot"
+
+      return body
     
 
 class Struct(object):

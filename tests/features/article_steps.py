@@ -129,8 +129,8 @@ def i_have_the_article_is_poa(step, is_poa):
   if is_poa == "False": is_poa = False
   if is_poa == "None": is_poa = None
       
-  assert world.article.is_poa() == is_poa, \
-  "Got is_poa %s" % world.article.is_poa()
+  assert world.article.is_poa == is_poa, \
+  "Got is_poa %s" % world.article.is_poa
 
 @step(u'I have the article related insight doi (\S+)')
 def i_have_the_article_related_insight_doi(step, insight_doi):
