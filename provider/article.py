@@ -293,6 +293,7 @@ class article(object):
           # print "getting s3 keys from " + prefix
           
           s3_key_names = s3lib.get_s3_key_names_from_bucket(
+              key_type        = "key",
               bucket          = bucket,
               prefix          = prefix,
               file_extensions = file_extensions)
