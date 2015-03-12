@@ -275,27 +275,22 @@ class article(object):
       s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
       bucket = s3_conn.lookup(bucket_name)
       
-      delimiter = '/'
-      headers = None
-      
       # Step one, get all the subfolder names
-      folders = []
-      bucketList = bucket.list(prefix = poa_published_folder, delimiter = delimiter, headers = headers)
-      for item in bucketList:
-          if(isinstance(item, boto.s3.prefix.Prefix)):
-              folders.append(item)
+      folder_names = s3lib.get_s3_key_names_from_bucket(
+              bucket          = bucket,
+              key_type        = "prefix",
+              prefix          = poa_published_folder)
 
       # Step two, for each subfolder get the keys inside it
       s3_poa_key_names = []
-      for folder_name in folders:
-          prefix = folder_name.name
-          
-          # print "getting s3 keys from " + prefix
+      for folder_name in folder_names:
+        
+          #print "getting s3 keys from " + folder_name
           
           s3_key_names = s3lib.get_s3_key_names_from_bucket(
-              key_type        = "key",
               bucket          = bucket,
-              prefix          = prefix,
+              key_type        = "key",
+              prefix          = folder_name,
               file_extensions = file_extensions)
           for s3_key_name in s3_key_names:
               s3_poa_key_names.append(s3_key_name)
