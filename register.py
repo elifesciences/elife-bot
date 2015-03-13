@@ -45,6 +45,7 @@ def start(ENV = "dev"):
 	workflow_names.append("PublishFiguresPDF")
 	workflow_names.append("PublicationEmail")
 	workflow_names.append("FTPArticle")
+	workflow_names.append("PubRouterDeposit")
 	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
@@ -88,6 +89,7 @@ def start(ENV = "dev"):
 	activity_names.append("UnzipArticleFiguresPDF")
 	activity_names.append("PublicationEmail")
 	activity_names.append("FTPArticle")
+	activity_names.append("PubRouterDeposit")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries
