@@ -5,12 +5,15 @@ import re
 Functions for reuse concerning Amazon s3 and buckets
 """
 
-def get_s3_key_names_from_bucket(bucket, prefix = None, delimiter = '/', headers = None, file_extensions = None):
+def get_s3_key_names_from_bucket(bucket, key_type = "key", prefix = None,
+                                 delimiter = '/', headers = None, file_extensions = None):
     """
     Given a connected boto bucket object, and optional parameters,
     from the prefix (folder name), get the s3 key names for
-    non-folder objects, optionally that match a particular
+    key_type objects, optionally that match a particular
     list of file extensions
+    key_type = "key" then look for s3 objects
+    key_type = "prefix" then look for folders (also s3 objects of a different type)
     """
     s3_keys = []
     s3_key_names = []
@@ -19,9 +22,13 @@ def get_s3_key_names_from_bucket(bucket, prefix = None, delimiter = '/', headers
     bucketList = bucket.list(prefix = prefix, delimiter = delimiter, headers = headers)
 
     for item in bucketList:
-      if(isinstance(item, boto.s3.key.Key)):
-        # Can loop through each prefix and search for objects
-        s3_keys.append(item)
+        # Can loop through each item and search for objects
+        if key_type == "key":
+            if(isinstance(item, boto.s3.key.Key)):
+                s3_keys.append(item)
+        elif key_type == "prefix":
+            if(isinstance(item, boto.s3.prefix.Prefix)):
+                s3_keys.append(item)
     
     # Convert to key names instead of objects to make it testable later
     for key in s3_keys:
