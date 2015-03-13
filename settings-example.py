@@ -84,19 +84,7 @@ class dev():
 	PUBMED_FTP_USERNAME = ""
 	PUBMED_FTP_PASSWORD = ""
 	PUBMED_FTP_CWD = ""
-	
-	# HWX FTP settings
-	HWX_FTP_URI = ""
-	HWX_FTP_USERNAME = ""
-	HWX_FTP_PASSWORD = ""
-	HWX_FTP_CWD = ""
-	
-	# HW Archive FTP settings
-	HWARCHIVE_FTP_URI = ""
-	HWARCHIVE_FTP_USERNAME = ""
-	HWARCHIVE_FTP_PASSWORD = ""
-	HWARCHIVE_FTP_CWD = ""
-	
+		
 	# HEFCE Archive FTP settings
 	HEFCE_FTP_URI = ""
 	HEFCE_FTP_USERNAME = ""
@@ -179,19 +167,7 @@ class live():
 	PUBMED_FTP_USERNAME = ""
 	PUBMED_FTP_PASSWORD = ""
 	PUBMED_FTP_CWD = ""
-	
-	# HWX FTP settings
-	HWX_FTP_URI = ""
-	HWX_FTP_USERNAME = ""
-	HWX_FTP_PASSWORD = ""
-	HWX_FTP_CWD = ""
-	
-	# HWX Archive FTP settings
-	HWARCHIVE_FTP_URI = ""
-	HWARCHIVE_FTP_USERNAME = ""
-	HWARCHIVE_FTP_PASSWORD = ""
-	HWARCHIVE_FTP_CWD = ""
-	
+		
 	# HEFCE Archive FTP settings
 	HEFCE_FTP_URI = ""
 	HEFCE_FTP_USERNAME = ""
