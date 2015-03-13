@@ -254,10 +254,11 @@ class article(object):
     """
     self.related_insight_article = article
     
-  def get_was_poa_doi_ids(self, force = False):
+  def get_was_poa_doi_ids(self, force = False, folder_names = None, s3_key_names = None):
       """
       Connect to the S3 bucket, and from the files in the published folder,
       get a list of .xml files, and then parse out the article id
+        folder_names and s3_key_names is only supplied for when running automated tests
       """
       # Return from cached values if not force
       if force is False and self.was_poa_doi_ids is not None:
@@ -271,32 +272,28 @@ class article(object):
       
       bucket_name = self.settings.poa_packaging_bucket
       
-      # Connect to S3 and bucket
-      s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-      bucket = s3_conn.lookup(bucket_name)
-      
-      # Step one, get all the subfolder names
-      folder_names = s3lib.get_s3_key_names_from_bucket(
-              bucket          = bucket,
-              key_type        = "prefix",
-              prefix          = poa_published_folder)
-
-      # Step two, for each subfolder get the keys inside it
-      s3_poa_key_names = []
-      for folder_name in folder_names:
-        
-          #print "getting s3 keys from " + folder_name
+      if folder_names is None:
+          # Get the folder names from live s3 bucket if no test data supplied
+          folder_names = self.get_folder_names_from_bucket(
+                                  bucket_name = bucket_name,
+                                  prefix      = poa_published_folder )
           
-          s3_key_names = s3lib.get_s3_key_names_from_bucket(
-              bucket          = bucket,
-              key_type        = "key",
-              prefix          = folder_name,
-              file_extensions = file_extensions)
-          for s3_key_name in s3_key_names:
-              s3_poa_key_names.append(s3_key_name)
-
+      
+      if s3_key_names is None:
+          # Get the s3 key names from live s3 bucket if no test data supplied
+          s3_key_names = []
+          for folder_name in folder_names:
+              
+              key_names = self.get_s3_key_names_from_bucket(
+                                  bucket_name = bucket_name,
+                                  prefix = folder_name,
+                                  file_extensions = file_extensions)
+          
+              for key_name in key_names:
+                s3_key_names.append(key_name)
+      
       # Extract just the doi_id portion
-      for s3_key_name in s3_poa_key_names:
+      for s3_key_name in s3_key_names:
           doi_id = self.get_doi_id_from_poa_s3_key_name(s3_key_name)
           if doi_id:
               was_poa_doi_ids.append(doi_id)
@@ -310,6 +307,44 @@ class article(object):
       
       # Return it
       return was_poa_doi_ids
+    
+  def get_folder_names_from_bucket(self, bucket_name, prefix):
+    """
+    Use live s3 bucket connection to get the folder names
+    from the bucket. This is so functions that rely on the data
+    can use test data when running automated tests
+    """
+    folder_names = None
+    # Connect to S3 and bucket
+    s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+    bucket = s3_conn.lookup(bucket_name)
+    
+    # Step one, get all the subfolder names
+    folder_names = s3lib.get_s3_key_names_from_bucket(
+            bucket          = bucket,
+            key_type        = "prefix",
+            prefix          = prefix)
+    
+    return folder_names
+  
+  def get_s3_key_names_from_bucket(self, bucket_name, prefix, file_extensions):
+    """
+    Use live s3 bucket connection to get the s3 key names
+    from the bucket. This is so functions that rely on the data
+    can use test data when running automated tests
+    """
+    s3_key_names = None
+    # Connect to S3 and bucket
+    s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+    bucket = s3_conn.lookup(bucket_name)
+    
+    s3_key_names = s3lib.get_s3_key_names_from_bucket(
+        bucket          = bucket,
+        key_type        = "key",
+        prefix          = prefix,
+        file_extensions = file_extensions)
+    
+    return s3_key_names
     
   def check_was_ever_poa(self, doi):
       """

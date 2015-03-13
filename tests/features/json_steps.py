@@ -25,6 +25,13 @@ def parse_the_JSON_string(step):
 	assert world.json is not None, \
 		"Got json %s" % json.dumps(world.json)
 
+@step(u'I set the world attribute (\S+) to world json')
+def i_set_the_world_attribute_folder_names_to_world_json(step, attr_name):
+	setattr(world, attr_name, world.json)
+	attr = getattr(world, attr_name)
+	assert world.json == attr, \
+		"Got json %s" % json.dumps(attr)
+
 @step('I have a decider module')
 def have_a_decider_module(step):
 	imported = None
