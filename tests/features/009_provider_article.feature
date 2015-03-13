@@ -86,3 +86,31 @@ Feature: Use article provider
     | env | tmp_base_dir  | test_name        | document_name                  | doi                  | doi_id  | doi_url                               | lens_url                            | tweet_url                                                                            | pub_date_timestamp | article_type     | related_article_count | xlink_href          | is_poa  | insight_doi          | display_channel_one | display_channel_two | authors_string
     | dev | tmp           | article_provider | test_data/elife00013.xml	      | 10.7554/eLife.00013  | 00013   | http://dx.doi.org/10.7554/eLife.00013 | http://lens.elifesciences.org/00013 | http://twitter.com/intent/tweet?text=http%3A%2F%2Fdx.doi.org%2F10.7554%2FeLife.00013 | 1350259200           | research-article | 1                     | 10.7554/eLife.00242 | False   | 10.7554/eLife.00242  | True                | False               | Rosanna A Alegado, Laura W Brown, Shugeng Cao, Renee K Dermenjian, Richard Zuzow, Stephen R Fairclough, Jon Clardy, Nicole King
     | dev | tmp           | article_provider | test_data/elife_poa_e03977.xml | 10.7554/eLife.03977  | 03977   | http://dx.doi.org/10.7554/eLife.03977 | http://lens.elifesciences.org/03977 | http://twitter.com/intent/tweet?text=http%3A%2F%2Fdx.doi.org%2F10.7554%2FeLife.03977 | 0                   | research-article | 0                     | None                | True    | None                 | True                | False               | Xili Liu, Xin Wang, Xiaojing Yang, Sen Liu, Lingli Jiang, Yimiao Qu, Lufeng Hu, Qi Ouyang, Chao Tang
+
+  Scenario: Given S3 bucket data, use the article provider to get a list of DOI id that were ever POA articles
+    Given I have imported a settings module
+    And I have the settings environment <env>
+    And I get the settings
+    And I create an article provider
+    And I have a document <folder_names>
+    And I get JSON from the document
+    And I parse the JSON string
+    And I set the world attribute folder_names to world json
+    And I have a document <s3_key_names>
+    And I get JSON from the document
+    And I parse the JSON string
+    And I set the world attribute s3_key_names to world json
+    And I have a document <poa_doi_ids>
+    And I get JSON from the document
+    And I parse the JSON string
+    And I set the world attribute poa_doi_ids to world json
+    When I get was poa doi ids using the article provider
+    Then I have poa doi ids equal to world was poa doi ids
+    And I check was ever poa 99999 using the article provider
+    Then I get was ever poa is False
+    And I check was ever poa 01257 using the article provider
+    Then I get was ever poa is True
+
+  Examples:
+    | env | folder_names                              | s3_key_names                              | poa_doi_ids
+    | dev | test_data/poa_published_folder_names.json | test_data/poa_published_s3_key_names.json | test_data/poa_was_poa_doi_ids.json

@@ -206,4 +206,27 @@ def i_have_the_article_is_in_display_channel_group(step, display_channel_name, i
   assert is_in == is_in_display_channel, \
     "Got is_in_display_channel %s" % is_in
 
-    
+@step(u'I get was poa doi ids using the article provider')
+def i_get_was_poa_doi_ids_using_the_article_provider(step):
+  force = False
+  world.was_poa_doi_ids = world.article.get_was_poa_doi_ids(force, world.folder_names, world.s3_key_names)
+  assert world.was_poa_doi_ids is not None, \
+    "Got was_poa_doi_ids %s" % json.dumps(world.was_poa_doi_ids)
+
+@step(u'I have poa doi ids equal to world was poa doi ids')
+def i_have_poa_doi_ids_equal_to_world_was_poa_doi_ids(step):
+  assert world.was_poa_doi_ids == world.poa_doi_ids, \
+    "Got was_poa_doi_ids %s" % json.dumps(world.was_poa_doi_ids)
+  
+@step(u'I check was ever poa (\S+) using the article provider')
+def i_check_was_ever_poa_using_the_article_provider(step, doi_id):
+  world.was_ever_poa = world.article.check_was_ever_poa(doi_id)
+  assert world.was_ever_poa is not None, \
+    "Got was_ever_poa %s" % world.was_ever_poa
+
+@step(u'I get was ever poa is (\S+)')
+def i_get_was_ever_poa_is_true(step, was_ever_poa):
+  if was_ever_poa == "True":  was_ever_poa = True
+  if was_ever_poa == "False": was_ever_poa = False
+  assert world.was_ever_poa == was_ever_poa, \
+    "Got was_ever_poa %s" % world.was_ever_poa
