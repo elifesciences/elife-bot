@@ -363,7 +363,6 @@ class activity_PubRouterDeposit(activity.activity):
           filename = name.split(os.sep)[-1]
           s3_key_name = self.outbox_folder + filename
           s3_key_names.append(s3_key_name)
-      print json.dumps(s3_key_names)
       
       for name in s3_key_names:
           # Download objects from S3 and save to disk
