@@ -84,31 +84,26 @@ class activity_PubRouterDeposit(activity.activity):
         if(self.logger):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
         
-        # Download the S3 objects
-        self.download_files_from_s3_outbox()
-        
+        # Download the S3 objects from the outbox
         self.article_xml_filenames = self.download_files_from_s3_outbox()
-
+        # Parse the XML
         self.articles = self.parse_article_xml(self.article_xml_filenames)
-        
+        # Approve the articles to be sent
         self.articles_approved = self.approve_articles(self.articles)
       
-        # TEMP hardcode the article
-        article_00003 = self.create_article("00003")
-        self.articles_approved.append(article_00003)
       
         for article in self.articles_approved:
             # Start a workflow for each article this is approved to publish
             print article.doi
             # Second test, start a ping workflow from an activity
-            workflow_id = "ping_pub_router_test"
+            workflow_id = "ping_" + "FTPArticle_" + self.workflow + "_" + str(article.doi_id)
             workflow_name = "Ping"
             workflow_version = "1"
             child_policy = None
             execution_start_to_close_timeout = None
             data = {}
             data['workflow'] = self.workflow
-            data['elife_id'] = article.doi
+            data['elife_id'] = article.doi_id
             
             input_json = {}
             input_json['data'] = data
@@ -126,18 +121,18 @@ class activity_PubRouterDeposit(activity.activity):
                 # There is already a running workflow with that ID, cannot start another
                 message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
                 print message
-                logger.info(message)
+                if(self.logger):
+                    self.logger.info(message)
             
 
         # Clean up outbox
         print "Moving files from outbox folder to published folder"
-        #self.clean_outbox()
+        self.clean_outbox()
         self.outbox_status = True
         
-        # Send email
-        # TODO!!!
-        #self.add_email_to_queue()
-        pass
+        # Send email to admins with the status
+        self.activity_status = True
+        self.send_admin_email()
 
         # Return the activity result, True or False
         result = True
@@ -267,6 +262,9 @@ class activity_PubRouterDeposit(activity.activity):
       
       # Check if article is a resupply
       # TODO !!!
+
+      # Check if article is on the blacklist to not send again
+      # TODO !!!
       
       # Can remove the articles now without affecting the loops using del
       for article in articles:
@@ -302,48 +300,58 @@ class activity_PubRouterDeposit(activity.activity):
         return to_folder
     
     def clean_outbox(self):
-        """
-        Clean out the S3 outbox folder
-        """
-        # Save the list of outbox contents to report on later
-        outbox_s3_key_names = self.get_outbox_s3_key_names()
+      """
+      Clean out the S3 outbox folder
+      """
+      
+      to_folder = self.get_to_folder_name()
+      
+      # Move only the published files from the S3 outbox to the published folder
+      bucket_name = self.publish_bucket
+      
+      # Connect to S3 and bucket
+      s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+      bucket = s3_conn.lookup(bucket_name)
+      
+      # Concatenate the expected S3 outbox file names
+      s3_key_names = []
+      
+      # Compile a list of the published file names
+      remove_doi_list = []
+      processed_file_names = []
+      for article in self.articles_approved:
+        remove_doi_list.append(article.doi)
+          
+      for k, v in self.xml_file_to_doi_map.items():
+        if k in remove_doi_list:
+          processed_file_names.append(v)
+      
+      for name in processed_file_names:
+          filename = name.split(os.sep)[-1]
+          s3_key_name = self.outbox_folder + filename
+          s3_key_names.append(s3_key_name)
+      print json.dumps(s3_key_names)
+      
+      for name in s3_key_names:
+          # Download objects from S3 and save to disk
+  
+          # Do not delete the from_folder itself, if it is in the list
+          if name != self.outbox_folder:
+              filename = name.split("/")[-1]
+              new_s3_key_name = to_folder + filename
+              
+              # First copy
+              new_s3_key = None
+              try:
+                  new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
+              except:
+                  pass
+              
+              # Then delete the old key if successful
+              if(isinstance(new_s3_key, boto.s3.key.Key)):
+                  old_s3_key = bucket.get_key(name)
+                  old_s3_key.delete()
         
-        to_folder = self.get_to_folder_name()
-        
-        # Move only the published files from the S3 outbox to the published folder
-        bucket_name = self.publish_bucket
-        
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-        
-        # Concatenate the expected S3 outbox file names
-        s3_key_names = []
-        for name in self.article_published_file_names:
-            filename = name.split(os.sep)[-1]
-            s3_key_name = self.outbox_folder + filename
-            s3_key_names.append(s3_key_name)
-        
-        for name in s3_key_names:
-            # Download objects from S3 and save to disk
-
-            # Do not delete the from_folder itself, if it is in the list
-            if name != self.outbox_folder:
-                filename = name.split("/")[-1]
-                new_s3_key_name = to_folder + filename
-                
-                # First copy
-                new_s3_key = None
-                try:
-                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
-                except:
-                    pass
-                
-                # Then delete the old key if successful
-                if(isinstance(new_s3_key, boto.s3.key.Key)):
-                    old_s3_key = bucket.get_key(name)
-                    old_s3_key.delete()
-
     def send_admin_email(self):
         """
         After do_activity is finished, send emails to recipients
