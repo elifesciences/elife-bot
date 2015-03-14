@@ -130,7 +130,7 @@ class activity_PubRouterDeposit(activity.activity):
         
         # Compile the workflow starter parameters
         workflow_id = "FTPArticle_" + self.workflow + "_" + str(article.doi_id)
-        workflow_name = "Ping"
+        workflow_name = "FTPArticle"
         workflow_version = "1"
         child_policy = None
         execution_start_to_close_timeout = None
