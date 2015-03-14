@@ -94,36 +94,19 @@ class activity_PubRouterDeposit(activity.activity):
       
         for article in self.articles_approved:
             # Start a workflow for each article this is approved to publish
-            print article.doi
-            # Second test, start a ping workflow from an activity
-            workflow_id = "ping_" + "FTPArticle_" + self.workflow + "_" + str(article.doi_id)
-            workflow_name = "Ping"
-            workflow_version = "1"
-            child_policy = None
-            execution_start_to_close_timeout = None
-            data = {}
-            data['workflow'] = self.workflow
-            data['elife_id'] = article.doi_id
+            starter_status = self.start_ftp_article_workflow(article)
             
-            input_json = {}
-            input_json['data'] = data
-            
-            input = json.dumps(input_json)
-            conn = boto.swf.layer1.Layer1(self.settings.aws_access_key_id,
-                                          self.settings.aws_secret_access_key)
-            try:
-                response = conn.start_workflow_execution(self.settings.domain, workflow_id,
-                                                         workflow_name, workflow_version,
-                                                         self.settings.default_task_list,
-                                                         child_policy,
-                                                         execution_start_to_close_timeout, input)
-            except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-                # There is already a running workflow with that ID, cannot start another
-                message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
-                print message
+            if starter_status is True:
                 if(self.logger):
-                    self.logger.info(message)
-            
+                    log_info = "Started an FTPArticle workflow for article: " + article.doi
+                    self.admin_email_content += "\n" + log_info
+                    self.logger.info(log_info)
+            else:
+                if(self.logger):
+                    log_info = "FAILED to start an FTPArticle workflow for article: " + article.doi
+                    self.admin_email_content += "\n" + log_info
+                    self.logger.info(log_info)
+                
 
         # Clean up outbox
         print "Moving files from outbox folder to published folder"
@@ -138,6 +121,49 @@ class activity_PubRouterDeposit(activity.activity):
         result = True
 
         return result
+
+    def start_ftp_article_workflow(self, article):
+        """
+        In here a new FTPArticle workflow is started for the article object supplied
+        """
+        starter_status = None
+        
+        # Compile the workflow starter parameters
+        workflow_id = "FTPArticle_" + self.workflow + "_" + str(article.doi_id)
+        workflow_name = "Ping"
+        workflow_version = "1"
+        child_policy = None
+        execution_start_to_close_timeout = None
+        
+        # Input data
+        data = {}
+        data['workflow'] = self.workflow
+        data['elife_id'] = article.doi_id
+        input_json = {}
+        input_json['data'] = data
+        input = json.dumps(input_json)
+        
+        # Connect to SWF
+        conn = boto.swf.layer1.Layer1(self.settings.aws_access_key_id,
+                                      self.settings.aws_secret_access_key)
+        
+        # Try and start a workflow
+        try:
+            response = conn.start_workflow_execution(self.settings.domain, workflow_id,
+                                                     workflow_name, workflow_version,
+                                                     self.settings.default_task_list,
+                                                     child_policy,
+                                                     execution_start_to_close_timeout, input)
+            starter_status = True
+        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
+            # There is already a running workflow with that ID, cannot start another
+            message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
+            print message
+            if(self.logger):
+                self.logger.info(message)
+            starter_status = False
+        
+        return starter_status
 
     def set_datestamp(self):
         a = arrow.utcnow()
