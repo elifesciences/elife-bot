@@ -125,6 +125,14 @@ def run_cron(ENV = "dev"):
           workflow_id   = "PublicationEmail",
           start_seconds = 60*31)
         
+      # Pub router deposits once per day 23:45 UTC
+      if(current_time.tm_hour == 23):
+        workflow_conditional_start(
+          ENV           = ENV,
+          starter_name  = "starter_PubRouterDeposit",
+          workflow_id   = "PubRouterDeposit",
+          start_seconds = 60*31)
+        
       workflow_conditional_start(
         ENV           = ENV,
         starter_name  = "starter_PubmedArticleDeposit",
@@ -204,6 +212,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       or starter_name == "cron_NewS3POA"
       or starter_name == "cron_NewS3FiguresPDF"
       or starter_name == "starter_PublicationEmail"
+      or starter_name == "starter_PubRouterDeposit"
       ):
       s.start(ENV = ENV)
       
