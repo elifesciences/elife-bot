@@ -39,6 +39,7 @@ class activity_ArticleToOutbox(activity.activity):
 		# Folder for pubmed XML
 		self.pubmed_outbox_folder = "pubmed/outbox/"
 		self.publication_email_outbox_folder = "publication_email/outbox/"
+		self.pub_router_outbox_folder = "pub_router/outbox/"
 
 	def do_activity(self, data = None):
 		"""
@@ -75,6 +76,12 @@ class activity_ArticleToOutbox(activity.activity):
 			path = tmp_document_path,
 			document = tmp_document,
 			outbox_folder = self.publication_email_outbox_folder)
+		
+		# 3. Send the file to the pub router outbox
+		self.copy_document_to_outbox(
+			path = tmp_document_path,
+			document = tmp_document,
+			outbox_folder = self.pub_router_outbox_folder)
 		
 		if(self.logger):
 			self.logger.info('ArticleToOutbox: %s' % elife_id)

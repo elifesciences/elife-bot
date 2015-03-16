@@ -84,6 +84,12 @@ class dev():
 	PUBMED_FTP_USERNAME = ""
 	PUBMED_FTP_PASSWORD = ""
 	PUBMED_FTP_CWD = ""
+		
+	# HEFCE Archive FTP settings
+	HEFCE_FTP_URI = ""
+	HEFCE_FTP_USERNAME = ""
+	HEFCE_FTP_PASSWORD = ""
+	HEFCE_FTP_CWD = ""
 	
 	# Logging
 	setLevel = "INFO"
@@ -161,6 +167,12 @@ class live():
 	PUBMED_FTP_USERNAME = ""
 	PUBMED_FTP_PASSWORD = ""
 	PUBMED_FTP_CWD = ""
+		
+	# HEFCE Archive FTP settings
+	HEFCE_FTP_URI = ""
+	HEFCE_FTP_USERNAME = ""
+	HEFCE_FTP_PASSWORD = ""
+	HEFCE_FTP_CWD = ""
 	
 	# Logging
 	setLevel = "INFO"
