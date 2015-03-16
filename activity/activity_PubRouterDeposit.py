@@ -133,7 +133,8 @@ class activity_PubRouterDeposit(activity.activity):
         workflow_name = "FTPArticle"
         workflow_version = "1"
         child_policy = None
-        execution_start_to_close_timeout = None
+        # Allow workflow 60 minutes to finish
+        execution_start_to_close_timeout = str(60*60)
         
         # Input data
         data = {}
