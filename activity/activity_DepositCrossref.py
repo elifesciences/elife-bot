@@ -206,15 +206,40 @@ class activity_DepositCrossref(activity.activity):
         
         return good_s3_key_names
         
+    def parse_article_xml(self, article_xml_files):
+        """
+        Given a list of article XML files, parse them into objects
+        and save the file name for later use
+        """
+        
+        # For each article XML file, parse it and save the filename for later
+        articles = []
+        for article_xml in article_xml_files:
+            article_list = None
+            article_xml_list = [article_xml]
+            try:
+                # Convert the XML files to article objects
+                article_list = self.elife_poa_lib.parse.build_articles_from_article_xmls(article_xml_list)
+            except:
+                continue
+            
+            if len(article_list) > 0:
+                article = article_list[0]
+                articles.append(article)
+            
+        return articles
 
     def generate_crossref_xml(self):
         """
         Using the POA generateCrossrefXml module
         """
         article_xml_files = glob.glob(self.elife_poa_lib.settings.STAGING_TO_HW_DIR + "/*.xml")
+        
+        articles = self.parse_article_xml(article_xml_files)
+        
         try:
             # Will write the XML to the TMP_DIR
-            self.elife_poa_lib.generate.build_crossref_xml_for_articles(article_xml_files)
+            self.elife_poa_lib.generate.build_crossref_xml_for_articles(articles)
             return True
         except:
             return False
@@ -564,6 +589,8 @@ class activity_DepositCrossref(activity.activity):
         """
 
         # Now we can continue with imports
+        self.elife_poa_lib.parse = importlib.import_module(dir_name + ".parsePoaXml")
+        self.reload_module(self.elife_poa_lib.parse)
         self.elife_poa_lib.generate = importlib.import_module(dir_name + ".generateCrossrefXml")
         self.reload_module(self.elife_poa_lib.generate)
         
