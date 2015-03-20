@@ -694,7 +694,7 @@ class activity_PublishPOA(activity.activity):
         for xml_file in xml_files:
             # Check for v2 or naming format
             # Very simple, checks for the letter v
-            if v2_xml_upload is True:
+            if v2_xml_upload is not True:
                 if self.get_filename_from_path(xml_file, '.xml').find('v') > -1:
                     # Do not upload
                     articles_not_uploaded_to_outbox.append(xml_file)
