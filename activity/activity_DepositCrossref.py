@@ -8,6 +8,8 @@ import calendar
 import time
 import arrow
 
+from collections import namedtuple
+
 import zipfile
 import requests
 import urlparse
@@ -21,6 +23,7 @@ import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.simpleDB as dblib
+import provider.article as articlelib
 
 """
 DepositCrossref activity
@@ -54,6 +57,9 @@ class activity_DepositCrossref(activity.activity):
         
         # Data provider where email body is saved
         self.db = dblib.SimpleDB(settings)
+        
+        # Instantiate a new article object to provide some helper functions
+        self.article = articlelib.article(self.settings, self.get_tmp_dir())
         
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
@@ -206,15 +212,54 @@ class activity_DepositCrossref(activity.activity):
         
         return good_s3_key_names
         
+    def parse_article_xml(self, article_xml_files):
+        """
+        Given a list of article XML files, parse them into objects
+        and save the file name for later use
+        """
+        
+        # For each article XML file, parse it and save the filename for later
+        articles = []
+        for article_xml in article_xml_files:
+            article_list = None
+            article_xml_list = [article_xml]
+            try:
+                # Convert the XML files to article objects
+                article_list = self.elife_poa_lib.parse.build_articles_from_article_xmls(article_xml_list)
+            except:
+                continue
+            
+            # Set the published date on v2, v3 etc. files
+            if article_xml.find('v') > -1:
+                article = None
+                if len(article_list) > 0:
+                    article = article_list[0]
+                    
+                pub_date_date = self.article.get_article_bucket_pub_date(article.doi, "poa")
+                
+                if article is not None and pub_date_date is not None:
+                    # Emmulate the eLifeDate object use in the POA generation package
+                    eLifeDate = namedtuple("eLifeDate", "date_type date")
+                    pub_date = eLifeDate("pub", pub_date_date)
+                    article.add_date(pub_date)
+            
+            if len(article_list) > 0:
+                article = article_list[0]
+                articles.append(article)
+            
+        return articles
 
     def generate_crossref_xml(self):
         """
         Using the POA generateCrossrefXml module
         """
         article_xml_files = glob.glob(self.elife_poa_lib.settings.STAGING_TO_HW_DIR + "/*.xml")
+        
+        articles = self.parse_article_xml(article_xml_files)
+        
         try:
             # Will write the XML to the TMP_DIR
-            self.elife_poa_lib.generate.build_crossref_xml_for_articles(article_xml_files)
+            self.elife_poa_lib.generate.build_crossref_xml_for_articles(articles)
             return True
         except:
             return False
@@ -564,6 +609,8 @@ class activity_DepositCrossref(activity.activity):
         """
 
         # Now we can continue with imports
+        self.elife_poa_lib.parse = importlib.import_module(dir_name + ".parsePoaXml")
+        self.reload_module(self.elife_poa_lib.parse)
         self.elife_poa_lib.generate = importlib.import_module(dir_name + ".generateCrossrefXml")
         self.reload_module(self.elife_poa_lib.generate)
         

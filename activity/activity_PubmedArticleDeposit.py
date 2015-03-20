@@ -8,6 +8,8 @@ import calendar
 import time
 import arrow
 
+from collections import namedtuple
+
 import zipfile
 import requests
 import urlparse
@@ -191,6 +193,20 @@ class activity_PubmedArticleDeposit(activity.activity):
                 article_list = self.elife_poa_lib.parse.build_articles_from_article_xmls(article_xml_list)
             except:
                 continue
+            
+            # Set the published date on v2, v3 etc. files
+            if article_xml.find('v') > -1:
+                article = None
+                if len(article_list) > 0:
+                    article = article_list[0]
+                    
+                pub_date_date = self.article.get_article_bucket_pub_date(article.doi, "poa")
+                
+                if article is not None and pub_date_date is not None:
+                    # Emmulate the eLifeDate object use in the POA generation package
+                    eLifeDate = namedtuple("eLifeDate", "date_type date")
+                    pub_date = eLifeDate("pub", pub_date_date)
+                    article.add_date(pub_date)
             
             if len(article_list) > 0:
                 article = article_list[0]
