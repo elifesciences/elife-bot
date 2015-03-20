@@ -637,9 +637,12 @@ class activity_PublishPOA(activity.activity):
         """
         s3_folder_name = self.crossref_outbox_folder
         
+        # Do yes upload v2 XML to the outbox
+        v2_xml_upload = True
+        
         (self.crossref_outbox_s3_key_names,
          self.crossref_articles_not_uploaded_to_outbox) \
-          = self.upload_xml_to_an_outbox_s3(s3_folder_name)
+          = self.upload_xml_to_an_outbox_s3(s3_folder_name, v2_xml_upload)
         
     def upload_xml_to_pubmed_outbox_s3(self):
         """
@@ -648,9 +651,12 @@ class activity_PublishPOA(activity.activity):
         """
         s3_folder_name = self.pubmed_outbox_folder
         
+        # Do yes upload v2 XML to the outbox
+        v2_xml_upload = True
+        
         (self.pubmed_outbox_s3_key_names,
          self.pubmed_articles_not_uploaded_to_outbox) \
-          = self.upload_xml_to_an_outbox_s3(s3_folder_name)
+          = self.upload_xml_to_an_outbox_s3(s3_folder_name, v2_xml_upload)
         
     def upload_xml_to_publication_email_outbox_s3(self):
         """
@@ -659,11 +665,14 @@ class activity_PublishPOA(activity.activity):
         """
         s3_folder_name = self.publication_email_outbox_folder
         
+        # Do not upload v2 XML to the outbox
+        v2_xml_upload = False
+        
         (self.publication_email_outbox_s3_key_names,
          self.publication_email_articles_not_uploaded_to_outbox) \
-          = self.upload_xml_to_an_outbox_s3(s3_folder_name)
+          = self.upload_xml_to_an_outbox_s3(s3_folder_name, v2_xml_upload)
         
-    def upload_xml_to_an_outbox_s3(self, s3_folder_name):
+    def upload_xml_to_an_outbox_s3(self, s3_folder_name, v2_xml_upload):
         """
         Upload a copy of the article XML to the s3_folder_name,
         used by upload to crossref outbox and pubmed outbox functions
@@ -686,9 +695,10 @@ class activity_PublishPOA(activity.activity):
             # Check for v2 or naming format
             # Very simple, checks for the letter v
             if self.get_filename_from_path(xml_file, '.xml').find('v') > -1:
-                # Do not upload
-                articles_not_uploaded_to_outbox.append(xml_file)
-                continue
+                if v2_xml_upload is not True:
+                    # Do not upload
+                    articles_not_uploaded_to_outbox.append(xml_file)
+                    continue
 
             s3key = boto.s3.key.Key(bucket)
             s3key.key = s3_folder_name + self.get_filename_from_path(xml_file, '.xml') + '.xml'
