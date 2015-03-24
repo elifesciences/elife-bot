@@ -443,15 +443,18 @@ class activity_PackagePOA(activity.activity):
         
         settings = self.elife_poa_lib.settings
         
+        full_path = os.path.realpath(__file__)
+        base_path = os.path.dirname(full_path) + os.sep + '..' +  os.sep
+        
         # Override the settings
         settings.XLS_PATH                   = self.get_tmp_dir() + os.sep + 'ejp-csv' + os.sep
         settings.TARGET_OUTPUT_DIR          = self.get_tmp_dir() + os.sep + settings.TARGET_OUTPUT_DIR
-        settings.STAGING_TO_HW_DIR          = self.get_tmp_dir() + os.sep + settings.STAGING_TO_HW_DIR
+        settings.STAGING_TO_HW_DIR          = base_path + self.get_tmp_dir() + os.sep + settings.STAGING_TO_HW_DIR
         settings.FTP_TO_HW_DIR              = self.get_tmp_dir() + os.sep + settings.FTP_TO_HW_DIR
         settings.MADE_FTP_READY             = self.get_tmp_dir() + os.sep + settings.MADE_FTP_READY
         settings.EJP_INPUT_DIR              = self.get_tmp_dir() + os.sep + settings.EJP_INPUT_DIR
-        settings.STAGING_DECAPITATE_PDF_DIR = self.get_tmp_dir() + os.sep + settings.STAGING_DECAPITATE_PDF_DIR
-        settings.TMP_DIR                    = self.get_tmp_dir() + os.sep + settings.TMP_DIR
+        settings.STAGING_DECAPITATE_PDF_DIR = base_path + self.get_tmp_dir() + os.sep + settings.STAGING_DECAPITATE_PDF_DIR
+        settings.TMP_DIR                    = base_path + self.get_tmp_dir() + os.sep + settings.TMP_DIR
 
         settings.XLS_FILES = {  "authors"    : "poa_author.csv",
                                 "license"    : "poa_license.csv",
