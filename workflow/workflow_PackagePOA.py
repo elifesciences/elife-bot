@@ -56,10 +56,10 @@ class workflow_PackagePOA(workflow.workflow):
 					"version": "1",
 					"input": data,
 					"control": None,
-					"heartbeat_timeout": 300,
-					"schedule_to_close_timeout": 60*15,
-					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 60*15
+					"heartbeat_timeout": 60*10,
+					"schedule_to_close_timeout": 60*20,
+					"schedule_to_start_timeout": 60*10,
+					"start_to_close_timeout": 60*20
 				}
 			],
 		
