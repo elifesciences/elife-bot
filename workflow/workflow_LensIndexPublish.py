@@ -71,28 +71,6 @@ class workflow_LensIndexPublish(workflow.workflow):
 					"schedule_to_close_timeout": 300,
 					"schedule_to_start_timeout": 300,
 					"start_to_close_timeout": 300
-				},
-				{
-					"activity_type": "LensDocumentsJS",
-					"activity_id": "LensDocumentsJS",
-					"version": "1",
-					"input": data,
-					"control": None,
-					"heartbeat_timeout": 300,
-					"schedule_to_close_timeout": 300,
-					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 300
-				},
-{
-					"activity_type": "LensCDNInvalidation",
-					"activity_id": "LensCDNInvalidation",
-					"version": "1",
-					"input": data,
-					"control": None,
-					"heartbeat_timeout": 300,
-					"schedule_to_close_timeout": 300,
-					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 300
 				}
 			],
 		
