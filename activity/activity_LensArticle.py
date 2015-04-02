@@ -107,7 +107,7 @@ class activity_LensArticle(activity.activity):
 		
 		filename_plus_path = self.get_tmp_dir() + os.sep + filename
 		mode = "w"
-		f = codecs.open(filename_plus_path, 'w', encoding='utf8')
+		f = codecs.open(filename_plus_path, mode, encoding='utf8')
 		f.write(article_html)
 		f.close()
 		
