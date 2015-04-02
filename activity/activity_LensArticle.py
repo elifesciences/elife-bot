@@ -13,6 +13,8 @@ import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.filesystem as fslib
+import provider.templates as templatelib
+import provider.article as articlelib
 
 """
 LensArticle activity
@@ -33,6 +35,15 @@ class activity_LensArticle(activity.activity):
 		
 		# Create the filesystem provider
 		self.fs = fslib.Filesystem(self.get_tmp_dir())
+		
+		# Templates provider
+		self.templates = templatelib.Templates(settings, self.get_tmp_dir())
+		
+		# article data provider
+		self.article = articlelib.article(settings, self.get_tmp_dir())
+		
+		# Default templates directory
+		self.from_dir = "template"
 
 	def do_activity(self, data = None):
 		"""
@@ -41,19 +52,16 @@ class activity_LensArticle(activity.activity):
 		if(self.logger):
 			self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 		
-		# Temporary use of local header and footer files
-		self.header_html_file = "template/lens_article_header.html"
-		self.footer_html_file = "template/lens_article_footer.html"
-		
 		elife_id = data["data"]["elife_id"]
 		
-		xml_file_url = self.get_xml_file_url(elife_id)
+		article_xml_filename = self.article.download_article_xml_from_s3(doi_id = elife_id)
+		self.article.parse_article_file(self.get_tmp_dir() + os.sep + article_xml_filename)
 		
 		article_s3key = self.get_article_s3key(elife_id)
 		
 		filename = "index.html"
 		
-		article_html = self.get_article_html(xml_file_url)
+		article_html = self.get_article_html(from_dir = self.from_dir, article = self.article)
 		
 		# Write the document to disk first
 		self.fs.write_content_to_document(article_html, filename)
@@ -73,15 +81,6 @@ class activity_LensArticle(activity.activity):
 
 		return True
 	
-	def get_xml_file_url(self, elife_id):
-		"""
-		Given an eLife article DOI ID (5 digits) assemble the
-		URL of where it is found
-		"""
-		xml_url = "https://s3.amazonaws.com/" + self.settings.cdn_bucket + "/elife-articles/" + elife_id + "/elife" + elife_id + ".xml"
-		
-		return xml_url
-	
 	def get_article_s3key(self, elife_id):
 		"""
 		Given an eLife article DOI ID (5 digits) assemble the
@@ -91,30 +90,16 @@ class activity_LensArticle(activity.activity):
 		
 		return article_s3key
 		
-	def get_header_html(self):
-		f = open(self.header_html_file, "rb")
-		content = f.read()
-		f.close()
-		return content
-	
-	def get_footer_html(self):
-		f = open(self.footer_html_file, "rb")
-		content = f.read()
-		f.close()
-		return content
-		
-	def get_article_html(self, xml_file_url):
+	def get_article_html(self, from_dir, article):
 		"""
 		Given the URL of the article XML file, create a lens article index.html page
 		using header, footer or template, as required
 		"""
 		
-		header_html = self.get_header_html()
-		footer_html = self.get_footer_html()
-		
-		document_url_html = "\n" + '      var documentURL = "' + xml_file_url + '";' + "\n"
-		
-		article_html = header_html + document_url_html + footer_html
+		if(from_dir is None):
+			from_dir = self.from_dir
+			
+		article_html = self.templates.get_lens_article_html(from_dir, article)
 
 		return article_html
 		

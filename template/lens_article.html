@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html xmlns:mml="http://www.w3.org/1998/Math/MathML">
   <head>
-    <title>eLife Lens</title>
+    <title>{% if article.article_title %}{{ article.article_title }} | {% endif %}eLife Lens</title>
     <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,400italic,600italic' rel='stylesheet' type='text/css'>
     
     <link rel="stylesheet" type="text/css" media="all" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" />
 
-    <!-- Settings for mobile -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-
-    <!-- A combined lens.css will be generated in the bundling process --> 
+    <!-- A combined lens.css will be generated in the bundling process -->
     <!-- While in development, separate links for each CSS file are added, so we don't need a source map -->
     <link href='../dist/lens.css' rel='stylesheet' type='text/css'/>
-
+    
+    <script src="../check-mobile-script.js"></script>
+    <script>
+    // Mobile device check
+    if (isMobile.any) {
+      document.location = '{{ article.doi_url }}';
+    }
+    </script>
+    
     <script src="../dist/lib/jquery.min.js"></script>
 
     <!-- MathJax Configuration -->
@@ -58,3 +61,35 @@
         }
         return query_string;
       }();
+
+      var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/{{ article.doi_id }}/elife{{ article.doi_id }}.xml";
+
+      $(function() {
+
+        // Create a new Lens app instance
+        // --------
+        //
+
+        var app = new window.Lens({
+          document_url: qs.url ? decodeURIComponent(qs.url) : documentURL
+        });
+
+        // And start it
+        // --------
+        // 
+        // The app will be injected into the body element
+
+        app.start();
+
+        window.app = app;
+      });
+    </script>
+    
+    <script src="../ga.js"></script>
+    
+  </head>
+
+  <body class="loading">
+
+  </body>
+</html>
