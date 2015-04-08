@@ -128,3 +128,22 @@ def i_have_the_email_headers_sender_email(step, sender_email):
 def i_have_the_email_headers_subject(step, subject):
   assert world.email_headers['subject'] == subject, \
     "Got subject %s" % world.email_headers['subject']
+  
+@step(u'I get lens templates list from the template provider')
+def i_get_lens_templates_list_from_the_template_provider(step):
+  world.templates_list = world.templates.get_lens_templates_list()
+  assert world.templates_list is not None, \
+    "Got templates_list %s" % world.templates_list
+    
+@step(u'I get lens article html from the templates provider')
+def i_get_lens_article_html_from_the_templates_provider(step):
+  world.article_html = world.templates.get_lens_article_html(world.base_dir, world.article)
+  assert world.article_html is not None, \
+    "Got article_html %s" % world.article_html
+    
+@step(u'I have the article html (.*)')
+def i_have_the_article_html_article_html(step, article_html):
+  html_newline_replaced = world.article_html.replace("\n", "\\n")
+  assert html_newline_replaced == article_html, \
+    "Got html_newline_replaced %s" % html_newline_replaced
+  
