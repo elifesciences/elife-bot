@@ -17,6 +17,7 @@ from boto.s3.connection import S3Connection
 
 import simpleDB as dblib
 import provider.s3lib as s3lib
+from elifetools import parseJATS as parser
 
 """
 Article data provider
@@ -102,9 +103,7 @@ class article(object):
     parse it
     """
     
-    document = open(filename, "rb")
-    parsed = self.parse_article_xml(document)
-    document.close()
+    parsed = self.parse_article_xml(filename)
     
     return parsed
 
@@ -115,30 +114,30 @@ class article(object):
     """
     
     try:
-      soup = self.parse_document(document)
-      self.doi = self.parse_doi(soup)
+      soup = parser.parse_document(document)
+      self.doi = parser.doi(soup)
       if(self.doi):
         self.doi_id = self.get_doi_id(self.doi)
         self.doi_url = self.get_doi_url(self.doi)
         self.lens_url = self.get_lens_url(self.doi)
         self.tweet_url = self.get_tweet_url(self.doi)
   
-      self.pub_date = self.parse_pub_date(soup)
-      if(self.pub_date):
-        self.pub_date_timestamp = self.get_pub_date_timestamp(self.pub_date)
+      self.pub_date = parser.pub_date(soup)
+      self.pub_date_timestamp = parser.pub_date_timestamp(soup)
+  
+      self.article_title = parser.title(soup)
+      self.article_type = parser.article_type(soup)
       
-      self.article_title = self.parse_article_title(soup)
-      self.article_type = self.parse_article_type(soup)
+      self.authors = parser.authors(soup)
+      self.authors_string = self.authors_string(self.authors)
       
-      self.authors_string = self.parse_authors_string(soup)
+      self.related_articles = parser.related_article(soup)
       
-      self.related_articles = self.parse_related_article(soup)
-      
-      self.is_poa = self.parse_is_poa(soup)
+      self.is_poa = parser.is_poa(soup)
       
       #self.subject_area = self.parse_subject_area(soup)
       
-      self.display_channel = self.parse_subject_area(soup, subj_group_type = "display-channel")
+      self.display_channel = parser.display_channel(soup)
           
       return True
     except:
@@ -620,11 +619,10 @@ class article(object):
       lookup_url = self.lookup_url_prefix + str(doi_id).zfill(5)
       return lookup_url
     
-  def parse_authors_string(self, soup):
+  def authors_string(self, authors):
     """
-    Return a string for all the article authors    
+    Given a list of authors return a string for all the article authors    
     """
-    authors = self.authors(soup)
     
     authors_string = ""
     for author in authors:
