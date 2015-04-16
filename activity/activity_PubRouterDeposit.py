@@ -53,8 +53,8 @@ class activity_PubRouterDeposit(activity.activity):
         
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
-        self.outbox_folder = "pub_router/outbox/"
-        self.published_folder = "pub_router/published/"
+        self.outbox_folder = None
+        self.published_folder = None
         
         # Track the success of some steps
         self.activity_status = None
@@ -64,8 +64,8 @@ class activity_PubRouterDeposit(activity.activity):
         
         self.outbox_s3_key_names = None
         
-        # Type of FTPArticle workflow to start
-        self.workflow = "HEFCE"
+        # Type of FTPArticle workflow to start, will be specified in data
+        self.workflow = None
         
         # Track XML files selected
         self.article_xml_filenames = []
@@ -83,6 +83,14 @@ class activity_PubRouterDeposit(activity.activity):
         """
         if(self.logger):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        
+        self.workflow = data["data"]["workflow"]
+        self.outbox_folder = self.get_outbox_folder(self.workflow)
+        self.published_folder = self.get_published_folder(self.workflow)
+        
+        if self.outbox_folder is None or self.published_folder is None:
+            # Total fail
+            return False
         
         # Download the S3 objects from the outbox
         self.article_xml_filenames = self.download_files_from_s3_outbox()
@@ -122,6 +130,28 @@ class activity_PubRouterDeposit(activity.activity):
 
         return result
 
+    def get_outbox_folder(self, workflow):
+        """
+        S3 outbox, where files to be processed are
+        """
+        if workflow == "HEFCE":
+            return "pub_router/outbox/"
+        elif workflow == "Cengage":
+            return "cengage/outbox/"
+        
+        return None
+        
+    def get_published_folder(self, workflow):
+        """
+        S3 published folder, where processed files are copied to
+        """
+        if workflow == "HEFCE":
+            return "pub_router/published/"
+        elif workflow == "Cengage":
+            return "cengage/published/"
+        
+        return None
+        
     def start_ftp_article_workflow(self, article):
         """
         In here a new FTPArticle workflow is started for the article object supplied
