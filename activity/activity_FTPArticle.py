@@ -134,6 +134,7 @@ class activity_FTPArticle(activity.activity):
             # Download files from the articles bucket
             self.download_data_file_from_s3(doi_id, 'xml', workflow)
             self.download_data_file_from_s3(doi_id, 'pdf', workflow)
+            self.download_data_file_from_s3(doi_id, 'figures', workflow)
         
     def download_data_file_from_s3(self, doi_id, file_data_type, workflow):
         """
