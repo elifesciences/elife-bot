@@ -318,7 +318,14 @@ class activity_PubRouterDeposit(activity.activity):
           remove_article_doi.append(article.doi)
       
       # Check if article is a resupply
-      # TODO !!!  Probably to check the published bucket history
+      for article in articles:
+        was_ever_published = blank_article.was_ever_published(article.doi, workflow)
+        if was_ever_published is True:
+          if(self.logger):
+            log_info = "Removing because it has been published before " + article.doi
+            self.admin_email_content += "\n" + log_info
+            self.logger.info(log_info)
+          remove_article_doi.append(article.doi)
 
       # Check if article is on the blacklist to not send again
       for article in articles:
