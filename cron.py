@@ -130,7 +130,15 @@ def run_cron(ENV = "dev"):
         workflow_conditional_start(
           ENV           = ENV,
           starter_name  = "starter_PubRouterDeposit",
-          workflow_id   = "PubRouterDeposit",
+          workflow_id   = "PubRouterDeposit_HEFCE",
+          start_seconds = 60*31)
+        
+      # Cengage deposits once per day 22:45 UTC
+      if(current_time.tm_hour == 22):
+        workflow_conditional_start(
+          ENV           = ENV,
+          starter_name  = "starter_PubRouterDeposit",
+          workflow_id   = "PubRouterDeposit_Cengage",
           start_seconds = 60*31)
         
       workflow_conditional_start(
@@ -202,6 +210,11 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       if len(s3_key_names) > 0:
         s.start(ENV = ENV)
 
+    elif(starter_name == "starter_PubRouterDeposit"):
+      # PubRouterDeposit has different variants specified by the workflow variable
+      workflow = workflow_id.split("_")[-1]
+      s.start(ENV = ENV, workflow = workflow)
+
     elif(starter_name == "cron_NewS3XML"
       or starter_name == "cron_NewS3PDF"
       or starter_name == "cron_NewS3SVG"
@@ -212,7 +225,6 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       or starter_name == "cron_NewS3POA"
       or starter_name == "cron_NewS3FiguresPDF"
       or starter_name == "starter_PublicationEmail"
-      or starter_name == "starter_PubRouterDeposit"
       ):
       s.start(ENV = ENV)
       
