@@ -133,6 +133,14 @@ def run_cron(ENV = "dev"):
           workflow_id   = "PubRouterDeposit_HEFCE",
           start_seconds = 60*31)
         
+      # Cengage deposits once per day 22:45 UTC
+      if(current_time.tm_hour == 22):
+        workflow_conditional_start(
+          ENV           = ENV,
+          starter_name  = "starter_PubRouterDeposit",
+          workflow_id   = "PubRouterDeposit_Cengage",
+          start_seconds = 60*31)
+        
       workflow_conditional_start(
         ENV           = ENV,
         starter_name  = "starter_PubmedArticleDeposit",
