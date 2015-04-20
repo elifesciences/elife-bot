@@ -394,18 +394,38 @@ class article(object):
           return self.was_poa_doi_ids
       
       was_poa_doi_ids = []
-      poa_published_folder = "published/"
+      published_folder = "published/"
 
       file_extensions = []
       file_extensions.append(".xml")
       
       bucket_name = self.settings.poa_packaging_bucket
+
+      was_poa_doi_ids = self.doi_ids_from_published_folder(bucket_name, published_folder,
+                                                           file_extensions, folder_names,
+                                                           s3_key_names)
+      
+      # Cache it
+      self.was_poa_doi_ids = was_poa_doi_ids
+      
+      # Return it
+      return was_poa_doi_ids
+    
+  def doi_ids_from_published_folder(self, bucket_name, published_folder, file_extensions,
+                                    folder_names = None, s3_key_names = None):
+      """
+      Connect to the S3 bucket, and from the files in the published folder,
+      get a list of files by file extensions, and then parse out the article id
+        folder_names and s3_key_names is only supplied for when running automated tests
+      """
+      ids = []
+      
       
       if folder_names is None:
           # Get the folder names from live s3 bucket if no test data supplied
           folder_names = self.get_folder_names_from_bucket(
                                   bucket_name = bucket_name,
-                                  prefix      = poa_published_folder )
+                                  prefix      = published_folder )
           
       
       if s3_key_names is None:
@@ -425,17 +445,13 @@ class article(object):
       for s3_key_name in s3_key_names:
           doi_id = self.get_doi_id_from_poa_s3_key_name(s3_key_name)
           if doi_id:
-              was_poa_doi_ids.append(doi_id)
+              ids.append(doi_id)
               
       # Remove duplicates and sort it
-      was_poa_doi_ids = list(set(was_poa_doi_ids))
-      was_poa_doi_ids.sort()
+      ids = list(set(ids))
+      ids.sort()
       
-      # Cache it
-      self.was_poa_doi_ids = was_poa_doi_ids
-      
-      # Return it
-      return was_poa_doi_ids
+      return ids
     
   def get_folder_names_from_bucket(self, bucket_name, prefix):
     """
