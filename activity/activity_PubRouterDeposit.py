@@ -756,7 +756,7 @@ class activity_PubRouterDeposit(activity.activity):
         
         activity_status_text = self.get_activity_status_text(self.activity_status)
         
-        subject = ( self.name + " " + activity_status_text +
+        subject = ( self.name + " " + str(self.workflow) + " " + activity_status_text +
                     ", " + datetime_string +
                     ", eLife SWF domain: " + self.settings.domain)
         
@@ -775,6 +775,8 @@ class activity_PubRouterDeposit(activity.activity):
         activity_status_text = self.get_activity_status_text(self.activity_status)
         
         # Bulk of body
+        body += "Workflow type:" + str(self.workflow)
+        body += "\n"
         body += self.name + " status:" + "\n"
         body += "\n"
         body += activity_status_text + "\n"
