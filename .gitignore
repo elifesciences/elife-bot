@@ -5,3 +5,5 @@ ftp-credentials.txt
 settings.py
 .boto
 tmp
+venv
+.idea
