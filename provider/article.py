@@ -54,6 +54,7 @@ class article(object):
     
     # Store the list of DOI id that was ever PoA
     self.was_poa_doi_ids = None
+    self.doi_ids = None
     self.article_bucket_published_dates = None
     
     # For checking published articles need a URL prefix for where to check
@@ -381,6 +382,50 @@ class article(object):
         # If the hash key does not exist then we just do not know
         return None
     
+  def was_ever_published(self, doi, workflow):
+      """
+      For an article DOI and workflow name, check if it ever went through that workflow
+      """
+      
+      doi_id = self.get_doi_id(doi)
+      
+      if int(doi_id) in self.was_published_doi_ids(workflow):
+          return True
+      else:
+          return False
+    
+  def was_published_doi_ids(self, workflow, force = False, folder_names = None, s3_key_names = None):
+      """
+      Connect to the S3 bucket, and from the files in the published folder,
+      get a list of .xml files, and then parse out the article id
+        folder_names and s3_key_names is only supplied for when running automated tests
+      """
+      # Return from cached values if not force
+      if force is False and self.doi_ids is not None:
+          return self.doi_ids
+        
+      doi_ids = []
+      
+      if workflow == "HEFCE":
+          published_folder = "pub_router/published/"
+      if workflow == "Cengage":
+          published_folder = "cengage/published/"
+      
+      file_extensions = []
+      file_extensions.append(".xml")
+      
+      bucket_name = self.settings.poa_packaging_bucket
+
+      doi_ids = self.doi_ids_from_published_folder(bucket_name, published_folder,
+                                                           file_extensions, folder_names,
+                                                           s3_key_names)
+      
+      # Cache it
+      self.doi_ids = doi_ids
+      
+      # Return it
+      return doi_ids
+    
     
   def get_was_poa_doi_ids(self, force = False, folder_names = None, s3_key_names = None):
       """
@@ -393,18 +438,38 @@ class article(object):
           return self.was_poa_doi_ids
       
       was_poa_doi_ids = []
-      poa_published_folder = "published/"
+      published_folder = "published/"
 
       file_extensions = []
       file_extensions.append(".xml")
       
       bucket_name = self.settings.poa_packaging_bucket
+
+      was_poa_doi_ids = self.doi_ids_from_published_folder(bucket_name, published_folder,
+                                                           file_extensions, folder_names,
+                                                           s3_key_names)
+      
+      # Cache it
+      self.was_poa_doi_ids = was_poa_doi_ids
+      
+      # Return it
+      return was_poa_doi_ids
+    
+  def doi_ids_from_published_folder(self, bucket_name, published_folder, file_extensions,
+                                    folder_names = None, s3_key_names = None):
+      """
+      Connect to the S3 bucket, and from the files in the published folder,
+      get a list of files by file extensions, and then parse out the article id
+        folder_names and s3_key_names is only supplied for when running automated tests
+      """
+      ids = []
+      
       
       if folder_names is None:
           # Get the folder names from live s3 bucket if no test data supplied
           folder_names = self.get_folder_names_from_bucket(
                                   bucket_name = bucket_name,
-                                  prefix      = poa_published_folder )
+                                  prefix      = published_folder )
           
       
       if s3_key_names is None:
@@ -423,18 +488,18 @@ class article(object):
       # Extract just the doi_id portion
       for s3_key_name in s3_key_names:
           doi_id = self.get_doi_id_from_poa_s3_key_name(s3_key_name)
+          if not doi_id:
+              # Try again as vor name
+              doi_id = self.get_doi_id_from_vor_s3_key_name(s3_key_name)
+              
           if doi_id:
-              was_poa_doi_ids.append(doi_id)
+              ids.append(doi_id)
               
       # Remove duplicates and sort it
-      was_poa_doi_ids = list(set(was_poa_doi_ids))
-      was_poa_doi_ids.sort()
+      ids = list(set(ids))
+      ids.sort()
       
-      # Cache it
-      self.was_poa_doi_ids = was_poa_doi_ids
-      
-      # Return it
-      return was_poa_doi_ids
+      return ids
     
   def get_folder_names_from_bucket(self, bucket_name, prefix):
     """
@@ -498,6 +563,23 @@ class article(object):
       doi_id = None
       delimiter = '/'
       file_name_prefix = "elife_poa_e"
+      
+      doi_id = self.get_doi_id_from_s3_key_name(s3_key_name, file_name_prefix)
+
+      return doi_id
+    
+  def get_doi_id_from_vor_s3_key_name(self, s3_key_name):
+      """
+      Extract just the integer doi_id value from the S3 key name
+      of the article XML file for a VOR XML file
+      E.g.
+        pub_router/published/20140508/elife02419.xml = 2419
+        
+      """
+      
+      doi_id = None
+      delimiter = '/'
+      file_name_prefix = "elife"
       
       doi_id = self.get_doi_id_from_s3_key_name(s3_key_name, file_name_prefix)
 

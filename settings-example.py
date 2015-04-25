@@ -91,6 +91,12 @@ class dev():
 	HEFCE_FTP_PASSWORD = ""
 	HEFCE_FTP_CWD = ""
 	
+	# Cengage Archive FTP settings
+	CENGAGE_FTP_URI = ""
+	CENGAGE_FTP_USERNAME = ""
+	CENGAGE_FTP_PASSWORD = ""
+	CENGAGE_FTP_CWD = ""
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -173,6 +179,12 @@ class live():
 	HEFCE_FTP_USERNAME = ""
 	HEFCE_FTP_PASSWORD = ""
 	HEFCE_FTP_CWD = ""
+	
+	# Cengage Archive FTP settings
+	CENGAGE_FTP_URI = ""
+	CENGAGE_FTP_USERNAME = ""
+	CENGAGE_FTP_PASSWORD = ""
+	CENGAGE_FTP_CWD = ""
 	
 	# Logging
 	setLevel = "INFO"

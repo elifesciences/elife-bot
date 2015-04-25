@@ -86,6 +86,10 @@ class activity_FTPArticle(activity.activity):
             file_type = "/*.zip"
             zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
             self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR)
+        if workflow == 'Cengage':
+            file_type = "/*.zip"
+            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+            self.ftp_to_endpoint(zipfiles)
          
         # Return the activity result, True or False
         result = True
@@ -104,7 +108,13 @@ class activity_FTPArticle(activity.activity):
             self.FTP_PASSWORD = self.settings.HEFCE_FTP_PASSWORD
             self.FTP_CWD =  self.settings.HEFCE_FTP_CWD
             # Subfolders to create when FTPing
-            self.FTP_SUBDIR.append(str(doi_id).zfill(5)) 
+            self.FTP_SUBDIR.append(str(doi_id).zfill(5))
+            
+        if workflow == 'Cengage':
+            self.FTP_URI = self.settings.CENGAGE_FTP_URI
+            self.FTP_USERNAME = self.settings.CENGAGE_FTP_USERNAME
+            self.FTP_PASSWORD = self.settings.CENGAGE_FTP_PASSWORD
+            self.FTP_CWD =  self.settings.CENGAGE_FTP_CWD
         
     def download_files_from_s3(self, doi_id, workflow):
         
@@ -119,7 +129,12 @@ class activity_FTPArticle(activity.activity):
             self.download_data_file_from_s3(doi_id, 'video', workflow)
             self.download_data_file_from_s3(doi_id, 'jpg', workflow)
             self.download_data_file_from_s3(doi_id, 'figures', workflow)
-                    
+            
+        if workflow == 'Cengage':
+            # Download files from the articles bucket
+            self.download_data_file_from_s3(doi_id, 'xml', workflow)
+            self.download_data_file_from_s3(doi_id, 'pdf', workflow)
+            self.download_data_file_from_s3(doi_id, 'figures', workflow)
         
     def download_data_file_from_s3(self, doi_id, file_data_type, workflow):
         """

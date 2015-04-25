@@ -40,6 +40,7 @@ class activity_ArticleToOutbox(activity.activity):
 		self.pubmed_outbox_folder = "pubmed/outbox/"
 		self.publication_email_outbox_folder = "publication_email/outbox/"
 		self.pub_router_outbox_folder = "pub_router/outbox/"
+		self.cengage_outbox_folder = "cengage/outbox/"
 
 	def do_activity(self, data = None):
 		"""
@@ -82,7 +83,13 @@ class activity_ArticleToOutbox(activity.activity):
 			path = tmp_document_path,
 			document = tmp_document,
 			outbox_folder = self.pub_router_outbox_folder)
-		
+
+		# 4. Send the file to the cengage outbox
+		self.copy_document_to_outbox(
+			path = tmp_document_path,
+			document = tmp_document,
+			outbox_folder = self.cengage_outbox_folder)
+
 		if(self.logger):
 			self.logger.info('ArticleToOutbox: %s' % elife_id)
 
