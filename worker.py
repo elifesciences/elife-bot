@@ -243,9 +243,8 @@ if __name__ == "__main__":
 			pool = start_multiple_thread(ENV)
 		else:
 			pool = start_single_thread(ENV)
-	except:
-		# If forks is not specified start in single threaded mode
-		pool = start_single_thread(ENV)
+	except Exception as e:
+ 		log ("Exception: " + e.message)
 
 	# Monitor for keyboard interrupt ctrl-C
 	loop = True

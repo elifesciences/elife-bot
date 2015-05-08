@@ -67,6 +67,7 @@ def start(ENV = "dev"):
 	activity_names = []
 	activity_names.append("PingWorker")
 	activity_names.append("ConvertJATS")
+	activity_names.append("PostNAF")
 	activity_names.append("Sum")
 	activity_names.append("S3Monitor")
 	activity_names.append("UnzipArticleXML")

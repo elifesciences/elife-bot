@@ -10,3 +10,5 @@ requests==2.5.3
 wsgiref==0.1.2
 lxml==3.4.1
 xlrd==0.9.3
+-e hg+https://bitbucket.org/lskibinski/scraper/src#egg=scraper
+-e git+https://github.com/elifesciences/elife-tools.git@master#egg=elifetools

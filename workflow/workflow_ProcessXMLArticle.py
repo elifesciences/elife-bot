@@ -19,7 +19,7 @@ class workflow_ProcessXMLArticle(workflow.workflow):
         # Get the input from the JSON decision response
         data = self.get_input()
 
-        # JSON format workflow definition, for now
+        # JSON format workflow definition, for now - may be from common YAML definition
         workflow_definition = {
             "name": self.name,
             "version": self.version,
@@ -55,16 +55,17 @@ class workflow_ProcessXMLArticle(workflow.workflow):
                         "schedule_to_start_timeout": 300,
                         "start_to_close_timeout": 60 * 5
                     },
-                    # {
-                    #  "activity_type": "PushNAFToDrupal",
-                    #  	"activity_id": "LensArticle",
-                    # 	"version": "1",
-                    # 	"input": data,
-                    #  	"control": None,
-                    #  	"heartbeat_timeout": 60*5,
-                    # 	"schedule_to_close_timeout": 60*5,
-                    #  	"schedule_to_start_timeout": 300,
-                    # 	"start_to_close_timeout": 60*5  # },
+                    {
+                        "activity_type": "PostNAF",
+                        "activity_id": "PostNAF",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 5,
+                        "schedule_to_close_timeout": 60 * 5,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 5
+                    },
 
                 ],
 
