@@ -66,7 +66,7 @@ def work(ENV="dev"):
                 # TODO : make that workflow configurable to choose a second workflow based on bucket name,
                 # TODO (cont) file name and maybe contents
 
-                starter_name = 'starter_ProcessXMLArticle'
+                starter_name = 'starter_NewS3File'
                 module_name = "starter." + starter_name
                 module = importlib.import_module(module_name)
                 reload_module(module)

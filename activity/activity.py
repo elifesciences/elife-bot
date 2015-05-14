@@ -11,7 +11,7 @@ Amazon SWF activity base class
 
 class activity(object):
 	# Base class
-	def __init__(self, settings, logger, conn = None, token = None, activity_task = None):
+        def __init__(self, settings, logger, conn = None, token = None, activity_task = None):
 		self.settings = settings
 		self.logger = logger
 		self.result = None

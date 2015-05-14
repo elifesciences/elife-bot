@@ -43,17 +43,25 @@ class activity_ConvertJATS(activity.activity):
         key = Key(bucket)
         key.key = filename
         xml = key.get_contents_as_string()
+        if self.logger:
+            self.logger.info("Downloaded contents of file %s" % filename)
 
         # TODO : improve integration with scraper project rather than copy and paste
         # now that its been updated
         json_output = article_scraper.convert(xml)
-        output_name = filename.replace('.xml', '.json')
+
+        if self.logger:
+            self.logger.info("Scraped file %s" % filename)
 
         # TODO (see note above about utility class for S3 work)
+        output_name = filename.replace('.xml', '.json')
         destination = conn.get_bucket(self.settings.jr_S3_NAF_bucket)
         destination_key = Key(destination)
         destination_key.key = output_name
         destination_key.set_contents_from_string(json_output)
+
+        if self.logger:
+            self.logger.info("Uploaded key %s to %s" % (output_name, self.settings.jr_S3_NAF_bucket))
 
         return True
 
