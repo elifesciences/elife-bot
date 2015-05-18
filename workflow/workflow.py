@@ -189,7 +189,7 @@ class workflow(object):
 		"""
 	
 		if(activityType is None and activityID is None):
-			return false
+			return False
 
 		eventId_list = []
 
