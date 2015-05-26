@@ -1,20 +1,18 @@
-import json
 import random
 import time
 import importlib
 from multiprocessing import Process
 from optparse import OptionParser
-from s3_sqs_message import S3SQSMessage
 
+from S3utility.s3_sqs_message import S3SQSMessage
 import boto.sqs
 from boto.sqs.jsonmessage import JSONMessage
-
 import settings as settingsLib
 import log
 import os
 
+
 # this is not an unused import, it is used dynamically
-import starter
 
 
 # Add parent directory for imports, so activity classes can use elife-api-prototype

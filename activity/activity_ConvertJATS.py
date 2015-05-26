@@ -1,7 +1,6 @@
 import activity
 import json
-import boto.swf
-import article_scraper
+from jats_scraper import jats_scraper
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 
@@ -46,9 +45,9 @@ class activity_ConvertJATS(activity.activity):
         if self.logger:
             self.logger.info("Downloaded contents of file %s" % filename)
 
-        # TODO : improve integration with scraper project rather than copy and paste
+        # TODO : improve integration with jats_scraper project rather than copy and paste
         # now that its been updated
-        json_output = article_scraper.convert(xml)
+        json_output = jats_scraper.scrape(xml)
 
         if self.logger:
             self.logger.info("Scraped file %s" % filename)

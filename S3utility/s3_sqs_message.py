@@ -6,7 +6,7 @@ class S3SQSMessage(Message):
         Message.__init__(self, queue, body)
         self.payload = None
 
-    def file_   name(self):
+    def file_name(self):
         return self.payload['Records'][0]['s3']['object']['key']
 
     def bucket_name(self):

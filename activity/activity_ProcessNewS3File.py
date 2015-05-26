@@ -1,7 +1,6 @@
 import activity
 import json
 import boto.swf
-import article_scraper
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 import importlib

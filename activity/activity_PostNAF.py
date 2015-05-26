@@ -1,7 +1,5 @@
 import activity
 import json
-import boto.swf
-import article_scraper
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 
@@ -38,7 +36,6 @@ class activity_PostNAF(activity.activity):
 
         if self.logger:
             self.logger.info("Posting file %s" % naf_filename)
-
 
         conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = conn.get_bucket(naf_bucket)

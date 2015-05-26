@@ -141,7 +141,7 @@ def import_activity_class(activity_name):
 		# Reload the module, in case it was imported before
 		reload_module(module_name)
 		return True
-	except ImportError:
+	except ImportError as e:
 		return False
 	
 def reload_module(module_name):
