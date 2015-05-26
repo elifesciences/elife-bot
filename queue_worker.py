@@ -4,6 +4,7 @@ import time
 import importlib
 from multiprocessing import Process
 from optparse import OptionParser
+from s3_sqs_message import S3SQSMessage
 
 import boto.sqs
 from boto.sqs.jsonmessage import JSONMessage
@@ -41,6 +42,7 @@ def work(ENV="dev"):
                                       aws_access_key_id=settings.aws_access_key_id,
                                       aws_secret_access_key=settings.aws_secret_access_key)
     queue = conn.get_queue(settings.jr_S3_monitor_queue)
+    queue.set_message_class(S3SQSMessage)
     # TODO : set queue message type to a custom S3EventNotification subclass extending boto.sqs.message
 
     # Poll for an activity task indefinitely
@@ -48,7 +50,7 @@ def work(ENV="dev"):
         while True:
 
             logger.info('reading message')
-            queue_message = queue.read(60)
+            queue_message = queue.read(30)
             # TODO : check for more-than-once delivery
             # ( Dynamo conditional write? http://tinyurl.com/of3tmop )
 
@@ -56,14 +58,12 @@ def work(ENV="dev"):
                 logger.info('no messages available')
             else:
                 logger.info('got message id: %s' % queue_message.id)
-                payload = (queue_message.get_body())
-                json_payload = json.loads(payload)
-                bucket = json_payload['Records'][0]['s3']['bucket']['name']
-                filename = json_payload['Records'][0]['s3']['object']['key']
+                bucket = queue_message.bucket_name()
+                filename = queue_message.file_name()
                 print "%s received %s" % (bucket, filename)
 
                 # TODO : create initial workflow to handle new objects in S3
-                # TODO : make that workflow configurable to choose a second workflow based on bucket name,
+                # TODO : m  ake that workflow configurable to choose a second workflow based on bucket name,
                 # TODO (cont) file name and maybe contents
 
                 starter_name = 'starter_NewS3File'
@@ -77,6 +77,7 @@ def work(ENV="dev"):
                 print "cancelling message"
                 queue.delete_message(queue_message)
                 print "message cancelled"
+            time.sleep(10)
 
     else:
         logger.error('error obtaining queue')
