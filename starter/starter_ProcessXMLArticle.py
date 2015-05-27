@@ -17,7 +17,7 @@ Amazon SWF PublishArticle starter, for API and Lens publishing etc.
 
 class starter_ProcessXMLArticle():
 
-    def start(self, ENV="dev", bucket=None, filename=None):
+    def start(self, ENV="dev", info=None):
 
         # TODO : much of this is common to many starters and could probably be streamlined
 
@@ -30,6 +30,8 @@ class starter_ProcessXMLArticle():
         # logFile = None
         logger = log.logger(log_file, settings.setLevel, identity)
 
+        filename = info.file_name
+
         if filename is None:
             logger.error("Did not get a filename")
             return
@@ -37,19 +39,13 @@ class starter_ProcessXMLArticle():
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
-        doc_info = {
-            'filename': filename,
-            'bucket': bucket,
-            'other_information': 'random information'
-        }
-
         # Start a workflow execution
         workflow_id = "ProcessXMLArticle_%s" % filename + str(int(random.random() * 1000))
         workflow_name = "ProcessXMLArticle"
         workflow_version = "1"
         child_policy = None
         execution_start_to_close_timeout = None
-        workflow_input = '{"data": ' + json.dumps(doc_info) + '}'
+        workflow_input = json.dumps(info, default=lambda ob: ob.__dict__)
 
         try:
             response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version,
@@ -84,4 +80,4 @@ if __name__ == "__main__":
 
     o = starter_ProcessXMLArticle()
 
-    o.start(ENV, filename="not_a_file.txt")
+    o.start(ENV, )

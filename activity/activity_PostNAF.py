@@ -2,6 +2,7 @@ import activity
 import json
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
+from S3utility.s3_notification_info import S3NotificationInfo
 
 """
 activity_PostNAF.py activity
@@ -28,10 +29,9 @@ class activity_PostNAF(activity.activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
         # TODO : better exception handling
+        info = S3NotificationInfo.from_dict(data)
 
-        # TODO : use common logic for obtaining this information
-        original_filename = data["data"]["filename"]
-        naf_filename = original_filename.replace('.xml', '.json')
+        naf_filename = info.file_name.replace('.xml', '.json')
         naf_bucket = self.settings.jr_S3_NAF_bucket
 
         if self.logger:

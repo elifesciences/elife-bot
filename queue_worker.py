@@ -3,7 +3,7 @@ import time
 import importlib
 from multiprocessing import Process
 from optparse import OptionParser
-
+from S3utility.s3_notification_info import S3NotificationInfo
 from S3utility.s3_sqs_message import S3SQSMessage
 import boto.sqs
 from boto.sqs.jsonmessage import JSONMessage
@@ -13,7 +13,7 @@ import os
 
 
 # this is not an unused import, it is used dynamically
-
+import starter
 
 # Add parent directory for imports, so activity classes can use elife-api-prototype
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -41,7 +41,6 @@ def work(ENV="dev"):
                                       aws_secret_access_key=settings.aws_secret_access_key)
     queue = conn.get_queue(settings.jr_S3_monitor_queue)
     queue.set_message_class(S3SQSMessage)
-    # TODO : set queue message type to a custom S3EventNotification subclass extending boto.sqs.message
 
     # Poll for an activity task indefinitely
     if queue is not None:
@@ -56,25 +55,24 @@ def work(ENV="dev"):
                 logger.info('no messages available')
             else:
                 logger.info('got message id: %s' % queue_message.id)
-                bucket = queue_message.bucket_name()
-                filename = queue_message.file_name()
-                print "%s received %s" % (bucket, filename)
-
-                # TODO : create initial workflow to handle new objects in S3
-                # TODO : m  ake that workflow configurable to choose a second workflow based on bucket name,
-                # TODO (cont) file name and maybe contents
-
-                starter_name = 'starter_NewS3File'
-                module_name = "starter." + starter_name
-                module = importlib.import_module(module_name)
-                reload_module(module)
-                full_path = "starter." + starter_name + "." + starter_name + "()"
-                s = eval(full_path)
-                # TODO : etag too?
-                s.start(ENV=ENV, bucket=bucket, filename=filename)
-                print "cancelling message"
-                queue.delete_message(queue_message)
-                print "message cancelled"
+                if queue_message.notification_type == 'S3Event':
+                    info = S3NotificationInfo.from_S3SQSMessage(queue_message)
+                    bucket = info.bucket_name
+                    filename = info.file_name
+                    logger.info("%s received %s" % (bucket, filename))
+                    starter_name = 'starter_NewS3File'
+                    module_name = "starter." + starter_name
+                    module = importlib.import_module(module_name)
+                    reload_module(module)
+                    full_path = "starter." + starter_name + "." + starter_name + "()"
+                    s = eval(full_path)
+                    s.start(ENV=ENV, info=info)
+                    logger.info("cancelling message")
+                    queue.delete_message(queue_message)
+                    logger.info("message cancelled")
+                else:
+                    # TODO : log
+                    pass
             time.sleep(10)
 
     else:

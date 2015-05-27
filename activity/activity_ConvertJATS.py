@@ -3,6 +3,7 @@ import json
 from jats_scraper import jats_scraper
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
+from S3utility.s3_notification_info import S3NotificationInfo
 
 """
 ConvertJATS.py activity
@@ -28,32 +29,29 @@ class activity_ConvertJATS(activity.activity):
         """
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
-
-        # TODO : Multiple activities will need this information so abstract this work
-        filename = data["data"]["filename"]
-        bucketname = data["data"]["bucket"]
+        info = S3NotificationInfo.from_dict(data)
 
         if self.logger:
-            self.logger.info("Converting file %s" % filename)
+            self.logger.info("Converting file %s" % info.file_name)
 
         # TODO : create a utility class for the S3 work, may already be in the bot somewhere
         conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = conn.get_bucket(bucketname)
+        bucket = conn.get_bucket(info.bucket_name)
         key = Key(bucket)
-        key.key = filename
+        key.key = info.file_name
         xml = key.get_contents_as_string()
         if self.logger:
-            self.logger.info("Downloaded contents of file %s" % filename)
+            self.logger.info("Downloaded contents of file %s" % info.file_name)
 
         # TODO : improve integration with jats_scraper project rather than copy and paste
         # now that its been updated
         json_output = jats_scraper.scrape(xml)
 
         if self.logger:
-            self.logger.info("Scraped file %s" % filename)
+            self.logger.info("Scraped file %s" % info.file_name)
 
         # TODO (see note above about utility class for S3 work)
-        output_name = filename.replace('.xml', '.json')
+        output_name = info.file_name.replace('.xml', '.json')
         destination = conn.get_bucket(self.settings.jr_S3_NAF_bucket)
         destination_key = Key(destination)
         destination_key.key = output_name
