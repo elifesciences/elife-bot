@@ -1,16 +1,14 @@
-import scraper
-import json
 import feeds
 
-def scrape(xml, status=1):
+def scrape(xml):
 
-    res = scraper.scrape(feeds, doc=xml, status=status)
+    res = feeds.scrape(xml, lambda x: x[0]['article'][0])
 
-    return json.dumps(res[0]['article'][0], indent=4)
+    return res
 
 def main(args):
     xml = open(args[0], "r").read()
-    print scrape(xml, status=1)
+    print scrape(xml)
 
 if __name__ == '__main__':
     import sys
