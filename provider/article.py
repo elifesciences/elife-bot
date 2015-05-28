@@ -17,6 +17,7 @@ from boto.s3.connection import S3Connection
 
 import simpleDB as dblib
 import provider.s3lib as s3lib
+from elifetools import parseJATS as parser
 
 """
 Article data provider
@@ -103,9 +104,7 @@ class article(object):
     parse it
     """
     
-    document = open(filename, "rb")
-    parsed = self.parse_article_xml(document)
-    document.close()
+    parsed = self.parse_article_xml(filename)
     
     return parsed
 
@@ -116,30 +115,30 @@ class article(object):
     """
     
     try:
-      soup = self.parse_document(document)
-      self.doi = self.parse_doi(soup)
+      soup = parser.parse_document(document)
+      self.doi = parser.doi(soup)
       if(self.doi):
         self.doi_id = self.get_doi_id(self.doi)
         self.doi_url = self.get_doi_url(self.doi)
         self.lens_url = self.get_lens_url(self.doi)
         self.tweet_url = self.get_tweet_url(self.doi)
   
-      self.pub_date = self.parse_pub_date(soup)
-      if(self.pub_date):
-        self.pub_date_timestamp = self.get_pub_date_timestamp(self.pub_date)
+      self.pub_date = parser.pub_date(soup)
+      self.pub_date_timestamp = parser.pub_date_timestamp(soup)
+  
+      self.article_title = parser.title(soup)
+      self.article_type = parser.article_type(soup)
       
-      self.article_title = self.parse_article_title(soup)
-      self.article_type = self.parse_article_type(soup)
+      self.authors = parser.authors(soup)
+      self.authors_string = self.authors_string(self.authors)
       
-      self.authors_string = self.parse_authors_string(soup)
+      self.related_articles = parser.related_article(soup)
       
-      self.related_articles = self.parse_related_article(soup)
-      
-      self.is_poa = self.parse_is_poa(soup)
+      self.is_poa = parser.is_poa(soup)
       
       #self.subject_area = self.parse_subject_area(soup)
       
-      self.display_channel = self.parse_subject_area(soup, subj_group_type = "display-channel")
+      self.display_channel = parser.display_channel(soup)
           
       return True
     except:
@@ -702,11 +701,10 @@ class article(object):
       lookup_url = self.lookup_url_prefix + str(doi_id).zfill(5)
       return lookup_url
     
-  def parse_authors_string(self, soup):
+  def authors_string(self, authors):
     """
-    Return a string for all the article authors    
+    Given a list of authors return a string for all the article authors    
     """
-    authors = self.authors(soup)
     
     authors_string = ""
     for author in authors:
@@ -730,389 +728,3 @@ class article(object):
       return True
     else:
       return False
-    
-    
-    
-  """
-  Some quick copy and paste from elife-api-prototype parseNLM.py parser to get the basics for now
-  """
-  
-  def parse_document(self, document):
-    return self.parse_xml(document)
-  
-  def parse_xml(self, xml):
-    soup = BeautifulSoup(xml, ["lxml", "xml"])
-    return soup
-  
-  def parse_doi(self, soup):
-    doi = None
-    doi_tags = self.extract_nodes(soup, "article-id", attr = "pub-id-type", value = "doi")
-    for tag in doi_tags:
-      # Only look at the doi tag directly inside the article-meta section
-      if (tag.parent.name == "article-meta"):
-        doi = tag.text
-    return doi
-  
-  def parse_pub_date(self, soup, date_type = "pub"):
-    """
-    Find the publishing date for populating
-    pub_date_date, pub_date_day, pub_date_month, pub_date_year, pub_date_timestamp
-    Default pub_type is ppub, but will revert to epub if tag is not found
-    """
-    tz = "UTC"
-    
-    try:
-      pub_date_section = self.extract_nodes(soup, "pub-date", attr = "date-type", value = date_type)
-      if(len(pub_date_section) == 0):
-        if(date_type == "ppub"):
-          date_type = "epub"
-        pub_date_section = self.extract_nodes(soup, "pub-date", attr = "pub-type", value = date_type)
-      (day, month, year) = self.get_ymd(pub_date_section[0])
-  
-    except(IndexError):
-      # Tag not found, try the other
-      return None
-    
-    date_string = None
-    try:
-      date_string = time.strptime(year + "-" + month + "-" + day + " " + tz, "%Y-%m-%d %Z")
-    except(TypeError):
-      # Date did not convert
-      pass
-  
-    return date_string
-    
-  def parse_article_title(self, soup):
-    title_text = self.extract_node_text(soup, "article-title")
-    return title_text
-    
-  def extract_first_node(self, soup, nodename):
-    tags = self.extract_nodes(soup, nodename)
-    try:
-      tag = tags[0]
-    except(IndexError):
-      # Tag not found
-      return None
-    return tag
-    
-  def extract_nodes(self, soup, nodename, attr = None, value = None):
-    tags = soup.find_all(nodename)
-    if(attr != None and value != None):
-      # Further refine nodes by attributes
-      tags_by_value = []
-      for tag in tags:
-        try:
-          if tag[attr] == value:
-            tags_by_value.append(tag)
-        except KeyError:
-          continue
-      return tags_by_value
-    return tags
-  
-  def extract_node_text(self, soup, nodename, attr = None, value = None):
-    """
-    Extract node text by nodename, unless attr is supplied
-    If attr and value is specified, find all the nodes and search
-      by attr and value for the first node
-    """
-    tag_text = None
-    if(attr == None):
-      tag = self.extract_first_node(soup, nodename)
-      try:
-        tag_text = tag.text
-      except(AttributeError):
-        # Tag text not found
-        return None
-    else:
-      tags = self.extract_nodes(soup, nodename, attr, value)
-      for tag in tags:
-        try:
-          if tag[attr] == value:
-            tag_text = tag.text
-        except KeyError:
-          continue
-    return tag_text
-  
-  def get_ymd(self, soup):
-    """
-    Get the year, month and day from child tags
-    """
-    day = self.extract_node_text(soup, "day")
-    month = self.extract_node_text(soup, "month")
-    year = self.extract_node_text(soup, "year")
-    return (day, month, year)
-      
-  def parse_article_type(self, soup):
-      """
-      Find the article_type from the article tag root XML attribute
-      """
-      article_type = None
-      article = self.extract_nodes(soup, "article")
-      #try:
-      article_type = article[0]['article-type']    
-      #except(KeyError,IndexError):
-          # Attribute or tag not found
-      #    return None
-      return article_type
-      
-  def parse_related_article(self, soup):
-    related_articles = []
-    # Only look for type DOI for now, to find commentary articles
-    related_article_tags = self.extract_nodes(soup, "related-article", attr = "ext-link-type", value = "doi")
-    for tag in related_article_tags:
-      # Only look at the doi tag directly inside the article-meta section
-      if (tag.parent.name == "article-meta"):
-        ra = {}
-        ra["ext_link_type"] = tag["ext-link-type"]
-        ra["related_article_type"] = tag["related-article-type"]
-        ra["xlink_href"] = tag["xlink:href"]
-        related_articles.append(ra)
-        
-    return related_articles
-
-
-  def authors(self, soup):
-    """Find and return all the authors"""
-    tags = self.extract_nodes(soup, "contrib", attr = "contrib-type", value = "author")
-    authors = []
-    position = 1
-    
-    article_doi = self.parse_doi(soup)
-    
-    for tag in tags:
-        author = {}
-        
-        # Person id
-        try:
-            person_id = tag["id"]
-            person_id = person_id.replace("author-", "")
-            author['person_id'] = int(person_id)
-        except(KeyError):
-            pass
-  
-        # Equal contrib
-        try:
-            equal_contrib = tag["equal-contrib"]
-            if(equal_contrib == 'yes'):
-                author['equal_contrib'] = True
-        except(KeyError):
-            pass
-        
-        # Correspondence
-        try:
-            corresponding = tag["corresp"]
-            if(corresponding == 'yes'):
-                author['corresponding'] = True
-        except(KeyError):
-            pass
-        
-        # Surname
-        surname = self.extract_node_text(tag, "surname")
-        if(surname != None):
-            author['surname'] = surname
-  
-        # Given names
-        given_names = self.extract_node_text(tag, "given-names")
-        if(given_names != None):
-            author['given_names'] = given_names
-        
-        # Find and parse affiliations
-        affs = self.extract_nodes(tag, "xref", attr = "ref-type", value = "aff")
-        if(len(affs) > 0):
-            # One or more affiliations
-            if(len(affs) > 1):
-                # Prepare for multiple affiliations if multiples found
-                author['country'] = []
-                author['institution'] = []
-                author['department'] = []
-                author['city'] = []
-                
-            for aff in affs:
-                # Find the matching affiliation detail
-                rid = aff['rid']
-  
-                aff_node = self.extract_nodes(soup, "aff", attr = "id", value = rid)
-                country = self.extract_node_text(aff_node[0], "country")
-                institution = self.extract_node_text(aff_node[0], "institution")
-                department = self.extract_node_text(aff_node[0], "named-content", attr = "content-type", value = "department")
-                city = self.extract_node_text(aff_node[0], "named-content", attr = "content-type", value = "city")
-                
-                # Convert None to empty string if there is more than one affiliation
-                if((country == None) and (len(affs) > 1)):
-                    country = ''
-                if((institution == None) and (len(affs) > 1)):
-                    institution = ''
-                if((department == None) and (len(affs) > 1)):
-                    department = ''
-                if((city == None) and (len(affs) > 1)):
-                    city = ''
-                    
-                # Append values
-                try:
-                    # Multiple values
-                    author['country'].append(country)
-                except(KeyError):
-                    author['country'] = country
-                try:
-                    # Multiple values
-                    author['institution'].append(institution)
-                except(KeyError):
-                    author['institution'] = institution
-                try:
-                    # Multiple values
-                    author['department'].append(department)
-                except(KeyError):
-                    author['department'] = department
-                try:
-                    # Multiple values
-                    author['city'].append(city)
-                except(KeyError):
-                    author['city'] = city
-  
-        # Author - given names + surname
-        author_name = ""
-        if(given_names != None):
-            author_name += given_names + " "
-        if(surname != None):
-            author_name += surname
-        author['author'] = author_name
-        
-        # Add xref linked correspondence author notes if applicable
-        cors = self.extract_nodes(tag, "xref", attr = "ref-type", value = "corresp")
-        if(len(cors) > 0):
-            # One or more 
-            if(len(cors) > 1):
-                # Prepare for multiple values if multiples found
-                author['notes_correspondence'] = []
-                
-            for cor in cors:
-                # Find the matching affiliation detail
-                rid = cor['rid']
-  
-                # Find elements by id
-                try:
-                    corresp_node = soup.select("#" + rid)
-                    author_notes = corresp_node[0].get_text(" ")
-                    author_notes = strip_strings(author_notes)
-                except:
-                    continue
-                try:
-                    # Multiple values
-                    author['notes_correspondence'].append(author_notes)
-                except(KeyError):
-                    author['notes_correspondence'] = author_notes
-                    
-        # Add xref linked footnotes if applicable
-        fns = self.extract_nodes(tag, "xref", attr = "ref-type", value = "fn")
-        if(len(fns) > 0):
-            # One or more 
-            if(len(fns) > 1):
-                # Prepare for multiple values if multiples found
-                author['notes_footnotes'] = []
-                
-            for fn in fns:
-                # Find the matching affiliation detail
-                rid = fn['rid']
-  
-                # Find elements by id
-                try:
-                    fn_node = soup.select("#" + rid)
-                    fn_text = fn_node[0].get_text(" ")
-                    fn_text = strip_strings(fn_text)
-                except:
-                    continue
-                try:
-                    # Multiple values
-                    author['notes_footnotes'].append(fn_text)
-                except(KeyError):
-                    author['notes_footnotes'] = fn_text
-                    
-        # Add xref linked other notes if applicable, such as funding detail
-        others = self.extract_nodes(tag, "xref", attr = "ref-type", value = "other")
-        if(len(others) > 0):
-            # One or more 
-            if(len(others) > 1):
-                # Prepare for multiple values if multiples found
-                author['notes_other'] = []
-                
-            for other in others:
-                # Find the matching affiliation detail
-                rid = other['rid']
-  
-                # Find elements by id
-                try:
-                    other_node = soup.select("#" + rid)
-                    other_text = other_node[0].get_text(" ")
-                    other_text = strip_strings(other_text)
-                except:
-                    continue
-                try:
-                    # Multiple values
-                    author['notes_other'].append(other_text)
-                except(KeyError):
-                    author['notes_other'] = other_text	
-  
-        # If not empty, add position value, append, then increment the position counter
-        if(len(author) > 0):
-            author['article_doi'] = article_doi
-            
-            author['position'] = position
-            
-            # Create a unique about tag value to make fom objects function
-            author['about'] = 'author' + '_' + str(position) + '_' + article_doi
-            
-            authors.append(author)
-            position += 1
-        
-    return authors
-
-  def parse_subject_area(self, soup, subj_group_type = None):
-    """
-    Find the subject areas from article-categories subject tags
-    """
-    subject_area = []
-    try:
-      article_meta = self.extract_nodes(soup, "article-meta")
-      
-      article_categories = self.extract_nodes(article_meta[0], "article-categories")
-    
-      if subj_group_type is None:
-        subj_group = self.extract_nodes(article_categories[0], "subj-group")
-      else:
-        subj_group = self.extract_nodes(article_categories[0], "subj-group",
-                                                attr="subj-group-type", value=subj_group_type)
-        
-      for tag in subj_group:
-        tags = self.extract_nodes(tag, "subject")
-        for t in tags:
-          subject_area.append(t.text)
-
-    except(IndexError):
-      # Tag not found
-      return None
-    
-    # Remove duplicates
-    subject_area = list(set(subject_area))
-    return subject_area
-
-  def parse_is_poa(self, soup):
-    """
-    Using the same method as done in the elife-poa-xml-generation code,
-    looks for
-    pub-date pub-type="collection"
-    if present then is_poa is false, if not present then is_poa is True
-    """
-    # Default value
-    is_poa = True
-    
-    pub_dates = self.extract_nodes(soup, "pub-date")
-
-    for pub_date in pub_dates:
-      try:
-        if pub_date["pub-type"] == "collection":
-          is_poa = False
-      except KeyError:
-        # This pub date does not have the attribute, continue
-        pass
-
-    return is_poa
