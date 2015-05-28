@@ -28,7 +28,7 @@ def work(ENV = "dev"):
 	logFile = "worker.log"
 	#logFile = None
 	logger = log.logger(logFile, settings.setLevel, identity)
-	
+
 	# Simple connect
 	conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
@@ -41,10 +41,10 @@ def work(ENV = "dev"):
 			activity_task = conn.poll_for_activity_task(settings.domain, settings.default_task_list, identity)
 
 			token = get_taskToken(activity_task)
-			
+
 			logger.info('got activity: [json omitted], token %s' % token)
 			#logger.info('got activity: \n%s' % json.dumps(activity_task, sort_keys=True, indent=4))
-			
+
 
 
 			# Complete the activity based on data and activity type
@@ -54,10 +54,10 @@ def work(ENV = "dev"):
 				activityType = get_activityType(activity_task)
 				if(activityType != None):
 					logger.info('activityType: %s' % activityType)
-				
+
 					# Build a string for the object name
 					activity_name = get_activity_name(activityType)
-				
+
 					# Attempt to import the module for the activity
 					if(import_activity_class(activity_name)):
 						# Instantiate the activity object
@@ -65,10 +65,13 @@ def work(ENV = "dev"):
 
 						# Get the data to pass
 						data = get_input(activity_task)
-						
+
 						# Do the activity
-						success = activity_object.do_activity(data)
-						
+						try:
+							success = activity_object.do_activity(data)
+						except Exception:
+							logger.error('error executing activity %s' % activity_name, exc_info=True)
+
 						# Print the result to the log
 						logger.info('got result: \n%s' % json.dumps(activity_object.result, sort_keys=True, indent=4))
 
@@ -80,16 +83,16 @@ def work(ENV = "dev"):
 							reason = 'error: activity failed with result ' + str(activity_object.result)
 							detail = ''
 							respond_failed(conn, logger, token, detail, reason)
-						
+
 					else:
 						reason = 'error: could not load object %s\n' % activity_name
 						detail = ''
 						respond_failed(conn, logger, token, detail, reason)
 						logger.info('error: could not load object %s\n' % activity_name)
-						
+
 		# Reset and loop
 		token = None
-		
+
 def get_input(activity_task):
 	"""
 	Given a response from polling for activity from SWF via boto,
@@ -100,7 +103,7 @@ def get_input(activity_task):
 	except KeyError:
 		input = None
 	return input
-		
+
 def get_taskToken(activity_task):
 	"""
 	Given a response from polling for activity from SWF via boto,
@@ -111,7 +114,7 @@ def get_taskToken(activity_task):
 	except KeyError:
 		# No taskToken returned
 		return None
-		
+
 def get_activityType(activity_task):
 	"""
 	Given a polling for activity response from SWF via boto,
@@ -122,7 +125,7 @@ def get_activityType(activity_task):
 	except KeyError:
 		# No activityType found
 		return None
-	
+
 def get_activity_name(activityType):
 	"""
 	Given an activityType, return the name of a
@@ -143,7 +146,7 @@ def import_activity_class(activity_name):
 		return True
 	except ImportError as e:
 		return False
-	
+
 def reload_module(module_name):
 	"""
 	Given an module name,
@@ -164,7 +167,7 @@ def get_activity_object(activity_name, settings, logger, conn, token, activity_t
 	# Create the object
 	activity_object = f(settings, logger, conn, token, activity_task)
 	return activity_object
-		
+
 def respond_completed(conn, logger, token, message):
 	"""
 	Given an SWF connection and logger as resources,
@@ -198,7 +201,7 @@ def start_single_thread(ENV):
 	print 'starting single thread'
 	work(ENV)
 	return None
-	
+
 def start_multiple_thread(ENV):
 	"""
 	Start multiple processes using a manual pool
@@ -232,11 +235,11 @@ if __name__ == "__main__":
 	parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
 	parser.add_option("-f", "--forks", default=10, action="store", type="int", dest="forks", help="specify the number of forks to start")
 	(options, args) = parser.parse_args()
-	if options.env: 
+	if options.env:
 		ENV = options.env
-	if options.forks: 
+	if options.forks:
 		forks = options.forks
-	
+
 	pool = None
 	try:
 		if(forks > 1):
