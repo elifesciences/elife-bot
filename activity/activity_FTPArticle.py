@@ -82,18 +82,25 @@ class activity_FTPArticle(activity.activity):
         self.set_ftp_settings(elife_id, workflow)
         
         # FTP to endpoint
-        if workflow == 'HEFCE':
-            file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-            self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR, passive=True)
-        if workflow == 'Cengage':
-            file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-            self.ftp_to_endpoint(zipfiles, passive=True)
-        if workflow == 'GoOA':
-            file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-            self.ftp_to_endpoint(zipfiles, passive=False)
+        try:
+            if workflow == 'HEFCE':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR, passive=True)
+            if workflow == 'Cengage':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, passive=True)
+            if workflow == 'GoOA':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, passive=False)
+        except:
+            # Something went wrong, fail
+            if(self.logger):
+                self.logger.exception('exception in FTPArticle, data: %s' % json.dumps(data, sort_keys=True, indent=4))
+            result = False
+            return result
          
         # Return the activity result, True or False
         result = True
