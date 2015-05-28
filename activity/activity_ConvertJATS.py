@@ -43,8 +43,6 @@ class activity_ConvertJATS(activity.activity):
         if self.logger:
             self.logger.info("Downloaded contents of file %s" % info.file_name)
 
-        # TODO : improve integration with jats_scraper project rather than copy and paste
-        # now that its been updated
         json_output = jats_scraper.scrape(xml)
 
         if self.logger:

@@ -45,8 +45,8 @@ class activity_PostNAF(activity.activity):
         destination = self.settings.drupal_naf_endpoint
 
         # TODO : address file naming
-        r = requests.post(destination, files={'file': xml})
-
+        headers = {'content-type': 'application/json'}
+        r = requests.post(destination, data=xml, headers=headers)
         self.logger.info("POST response was %s" % r.status_code)
         return True
 

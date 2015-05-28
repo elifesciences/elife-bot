@@ -69,7 +69,7 @@ def work(ENV = "dev"):
 						# Do the activity
 						try:
 							success = activity_object.do_activity(data)
-						except Exception:
+						except:
 							logger.error('error executing activity %s' % activity_name, exc_info=True)
 
 						# Print the result to the log

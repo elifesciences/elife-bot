@@ -57,7 +57,6 @@ class starter_ProcessXMLArticle():
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
             # There is already a running workflow with that ID, cannot start another
             message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
-            print message
             logger.info(message)
 
 

@@ -43,20 +43,12 @@ class activity_ProcessNewS3File(activity.activity):
         starter_name = 'starter_ProcessXMLArticle'
         module_name = "starter." + starter_name
         module = importlib.import_module(module_name)
-        reload_module(module)
+        try:
+            reload(eval(module))
+        except:
+            pass
         full_path = "starter." + starter_name + "." + starter_name + "()"
         s = eval(full_path)
-        # TODO : etag too?
         s.start(ENV=self.settings.__name__, info=info)
 
         return True
-
-def reload_module(module_name):
-    """
-    Given an module name,
-    attempt to reload the module
-    """
-    try:
-        reload(eval(module_name))
-    except:
-        pass
