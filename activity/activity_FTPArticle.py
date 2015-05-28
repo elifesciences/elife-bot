@@ -90,6 +90,10 @@ class activity_FTPArticle(activity.activity):
             file_type = "/*.zip"
             zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
             self.ftp_to_endpoint(zipfiles)
+        if workflow == 'GoOA':
+            file_type = "/*.zip"
+            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+            self.ftp_to_endpoint(zipfiles)
          
         # Return the activity result, True or False
         result = True
@@ -115,10 +119,16 @@ class activity_FTPArticle(activity.activity):
             self.FTP_USERNAME = self.settings.CENGAGE_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.CENGAGE_FTP_PASSWORD
             self.FTP_CWD =  self.settings.CENGAGE_FTP_CWD
+            
+        if workflow == 'GoOA':
+            self.FTP_URI = self.settings.GOOA_FTP_URI
+            self.FTP_USERNAME = self.settings.GOOA_FTP_USERNAME
+            self.FTP_PASSWORD = self.settings.GOOA_FTP_PASSWORD
+            self.FTP_CWD =  self.settings.GOOA_FTP_CWD
         
     def download_files_from_s3(self, doi_id, workflow):
         
-        if workflow == 'HEFCE':
+        if workflow == 'HEFCE' or workflow == 'GoOA':
             # Download files from the articles bucket
             self.download_data_file_from_s3(doi_id, 'xml', workflow)
             self.download_data_file_from_s3(doi_id, 'pdf', workflow)

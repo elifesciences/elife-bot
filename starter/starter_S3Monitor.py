@@ -64,7 +64,7 @@ class starter_S3Monitor():
       workflow_name = "S3Monitor"
       workflow_version = "1.1"
       child_policy = None
-      execution_start_to_close_timeout = None
+      execution_start_to_close_timeout = str(60*20)
       input = '{"data": {"bucket": "' + bucket + '"}}'
   
     return (workflow_id, workflow_name, workflow_version, child_policy, execution_start_to_close_timeout, input)

@@ -59,7 +59,8 @@ class starter_FTPArticle():
     input = None
     
     if (workflow == 'HEFCE'
-        or workflow == 'Cengage'):
+        or workflow == 'Cengage'
+        or workflow == 'GoOA'):
       workflow_id = "FTPArticle_" + workflow + "_" + str(doi_id)
 
     # workflow_id as set above
