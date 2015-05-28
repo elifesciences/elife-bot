@@ -85,15 +85,15 @@ class activity_FTPArticle(activity.activity):
         if workflow == 'HEFCE':
             file_type = "/*.zip"
             zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-            self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR)
+            self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR, passive=True)
         if workflow == 'Cengage':
             file_type = "/*.zip"
             zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-            self.ftp_to_endpoint(zipfiles)
+            self.ftp_to_endpoint(zipfiles, passive=True)
         if workflow == 'GoOA':
             file_type = "/*.zip"
             zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-            self.ftp_to_endpoint(zipfiles)
+            self.ftp_to_endpoint(zipfiles, passive=False)
          
         # Return the activity result, True or False
         result = True
@@ -206,9 +206,14 @@ class activity_FTPArticle(activity.activity):
         
         return cwd_success
     
-    def ftp_to_endpoint(self, uploadfiles, sub_dir_list = None):
+    def ftp_to_endpoint(self, uploadfiles, sub_dir_list = None, passive = True):
         for uploadfile in uploadfiles:
-            ftp = FTP(self.FTP_URI, self.FTP_USERNAME, self.FTP_PASSWORD)
+            ftp = FTP()
+            if passive is False:
+                ftp.set_pasv(False)
+            ftp.connect(self.FTP_URI)
+            ftp.login(self.FTP_USERNAME, self.FTP_PASSWORD)
+
             self.ftp_cwd_mkd(ftp, "/")
             if self.FTP_CWD != "":
                 self.ftp_cwd_mkd(ftp, self.FTP_CWD)
