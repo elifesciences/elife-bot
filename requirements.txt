@@ -10,6 +10,6 @@ requests==2.5.3
 wsgiref==0.1.2
 lxml==3.4.1
 xlrd==0.9.3
--e git+https://github.com/jrdigi/jats-scraper.git@master#egg=jats-scraper
+-e git+https://github.com/elifesciences/jats-scraper.git@master#egg=jats-scraper
 -e hg+https://bitbucket.org/lskibinski/scraper/src#egg=scraper
--e git+https://github.com/jrdigi/elife-tools.git#egg=elifetools
+-e git+https://github.com/elifesciences/elife-tools.git@exp#egg=elifetools
