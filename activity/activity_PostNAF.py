@@ -41,12 +41,12 @@ class activity_PostNAF(activity.activity):
         bucket = conn.get_bucket(naf_bucket)
         key = Key(bucket)
         key.key = naf_filename
-        xml = key.get_contents_as_string()
+        json_output = key.get_contents_as_string()
         destination = self.settings.drupal_naf_endpoint
 
         # TODO : address file naming
         headers = {'content-type': 'application/json'}
-        r = requests.post(destination, data=xml, headers=headers)
+        r = requests.post(destination, data=json_output, headers=headers)
         self.logger.info("POST response was %s" % r.status_code)
         return True
 
