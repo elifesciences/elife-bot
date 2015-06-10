@@ -19,7 +19,7 @@ class workflow_PublishPOA(workflow.workflow):
 		self.name = "PublishPOA"
 		self.version = "1"
 		self.description = "Publish POA articles workflow"
-		self.default_execution_start_to_close_timeout = 60*20
+		self.default_execution_start_to_close_timeout = 60*35
 		self.default_task_start_to_close_timeout = 30
 
 		# Get the input from the JSON decision response
@@ -56,10 +56,10 @@ class workflow_PublishPOA(workflow.workflow):
 					"version": "1",
 					"input": data,
 					"control": None,
-					"heartbeat_timeout": 60*15,
-					"schedule_to_close_timeout": 60*15,
+					"heartbeat_timeout": 60*30,
+					"schedule_to_close_timeout": 60*30,
 					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 60*15
+					"start_to_close_timeout": 60*30
 				},
 				{
 					"activity_type": "DepositCrossref",
@@ -67,10 +67,10 @@ class workflow_PublishPOA(workflow.workflow):
 					"version": "1",
 					"input": data,
 					"control": None,
-					"heartbeat_timeout": 60*15,
-					"schedule_to_close_timeout": 60*15,
+					"heartbeat_timeout": 60*5,
+					"schedule_to_close_timeout": 60*5,
 					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 60*15
+					"start_to_close_timeout": 60*5
 				}
 			],
 		
