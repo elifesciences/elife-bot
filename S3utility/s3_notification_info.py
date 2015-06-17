@@ -16,5 +16,5 @@ class S3NotificationInfo:
 
     @staticmethod
     def from_dict(d):
-        return S3NotificationInfo(d['event_name'],d['event_time'],d['bucket_name'],d['file_name'],d['file_etag'],
+        return S3NotificationInfo(d['event_name'], d['event_time'], d['bucket_name'], d['file_name'], d['file_etag'],
                                   d['file_size'])
