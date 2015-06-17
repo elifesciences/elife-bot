@@ -15,5 +15,6 @@ def step_impl(step, filename):
 def step_impl(step, filename, extension, file_type, f_id):
     assert world.article.file_type == file_type
     assert world.article.extension == extension
+    print world.article.file_type
     assert world.article.file_type == file_type
     assert world.article.f_id == f_id
