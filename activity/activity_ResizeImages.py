@@ -1,16 +1,15 @@
 import random
+import json
+import StringIO
 from S3utility.s3_notification_info import S3NotificationInfo
 import activity
-import json
 from boto.s3.connection import S3Connection
 import log
 import boto.swf
 from provider.article_structure import ArticleInfo
-from wand.image import Image
-import StringIO
 import settings as settings_lib
 import yaml
-
+import provider.imageresize as resizer
 
 """
 ResizeImages.py activity
@@ -56,6 +55,7 @@ class activity_ResizeImages(activity.activity):
             if not key.name.endswith("/"):
                 # process each key in the folder
                 self.process_key(key)
+
         return True
 
     def get_file_infos(self, zip_file_name):
@@ -79,7 +79,9 @@ class activity_ResizeImages(activity.activity):
         formats = self.get_formats(info.file_type)
         if formats is not None:
             # generate images for relevant formats
-            self.generate_images(formats, key, info)
+            fp = StringIO.StringIO()
+            key.get_file(fp)
+            self.generate_images(formats, fp, info)
 
     def get_formats(self, file_type):
         # look up file_type in pre-parsed formats
@@ -87,15 +89,13 @@ class activity_ResizeImages(activity.activity):
             return self.formats[file_type]
         return None
 
-    def generate_images(self, formats, key, info):
-        fp = StringIO.StringIO()
-        key.get_file(fp)
-        fp.seek(0)
-        try:
-            with Image(file=fp) as img:
-                pass
-        except Exception as e:
-            print e
+    def generate_images(self, formats, fp, info):
+        # delegate this to module
+        for format in formats:
+            fp.seek(0)  # rewind the tape
+            filename, image = resizer.resize(format, fp, info)
+            print "resized : " + filename + "filesize" + str(image.len)
+            # TODO : write the image to the 'CDN' (or destinaton bucket)
 
     def load_formats(self):
         # load the formats from the YAML file
