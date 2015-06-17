@@ -1,7 +1,6 @@
-from string import rsplit
 import re
 
-class ArticleStructure(object):
+class ArticleInfo(object):
 
     """
     Determine useful information about an article file from its filename
@@ -69,5 +68,10 @@ class ArticleStructure(object):
             self.file_type = 'Other'
 
 
+def main():
+    a = ArticleInfo("elife-00012-fig3-figsupp1-data2.csv")
+    print a
 
+if __name__ == '__main__':
+    main()
 
