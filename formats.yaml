@@ -1,0 +1,24 @@
+Figure:
+
+  Small:
+    width: 100
+    suffix: -sm
+    format: png
+
+  Large:
+    width: 300
+    suffix: -sm
+    format: png
+
+  Odd:
+    height: 50
+    format: png
+
+  Thumbnail:
+    width: 50
+    height: 50
+    prefix: thumb-
+    format: png
+
+
+
