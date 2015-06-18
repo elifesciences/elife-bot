@@ -4,21 +4,24 @@ Figure:
     width: 100
     suffix: -sm
     format: png
+    resolution: 96
 
   Large:
     width: 300
     suffix: -w300
     format: jpeg
     extension: jpg
-    resolution: 300
+    resolution: 96
 
   Odd:
     height: 50
     format: png
     prefix: h50-
+    resolution: 96
 
   Thumbnail:
     width: 50
     height: 50
     prefix: thumb-
     format: png
+    resolution: 96

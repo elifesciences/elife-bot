@@ -35,6 +35,15 @@ def resize(format, filep, info):
     except Exception as e:
         # TODO : log!
         print e
-    filename = info.full_filename
-    filename = filename.replace(".tiff", "." + image_format)
+    filename = info.filename
+    if format.get('prefix') is not None:
+        filename = format.get('prefix') + filename
+    if format.get('suffix') is not None:
+        filename = filename + format.get('suffix')
+    if format.get('extension') is not None:
+        filename = filename + "." + format.get('extension')
+    elif format.get('format') is not None:
+        filename = filename + "." + format['format']
+    else:
+        filename += '.tiff'
     return filename, jp

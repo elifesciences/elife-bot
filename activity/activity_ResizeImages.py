@@ -114,7 +114,7 @@ class activity_ResizeImages(activity.activity):
             image.close()
 
     def load_formats(self):
-        # load the formats fro m the YAML file
+        # load the formats from the YAML file
         stream = file('formats.yaml', 'r')
         formats = yaml.load(stream)
         return formats
