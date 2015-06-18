@@ -7,18 +7,18 @@ Figure:
 
   Large:
     width: 300
-    suffix: -sm
-    format: png
+    suffix: -w300
+    format: jpeg
+    extension: jpg
+    resolution: 300
 
   Odd:
     height: 50
     format: png
+    prefix: h50-
 
   Thumbnail:
     width: 50
     height: 50
     prefix: thumb-
     format: png
-
-
-
