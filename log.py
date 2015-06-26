@@ -15,6 +15,6 @@ def logger(logFile = None, setLevel = "INFO", identity = ""):
 		hdlr = logging.StreamHandler()
 	formatter = logging.Formatter('%(asctime)s %(levelname)s ' + identity + ' %(message)s', '%Y-%m-%dT%H:%M:%SZ')
 	hdlr.setFormatter(formatter)
-	logger.addHandler(hdlr) 
+	logger.addHandler(hdlr)
 	logger.setLevel(eval("logging." + setLevel))
 	return logger
