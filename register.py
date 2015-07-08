@@ -47,6 +47,7 @@ def start(ENV = "dev"):
 	workflow_names.append("PublicationEmail")
 	workflow_names.append("FTPArticle")
 	workflow_names.append("PubRouterDeposit")
+	workflow_names.append("PublishPerfectArticle")
 	workflow_names.append("ProcessXMLArticle")
 
 	for workflow_name in workflow_names:
@@ -68,7 +69,8 @@ def start(ENV = "dev"):
 	activity_names = []
 	activity_names.append("PingWorker")
 	activity_names.append("ConvertJATS")
-	activity_names.append("PostNAF")
+	activity_names.append("ExpandArticle")
+	activity_names.append("PostEIF")
 	activity_names.append("ProcessNewS3File")
 	activity_names.append("Sum")
 	activity_names.append("S3Monitor")

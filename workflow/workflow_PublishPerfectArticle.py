@@ -1,11 +1,11 @@
 import workflow
 
 """
-PublishArticle workflow
+PublishPerfectArticle workflow
 """
 
 
-class workflow_ProcessXMLArticle(workflow.workflow):
+class workflow_PublishPerfectArticle(workflow.workflow):
     def __init__(self, settings, logger, conn=None, token=None, decision=None, maximum_page_size=100):
         workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
 
@@ -44,17 +44,17 @@ class workflow_ProcessXMLArticle(workflow.workflow):
                         "schedule_to_start_timeout": 300,
                         "start_to_close_timeout": 300
                     },
-                    # {
-                    #     "activity_type": "ExpandArticle",
-                    #     "activity_id": "ExpandArticle",
-                    #     "version": "1",
-                    #     "input": data,
-                    #     "control": None,
-                    #     "heartbeat_timeout": 60 * 5,
-                    #     "schedule_to_close_timeout": 60 * 5,
-                    #     "schedule_to_start_timeout": 300,
-                    #     "start_to_close_timeout": 60 * 5
-                    # },
+                    {
+                        "activity_type": "ExpandArticle",
+                        "activity_id": "ExpandArticle",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 5,
+                        "schedule_to_close_timeout": 60 * 5,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 5
+                    },
                     {
                         "activity_type": "ConvertJATS",
                         "activity_id": "ConvertJATS",

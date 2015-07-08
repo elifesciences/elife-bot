@@ -3,7 +3,7 @@ import json
 from jats_scraper import jats_scraper
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from S3utility.s3_notification_info import S3NotificationInfo
+from provider.execution_context import Session
 
 """
 ConvertJATS.py activity
@@ -19,37 +19,42 @@ class activity_ConvertJATS(activity.activity):
         self.default_task_schedule_to_close_timeout = 60 * 5
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
-        self.description = "Process a JATS xml file into .... something else"
+        self.description = "Process a JATS xml file into EIF"
         self.logger = logger
-        # TODO : better exception handling
 
     def do_activity(self, data=None):
         """
         Do the work
         """
-        if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
-        info = S3NotificationInfo.from_dict(data)
+
+        session = Session(self.settings)
 
         if self.logger:
-            self.logger.info("Converting file %s" % info.file_name)
+            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder', )
+        expanded_folder_bucket = self.settings.expanded_article_bucket
+        print expanded_folder_name
+        xml_path = None
+
+        if self.logger:
+            self.logger.info("Converting file %s" % xml_path)
 
         # TODO : create a utility class for the S3 work, may already be in the bot somewhere
         conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = conn.get_bucket(info.bucket_name)
+        bucket = conn.get_bucket(expanded_folder_bucket)
         key = Key(bucket)
-        key.key = info.file_name
+        key.key = xml_path
         xml = key.get_contents_as_string()
         if self.logger:
-            self.logger.info("Downloaded contents of file %s" % info.file_name)
+            self.logger.info("Downloaded contents of file %s" % xml_path)
 
         json_output = jats_scraper.scrape(xml)
 
         if self.logger:
-            self.logger.info("Scraped file %s" % info.file_name)
+            self.logger.info("Scraped file %s" % xml_path)
 
         # TODO (see note above about utility class for S3 work)
-        output_name = info.file_name.replace('.xml', '.json')
+        output_name = xml_path.replace('.xml', '.json')
         destination = conn.get_bucket(self.settings.jr_S3_NAF_bucket)
         destination_key = Key(destination)
         destination_key.key = output_name

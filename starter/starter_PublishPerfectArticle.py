@@ -15,7 +15,7 @@ Amazon SWF PublishArticle starter, for API and Lens publishing etc.
 """
 
 
-class starter_ProcessXMLArticle():
+class starter_PublishPerfectArticle():
 
     def start(self, ENV="dev", info=None):
 
@@ -40,8 +40,8 @@ class starter_ProcessXMLArticle():
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "ProcessXMLArticle_%s" % filename + str(int(random.random() * 1000))
-        workflow_name = "ProcessXMLArticle"
+        workflow_id = "PublishPerfectArticle_%s" % filename + str(int(random.random() * 1000))
+        workflow_name = "PublishPerfectArticle"
         workflow_version = "1"
         child_policy = None
         execution_start_to_close_timeout = None
@@ -77,6 +77,6 @@ if __name__ == "__main__":
     if options.filename:
         filename = options.filename
 
-    o = starter_ProcessXMLArticle()
+    o = starter_PublishPerfectArticle()
 
-    o.start(ENV, )
+    o.start(ENV,)

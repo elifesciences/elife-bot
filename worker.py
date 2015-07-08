@@ -76,10 +76,10 @@ def work(ENV = "dev"):
 						logger.info('got result: \n%s' % json.dumps(activity_object.result, sort_keys=True, indent=4))
 
 						# Complete the activity task if it was successful
-						if(success == True):
+						if success:
 							message = activity_object.result
 							respond_completed(conn, logger, token, message)
-						elif(success == False):
+						else:
 							reason = 'error: activity failed with result ' + str(activity_object.result)
 							detail = ''
 							respond_failed(conn, logger, token, detail, reason)

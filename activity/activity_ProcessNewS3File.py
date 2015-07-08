@@ -1,6 +1,7 @@
 import json
 import importlib
-
+import yaml
+import re
 import activity
 import os
 from S3utility.s3_notification_info import S3NotificationInfo
@@ -23,6 +24,8 @@ class activity_ProcessNewS3File(activity.activity):
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
         self.description = "Process a newly arrived S3 file"
+        self.rules = []
+        self.info = None
         self.logger = logger
         # TODO : better exception handling
 
@@ -32,16 +35,19 @@ class activity_ProcessNewS3File(activity.activity):
         """
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
-        info = S3NotificationInfo.from_dict(data)
+
+        self.info = S3NotificationInfo.from_dict(data)
 
         if self.logger:
-            self.logger.info("File %s has arrived, deciding workflow" % info.file_name)
+            self.logger.info("File %s has arrived, deciding workflow" % self.info.file_name)
 
-        # TODO : in reality this will centralise (for the elife bot) the logic used
-        # to determine which workflow will be started to handle this file, based
-        # upon file name, type, version and possibly contents
-        starter_name = 'starter_ProcessXMLArticle'
-        module_name = "starter." + starter_name
+        self.load_rules()
+
+        starter_name = self.get_starter_name()
+        module_name = 'starter.' + starter_name
+        if module_name is None:
+            self.logger.info("Could not handle file %s in bucket %s" % (self.info.file_name, self.info.bucket_name))
+            return False
         module = importlib.import_module(module_name)
         try:
             reload(eval(module))
@@ -49,6 +55,19 @@ class activity_ProcessNewS3File(activity.activity):
             pass
         full_path = "starter." + starter_name + "." + starter_name + "()"
         s = eval(full_path)
-        s.start(ENV=self.settings.__name__, info=info)
+        s.start(ENV=self.settings.__name__, info=self.info)
 
         return True
+
+    def load_rules(self):
+        # load the rules from the YAML file
+        stream = file('newFileWorkflows.yaml', 'r')
+        self.rules = yaml.load(stream)
+
+    def get_starter_name(self):
+        for rule_name in self.rules:
+            rule = self.rules[rule_name]
+            if re.match(rule['bucket_name_pattern'], self.info.bucket_name) and \
+               re.match(rule['file_name_pattern'], self.info.file_name):
+                    return rule['starter_name']
+        pass
