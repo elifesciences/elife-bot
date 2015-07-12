@@ -70,6 +70,7 @@ def start(ENV = "dev"):
 	activity_names.append("PingWorker")
 	activity_names.append("ConvertJATS")
 	activity_names.append("ExpandArticle")
+	activity_names.append("ResizeImages")
 	activity_names.append("PostEIF")
 	activity_names.append("ProcessNewS3File")
 	activity_names.append("Sum")

@@ -8,6 +8,7 @@ from boto.s3.key import Key
 import log
 import boto.swf
 from provider.article_structure import ArticleInfo
+from provider.execution_context import Session
 import settings as settings_lib
 import yaml
 import provider.imageresize as resizer
@@ -41,39 +42,35 @@ class activity_ResizeImages(activity.activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
-        # extract S3 notification information
-        info = S3NotificationInfo.from_dict(data)
-        zip_file_name = info.file_name
+        session = Session(self.settings)
+        expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder')
 
         if self.logger:
-            self.logger.info("Converting images for article %s" % ",".join(map(str, zip_file_name)))
+            self.logger.info("Converting images for article %s" % ",".join(map(str, expanded_folder_name)))
 
         # get information on files in the expanded article bucket for notified zip file
-        bucket, file_infos = self.get_file_infos(zip_file_name)
+        bucket, file_infos = self.get_file_infos(expanded_folder_name)
 
         for file_info in file_infos:
             key = bucket.get_key(file_info.key)
             # see : http://stackoverflow.com/questions/9954521/s3-boto-list-keys-sometimes-returns-directory-key
             if not key.name.endswith("/"):
                 # process each key in the folder
-                self.process_key(key, zip_file_name)
+                self.process_key(key, expanded_folder_name)
 
         return True
 
-    def get_file_infos(self, zip_file_name):
+    def get_file_infos(self, folder_name):
         # connect to S3 and obtain the expanded article bucket
         self.conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key,
                                  host=self.settings.s3_hostname)
         bucket = self.conn.get_bucket(self.settings.expanded_article_bucket)
 
-        # determine the correct expanded article folder for the zip file that was notified
-        folder = zip_file_name.rsplit('.', 1)[0]
-
         # get the keys for the files in the folder and return along with a reference to the bucket
-        file_infos = bucket.list(folder + "/", "/")
+        file_infos = bucket.list(folder_name + "/", "/")
         return bucket, file_infos
 
-    def process_key(self, key, zip_file_name):
+    def process_key(self, key, folder_name):
         # determine filename (without folder) and obtain ArticleInfo instance
         filename = key.name.rsplit('/', 1)[1]
         info = ArticleInfo(filename)
@@ -84,7 +81,7 @@ class activity_ResizeImages(activity.activity):
             # generate images for relevant formats
             fp = StringIO.StringIO()
             key.get_file(fp)
-            self.generate_images(formats, fp, info, zip_file_name)
+            self.generate_images(formats, fp, info, folder_name)
 
     def get_formats(self, file_type):
         # look up file_type in pre-parsed formats
@@ -92,28 +89,29 @@ class activity_ResizeImages(activity.activity):
             return self.formats[file_type]
         return None
 
-    def generate_images(self, formats, fp, info, zip_file_name):
+    def generate_images(self, formats, fp, info, folder_name):
         # delegate this to module
         try:
             for format_spec_name in formats:
                 fp.seek(0)  # rewind the tape
                 filename, image = resizer.resize(formats[format_spec_name], fp, info)
-                self.store_in_cdn(filename, image, zip_file_name)
+                self.store_in_cdn(filename, image, folder_name)
         finally:
             fp.close()
 
-    def store_in_cdn(self, filename, image, zip_file_name):
+    def store_in_cdn(self, filename, image, folder_name):
         # for now we'l use an S3 bucket
         try:
             cdn_bucket = self.conn.get_bucket(self.settings.article_cdn_bucket)
             key = Key(cdn_bucket)
-            key.key = zip_file_name.rsplit('.', 1)[0] + "/" + filename
+            key.key = folder_name + "/" + filename
             image.seek(0)
             key.set_contents_from_file(image)
         finally:
             image.close()
 
-    def load_formats(self):
+    @staticmethod
+    def load_formats():
         # load the formats from the YAML file
         stream = file('formats.yaml', 'r')
         formats = yaml.load(stream)
@@ -127,14 +125,7 @@ def main(args):
     testing and debugging. This activity would usually be executed by worker.py
     """
 
-    data = {
-        'file_name': 'elife-00012-vor-v1.zip',
-        'event_name': None,
-        'event_time': None,
-        'bucket_name': None,
-        'file_etag': None,
-        'file_size': None
-    }
+    data = None
 
     settings = settings_lib.get_settings('exp')
     identity = "resize_%s" % int(random.random() * 1000)

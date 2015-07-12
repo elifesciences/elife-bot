@@ -8,7 +8,7 @@ class Session(object):
 
     def store_value(self, execution_id, key, value):
         f = open(self.settings.workflow_context_path + self.get_full_key(execution_id, key), 'w')
-        f.write(value + '\n')
+        f.write(value)
 
     def get_value(self, execution_id, key):
         f = open(self.settings.workflow_context_path + self.get_full_key(execution_id, key), 'r')

@@ -32,7 +32,7 @@ class activity_PostEIF(activity.activity):
         info = S3NotificationInfo.from_dict(data)
 
         eif_filename = info.file_name.replace('.xml', '.json')
-        eif_bucket = self.settings.jr_S3_NAF_bucket
+        eif_bucket = self.settings.jr_S3_EIF_bucket
 
         if self.logger:
             self.logger.info("Posting file %s" % eif_filename)

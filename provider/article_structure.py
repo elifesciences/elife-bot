@@ -64,6 +64,8 @@ class ArticleInfo(object):
             self.file_type = "ArticleZip"
         elif self.extension == 'tiff' and self.extra_info[0].startswith('fig'):
             self.file_type = "Figure"
+        elif self.extension == 'xml':
+            self.file_type = 'ArticleXML'
         else:
             self.file_type = 'Other'
 
