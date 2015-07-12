@@ -2,7 +2,7 @@ import activity
 import json
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from S3utility.s3_notification_info import S3NotificationInfo
+from provider.execution_context import Session
 
 """
 activity_PostEIF.py activity
@@ -28,10 +28,9 @@ class activity_PostEIF(activity.activity):
         """
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
-        # TODO : better exception handling
-        info = S3NotificationInfo.from_dict(data)
 
-        eif_filename = info.file_name.replace('.xml', '.json')
+        session = Session(self.settings)
+        eif_filename = session.get_value(self.get_workflowId(), 'eif_filename')
         eif_bucket = self.settings.jr_S3_EIF_bucket
 
         if self.logger:
@@ -42,7 +41,7 @@ class activity_PostEIF(activity.activity):
         key = Key(bucket)
         key.key = eif_filename
         json_output = key.get_contents_as_string()
-        destination = self.settings.drupal_eif_endpoint
+        destination = self.settings.drupal_EIF_endpoint
 
         headers = {'content-type': 'application/json'}
         r = requests.post(destination, data=json_output, headers=headers)

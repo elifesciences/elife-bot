@@ -67,6 +67,8 @@ class activity_ConvertJATS(activity.activity):
         if self.logger:
             self.logger.info("Uploaded key %s to %s" % (output_name, self.settings.jr_S3_EIF_bucket))
 
+        session.store_value(self.get_workflowId(), "eif_filename", output_name)
+
         return True
 
     @staticmethod
