@@ -1,9 +1,9 @@
 ArticleXML:
-  bucket_name_pattern: '^incoming-jats-bucket'
+  bucket_name_pattern: '.*incoming-jats-bucket$'
   file_name_pattern: '.*\.xml'
   starter_name: 'starter_ProcessXMLArticle'
 
 ArticleZip:
-  bucket_name_pattern: '^incoming-jats-bucket'
+  bucket_name_pattern: '.*incoming-jats-bucket$'
   file_name_pattern: '.*\.zip'
   starter_name: 'starter_PublishPerfectArticle'
