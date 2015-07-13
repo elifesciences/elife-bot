@@ -7,4 +7,5 @@ settings.py
 tmp
 venv
 .idea
-workflow-context
+workflow-context/*
+!workflow-context/.gitkeep
