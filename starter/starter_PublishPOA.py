@@ -38,7 +38,7 @@ class starter_PublishPOA():
         workflow_name = "PublishPOA"
         workflow_version = "1"
         child_policy = None
-        execution_start_to_close_timeout = None
+        execution_start_to_close_timeout = str(60*35)
         input = None
 
         try:
