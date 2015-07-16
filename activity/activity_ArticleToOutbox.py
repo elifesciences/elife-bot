@@ -41,6 +41,7 @@ class activity_ArticleToOutbox(activity.activity):
 		self.publication_email_outbox_folder = "publication_email/outbox/"
 		self.pub_router_outbox_folder = "pub_router/outbox/"
 		self.cengage_outbox_folder = "cengage/outbox/"
+		self.gooa_outbox_folder = "gooa/outbox/"
 
 	def do_activity(self, data = None):
 		"""
@@ -89,6 +90,12 @@ class activity_ArticleToOutbox(activity.activity):
 			path = tmp_document_path,
 			document = tmp_document,
 			outbox_folder = self.cengage_outbox_folder)
+
+		# 5. Send the file to the GoOA outbox
+		self.copy_document_to_outbox(
+			path = tmp_document_path,
+			document = tmp_document,
+			outbox_folder = self.gooa_outbox_folder)
 
 		if(self.logger):
 			self.logger.info('ArticleToOutbox: %s' % elife_id)
