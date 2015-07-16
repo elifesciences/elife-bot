@@ -138,6 +138,8 @@ class activity_PubRouterDeposit(activity.activity):
             return "pub_router/outbox/"
         elif workflow == "Cengage":
             return "cengage/outbox/"
+        elif workflow == "GoOA":
+            return "gooa/outbox/"
         
         return None
         
@@ -149,6 +151,8 @@ class activity_PubRouterDeposit(activity.activity):
             return "pub_router/published/"
         elif workflow == "Cengage":
             return "cengage/published/"
+        elif workflow == "GoOA":
+            return "gooa/published/"
         
         return None
         
@@ -701,6 +705,8 @@ class activity_PubRouterDeposit(activity.activity):
             "07108", "07157", "07204", "07239", "07322", "07364", "07390", "07431", "07482", 
             "07527", "07532", "07586", "07604"
             ]
+        elif workflow == "GoOA":
+            article_blacklist = []
     
         return article_blacklist
         
