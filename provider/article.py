@@ -410,6 +410,8 @@ class article(object):
           published_folder = "pub_router/published/"
       if workflow == "Cengage":
           published_folder = "cengage/published/"
+      if workflow == "GoOA":
+          published_folder = "gooa/published/"
       
       file_extensions = []
       file_extensions.append(".xml")
