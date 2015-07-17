@@ -712,7 +712,12 @@ class article(object):
     for author in authors:
       if authors_string != "":
         authors_string += ", "
-      authors_string += author["given_names"] + " " + author["surname"]
+      if author.get("given_names"):
+        authors_string += author["given_names"] + " "
+      if author.get("surname"):
+        authors_string += author["surname"]
+      if author.get("collab"):
+        authors_string += author['collab']
       
     return authors_string
   
