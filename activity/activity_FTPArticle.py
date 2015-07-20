@@ -82,18 +82,25 @@ class activity_FTPArticle(activity.activity):
         self.set_ftp_settings(elife_id, workflow)
         
         # FTP to endpoint
-        if workflow == 'HEFCE':
-            file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-            self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR)
-        if workflow == 'Cengage':
-            file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-            self.ftp_to_endpoint(zipfiles)
-        if workflow == 'GoOA':
-            file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-            self.ftp_to_endpoint(zipfiles)
+        try:
+            if workflow == 'HEFCE':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR, passive=True)
+            if workflow == 'Cengage':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, passive=True)
+            if workflow == 'GoOA':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, passive=False)
+        except:
+            # Something went wrong, fail
+            if(self.logger):
+                self.logger.exception('exception in FTPArticle, data: %s' % json.dumps(data, sort_keys=True, indent=4))
+            result = False
+            return result
          
         # Return the activity result, True or False
         result = True
@@ -206,9 +213,14 @@ class activity_FTPArticle(activity.activity):
         
         return cwd_success
     
-    def ftp_to_endpoint(self, uploadfiles, sub_dir_list = None):
+    def ftp_to_endpoint(self, uploadfiles, sub_dir_list = None, passive = True):
         for uploadfile in uploadfiles:
-            ftp = FTP(self.FTP_URI, self.FTP_USERNAME, self.FTP_PASSWORD)
+            ftp = FTP()
+            if passive is False:
+                ftp.set_pasv(False)
+            ftp.connect(self.FTP_URI)
+            ftp.login(self.FTP_USERNAME, self.FTP_PASSWORD)
+
             self.ftp_cwd_mkd(ftp, "/")
             if self.FTP_CWD != "":
                 self.ftp_cwd_mkd(ftp, self.FTP_CWD)

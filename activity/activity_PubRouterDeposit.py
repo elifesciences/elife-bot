@@ -138,6 +138,8 @@ class activity_PubRouterDeposit(activity.activity):
             return "pub_router/outbox/"
         elif workflow == "Cengage":
             return "cengage/outbox/"
+        elif workflow == "GoOA":
+            return "gooa/outbox/"
         
         return None
         
@@ -149,6 +151,8 @@ class activity_PubRouterDeposit(activity.activity):
             return "pub_router/published/"
         elif workflow == "Cengage":
             return "cengage/published/"
+        elif workflow == "GoOA":
+            return "gooa/published/"
         
         return None
         
@@ -318,14 +322,15 @@ class activity_PubRouterDeposit(activity.activity):
           remove_article_doi.append(article.doi)
       
       # Check if article is a resupply
-      for article in articles:
-        was_ever_published = blank_article.was_ever_published(article.doi, workflow)
-        if was_ever_published is True:
-          if(self.logger):
-            log_info = "Removing because it has been published before " + article.doi
-            self.admin_email_content += "\n" + log_info
-            self.logger.info(log_info)
-          remove_article_doi.append(article.doi)
+      if workflow != 'GoOA':
+        for article in articles:
+          was_ever_published = blank_article.was_ever_published(article.doi, workflow)
+          if was_ever_published is True:
+            if(self.logger):
+              log_info = "Removing because it has been published before " + article.doi
+              self.admin_email_content += "\n" + log_info
+              self.logger.info(log_info)
+            remove_article_doi.append(article.doi)
 
       # Check if article is on the blacklist to not send again
       for article in articles:
@@ -701,6 +706,8 @@ class activity_PubRouterDeposit(activity.activity):
             "07108", "07157", "07204", "07239", "07322", "07364", "07390", "07431", "07482", 
             "07527", "07532", "07586", "07604"
             ]
+        elif workflow == "GoOA":
+            article_blacklist = []
     
         return article_blacklist
         
