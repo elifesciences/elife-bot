@@ -94,7 +94,7 @@ class activity_FTPArticle(activity.activity):
             if workflow == 'GoOA':
                 file_type = "/*.zip"
                 zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-                self.ftp_to_endpoint(zipfiles, passive=False)
+                self.ftp_to_endpoint(zipfiles, passive=True)
         except:
             # Something went wrong, fail
             if(self.logger):
