@@ -46,7 +46,7 @@ class activity_ResizeImages(activity.activity):
         expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder')
 
         if self.logger:
-            self.logger.info("Converting images for article %s" % ",".join(map(str, expanded_folder_name)))
+            self.logger.info("Converting images for folder %s" % expanded_folder_name)
 
         # get information on files in the expanded article bucket for notified zip file
         bucket, file_infos = self.get_file_infos(expanded_folder_name)
