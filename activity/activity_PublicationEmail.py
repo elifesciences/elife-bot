@@ -884,7 +884,12 @@ class activity_PublicationEmail(activity.activity):
       "05663", "05720", "05770", "05787", "05789", "05816", "05846", "05896", "05983", "06156", 
       "06193", "06200", "06235", "06303", "06306", "06351", "06424", "06430", "06453", "06494", 
       "06656", "06720", "06740", "06900", "06986"]
-    
+
+    # More do not send circa July 2015
+    #  Do not send email if they are revised, since the duplicate check will not
+    #  trigger since they were not sent in the first place
+    do_not_send_list = do_not_send_list + ["04186", "06416", "06847", "06938", "06959", "07072"]
+
     return do_not_send_list
     
   def send_admin_email(self):
