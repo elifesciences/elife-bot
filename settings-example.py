@@ -25,9 +25,6 @@ class dev():
 	domain = "Publish.dev"
 	default_task_list = "DefaultTaskList"
 	
-	# Fluidinfo settings
-	fi_namespace = "elifesciences.org/api_dev"
-	
 	# SimpleDB settings
 	simpledb_region = "us-east-1"
 	simpledb_domain_postfix = "_dev"
@@ -55,6 +52,57 @@ class dev():
 	# Bot S3 settings
 	bot_bucket = 'elife-bot-dev'
 	
+	# POA delivery bucket
+	poa_bucket = 'elife-ejp-poa-delivery-dev'
+	
+	# POA packaging bucket
+	poa_packaging_bucket = 'elife-poa-packaging-dev'
+	
+	# POA FTP settings
+	POA_FTP_URI = ""
+	POA_FTP_USERNAME = ""
+	POA_FTP_PASSWORD = ""
+	POA_FTP_CWD = ""
+	
+	# POA email settings
+	ses_poa_sender_email = "sender@example.com"
+	ses_poa_recipient_email = "admin@example.com"
+	
+	# EJP S3 settings
+	ejp_bucket = 'elife-ejp-ftp-dev'
+	
+	# Templates S3 settings
+	templates_bucket = 'elife-bot-dev'
+	
+	# Crossref
+	crossref_url = 'http://test.crossref.org/servlet/deposit'
+	crossref_login_id = ''
+	crossref_login_passwd = ''
+	
+	# PubMed FTP settings
+	PUBMED_FTP_URI = ""
+	PUBMED_FTP_USERNAME = ""
+	PUBMED_FTP_PASSWORD = ""
+	PUBMED_FTP_CWD = ""
+		
+	# HEFCE Archive FTP settings
+	HEFCE_FTP_URI = ""
+	HEFCE_FTP_USERNAME = ""
+	HEFCE_FTP_PASSWORD = ""
+	HEFCE_FTP_CWD = ""
+	
+	# Cengage Archive FTP settings
+	CENGAGE_FTP_URI = ""
+	CENGAGE_FTP_USERNAME = ""
+	CENGAGE_FTP_PASSWORD = ""
+	CENGAGE_FTP_CWD = ""
+	
+	# GoOA FTP settings
+	GOOA_FTP_URI = ""
+	GOOA_FTP_USERNAME = ""
+	GOOA_FTP_PASSWORD = ""
+	GOOA_FTP_CWD = ""
+	
 	# Logging
 	setLevel = "INFO"
 	
@@ -71,9 +119,6 @@ class live():
 	# SWF queue settings
 	domain = "Publish"
 	default_task_list = "DefaultTaskList"
-	
-	# Fluidinfo settings
-	fi_namespace = "elifesciences.org/api_v1"
 	
 	# Converter settings
 	converter_url = ""
@@ -101,6 +146,57 @@ class live():
 	
 	# Bot S3 settings
 	bot_bucket = 'elife-bot'
+	
+	# POA delivery bucket
+	poa_bucket = 'elife-ejp-poa-delivery'
+	
+	# POA packaging bucket
+	poa_packaging_bucket = 'elife-poa-packaging'
+	
+	# POA FTP settings
+	POA_FTP_URI = ""
+	POA_FTP_USERNAME = ""
+	POA_FTP_PASSWORD = ""
+	POA_FTP_CWD = ""
+	
+	# POA email settings
+	ses_poa_sender_email = "sender@example.com"
+	ses_poa_recipient_email = "admin@example.com"
+	
+	# EJP S3 settings
+	ejp_bucket = 'elife-ejp-ftp'
+	
+	# Templates S3 settings
+	templates_bucket = 'elife-bot'
+	
+	# Crossref
+	crossref_url = 'http://doi.crossref.org/servlet/deposit'
+	crossref_login_id = ''
+	crossref_login_passwd = ''
+	
+	# PubMed FTP settings
+	PUBMED_FTP_URI = ""
+	PUBMED_FTP_USERNAME = ""
+	PUBMED_FTP_PASSWORD = ""
+	PUBMED_FTP_CWD = ""
+		
+	# HEFCE Archive FTP settings
+	HEFCE_FTP_URI = ""
+	HEFCE_FTP_USERNAME = ""
+	HEFCE_FTP_PASSWORD = ""
+	HEFCE_FTP_CWD = ""
+	
+	# Cengage Archive FTP settings
+	CENGAGE_FTP_URI = ""
+	CENGAGE_FTP_USERNAME = ""
+	CENGAGE_FTP_PASSWORD = ""
+	CENGAGE_FTP_CWD = ""
+	
+	# GoOA FTP settings
+	GOOA_FTP_URI = ""
+	GOOA_FTP_USERNAME = ""
+	GOOA_FTP_PASSWORD = ""
+	GOOA_FTP_CWD = ""
 	
 	# Logging
 	setLevel = "INFO"

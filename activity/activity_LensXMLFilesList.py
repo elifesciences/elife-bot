@@ -55,8 +55,8 @@ class activity_LensXMLFilesList(activity.activity):
     f.write(xml_list_content)
     f.close
     
-    # Save the document to the elife-lens bucket
-    bucket_name = self.settings.lens_bucket
+    # Save the document to the elife-cdn bucket
+    bucket_name = self.settings.cdn_bucket
     
     # Connect to S3
     s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)

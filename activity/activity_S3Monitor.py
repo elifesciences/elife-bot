@@ -25,9 +25,9 @@ class activity_S3Monitor(activity.activity):
 		self.name = "S3Monitor"
 		self.version = "1.1"
 		self.default_task_heartbeat_timeout = 30
-		self.default_task_schedule_to_close_timeout = 60*15
+		self.default_task_schedule_to_close_timeout = 60*20
 		self.default_task_schedule_to_start_timeout = 30
-		self.default_task_start_to_close_timeout= 60*15
+		self.default_task_start_to_close_timeout= 60*20
 		self.description = "S3Monitor activity: poll S3 bucket and save object metadata into SimpleDB."
 		
 		# Data provider
@@ -40,7 +40,7 @@ class activity_S3Monitor(activity.activity):
 		if(self.logger):
 			self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 			
-		bucket_name = self.settings.bucket
+		bucket_name = data["data"]["bucket"]
 		prefix = self.settings.prefix
 		delimiter = self.settings.delimiter
 		

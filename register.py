@@ -38,6 +38,14 @@ def start(ENV = "dev"):
 	workflow_names.append("SendQueuedEmail")
 	workflow_names.append("PublishSuppl")
 	workflow_names.append("PublishJPG")
+	workflow_names.append("PackagePOA")
+	workflow_names.append("PublishPOA")
+	workflow_names.append("DepositCrossref")
+	workflow_names.append("PubmedArticleDeposit")
+	workflow_names.append("PublishFiguresPDF")
+	workflow_names.append("PublicationEmail")
+	workflow_names.append("FTPArticle")
+	workflow_names.append("PubRouterDeposit")
 	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
@@ -58,7 +66,6 @@ def start(ENV = "dev"):
 	activity_names = []
 	activity_names.append("PingWorker")
 	activity_names.append("Sum")
-	activity_names.append("ArticleToFluidinfo")
 	activity_names.append("S3Monitor")
 	activity_names.append("UnzipArticleXML")
 	activity_names.append("ConverterXMLtoJS")
@@ -73,6 +80,16 @@ def start(ENV = "dev"):
 	activity_names.append("LensArticle")
 	activity_names.append("UnzipArticleSuppl")
 	activity_names.append("UnzipArticleJPG")
+	activity_names.append("ConverterSVGtoJPG")
+	activity_names.append("PackagePOA")
+	activity_names.append("PublishPOA")
+	activity_names.append("DepositCrossref")
+	activity_names.append("PubmedArticleDeposit")
+	activity_names.append("ArticleToOutbox")
+	activity_names.append("UnzipArticleFiguresPDF")
+	activity_names.append("PublicationEmail")
+	activity_names.append("FTPArticle")
+	activity_names.append("PubRouterDeposit")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries

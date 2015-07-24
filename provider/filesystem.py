@@ -102,7 +102,7 @@ class Filesystem(object):
 			path_array = o.path.split('/')
 			filename = path_array[-1]
 		
-		r = requests.get(document_url, prefetch=False)
+		r = requests.get(document_url, stream=True)
 		mode = "wb"
 		f = self.open_file_from_tmp_dir(filename, mode)
 		for block in r.iter_content(1024):

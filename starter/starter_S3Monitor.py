@@ -1,5 +1,5 @@
 import os
-# Add parent directory for imports, so activity classes can use elife-api-prototype
+# Add parent directory for imports
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0,parentdir)
 
@@ -49,14 +49,22 @@ class starter_S3Monitor():
     workflow_id = workflow_name = workflow_version = child_policy = execution_start_to_close_timeout = None
     input = None
     
-    bucket = settings.bucket
-    
-    if(workflow == "S3Monitor"):
+    if workflow == "S3Monitor":
+      # Standard article bucket monitor
+      bucket = settings.bucket
       workflow_id = "S3Monitor"
+    elif workflow == "S3Monitor_POA":
+      # POA delivery bucket monitor
+      bucket = settings.poa_bucket
+      workflow_id = "S3Monitor_POA"
+    
+    if bucket is not None:
+      # workflow_id as set above
+      workflow_id = workflow_id
       workflow_name = "S3Monitor"
       workflow_version = "1.1"
       child_policy = None
-      execution_start_to_close_timeout = None
+      execution_start_to_close_timeout = str(60*20)
       input = '{"data": {"bucket": "' + bucket + '"}}'
   
     return (workflow_id, workflow_name, workflow_version, child_policy, execution_start_to_close_timeout, input)
@@ -67,10 +75,13 @@ if __name__ == "__main__":
   # Add options
   parser = OptionParser()
   parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
+  parser.add_option("-w", "--workflow-name", default="S3Monitor", action="store", type="string", dest="workflow", help="specify the workflow name to start")
   (options, args) = parser.parse_args()
   if options.env: 
     ENV = options.env
+  if options.workflow: 
+    workflow = options.workflow
 
   o = starter_S3Monitor()
 
-  o.start(ENV)
+  o.start(ENV, workflow = workflow)

@@ -9,21 +9,24 @@ Currently eLife bot is deployed manually using a snapshot of an Ec2 instance.
 
 # Project dependencies
 
-[Boto][bot] for AWS logic.
-	
-    $ pip install boto
+System dependencies can be installed with `apt-get` using:
 
-[GitPython][gitpy] for git.
-	
-    $ easy_install gitpython
+    $ sudo apt-get install python-dev libxml2-dev libxslt-dev lzma-dev
+    
+These are necessary for compiling `lxml`.
 
-[Lettuce][let] for testing.
-	
-    $ pip install lettuce
-	
-[gitpy]: http://pypi.python.org/pypi/GitPython/
-[bot]: http://www.crummy.com/software/BeautifulSoup/
-[let]: http://packages.python.org/lettuce/
+There is also a dependency on ImageMagic (With TIFF support). On a mac this can be installed with:
+
+    $ brew install libtiff
+    $ brew reinstall imagemagick –with-libtiff
+
+Python dependencies should be installed with `pip` using:
+    
+    $ pip install -r requirements.txt
+
+And for the library `elementtree` which is not part of Pypi
+
+    $ pip install elementtree --allow-external elementtree --allow-unverified elementtree
 
 # Configure
 
