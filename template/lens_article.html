@@ -32,16 +32,14 @@
     </script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
-    <script src='../dist/lens.min.js'></script>
+    <script src='../dist/lens.js'></script>
 
     <script>
 
       // Little helper used to parse query strings from urls
       // --------
       //
-      // This is needed to support switching to other documents using
-      // a url fragment `?url=http://path.to/jats-conforming.xml`
-
+      
       var qs = function () {
         var query_string = {};
         var query = window.location.search.substring(1);
@@ -61,7 +59,7 @@
           }
         }
         return query_string;
-      }();
+      } ();
 
       var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/{{ article.doi_id }}/elife{{ article.doi_id }}.xml";
 
@@ -70,15 +68,10 @@
         // Create a new Lens app instance
         // --------
         //
-
+        // Injects itself into body
         var app = new window.Lens({
           document_url: qs.url ? decodeURIComponent(qs.url) : documentURL
         });
-
-        // And start it
-        // --------
-        // 
-        // The app will be injected into the body element
 
         app.start();
 
