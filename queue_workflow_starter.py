@@ -1,19 +1,36 @@
 """
 Process SQS message from queue and start required workflow
 """
+from S3utility.s3_notification_info import S3NotificationInfo
 import settings as settings_lib
 from optparse import OptionParser
 import log
 import boto.sqs
 from multiprocessing import Pool
 import json
-import dashboard_data_access
+import importlib
+
+# this is not an unused import, it is used dynamically
+import starter
+
+"""
+Example message:
+
+{
+    "workflow_name": "event"
+    "workflow_data": {
+        "article_version_id": 05224.1
+    }
+}
+"""
 
 settings = None
 logger = None
 
 
 def main():
+    global settings
+    global env
     parser = OptionParser()
     parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
                       help="set the environment to run, either dev or live")
@@ -21,69 +38,89 @@ def main():
     if options.env:
         env = options.env
 
-    global settings
+
+
+    if options.env:
+        env = options.env
+
     settings = settings_lib.get_settings(env)
+    env = env
 
     log_file = "queue_workflow_starter.log"
     global logger
-    logger = log.logger(log_file, settings.log_level)
+    logger = log.logger(log_file, settings.setLevel)
 
     # Simple connect
     queue = get_queue()
 
-    pool = Pool(settings.event_queue_pool_size)
+    pool = Pool(settings.workflow_starter_queue_pool_size)
 
     while True:
-        messages = queue.get_messages(num_messages=settings.event_queue_message_count, visibility_timeout=60,
+        messages = queue.get_messages(num_messages=settings.workflow_starter_queue_message_count, visibility_timeout=60,
                                       wait_time_seconds=20)
         if messages is not None:
             logger.info(str(len(messages)) + " message received")
             pool.map(process_message, messages)
         else:
-            logger.info("No messages received")
+            logger.debug("No messages received")
 
 
 def get_queue():
     conn = boto.sqs.connect_to_region(settings.sqs_region,
                                       aws_access_key_id=settings.aws_access_key_id,
                                       aws_secret_access_key=settings.aws_secret_access_key)
-    queue = conn.get_queue(settings.event_monitor_queue)
+    queue = conn.get_queue(settings.workflow_starter_queue)
     return queue
 
 
 def process_message(message):
-    message_payload = json.loads(message.get_body())
-    message_type = message_payload.get('message_type')
-    if message_type is not None:
-        if message_type in dispatch:
-            dispatch[message_type](message_payload)
-        else:
-            logger.error('Unknown message type ' + message_type)
+    try:
+        message_payload = json.loads(message.get_body())
+        name = message_payload.get('workflow_name')
+        data = message_payload.get('workflow_data')
+        start_workflow(name, data)
+    except Exception:
+        logger.exception("Exception while processing message")
     message.delete()
 
 
-def process_event_message(message):
+def start_workflow(workflow_name, workflow_data):
+    data_processor = workflow_data_processors.get(workflow_name)
+    workflow_name = 'starter_' + workflow_name
+    if data_processor is not None:
+        workflow_data = data_processor(workflow_name, workflow_data)
+    module_name = "starter." + workflow_name
+    module = importlib.import_module(module_name)
     try:
-        dashboard_data_access.store_event(message.get('version'), message.get('run'), message.get('event_type'),
-                                          message.get('timestamp'), message.get('status'), message.get('message'),
-                                          message.get('item_identifier'), message.get('message_id'))
-    except Exception:
-        logger.exception("Error processing event message ")
+        reload(eval(module))
+    except:
+        pass
+    full_path = "starter." + workflow_name + "." + workflow_name + "()"
+    s = eval(full_path)
+    s.start(ENV=env, **workflow_data)
 
 
-def process_property_message(message):
-    try:
-        dashboard_data_access.store_property(message.get('property_type'), message.get('name'), message.get('value'),
-                                             message.get('item_identifier'), message.get('message_id'))
-    except Exception:
-        logger.exception("Error processing property message ")
+# adapt message_data for NewS3File workflow
+# expects workflow data to be a dictionary, e.g.
+# 'workdlow_data': {
+#        'event_name': "S3Event",
+#        'event_time': "", 'bucket_name': "xxawsxx-drop-bucket",
+#        'file_name': "elife-kitchen-sink.xml", 'file_etag': "3f53f5c808dd58973cd93a368be739b4", 'file_size': 1
+#    }
+def process_data_news3file(workflow_name, workflow_data):
+    data = {'info': S3NotificationInfo.from_dict(workflow_data)}
+    return data
 
 
-def get_rds_connection():
-    pass
+def process_data_approvearticlepublication(workflow_name, workflow_data):
+    data = {'article_version_id': workflow_data.get('article_version_id')}
+    return data
 
 
-dispatch = {'event': process_event_message, 'property': process_property_message}
+workflow_data_processors = {
+    'NewS3File': process_data_news3file,
+    'ApproveArticlePublication': process_data_approvearticlepublication
+}
 
 if __name__ == "__main__":
     main()
