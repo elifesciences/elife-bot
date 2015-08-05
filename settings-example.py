@@ -18,7 +18,7 @@ class exp():
 
 
     # SQS settings
-    jr_sqs_region = 'eu-west-1'
+    sqs_region = 'eu-west-1'
     jr_S3_monitor_queue = 'xxawsxx-incoming-queue'
 
     # S3 settings

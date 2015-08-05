@@ -36,7 +36,7 @@ def work(ENV="dev"):
     # TODO : better logging
 
     # Simple connect
-    conn = boto.sqs.connect_to_region(settings.jr_sqs_region,
+    conn = boto.sqs.connect_to_region(settings.sqs_region,
                                       aws_access_key_id=settings.aws_access_key_id,
                                       aws_secret_access_key=settings.aws_secret_access_key)
     queue = conn.get_queue(settings.jr_S3_monitor_queue)

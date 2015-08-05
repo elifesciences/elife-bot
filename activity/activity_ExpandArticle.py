@@ -10,6 +10,8 @@ from boto.s3.connection import S3Connection
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
 from zipfile import ZipFile
+import random
+import uuid
 
 """
 ExpandArticle.py activity
@@ -46,8 +48,7 @@ class activity_ExpandArticle(activity.activity):
         if self.logger:
             self.logger.info("Expanding file %s" % info.file_name)
 
-        # extract any version and updated date information from the filename
-
+        # extract any doi, version and updated date information from the filename
         version = None
         # zip name contains version information for previously archived zip files
         m = re.search(ur'-v([0-9]*?)[\.|-]', info.file_name)
@@ -56,9 +57,24 @@ class activity_ExpandArticle(activity.activity):
         if version is None:
             # TODO : get next version from API
             version = 0
+        version = str(random.randint(0, 99999)) # TODO : remove
+
+        run = str(uuid.uuid4())
         # store version for other activities in this workflow execution
         session.store_value(self.get_workflowId(), 'version', version)
+
         # TODO : extract and store updated date if supplied
+
+        article_id_match = re.match(ur'elife-(.*?)-', info.file_name)
+        article_id = article_id_match.group(1)
+        article_version_id = article_id + '.' + version
+        session.store_value(self.get_workflowId(), 'article_id', article_id)
+        session.store_value(self.get_workflowId(), 'article_version_id', article_version_id)
+        session.store_value(self.get_workflowId(), 'run', run)
+        self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "start",
+                                "Starting expansion of article " + article_id
+                                + " for version " + version + " run " + run)
+        self.set_monitor_property(self.settings, article_id, "article_id", article_id, "text")
 
         # download zip to temp folder
         tmp = self.get_tmp_dir()
@@ -94,6 +110,10 @@ class activity_ExpandArticle(activity.activity):
             k.set_contents_from_filename(source_path)
 
         session.store_value(self.get_workflowId(), 'expanded_folder', folder_name)
+
+        self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "end",
+                                "Finished expansion of article " + article_id
+                                + " for version " + version + " run " + str(run) + " into " + folder_name)
 
         return True
 

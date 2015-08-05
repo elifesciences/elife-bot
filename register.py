@@ -28,6 +28,7 @@ def start(ENV = "dev"):
 	workflow_names = []
 	workflow_names.append("Ping")
 	workflow_names.append("Sum")
+	workflow_names.append("ApproveArticlePublication")
 	workflow_names.append("PublishArticle")
 	workflow_names.append("NewS3File")
 	workflow_names.append("S3Monitor")
@@ -70,6 +71,7 @@ def start(ENV = "dev"):
 	activity_names.append("PingWorker")
 	activity_names.append("ConvertJATS")
 	activity_names.append("ExpandArticle")
+	activity_names.append("ApprovePublication")
 	activity_names.append("ResizeImages")
 	activity_names.append("PostEIF")
 	activity_names.append("ProcessNewS3File")
