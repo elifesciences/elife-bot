@@ -19,7 +19,7 @@ class workflow_S3Monitor(workflow.workflow):
 		self.name = "S3Monitor"
 		self.version = "1.1"
 		self.description = "Monitoring an S3 bucket for modifications."
-		self.default_execution_start_to_close_timeout = 60*20
+		self.default_execution_start_to_close_timeout = 60*25
 		self.default_task_start_to_close_timeout = 30
 		
 		# Get the input from the JSON decision response
@@ -56,10 +56,10 @@ class workflow_S3Monitor(workflow.workflow):
 					"version": "1.1",
 					"input": data,
 					"control": None,
-					"heartbeat_timeout": 60*20,
-					"schedule_to_close_timeout": 60*20,
+					"heartbeat_timeout": 60*25,
+					"schedule_to_close_timeout": 60*25,
 					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 60*20
+					"start_to_close_timeout": 60*25
 				}
 			],
 		
