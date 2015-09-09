@@ -4,6 +4,6 @@ ArticleXML:
   starter_name: 'starter_ProcessXMLArticle'
 
 ArticleZip:
-  bucket_name_pattern: '.*incoming-jats-bucket$'
+  bucket_name_pattern: '.*elife-production-final$'
   file_name_pattern: '.*\.zip'
   starter_name: 'starter_PublishPerfectArticle'

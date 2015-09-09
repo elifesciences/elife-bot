@@ -1,15 +1,17 @@
+import json
+from zipfile import ZipFile
+import random
+import uuid
+
 import activity
 import re
-import json
-import time
 from os.path import isfile, join
-from os import listdir, mkdir
+from os import listdir, makedirs
 from os import path
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
-from zipfile import ZipFile
 
 """
 ExpandArticle.py activity
@@ -29,6 +31,7 @@ class activity_ExpandArticle(activity.activity):
         self.logger = logger
 
     def do_activity(self, data=None):
+
         """
         Do the work
         """
@@ -39,15 +42,14 @@ class activity_ExpandArticle(activity.activity):
         # set up required connections
         conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         source_bucket = conn.get_bucket(info.bucket_name)
-        dest_bucket = conn.get_bucket(self.settings.expanded_article_bucket)
+        dest_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
         session = Session(self.settings)
 
         # set up logging
         if self.logger:
             self.logger.info("Expanding file %s" % info.file_name)
 
-        # extract any version and updated date information from the filename
-
+        # extract any doi, version and updated date information from the filename
         version = None
         # zip name contains version information for previously archived zip files
         m = re.search(ur'-v([0-9]*?)[\.|-]', info.file_name)
@@ -56,67 +58,66 @@ class activity_ExpandArticle(activity.activity):
         if version is None:
             # TODO : get next version from API
             version = 0
+        version = str(random.randint(0, 99999)) # TODO : remove
+
+        run = str(uuid.uuid4())
         # store version for other activities in this workflow execution
         session.store_value(self.get_workflowId(), 'version', version)
+
         # TODO : extract and store updated date if supplied
 
-        # download zip to temp folder
-        tmp = self.get_tmp_dir()
-        key = Key(source_bucket)
-        key.key = info.file_name
-        local_zip_file = self.open_file_from_tmp_dir(info.file_name, mode='w')
-        key.get_contents_to_file(local_zip_file)
-        local_zip_file.close()
+        article_id_match = re.match(ur'elife-(.*?)-', info.file_name)
+        article_id = article_id_match.group(1)
+        article_version_id = article_id + '.' + version
+        session.store_value(self.get_workflowId(), 'article_id', article_id)
+        session.store_value(self.get_workflowId(), 'article_version_id', article_version_id)
+        session.store_value(self.get_workflowId(), 'run', run)
+        self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "start",
+                                "Starting expansion of article " + article_id)
+        self.set_monitor_property(self.settings, article_id, "article_id", article_id, "text")
+        try:
 
-        # TODO : generate final name
-        folder_name = info.file_name.replace(".zip", "") + str(time.time())
+            # download zip to temp folder
+            tmp = self.get_tmp_dir()
+            key = Key(source_bucket)
+            key.key = info.file_name
+            local_zip_file = self.open_file_from_tmp_dir(info.file_name, mode='w')
+            key.get_contents_to_file(local_zip_file)
+            local_zip_file.close()
 
-        # extract zip contents
-        content_folder = path.join(tmp, folder_name)
-        mkdir(content_folder)
-        with ZipFile(path.join(tmp, info.file_name)) as zf:
-            zf.extractall(content_folder)
+            folder_name = path.join(article_version_id, run)
 
-        # TODO : rename files
+            # extract zip contents
+            content_folder = path.join(tmp, folder_name)
+            makedirs(content_folder)
+            with ZipFile(path.join(tmp, info.file_name)) as zf:
+                zf.extractall(content_folder)
 
-        # TODO : edit xml and rename references
+            # TODO : rename files (versions!)
 
-        upload_filenames = []
-        for f in listdir(content_folder):
-            if isfile(join(content_folder, f)) and f[0] != '.' and not f[0] == '_':
-                upload_filenames.append(f)
+            # TODO : edit xml and rename references
 
-        for filename in upload_filenames:
-            source_path = path.join(content_folder, filename)
-            dest_path = path.join(folder_name, filename)
-            k = Key(dest_bucket)
-            k.key = dest_path
-            k.set_contents_from_filename(source_path)
+            upload_filenames = []
+            for f in listdir(content_folder):
+                if isfile(join(content_folder, f)) and f[0] != '.' and not f[0] == '_':
+                    upload_filenames.append(f)
 
-        session.store_value(self.get_workflowId(), 'expanded_folder', folder_name)
+            for filename in upload_filenames:
+                source_path = path.join(content_folder, filename)
+                dest_path = path.join(folder_name, filename)
+                k = Key(dest_bucket)
+                k.key = dest_path
+                k.set_contents_from_filename(source_path)
+
+            session.store_value(self.get_workflowId(), 'expanded_folder', folder_name)
+            self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "end",
+                                    "Finished expansion of article " + article_id
+                                    + " for version " + version + " run " + str(run) + " into " + folder_name)
+        except Exception as e:
+            self.logger.exception("Exception when expanding article")
+            self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "error",
+                                    "Error expanding article " + article_id + " message:" + e.message)
 
         return True
 
-        # conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        # bucket = conn.get_bucket(info.bucket_name)
-        # key = Key(bucket)
-        # key.key = info.file_name
-        # xml = key.get_contents_as_string()
-        # if self.logger:
-        #     self.logger.info("Downloaded contents of file %s" % info.file_name)
-        #
-        # json_output = jats_scraper.scrape(xml)
-        #
-        # if self.logger:
-        #     self.logger.info("Scraped file %s" % info.file_name)
-        #
-        # # TODO (see note above about utility class for S3 work)
-        # output_name = info.file_name.replace('.xml', '.json')
-        # destination = conn.get_bucket(self.settings.jr_S3_NAF_bucket)
-        # destination_key = Key(destination)
-        # destination_key.key = output_name
-        # destination_key.set_contents_from_string(json_output)
-        #
-        # if self.logger:
-        #     self.logger.info("Uploaded key %s to %s" % (output_name, self.settings.jr_S3_NAF_bucket))
 
