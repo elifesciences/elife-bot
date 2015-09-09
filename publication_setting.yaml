@@ -1,0 +1,23 @@
+# set default to 1 to immediately publish articles by default or 0 to require approval
+default: 0
+
+# rules to override the default
+override:
+
+  # override and publish, these rules are not checked if the default is 1
+  publish:
+    # keys are properties in EIF json, values are patterns to match against an articles value of that property
+    # if any pattern matches the article will be publised immediately, regardless of default setting
+    doi:
+      00288$
+      00003$
+    article-type:
+      ^research-article$
+
+  # override and hold, these rules are not checked if the default is 0
+  hold:
+    # keys are properties in EIF json, values are patterns to match against an articles value of that property
+    # if any pattern matches the article will be publised immediately, regardless of default setting
+    doi:
+      00001$
+
