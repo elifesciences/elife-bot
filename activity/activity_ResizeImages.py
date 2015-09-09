@@ -64,7 +64,7 @@ class activity_ResizeImages(activity.activity):
         # connect to S3 and obtain the expanded article bucket
         self.conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key,
                                  host=self.settings.s3_hostname)
-        bucket = self.conn.get_bucket(self.settings.expanded_article_bucket)
+        bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
 
         # get the keys for the files in the folder and return along with a reference to the bucket
         file_infos = bucket.list(folder_name + "/", "/")
@@ -102,7 +102,7 @@ class activity_ResizeImages(activity.activity):
     def store_in_cdn(self, filename, image, folder_name):
         # for now we'l use an S3 bucket
         try:
-            cdn_bucket = self.conn.get_bucket(self.settings.article_cdn_bucket)
+            cdn_bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket)
             key = Key(cdn_bucket)
             key.key = folder_name + "/" + filename
             image.seek(0)

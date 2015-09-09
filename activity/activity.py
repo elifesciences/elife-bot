@@ -193,7 +193,7 @@ class activity(object):
         dashboard_queue.send_message(message, settings)
 
     @staticmethod
-    def set_monitor_property(settings, item_identifier, name, value, property_type):
-        message = dashboard_queue.build_property_message(item_identifier, name, value, property_type)
+    def set_monitor_property(settings, item_identifier, name, value, property_type, version=0):
+        message = dashboard_queue.build_property_message(item_identifier, version, name, value, property_type)
         dashboard_queue.send_message(message, settings)
         pass

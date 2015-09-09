@@ -75,7 +75,7 @@ def get_queue():
 
 def process_message(message):
     try:
-        message_payload = json.loads(message.get_body())
+        message_payload = json.loads(str(message.get_body()))
         name = message_payload.get('workflow_name')
         data = message_payload.get('workflow_data')
         start_workflow(name, data)

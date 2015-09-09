@@ -30,10 +30,11 @@ def build_event_message(item_identifier, version, run, event_type, timestamp, st
     return message
 
 
-def build_property_message(item_identifier, name, value, property_type):
+def build_property_message(item_identifier, version, name, value, property_type):
     message = {
         'message_type': 'property',
         'item_identifier': item_identifier,
+        'version': version,
         'name': name,
         'value': value,
         'property_type': property_type,
