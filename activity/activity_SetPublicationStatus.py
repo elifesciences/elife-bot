@@ -1,20 +1,21 @@
 import json
 import activity
 import os
-import requests
-
+from boto.s3.key import Key
+from boto.s3.connection import S3Connection
+from provider.execution_context import Session
 
 """
-ConvertJATS.py activity
+activity_SetPublicationStatus.py activity
 """
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
-class activity_ApprovePublication(activity.activity):
+class activity_SetPublicationStatus(activity.activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
 
-        self.name = "ApprovePublication"
+        self.name = "SetPublicationStatus"
         self.version = "1"
         self.default_task_heartbeat_timeout = 30
         self.default_task_schedule_to_close_timeout = 60 * 5
@@ -26,21 +27,40 @@ class activity_ApprovePublication(activity.activity):
         self.logger = logger
         # TODO : better exception handling
 
-
     def do_activity(self, data=None):
-        """
-        Do the work
-        """
-        if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        session = Session(self.settings)
+        version = session.get_value(self.get_workflowId(), 'version')
+        article_id = session.get_value(self.get_workflowId(), 'article_id')
+        run = session.get_value(self.get_workflowId(), 'run')
 
-        article_version_id = data
+        self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "start",
+                                "Starting submission of article EIF " + article_id)
 
-        destination = self.settings.drupal_approve_endpoint
-        destination = destination + article_version_id + '.json'
+        try:
+            eif_filename = session.get_value(self.get_workflowId(), 'eif_filename')
+            eif_bucket = self.settings.publishing_buckets_prefix + self.settings.eif_bucket
 
-        headers = {'content-type': 'application/json'}
-        r = requests.put(destination, data="{ \"publish\": \"1\" }", headers=headers)
-        self.logger.info("PUT response was %s" % r.status_code)
+            conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+            bucket = conn.get_bucket(eif_bucket)
+            key = Key(bucket)
+            key.key = eif_filename
+            json_input = key.get_contents_as_string()
+            data = json.loads(json_input)
+            publication_status = self.get_publication_status(data)
+            data['publish'] = publication_status
+            json_output = json.dumps(data)
+            output_bucket = self.settings.publishing_buckets_prefix + self.settings.eif_bucket
+            output_path = eif_filename
+            destination = conn.get_bucket(output_bucket)
+            destination_key = Key(destination)
+            destination_key.key = output_path
+            destination_key.set_contents_from_string(json_output)
+
+        except Exception as e:
+            self.logger.exception("Exception when submitting article EIF")
+            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
+                                    "Error submitting EIF For article" + article_id + " message:" + e.message)
         return True
 
+    def get_publication_status(self, data):
+        return "1"
