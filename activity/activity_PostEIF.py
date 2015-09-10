@@ -39,7 +39,6 @@ class activity_PostEIF(activity.activity):
                                 "Starting submission of article EIF " + article_id)
 
         try:
-            session = Session(self.settings)
             eif_filename = session.get_value(self.get_workflowId(), 'eif_filename')
             eif_bucket = self.settings.publishing_buckets_prefix + self.settings.eif_bucket
 
