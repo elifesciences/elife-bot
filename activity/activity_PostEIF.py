@@ -70,7 +70,10 @@ class activity_PostEIF(activity.activity):
                     self.set_monitor_property(self.settings, article_id, 'publication_status', 'ready')
             else:
                 self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
-                                        "Website ingest returned an error code: " + r.status_code)
+                                        "Website ingest returned an error code: " + str(r.status_code))
+            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "end",
+                                    "Finished submitting EIF for article  " + article_id +
+                                    " status was " + str(r.status_code))
 
         except Exception as e:
             self.logger.exception("Exception when submitting article EIF")

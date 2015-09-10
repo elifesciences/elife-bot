@@ -43,20 +43,38 @@ class activity_ResizeImages(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         session = Session(self.settings)
-        expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder')
+        version = session.get_value(self.get_workflowId(), 'version')
+        article_id = session.get_value(self.get_workflowId(), 'article_id')
+        run = session.get_value(self.get_workflowId(), 'run')
 
-        if self.logger:
-            self.logger.info("Converting images for folder %s" % expanded_folder_name)
+        self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "start",
+                                "Starting submission resize of images for article " + article_id)
 
-        # get information on files in the expanded article bucket for notified zip file
-        bucket, file_infos = self.get_file_infos(expanded_folder_name)
+        try:
+            expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder')
 
-        for file_info in file_infos:
-            key = bucket.get_key(file_info.key)
-            # see : http://stackoverflow.com/questions/9954521/s3-boto-list-keys-sometimes-returns-directory-key
-            if not key.name.endswith("/"):
-                # process each key in the folder
-                self.process_key(key, expanded_folder_name)
+            if self.logger:
+                self.logger.info("Converting images for folder %s" % expanded_folder_name)
+
+            # get information on files in the expanded article bucket for notified zip file
+            bucket, file_infos = self.get_file_infos(expanded_folder_name)
+
+            image_count = 0
+            for file_info in file_infos:
+                image_count += 1
+                key = bucket.get_key(file_info.key)
+                # see : http://stackoverflow.com/questions/9954521/s3-boto-list-keys-sometimes-returns-directory-key
+                if not key.name.endswith("/"):
+                    # process each key in the folder
+                    self.process_key(key, expanded_folder_name)
+            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "end",
+                                    "Finished converting images for  " + article_id +
+                                    str(image_count) + " images processed ")
+
+        except Exception as e:
+            self.logger.exception("Exception when resizing images")
+            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
+                                    "Error resizing images for article" + article_id + " message:" + e.message)
 
         return True
 
