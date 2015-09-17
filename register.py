@@ -46,6 +46,7 @@ def start(ENV = "dev"):
 	workflow_names.append("PublicationEmail")
 	workflow_names.append("FTPArticle")
 	workflow_names.append("PubRouterDeposit")
+	workflow_names.append("PMCDeposit")
 	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
@@ -90,6 +91,7 @@ def start(ENV = "dev"):
 	activity_names.append("PublicationEmail")
 	activity_names.append("FTPArticle")
 	activity_names.append("PubRouterDeposit")
+	activity_names.append("PMCDeposit")
 	
 	for activity_name in activity_names:
 		# Import the activity libraries
