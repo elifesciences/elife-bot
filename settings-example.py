@@ -32,7 +32,6 @@ class exp():
     # shouldn't need this but uploads seem to fail without. Should correspond with the s3 region
     # hostname list here http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
 
-
     s3_hostname = 's3-eu-west-1.amazonaws.com'
     production_bucket = 'elife-production-final'
     eif_bucket = 'elife-publishing-eif'
@@ -44,6 +43,9 @@ class exp():
     # drupal_naf_endpoint = 'http://localhost:5000/nodes'
     drupal_EIF_endpoint = 'http://52.4.182.179/api/article.json'
     drupal_approve_endpoint = 'http://52.2.70.162/api/publish/'
+
+    # lax endpoint to retrieve information about published versions of articles
+    lax_article_versions = 'http://2015-09-03.lax.elifesciences.org/api/v1/article/10.7554/eLife.{article_id}/version/'
 
     # end JR settings
 
