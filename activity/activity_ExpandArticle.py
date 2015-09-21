@@ -12,6 +12,7 @@ from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
+import requests
 
 """
 ExpandArticle.py activity
@@ -45,7 +46,10 @@ class activity_ExpandArticle(activity.activity):
         dest_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
         session = Session(self.settings)
 
-        # set up logging
+        article_id_match = re.match(ur'elife-(.*?)-', info.file_name)
+        article_id = article_id_match.group(1)
+        session.store_value(self.get_workflowId(), 'article_id', article_id)
+
         if self.logger:
             self.logger.info("Expanding file %s" % info.file_name)
 
@@ -56,9 +60,9 @@ class activity_ExpandArticle(activity.activity):
         if m is not None:
             version = m.group(1)
         if version is None:
-            # TODO : get next version from API
-            version = 0
-        version = str(random.randint(0, 99999)) # TODO : remove
+            version = self.get_next_version(article_id)
+        if version == '-1':
+            return False  # version could not be determined, exit workflow. Can't emit event as no version.
 
         run = str(uuid.uuid4())
         # store version for other activities in this workflow execution
@@ -66,10 +70,7 @@ class activity_ExpandArticle(activity.activity):
 
         # TODO : extract and store updated date if supplied
 
-        article_id_match = re.match(ur'elife-(.*?)-', info.file_name)
-        article_id = article_id_match.group(1)
         article_version_id = article_id + '.' + version
-        session.store_value(self.get_workflowId(), 'article_id', article_id)
         session.store_value(self.get_workflowId(), 'article_version_id', article_version_id)
         session.store_value(self.get_workflowId(), 'run', run)
         self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "start",
@@ -111,13 +112,31 @@ class activity_ExpandArticle(activity.activity):
 
             session.store_value(self.get_workflowId(), 'expanded_folder', folder_name)
             self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "end",
-                                    "Finished expansion of article " + article_id
-                                    + " for version " + version + " run " + str(run) + " into " + folder_name)
+                                    "Finished expansion of article " + article_id +
+                                    " for version " + version + " run " + str(run) + " into " + folder_name)
         except Exception as e:
             self.logger.exception("Exception when expanding article")
             self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "error",
                                     "Error expanding article " + article_id + " message:" + e.message)
 
         return True
+
+    def get_next_version(self, article_id):
+        url = self.settings.lax_article_versions.replace('{article_id}', article_id)
+        response = requests.get(url)
+        if response.status_code is 200:
+            high_version = 0
+            data = response.json()
+            for version in data:
+                int_version = int(version)
+                if int_version > high_version:
+                    high_version = int_version
+            return str(high_version + 1)
+        elif response.status_code is 404:
+            return "1"
+        else:
+            self.logger.error("Error obtaining version information from Lax" + response.status_code)
+            return "-1"
+        
 
 

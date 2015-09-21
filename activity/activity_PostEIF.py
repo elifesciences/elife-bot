@@ -65,9 +65,9 @@ class activity_PostEIF(activity.activity):
                 self.set_monitor_property(self.settings, article_id, 'path', article_path, 'text')
                 published = r.json().get('Published')
                 if published == 1:
-                    self.set_monitor_property(self.settings, article_id, 'publication_status', 'published')
+                    self.set_monitor_property(self.settings, article_id, 'publication_status', 'published', "text")
                 else:
-                    self.set_monitor_property(self.settings, article_id, 'publication_status', 'ready')
+                    self.set_monitor_property(self.settings, article_id, 'publication_status', 'ready', "text")
             else:
                 self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
                                         "Website ingest returned an error code: " + str(r.status_code))
