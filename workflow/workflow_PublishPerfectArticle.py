@@ -13,8 +13,8 @@ class workflow_PublishPerfectArticle(workflow.workflow):
         self.name = "PublishPerfectArticle"
         self.version = "1"
         self.description = "Process JATS zip article to Drupal nodes workflow"
-        self.default_execution_start_to_close_timeout = 60 * 5
-        self.default_task_start_to_close_timeout = 30
+        self.default_execution_start_to_close_timeout = 60 * 15
+        self.default_task_start_to_close_timeout = 60 * 10
 
         # Get the input from the JSON decision response
         data = self.get_input()
@@ -39,10 +39,10 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
+                        "heartbeat_timeout": 600,
+                        "schedule_to_close_timeout": 600,
+                        "schedule_to_start_timeout": 600,
+                        "start_to_close_timeout": 600
                     },
                     {
                         "activity_type": "ExpandArticle",
@@ -50,10 +50,10 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
+                        "heartbeat_timeout": 60 * 10,
+                        "schedule_to_close_timeout": 60 * 10,
+                        "schedule_to_start_timeout": 600,
+                        "start_to_close_timeout": 60 * 10
                     },
                     {
                         "activity_type": "ConvertJATS",
@@ -61,10 +61,10 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
+                        "heartbeat_timeout": 60 * 10,
+                        "schedule_to_close_timeout": 60 * 10,
+                        "schedule_to_start_timeout": 600,
+                        "start_to_close_timeout": 60 * 10
                     },
                     {
                         "activity_type": "SetPublicationStatus",
@@ -72,10 +72,10 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
+                        "heartbeat_timeout": 60 * 10,
+                        "schedule_to_close_timeout": 60 * 10,
+                        "schedule_to_start_timeout": 600,
+                        "start_to_close_timeout": 60 * 10
                     },
                     {
                         "activity_type": "ResizeImages",
@@ -83,10 +83,10 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
+                        "heartbeat_timeout": 60 * 10,
+                        "schedule_to_close_timeout": 60 * 10,
+                        "schedule_to_start_timeout": 600,
+                        "start_to_close_timeout": 60 * 10
                     },
                     {
                         "activity_type": "PostEIF",
@@ -94,10 +94,10 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
+                        "heartbeat_timeout": 60 * 10,
+                        "schedule_to_close_timeout": 60 * 10,
+                        "schedule_to_start_timeout": 600,
+                        "start_to_close_timeout": 60 * 10
                     },
 
                 ],
