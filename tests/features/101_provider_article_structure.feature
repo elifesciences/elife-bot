@@ -14,6 +14,6 @@ Feature: Use article_structure as to examine filenames
     | elife-00012-vor-r1.zip               | elife-00012-vor-r1    | zip        | ArticleZip  | 00012
     | elife-00123-poa.zip                  | elife-00123-poa       | zip        | ArticleZip  | 00123
     | elife-00288-supp-v1.zip              | elife-00288-supp-v1   | zip        | Other       | 00288
-    | elife-00012-poa.xml                  | elife-00012-poaxml    | xml        | Other       | 00012
+    | elife-00012-poa.xml                  | elife-00012-poa       | xml        | ArticleXML       | 00012
     | elife-00012-fig3-figsupp1.tiff  | elife-00012-fig3-figsupp1  | tiff | Figure | 00012
 

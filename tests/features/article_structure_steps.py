@@ -9,7 +9,7 @@ def step_impl(step):
 
 @step("I create an ArticleStructure with (\S+)")
 def step_impl(step, filename):
-    world.article = world.article_structure.ArticleStructure(filename)
+    world.article = world.article_structure.ArticleInfo(filename)
 
 @step("It exposes the correct (\S+), (\S+), (\S+) and (\S+)")
 def step_impl(step, filename, extension, file_type, f_id):
