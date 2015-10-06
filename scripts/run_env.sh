@@ -11,3 +11,4 @@ alias ..='cd ..'
 source /opt/elife-bot/venv/bin/activate && python decider.py -f 3 -e $1 &
 source /opt/elife-bot/venv/bin/activate && python worker.py -f 5 -e $1 &
 source /opt/elife-bot/venv/bin/activate && python queue_worker.py -f 3 -e $1 &
+source /opt/elife-bot/venv/bin/activate && python queue_workflow_starter.py -f 3 -e $1 &
