@@ -1,5 +1,6 @@
 import activity
 import json
+import os
 from os import path
 from jats_scraper import jats_scraper
 from boto.s3.key import Key
@@ -50,8 +51,8 @@ class activity_ConvertJATS(activity.activity):
             conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
             bucket = conn.get_bucket(expanded_folder_bucket)
 
-            (xml_key, xml_filename) = self.get_article_xml_key(bucket, expanded_folder_name)
-
+            bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
+            (xml_key, xml_filename) = self.get_article_xml_key(bucket, bucket_folder_name)
             if xml_key is None:
                 self.logger.error("Article XML path not found")
                 return False
@@ -74,7 +75,7 @@ class activity_ConvertJATS(activity.activity):
             output_path = path.join(output_folder, output_name)
             destination = conn.get_bucket(output_bucket)
             destination_key = Key(destination)
-            destination_key.key = output_path
+            destination_key.key = output_path.replace(os.sep, '/')
             destination_key.set_contents_from_string(json_output)
 
             if self.logger:
