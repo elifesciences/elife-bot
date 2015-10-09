@@ -72,6 +72,7 @@ def start(ENV = "dev"):
 	activity_names.append("SetPublicationStatus")
 	activity_names.append("ConvertJATS")
 	activity_names.append("ExpandArticle")
+	activity_names.append("ApplyVersionNumber")
 	activity_names.append("ApprovePublication")
 	activity_names.append("ResizeImages")
 	activity_names.append("PostEIF")
