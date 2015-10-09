@@ -75,17 +75,18 @@ class activity_ConvertJATS(activity.activity):
             output_path = path.join(output_folder, output_name)
             destination = conn.get_bucket(output_bucket)
             destination_key = Key(destination)
-            destination_key.key = output_path.replace(os.sep, '/')
+            output_key = output_path.replace(os.sep, '/')
+            destination_key.key = output_key
             destination_key.set_contents_from_string(json_output)
 
             if self.logger:
                 self.logger.info("Uploaded key %s to %s" % (output_path, output_bucket))
 
-            session.store_value(self.get_workflowId(), "eif_filename", output_path)
+            session.store_value(self.get_workflowId(), "eif_filename", output_key)
             eif_object = json.loads(json_output)
             session.store_value(self.get_workflowId(), 'article_path', eif_object.get('path'))
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
-                                        "XML converted to EIF for article " + article_id + " to " + output_path)
+                                        "XML converted to EIF for article " + article_id + " to " + output_key)
 
         except Exception as e:
             self.logger.exception("Exception when converting article XML to EIF")
