@@ -48,7 +48,7 @@ class activity_ResizeImages(activity.activity):
         article_id = session.get_value(self.get_workflowId(), 'article_id')
         run = session.get_value(self.get_workflowId(), 'run')
 
-        self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "start",
+        self.emit_monitor_event(self.settings, article_id, version, run, "Resize Images", "start",
                                 "Starting submission resize of images for article " + article_id)
 
         try:
@@ -70,13 +70,13 @@ class activity_ResizeImages(activity.activity):
                 if not key.name.endswith("/"):
                     # process each key in the folder
                     self.process_key(key, expanded_folder_name, cdn_path)
-            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "end",
+            self.emit_monitor_event(self.settings, article_id, version, run, "Resize Images", "end",
                                     "Finished converting images for  " + article_id +
                                     str(image_count) + " images processed ")
 
         except Exception as e:
             self.logger.exception("Exception when resizing images")
-            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
+            self.emit_monitor_event(self.settings, article_id, version, run, "Resize Images", "error",
                                     "Error resizing images for article" + article_id + " message:" + e.message)
 
         return True

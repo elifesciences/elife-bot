@@ -5,7 +5,8 @@ import boto
 import random
 from boto import swf
 import zipfile
-import zlib
+from datetime import datetime
+from time import strftime
 import os
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
@@ -40,38 +41,47 @@ class activity_ArchiveArticle(activity.activity):
         try:
 
             session = Session(self.settings)
-            article_id = data['article_id']
-            article_version = data['article_version']
+
+            id = data['id']
+            version = data['version']
             expanded_folder = data['expanded_folder']
-            updated_date = data['updated_date']
+            updated_date_string = data['updated_date']
+            updated_date = datetime.strptime(updated_date_string, "%Y-%m-%dT%H:%M:%S")
+            status = data['status'].lower()
 
             # download expanded folder
             conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
             source_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
             tmp = self.get_tmp_dir()
-            # TODO: determine POA/VOR?, add date
-            zip_dir = tmp + "/elife-" + article_id + "-vor-/"
+            name = "/elife-" + id + '-' + status + '-v' + version + '-' + updated_date.strftime('%Y%m%d%H%m%S')
+            zip_dir = tmp + name
             os.makedirs(zip_dir)
             folderlist = source_bucket.list(prefix=expanded_folder)
             for key in folderlist:
-                save_path = zip_dir+os.path.basename(key.name)
+                save_path = zip_dir+'/'+os.path.basename(key.name)
                 key.get_contents_to_filename(save_path)
 
             # rename downloaded folder
-
+            zip_path = tmp + name + '.zip'
             # zip expanded folder
-            zf = zipfile.ZipFile(tmp + '/zipfile_write_compression.zip', 'w', zipfile.ZIP_DEFLATED)
+            zf = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
             relroot = os.path.abspath(os.path.join(zip_dir, os.pardir))
             for root, dirs, files in os.walk(zip_dir):
                 # add directory (needed for empty dirs)
                 zf.write(root, os.path.relpath(root, zip_dir))
-                for file in files:
-                    filename = os.path.join(root, file)
-                    if os.path.isfile(filename): # regular files only
-                        arcname = os.path.join(os.path.relpath(root, relroot), file)
+                for f in files:
+                    filename = os.path.join(root, f)
+                    if os.path.isfile(filename):
+                        arcname = os.path.join(os.path.relpath(root, relroot), f)
                         zf.write(filename, arcname)
             zf.close()
+
             # upload zip to archive bucket
+            output_bucket = self.settings.publishing_buckets_prefix + self.settings.archive_bucket
+            destination = conn.get_bucket(output_bucket)
+            destination_key = Key(destination)
+            destination_key.key = name + '.zip'
+            destination_key.set_contents_from_filename(zip_path)
 
         except Exception as e:
             # TODO: log
@@ -86,10 +96,11 @@ def main(args):
     """
 
     data = {
-        'article_id': '00353',
-        'expanded_folder': '00353.94243/39ed4f28-b2e0-499c-961a-35eda4ff11c0',
-        'article_version': '1',
-        'updated_date': '10/10/2015/'
+        'id': '00353',
+        'expanded_folder': '00353.1/9a0f0b0d-1f0b-47c8-88ef-050bd9cdff92',
+        'version': '1',
+        'status': 'VOR',
+        'updated_date': datetime.strftime(datetime.utcnow(), "%Y-%m-%dT%H:%M:%S")
     }
 
     settings = settings_lib.get_settings('exp')
