@@ -1,19 +1,17 @@
 import random
 import time
-import importlib
+import json
 from multiprocessing import Process
 from optparse import OptionParser
 from S3utility.s3_notification_info import S3NotificationInfo
 from S3utility.s3_sqs_message import S3SQSMessage
 import boto.sqs
-from boto.sqs.jsonmessage import JSONMessage
-import settings as settingsLib
+from boto.sqs.message import Message
+import settings as settings_lib
 import log
 import os
-
-
-# this is not an unused import, it is used dynamically
-import starter
+import yaml
+import re
 
 # Add parent directory for imports, so activity classes can use elife-api-prototype
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,7 +24,7 @@ Amazon SQS worker
 
 def work(ENV="dev"):
     # Specify run environment settings
-    settings = settingsLib.get_settings(ENV)
+    settings = settings_lib.get_settings(ENV)
 
     # Log
     identity = "queue_worker_%s" % int(random.random() * 1000)
@@ -41,6 +39,8 @@ def work(ENV="dev"):
                                       aws_secret_access_key=settings.aws_secret_access_key)
     queue = conn.get_queue(settings.S3_monitor_queue)
     queue.set_message_class(S3SQSMessage)
+
+    rules = load_rules()
 
     # Poll for an activity task indefinitely
     if queue is not None:
@@ -57,16 +57,24 @@ def work(ENV="dev"):
                 logger.info('got message id: %s' % queue_message.id)
                 if queue_message.notification_type == 'S3Event':
                     info = S3NotificationInfo.from_S3SQSMessage(queue_message)
-                    bucket = info.bucket_name
-                    filename = info.file_name
-                    logger.info("%s received %s" % (bucket, filename))
-                    starter_name = 'starter_NewS3File'
-                    module_name = "starter." + starter_name
-                    module = importlib.import_module(module_name)
-                    reload_module(module)
-                    full_path = "starter." + starter_name + "." + starter_name + "()"
-                    s = eval(full_path)
-                    s.start(ENV=ENV, info=info)
+                    starter_name = get_starter_name(rules, info)
+                    module_name = 'starter.' + starter_name
+                    if module_name is None:
+                        logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
+                        return False
+
+                    # TODO : place message in queue
+
+                    message = {
+                        'workflow_name': "PublishPerfectArticle",
+                        'workflow_data': info.to_dict()
+                    }
+
+                    out_queue = conn.get_queue(settings.workflow_starter_queue)
+
+                    m = Message()
+                    m.set_body(json.dumps(message))
+                    out_queue.write(m)
                     logger.info("cancelling message")
                     queue.delete_message(queue_message)
                     logger.info("message cancelled")
@@ -77,6 +85,21 @@ def work(ENV="dev"):
 
     else:
         logger.error('error obtaining queue')
+
+
+def load_rules():
+    # load the rules from the YAML file
+    stream = file('newFileWorkflows.yaml', 'r')
+    return yaml.load(stream)
+
+
+def get_starter_name(rules, info):
+    for rule_name in rules:
+        rule = rules[rule_name]
+        if re.match(rule['bucket_name_pattern'], info.bucket_name) and \
+                re.match(rule['file_name_pattern'], info.file_name):
+            return rule['starter_name']
+        pass
 
 
 def reload_module(module_name):
@@ -151,7 +174,7 @@ if __name__ == "__main__":
         pool = start_multiple_thread(ENV)
     else:
         start_single_thread(ENV)
-        #except:
+        # except:
         # If forks is not specified start in single threaded mode
         # TODO : resolve issue when exception in thread. This whole area needs revisiting
         #    pass
@@ -161,5 +184,3 @@ if __name__ == "__main__":
     loop = True
     while loop:
         loop = monitor_KeyboardInterrupt(pool)
-
-

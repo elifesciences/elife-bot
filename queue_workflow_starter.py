@@ -100,14 +100,7 @@ def start_workflow(workflow_name, workflow_data):
     s.start(ENV=env, **workflow_data)
 
 
-# adapt message_data for NewS3File workflow
-# expects workflow data to be a dictionary, e.g.
-# 'workdlow_data': {
-#        'event_name': "S3Event",
-#        'event_time': "", 'bucket_name': "xxawsxx-drop-bucket",
-#        'file_name': "elife-kitchen-sink.xml", 'file_etag': "3f53f5c808dd58973cd93a368be739b4", 'file_size': 1
-#    }
-def process_data_news3file(workflow_name, workflow_data):
+def process_data_publishperfectarticle(workflow_name, workflow_data):
     data = {'info': S3NotificationInfo.from_dict(workflow_data)}
     return data
 
@@ -118,7 +111,7 @@ def process_data_approvearticlepublication(workflow_name, workflow_data):
 
 
 workflow_data_processors = {
-    'NewS3File': process_data_news3file,
+    'PublishPerfectArticle': process_data_publishperfectarticle,
     'ApproveArticlePublication': process_data_approvearticlepublication
 }
 
