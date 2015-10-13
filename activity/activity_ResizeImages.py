@@ -12,6 +12,7 @@ from provider.execution_context import Session
 import settings as settings_lib
 import yaml
 import provider.imageresize as resizer
+import os
 
 """
 ResizeImages.py activity
@@ -58,7 +59,8 @@ class activity_ResizeImages(activity.activity):
                 self.logger.info("Converting images for folder %s" % expanded_folder_name)
 
             # get information on files in the expanded article bucket for notified zip file
-            bucket, file_infos = self.get_file_infos(expanded_folder_name)
+            bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
+            bucket, file_infos = self.get_file_infos(bucket_folder_name)
 
             image_count = 0
             for file_info in file_infos:

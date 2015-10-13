@@ -5,6 +5,7 @@ import uuid
 
 import activity
 import re
+import os
 from os.path import isfile, join
 from os import listdir, makedirs
 from os import path
@@ -82,7 +83,7 @@ class activity_ExpandArticle(activity.activity):
             tmp = self.get_tmp_dir()
             key = Key(source_bucket)
             key.key = info.file_name
-            local_zip_file = self.open_file_from_tmp_dir(info.file_name, mode='w')
+            local_zip_file = self.open_file_from_tmp_dir(info.file_name, mode='wb')
             key.get_contents_to_file(local_zip_file)
             local_zip_file.close()
 
@@ -105,7 +106,7 @@ class activity_ExpandArticle(activity.activity):
 
             for filename in upload_filenames:
                 source_path = path.join(content_folder, filename)
-                dest_path = path.join(folder_name, filename)
+                dest_path = path.join(folder_name, filename).replace(os.sep, '/')
                 k = Key(dest_bucket)
                 k.key = dest_path
                 k.set_contents_from_filename(source_path)

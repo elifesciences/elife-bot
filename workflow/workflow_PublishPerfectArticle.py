@@ -56,6 +56,17 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "start_to_close_timeout": 60 * 5
                     },
                     {
+                        "activity_type": "ApplyVersionNumber",
+                        "activity_id": "ApplyVersionNumber",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 5,
+                        "schedule_to_close_timeout": 60 * 5,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 5
+                    },
+                    {
                         "activity_type": "ConvertJATS",
                         "activity_id": "ConvertJATS",
                         "version": "1",
