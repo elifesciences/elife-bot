@@ -53,7 +53,7 @@ def main():
     # Simple connect
     queue = get_queue()
 
-    pool = Pool(settings.workflow_starter_queue_pool_size)
+    pool = Pool(settings.workflow_starter_queue_pool_size, initialise_pool, [env])
 
     while True:
         messages = queue.get_messages(num_messages=settings.workflow_starter_queue_message_count, visibility_timeout=60,
@@ -64,6 +64,10 @@ def main():
         else:
             logger.debug("No messages received")
 
+def initialise_pool(*args):
+    """ Explicitly set each pool process global variable """
+    global env
+    env = args[0]
 
 def get_queue():
     conn = boto.sqs.connect_to_region(settings.sqs_region,
