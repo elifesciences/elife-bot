@@ -63,18 +63,19 @@ def work(ENV="dev"):
                         logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
                         return False
 
-                    # TODO : place message in queue
-
+                    # build message
                     message = {
                         'workflow_name': "PublishPerfectArticle",
                         'workflow_data': info.to_dict()
                     }
 
+                    # send workflow initiation message
                     out_queue = conn.get_queue(settings.workflow_starter_queue)
-
                     m = Message()
                     m.set_body(json.dumps(message))
                     out_queue.write(m)
+
+                    # cancel incoming message
                     logger.info("cancelling message")
                     queue.delete_message(queue_message)
                     logger.info("message cancelled")
