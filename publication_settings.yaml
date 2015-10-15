@@ -1,6 +1,6 @@
 ---
 # set default to 1 to immediately publish articles by default or 0 to require approval
-default: 1
+default: 0
 
 # rules to override the default
 override:
