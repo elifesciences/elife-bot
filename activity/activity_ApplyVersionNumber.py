@@ -94,6 +94,10 @@ class activity_ApplyVersionNumber(activity.activity):
         # Get the old name to new name map
         file_name_map = self.build_file_name_map(s3_key_names, version)
 
+        # log file names for reference
+        if self.logger:
+            self.logger.info('file_name_map: %s' % json.dumps(file_name_map, sort_keys=True, indent=4))
+
         # rename_s3_objects(old_name_new_name_dict)
         self.rename_s3_objects(bucket, self.expanded_bucket_name, bucket_folder_name, file_name_map)
         
