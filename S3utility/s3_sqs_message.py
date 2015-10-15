@@ -22,7 +22,10 @@ class S3SQSMessage(Message):
         return self.payload['Records'][0]['s3']['object']['key']
 
     def file_etag(self):
-        return self.payload['Records'][0]['s3']['object']['eTag']
+        if 'eTag' in self.payload['Records'][0]['s3']['object']:
+            return self.payload['Records'][0]['s3']['object']['eTag']
+        else:
+            return None
 
     def file_size(self):
         return self.payload['Records'][0]['s3']['object']['size']
