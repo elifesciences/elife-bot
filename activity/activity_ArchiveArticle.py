@@ -42,11 +42,11 @@ class activity_ArchiveArticle(activity.activity):
 
             session = Session(self.settings)
 
-            id = data['id']
+            id = data['article_id']
             version = data['version']
             expanded_folder = data['expanded_folder']
-            updated_date_string = data['updated_date']
-            updated_date = datetime.strptime(updated_date_string, "%Y-%m-%dT%H:%M:%S")
+            update_date_string = data['update_date']
+            updated_date = datetime.strptime(update_date_string, "%Y-%m-%dT%H:%M:%SZ")
             status = data['status'].lower()
 
             # download expanded folder
@@ -85,7 +85,8 @@ class activity_ArchiveArticle(activity.activity):
 
         except Exception as e:
             # TODO: log
-            pass
+            return False
+
         return True
 
 def main(args):

@@ -110,6 +110,7 @@ def process_data_publishperfectarticle(workflow_name, workflow_data):
 
 
 def process_data_approvearticlepublication(workflow_name, workflow_data):
+    # technically not needed if input matches!
     data = {'article_version_id': workflow_data.get('article_version_id')}
     return data
 

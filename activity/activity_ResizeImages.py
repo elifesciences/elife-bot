@@ -78,7 +78,7 @@ class activity_ResizeImages(activity.activity):
             self.logger.exception("Exception when resizing images")
             self.emit_monitor_event(self.settings, article_id, version, run, "Resize Images", "error",
                                     "Error resizing images for article" + article_id + " message:" + e.message)
-
+            return False
         return True
 
     def get_file_infos(self, folder_name):
