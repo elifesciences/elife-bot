@@ -51,9 +51,10 @@ class activity_SetPublicationStatus(activity.activity):
                                     "Ending setting of publish status for " + article_id)
 
         except Exception as e:
-            self.logger.exception("Exception when submitting article EIF")
+            self.logger.exception("Exception when setting publication status for " + article_id)
             self.emit_monitor_event(self.settings, article_id, version, run, "Set Publication Status", "error",
                                     "Error submitting EIF For article" + article_id + " message:" + e.message)
+            return False
         return True
 
     def update_bucket(self, conn, data, eif_filename):

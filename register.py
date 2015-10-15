@@ -49,6 +49,7 @@ def start(ENV = "dev"):
 	workflow_names.append("FTPArticle")
 	workflow_names.append("PubRouterDeposit")
 	workflow_names.append("PublishPerfectArticle")
+	workflow_names.append("PostPerfectPublication")
 	workflow_names.append("ProcessXMLArticle")
 
 	for workflow_name in workflow_names:
@@ -73,10 +74,11 @@ def start(ENV = "dev"):
 	activity_names.append("ConvertJATS")
 	activity_names.append("ExpandArticle")
 	activity_names.append("ApplyVersionNumber")
+	activity_names.append("ArchiveArticle")
+	activity_names.append("UpdateLAX")
 	activity_names.append("ApprovePublication")
 	activity_names.append("ResizeImages")
 	activity_names.append("PostEIF")
-	activity_names.append("ProcessNewS3File")
 	activity_names.append("Sum")
 	activity_names.append("S3Monitor")
 	activity_names.append("UnzipArticleXML")

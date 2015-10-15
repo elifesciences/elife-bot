@@ -65,6 +65,11 @@ class activity_ExpandArticle(activity.activity):
         if version == '-1':
             return False  # version could not be determined, exit workflow. Can't emit event as no version.
 
+        sm = re.search(ur'.*?-.*?-(.*?)-', info.file_name)
+        if sm is not None:
+            status = sm.group(1)
+        if status is None:
+            return False  # version could not be determined, exit workflow. Can't emit event as no version.
         run = str(uuid.uuid4())
         # store version for other activities in this workflow execution
         session.store_value(self.get_workflowId(), 'version', version)
@@ -74,6 +79,7 @@ class activity_ExpandArticle(activity.activity):
         article_version_id = article_id + '.' + version
         session.store_value(self.get_workflowId(), 'article_version_id', article_version_id)
         session.store_value(self.get_workflowId(), 'run', run)
+        session.store_value(self.get_workflowId(), 'status', status)
         self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "start",
                                 "Starting expansion of article " + article_id)
         self.set_monitor_property(self.settings, article_id, "article_id", article_id, "text")
@@ -119,6 +125,7 @@ class activity_ExpandArticle(activity.activity):
             self.logger.exception("Exception when expanding article")
             self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "error",
                                     "Error expanding article " + article_id + " message:" + e.message)
+            return False
 
         return True
 

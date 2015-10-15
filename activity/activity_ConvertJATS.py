@@ -93,6 +93,7 @@ class activity_ConvertJATS(activity.activity):
             self.emit_monitor_event(self.settings, article_id, version, run, "Convert JATS", "error",
                                     "Error in conversion of article xml to EIF for " + article_id +
                                     " message:" + e.message)
+            return False
 
         return True
 
