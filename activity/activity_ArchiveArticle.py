@@ -53,16 +53,16 @@ class activity_ArchiveArticle(activity.activity):
             conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
             source_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
             tmp = self.get_tmp_dir()
-            name = "/elife-" + id + '-' + status + '-v' + version + '-' + updated_date.strftime('%Y%m%d%H%m%S')
-            zip_dir = tmp + name
+            name = "elife-" + id + '-' + status + '-v' + version + '-' + updated_date.strftime('%Y%m%d%H%m%S')
+            zip_dir = tmp + os.sep + name
             os.makedirs(zip_dir)
-            folderlist = source_bucket.list(prefix=expanded_folder)
+            folderlist = source_bucket.list(prefix=expanded_folder.replace(os.sep, '/'))
             for key in folderlist:
-                save_path = zip_dir+'/'+os.path.basename(key.name)
+                save_path = zip_dir + os.sep + os.path.basename(key.name)
                 key.get_contents_to_filename(save_path)
 
             # rename downloaded folder
-            zip_path = tmp + name + '.zip'
+            zip_path = tmp + os.sep + name + '.zip'
             # zip expanded folder
             zf = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
             relroot = os.path.abspath(os.path.join(zip_dir, os.pardir))
