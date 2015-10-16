@@ -53,7 +53,7 @@ class activity_ArchiveArticle(activity.activity):
             conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
             source_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
             tmp = self.get_tmp_dir()
-            name = "elife-" + id + '-' + status + '-v' + version + '-' + updated_date.strftime('%Y%m%d%H%m%S')
+            name = "elife-" + id + '-' + status + '-v' + version + '-' + updated_date.strftime('%Y%m%d%H%M%S')
             zip_dir = tmp + os.sep + name
             os.makedirs(zip_dir)
             folderlist = source_bucket.list(prefix=expanded_folder.replace(os.sep, '/'))
