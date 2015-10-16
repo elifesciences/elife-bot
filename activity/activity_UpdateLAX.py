@@ -42,10 +42,11 @@ class activity_UpdateLAX(activity.activity):
             key.key = eif_location
             eif_json_string = key.get_contents_as_string()
             lax_update_endpoint = self.settings.lax_update
-            response = requests.post(lax_update_endpoint, data=eif_json_string)
+            response = requests.post(lax_update_endpoint, data=eif_json_string,
+                                     auth=(self.settings.lax_update_user, self.settings.lax_update_pass))
 
             self.emit_monitor_event(self.settings, article_id, version, run, "Update LAX", "end",
-                                    "Lax has been updated")
+                                    "Lax has been updated, response is " + str(response))
 
         except Exception as e:
             self.logger.exception("Exception when updating LAX")
