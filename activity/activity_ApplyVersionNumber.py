@@ -153,6 +153,9 @@ class activity_ApplyVersionNumber(activity.activity):
             
             if self.is_video_file(filename) is False:
                 renamed_filename = self.new_filename(filename, version)
+            else:
+                # Keep video files named the same
+                renamed_filename = filename
             
             if renamed_filename:
                 file_name_map[filename] = renamed_filename
