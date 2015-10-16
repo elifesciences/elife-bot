@@ -65,6 +65,9 @@ class activity_ApplyVersionNumber(activity.activity):
                 bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
                 self.rename_article_s3_objects(bucket_folder_name, version)
                 
+            self.emit_monitor_event(self.settings, article_id, version, run, "Apply Version Number", "end",
+                        "Finished applying version number to article " + article_id +
+                        " for version " + version + " run " + str(run))
 
 
         except Exception as e:
