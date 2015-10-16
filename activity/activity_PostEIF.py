@@ -127,6 +127,6 @@ class activity_PostEIF(activity.activity):
         except Exception as e:
             self.logger.exception("Exception when submitting article EIF")
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
-                                    "Error submitting EIF For article" + article_id + " message:" + e.message)
+                                    "Error submitting EIF For article" + article_id + " message:" + str(e.message))
             return False
         return True
