@@ -2,6 +2,7 @@ import activity
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 import requests
+import json
 
 """
 UpdateLAX.py activity
@@ -40,13 +41,18 @@ class activity_UpdateLAX(activity.activity):
             bucket = conn.get_bucket(eif_bucket)
             key = Key(bucket)
             key.key = eif_location
-            eif_json_string = key.get_contents_as_string()
+            eif = key.get_contents_as_string()
             lax_update_endpoint = self.settings.lax_update
-            response = requests.post(lax_update_endpoint, data=eif_json_string,
+            headers = {"Content-type": "application/json", "Accept": "application/json"}
+            response = requests.post(lax_update_endpoint, data=eif, headers=headers,
                                      auth=(self.settings.lax_update_user, self.settings.lax_update_pass))
 
+            if response.status_code is not 200:
+                self.emit_monitor_event(self.settings, article_id, version, run, "Update LAX", "error",
+                                        "Lax was not updated, " + str(response))
+                return False
             self.emit_monitor_event(self.settings, article_id, version, run, "Update LAX", "end",
-                                    "Lax has been updated, response is " + str(response))
+                                    "Lax has been updated, response is " + str(response.status_code) + " " + str(response.reason))
 
         except Exception as e:
             self.logger.exception("Exception when updating LAX")
