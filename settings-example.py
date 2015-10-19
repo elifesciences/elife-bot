@@ -38,6 +38,7 @@ class exp():
     expanded_bucket = 'elife-publishing-expanded'
     ppp_cdn_bucket = 'elife-publishing-cdn'
     archive_bucket = 'elife-publishing-archive'
+    xml_bucket = 'elife-publishing-xml'
 
     # REST endpoint for drupal node builder
     # drupal_naf_endpoint = 'http://localhost:5000/nodes'
