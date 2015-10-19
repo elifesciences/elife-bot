@@ -57,15 +57,14 @@ def work(ENV="dev"):
                 logger.info('got message id: %s' % queue_message.id)
                 if queue_message.notification_type == 'S3Event':
                     info = S3NotificationInfo.from_S3SQSMessage(queue_message)
-                    starter_name = get_starter_name(rules, info)
-                    module_name = 'starter.' + starter_name
-                    if module_name is None:
+                    workflow_name = get_starter_name(rules, info)
+                    if workflow_name is None:
                         logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
                         return False
 
                     # build message
                     message = {
-                        'workflow_name': "PublishPerfectArticle",
+                        'workflow_name': workflow_name,
                         'workflow_data': info.to_dict()
                     }
 
