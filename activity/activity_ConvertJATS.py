@@ -85,7 +85,7 @@ class activity_ConvertJATS(activity.activity):
             session.store_value(self.get_workflowId(), "eif_filename", output_key)
             eif_object = json.loads(json_output)
             session.store_value(self.get_workflowId(), 'article_path', eif_object.get('path'))
-            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
+            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "success",
                                         "XML converted to EIF for article " + article_id + " to " + output_key)
 
         except Exception as e:
