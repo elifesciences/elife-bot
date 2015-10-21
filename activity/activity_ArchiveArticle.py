@@ -72,7 +72,9 @@ class activity_ArchiveArticle(activity.activity):
                 for f in files:
                     filename = os.path.join(root, f)
                     if os.path.isfile(filename):
-                        arcname = os.path.join(os.path.relpath(root, relroot), f)
+                        # Archive file name, effectively make the
+                        # zip_dir the root directory by stripping it from the file name f
+                        arcname = root.rstrip(zip_dir) + f
                         zf.write(filename, arcname)
             zf.close()
 
