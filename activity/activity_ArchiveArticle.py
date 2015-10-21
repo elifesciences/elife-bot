@@ -64,7 +64,7 @@ class activity_ArchiveArticle(activity.activity):
             # rename downloaded folder
             zip_path = tmp + os.sep + name + '.zip'
             # zip expanded folder
-            zf = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+            zf = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, allowZip64 = True)
             relroot = os.path.abspath(os.path.join(zip_dir, os.pardir))
             for root, dirs, files in os.walk(zip_dir):
                 # add directory (needed for empty dirs)
