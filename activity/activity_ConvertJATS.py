@@ -51,7 +51,7 @@ class activity_ConvertJATS(activity.activity):
             conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
             bucket = conn.get_bucket(expanded_folder_bucket)
 
-            bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
+            bucket_folder_name = expanded_folder_name
             (xml_key, xml_filename) = self.get_article_xml_key(bucket, bucket_folder_name)
             if xml_key is None:
                 self.logger.error("Article XML path not found")
@@ -69,13 +69,13 @@ class activity_ConvertJATS(activity.activity):
             if self.logger:
                 self.logger.info("Scraped file %s" % xml_filename)
 
-            output_folder = path.join(article_version_id, run)
+            output_folder = article_version_id + '/' + run
             output_name = xml_filename.replace('.xml', '.json')
             output_bucket = self.settings.publishing_buckets_prefix + self.settings.eif_bucket
-            output_path = path.join(output_folder, output_name)
+            output_path = output_folder + '/' + output_name
             destination = conn.get_bucket(output_bucket)
             destination_key = Key(destination)
-            output_key = output_path.replace(os.sep, '/')
+            output_key = output_path
             destination_key.key = output_key
             destination_key.set_contents_from_string(json_output)
 

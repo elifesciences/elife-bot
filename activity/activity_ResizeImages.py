@@ -59,7 +59,7 @@ class activity_ResizeImages(activity.activity):
                 self.logger.info("Converting images for folder %s" % expanded_folder_name)
 
             # get information on files in the expanded article bucket for notified zip file
-            bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
+            bucket_folder_name = expanded_folder_name
             bucket, file_infos = self.get_file_infos(bucket_folder_name)
 
             image_count = 0
@@ -69,7 +69,7 @@ class activity_ResizeImages(activity.activity):
                 # see : http://stackoverflow.com/questions/9954521/s3-boto-list-keys-sometimes-returns-directory-key
                 if not key.name.endswith("/"):
                     # process each key in the folder
-                    self.process_key(key, expanded_folder_name, cdn_path)
+                    self.process_key(key, bucket_folder_name, cdn_path)
             self.emit_monitor_event(self.settings, article_id, version, run, "Resize Images", "end",
                                     "Finished converting images for  " + article_id +
                                     str(image_count) + " images processed ")
