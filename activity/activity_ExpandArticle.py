@@ -93,6 +93,7 @@ class activity_ExpandArticle(activity.activity):
             key.get_contents_to_file(local_zip_file)
             local_zip_file.close()
 
+            bucket_folder_name = article_version_id + '/' + run
             folder_name = path.join(article_version_id, run)
 
             # extract zip contents
@@ -112,15 +113,15 @@ class activity_ExpandArticle(activity.activity):
 
             for filename in upload_filenames:
                 source_path = path.join(content_folder, filename)
-                dest_path = path.join(folder_name, filename).replace(os.sep, '/')
+                dest_path = path.join(bucket_folder_name, filename)
                 k = Key(dest_bucket)
                 k.key = dest_path
                 k.set_contents_from_filename(source_path)
 
-            session.store_value(self.get_workflowId(), 'expanded_folder', folder_name)
+            session.store_value(self.get_workflowId(), 'expanded_folder', bucket_folder_name)
             self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "end",
                                     "Finished expansion of article " + article_id +
-                                    " for version " + version + " run " + str(run) + " into " + folder_name)
+                                    " for version " + version + " run " + str(run) + " into " + bucket_folder_name)
         except Exception as e:
             self.logger.exception("Exception when expanding article")
             self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "error",
