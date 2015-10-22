@@ -113,7 +113,7 @@ class activity_ExpandArticle(activity.activity):
 
             for filename in upload_filenames:
                 source_path = path.join(content_folder, filename)
-                dest_path = path.join(bucket_folder_name, filename)
+                dest_path = bucket_folder_name + '/' + filename
                 k = Key(dest_bucket)
                 k.key = dest_path
                 k.set_contents_from_filename(source_path)
