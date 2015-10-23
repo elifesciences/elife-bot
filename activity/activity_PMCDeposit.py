@@ -57,9 +57,8 @@ class activity_PMCDeposit(activity.activity):
         self.OUTPUT_DIR = self.get_tmp_dir() + os.sep + "output_dir"
        
         # Bucket settings
-        self.input_bucket = "elife-articles-renamed"
-        # Temporarily upload to a folder during development
-        self.input_bucket_folder = "samples05/"
+        self.input_bucket = None
+        self.input_bucket_default = "elife-articles-renamed"
 
         # journal
         self.journal = 'elife'
@@ -80,6 +79,12 @@ class activity_PMCDeposit(activity.activity):
         
         # Data passed to this activity
         self.document = data["data"]["document"]
+        
+        # Custom bucket, if specified
+        if "bucket" in data["data"]:
+            self.input_bucket = data["data"]["bucket"]
+        else:
+            self.input_bucket = self.input_bucket_default
         
         # Create output directories
         self.create_activity_directories()
@@ -136,8 +141,7 @@ class activity_PMCDeposit(activity.activity):
 
         
             # TODO!!!!
-            #self.upload_article_zip_to_s3()
-            #self.upload_article_zip_to_s3()
+            self.upload_article_zip_to_s3()
 
         # Full Clean up
         #self.clean_directories(full = True)
@@ -217,14 +221,13 @@ class activity_PMCDeposit(activity.activity):
         if(self.logger):
             self.logger.info('downloading VoR file ' + document)
 
-        prefix = self.input_bucket_folder
         subfolder_name = ""
         
         # Connect to S3 and bucket
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(self.input_bucket)
 
-        s3_key_name = prefix + document
+        s3_key_name = document
         s3_key_names = [s3_key_name]
 
         self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
@@ -251,6 +254,11 @@ class activity_PMCDeposit(activity.activity):
             f = open(filename_plus_path, mode)
             s3_key.get_contents_to_file(f)
             f.close()
+
+    def upload_article_zip_to_s3(self):
+        """
+        TODO!!!
+        """
 
     def list_dir(self, dir_name):
         dir_list = os.listdir(dir_name)
