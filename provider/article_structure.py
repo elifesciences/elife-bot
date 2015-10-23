@@ -47,6 +47,11 @@ class ArticleInfo(object):
             self.is_article_zip = False
             # TODO : determine other useful file_type values from extra_info list if required
 
+        # Files in PoA 04493 do not have hyphenated names so handle it now before continuing
+        if len(parts) < 2:
+            self.file_type = None
+            return
+
         self.journal = parts[0]
         self.f_id = parts[1]
         last_part_index = len(parts) - 1
