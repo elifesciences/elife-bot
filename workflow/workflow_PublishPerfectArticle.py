@@ -50,10 +50,10 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
                         "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
+                        "start_to_close_timeout": 60 * 15
                     },
                     {
                         "activity_type": "ApplyVersionNumber",
@@ -61,10 +61,10 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
+                        "heartbeat_timeout": 60 * 10,
+                        "schedule_to_close_timeout": 60 * 10,
                         "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
+                        "start_to_close_timeout": 60 * 10
                     },
                     {
                         "activity_type": "ConvertJATS",

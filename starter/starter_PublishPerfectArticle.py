@@ -44,7 +44,7 @@ class starter_PublishPerfectArticle():
         workflow_name = "PublishPerfectArticle"
         workflow_version = "1"
         child_policy = None
-        execution_start_to_close_timeout = None
+        execution_start_to_close_timeout = str(60 * 30)
         workflow_input = json.dumps(info, default=lambda ob: ob.__dict__)
 
         try:
