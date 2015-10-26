@@ -100,8 +100,8 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "start_to_close_timeout": 60 * 5
                     },
                     {
-                        "activity_type": "DepositXML",
-                        "activity_id": "DepositXML",
+                        "activity_type": "DepositAssets",
+                        "activity_id": "DepositAssets",
                         "version": "1",
                         "input": data,
                         "control": None,

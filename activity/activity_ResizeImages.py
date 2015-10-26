@@ -69,7 +69,7 @@ class activity_ResizeImages(activity.activity):
                 # see : http://stackoverflow.com/questions/9954521/s3-boto-list-keys-sometimes-returns-directory-key
                 if not key.name.endswith("/"):
                     # process each key in the folder
-                    self.process_key(key, bucket_folder_name, cdn_path)
+                    self.process_key(key, cdn_path)
             self.emit_monitor_event(self.settings, article_id, version, run, "Resize Images", "end",
                                     "Finished converting images for  " + article_id +
                                     str(image_count) + " images processed ")
@@ -91,7 +91,7 @@ class activity_ResizeImages(activity.activity):
         file_infos = bucket.list(folder_name + "/", "/")
         return bucket, file_infos
 
-    def process_key(self, key, folder_name, cdn_path):
+    def process_key(self, key, cdn_path):
         # determine filename (without folder) and obtain ArticleInfo instance
         filename = key.name.rsplit('/', 1)[1]
         info = ArticleInfo(filename)
@@ -102,7 +102,7 @@ class activity_ResizeImages(activity.activity):
             # generate images for relevant formats
             fp = StringIO.StringIO()
             key.get_file(fp)
-            self.generate_images(formats, fp, info, folder_name, cdn_path)
+            self.generate_images(formats, fp, info, cdn_path)
 
     def get_formats(self, file_type):
         # look up file_type in pre-parsed formats
@@ -110,17 +110,17 @@ class activity_ResizeImages(activity.activity):
             return self.formats[file_type]
         return None
 
-    def generate_images(self, formats, fp, info, folder_name, cdn_path):
+    def generate_images(self, formats, fp, info,  cdn_path):
         # delegate this to module
         try:
             for format_spec_name in formats:
                 fp.seek(0)  # rewind the tape
                 filename, image = resizer.resize(formats[format_spec_name], fp, info)
-                self.store_in_cdn(filename, image, folder_name, cdn_path)
+                self.store_in_cdn(filename, image,  cdn_path)
         finally:
             fp.close()
 
-    def store_in_cdn(self, filename, image, folder_name, cdn_path):
+    def store_in_cdn(self, filename, image, cdn_path):
         # for now we'l use an S3 bucket
         try:
             cdn_bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket)
