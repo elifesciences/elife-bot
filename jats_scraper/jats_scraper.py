@@ -1,6 +1,6 @@
 import feeds
 
-def scrape(xml,version):
+def scrape(xml):
 
     res = feeds.scrape(xml, lambda x: x[0]['article'][0])
 
@@ -8,7 +8,7 @@ def scrape(xml,version):
 
 def main(args):
     xml = open(args[0], "r").read()
-    print scrape(xml,1)
+    print scrape(xml)
 
 if __name__ == '__main__':
     import sys
