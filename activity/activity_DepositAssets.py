@@ -31,11 +31,9 @@ class activity_DepositAssets(activity.activity):
         Do the work
         """
 
-
         session = Session(self.settings)
         version = session.get_value(self.get_workflowId(), 'version')
         article_id = session.get_value(self.get_workflowId(), 'article_id')
-        article_version_id = article_id + '.' + version
         run = session.get_value(self.get_workflowId(), 'run')
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Deposit assets", "start",
