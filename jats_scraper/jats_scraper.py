@@ -2,7 +2,7 @@ import feeds
 
 def scrape(xml,version):
 
-    res = feeds.scrape(xml, lambda x: x[0]['article'][0],article_version=version)
+    res = feeds.scrape(xml, lambda x: x[0]['article'][0])
 
     return res
 

@@ -1,12 +1,6 @@
 import activity
-import json
-import os
-from os import path
-from jats_scraper import jats_scraper
-from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 from provider.execution_context import Session
-from provider.article_structure import ArticleInfo
 
 """
 DepositAssets.py activity
