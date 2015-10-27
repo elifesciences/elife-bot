@@ -133,7 +133,7 @@ class activity_ExpandArticle(activity.activity):
     def get_next_version(self, article_id):
         url = self.settings.lax_article_versions.replace('{article_id}', article_id)
         response = requests.get(url)
-        if response.status_code is 200:
+        if response.status_code == 200:
             high_version = 0
             data = response.json()
             for version in data:
@@ -141,10 +141,10 @@ class activity_ExpandArticle(activity.activity):
                 if int_version > high_version:
                     high_version = int_version
             return str(high_version + 1)
-        elif response.status_code is 404:
+        elif response.status_code == 404:
             return "1"
         else:
-            self.logger.error("Error obtaining version information from Lax" + response.status_code)
+            self.logger.error("Error obtaining version information from Lax" + str(response.status_code))
             return "-1"
         
 
