@@ -46,9 +46,9 @@ class activity(object):
 
     def describe(self):
         """
-		Describe activity type from SWF, to confirm it exists
-		Requires object to have an active connection to SWF using boto
-		"""
+        Describe activity type from SWF, to confirm it exists
+        Requires object to have an active connection to SWF using boto
+        """
         if (self.conn == None or self.domain == None or self.name == None or self.version == None):
             return None
 
@@ -61,9 +61,9 @@ class activity(object):
 
     def register(self):
         """
-		Register the activity type with SWF, if it does not already exist
-		Requires object to have an active connection to SWF using boto
-		"""
+        Register the activity type with SWF, if it does not already exist
+        Requires object to have an active connection to SWF using boto
+        """
         if (self.conn == None or self.domain == None or self.name == None or self.version == None):
             return None
 
@@ -83,9 +83,9 @@ class activity(object):
 
     def get_workflowId(self):
         """
-		Get the workflowId from the SWF activity_task
-		if it is available
-		"""
+        Get the workflowId from the SWF activity_task
+        if it is available
+        """
         workflowId = None
         if (self.activity_task is None):
             return None
@@ -99,9 +99,9 @@ class activity(object):
 
     def get_activityId(self):
         """
-		Get the activityId from the SWF activity_task
-		if it is available
-		"""
+        Get the activityId from the SWF activity_task
+        if it is available
+        """
         activityId = None
         if (self.activity_task is None):
             return None
@@ -115,8 +115,8 @@ class activity(object):
 
     def make_tmp_dir(self):
         """
-		Check or create temporary directory for this activity
-		"""
+        Check or create temporary directory for this activity
+        """
         # Try and make the based tmp directory, if it does not exist
         if (self.tmp_base_dir):
             try:
@@ -160,9 +160,9 @@ class activity(object):
 
     def get_tmp_dir(self):
         """
-		Get the temporary file directory, but if not set
-		then make the directory
-		"""
+        Get the temporary file directory, but if not set
+        then make the directory
+        """
         if (self.tmp_dir):
             return self.tmp_dir
         else:
@@ -172,8 +172,8 @@ class activity(object):
 
     def open_file_from_tmp_dir(self, filename, mode='r'):
         """
-		Read the file from the tmp_dir
-		"""
+        Read the file from the tmp_dir
+        """
         tmp_dir = self.get_tmp_dir()
 
         if (tmp_dir):
