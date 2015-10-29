@@ -5,3 +5,7 @@ ftp-credentials.txt
 settings.py
 .boto
 tmp
+venv
+.idea
+workflow-context/*
+!workflow-context/.gitkeep

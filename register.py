@@ -28,7 +28,9 @@ def start(ENV = "dev"):
 	workflow_names = []
 	workflow_names.append("Ping")
 	workflow_names.append("Sum")
+	workflow_names.append("ApproveArticlePublication")
 	workflow_names.append("PublishArticle")
+	workflow_names.append("NewS3File")
 	workflow_names.append("S3Monitor")
 	workflow_names.append("LensArticlePublish")
 	workflow_names.append("LensIndexPublish")
@@ -46,7 +48,10 @@ def start(ENV = "dev"):
 	workflow_names.append("PublicationEmail")
 	workflow_names.append("FTPArticle")
 	workflow_names.append("PubRouterDeposit")
-	
+	workflow_names.append("PublishPerfectArticle")
+	workflow_names.append("PostPerfectPublication")
+	workflow_names.append("ProcessXMLArticle")
+
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
 		class_name = "workflow_" + workflow_name
@@ -57,14 +62,24 @@ def start(ENV = "dev"):
 		f = eval(full_path)
 		logger = None
 		workflow_object = f(settings, logger, conn)
-		
+
 		# Now register it
 		response = workflow_object.register()
-	
+
 		print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
-		
+
 	activity_names = []
 	activity_names.append("PingWorker")
+	activity_names.append("SetPublicationStatus")
+	activity_names.append("ConvertJATS")
+	activity_names.append("ExpandArticle")
+	activity_names.append("ApplyVersionNumber")
+	activity_names.append("ArchiveArticle")
+	activity_names.append("UpdateLAX")
+	activity_names.append("DepositAssets")
+	activity_names.append("ApprovePublication")
+	activity_names.append("ResizeImages")
+	activity_names.append("PostEIF")
 	activity_names.append("Sum")
 	activity_names.append("S3Monitor")
 	activity_names.append("UnzipArticleXML")
@@ -90,7 +105,7 @@ def start(ENV = "dev"):
 	activity_names.append("PublicationEmail")
 	activity_names.append("FTPArticle")
 	activity_names.append("PubRouterDeposit")
-	
+
 	for activity_name in activity_names:
 		# Import the activity libraries
 		class_name = "activity_" + activity_name
@@ -101,19 +116,19 @@ def start(ENV = "dev"):
 		f = eval(full_path)
 		logger = None
 		activity_object = f(settings, logger, conn)
-		
+
 		# Now register it
 		response = activity_object.register()
-	
+
 		print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
-	
+
 if __name__ == "__main__":
-	
+
 	# Add options
 	parser = OptionParser()
 	parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
 	(options, args) = parser.parse_args()
-	if options.env: 
+	if options.env:
 		ENV = options.env
 
 	start(ENV)

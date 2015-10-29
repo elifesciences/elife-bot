@@ -1,0 +1,105 @@
+---
+
+# Not sure whether suffix is needed here, depends on how the naming for
+# current images is already being derived.
+
+FigureHW:
+  Thumbnail:
+    width: 80
+    suffix: .small
+    format: gif
+    resolution: 96
+
+
+  FullSizeHW:
+    width: 650
+    suffix: .medium
+    format: jpg
+    resolution: 96
+
+  # Lens image naming:
+  #   Main figures: e.g. Figure 7 of article 04232 is named elife04232f007.jpg
+  #                 (see http://lens.elifesciences.org/04232/#figures)
+  #
+  #   Supplementary figures are named sequentially by suppplementary figcount,
+  #   and are not related to their 'main' figure by filename.
+  #   For example:
+  #   Figure 2 supplement 2 in http://lens.elifesciences.org/08069/#figures
+  #   is named elife08069fs003.jpg because it is the third figure supplement
+  #   in that article.
+
+  Lens:
+    width: 1600
+    format: jpg
+    resolution: 300
+
+# Future (once we have control of the markup to code responsive images)
+Figure:
+
+  WidthA:
+    width: 300
+    suffix: -300w
+    format: jpg
+    resolution: 96
+
+  WidthB:
+    width: 480
+    suffix: -480w
+    format: jpg
+    resolution: 96
+
+  WidthC:
+    width: 511
+    suffix: -511w
+    format: jpg
+    resolution: 96
+
+  WidthD:
+    width: 542
+    suffix: -542w
+    format: jpg
+    resolution: 96
+
+  WidthE:
+    width: 600
+    suffix: -600w
+    format: jpg
+    resolution: 96
+
+  WidthF:
+    width: 742
+    suffix: -742w
+    format: jpg
+    resolution: 96
+
+  WidthG:
+    width: 972
+    suffix: -972w
+    format: jpg
+    resolution: 96
+
+  WidthH:
+    width: 1022
+    suffix: -1022w
+    format: jpg
+    resolution: 96
+
+  # There is no WidthI (that name can be hard to read correctly).
+
+  WidthJ:
+    width: 1084
+    suffix: -1084w
+    format: jpg
+    resolution: 96
+
+  WidthK:
+    width: 1484
+    suffix: -1484w
+    format: jpg
+    resolution: 96
+
+  Thumbnail:
+    width: 80
+    suffix: -80w
+    format: gif
+    resolution: 96
