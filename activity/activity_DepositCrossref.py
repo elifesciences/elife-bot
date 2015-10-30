@@ -79,6 +79,10 @@ class activity_DepositCrossref(activity.activity):
         
         self.outbox_s3_key_names = None
             
+        # Track XML files selected for pubmed XML
+        self.article_published_file_names = []
+        self.article_not_published_file_names = [] 
+            
     def do_activity(self, data = None):
         """
         Activity, do the work
@@ -118,7 +122,9 @@ class activity_DepositCrossref(activity.activity):
             self.activity_status = False
 
         # Send email
-        self.add_email_to_queue()
+        # Only if there were files approved for publishing
+        if len(self.article_published_file_names) > 0:
+            self.add_email_to_queue()
 
         # Return the activity result, True or False
         result = True
@@ -263,6 +269,7 @@ class activity_DepositCrossref(activity.activity):
             article_list = self.parse_article_xml(xml_files)
             
             if len(article_list) == 0:
+                self.article_not_published_file_names.append(xml_file)
                 continue
             else:
                 article = article_list[0]
@@ -278,8 +285,11 @@ class activity_DepositCrossref(activity.activity):
                     generate_status = False
                 
             if generate_status is True:
-                # TODO!!! keep track of successfully generated files for cleaning the outbox
-                pass
+                # Add filename to the list of published files
+                self.article_published_file_names.append(xml_file)
+            else:
+                # Add the file to the list of not published articles, may be used later
+                self.article_not_published_file_names.append(xml_file)
         
         # Any files generated is a sucess, even if one failed
         return True
@@ -368,42 +378,6 @@ class activity_DepositCrossref(activity.activity):
             
         return status
 
-    def move_files_from_s3_folder_to_folder(self, from_folder, to_folder):
-        """
-        Connect to the S3 bucket, and from the from_folder,
-        move all the objects to the to_folder
-        """
-        
-        bucket_name = self.publish_bucket
-        
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-        
-        s3_key_names = self.get_s3_key_names_from_bucket(
-            bucket          = bucket,
-            prefix          = from_folder)
-        
-        for name in s3_key_names:
-            # Download objects from S3 and save to disk
-
-            # Do not delete the from_folder itself, if it is in the list
-            if name != from_folder:
-                filename = name.split("/")[-1]
-                new_s3_key_name = to_folder + filename
-                
-                # First copy
-                new_s3_key = None
-                try:
-                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
-                except:
-                    pass
-                
-                # Then delete the old key if successful
-                if(isinstance(new_s3_key, boto.s3.key.Key)):
-                    old_s3_key = bucket.get_key(name)
-                    old_s3_key.delete()
-    
     def get_outbox_s3_key_names(self, force = None):
         """
         Separately get a list of S3 key names form the outbox
@@ -454,7 +428,41 @@ class activity_DepositCrossref(activity.activity):
         outbox_s3_key_names = self.get_outbox_s3_key_names()
         
         to_folder = self.get_to_folder_name()
-        self.move_files_from_s3_folder_to_folder(self.outbox_folder, to_folder)
+
+        # Move only the published files from the S3 outbox to the published folder
+        bucket_name = self.publish_bucket
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        # Concatenate the expected S3 outbox file names
+        s3_key_names = []
+        for name in self.article_published_file_names:
+            filename = name.split(os.sep)[-1]
+            s3_key_name = self.outbox_folder + filename
+            s3_key_names.append(s3_key_name)
+        
+        for name in s3_key_names:
+            # Download objects from S3 and save to disk
+
+            # Do not delete the from_folder itself, if it is in the list
+            if name != self.outbox_folder:
+                filename = name.split("/")[-1]
+                new_s3_key_name = to_folder + filename
+                
+                # First copy
+                new_s3_key = None
+                try:
+                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
+                except:
+                    pass
+                
+                # Then delete the old key if successful
+                if(isinstance(new_s3_key, boto.s3.key.Key)):
+                    old_s3_key = bucket.get_key(name)
+                    old_s3_key.delete()
+                
         
     def upload_crossref_xml_to_s3(self):
         """
@@ -584,6 +592,20 @@ class activity_DepositCrossref(activity.activity):
                 body += name + "\n"
         else:
             body += "No files in outbox." + "\n"
+            
+        # Report on published files
+        if len(self.article_published_file_names) > 0:
+            body += "\n"
+            body += "Published files generated crossref XML: " + "\n"
+            for name in self.article_published_file_names:
+                body += name.split(os.sep)[-1] + "\n"
+
+        # Report on not published files
+        if len(self.article_not_published_file_names) > 0:
+            body += "\n"
+            body += "Files not approved or failed crossref XML: " + "\n"
+            for name in self.article_not_published_file_names:
+                body += name.split(os.sep)[-1] + "\n"
             
         body += "\n"
         body += "-------------------------------\n"
