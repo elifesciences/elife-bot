@@ -255,14 +255,56 @@ class activity_DepositCrossref(activity.activity):
         """
         article_xml_files = glob.glob(self.elife_poa_lib.settings.STAGING_TO_HW_DIR + "/*.xml")
         
-        articles = self.parse_article_xml(article_xml_files)
+        for xml_file in article_xml_files:
+            generate_status = True
+            
+            # Convert the single value to a list for processing
+            xml_files = [xml_file]
+            article_list = self.parse_article_xml(xml_files)
+            
+            if len(article_list) == 0:
+                continue
+            else:
+                article = article_list[0]
+            
+            if self.approve_to_generate(article) is not True:
+                generate_status = False
+            else:
+                try:
+                    # Will write the XML to the TMP_DIR
+                    self.elife_poa_lib.generate.build_crossref_xml_for_articles(article_list)
+                except:
+
+                    generate_status = False
+                
+            if generate_status is True:
+                # TODO!!! keep track of successfully generated files for cleaning the outbox
+                pass
         
-        try:
-            # Will write the XML to the TMP_DIR
-            self.elife_poa_lib.generate.build_crossref_xml_for_articles(articles)
-            return True
-        except:
-            return False
+        # Any files generated is a sucess, even if one failed
+        return True
+
+    def approve_to_generate(self, article):
+        """
+        Given an article object, decide if crossref deposit should be
+        generated from it
+        """
+        approved = None
+        # Embargo if the pub date is in the future
+        if article.get_date('pub'):
+            pub_date = article.get_date('pub').date
+            now_date = time.gmtime()
+            if pub_date < now_date:
+                approved = True
+            else:
+                # Pub date is later than now, do not approve
+                approved = False
+        else:
+            # No pub date, then we approve it
+            approved = True
+            
+        return approved
+    
 
     def approve_for_publishing(self):
         """
@@ -320,8 +362,9 @@ class activity_DepositCrossref(activity.activity):
             if r.status_code != requests.codes.ok:
                 status = False
             #print r.text
-            self.http_request_status_code.append(r.status_code)
-            self.http_request_status_text.append(r.text)
+            self.http_request_status_text.append("XML file: " + xml_file)
+            self.http_request_status_text.append("HTTP status: " + str(r.status_code))
+            self.http_request_status_text.append("HTTP response: " + r.text)
             
         return status
 
@@ -548,7 +591,7 @@ class activity_DepositCrossref(activity.activity):
         for code in self.http_request_status_code:
             body += "Status code: " + str(code) + "\n"
         for text in self.http_request_status_text:
-            body += "Response text: " + str(text) + "\n"
+            body += str(text) + "\n"
             
         body += "\n"
         body += "-------------------------------\n"
