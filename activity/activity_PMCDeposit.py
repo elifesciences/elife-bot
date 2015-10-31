@@ -381,9 +381,11 @@ class activity_PMCDeposit(activity.activity):
 
     
     def rename_files_remove_version_number(self):
-        
-        ### TODO !!!!!
-        
+        """
+        Rename files to not include the version number, if present
+        Pre-PPP files will not have a version number, for before PPP is launched
+        """
+
         file_name_map = {}
                
         # Get a list of all files
@@ -397,7 +399,13 @@ class activity_PMCDeposit(activity.activity):
             
             # TODO strip the -v1 from it
             file_extension = filename.split('.')[-1]
-            part_without_version = filename.split('-v')[0]
+            if '-v' in filename:
+                # Use part before the -v number
+                part_without_version = filename.split('-v')[0]
+            else:
+                # No -v found, use the file name minus the extension
+                part_without_version = ''.join(filename.split('.')[0:-1])
+                
             renamed_filename = part_without_version + '.' + file_extension
 
             if renamed_filename:
