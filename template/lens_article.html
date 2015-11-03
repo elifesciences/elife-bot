@@ -61,7 +61,7 @@
         return query_string;
       } ();
 
-      var documentURL = "https://s3.amazonaws.com/elife-cdn/elife-articles/{{ article.doi_id }}/elife{{ article.doi_id }}.xml";
+      var documentURL = "https://s3.amazonaws.com/{{ cdn_bucket }}/elife-articles/{{ article.doi_id }}/{{ article_xml_filename }}";
 
       $(function() {
 

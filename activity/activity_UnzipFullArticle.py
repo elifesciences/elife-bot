@@ -80,6 +80,7 @@ class activity_UnzipFullArticle(activity.activity):
     
         if self.xml_file_name():
             print self.xml_file_name()
+        self.start_publish_article_workflow(self.elife_id, self.xml_file_name())
     
         return True
     
@@ -251,6 +252,54 @@ class activity_UnzipFullArticle(activity.activity):
                 return None
         return None
 
+    def start_publish_article_workflow(self, elife_id, document):
+        """
+        In here a new FTPArticle workflow is started for the article object supplied
+        """
+        starter_status = None
+        
+        starter_status = None
+        
+        # Compile the workflow starter parameters
+        workflow_id = "PublishArticle_" + str(elife_id)
+        workflow_name = "PublishArticle"
+        workflow_version = "1"
+        child_policy = None
+        execution_start_to_close_timeout = None
+        
+        # Input data
+        data = {}
+        s3_document_url = ('https://s3.amazonaws.com/' + self.output_bucket + '/'
+                           + self.cdn_base_prefix(elife_id) + document)
+        data['document'] = s3_document_url
+        data['elife_id'] = elife_id
+        input_json = {}
+        input_json['data'] = data
+        input = json.dumps(input_json)
+        
+        # Connect to SWF
+        conn = boto.swf.layer1.Layer1(self.settings.aws_access_key_id,
+                                      self.settings.aws_secret_access_key)
+        
+        # Try and start a workflow
+        try:
+            response = conn.start_workflow_execution(self.settings.domain, workflow_id,
+                                                     workflow_name, workflow_version,
+                                                     self.settings.default_task_list,
+                                                     child_policy,
+                                                     execution_start_to_close_timeout, input)
+            starter_status = True
+        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
+            # There is already a running workflow with that ID, cannot start another
+            message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
+            print message
+            if(self.logger):
+                self.logger.info(message)
+            starter_status = False
+        
+        return starter_status
+        
+       
     def create_activity_directories(self):
         """
         Create the directories in the activity tmp_dir
