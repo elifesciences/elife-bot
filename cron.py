@@ -46,6 +46,12 @@ def run_cron(ENV = "dev"):
       workflow_id   = "S3Monitor",
       start_seconds = 60*31)
     
+    workflow_conditional_start(
+      ENV           = ENV,
+      starter_name  = "starter_DepositCrossref",
+      workflow_id   = "DepositCrossref",
+      start_seconds = 60*31)
+    
     pass
   
   elif(current_time.tm_min >= 30 and current_time.tm_min <= 59):
@@ -149,12 +155,12 @@ def run_cron(ENV = "dev"):
           start_seconds = 60*31)
         
       # GoOA / CAS deposits once per day 21:45 UTC
-      #if(current_time.tm_hour == 21):
-      #  workflow_conditional_start(
-      #    ENV           = ENV,
-      #    starter_name  = "starter_PubRouterDeposit",
-      #    workflow_id   = "PubRouterDeposit_GoOA",
-      #    start_seconds = 60*31)
+      if(current_time.tm_hour == 21):
+        workflow_conditional_start(
+          ENV           = ENV,
+          starter_name  = "starter_PubRouterDeposit",
+          workflow_id   = "PubRouterDeposit_GoOA",
+          start_seconds = 60*31)
         
       workflow_conditional_start(
         ENV           = ENV,
