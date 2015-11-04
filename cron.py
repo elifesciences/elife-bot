@@ -239,6 +239,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       or starter_name == "cron_NewS3POA"
       or starter_name == "cron_NewS3FiguresPDF"
       or starter_name == "starter_PublicationEmail"
+      or starter_name == "starter_DepositCrossref"
       ):
       s.start(ENV = ENV)
       
