@@ -24,6 +24,7 @@ from boto.s3.connection import S3Connection
 
 import provider.simpleDB as dblib
 import provider.article as articlelib
+import provider.s3lib as s3lib
 
 """
 DepositCrossref activity
@@ -79,6 +80,10 @@ class activity_DepositCrossref(activity.activity):
         
         self.outbox_s3_key_names = None
             
+        # Track XML files selected for pubmed XML
+        self.article_published_file_names = []
+        self.article_not_published_file_names = [] 
+            
     def do_activity(self, data = None):
         """
         Activity, do the work
@@ -118,7 +123,9 @@ class activity_DepositCrossref(activity.activity):
             self.activity_status = False
 
         # Send email
-        self.add_email_to_queue()
+        # Only if there were files approved for publishing
+        if len(self.article_published_file_names) > 0:
+            self.add_email_to_queue()
 
         # Return the activity result, True or False
         result = True
@@ -144,7 +151,7 @@ class activity_DepositCrossref(activity.activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
         
-        s3_key_names = self.get_s3_key_names_from_bucket(
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(
             bucket          = bucket,
             prefix          = self.outbox_folder,
             file_extensions = file_extensions)
@@ -164,53 +171,6 @@ class activity_DepositCrossref(activity.activity):
             f = open(filename_plus_path, mode)
             s3_key.get_contents_to_file(f)
             f.close()
-        
-    def get_s3_key_names_from_bucket(self, bucket, prefix = None, delimiter = '/', headers = None, file_extensions = None):
-        """
-        Given a connected boto bucket object, and optional parameters,
-        from the prefix (folder name), get the s3 key names for
-        non-folder objects, optionally that match a particular
-        list of file extensions
-        """
-        s3_keys = []
-        s3_key_names = []
-        
-        # Get a list of S3 objects
-        bucketList = bucket.list(prefix = prefix, delimiter = delimiter, headers = headers)
-
-        for item in bucketList:
-          if(isinstance(item, boto.s3.key.Key)):
-            # Can loop through each prefix and search for objects
-            s3_keys.append(item)
-        
-        # Convert to key names instead of objects to make it testable later
-        for key in s3_keys:
-            s3_key_names.append(key.name)
-        
-        # Filter by file_extension
-        if file_extensions is not None:
-            s3_key_names = self.filter_list_by_file_extensions(s3_key_names, file_extensions)
-            
-        return s3_key_names
-    
-    def filter_list_by_file_extensions(self, s3_key_names, file_extensions):
-        """
-        Given a list of s3_key_names, and a list of file_extensions
-        filter out all but the allowed file extensions
-        Each file extension should start with a . dot
-        """
-        good_s3_key_names = []
-        for name in s3_key_names:
-            match = False
-            for ext in file_extensions:
-                # Match file extension as the end of the string and escape the dot
-                pattern = ".*\\" + ext + "$"
-                if(re.search(pattern, name) is not None):
-                    match = True
-            if match is True:
-                good_s3_key_names.append(name)
-        
-        return good_s3_key_names
         
     def parse_article_xml(self, article_xml_files):
         """
@@ -255,14 +215,60 @@ class activity_DepositCrossref(activity.activity):
         """
         article_xml_files = glob.glob(self.elife_poa_lib.settings.STAGING_TO_HW_DIR + "/*.xml")
         
-        articles = self.parse_article_xml(article_xml_files)
+        for xml_file in article_xml_files:
+            generate_status = True
+            
+            # Convert the single value to a list for processing
+            xml_files = [xml_file]
+            article_list = self.parse_article_xml(xml_files)
+            
+            if len(article_list) == 0:
+                self.article_not_published_file_names.append(xml_file)
+                continue
+            else:
+                article = article_list[0]
+            
+            if self.approve_to_generate(article) is not True:
+                generate_status = False
+            else:
+                try:
+                    # Will write the XML to the TMP_DIR
+                    self.elife_poa_lib.generate.build_crossref_xml_for_articles(article_list)
+                except:
+
+                    generate_status = False
+                
+            if generate_status is True:
+                # Add filename to the list of published files
+                self.article_published_file_names.append(xml_file)
+            else:
+                # Add the file to the list of not published articles, may be used later
+                self.article_not_published_file_names.append(xml_file)
         
-        try:
-            # Will write the XML to the TMP_DIR
-            self.elife_poa_lib.generate.build_crossref_xml_for_articles(articles)
-            return True
-        except:
-            return False
+        # Any files generated is a sucess, even if one failed
+        return True
+
+    def approve_to_generate(self, article):
+        """
+        Given an article object, decide if crossref deposit should be
+        generated from it
+        """
+        approved = None
+        # Embargo if the pub date is in the future
+        if article.get_date('pub'):
+            pub_date = article.get_date('pub').date
+            now_date = time.gmtime()
+            if pub_date < now_date:
+                approved = True
+            else:
+                # Pub date is later than now, do not approve
+                approved = False
+        else:
+            # No pub date, then we approve it
+            approved = True
+            
+        return approved
+    
 
     def approve_for_publishing(self):
         """
@@ -320,47 +326,12 @@ class activity_DepositCrossref(activity.activity):
             if r.status_code != requests.codes.ok:
                 status = False
             #print r.text
-            self.http_request_status_code.append(r.status_code)
-            self.http_request_status_text.append(r.text)
+            self.http_request_status_text.append("XML file: " + xml_file)
+            self.http_request_status_text.append("HTTP status: " + str(r.status_code))
+            self.http_request_status_text.append("HTTP response: " + r.text)
             
         return status
 
-    def move_files_from_s3_folder_to_folder(self, from_folder, to_folder):
-        """
-        Connect to the S3 bucket, and from the from_folder,
-        move all the objects to the to_folder
-        """
-        
-        bucket_name = self.publish_bucket
-        
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-        
-        s3_key_names = self.get_s3_key_names_from_bucket(
-            bucket          = bucket,
-            prefix          = from_folder)
-        
-        for name in s3_key_names:
-            # Download objects from S3 and save to disk
-
-            # Do not delete the from_folder itself, if it is in the list
-            if name != from_folder:
-                filename = name.split("/")[-1]
-                new_s3_key_name = to_folder + filename
-                
-                # First copy
-                new_s3_key = None
-                try:
-                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
-                except:
-                    pass
-                
-                # Then delete the old key if successful
-                if(isinstance(new_s3_key, boto.s3.key.Key)):
-                    old_s3_key = bucket.get_key(name)
-                    old_s3_key.delete()
-    
     def get_outbox_s3_key_names(self, force = None):
         """
         Separately get a list of S3 key names form the outbox
@@ -377,7 +348,7 @@ class activity_DepositCrossref(activity.activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
         
-        s3_key_names = self.get_s3_key_names_from_bucket(
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(
             bucket          = bucket,
             prefix          = self.outbox_folder)
         
@@ -411,7 +382,41 @@ class activity_DepositCrossref(activity.activity):
         outbox_s3_key_names = self.get_outbox_s3_key_names()
         
         to_folder = self.get_to_folder_name()
-        self.move_files_from_s3_folder_to_folder(self.outbox_folder, to_folder)
+
+        # Move only the published files from the S3 outbox to the published folder
+        bucket_name = self.publish_bucket
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        # Concatenate the expected S3 outbox file names
+        s3_key_names = []
+        for name in self.article_published_file_names:
+            filename = name.split(os.sep)[-1]
+            s3_key_name = self.outbox_folder + filename
+            s3_key_names.append(s3_key_name)
+        
+        for name in s3_key_names:
+            # Download objects from S3 and save to disk
+
+            # Do not delete the from_folder itself, if it is in the list
+            if name != self.outbox_folder:
+                filename = name.split("/")[-1]
+                new_s3_key_name = to_folder + filename
+                
+                # First copy
+                new_s3_key = None
+                try:
+                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
+                except:
+                    pass
+                
+                # Then delete the old key if successful
+                if(isinstance(new_s3_key, boto.s3.key.Key)):
+                    old_s3_key = bucket.get_key(name)
+                    old_s3_key.delete()
+                
         
     def upload_crossref_xml_to_s3(self):
         """
@@ -542,13 +547,27 @@ class activity_DepositCrossref(activity.activity):
         else:
             body += "No files in outbox." + "\n"
             
+        # Report on published files
+        if len(self.article_published_file_names) > 0:
+            body += "\n"
+            body += "Published files generated crossref XML: " + "\n"
+            for name in self.article_published_file_names:
+                body += name.split(os.sep)[-1] + "\n"
+
+        # Report on not published files
+        if len(self.article_not_published_file_names) > 0:
+            body += "\n"
+            body += "Files not approved or failed crossref XML: " + "\n"
+            for name in self.article_not_published_file_names:
+                body += name.split(os.sep)[-1] + "\n"
+            
         body += "\n"
         body += "-------------------------------\n"
         body += "HTTP deposit details: " + "\n"
         for code in self.http_request_status_code:
             body += "Status code: " + str(code) + "\n"
         for text in self.http_request_status_text:
-            body += "Response text: " + str(text) + "\n"
+            body += str(text) + "\n"
             
         body += "\n"
         body += "-------------------------------\n"
