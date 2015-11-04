@@ -46,6 +46,12 @@ def run_cron(ENV = "dev"):
       workflow_id   = "S3Monitor",
       start_seconds = 60*31)
     
+    workflow_conditional_start(
+      ENV           = ENV,
+      starter_name  = "starter_DepositCrossref",
+      workflow_id   = "DepositCrossref",
+      start_seconds = 60*31)
+    
     pass
   
   elif(current_time.tm_min >= 30 and current_time.tm_min <= 59):
