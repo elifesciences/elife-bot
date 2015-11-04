@@ -54,7 +54,7 @@ def run_cron(ENV = "dev"):
     
     # POA Publish once per day 12:30 UTC
     #  Set to 11:30 UTC during British Summer Time for 12:30 local UK time
-    if(current_time.tm_hour == 11):
+    if(current_time.tm_hour == 12):
       workflow_conditional_start(
         ENV           = ENV,
         starter_name  = "starter_PublishPOA",
@@ -109,7 +109,7 @@ def run_cron(ENV = "dev"):
       
       # POA Package once per day 11:45 UTC
       # Set to 10:45 UTC during British Summer Time for 11:45 local UK time
-      if(current_time.tm_hour == 10):
+      if(current_time.tm_hour == 11):
         workflow_conditional_start(
           ENV           = ENV,
           starter_name  = "cron_NewS3POA",
@@ -118,7 +118,7 @@ def run_cron(ENV = "dev"):
         
       # Author emails once per day 17:45 UTC
       # Set to 16:45 UTC during British Summer Time for 17:45 local UK time
-      if(current_time.tm_hour == 16):
+      if(current_time.tm_hour == 17):
         workflow_conditional_start(
           ENV           = ENV,
           starter_name  = "starter_PublicationEmail",
@@ -140,6 +140,14 @@ def run_cron(ENV = "dev"):
           starter_name  = "starter_PubRouterDeposit",
           workflow_id   = "PubRouterDeposit_Cengage",
           start_seconds = 60*31)
+        
+      # GoOA / CAS deposits once per day 21:45 UTC
+      #if(current_time.tm_hour == 21):
+      #  workflow_conditional_start(
+      #    ENV           = ENV,
+      #    starter_name  = "starter_PubRouterDeposit",
+      #    workflow_id   = "PubRouterDeposit_GoOA",
+      #    start_seconds = 60*31)
         
       workflow_conditional_start(
         ENV           = ENV,

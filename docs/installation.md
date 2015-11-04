@@ -15,6 +15,11 @@ System dependencies can be installed with `apt-get` using:
     
 These are necessary for compiling `lxml`.
 
+There is also a dependency on ImageMagic (With TIFF support). On a mac this can be installed with:
+
+    $ brew install libtiff
+    $ brew reinstall imagemagick –with-libtiff
+
 Python dependencies should be installed with `pip` using:
     
     $ pip install -r requirements.txt

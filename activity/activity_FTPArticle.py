@@ -82,14 +82,25 @@ class activity_FTPArticle(activity.activity):
         self.set_ftp_settings(elife_id, workflow)
         
         # FTP to endpoint
-        if workflow == 'HEFCE':
-            file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-            self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR)
-        if workflow == 'Cengage':
-            file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-            self.ftp_to_endpoint(zipfiles)
+        try:
+            if workflow == 'HEFCE':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR, passive=True)
+            if workflow == 'Cengage':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, passive=True)
+            if workflow == 'GoOA':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, passive=True)
+        except:
+            # Something went wrong, fail
+            if(self.logger):
+                self.logger.exception('exception in FTPArticle, data: %s' % json.dumps(data, sort_keys=True, indent=4))
+            result = False
+            return result
          
         # Return the activity result, True or False
         result = True
@@ -115,10 +126,16 @@ class activity_FTPArticle(activity.activity):
             self.FTP_USERNAME = self.settings.CENGAGE_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.CENGAGE_FTP_PASSWORD
             self.FTP_CWD =  self.settings.CENGAGE_FTP_CWD
+            
+        if workflow == 'GoOA':
+            self.FTP_URI = self.settings.GOOA_FTP_URI
+            self.FTP_USERNAME = self.settings.GOOA_FTP_USERNAME
+            self.FTP_PASSWORD = self.settings.GOOA_FTP_PASSWORD
+            self.FTP_CWD =  self.settings.GOOA_FTP_CWD
         
     def download_files_from_s3(self, doi_id, workflow):
         
-        if workflow == 'HEFCE':
+        if workflow == 'HEFCE' or workflow == 'GoOA':
             # Download files from the articles bucket
             self.download_data_file_from_s3(doi_id, 'xml', workflow)
             self.download_data_file_from_s3(doi_id, 'pdf', workflow)
@@ -196,9 +213,14 @@ class activity_FTPArticle(activity.activity):
         
         return cwd_success
     
-    def ftp_to_endpoint(self, uploadfiles, sub_dir_list = None):
+    def ftp_to_endpoint(self, uploadfiles, sub_dir_list = None, passive = True):
         for uploadfile in uploadfiles:
-            ftp = FTP(self.FTP_URI, self.FTP_USERNAME, self.FTP_PASSWORD)
+            ftp = FTP()
+            if passive is False:
+                ftp.set_pasv(False)
+            ftp.connect(self.FTP_URI)
+            ftp.login(self.FTP_USERNAME, self.FTP_PASSWORD)
+
             self.ftp_cwd_mkd(ftp, "/")
             if self.FTP_CWD != "":
                 self.ftp_cwd_mkd(ftp, self.FTP_CWD)

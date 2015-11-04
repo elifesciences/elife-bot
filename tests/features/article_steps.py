@@ -89,15 +89,19 @@ def i_have_the_article_tweet_url(step, tweet_url):
   assert world.article.tweet_url == tweet_url, \
   "Got tweet_url %s" % world.article.tweet_url 
 
-@step('I have the article pub_date_timestamp (\d+)')
+@step('I have the article pub_date_timestamp (\S+)')
 def i_have_the_article_pub_date_timestamp(step, pub_date_timestamp):
   # Possible there is no pub date
   if hasattr(world.article, "pub_date_timestamp"):
-    assert int(world.article.pub_date_timestamp) == int(pub_date_timestamp), \
-    "Got pub_date_timestamp %s" % world.article.pub_date_timestamp
+    if pub_date_timestamp == "None":
+      assert world.article.pub_date_timestamp is None, \
+        "Got pub_date_timestamp %s" % world.article.pub_date_timestamp
+    else:
+      assert int(world.article.pub_date_timestamp) == int(pub_date_timestamp), \
+        "Got pub_date_timestamp %s" % world.article.pub_date_timestamp
   else:
-    # Using 0 as the value to compare when there is no pub_date_timestamp
-    assert 0 == int(pub_date_timestamp), \
+    # Using None as the value to compare when there is no pub_date_timestamp
+    assert pub_date_timestamp is None, \
     "Got pub_date_timestamp %s" % world.article.pub_date_timestamp
 
 @step('I have the article article_type (\S+)')
