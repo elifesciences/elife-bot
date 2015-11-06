@@ -20,7 +20,7 @@ Amazon SWF PublishFullArticleZip starter
 
 class starter_PublishFullArticleZip():
 
-    def start(self, ENV = "dev", doi_id = None,  document = None):
+    def start(self, ENV = "dev", doi_id = None,  document = None, last_updated_since = None):
         # Specify run environment settings
         settings = settingsLib.get_settings(ENV)
         
@@ -33,12 +33,17 @@ class starter_PublishFullArticleZip():
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
     
-        docs = []
-        doc = {}
-        doc['document'] = document
-        doc['elife_id'] = doi_id
-        docs.append(doc)
-
+        if document is not None and doi_id is not None:
+            
+            docs = []
+            doc = {}
+            doc['document'] = document
+            doc['elife_id'] = doi_id
+            docs.append(doc)
+        elif(last_updated_since is not None):
+            # Publish only articles since the last_modified date, use SimpleDB as the source
+            docs = self.get_docs_from_SimpleDB(ENV, last_updated_since = last_updated_since)
+        
         if(docs):
             for doc in docs:
                 
@@ -66,9 +71,48 @@ class starter_PublishFullArticleZip():
                     print message
                     logger.info(message)
 
+    def get_docs_from_SimpleDB(self, ENV = "dev", last_updated_since = None):
+        """
+        Get the array of docs from the SimpleDB provider
+        """
+        docs = []
+    
+        # Specify run environment settings
+        settings = settingsLib.get_settings(ENV)
+        
+        db = dblib.SimpleDB(settings)
+        db.connect()
+        
+        if(last_updated_since is not None):
+            file_list = db.elife_get_production_final_delivery_S3_file_items(last_updated_since = last_updated_since)
+        else:
+            # Get all - not implemented for now to avoid mistakes running too many workflows
+            pass
+            
+        for x in file_list:
+            tmp = {}
+            name = x['name']
+            tmp['document'] = name
+            
+            # Extract the DOI from the file name, example file name
+            #   elife-00353-vor-v1.zip
+            doi_id = None
+            try:
+                part = name.split('elife-')[1]
+                doi_id = part.split('-')[0]
+            except:
+                doi_id = None
+                
+            if doi_id:
+                tmp['elife-id'] = doi_id
+                docs.append(tmp)
+        
+        return docs
+
 if __name__ == "__main__":
 
     doi_id = None
+    document = None
     last_updated_since = None
     all = False
     
@@ -77,7 +121,8 @@ if __name__ == "__main__":
     parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
     parser.add_option("-d", "--doi-id", default=None, action="store", type="string", dest="doi_id", help="specify the DOI id of a single article")
     parser.add_option("-f", "--file", default=None, action="store", type="string", dest="document", help="specify the S3 object name of the zip file")
-
+    parser.add_option("-u", "--last-updated-since", default=None, action="store", type="string", dest="last_updated_since", help="specify the datetime for last_updated_since")
+    
     (options, args) = parser.parse_args()
     if options.env: 
         ENV = options.env
@@ -85,7 +130,9 @@ if __name__ == "__main__":
         doi_id = options.doi_id
     if options.document:
         document = options.document
+    if options.last_updated_since:
+        last_updated_since = options.last_updated_since
 
     o = starter_PublishFullArticleZip()
 
-    o.start(ENV, doi_id = doi_id, document = document)
+    o.start(ENV, doi_id = doi_id, document = document, last_updated_since = last_updated_since)
