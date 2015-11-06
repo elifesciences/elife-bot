@@ -44,7 +44,10 @@ class activity_UnzipFullArticle(activity.activity):
         
         self.input_bucket = settings.publishing_buckets_prefix + settings.production_bucket
         self.output_bucket = self.settings.cdn_bucket
-  
+        
+        # For copying to crossref outbox from here for now
+        self.crossref_outbox_folder = "crossref/outbox/"
+
     def do_activity(self, data = None):
         """
         Do the work
@@ -79,8 +82,16 @@ class activity_UnzipFullArticle(activity.activity):
           self.logger.info('UnzipFullArticle: %s' % self.elife_id)
     
         if self.xml_file_name():
-            print self.xml_file_name()
-        self.start_publish_article_workflow(self.elife_id, self.xml_file_name())
+            #print self.xml_file_name()
+            
+            # Copy to the crossref outbox here for now, until it is safe to add to ArticleToOutbox activity
+            crossref_outbox_file_list = []
+            crossref_outbox_file_list.append(self.OUTPUT_DIR + os.sep + self.xml_file_name())
+            self.upload_files_to_poa_packaging_bucket(prefix = self.crossref_outbox_folder,
+                                                      file_list = crossref_outbox_file_list)
+            
+            # Continue with a standard publish article workflow
+            self.start_publish_article_workflow(self.elife_id, self.xml_file_name())
     
         return True
     
@@ -105,6 +116,9 @@ class activity_UnzipFullArticle(activity.activity):
     def rename_file(self, file_name):
         if 'figures' in file_name:
             # Remove hyphen from figures PDF so it is compatible wtih our figures PDF API
+            file_name = file_name.replace('elife-', 'elife')
+        if self.file_extension(file_name) == 'xml':
+            # Remove hyphen from the article XML file for better lens compatibility
             file_name = file_name.replace('elife-', 'elife')
         return file_name
     
@@ -180,6 +194,19 @@ class activity_UnzipFullArticle(activity.activity):
             s3_key.set_contents_from_filename(file_name, replace=True)
             if content_type:
                 s3_key.set_metadata('Content-Type', content_type)
+
+    def upload_files_to_poa_packaging_bucket(self, prefix, file_list):
+        """
+        Used for uploading to the crossref outbox, for now
+        """
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(self.settings.poa_packaging_bucket)
+        
+        for file_name in file_list:
+            s3_key_name = prefix + self.file_name_from_name(file_name)
+            s3_key = boto.s3.key.Key(bucket)
+            s3_key.key = s3_key_name
+            s3_key.set_contents_from_filename(file_name, replace=True)
 
     def download_files_from_s3(self, document):
         
