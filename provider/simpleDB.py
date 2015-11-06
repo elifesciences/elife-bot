@@ -171,7 +171,7 @@ class SimpleDB(object):
 		
 		domain_name_env = self.get_domain_name(domain_name)
 		bucket_name = self.settings.poa_bucket
-		query = self.elife_get_POA_delivery_S3_query(date_format, domain_name_env, bucket_name, last_updated_since)
+		query = self.elife_get_generic_delivery_S3_query(date_format, domain_name_env, bucket_name, last_updated_since)
 
 		dom = self.get_domain(domain_name)
 
@@ -181,10 +181,10 @@ class SimpleDB(object):
 		
 		return item_list
 
-	def elife_get_POA_delivery_S3_query(self, date_format, domain_name, bucket_name = None, last_updated_since = None):
+	def elife_get_generic_delivery_S3_query(self, date_format, domain_name, bucket_name = None, last_updated_since = None):
 		"""
 		Build a query for SimpleDB to get S3 poa_bucket bucket data
-		from the S3FileLog domain.
+		from the S3FileLog domain, for example
 		"""
 		
 		query = ""

@@ -158,12 +158,15 @@ Feature: Use SimpleDB as a data provider
     | dev  | False  | test       | test@example.com  | test@example.com  | 0
 
   Scenario: Build SimpleDB queries for elife POA bucket
-    Given I have imported the SimpleDB provider module
+    Given I have imported a settings module
+    And I have the settings environment dev
+    And I get the settings
+    And I have imported the SimpleDB provider module
     And I have the domain name S3FileLog_dev
     And I have the date format %Y-%m-%dT%H:%M:%S.000Z
     And I have the bucket name elife-ejp-poa-delivery-dev
     And I have the last updated since <last_updated_since>
-    When I get the POA bucket query from the SimpleDB provider
+    When I get the generic bucket query from the SimpleDB provider
     Then I have the SimpleDB query <query>
   
   Examples:
