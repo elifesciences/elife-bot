@@ -47,7 +47,8 @@ class activity_ExpandArticle(activity.activity):
         dest_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
         session = Session(self.settings)
 
-        article_id_match = re.match(ur'elife-(.*?)-', info.file_name)
+        filename_last_element = info.file_name[info.file_name.rfind('/')+1:]
+        article_id_match = re.match(ur'elife-(.*?)-', filename_last_element)
         article_id = article_id_match.group(1)
         session.store_value(self.get_workflowId(), 'article_id', article_id)
 
@@ -57,7 +58,7 @@ class activity_ExpandArticle(activity.activity):
         # extract any doi, version and updated date information from the filename
         version = None
         # zip name contains version information for previously archived zip files
-        m = re.search(ur'-v([0-9]*?)[\.|-]', info.file_name)
+        m = re.search(ur'-v([0-9]*?)[\.|-]', filename_last_element)
         if m is not None:
             version = m.group(1)
         if version is None:
@@ -65,7 +66,7 @@ class activity_ExpandArticle(activity.activity):
         if version == '-1':
             return False  # version could not be determined, exit workflow. Can't emit event as no version.
 
-        sm = re.search(ur'.*?-.*?-(.*?)-', info.file_name)
+        sm = re.search(ur'.*?-.*?-(.*?)-', filename_last_element)
         if sm is not None:
             status = sm.group(1)
         if status is None:
@@ -89,7 +90,7 @@ class activity_ExpandArticle(activity.activity):
             tmp = self.get_tmp_dir()
             key = Key(source_bucket)
             key.key = info.file_name
-            local_zip_file = self.open_file_from_tmp_dir(info.file_name, mode='wb')
+            local_zip_file = self.open_file_from_tmp_dir(filename_last_element, mode='wb')
             key.get_contents_to_file(local_zip_file)
             local_zip_file.close()
 
@@ -99,7 +100,7 @@ class activity_ExpandArticle(activity.activity):
             # extract zip contents
             content_folder = path.join(tmp, folder_name)
             makedirs(content_folder)
-            with ZipFile(path.join(tmp, info.file_name)) as zf:
+            with ZipFile(path.join(tmp, filename_last_element)) as zf:
                 zf.extractall(content_folder)
 
             # TODO : rename files (versions!)
