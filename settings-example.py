@@ -105,6 +105,10 @@ class exp():
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
 
+    # PMC email settings
+    ses_pmc_sender_email = "sender@example.com"
+    ses_pmc_recipient_email = "admin@example.com"
+
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
@@ -201,6 +205,10 @@ class dev():
     # POA email settings
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
+
+    # PMC email settings
+    ses_pmc_sender_email = "sender@example.com"
+    ses_pmc_recipient_email = "admin@example.com"
 
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
@@ -303,6 +311,10 @@ class live():
     # POA email settings
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
+
+    # PMC email settings
+    ses_pmc_sender_email = "sender@example.com"
+    ses_pmc_recipient_email = "admin@example.com"
 
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp'

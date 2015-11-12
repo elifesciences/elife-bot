@@ -23,6 +23,7 @@ import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.s3lib as s3lib
+import provider.simpleDB as dblib
 
 from elifetools import parseJATS as parser
 from elifetools import xmlio
@@ -55,6 +56,9 @@ class activity_PMCDeposit(activity.activity):
         self.EPS_DIR = self.get_tmp_dir() + os.sep + "eps_dir"
         self.TIF_DIR = self.get_tmp_dir() + os.sep + "tif_dir" 
         self.OUTPUT_DIR = self.get_tmp_dir() + os.sep + "output_dir"
+       
+        # Data provider where email body is saved
+        self.db = dblib.SimpleDB(settings)
        
         # Bucket settings
         self.input_bucket = None
@@ -144,9 +148,11 @@ class activity_PMCDeposit(activity.activity):
         if verified and zip_file_name:
             self.ftp_to_endpoint(self.file_list(self.ZIP_DIR), self.FTP_SUBDIR, passive=True)
 
-        
-            # TODO!!!!
             self.upload_article_zip_to_s3()
+            
+            # Send email
+            file_size = self.file_size(os.path.join(self.ZIP_DIR, zip_file_name))
+            self.add_email_to_queue(self.journal, volume, fid, revision, zip_file_name, file_size)
 
         # Full Clean up
         #self.clean_directories(full = True)
@@ -306,6 +312,9 @@ class activity_PMCDeposit(activity.activity):
             else:
                 return None
         return None
+    
+    def file_size(self, file_name):
+        return os.path.getsize(file_name)
     
     def file_type(self, file_name):
         """
@@ -582,7 +591,84 @@ class activity_PMCDeposit(activity.activity):
     def article_soup(self, xml_filename):
         return parser.parse_document(xml_filename)
 
+    def add_email_to_queue(self, journal, volume, fid, revision, file_name, file_size):
+        """
+        After do_activity is finished, send emails to recipients
+        on the status
+        """
+        # Connect to DB
+        db_conn = self.db.connect()
+        
+        current_time = time.gmtime()
+        
+        body = self.get_email_body(current_time, journal, volume, fid, revision,
+                                   file_name, file_size)
+        
+        subject = self.get_email_subject(current_time, journal, volume, fid, revision,
+                                   file_name, file_size)
+        
+        sender_email = self.settings.ses_pmc_sender_email
+        
+        recipient_email_list = []
+        # Handle multiple recipients, if specified
+        if(type(self.settings.ses_poa_recipient_email) == list):
+          for email in self.settings.ses_pmc_recipient_email:
+            recipient_email_list.append(email)
+        else:
+          recipient_email_list.append(self.settings.ses_pmc_recipient_email)
+    
+        for email in recipient_email_list:
+          # Add the email to the email queue
+          self.db.elife_add_email_to_email_queue(
+            recipient_email = email,
+            sender_email = sender_email,
+            email_type = "PMCDeposit",
+            format = "text",
+            subject = subject,
+            body = body)
+          pass
+        
+        return True
 
+    def get_email_subject(self, current_time, journal, volume, fid, revision,
+                                   file_name, file_size):
+        date_format = '%Y-%m-%d %H:%M'
+        datetime_string = time.strftime(date_format, current_time)
+        
+        subject = ( journal + " deposit " + datetime_string +
+                    ", article " + str(fid).zfill(5) )
+        
+        return subject
+        
+    def get_email_body(self, current_time, journal, volume, fid, revision,
+                                   file_name, file_size):
+        
+        body = ""
+        
+        date_format = '%Y-%m-%dT%H:%M'
+        datetime_string = time.strftime(date_format, current_time)
+        
+        # Bulk of body
+        body += journal + " deposit: " + datetime_string + "\n"
+        body += "\n"
+        body += "Journal title: " + journal + "\n"
+        body += "Volume: " + str(volume).zfill(2) + "\n"
+        body += "Article: " + str(fid).zfill(2) + "\n"
+        
+        if revision:
+            revision_text = str(revision)
+        else:
+            revision_text = "n/a"
+        body += "Revision: " + revision_text + "\n"
+        body += "\n"
+        body += "Zip filename: " + file_name + "\n"
+        body += "Fize size: " + str(file_size) + "\n" 
+        
+        body += "\n"
+        
+        body += "\n\nSincerely\n\neLife bot"
+        
+        return body
 
 
 
