@@ -60,6 +60,10 @@ class activity_PMCDeposit(activity.activity):
         self.input_bucket = None
         self.input_bucket_default = "elife-articles-renamed"
 
+        self.publish_bucket = settings.poa_packaging_bucket
+        self.published_folder = "pmc/published"
+        self.published_zip_folder = "pmc/zip"
+
         # journal
         self.journal = 'elife'
         
@@ -258,8 +262,19 @@ class activity_PMCDeposit(activity.activity):
 
     def upload_article_zip_to_s3(self):
         """
-        TODO!!!
+        Upload PMC zip file to S3
         """
+        bucket_name = self.publish_bucket
+
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        for file_name in self.file_list(self.ZIP_DIR):
+            s3_key_name = self.published_zip_folder + '/' + self.file_name_from_name(file_name)
+            s3_key = boto.s3.key.Key(bucket)
+            s3_key.key = s3_key_name
+            s3_key.set_contents_from_filename(file_name, replace=True)
 
     def list_dir(self, dir_name):
         dir_list = os.listdir(dir_name)
