@@ -129,7 +129,8 @@ class activity_PMCDeposit(activity.activity):
         
         # Get the new zip file name
         # TODO - may need to take into account the r1 r2 revision numbers when replacing an article
-        zip_file_name = self.new_zip_filename(self.journal, volume, fid, revision = None)
+        revision = self.zip_revision_number(fid)
+        zip_file_name = self.new_zip_filename(self.journal, volume, fid, revision)
         self.create_new_zip(zip_file_name)
         
         # Set FTP settings
@@ -456,13 +457,22 @@ class activity_PMCDeposit(activity.activity):
         f.write(reparsed_string)
         f.close()
     
-
+    def zip_revision_number(self, fid):
+        """
+        Look at previously supplied files and determine the
+        next revision number
+        """
+        # TODO!!!
+        revision = None
+        return revision
 
     def new_zip_filename(self, journal, volume, fid, revision = None):
 
         filename = journal
         filename = filename + '-' + str(volume).zfill(2)
         filename = filename + '-' + str(fid).zfill(5)
+        if revision:
+            filename = filename + '.r' + str(revision)
         filename += '.zip'
         return filename
     
