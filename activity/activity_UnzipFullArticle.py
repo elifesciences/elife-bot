@@ -131,7 +131,7 @@ class activity_UnzipFullArticle(activity.activity):
         return file_name
     
     def cdn_base_prefix(self, elife_id):
-        return 'elife-articles/' + str(self.elife_id).zfill(5) + '/'
+        return 'elife-articles/' + str(elife_id).zfill(5) + '/'
     
     def xml_file_name(self):
         """
