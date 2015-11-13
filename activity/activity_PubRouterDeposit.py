@@ -342,6 +342,17 @@ class activity_PubRouterDeposit(activity.activity):
             self.logger.info(log_info)
           remove_article_doi.append(article.doi)
       
+      # Temporarily block if there are no zip files in the elife-article bucket for this article
+      db_conn = self.db.connect()
+      for article in articles:
+        s3_items = self.db.elife_get_article_S3_file_items(doi_id = article.doi_id)
+        if not s3_items or len(s3_items) == 0:
+            if(self.logger):
+              log_info = "Removing because there are no zip files to send " + article.doi
+              self.admin_email_content += "\n" + log_info
+              self.logger.info(log_info)
+            remove_article_doi.append(article.doi)
+      
       # Can remove the articles now without affecting the loops using del
       for article in articles:
         if article.doi not in remove_article_doi:
