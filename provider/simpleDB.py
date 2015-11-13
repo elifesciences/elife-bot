@@ -162,6 +162,22 @@ class SimpleDB(object):
 		From the SimpleDB domain for the S3FileLog, return a list of matching item to the attributes
 			last_updated_since:       only return items updated since the date provided
 		"""
+		bucket_name = self.settings.poa_bucket
+		return self.elife_get_generic_delivery_S3_file_items(bucket_name, last_updated_since)
+	
+	def elife_get_production_final_delivery_S3_file_items(self, last_updated_since = None):
+		"""
+		From the SimpleDB domain for the S3FileLog, return a list of matching item to the attributes
+			last_updated_since:       only return items updated since the date provided
+		"""
+		bucket_name = self.settings.publishing_buckets_prefix + self.settings.production_bucket
+		return self.elife_get_generic_delivery_S3_file_items(bucket_name, last_updated_since)
+	
+	def elife_get_generic_delivery_S3_file_items(self, bucket_name, last_updated_since = None):
+		"""
+		From the SimpleDB domain for the S3FileLog, return a list of matching item to the attributes
+			last_updated_since:       only return items updated since the date provided
+		"""
 		
 		date_format = "%Y-%m-%dT%H:%M:%S.000Z"
 		
@@ -170,8 +186,7 @@ class SimpleDB(object):
 		item_list = []
 		
 		domain_name_env = self.get_domain_name(domain_name)
-		bucket_name = self.settings.poa_bucket
-		query = self.elife_get_POA_delivery_S3_query(date_format, domain_name_env, bucket_name, last_updated_since)
+		query = self.elife_get_generic_delivery_S3_query(date_format, domain_name_env, bucket_name, last_updated_since)
 
 		dom = self.get_domain(domain_name)
 
@@ -181,10 +196,10 @@ class SimpleDB(object):
 		
 		return item_list
 
-	def elife_get_POA_delivery_S3_query(self, date_format, domain_name, bucket_name = None, last_updated_since = None):
+	def elife_get_generic_delivery_S3_query(self, date_format, domain_name, bucket_name = None, last_updated_since = None):
 		"""
 		Build a query for SimpleDB to get S3 poa_bucket bucket data
-		from the S3FileLog domain.
+		from the S3FileLog domain, for example
 		"""
 		
 		query = ""

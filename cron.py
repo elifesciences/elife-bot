@@ -74,6 +74,13 @@ def run_cron(ENV = "dev"):
       workflow_id   = "S3Monitor_POA",
       start_seconds = 60*31)
     
+    # Full article zip bucket polling
+    workflow_conditional_start(
+      ENV           = ENV,
+      starter_name  = "starter_S3Monitor",
+      workflow_id   = "S3Monitor_FullArticle",
+      start_seconds = 60*31)
+    
     workflow_conditional_start(
       ENV           = ENV,
       starter_name  = "cron_NewS3XML",
@@ -161,6 +168,12 @@ def run_cron(ENV = "dev"):
         workflow_id   = "PubmedArticleDeposit",
         start_seconds = 60*31)
       
+      #workflow_conditional_start(
+      #  ENV           = ENV,
+      #  starter_name  = "cron_NewS3FullArticle",
+      #  workflow_id   = "cron_NewS3FullArticle",
+      #  start_seconds = 60*31)
+      
       workflow_conditional_start(
         ENV           = ENV,
         starter_name  = "starter_AdminEmail",
@@ -204,6 +217,8 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
         s.start(ENV = ENV, workflow = "S3Monitor")
       if workflow_id == "S3Monitor_POA":
         s.start(ENV = ENV, workflow = "S3Monitor_POA")
+      if workflow_id == "S3Monitor_FullArticle":
+        s.start(ENV = ENV, workflow = "S3Monitor_FullArticle")
         
     elif(starter_name == "starter_AdminEmail"):
       s.start(ENV = ENV, workflow = "AdminEmail")
@@ -240,6 +255,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       or starter_name == "cron_NewS3FiguresPDF"
       or starter_name == "starter_PublicationEmail"
       or starter_name == "starter_DepositCrossref"
+      or starter_name == "cron_NewS3FullArticle"
       ):
       s.start(ENV = ENV)
       

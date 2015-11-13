@@ -158,12 +158,15 @@ Feature: Use SimpleDB as a data provider
     | dev  | False  | test       | test@example.com  | test@example.com  | 0
 
   Scenario: Build SimpleDB queries for elife POA bucket
-    Given I have imported the SimpleDB provider module
+    Given I have imported a settings module
+    And I have the settings environment dev
+    And I get the settings
+    And I have imported the SimpleDB provider module
     And I have the domain name S3FileLog_dev
     And I have the date format %Y-%m-%dT%H:%M:%S.000Z
     And I have the bucket name elife-ejp-poa-delivery-dev
     And I have the last updated since <last_updated_since>
-    When I get the POA bucket query from the SimpleDB provider
+    When I get the generic bucket query from the SimpleDB provider
     Then I have the SimpleDB query <query>
   
   Examples:
@@ -171,4 +174,20 @@ Feature: Use SimpleDB as a data provider
     | None                     | select * from S3FileLog_dev where bucket_name = 'elife-ejp-poa-delivery-dev' and last_modified_timestamp is not null order by last_modified_timestamp desc
     | 2014-04-20T00:00:00.000Z | select * from S3FileLog_dev where bucket_name = 'elife-ejp-poa-delivery-dev' and last_modified_timestamp > '1397952000' order by last_modified_timestamp desc
 
+  Scenario: Build SimpleDB queries for elife production final bucket
+    Given I have imported a settings module
+    And I have the settings environment dev
+    And I get the settings
+    And I have imported the SimpleDB provider module
+    And I have the domain name S3FileLog
+    And I have the date format %Y-%m-%dT%H:%M:%S.000Z
+    And I have the bucket name elife-production-final
+    And I have the last updated since <last_updated_since>
+    When I get the generic bucket query from the SimpleDB provider
+    Then I have the SimpleDB query <query>
+  
+  Examples:
+    | last_updated_since       | query
+    | None                     | select * from S3FileLog where bucket_name = 'elife-production-final' and last_modified_timestamp is not null order by last_modified_timestamp desc
+    | 2014-04-20T00:00:00.000Z | select * from S3FileLog where bucket_name = 'elife-production-final' and last_modified_timestamp > '1397952000' order by last_modified_timestamp desc
   

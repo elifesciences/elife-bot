@@ -316,7 +316,7 @@ class Templates(object):
     else:
       return None
     
-  def get_lens_article_html(self, from_dir, article):
+  def get_lens_article_html(self, from_dir, article, cdn_bucket, article_xml_filename):
     """
     Given data objects, load the jinja environment,
     get the template, render it and return the content
@@ -331,7 +331,9 @@ class Templates(object):
   
       jinja_env = self.get_jinja_env()
       tmpl = self.get_jinja_template(jinja_env, "lens_article.html")
-      content = tmpl.render(article = article)
+      content = tmpl.render(article = article,
+                            cdn_bucket = cdn_bucket,
+                            article_xml_filename = article_xml_filename)
       return content
     else:
       return None

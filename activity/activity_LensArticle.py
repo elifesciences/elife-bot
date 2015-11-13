@@ -16,6 +16,8 @@ from boto.s3.connection import S3Connection
 import provider.templates as templatelib
 import provider.article as articlelib
 
+import provider.filesystem as fslib
+
 """
 LensArticle activity
 """
@@ -32,6 +34,9 @@ class activity_LensArticle(activity.activity):
 		self.default_task_schedule_to_start_timeout = 30
 		self.default_task_start_to_close_timeout= 60*5
 		self.description = "Create a lens article index.html page for the particular article."
+		
+		# Create the filesystem provider
+		self.fs = fslib.Filesystem(self.get_tmp_dir())
 		
 		# Templates provider
 		self.templates = templatelib.Templates(settings, self.get_tmp_dir())
@@ -52,13 +57,23 @@ class activity_LensArticle(activity.activity):
 		elife_id = data["data"]["elife_id"]
 		
 		article_xml_filename = self.article.download_article_xml_from_s3(doi_id = elife_id)
+		
+		# Adaptation for new XML file format if the document supplied is .xml
+		if "document" in data["data"] and data["data"]["document"].split('.')[-1] == 'xml':
+			document = data["data"]["document"]
+			self.fs.write_document_to_tmp_dir(document)
+			article_xml_filename = document.split('/')[-1]
+			
 		self.article.parse_article_file(self.get_tmp_dir() + os.sep + article_xml_filename)
 		
 		article_s3key = self.get_article_s3key(elife_id)
 		
 		filename = "index.html"
 		
-		article_html = self.get_article_html(from_dir = self.from_dir, article = self.article)
+		article_html = self.get_article_html(from_dir = self.from_dir,
+											 article = self.article,
+											 cdn_bucket = self.settings.cdn_bucket,
+											 article_xml_filename = article_xml_filename)
 		
 		# Write the document to disk first
 		filename_plus_path = self.write_html_file(article_html, filename)
@@ -83,11 +98,11 @@ class activity_LensArticle(activity.activity):
 		Given an eLife article DOI ID (5 digits) assemble the
 		S3 key name for where to save the article index.html page
 		"""
-		article_s3key = "/" + elife_id + "/index.html"
+		article_s3key = "/" + str(elife_id).zfill(5) + "/index.html"
 		
 		return article_s3key
 		
-	def get_article_html(self, from_dir, article):
+	def get_article_html(self, from_dir, article, cdn_bucket, article_xml_filename):
 		"""
 		Given the URL of the article XML file, create a lens article index.html page
 		using header, footer or template, as required
@@ -96,7 +111,11 @@ class activity_LensArticle(activity.activity):
 		if(from_dir is None):
 			from_dir = self.from_dir
 			
-		article_html = self.templates.get_lens_article_html(from_dir, article)
+		print article_xml_filename
+		article_html = self.templates.get_lens_article_html(from_dir,
+															article,
+															cdn_bucket,
+															article_xml_filename)
 
 		return article_html
 		

@@ -48,6 +48,7 @@ def start(ENV = "dev"):
 	workflow_names.append("PublicationEmail")
 	workflow_names.append("FTPArticle")
 	workflow_names.append("PubRouterDeposit")
+	workflow_names.append("PublishFullArticleZip")
 	workflow_names.append("PublishPerfectArticle")
 	workflow_names.append("PostPerfectPublication")
 	workflow_names.append("ProcessXMLArticle")
@@ -105,6 +106,7 @@ def start(ENV = "dev"):
 	activity_names.append("PublicationEmail")
 	activity_names.append("FTPArticle")
 	activity_names.append("PubRouterDeposit")
+	activity_names.append("UnzipFullArticle")
 
 	for activity_name in activity_names:
 		# Import the activity libraries
