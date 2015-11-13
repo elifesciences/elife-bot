@@ -47,6 +47,9 @@ class activity_UnzipFullArticle(activity.activity):
         
         # For copying to crossref outbox from here for now
         self.crossref_outbox_folder = "crossref/outbox/"
+        # Copy to PMC outbox
+        self.pmc_outbox_folder = "pmc/outbox/"
+        
 
     def do_activity(self, data = None):
         """
@@ -89,6 +92,11 @@ class activity_UnzipFullArticle(activity.activity):
             crossref_outbox_file_list.append(self.OUTPUT_DIR + os.sep + self.xml_file_name())
             self.upload_files_to_poa_packaging_bucket(prefix = self.crossref_outbox_folder,
                                                       file_list = crossref_outbox_file_list)
+            
+            # TODO!! Only send VoR files to the PMC outbox, right now we will upload all there
+            pmc_outbox_file_list = crossref_outbox_file_list
+            self.upload_files_to_poa_packaging_bucket(prefix = self.pmc_outbox_folder,
+                                                      file_list = pmc_outbox_file_list)
             
             # Continue with a standard publish article workflow
             self.start_publish_article_workflow(self.elife_id, self.xml_file_name())
