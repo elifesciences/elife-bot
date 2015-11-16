@@ -85,6 +85,8 @@ class activity_ArchiveArticle(activity.activity):
             destination_key.key = name + '.zip'
             destination_key.set_contents_from_filename(zip_path)
 
+            self.clean_tmp_dir()
+
         except Exception as e:
             # TODO: log
             return False

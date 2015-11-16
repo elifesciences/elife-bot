@@ -49,6 +49,9 @@ class activity_ExpandArticle(activity.activity):
 
         filename_last_element = info.file_name[info.file_name.rfind('/')+1:]
         article_id_match = re.match(ur'elife-(.*?)-', filename_last_element)
+        if article_id_match is None:
+            self.logger.error("Name '%s' did not match expected pattern for article id" % filename_last_element)
+            return False
         article_id = article_id_match.group(1)
         session.store_value(self.get_workflowId(), 'article_id', article_id)
 
@@ -57,6 +60,7 @@ class activity_ExpandArticle(activity.activity):
 
         # extract any doi, version and updated date information from the filename
         version = None
+        status = None
         # zip name contains version information for previously archived zip files
         m = re.search(ur'-v([0-9]*?)[\.|-]', filename_last_element)
         if m is not None:
@@ -64,13 +68,15 @@ class activity_ExpandArticle(activity.activity):
         if version is None:
             version = self.get_next_version(article_id)
         if version == '-1':
+            self.logger.error("Name '%s' did not match expected pattern for version" % filename_last_element)
             return False  # version could not be determined, exit workflow. Can't emit event as no version.
 
         sm = re.search(ur'.*?-.*?-(.*?)-', filename_last_element)
         if sm is not None:
             status = sm.group(1)
         if status is None:
-            return False  # version could not be determined, exit workflow. Can't emit event as no version.
+            self.logger.error("Name '%s' did not match expected pattern for status" % filename_last_element)
+            return False  # status could not be determined, exit workflow. Can't emit event as no version.
         run = str(uuid.uuid4())
         # store version for other activities in this workflow execution
         session.store_value(self.get_workflowId(), 'version', version)
@@ -118,6 +124,8 @@ class activity_ExpandArticle(activity.activity):
                 k = Key(dest_bucket)
                 k.key = dest_path
                 k.set_contents_from_filename(source_path)
+
+            self.clean_tmp_dir()
 
             session.store_value(self.get_workflowId(), 'expanded_folder', bucket_folder_name)
             self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "end",

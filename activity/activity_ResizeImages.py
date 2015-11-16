@@ -74,6 +74,8 @@ class activity_ResizeImages(activity.activity):
                                     "Finished converting images for  " + article_id +
                                     str(image_count) + " images processed ")
 
+            self.clean_tmp_dir()
+
         except Exception as e:
             self.logger.exception("Exception when resizing images")
             self.emit_monitor_event(self.settings, article_id, version, run, "Resize Images", "error",
