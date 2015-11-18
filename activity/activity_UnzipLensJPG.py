@@ -40,7 +40,7 @@ class activity_UnzipLensJPG(activity.activity):
         
         self.jpg_subfolder = 'jpg'
         
-        self.input_bucket = settings.publishing_buckets_prefix + "elife-production-lens-jpg"
+        self.input_bucket = settings.lens_jpg_bucket
         self.output_bucket = self.settings.cdn_bucket        
 
     def do_activity(self, data = None):

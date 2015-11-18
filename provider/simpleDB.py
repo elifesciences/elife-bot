@@ -178,7 +178,7 @@ class SimpleDB(object):
 		From the SimpleDB domain for the S3FileLog, return a list of matching item to the attributes
 			last_updated_since:       only return items updated since the date provided
 		"""
-		bucket_name = self.settings.publishing_buckets_prefix + "elife-production-lens-jpg"
+		bucket_name = self.settings.lens_jpg_bucket
 		return self.elife_get_generic_delivery_S3_file_items(bucket_name, last_updated_since)
 
 	def elife_get_generic_delivery_S3_file_items(self, bucket_name, last_updated_since = None):
