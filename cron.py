@@ -232,6 +232,8 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
         s.start(ENV = ENV, workflow = "S3Monitor_POA")
       if workflow_id == "S3Monitor_FullArticle":
         s.start(ENV = ENV, workflow = "S3Monitor_FullArticle")
+      if workflow_id == "S3Monitor_LensJPG":
+        s.start(ENV = ENV, workflow = "S3Monitor_LensJPG")
         
     elif(starter_name == "starter_AdminEmail"):
       s.start(ENV = ENV, workflow = "AdminEmail")
