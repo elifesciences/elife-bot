@@ -86,6 +86,9 @@ class exp():
     lens_distribution_id = u'E30WWCB2DNEOKI'
     lens_domain_name = 'd32g8kubfuccxs.cloudfront.net'
 
+    # Lens jpg bucket
+    lens_jpg_bucket = "exp-elife-production-lens-jpg"
+
     # Bot S3 settings
     bot_bucket = 'elife-bot-dev'
 
@@ -176,6 +179,9 @@ class dev():
     lens_bucket = 'elife-lens-dev'
     lens_distribution_id = u'E30WWCB2DNEOKI'
     lens_domain_name = 'd32g8kubfuccxs.cloudfront.net'
+
+    # Lens jpg bucket
+    lens_jpg_bucket = "exp-elife-production-lens-jpg"
 
     # Bot S3 settings
     bot_bucket = 'elife-bot-dev'
@@ -272,6 +278,9 @@ class live():
     lens_bucket = 'elife-lens'
     lens_distribution_id = u'EK4HKRQWIF6B3'
     cdn_domain_name = 'lens.elifesciences.org'
+
+    # Lens jpg bucket
+    lens_jpg_bucket = "elife-production-lens-jpg"
 
     # Bot S3 settings
     bot_bucket = 'elife-bot'

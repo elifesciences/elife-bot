@@ -81,6 +81,13 @@ def run_cron(ENV = "dev"):
       workflow_id   = "S3Monitor_FullArticle",
       start_seconds = 60*31)
     
+    # Lens jpg zip bucket polling
+    workflow_conditional_start(
+      ENV           = ENV,
+      starter_name  = "starter_S3Monitor",
+      workflow_id   = "S3Monitor_LensJPG",
+      start_seconds = 60*31)
+    
     workflow_conditional_start(
       ENV           = ENV,
       starter_name  = "cron_NewS3XML",
@@ -176,6 +183,12 @@ def run_cron(ENV = "dev"):
       
       workflow_conditional_start(
         ENV           = ENV,
+        starter_name  = "cron_NewS3LensJPG",
+        workflow_id   = "cron_NewS3LensJPG",
+        start_seconds = 60*31)
+      
+      workflow_conditional_start(
+        ENV           = ENV,
         starter_name  = "starter_AdminEmail",
         workflow_id   = "AdminEmail",
         start_seconds = (60*60*4)-(14*60))
@@ -256,6 +269,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       or starter_name == "starter_PublicationEmail"
       or starter_name == "starter_DepositCrossref"
       or starter_name == "cron_NewS3FullArticle"
+      or starter_name == "cron_NewS3LensJPG"
       ):
       s.start(ENV = ENV)
       
