@@ -104,7 +104,7 @@ class starter_PublishFullArticleZip():
                 doi_id = None
                 
             if doi_id:
-                tmp['elife-id'] = doi_id
+                tmp['elife_id'] = doi_id
                 docs.append(tmp)
         
         return docs
