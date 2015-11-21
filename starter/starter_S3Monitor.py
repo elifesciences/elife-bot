@@ -57,6 +57,14 @@ class starter_S3Monitor():
       # POA delivery bucket monitor
       bucket = settings.poa_bucket
       workflow_id = "S3Monitor_POA"
+    elif workflow == "S3Monitor_FullArticle":
+      # Full article zip delivery bucket monitor
+      bucket = settings.publishing_buckets_prefix + settings.production_bucket
+      workflow_id = "S3Monitor_FullArticle"
+    elif workflow == "S3Monitor_LensJPG":
+      # Lens JPG bucket, hard-coded because it should be temporary
+      bucket = settings.lens_jpg_bucket
+      workflow_id = "S3Monitor_LensJPG"
     
     if bucket is not None:
       # workflow_id as set above

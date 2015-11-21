@@ -134,10 +134,23 @@ def i_get_lens_templates_list_from_the_template_provider(step):
   world.templates_list = world.templates.get_lens_templates_list()
   assert world.templates_list is not None, \
     "Got templates_list %s" % world.templates_list
+
+@step(u'I have the cdn bucket (\S+)')
+def i_have_the_cdn_bucket_cdn_bucket(step, cdn_bucket):
+  world.cdn_bucket = cdn_bucket
+  assert world.cdn_bucket is not None, \
+    "Got cdn_bucket %s" % world.cdn_bucket
     
+@step(u'I have the article xml filename (\S+)')
+def i_have_the_article_xml_filename_article_xml_filename(step, article_xml_filename):
+  world.article_xml_filename = article_xml_filename
+  assert world.article_xml_filename is not None, \
+    "Got article_xml_filename %s" % world.article_xml_filename
+
 @step(u'I get lens article html from the templates provider')
 def i_get_lens_article_html_from_the_templates_provider(step):
-  world.article_html = world.templates.get_lens_article_html(world.base_dir, world.article)
+  world.article_html = world.templates.get_lens_article_html(world.base_dir, world.article,
+                                                             world.cdn_bucket, world.article_xml_filename)
   assert world.article_html is not None, \
     "Got article_html %s" % world.article_html
     

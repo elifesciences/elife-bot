@@ -3,7 +3,7 @@
 <head>
 <title>{% if article.article_title %}{{ article.article_title }} | {% endif %}eLife Lens</title>
 <script>
-document_url: "http://example.com/elife{{ article.doi_id }}.xml"
+document_url: "http://example.com/{{ cdn_bucket }}/{{ article_xml_filename }}"
 </script>
 </head>
 <body>
