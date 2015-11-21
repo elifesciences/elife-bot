@@ -175,11 +175,11 @@ def run_cron(ENV = "dev"):
         workflow_id   = "PubmedArticleDeposit",
         start_seconds = 60*31)
       
-      #workflow_conditional_start(
-      #  ENV           = ENV,
-      #  starter_name  = "cron_NewS3FullArticle",
-      #  workflow_id   = "cron_NewS3FullArticle",
-      #  start_seconds = 60*31)
+      workflow_conditional_start(
+        ENV           = ENV,
+        starter_name  = "cron_NewS3FullArticle",
+        workflow_id   = "cron_NewS3FullArticle",
+        start_seconds = 60*31)
       
       workflow_conditional_start(
         ENV           = ENV,
