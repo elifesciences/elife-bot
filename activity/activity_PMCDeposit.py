@@ -649,7 +649,10 @@ class activity_PMCDeposit(activity.activity):
         datetime_string = time.strftime(date_format, current_time)
         
         # Bulk of body
-        body += journal + " deposit: " + datetime_string + "\n"
+        body += "PMCDeposit activity" + "\n"
+        body += "\n"
+        
+        body += journal + " deposit date: " + datetime_string + "\n"
         body += "\n"
         body += "Journal title: " + journal + "\n"
         body += "Volume: " + str(volume).zfill(2) + "\n"
@@ -662,7 +665,7 @@ class activity_PMCDeposit(activity.activity):
         body += "Revision: " + revision_text + "\n"
         body += "\n"
         body += "Zip filename: " + file_name + "\n"
-        body += "Fize size: " + str(file_size) + "\n" 
+        body += "File size (bytes): " + str(file_size) + "\n" 
         
         body += "\n"
         
