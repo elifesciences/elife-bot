@@ -635,7 +635,7 @@ class activity_PMCDeposit(activity.activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
         
-        subject = ( journal + " deposit " + datetime_string +
+        subject = ( journal + " PMC deposit " + datetime_string +
                     ", article " + str(fid).zfill(5) )
         
         return subject
