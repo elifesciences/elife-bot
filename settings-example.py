@@ -108,6 +108,10 @@ class exp():
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
 
+    # PMC email settings
+    ses_pmc_sender_email = "sender@example.com"
+    ses_pmc_recipient_email = "admin@example.com"
+
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
@@ -124,6 +128,12 @@ class exp():
     PUBMED_FTP_USERNAME = ""
     PUBMED_FTP_PASSWORD = ""
     PUBMED_FTP_CWD = ""
+
+    # PMC FTP settings
+    PMC_FTP_URI = ""
+    PMC_FTP_USERNAME = ""
+    PMC_FTP_PASSWORD = ""
+    PMC_FTP_CWD = ""
 
     # HEFCE Archive FTP settings
     HEFCE_FTP_URI = ""
@@ -202,6 +212,10 @@ class dev():
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
 
+    # PMC email settings
+    ses_pmc_sender_email = "sender@example.com"
+    ses_pmc_recipient_email = "admin@example.com"
+
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
@@ -218,6 +232,12 @@ class dev():
     PUBMED_FTP_USERNAME = ""
     PUBMED_FTP_PASSWORD = ""
     PUBMED_FTP_CWD = ""
+
+    # PMC FTP settings
+    PMC_FTP_URI = ""
+    PMC_FTP_USERNAME = ""
+    PMC_FTP_PASSWORD = ""
+    PMC_FTP_CWD = ""
 
     # HEFCE Archive FTP settings
     HEFCE_FTP_URI = ""
@@ -301,6 +321,10 @@ class live():
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
 
+    # PMC email settings
+    ses_pmc_sender_email = "sender@example.com"
+    ses_pmc_recipient_email = "admin@example.com"
+
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp'
 
@@ -317,6 +341,12 @@ class live():
     PUBMED_FTP_USERNAME = ""
     PUBMED_FTP_PASSWORD = ""
     PUBMED_FTP_CWD = ""
+
+    # PMC FTP settings
+    PMC_FTP_URI = ""
+    PMC_FTP_USERNAME = ""
+    PMC_FTP_PASSWORD = ""
+    PMC_FTP_CWD = ""
 
     # HEFCE Archive FTP settings
     HEFCE_FTP_URI = ""
