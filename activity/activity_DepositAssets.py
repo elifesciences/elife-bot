@@ -42,12 +42,21 @@ class activity_DepositAssets(activity.activity):
             expanded_bucket = conn.get_bucket(expanded_folder_bucket)
             cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
 
+            no_download_extensions = [x.strip() for x in self.settings.no_download_extensions.split(',')]
+
             keys = self.get_keys(expanded_bucket, expanded_folder_name)
             for key in keys:
                 (file_key, file_name) = key
                 file_key.copy(cdn_bucket_name, article_id + "/" + file_name)
                 if self.logger:
                     self.logger.info("Uploaded key %s to %s" % (file_name, cdn_bucket_name))
+                file_name_no_extension, extension = file_name.rsplit('.', 1)
+                if extension not in no_download_extensions:
+                    download_metadata = file_key.metadata
+                    download_metadata['Content-Disposition'] = "Content-Disposition: attachment; filename=" \
+                                                               + file_name + ";"
+                    file_key.copy(cdn_bucket_name, article_id + "/" + file_name_no_extension + "-download." + extension,
+                                  metadata=download_metadata)
 
         except Exception as e:
             self.logger.exception("Exception when Depositing assets")
