@@ -53,8 +53,8 @@ class activity_DepositAssets(activity.activity):
                 file_name_no_extension, extension = file_name.rsplit('.', 1)
                 if extension not in no_download_extensions:
                     download_metadata = file_key.metadata
-                    download_metadata['Content-Disposition'] = "Content-Disposition: attachment; filename=" \
-                                                               + file_name + ";"
+                    download_metadata['Content-Disposition'] = str(
+                        "Content-Disposition: attachment; filename=" + file_name + ";")
                     file_key.copy(cdn_bucket_name, article_id + "/" + file_name_no_extension + "-download." + extension,
                                   metadata=download_metadata)
 
@@ -69,11 +69,10 @@ class activity_DepositAssets(activity.activity):
 
     @staticmethod
     def get_keys(bucket, expanded_folder_name):
-        keys=[]
+        keys = []
         files = bucket.list(expanded_folder_name + "/", "/")
         for bucket_file in files:
             key = bucket.get_key(bucket_file.key)
             filename = key.name.rsplit('/', 1)[1]
             keys.append((key, filename))
         return keys
-
