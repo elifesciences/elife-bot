@@ -71,7 +71,7 @@ class ArticleInfo(object):
             self.file_type = "Figure"
         elif self.extra_info[0].startswith('inf'):
             self.file_type = "Inline"
-        elif self.extension == 'xml':
+        elif len(parts) == 3 and self.extension == 'xml':
             self.file_type = 'ArticleXML'
         else:
             self.file_type = 'Other'
