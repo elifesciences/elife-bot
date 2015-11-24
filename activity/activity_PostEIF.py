@@ -106,6 +106,7 @@ class activity_PostEIF(activity.activity):
             else:
                 self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
                                         "Website ingest returned an error code: " + str(r.status_code))
+                self.logger.error("Body:" + r.text)
                 return False
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "end",
                                     "Finished submitting EIF for article  " + article_id +

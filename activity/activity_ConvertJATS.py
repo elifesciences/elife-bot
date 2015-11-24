@@ -64,7 +64,7 @@ class activity_ConvertJATS(activity.activity):
             if self.logger:
                 self.logger.info("Downloaded contents of file %s" % xml_filename)
 
-            json_output = jats_scraper.scrape(xml)
+            json_output = jats_scraper.scrape(xml, article_version=version)
 
             if self.logger:
                 self.logger.info("Scraped file %s" % xml_filename)
