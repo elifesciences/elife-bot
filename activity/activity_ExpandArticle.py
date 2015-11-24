@@ -109,10 +109,6 @@ class activity_ExpandArticle(activity.activity):
             with ZipFile(path.join(tmp, filename_last_element)) as zf:
                 zf.extractall(content_folder)
 
-            # TODO : rename files (versions!)
-
-            # TODO : edit xml and rename references
-
             upload_filenames = []
             for f in listdir(content_folder):
                 if isfile(join(content_folder, f)) and f[0] != '.' and not f[0] == '_':
