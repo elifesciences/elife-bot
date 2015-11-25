@@ -51,6 +51,8 @@ class exp():
     lax_update_user = ''
     lax_update_pass = ''
 
+    no_download_extensions = 'tif'
+
     # end JR settings
 
     # S3 settings

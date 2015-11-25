@@ -1,18 +1,17 @@
-import random
-import json
 import StringIO
-from S3utility.s3_notification_info import S3NotificationInfo
+import json
+import random
+from mimetypes import guess_type
 import activity
-from boto.s3.connection import S3Connection
-from boto.s3.key import Key
-import log
 import boto.swf
-from provider.article_structure import ArticleInfo
-from provider.execution_context import Session
+import log
+import provider.imageresize as resizer
 import settings as settings_lib
 import yaml
-import provider.imageresize as resizer
-import os
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+from provider.article_structure import ArticleInfo
+from provider.execution_context import Session
 
 """
 ResizeImages.py activity
@@ -112,24 +111,38 @@ class activity_ResizeImages(activity.activity):
             return self.formats[file_type]
         return None
 
-    def generate_images(self, formats, fp, info,  cdn_path):
+    def generate_images(self, formats, fp, info, cdn_path):
         # delegate this to module
         try:
             for format_spec_name in formats:
-                fp.seek(0)  # rewind the tape
-                filename, image = resizer.resize(formats[format_spec_name], fp, info)
-                self.store_in_cdn(filename, image,  cdn_path)
+                format_spec = formats[format_spec_name]
+                # if sources not present or includes file extension for this image
+                if 'sources' not in format_spec or info.extension in [x.strip() for x in
+                                                                      format_spec['sources'].split(',')]:
+                    download = 'download' in format_spec and format_spec['download']
+                    fp.seek(0)  # rewind the tape
+                    filename, image = resizer.resize(format_spec, fp, info)
+                    self.store_in_cdn(filename, image, cdn_path, download)
         finally:
             fp.close()
 
-    def store_in_cdn(self, filename, image, cdn_path):
+    def store_in_cdn(self, filename, image, cdn_path, download):
         # for now we'l use an S3 bucket
         try:
+            content_type, encoding = guess_type(filename)
             cdn_bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket)
             key = Key(cdn_bucket)
             key.key = cdn_path + "/" + filename
+            key.metadata['Content-Type'] = content_type
             image.seek(0)
             key.set_contents_from_file(image)
+            if download:
+                metadata = key.metadata.copy()
+                metadata['Content-Disposition'] = str("Content-Disposition: attachment; filename=" +
+                                                      filename + ";")
+                filename_no_extension, extension = filename.rsplit('.', 1)
+                key.copy(cdn_bucket, cdn_path + "/" + filename_no_extension + "-download." +
+                         extension, metadata=metadata)
         finally:
             image.close()
 
@@ -142,7 +155,6 @@ class activity_ResizeImages(activity.activity):
 
 
 def main(args):
-
     """
     This sets up dummy SWF activity data, creates an instance of this activity and runs it only for
     testing and debugging. This activity would usually be executed by worker.py
@@ -158,6 +170,8 @@ def main(args):
     act = activity_ResizeImages(settings, logger, conn=conn)
     act.do_activity(data)
 
+
 if __name__ == '__main__':
     import sys
+
     main(sys.argv[1:])
