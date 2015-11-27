@@ -121,8 +121,9 @@ class activity_ResizeImages(activity.activity):
                                                                       format_spec['sources'].split(',')]:
                     download = 'download' in format_spec and format_spec['download']
                     fp.seek(0)  # rewind the tape
-                    filename, image = resizer.resize(format_spec, fp, info)
-                    self.store_in_cdn(filename, image, cdn_path, download)
+                    filename, image = resizer.resize(format_spec, fp, info, self.logger)
+                    if filename is not None and image is not None:
+                        self.store_in_cdn(filename, image, cdn_path, download)
         finally:
             fp.close()
 
