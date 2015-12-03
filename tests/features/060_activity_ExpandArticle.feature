@@ -30,7 +30,7 @@ Feature: ExpandArticle activity
   Examples:
     | env | filename                                | update_date  
     | dev | elife-07702-vor-r4.zip                  | None    
-    | dev | elife-00013-vor-v1-20121015000000.zip   | 20121015000000
+    | dev | elife-00013-vor-v1-20121015000000.zip   | 2012-10-15T00:00:00Z
 
   Scenario: Get the version from an article zip filename using an ExpandArticle activity object
     Given I have imported a settings module

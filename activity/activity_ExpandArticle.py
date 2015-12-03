@@ -9,6 +9,7 @@ import os
 from os.path import isfile, join
 from os import listdir, makedirs
 from os import path
+import datetime
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 from S3utility.s3_notification_info import S3NotificationInfo
@@ -156,7 +157,12 @@ class activity_ExpandArticle(activity.activity):
         if m is None:
             return None
         else:
-            return m.group(1)
+            try:
+                raw_update_date = m.group(1)
+                updated_date = datetime.datetime.strptime(raw_update_date, "%Y%m%d%H%M%S")
+                return updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+            except:
+                return None
 
     def get_version_from_zip_filename(self, filename):
         m = re.search(ur'-v([0-9]*?)[\.|-]', filename)

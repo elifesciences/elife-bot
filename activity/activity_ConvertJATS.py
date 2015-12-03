@@ -2,7 +2,7 @@ import activity
 import json
 import os
 from os import path
-from datetime import datetime
+import datetime
 from jats_scraper import jats_scraper
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
@@ -120,13 +120,13 @@ class activity_ConvertJATS(activity.activity):
 
     def add_update_date_to_json(self, json_string, update_date, xml_filename = None):
         """
-        Update date is a string in the YYYYMMDDHHMMSS format
+        Update date is a string e.g. 2012-10-15T00:00:00Z format
         We want to add update: YYYY-MM-DD to the json
         xml_filename is just for logging purposes
         """
         try:
             json_obj = json.loads(json_string)
-            updated_date = datetime.strptime(update_date, "%Y%m%d%H%M%S")
+            updated_date = datetime.datetime.strptime(update_date, "%Y-%m-%dT%H:%M:%SZ")
             update_date_string = updated_date.strftime('%Y-%m-%d')
             json_obj['update'] = update_date_string
             json_string = json.dumps(json_obj)

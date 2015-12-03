@@ -78,8 +78,6 @@ class activity_PostEIF(activity.activity):
 
                     try:
                         update_date = session.get_value(self.get_workflowId(), 'update_date')
-                        updated_date = datetime.datetime.strptime(update_date, "%Y%m%d%H%M%S")
-                        update_date = updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
                     except:
                         # Default
                         update_date = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
