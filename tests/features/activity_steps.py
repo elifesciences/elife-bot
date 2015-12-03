@@ -261,3 +261,11 @@ def i_get_the_email_type_email_type(step, email_type):
 @step(u'I get update date from the filename using the activity object')
 def i_get_update_date_from_the_filename_using_the_activity_object(step):
 	world.string = world.activity_object.get_update_date_from_zip_filename(world.filename)
+	
+@step(u'I get version from the filename using the activity object')
+def i_get_version_from_the_filename_using_the_activity_object(step):
+	world.string = world.activity_object.get_version_from_zip_filename(world.filename)
+	
+@step(u'I get status from the filename using the activity object')
+def i_get_status_from_the_filename_using_the_activity_object(step):
+	world.string = world.activity_object.get_status_from_zip_filename(world.filename)

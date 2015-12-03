@@ -62,18 +62,14 @@ class activity_ExpandArticle(activity.activity):
         version = None
         status = None
         # zip name contains version information for previously archived zip files
-        m = re.search(ur'-v([0-9]*?)[\.|-]', filename_last_element)
-        if m is not None:
-            version = m.group(1)
+        version = self.get_version_from_zip_filename(filename_last_element)
         if version is None:
             version = self.get_next_version(article_id)
         if version == '-1':
             self.logger.error("Name '%s' did not match expected pattern for version" % filename_last_element)
             return False  # version could not be determined, exit workflow. Can't emit event as no version.
 
-        sm = re.search(ur'.*?-.*?-(.*?)-', filename_last_element)
-        if sm is not None:
-            status = sm.group(1)
+        status = self.get_status_from_zip_filename(filename_last_element)
         if status is None:
             self.logger.error("Name '%s' did not match expected pattern for status" % filename_last_element)
             return False  # status could not be determined, exit workflow. Can't emit event as no version.
@@ -157,6 +153,20 @@ class activity_ExpandArticle(activity.activity):
         
     def get_update_date_from_zip_filename(self, filename):
         m = re.search(ur'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
+        if m is None:
+            return None
+        else:
+            return m.group(1)
+
+    def get_version_from_zip_filename(self, filename):
+        m = re.search(ur'-v([0-9]*?)[\.|-]', filename)
+        if m is None:
+            return None
+        else:
+            return m.group(1)
+            
+    def get_status_from_zip_filename(self, filename):
+        m = re.search(ur'.*?-.*?-(.*?)-', filename)
         if m is None:
             return None
         else:
