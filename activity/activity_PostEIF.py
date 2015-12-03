@@ -76,9 +76,13 @@ class activity_PostEIF(activity.activity):
                     expanded_folder = session.get_value(self.get_workflowId(), 'expanded_folder')
                     status = session.get_value(self.get_workflowId(), 'status')
 
-                    update_date = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-                    # TODO: need to replace line above with this once its in the session
-                    # update_date = session.get_value(self.get_workflowId(), 'update_date')
+                    try:
+                        update_date = session.get_value(self.get_workflowId(), 'update_date')
+                        updated_date = datetime.datetime.strptime(update_date, "%Y%m%d%H%M%S")
+                        update_date = updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+                    except:
+                        # Default
+                        update_date = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
                     sqs_conn = boto.sqs.connect_to_region(self.settings.sqs_region,
                                                           aws_access_key_id=self.settings.aws_access_key_id,
