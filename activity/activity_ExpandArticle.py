@@ -81,7 +81,10 @@ class activity_ExpandArticle(activity.activity):
         # store version for other activities in this workflow execution
         session.store_value(self.get_workflowId(), 'version', version)
 
-        # TODO : extract and store updated date if supplied
+        # Extract and store updated date if supplied
+        update_date = self.get_update_date_from_zip_filename(filename_last_element)
+        if update_date:
+            session.store_value(self.get_workflowId(), 'update_date', update_date)
 
         article_version_id = article_id + '.' + version
         session.store_value(self.get_workflowId(), 'article_version_id', article_version_id)
@@ -152,5 +155,9 @@ class activity_ExpandArticle(activity.activity):
             self.logger.error("Error obtaining version information from Lax" + str(response.status_code))
             return "-1"
         
-
-
+    def get_update_date_from_zip_filename(self, filename):
+        m = re.search(ur'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
+        if m is None:
+            return None
+        else:
+            return m.group(1)
