@@ -2,6 +2,7 @@ import activity
 import json
 import os
 from os import path
+from datetime import datetime
 from jats_scraper import jats_scraper
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
@@ -65,6 +66,15 @@ class activity_ConvertJATS(activity.activity):
                 self.logger.info("Downloaded contents of file %s" % xml_filename)
 
             json_output = jats_scraper.scrape(xml, article_version=version)
+            
+            # Add update date if it is in the session
+            update_date = None
+            try:
+                update_date = session.get_value(self.get_workflowId(), 'update_date')
+            except:
+                update_date = None
+            if update_date:
+                json_output = self.add_update_date_to_json(json_output, update_date, xml_filename)
 
             if self.logger:
                 self.logger.info("Scraped file %s" % xml_filename)
@@ -107,3 +117,20 @@ class activity_ConvertJATS(activity.activity):
             if info.file_type == 'ArticleXML':
                 return key, filename
         return None
+
+    def add_update_date_to_json(self, json_string, update_date, xml_filename = None):
+        """
+        Update date is a string in the YYYYMMDDHHMMSS format
+        We want to add update: YYYY-MM-DD to the json
+        xml_filename is just for logging purposes
+        """
+        try:
+            json_obj = json.loads(json_string)
+            updated_date = datetime.strptime(update_date, "%Y%m%d%H%M%S")
+            update_date_string = updated_date.strftime('%Y-%m-%d')
+            json_obj['update'] = update_date_string
+            json_string = json.dumps(json_obj)
+        except:
+            if self.logger:
+                self.logger.error("Unable to set the update date in the json %s" % str(xml_filename))
+        return json_string
