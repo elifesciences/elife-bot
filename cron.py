@@ -40,11 +40,11 @@ def run_cron(ENV = "dev"):
     # Jobs to start at the top of the hour
     #print "Top of the hour"
 
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "starter_S3Monitor",
-      workflow_id   = "S3Monitor",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "starter_S3Monitor",
+    #  workflow_id   = "S3Monitor",
+    #  start_seconds = 60*31)
     
     workflow_conditional_start(
       ENV           = ENV,
