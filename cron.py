@@ -40,11 +40,11 @@ def run_cron(ENV = "dev"):
     # Jobs to start at the top of the hour
     #print "Top of the hour"
 
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "starter_S3Monitor",
-      workflow_id   = "S3Monitor",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "starter_S3Monitor",
+    #  workflow_id   = "S3Monitor",
+    #  start_seconds = 60*31)
     
     workflow_conditional_start(
       ENV           = ENV,
@@ -88,41 +88,41 @@ def run_cron(ENV = "dev"):
       workflow_id   = "S3Monitor_LensJPG",
       start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "cron_NewS3XML",
-      workflow_id   = "cron_NewS3XML",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3XML",
+    #  workflow_id   = "cron_NewS3XML",
+    #  start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "cron_NewS3PDF",
-      workflow_id   = "cron_NewS3PDF",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3PDF",
+    #  workflow_id   = "cron_NewS3PDF",
+    #  start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "cron_NewS3SVG",
-      workflow_id   = "cron_NewS3SVG",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3SVG",
+    #  workflow_id   = "cron_NewS3SVG",
+    #  start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "cron_NewS3Suppl",
-      workflow_id   = "cron_NewS3Suppl",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3Suppl",
+    #  workflow_id   = "cron_NewS3Suppl",
+    #  start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "cron_NewS3JPG",
-      workflow_id   = "cron_NewS3JPG",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3JPG",
+    #  workflow_id   = "cron_NewS3JPG",
+    #  start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "cron_NewS3FiguresPDF",
-      workflow_id   = "cron_NewS3FiguresPDF",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3FiguresPDF",
+    #  workflow_id   = "cron_NewS3FiguresPDF",
+    #  start_seconds = 60*31)
     
     if(current_time.tm_min >= 45 and current_time.tm_min <= 59):
       # Bottom quarter of the hour
