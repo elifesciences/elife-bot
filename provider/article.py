@@ -157,33 +157,20 @@ class article(object):
     if type(doi_id) == int:
       doi_id = str(doi_id).zfill(5)
 
-    # Connect to SimpleDB and get the latest article XML S3 object name
-    self.db.connect()
-    # Look up the latest XMl file by doi_id, should return a list of 1
-    log_item = self.db.elife_get_article_S3_file_items(file_data_type = "xml", doi_id = doi_id, latest = True)
-    s3_key_name = None
-    
-    try:
-      s3_key_name = log_item[0]["name"]
-    except IndexError:
-      return False
-    #print s3_key_name
+    # Download XML file via HTTP for now
+    xml_file_url = ('http://s3.amazonaws.com/elife-cdn/elife-articles/'
+                    + doi_id + '/' + 'elife' + doi_id + '.xml')
+    xml_filename = xml_file_url.split('/')[-1]
 
-    # Download from S3
-    s3_key = self.get_s3key(s3_key_name)
-    filename = s3_key_name.split('/')[-1]
-    filename_plus_path = self.get_tmp_dir() + os.sep + filename
-    #print filename_plus_path
-    f = open(filename_plus_path, "wb")
-    s3_key.get_contents_to_file(f)
-    f.close()
-    
-    # Unzip
-    z = zipfile.ZipFile(filename_plus_path)
-    for f in z.namelist():
-      # Expecting one file only per zip file in article XML zip
-      z.extract(f, self.get_tmp_dir())
-      xml_filename = f
+    r = requests.get(xml_file_url)
+    if r.status_code == requests.codes.ok:
+      filename_plus_path = self.get_tmp_dir() + os.sep + xml_filename
+      f = open(filename_plus_path, "wb")
+      f.write(r.text)
+      f.close()
+      return xml_filename
+    else:
+      return False
 
     return xml_filename
     
