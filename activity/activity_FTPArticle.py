@@ -22,6 +22,7 @@ import activity
 import boto.s3
 from boto.s3.connection import S3Connection
 
+import provider.s3lib as s3lib
 import provider.simpleDB as dblib
 import provider.sftp as sftplib
 
@@ -154,23 +155,34 @@ class activity_FTPArticle(activity.activity):
         
     def download_files_from_s3(self, doi_id, workflow):
         
-        if workflow == 'HEFCE' or workflow == 'GoOA':
-            # Download files from the articles bucket
-            self.download_data_file_from_s3(doi_id, 'xml', workflow)
-            self.download_data_file_from_s3(doi_id, 'pdf', workflow)
-            if int(doi_id) != 855:
-                self.download_data_file_from_s3(doi_id, 'img', workflow)
-            if int(doi_id) != 1311:
-                self.download_data_file_from_s3(doi_id, 'suppl', workflow)
-            self.download_data_file_from_s3(doi_id, 'video', workflow)
-            self.download_data_file_from_s3(doi_id, 'jpg', workflow)
-            self.download_data_file_from_s3(doi_id, 'figures', workflow)
+        # Switch for old article zip format versus getting PMC zip for new articles
+        item_list = self.db.elife_get_article_S3_file_items(
+            doi_id = str(doi_id).zfill(5))
+        
+        if item_list and len(item_list) > 0:
+        
+            if workflow == 'HEFCE' or workflow == 'GoOA':
+                # Download files from the articles bucket
+                self.download_data_file_from_s3(doi_id, 'xml', workflow)
+                self.download_data_file_from_s3(doi_id, 'pdf', workflow)
+                if int(doi_id) != 855:
+                    self.download_data_file_from_s3(doi_id, 'img', workflow)
+                if int(doi_id) != 1311:
+                    self.download_data_file_from_s3(doi_id, 'suppl', workflow)
+                self.download_data_file_from_s3(doi_id, 'video', workflow)
+                self.download_data_file_from_s3(doi_id, 'jpg', workflow)
+                self.download_data_file_from_s3(doi_id, 'figures', workflow)
+                
+            if workflow == 'Cengage':
+                # Download files from the articles bucket
+                self.download_data_file_from_s3(doi_id, 'xml', workflow)
+                self.download_data_file_from_s3(doi_id, 'pdf', workflow)
+                self.download_data_file_from_s3(doi_id, 'figures', workflow)
+        
+        else:
+            # Download PMC zip file if present
+            self.download_pmc_zip_from_s3(doi_id, workflow)
             
-        if workflow == 'Cengage':
-            # Download files from the articles bucket
-            self.download_data_file_from_s3(doi_id, 'xml', workflow)
-            self.download_data_file_from_s3(doi_id, 'pdf', workflow)
-            self.download_data_file_from_s3(doi_id, 'figures', workflow)
         
     def download_data_file_from_s3(self, doi_id, file_data_type, workflow):
         """
@@ -201,6 +213,48 @@ class activity_FTPArticle(activity.activity):
             s3_key.get_contents_to_file(f)
             f.close()
                     
+    def download_pmc_zip_from_s3(self, doi_id, workflow):
+        """
+        Simple download of PMC zip file from the live bucket
+        """
+        bucket_name = 'elife-poa-packaging'
+        prefix = 'pmc/zip/'
+
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(
+            bucket          = bucket,
+            prefix          = prefix)
+        
+        for s3_key_name in s3_key_names:
+            name_match = '-' + str(doi_id).zfill(5)
+            if name_match in s3_key_name:
+                # Download
+                print s3_key_name
+                s3_key = bucket.get_key(s3_key_name)
+    
+                filename = s3_key_name.split("/")[-1]
+    
+                filename_plus_path = (self.get_tmp_dir() + os.sep +
+                                      self.TMP_DIR + os.sep + filename)
+                mode = "wb"
+                f = open(filename_plus_path, mode)
+                s3_key.get_contents_to_file(f)
+                f.close()
+        
+        # Repackage or move the zip depending on the workflow type
+        if workflow == 'Cengage':
+            # TODO!!!
+            
+        else:
+            # Default, move all the zip files from TMP_DIR to FTP_OUTBOX
+            file_type = "/*.zip"
+            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.TMP_DIR + file_type)
+            for filename in zipfiles:
+                shutil.move(filename, self.get_tmp_dir() + os.sep +
+                                          self.FTP_TO_SOMEWHERE_DIR + os.sep) 
         
     def ftp_upload(self, ftp, file):
         ext = os.path.splitext(file)[1]
