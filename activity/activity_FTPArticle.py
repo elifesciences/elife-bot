@@ -23,6 +23,7 @@ import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.simpleDB as dblib
+import provider.sftp as sftplib
 
 """
 FTPArticle activity
@@ -55,6 +56,12 @@ class activity_FTPArticle(activity.activity):
         self.FTP_CWD = None
         self.FTP_SUBDIR = []
         
+        # SFTP settings
+        self.SFTP_URI = None
+        self.SFTP_USERNAME = None
+        self.SFTP_PASSWORD = None
+        self.SFTP_CWD = None
+        
             
     def do_activity(self, data = None):
         """
@@ -86,7 +93,12 @@ class activity_FTPArticle(activity.activity):
             if workflow == 'HEFCE':
                 file_type = "/*.zip"
                 zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
-                self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR, passive=True)
+                
+                #self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR, passive=True)
+                # SFTP now
+                sub_dir = "{:05d}".format(int(elife_id))
+                self.sftp_to_endpoint(zipfiles, sub_dir)
+                
             if workflow == 'Cengage':
                 file_type = "/*.zip"
                 zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
@@ -120,6 +132,13 @@ class activity_FTPArticle(activity.activity):
             self.FTP_CWD =  self.settings.HEFCE_FTP_CWD
             # Subfolders to create when FTPing
             self.FTP_SUBDIR.append(str(doi_id).zfill(5))
+            
+            # SFTP settings
+            
+            self.SFTP_URI = self.settings.HEFCE_SFTP_URI
+            self.SFTP_USERNAME = self.settings.HEFCE_SFTP_USERNAME
+            self.SFTP_PASSWORD = self.settings.HEFCE_SFTP_PASSWORD
+            self.SFTP_CWD = self.settings.HEFCE_SFTP_CWD
             
         if workflow == 'Cengage':
             self.FTP_URI = self.settings.CENGAGE_FTP_URI
@@ -231,6 +250,15 @@ class activity_FTPArticle(activity.activity):
             self.ftp_upload(ftp, uploadfile)
             ftp.quit()
 
+    def sftp_to_endpoint(self, uploadfiles, sub_dir = None):
+        """
+        Using the sftp provider module, connect to sftp server and transmit files
+        """
+        sftp = sftplib.SFTP(logger = self.logger)
+        sftp_client = sftp.sftp_connect(self.SFTP_URI, self.SFTP_USERNAME, self.SFTP_PASSWORD)
+
+        if sftp_client is not None:
+            sftp.sftp_to_endpoint(sftp_client, uploadfiles, self.SFTP_CWD, sub_dir)
 
     def create_activity_directories(self):
         """

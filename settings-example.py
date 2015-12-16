@@ -141,6 +141,12 @@ class exp():
     HEFCE_FTP_PASSWORD = ""
     HEFCE_FTP_CWD = ""
     
+    # HEFCE Archive SFTP settings
+    HEFCE_SFTP_URI = ""
+    HEFCE_SFTP_USERNAME = ""
+    HEFCE_SFTP_PASSWORD = ""
+    HEFCE_SFTP_CWD = ""
+    
     # GoOA FTP settings
     GOOA_FTP_URI = ""
     GOOA_FTP_USERNAME = ""
@@ -244,6 +250,12 @@ class dev():
     HEFCE_FTP_USERNAME = ""
     HEFCE_FTP_PASSWORD = ""
     HEFCE_FTP_CWD = ""
+
+    # HEFCE Archive SFTP settings
+    HEFCE_SFTP_URI = ""
+    HEFCE_SFTP_USERNAME = ""
+    HEFCE_SFTP_PASSWORD = ""
+    HEFCE_SFTP_CWD = ""
 
     # Cengage Archive FTP settings
     CENGAGE_FTP_URI = ""
@@ -353,6 +365,12 @@ class live():
     HEFCE_FTP_USERNAME = ""
     HEFCE_FTP_PASSWORD = ""
     HEFCE_FTP_CWD = ""
+
+    # HEFCE Archive SFTP settings
+    HEFCE_SFTP_URI = ""
+    HEFCE_SFTP_USERNAME = ""
+    HEFCE_SFTP_PASSWORD = ""
+    HEFCE_SFTP_CWD = ""
 
     # Cengage Archive FTP settings
     CENGAGE_FTP_URI = ""
