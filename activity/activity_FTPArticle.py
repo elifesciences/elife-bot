@@ -48,6 +48,8 @@ class activity_FTPArticle(activity.activity):
         
         # Local directory settings
         self.TMP_DIR = "tmp_dir"
+        self.INPUT_DIR = "input_dir"
+        self.ZIP_DIR = "zip_dir"
         self.FTP_TO_SOMEWHERE_DIR = "ftp_outbox"
         
         # Outgoing FTP settings are set later
@@ -232,13 +234,12 @@ class activity_FTPArticle(activity.activity):
             name_match = '-' + str(doi_id).zfill(5)
             if name_match in s3_key_name:
                 # Download
-                print s3_key_name
                 s3_key = bucket.get_key(s3_key_name)
     
                 filename = s3_key_name.split("/")[-1]
     
                 filename_plus_path = (self.get_tmp_dir() + os.sep +
-                                      self.TMP_DIR + os.sep + filename)
+                                      self.INPUT_DIR + os.sep + filename)
                 mode = "wb"
                 f = open(filename_plus_path, mode)
                 s3_key.get_contents_to_file(f)
@@ -246,12 +247,38 @@ class activity_FTPArticle(activity.activity):
         
         # Repackage or move the zip depending on the workflow type
         if workflow == 'Cengage':
-            # TODO!!!
+            # Extract the zip and build a new zip
+            file_type = "/*.zip"
+            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.INPUT_DIR + file_type)
+            to_dir = self.get_tmp_dir() + os.sep + self.TMP_DIR
+            for filename in zipfiles:
+                myzip = zipfile.ZipFile(filename, 'r')
+                myzip.extractall(to_dir)
+                
+            # Create the new zip
+            zip_file_name = 'elife-' + str(doi_id).zfill(5) + '-xml-pdf.zip'
+            zip_dir = self.get_tmp_dir() + os.sep + self.ZIP_DIR
+            new_zipfile = zipfile.ZipFile(zip_dir + os.sep + zip_file_name,
+                              'w', zipfile.ZIP_DEFLATED, allowZip64 = True)
+            # Add files
+            file_types = ["/*.pdf", "/*.xml"]
+            for file_type in file_types:
+                files = glob.glob(to_dir + file_type)
+                for file in files:
+                    filename = file.split(os.sep)[-1]
+                    new_zipfile.write(file, filename)
+            
+            # Close zip
+            new_zipfile.close()
+            
+            # Move the zip
+            shutil.move(zip_dir + os.sep + zip_file_name, self.get_tmp_dir() + os.sep +
+                                      self.FTP_TO_SOMEWHERE_DIR + os.sep) 
             
         else:
             # Default, move all the zip files from TMP_DIR to FTP_OUTBOX
             file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.TMP_DIR + file_type)
+            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.INPUT_DIR + file_type)
             for filename in zipfiles:
                 shutil.move(filename, self.get_tmp_dir() + os.sep +
                                           self.FTP_TO_SOMEWHERE_DIR + os.sep) 
@@ -320,6 +347,8 @@ class activity_FTPArticle(activity.activity):
         """
         try:
             os.mkdir(self.get_tmp_dir() + os.sep + self.TMP_DIR)
+            os.mkdir(self.get_tmp_dir() + os.sep + self.INPUT_DIR)
+            os.mkdir(self.get_tmp_dir() + os.sep + self.ZIP_DIR)
             os.mkdir(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR)
         except:
             pass
