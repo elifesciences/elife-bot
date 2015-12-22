@@ -127,7 +127,7 @@ class activity_ConvertJATS(activity.activity):
         try:
             json_obj = json.loads(json_string)
             updated_date = datetime.datetime.strptime(update_date, "%Y-%m-%dT%H:%M:%SZ")
-            update_date_string = updated_date.strftime('%Y-%m-%d')
+            update_date_string = updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
             json_obj['update'] = update_date_string
             json_string = json.dumps(json_obj)
         except:
