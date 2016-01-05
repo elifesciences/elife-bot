@@ -73,7 +73,7 @@ class activity_PostEIF(activity.activity):
                 article_path = session.get_value(self.get_workflowId(), 'article_path')
                 self.set_monitor_property(self.settings, article_id, 'path', article_path, 'text')
                 published = r.json().get('publish')
-                if published == "1":
+                if published is True:
                     self.set_monitor_property(self.settings, article_id, 'publication_status', 'published', "text")
 
                     # initiate post-publication workflow
