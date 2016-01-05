@@ -56,7 +56,13 @@ class activity_PostEIF(activity.activity):
             destination = self.settings.drupal_EIF_endpoint
 
             headers = {'content-type': 'application/json'}
-            r = requests.post(destination, data=json_output, headers=headers)
+            
+            auth = None
+            if self.settings.drupal_update_user and self.settings.drupal_update_user != '':
+                auth = requests.auth.HTTPBasicAuth(self.settings.drupal_update_user,
+                                                    self.settings.drupal_update_pass)
+                        
+            r = requests.post(destination, data=json_output, headers=headers, auth=auth)
             self.logger.info("POST response was %s" % str(r.status_code))
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "start",
                                     "Finish submission of article " + article_id +
