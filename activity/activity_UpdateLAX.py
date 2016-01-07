@@ -49,7 +49,8 @@ class activity_UpdateLAX(activity.activity):
 
             if response.status_code is not 200:
                 self.emit_monitor_event(self.settings, article_id, version, run, "Update LAX", "error",
-                                        "Lax was not updated, " + str(response.text))
+                                        "Lax was not updated, " + str(response))
+                self.logger.error("Body:" + response.text)
                 return False
             self.emit_monitor_event(self.settings, article_id, version, run, "Update LAX", "end",
                                     "Lax has been updated, response is " + str(response.status_code) + " " + str(response.reason))
