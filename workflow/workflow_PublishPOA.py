@@ -71,6 +71,17 @@ class workflow_PublishPOA(workflow.workflow):
 					"schedule_to_close_timeout": 60*5,
 					"schedule_to_start_timeout": 300,
 					"start_to_close_timeout": 60*5
+				},
+				{
+					"activity_type": "PublishFinalPOA",
+					"activity_id": "PublishFinalPOA",
+					"version": "1",
+					"input": data,
+					"control": None,
+					"heartbeat_timeout": 60*30,
+					"schedule_to_close_timeout": 60*30,
+					"schedule_to_start_timeout": 300,
+					"start_to_close_timeout": 60*30
 				}
 			],
 		
