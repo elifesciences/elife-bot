@@ -107,8 +107,9 @@ class activity_PublishFinalPOA(activity.activity):
                     xml_file = self.INPUT_DIR + os.sep + article_xml_file_name
                     self.convert_xml(doi_id, xml_file, filenames, new_filenames)
                     
+                revision = self.next_revision_number(doi_id)
                 # TODO !!!!
-                self.zip_article_files(doi_id, filenames, new_filenames)
+                self.zip_article_files(doi_id, filenames, new_filenames, revision)
                     
             # TODO!!!!
             self.publish_status = self.upload_files_to_s3()
@@ -327,7 +328,45 @@ class activity_PublishFinalPOA(activity.activity):
         # TODO !!!!
         pass
     
-    def zip_article_files(self, doi_id, filenames, new_filenames):
+    def next_revision_number(self, doi_id, status = 'poa'):
+        """
+        From the bucket, get a list of zip files
+        and determine the next revision number to use
+        """
+        next_revision_number = 1
+        
+        bucket_name = self.publish_bucket
+        
+        file_extensions = []
+        file_extensions.append(".zip")
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket = bucket)
+        
+        max_revision_number = 0
+        for key_name in s3_key_names:
+
+            name_prefix = 'elife-' + str(doi_id).zfill(5) + '-' + str(status) + '-r'
+            if key_name.startswith(name_prefix):
+                # Attempt to get a revision number from the matching files
+                try:
+                    part = key_name.replace(name_prefix, '')
+                    revision = int(part.split('.')[0])
+                except:
+                    revision = None
+                if revision and revision > max_revision_number:
+                    max_revision_number = revision
+        
+        if max_revision_number > 0:
+            next_revision_number = max_revision_number + 1
+
+        return next_revision_number
+        
+
+    def zip_article_files(self, doi_id, filenames, new_filenames, revision):
         # TODO !!!!
         pass
 
