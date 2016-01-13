@@ -49,6 +49,7 @@ class activity_PublishFinalPOA(activity.activity):
         self.INPUT_DIR = self.get_tmp_dir() + os.sep + "input_dir"
         self.OUTPUT_DIR = self.get_tmp_dir() + os.sep + "output_dir"
         self.JUNK_DIR = self.get_tmp_dir() + os.sep + "junk_dir"
+        self.DONE_DIR = self.get_tmp_dir() + os.sep + "done_dir"
         
         # Bucket for outgoing files
         self.input_bucket = settings.poa_packaging_bucket
@@ -108,9 +109,10 @@ class activity_PublishFinalPOA(activity.activity):
                     self.convert_xml(doi_id, xml_file, filenames, new_filenames)
                     
                 revision = self.next_revision_number(doi_id)
-                # TODO !!!!
-                self.zip_article_files(doi_id, filenames, new_filenames, revision)
-                    
+                zip_file_name = self.new_zip_file_name(doi_id, revision)
+                if revision and zip_file_name:
+                    self.zip_article_files(doi_id, filenames, new_filenames, zip_file_name)
+                        
             # TODO!!!!
             self.publish_status = self.upload_files_to_s3()
             
@@ -183,7 +185,7 @@ class activity_PublishFinalPOA(activity.activity):
         part = part.replace('elife_poa_e', '')
         # Take the next five characters as digits
         try:
-            doi_id = int(part[0:4])
+            doi_id = int(part[0:5])
         except:
             doi_id = None
         return doi_id
@@ -365,10 +367,77 @@ class activity_PublishFinalPOA(activity.activity):
 
         return next_revision_number
         
+    def new_zip_file_name(self, doi_id, revision, status = 'poa'):
+        new_file_name = None
+        
+        try:
+            new_file_name = ('elife-' + str(doi_id).zfill(5)
+                             + '-' + str(status)
+                             + '-r' + str(revision)
+                             + '.zip')
+        except:
+            pass
+        
+        return new_file_name
 
-    def zip_article_files(self, doi_id, filenames, new_filenames, revision):
-        # TODO !!!!
-        pass
+    def zip_article_files(self, doi_id, filenames, new_filenames, zip_filename):
+        """
+        Move the files from old to new name into the tmp_dir
+        add them to a zip file
+        and move the zip file to the output_dir
+        """
+        
+        # Move the files
+        for filename in filenames:
+            new_filename = self.new_filename_from_old(filename, new_filenames)
+            if new_filename:
+                print filename
+                old_filename_plus_path = self.INPUT_DIR + os.sep + filename
+                new_filename_plus_path = self.TMP_DIR + os.sep + new_filename
+                if(self.logger):
+                    self.logger.info('moving poa file from %s to %s'
+                                     % (old_filename_plus_path, new_filename_plus_path))
+                
+                shutil.move(old_filename_plus_path, new_filename_plus_path)
+        
+        # Create the zip
+        zip_filename_plus_path = self.OUTPUT_DIR + os.sep + zip_filename
+        new_zipfile = zipfile.ZipFile(zip_filename_plus_path,
+                                      'w', zipfile.ZIP_DEFLATED, allowZip64 = True)
+        
+        # Add the files
+        for file in glob.glob(self.TMP_DIR + '/*'):
+            filename = file.split(os.sep)[-1]
+            new_zipfile.write(file, filename)
+        new_zipfile.close()
+        
+        # Clean out the tmp_dir
+        for file in glob.glob(self.TMP_DIR + '/*'):
+            filename = file.split(os.sep)[-1]
+            new_filename_plus_path = self.DONE_DIR + os.sep + filename
+            shutil.move(file, new_filename_plus_path)
+        
+        
+    
+    def new_filename_from_old(self, old_filename, new_filenames):
+        """
+        From a list of new file names, find the new name
+        that corresponds with the old file name based on the file extension
+        """
+        new_filename = None
+        try:
+            extension = old_filename.split('.')[-1]
+        except:
+            extension = None
+        if extension:
+            for filename in new_filenames:
+                try:
+                    new_extension = filename.split('.')[-1]
+                except:
+                    new_extension = None
+                if new_extension and extension == new_extension:
+                    new_filename = filename
+        return new_filename
 
     def upload_files_to_s3(self):
         # TODO !!!!
@@ -628,6 +697,7 @@ class activity_PublishFinalPOA(activity.activity):
             os.mkdir(self.INPUT_DIR)
             os.mkdir(self.OUTPUT_DIR)
             os.mkdir(self.JUNK_DIR)
+            os.mkdir(self.DONE_DIR)
             
         except:
             pass
