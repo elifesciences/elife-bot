@@ -16,6 +16,12 @@ import re
 
 import activity
 
+from xml.etree import ElementTree
+from xml.etree.ElementTree import Element, SubElement
+
+from elifetools import parseJATS as parser
+from elifetools import xmlio
+
 import boto.s3
 from boto.s3.connection import S3Connection
 
@@ -89,12 +95,21 @@ class activity_PublishFinalPOA(activity.activity):
         
         if self.approve_status is True:
             
-            # TODO!!!!!
-            self.add_pub_date_to_xml()
+            article_filenames_map = self.profile_article_files()
             
-            # TODO !!!!
-            self.zip_article_files()
-            
+            for doi_id,filenames in article_filenames_map.iteritems():
+                
+                article_xml_file_name = self.article_xml_from_filename_map(filenames)
+
+                new_filenames = self.new_filenames(doi_id, filenames)
+                
+                if article_xml_file_name:
+                    xml_file = self.INPUT_DIR + os.sep + article_xml_file_name
+                    self.convert_xml(doi_id, xml_file, filenames, new_filenames)
+                    
+                # TODO !!!!
+                self.zip_article_files(doi_id, filenames, new_filenames)
+                    
             # TODO!!!!
             self.publish_status = self.upload_files_to_s3()
             
@@ -109,11 +124,210 @@ class activity_PublishFinalPOA(activity.activity):
 
         return result
 
-    def add_pub_date_to_xml(self):
+    def new_filenames(self, doi_id, filenames):
+        """
+        Given a list of file names for one article,
+        rename them
+        Since there should only be one xml, pdf and possible zip
+        this should be simple
+        """
+        new_filenames = []
+        for filename in filenames:
+            name_prefix = 'elife-' + str(doi_id).zfill(5)
+            if filename.endswith('.xml'):
+                new_filenames.append(name_prefix + '.xml')
+            if filename.endswith('.pdf'):
+                new_filenames.append(name_prefix + '.pdf')
+            if filename.endswith('.zip'):
+                new_filenames.append(name_prefix + '-supp.zip')
+        return new_filenames
+        
+
+    def profile_article_files(self):
+        """
+        In the inbox, look for each article doi_id
+        and the files associated with that article
+        """
+        article_filenames_map = {}
+        
+        for file in glob.glob(self.INPUT_DIR + '/*'):
+            filename = file.split(os.sep)[-1]
+            doi_id = self.doi_id_from_filename(filename)
+            if doi_id:
+                #doi_id_str = str(doi_id).zfill(5)
+                if doi_id not in article_filenames_map:
+                    article_filenames_map[doi_id] = []
+                # Add the filename to the map for this article
+                article_filenames_map[doi_id].append(filename)
+        
+        return article_filenames_map
+        
+    def doi_id_from_filename(self, filename):
+        """
+        From a filename, get the doi_id portion
+        Example file names
+            decap_elife_poa_e10727.pdf
+            decap_elife_poa_e12029v2.pdf
+            elife_poa_e10727.xml
+            elife_poa_e10727_ds.zip
+            elife_poa_e12029v2.xml
+        """
+        if filename is None:
+            return None
+        
+        doi_id = None
+        # Remove folder names, if present
+        filename = filename.split(os.sep)[-1]
+        part = filename.replace('decap_elife_poa_e', '')
+        part = part.replace('elife_poa_e', '')
+        # Take the next five characters as digits
+        try:
+            doi_id = int(part[0:4])
+        except:
+            doi_id = None
+        return doi_id
+        
+        
+    def article_xml_from_filename_map(self, filenames):
+        """
+        Given a list of file names, return the article xml file name
+        """
+        for f in filenames:
+            if f.endswith('.xml'):
+                return f
+        return None
+
+    def convert_xml(self, doi_id, xml_file, filenames, new_filenames):
+
+        # Register namespaces
+        xmlio.register_xmlns()
+        
+        root = xmlio.parse(xml_file)
+
+        soup = self.article_soup(xml_file)
+
+        if parser.is_poa(soup):
+            if parser.pub_date(soup) is None:
+                # add the published date to the XML
+                root = self.add_pub_date_to_xml(doi_id, root)
+            
+            # set the article-id, to overwrite the v2, v3 value if present
+            root = self.set_article_id_xml(doi_id, root)
+            
+            # if ds.zip file is there, then add it to the xml
+            poa_ds_zip_file = None
+            for f in new_filenames:
+                if f.endswith('.zip'):
+                    poa_ds_zip_file = f
+            if poa_ds_zip_file:
+                root = self.add_poa_ds_zip_to_xml(doi_id, poa_ds_zip_file, root)
+            
+                
+        # Start the file output
+        reparsed_string = xmlio.output(root)
+
+        # Remove extra whitespace here for PoA articles to clean up and one VoR file too
+        reparsed_string = reparsed_string.replace("\n",'').replace("\t",'')
+        
+        f = open(xml_file, 'wb')
+        f.write(reparsed_string)
+        f.close()
+       
+    def article_soup(self, xml_file):
+        return parser.parse_document(xml_file) 
+
+    def add_pub_date_to_xml(self, doi_id, root):
+        
+        # Get the date for the first version
+        date_struct = None
+        date_str = self.get_pub_date_from_lax(doi_id)
+        
+        if date_str is not None:
+            date_struct = time.strptime(date_str,  "%Y%m%d000000")
+        else:
+            # Use current date
+            date_struct = time.gmtime()
+        
+        # Create the pub-date XML tag
+        pub_date_tag = self.pub_date_xml_element(date_struct)
+
+        # Add the tag to the XML
+        for tag in root.findall('./front/article-meta'):
+            parent_tag_index = xmlio.get_first_element_index(tag, 'elocation-id')
+            if not parent_tag_index:
+                if(self.logger):
+                    self.logger.info('no elocation-id tag and no pub-date added: ' + str(doi_id))
+            else:
+                tag.insert( parent_tag_index - 1, pub_date_tag)
+                
+            # Should only do it once but ensure it is only done once
+            break
+        
+        return root
+    
+    def pub_date_xml_element(self, pub_date):
+        
+        pub_date_tag = Element("pub-date")
+        pub_date_tag.set("publication-format", "electronic")
+        pub_date_tag.set("date-type", "pub")
+        
+        day = SubElement(pub_date_tag, "day")
+        day.text = str(pub_date.tm_mday).zfill(2)
+        
+        month = SubElement(pub_date_tag, "month")
+        month.text = str(pub_date.tm_mon).zfill(2)
+        
+        year = SubElement(pub_date_tag, "year")
+        year.text = str(pub_date.tm_year)
+    
+        return pub_date_tag
+    
+    def set_article_id_xml(self, doi_id, root):
+        
+        for tag in root.findall('./front/article-meta/article-id'):
+            if tag.get('pub-id-type') == "publisher-id":
+                # Overwrite the text with the base DOI value
+                tag.text = str(doi_id).zfill(5)
+                
+        return root
+
+    def add_poa_ds_zip_to_xml(self, doi_id, file_name, root):
+        """
+        Add the ext-link tag to the XML for the PoA ds.zip file
+        """
+
+        # Create the XML tag
+        supp_tag = self.ds_zip_xml_element(file_name, doi_id)
+
+        # Add the tag to the XML
+        for tag in root.findall('./front/article-meta'):
+            parent_tag_index = xmlio.get_first_element_index(tag, 'history')
+            if not parent_tag_index:
+                if(self.logger):
+                    self.logger.info('no history tag and no ds_zip tag added: ' + str(doi_id))
+            else:
+                tag.insert( parent_tag_index - 1, supp_tag)
+            
+        return root
+
+    def ds_zip_xml_element(self, file_name, doi_id):
+        
+        supp_tag = Element("supplementary-material")
+        ext_link_tag = SubElement(supp_tag, "ext-link")
+        ext_link_tag.set("xlink:href", file_name)
+        if 'supp' in file_name:
+            ext_link_tag.text = "Download zip"
+            
+            p_tag = SubElement(supp_tag, "p")
+            p_tag.text = "Any figures and tables for this article are included in the PDF. The zip folder contains additional supplemental files."
+
+        return supp_tag
+
+    def get_pub_date_from_lax(self, doi_id):
         # TODO !!!!
         pass
     
-    def zip_article_files(self):
+    def zip_article_files(self, doi_id, filenames, new_filenames):
         # TODO !!!!
         pass
 
