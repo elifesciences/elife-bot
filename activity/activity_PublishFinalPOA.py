@@ -113,7 +113,7 @@ class activity_PublishFinalPOA(activity.activity):
                 if revision and zip_file_name:
                     self.zip_article_files(doi_id, filenames, new_filenames, zip_file_name)
                         
-            # TODO!!!!
+            # Upload the zip files to the publishing bucket
             self.publish_status = self.upload_files_to_s3()
             
         # Set the activity status of this activity based on successes
@@ -391,7 +391,6 @@ class activity_PublishFinalPOA(activity.activity):
         for filename in filenames:
             new_filename = self.new_filename_from_old(filename, new_filenames)
             if new_filename:
-                print filename
                 old_filename_plus_path = self.INPUT_DIR + os.sep + filename
                 new_filename_plus_path = self.TMP_DIR + os.sep + new_filename
                 if(self.logger):
@@ -440,8 +439,24 @@ class activity_PublishFinalPOA(activity.activity):
         return new_filename
 
     def upload_files_to_s3(self):
-        # TODO !!!!
-        pass
+        """
+        Upload the article zip files to S3
+        """
+        
+        bucket_name = self.publish_bucket
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+    
+        for file in glob.glob(self.OUTPUT_DIR + '/*.zip'):
+            s3_key_name = file.split(os.sep)[-1]
+            s3key = boto.s3.key.Key(bucket)
+            s3key.key = s3_key_name
+            s3key.set_contents_from_filename(file, replace=True)
+            if(self.logger):
+                self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
+        return True
 
     def check_published_folder_exists(self):
         
