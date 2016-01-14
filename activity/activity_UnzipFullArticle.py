@@ -84,7 +84,8 @@ class activity_UnzipFullArticle(activity.activity):
         if(self.logger):
           self.logger.info('UnzipFullArticle: %s' % self.elife_id)
     
-        if self.xml_file_name():
+        # Only do the following if the document is VoR type
+        if self.xml_file_name() and self.is_document_poa_status(self.document) is False:
             #print self.xml_file_name()
             
             # Copy to the crossref outbox here for now, until it is safe to add to ArticleToOutbox activity
@@ -102,6 +103,14 @@ class activity_UnzipFullArticle(activity.activity):
             self.start_publish_article_workflow(self.elife_id, self.xml_file_name())
     
         return True
+    
+    def is_document_poa_status(self, document):
+        is_poa = None
+        if '-poa-' in document:
+            is_poa = True
+        elif '-vor-' in document:
+            is_poa = False
+        return is_poa
     
     def get_elife_id_from_data(self, data):
         self.elife_id = data["data"]["elife_id"]
