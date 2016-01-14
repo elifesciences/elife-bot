@@ -107,13 +107,6 @@ class activity_ConvertJATS(activity.activity):
                                     " message:" + e.message)
             return False
 
-        # set some more properties for the dashboard
-
-        article_data = json.loads(json_output)
-        self.set_monitor_property(self.settings, article_id, "title", article_data['title'], "text")
-        #self.set_monitor_property(self.settings, article_id, "pub-date", json_output['pub-date'], "date")
-        self.set_monitor_property(self.settings, article_id, "status", article_data['status'], "text")
-
         return True
 
     @staticmethod
@@ -172,7 +165,6 @@ class activity_ConvertJATS(activity.activity):
                 if surname is not None:
                     author += " " + surname
                 corresponding_authors.append(str.join(" ", (given_names, surname)))
-
 
         corresponding_authors_text = str.join(", ", corresponding_authors)
         self.set_monitor_property(self.settings, article_id, "corresponding-authors", corresponding_authors_text,
