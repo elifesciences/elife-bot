@@ -243,7 +243,7 @@ class activity_PublishFinalPOA(activity.activity):
         
         # Get the date for the first version
         date_struct = None
-        date_str = self.get_pub_date_from_lax(doi_id)
+        date_str = self.get_pub_date_str_from_lax(doi_id)
         
         if date_str is not None:
             date_struct = time.strptime(date_str,  "%Y%m%d000000")
@@ -326,9 +326,44 @@ class activity_PublishFinalPOA(activity.activity):
 
         return supp_tag
 
-    def get_pub_date_from_lax(self, doi_id):
-        # TODO !!!!
-        pass
+    def get_pub_date_str_from_lax(self, doi_id):
+        """
+        Check lax for any article published version
+        If found, get the pub date and format it as a string YYYYMMDDhhmmss
+        """
+        date_str = None
+        article_id = str(doi_id).zfill(5)
+        url = self.settings.lax_article_versions.replace('{article_id}', article_id)
+        response = requests.get(url)
+        if response.status_code == 200:
+
+            data = response.json()
+
+            for version in data:
+                article_data = data[version]
+                if 'datetime_published' in article_data:
+
+                    try:
+                        date_struct = time.strptime(article_data['datetime_published'],
+                                                    "%Y-%m-%dT%H:%M:%SZ")
+                        date_str = time.strftime('%Y%m%d%H%M%S', date_struct)
+
+                    except:
+                        if self.logger:
+                            self.logger.error("Error parsing the datetime_published from Lax: "
+                                              + str(article_data['datetime_published']))
+
+            return date_str
+        
+        elif response.status_code == 404:
+            return None
+        else:
+            if self.logger:
+                self.logger.error("Error obtaining version information from Lax" + str(response.status_code))
+            return None
+
+
+
     
     def next_revision_number(self, doi_id, status = 'poa'):
         """
