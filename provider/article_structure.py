@@ -69,7 +69,7 @@ class ArticleInfo(object):
             self.file_type = "ArticleZip"
         elif len(self.extra_info) > 0 and (self.extra_info[0].startswith('fig') or self.extra_info[0].startswith('figsupp')):
             self.file_type = "Figure"
-        elif len(self.extra_info) > 1 and self.extra_info[0].startswith('resp' or self.extra_info[1].startswith('fig')):
+        elif len(self.extra_info) > 1 and self.extra_info[0].startswith('resp') and self.extra_info[1].startswith('fig'):
             self.file_type = "Figure"
         elif len(self.extra_info) > 0 and self.extra_info[0].startswith('inf'):
             self.file_type = "Inline"
