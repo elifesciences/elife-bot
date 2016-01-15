@@ -66,7 +66,7 @@ class activity_ConvertJATS(activity.activity):
                 self.logger.info("Downloaded contents of file %s" % xml_filename)
 
             json_output = jats_scraper.scrape(xml, article_version=version)
-            
+
             # Add update date if it is in the session
             update_date = None
             try:
@@ -92,11 +92,13 @@ class activity_ConvertJATS(activity.activity):
             if self.logger:
                 self.logger.info("Uploaded key %s to %s" % (output_path, output_bucket))
 
+            self.set_dashboard_properties(json_output, article_id, version)
+
             session.store_value(self.get_workflowId(), "eif_filename", output_key)
             eif_object = json.loads(json_output)
             session.store_value(self.get_workflowId(), 'article_path', eif_object.get('path'))
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "success",
-                                        "XML converted to EIF for article " + article_id + " to " + output_key)
+                                    "XML converted to EIF for article " + article_id + " to " + output_key)
 
         except Exception as e:
             self.logger.exception("Exception when converting article XML to EIF")
@@ -118,7 +120,7 @@ class activity_ConvertJATS(activity.activity):
                 return key, filename
         return None
 
-    def add_update_date_to_json(self, json_string, update_date, xml_filename = None):
+    def add_update_date_to_json(self, json_string, update_date, xml_filename=None):
         """
         Update date is a string e.g. 2012-10-15T00:00:00Z format
         We want to add update: YYYY-MM-DD to the json
@@ -134,3 +136,36 @@ class activity_ConvertJATS(activity.activity):
             if self.logger:
                 self.logger.error("Unable to set the update date in the json %s" % str(xml_filename))
         return json_string
+
+    def set_dashboard_properties(self, json_output, article_id, version):
+
+        article_data = json.loads(json_output)
+
+        doi = article_data.get("doi")
+        self.set_monitor_property(self.settings, article_id, "doi", doi,
+                                  "text", version=version)
+
+        title = article_data.get("title")
+        self.set_monitor_property(self.settings, article_id, "title", title,
+                                  "text", version=version)
+
+        status = article_data.get("status")
+        self.set_monitor_property(self.settings, article_id, "status", status,
+                                  "text", version=version)
+
+        corresponding_authors = []
+        contributors = article_data.get("contributors")
+        for contributor in contributors:
+            if "corresp" in contributor and contributor["corresp"] == True:
+                author = ""
+                given_names = contributor.get("given-names")
+                if given_names is not None:
+                    author = given_names
+                surname = contributor.get("surname")
+                if surname is not None:
+                    author += " " + surname
+                corresponding_authors.append(str.join(" ", (given_names, surname)))
+
+        corresponding_authors_text = str.join(", ", corresponding_authors)
+        self.set_monitor_property(self.settings, article_id, "corresponding-authors", corresponding_authors_text,
+                                  "text", version=version)
