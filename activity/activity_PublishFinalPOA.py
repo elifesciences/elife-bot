@@ -434,6 +434,9 @@ class activity_PublishFinalPOA(activity.activity):
                 
                 shutil.move(old_filename_plus_path, new_filename_plus_path)
         
+        # Repackage the PoA ds zip file
+        self.repackage_poa_ds_zip()
+        
         # Create the zip
         zip_filename_plus_path = self.OUTPUT_DIR + os.sep + zip_filename
         new_zipfile = zipfile.ZipFile(zip_filename_plus_path,
@@ -451,7 +454,43 @@ class activity_PublishFinalPOA(activity.activity):
             new_filename_plus_path = self.DONE_DIR + os.sep + filename
             shutil.move(file, new_filename_plus_path)
         
-        
+    def repackage_poa_ds_zip(self):
+        """
+        If there is a ds zip file for this article files in the tmp_dir
+        then repackage it
+        """
+        zipfiles = glob.glob(self.TMP_DIR + '/*.zip')
+        if len(zipfiles) == 1:
+            zipfile_file = zipfiles[0]
+            zipfile_filename = zipfile_file.split(os.sep)[-1]
+            # Extract the zip
+            myzip = zipfile.ZipFile(zipfile_file, 'r')
+            myzip.extractall(self.TMP_DIR)
+            myzip.close()
+            
+            # Remove the manifest.xml file
+            try:
+                shutil.move(self.TMP_DIR + os.sep + 'manifest.xml', self.JUNK_DIR + os.sep + 'manifest.xml')
+                if(self.logger):
+                    self.logger.info("moving PoA zip manifest.xml to the junk folder")
+            except:
+                pass
+            
+            # Move the old zip file
+            zipfiles_now = glob.glob(self.TMP_DIR + '/*.zip')
+            for new_zipfile in zipfiles_now:
+                if not new_zipfile.endswith('_Supplemental_files.zip'):
+                    # Old zip file, move it to junk
+                    new_zipfile_filename = new_zipfile.split(os.sep)[-1]
+                    shutil.move(new_zipfile, self.JUNK_DIR + os.sep + new_zipfile_filename)
+                    
+            # Then can rename the new zip file
+            zipfiles_now = glob.glob(self.TMP_DIR + '/*.zip')
+            for new_zipfile in zipfiles_now:
+                if new_zipfile.endswith('_Supplemental_files.zip'):
+                    # Rename the zip as the old zip
+                    shutil.move(new_zipfile, self.TMP_DIR + os.sep + zipfile_filename)
+
     
     def new_filename_from_old(self, old_filename, new_filenames):
         """
