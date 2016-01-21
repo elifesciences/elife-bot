@@ -1,14 +1,17 @@
+import base64
 import json
 import activity
 import os
 import requests
-
+import boto.sqs
+from boto.sqs.message import Message
 
 """
 ConvertJATS.py activity
 """
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
+
 
 class activity_ApprovePublication(activity.activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
@@ -26,7 +29,6 @@ class activity_ApprovePublication(activity.activity):
         self.logger = logger
         # TODO : better exception handling
 
-
     def do_activity(self, data=None):
         """
         Do the work
@@ -34,13 +36,52 @@ class activity_ApprovePublication(activity.activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
-        article_version_id = data
+        article_id = data['article_id']
+        version = data['version']
+        run = data['run']
 
-        destination = self.settings.drupal_approve_endpoint
-        destination = destination + article_version_id + '.json'
+        try:
 
-        headers = {'content-type': 'application/json'}
-        r = requests.put(destination, data="{ \"publish\": \"1\" }", headers=headers)
-        self.logger.info("PUT response was %s" % r.status_code)
+            self.emit_monitor_event(self.settings, article_id, version, run, "Approve Publication", "start",
+                                    "Starting approval of article " + article_id)
+
+            publication_data = data['publication_data']
+            article_version_id = str(article_id) + '.' + str(version)
+
+            destination = self.settings.drupal_approve_endpoint
+            destination = destination + article_version_id + '.json'
+
+            headers = {'content-type': 'application/json'}
+            r = requests.put(destination, data="{ \"publish\": \"1\" }", headers=headers)
+            self.logger.debug("PUT response was %s" % r.status_code)
+
+            if r.status_code == 200:
+                self.set_monitor_property(self.settings, article_id, 'publication-status', 'published', "text", version=version)
+                message = base64.decodestring(publication_data)
+
+                sqs_conn = boto.sqs.connect_to_region(self.settings.sqs_region,
+                                                      aws_access_key_id=self.settings.aws_access_key_id,
+                                                      aws_secret_access_key=self.settings.aws_secret_access_key)
+
+                out_queue = sqs_conn.get_queue(self.settings.workflow_starter_queue)
+                m = Message()
+                m.set_body(json.dumps(message))
+                out_queue.write(m)
+
+            else:
+                self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
+                                        "Website ingest returned an error code: " + str(r.status_code))
+                self.logger.error("Body:" + r.text)
+                return False
+
+        except Exception as e:
+            self.logger.exception("Exception when submitting article EIF")
+            self.emit_monitor_event(self.settings, article_id, version, run, "Approve Publication", "error",
+                                    "Error approving article publication for " + article_id + " message:" + str(
+                                        e.message))
+            return False
+
+        self.emit_monitor_event(self.settings, article_id, version, run, "Approve Publication", "end",
+                                    "Finished approving article" + article_id +
+                                    " status was " + str(r.status_code))
         return True
-

@@ -1,5 +1,5 @@
 ---
-# set default to 1 to immediately publish articles by default or 0 to require approval
+# set default to true to immediately publish articles by default or false to require approval
 default: false
 
 # rules to override the default
@@ -22,11 +22,6 @@ override:
       - 00001$
       - 00288$
 
-# this specifically matches against the end of the DOI, set a date and time to automatically publish content
-# overrides any default or matching override rules from above
-schedule:
-   - 00353: 01/04/2015 12:01
-   - 00999: 25/12/1015 00:00
 
 
 
