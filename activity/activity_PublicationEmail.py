@@ -257,7 +257,11 @@ class activity_PublicationEmail(activity.activity):
           related_article_doi = article.get_article_related_insight_doi()
           if related_article_doi:
             related_article = self.get_related_article(related_article_doi)
-            article.set_related_insight_article(related_article)
+            if related_article:
+              article.set_related_insight_article(related_article)
+            else:
+              # Could not find the related article
+              remove_article_doi.append(article.doi)
             
     # Can remove articles now if required
     for article in articles:
@@ -368,7 +372,12 @@ class activity_PublicationEmail(activity.activity):
       if type(doi_id) == int:
         doi_id = str(doi_id).zfill(5)
       article_xml_filename = article.download_article_xml_from_s3(doi_id)
-      article.parse_article_file(self.get_tmp_dir() + os.sep + article_xml_filename)
+      try:
+        article.parse_article_file(self.get_tmp_dir() + os.sep + article_xml_filename)
+      except:
+        # Article XML for this DOI was not parsed so return None
+        return None
+    
     return article
   
   def get_related_article(self, doi):
@@ -392,6 +401,13 @@ class activity_PublicationEmail(activity.activity):
     # Article for this DOI does not exist, populate it
     doi_id = int(doi.split(".")[-1])
     article = self.create_article(doi_id)
+    
+    if not article:
+      if(self.logger):
+        log_info = "Could not build the related article " + doi
+        self.admin_email_content += "\n" + log_info
+        self.logger.info(log_info)
+      return article
     
     self.related_articles.append(article)
     
