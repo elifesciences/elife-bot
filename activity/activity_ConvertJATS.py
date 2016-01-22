@@ -158,13 +158,16 @@ class activity_ConvertJATS(activity.activity):
         for contributor in contributors:
             if "corresp" in contributor and contributor["corresp"] == True:
                 author = ""
+                
                 given_names = contributor.get("given-names")
-                if given_names is not None:
-                    author = given_names
                 surname = contributor.get("surname")
-                if surname is not None:
-                    author += " " + surname
-                corresponding_authors.append(str.join(" ", (given_names, surname)))
+                
+                if surname and given_names:
+                    author = str.join(" ", (given_names, surname)
+                elif surname:
+                    author = surname
+                    
+                corresponding_authors.append(author)
 
         corresponding_authors_text = str.join(", ", corresponding_authors)
         self.set_monitor_property(self.settings, article_id, "corresponding-authors", corresponding_authors_text,
