@@ -71,15 +71,15 @@ class activity_PostEIF(activity.activity):
                                     " for version " + str(version) + " run " + str(run) + " the response status "
                                                                                           "was " + str(r.status_code))
             # TODO: this is temp
-            # if r.status_code == 200:
-            if True:
+            if r.status_code == 200:
+            #if True:
                 # TODO : article path will at some point be available in the respose
                 article_path = session.get_value(self.get_workflowId(), 'article_path')
                 self.set_monitor_property(self.settings, article_id, 'path', article_path, 'text', version=version)
 
-                # published = r.json().get('publish')
+                published = r.json().get('publish')
                 # TODO: this is temp
-                published = False
+                #published = False
 
                 # assemble data to start post-publication workflow
                 expanded_folder = session.get_value(self.get_workflowId(), 'expanded_folder')
