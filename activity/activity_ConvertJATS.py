@@ -163,7 +163,7 @@ class activity_ConvertJATS(activity.activity):
                 surname = contributor.get("surname")
                 
                 if surname and given_names:
-                    author = str.join(" ", (given_names, surname)
+                    author = str.join(" ", (given_names, surname))
                 elif surname:
                     author = surname
                     
