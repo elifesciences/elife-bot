@@ -262,7 +262,7 @@ class activity_PublicationEmail(activity.activity):
             else:
               # Could not find the related article
               if(self.logger):
-                log_info = "Could not build the article related to insight " + doi
+                log_info = "Could not build the article related to insight " + article.doi
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
               remove_article_doi.append(article.doi)
