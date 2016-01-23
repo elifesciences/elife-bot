@@ -261,6 +261,10 @@ class activity_PublicationEmail(activity.activity):
               article.set_related_insight_article(related_article)
             else:
               # Could not find the related article
+              if(self.logger):
+                log_info = "Could not build the article related to insight " + doi
+                self.admin_email_content += "\n" + log_info
+                self.logger.info(log_info)
               remove_article_doi.append(article.doi)
             
     # Can remove articles now if required
