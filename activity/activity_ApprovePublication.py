@@ -69,7 +69,7 @@ class activity_ApprovePublication(activity.activity):
                 out_queue.write(m)
 
             else:
-                self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
+                self.emit_monitor_event(self.settings, article_id, version, run, "Approve Publication", "error",
                                         "Website ingest returned an error code: " + str(r.status_code))
                 self.logger.error("Body:" + r.text)
                 return False

@@ -97,7 +97,7 @@ class activity_ConvertJATS(activity.activity):
             session.store_value(self.get_workflowId(), "eif_filename", output_key)
             eif_object = json.loads(json_output)
             session.store_value(self.get_workflowId(), 'article_path', eif_object.get('path'))
-            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "success",
+            self.emit_monitor_event(self.settings, article_id, version, run, "Convert JATS", "success",
                                     "XML converted to EIF for article " + article_id + " to " + output_key)
 
         except Exception as e:
@@ -158,16 +158,13 @@ class activity_ConvertJATS(activity.activity):
         for contributor in contributors:
             if "corresp" in contributor and contributor["corresp"] == True:
                 author = ""
-                
                 given_names = contributor.get("given-names")
+                if given_names is not None:
+                    author = given_names
                 surname = contributor.get("surname")
-                
-                if surname and given_names:
-                    author = str.join(" ", (given_names, surname))
-                elif surname:
-                    author = surname
-                    
-                corresponding_authors.append(author)
+                if surname is not None:
+                    author += " " + surname
+                corresponding_authors.append(str.join(" ", (given_names, surname)))
 
         corresponding_authors_text = str.join(", ", corresponding_authors)
         self.set_monitor_property(self.settings, article_id, "corresponding-authors", corresponding_authors_text,
