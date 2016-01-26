@@ -153,19 +153,36 @@ class activity_ConvertJATS(activity.activity):
         self.set_monitor_property(self.settings, article_id, "status", status,
                                   "text", version=version)
 
+        pub_date = article_data.get("pub-date")
+        self.set_monitor_property(self.settings, article_id, "publication-date", pub_date,
+                                  "text", version=version)
+
+        article_type = article_data.get("article-type")
+        self.set_monitor_property(self.settings, article_id, "article-type", article_type,
+                                  "text", version=version)
+
+        authors = []
         corresponding_authors = []
         contributors = article_data.get("contributors")
         for contributor in contributors:
+
+            author = ""
+            given_names = contributor.get("given-names")
+            if given_names is not None:
+                author = given_names
+            surname = contributor.get("surname")
+            if surname is not None:
+                author += " " + surname
+
+            name = str.join(" ", (given_names, surname))
             if "corresp" in contributor and contributor["corresp"] == True:
-                author = ""
-                given_names = contributor.get("given-names")
-                if given_names is not None:
-                    author = given_names
-                surname = contributor.get("surname")
-                if surname is not None:
-                    author += " " + surname
-                corresponding_authors.append(str.join(" ", (given_names, surname)))
+                corresponding_authors.append(name)
+            authors.append(name)
 
         corresponding_authors_text = str.join(", ", corresponding_authors)
         self.set_monitor_property(self.settings, article_id, "corresponding-authors", corresponding_authors_text,
+                                  "text", version=version)
+
+        authors_text = str.join(", ", authors)
+        self.set_monitor_property(self.settings, article_id, "authors", authors_text,
                                   "text", version=version)
