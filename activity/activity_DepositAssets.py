@@ -57,6 +57,8 @@ class activity_DepositAssets(activity.activity):
                         "Content-Disposition: attachment; filename=" + file_name + ";")
                     file_key.copy(cdn_bucket_name, article_id + "/" + file_name_no_extension + "-download." + extension,
                                   metadata=download_metadata)
+            self.emit_monitor_event(self.settings, article_id, version, run, "Deposit assets", "end",
+                                    "Deposited assets for article " + article_id)
 
         except Exception as e:
             self.logger.exception("Exception when Depositing assets")

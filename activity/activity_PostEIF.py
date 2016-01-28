@@ -1,5 +1,5 @@
 import base64
-
+from requests.auth import HTTPBasicAuth
 import activity
 import json
 from boto.s3.key import Key

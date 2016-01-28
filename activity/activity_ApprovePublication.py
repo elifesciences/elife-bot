@@ -5,6 +5,7 @@ import os
 import requests
 import boto.sqs
 from boto.sqs.message import Message
+from requests.auth import HTTPBasicAuth
 
 """
 ConvertJATS.py activity
@@ -52,7 +53,12 @@ class activity_ApprovePublication(activity.activity):
             destination = destination + article_version_id + '.json'
 
             headers = {'content-type': 'application/json'}
-            r = requests.put(destination, data="{ \"publish\": \"1\" }", headers=headers)
+
+            auth = None
+            if self.settings.drupal_update_user and self.settings.drupal_update_user != '':
+                auth = requests.auth.HTTPBasicAuth(self.settings.drupal_update_user,
+                                                    self.settings.drupal_update_pass)
+            r = requests.put(destination, data="{ \"publish\": \"1\" }", headers=headers, auth=auth)
             self.logger.debug("PUT response was %s" % r.status_code)
 
             if r.status_code == 200:
