@@ -65,7 +65,9 @@ class activity_ApprovePublication(activity.activity):
                 self.set_monitor_property(self.settings, article_id, 'publication-status', 'published', "text", version=version)
                 message = base64.decodestring(publication_data)
 
-                sqs_conn = boto.sqs.connect_to_region(self.settings.sqs_region)
+                sqs_conn = boto.sqs.connect_to_region(self.settings.sqs_region,
+                                                      aws_access_key_id=self.settings.aws_access_key_id,
+                                                      aws_secret_access_key=self.settings.aws_secret_access_key)
 
                 out_queue = sqs_conn.get_queue(self.settings.workflow_starter_queue)
                 m = Message()
