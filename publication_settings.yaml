@@ -9,8 +9,8 @@ override:
   publish:
     # keys are properties in EIF json, values are patterns to match against an articles value of that property
     # if any pattern matches the article will be publised immediately, regardless of default setting
-    #doi:
-    #  - 00353$
+    doi:
+     - 000000000353$
     #article-type:
     #  - research-article$
 
@@ -18,8 +18,8 @@ override:
   hold:
     # keys are properties in EIF json, values are patterns to match against an articles value of that property
     # if any pattern matches the article will be publised immediately, regardless of default setting
-    #doi:
-      #- 00001$
+    doi:
+      - 0000000000001$
       #- 00288$
 
 
