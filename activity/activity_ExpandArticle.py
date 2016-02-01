@@ -74,7 +74,13 @@ class activity_ExpandArticle(activity.activity):
         if status is None:
             self.logger.error("Name '%s' did not match expected pattern for status" % filename_last_element)
             return False  # status could not be determined, exit workflow. Can't emit event as no version.
-        run = str(uuid.uuid4())
+        
+        # Get the run value from the session, if available, otherwise set it
+        try:
+            run = session.get_value(self.get_workflowId(), 'run')
+        except:
+            run = str(uuid.uuid4())
+        
         # store version for other activities in this workflow execution
         session.store_value(self.get_workflowId(), 'version', version)
 
