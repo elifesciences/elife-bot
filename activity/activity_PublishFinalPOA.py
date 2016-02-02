@@ -210,6 +210,9 @@ class activity_PublishFinalPOA(activity.activity):
         soup = self.article_soup(xml_file)
 
         if parser.is_poa(soup):
+            # Capitalise subject group values in article categories
+            root = self.subject_group_convert_in_xml(root)
+            
             if parser.pub_date(soup) is None:
                 # add the published date to the XML
                 root = self.add_pub_date_to_xml(doi_id, root)
@@ -238,6 +241,23 @@ class activity_PublishFinalPOA(activity.activity):
        
     def article_soup(self, xml_file):
         return parser.parse_document(xml_file) 
+
+    def title_case(self, string):
+        ignore_words = ['and']
+        word_list = string.split(' ')
+        for i, word in enumerate(word_list):
+            if word.lower() not in ignore_words:
+                word_list[i] = word.capitalize()
+        return ' '.join(word_list)
+
+    def subject_group_convert_in_xml(self, root):
+        """
+        Convert capitalisation of <subject> tags in article categories
+        """
+        for tag in root.findall('./front/article-meta/article-categories/subj-group'):
+            for subject_tag in tag.findall('./subject'):
+                subject_tag.text = self.title_case(subject_tag.text)
+        return root
 
     def add_pub_date_to_xml(self, doi_id, root):
         
