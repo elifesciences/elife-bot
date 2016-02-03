@@ -38,11 +38,6 @@ def main():
     if options.env:
         env = options.env
 
-
-
-    if options.env:
-        env = options.env
-
     settings = settings_lib.get_settings(env)
     env = env
 
@@ -109,33 +104,8 @@ def process_data_publishperfectarticle(workflow_name, workflow_data):
     return data
 
 
-def process_data_approvearticlepublication(workflow_name, workflow_data):
-    # technically not needed if input matches!
-    data = {
-        'article_id': workflow_data.get('article_id'),
-        'version': workflow_data.get('version'),
-        'run': workflow_data.get('run'),
-        'publication_data': workflow_data.get('publication_data')
-    }
-    return data
-
-def process_data_postperfectpublication(workflow_name, workflow_data):
-    data = {
-        'article_id': workflow_data.get('article_id'),
-        'version': workflow_data.get('version'),
-        'expanded_folder': workflow_data.get('expanded_folder'),
-        'update_date': workflow_data.get('update_date'),
-        'run': workflow_data.get('run'),
-        'status': workflow_data.get('status'),
-        'eif_location': workflow_data.get('eif_location')
-    }
-    return data
-
-
 workflow_data_processors = {
-    'PublishPerfectArticle': process_data_publishperfectarticle,
-    'ApproveArticlePublication': process_data_approvearticlepublication,
-    'PostPerfectPublication': process_data_postperfectpublication
+    'PublishPerfectArticle': process_data_publishperfectarticle
 }
 
 if __name__ == "__main__":
