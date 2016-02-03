@@ -71,7 +71,7 @@ class activity_ApprovePublication(activity.activity):
 
                 out_queue = sqs_conn.get_queue(self.settings.workflow_starter_queue)
                 m = Message()
-                m.set_body(json.dumps(message))
+                m.set_body(message)
                 out_queue.write(m)
 
             else:
