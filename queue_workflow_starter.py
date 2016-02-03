@@ -127,7 +127,7 @@ def process_data_postperfectpublication(workflow_name, workflow_data):
         'update_date': workflow_data.get('update_date'),
         'run': workflow_data.get('run'),
         'status': workflow_data.get('status'),
-        'eif_location': workflow_data.get('eif_filename')
+        'eif_location': workflow_data.get('eif_location')
     }
     return data
 
