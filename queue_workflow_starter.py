@@ -119,10 +119,23 @@ def process_data_approvearticlepublication(workflow_name, workflow_data):
     }
     return data
 
+def process_data_postperfectpublication(workflow_name, workflow_data):
+    data = {
+        'article_id': workflow_data.get('article_id'),
+        'version': workflow_data.get('version'),
+        'expanded_folder': workflow_data.get('expanded_folder'),
+        'update_date': workflow_data.get('update_date'),
+        'run': workflow_data.get('run'),
+        'status': workflow_data.get('status'),
+        'eif_location': workflow_data.get('eif_filename')
+    }
+    return data
+
 
 workflow_data_processors = {
     'PublishPerfectArticle': process_data_publishperfectarticle,
-    'ApproveArticlePublication': process_data_approvearticlepublication
+    'ApproveArticlePublication': process_data_approvearticlepublication,
+    'PostPerfectPublication': process_data_postperfectpublication
 }
 
 if __name__ == "__main__":
