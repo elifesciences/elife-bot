@@ -246,6 +246,9 @@ class activity_PublishFinalPOA(activity.activity):
         ignore_words = ['and']
         word_list = string.split(' ')
         for i, word in enumerate(word_list):
+            # Skip if the word if the first letter is a capital
+            if word and word[0] == word[0].upper():
+                continue
             if word.lower() not in ignore_words:
                 word_list[i] = word.capitalize()
         return ' '.join(word_list)
