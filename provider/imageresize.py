@@ -1,8 +1,13 @@
-from wand.image import Image
 import StringIO
 
-def resize(format, filep, info):
+from wand.image import Image
+
+
+def resize(format, filep, info, logger):
+
+    image_buffer = None
     try:
+
         with Image(file=filep, resolution=96) as tiff:
             image_format = format.get('format')
             if image_format is not None:
@@ -30,11 +35,14 @@ def resize(format, filep, info):
             if target_height is not image.height or target_width is not image.width:
                 image.resize(width=target_width, height=target_height)
 
-            jp = StringIO.StringIO()
-            image.save(file=jp)
+            image_buffer = StringIO.StringIO()
+            image.save(file=image_buffer)
+
     except Exception as e:
-        # TODO : log!
-        print e
+        logger.error("error resizing image %s" % info.filename, exc_info=True)
+        # TODO : raise this error, but only once the decider will terminate the worklfow on hard error
+        # raise e
+
     filename = info.filename
     if format.get('prefix') is not None:
         filename = format.get('prefix') + filename
@@ -46,4 +54,4 @@ def resize(format, filep, info):
         filename = filename + "." + format['format']
     else:
         filename += '.tiff'
-    return filename, jp
+    return filename, image_buffer

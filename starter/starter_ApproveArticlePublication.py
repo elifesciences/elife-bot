@@ -19,7 +19,7 @@ Amazon SWF PublishArticle starter, for API and Lens publishing etc.
 
 class starter_ApproveArticlePublication():
 
-    def start(self, ENV="dev", article_version_id=None):
+    def start(self, ENV="dev", article_id=None, version=None, run=None, publication_data=None):
 
         # TODO : much of this is common to many starters and could probably be streamlined
 
@@ -32,20 +32,27 @@ class starter_ApproveArticlePublication():
         # logFile = None
         logger = log.logger(log_file, settings.setLevel, identity)
 
-        if article_version_id is None:
-            logger.error("Did not get an article version id")
-            return
+        if article_id is None or version is None or publication_data is None:
+            logger.error("Did not get an article id, version or publication data")
+            return False
+
+        info = {
+            'article_id': article_id,
+            'version': version,
+            'run': run,
+            'publication_data': publication_data
+        }
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "ApproveArticlePublication_%s" % article_version_id + str(int(random.random() * 1000))
+        workflow_id = "ApproveArticlePublication_%s" % article_id + "." + str(version) + "." + str(int(random.random() * 1000))
         workflow_name = "ApproveArticlePublication"
         workflow_version = "1"
         child_policy = None
         execution_start_to_close_timeout = None
-        workflow_input = json.dumps(article_version_id, default=lambda ob: ob.__dict__)
+        workflow_input = json.dumps(info, default=lambda ob: ob.__dict__)
 
         try:
             response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version,

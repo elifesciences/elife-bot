@@ -2,6 +2,7 @@ import activity
 import json
 import os
 from os import path
+import datetime
 from jats_scraper import jats_scraper
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
@@ -64,7 +65,16 @@ class activity_ConvertJATS(activity.activity):
             if self.logger:
                 self.logger.info("Downloaded contents of file %s" % xml_filename)
 
-            json_output = jats_scraper.scrape(xml)
+            json_output = jats_scraper.scrape(xml, article_version=version)
+
+            # Add update date if it is in the session
+            update_date = None
+            try:
+                update_date = session.get_value(self.get_workflowId(), 'update_date')
+            except:
+                update_date = None
+            if update_date:
+                json_output = self.add_update_date_to_json(json_output, update_date, xml_filename)
 
             if self.logger:
                 self.logger.info("Scraped file %s" % xml_filename)
@@ -82,11 +92,13 @@ class activity_ConvertJATS(activity.activity):
             if self.logger:
                 self.logger.info("Uploaded key %s to %s" % (output_path, output_bucket))
 
+            self.set_dashboard_properties(json_output, article_id, version)
+
             session.store_value(self.get_workflowId(), "eif_filename", output_key)
             eif_object = json.loads(json_output)
             session.store_value(self.get_workflowId(), 'article_path', eif_object.get('path'))
-            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "success",
-                                        "XML converted to EIF for article " + article_id + " to " + output_key)
+            self.emit_monitor_event(self.settings, article_id, version, run, "Convert JATS", "end",
+                                    "XML converted to EIF for article " + article_id + " to " + output_key)
 
         except Exception as e:
             self.logger.exception("Exception when converting article XML to EIF")
@@ -107,3 +119,72 @@ class activity_ConvertJATS(activity.activity):
             if info.file_type == 'ArticleXML':
                 return key, filename
         return None
+
+    def add_update_date_to_json(self, json_string, update_date, xml_filename=None):
+        """
+        Update date is a string e.g. 2012-10-15T00:00:00Z format
+        We want to add update: YYYY-MM-DD to the json
+        xml_filename is just for logging purposes
+        """
+        try:
+            json_obj = json.loads(json_string)
+            updated_date = datetime.datetime.strptime(update_date, "%Y-%m-%dT%H:%M:%SZ")
+            update_date_string = updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+            json_obj['update'] = update_date_string
+            json_string = json.dumps(json_obj)
+        except:
+            if self.logger:
+                self.logger.error("Unable to set the update date in the json %s" % str(xml_filename))
+        return json_string
+
+    def set_dashboard_properties(self, json_output, article_id, version):
+
+        article_data = json.loads(json_output)
+
+        doi = article_data.get("doi")
+        self.set_monitor_property(self.settings, article_id, "doi", doi,
+                                  "text", version=version)
+
+        title = article_data.get("title")
+        self.set_monitor_property(self.settings, article_id, "title", title,
+                                  "text", version=version)
+
+        status = article_data.get("status")
+        self.set_monitor_property(self.settings, article_id, "status", status,
+                                  "text", version=version)
+
+        pub_date = article_data.get("pub-date")
+        self.set_monitor_property(self.settings, article_id, "publication-date", pub_date,
+                                  "text", version=version)
+
+        article_type = article_data.get("article-type")
+        self.set_monitor_property(self.settings, article_id, "article-type", article_type,
+                                  "text", version=version)
+
+        authors = []
+        corresponding_authors = []
+        contributors = article_data.get("contributors")
+        for contributor in contributors:
+
+            author = ""
+            given_names = contributor.get("given-names")
+            surname = contributor.get("surname")
+
+            if surname and given_names:
+                author = str.join(" ", (given_names, surname))
+
+            elif surname:
+                author = surname
+
+            if "corresp" in contributor and contributor["corresp"] == True:
+                corresponding_authors.append(author)
+
+            authors.append(author)
+
+        corresponding_authors_text = str.join(", ", corresponding_authors)
+        self.set_monitor_property(self.settings, article_id, "corresponding-authors", corresponding_authors_text,
+                                  "text", version=version)
+
+        authors_text = str.join(", ", authors)
+        self.set_monitor_property(self.settings, article_id, "authors", authors_text,
+                                  "text", version=version)
