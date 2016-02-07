@@ -90,6 +90,9 @@ class exp():
     lens_distribution_id = u'E30WWCB2DNEOKI'
     lens_domain_name = 'd32g8kubfuccxs.cloudfront.net'
 
+    # Lens jpg bucket
+    lens_jpg_bucket = "exp-elife-production-lens-jpg"
+
     # Bot S3 settings
     bot_bucket = 'elife-bot-dev'
 
@@ -109,6 +112,10 @@ class exp():
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
 
+    # PMC email settings
+    ses_pmc_sender_email = "sender@example.com"
+    ses_pmc_recipient_email = "admin@example.com"
+
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
@@ -125,6 +132,12 @@ class exp():
     PUBMED_FTP_USERNAME = ""
     PUBMED_FTP_PASSWORD = ""
     PUBMED_FTP_CWD = ""
+
+    # PMC FTP settings
+    PMC_FTP_URI = ""
+    PMC_FTP_USERNAME = ""
+    PMC_FTP_PASSWORD = ""
+    PMC_FTP_CWD = ""
 
     # HEFCE Archive FTP settings
     HEFCE_FTP_URI = ""
@@ -181,6 +194,9 @@ class dev():
     lens_distribution_id = u'E30WWCB2DNEOKI'
     lens_domain_name = 'd32g8kubfuccxs.cloudfront.net'
 
+    # Lens jpg bucket
+    lens_jpg_bucket = "exp-elife-production-lens-jpg"
+
     # Bot S3 settings
     bot_bucket = 'elife-bot-dev'
 
@@ -200,6 +216,10 @@ class dev():
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
 
+    # PMC email settings
+    ses_pmc_sender_email = "sender@example.com"
+    ses_pmc_recipient_email = "admin@example.com"
+
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
@@ -216,6 +236,12 @@ class dev():
     PUBMED_FTP_USERNAME = ""
     PUBMED_FTP_PASSWORD = ""
     PUBMED_FTP_CWD = ""
+
+    # PMC FTP settings
+    PMC_FTP_URI = ""
+    PMC_FTP_USERNAME = ""
+    PMC_FTP_PASSWORD = ""
+    PMC_FTP_CWD = ""
 
     # HEFCE Archive FTP settings
     HEFCE_FTP_URI = ""
@@ -277,6 +303,9 @@ class live():
     lens_distribution_id = u'EK4HKRQWIF6B3'
     cdn_domain_name = 'lens.elifesciences.org'
 
+    # Lens jpg bucket
+    lens_jpg_bucket = "elife-production-lens-jpg"
+
     # Bot S3 settings
     bot_bucket = 'elife-bot'
 
@@ -296,6 +325,10 @@ class live():
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
 
+    # PMC email settings
+    ses_pmc_sender_email = "sender@example.com"
+    ses_pmc_recipient_email = "admin@example.com"
+
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp'
 
@@ -312,6 +345,12 @@ class live():
     PUBMED_FTP_USERNAME = ""
     PUBMED_FTP_PASSWORD = ""
     PUBMED_FTP_CWD = ""
+
+    # PMC FTP settings
+    PMC_FTP_URI = ""
+    PMC_FTP_USERNAME = ""
+    PMC_FTP_PASSWORD = ""
+    PMC_FTP_CWD = ""
 
     # HEFCE Archive FTP settings
     HEFCE_FTP_URI = ""

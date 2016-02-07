@@ -7,18 +7,18 @@ import datetime
 import workflow
 
 """
-PublicationEmail workflow
+PMCDeposit workflow
 """
 
-class workflow_PublicationEmail(workflow.workflow):
+class workflow_PMCDeposit(workflow.workflow):
 	
 	def __init__(self, settings, logger, conn = None, token = None, decision = None, maximum_page_size = 100):
 		workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
 
 		# SWF Defaults
-		self.name = "PublicationEmail"
+		self.name = "PMCDeposit"
 		self.version = "1"
-		self.description = "Send emails upon publication of each article"
+		self.description = "Deposit article files to PMC"
 		self.default_execution_start_to_close_timeout = 60*20
 		self.default_task_start_to_close_timeout = 30
 
@@ -51,15 +51,15 @@ class workflow_PublicationEmail(workflow.workflow):
 					"start_to_close_timeout": 300
 				},
 				{
-					"activity_type": "PublicationEmail",
-					"activity_id": "PublicationEmail",
+					"activity_type": "PMCDeposit",
+					"activity_id": "PMCDeposit",
 					"version": "1",
 					"input": data,
 					"control": None,
-					"heartbeat_timeout": 60*10,
-					"schedule_to_close_timeout": 60*10,
+					"heartbeat_timeout": 60*30,
+					"schedule_to_close_timeout": 60*120,
 					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 60*10
+					"start_to_close_timeout": 60*120
 				}
 			],
 		

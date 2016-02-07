@@ -105,6 +105,8 @@ Feature: Use Templates provider
     And I have a base directory <base_dir>
     And I create an article provider
     And I have the document name <document_name>
+    And I have the cdn bucket <cdn_bucket>
+    And I have the article xml filename <article_xml_filename>
     And I get lens templates list from the template provider
     And I get a filesystem provider from the templates provider
     When I read each base dir plus templates list document to content
@@ -114,6 +116,6 @@ Feature: Use Templates provider
     Then I have the article html <article_html>
     
   Examples:
-    | env | tmp_base_dir  | test_name     | base_dir              | document_name	           | article_html
-    | dev | tmp           | tmpl_provider | test_data/templates/  | test_data/elife03385.xml | <!DOCTYPE html>\n<html xmlns:mml="http://www.w3.org/1998/Math/MathML">\n<head>\n<title>Differential TAM receptor–ligand–phospholipid interactions delimit differential TAM bioactivities \| eLife Lens</title>\n<script>\ndocument_url: "http://example.com/elife03385.xml"\n</script>\n</head>\n<body>\n</body>\n</html>
+    | env | tmp_base_dir  | test_name     | base_dir              | document_name	           | cdn_bucket | article_xml_filename | article_html
+    | dev | tmp           | tmpl_provider | test_data/templates/  | test_data/elife03385.xml | cdn-bucket | elife03385.xml       | <!DOCTYPE html>\n<html xmlns:mml="http://www.w3.org/1998/Math/MathML">\n<head>\n<title>Differential TAM receptor–ligand–phospholipid interactions delimit differential TAM bioactivities \| eLife Lens</title>\n<script>\ndocument_url: "http://example.com/cdn-bucket/elife03385.xml"\n</script>\n</head>\n<body>\n</body>\n</html>
     

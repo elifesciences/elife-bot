@@ -48,6 +48,9 @@ def start(ENV = "dev"):
 	workflow_names.append("PublicationEmail")
 	workflow_names.append("FTPArticle")
 	workflow_names.append("PubRouterDeposit")
+	workflow_names.append("PMCDeposit")
+	workflow_names.append("PublishFullArticleZip")
+	workflow_names.append("PublishLensJPG")
 	workflow_names.append("PublishPerfectArticle")
 	workflow_names.append("PostPerfectPublication")
 	workflow_names.append("ProcessXMLArticle")
@@ -98,6 +101,7 @@ def start(ENV = "dev"):
 	activity_names.append("ConverterSVGtoJPG")
 	activity_names.append("PackagePOA")
 	activity_names.append("PublishPOA")
+	activity_names.append("PublishFinalPOA")
 	activity_names.append("DepositCrossref")
 	activity_names.append("PubmedArticleDeposit")
 	activity_names.append("ArticleToOutbox")
@@ -105,6 +109,9 @@ def start(ENV = "dev"):
 	activity_names.append("PublicationEmail")
 	activity_names.append("FTPArticle")
 	activity_names.append("PubRouterDeposit")
+	activity_names.append("PMCDeposit")
+	activity_names.append("UnzipFullArticle")
+	activity_names.append("UnzipLensJPG")
 
 	for activity_name in activity_names:
 		# Import the activity libraries

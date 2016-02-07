@@ -40,10 +40,16 @@ def run_cron(ENV = "dev"):
     # Jobs to start at the top of the hour
     #print "Top of the hour"
 
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "starter_S3Monitor",
+    #  workflow_id   = "S3Monitor",
+    #  start_seconds = 60*31)
+    
     workflow_conditional_start(
       ENV           = ENV,
-      starter_name  = "starter_S3Monitor",
-      workflow_id   = "S3Monitor",
+      starter_name  = "starter_DepositCrossref",
+      workflow_id   = "DepositCrossref",
       start_seconds = 60*31)
     
     pass
@@ -68,41 +74,55 @@ def run_cron(ENV = "dev"):
       workflow_id   = "S3Monitor_POA",
       start_seconds = 60*31)
     
+    # Full article zip bucket polling
     workflow_conditional_start(
       ENV           = ENV,
-      starter_name  = "cron_NewS3XML",
-      workflow_id   = "cron_NewS3XML",
+      starter_name  = "starter_S3Monitor",
+      workflow_id   = "S3Monitor_FullArticle",
       start_seconds = 60*31)
     
+    # Lens jpg zip bucket polling
     workflow_conditional_start(
       ENV           = ENV,
-      starter_name  = "cron_NewS3PDF",
-      workflow_id   = "cron_NewS3PDF",
+      starter_name  = "starter_S3Monitor",
+      workflow_id   = "S3Monitor_LensJPG",
       start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "cron_NewS3SVG",
-      workflow_id   = "cron_NewS3SVG",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3XML",
+    #  workflow_id   = "cron_NewS3XML",
+    #  start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "cron_NewS3Suppl",
-      workflow_id   = "cron_NewS3Suppl",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3PDF",
+    #  workflow_id   = "cron_NewS3PDF",
+    #  start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "cron_NewS3JPG",
-      workflow_id   = "cron_NewS3JPG",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3SVG",
+    #  workflow_id   = "cron_NewS3SVG",
+    #  start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "cron_NewS3FiguresPDF",
-      workflow_id   = "cron_NewS3FiguresPDF",
-      start_seconds = 60*31)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3Suppl",
+    #  workflow_id   = "cron_NewS3Suppl",
+    #  start_seconds = 60*31)
+    
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3JPG",
+    #  workflow_id   = "cron_NewS3JPG",
+    #  start_seconds = 60*31)
+    
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "cron_NewS3FiguresPDF",
+    #  workflow_id   = "cron_NewS3FiguresPDF",
+    #  start_seconds = 60*31)
     
     if(current_time.tm_min >= 45 and current_time.tm_min <= 59):
       # Bottom quarter of the hour
@@ -142,17 +162,29 @@ def run_cron(ENV = "dev"):
           start_seconds = 60*31)
         
       # GoOA / CAS deposits once per day 21:45 UTC
-      #if(current_time.tm_hour == 21):
-      #  workflow_conditional_start(
-      #    ENV           = ENV,
-      #    starter_name  = "starter_PubRouterDeposit",
-      #    workflow_id   = "PubRouterDeposit_GoOA",
-      #    start_seconds = 60*31)
+      if(current_time.tm_hour == 21):
+        workflow_conditional_start(
+          ENV           = ENV,
+          starter_name  = "starter_PubRouterDeposit",
+          workflow_id   = "PubRouterDeposit_GoOA",
+          start_seconds = 60*31)
         
       workflow_conditional_start(
         ENV           = ENV,
         starter_name  = "starter_PubmedArticleDeposit",
         workflow_id   = "PubmedArticleDeposit",
+        start_seconds = 60*31)
+      
+      workflow_conditional_start(
+        ENV           = ENV,
+        starter_name  = "cron_NewS3FullArticle",
+        workflow_id   = "cron_NewS3FullArticle",
+        start_seconds = 60*31)
+      
+      workflow_conditional_start(
+        ENV           = ENV,
+        starter_name  = "cron_NewS3LensJPG",
+        workflow_id   = "cron_NewS3LensJPG",
         start_seconds = 60*31)
       
       workflow_conditional_start(
@@ -198,6 +230,10 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
         s.start(ENV = ENV, workflow = "S3Monitor")
       if workflow_id == "S3Monitor_POA":
         s.start(ENV = ENV, workflow = "S3Monitor_POA")
+      if workflow_id == "S3Monitor_FullArticle":
+        s.start(ENV = ENV, workflow = "S3Monitor_FullArticle")
+      if workflow_id == "S3Monitor_LensJPG":
+        s.start(ENV = ENV, workflow = "S3Monitor_LensJPG")
         
     elif(starter_name == "starter_AdminEmail"):
       s.start(ENV = ENV, workflow = "AdminEmail")
@@ -233,6 +269,9 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       or starter_name == "cron_NewS3POA"
       or starter_name == "cron_NewS3FiguresPDF"
       or starter_name == "starter_PublicationEmail"
+      or starter_name == "starter_DepositCrossref"
+      or starter_name == "cron_NewS3FullArticle"
+      or starter_name == "cron_NewS3LensJPG"
       ):
       s.start(ENV = ENV)
       
