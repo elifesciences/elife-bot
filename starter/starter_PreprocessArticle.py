@@ -80,7 +80,7 @@ class starter_PreprocessArticle():
 
 if __name__ == "__main__":
 
-  doi_id = None
+  document = None
 
   # Add options
   parser = OptionParser()

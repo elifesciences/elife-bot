@@ -71,8 +71,8 @@ class activity_PreprocessArticle(activity.activity):
         # Bucket settings
         self.output_bucket = "elife-articles-renamed"
         # Temporarily upload to a folder during development
-        self.output_bucket_folder = "samples07/"
-        self.output_article_xml_bucket_folder = "samples07/article-xml/"
+        self.output_bucket_folder = ""
+        self.output_article_xml_bucket_folder = "article-xml/"
         
         # Temporary detail of files from the zip files to an append log
         self.zip_file_contents_log_name = "rezip_article_zip_file_contents.txt"
@@ -89,26 +89,24 @@ class activity_PreprocessArticle(activity.activity):
         
         documents = []
         # Data passed to this activity
-        if "document" in data["data"]:
+        if data and "data" in data and "document" in data["data"]:
             document = data["data"]["document"]
             documents.append(document)
         else:
-            # TODO, get document names from the buckets
+            # Get document names from the buckets
             document = None
-            pass
-        
-        print documents
+            documents = self.documents_in_first_bucket_not_the_second(self.ppp_input_bucket,
+                                                                      self.output_bucket)
+            if(self.logger):
+                self.logger.info('PreprocessArticle found new zip files: %s' %
+                                 json.dumps(documents, sort_keys=True, indent=4))
 
-        
+
         # Create output directories
         self.create_activity_directories()
 
         # Download the S3 objects
         self.download_files_from_s3(documents)
-        
-        #return True
-        # TODO FROM HERE!!!!
-        
         
         verified = None
         # Check for an empty folder and respond true
@@ -193,8 +191,30 @@ class activity_PreprocessArticle(activity.activity):
                                + "\t" + str(i.filename)
                                + "\t" + str(i.file_size))
 
-    def documents_in_first_bucket_not_the_second(self, first_bucket, second_bucket):
-        return []
+    def documents_in_first_bucket_not_the_second(self, first_bucket_name, second_bucket_name):
+        """
+        Comparing the keys from one bucket to the other
+        in order to get a list of keys to prcoess
+        """
+        s3_key_names = []
+        
+        file_extensions = ['.zip']
+        # get item list from S3
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(first_bucket_name)
+        first_bucket_s3_key_names = s3lib.get_s3_key_names_from_bucket(
+            bucket = bucket, file_extensions = file_extensions)
+        
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(second_bucket_name)
+        second_bucket_s3_key_names = s3lib.get_s3_key_names_from_bucket(
+            bucket = bucket)
+        
+        for first in first_bucket_s3_key_names:
+            if first not in second_bucket_s3_key_names:
+                s3_key_names.append(first)
+
+        return s3_key_names
 
     def download_files_from_s3(self, documents):
         
