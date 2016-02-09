@@ -54,7 +54,8 @@ def start(ENV = "dev"):
 	workflow_names.append("PublishPerfectArticle")
 	workflow_names.append("PostPerfectPublication")
 	workflow_names.append("ProcessXMLArticle")
-
+	workflow_names.append("PreprocessArticle")
+	
 	for workflow_name in workflow_names:
 		# Import the workflow libraries
 		class_name = "workflow_" + workflow_name
@@ -112,6 +113,7 @@ def start(ENV = "dev"):
 	activity_names.append("PMCDeposit")
 	activity_names.append("UnzipFullArticle")
 	activity_names.append("UnzipLensJPG")
+	activity_names.append("PreprocessArticle")
 
 	for activity_name in activity_names:
 		# Import the activity libraries
