@@ -69,7 +69,7 @@ class activity_PreprocessArticle(activity.activity):
         self.OUTPUT_DIR = self.get_tmp_dir() + os.sep + "output_dir"
        
         # Bucket settings
-        self.output_bucket = "elife-articles-renamed"
+        self.output_bucket = settings.publishing_buckets_prefix + settings.production_bucket
         # Temporarily upload to a folder during development
         self.output_bucket_folder = ""
         
