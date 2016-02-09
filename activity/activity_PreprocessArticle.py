@@ -105,21 +105,19 @@ class activity_PreprocessArticle(activity.activity):
         # Create output directories
         self.create_activity_directories()
 
-        # Download the S3 objects
-        self.download_files_from_s3(documents)
-        
-        verified = None
-        # Check for an empty folder and respond true
-        #  if we do not do this it will continue to attempt this activity
-        if len(self.folder_list(self.INPUT_DIR)) <= 0:
+        if len(documents) <= 0:
             if(self.logger):
-                self.logger.info('folder was empty in RezipArticle: ' + self.INPUT_DIR)
+                self.logger.info('PreprocessArticle has no documents to process: ')
             verified = True
-        
-        for folder in self.folder_list(self.INPUT_DIR):
-            if(self.logger):
-                self.logger.info('processing files in folder ' + folder)
+
+        for zip_doc in sorted(documents):
+            article_documents = [zip_doc]
+
+            # Download the S3 objects
+            self.download_files_from_s3(article_documents)
             
+            # Set the folder name in order to continue
+            folder = ''.join(document.split('.')[0:-1])
 
             try:
                 elife_id = int(folder.split('-')[1])
@@ -159,7 +157,7 @@ class activity_PreprocessArticle(activity.activity):
                 self.upload_article_xml_to_s3()
             
             # Partial clean up
-            #self.clean_directories()
+            self.clean_directories()
             
         # Get a list of file names and sizes
         self.log_zip_file_contents()
