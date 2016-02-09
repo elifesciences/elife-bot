@@ -624,6 +624,19 @@ class article(object):
     
   def check_is_article_published(self, doi, is_poa, was_ever_poa, article_url = None):
       """
+      NOTE: With a new URL scheme set to launch, this function must be disabled
+      until it can be switched to lax as the data source
+      but we can keep the tests running too for now
+      """
+      if article_url:
+        # Running tests
+        return self.check_is_article_published_by_url(doi, is_poa, was_ever_poa, article_url)
+      else:
+        # Live
+        return False
+      
+  def check_is_article_published_by_url(self, doi, is_poa, was_ever_poa, article_url = None):
+      """
       For each article XML downloaded from S3, check if it is published
       Also needs to know whether the article is POA or was ever POA'ed
         article_url can be supplied for testing without making live HTTP requests
