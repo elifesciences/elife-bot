@@ -157,14 +157,11 @@ class activity_PreprocessArticle(activity.activity):
                 self.upload_article_xml_to_s3()
             
             # Partial clean up
-            self.clean_directories()
+            self.clean_directories(full = True)
             
         # Get a list of file names and sizes
         self.log_zip_file_contents()
         
-        # Full Clean up
-        #self.clean_directories(full = True)
-            
         
         # Return the activity result, True or False
         if verified is True:
