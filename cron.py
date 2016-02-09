@@ -54,7 +54,7 @@ def run_cron(ENV = "dev"):
     
     workflow_conditional_start(
       ENV           = ENV,
-      starter_name  = "activity_PreprocessArticle",
+      starter_name  = "starter_PreprocessArticle",
       workflow_id   = "PreprocessArticle",
       start_seconds = 60*13)
     
@@ -96,7 +96,7 @@ def run_cron(ENV = "dev"):
     
     workflow_conditional_start(
       ENV           = ENV,
-      starter_name  = "activity_PreprocessArticle",
+      starter_name  = "starter_PreprocessArticle",
       workflow_id   = "PreprocessArticle",
       start_seconds = 60*13)
     
