@@ -117,7 +117,7 @@ class activity_PreprocessArticle(activity.activity):
             self.download_files_from_s3(article_documents)
             
             # Set the folder name in order to continue
-            folder = ''.join(document.split('.')[0:-1])
+            folder = ''.join(zip_doc.split('.')[0:-1])
 
             try:
                 elife_id = int(folder.split('-')[1])
