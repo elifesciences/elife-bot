@@ -72,7 +72,6 @@ class activity_PreprocessArticle(activity.activity):
         self.output_bucket = "elife-articles-renamed"
         # Temporarily upload to a folder during development
         self.output_bucket_folder = ""
-        self.output_article_xml_bucket_folder = "article-xml/"
         
         # Temporary detail of files from the zip files to an append log
         self.zip_file_contents_log_name = "rezip_article_zip_file_contents.txt"
@@ -154,7 +153,6 @@ class activity_PreprocessArticle(activity.activity):
             
             if verified and zip_file_name:
                 self.upload_article_zip_to_s3()
-                self.upload_article_xml_to_s3()
             
             # Partial clean up
             self.clean_directories(full = True)
@@ -363,29 +361,7 @@ class activity_PreprocessArticle(activity.activity):
             if(self.logger):
                 self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
 
-    def upload_article_xml_to_s3(self):
-        """
-        Upload the article xml to S3
-        """
-        
-        bucket_name = self.output_bucket
-        bucket_folder_name = self.output_article_xml_bucket_folder
-        
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-        
-        file = self.article_xml_file()
 
-        s3_key_name = bucket_folder_name + file.split(os.sep)[-1]
-        s3key = boto.s3.key.Key(bucket)
-        s3key.key = s3_key_name
-        s3key.set_contents_from_filename(file, replace=True)
-        if(self.logger):
-            self.logger.info("uploaded " + s3_key_name + " to s3 bucket " +
-                             bucket_name + ", " + bucket_folder_name + " folder")
-
-    
     
     def list_dir(self, dir_name):
         dir_list = os.listdir(dir_name)
