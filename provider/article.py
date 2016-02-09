@@ -166,7 +166,7 @@ class article(object):
     if r.status_code == requests.codes.ok:
       filename_plus_path = self.get_tmp_dir() + os.sep + xml_filename
       f = open(filename_plus_path, "wb")
-      f.write(r.text)
+      f.write(r.content)
       f.close()
       return xml_filename
     else:
