@@ -633,8 +633,58 @@ class article(object):
         return self.check_is_article_published_by_url(doi, is_poa, was_ever_poa, article_url)
       else:
         # Live
-        return False
+        return self.check_is_article_published_by_lax(doi, is_poa, was_ever_poa)
       
+  def check_is_article_published_by_lax(self, doi, is_poa, was_ever_poa):
+      """
+      Check the lax data for whether an article is published
+      considering whether it was or is PoA status too
+      """
+      doi_id = int(self.get_doi_id(doi))
+      article_id = str(doi_id).zfill(5)
+      
+      lax_url = self.settings.lax_article_versions.replace('{article_id}', article_id)
+      response = requests.get(lax_url)
+      
+      # We will check for any published version with these article status below
+      poa_status = None
+      vor_status = None
+      
+      if response.status_code == 200:
+          data = response.json()
+          
+          for version in data:
+              try:
+                  status = data[version]['status']
+              except:
+                  status = None
+              
+              if status and status == 'poa':
+                  poa_status = True
+              if status and status == 'vor':
+                  vor_status = True
+      
+      # Now a decision can be made
+      if (is_poa is True or
+          (is_poa is False and was_ever_poa is False) or
+          (is_poa is False and was_ever_poa is None)):
+          # In this case, any version is sufficient
+          if poa_status or vor_status:
+              return True
+          else:
+              return False
+      elif is_poa is False and was_ever_poa is True:
+          # In the case of was ever PoA but is not PoA
+          #  check there is a VoR version
+          if vor_status:
+              return True
+          else:
+            return False
+      
+      # Default
+      return False
+              
+        
   def check_is_article_published_by_url(self, doi, is_poa, was_ever_poa, article_url = None):
       """
       For each article XML downloaded from S3, check if it is published
