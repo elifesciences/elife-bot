@@ -1,3 +1,5 @@
+import shutil
+
 import boto.swf
 import json
 import random
@@ -176,13 +178,19 @@ class activity(object):
         """
         tmp_dir = self.get_tmp_dir()
 
-        if (tmp_dir):
+        if tmp_dir:
             full_filename = tmp_dir + os.sep + filename
         else:
             full_filename = filename
 
         f = open(full_filename, mode)
         return f
+
+    def clean_tmp_dir(self):
+
+        tmp_dir = self.get_tmp_dir()
+        shutil.rmtree(tmp_dir)
+        self.tmp_dir = None
 
     @staticmethod
     def emit_monitor_event(settings, item_identifier, version, run, event_type, status, message):

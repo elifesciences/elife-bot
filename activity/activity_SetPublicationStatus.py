@@ -77,11 +77,11 @@ class activity_SetPublicationStatus(activity.activity):
 
     def get_publication_status(self, data):
         settings = self.load_settings()
-        publish = "0"
-        override = "1"
+        publish = False
+        override = True
         if settings['default']:
-            publish = "1"
-            override = "0"
+            publish = True
+            override = False
             override_rule_keys = settings['override']['hold']
         else:
             override_rule_keys = settings['override']['publish']

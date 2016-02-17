@@ -7,19 +7,19 @@ import datetime
 import workflow
 
 """
-PublishPOA workflow
+PreprocessArticle workflow
 """
 
-class workflow_PublishPOA(workflow.workflow):
+class workflow_PreprocessArticle(workflow.workflow):
 	
 	def __init__(self, settings, logger, conn = None, token = None, decision = None, maximum_page_size = 100):
 		workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
 
 		# SWF Defaults
-		self.name = "PublishPOA"
+		self.name = "PreprocessArticle"
 		self.version = "1"
-		self.description = "Publish POA articles workflow"
-		self.default_execution_start_to_close_timeout = 60*35
+		self.description = "Download article zip files, rename or change them, and then upload them to a different bucket."
+		self.default_execution_start_to_close_timeout = 60*60
 		self.default_task_start_to_close_timeout = 30
 
 		# Get the input from the JSON decision response
@@ -51,30 +51,8 @@ class workflow_PublishPOA(workflow.workflow):
 					"start_to_close_timeout": 300
 				},
 				{
-					"activity_type": "PublishPOA",
-					"activity_id": "PublishPOA",
-					"version": "1",
-					"input": data,
-					"control": None,
-					"heartbeat_timeout": 60*30,
-					"schedule_to_close_timeout": 60*30,
-					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 60*30
-				},
-				{
-					"activity_type": "DepositCrossref",
-					"activity_id": "DepositCrossref",
-					"version": "1",
-					"input": data,
-					"control": None,
-					"heartbeat_timeout": 60*5,
-					"schedule_to_close_timeout": 60*5,
-					"schedule_to_start_timeout": 300,
-					"start_to_close_timeout": 60*5
-				},
-				{
-					"activity_type": "PublishFinalPOA",
-					"activity_id": "PublishFinalPOA",
+					"activity_type": "PreprocessArticle",
+					"activity_id": "PreprocessArticle",
 					"version": "1",
 					"input": data,
 					"control": None,

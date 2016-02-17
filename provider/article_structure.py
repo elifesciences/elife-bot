@@ -1,7 +1,7 @@
 import re
 
-class ArticleInfo(object):
 
+class ArticleInfo(object):
     """
     Determine useful information about an article file from its filename
     see https://github.com/elifesciences/ppp-project/blob/master/file_naming_spec.md
@@ -67,9 +67,15 @@ class ArticleInfo(object):
 
         if self.is_article_zip:
             self.file_type = "ArticleZip"
-        elif (self.extension == 'tiff' or self.extension == 'tif') and self.extra_info[0].startswith('fig'):
+        elif len(self.extra_info) > 0 and (self.extra_info[0].startswith('fig') or self.extra_info[0].startswith('figsupp')):
             self.file_type = "Figure"
-        elif self.extension == 'xml':
+        elif len(self.extra_info) > 1 and self.extra_info[0].startswith('resp') and self.extra_info[1].startswith('fig'):
+            self.file_type = "Figure"
+        elif len(self.extra_info) > 1 and self.extra_info[0].startswith('app') and self.extra_info[1].startswith('fig'):
+            self.file_type = "Figure"
+        elif len(self.extra_info) > 0 and self.extra_info[0].startswith('inf'):
+            self.file_type = "Inline"
+        elif len(parts) == 3 and self.extension == 'xml':
             self.file_type = 'ArticleXML'
         else:
             self.file_type = 'Other'
@@ -79,6 +85,6 @@ def main():
     a = ArticleInfo("elife-00012-fig3-figsupp1-data2.csv")
     print a
 
+
 if __name__ == '__main__':
     main()
-

@@ -45,7 +45,7 @@ class activity_ApplyVersionNumber(activity.activity):
         article_version_id = article_id + '.' + version
         run = session.get_value(self.get_workflowId(), 'run')
 
-        self.emit_monitor_event(self.settings, article_id, version, run, "ApplyVersionNumber", "start",
+        self.emit_monitor_event(self.settings, article_id, version, run, "Apply Version Number", "start",
                                 "Starting applying version number to files for " + article_id)
 
         try:

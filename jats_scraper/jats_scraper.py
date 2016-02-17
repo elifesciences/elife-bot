@@ -1,8 +1,8 @@
 import feeds
 
-def scrape(xml):
+def scrape(xml, article_version=None):
 
-    res = feeds.scrape(xml, lambda x: x[0]['article'][0])
+    res = feeds.scrape(xml, lambda x: x[0]['article'][0], article_version)
 
     return res
 

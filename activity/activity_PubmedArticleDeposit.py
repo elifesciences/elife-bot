@@ -233,7 +233,10 @@ class activity_PubmedArticleDeposit(activity.activity):
             
             # Check if article was ever poa
             # Must be set to True or False to get it published
-            if (article.is_poa is False and
+            if article.doi and article.doi == '10.7554/eLife.11190':
+                # Edge case, ignore this article PoA
+                article.was_ever_poa = False
+            elif (article.is_poa is False and
                 self.article.check_was_ever_poa(article.doi) is True):
                 article.was_ever_poa = True
             elif (article.is_poa is False and

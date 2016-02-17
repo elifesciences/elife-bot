@@ -66,10 +66,15 @@ def decide(ENV = "dev"):
 						workflow_object = get_workflow_object(workflow_name, settings, logger, conn, token, decision, maximum_page_size)
 				
 						# Process the workflow
-						success = workflow_object.do_workflow()
+						try:
+							success = workflow_object.do_workflow()
+						except Exception as e:
+							success = None
+							logger.error('error processing workflow %s' % workflow_name, exc_info=True)
 						
 						# Print the result to the log
-						logger.info('%s success %s' % (workflow_name, success))
+						if success:
+							logger.info('%s success %s' % (workflow_name, success))
 						
 					else:
 						logger.info('error: could not load object %s\n' % workflow_name)
