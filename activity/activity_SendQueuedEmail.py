@@ -37,6 +37,9 @@ class activity_SendQueuedEmail(activity.activity):
     # Default limit of emails per activity
     self.limit = 100
     
+    # Default rate limit
+    self.rate_limit_per_sec = 10
+    
     # S3 bucket where email body content is stored
     self.email_body_bucket = settings.bot_bucket
     
@@ -67,7 +70,17 @@ class activity_SendQueuedEmail(activity.activity):
       limit = limit,
       date_scheduled_before = date_scheduled_before)
     
+    email_count = 0
     for e in email_items:
+      
+      # Wait if the rate limit is reached
+      if (self.rate_limit_per_sec and email_count > 0
+          and email_count % self.rate_limit_per_sec == 0):
+        if(self.logger):
+          self.logger.info('SendQueuedEmail waiting 1 second after sending %s emails'
+                           % str(self.rate_limit_per_sec))
+        time.sleep(1)
+      
       item_name = e.name
       item_attrs = {}
       
@@ -102,6 +115,10 @@ class activity_SendQueuedEmail(activity.activity):
         # Did not send correctly
         item_attrs["sent_status"] = False
         self.db.put_attributes(domain_name, item_name, item_attrs)
+      
+      # Increment the counter
+      email_count += 1
+      
     return True
   
   def send_email(self, sender_email, recipient_email, subject, body, format = "text"):
