@@ -46,6 +46,9 @@ class activity_LensArticle(activity.activity):
 		
 		# Default templates directory
 		self.from_dir = "template"
+		
+		# CDN bucket
+		self.cdn_bucket = settings.publishing_buckets_prefix + settings.ppp_cdn_bucket
 
 	def do_activity(self, data = None):
 		"""
@@ -72,7 +75,7 @@ class activity_LensArticle(activity.activity):
 		
 		article_html = self.get_article_html(from_dir = self.from_dir,
 											 article = self.article,
-											 cdn_bucket = self.settings.cdn_bucket,
+											 cdn_bucket = self.cdn_bucket,
 											 article_xml_filename = article_xml_filename)
 		
 		# Write the document to disk first
