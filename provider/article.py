@@ -156,10 +156,31 @@ class article(object):
     # Convert the value just in case
     if type(doi_id) == int:
       doi_id = str(doi_id).zfill(5)
+    
+    article_id = doi_id
+    version = None
+    # Get the highest published version from lax
+    url = self.settings.lax_article_versions.replace('{article_id}', article_id)
+    try:
+      response = requests.get(url)
+      if response.status_code == 200:
+          high_version = 0
+          data = response.json()
+          for version in data:
+              int_version = int(version)
+              if int_version > high_version:
+                  high_version = int_version
+          if high_version > 0:
+            version = high_version
+    except:
+      return False
+
+    if not version:
+      return False
 
     # Download XML file via HTTP for now
-    xml_file_url = ('http://s3.amazonaws.com/elife-cdn/elife-articles/'
-                    + doi_id + '/' + 'elife' + doi_id + '.xml')
+    xml_file_url = ('http://s3.amazonaws.com/elife-publishing-cdn/'
+                    + doi_id + '/' + 'elife-' + doi_id + '-v' + str(version) + '.xml')
     xml_filename = xml_file_url.split('/')[-1]
 
     r = requests.get(xml_file_url)
