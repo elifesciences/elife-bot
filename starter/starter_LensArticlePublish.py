@@ -34,20 +34,19 @@ class starter_LensArticlePublish():
 		conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 	
 		if(all == True):
-			# Publish all articles, use SimpleDB as the source
-			docs = self.get_docs_from_SimpleDB(ENV)
-	
+			# Publish all articles
+			# TODO!! Add all articles support again
+			pass
+
 		elif(doi_id is not None):
-			docs = self.get_docs_from_SimpleDB(ENV, doi_id = doi_id)
-			
-		elif(last_updated_since is not None):
-			# Publish only articles since the last_modified date, use SimpleDB as the source
-			docs = self.get_docs_from_SimpleDB(ENV, last_updated_since = last_updated_since)
-		
+			docs = []
+			doc = {}
+			doc['elife_id'] = str(doi_id).zfill(5)
+			docs.append(doc)
+
 		if(docs):
 			for doc in docs:
 				
-				document = doc["document"]
 				elife_id = doc["elife_id"]
 		
 				id_string = elife_id
