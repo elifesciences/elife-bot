@@ -106,6 +106,17 @@ class activity_FTPArticle(activity.activity):
                 file_type = "/*.zip"
                 zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
                 self.ftp_to_endpoint(zipfiles, passive=True)
+            
+            if workflow == 'Scopus':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, passive=True)
+            
+            if workflow == 'WoS':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, passive=True)
+            
             if workflow == 'GoOA':
                 file_type = "/*.zip"
                 zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR + file_type)
@@ -149,6 +160,18 @@ class activity_FTPArticle(activity.activity):
             self.FTP_PASSWORD = self.settings.CENGAGE_FTP_PASSWORD
             self.FTP_CWD =  self.settings.CENGAGE_FTP_CWD
             
+        if workflow == 'Scopus':
+            self.FTP_URI = self.settings.SCOPUS_FTP_URI
+            self.FTP_USERNAME = self.settings.SCOPUS_FTP_USERNAME
+            self.FTP_PASSWORD = self.settings.SCOPUS_FTP_PASSWORD
+            self.FTP_CWD =  self.settings.SCOPUS_FTP_CWD
+            
+        if workflow == 'WoS':
+            self.FTP_URI = self.settings.WOS_FTP_URI
+            self.FTP_USERNAME = self.settings.WOS_FTP_USERNAME
+            self.FTP_PASSWORD = self.settings.WOS_FTP_PASSWORD
+            self.FTP_CWD =  self.settings.WOS_FTP_CWD
+            
         if workflow == 'GoOA':
             self.FTP_URI = self.settings.GOOA_FTP_URI
             self.FTP_USERNAME = self.settings.GOOA_FTP_USERNAME
@@ -175,7 +198,7 @@ class activity_FTPArticle(activity.activity):
                 self.download_data_file_from_s3(doi_id, 'jpg', workflow)
                 self.download_data_file_from_s3(doi_id, 'figures', workflow)
                 
-            if workflow == 'Cengage':
+            if workflow == 'Cengage' or workflow == 'Scopus' or workflow == 'WoS':
                 # Download files from the articles bucket
                 self.download_data_file_from_s3(doi_id, 'xml', workflow)
                 self.download_data_file_from_s3(doi_id, 'pdf', workflow)
@@ -246,7 +269,7 @@ class activity_FTPArticle(activity.activity):
                 f.close()
         
         # Repackage or move the zip depending on the workflow type
-        if workflow == 'Cengage':
+        if workflow == 'Cengage' or workflow == 'Scopus' or workflow == 'WoS':
             # Extract the zip and build a new zip
             file_type = "/*.zip"
             zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.INPUT_DIR + file_type)
