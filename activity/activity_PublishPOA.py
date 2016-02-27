@@ -118,8 +118,11 @@ class activity_PublishPOA(activity.activity):
         if self.approve_status is True:
             try:
                 # Publish files
-                self.ftp_files_to_endpoint(file_type = "/*_ds.zip", sub_dir = self.ftp_subfolder_ds)
-                self.ftp_files_to_endpoint(file_type = "/*[0-9].zip", sub_dir = self.ftp_subfolder_poa)
+                
+                # Feb 26, 2016: Disable FTP delivery
+                #self.ftp_files_to_endpoint(file_type = "/*_ds.zip", sub_dir = self.ftp_subfolder_ds)
+                #self.ftp_files_to_endpoint(file_type = "/*[0-9].zip", sub_dir = self.ftp_subfolder_poa)
+                
                 self.ftp_status = True
             except:
                 self.ftp_status = False
@@ -129,8 +132,11 @@ class activity_PublishPOA(activity.activity):
                     # Add go.xml files
                     self.create_go_xml_file("pap", self.ftp_subfolder_poa)
                     self.create_go_xml_file("ds", self.ftp_subfolder_ds)
-                    self.ftp_go_xml_to_endpoint("pap", self.ftp_subfolder_poa)
-                    self.ftp_go_xml_to_endpoint("ds", self.ftp_subfolder_ds)
+                    
+                    # Feb 26, 2016: Disable FTP delivery
+                    #self.ftp_go_xml_to_endpoint("pap", self.ftp_subfolder_poa)
+                    #self.ftp_go_xml_to_endpoint("ds", self.ftp_subfolder_ds)
+                    
                     self.go_status = True
                 except:
                     self.go_status = False
