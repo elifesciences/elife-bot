@@ -57,17 +57,26 @@ class activity_LensArticle(activity.activity):
 		if(self.logger):
 			self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 		
-		elife_id = data["data"]["elife_id"]
+		# Support for both the starter method and the PostPerfectPublication method
+		if data and "data" in data:
+			elife_id = data["data"]["elife_id"]
+		elif data and "article_id" in data:
+			elife_id = data["article_id"]
 		
 		article_xml_filename = self.article.download_article_xml_from_s3(doi_id = elife_id)
 		
-		# Adaptation for new XML file format if the document supplied is .xml
-		if "document" in data["data"] and data["data"]["document"].split('.')[-1] == 'xml':
-			document = data["data"]["document"]
-			self.fs.write_document_to_tmp_dir(document)
-			article_xml_filename = document.split('/')[-1]
-			
+		if not article_xml_filename:
+			if(self.logger):
+				self.logger.info('LensArticle article xml file not found for %s' % str(elife_id))
+			return True
+		
 		self.article.parse_article_file(self.get_tmp_dir() + os.sep + article_xml_filename)
+		
+		# Check for PoA, we will not create lens article for
+		if self.article.is_poa:
+			if(self.logger):
+				self.logger.info('LensArticle %s is PoA, not creating a lens page' % str(elife_id))
+			return True
 		
 		article_s3key = self.get_article_s3key(elife_id)
 		
