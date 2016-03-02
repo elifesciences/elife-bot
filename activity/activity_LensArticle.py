@@ -57,6 +57,7 @@ class activity_LensArticle(activity.activity):
 		if(self.logger):
 			self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 		
+		elife_id = None
 		# Support for both the starter method and the PostPerfectPublication method
 		if data and "data" in data:
 			elife_id = data["data"]["elife_id"]
