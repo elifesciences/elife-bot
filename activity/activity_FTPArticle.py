@@ -341,10 +341,15 @@ class activity_FTPArticle(activity.activity):
             new_zipfile = zipfile.ZipFile(zip_dir + os.sep + zip_file_name,
                               'w', zipfile.ZIP_DEFLATED, allowZip64 = True)
             # Add files
+            ignore_name_fragments = ["-supp", "-data", "-code"]
             file_types = ["/*.pdf", "/*.xml"]
             for file_type in file_types:
                 files = glob.glob(to_dir + file_type)
                 for file in files:
+                    # Ignore some files that are PDF we do not want to include
+                    for ignore in ignore_name_fragments:
+                        if ignore in file:
+                            continue
                     filename = file.split(os.sep)[-1]
                     new_zipfile.write(file, filename)
             
