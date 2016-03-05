@@ -45,6 +45,8 @@ class activity_FTPArticle(activity.activity):
         
         # Bucket settings
         self.article_bucket = settings.bucket
+        self.pmc_zip_bucket = settings.poa_packaging_bucket
+        self.pmc_zip_folder = "pmc/zip/"
         
         # Local directory settings
         self.TMP_DIR = "tmp_dir"
@@ -180,33 +182,37 @@ class activity_FTPArticle(activity.activity):
         
     def download_files_from_s3(self, doi_id, workflow):
         
-        # Switch for old article zip format versus getting PMC zip for new articles
-        item_list = self.db.elife_get_article_S3_file_items(
-            doi_id = str(doi_id).zfill(5))
+        # Download PMC zip file if present
+        pmc_zip_downloaded = self.download_pmc_zip_from_s3(doi_id, workflow)
         
-        if item_list and len(item_list) > 0:
-        
-            if workflow == 'HEFCE' or workflow == 'GoOA':
-                # Download files from the articles bucket
-                self.download_data_file_from_s3(doi_id, 'xml', workflow)
-                self.download_data_file_from_s3(doi_id, 'pdf', workflow)
-                if int(doi_id) != 855:
-                    self.download_data_file_from_s3(doi_id, 'img', workflow)
-                if int(doi_id) != 1311:
-                    self.download_data_file_from_s3(doi_id, 'suppl', workflow)
-                self.download_data_file_from_s3(doi_id, 'video', workflow)
-                self.download_data_file_from_s3(doi_id, 'jpg', workflow)
-                self.download_data_file_from_s3(doi_id, 'figures', workflow)
-                
-            if workflow == 'Cengage' or workflow == 'Scopus' or workflow == 'WoS':
-                # Download files from the articles bucket
-                self.download_data_file_from_s3(doi_id, 'xml', workflow)
-                self.download_data_file_from_s3(doi_id, 'pdf', workflow)
-                self.download_data_file_from_s3(doi_id, 'figures', workflow)
-        
+        if pmc_zip_downloaded:
+            self.move_or_repackage_pmc_zip(doi_id, workflow)
+            
         else:
-            # Download PMC zip file if present
-            self.download_pmc_zip_from_s3(doi_id, workflow)
+            # Switch for old article zip format versus getting PMC zip for new articles
+            item_list = self.db.elife_get_article_S3_file_items(
+                doi_id = str(doi_id).zfill(5))
+            
+            if item_list and len(item_list) > 0:
+            
+                if workflow == 'HEFCE' or workflow == 'GoOA':
+                    # Download files from the articles bucket
+                    self.download_data_file_from_s3(doi_id, 'xml', workflow)
+                    self.download_data_file_from_s3(doi_id, 'pdf', workflow)
+                    if int(doi_id) != 855:
+                        self.download_data_file_from_s3(doi_id, 'img', workflow)
+                    if int(doi_id) != 1311:
+                        self.download_data_file_from_s3(doi_id, 'suppl', workflow)
+                    self.download_data_file_from_s3(doi_id, 'video', workflow)
+                    self.download_data_file_from_s3(doi_id, 'jpg', workflow)
+                    self.download_data_file_from_s3(doi_id, 'figures', workflow)
+                    
+                if workflow == 'Cengage' or workflow == 'Scopus' or workflow == 'WoS':
+                    # Download files from the articles bucket
+                    self.download_data_file_from_s3(doi_id, 'xml', workflow)
+                    self.download_data_file_from_s3(doi_id, 'pdf', workflow)
+                    self.download_data_file_from_s3(doi_id, 'figures', workflow)
+
             
         
     def download_data_file_from_s3(self, doi_id, file_data_type, workflow):
@@ -238,12 +244,50 @@ class activity_FTPArticle(activity.activity):
             s3_key.get_contents_to_file(f)
             f.close()
                     
+    def latest_pmc_zip_revision(self, doi_id, s3_key_names):
+        """
+        Given a list of zip file names from the PMC zip folder on S3,
+        look for the ones matching the article doi_id
+        and if there is more than one then return the latest revision, if applicable
+        """
+        s3_key_name = None
+        
+        name_matches = []
+        for key_name in s3_key_names:
+            name_match = '-' + str(doi_id).zfill(5)
+            if name_match in key_name:
+                name_matches.append(key_name)
+        
+        if len(name_matches) == 1:
+            s3_key_name = name_matches[0]
+        else:
+            # Look for latest revision number
+            highest_revision = None
+            for key_name in name_matches:
+                
+                revision_match = re.match(ur'.*r(.*)\.zip$', key_name)
+                
+                if revision_match is None:
+                    if highest_revision is None:
+                        # First value with no revision on it
+                        s3_key_name = key_name
+                    else:
+                        continue
+                elif revision_match is not None:
+                    # Use either the first revision number found or the highest revision number
+                    if ((highest_revision is None) or
+                        (highest_revision and int(revision_match.group(1)) > int(highest_revision))):
+                        s3_key_name = key_name
+                        highest_revision = revision_match.group(1)
+
+        return s3_key_name
+    
     def download_pmc_zip_from_s3(self, doi_id, workflow):
         """
         Simple download of PMC zip file from the live bucket
         """
-        bucket_name = 'elife-poa-packaging'
-        prefix = 'pmc/zip/'
+        bucket_name = self.pmc_zip_bucket
+        prefix = self.pmc_zip_folder
 
         # Connect to S3 and bucket
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
@@ -253,21 +297,34 @@ class activity_FTPArticle(activity.activity):
             bucket          = bucket,
             prefix          = prefix)
         
-        for s3_key_name in s3_key_names:
-            name_match = '-' + str(doi_id).zfill(5)
-            if name_match in s3_key_name:
-                # Download
-                s3_key = bucket.get_key(s3_key_name)
-    
-                filename = s3_key_name.split("/")[-1]
-    
-                filename_plus_path = (self.get_tmp_dir() + os.sep +
-                                      self.INPUT_DIR + os.sep + filename)
-                mode = "wb"
-                f = open(filename_plus_path, mode)
-                s3_key.get_contents_to_file(f)
-                f.close()
+        s3_key_name = self.latest_pmc_zip_revision(doi_id, s3_key_names)
         
+        if s3_key_name:
+            
+            # Download
+            s3_key = bucket.get_key(s3_key_name)
+
+            filename = s3_key_name.split("/")[-1]
+
+            filename_plus_path = (self.get_tmp_dir() + os.sep +
+                                  self.INPUT_DIR + os.sep + filename)
+            mode = "wb"
+            f = open(filename_plus_path, mode)
+            s3_key.get_contents_to_file(f)
+            f.close()
+            
+            return True
+        else:
+            return False
+
+
+    def move_or_repackage_pmc_zip(self, doi_id, workflow):
+        """
+        Run if we downloaded a PMC zip file, either
+        create a new zip for only the xml and pdf files, or
+        move the entire zip to the ftp folder if we want to send the full article pacakge
+        """
+    
         # Repackage or move the zip depending on the workflow type
         if workflow == 'Cengage' or workflow == 'Scopus' or workflow == 'WoS':
             # Extract the zip and build a new zip
