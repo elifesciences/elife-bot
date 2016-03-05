@@ -157,6 +157,18 @@ class exp():
     GOOA_FTP_PASSWORD = ""
     GOOA_FTP_CWD = ""
 
+    # Scopus FTP settings
+    SCOPUS_FTP_URI = ""
+    SCOPUS_FTP_USERNAME = ""
+    SCOPUS_FTP_PASSWORD = ""
+    SCOPUS_FTP_CWD = ""
+
+    # Web of Science WoS FTP settings
+    WOS_FTP_URI = ""
+    WOS_FTP_USERNAME = ""
+    WOS_FTP_PASSWORD = ""
+    WOS_FTP_CWD = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -272,7 +284,19 @@ class dev():
     GOOA_FTP_USERNAME = ""
     GOOA_FTP_PASSWORD = ""
     GOOA_FTP_CWD = ""
-    
+
+    # Scopus FTP settings
+    SCOPUS_FTP_URI = ""
+    SCOPUS_FTP_USERNAME = ""
+    SCOPUS_FTP_PASSWORD = ""
+    SCOPUS_FTP_CWD = ""
+
+    # Web of Science WoS FTP settings
+    WOS_FTP_URI = ""
+    WOS_FTP_USERNAME = ""
+    WOS_FTP_PASSWORD = ""
+    WOS_FTP_CWD = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -387,6 +411,18 @@ class live():
     GOOA_FTP_USERNAME = ""
     GOOA_FTP_PASSWORD = ""
     GOOA_FTP_CWD = ""
+    
+    # Scopus FTP settings
+    SCOPUS_FTP_URI = ""
+    SCOPUS_FTP_USERNAME = ""
+    SCOPUS_FTP_PASSWORD = ""
+    SCOPUS_FTP_CWD = ""
+
+    # Web of Science WoS FTP settings
+    WOS_FTP_URI = ""
+    WOS_FTP_USERNAME = ""
+    WOS_FTP_PASSWORD = ""
+    WOS_FTP_CWD = ""
     
     # Logging
     setLevel = "INFO"

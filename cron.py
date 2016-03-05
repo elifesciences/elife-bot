@@ -52,11 +52,11 @@ def run_cron(ENV = "dev"):
       workflow_id   = "DepositCrossref",
       start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "starter_PreprocessArticle",
-      workflow_id   = "PreprocessArticle",
-      start_seconds = 60*13)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "starter_PreprocessArticle",
+    #  workflow_id   = "PreprocessArticle",
+    #  start_seconds = 60*13)
     
     pass
   
@@ -94,11 +94,11 @@ def run_cron(ENV = "dev"):
       workflow_id   = "S3Monitor_LensJPG",
       start_seconds = 60*31)
     
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "starter_PreprocessArticle",
-      workflow_id   = "PreprocessArticle",
-      start_seconds = 60*13)
+    #workflow_conditional_start(
+    #  ENV           = ENV,
+    #  starter_name  = "starter_PreprocessArticle",
+    #  workflow_id   = "PreprocessArticle",
+    #  start_seconds = 60*13)
     
     #workflow_conditional_start(
     #  ENV           = ENV,
