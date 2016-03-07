@@ -244,44 +244,6 @@ class activity_FTPArticle(activity.activity):
             s3_key.get_contents_to_file(f)
             f.close()
                     
-    def latest_pmc_zip_revision(self, doi_id, s3_key_names):
-        """
-        Given a list of zip file names from the PMC zip folder on S3,
-        look for the ones matching the article doi_id
-        and if there is more than one then return the latest revision, if applicable
-        """
-        s3_key_name = None
-        
-        name_matches = []
-        for key_name in s3_key_names:
-            name_match = '-' + str(doi_id).zfill(5)
-            if name_match in key_name:
-                name_matches.append(key_name)
-        
-        if len(name_matches) == 1:
-            s3_key_name = name_matches[0]
-        else:
-            # Look for latest revision number
-            highest_revision = None
-            for key_name in name_matches:
-                
-                revision_match = re.match(ur'.*r(.*)\.zip$', key_name)
-                
-                if revision_match is None:
-                    if highest_revision is None:
-                        # First value with no revision on it
-                        s3_key_name = key_name
-                    else:
-                        continue
-                elif revision_match is not None:
-                    # Use either the first revision number found or the highest revision number
-                    if ((highest_revision is None) or
-                        (highest_revision and int(revision_match.group(1)) > int(highest_revision))):
-                        s3_key_name = key_name
-                        highest_revision = revision_match.group(1)
-
-        return s3_key_name
-    
     def download_pmc_zip_from_s3(self, doi_id, workflow):
         """
         Simple download of PMC zip file from the live bucket
@@ -297,7 +259,7 @@ class activity_FTPArticle(activity.activity):
             bucket          = bucket,
             prefix          = prefix)
         
-        s3_key_name = self.latest_pmc_zip_revision(doi_id, s3_key_names)
+        s3_key_name = s3lib.latest_pmc_zip_revision(doi_id, s3_key_names)
         
         if s3_key_name:
             
