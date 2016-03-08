@@ -13,5 +13,6 @@ xlrd==0.9.3
 elifetools==0.1.4
 PyYAML==3.11
 Wand==0.4.0
+paramiko==1.15.2
 -e git+https://github.com/elifesciences/jats-scraper.git#egg=jats-scraper
 -e hg+https://bitbucket.org/lskibinski/scraper#egg=scraper
