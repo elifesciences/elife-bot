@@ -486,8 +486,31 @@ class activity_PMCDeposit(activity.activity):
         Look at previously supplied files and determine the
         next revision number
         """
-        # TODO!!!
         revision = None
+        
+        bucket_name = self.publish_bucket
+        prefix = self.published_zip_folder + '/'
+
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(
+            bucket          = bucket,
+            prefix          = prefix)
+        
+        s3_key_name = s3lib.latest_pmc_zip_revision(fid, s3_key_names)
+        
+        if s3_key_name:
+            # Found an existing PMC zip file, look for a revision number
+            revision_match = re.match(ur'.*r(.*)\.zip$', s3_key_name)
+            if revision_match is None:
+                # There is a zip but no revision number, use 1
+                revision = 1
+            else:
+                # Use the latest revision plus 1
+                revision = int(revision_match.group(1)) + 1
+        
         return revision
 
     def new_zip_filename(self, journal, volume, fid, revision = None):
@@ -501,6 +524,9 @@ class activity_PMCDeposit(activity.activity):
         return filename
     
     def create_new_zip(self, zip_file_name):
+    
+        if(self.logger):
+            self.logger.info("creating new PMC zip file named " + zip_file_name)
     
         new_zipfile = zipfile.ZipFile(self.ZIP_DIR + os.sep + zip_file_name,
                                       'w', zipfile.ZIP_DEFLATED, allowZip64 = True)
