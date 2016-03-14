@@ -105,13 +105,7 @@ def run_cron(ENV = "dev"):
     #  starter_name  = "cron_NewS3XML",
     #  workflow_id   = "cron_NewS3XML",
     #  start_seconds = 60*31)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "cron_NewS3PDF",
-    #  workflow_id   = "cron_NewS3PDF",
-    #  start_seconds = 60*31)
-    
+        
     #workflow_conditional_start(
     #  ENV           = ENV,
     #  starter_name  = "cron_NewS3SVG",
@@ -266,7 +260,6 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       s.start(ENV = ENV, workflow = workflow)
 
     elif(starter_name == "cron_NewS3XML"
-      or starter_name == "cron_NewS3PDF"
       or starter_name == "cron_NewS3SVG"
       or starter_name == "cron_FiveMinute"
       or starter_name == "cron_NewS3Suppl"
