@@ -99,13 +99,7 @@ def run_cron(ENV = "dev"):
     #  starter_name  = "starter_PreprocessArticle",
     #  workflow_id   = "PreprocessArticle",
     #  start_seconds = 60*13)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "cron_NewS3XML",
-    #  workflow_id   = "cron_NewS3XML",
-    #  start_seconds = 60*31)
-                        
+                            
     if(current_time.tm_min >= 45 and current_time.tm_min <= 59):
       # Bottom quarter of the hour
       
@@ -241,8 +235,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       workflow = workflow_id.split("_")[-1]
       s.start(ENV = ENV, workflow = workflow)
 
-    elif(starter_name == "cron_NewS3XML"
-      or starter_name == "cron_FiveMinute"
+    elif(starter_name == "cron_FiveMinute"
       or starter_name == "starter_PublishPOA"
       or starter_name == "cron_NewS3POA"
       or starter_name == "starter_PublicationEmail"
