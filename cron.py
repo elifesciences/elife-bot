@@ -51,13 +51,7 @@ def run_cron(ENV = "dev"):
       starter_name  = "starter_DepositCrossref",
       workflow_id   = "DepositCrossref",
       start_seconds = 60*31)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "starter_PreprocessArticle",
-    #  workflow_id   = "PreprocessArticle",
-    #  start_seconds = 60*13)
-    
+        
     pass
   
   elif(current_time.tm_min >= 30 and current_time.tm_min <= 59):
@@ -93,13 +87,7 @@ def run_cron(ENV = "dev"):
       starter_name  = "starter_S3Monitor",
       workflow_id   = "S3Monitor_LensJPG",
       start_seconds = 60*31)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "starter_PreprocessArticle",
-    #  workflow_id   = "PreprocessArticle",
-    #  start_seconds = 60*13)
-                            
+                                
     if(current_time.tm_min >= 45 and current_time.tm_min <= 59):
       # Bottom quarter of the hour
       
@@ -242,7 +230,6 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       or starter_name == "starter_DepositCrossref"
       or starter_name == "cron_NewS3FullArticle"
       or starter_name == "cron_NewS3LensJPG"
-      or starter_name == "starter_PreprocessArticle"
       ):
       s.start(ENV = ENV)
       
