@@ -51,13 +51,7 @@ def run_cron(ENV = "dev"):
       starter_name  = "starter_DepositCrossref",
       workflow_id   = "DepositCrossref",
       start_seconds = 60*31)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "starter_PreprocessArticle",
-    #  workflow_id   = "PreprocessArticle",
-    #  start_seconds = 60*13)
-    
+        
     pass
   
   elif(current_time.tm_min >= 30 and current_time.tm_min <= 59):
@@ -86,56 +80,7 @@ def run_cron(ENV = "dev"):
       starter_name  = "starter_S3Monitor",
       workflow_id   = "S3Monitor_FullArticle",
       start_seconds = 60*31)
-    
-    # Lens jpg zip bucket polling
-    workflow_conditional_start(
-      ENV           = ENV,
-      starter_name  = "starter_S3Monitor",
-      workflow_id   = "S3Monitor_LensJPG",
-      start_seconds = 60*31)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "starter_PreprocessArticle",
-    #  workflow_id   = "PreprocessArticle",
-    #  start_seconds = 60*13)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "cron_NewS3XML",
-    #  workflow_id   = "cron_NewS3XML",
-    #  start_seconds = 60*31)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "cron_NewS3PDF",
-    #  workflow_id   = "cron_NewS3PDF",
-    #  start_seconds = 60*31)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "cron_NewS3SVG",
-    #  workflow_id   = "cron_NewS3SVG",
-    #  start_seconds = 60*31)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "cron_NewS3Suppl",
-    #  workflow_id   = "cron_NewS3Suppl",
-    #  start_seconds = 60*31)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "cron_NewS3JPG",
-    #  workflow_id   = "cron_NewS3JPG",
-    #  start_seconds = 60*31)
-    
-    #workflow_conditional_start(
-    #  ENV           = ENV,
-    #  starter_name  = "cron_NewS3FiguresPDF",
-    #  workflow_id   = "cron_NewS3FiguresPDF",
-    #  start_seconds = 60*31)
-    
+                                    
     if(current_time.tm_min >= 45 and current_time.tm_min <= 59):
       # Bottom quarter of the hour
       
@@ -192,13 +137,7 @@ def run_cron(ENV = "dev"):
         starter_name  = "cron_NewS3FullArticle",
         workflow_id   = "cron_NewS3FullArticle",
         start_seconds = 60*31)
-      
-      workflow_conditional_start(
-        ENV           = ENV,
-        starter_name  = "cron_NewS3LensJPG",
-        workflow_id   = "cron_NewS3LensJPG",
-        start_seconds = 60*31)
-      
+            
       workflow_conditional_start(
         ENV           = ENV,
         starter_name  = "starter_AdminEmail",
@@ -244,8 +183,6 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
         s.start(ENV = ENV, workflow = "S3Monitor_POA")
       if workflow_id == "S3Monitor_FullArticle":
         s.start(ENV = ENV, workflow = "S3Monitor_FullArticle")
-      if workflow_id == "S3Monitor_LensJPG":
-        s.start(ENV = ENV, workflow = "S3Monitor_LensJPG")
         
     elif(starter_name == "starter_AdminEmail"):
       s.start(ENV = ENV, workflow = "AdminEmail")
@@ -271,20 +208,12 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data = None, wo
       workflow = workflow_id.split("_")[-1]
       s.start(ENV = ENV, workflow = workflow)
 
-    elif(starter_name == "cron_NewS3XML"
-      or starter_name == "cron_NewS3PDF"
-      or starter_name == "cron_NewS3SVG"
-      or starter_name == "cron_FiveMinute"
-      or starter_name == "cron_NewS3Suppl"
-      or starter_name == "cron_NewS3JPG"
+    elif(starter_name == "cron_FiveMinute"
       or starter_name == "starter_PublishPOA"
       or starter_name == "cron_NewS3POA"
-      or starter_name == "cron_NewS3FiguresPDF"
       or starter_name == "starter_PublicationEmail"
       or starter_name == "starter_DepositCrossref"
       or starter_name == "cron_NewS3FullArticle"
-      or starter_name == "cron_NewS3LensJPG"
-      or starter_name == "starter_PreprocessArticle"
       ):
       s.start(ENV = ENV)
       
