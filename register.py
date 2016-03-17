@@ -33,7 +33,6 @@ def start(ENV = "dev"):
     workflow_names.append("NewS3File")
     workflow_names.append("S3Monitor")
     workflow_names.append("LensArticlePublish")
-    workflow_names.append("LensIndexPublish")
     workflow_names.append("AdminEmail")
     workflow_names.append("SendQueuedEmail")
     workflow_names.append("PackagePOA")
