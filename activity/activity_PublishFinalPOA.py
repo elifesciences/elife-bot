@@ -53,6 +53,7 @@ class activity_PublishFinalPOA(activity.activity):
         
         # Bucket for outgoing files
         self.input_bucket = settings.poa_packaging_bucket
+        self.outbox_folder = "outbox/"
         self.published_folder_prefix = "published/"
         self.published_folder_name = None
         
@@ -60,7 +61,6 @@ class activity_PublishFinalPOA(activity.activity):
         
         # Track the success of some steps
         self.activity_status = None
-        self.prepare_status = None
         self.approve_status = None
         self.publish_status = None
         
@@ -85,11 +85,8 @@ class activity_PublishFinalPOA(activity.activity):
                                       + str(datetime.datetime.utcnow().strftime('%Y%m%d'))
                                       + '/')
         
-        self.prepare_status = self.check_published_folder_exists()
-        
-        if self.prepare_status:
-            # Download the S3 objects
-            self.download_files_from_s3()
+        # Download the S3 objects
+        self.download_files_from_s3()
         
         # Approve files for publishing
         self.approve_status = self.approve_for_publishing()
@@ -555,30 +552,6 @@ class activity_PublishFinalPOA(activity.activity):
                 self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
         return True
 
-    def check_published_folder_exists(self):
-        
-        if not self.published_folder_name:
-            return None
-        
-        bucket_name = self.input_bucket
-        
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-        
-        # Strip the trailing slash from the folder name if present
-        published_folder_prefix = self.published_folder_name.rstrip('/')
-        
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket          = bucket,
-            key_type        = 'prefix',
-            prefix          = published_folder_prefix)
-        
-        if len(s3_key_names) > 0:
-            return True
-        else:
-            return False
-
     def download_files_from_s3(self):
         """
         Connect to the S3 bucket, and from the outbox folder,
@@ -598,7 +571,7 @@ class activity_PublishFinalPOA(activity.activity):
 
         s3_key_names = s3lib.get_s3_key_names_from_bucket(
             bucket          = bucket,
-            prefix          = self.published_folder_name,
+            prefix          = self.outbox_folder,
             file_extensions = file_extensions)
 
         for name in s3_key_names:
@@ -629,7 +602,7 @@ class activity_PublishFinalPOA(activity.activity):
         status = None
 
         # Check for empty directory
-        if len(glob.glob(self.INPUT_DIR)) <= 0:
+        if len(glob.glob(self.INPUT_DIR + "/*")) <= 1:
             status = False
         else:
             status = True
