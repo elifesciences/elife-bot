@@ -59,6 +59,15 @@ class activity_PublishFinalPOA(activity.activity):
         
         self.publish_bucket = settings.publishing_buckets_prefix + settings.production_bucket
         
+        # Folder for crossref XML
+        self.crossref_outbox_folder = "crossref/outbox/"
+        
+        # Folder for pubmed XML
+        self.pubmed_outbox_folder = "pubmed/outbox/"
+        
+        # Folder for publication email
+        self.publication_email_outbox_folder = "publication_email/outbox/"
+        
         # Track the success of some steps
         self.activity_status = None
         self.approve_status = None
@@ -91,6 +100,9 @@ class activity_PublishFinalPOA(activity.activity):
         # Approve files for publishing
         self.approve_status = self.approve_for_publishing()
         
+        done_xml_files = []
+        clean_from_outbox_files = []
+        
         if self.approve_status is True:
             
             article_filenames_map = self.profile_article_files()
@@ -109,10 +121,24 @@ class activity_PublishFinalPOA(activity.activity):
                 zip_file_name = self.new_zip_file_name(doi_id, revision)
                 if revision and zip_file_name:
                     self.zip_article_files(doi_id, filenames, new_filenames, zip_file_name)
-                        
+                    # Add files to the lists to be processed after
+                    new_article_xml_file_name = self.article_xml_from_filename_map(new_filenames)
+                    done_xml_files.append(new_article_xml_file_name)
+                    clean_from_outbox_files = clean_from_outbox_files + filenames
+                    
             # Upload the zip files to the publishing bucket
             self.publish_status = self.upload_files_to_s3()
-            
+        
+        # Upload XML to the outboxes
+        if len(done_xml_files) > 0:
+            self.upload_xml_to_outbox_s3(self.crossref_outbox_folder, done_xml_files)
+            self.upload_xml_to_outbox_s3(self.pubmed_outbox_folder, done_xml_files)
+            self.upload_xml_to_outbox_s3(self.publication_email_outbox_folder, done_xml_files)
+
+        # Clean the outbox
+        if len(clean_from_outbox_files) > 0:
+            self.clean_outbox(self.published_folder_name, clean_from_outbox_files)
+
         # Set the activity status of this activity based on successes
         if self.publish_status is not False:
             self.activity_status = True
@@ -755,8 +781,56 @@ class activity_PublishFinalPOA(activity.activity):
         # Default return
         return False
 
-
         
+    def upload_xml_to_outbox_s3(self, outbox_folder, done_xml_files):
+        """
+        Upload a copy of the article XML to the s3_folder_name,
+        used by upload to crossref outbox and pubmed outbox functions
+        """
+        
+        bucket_name = self.input_bucket
+
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        outbox_s3_key_names = []
+        articles_not_uploaded_to_outbox = []
+
+        for xml_file in done_xml_files:
+            # Remove dashes for now for compatibility with old standard outbox file naming
+            new_s3_key = outbox_folder + xml_file.replace('-', '')
+            s3key = boto.s3.key.Key(bucket)
+            s3key.key = new_s3_key
+            s3key.set_contents_from_filename(self.DONE_DIR + os.sep + xml_file, replace=True)
+
+    def clean_outbox(self, published_folder_name, outbox_files):
+        """
+        Move files from S3 outbox to the published folder
+        """
+        bucket_name = self.input_bucket
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+                
+        for file_name in outbox_files:
+            old_s3_key_name = self.outbox_folder + file_name
+            new_s3_key_name = published_folder_name + file_name
+
+            # First copy
+            new_s3_key = None
+            try:
+                new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, old_s3_key_name)
+            except:
+                pass
+            
+            # Then delete the old key if successful
+            if(isinstance(new_s3_key, boto.s3.key.Key)):
+                old_s3_key = bucket.get_key(old_s3_key_name)
+                old_s3_key.delete()
+
+
     def get_filename_from_path(self, f, extension):
         """
         Get a filename minus the supplied file extension
