@@ -595,10 +595,9 @@ class activity_PublishFinalPOA(activity.activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
 
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket          = bucket,
-            prefix          = self.outbox_folder,
-            file_extensions = file_extensions)
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket=bucket,
+                                                          prefix=self.outbox_folder,
+                                                          file_extensions=file_extensions)
 
         for name in s3_key_names:
             # Download objects from S3 and save to disk
@@ -659,7 +658,7 @@ class activity_PublishFinalPOA(activity.activity):
 
                 # Check for a file with no matching XML document
                 if (self.check_matching_xml_file(current_zipfile) is not True or
-                    self.check_matching_pdf_file(current_zipfile) is not True):
+                        self.check_matching_pdf_file(current_zipfile) is not True):
                     badfile = True
                     self.unmatched_ds_file_names.append(current_zipfile.filename)
 
@@ -750,7 +749,8 @@ class activity_PublishFinalPOA(activity.activity):
         file_type = "/*.xml"
         xml_files = glob.glob(self.INPUT_DIR + file_type)
         xml_file_articles_numbers = []
-        for f in xml_files: xml_file_articles_numbers.append(self.get_filename_from_path(f, ".xml"))
+        for f in xml_files:
+            xml_file_articles_numbers.append(self.get_filename_from_path(f, ".xml"))
         #print xml_file_articles_numbers
 
         if zip_file_article_number in xml_file_articles_numbers:
