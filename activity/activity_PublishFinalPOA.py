@@ -42,7 +42,8 @@ class activity_PublishFinalPOA(activity.activity):
         self.default_task_schedule_to_close_timeout = 60 * 30
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 15
-        self.description = "Download POA files from a bucket, zip each article separately, and upload to final bucket."
+        self.description = ("Download POA files from a bucket, zip each article separately, "
+                            + "and upload to final bucket.")
 
         # Local directory settings
         self.TMP_DIR = self.get_tmp_dir() + os.sep + "tmp_dir"
@@ -82,7 +83,7 @@ class activity_PublishFinalPOA(activity.activity):
         """
         Activity, do the work
         """
-        if(self.logger):
+        if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         # Create output directories
@@ -304,7 +305,7 @@ class activity_PublishFinalPOA(activity.activity):
         for tag in root.findall('./front/article-meta'):
             parent_tag_index = xmlio.get_first_element_index(tag, 'elocation-id')
             if not parent_tag_index:
-                if(self.logger):
+                if self.logger:
                     self.logger.info('no elocation-id tag and no pub-date added: ' + str(doi_id))
             else:
                 tag.insert(parent_tag_index - 1, pub_date_tag)
@@ -352,7 +353,7 @@ class activity_PublishFinalPOA(activity.activity):
         for tag in root.findall('./front/article-meta'):
             parent_tag_index = xmlio.get_first_element_index(tag, 'history')
             if not parent_tag_index:
-                if(self.logger):
+                if self.logger:
                     self.logger.info('no history tag and no ds_zip tag added: ' + str(doi_id))
             else:
                 tag.insert(parent_tag_index - 1, supp_tag)
@@ -368,7 +369,8 @@ class activity_PublishFinalPOA(activity.activity):
             ext_link_tag.text = "Download zip"
 
             p_tag = SubElement(supp_tag, "p")
-            p_tag.text = "Any figures and tables for this article are included in the PDF. The zip folder contains additional supplemental files."
+            p_tag.text = ("Any figures and tables for this article are included "
+                          + "in the PDF. The zip folder contains additional supplemental files.")
 
         return supp_tag
 
@@ -405,7 +407,8 @@ class activity_PublishFinalPOA(activity.activity):
             return None
         else:
             if self.logger:
-                self.logger.error("Error obtaining version information from Lax" + str(response.status_code))
+                self.logger.error("Error obtaining version information from Lax"
+                                  + str(response.status_code))
             return None
 
 
@@ -474,7 +477,7 @@ class activity_PublishFinalPOA(activity.activity):
             if new_filename:
                 old_filename_plus_path = self.INPUT_DIR + os.sep + filename
                 new_filename_plus_path = self.TMP_DIR + os.sep + new_filename
-                if(self.logger):
+                if self.logger:
                     self.logger.info('moving poa file from %s to %s'
                                      % (old_filename_plus_path, new_filename_plus_path))
 
@@ -516,8 +519,9 @@ class activity_PublishFinalPOA(activity.activity):
 
             # Remove the manifest.xml file
             try:
-                shutil.move(self.TMP_DIR + os.sep + 'manifest.xml', self.JUNK_DIR + os.sep + 'manifest.xml')
-                if(self.logger):
+                shutil.move(self.TMP_DIR + os.sep + 'manifest.xml',
+                            self.JUNK_DIR + os.sep + 'manifest.xml')
+                if self.logger:
                     self.logger.info("moving PoA zip manifest.xml to the junk folder")
             except:
                 pass
@@ -574,7 +578,7 @@ class activity_PublishFinalPOA(activity.activity):
             s3key = boto.s3.key.Key(bucket)
             s3key.key = s3_key_name
             s3key.set_contents_from_filename(file, replace=True)
-            if(self.logger):
+            if self.logger:
                 self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
         return True
 
@@ -607,7 +611,7 @@ class activity_PublishFinalPOA(activity.activity):
 
             filename_plus_path = self.INPUT_DIR + os.sep + filename
 
-            if(self.logger):
+            if self.logger:
                 self.logger.info('PublishFinalPOA downloading: %s' % filename_plus_path)
 
             mode = "wb"
@@ -722,7 +726,7 @@ class activity_PublishFinalPOA(activity.activity):
         sub_folder_name = None
 
         for name in input_zipfile.namelist():
-            if re.match("^.*\.zip$", name):
+            if re.match(r"^.*\.zip$", name):
                 sub_folder_name = name
 
         if sub_folder_name:
@@ -826,7 +830,7 @@ class activity_PublishFinalPOA(activity.activity):
                 pass
 
             # Then delete the old key if successful
-            if(isinstance(new_s3_key, boto.s3.key.Key)):
+            if isinstance(new_s3_key, boto.s3.key.Key):
                 old_s3_key = bucket.get_key(old_s3_key_name)
                 old_s3_key.delete()
 
