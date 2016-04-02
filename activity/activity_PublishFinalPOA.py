@@ -1,22 +1,17 @@
 import os
 import boto.swf
 import json
-import random
 import datetime
-import importlib
-import calendar
 import time
 
 import zipfile
 import requests
-import urlparse
 import glob
 import shutil
 import re
 
 import activity
 
-from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 
 from elifetools import parseJATS as parser
@@ -210,7 +205,7 @@ class activity_PublishFinalPOA(activity.activity):
         # Take the next five characters as digits
         try:
             doi_id = int(part[0:5])
-        except:
+        except (IndexError, ValueError):
             doi_id = None
         return doi_id
 
@@ -396,7 +391,7 @@ class activity_PublishFinalPOA(activity.activity):
                                                     "%Y-%m-%dT%H:%M:%SZ")
                         date_str = time.strftime('%Y%m%d%H%M%S', date_struct)
 
-                    except:
+                    except (KeyError, ValueError):
                         if self.logger:
                             self.logger.error("Error parsing the datetime_published from Lax: "
                                               + str(article_data['datetime_published']))
@@ -441,7 +436,7 @@ class activity_PublishFinalPOA(activity.activity):
                 try:
                     part = key_name.replace(name_prefix, '')
                     revision = int(part.split('.')[0])
-                except:
+                except (IndexError, ValueError):
                     revision = None
                 if revision and revision > max_revision_number:
                     max_revision_number = revision
@@ -454,13 +449,10 @@ class activity_PublishFinalPOA(activity.activity):
     def new_zip_file_name(self, doi_id, revision, status='poa'):
         new_file_name = None
 
-        try:
-            new_file_name = ('elife-' + str(doi_id).zfill(5)
-                             + '-' + str(status)
-                             + '-r' + str(revision)
-                             + '.zip')
-        except:
-            pass
+        new_file_name = ('elife-' + str(doi_id).zfill(5)
+                         + '-' + str(status)
+                         + '-r' + str(revision)
+                         + '.zip')
 
         return new_file_name
 
@@ -523,7 +515,7 @@ class activity_PublishFinalPOA(activity.activity):
                             self.JUNK_DIR + os.sep + 'manifest.xml')
                 if self.logger:
                     self.logger.info("moving PoA zip manifest.xml to the junk folder")
-            except:
+            except IOError:
                 pass
 
             # Move the old zip file
@@ -550,13 +542,13 @@ class activity_PublishFinalPOA(activity.activity):
         new_filename = None
         try:
             extension = old_filename.split('.')[-1]
-        except:
+        except IndexError:
             extension = None
         if extension:
             for filename in new_filenames:
                 try:
                     new_extension = filename.split('.')[-1]
-                except:
+                except IndexError:
                     new_extension = None
                 if new_extension and extension == new_extension:
                     new_filename = filename
@@ -644,7 +636,7 @@ class activity_PublishFinalPOA(activity.activity):
 
             try:
                 current_zipfile = zipfile.ZipFile(input_zipfile, 'r')
-            except:
+            except zipfile.BadZipfile:
                 badfile = True
                 self.malformed_ds_file_names.append(input_zipfile)
                 current_zipfile = None
@@ -702,7 +694,7 @@ class activity_PublishFinalPOA(activity.activity):
         manifest = None
         try:
             manifest = input_zipfile.read("manifest.xml")
-        except:
+        except KeyError:
             return False
 
         if manifest:
@@ -844,7 +836,7 @@ class activity_PublishFinalPOA(activity.activity):
         # Remove path if present
         try:
             filename = filename.split(os.sep)[-1]
-        except:
+        except IndexError:
             pass
 
         return filename
@@ -862,5 +854,5 @@ class activity_PublishFinalPOA(activity.activity):
             os.mkdir(self.JUNK_DIR)
             os.mkdir(self.DONE_DIR)
 
-        except:
+        except OSError:
             pass
