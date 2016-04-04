@@ -284,6 +284,20 @@ class workflow(object):
         except KeyError:
             input = None
         return input
+
+    def check_for_failed_workflow_request(self, decision):
+        try:
+
+            # Traverse the array in reverse order
+            for event in decision["events"][::-1]:
+                if event["eventType"] == "WorkflowExecutionCancelRequested":
+                    # terminate
+                    d = Layer1Decisions()
+                    d.fail_workflow_execution()
+                    self.complete_decision(d)
+                    return
+        except TypeError:
+            pass
     
     def rate_limit_failed_activity(self, decision):
         """
@@ -311,6 +325,8 @@ class workflow(object):
                 # Complete the workflow execution
                 self.complete_workflow()
             else:
+                # check if the failed activity signalled a request to fail the workflow
+                self.check_for_failed_workflow_request(self.decision)
                 self.rate_limit_failed_activity(self.decision)
                 # 2. Get the next activity
                 next_activities = self.get_next_activities()
