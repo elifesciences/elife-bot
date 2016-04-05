@@ -92,7 +92,6 @@ def work(ENV = "dev"):
                                 signal_fail_workflow(conn, logger, settings.domain,
                                                      activity_task['workflowExecution']['workflowId'],
                                                      activity_task['workflowExecution']['runId'])
-                                respond_failed(conn, logger, token, detail, reason)
                         else:
                             # for legacy actions
 
