@@ -84,8 +84,7 @@ class activity_PublishFinalPOA(activity.activity):
         # Create output directories
         self.create_activity_directories()
 
-        # Set the published folder name
-        # For now use todays date
+        # Set the published folder name as todays date
         self.published_folder_name = (self.published_folder_prefix
                                       + str(datetime.datetime.utcnow().strftime('%Y%m%d'))
                                       + '/')
@@ -614,9 +613,9 @@ class activity_PublishFinalPOA(activity.activity):
 
     def approve_for_publishing(self):
         """
-        Final checks before publishing files to the FTP endpoint
-        Check for empty made_ftp_ready_dir
-        Also, remove files that should not be uploaded due to incomplete
+        Final checks before processing the downloaded files
+        Check for empty INPUT_DIR
+        Also, remove files that should not be published due to incomplete
         sets of files per article
         """
 
@@ -712,7 +711,7 @@ class activity_PublishFinalPOA(activity.activity):
     def check_empty_supplemental_files(self, input_zipfile):
         """
         Given a zipfile.ZipFile object, look inside the internal zipped folder
-        and asses the zipextfile object length to see whether it is empty
+        and assess the zipextfile object length to see whether it is empty
         """
         zipextfile_line_count = 0
         sub_folder_name = None
