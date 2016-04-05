@@ -15,6 +15,11 @@ Amazon SWF activity base class
 
 
 class activity(object):
+
+    ACTIVITY_SUCCESS = "ActivitySuccess"
+    ACTIVITY_TEMPORARY_FAILURE = "ActivityTemporaryFailure"
+    ACTIVITY_PERMANENT_FAILURE = "ActivityPermanentFailure"
+
     # Base class
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         self.settings = settings

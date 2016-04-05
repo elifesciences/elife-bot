@@ -11,6 +11,7 @@ from multiprocessing import Process
 from optparse import OptionParser
 
 import activity
+from activity.activity import activity as activitybase
 # Add parent directory for imports, so activity classes can use elife-api-prototype
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0,parentdir)
@@ -68,7 +69,7 @@ def work(ENV = "dev"):
 
                         # Do the activity
                         try:
-                            success = activity_object.do_activity(data)
+                            activity_result = activity_object.do_activity(data)
                         except Exception as e:
                             logger.error('error executing activity %s' % activity_name, exc_info=True)
 
@@ -76,13 +77,32 @@ def work(ENV = "dev"):
                         logger.info('got result: \n%s' % json.dumps(activity_object.result, sort_keys=True, indent=4))
 
                         # Complete the activity task if it was successful
-                        if success:
-                            message = activity_object.result
-                            respond_completed(conn, logger, token, message)
+                        if type(activity_result) == str:
+                            if activity_result == activitybase.ACTIVITY_SUCCESS:
+                                message = activity_object.result
+                                respond_completed(conn, logger, token, message)
+                            elif activity_result == activitybase.ACTIVITY_TEMPORARY_FAILURE:
+                                reason = 'error: activity failed with result ' + str(activity_object.result)
+                                detail = ''
+                                respond_failed(conn, logger, token, detail, reason)
+                            else:
+                                # (activitybase.ACTIVITY_PERMANENT_FAILURE)
+                                reason = 'error: activity failed with result ' + str(activity_object.result)
+                                detail = ''
+                                signal_fail_workflow(conn, logger, settings.domain,
+                                                     activity_task['workflowExecution']['workflowId'],
+                                                     activity_task['workflowExecution']['runId'])
                         else:
-                            reason = 'error: activity failed with result ' + str(activity_object.result)
-                            detail = ''
-                            respond_failed(conn, logger, token, detail, reason)
+                            # for legacy actions
+
+                            # Complete the activity task if it was successful
+                            if activity_result:
+                                message = activity_object.result
+                                respond_completed(conn, logger, token, message)
+                            else:
+                                reason = 'error: activity failed with result ' + str(activity_object.result)
+                                detail = ''
+                                respond_failed(conn, logger, token, detail, reason)
 
                     else:
                         reason = 'error: could not load object %s\n' % activity_name
@@ -189,6 +209,19 @@ def respond_failed(conn, logger, token, details, reason):
     try:
         out = conn.respond_activity_task_failed(token,str(details),str(reason))
         logger.info('respond_activity_task_failed returned %s' % out)
+    except boto.exception.SWFResponseError:
+        logger.info('SWFResponseError: SWFResponseError: 400 Bad Request on respond_failed')
+
+def signal_fail_workflow(conn, logger,  domain, workflow_id, run_id):
+    """
+    Given an SWF connection and logger as resources,
+    the token to specify an accepted activity, details and a reason
+    to send, communicate with SWF that the activity failed
+    and the workflow should be abandoned
+    """
+    try:
+        out = conn.request_cancel_workflow_execution(domain,workflow_id, run_id=run_id  )
+        logger.info('request_cancel_workflow_execution %s' % out)
     except boto.exception.SWFResponseError:
         logger.info('SWFResponseError: SWFResponseError: 400 Bad Request on respond_failed')
 
