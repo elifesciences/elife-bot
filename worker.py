@@ -3,7 +3,6 @@ import settings as settingsLib
 import log
 import json
 import random
-import datetime
 import os
 import importlib
 import time
@@ -12,15 +11,15 @@ from optparse import OptionParser
 
 import activity
 from activity.activity import activity as activitybase
-# Add parent directory for imports, so activity classes can use elife-api-prototype
+# Add parent directory for imports, so activity classes can use elife-poa-xml-generation
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0,parentdir)
+os.sys.path.insert(0, parentdir)
 
 """
 Amazon SWF worker
 """
 
-def work(ENV = "dev"):
+def work(ENV="dev"):
     # Specify run environment settings
     settings = settingsLib.get_settings(ENV)
 
@@ -36,10 +35,11 @@ def work(ENV = "dev"):
     token = None
 
     # Poll for an activity task indefinitely
-    while(True):
-        if(token == None):
+    while True:
+        if token is None:
             logger.info('polling for activity...')
-            activity_task = conn.poll_for_activity_task(settings.domain, settings.default_task_list, identity)
+            activity_task = conn.poll_for_activity_task(settings.domain,
+                                                        settings.default_task_list, identity)
 
             token = get_taskToken(activity_task)
 
@@ -50,19 +50,20 @@ def work(ENV = "dev"):
 
             # Complete the activity based on data and activity type
             success = False
-            if(token != None):
+            if token is not None:
                 # Get the activityType and attempt to do the work
                 activityType = get_activityType(activity_task)
-                if(activityType != None):
+                if activityType is not None:
                     logger.info('activityType: %s' % activityType)
 
                     # Build a string for the object name
                     activity_name = get_activity_name(activityType)
 
                     # Attempt to import the module for the activity
-                    if(import_activity_class(activity_name)):
+                    if import_activity_class(activity_name):
                         # Instantiate the activity object
-                        activity_object = get_activity_object(activity_name, settings, logger, conn, token, activity_task)
+                        activity_object = get_activity_object(activity_name, settings,
+                                                              logger, conn, token, activity_task)
 
                         # Get the data to pass
                         data = get_input(activity_task)
@@ -71,10 +72,12 @@ def work(ENV = "dev"):
                         try:
                             activity_result = activity_object.do_activity(data)
                         except Exception as e:
-                            logger.error('error executing activity %s' % activity_name, exc_info=True)
+                            logger.error('error executing activity %s' %
+                                         activity_name, exc_info=True)
 
                         # Print the result to the log
-                        logger.info('got result: \n%s' % json.dumps(activity_object.result, sort_keys=True, indent=4))
+                        logger.info('got result: \n%s' %
+                                    json.dumps(activity_object.result, sort_keys=True, indent=4))
 
                         # Complete the activity task if it was successful
                         if type(activity_result) == str:
@@ -82,12 +85,14 @@ def work(ENV = "dev"):
                                 message = activity_object.result
                                 respond_completed(conn, logger, token, message)
                             elif activity_result == activitybase.ACTIVITY_TEMPORARY_FAILURE:
-                                reason = 'error: activity failed with result ' + str(activity_object.result)
+                                reason = ('error: activity failed with result '
+                                          + str(activity_object.result))
                                 detail = ''
                                 respond_failed(conn, logger, token, detail, reason)
                             else:
                                 # (activitybase.ACTIVITY_PERMANENT_FAILURE)
-                                reason = 'error: activity failed with result ' + str(activity_object.result)
+                                reason = ('error: activity failed with result '
+                                          + str(activity_object.result))
                                 detail = ''
                                 signal_fail_workflow(conn, logger, settings.domain,
                                                      activity_task['workflowExecution']['workflowId'],
@@ -100,7 +105,8 @@ def work(ENV = "dev"):
                                 message = activity_object.result
                                 respond_completed(conn, logger, token, message)
                             else:
-                                reason = 'error: activity failed with result ' + str(activity_object.result)
+                                reason = ('error: activity failed with result '
+                                          + str(activity_object.result))
                                 detail = ''
                                 respond_failed(conn, logger, token, detail, reason)
 
@@ -174,7 +180,7 @@ def reload_module(module_name):
     """
     try:
         reload(eval(module_name))
-    except:
+    except NameError:
         pass
 
 def get_activity_object(activity_name, settings, logger, conn, token, activity_task):
@@ -195,7 +201,7 @@ def respond_completed(conn, logger, token, message):
     to send, communicate with SWF that the activity was completed
     """
     try:
-        out = conn.respond_activity_task_completed(token,str(message))
+        out = conn.respond_activity_task_completed(token, str(message))
         logger.info('respond_activity_task_completed returned %s' % out)
     except boto.exception.SWFResponseError:
         logger.info('SWFResponseError: SWFResponseError: 400 Bad Request on respond_completed')
@@ -207,12 +213,12 @@ def respond_failed(conn, logger, token, details, reason):
     to send, communicate with SWF that the activity failed
     """
     try:
-        out = conn.respond_activity_task_failed(token,str(details),str(reason))
+        out = conn.respond_activity_task_failed(token, str(details), str(reason))
         logger.info('respond_activity_task_failed returned %s' % out)
     except boto.exception.SWFResponseError:
         logger.info('SWFResponseError: SWFResponseError: 400 Bad Request on respond_failed')
 
-def signal_fail_workflow(conn, logger,  domain, workflow_id, run_id):
+def signal_fail_workflow(conn, logger, domain, workflow_id, run_id):
     """
     Given an SWF connection and logger as resources,
     the token to specify an accepted activity, details and a reason
@@ -220,7 +226,7 @@ def signal_fail_workflow(conn, logger,  domain, workflow_id, run_id):
     and the workflow should be abandoned
     """
     try:
-        out = conn.request_cancel_workflow_execution(domain,workflow_id, run_id=run_id  )
+        out = conn.request_cancel_workflow_execution(domain, workflow_id, run_id=run_id)
         logger.info('request_cancel_workflow_execution %s' % out)
     except boto.exception.SWFResponseError:
         logger.info('SWFResponseError: SWFResponseError: 400 Bad Request on respond_failed')
@@ -249,19 +255,22 @@ def start_multiple_thread(ENV):
         time.sleep(0.5)
     return pool
 
-def monitor_KeyboardInterrupt(pool = None):
+def monitor_KeyboardInterrupt(pool=None):
     # Monitor for keyboard interrupt ctrl-C
     try:
         time.sleep(10)
     except KeyboardInterrupt:
         print 'caught KeyboardInterrupt, terminating threads'
-        if(pool != None):
+        if pool is not None:
             for p in pool:
                 p.terminate()
         return False
     return True
 
 if __name__ == "__main__":
+
+    ENV = None
+    forks = None
 
     # Add options
     parser = OptionParser()
@@ -273,18 +282,14 @@ if __name__ == "__main__":
     if options.forks:
         forks = options.forks
 
-    pool = None
-    try:
-        if(forks > 1):
-            pool = start_multiple_thread(ENV)
-        else:
-            pool = start_single_thread(ENV)
-    except Exception as e:
-         log ("Exception: " + e.message)
+    if forks and forks > 1:
+        pool = start_multiple_thread(ENV)
+    else:
+        pool = start_single_thread(ENV)
 
     # Monitor for keyboard interrupt ctrl-C
     loop = True
-    while(loop):
+    while loop:
         loop = monitor_KeyboardInterrupt(pool)
 
 
