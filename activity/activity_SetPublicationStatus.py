@@ -36,24 +36,29 @@ class activity_SetPublicationStatus(activity.activity):
         article_id = session.get_value(self.get_workflowId(), 'article_id')
         run = session.get_value(self.get_workflowId(), 'run')
 
-        self.emit_monitor_event(self.settings, article_id, version, run, "Set Publication Status", "start",
+        self.emit_monitor_event(self.settings, article_id, version, run,
+                                "Set Publication Status", "start",
                                 "Starting Ending setting of publish status for " + article_id)
 
         try:
-            conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+            conn = S3Connection(self.settings.aws_access_key_id,
+                                self.settings.aws_secret_access_key)
             eif_filename = session.get_value(self.get_workflowId(), 'eif_filename')
             data = self.get_eif(conn, eif_filename)
             publication_status = self.get_publication_status(data)
             data['publish'] = publication_status
             self.update_bucket(conn, data, eif_filename)
 
-            self.emit_monitor_event(self.settings, article_id, version, run, "Set Publication Status", "end",
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    "Set Publication Status", "end",
                                     "Ending setting of publish status for " + article_id)
 
         except Exception as e:
             self.logger.exception("Exception when setting publication status for " + article_id)
-            self.emit_monitor_event(self.settings, article_id, version, run, "Set Publication Status", "error",
-                                    "Error submitting EIF For article" + article_id + " message:" + e.message)
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    "Set Publication Status", "error",
+                                    "Error submitting EIF For article" + article_id +
+                                    " message:" + e.message)
             return False
         return True
 
