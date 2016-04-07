@@ -6,32 +6,32 @@ import os
 """
 
 class SFTP(object):
-    
-    def __init__(self, logger = None):
+
+    def __init__(self, logger=None):
         paramiko.util.log_to_file('paramiko.log')
         self.logger = logger
-    
-    def sftp_connect(self, uri, username, password, port = 22):
+
+    def sftp_connect(self, uri, username, password, port=22):
         """
         Connect to SFTP server without a host key
         """
         #print "trying to SFTP now"
 
         transport = paramiko.Transport((uri, port))
-        
+
         try:
-            transport.connect(hostkey = None,
-                              username = username,
-                              password = password)
+            transport.connect(hostkey=None,
+                              username=username,
+                              password=password)
         except:
-            if(self.logger):
+            if self.logger:
                 self.logger.info("was unable to connect to SFTP server")
             return None
-        
+
         sftp = paramiko.SFTPClient.from_transport(transport)
         return sftp
-    
-    def sftp_to_endpoint(self, sftp_client, uploadfiles, sftp_cwd = '', sub_dir = None):
+
+    def sftp_to_endpoint(self, sftp_client, uploadfiles, sftp_cwd='', sub_dir=None):
         """
         Given a paramiko SFTP client, upload files to it
         """
@@ -43,13 +43,14 @@ class SFTP(object):
                 sftp_client.mkdir(absolute_sub_dir)
             except IOError:
                 pass
-            
+
         for uploadfile in uploadfiles:
             remote_file = uploadfile.split(os.sep)[-1]
             if sub_dir:
                 remote_file = sub_dir + '/' + remote_file
             if sftp_cwd != '':
                 remote_file = sftp_cwd + '/' + remote_file
-            if(self.logger):
-                self.logger.info("putting file by sftp " + uploadfile + " to remote_file " + remote_file)
+            if self.logger:
+                self.logger.info("putting file by sftp " + uploadfile +
+                                 " to remote_file " + remote_file)
             result = sftp_client.put(uploadfile, remote_file)
