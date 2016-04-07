@@ -49,7 +49,7 @@ def work(ENV="dev"):
 
 
             # Complete the activity based on data and activity type
-            success = False
+            activity_result = False
             if token is not None:
                 # Get the activityType and attempt to do the work
                 activityType = get_activityType(activity_task)
