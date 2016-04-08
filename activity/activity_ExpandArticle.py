@@ -1,6 +1,5 @@
 import json
 from zipfile import ZipFile
-import random
 import uuid
 
 import activity
@@ -45,13 +44,15 @@ class activity_ExpandArticle(activity.activity):
         # set up required connections
         conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         source_bucket = conn.get_bucket(info.bucket_name)
-        dest_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
+        dest_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix +
+                                      self.settings.expanded_bucket)
         session = Session(self.settings)
 
         filename_last_element = info.file_name[info.file_name.rfind('/')+1:]
         article_id_match = re.match(ur'elife-(.*?)-', filename_last_element)
         if article_id_match is None:
-            self.logger.error("Name '%s' did not match expected pattern for article id" % filename_last_element)
+            self.logger.error("Name '%s' did not match expected pattern for article id" %
+                              filename_last_element)
             return False
         article_id = article_id_match.group(1)
         session.store_value(self.get_workflowId(), 'article_id', article_id)
@@ -67,20 +68,22 @@ class activity_ExpandArticle(activity.activity):
         if version is None:
             version = self.get_next_version(article_id)
         if version == '-1':
-            self.logger.error("Name '%s' did not match expected pattern for version" % filename_last_element)
+            self.logger.error("Name '%s' did not match expected pattern for version" %
+                              filename_last_element)
             return False  # version could not be determined, exit workflow. Can't emit event as no version.
 
         status = self.get_status_from_zip_filename(filename_last_element)
         if status is None:
-            self.logger.error("Name '%s' did not match expected pattern for status" % filename_last_element)
+            self.logger.error("Name '%s' did not match expected pattern for status" %
+                              filename_last_element)
             return False  # status could not be determined, exit workflow. Can't emit event as no version.
-        
+
         # Get the run value from the session, if available, otherwise set it
         try:
             run = session.get_value(self.get_workflowId(), 'run')
         except:
             run = str(uuid.uuid4())
-        
+
         # store version for other activities in this workflow execution
         session.store_value(self.get_workflowId(), 'version', version)
 
@@ -96,7 +99,8 @@ class activity_ExpandArticle(activity.activity):
         self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "start",
                                 "Starting expansion of article " + article_id)
         self.set_monitor_property(self.settings, article_id, "article-id", article_id, "text")
-        self.set_monitor_property(self.settings, article_id, "publication-status", "publication in progress", "text",
+        self.set_monitor_property(self.settings, article_id, "publication-status",
+                                  "publication in progress", "text",
                                   version=version)
 
         try:
@@ -133,13 +137,15 @@ class activity_ExpandArticle(activity.activity):
             self.clean_tmp_dir()
 
             session.store_value(self.get_workflowId(), 'expanded_folder', bucket_folder_name)
-            self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "end",
-                                    "Finished expansion of article " + article_id +
-                                    " for version " + version + " run " + str(run) + " into " + bucket_folder_name)
+            self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article",
+                                    "end", "Finished expansion of article " + article_id +
+                                    " for version " + version + " run " + str(run) +
+                                    " into " + bucket_folder_name)
         except Exception as e:
             self.logger.exception("Exception when expanding article")
-            self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "error",
-                                    "Error expanding article " + article_id + " message:" + e.message)
+            self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article",
+                                    "error", "Error expanding article " + article_id +
+                                    " message:" + e.message)
             return False
 
         return True
@@ -158,9 +164,10 @@ class activity_ExpandArticle(activity.activity):
         elif response.status_code == 404:
             return "1"
         else:
-            self.logger.error("Error obtaining version information from Lax" + str(response.status_code))
+            self.logger.error("Error obtaining version information from Lax" +
+                              str(response.status_code))
             return "-1"
-        
+
     def get_update_date_from_zip_filename(self, filename):
         m = re.search(ur'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
         if m is None:
@@ -179,7 +186,7 @@ class activity_ExpandArticle(activity.activity):
             return None
         else:
             return m.group(1)
-            
+
     def get_status_from_zip_filename(self, filename):
         m = re.search(ur'.*?-.*?-(.*?)-', filename)
         if m is None:

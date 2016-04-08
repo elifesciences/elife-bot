@@ -77,16 +77,20 @@ class activity_ResizeImages(activity.activity):
 
         except Exception as e:
             self.logger.exception("Exception when resizing images")
-            self.emit_monitor_event(self.settings, article_id, version, run, "Resize Images", "error",
-                                    "Error resizing images for article" + article_id + " message:" + e.message)
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    "Resize Images", "error",
+                                    "Error resizing images for article" + article_id +
+                                    " message:" + e.message)
             return False
         return True
 
     def get_file_infos(self, folder_name):
         # connect to S3 and obtain the expanded article bucket
-        self.conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key,
+        self.conn = S3Connection(self.settings.aws_access_key_id,
+                                 self.settings.aws_secret_access_key,
                                  host=self.settings.s3_hostname)
-        bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
+        bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix +
+                                      self.settings.expanded_bucket)
 
         # get the keys for the files in the folder and return along with a reference to the bucket
         file_infos = bucket.list(folder_name + "/", "/")
@@ -117,8 +121,8 @@ class activity_ResizeImages(activity.activity):
             for format_spec_name in formats:
                 format_spec = formats[format_spec_name]
                 # if sources not present or includes file extension for this image
-                if 'sources' not in format_spec or info.extension in [x.strip() for x in
-                                                                      format_spec['sources'].split(',')]:
+                if 'sources' not in format_spec or info.extension in [
+                        x.strip() for x in format_spec['sources'].split(',')]:
                     download = 'download' in format_spec and format_spec['download']
                     fp.seek(0)  # rewind the tape
                     filename, image = resizer.resize(format_spec, fp, info, self.logger)
@@ -131,7 +135,8 @@ class activity_ResizeImages(activity.activity):
         # for now we'l use an S3 bucket
         try:
             content_type, encoding = guess_type(filename)
-            cdn_bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket)
+            cdn_bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix +
+                                              self.settings.ppp_cdn_bucket)
             key = Key(cdn_bucket)
             key.key = cdn_path + "/" + filename
             key.metadata['Content-Type'] = content_type

@@ -1,13 +1,10 @@
 import shutil
-
-import boto.swf
-import json
-import random
 import datetime
 import os
 import re
+
+import boto.swf
 import dashboard_queue
-import datetime
 
 """
 Amazon SWF activity base class
@@ -56,7 +53,7 @@ class activity(object):
         Describe activity type from SWF, to confirm it exists
         Requires object to have an active connection to SWF using boto
         """
-        if (self.conn == None or self.domain == None or self.name == None or self.version == None):
+        if self.conn is None or self.domain is None or self.name is None or self.version is None:
             return None
 
         try:
@@ -71,10 +68,10 @@ class activity(object):
         Register the activity type with SWF, if it does not already exist
         Requires object to have an active connection to SWF using boto
         """
-        if (self.conn == None or self.domain == None or self.name == None or self.version == None):
+        if self.conn is None or self.domain is None or self.name is None or self.version is None:
             return None
 
-        if (self.describe() is None):
+        if self.describe() is None:
             response = self.conn.register_activity_type(
                 str(self.domain),
                 str(self.name),
@@ -94,7 +91,7 @@ class activity(object):
         if it is available
         """
         workflowId = None
-        if (self.activity_task is None):
+        if self.activity_task is None:
             return None
 
         try:
@@ -110,7 +107,7 @@ class activity(object):
         if it is available
         """
         activityId = None
-        if (self.activity_task is None):
+        if self.activity_task is None:
             return None
 
         try:
@@ -125,7 +122,7 @@ class activity(object):
         Check or create temporary directory for this activity
         """
         # Try and make the based tmp directory, if it does not exist
-        if (self.tmp_base_dir):
+        if self.tmp_base_dir:
             try:
                 os.mkdir(self.tmp_base_dir)
             except OSError:
@@ -139,20 +136,20 @@ class activity(object):
             domain = self.settings.domain
         except:
             domain = None
-        if (domain):
+        if domain:
             # Use regular expression to strip out messy symbols
             domain_safe = re.sub(r'\W', '', domain)
             dir_name += '.' + domain_safe
-        if (workflowId):
+        if workflowId:
             # Use regular expression to strip out messy symbols
             workflowId_safe = re.sub(r'\W', '', workflowId)
             dir_name += '.' + workflowId_safe
-        if (activityId):
+        if activityId:
             # Use regular expression to strip out messy symbols
             activityId_safe = re.sub(r'\W', '', activityId)
             dir_name += '.' + activityId_safe
 
-        if (self.tmp_base_dir):
+        if self.tmp_base_dir:
             full_dir_name = self.tmp_base_dir + os.sep + dir_name
         else:
             full_dir_name = dir_name
@@ -162,7 +159,7 @@ class activity(object):
             self.tmp_dir = full_dir_name
         except OSError:
             # Directory may already exist, happens when running tests, check if it exists
-            if (os.path.isdir(full_dir_name)):
+            if os.path.isdir(full_dir_name):
                 self.tmp_dir = full_dir_name
 
     def get_tmp_dir(self):
@@ -170,7 +167,7 @@ class activity(object):
         Get the temporary file directory, but if not set
         then make the directory
         """
-        if (self.tmp_dir):
+        if self.tmp_dir:
             return self.tmp_dir
         else:
             self.make_tmp_dir()
@@ -207,6 +204,7 @@ class activity(object):
 
     @staticmethod
     def set_monitor_property(settings, item_identifier, name, value, property_type, version=0):
-        message = dashboard_queue.build_property_message(item_identifier, version, name, value, property_type)
+        message = dashboard_queue.build_property_message(item_identifier, version,
+                                                         name, value, property_type)
         dashboard_queue.send_message(message, settings)
-        pass
+

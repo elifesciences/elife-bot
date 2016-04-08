@@ -1,7 +1,5 @@
 import activity
 import json
-import os
-from os import path
 import datetime
 from jats_scraper import jats_scraper
 from boto.s3.key import Key
@@ -46,10 +44,12 @@ class activity_ConvertJATS(activity.activity):
             if self.logger:
                 self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
             expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder')
-            expanded_folder_bucket = self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
+            expanded_folder_bucket = (self.settings.publishing_buckets_prefix
+                                      + self.settings.expanded_bucket)
             print expanded_folder_name
 
-            conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+            conn = S3Connection(self.settings.aws_access_key_id,
+                                self.settings.aws_secret_access_key)
             bucket = conn.get_bucket(expanded_folder_bucket)
 
             bucket_folder_name = expanded_folder_name
@@ -97,12 +97,15 @@ class activity_ConvertJATS(activity.activity):
             session.store_value(self.get_workflowId(), "eif_filename", output_key)
             eif_object = json.loads(json_output)
             session.store_value(self.get_workflowId(), 'article_path', eif_object.get('path'))
-            self.emit_monitor_event(self.settings, article_id, version, run, "Convert JATS", "end",
-                                    "XML converted to EIF for article " + article_id + " to " + output_key)
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    "Convert JATS", "end",
+                                    "XML converted to EIF for article " +
+                                    article_id + " to " + output_key)
 
         except Exception as e:
             self.logger.exception("Exception when converting article XML to EIF")
-            self.emit_monitor_event(self.settings, article_id, version, run, "Convert JATS", "error",
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    "Convert JATS", "error",
                                     "Error in conversion of article xml to EIF for " + article_id +
                                     " message:" + e.message)
             return False
@@ -134,7 +137,8 @@ class activity_ConvertJATS(activity.activity):
             json_string = json.dumps(json_obj)
         except:
             if self.logger:
-                self.logger.error("Unable to set the update date in the json %s" % str(xml_filename))
+                self.logger.error("Unable to set the update date in the json %s" %
+                                  str(xml_filename))
         return json_string
 
     def set_dashboard_properties(self, json_output, article_id, version):
@@ -182,7 +186,8 @@ class activity_ConvertJATS(activity.activity):
             authors.append(author)
 
         corresponding_authors_text = str.join(", ", corresponding_authors)
-        self.set_monitor_property(self.settings, article_id, "corresponding-authors", corresponding_authors_text,
+        self.set_monitor_property(self.settings, article_id, "corresponding-authors",
+                                  corresponding_authors_text,
                                   "text", version=version)
 
         authors_text = str.join(", ", authors)
