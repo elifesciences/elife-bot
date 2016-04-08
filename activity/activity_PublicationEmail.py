@@ -187,9 +187,9 @@ class activity_PublicationEmail(activity.activity):
                 if was_ever_poa is True:
                     email_type = "author_publication_email_VOR_after_POA"
 
-            else:
-                # False or None is allowed here
-                email_type = "author_publication_email_VOR_no_POA"
+                else:
+                    # False or None is allowed here
+                    email_type = "author_publication_email_VOR_no_POA"
 
         return email_type
 
