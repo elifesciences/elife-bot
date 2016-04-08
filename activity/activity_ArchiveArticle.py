@@ -3,10 +3,8 @@ import log
 import json
 import boto
 import random
-from boto import swf
 import zipfile
 from datetime import datetime
-from time import strftime
 import os
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
@@ -50,10 +48,13 @@ class activity_ArchiveArticle(activity.activity):
             status = data['status'].lower()
 
             # download expanded folder
-            conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-            source_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
+            conn = S3Connection(self.settings.aws_access_key_id,
+                                self.settings.aws_secret_access_key)
+            source_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix +
+                                            self.settings.expanded_bucket)
             tmp = self.get_tmp_dir()
-            name = "elife-" + id + '-' + status + '-v' + version + '-' + updated_date.strftime('%Y%m%d%H%M%S')
+            name = ("elife-" + id + '-' + status + '-v' + version
+                    + '-' + updated_date.strftime('%Y%m%d%H%M%S'))
             zip_dir = tmp + os.sep + name
             os.makedirs(zip_dir)
             folderlist = source_bucket.list(prefix=expanded_folder.replace(os.sep, '/'))
@@ -64,7 +65,7 @@ class activity_ArchiveArticle(activity.activity):
             # rename downloaded folder
             zip_path = tmp + os.sep + name + '.zip'
             # zip expanded folder
-            zf = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, allowZip64 = True)
+            zf = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, allowZip64=True)
             relroot = os.path.abspath(os.path.join(zip_dir, os.pardir))
             for root, dirs, files in os.walk(zip_dir):
                 # add directory (needed for empty dirs)

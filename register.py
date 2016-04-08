@@ -1,24 +1,22 @@
+import json
+import os
+import importlib
+from optparse import OptionParser
+
 import boto.swf
 import settings as settingsLib
-import log
-import json
-import random
-import datetime
-import os
-from optparse import OptionParser
-import importlib
 import workflow
 import activity
 
-# Add parent directory for imports, so activity classes can use elife-api-prototype
+# Add parent directory for imports, so activity classes can use elife-poa-xml-generation
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0,parentdir)
+os.sys.path.insert(0, parentdir)
 
 """
 Amazon SWF register workflow or activity utility
 """
 
-def start(ENV = "dev"):
+def start(ENV="dev"):
     # Specify run environment settings
     settings = settingsLib.get_settings(ENV)
 
@@ -47,7 +45,7 @@ def start(ENV = "dev"):
     workflow_names.append("PublishPerfectArticle")
     workflow_names.append("PostPerfectPublication")
     workflow_names.append("ProcessXMLArticle")
-    
+
     for workflow_name in workflow_names:
         # Import the workflow libraries
         class_name = "workflow_" + workflow_name
@@ -115,7 +113,8 @@ if __name__ == "__main__":
 
     # Add options
     parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
+    parser.add_option("-e", "--env", default="dev", action="store", type="string",
+                      dest="env", help="set the environment to run, either dev or live")
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
