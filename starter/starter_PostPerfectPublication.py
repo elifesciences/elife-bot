@@ -18,7 +18,7 @@ Amazon SWF PostPerfectPublication starter, for API and Lens publishing etc.
 class starter_PostPerfectPublication():
 
     def start(self, article_id, version, expanded_folder, update_date,
-              run, status, eif_location,  ENV="dev"):
+              run, status, eif_location, ENV="dev"):
 
         info = {
             'article_id': article_id,
