@@ -266,9 +266,9 @@ class EJP(object):
                     if int(doi_id) != int(a[0]):
                         add = False
 
-            # Finish up, add the author if we should
-            if add is True:
-                editors.append(a)
+                # Finish up, add the author if we should
+                if add is True:
+                    editors.append(a)
 
         if len(editors) <= 0:
             editors = None
