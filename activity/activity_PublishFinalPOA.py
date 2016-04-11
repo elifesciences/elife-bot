@@ -106,7 +106,11 @@ class activity_PublishFinalPOA(activity.activity):
                 
                 if article_xml_file_name:
                     xml_file = self.INPUT_DIR + os.sep + article_xml_file_name
-                    self.convert_xml(doi_id, xml_file, filenames, new_filenames)
+                    try:
+                        self.convert_xml(doi_id, xml_file, filenames, new_filenames)
+                    except ParseError:
+                        # One possible error is an entirely blank XML file or a malformed xml file
+                        continue
                     
                 revision = self.next_revision_number(doi_id)
                 zip_file_name = self.new_zip_file_name(doi_id, revision)
