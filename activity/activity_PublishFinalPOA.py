@@ -108,9 +108,11 @@ class activity_PublishFinalPOA(activity.activity):
                     xml_file = self.INPUT_DIR + os.sep + article_xml_file_name
                     try:
                         self.convert_xml(doi_id, xml_file, filenames, new_filenames)
-                    except ParseError:
+                    except Exception as e:
                         # One possible error is an entirely blank XML file or a malformed xml file
-                        continue
+                        if self.logger:
+                            self.logger.exception("Exception when converting XML for doi %s, %s" %
+                                                  str(doi_id), e.message)
                     
                 revision = self.next_revision_number(doi_id)
                 zip_file_name = self.new_zip_file_name(doi_id, revision)
