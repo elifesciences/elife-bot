@@ -112,7 +112,8 @@ class activity_PublishFinalPOA(activity.activity):
                         # One possible error is an entirely blank XML file or a malformed xml file
                         if self.logger:
                             self.logger.exception("Exception when converting XML for doi %s, %s" %
-                                                  str(doi_id), e.message)
+                                                  (str(doi_id), e.message))
+                        continue
                     
                 revision = self.next_revision_number(doi_id)
                 zip_file_name = self.new_zip_file_name(doi_id, revision)
