@@ -64,7 +64,7 @@ class activity_ScheduleCrossref(activity.activity):
             self.copy_article_xml_to_crossref_outbox(
                 new_key_name=new_key_name,
                 source_bucket_name=self.expanded_bucket_name,
-                old_key_name=xml_key)
+                old_key_name=xml_key.name)
 
             self.emit_monitor_event(self.settings, article_id, version, run, "Schedule Crossref",
                                     "end", "Finished scheduling of crossref deposit " + article_id +
