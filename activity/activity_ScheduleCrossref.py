@@ -1,6 +1,9 @@
 import json
 
 import activity
+
+from boto.s3.connection import S3Connection
+
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
 from activity_ConvertJATS import activity_ConvertJATS as ConvertJATS
