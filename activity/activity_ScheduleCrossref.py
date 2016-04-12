@@ -53,7 +53,7 @@ class activity_ScheduleCrossref(activity.activity):
         bucket = conn.get_bucket(self.expanded_bucket_name)
 
         try:
-            (xml_key, xml_filename) = ConvertJATS.get_article_xml_key(bucket, bucket_folder_name)
+            (xml_key, xml_filename) = ConvertJATS.get_article_xml_key(bucket, expanded_folder_name)
 
             # Rename the XML file to match what is used already
             new_key_name = self.new_crossref_xml_name(
