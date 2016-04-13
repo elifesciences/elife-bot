@@ -69,7 +69,7 @@ class activity_ScheduleDownstream(activity.activity):
                                     "end", "Finished scheduling of downstream deposits " +
                                     article_id + " for version " + version + " run " + str(run))
         except Exception as e:
-            self.logger.exception("Exception when scheduling crossref")
+            self.logger.exception("Exception when scheduling downstream")
             self.emit_monitor_event(self.settings, article_id, version, run, "Schedule Downstream",
                                     "error", "Error scheduling downstream " + article_id +
                                     " message:" + e.message)
@@ -109,7 +109,7 @@ class activity_ScheduleDownstream(activity.activity):
             journal='elife',
             article_id=str(article_id).zfill(5))
 
-        self.copy_article_xml_to_crossref_outbox(
+        self.copy_article_xml_to_outbox(
             new_key_name=new_key_name,
             source_bucket_name=self.expanded_bucket_name,
             old_key_name=old_xml_key.name)
