@@ -27,7 +27,6 @@ def start(ENV="dev"):
     workflow_names.append("Ping")
     workflow_names.append("Sum")
     workflow_names.append("ApproveArticlePublication")
-    workflow_names.append("PublishArticle")
     workflow_names.append("NewS3File")
     workflow_names.append("S3Monitor")
     workflow_names.append("LensArticlePublish")
@@ -76,8 +75,6 @@ def start(ENV="dev"):
     activity_names.append("PostEIF")
     activity_names.append("Sum")
     activity_names.append("S3Monitor")
-    activity_names.append("UnzipArticleXML")
-    activity_names.append("LensXMLFilesList")
     activity_names.append("AdminEmailHistory")
     activity_names.append("SendQueuedEmail")
     activity_names.append("LensArticle")
@@ -86,12 +83,13 @@ def start(ENV="dev"):
     activity_names.append("PublishFinalPOA")
     activity_names.append("DepositCrossref")
     activity_names.append("PubmedArticleDeposit")
-    activity_names.append("ArticleToOutbox")
     activity_names.append("PublicationEmail")
     activity_names.append("FTPArticle")
     activity_names.append("PubRouterDeposit")
     activity_names.append("PMCDeposit")
     activity_names.append("UnzipFullArticle")
+    activity_names.append("ScheduleCrossref")
+    activity_names.append("ScheduleDownstream")
 
     for activity_name in activity_names:
         # Import the activity libraries

@@ -42,11 +42,6 @@ class activity_UnzipFullArticle(activity.activity):
         self.input_bucket = settings.publishing_buckets_prefix + settings.production_bucket
         self.output_bucket = self.settings.cdn_bucket
 
-        # For copying to crossref outbox from here for now
-        self.crossref_outbox_folder = "crossref/outbox/"
-        # Copy to PMC outbox
-        self.pmc_outbox_folder = "pmc/outbox/"
-
 
     def do_activity(self, data=None):
         """
@@ -80,25 +75,6 @@ class activity_UnzipFullArticle(activity.activity):
 
         if self.logger:
             self.logger.info('UnzipFullArticle: %s' % self.elife_id)
-
-        # Only do the following if the document is VoR type
-        if self.xml_file_name() and self.is_document_poa_status(self.document) is False:
-            #print self.xml_file_name()
-
-            # Copy to the crossref outbox here for now,
-            # until it is safe to add to ArticleToOutbox activity
-            crossref_outbox_file_list = []
-            crossref_outbox_file_list.append(self.OUTPUT_DIR + os.sep + self.xml_file_name())
-            self.upload_files_to_poa_packaging_bucket(prefix=self.crossref_outbox_folder,
-                                                      file_list=crossref_outbox_file_list)
-
-            # TODO!! Only send VoR files to the PMC outbox, right now we will upload all there
-            pmc_outbox_file_list = crossref_outbox_file_list
-            self.upload_files_to_poa_packaging_bucket(prefix=self.pmc_outbox_folder,
-                                                      file_list=pmc_outbox_file_list)
-
-            # Continue with a standard publish article workflow
-            self.start_publish_article_workflow(self.elife_id, self.xml_file_name())
 
         return True
 
@@ -211,19 +187,6 @@ class activity_UnzipFullArticle(activity.activity):
             if content_type:
                 s3_key.set_metadata('Content-Type', content_type)
 
-    def upload_files_to_poa_packaging_bucket(self, prefix, file_list):
-        """
-        Used for uploading to the crossref outbox, for now
-        """
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(self.settings.poa_packaging_bucket)
-
-        for file_name in file_list:
-            s3_key_name = prefix + self.file_name_from_name(file_name)
-            s3_key = boto.s3.key.Key(bucket)
-            s3_key.key = s3_key_name
-            s3_key.set_contents_from_filename(file_name, replace=True)
 
     def download_files_from_s3(self, document):
 
@@ -296,54 +259,6 @@ class activity_UnzipFullArticle(activity.activity):
             else:
                 return None
         return None
-
-    def start_publish_article_workflow(self, elife_id, document):
-        """
-        In here a new FTPArticle workflow is started for the article object supplied
-        """
-        starter_status = None
-
-        starter_status = None
-
-        # Compile the workflow starter parameters
-        workflow_id = "PublishArticle_" + str(elife_id)
-        workflow_name = "PublishArticle"
-        workflow_version = "1"
-        child_policy = None
-        execution_start_to_close_timeout = None
-
-        # Input data
-        data = {}
-        s3_document_url = ('https://s3.amazonaws.com/' + self.output_bucket + '/'
-                           + self.cdn_base_prefix(elife_id) + document)
-        data['document'] = s3_document_url
-        data['elife_id'] = elife_id
-        input_json = {}
-        input_json['data'] = data
-        input = json.dumps(input_json)
-
-        # Connect to SWF
-        conn = boto.swf.layer1.Layer1(self.settings.aws_access_key_id,
-                                      self.settings.aws_secret_access_key)
-
-        # Try and start a workflow
-        try:
-            response = conn.start_workflow_execution(self.settings.domain, workflow_id,
-                                                     workflow_name, workflow_version,
-                                                     self.settings.default_task_list,
-                                                     child_policy,
-                                                     execution_start_to_close_timeout, input)
-            starter_status = True
-        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-            # There is already a running workflow with that ID, cannot start another
-            message = ('SWFWorkflowExecutionAlreadyStartedError: There is already ' +
-                       'a running workflow with ID %s' % workflow_id)
-            print message
-            if self.logger:
-                self.logger.info(message)
-            starter_status = False
-
-        return starter_status
 
 
     def create_activity_directories(self):
