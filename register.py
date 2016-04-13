@@ -93,6 +93,7 @@ def start(ENV="dev"):
     activity_names.append("PMCDeposit")
     activity_names.append("UnzipFullArticle")
     activity_names.append("ScheduleCrossref")
+    activity_names.append("ScheduleDownstream")
 
     for activity_name in activity_names:
         # Import the activity libraries
