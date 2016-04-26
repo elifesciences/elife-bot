@@ -9,12 +9,11 @@ from mock import mock, patch
 from classes_mock import FakeSession
 from classes_mock import FakeKey
 from classes_mock import FakeS3Connection
-import settings_mock
 
 
 class tests_ConvertJATS(unittest.TestCase):
     def setUp(self):
-        self.jats = activity_ConvertJATS(settings_mock.get_settings(), None, None, None, None)
+        self.jats = activity_ConvertJATS(settings.get_settings("mock"), None, None, None, None)
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -41,7 +40,7 @@ class tests_ConvertJATS(unittest.TestCase):
         self.jats.emit_monitor_event = mock.MagicMock()
         self.jats.set_dashboard_properties = mock.MagicMock()
 
-        param_data = None #{u'event_time': u'2016-04-04T10:35:28.407Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-00353-vor-v1-20121213000000.zip', u'file_etag': u'1e17ebb1fad6c467fce9cede16bb752f', u'bucket_name': u'jen-elife-production-final', u'file_size': 1097506}
+        param_data = None
         success = self.jats.do_activity(param_data)
         self.assertDictEqual.__self__.maxDiff = None
         self.assertEqual(success,True)
