@@ -12,6 +12,7 @@ from optparse import OptionParser
 
 import provider.simpleDB as dblib
 import provider.swfmeta as swfmetalib
+import starter
 
 """
 Cron job to check for workflows to start every five minutes, if applicable

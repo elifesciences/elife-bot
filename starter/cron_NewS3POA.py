@@ -12,7 +12,7 @@ from optparse import OptionParser
 
 import provider.simpleDB as dblib
 import provider.swfmeta as swfmetalib
-
+import starter
 
 """
 Cron job to check for new article S3 POA and start workflows
