@@ -29,6 +29,7 @@ class activity_ScheduleDownstream(activity.activity):
 
         # Outbox folders on S3
         self.pubmed_outbox_folder = "pubmed/outbox/"
+        self.pmc_outbox_folder  = "pmc/outbox/"
         self.publication_email_outbox_folder = "publication_email/outbox/"
         self.pub_router_outbox_folder = "pub_router/outbox/"
         self.cengage_outbox_folder = "cengage/outbox/"
@@ -87,6 +88,7 @@ class activity_ScheduleDownstream(activity.activity):
 
         elif status == "vor":
             outbox_list.append(self.pubmed_outbox_folder)
+            outbox_list.append(self.pmc_outbox_folder)
             outbox_list.append(self.publication_email_outbox_folder)
             outbox_list.append(self.pub_router_outbox_folder)
             outbox_list.append(self.cengage_outbox_folder)
