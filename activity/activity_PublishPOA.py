@@ -145,9 +145,9 @@ class activity_PublishPOA(activity.activity):
                 # Clean up outbox
                 print "Moving files from outbox folder to published folder"
                 self.clean_outbox()
-                self.upload_xml_to_crossref_outbox_s3()
-                self.upload_xml_to_pubmed_outbox_s3()
-                self.upload_xml_to_publication_email_outbox_s3()
+                #self.upload_xml_to_crossref_outbox_s3()
+                #self.upload_xml_to_pubmed_outbox_s3()
+                #self.upload_xml_to_publication_email_outbox_s3()
                 self.outbox_status = True
                 
             # Set the activity status of this activity based on successes
