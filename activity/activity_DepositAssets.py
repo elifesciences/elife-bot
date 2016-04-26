@@ -34,10 +34,12 @@ class activity_DepositAssets(activity.activity):
                                 "Depositing assets for " + article_id)
 
         try:
-            conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+            conn = S3Connection(self.settings.aws_access_key_id,
+                                self.settings.aws_secret_access_key)
 
             expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder')
-            expanded_folder_bucket = self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
+            expanded_folder_bucket = (self.settings.publishing_buckets_prefix +
+                                      self.settings.expanded_bucket)
 
             expanded_bucket = conn.get_bucket(expanded_folder_bucket)
             cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
@@ -55,14 +57,17 @@ class activity_DepositAssets(activity.activity):
                     download_metadata = file_key.metadata
                     download_metadata['Content-Disposition'] = str(
                         "Content-Disposition: attachment; filename=" + file_name + ";")
-                    file_key.copy(cdn_bucket_name, article_id + "/" + file_name_no_extension + "-download." + extension,
+                    file_key.copy(cdn_bucket_name, article_id + "/" +
+                                  file_name_no_extension + "-download." + extension,
                                   metadata=download_metadata)
-            self.emit_monitor_event(self.settings, article_id, version, run, "Deposit assets", "end",
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    "Deposit assets", "end",
                                     "Deposited assets for article " + article_id)
 
         except Exception as e:
             self.logger.exception("Exception when Depositing assets")
-            self.emit_monitor_event(self.settings, article_id, version, run, "Deposit assets", "error",
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    "Deposit assets", "error",
                                     "Error depositing assets for article " + article_id +
                                     " message:" + e.message)
             return False

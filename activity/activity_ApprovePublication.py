@@ -5,7 +5,6 @@ import os
 import requests
 import boto.sqs
 from boto.sqs.message import Message
-from requests.auth import HTTPBasicAuth
 
 """
 ConvertJATS.py activity
@@ -43,7 +42,8 @@ class activity_ApprovePublication(activity.activity):
 
         try:
 
-            self.emit_monitor_event(self.settings, article_id, version, run, "Approve Publication", "start",
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    "Approve Publication", "start",
                                     "Starting approval of article " + article_id)
 
             publication_data = data['publication_data']
@@ -57,17 +57,19 @@ class activity_ApprovePublication(activity.activity):
             auth = None
             if self.settings.drupal_update_user and self.settings.drupal_update_user != '':
                 auth = requests.auth.HTTPBasicAuth(self.settings.drupal_update_user,
-                                                    self.settings.drupal_update_pass)
+                                                   self.settings.drupal_update_pass)
             r = requests.put(destination, data="{ \"publish\": \"1\" }", headers=headers, auth=auth)
             self.logger.debug("PUT response was %s" % r.status_code)
 
             if r.status_code == 200:
-                self.set_monitor_property(self.settings, article_id, 'publication-status', 'published', "text", version=version)
+                self.set_monitor_property(self.settings, article_id, 'publication-status',
+                                          'published', "text", version=version)
                 message = base64.decodestring(publication_data)
 
-                sqs_conn = boto.sqs.connect_to_region(self.settings.sqs_region,
-                                                      aws_access_key_id=self.settings.aws_access_key_id,
-                                                      aws_secret_access_key=self.settings.aws_secret_access_key)
+                sqs_conn = boto.sqs.connect_to_region(
+                    self.settings.sqs_region,
+                    aws_access_key_id=self.settings.aws_access_key_id,
+                    aws_secret_access_key=self.settings.aws_secret_access_key)
 
                 out_queue = sqs_conn.get_queue(self.settings.workflow_starter_queue)
                 m = Message()
@@ -75,19 +77,23 @@ class activity_ApprovePublication(activity.activity):
                 out_queue.write(m)
 
             else:
-                self.emit_monitor_event(self.settings, article_id, version, run, "Approve Publication", "error",
-                                        "Website ingest returned an error code: " + str(r.status_code))
+                self.emit_monitor_event(self.settings, article_id, version, run,
+                                        "Approve Publication", "error",
+                                        "Website ingest returned an error code: " +
+                                        str(r.status_code))
                 self.logger.error("Body:" + r.text)
                 return False
 
         except Exception as e:
             self.logger.exception("Exception when submitting article EIF")
-            self.emit_monitor_event(self.settings, article_id, version, run, "Approve Publication", "error",
-                                    "Error approving article publication for " + article_id + " message:" + str(
-                                        e.message))
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    "Approve Publication", "error",
+                                    "Error approving article publication for " + article_id +
+                                    " message:" + str(e.message))
             return False
 
-        self.emit_monitor_event(self.settings, article_id, version, run, "Approve Publication", "end",
-                                    "Finished approving article" + article_id +
-                                    " status was " + str(r.status_code))
+        self.emit_monitor_event(self.settings, article_id, version, run,
+                                "Approve Publication", "end",
+                                "Finished approving article" + article_id +
+                                " status was " + str(r.status_code))
         return True

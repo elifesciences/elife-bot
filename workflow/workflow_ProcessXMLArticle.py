@@ -6,7 +6,8 @@ PublishArticle workflow
 
 
 class workflow_ProcessXMLArticle(workflow.workflow):
-    def __init__(self, settings, logger, conn=None, token=None, decision=None, maximum_page_size=100):
+    def __init__(self, settings, logger, conn=None, token=None, decision=None,
+                 maximum_page_size=100):
         workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
 
         # SWF Defaults

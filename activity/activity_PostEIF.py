@@ -50,7 +50,8 @@ class activity_PostEIF(activity.activity):
             if self.logger:
                 self.logger.info("Posting file %s" % eif_filename)
 
-            conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+            conn = S3Connection(self.settings.aws_access_key_id,
+                                self.settings.aws_secret_access_key)
             bucket = conn.get_bucket(eif_bucket)
             key = Key(bucket)
             key.key = eif_filename
@@ -58,24 +59,26 @@ class activity_PostEIF(activity.activity):
             destination = self.settings.drupal_EIF_endpoint
 
             headers = {'content-type': 'application/json'}
-            
+
             auth = None
             if self.settings.drupal_update_user and self.settings.drupal_update_user != '':
                 auth = requests.auth.HTTPBasicAuth(self.settings.drupal_update_user,
-                                                    self.settings.drupal_update_pass)
-                        
+                                                   self.settings.drupal_update_pass)
+
             r = requests.post(destination, data=json_output, headers=headers, auth=auth)
             self.logger.info("POST response was %s" % str(r.status_code))
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "start",
                                     "Finish submission of article " + article_id +
-                                    " for version " + str(version) + " run " + str(run) + " the response status "
-                                                                                          "was " + str(r.status_code))
+                                    " for version " + str(version) + " run " + str(run) +
+                                    " the response status " +
+                                    "was " + str(r.status_code))
             # TODO: this is temp
             if r.status_code == 200:
             #if True:
                 # TODO : article path will at some point be available in the respose
                 article_path = session.get_value(self.get_workflowId(), 'article_path')
-                self.set_monitor_property(self.settings, article_id, 'path', article_path, 'text', version=version)
+                self.set_monitor_property(self.settings, article_id, 'path',
+                                          article_path, 'text', version=version)
 
                 published = r.json().get('publish')
                 # TODO: this is temp
@@ -99,7 +102,7 @@ class activity_PostEIF(activity.activity):
                     'run': run,
                     'status': status,
                     'eif_location': eif_filename,
-                 }
+                }
 
                 message = {
                     'workflow_name': 'PostPerfectPublication',
@@ -107,13 +110,15 @@ class activity_PostEIF(activity.activity):
                 }
 
                 if published is True:
-                    self.set_monitor_property(self.settings, article_id, 'publication-status', 'published', "text", version=version)
+                    self.set_monitor_property(self.settings, article_id, 'publication-status',
+                                              'published', "text", version=version)
 
                     # initiate post-publication workflow now
 
-                    sqs_conn = boto.sqs.connect_to_region(self.settings.sqs_region,
-                                                          aws_access_key_id=self.settings.aws_access_key_id,
-                                                          aws_secret_access_key=self.settings.aws_secret_access_key)
+                    sqs_conn = boto.sqs.connect_to_region(
+                        self.settings.sqs_region,
+                        aws_access_key_id=self.settings.aws_access_key_id,
+                        aws_secret_access_key=self.settings.aws_secret_access_key)
 
                     out_queue = sqs_conn.get_queue(self.settings.workflow_starter_queue)
                     m = Message()
@@ -122,11 +127,15 @@ class activity_PostEIF(activity.activity):
                 else:
                     encoded_message = base64.encodestring(json.dumps(message))
                     # store message in dashboard for later
-                    self.set_monitor_property(self.settings, article_id, "_publication-data", encoded_message, "text", version=version)
-                    self.set_monitor_property(self.settings, article_id, "publication-status", "ready to publish", "text", version=version)
+                    self.set_monitor_property(self.settings, article_id, "_publication-data",
+                                              encoded_message, "text", version=version)
+                    self.set_monitor_property(self.settings, article_id, "publication-status",
+                                              "ready to publish", "text", version=version)
             else:
-                self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
-                                        "Website ingest returned an error code: " + str(r.status_code))
+                self.emit_monitor_event(self.settings, article_id, version, run,
+                                        "Post EIF", "error",
+                                        "Website ingest returned an error code: " +
+                                        str(r.status_code))
                 self.logger.error("Body:" + r.text)
                 return False
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "end",
@@ -136,6 +145,7 @@ class activity_PostEIF(activity.activity):
         except Exception as e:
             self.logger.exception("Exception when submitting article EIF")
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
-                                    "Error submitting EIF For article" + article_id + " message:" + str(e.message))
+                                    "Error submitting EIF For article" + article_id +
+                                    " message:" + str(e.message))
             return False
         return True

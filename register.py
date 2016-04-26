@@ -1,24 +1,22 @@
+import json
+import os
+import importlib
+from optparse import OptionParser
+
 import boto.swf
 import settings as settingsLib
-import log
-import json
-import random
-import datetime
-import os
-from optparse import OptionParser
-import importlib
 import workflow
 import activity
 
-# Add parent directory for imports, so activity classes can use elife-api-prototype
+# Add parent directory for imports, so activity classes can use elife-poa-xml-generation
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0,parentdir)
+os.sys.path.insert(0, parentdir)
 
 """
 Amazon SWF register workflow or activity utility
 """
 
-def start(ENV = "dev"):
+def start(ENV="dev"):
     # Specify run environment settings
     settings = settingsLib.get_settings(ENV)
 
@@ -29,7 +27,6 @@ def start(ENV = "dev"):
     workflow_names.append("Ping")
     workflow_names.append("Sum")
     workflow_names.append("ApproveArticlePublication")
-    workflow_names.append("PublishArticle")
     workflow_names.append("NewS3File")
     workflow_names.append("S3Monitor")
     workflow_names.append("LensArticlePublish")
@@ -47,7 +44,7 @@ def start(ENV = "dev"):
     workflow_names.append("PublishPerfectArticle")
     workflow_names.append("PostPerfectPublication")
     workflow_names.append("ProcessXMLArticle")
-    
+
     for workflow_name in workflow_names:
         # Import the workflow libraries
         class_name = "workflow_" + workflow_name
@@ -78,8 +75,6 @@ def start(ENV = "dev"):
     activity_names.append("PostEIF")
     activity_names.append("Sum")
     activity_names.append("S3Monitor")
-    activity_names.append("UnzipArticleXML")
-    activity_names.append("LensXMLFilesList")
     activity_names.append("AdminEmailHistory")
     activity_names.append("SendQueuedEmail")
     activity_names.append("LensArticle")
@@ -88,12 +83,13 @@ def start(ENV = "dev"):
     activity_names.append("PublishFinalPOA")
     activity_names.append("DepositCrossref")
     activity_names.append("PubmedArticleDeposit")
-    activity_names.append("ArticleToOutbox")
     activity_names.append("PublicationEmail")
     activity_names.append("FTPArticle")
     activity_names.append("PubRouterDeposit")
     activity_names.append("PMCDeposit")
     activity_names.append("UnzipFullArticle")
+    activity_names.append("ScheduleCrossref")
+    activity_names.append("ScheduleDownstream")
 
     for activity_name in activity_names:
         # Import the activity libraries
@@ -115,7 +111,8 @@ if __name__ == "__main__":
 
     # Add options
     parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
+    parser.add_option("-e", "--env", default="dev", action="store", type="string",
+                      dest="env", help="set the environment to run, either dev or live")
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env

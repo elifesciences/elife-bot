@@ -5,8 +5,8 @@ import re
 Functions for reuse concerning Amazon s3 and buckets
 """
 
-def get_s3_key_names_from_bucket(bucket, key_type = "key", prefix = None,
-                                 delimiter = '/', headers = None, file_extensions = None):
+def get_s3_key_names_from_bucket(bucket, key_type="key", prefix=None,
+                                 delimiter='/', headers=None, file_extensions=None):
     """
     Given a connected boto bucket object, and optional parameters,
     from the prefix (folder name), get the s3 key names for
@@ -17,27 +17,27 @@ def get_s3_key_names_from_bucket(bucket, key_type = "key", prefix = None,
     """
     s3_keys = []
     s3_key_names = []
-    
+
     # Get a list of S3 objects
-    bucketList = bucket.list(prefix = prefix, delimiter = delimiter, headers = headers)
+    bucketList = bucket.list(prefix=prefix, delimiter=delimiter, headers=headers)
 
     for item in bucketList:
         # Can loop through each item and search for objects
         if key_type == "key":
-            if(isinstance(item, boto.s3.key.Key)):
+            if isinstance(item, boto.s3.key.Key):
                 s3_keys.append(item)
         elif key_type == "prefix":
-            if(isinstance(item, boto.s3.prefix.Prefix)):
+            if isinstance(item, boto.s3.prefix.Prefix):
                 s3_keys.append(item)
-    
+
     # Convert to key names instead of objects to make it testable later
     for key in s3_keys:
         s3_key_names.append(key.name)
-    
+
     # Filter by file_extension
     if file_extensions is not None:
         s3_key_names = filter_list_by_file_extensions(s3_key_names, file_extensions)
-        
+
     return s3_key_names
 
 def filter_list_by_file_extensions(s3_key_names, file_extensions):
@@ -52,11 +52,11 @@ def filter_list_by_file_extensions(s3_key_names, file_extensions):
         for ext in file_extensions:
             # Match file extension as the end of the string and escape the dot
             pattern = ".*\\" + ext + "$"
-            if(re.search(pattern, name) is not None):
+            if re.search(pattern, name) is not None:
                 match = True
         if match is True:
             good_s3_key_names.append(name)
-    
+
     return good_s3_key_names
 
 
@@ -67,22 +67,22 @@ def latest_pmc_zip_revision(doi_id, s3_key_names):
     and if there is more than one then return the latest revision, if applicable
     """
     s3_key_name = None
-    
+
     name_matches = []
     for key_name in s3_key_names:
         name_match = '-' + str(doi_id).zfill(5)
         if name_match in key_name:
             name_matches.append(key_name)
-    
+
     if len(name_matches) == 1:
         s3_key_name = name_matches[0]
     else:
         # Look for latest revision number
         highest_revision = None
         for key_name in name_matches:
-            
+
             revision_match = re.match(ur'.*r(.*)\.zip$', key_name)
-            
+
             if revision_match is None:
                 if highest_revision is None:
                     # First value with no revision on it
@@ -91,8 +91,9 @@ def latest_pmc_zip_revision(doi_id, s3_key_names):
                     continue
             elif revision_match is not None:
                 # Use either the first revision number found or the highest revision number
-                if ((highest_revision is None) or
-                    (highest_revision and int(revision_match.group(1)) > int(highest_revision))):
+                if (highest_revision is None or
+                        (highest_revision and
+                         int(revision_match.group(1)) > int(highest_revision))):
                     s3_key_name = key_name
                     highest_revision = revision_match.group(1)
 

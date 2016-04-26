@@ -20,6 +20,5 @@ Feature: Workflow is configured at Amazon SWF
     | env					| workflow_name	
     | dev					| Ping
     | dev					| Sum
-    | dev					| PublishArticle
     | live				| Ping
-    | live				| PublishArticle
+

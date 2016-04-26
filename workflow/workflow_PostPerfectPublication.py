@@ -6,7 +6,8 @@ PostPerfectPublication workflow
 
 
 class workflow_PostPerfectPublication(workflow.workflow):
-    def __init__(self, settings, logger, conn=None, token=None, decision=None, maximum_page_size=100):
+    def __init__(self, settings, logger, conn=None, token=None, decision=None,
+                 maximum_page_size=100):
         workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
 
         # SWF Defaults
@@ -54,7 +55,7 @@ class workflow_PostPerfectPublication(workflow.workflow):
                         "schedule_to_start_timeout": 300,
                         "start_to_close_timeout": 60 * 15
                     },
-                     {
+                    {
                         "activity_type": "UpdateLAX",
                         "activity_id": "UpdateLAX",
                         "version": "1",
@@ -75,6 +76,17 @@ class workflow_PostPerfectPublication(workflow.workflow):
                         "schedule_to_close_timeout": 60*5,
                         "schedule_to_start_timeout": 300,
                         "start_to_close_timeout": 60*5
+                    },
+                    {
+                        "activity_type": "ScheduleDownstream",
+                        "activity_id": "ScheduleDownstream",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 5,
+                        "schedule_to_close_timeout": 60 * 5,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 5
                     }
                 ],
 
