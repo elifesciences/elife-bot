@@ -1,6 +1,5 @@
 import unittest
 from activity.activity_ConvertJATS import activity_ConvertJATS
-import settings
 import test_activity_data as data
 import json
 from testfixtures import tempdir, compare
@@ -9,11 +8,12 @@ from mock import mock, patch
 from classes_mock import FakeSession
 from classes_mock import FakeKey
 from classes_mock import FakeS3Connection
+import settings_mock
 
 
 class tests_ConvertJATS(unittest.TestCase):
     def setUp(self):
-        self.jats = activity_ConvertJATS(settings.get_settings("mock"), None, None, None, None)
+        self.jats = activity_ConvertJATS(settings_mock, None, None, None, None)
 
     def tearDown(self):
         TempDirectory.cleanup_all()
