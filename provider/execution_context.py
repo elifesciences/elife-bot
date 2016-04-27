@@ -37,7 +37,7 @@ class FileSession(object):
 
 class RedisSession(object):
     def __init__(self, settings):
-        self.r = redis.StrictRedis(host='localhost', port=6379, db=0) #host, port will come from settings
+        self.r = redis.StrictRedis(host=settings.redis_host, port=settings.redis_port, db=settings.redis_db)
 
     def store_value(self, execution_id, key, value):
         self.r.hset(execution_id, key, value)
