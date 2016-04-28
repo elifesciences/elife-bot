@@ -109,7 +109,6 @@ class activity_PubRouterDeposit(activity.activity):
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
 
-
         # Clean up outbox
         print "Moving files from outbox folder to published folder"
         self.clean_outbox()
@@ -118,6 +117,7 @@ class activity_PubRouterDeposit(activity.activity):
         # Send email to admins with the status
         self.activity_status = True
         self.send_admin_email()
+        self.send_friendly_email(self.workflow, self.articles_approved)
 
         # Return the activity result, True or False
         result = True
@@ -516,12 +516,78 @@ class activity_PubRouterDeposit(activity.activity):
             self.db.elife_add_email_to_email_queue(
                 recipient_email=email,
                 sender_email=sender_email,
-                email_type="PublicationEmail",
+                email_type="PubRouterDeposit",
                 format="text",
                 subject=subject,
                 body=body)
 
         return True
+
+    def send_friendly_email(self, workflow, articles_approved):
+        """
+        After do_activity is finished, send emails to recipients
+        including the sucessfully sent article list
+        """
+        # Connect to DB
+        db_conn = self.db.connect()
+
+        # Note: Create a verified sender email address, only done once
+        #conn.verify_email_address(self.settings.ses_sender_email)
+
+        current_time = time.gmtime()
+
+        body = self.get_friendly_email_body(current_time, workflow, articles_approved)
+        subject = self.get_friendly_email_subject(current_time, workflow)
+        sender_email = self.settings.ses_poa_sender_email
+
+        # Get pub router recipients
+        recipient_email_list = self.get_friendly_email_recipients(workflow)
+
+        # Handle multiple recipients, if specified
+        if type(self.settings.ses_poa_recipient_email) == list:
+            for email in self.settings.ses_poa_recipient_email:
+                recipient_email_list.append(email)
+        else:
+            recipient_email_list.append(self.settings.ses_poa_recipient_email)
+
+        for email in recipient_email_list:
+            # Add the email to the email queue
+            self.db.elife_add_email_to_email_queue(
+                recipient_email=email,
+                sender_email=sender_email,
+                email_type="PubRouterDeposit",
+                format="text",
+                subject=subject,
+                body=body)
+
+        return True
+
+    def get_friendly_email_recipients(self, workflow):
+
+        recipient_email_list = []
+
+        recipients = None
+        try:
+            # Get the email recipient list
+            if workflow == "HEFCE":
+                recipients = self.settings.HEFCE_EMAIL
+            elif workflow == "Cengage":
+                recipients = self.settings.CENGAGE_EMAIL
+            elif workflow == "GoOA":
+                recipients = self.settings.GOOA_EMAIL
+            elif workflow == "WoS":
+                recipients = self.settings.WOS_EMAIL
+            elif workflow == "Scopus":
+                recipients = self.settings.SCOPUS_EMAIL
+        except:
+            pass
+
+        if recipients and type(recipients) == list:
+            recipient_email_list = recipients
+        elif recipients:
+            recipient_email_list.append(recipients)
+
+        return recipient_email_list
 
     def get_activity_status_text(self, activity_status):
         """
@@ -588,4 +654,36 @@ class activity_PubRouterDeposit(activity.activity):
 
         return body
 
+    def get_friendly_email_subject(self, current_time, workflow):
+        """
+        Assemble the email subject
+        """
+        date_format = '%Y-%m-%d'
+        datetime_string = time.strftime(date_format, current_time)
 
+        subject = ("eLife content for " + workflow + " " +  datetime_string)
+
+        return subject
+
+    def get_friendly_email_body(self, current_time, workflow, approved_articles):
+        """
+        Format the body of the email
+        """
+
+        body = ""
+
+        date_format = '%Y-%m-%d'
+        datetime_string = time.strftime(date_format, current_time)
+
+        body += datetime_string
+        body += "\n\n"
+        body += "eLife is sending content for the following articles"
+        body += "\n\n"
+
+        for article in approved_articles:
+            body += article.doi
+            body += "\n"
+
+        body += "\n\nSincerely\n\neLife bot"
+
+        return body
