@@ -46,6 +46,10 @@ class activity_PubRouterDeposit(activity.activity):
         self.outbox_folder = None
         self.published_folder = None
 
+        # Bucket settings for source files
+        self.pmc_zip_bucket = settings.poa_packaging_bucket
+        self.pmc_zip_folder = "pmc/zip/"
+
         # Track the success of some steps
         self.activity_status = None
         self.ftp_status = None
@@ -345,13 +349,11 @@ class activity_PubRouterDeposit(activity.activity):
                     self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
 
-        # Temporarily block if there are no zip files in the elife-article bucket for this article
-        db_conn = self.db.connect()
+        # Check if a PMC zip file exists for this article
         for article in articles:
-            s3_items = self.db.elife_get_article_S3_file_items(doi_id=article.doi_id)
-            if not s3_items or len(s3_items) == 0:
+            if not self.does_source_zip_exist_from_s3(doi_id=article.doi_id):
                 if self.logger:
-                    log_info = "Removing because there are no zip files to send " + article.doi
+                    log_info = "Removing because there is no PMC zip file to send " + article.doi
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
@@ -456,6 +458,29 @@ class activity_PubRouterDeposit(activity.activity):
             doi_id = str(doi_id).zfill(5)
 
         if doi_id in blacklist.pub_router_deposit_article_blacklist(workflow):
+            return True
+        else:
+            return False
+
+    def does_source_zip_exist_from_s3(self, doi_id):
+        """
+
+        """
+        bucket_name = self.pmc_zip_bucket
+        prefix = self.pmc_zip_folder
+
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id,
+                               self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(
+            bucket=bucket,
+            prefix=prefix)
+
+        s3_key_name = s3lib.latest_pmc_zip_revision(doi_id, s3_key_names)
+
+        if s3_key_name:
             return True
         else:
             return False
