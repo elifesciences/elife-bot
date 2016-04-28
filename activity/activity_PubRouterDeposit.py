@@ -130,6 +130,10 @@ class activity_PubRouterDeposit(activity.activity):
             return "cengage/outbox/"
         elif workflow == "GoOA":
             return "gooa/outbox/"
+        elif workflow == "WoS":
+            return "wos/outbox/"
+        elif workflow == "Scopus":
+            return "scopus/outbox/"
 
         return None
 
@@ -143,6 +147,10 @@ class activity_PubRouterDeposit(activity.activity):
             return "cengage/published/"
         elif workflow == "GoOA":
             return "gooa/published/"
+        elif workflow == "WoS":
+            return "wos/published/"
+        elif workflow == "Scopus":
+            return "scopus/published/"
 
         return None
 
