@@ -211,6 +211,27 @@ class activity_PubmedArticleDeposit(activity.activity):
 
         return articles
 
+    def get_article_version_from_lax(self, article_id):
+        """
+        Temporary fix to set the version of the article if available
+        """
+        url = self.settings.lax_article_versions.replace('{article_id}', article_id)
+        response = requests.get(url)
+        if response.status_code == 200:
+            high_version = 0
+            data = response.json()
+            for version in data:
+                int_version = int(version)
+                if int_version > high_version:
+                    high_version = int_version
+            return high_version
+        elif response.status_code == 404:
+            return "1"
+        else:
+            self.logger.error("Error obtaining version information from Lax" +
+                              str(response.status_code))
+            return "-1"
+
     def generate_pubmed_xml(self):
         """
         Using the POA generatePubMedXml module
@@ -243,6 +264,14 @@ class activity_PubmedArticleDeposit(activity.activity):
                     doi=article.doi,
                     is_poa=article.is_poa,
                     was_ever_poa=article.was_ever_poa) is True:
+
+                # Try to add the article version if in lax
+                try:
+                    version = self.get_article_version_from_lax(article.doi.split('.')[-1])
+                except:
+                    version = None
+                if version and version > 0:
+                    article.version = version
 
                 # Add published article object to be processed
                 published_articles.append(article)
