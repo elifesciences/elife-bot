@@ -117,7 +117,9 @@ class activity_PubRouterDeposit(activity.activity):
         # Send email to admins with the status
         self.activity_status = True
         self.send_admin_email()
-        self.send_friendly_email(self.workflow, self.articles_approved)
+        
+        if len(self.articles_approved) > 0:
+            self.send_friendly_email(self.workflow, self.articles_approved)
 
         # Return the activity result, True or False
         result = True
