@@ -46,6 +46,10 @@ class activity_PubRouterDeposit(activity.activity):
         self.outbox_folder = None
         self.published_folder = None
 
+        # Bucket settings for source files
+        self.pmc_zip_bucket = settings.poa_packaging_bucket
+        self.pmc_zip_folder = "pmc/zip/"
+
         # Track the success of some steps
         self.activity_status = None
         self.ftp_status = None
@@ -105,7 +109,6 @@ class activity_PubRouterDeposit(activity.activity):
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
 
-
         # Clean up outbox
         print "Moving files from outbox folder to published folder"
         self.clean_outbox()
@@ -114,6 +117,9 @@ class activity_PubRouterDeposit(activity.activity):
         # Send email to admins with the status
         self.activity_status = True
         self.send_admin_email()
+        
+        if len(self.articles_approved) > 0:
+            self.send_friendly_email(self.workflow, self.articles_approved)
 
         # Return the activity result, True or False
         result = True
@@ -130,6 +136,10 @@ class activity_PubRouterDeposit(activity.activity):
             return "cengage/outbox/"
         elif workflow == "GoOA":
             return "gooa/outbox/"
+        elif workflow == "WoS":
+            return "wos/outbox/"
+        elif workflow == "Scopus":
+            return "scopus/outbox/"
 
         return None
 
@@ -143,6 +153,10 @@ class activity_PubRouterDeposit(activity.activity):
             return "cengage/published/"
         elif workflow == "GoOA":
             return "gooa/published/"
+        elif workflow == "WoS":
+            return "wos/published/"
+        elif workflow == "Scopus":
+            return "scopus/published/"
 
         return None
 
@@ -337,13 +351,11 @@ class activity_PubRouterDeposit(activity.activity):
                     self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
 
-        # Temporarily block if there are no zip files in the elife-article bucket for this article
-        db_conn = self.db.connect()
+        # Check if a PMC zip file exists for this article
         for article in articles:
-            s3_items = self.db.elife_get_article_S3_file_items(doi_id=article.doi_id)
-            if not s3_items or len(s3_items) == 0:
+            if not self.does_source_zip_exist_from_s3(doi_id=article.doi_id):
                 if self.logger:
-                    log_info = "Removing because there are no zip files to send " + article.doi
+                    log_info = "Removing because there is no PMC zip file to send " + article.doi
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
@@ -452,6 +464,29 @@ class activity_PubRouterDeposit(activity.activity):
         else:
             return False
 
+    def does_source_zip_exist_from_s3(self, doi_id):
+        """
+
+        """
+        bucket_name = self.pmc_zip_bucket
+        prefix = self.pmc_zip_folder
+
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id,
+                               self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(
+            bucket=bucket,
+            prefix=prefix)
+
+        s3_key_name = s3lib.latest_pmc_zip_revision(doi_id, s3_key_names)
+
+        if s3_key_name:
+            return True
+        else:
+            return False
+
 
     def send_admin_email(self):
         """
@@ -483,12 +518,78 @@ class activity_PubRouterDeposit(activity.activity):
             self.db.elife_add_email_to_email_queue(
                 recipient_email=email,
                 sender_email=sender_email,
-                email_type="PublicationEmail",
+                email_type="PubRouterDeposit",
                 format="text",
                 subject=subject,
                 body=body)
 
         return True
+
+    def send_friendly_email(self, workflow, articles_approved):
+        """
+        After do_activity is finished, send emails to recipients
+        including the sucessfully sent article list
+        """
+        # Connect to DB
+        db_conn = self.db.connect()
+
+        # Note: Create a verified sender email address, only done once
+        #conn.verify_email_address(self.settings.ses_sender_email)
+
+        current_time = time.gmtime()
+
+        body = self.get_friendly_email_body(current_time, workflow, articles_approved)
+        subject = self.get_friendly_email_subject(current_time, workflow)
+        sender_email = self.settings.ses_poa_sender_email
+
+        # Get pub router recipients
+        recipient_email_list = self.get_friendly_email_recipients(workflow)
+
+        # Handle multiple recipients, if specified
+        if type(self.settings.ses_poa_recipient_email) == list:
+            for email in self.settings.ses_poa_recipient_email:
+                recipient_email_list.append(email)
+        else:
+            recipient_email_list.append(self.settings.ses_poa_recipient_email)
+
+        for email in recipient_email_list:
+            # Add the email to the email queue
+            self.db.elife_add_email_to_email_queue(
+                recipient_email=email,
+                sender_email=sender_email,
+                email_type="PubRouterDeposit",
+                format="text",
+                subject=subject,
+                body=body)
+
+        return True
+
+    def get_friendly_email_recipients(self, workflow):
+
+        recipient_email_list = []
+
+        recipients = None
+        try:
+            # Get the email recipient list
+            if workflow == "HEFCE":
+                recipients = self.settings.HEFCE_EMAIL
+            elif workflow == "Cengage":
+                recipients = self.settings.CENGAGE_EMAIL
+            elif workflow == "GoOA":
+                recipients = self.settings.GOOA_EMAIL
+            elif workflow == "WoS":
+                recipients = self.settings.WOS_EMAIL
+            elif workflow == "Scopus":
+                recipients = self.settings.SCOPUS_EMAIL
+        except:
+            pass
+
+        if recipients and type(recipients) == list:
+            recipient_email_list = recipients
+        elif recipients:
+            recipient_email_list.append(recipients)
+
+        return recipient_email_list
 
     def get_activity_status_text(self, activity_status):
         """
@@ -555,4 +656,36 @@ class activity_PubRouterDeposit(activity.activity):
 
         return body
 
+    def get_friendly_email_subject(self, current_time, workflow):
+        """
+        Assemble the email subject
+        """
+        date_format = '%Y-%m-%d'
+        datetime_string = time.strftime(date_format, current_time)
 
+        subject = ("eLife content for " + workflow + " " +  datetime_string)
+
+        return subject
+
+    def get_friendly_email_body(self, current_time, workflow, approved_articles):
+        """
+        Format the body of the email
+        """
+
+        body = ""
+
+        date_format = '%Y-%m-%d'
+        datetime_string = time.strftime(date_format, current_time)
+
+        body += datetime_string
+        body += "\n\n"
+        body += "eLife is sending content for the following articles"
+        body += "\n\n"
+
+        for article in approved_articles:
+            body += article.doi
+            body += "\n"
+
+        body += "\n\nSincerely\n\neLife bot"
+
+        return body

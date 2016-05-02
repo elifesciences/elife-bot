@@ -502,4 +502,7 @@ def pub_router_deposit_article_blacklist(workflow):
     elif workflow == "GoOA":
         article_blacklist = []
 
+    else:
+        article_blacklist = []
+
     return article_blacklist
