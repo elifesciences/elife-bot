@@ -56,7 +56,7 @@ class activity_PMCDeposit(activity.activity):
         # Bucket settings
         self.input_bucket = None
         self.input_bucket_default = (settings.publishing_buckets_prefix +
-                                     settings.production_bucket)
+                                     settings.archive_bucket)
 
         self.publish_bucket = settings.poa_packaging_bucket
         self.published_folder = "pmc/published"
