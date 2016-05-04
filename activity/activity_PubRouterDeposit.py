@@ -46,9 +46,12 @@ class activity_PubRouterDeposit(activity.activity):
         self.outbox_folder = None
         self.published_folder = None
 
-        # Bucket settings for source files
+        # Bucket settings for source files of FTPArticle workflows
         self.pmc_zip_bucket = settings.poa_packaging_bucket
         self.pmc_zip_folder = "pmc/zip/"
+
+        # Bucket settings for source files of PMCDeposit workflows
+        self.archive_bucket = self.settings.publishing_buckets_prefix + self.settings.archive_bucket
 
         # Track the success of some steps
         self.activity_status = None
@@ -70,6 +73,9 @@ class activity_PubRouterDeposit(activity.activity):
         #self.article_not_published_file_names = []
 
         self.admin_email_content = ''
+
+        # journal
+        self.journal = 'elife'
 
     def do_activity(self, data=None):
         """
@@ -96,16 +102,22 @@ class activity_PubRouterDeposit(activity.activity):
 
         for article in self.articles_approved:
             # Start a workflow for each article this is approved to publish
-            starter_status = self.start_ftp_article_workflow(article)
+            if self.workflow == 'PMC':
+                zip_file_name = self.archive_zip_file_name(article)
+                starter_status = self.start_pmc_deposit_workflow(article, zip_file_name)
+            else:
+                starter_status = self.start_ftp_article_workflow(article)
 
             if starter_status is True:
                 if self.logger:
-                    log_info = "Started an FTPArticle workflow for article: " + article.doi
+                    log_info = (self.name + " " + self.workflow +
+                                " Started a workflow for article: " + article.doi)
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
             else:
                 if self.logger:
-                    log_info = "FAILED to start an FTPArticle workflow for article: " + article.doi
+                    log_info = (self.name + " " + self.workflow +
+                                " FAILED to start a workflow for article: " + article.doi)
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
 
@@ -117,7 +129,7 @@ class activity_PubRouterDeposit(activity.activity):
         # Send email to admins with the status
         self.activity_status = True
         self.send_admin_email()
-        
+
         if len(self.articles_approved) > 0:
             self.send_friendly_email(self.workflow, self.articles_approved)
 
@@ -140,6 +152,8 @@ class activity_PubRouterDeposit(activity.activity):
             return "wos/outbox/"
         elif workflow == "Scopus":
             return "scopus/outbox/"
+        elif workflow == "PMC":
+            return "pmc/outbox/"
 
         return None
 
@@ -157,6 +171,8 @@ class activity_PubRouterDeposit(activity.activity):
             return "wos/published/"
         elif workflow == "Scopus":
             return "scopus/published/"
+        elif workflow == "PMC":
+            return "pmc/published/"
 
         return None
 
@@ -178,6 +194,92 @@ class activity_PubRouterDeposit(activity.activity):
         data = {}
         data['workflow'] = self.workflow
         data['elife_id'] = article.doi_id
+        input_json = {}
+        input_json['data'] = data
+        input = json.dumps(input_json)
+
+        # Connect to SWF
+        conn = boto.swf.layer1.Layer1(self.settings.aws_access_key_id,
+                                      self.settings.aws_secret_access_key)
+
+        # Try and start a workflow
+        try:
+            response = conn.start_workflow_execution(self.settings.domain, workflow_id,
+                                                     workflow_name, workflow_version,
+                                                     self.settings.default_task_list,
+                                                     child_policy,
+                                                     execution_start_to_close_timeout, input)
+            starter_status = True
+        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
+            # There is already a running workflow with that ID, cannot start another
+            message = ('SWFWorkflowExecutionAlreadyStartedError: ' +
+                       'There is already a running workflow with ID %s' % workflow_id)
+            print message
+            if self.logger:
+                self.logger.info(message)
+            starter_status = False
+
+        return starter_status
+
+    def archive_zip_file_name(self, article, status='vor'):
+        """
+        Get the file name of the most recent archive zip from the archive bucket
+        """
+        zip_file_name = None
+        bucket_name = self.archive_bucket
+
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id,
+                               self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket=bucket)
+
+        return self.latest_archive_zip_revision(article.doi_id, s3_key_names, self.journal, status)
+
+    def latest_archive_zip_revision(self, doi_id, s3_key_names, journal, status):
+        """
+        Get the most recent version of the article zip file from the
+        list of bucket key names
+        """
+        s3_key_name = None
+
+        name_prefix_to_match = (journal + '-' + str(doi_id).zfill(5)
+                                + '-' + status + '-v')
+
+        highest_version = 0
+        for key_name in s3_key_names:
+            if key_name.startswith(name_prefix_to_match):
+                version = None
+                try:
+                    parts = key_name.split(name_prefix_to_match)
+                    version = int(parts[1].split('-')[0])
+                except:
+                    pass
+                if version and version > highest_version:
+                    s3_key_name = key_name
+
+        return s3_key_name
+
+
+    def start_pmc_deposit_workflow(self, article, zip_file_name):
+        """
+        Start a PMCDeposit workflow for the article object, by looking up
+        the archive zip file for the article DOI
+        """
+        starter_status = None
+
+        # Compile the workflow starter parameters
+        workflow_id = "PMCDeposit_%s" % str(article.doi_id)
+        workflow_name = "PMCDeposit"
+        workflow_version = "1"
+        child_policy = None
+        # Allow workflow 120 minutes to finish
+        execution_start_to_close_timeout = None
+
+        # Input data
+        data = {}
+        data['document'] = zip_file_name
         input_json = {}
         input_json['data'] = data
         input = json.dumps(input_json)
@@ -330,7 +432,7 @@ class activity_PubRouterDeposit(activity.activity):
                 remove_article_doi.append(article.doi)
 
         # Check if article is a resupply
-        if workflow != 'GoOA':
+        if workflow != 'GoOA' and workflow != 'PMC':
             for article in articles:
                 was_ever_published = blank_article.was_ever_published(article.doi, workflow)
                 if was_ever_published is True:
@@ -352,13 +454,27 @@ class activity_PubRouterDeposit(activity.activity):
                 remove_article_doi.append(article.doi)
 
         # Check if a PMC zip file exists for this article
-        for article in articles:
-            if not self.does_source_zip_exist_from_s3(doi_id=article.doi_id):
-                if self.logger:
-                    log_info = "Removing because there is no PMC zip file to send " + article.doi
-                    self.admin_email_content += "\n" + log_info
-                    self.logger.info(log_info)
-                remove_article_doi.append(article.doi)
+        if workflow != 'PMC':
+            for article in articles:
+                if not self.does_source_zip_exist_from_s3(doi_id=article.doi_id):
+                    if self.logger:
+                        log_info = ("Removing because there is no PMC zip file to send " +
+                                    article.doi)
+                        self.admin_email_content += "\n" + log_info
+                        self.logger.info(log_info)
+                    remove_article_doi.append(article.doi)
+
+        # For PMC workflows, check the archive zip file exists
+        if workflow == 'PMC':
+            for article in articles:
+                zip_file_name = self.archive_zip_file_name(article)
+                if not zip_file_name:
+                    if self.logger:
+                        log_info = ("Removing because there is no archive zip for PMC to send " +
+                                    article.doi)
+                        self.admin_email_content += "\n" + log_info
+                        self.logger.info(log_info)
+                    remove_article_doi.append(article.doi)
 
         # Can remove the articles now without affecting the loops using del
         for article in articles:

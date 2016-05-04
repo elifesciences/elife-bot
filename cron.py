@@ -76,6 +76,14 @@ def run_cron(ENV="dev"):
             workflow_id="S3Monitor_FullArticle",
             start_seconds=60 * 31)
 
+        # PMC deposits once per day 20:30 UTC
+        if current_time.tm_hour == 20:
+            workflow_conditional_start(
+                ENV=ENV,
+                starter_name="starter_PubRouterDeposit",
+                workflow_id="PubRouterDeposit_PMC",
+                start_seconds=60 * 31)
+
         # Web of Science deposits once per day 21:30 UTC
         if current_time.tm_hour == 21:
             workflow_conditional_start(
