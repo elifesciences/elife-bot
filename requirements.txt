@@ -14,5 +14,8 @@ elifetools==0.1.4
 PyYAML==3.11
 Wand==0.4.0
 paramiko==1.15.2
+mock==1.3.0
+redis==2.10.5
+testfixtures==4.9.1
 -e git+https://github.com/elifesciences/jats-scraper.git#egg=jats-scraper
 -e hg+https://bitbucket.org/lskibinski/scraper#egg=scraper

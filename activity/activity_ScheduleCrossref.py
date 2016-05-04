@@ -38,7 +38,8 @@ class activity_ScheduleCrossref(activity.activity):
 
         self.expanded_bucket_name = (self.settings.publishing_buckets_prefix
                                      + self.settings.expanded_bucket)
-        self.crossref_bucket_name = self.settings.poa_packaging_bucket
+        self.crossref_bucket_name = (self.settings.publishing_buckets_prefix
+                                     + self.settings.poa_packaging_bucket)
 
         info = S3NotificationInfo.from_dict(data)
         session = Session(self.settings)

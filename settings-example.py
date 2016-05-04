@@ -172,6 +172,9 @@ class exp():
     # Logging
     setLevel = "INFO"
 
+    # Session
+    session_class = "RedisSession"
+
 
 class dev():
 
@@ -300,6 +303,9 @@ class dev():
     # Logging
     setLevel = "INFO"
 
+    # Session
+    session_class = "RedisSession"
+
 
 class live():
     # AWS settings
@@ -426,6 +432,9 @@ class live():
     
     # Logging
     setLevel = "INFO"
+
+    # Session
+    session_class = "RedisSession"
 
 
 def get_settings(ENV="dev"):
