@@ -58,6 +58,10 @@ class activity_ScheduleDownstream(activity.activity):
                             self.settings.aws_secret_access_key)
         bucket = conn.get_bucket(self.expanded_bucket_name)
 
+        self.emit_monitor_event(self.settings, article_id, version, run,
+                                "Schedule Downstream", "start",
+                                "Starting scheduling of downstream deposits for " + article_id)
+
         try:
             (xml_key, xml_filename) = ConvertJATS.get_article_xml_key(bucket, expanded_folder_name)
 
