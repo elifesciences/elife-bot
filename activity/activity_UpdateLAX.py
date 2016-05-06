@@ -46,7 +46,7 @@ class activity_UpdateLAX(activity.activity):
             headers = {"Content-type": "application/json", "Accept": "application/json"}
             response = requests.post(lax_update_endpoint, data=eif, headers=headers,
                                      auth=(self.settings.lax_update_user,
-                                           self.settings.lax_update_pass))
+                                           self.settings.lax_update_pass), verify=self.settings.verify_ssl)
 
             if response.status_code is not 200:
                 self.emit_monitor_event(self.settings, article_id, version, run,
