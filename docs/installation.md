@@ -24,10 +24,6 @@ Python dependencies should be installed with `pip` using:
     
     $ pip install -r requirements.txt
 
-And for the library `elementtree` which is not part of Pypi
-
-    $ pip install elementtree --allow-external elementtree --allow-unverified elementtree
-
 # Configure
 
 Resave settings-example.py as settings.py, and enter your aws credentials.
