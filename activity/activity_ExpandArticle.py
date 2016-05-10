@@ -151,7 +151,7 @@ class activity_ExpandArticle(activity.activity):
 
     def get_next_version(self, article_id):
         url = self.settings.lax_article_versions.replace('{article_id}', article_id)
-        response = requests.get(url)
+        response = requests.get(url, verify=self.settings.verify_ssl)
         if response.status_code == 200:
             high_version = 0
             data = response.json()
