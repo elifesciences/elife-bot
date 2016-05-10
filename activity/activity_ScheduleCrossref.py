@@ -38,7 +38,8 @@ class activity_ScheduleCrossref(activity.activity):
 
         self.expanded_bucket_name = (self.settings.publishing_buckets_prefix
                                      + self.settings.expanded_bucket)
-        self.crossref_bucket_name = self.settings.poa_packaging_bucket
+        self.crossref_bucket_name = (self.settings.publishing_buckets_prefix
+                                     + self.settings.poa_packaging_bucket)
 
         info = S3NotificationInfo.from_dict(data)
         session = Session(self.settings)
@@ -51,6 +52,10 @@ class activity_ScheduleCrossref(activity.activity):
         conn = S3Connection(self.settings.aws_access_key_id,
                             self.settings.aws_secret_access_key)
         bucket = conn.get_bucket(self.expanded_bucket_name)
+
+        self.emit_monitor_event(self.settings, article_id, version, run,
+                                "Schedule Crossref", "start",
+                                "Starting scheduling of crossref deposit for " + article_id)
 
         try:
             (xml_key, xml_filename) = ConvertJATS.get_article_xml_key(bucket, expanded_folder_name)

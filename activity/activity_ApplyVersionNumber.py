@@ -76,9 +76,10 @@ class activity_ApplyVersionNumber(activity.activity):
         except Exception as e:
             self.logger.exception("Exception when applying version number to article")
             self.emit_monitor_event(self.settings, article_id, version, run,
-                                    "Convert JATS", "error",
+                                    "Apply Version Number", "error",
                                     "Error in applying version number to files for " + article_id +
                                     " message:" + e.message)
+            return False
 
         return True
 

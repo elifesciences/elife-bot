@@ -29,7 +29,7 @@ class activity_ScheduleDownstream(activity.activity):
 
         # Outbox folders on S3
         self.pubmed_outbox_folder = "pubmed/outbox/"
-        self.pmc_outbox_folder  = "pmc/outbox/"
+        self.pmc_outbox_folder = "pmc/outbox/"
         self.publication_email_outbox_folder = "publication_email/outbox/"
         self.pub_router_outbox_folder = "pub_router/outbox/"
         self.cengage_outbox_folder = "cengage/outbox/"
@@ -57,6 +57,10 @@ class activity_ScheduleDownstream(activity.activity):
         conn = S3Connection(self.settings.aws_access_key_id,
                             self.settings.aws_secret_access_key)
         bucket = conn.get_bucket(self.expanded_bucket_name)
+
+        self.emit_monitor_event(self.settings, article_id, version, run,
+                                "Schedule Downstream", "start",
+                                "Starting scheduling of downstream deposits for " + article_id)
 
         try:
             (xml_key, xml_filename) = ConvertJATS.get_article_xml_key(bucket, expanded_folder_name)

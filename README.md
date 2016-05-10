@@ -7,7 +7,11 @@ eLife Bot is a set of tools built on top of Amazon's [Simple Work Flow][swf] (SW
 
 ## Installation and tests
 
-eLife bot is currently configured and deployed manually via a custom Ec2 instance. This is partially described in `installation.md`. Tests are provided in `lettuce`. 
+eLife bot is currently configured and deployed manually via a custom Ec2 instance. This is partially described in `installation.md`. Tests are provided in `lettuce`.
+
+We have added unit tests for the eLife bot activities using Python unittest library. Running on the command line:
+cd to elife-bot and execute:
+python -m unittest discover -s tests/activity -p '*_tests.py'
 
 
 ## Existing Workflows
