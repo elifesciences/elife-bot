@@ -475,6 +475,8 @@ class activity_PackagePOA(activity.activity):
         # Now we can continue with imports
         self.elife_poa_lib.xml = importlib.import_module(dir_name + ".xml_generation")
         self.reload_module(self.elife_poa_lib.xml)
+        self.elife_poa_lib.csv = importlib.import_module(dir_name + ".parseCSVFiles")
+        self.reload_module(self.elife_poa_lib.csv)
         self.elife_poa_lib.transform = importlib.import_module(dir_name +
                                                                ".transform-ejp-zip-to-hw-zip")
         self.reload_module(self.elife_poa_lib.transform)
