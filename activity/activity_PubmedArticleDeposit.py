@@ -6,6 +6,7 @@ import time
 import arrow
 import glob
 import re
+import requests
 from collections import namedtuple
 
 import activity
@@ -216,7 +217,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         Temporary fix to set the version of the article if available
         """
         url = self.settings.lax_article_versions.replace('{article_id}', article_id)
-        response = requests.get(url)
+        response = requests.get(url, verify=self.settings.verify_ssl)
         if response.status_code == 200:
             high_version = 0
             data = response.json()
