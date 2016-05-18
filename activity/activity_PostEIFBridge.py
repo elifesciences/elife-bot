@@ -66,6 +66,8 @@ class activity_PostEIFBridge(activity.activity):
                 'workflow_data': follow_on_data
             }
 
+
+
             if published is True:
                 self.set_monitor_property(self.settings, article_id, 'publication-status',
                                           'published', "text", version=version)
@@ -100,9 +102,9 @@ class activity_PostEIFBridge(activity.activity):
             #                         " status was " + str(r.status_code))
 
         except Exception as e:
-            self.logger.exception("Exception when submitting article EIF")
-            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
-                            "Error submitting EIF For article" + article_id +
+            self.logger.exception("Exception after submitting article EIF")
+            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF Bridge", "error",
+                            "Error carrying over information after EIF For article" + article_id +
                             " message:" + str(e.message))
             return False
         return True
