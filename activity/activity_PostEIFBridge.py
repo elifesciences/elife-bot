@@ -25,7 +25,7 @@ class activity_PostEIFBridge(activity.activity):
         self.default_task_schedule_to_close_timeout = 60 * 5
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
-        self.description = "Carries data from [PrePostEIF - or - getdrupaljsondetails] activity through to PostPerfectPublication"
+        self.description = "Carries data from PreparePostEIF activity through to PostPerfectPublication"
         self.logger = logger
 
     def do_activity(self, data=None):
@@ -66,11 +66,7 @@ class activity_PostEIFBridge(activity.activity):
                 'workflow_data': follow_on_data
             }
 
-
-
             if published is True:
-                self.set_monitor_property(self.settings, article_id, 'publication-status',
-                                          'published', "text", version=version)
 
                 # initiate post-publication workflow now
 
@@ -83,6 +79,10 @@ class activity_PostEIFBridge(activity.activity):
                 m = Message()
                 m.set_body(json.dumps(message))
                 out_queue.write(m)
+
+
+                self.set_monitor_property(self.settings, article_id, 'publication-status',
+                                          'published', "text", version=version)
             else:
                 encoded_message = base64.encodestring(json.dumps(message))
                 # store message in dashboard for later
@@ -90,16 +90,6 @@ class activity_PostEIFBridge(activity.activity):
                                           encoded_message, "text", version=version)
                 self.set_monitor_property(self.settings, article_id, "publication-status",
                                           "ready to publish", "text", version=version)
-            # else:
-            #     self.emit_monitor_event(self.settings, article_id, version, run,
-            #                             "Post EIF", "error",
-            #                             "Website ingest returned an error code: " +
-            #                             str(r.status_code))
-            #     self.logger.error("Body:" + r.text)
-            #     return False
-            # self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "end",
-            #                         "Finished submitting EIF for article  " + article_id +
-            #                         " status was " + str(r.status_code))
 
         except Exception as e:
             self.logger.exception("Exception after submitting article EIF")
