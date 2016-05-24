@@ -10,3 +10,4 @@ venv
 .idea
 workflow-context/*
 !workflow-context/.gitkeep
+/tmp
