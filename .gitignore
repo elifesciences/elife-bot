@@ -11,3 +11,5 @@ venv
 workflow-context/*
 !workflow-context/.gitkeep
 /tmp
+.cache
+build/
