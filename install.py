@@ -22,7 +22,7 @@ class EnvironmentCreation:
         s3_conn = S3Connection(self._settings.aws_access_key_id, self._settings.aws_secret_access_key)
         for bucket in buckets_to_create.values():
             print("Creating bucket %s..." % bucket)
-            #s3_conn.create_bucket(bucket)
+            s3_conn.create_bucket(bucket)
             print("Created bucket %s" % bucket)
 
     def create_sqs(self):
