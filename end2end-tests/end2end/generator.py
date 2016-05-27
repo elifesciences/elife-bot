@@ -11,8 +11,6 @@ def article_zip():
         data = template_file.read().decode('UTF-8')
     template = Template(data)
     xml_content = template.render(article = { 'id': id })
-    print(xml_content)
-    print(type(xml_content))
     xml_filename = '/tmp/elife-%s.xml' % id
     with open(xml_filename, 'w') as xml_file:
         xml_file.write(xml_content.encode('utf-8'))
@@ -26,6 +24,11 @@ class ArticleZip:
         self._id = id
         self._filename = filename
 
+    def id(self):
+        return self._id
+
     def doi(self):
         return '10.7554/eLife.' + self._id
 
+    def filename(self):
+        return self._filename
