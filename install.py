@@ -24,6 +24,9 @@ class EnvironmentCreation:
             print("Creating bucket %s..." % bucket)
             s3_conn.create_bucket(bucket)
             print("Created bucket %s" % bucket)
+        # there is also a bucket which is used both without a prefix and with a prefix:
+        # end2end-elife-poa-packaging-end2end -> end2end is appended automatically and the bucket is created
+        # elife-poa-packaging-end2end -> this one has to be created manually
 
     def create_sqs(self):
         sqs_conn = boto.sqs.connect_to_region("us-east-1", aws_access_key_id=self._settings.aws_access_key_id, aws_secret_access_key=self._settings.aws_secret_access_key)
