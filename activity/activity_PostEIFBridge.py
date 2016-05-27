@@ -39,7 +39,7 @@ class activity_PostEIFBridge(activity.activity):
                                   article_path, 'text', version=version)
 
 
-            published = info['published']
+            published = data['ingest_publish']
 
             # assemble data to start post-publication workflow
             expanded_folder = info['expanded_folder']

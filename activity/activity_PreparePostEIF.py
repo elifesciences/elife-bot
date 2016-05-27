@@ -66,7 +66,6 @@ class activity_PreparePostEIF(activity.activity):
                     'version': version,
                     'run': run,
                     'article_path': article_path,
-                    'published': False,
                     'expanded_folder': expanded_folder,
                     'status': status,
                     'update_date': update_date,
