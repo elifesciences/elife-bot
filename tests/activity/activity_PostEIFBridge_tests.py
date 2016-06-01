@@ -23,6 +23,7 @@ class tests_PostEIFBridge(unittest.TestCase):
         mock_sqs_connect.return_value = FakeSQSConn(directory)
         mock_sqs_message.return_value = FakeSQSMessage(directory)
         self.activity_PostEIFBridge.set_monitor_property = mock.MagicMock()
+        self.activity_PostEIFBridge.emit_monitor_event = mock.MagicMock()
         success = self.activity_PostEIFBridge.do_activity(data.PostEIFBridge_data(True))
         fake_sqs_queue = FakeSQSQueue(directory)
         data_written_in_test_queue = fake_sqs_queue.read(data.PostEIFBridge_test_dir)
@@ -34,6 +35,7 @@ class tests_PostEIFBridge(unittest.TestCase):
         #mock_set_monitor_property.side_effect = classes_mock.fake_monitor
         #self.activity_PostEIFBridge.set_monitor_property = mock.MagicMock(side_effect=classes_mock.fake_monitor)
         self.activity_PostEIFBridge.set_monitor_property = mock.MagicMock()
+        self.activity_PostEIFBridge.emit_monitor_event = mock.MagicMock()
         success = self.activity_PostEIFBridge.do_activity(data.PostEIFBridge_data(False))
         self.assertEqual(True, success)
         #self.assertEqual(base64.decodestring(classes_mock.fake_monitor.value), data.PostEIFBridge_message)

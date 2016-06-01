@@ -30,16 +30,14 @@ def PostEIFBridge_data(published):
         return {
                 'eif_filename': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json',
                 'eif_bucket':  'jen-elife-publishing-eif',
-                'passthrough': {
-                    'article_id': u'00353',
-                    'version': u'1',
-                    'run': u'cf9c7e86-7355-4bb4-b48e-0bc284221251',
-                    'article_path': 'content/1/e00353v1',
-                    'published': published,
-                    'expanded_folder': u'00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251',
-                    'status': u'vor',
-                    'update_date': u'2012-12-13T00:00:00Z',
-                }
+                'article_id': u'00353',
+                'version': u'1',
+                'run': u'cf9c7e86-7355-4bb4-b48e-0bc284221251',
+                'article_path': 'content/1/e00353v1',
+                'published': published,
+                'expanded_folder': u'00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251',
+                'status': u'vor',
+                'update_date': u'2012-12-13T00:00:00Z'
             }
 PostEIFBridge_test_dir = "fake_sqs_queue_container"
 PostEIFBridge_message = {'workflow_name': 'PostPerfectPublication', 'workflow_data': {'status': u'vor', 'update_date': u'2012-12-13T00:00:00Z', 'run': u'cf9c7e86-7355-4bb4-b48e-0bc284221251', 'expanded_folder': u'00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251', 'version': u'1', 'eif_location': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json', 'article_id': u'00353'}}
