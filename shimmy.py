@@ -45,13 +45,14 @@ def listen():
 def process_message(message, output_queue):
 
     # extract parameters from message
-    bucket = message.get("eif_bucket")
-    filename = message.get("eif_filename")
-    passthrough = message.get("passthrough")
+    message_data = json.loads(str(message.get_body()))
+    bucket = message_data.get("eif_bucket")
+    filename = message_data.get("eif_filename")
+    passthrough = message_data.get("passthrough")
 
     if bucket is None or filename is None or passthrough is None:
         logging.error("Message format incorrect:")
-        logging.error(message)
+        logging.error(message_data)
         return
 
     # slurp EIF file from S3 into memory
@@ -66,16 +67,27 @@ def process_message(message, output_queue):
         logging.debug("Requests auth set for user %s", settings.drupal_update_user)
     headers = {'content-type': 'application/json'}
     response = requests.post(ingest_endpoint, data=eif, headers=headers, auth=auth)
-    logging.debug("Reponse code was % . Reason was %s", response.status_code, response.status_code)
+    logging.debug("Reponse code was %s . Reason was %s", response.status_code, response.reason)
 
     if response.status_code == 200:
 
         ingest_publish = response.json().get('publish')
+        workflow_data = {
+            'eif_filename': filename,
+            'eif_bucket':  bucket,
+            'article_id': passthrough.get("article_id"),
+            'version': passthrough.get("version"),
+            'run': passthrough.get("run"),
+            'article_path': passthrough.get("article_path"),
+            'expanded_folder': passthrough.get("expanded_folder"),
+            'status': passthrough.get("status"),
+            'update_date': passthrough.get("update_date"),
+            'published': ingest_publish
+        }
         response_message = {
             "workflow_name": "ArticleInformationSupplier",
-            "workflow_data": message
+            "workflow_data": workflow_data
         }
-        response_message['workflow_data']['ingest_publish'] = ingest_publish
 
         m = Message()
         m.set_body(json.dumps(response_message))
@@ -109,3 +121,4 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
+        listen()

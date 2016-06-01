@@ -17,9 +17,22 @@ Amazon SWF PublishArticle starter, for API and Lens publishing etc.
 
 class starter_ArticleInformationSupplier():
 
-    def start(self, ENV="dev", info=None):
+    def start(self,eif_filename, eif_bucket, article_id, version, run, article_path ,expanded_folder, status, update_date, published, ENV="dev", info=None):
 
-        incoming_data = info.passthrough;
+        info = {
+            'eif_filename': eif_filename,
+            'eif_bucket':  eif_bucket,
+            'article_id': article_id,
+            'version': version,
+            'run': run,
+            'article_path': article_path,
+            'expanded_folder': expanded_folder,
+            'status': status,
+            'update_date': update_date,
+            'published': published
+        }
+
+        incoming_data = info
 
         # Specify run environment settings
         settings = settingsLib.get_settings(ENV)

@@ -41,7 +41,7 @@ class activity_PreparePostEIF(activity.activity):
         run = session.get_value(self.get_workflowId(), 'run')
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Prepare Post EIF", "start",
-                                "Starting submission of article EIF " + article_id)
+                                "Starting preparation of article for EIF " + article_id)
 
         try:
             eif_filename = session.get_value(self.get_workflowId(), 'eif_filename')
@@ -79,7 +79,7 @@ class activity_PreparePostEIF(activity.activity):
                 aws_access_key_id=self.settings.aws_access_key_id,
                 aws_secret_access_key=self.settings.aws_secret_access_key)
 
-            out_queue = sqs_conn.get_queue(self.settings.drupal_queue)
+            out_queue = sqs_conn.get_queue(self.settings.website_ingest_queue)
             m = Message()
             m.set_body(json.dumps(message))
             out_queue.write(m)
@@ -89,8 +89,11 @@ class activity_PreparePostEIF(activity.activity):
 
         except Exception as e:
             self.logger.exception("Exception when Preparing for PostEIF")
-            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF", "error",
+            self.emit_monitor_event(self.settings, article_id, version, run, "PreparePost EIF", "error",
                                     "Error submitting EIF For article" + article_id +
                                     " message:" + str(e.message))
             return False
+
+        self.emit_monitor_event(self.settings, article_id, version, run, "Prepare Post EIF", "end",
+                                "Finished preparation of article for EIF " + article_id)
         return True

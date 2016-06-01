@@ -105,8 +105,7 @@ def process_data_publishperfectarticle(workflow_name, workflow_data):
 
 
 workflow_data_processors = {
-    'PublishPerfectArticle': process_data_publishperfectarticle,
-    'ArticleInformationSupplier': process_data_publishperfectarticle
+    'PublishPerfectArticle': process_data_publishperfectarticle
 }
 
 if __name__ == "__main__":

@@ -30,26 +30,29 @@ class activity_PostEIFBridge(activity.activity):
 
     def do_activity(self, data=None):
         try:
-            info = data['passthrough']
 
-            article_path = info['article_path']
-            article_id = info['article_id']
-            version = info['version']
+            article_path = data['article_path']
+            article_id = data['article_id']
+            version = data['version']
+            run = data['run']
             self.set_monitor_property(self.settings, article_id, 'path',
                                   article_path, 'text', version=version)
 
 
-            published = data['ingest_publish']
+            self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF Bridge", "start",
+                                "Starting " + article_id)
+
+            published = data['published']
 
             # assemble data to start post-publication workflow
-            expanded_folder = info['expanded_folder']
-            status = info['status']
+            expanded_folder = data['expanded_folder']
+            status = data['status']
 
-            update_date = info['update_date']
+            update_date = data['update_date']
             if update_date is None:
                 update_date = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
-            run = info['run']
+            run = data['run']
             eif_filename = data['eif_filename']
             follow_on_data = {
                 'article_id': article_id,
@@ -97,4 +100,8 @@ class activity_PostEIFBridge(activity.activity):
                             "Error carrying over information after EIF For article" + article_id +
                             " message:" + str(e.message))
             return False
+
+
+        self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF Bridge", "end",
+                                "Finished Post EIF Bridge" + article_id)
         return True
