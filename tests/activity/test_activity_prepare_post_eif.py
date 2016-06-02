@@ -12,7 +12,7 @@ import json
 import base64
 
 
-class tests_PostEIFBridge(unittest.TestCase):
+class tests_PreparePostEIF(unittest.TestCase):
     def setUp(self):
         self.activity_PreparePostEIF = activity_PreparePostEIF(settings_mock, None, None, None, None)
 
