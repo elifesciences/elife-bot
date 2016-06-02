@@ -171,6 +171,9 @@ class activity_PublishPOA(activity.activity):
         # Return the activity result, True or False
         result = True
 
+        if self.activity_status is True:
+            self.clean_tmp_dir()
+
         return result
 
     def download_files_from_s3_outbox(self):
