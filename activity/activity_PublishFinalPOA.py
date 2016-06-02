@@ -131,7 +131,10 @@ class activity_PublishFinalPOA(activity.activity):
 
         # Return the activity result, True or False
         result = True
-        self.clean_tmp_dir()
+
+        if self.activity_status is True:
+            self.clean_tmp_dir()
+
         return result
 
     def new_filenames(self, doi_id, filenames):
