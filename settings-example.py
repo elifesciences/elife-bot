@@ -176,6 +176,12 @@ class exp():
     # Session
     session_class = "RedisSession"
 
+    # Redis
+    redis_host = "127.0.0.1"
+    redis_port = 6379
+    redis_db = 0
+    redis_expire_key = 86400  # seconds
+
 
 class dev():
 
@@ -307,6 +313,12 @@ class dev():
     # Session
     session_class = "RedisSession"
 
+    # Redis
+    redis_host = "127.0.0.1"
+    redis_port = 6379
+    redis_db = 0
+    redis_expire_key = 86400  # seconds
+
 
 class live():
     # AWS settings
@@ -436,6 +448,12 @@ class live():
 
     # Session
     session_class = "RedisSession"
+
+    # Redis
+    redis_host = "127.0.0.1"
+    redis_port = 6379
+    redis_db = 0
+    redis_expire_key = 86400  # seconds
 
 
 def get_settings(ENV="dev"):
