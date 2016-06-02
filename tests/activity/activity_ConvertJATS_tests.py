@@ -11,7 +11,7 @@ from classes_mock import FakeS3Connection
 import settings_mock
 
 
-class TestConvertJATS(unittest.TestCase):
+class tests_ConvertJATS(unittest.TestCase):
     def setUp(self):
         self.jats = activity_ConvertJATS(settings_mock, None, None, None, None)
 
