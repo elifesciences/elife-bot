@@ -76,6 +76,7 @@ class activity_UnzipFullArticle(activity.activity):
         if self.logger:
             self.logger.info('UnzipFullArticle: %s' % self.elife_id)
 
+        self.clean_tmp_dir()
         return True
 
     def is_document_poa_status(self, document):

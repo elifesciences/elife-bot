@@ -118,6 +118,7 @@ class activity_PackagePOA(activity.activity):
 
         # Return the activity result, True or False
         result = True
+        self.clean_tmp_dir()
         return result
 
     def get_doi_id_from_doi(self, doi):
