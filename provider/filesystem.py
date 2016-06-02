@@ -195,9 +195,9 @@ class Filesystem(object):
         if self.tmp_dir:
             try:
                 os.mkdir(self.tmp_dir)
-            except OSError:
+            except OSError as e:
                 # Directory may already exist, happens when running tests, check if it exists
                 if os.path.isdir(self.tmp_dir):
-                    self.tmp_dir = self.tmp_dir
+                    return
                 else:
-                    self.tmp_dir = None
+                    raise e

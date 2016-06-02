@@ -123,8 +123,8 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "start_to_close_timeout": 60 * 5
                     },
                     {
-                        "activity_type": "PostEIF",
-                        "activity_id": "PostEIF",
+                        "activity_type": "PreparePostEIF",
+                        "activity_id": "PreparePostEIF",
                         "version": "1",
                         "input": data,
                         "control": None,

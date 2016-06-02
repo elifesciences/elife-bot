@@ -2,10 +2,14 @@
 ftp-credentials.txt
 *.log
 *.pyc
+*.swp
 settings.py
 .boto
-tmp
+tests/tmp/*
 venv
 .idea
 workflow-context/*
 !workflow-context/.gitkeep
+/tmp
+.cache
+build/
