@@ -10,6 +10,3 @@ publishing_buckets_prefix = ""
 aws_access_key_id = ""
 aws_secret_access_key = ""
 
-workflow_starter_queue = ""
-sqs_region = ""
-

@@ -1,2 +1,2 @@
 #!/bin/bash
-python -m pytest --junitxml=build/junit.xml tests/
+python -m unittest discover -s tests/activity -p '*_tests.py'

@@ -24,7 +24,6 @@ def start(ENV="dev"):
     conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
     workflow_names = []
-    workflow_names.append("ArticleInformationSupplier")
     workflow_names.append("Ping")
     workflow_names.append("Sum")
     workflow_names.append("ApproveArticlePublication")
@@ -63,7 +62,6 @@ def start(ENV="dev"):
         print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
 
     activity_names = []
-    activity_names.append("PostEIFBridge")
     activity_names.append("PingWorker")
     activity_names.append("SetPublicationStatus")
     activity_names.append("ConvertJATS")
@@ -74,7 +72,6 @@ def start(ENV="dev"):
     activity_names.append("DepositAssets")
     activity_names.append("ApprovePublication")
     activity_names.append("ResizeImages")
-    activity_names.append("PreparePostEIF")
     activity_names.append("PostEIF")
     activity_names.append("Sum")
     activity_names.append("S3Monitor")
