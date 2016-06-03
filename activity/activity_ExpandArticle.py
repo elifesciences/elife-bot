@@ -9,11 +9,11 @@ from os.path import isfile, join
 from os import listdir, makedirs
 from os import path
 import datetime
-from boto.s3.key import Key
-from boto.s3.connection import S3Connection
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
 import requests
+from provider.storage_provider import StorageProviderConnection
+from provider.storage_provider import StorageProviderKey
 
 """
 ExpandArticle.py activity
@@ -42,10 +42,16 @@ class activity_ExpandArticle(activity.activity):
         info = S3NotificationInfo.from_dict(data)
 
         # set up required connections
-        conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        source_bucket = conn.get_bucket(info.bucket_name)
-        dest_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix +
+        storage_provider = StorageProviderConnection()
+        conn = storage_provider.get_connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        source_bucket = storage_provider.get_bucket(conn, info.bucket_name)
+        dest_bucket = storage_provider.get_bucket(conn, self.settings.publishing_buckets_prefix +
                                       self.settings.expanded_bucket)
+
+        # conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        # source_bucket = conn.get_bucket(info.bucket_name)
+        # dest_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix +
+        #                               self.settings.expanded_bucket)
         session = Session(self.settings)
 
         filename_last_element = info.file_name[info.file_name.rfind('/')+1:]
@@ -103,10 +109,11 @@ class activity_ExpandArticle(activity.activity):
                                   version=version)
 
         try:
+            storage_provider_key = StorageProviderKey()
 
             # download zip to temp folder
             tmp = self.get_tmp_dir()
-            key = Key(source_bucket)
+            key = storage_provider_key.key(source_bucket)
             key.key = info.file_name
             local_zip_file = self.open_file_from_tmp_dir(filename_last_element, mode='wb')
             key.get_contents_to_file(local_zip_file)
@@ -129,7 +136,7 @@ class activity_ExpandArticle(activity.activity):
             for filename in upload_filenames:
                 source_path = path.join(content_folder, filename)
                 dest_path = bucket_folder_name + '/' + filename
-                k = Key(dest_bucket)
+                k = storage_provider_key.key(dest_bucket)
                 k.key = dest_path
                 k.set_contents_from_filename(source_path)
 
