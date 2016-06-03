@@ -24,6 +24,7 @@ class exp():
     S3_monitor_queue = 'xxawsxx-incoming-queue'
     event_monitor_queue = 'event-property-incoming-queue'
     workflow_starter_queue = 'workflow-starter-queue'
+    website_ingest_queue = 'website-ingest-queue'
     workflow_starter_queue_pool_size = 5
     workflow_starter_queue_message_count = 5
 
