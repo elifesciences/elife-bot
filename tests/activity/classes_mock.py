@@ -58,3 +58,49 @@ class FakeKey:
     def cleanup_fake_directories(self):
         self.d.cleanup()
 
+
+## PostEIFBridge Tests TODO: split in 2 files?
+
+class FakeSQSMessage:
+    def __init__(self, directory):
+        self.dir = directory
+
+    def set_body(self, body):
+        self.dir.write("fake_sqs_body", body)
+
+
+class FakeSQSConn:
+    def __init__(self, directory):
+        self.dir = directory
+
+    def get_queue(self, queue):
+        return FakeSQSQueue(self.dir) #self.get_object('FakeSQSQueue', self.dir)
+
+
+class FakeSQSQueue:
+    def __init__(self, directory):
+        self.dir = directory
+
+    # def write(self, body_dir):
+    #     self.dir.write("fake_sqs_queue_container", body_dir.read("fake_sqs_body"))
+    def write(self, message):
+        self.dir.write("fake_sqs_queue_container", message.dir.read("fake_sqs_body"))
+
+    def read(self, dir_name):
+        return self.dir.read(dir_name)
+
+
+def fake_monitor(self, settings, item_identifier, name, value, property_type, version=0):
+        settings = settings
+        item_identifier = item_identifier
+        name = name
+        value = value
+        property_type = property_type
+        version = version
+
+
+
+
+
+
+
