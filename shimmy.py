@@ -117,6 +117,7 @@ if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
                       help="set the environment to run, either dev or live")
+    parser.add_option("-f", "--forks", default=1, action="store", type="int", dest="forks", help="specify the number of forks to start")
 
     (options, args) = parser.parse_args()
     if options.env:

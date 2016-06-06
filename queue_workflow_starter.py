@@ -34,6 +34,7 @@ def main():
     parser = OptionParser()
     parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
                       help="set the environment to run, either dev or live")
+    parser.add_option("-f", "--forks", default=5, action="store", type="int", dest="forks", help="specify the number of forks to start")
     (options, args) = parser.parse_args()
     if options.env:
         env = options.env
@@ -48,7 +49,7 @@ def main():
     # Simple connect
     queue = get_queue()
 
-    pool = Pool(settings.workflow_starter_queue_pool_size, initialise_pool, [env])
+    pool = Pool(options['forks'], initialise_pool, [env])
 
     while True:
         messages = queue.get_messages(num_messages=settings.workflow_starter_queue_message_count, visibility_timeout=60,
