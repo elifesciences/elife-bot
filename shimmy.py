@@ -23,20 +23,18 @@ def listen():
                                       aws_secret_access_key=settings.aws_secret_access_key)
     input_queue = conn.get_queue(settings.website_ingest_queue)
     output_queue = conn.get_queue(settings.workflow_starter_queue)
-
     if input_queue is not None:
         while True:
 
             logging.debug('reading queue')
             queue_message = input_queue.read(30)
 
-            if queue_message is None:
-                logging.debug('no messages available')
-            else:
+            if queue_message is not None:
                 logging.debug('got message id: %s' % queue_message.id)
 
                 process_message(queue_message, output_queue)
                 queue_message.delete()
+
 
     else:
         logging.error("Could not obtain queue, exiting")
