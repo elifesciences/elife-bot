@@ -10,7 +10,7 @@ import settings as settings_lib
 import json
 
 settings = None
-logging.basicConfig(filename='shimmy.log', level=logging.DEBUG)
+logging.basicConfig(filename='shimmy.log', level=logging.INFO)
 
 
 def listen():
