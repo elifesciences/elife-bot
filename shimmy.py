@@ -10,7 +10,7 @@ import settings as settings_lib
 import json
 
 settings = None
-logging.basicConfig(filename='shimmy.log', level=logging.DEBUG)
+logging.basicConfig(filename='shimmy.log', level=logging.INFO)
 
 
 def listen():
@@ -27,7 +27,7 @@ def listen():
         while True:
 
             logging.debug('reading queue')
-            queue_message = input_queue.read(30)
+            queue_message = input_queue.read(visibility_timeout=60, wait_time_seconds=20)
 
             if queue_message is not None:
                 logging.debug('got message id: %s' % queue_message.id)
