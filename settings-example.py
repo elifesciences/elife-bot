@@ -28,6 +28,9 @@ class exp():
     workflow_starter_queue_pool_size = 5
     workflow_starter_queue_message_count = 5
 
+    # Storage settings
+    storage_provider = "s3"
+
     # S3 settings
     publishing_buckets_prefix = 'jr-'
     # shouldn't need this but uploads seem to fail without. Should correspond with the s3 region

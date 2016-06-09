@@ -12,8 +12,7 @@ import datetime
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
 import requests
-from provider.storage_provider import StorageProviderConnection
-from provider.storage_provider import StorageProviderKey
+from provider.storage_provider import StorageContext
 
 """
 ExpandArticle.py activity
@@ -41,17 +40,8 @@ class activity_ExpandArticle(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
         info = S3NotificationInfo.from_dict(data)
 
-        # set up required connections
-        storage_provider = StorageProviderConnection()
-        conn = storage_provider.get_connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        source_bucket = storage_provider.get_bucket(conn, info.bucket_name)
-        dest_bucket = storage_provider.get_bucket(conn, self.settings.publishing_buckets_prefix +
-                                      self.settings.expanded_bucket)
+        storage_context = StorageContext(self.settings)
 
-        # conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        # source_bucket = conn.get_bucket(info.bucket_name)
-        # dest_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix +
-        #                               self.settings.expanded_bucket)
         session = Session(self.settings)
 
         filename_last_element = info.file_name[info.file_name.rfind('/')+1:]
@@ -109,20 +99,15 @@ class activity_ExpandArticle(activity.activity):
                                   version=version)
 
         try:
-            storage_provider_key = StorageProviderKey()
-
             # download zip to temp folder
             tmp = self.get_tmp_dir()
-            key = storage_provider_key.key(source_bucket)
-            key.key = info.file_name
             local_zip_file = self.open_file_from_tmp_dir(filename_last_element, mode='wb')
-            key.get_contents_to_file(local_zip_file)
+            storage_resource_origin = self.settings.storage_provider + "://" + info.bucket_name + "/" + info.file_name
+            storage_context.get_resource_to_file(storage_resource_origin, local_zip_file)
             local_zip_file.close()
 
-            bucket_folder_name = article_version_id + '/' + run
-            folder_name = path.join(article_version_id, run)
-
             # extract zip contents
+            folder_name = path.join(article_version_id, run)
             content_folder = path.join(tmp, folder_name)
             makedirs(content_folder)
             with ZipFile(path.join(tmp, filename_last_element)) as zf:
@@ -133,12 +118,12 @@ class activity_ExpandArticle(activity.activity):
                 if isfile(join(content_folder, f)) and f[0] != '.' and not f[0] == '_':
                     upload_filenames.append(f)
 
+            bucket_folder_name = article_version_id + '/' + run
             for filename in upload_filenames:
                 source_path = path.join(content_folder, filename)
                 dest_path = bucket_folder_name + '/' + filename
-                k = storage_provider_key.key(dest_bucket)
-                k.key = dest_path
-                k.set_contents_from_filename(source_path)
+                storage_resource_dest = self.settings.storage_provider + "://" + self.settings.publishing_buckets_prefix + self.settings.expanded_bucket + "/" + dest_path
+                storage_context.set_resource_from_file(storage_resource_dest, source_path)
 
             self.clean_tmp_dir()
 
