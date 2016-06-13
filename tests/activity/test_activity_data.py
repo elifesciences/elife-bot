@@ -41,26 +41,14 @@ def PostEIFBridge_data(published):
             }
 PostEIFBridge_test_dir = "fake_sqs_queue_container"
 PostEIFBridge_message = {'workflow_name': 'PostPerfectPublication', 'workflow_data': {'status': u'vor', 'update_date': u'2012-12-13T00:00:00Z', 'run': u'cf9c7e86-7355-4bb4-b48e-0bc284221251', 'expanded_folder': u'00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251', 'version': u'1', 'eif_location': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json', 'article_id': u'00353'}}
-# import activity
-# import settings as s_lib
-# import random
-# import log
-# import boto
-#
-# s = s_lib.get_settings("exp")
-# identity = "worker_%s" % int(random.random() * 1000)
-# logFile = "worker.log"
-# logger = log.logger(logFile, s.setLevel, identity)
-# conn = None #boto.swf.layer1.Layer1(s.aws_access_key_id, s.aws_secret_access_key)
-#
-# cj = activity.activity_ConvertJATS(s, logger, conn, None, None)
-#
-# x = cj.do_activity("{\"json\": \"hello\"}")
-#
-# print x
 
 
+# ExpandArticle
 
-#import activity
-
-#fake_activity = activity.activity()
+ExpandArticle_data = {u'event_time': u'2016-06-07T10:45:18.141126Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-00353-vor-v1-20121213000000.zip', u'file_etag': u'1e17ebb1fad6c467fce9cede16bb752f', u'bucket_name': u'jen-elife-production-final', u'file_size': 1097506}
+ExpandArticle_filename = 'elife-00353-vor-v1-20121213000000.zip'
+ExpandArticle_path = 'elife-00353-vor-v1'
+ExpandArticle_files_source_folder = 'tests/files_source'
+ExpandArticle_files_dest_folder = 'tests/files_dest'
+ExpandArticle_files_dest_expected = ['elife-00353-fig1-v1.tif', 'elife-00353-v1.pdf', 'elife-00353-v1.xml']
+ExpandArticle_files_dest_bytes_expected = [{'name': 'elife-00353-fig1-v1.tif', 'bytes': 961324}, {'name': 'elife-00353-v1.pdf', 'bytes': 936318}, {'name': 'elife-00353-v1.xml', 'bytes': 9458}]

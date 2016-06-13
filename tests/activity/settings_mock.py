@@ -2,6 +2,7 @@
 domain = ""
 default_task_list = ""
 
+storage_provider = 's3'
 eif_bucket = 'dest_bucket'
 expanded_bucket = 'origin_bucket'
 
