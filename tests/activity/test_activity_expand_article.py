@@ -13,11 +13,14 @@ import test_activity_data as data
 
 class TestExpandArticle(unittest.TestCase):
     def setUp(self):
+        self.create_folder(data.ExpandArticle_files_dest_folder)
         self.expandarticle = activity_ExpandArticle(settings_mock, None, None, None, None)
         self.create_temp_folder(data.ExpandArticle_path)
 
     def tearDown(self):
         self.delete_files_in_folder(data.ExpandArticle_files_dest_folder)
+        self.delete_folder(data.ExpandArticle_files_dest_folder)
+
 
     @patch.object(activity_ExpandArticle, 'get_tmp_dir')
     @patch('activity.activity_ExpandArticle.Session')
@@ -56,6 +59,13 @@ class TestExpandArticle(unittest.TestCase):
         if plus is not None:
             if not os.path.exists('tests/tmp/'+ data.ExpandArticle_path):
                 os.makedirs('tests/tmp/' + data.ExpandArticle_path)
+
+    def create_folder(self, folder):
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+    def delete_folder(self, folder):
+        os.rmdir(folder)
 
 
 
