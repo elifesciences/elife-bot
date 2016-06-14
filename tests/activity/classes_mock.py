@@ -147,6 +147,14 @@ def fake_clean_tmp_dir():
     tmp_dir = fake_get_tmp_dir()
     shutil.rmtree(tmp_dir)
 
+class FakeResponse:
+    def __init__(self, status_code, response_json):
+        self.status_code = status_code
+        self.response_json = response_json
+
+    def json(self):
+        return self.response_json
+
 
 
 
