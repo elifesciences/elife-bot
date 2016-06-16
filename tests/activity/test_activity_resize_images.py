@@ -7,10 +7,8 @@ import test_activity_data as testdata
 import helpers
 import classes_mock
 import shutil
-import os
 import unicodedata
-import imghdr
-import struct
+from PIL import Image
 
 class TestResizeImages(unittest.TestCase):
     resize_images_start_folder = 'tests/resizeimages_start/'
@@ -53,8 +51,8 @@ class TestResizeImages(unittest.TestCase):
                     format_spec = formats[format_spec_name]
                     suffix = format_spec['suffix']
                     width = format_spec['width']
-                    fname_noextension = 'tests/test_cdn/' + prefix + suffix
-                    real_width, real_height = self.get_image_dimensions(fname_noextension)
+                    fname = 'tests/test_cdn/' + prefix + suffix + '.' + format_spec['format']
+                    real_width, real_height = self.get_image_dimensions(fname)
                     self.assertEqual(width, real_width)
 
     def load_to_cdn(self, filename, image, cdn_path, download):
@@ -79,34 +77,12 @@ class TestResizeImages(unittest.TestCase):
         return bucket, file_infos
 
     def get_image_dimensions(self, fname):
-        if os.path.isfile(fname + '.jpg'):
-            fname += '.jpg'
-            with open(fname, 'rb') as fhandle:
-                try:
-                    fhandle.seek(0) # Read 0xff next
-                    size = 2
-                    ftype = 0
-                    while not 0xc0 <= ftype <= 0xcf:
-                        fhandle.seek(size, 1)
-                        byte = fhandle.read(1)
-                        while ord(byte) == 0xff:
-                            byte = fhandle.read(1)
-                        ftype = ord(byte)
-                        size = struct.unpack('>H', fhandle.read(2))[0] - 2
-                    # We are at a SOFn block
-                    fhandle.seek(1, 1)  # Skip `precision' byte.
-                    height, width = struct.unpack('>HH', fhandle.read(4))
-                except Exception: #IGNORE:W0703
-                    return
-        elif os.path.isfile(fname + '.gif'):
-            fname += '.gif'
-            with open(fname, 'rb') as fhandle:
-                head = fhandle.read(24)
-                width, height = struct.unpack('<HH', head[6:10])
-        else:
+        try:
+            with Image.open(fname) as im:
+                width, height = im.size
+            return width, height
+        except Exception as e:
             return
-        return width, height
-
 
 if __name__ == '__main__':
     unittest.main()
