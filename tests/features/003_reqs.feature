@@ -19,6 +19,6 @@ Feature: Use python imports and requirements
     | elife-poa-xml-generation
     | git
     | arrow
-    | elementtree
+    | xml.etree
     | PyPDF2
     | wsgiref

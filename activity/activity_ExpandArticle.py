@@ -79,9 +79,8 @@ class activity_ExpandArticle(activity.activity):
             return False  # status could not be determined, exit workflow. Can't emit event as no version.
 
         # Get the run value from the session, if available, otherwise set it
-        try:
-            run = session.get_value(self.get_workflowId(), 'run')
-        except:
+        run = session.get_value(self.get_workflowId(), 'run')
+        if run is None:
             run = str(uuid.uuid4())
 
         # store version for other activities in this workflow execution
@@ -152,7 +151,7 @@ class activity_ExpandArticle(activity.activity):
 
     def get_next_version(self, article_id):
         url = self.settings.lax_article_versions.replace('{article_id}', article_id)
-        response = requests.get(url)
+        response = requests.get(url, verify=self.settings.verify_ssl)
         if response.status_code == 200:
             high_version = 0
             data = response.json()

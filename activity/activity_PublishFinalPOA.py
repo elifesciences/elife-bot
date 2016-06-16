@@ -152,6 +152,9 @@ class activity_PublishFinalPOA(activity.activity):
         # Return the activity result, True or False
         result = True
 
+        if self.activity_status is True:
+            self.clean_tmp_dir()
+
         return result
 
     def new_filenames(self, doi_id, filenames):
@@ -385,7 +388,7 @@ class activity_PublishFinalPOA(activity.activity):
         date_str = None
         article_id = str(doi_id).zfill(5)
         url = self.settings.lax_article_versions.replace('{article_id}', article_id)
-        response = requests.get(url)
+        response = requests.get(url, verify=self.settings.verify_ssl)
         if response.status_code == 200:
 
             data = response.json()

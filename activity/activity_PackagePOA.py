@@ -118,6 +118,10 @@ class activity_PackagePOA(activity.activity):
 
         # Return the activity result, True or False
         result = True
+
+        if self.activity_status is True:
+            self.clean_tmp_dir()
+
         return result
 
     def get_doi_id_from_doi(self, doi):
@@ -475,6 +479,8 @@ class activity_PackagePOA(activity.activity):
         # Now we can continue with imports
         self.elife_poa_lib.xml = importlib.import_module(dir_name + ".xml_generation")
         self.reload_module(self.elife_poa_lib.xml)
+        self.elife_poa_lib.csv = importlib.import_module(dir_name + ".parseCSVFiles")
+        self.reload_module(self.elife_poa_lib.csv)
         self.elife_poa_lib.transform = importlib.import_module(dir_name +
                                                                ".transform-ejp-zip-to-hw-zip")
         self.reload_module(self.elife_poa_lib.transform)

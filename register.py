@@ -24,10 +24,10 @@ def start(ENV="dev"):
     conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
     workflow_names = []
+    workflow_names.append("ArticleInformationSupplier")
     workflow_names.append("Ping")
     workflow_names.append("Sum")
     workflow_names.append("ApproveArticlePublication")
-    workflow_names.append("PublishArticle")
     workflow_names.append("NewS3File")
     workflow_names.append("S3Monitor")
     workflow_names.append("LensArticlePublish")
@@ -63,6 +63,7 @@ def start(ENV="dev"):
         print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
 
     activity_names = []
+    activity_names.append("PostEIFBridge")
     activity_names.append("PingWorker")
     activity_names.append("SetPublicationStatus")
     activity_names.append("ConvertJATS")
@@ -73,11 +74,10 @@ def start(ENV="dev"):
     activity_names.append("DepositAssets")
     activity_names.append("ApprovePublication")
     activity_names.append("ResizeImages")
+    activity_names.append("PreparePostEIF")
     activity_names.append("PostEIF")
     activity_names.append("Sum")
     activity_names.append("S3Monitor")
-    activity_names.append("UnzipArticleXML")
-    activity_names.append("LensXMLFilesList")
     activity_names.append("AdminEmailHistory")
     activity_names.append("SendQueuedEmail")
     activity_names.append("LensArticle")
@@ -86,12 +86,13 @@ def start(ENV="dev"):
     activity_names.append("PublishFinalPOA")
     activity_names.append("DepositCrossref")
     activity_names.append("PubmedArticleDeposit")
-    activity_names.append("ArticleToOutbox")
     activity_names.append("PublicationEmail")
     activity_names.append("FTPArticle")
     activity_names.append("PubRouterDeposit")
     activity_names.append("PMCDeposit")
     activity_names.append("UnzipFullArticle")
+    activity_names.append("ScheduleCrossref")
+    activity_names.append("ScheduleDownstream")
 
     for activity_name in activity_names:
         # Import the activity libraries

@@ -17,7 +17,5 @@ Feature: Workflow class can be instantiated
     | env					| workflow_name				
     | dev					| Ping					
     | dev					| Sum									
-    | dev					| PublishArticle
     | live				| Ping					
     | live				| Sum									
-    | live				| PublishArticle

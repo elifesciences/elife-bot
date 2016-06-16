@@ -123,11 +123,12 @@ class activity_FTPArticle(activity.activity):
                 self.logger.exception('exception in FTPArticle, data: %s' %
                                       json.dumps(data, sort_keys=True, indent=4))
             result = False
+            self.clean_tmp_dir()
             return result
 
         # Return the activity result, True or False
         result = True
-
+        self.clean_tmp_dir()
         return result
 
     def set_ftp_settings(self, doi_id, workflow):

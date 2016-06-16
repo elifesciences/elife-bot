@@ -88,10 +88,8 @@ class activity_PostEIF(activity.activity):
                 expanded_folder = session.get_value(self.get_workflowId(), 'expanded_folder')
                 status = session.get_value(self.get_workflowId(), 'status')
 
-                try:
-                    update_date = session.get_value(self.get_workflowId(), 'update_date')
-                except:
-                    # Default
+                update_date = session.get_value(self.get_workflowId(), 'update_date')
+                if update_date is None:
                     update_date = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
                 follow_on_data = {

@@ -24,6 +24,7 @@ class exp():
     S3_monitor_queue = 'xxawsxx-incoming-queue'
     event_monitor_queue = 'event-property-incoming-queue'
     workflow_starter_queue = 'workflow-starter-queue'
+    website_ingest_queue = 'website-ingest-queue'
     workflow_starter_queue_pool_size = 5
     workflow_starter_queue_message_count = 5
 
@@ -52,6 +53,7 @@ class exp():
     lax_update = 'http://2015-09-03.lax.elifesciences.org/api/v1/import/article/'
     lax_update_user = ''
     lax_update_pass = ''
+    verify_ssl = True # False when testing
 
     no_download_extensions = 'tif'
 
@@ -171,6 +173,15 @@ class exp():
 
     # Logging
     setLevel = "INFO"
+
+    # Session
+    session_class = "RedisSession"
+
+    # Redis
+    redis_host = "127.0.0.1"
+    redis_port = 6379
+    redis_db = 0
+    redis_expire_key = 86400  # seconds
 
 
 class dev():
@@ -300,6 +311,15 @@ class dev():
     # Logging
     setLevel = "INFO"
 
+    # Session
+    session_class = "RedisSession"
+
+    # Redis
+    redis_host = "127.0.0.1"
+    redis_port = 6379
+    redis_db = 0
+    redis_expire_key = 86400  # seconds
+
 
 class live():
     # AWS settings
@@ -426,6 +446,15 @@ class live():
     
     # Logging
     setLevel = "INFO"
+
+    # Session
+    session_class = "RedisSession"
+
+    # Redis
+    redis_host = "127.0.0.1"
+    redis_port = 6379
+    redis_db = 0
+    redis_expire_key = 86400  # seconds
 
 
 def get_settings(ENV="dev"):
