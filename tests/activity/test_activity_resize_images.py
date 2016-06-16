@@ -18,7 +18,6 @@ class TestResizeImages(unittest.TestCase):
     image_prefix = 'elife-00353-fig1-v1'
 
     def setUp(self):
-        # create cdn
         self.resizeimages = activity_ResizeImages(settings_mock, None, None, None, None)
         helpers.create_folder('tests/test_cdn')
         helpers.create_folder(self.resize_images_start_folder + testdata.session_example['expanded_folder'])
@@ -27,7 +26,6 @@ class TestResizeImages(unittest.TestCase):
         shutil.copy('tests/files_source/elife-00353-v1.xml', self.resize_images_start_folder + testdata.session_example['expanded_folder'] + '/elife-00353-v1.xml')
 
     def tearDown(self):
-        # delete cdn
         helpers.delete_folder('tests/test_cdn', True)
         helpers.delete_folder(self.resize_images_start_folder, True)
 
@@ -37,11 +35,9 @@ class TestResizeImages(unittest.TestCase):
     @patch('activity.activity_ResizeImages.Session')
     def test_do_activity(self, mock_session, mock_get_file_infos, mock_store_in_cdn, mock_get_file_pointer):
         mock_session.return_value = FakeSession(testdata.session_example)
-        # create bucket_folder
-        # create bucket_folder + expanded_folder_name (look in data) (for now, created in startup)
 
         mock_get_file_infos.return_value = self.fake_get_file_infos()
-        mock_store_in_cdn.side_effect = self.load_to_cdn #todo: do copy and paste to final cdn bucket here
+        mock_store_in_cdn.side_effect = self.load_to_cdn
         mock_get_file_pointer.side_effect = self.fake_get_file_pointer
 
         self.resizeimages.emit_monitor_event = mock.MagicMock()
