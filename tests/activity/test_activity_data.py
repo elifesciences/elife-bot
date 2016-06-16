@@ -18,6 +18,8 @@ session_example = {
             'expanded_folder': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'update_date': '2012-12-13T00:00:00Z',
         }
+key_names = [u'00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-fig1-v1.tif', u'00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.pdf',
+             u'00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.xml']
 
 bucket = {
     bucket_origin_file_name: xml_content_for_xml_key,
@@ -47,6 +49,7 @@ PostEIFBridge_message = {'workflow_name': 'PostPerfectPublication', 'workflow_da
 # ExpandArticle
 
 ExpandArticle_data = {u'event_time': u'2016-06-07T10:45:18.141126Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-00353-vor-v1-20121213000000.zip', u'file_etag': u'1e17ebb1fad6c467fce9cede16bb752f', u'bucket_name': u'jen-elife-production-final', u'file_size': 1097506}
+ExpandArticle_data1 = {u'event_time': u'2016-06-07T10:45:18.141126Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-00353-v1-20121213000000.zip', u'file_etag': u'1e17ebb1fad6c467fce9cede16bb752f', u'bucket_name': u'jen-elife-production-final', u'file_size': 1097506}
 ExpandArticle_filename = 'elife-00353-vor-v1-20121213000000.zip'
 ExpandArticle_path = 'elife-00353-vor-v1'
 ExpandArticle_files_source_folder = 'tests/files_source'
@@ -59,3 +62,7 @@ ExpandArticle_data_invalid_version = {u'event_time': u'2016-06-07T10:45:18.14112
 
 ExpandArticle_data_invalid_status1 = {u'event_time': u'2016-06-07T10:45:18.141126Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-00353-v1.zip', u'file_etag': u'1e17ebb1fad6c467fce9cede16bb752f', u'bucket_name': u'jen-elife-production-final', u'file_size': 1097506}
 ExpandArticle_data_invalid_status2 = {u'event_time': u'2016-06-07T10:45:18.141126Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-00353-v1-20121213000000.zip', u'file_etag': u'1e17ebb1fad6c467fce9cede16bb752f', u'bucket_name': u'jen-elife-production-final', u'file_size': 1097506}
+
+#ResizeImages
+
+ResizeImages_data = {u'event_time': u'2016-06-14T12:32:38.084176Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-00353-vor-v1-20121213000000.zip', u'file_etag': u'1e17ebb1fad6c467fce9cede16bb752f', u'bucket_name': u'jen-elife-production-final', u'file_size': 1097506}

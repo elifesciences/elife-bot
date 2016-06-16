@@ -155,6 +155,23 @@ class FakeResponse:
     def json(self):
         return self.response_json
 
+class FakeKey:
+    def __init__(self):
+        self.name = u''
+        self.key = u''
+
+    def get_file(self, param):
+        pass
+
+class FakeFileInfo:
+    def __init__(self):
+        self.key = None
+
+class FakeBucket:
+
+    def get_key(self, key): #key will be u'00353.1/7d5fa403-cba9-486c-8273-3078a98a0b98/elife-00353-fig1-v1.tif' for example
+        return key
+
 
 
 
