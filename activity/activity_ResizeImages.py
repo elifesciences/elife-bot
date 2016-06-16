@@ -105,9 +105,14 @@ class activity_ResizeImages(activity.activity):
         formats = self.get_formats(info.file_type)
         if formats is not None:
             # generate images for relevant formats
-            fp = StringIO.StringIO()
-            key.get_file(fp)
+            fp = self.get_file_pointer(key)
             self.generate_images(formats, fp, info, cdn_path)
+
+    def get_file_pointer(self, key):
+        fp = StringIO.StringIO()
+        key.get_file(fp)
+        return fp
+
 
     def get_formats(self, file_type):
         # look up file_type in pre-parsed formats
