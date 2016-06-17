@@ -13,3 +13,11 @@ aws_secret_access_key = ""
 workflow_starter_queue = ""
 sqs_region = ""
 
+simpledb_region = ""
+simpledb_domain_postfix = "_test"
+ejp_bucket = 'ejp_bucket'
+bot_bucket = 'bot_bucket'
+poa_packaging_bucket = 'poa_packaging_bucket'
+poa_bucket = 'poa_bucket'
+ses_poa_sender_email = ""
+ses_poa_recipient_email = ""
