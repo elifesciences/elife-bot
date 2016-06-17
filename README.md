@@ -11,7 +11,7 @@ eLife bot is currently configured and deployed manually via a custom Ec2 instanc
 
 We have added unit tests for the eLife bot activities using Python unittest library. Running on the command line:
 cd to elife-bot and execute:
-python -m unittest discover -s tests/activity -p '*_tests.py'
+python -m pytest --junitxml=build/junit.xml tests/
 
 
 ## Existing Workflows
