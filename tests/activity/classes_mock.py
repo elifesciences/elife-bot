@@ -156,12 +156,23 @@ class FakeResponse:
         return self.response_json
 
 class FakeKey:
-    def __init__(self):
-        self.name = u''
-        self.key = u''
 
-    def get_file(self, param):
-        pass
+    def __init__(self, directory, destination=None):
+        self.d = directory
+        if destination is None:
+            self.d.write(data.bucket_origin_file_name, data.xml_content_for_xml_key)
+
+    def get_contents_as_string(self):
+        return self.d.read(data.bucket_origin_file_name)
+
+    def set_contents_from_string(self, json_output):
+        self.d.write(data.bucket_dest_file_name, json_output)
+
+    def check_file_contents(self, directory, file):
+        return directory.read(file)
+
+    def cleanup_fake_directories(self):
+        self.d.cleanup()
 
 class FakeFileInfo:
     def __init__(self):

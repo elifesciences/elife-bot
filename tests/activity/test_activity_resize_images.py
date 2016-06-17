@@ -10,6 +10,7 @@ import shutil
 import unicodedata
 from PIL import Image
 
+
 class TestResizeImages(unittest.TestCase):
     resize_images_start_folder = 'tests/resizeimages_start/'
     resize_images_start_path_and_file = resize_images_start_folder + testdata.session_example['expanded_folder'] + '/elife-00353-vor-v1-20121213000000.zip'
@@ -68,7 +69,7 @@ class TestResizeImages(unittest.TestCase):
     def fake_get_file_infos(self):
         file_infos = []
         for key_name in testdata.key_names:
-            key = classes_mock.FakeKey()
+            key = FakeKey()
             key.name = key_name
             file_info = classes_mock.FakeFileInfo()
             file_info.key = key
@@ -83,6 +84,16 @@ class TestResizeImages(unittest.TestCase):
             return width, height
         except Exception as e:
             return
+
+
+class FakeKey:
+
+    def __init__(self):
+        self.name = u''
+        self.key = u''
+
+    def get_file(self, param):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
