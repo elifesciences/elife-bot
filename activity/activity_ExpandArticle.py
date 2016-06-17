@@ -122,7 +122,8 @@ class activity_ExpandArticle(activity.activity):
             for filename in upload_filenames:
                 source_path = path.join(content_folder, filename)
                 dest_path = bucket_folder_name + '/' + filename
-                storage_resource_dest = self.settings.storage_provider + "://" + self.settings.publishing_buckets_prefix + self.settings.expanded_bucket + "/" + dest_path
+                storage_resource_dest = self.settings.storage_provider + "://" + self.settings.publishing_buckets_prefix + \
+                                        self.settings.expanded_bucket + "/" + dest_path
                 storage_context.set_resource_from_file(storage_resource_dest, source_path)
 
             self.clean_tmp_dir()
