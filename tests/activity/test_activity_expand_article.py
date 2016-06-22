@@ -11,6 +11,7 @@ from classes_mock import FakeSession
 import classes_mock
 import test_activity_data as testdata
 from ddt import ddt, data
+import helpers
 
 @ddt
 class TestExpandArticle(unittest.TestCase):
@@ -20,8 +21,9 @@ class TestExpandArticle(unittest.TestCase):
         self.create_temp_folder(testdata.ExpandArticle_path)
 
     def tearDown(self):
-        self.delete_files_in_folder(testdata.ExpandArticle_files_dest_folder)
-        self.delete_folder(testdata.ExpandArticle_files_dest_folder)
+        helpers.delete_files_in_folder('tests/tmp')
+        helpers.delete_files_in_folder(testdata.ExpandArticle_files_dest_folder)
+        helpers.delete_folder(testdata.ExpandArticle_files_dest_folder)
 
     @patch.object(activity_ExpandArticle, 'get_tmp_dir')
     @patch('activity.activity_ExpandArticle.Session')
@@ -87,10 +89,10 @@ class TestExpandArticle(unittest.TestCase):
         self.assertEqual(self.expandarticle.ACTIVITY_PERMANENT_FAILURE, success)
 
 
-    def delete_files_in_folder(self, folder):
-        fileList = os.listdir(folder)
-        for fileName in fileList:
-            os.remove(folder+"/"+fileName)
+    # def delete_files_in_folder(self, folder):
+    #     fileList = os.listdir(folder)
+    #     for fileName in fileList:
+    #         os.remove(folder+"/"+fileName)
 
     def create_temp_folder(self, plus=None):
         if not os.path.exists('tests/tmp'):
