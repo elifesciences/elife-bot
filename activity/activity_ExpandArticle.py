@@ -9,11 +9,10 @@ from os.path import isfile, join
 from os import listdir, makedirs
 from os import path
 import datetime
-from boto.s3.key import Key
-from boto.s3.connection import S3Connection
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
 import requests
+from provider.storage_provider import StorageContext
 
 """
 ExpandArticle.py activity
@@ -41,11 +40,8 @@ class activity_ExpandArticle(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
         info = S3NotificationInfo.from_dict(data)
 
-        # set up required connections
-        conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        source_bucket = conn.get_bucket(info.bucket_name)
-        dest_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix +
-                                      self.settings.expanded_bucket)
+        storage_context = StorageContext(self.settings)
+
         session = Session(self.settings)
 
         filename_last_element = info.file_name[info.file_name.rfind('/')+1:]
@@ -53,7 +49,7 @@ class activity_ExpandArticle(activity.activity):
         if article_id_match is None:
             self.logger.error("Name '%s' did not match expected pattern for article id" %
                               filename_last_element)
-            return False
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
         article_id = article_id_match.group(1)
         session.store_value(self.get_workflowId(), 'article_id', article_id)
 
@@ -70,13 +66,13 @@ class activity_ExpandArticle(activity.activity):
         if version == '-1':
             self.logger.error("Name '%s' did not match expected pattern for version" %
                               filename_last_element)
-            return False  # version could not be determined, exit workflow. Can't emit event as no version.
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE  # version could not be determined, will retry
 
         status = self.get_status_from_zip_filename(filename_last_element)
         if status is None:
             self.logger.error("Name '%s' did not match expected pattern for status" %
                               filename_last_element)
-            return False  # status could not be determined, exit workflow. Can't emit event as no version.
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE  # status could not be determined, exit workflow.
 
         # Get the run value from the session, if available, otherwise set it
         run = session.get_value(self.get_workflowId(), 'run')
@@ -103,19 +99,15 @@ class activity_ExpandArticle(activity.activity):
                                   version=version)
 
         try:
-
             # download zip to temp folder
             tmp = self.get_tmp_dir()
-            key = Key(source_bucket)
-            key.key = info.file_name
             local_zip_file = self.open_file_from_tmp_dir(filename_last_element, mode='wb')
-            key.get_contents_to_file(local_zip_file)
+            storage_resource_origin = self.settings.storage_provider + "://" + info.bucket_name + "/" + info.file_name
+            storage_context.get_resource_to_file(storage_resource_origin, local_zip_file)
             local_zip_file.close()
 
-            bucket_folder_name = article_version_id + '/' + run
-            folder_name = path.join(article_version_id, run)
-
             # extract zip contents
+            folder_name = path.join(article_version_id, run)
             content_folder = path.join(tmp, folder_name)
             makedirs(content_folder)
             with ZipFile(path.join(tmp, filename_last_element)) as zf:
@@ -126,12 +118,13 @@ class activity_ExpandArticle(activity.activity):
                 if isfile(join(content_folder, f)) and f[0] != '.' and not f[0] == '_':
                     upload_filenames.append(f)
 
+            bucket_folder_name = article_version_id + '/' + run
             for filename in upload_filenames:
                 source_path = path.join(content_folder, filename)
                 dest_path = bucket_folder_name + '/' + filename
-                k = Key(dest_bucket)
-                k.key = dest_path
-                k.set_contents_from_filename(source_path)
+                storage_resource_dest = self.settings.storage_provider + "://" + self.settings.publishing_buckets_prefix + \
+                                        self.settings.expanded_bucket + "/" + dest_path
+                storage_context.set_resource_from_file(storage_resource_dest, source_path)
 
             self.clean_tmp_dir()
 
@@ -145,7 +138,7 @@ class activity_ExpandArticle(activity.activity):
             self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article",
                                     "error", "Error expanding article " + article_id +
                                     " message:" + e.message)
-            return False
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
         return True
 
@@ -180,7 +173,7 @@ class activity_ExpandArticle(activity.activity):
                 return None
 
     def get_version_from_zip_filename(self, filename):
-        m = re.search(ur'-v([0-9]*?)[\.|-]', filename)
+        m = re.search(ur'-v([0-9]+?)[\.|-]', filename)
         if m is None:
             return None
         else:

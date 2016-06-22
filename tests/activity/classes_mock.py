@@ -1,5 +1,10 @@
 from testfixtures import TempDirectory
 import test_activity_data as data
+from shutil import copyfile
+from shutil import copy
+import shutil
+import re
+import os
 
 
 class FakeSession:
@@ -97,6 +102,86 @@ def fake_monitor(self, settings, item_identifier, name, value, property_type, ve
         value = value
         property_type = property_type
         version = version
+
+class FakeStorageProviderConnection:
+    def get_connection(self, aws_access_key_id, aws_secret_access_key):
+        return None
+
+    def get_resource(self, conn, name):
+        if "elife-production-final" in name:
+            return "tests\\files_source\\"
+        else:
+            return "tests\\files_dest\\"
+
+class FakeStorageContext:
+
+    def get_bucket_and_key(self, resource):
+        p = re.compile(ur'(.*?)://(.*?)(/.*)')
+        match = p.match(resource)
+        protocol = match.group(1)
+        bucket_name = match.group(2)
+        s3_key = match.group(3)
+        return bucket_name, s3_key
+
+    def get_resource_to_file(self, resource, file):
+        bucket_name, s3_key = self.get_bucket_and_key(resource)
+        copyfile(data.ExpandArticle_files_source_folder + s3_key, file.name)
+
+    def set_resource_from_file(self, resource, file):
+        #bucket_name, s3_key = self.get_bucket_and_key(resource)
+        copy(file, data.ExpandArticle_files_dest_folder)
+
+    # def set_contents_from_filename(self, storage_object, key, path):
+    #     copyfile(file, "tests\\" + storage_object + key)
+
+def fake_get_tmp_dir(path=None):
+    tmp = 'tests/tmp/'
+    directory = tmp
+    if path is not None:
+        directory = tmp + path
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    return directory
+
+def fake_clean_tmp_dir():
+    tmp_dir = fake_get_tmp_dir()
+    shutil.rmtree(tmp_dir)
+
+class FakeResponse:
+    def __init__(self, status_code, response_json):
+        self.status_code = status_code
+        self.response_json = response_json
+
+    def json(self):
+        return self.response_json
+
+class FakeKey:
+
+    def __init__(self, directory, destination=None):
+        self.d = directory
+        if destination is None:
+            self.d.write(data.bucket_origin_file_name, data.xml_content_for_xml_key)
+
+    def get_contents_as_string(self):
+        return self.d.read(data.bucket_origin_file_name)
+
+    def set_contents_from_string(self, json_output):
+        self.d.write(data.bucket_dest_file_name, json_output)
+
+    def check_file_contents(self, directory, file):
+        return directory.read(file)
+
+    def cleanup_fake_directories(self):
+        self.d.cleanup()
+
+class FakeFileInfo:
+    def __init__(self):
+        self.key = None
+
+class FakeBucket:
+
+    def get_key(self, key): #key will be u'00353.1/7d5fa403-cba9-486c-8273-3078a98a0b98/elife-00353-fig1-v1.tif' for example
+        return key
 
 
 
