@@ -100,7 +100,9 @@ class activity_PackagePOA(activity.activity):
 
             # Set the DOI and generate XML
             self.download_latest_csv()
-            self.generate_xml_status = self.generate_xml(doi_id)
+            pub_date = self.get_pub_date(doi_id)
+            volume = self.elife_volume_from_pub_date(pub_date)
+            self.generate_xml_status = self.generate_xml(doi_id, pub_date, volume)
 
             # Copy finished files to S3 outbox
             self.copy_files_to_s3_outbox()
@@ -134,6 +136,65 @@ class activity_PackagePOA(activity.activity):
             doi_id = None
 
         return doi_id
+
+    def elife_volume_from_pub_date(self, pub_date):
+        """
+        eLife volume is based on starting to publish in year 2011
+        pub_date is time.struct_time
+        """
+        volume = None
+        if pub_date:
+            volume = pub_date[0] - 2011
+        return volume
+
+    def get_pub_date(self, doi_id):
+        # Get the date for the first version
+        date_struct = None
+        date_str = self.get_pub_date_str_from_lax(doi_id)
+
+        if date_str is not None:
+            date_struct = time.strptime(date_str, "%Y%m%d000000")
+        else:
+            # Use current date
+            date_struct = time.gmtime()
+
+        return date_struct
+
+    def get_pub_date_str_from_lax(self, doi_id):
+        """
+        Check lax for any article published version
+        If found, get the pub date and format it as a string YYYYMMDDhhmmss
+        """
+        date_str = None
+        article_id = str(doi_id).zfill(5)
+        url = self.settings.lax_article_versions.replace('{article_id}', article_id)
+        response = requests.get(url, verify=self.settings.verify_ssl)
+        if response.status_code == 200:
+
+            data = response.json()
+
+            for version in data:
+                article_data = data[version]
+                if 'datetime_published' in article_data:
+
+                    try:
+                        date_struct = time.strptime(article_data['datetime_published'],
+                                                    "%Y-%m-%dT%H:%M:%SZ")
+                        date_str = time.strftime('%Y%m%d%H%M%S', date_struct)
+
+                    except:
+                        if self.logger:
+                            self.logger.error("Error parsing the datetime_published from Lax: "
+                                              + str(article_data['datetime_published']))
+
+            return date_str
+
+        elif response.status_code == 404:
+            return None
+        else:
+            if self.logger:
+                self.logger.error("Error obtaining version information from Lax" + str(response.status_code))
+            return None
 
     def download_poa_zip(self, document, bucket_name=None):
         """
@@ -249,15 +310,27 @@ class activity_PackagePOA(activity.activity):
             f.write(contents)
             f.close()
 
-    def generate_xml(self, article_id):
+    def generate_xml(self, article_id, pub_date=None, volume=None):
         """
         Given DOI number as article_id, use the POA library to generate
         article XML from the CSV files
         """
         result = None
-        try:
-            result = self.elife_poa_lib.xml_generation.build_xml_for_article(article_id)
-        except:
+
+        article, error_count = (
+            self.elife_poa_lib.xml_generation.build_article_for_article(article_id))
+
+        if article:
+            # Here can set the pub-date and volume, if provided
+            if pub_date:
+                date_pub = self.elife_poa_lib.generatePoaXml.eLifeDate("pub", pub_date)
+                article.add_date(date_pub)
+
+            if volume:
+                article.volume = volume
+
+            result = self.elife_poa_lib.xml_generation.output_xml_for_article(article, article_id)
+        else:
             result = False
 
         # Copy to STAGING_TO_HW_DIR because we need it there
