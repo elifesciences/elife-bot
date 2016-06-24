@@ -88,12 +88,6 @@ class TestExpandArticle(unittest.TestCase):
         success = self.expandarticle.do_activity(status_example)
         self.assertEqual(self.expandarticle.ACTIVITY_PERMANENT_FAILURE, success)
 
-
-    # def delete_files_in_folder(self, folder):
-    #     fileList = os.listdir(folder)
-    #     for fileName in fileList:
-    #         os.remove(folder+"/"+fileName)
-
     def create_temp_folder(self, plus=None):
         if not os.path.exists('tests/tmp'):
             os.makedirs('tests/tmp')
