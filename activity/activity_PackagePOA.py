@@ -60,6 +60,10 @@ class activity_PackagePOA(activity.activity):
         self.poa_zip_filename = None
         self.doi = None
 
+        # Capture errors from generating XML
+        self.error_count = None
+        self.error_messages = None
+
         # Track the success of some steps
         self.activity_status = None
         self.approve_status = None
@@ -317,7 +321,7 @@ class activity_PackagePOA(activity.activity):
         """
         result = None
 
-        article, error_count = (
+        article, self.error_count, self.error_messages = (
             self.elife_poa_lib.xml_generation.build_article_for_article(article_id))
 
         if article:
@@ -467,6 +471,12 @@ class activity_PackagePOA(activity.activity):
         body += "process_status: " + str(self.process_status) + "\n"
         body += "pdf_decap_status: " + str(self.pdf_decap_status) + "\n"
         body += "generate_xml_status: " + str(self.generate_xml_status) + "\n"
+
+        if self.error_count and self.error_count > 0:
+            body += "\n"
+            body += "XML generation errors:" + "\n"
+            body += "error_count: " + str(self.error_count) + "\n"
+            body += "error_messages: " + ", ".join(self.error_messages) + "\n"
 
         body += "\n"
         body += "SWF workflow details: " + "\n"
