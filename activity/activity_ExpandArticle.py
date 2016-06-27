@@ -13,6 +13,7 @@ from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
 import requests
 from provider.storage_provider import StorageContext
+from provider.article_structure import ArticleInfo
 
 """
 ExpandArticle.py activity
@@ -68,8 +69,9 @@ class activity_ExpandArticle(activity.activity):
                               filename_last_element)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE  # version could not be determined, will retry
 
-        status = self.get_status_from_zip_filename(filename_last_element)
-        if status is None:
+        article_structure = ArticleInfo(filename_last_element)
+        status = article_structure.status
+        if status is None or (status != 'vor' and status != 'poa'):
             self.logger.error("Name '%s' did not match expected pattern for status" %
                               filename_last_element)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE  # status could not be determined, exit workflow.
@@ -174,13 +176,6 @@ class activity_ExpandArticle(activity.activity):
 
     def get_version_from_zip_filename(self, filename):
         m = re.search(ur'-v([0-9]+?)[\.|-]', filename)
-        if m is None:
-            return None
-        else:
-            return m.group(1)
-
-    def get_status_from_zip_filename(self, filename):
-        m = re.search(ur'.*?-.*?-(.*?)-', filename)
         if m is None:
             return None
         else:
