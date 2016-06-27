@@ -5,8 +5,8 @@ import json
 import random
 import importlib
 import time
-from multiprocessing import Process
 from optparse import OptionParser
+from provider import process
 
 import workflow
 
@@ -198,11 +198,6 @@ def get_workflow_object(workflow_name, settings, logger, conn, token, decision, 
     workflow_object = f(settings, logger, conn, token, decision, maximum_page_size)
     return workflow_object
 
-def monitor_interrupt(work):
-    try:
-        work()
-    except KeyboardInterrupt:
-        print "\nCaught KeyboardInterrupt, shutting down..."
 
 if __name__ == "__main__":
 
@@ -216,4 +211,4 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
-    monitor_interrupt(lambda: decide(ENV))
+    process.monitor_interrupt(lambda: decide(ENV))
