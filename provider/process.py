@@ -1,3 +1,7 @@
+"""
+Provides process-management utilities such as catching signals and interrupts
+"""
+
 def monitor_interrupt(work):
     """
     Given a lambda work that takes an arbitrary long time to execute,
