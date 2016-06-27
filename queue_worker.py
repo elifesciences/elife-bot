@@ -1,7 +1,7 @@
 import random
 import time
 import json
-from multiprocessing import Process
+from provider import process
 from optparse import OptionParser
 from S3utility.s3_notification_info import S3NotificationInfo
 from S3utility.s3_sqs_message import S3SQSMessage
@@ -112,75 +112,11 @@ def reload_module(module_name):
     except:
         pass
 
-
-def start_single_thread(ENV):
-    """
-    Start in single process / threaded mode, but
-    return a pool resource of None to indicate it
-    is running in a single thread
-    """
-    print 'starting single thread'
-    work(ENV)
-    return None
-
-
-def start_multiple_thread(ENV):
-    """
-    Start multiple processes using a manual pool
-    """
-    pool = []
-    for num in range(forks):
-        p = Process(target=work, args=(ENV,))
-        p.start()
-        pool.append(p)
-        print 'started worker thread'
-        # Sleep briefly so polling connections do not happen at once
-        time.sleep(0.5)
-    return pool
-
-
-def monitor_KeyboardInterrupt(pool=None):
-    # Monitor for keyboard interrupt ctrl-C
-    try:
-        time.sleep(10)
-    except KeyboardInterrupt:
-        print 'caught KeyboardInterrupt, terminating threads'
-        if pool != None:
-            for p in pool:
-                p.terminate()
-        return False
-    return True
-
-
 if __name__ == "__main__":
-
-    forks = None
-
-    # Add options
     parser = OptionParser()
     parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
                       help="set the environment to run, either dev or live")
-    parser.add_option("-f", "--forks", default=1, action="store", type="int", dest="forks",
-                      help="specify the number of forks to start")
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
-    if options.forks:
-        forks = options.forks
-
-    pool = None
-    # try:
-    if forks > 1:
-        pool = start_multiple_thread(ENV)
-    else:
-        start_single_thread(ENV)
-        # except:
-        # If forks is not specified start in single threaded mode
-        # TODO : resolve issue when exception in thread. This whole area needs revisiting
-        #    pass
-        # start_single_thread(ENV)
-
-    # Monitor for keyboard interrupt ctrl-C
-    loop = True
-    while loop:
-        loop = monitor_KeyboardInterrupt(pool)
+    process.monitor_interrupt(lambda: work(ENV))
