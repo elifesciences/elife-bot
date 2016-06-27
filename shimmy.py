@@ -5,6 +5,7 @@ from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 import requests
 from requests.auth import HTTPBasicAuth
+from provider import process
 import logging
 import json
 
@@ -123,9 +124,8 @@ if __name__ == "__main__":
                       help="set the environment to run, either dev or live")
 
     (options, args) = parser.parse_args()
-    if options.env:
-        ENV = options.env
-        settings_lib = __import__('settings')
-        settings = settings_lib.get_settings(ENV)
-        shimmy = Shimmy(settings)
-        shimmy.listen()
+    ENV = options.env
+    settings_lib = __import__('settings')
+    settings = settings_lib.get_settings(ENV)
+    shimmy = Shimmy(settings)
+    process.monitor_interrupt(lambda: shimmy.listen())
