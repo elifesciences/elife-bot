@@ -295,7 +295,8 @@ class activity_PackagePOA(activity.activity):
             "poa_abstract"           : "poa_abstract.csv",
             "poa_title"              : "poa_title.csv",
             "poa_keywords"           : "poa_keywords.csv",
-            "poa_group_authors"      : "poa_group_authors.csv"
+            "poa_group_authors"      : "poa_group_authors.csv",
+            "poa_datasets"           : "poa_datasets.csv"
         }
 
         for file_type, filename in file_types.items():
