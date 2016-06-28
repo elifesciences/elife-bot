@@ -1,2 +1,2 @@
 #!/bin/bash
-python -m pytest --junitxml=build/junit.xml tests/
+python -m pytest --junitxml=build/junit.xml
