@@ -6,7 +6,6 @@ import activity
 import boto.swf
 import log
 import provider.imageresize as resizer
-import settings as settings_lib
 import yaml
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
@@ -105,9 +104,14 @@ class activity_ResizeImages(activity.activity):
         formats = self.get_formats(info.file_type)
         if formats is not None:
             # generate images for relevant formats
-            fp = StringIO.StringIO()
-            key.get_file(fp)
+            fp = self.get_file_pointer(key)
             self.generate_images(formats, fp, info, cdn_path)
+
+    def get_file_pointer(self, key):
+        fp = StringIO.StringIO()
+        key.get_file(fp)
+        return fp
+
 
     def get_formats(self, file_type):
         # look up file_type in pre-parsed formats
@@ -160,7 +164,7 @@ class activity_ResizeImages(activity.activity):
         return formats
 
 
-def main(args):
+def main(settings_lib, args):
     """
     This sets up dummy SWF activity data, creates an instance of this activity and runs it only for
     testing and debugging. This activity would usually be executed by worker.py
@@ -179,5 +183,6 @@ def main(args):
 
 if __name__ == '__main__':
     import sys
+    import settings as settings_lib
 
-    main(sys.argv[1:])
+    main(settings_lib, sys.argv[1:])
