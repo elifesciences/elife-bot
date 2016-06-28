@@ -12,6 +12,8 @@ import json
 settings = None
 logging.basicConfig(filename='shimmy.log', level=logging.INFO)
 
+class ShortRetryException(RuntimeError):
+    pass
 
 def listen():
 
@@ -30,11 +32,13 @@ def listen():
             queue_message = input_queue.read(visibility_timeout=60, wait_time_seconds=20)
 
             if queue_message is not None:
-                logging.debug('got message id: %s' % queue_message.id)
-
-                process_message(queue_message, output_queue)
-                queue_message.delete()
-
+                logging.debug('got message id: %s', queue_message.id)
+                try:
+                    process_message(queue_message, output_queue)
+                    queue_message.delete()
+                except ShortRetryException as e:
+                    logging.info('short retry: %s because of %s', queue_message.id, e)
+                    queue_message.change_visibility(visibility_timeout=10)
 
     else:
         logging.error("Could not obtain queue, exiting")
@@ -55,7 +59,9 @@ def process_message(message, output_queue):
 
     # slurp EIF file from S3 into memory
     eif = slurp_eif(bucket, filename)
+    post_eif(eif, bucket, filename, passthrough, output_queue)
 
+def post_eif(eif, bucket, filename, passthrough, output_queue):
     # call drupal with EIF
     ingest_endpoint = settings.drupal_EIF_endpoint
     auth = None
@@ -90,10 +96,11 @@ def process_message(message, output_queue):
         m = Message()
         m.set_body(json.dumps(response_message))
         output_queue.write(m)
-
+    elif response.status_code == 429:
+        raise ShortRetryException("Response code was %s" % response.status_code)
     else:
         logging.error("Status code from ingest is %s", response.status_code)
-        logging.error("Article not sent for ingestion is %s", passthrough.get(""))
+        logging.error("Article not sent for ingestion %s", passthrough)
 
 
 def slurp_eif(bucketname, filename):
