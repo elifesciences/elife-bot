@@ -1,0 +1,9 @@
+elifePipeline {
+    stage 'Checkout approved'
+    checkout scm
+    def commit = elifeGitRevision()
+
+    stage 'Deploy'
+    elifeGitMoveToBranch commit, 'master'
+    elifeSwitchRevision 'elife-bot-master', commit
+}
