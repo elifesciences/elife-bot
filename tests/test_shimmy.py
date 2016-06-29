@@ -2,6 +2,7 @@ import unittest
 import logging
 import requests
 import shimmy
+from shimmy import Shimmy
 import activity
 #from .activity import classes_mock
 from mock import Mock, patch
@@ -17,8 +18,9 @@ class FakeResponse:
 
 class tests_Shimmy(unittest.TestCase):
     def setUp(self):
-        shimmy.settings = Mock()
-        shimmy.settings.drupal_EIF_endpoint = 'http://example.com/article.json'
+        settings = Mock()
+        settings.drupal_EIF_endpoint = 'http://example.com/article.json'
+        self.shimmy = Shimmy(settings)
         self.queue = Mock()
 
     @patch.object(logging, 'error')
@@ -49,7 +51,7 @@ class tests_Shimmy(unittest.TestCase):
         self.queue.write.assert_not_called()
 
     def _post_some_eif(self):
-        return lambda: shimmy.post_eif(
+        return lambda: self.shimmy.post_eif(
             '{"field":"value"}',
             None,
             None,
