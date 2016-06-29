@@ -20,7 +20,7 @@ class TestExpandArticle(unittest.TestCase):
         self.create_temp_folder(testdata.ExpandArticle_path)
 
     def tearDown(self):
-        helpers.delete_files_in_folder('tests/tmp')
+        helpers.delete_files_in_folder('tests/tmp', filter_out=['.keepme'])
         helpers.delete_files_in_folder(testdata.ExpandArticle_files_dest_folder)
         helpers.delete_folder(testdata.ExpandArticle_files_dest_folder)
 

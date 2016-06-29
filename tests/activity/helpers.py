@@ -14,9 +14,11 @@ def delete_folder(folder, recursively=False):
         os.rmdir(folder)
 
 
-def delete_files_in_folder(folder):
+def delete_files_in_folder(folder, filter_out=[]):
     file_list = os.listdir(folder)
     for file_name in file_list:
+        if file_name in filter_out:
+            continue
         if os.path.isfile(folder+"/"+file_name):
             os.remove(folder+"/"+file_name)
 
