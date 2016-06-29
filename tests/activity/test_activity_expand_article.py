@@ -3,7 +3,6 @@ from activity.activity_ExpandArticle import activity_ExpandArticle
 from activity.activity import activity
 import settings_mock
 from mock import mock, patch
-from testfixtures import TempDirectory
 from testfixtures import tempdir, compare
 import os
 from classes_mock import FakeStorageContext

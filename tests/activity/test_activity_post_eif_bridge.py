@@ -16,6 +16,9 @@ class tests_PostEIFBridge(unittest.TestCase):
     def setUp(self):
         self.activity_PostEIFBridge = activity_PostEIFBridge(settings_mock, None, None, None, None)
 
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
     @patch('boto.sqs.connect_to_region')
     @patch('activity.activity_PostEIFBridge.Message')
     def test_activity_published_article(self, mock_sqs_message, mock_sqs_connect):
