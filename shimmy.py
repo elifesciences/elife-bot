@@ -6,10 +6,8 @@ from boto.s3.connection import S3Connection
 import requests
 from requests.auth import HTTPBasicAuth
 import logging
-import settings as settings_lib
 import json
 
-settings = None
 logging.basicConfig(filename='shimmy.log', level=logging.INFO)
 
 class ShortRetryException(RuntimeError):
@@ -20,6 +18,7 @@ class Shimmy:
         self._settings = settings
 
     def listen(self):
+        logging.info("started")
         conn = boto.sqs.connect_to_region(self._settings.sqs_region,
                                           aws_access_key_id=self._settings.aws_access_key_id,
                                           aws_secret_access_key=self._settings.aws_secret_access_key)
@@ -126,6 +125,7 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
+        settings_lib = __import__('settings')
         settings = settings_lib.get_settings(ENV)
         shimmy = Shimmy(settings)
         shimmy.listen()
