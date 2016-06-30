@@ -7,7 +7,6 @@ from classes_mock import FakeSQSConn
 from classes_mock import FakeSQSMessage
 from classes_mock import FakeSQSQueue
 import classes_mock
-from testfixtures import TempDirectory
 import json
 import base64
 
