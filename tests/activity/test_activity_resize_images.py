@@ -63,7 +63,7 @@ class TestResizeImages(unittest.TestCase):
 
     def fake_get_file_pointer(self, key):
         path = self.resize_images_start_folder + unicodedata.normalize('NFKD',key.name).encode('ascii','ignore')
-        fp = open(path, 'r')
+        fp = open(path, 'rb')
         return fp
 
     def fake_get_file_infos(self):
