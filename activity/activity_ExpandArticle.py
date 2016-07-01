@@ -14,6 +14,7 @@ from provider.execution_context import Session
 import requests
 from provider.storage_provider import StorageContext
 from provider.article_structure import ArticleInfo
+import provider.lax_provider as lax_provider
 
 """
 ExpandArticle.py activity
@@ -145,22 +146,26 @@ class activity_ExpandArticle(activity.activity):
         return True
 
     def get_next_version(self, article_id):
-        url = self.settings.lax_article_versions.replace('{article_id}', article_id)
-        response = requests.get(url, verify=self.settings.verify_ssl)
-        if response.status_code == 200:
-            high_version = 0
-            data = response.json()
-            for version in data:
-                int_version = int(version)
-                if int_version > high_version:
-                    high_version = int_version
-            return str(high_version + 1)
-        elif response.status_code == 404:
-            return "1"
-        else:
-            self.logger.error("Error obtaining version information from Lax" +
-                              str(response.status_code))
-            return "-1"
+        version = lax_provider.article_highest_version(article_id, self.settings)
+        return version
+
+    # def get_next_version(self, article_id):
+    #     url = self.settings.lax_article_versions.replace('{article_id}', article_id)
+    #     response = requests.get(url, verify=self.settings.verify_ssl)
+    #     if response.status_code == 200:
+    #         high_version = 0
+    #         data = response.json()
+    #         for version in data:
+    #             int_version = int(version)
+    #             if int_version > high_version:
+    #                 high_version = int_version
+    #         return str(high_version + 1)
+    #     elif response.status_code == 404:
+    #         return "1"
+    #     else:
+    #         self.logger.error("Error obtaining version information from Lax" +
+    #                           str(response.status_code))
+    #         return "-1"
 
     def get_update_date_from_zip_filename(self, filename):
         m = re.search(ur'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
