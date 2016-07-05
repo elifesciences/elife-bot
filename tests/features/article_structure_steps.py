@@ -13,6 +13,7 @@ def step_impl(step, filename):
 
 @step("It exposes the correct (\S+), (\S+), (\S+) and (\S+)")
 def step_impl(step, filename, extension, file_type, f_id):
+    assert world.article.filename == filename
     assert world.article.file_type == file_type
     assert world.article.extension == extension
     print world.article.file_type
