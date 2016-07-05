@@ -296,7 +296,8 @@ class activity_PackagePOA(activity.activity):
             "poa_title"              : "poa_title.csv",
             "poa_keywords"           : "poa_keywords.csv",
             "poa_group_authors"      : "poa_group_authors.csv",
-            "poa_datasets"           : "poa_datasets.csv"
+            "poa_datasets"           : "poa_datasets.csv",
+            "poa_funding"            : "poa_funding.csv"
         }
 
         for file_type, filename in file_types.items():
@@ -554,7 +555,8 @@ class activity_PackagePOA(activity.activity):
             "title"      : "poa_title.csv",
             "keywords"   : "poa_keywords.csv",
             "group_authors" : "poa_group_authors.csv",
-            "datasets"   : "poa_datasets.csv"
+            "datasets"   : "poa_datasets.csv",
+            "funding"    : "poa_funding.csv"
         }
 
     def import_poa_modules(self, dir_name="elife-poa-xml-generation"):
