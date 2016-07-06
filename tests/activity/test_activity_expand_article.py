@@ -1,7 +1,7 @@
 import unittest
 from activity.activity_ExpandArticle import activity_ExpandArticle
 from activity.activity import activity
-import settings_mock
+import tests.settings_mock as settings_mock
 from mock import mock, patch
 from testfixtures import tempdir, compare
 import os
