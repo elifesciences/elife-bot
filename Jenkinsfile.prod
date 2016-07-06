@@ -4,6 +4,7 @@ elifePipeline {
     def commit = elifeGitRevision()
 
     stage 'Deploy'
+    elifeDeploySlackNotification "elife-bot", "prod"
     elifeGitMoveToBranch commit, 'master'
     elifeSwitchRevision 'elife-bot-master', commit
 }
