@@ -19,7 +19,7 @@ def article_highest_version(article_id, settings, logger=None):
             int_version = int(version)
             if int_version > high_version:
                 high_version = int_version
-        return str(high_version + 1)
+        return high_version
     elif status_code == 404:
         return "1"
     else:

@@ -87,6 +87,19 @@ class TestExpandArticle(unittest.TestCase):
         success = self.expandarticle.do_activity(status_example)
         self.assertEqual(self.expandarticle.ACTIVITY_PERMANENT_FAILURE, success)
 
+    @patch('provider.lax_provider.article_versions')
+    def test_get_next_version_200(self, mock_article_versions):
+        mock_article_versions.return_value = 200, testdata.lax_article_versions_response_data
+        version = self.expandarticle.get_next_version("8411")
+        self.assertEqual("3", version)
+
+    @patch('provider.lax_provider.article_versions')
+    def test_get_next_version_500(self, mock_article_versions):
+        mock_article_versions.return_value = 500, None
+        version = self.expandarticle.get_next_version("8411")
+        self.assertEqual("-1", version)
+
+
     def create_temp_folder(self, plus=None):
         if not os.path.exists('tests/tmp'):
             os.makedirs('tests/tmp')

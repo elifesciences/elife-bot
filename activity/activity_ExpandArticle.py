@@ -147,6 +147,10 @@ class activity_ExpandArticle(activity.activity):
 
     def get_next_version(self, article_id):
         version = lax_provider.article_highest_version(article_id, self.settings)
+        if isinstance(version, (int,long)) and version >= 1:
+            version = str(version + 1)
+        if version is None:
+            return "-1"
         return version
 
     def get_update_date_from_zip_filename(self, filename):

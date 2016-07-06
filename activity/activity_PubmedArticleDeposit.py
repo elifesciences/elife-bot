@@ -218,6 +218,8 @@ class activity_PubmedArticleDeposit(activity.activity):
         Temporary fix to set the version of the article if available
         """
         version = lax_provider.article_highest_version(article_id, self.settings, self.logger)
+        if version is None:
+            return "-1"
         return version
 
     def generate_pubmed_xml(self):
