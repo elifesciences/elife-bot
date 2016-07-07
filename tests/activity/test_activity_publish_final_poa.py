@@ -7,6 +7,7 @@ from mock import mock, patch
 import settings_mock
 
 from types import MethodType
+import xml.etree.ElementTree as ET
 
 import os
 # Add parent directory for imports, so activity classes can use elife-poa-xml-generation
@@ -105,6 +106,23 @@ class TestPublishFinalPOA(unittest.TestCase):
             "unmatched_ds_file_names": ["elife_poa_e99997_ds.zip", "elife_poa_e99998_ds.zip"]
         })
 
+        # Tests for values in the XML files after rewriting
+        self.xml_file_values = {}
+        self.xml_file_values["elife-13833.xml"] = {
+            "./front/article-meta/volume": "5",
+            "./front/article-meta/article-id[@pub-id-type='publisher-id']": "13833",
+            "./front/article-meta/pub-date[@date-type='pub']/day": "05",
+            "./front/article-meta/pub-date[@date-type='pub']/month": "07",
+            "./front/article-meta/pub-date[@date-type='pub']/year": "2016"
+            }
+        self.xml_file_values["elife-14692.xml"] = {
+            "./front/article-meta/volume": "5",
+            "./front/article-meta/article-id[@pub-id-type='publisher-id']": "14692",
+            "./front/article-meta/pub-date[@date-type='pub']/day": "04",
+            "./front/article-meta/pub-date[@date-type='pub']/month": "07",
+            "./front/article-meta/pub-date[@date-type='pub']/year": "2016"
+            }
+
     def tearDown(self):
         self.poa.clean_tmp_dir()
 
@@ -130,12 +148,31 @@ class TestPublishFinalPOA(unittest.TestCase):
                 return False
         return True
 
+    def check_xml_contents(self, xml_file):
+        """
+        Function to compare XML tag value as located by an xpath
+        Can compare one tag only at a time
+        """
+        root = None
+        xml_file_name = xml_file.split(os.sep)[-1]
+        if xml_file_name in self.xml_file_values:
+            root = ET.parse(xml_file)
+        if root:
+            for (xpath, value) in self.xml_file_values[xml_file_name].iteritems():
+                matched_tags = root.findall(xpath)
+                if len(matched_tags) != 1:
+                    return False
+                for matched_tag in matched_tags:
+                    if matched_tag.text != value:
+                        return False
+        return True
+
     def fake_download_files_from_s3(self, file_list):
         for file in file_list:
             source_doc = "tests/test_data/poa/outbox/" + file
-            print source_doc
+            #print source_doc
             dest_doc = self.poa.INPUT_DIR + os.sep + file
-            print dest_doc
+            #print dest_doc
             shutil.copy(source_doc, dest_doc)
 
     def fake_clean_tmp_dir(self):
@@ -190,6 +227,12 @@ class TestPublishFinalPOA(unittest.TestCase):
             self.assertEqual(self.poa.malformed_ds_file_names, test_data["malformed_ds_file_names"])
             self.assertEqual(self.poa.empty_ds_file_names, test_data["empty_ds_file_names"])
             self.assertEqual(self.poa.unmatched_ds_file_names, test_data["unmatched_ds_file_names"])
+
+            # Check XML values if XML was approved
+            if test_data["done_dir_file_count"] > 0:
+                xml_files = glob.glob(self.poa.DONE_DIR + "/*.xml")
+                for xml_file in xml_files:
+                    self.assertTrue(self.check_xml_contents(xml_file))
 
             self.assertEqual(True, success)
 
