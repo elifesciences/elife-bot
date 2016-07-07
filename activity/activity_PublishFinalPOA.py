@@ -86,8 +86,8 @@ class activity_PublishFinalPOA(activity.activity):
         # Approve files for publishing
         self.approve_status = self.approve_for_publishing()
 
-        done_xml_files = []
-        clean_from_outbox_files = []
+        self.done_xml_files = []
+        self.clean_from_outbox_files = []
 
         if self.approve_status is True:
 
@@ -118,15 +118,15 @@ class activity_PublishFinalPOA(activity.activity):
                     self.zip_article_files(doi_id, filenames, new_filenames, zip_file_name)
                     # Add files to the lists to be processed after
                     new_article_xml_file_name = self.article_xml_from_filename_map(new_filenames)
-                    done_xml_files.append(new_article_xml_file_name)
-                    clean_from_outbox_files = clean_from_outbox_files + filenames
+                    self.done_xml_files.append(new_article_xml_file_name)
+                    self.clean_from_outbox_files = self.clean_from_outbox_files + filenames
 
             # Upload the zip files to the publishing bucket
             self.publish_status = self.upload_files_to_s3()
 
         # Clean the outbox
-        if len(clean_from_outbox_files) > 0:
-            self.clean_outbox(self.published_folder_name, clean_from_outbox_files)
+        if len(self.clean_from_outbox_files) > 0:
+            self.clean_outbox(self.published_folder_name, self.clean_from_outbox_files)
 
         # Set the activity status of this activity based on successes
         if self.publish_status is not False:
@@ -629,36 +629,37 @@ class activity_PublishFinalPOA(activity.activity):
         zipfiles = glob.glob(self.INPUT_DIR + file_type)
         for input_zipfile in zipfiles:
             badfile = None
-
+            filename = input_zipfile.split(os.sep)[-1]
             try:
                 current_zipfile = zipfile.ZipFile(input_zipfile, 'r')
             except zipfile.BadZipfile:
                 badfile = True
-                self.malformed_ds_file_names.append(input_zipfile)
+                self.malformed_ds_file_names.append(filename)
                 current_zipfile = None
 
             if current_zipfile:
+                filename = current_zipfile.filename.split(os.sep)[-1]
                 # Check for those with missing or empty manifest.xml
                 if self.manifest_xml_not_empty(current_zipfile) is not True:
                     badfile = True
-                    self.malformed_ds_file_names.append(current_zipfile.filename)
+                    self.malformed_ds_file_names.append(filename)
 
                 # Check for those with no zipped folder contents
                 if self.check_empty_supplemental_files(current_zipfile) is not True:
                     badfile = True
-                    self.empty_ds_file_names.append(current_zipfile.filename)
+                    self.empty_ds_file_names.append(filename)
 
                 # Check for a file with no matching XML document
-                if (self.check_matching_xml_file(current_zipfile) is not True or
-                        self.check_matching_pdf_file(current_zipfile) is not True):
+                if (self.check_matching_xml_file(filename) is not True or
+                        self.check_matching_pdf_file(filename) is not True):
                     badfile = True
-                    self.unmatched_ds_file_names.append(current_zipfile.filename)
+                    self.unmatched_ds_file_names.append(filename)
 
                 current_zipfile.close()
 
             if badfile:
                 # File is not good, move it somewhere
-                shutil.move(input_zipfile, self.JUNK_DIR + "/")
+                shutil.move(self.INPUT_DIR + os.sep + filename, self.JUNK_DIR + "/")
 
         # For each xml or pdf file, check there is a matching pair
         xml_file_type = "/*.xml"
@@ -730,13 +731,12 @@ class activity_PublishFinalPOA(activity.activity):
         elif zipextfile_line_count > 1:
             return True
 
-    def check_matching_xml_file(self, input_zipfile):
+    def check_matching_xml_file(self, zip_filename):
         """
         Given a zipfile.ZipFile object, check if for the DOI it represents
         there is a matching XML file for that DOI
         """
-        zip_file_article_number = self.get_filename_from_path(input_zipfile.filename, "_ds.zip")
-        #print zip_file_article_number
+        zip_file_article_number = self.get_filename_from_path(zip_filename, "_ds.zip")
 
         file_type = "/*.xml"
         xml_files = glob.glob(self.INPUT_DIR + file_type)
@@ -751,12 +751,12 @@ class activity_PublishFinalPOA(activity.activity):
         # Default return
         return False
 
-    def check_matching_pdf_file(self, input_zipfile):
+    def check_matching_pdf_file(self, zip_filename):
         """
         Given a zipfile.ZipFile object, check if for the DOI it represents
         there is a matching PDF file for that DOI
         """
-        zip_file_article_number = self.get_filename_from_path(input_zipfile.filename, "_ds.zip")
+        zip_file_article_number = self.get_filename_from_path(zip_filename, "_ds.zip")
 
         file_type = "/*.pdf"
         pdf_files = glob.glob(self.INPUT_DIR + file_type)

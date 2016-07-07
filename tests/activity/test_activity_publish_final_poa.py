@@ -27,7 +27,12 @@ class TestPublishFinalPOA(unittest.TestCase):
             "approve_status": False,
             "publish_status": None,
             "activity_status": True,
-            "output_dir_files": []
+            "output_dir_files": [],
+            "done_xml_files": [],
+            "clean_from_outbox_files": [],
+            "malformed_ds_file_names": [],
+            "empty_ds_file_names": [],
+            "unmatched_ds_file_names": []
         })
 
         # Missing a PDF
@@ -37,7 +42,12 @@ class TestPublishFinalPOA(unittest.TestCase):
             "approve_status": True,
             "publish_status": True,
             "activity_status": True,
-            "output_dir_files": []
+            "output_dir_files": [],
+            "done_xml_files": [],
+            "clean_from_outbox_files": [],
+            "malformed_ds_file_names": [],
+            "empty_ds_file_names": [],
+            "unmatched_ds_file_names": ["elife_poa_e13833_ds.zip"]
         })
 
         # Full set of files for one article
@@ -48,7 +58,13 @@ class TestPublishFinalPOA(unittest.TestCase):
             "approve_status": True,
             "publish_status": True,
             "activity_status": True,
-            "output_dir_files": ["elife-13833-poa-r1.zip"]
+            "output_dir_files": ["elife-13833-poa-r1.zip"],
+            "done_xml_files": ["elife-13833.xml"],
+            "clean_from_outbox_files": ["decap_elife_poa_e13833.pdf", "elife_poa_e13833.xml",
+                                 "elife_poa_e13833_ds.zip"],
+            "malformed_ds_file_names": [],
+            "empty_ds_file_names": [],
+            "unmatched_ds_file_names": []
         })
 
         # One article with no ds.zip file
@@ -58,7 +74,12 @@ class TestPublishFinalPOA(unittest.TestCase):
             "approve_status": True,
             "publish_status": True,
             "activity_status": True,
-            "output_dir_files": ["elife-14692-poa-r1.zip"]
+            "output_dir_files": ["elife-14692-poa-r1.zip"],
+            "done_xml_files": ["elife-14692.xml"],
+            "clean_from_outbox_files": ["decap_elife_poa_e14692.pdf", "elife_poa_e14692.xml"],
+            "malformed_ds_file_names": [],
+            "empty_ds_file_names": [],
+            "unmatched_ds_file_names": []
         })
 
         # Full set of files for two articles
@@ -66,12 +87,21 @@ class TestPublishFinalPOA(unittest.TestCase):
             "outbox_file_list": ["decap_elife_poa_e13833.pdf", "elife_poa_e13833.xml",
                                  "elife_poa_e13833_ds.zip",
                                  "decap_elife_poa_e14692.pdf", "elife_poa_e14692.xml",
-                                 "elife_poa_e14692_ds.zip"],
+                                 "elife_poa_e14692_ds.zip",
+                                 "elife_poa_e99999_ds.zip"],
             "done_dir_file_count": 6,
             "approve_status": True,
             "publish_status": True,
             "activity_status": True,
-            "output_dir_files": ["elife-13833-poa-r1.zip", "elife-14692-poa-r1.zip"]
+            "output_dir_files": ["elife-13833-poa-r1.zip", "elife-14692-poa-r1.zip"],
+            "done_xml_files": ["elife-13833.xml", "elife-14692.xml"],
+            "clean_from_outbox_files": ["decap_elife_poa_e13833.pdf", "elife_poa_e13833.xml",
+                                 "elife_poa_e13833_ds.zip",
+                                 "decap_elife_poa_e14692.pdf", "elife_poa_e14692.xml",
+                                 "elife_poa_e14692_ds.zip"],
+            "malformed_ds_file_names": ["elife_poa_e99999_ds.zip"],
+            "empty_ds_file_names": [],
+            "unmatched_ds_file_names": []
         })
 
     def tearDown(self):
@@ -126,14 +156,13 @@ class TestPublishFinalPOA(unittest.TestCase):
                     os.remove(file)
 
     @patch.object(activity_PublishFinalPOA, 'get_pub_date_str_from_lax')
-    @patch.object(activity_PublishFinalPOA, 'upload_xml_to_outbox_s3')
     @patch.object(activity_PublishFinalPOA, 'upload_files_to_s3')
     @patch.object(activity_PublishFinalPOA, 'next_revision_number')
     @patch.object(activity_PublishFinalPOA, 'download_files_from_s3')
     @patch.object(activity_PublishFinalPOA, 'clean_tmp_dir')
     def test_do_activity(self, fake_clean_tmp_dir, fake_download_files_from_s3,
                          fake_next_revision_number, fake_upload_files_to_s3,
-                         fake_upload_xml_to_outbox_s3, fake_get_pub_date_str_from_lax):
+                         fake_get_pub_date_str_from_lax):
 
         fake_clean_tmp_dir = self.fake_clean_tmp_dir()
         fake_next_revision_number.return_value = 1
@@ -155,10 +184,24 @@ class TestPublishFinalPOA(unittest.TestCase):
             self.assertEqual(self.poa.activity_status, test_data["activity_status"])
             self.assertTrue(self.compare_files_in_dir(self.poa.OUTPUT_DIR,
                                                       test_data["output_dir_files"]))
+            self.assertEqual(self.poa.done_xml_files, test_data["done_xml_files"])
+            self.assertEqual(self.poa.clean_from_outbox_files, test_data["clean_from_outbox_files"])
+            self.assertEqual(self.poa.malformed_ds_file_names, test_data["malformed_ds_file_names"])
+            self.assertEqual(self.poa.empty_ds_file_names, test_data["empty_ds_file_names"])
+            self.assertEqual(self.poa.unmatched_ds_file_names, test_data["unmatched_ds_file_names"])
+
             self.assertEqual(True, success)
-            
+
             # Clean the tmp_dir subfolders between tests
             self.remove_files_from_tmp_dir_subfolders()
+
+            # Reset variables
+            self.poa.activity_status = None
+            self.poa.approve_status = None
+            self.poa.publish_status = None
+            self.poa.malformed_ds_file_names = []
+            self.poa.empty_ds_file_names = []
+            self.poa.unmatched_ds_file_names = []
 
 
 if __name__ == '__main__':
