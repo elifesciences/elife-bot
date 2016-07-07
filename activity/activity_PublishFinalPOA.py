@@ -55,15 +55,6 @@ class activity_PublishFinalPOA(activity.activity):
 
         self.publish_bucket = settings.publishing_buckets_prefix + settings.production_bucket
 
-        # Folder for crossref XML
-        self.crossref_outbox_folder = "crossref/outbox/"
-
-        # Folder for pubmed XML
-        self.pubmed_outbox_folder = "pubmed/outbox/"
-
-        # Folder for publication email
-        self.publication_email_outbox_folder = "publication_email/outbox/"
-
         # Track the success of some steps
         self.activity_status = None
         self.approve_status = None
@@ -132,12 +123,6 @@ class activity_PublishFinalPOA(activity.activity):
 
             # Upload the zip files to the publishing bucket
             self.publish_status = self.upload_files_to_s3()
-
-        # Upload XML to the outboxes
-        if len(done_xml_files) > 0:
-            self.upload_xml_to_outbox_s3(self.crossref_outbox_folder, done_xml_files)
-            self.upload_xml_to_outbox_s3(self.pubmed_outbox_folder, done_xml_files)
-            self.upload_xml_to_outbox_s3(self.publication_email_outbox_folder, done_xml_files)
 
         # Clean the outbox
         if len(clean_from_outbox_files) > 0:
@@ -788,28 +773,6 @@ class activity_PublishFinalPOA(activity.activity):
         # Default return
         return False
 
-
-    def upload_xml_to_outbox_s3(self, outbox_folder, done_xml_files):
-        """
-        Upload a copy of the article XML to the s3_folder_name,
-        used by upload to crossref outbox and pubmed outbox functions
-        """
-
-        bucket_name = self.input_bucket
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-
-        outbox_s3_key_names = []
-        articles_not_uploaded_to_outbox = []
-
-        for xml_file in done_xml_files:
-            # Remove dashes for now for compatibility with old standard outbox file naming
-            new_s3_key = outbox_folder + xml_file.replace('-', '')
-            s3key = boto.s3.key.Key(bucket)
-            s3key.key = new_s3_key
-            s3key.set_contents_from_filename(self.DONE_DIR + os.sep + xml_file, replace=True)
 
     def clean_outbox(self, published_folder_name, outbox_files):
         """
