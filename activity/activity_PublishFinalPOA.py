@@ -101,7 +101,6 @@ class activity_PublishFinalPOA(activity.activity):
 
                 if article_xml_file_name:
                     xml_file = self.INPUT_DIR + os.sep + article_xml_file_name
-                    self.convert_xml(doi_id, xml_file, filenames, new_filenames)
 
                     try:
                         self.convert_xml(doi_id, xml_file, filenames, new_filenames)
