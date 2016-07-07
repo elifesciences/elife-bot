@@ -228,9 +228,19 @@ class activity_PublishFinalPOA(activity.activity):
             # Capitalise subject group values in article categories
             root = self.subject_group_convert_in_xml(root)
 
+            pub_date = None
             if parser.pub_date(soup) is None:
                 # add the published date to the XML
-                root = self.add_pub_date_to_xml(doi_id, root)
+                pub_date = self.get_pub_date_if_missing(doi_id)
+                root = self.add_pub_date_to_xml(doi_id, pub_date, root)
+            else:
+                pub_date = parser.pub_date(soup)
+
+            if parser.volume(soup) is None:
+                # Get the pub-date year to calculate the volume
+                year = pub_date[0]
+                volume = year - 2011
+                self.add_volume_to_xml(doi_id, volume, root)
 
             # set the article-id, to overwrite the v2, v3 value if present
             root = self.set_article_id_xml(doi_id, root)
@@ -277,8 +287,22 @@ class activity_PublishFinalPOA(activity.activity):
                 subject_tag.text = self.title_case(subject_tag.text)
         return root
 
-    def add_pub_date_to_xml(self, doi_id, root):
+    def add_tag_to_xml_before_elocation_id(self, add_tag, root):
+        # Add the tag to the XML
+        for tag in root.findall('./front/article-meta'):
+            parent_tag_index = xmlio.get_first_element_index(tag, 'elocation-id')
+            if not parent_tag_index:
+                if self.logger:
+                    self.logger.info('no elocation-id tag and no '
+                                     + str(add_tag.tag) + ' added: ' + str(doi_id))
+            else:
+                tag.insert(parent_tag_index - 1, add_tag)
 
+            # Should only do it once but ensure it is only done once
+            break
+        return root
+
+    def get_pub_date_if_missing(self, doi_id):
         # Get the date for the first version
         date_struct = None
         date_str = self.get_pub_date_str_from_lax(doi_id)
@@ -288,22 +312,12 @@ class activity_PublishFinalPOA(activity.activity):
         else:
             # Use current date
             date_struct = time.gmtime()
+        return date_struct
 
+    def add_pub_date_to_xml(self, doi_id, date_struct, root):
         # Create the pub-date XML tag
         pub_date_tag = self.pub_date_xml_element(date_struct)
-
-        # Add the tag to the XML
-        for tag in root.findall('./front/article-meta'):
-            parent_tag_index = xmlio.get_first_element_index(tag, 'elocation-id')
-            if not parent_tag_index:
-                if self.logger:
-                    self.logger.info('no elocation-id tag and no pub-date added: ' + str(doi_id))
-            else:
-                tag.insert(parent_tag_index - 1, pub_date_tag)
-
-            # Should only do it once but ensure it is only done once
-            break
-
+        root = self.add_tag_to_xml_before_elocation_id(pub_date_tag, root)
         return root
 
     def pub_date_xml_element(self, pub_date):
@@ -322,6 +336,17 @@ class activity_PublishFinalPOA(activity.activity):
         year.text = str(pub_date.tm_year)
 
         return pub_date_tag
+
+    def add_volume_to_xml(self, doi_id, volume, root):
+        # Create the pub-date XML tag
+        volume_tag = self.volume_xml_element(volume)
+        root = self.add_tag_to_xml_before_elocation_id(volume_tag, root)
+        return root
+
+    def volume_xml_element(self, volume):
+        volume_tag = Element("volume")
+        volume_tag.text = str(volume)
+        return volume_tag
 
     def set_article_id_xml(self, doi_id, root):
 
