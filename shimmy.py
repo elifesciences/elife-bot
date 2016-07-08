@@ -99,7 +99,7 @@ class Shimmy:
             raise ShortRetryException("Response code was %s" % response.status_code)
         else:
             logging.error("Status code from ingest is %s", response.status_code)
-            logging.error("Article not sent for ingestion %s", passthrough)
+            logging.error("Article not sent for ingestion %s", passthrough.get("article_id"))
 
 
     def slurp_eif(self, bucketname, filename):
