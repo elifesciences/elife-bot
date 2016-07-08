@@ -46,7 +46,7 @@ def article_publication_date(article_id, settings, logger=None):
                             logger.error("Error parsing the datetime_published from Lax: "
                                          + str(article_data['datetime_published']))
 
-                    return date_str
+        return date_str
     elif status_code == 404:
         return None
     else:
