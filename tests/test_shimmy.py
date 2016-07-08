@@ -12,6 +12,7 @@ class FakeResponse:
     def __init__(self, status_code):
         self.status_code = status_code
         self.reason = 'This is fake'
+        self.text = 'This is a fake response text'
 
     def json(self):
         return {}
