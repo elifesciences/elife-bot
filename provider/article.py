@@ -156,6 +156,8 @@ class article(object):
         # Get the highest published version from lax
         try:
             version = lax_provider.article_highest_version(article_id, self.settings)
+            if not isinstance(version, (int,long)):
+                return False
         except:
             return False
 
