@@ -21,6 +21,7 @@ import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.s3lib as s3lib
+import provider.simpleDB as dblib
 
 """
 PublishFinalPOA activity
@@ -61,9 +62,13 @@ class activity_PublishFinalPOA(activity.activity):
         self.publish_status = None
 
         # More file status tracking for reporting in email
+        self.outbox_s3_key_names = []
         self.malformed_ds_file_names = []
         self.empty_ds_file_names = []
         self.unmatched_ds_file_names = []
+
+        # Data provider where email body is saved
+        self.db = dblib.SimpleDB(settings)
 
     def do_activity(self, data=None):
         """
@@ -132,6 +137,9 @@ class activity_PublishFinalPOA(activity.activity):
             self.activity_status = True
         else:
             self.activity_status = False
+
+        # Send email
+        self.add_email_to_queue()
 
         # Return the activity result, True or False
         result = True
@@ -614,6 +622,7 @@ class activity_PublishFinalPOA(activity.activity):
         s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket=bucket,
                                                           prefix=self.outbox_folder,
                                                           file_extensions=file_extensions)
+        self.outbox_s3_key_names = s3_key_names
 
         for name in s3_key_names:
             # Download objects from S3 and save to disk
@@ -839,6 +848,149 @@ class activity_PublishFinalPOA(activity.activity):
 
         return filename
 
+
+    def add_email_to_queue(self):
+        """
+        After do_activity is finished, send emails to recipients
+        on the status
+        """
+        # Connect to DB
+        db_conn = self.db.connect()
+
+        # Note: Create a verified sender email address, only done once
+        #conn.verify_email_address(self.settings.ses_sender_email)
+
+        current_time = time.gmtime()
+
+        body = self.get_email_body(current_time)
+        subject = self.get_email_subject(current_time)
+        sender_email = self.settings.ses_poa_sender_email
+
+        recipient_email_list = []
+        # Handle multiple recipients, if specified
+        if type(self.settings.ses_poa_recipient_email) == list:
+            for email in self.settings.ses_poa_recipient_email:
+                recipient_email_list.append(email)
+        else:
+            recipient_email_list.append(self.settings.ses_poa_recipient_email)
+
+        for email in recipient_email_list:
+            # Add the email to the email queue
+            self.db.elife_add_email_to_email_queue(
+                recipient_email=email,
+                sender_email=sender_email,
+                email_type="PublishFinalPOA",
+                format="text",
+                subject=subject,
+                body=body)
+
+        return True
+
+    def get_activity_status_text(self, activity_status):
+        """
+        Given the activity status boolean, return a human
+        readable text version
+        """
+        if activity_status is True:
+            activity_status_text = "Success!"
+        else:
+            activity_status_text = "FAILED."
+
+        return activity_status_text
+
+    def get_email_subject(self, current_time):
+        """
+        Assemble the email subject
+        """
+        date_format = '%Y-%m-%d %H:%M'
+        datetime_string = time.strftime(date_format, current_time)
+
+        activity_status_text = self.get_activity_status_text(self.activity_status)
+
+        # Count the files moved from the outbox, the files that were processed
+        files_count = 0
+        if self.outbox_s3_key_names:
+            files_count = len(self.outbox_s3_key_names)
+
+        subject = (self.name + " " + activity_status_text +
+                   " files: " + str(files_count) +
+                   ", " + datetime_string +
+                   ", eLife SWF domain: " + self.settings.domain)
+
+        return subject
+
+    def get_email_body(self, current_time):
+        """
+        Format the body of the email
+        """
+
+        body = ""
+
+        date_format = '%Y-%m-%dT%H:%M:%S.000Z'
+        datetime_string = time.strftime(date_format, current_time)
+
+        activity_status_text = self.get_activity_status_text(self.activity_status)
+
+        # Bulk of body
+        body += self.name + " status:" + "\n"
+        body += "\n"
+        body += activity_status_text + "\n"
+        body += "\n"
+
+        body += "activity_status: " + str(self.activity_status) + "\n"
+        body += "approve_status: " + str(self.approve_status) + "\n"
+        body += "publish_status: " + str(self.publish_status) + "\n"
+
+        body += "\n"
+        body += "Outbox files: " + "\n"
+
+        files_count = 0
+        if self.outbox_s3_key_names:
+            files_count = len(self.outbox_s3_key_names)
+        if files_count > 0:
+            for name in self.outbox_s3_key_names:
+                body += name + "\n"
+        else:
+            body += "No files in outbox." + "\n"
+
+        if files_count > 0:
+            # Report on any empty or unmatched supplement files
+            if len(self.malformed_ds_file_names) > 0:
+                body += "\n"
+                body += "Note: Malformed ds files not sent by ftp: " + "\n"
+                for name in self.malformed_ds_file_names:
+                    body += name + "\n"
+            if len(self.empty_ds_file_names) > 0:
+                body += "\n"
+                body += "Note: Empty ds files not sent by ftp: " + "\n"
+                for name in self.empty_ds_file_names:
+                    body += name + "\n"
+            if len(self.unmatched_ds_file_names) > 0:
+                body += "\n"
+                body += "Note: Unmatched ds files not sent by ftp: " + "\n"
+                for name in self.unmatched_ds_file_names:
+                    body += name + "\n"
+
+        if self.publish_status is True and files_count > 0:
+            body += "\n"
+            body += "Files moved to: " + str(self.published_folder_name) + "\n"
+
+        for name in self.clean_from_outbox_files:
+            body += name + "\n"
+
+        body += "\n"
+        body += "-------------------------------\n"
+        body += "SWF workflow details: " + "\n"
+        body += "activityId: " + str(self.get_activityId()) + "\n"
+        body += "As part of workflowId: " + str(self.get_workflowId()) + "\n"
+        body += "As at " + datetime_string + "\n"
+        body += "Domain: " + self.settings.domain + "\n"
+
+        body += "\n"
+
+        body += "\n\nSincerely\n\neLife bot"
+
+        return body
 
 
     def create_activity_directories(self):

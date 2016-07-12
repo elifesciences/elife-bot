@@ -174,6 +174,7 @@ class TestPublishFinalPOA(unittest.TestCase):
             dest_doc = self.poa.INPUT_DIR + os.sep + file
             #print dest_doc
             shutil.copy(source_doc, dest_doc)
+        self.poa.outbox_s3_key_names = file_list
 
     def fake_clean_tmp_dir(self):
         """
