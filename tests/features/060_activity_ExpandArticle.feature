@@ -47,20 +47,3 @@ Feature: ExpandArticle activity
     | env | filename                                | version  
     | dev | elife-07702-vor-r4.zip                  | None    
     | dev | elife-00013-vor-v1-20121015000000.zip   | 1
-    
-  Scenario: Get the status from an article zip filename using an ExpandArticle activity object
-    Given I have imported a settings module
-    And I have the settings environment <env>
-    And I get the settings
-    And I have the activity name ExpandArticle
-    And I have the activityId ExpandArticle_test
-    And I have an activity object
-    And I have the filename <filename>
-    When I get status from the filename using the activity object
-    Then I see the string <status>
-  
-  Examples:
-    | env | filename                                | status  
-    | dev | elife-07702-vor-r4.zip                  | vor    
-    | dev | elife-00013-vor-v1-20121015000000.zip   | vor
-    | dev | elife-02112-poa-v1-20140508000000.zip   | poa

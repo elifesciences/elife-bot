@@ -3,7 +3,6 @@ from activity.activity_ExpandArticle import activity_ExpandArticle
 from activity.activity import activity
 import settings_mock
 from mock import mock, patch
-from testfixtures import TempDirectory
 from testfixtures import tempdir, compare
 import os
 from classes_mock import FakeStorageContext
@@ -21,7 +20,7 @@ class TestExpandArticle(unittest.TestCase):
         self.create_temp_folder(testdata.ExpandArticle_path)
 
     def tearDown(self):
-        helpers.delete_files_in_folder('tests/tmp')
+        helpers.delete_files_in_folder('tests/tmp', filter_out=['.keepme'])
         helpers.delete_files_in_folder(testdata.ExpandArticle_files_dest_folder)
         helpers.delete_folder(testdata.ExpandArticle_files_dest_folder)
 
@@ -78,7 +77,7 @@ class TestExpandArticle(unittest.TestCase):
 
     @patch('activity.activity_ExpandArticle.Session')
     @patch('activity.activity_ExpandArticle.StorageContext')
-    @data(testdata.ExpandArticle_data_invalid_status1) #testdata.ExpandArticle_data_invalid_status2 removed for now until we make the fix
+    @data(testdata.ExpandArticle_data_invalid_status1, testdata.ExpandArticle_data_invalid_status2)
     def test_do_activity_invalid_status(self, status_example, mock_storage_context, mock_session):
         mock_storage_context.return_value = FakeStorageContext()
         mock_session.return_value = FakeSession(testdata.session_example)
