@@ -17,9 +17,9 @@ elifePipeline {
     //elifeVerifyJunitXml testArtifact
 
     stage 'End2end tests'
-    def stacknameEnd2end = 'elife-bot-develop--end2end'
-    elifeSwitchRevision stacknameEnd2end, commit
-    elifeEnd2EndTest()
+    elifeEnd2EndTest {
+        elifeSwitchRevision 'elife-bot-develop--end2end', commit
+    }
 
     stage 'Approval'
     elifeGitMoveToBranch commit, 'approved'
