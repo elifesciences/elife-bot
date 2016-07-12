@@ -17,6 +17,7 @@ from boto.s3.connection import S3Connection
 import provider.simpleDB as dblib
 import provider.article as articlelib
 import provider.s3lib as s3lib
+import provider.lax_provider as lax_provider
 
 """
 PubmedArticleDeposit activity
@@ -216,22 +217,10 @@ class activity_PubmedArticleDeposit(activity.activity):
         """
         Temporary fix to set the version of the article if available
         """
-        url = self.settings.lax_article_versions.replace('{article_id}', article_id)
-        response = requests.get(url, verify=self.settings.verify_ssl)
-        if response.status_code == 200:
-            high_version = 0
-            data = response.json()
-            for version in data:
-                int_version = int(version)
-                if int_version > high_version:
-                    high_version = int_version
-            return high_version
-        elif response.status_code == 404:
-            return "1"
-        else:
-            self.logger.error("Error obtaining version information from Lax" +
-                              str(response.status_code))
+        version = lax_provider.article_highest_version(article_id, self.settings, self.logger)
+        if version is None:
             return "-1"
+        return version
 
     def generate_pubmed_xml(self):
         """
