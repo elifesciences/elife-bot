@@ -5,6 +5,7 @@ from mimetypes import guess_type
 import activity
 import boto.swf
 import log
+import os
 import provider.imageresize as resizer
 import yaml
 from boto.s3.connection import S3Connection
@@ -108,8 +109,12 @@ class activity_ResizeImages(activity.activity):
             self.generate_images(formats, fp, info, cdn_path)
 
     def get_file_pointer(self, key):
-        fp = StringIO.StringIO()
+        file_name = key.name.split('/')[-1]
+        file_path = self.get_tmp_dir() + os.sep + file_name
+        fp = open(file_path, mode='wb')
         key.get_file(fp)
+        fp.close()
+        fp = open(file_path, mode='r')
         return fp
 
 
