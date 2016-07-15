@@ -109,18 +109,20 @@ class TestPublishFinalPOA(unittest.TestCase):
         # Tests for values in the XML files after rewriting
         self.xml_file_values = {}
         self.xml_file_values["elife-13833.xml"] = {
-            "./front/article-meta/volume": "5",
-            "./front/article-meta/article-id[@pub-id-type='publisher-id']": "13833",
-            "./front/article-meta/pub-date[@date-type='pub']/day": "05",
-            "./front/article-meta/pub-date[@date-type='pub']/month": "07",
-            "./front/article-meta/pub-date[@date-type='pub']/year": "2016"
+            "./front/article-meta/volume": (None, "5"),
+            "./front/article-meta/article-id[@pub-id-type='publisher-id']": (None, "13833"),
+            "./front/article-meta/pub-date[@date-type='pub']/day": (None, "05"),
+            "./front/article-meta/pub-date[@date-type='pub']/month": (None, "07"),
+            "./front/article-meta/pub-date[@date-type='pub']/year": (None, "2016"),
+            "./front/article-meta/self-uri": ("{http://www.w3.org/1999/xlink}href", "elife-13833.pdf")
             }
         self.xml_file_values["elife-14692.xml"] = {
-            "./front/article-meta/volume": "5",
-            "./front/article-meta/article-id[@pub-id-type='publisher-id']": "14692",
-            "./front/article-meta/pub-date[@date-type='pub']/day": "04",
-            "./front/article-meta/pub-date[@date-type='pub']/month": "07",
-            "./front/article-meta/pub-date[@date-type='pub']/year": "2016"
+            "./front/article-meta/volume": (None, "5"),
+            "./front/article-meta/article-id[@pub-id-type='publisher-id']": (None, "14692"),
+            "./front/article-meta/pub-date[@date-type='pub']/day": (None, "04"),
+            "./front/article-meta/pub-date[@date-type='pub']/month": (None, "07"),
+            "./front/article-meta/pub-date[@date-type='pub']/year": (None, "2016"),
+            "./front/article-meta/self-uri": ("{http://www.w3.org/1999/xlink}href", "elife-14692.pdf")
             }
 
     def tearDown(self):
@@ -156,15 +158,21 @@ class TestPublishFinalPOA(unittest.TestCase):
         root = None
         xml_file_name = xml_file.split(os.sep)[-1]
         if xml_file_name in self.xml_file_values:
+            ET.register_namespace("xlink","http://www.w3.org/1999/xlink")
             root = ET.parse(xml_file)
         if root:
-            for (xpath, value) in self.xml_file_values[xml_file_name].iteritems():
+            for (xpath, (attribute, value)) in self.xml_file_values[xml_file_name].iteritems():
                 matched_tags = root.findall(xpath)
                 if len(matched_tags) != 1:
                     return False
                 for matched_tag in matched_tags:
-                    if matched_tag.text != value:
-                        return False
+                    if attribute:
+                        if matched_tag.get(attribute) != value:
+                            return False
+                    else:
+                        if matched_tag.text != value:
+                            return False
+
         return True
 
     def fake_download_files_from_s3(self, file_list):

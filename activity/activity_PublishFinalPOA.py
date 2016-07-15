@@ -253,6 +253,12 @@ class activity_PublishFinalPOA(activity.activity):
             # set the article-id, to overwrite the v2, v3 value if present
             root = self.set_article_id_xml(doi_id, root)
 
+            # if pdf file then add self-uri tag
+            if parser.self_uri(soup) is not None and len(parser.self_uri(soup)) == 0:
+                for filename in new_filenames:
+                    if filename.endswith('.pdf'):
+                        root = self.add_self_uri_to_xml(doi_id, filename, root)
+
             # if ds.zip file is there, then add it to the xml
             poa_ds_zip_file = None
             for f in new_filenames:
@@ -397,6 +403,31 @@ class activity_PublishFinalPOA(activity.activity):
                           + "in the PDF. The zip folder contains additional supplemental files.")
 
         return supp_tag
+
+    def add_self_uri_to_xml(self, doi_id, file_name, root):
+        """
+        Add the self-uri tag to the XML for the PDF file
+        """
+
+        # Create the XML tag
+        self_uri_tag = self.self_uri_xml_element(file_name, doi_id)
+
+        # Add the tag to the XML
+        for tag in root.findall('./front/article-meta'):
+            parent_tag_index = xmlio.get_first_element_index(tag, 'permissions')
+            if not parent_tag_index:
+                if self.logger:
+                    self.logger.info('no permissions tag and no self-uri tag added: ' + str(doi_id))
+            else:
+                tag.insert(parent_tag_index, self_uri_tag)
+
+        return root
+
+    def self_uri_xml_element(self, file_name, doi_id):
+        self_uri_tag = Element("self-uri")
+        self_uri_tag.set("content-type", "pdf")
+        self_uri_tag.set("xlink:href", file_name)
+        return self_uri_tag
 
     def get_pub_date_str_from_lax(self, doi_id):
         """
