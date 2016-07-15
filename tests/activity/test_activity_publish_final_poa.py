@@ -224,10 +224,9 @@ class TestPublishFinalPOA(unittest.TestCase):
         Given an XML file and a list of files
         check the list of files contains a ds zip file that matches the xml file
         """
-        file_prefix = xml_file.split('.')[0]
-        ds_zip_file_name = file_prefix + '.zip'
+        doi_id = xml_file.split('-')[-1].split('.')[0]
         for file in file_list:
-            if file.endswith(ds_zip_file_name):
+            if str(doi_id) in file and file.endswith('ds.zip'):
                 return True
         return False
 
