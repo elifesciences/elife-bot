@@ -106,6 +106,23 @@ class TestPublishFinalPOA(unittest.TestCase):
             "unmatched_ds_file_names": ["elife_poa_e99997_ds.zip", "elife_poa_e99998_ds.zip"]
         })
 
+        # Full set of files for one article
+        self.do_activity_passes.append({
+            "outbox_file_list": ["decap_elife_poa_e15082.pdf", "elife_poa_e15082.xml",
+                                 "elife_poa_e15082_ds.zip"],
+            "done_dir_file_count": 3,
+            "approve_status": True,
+            "publish_status": True,
+            "activity_status": True,
+            "output_dir_files": ["elife-15082-poa-r1.zip"],
+            "done_xml_files": ["elife-15082.xml"],
+            "clean_from_outbox_files": ["decap_elife_poa_e15082.pdf", "elife_poa_e15082.xml",
+                                 "elife_poa_e15082_ds.zip"],
+            "malformed_ds_file_names": [],
+            "empty_ds_file_names": [],
+            "unmatched_ds_file_names": []
+        })
+
         # Tests for values in the XML files after rewriting
         self.xml_file_values = {}
         self.xml_file_values["elife-13833.xml"] = {
@@ -123,6 +140,14 @@ class TestPublishFinalPOA(unittest.TestCase):
             "./front/article-meta/pub-date[@date-type='pub']/month": (None, "07"),
             "./front/article-meta/pub-date[@date-type='pub']/year": (None, "2016"),
             "./front/article-meta/self-uri": ("{http://www.w3.org/1999/xlink}href", "elife-14692.pdf")
+            }
+        self.xml_file_values["elife-15082.xml"] = {
+            "./front/article-meta/volume": (None, "5"),
+            "./front/article-meta/article-id[@pub-id-type='publisher-id']": (None, "15082"),
+            "./front/article-meta/pub-date[@date-type='pub']/day": (None, "13"),
+            "./front/article-meta/pub-date[@date-type='pub']/month": (None, "07"),
+            "./front/article-meta/pub-date[@date-type='pub']/year": (None, "2016"),
+            "./front/article-meta/self-uri": ("{http://www.w3.org/1999/xlink}href", "elife-15082.pdf")
             }
 
     def tearDown(self):
