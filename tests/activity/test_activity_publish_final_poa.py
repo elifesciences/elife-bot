@@ -287,10 +287,14 @@ class TestPublishFinalPOA(unittest.TestCase):
             self.assertTrue(self.compare_files_in_dir(self.poa.OUTPUT_DIR,
                                                       test_data["output_dir_files"]))
             self.assertEqual(self.poa.done_xml_files, test_data["done_xml_files"])
-            self.assertEqual(self.poa.clean_from_outbox_files, test_data["clean_from_outbox_files"])
-            self.assertEqual(self.poa.malformed_ds_file_names, test_data["malformed_ds_file_names"])
-            self.assertEqual(self.poa.empty_ds_file_names, test_data["empty_ds_file_names"])
-            self.assertEqual(self.poa.unmatched_ds_file_names, test_data["unmatched_ds_file_names"])
+            self.assertEqual(sorted(self.poa.clean_from_outbox_files),
+                             sorted(test_data["clean_from_outbox_files"]))
+            self.assertEqual(sorted(self.poa.malformed_ds_file_names),
+                             sorted(test_data["malformed_ds_file_names"]))
+            self.assertEqual(sorted(self.poa.empty_ds_file_names),
+                             sorted(test_data["empty_ds_file_names"]))
+            self.assertEqual(sorted(self.poa.unmatched_ds_file_names),
+                             sorted(test_data["unmatched_ds_file_names"]))
 
             # Check XML values if XML was approved
             if test_data["done_dir_file_count"] > 0:
