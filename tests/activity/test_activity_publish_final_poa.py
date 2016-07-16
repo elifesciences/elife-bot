@@ -156,15 +156,15 @@ class TestPublishFinalPOA(unittest.TestCase):
         # Tests for XML values only for when a ds zip file was packaged as part of the test
         self.xml_file_values_when_ds_zip = {}
         self.xml_file_values_when_ds_zip["elife-13833.xml"] = {
-            "./front/article-meta/supplementary-material/ext-link":
+            "./back/sec/supplementary-material/ext-link":
                 ("{http://www.w3.org/1999/xlink}href", "elife-13833-supp.zip"),
         }
         self.xml_file_values_when_ds_zip["elife-14692.xml"] = {
-            "./front/article-meta/supplementary-material/ext-link":
+            "./back/sec/supplementary-material/ext-link":
                 ("{http://www.w3.org/1999/xlink}href", "elife-14692-supp.zip"),
         }
         self.xml_file_values_when_ds_zip["elife-15082.xml"] = {
-            "./front/article-meta/supplementary-material/ext-link":
+            "./back/sec/supplementary-material/ext-link":
                 ("{http://www.w3.org/1999/xlink}href", "elife-15082-supp.zip"),
         }
 

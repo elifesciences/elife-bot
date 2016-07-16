@@ -380,13 +380,17 @@ class activity_PublishFinalPOA(activity.activity):
         supp_tag = self.ds_zip_xml_element(file_name, doi_id)
 
         # Add the tag to the XML
-        for tag in root.findall('./front/article-meta'):
-            parent_tag_index = xmlio.get_first_element_index(tag, 'history')
-            if not parent_tag_index:
-                if self.logger:
-                    self.logger.info('no history tag and no ds_zip tag added: ' + str(doi_id))
-            else:
-                tag.insert(parent_tag_index - 1, supp_tag)
+        back_sec_tags = root.findall('./back/sec[@sec-type="supplementary-material"]')
+        if not back_sec_tags:
+            # add sec tag
+            back_tags = root.findall('./back')
+            back_tag = back_tags[0]
+            sec_tag = SubElement(back_tag, "sec")
+            sec_tag.set("sec-type", "supplementary-material")
+        else:
+            sec_tag = back_sec_tags[-1]
+
+        sec_tag.append(supp_tag)
 
         return root
 
