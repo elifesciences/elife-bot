@@ -29,7 +29,7 @@ class TestLaxProvider(unittest.TestCase):
     def test_article_publication_date_200(self, mock_lax_provider_article_versions):
         mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
         date_str = lax_provider.article_publication_date('08411', settings_mock)
-        self.assertEqual('20151231000000', date_str)
+        self.assertEqual('20151126000000', date_str)
 
     @patch('provider.lax_provider.article_versions')
     def test_article_publication_date_404(self, mock_lax_provider_article_versions):
