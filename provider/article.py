@@ -200,7 +200,7 @@ class article(object):
         Given a DOI, return a tweet URL
         """
         doi_url = self.get_doi_url(doi)
-        f = {"text": doi_url}
+        f = {"text": doi_url + " @eLife"}
         tweet_url = "http://twitter.com/intent/tweet?" + urllib.urlencode(f)
         return tweet_url
 

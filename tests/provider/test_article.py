@@ -23,6 +23,11 @@ class TestProviderArticle(unittest.TestCase):
         result = self.articleprovider.download_article_xml_from_s3('08411')
         self.assertEqual(result, False)
 
+    def test_tweet_url(self):
+        tweet_url = self.articleprovider.get_tweet_url("10.7554/eLife.08411")
+        self.assertEqual(
+            tweet_url,
+            "http://twitter.com/intent/tweet?text=http%3A%2F%2Fdx.doi.org%2F10.7554%2FeLife.08411+%40eLife")
 
 
 if __name__ == '__main__':
