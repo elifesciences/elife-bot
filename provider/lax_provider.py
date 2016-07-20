@@ -32,7 +32,9 @@ def article_highest_version(article_id, settings, logger=None):
 def article_publication_date(article_id, settings, logger=None):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:
+        date_str = None
         for version in data:
+            if int(version) == 1:
                 article_data = data[version]
                 if 'datetime_published' in article_data:
 
