@@ -11,6 +11,7 @@ from boto.s3.connection import S3Connection
 import provider.simpleDB as dblib
 import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
+import provider.lax_provider as lax_provider
 
 """
 Article data provider
@@ -152,20 +153,11 @@ class article(object):
             doi_id = str(doi_id).zfill(5)
 
         article_id = doi_id
-        version = None
         # Get the highest published version from lax
-        url = self.settings.lax_article_versions.replace('{article_id}', article_id)
         try:
-            response = requests.get(url)
-            if response.status_code == 200:
-                high_version = 0
-                data = response.json()
-                for version in data:
-                    int_version = int(version)
-                    if int_version > high_version:
-                        high_version = int_version
-                if high_version > 0:
-                    version = high_version
+            version = lax_provider.article_highest_version(article_id, self.settings)
+            if not isinstance(version, (int,long)):
+                return False
         except:
             return False
 
@@ -208,7 +200,7 @@ class article(object):
         Given a DOI, return a tweet URL
         """
         doi_url = self.get_doi_url(doi)
-        f = {"text": doi_url}
+        f = {"text": doi_url + " @eLife"}
         tweet_url = "http://twitter.com/intent/tweet?" + urllib.urlencode(f)
         return tweet_url
 

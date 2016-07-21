@@ -51,4 +51,8 @@ This is part of the eLife suite of tools. You can find more resources at [dev.el
 
 ## About eLife
 
-eLife is an open access publisher in the life sciences. We are supported by [The Wellcom Trust](http://www.wellcome.ac.uk/), [The Howard Hughes Medical Institute](http://www.hhmi.org/) and [The Max Planck Society](http://www.mpg.de/en). We publish at [elife.elifescience.org](http://elife.elifesciences.org/).
+eLife is an open access publisher in the life sciences. We are supported by [The Wellcome Trust](http://www.wellcome.ac.uk/), [The Howard Hughes Medical Institute](http://www.hhmi.org/) and [The Max Planck Society](http://www.mpg.de/en). We publish at [elife.elifescience.org](http://elife.elifesciences.org/).
+
+# Copyright & Licence
+
+Copyright 2016 eLife Sciences. Licensed under the [MIT license](LICENSE).

@@ -16,6 +16,7 @@ from boto.s3.connection import S3Connection
 
 import provider.ejp as ejplib
 import provider.simpleDB as dblib
+import provider.lax_provider as lax_provider
 
 """
 PackagePOA activity
@@ -170,36 +171,8 @@ class activity_PackagePOA(activity.activity):
         Check lax for any article published version
         If found, get the pub date and format it as a string YYYYMMDDhhmmss
         """
-        date_str = None
         article_id = str(doi_id).zfill(5)
-        url = self.settings.lax_article_versions.replace('{article_id}', article_id)
-        response = requests.get(url, verify=self.settings.verify_ssl)
-        if response.status_code == 200:
-
-            data = response.json()
-
-            for version in data:
-                article_data = data[version]
-                if 'datetime_published' in article_data:
-
-                    try:
-                        date_struct = time.strptime(article_data['datetime_published'],
-                                                    "%Y-%m-%dT%H:%M:%SZ")
-                        date_str = time.strftime('%Y%m%d%H%M%S', date_struct)
-
-                    except:
-                        if self.logger:
-                            self.logger.error("Error parsing the datetime_published from Lax: "
-                                              + str(article_data['datetime_published']))
-
-            return date_str
-
-        elif response.status_code == 404:
-            return None
-        else:
-            if self.logger:
-                self.logger.error("Error obtaining version information from Lax" + str(response.status_code))
-            return None
+        return lax_provider.article_publication_date(article_id, self.settings, self.logger)
 
     def download_poa_zip(self, document, bucket_name=None):
         """

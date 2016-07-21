@@ -82,7 +82,6 @@ def start(ENV="dev"):
     activity_names.append("SendQueuedEmail")
     activity_names.append("LensArticle")
     activity_names.append("PackagePOA")
-    activity_names.append("PublishPOA")
     activity_names.append("PublishFinalPOA")
     activity_names.append("DepositCrossref")
     activity_names.append("PubmedArticleDeposit")

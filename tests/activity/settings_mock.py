@@ -7,6 +7,7 @@ eif_bucket = 'dest_bucket'
 expanded_bucket = 'origin_bucket'
 
 publishing_buckets_prefix = ""
+production_bucket = "production_bucket"
 
 aws_access_key_id = ""
 aws_secret_access_key = ""

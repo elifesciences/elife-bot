@@ -99,7 +99,9 @@ class Shimmy:
             raise ShortRetryException("Response code was %s" % response.status_code)
         else:
             logging.error("Status code from ingest is %s", response.status_code)
-            logging.error("Article not sent for ingestion %s", passthrough)
+            logging.error("Article not sent for ingestion %s", passthrough.get("article_id"))
+            logging.error("Response body for ingest: %s", response.text)
+            logging.error("Data sent (first 500 characters): %s", str(eif)[:500])
 
 
     def slurp_eif(self, bucketname, filename):
