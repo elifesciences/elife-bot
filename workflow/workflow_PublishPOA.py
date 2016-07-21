@@ -65,6 +65,7 @@ class workflow_PublishPOA(workflow.workflow):
                     "heartbeat_timeout": 60 * 5,
                     "schedule_to_close_timeout": 60 * 5,
                     "schedule_to_start_timeout": 300,
+                    "start_to_close_timeout": 60 * 15
                 }
             ],
 
