@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 
 def logger(logFile = None, setLevel = "INFO", identity = ""):
     """
@@ -18,3 +19,6 @@ def logger(logFile = None, setLevel = "INFO", identity = ""):
     logger.addHandler(hdlr)
     logger.setLevel(eval("logging." + setLevel))
     return logger
+
+def identity(process_name):
+    return "%s_%s" % (process_name, int(random.random() * 1000))
