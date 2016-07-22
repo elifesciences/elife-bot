@@ -5,8 +5,8 @@ import json
 import random
 import importlib
 import time
-from multiprocessing import Process
 from optparse import OptionParser
+from provider import process
 
 import workflow
 
@@ -198,41 +198,6 @@ def get_workflow_object(workflow_name, settings, logger, conn, token, decision, 
     workflow_object = f(settings, logger, conn, token, decision, maximum_page_size)
     return workflow_object
 
-def start_single_thread(ENV):
-    """
-    Start in single process / threaded mode, but
-    return a pool resource of None to indicate it
-    is running in a single thread
-    """
-    print 'starting single thread'
-    decide(ENV)
-    return None
-
-def start_multiple_thread(ENV):
-    """
-    Start multiple processes using a manual pool
-    """
-    pool = []
-    for num in range(forks):
-        p = Process(target=decide, args=(ENV,))
-        p.start()
-        pool.append(p)
-        print 'started decider thread'
-        # Sleep briefly so polling connections do not happen at once
-        time.sleep(0.5)
-    return pool
-
-def monitor_KeyboardInterrupt(pool=None):
-    # Monitor for keyboard interrupt ctrl-C
-    try:
-        time.sleep(10)
-    except KeyboardInterrupt:
-        print 'caught KeyboardInterrupt, terminating threads'
-        if pool is not None:
-            for p in pool:
-                p.terminate()
-        return False
-    return True
 
 if __name__ == "__main__":
 
@@ -243,20 +208,7 @@ if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-e", "--env", default="dev", action="store", type="string",
                       dest="env", help="set the environment to run, either dev or live")
-    parser.add_option("-f", "--forks", default=1, action="store", type="int",
-                      dest="forks", help="specify the number of forks to start")
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
-    if options.forks:
-        forks = options.forks
-
-    if forks and forks > 1:
-        pool = start_multiple_thread(ENV)
-    else:
-        pool = start_single_thread(ENV)
-
-    # Monitor for keyboard interrupt ctrl-C
-    loop = True
-    while loop:
-        loop = monitor_KeyboardInterrupt(pool)
+    process.monitor_interrupt(lambda: decide(ENV))

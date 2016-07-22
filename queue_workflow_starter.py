@@ -6,7 +6,7 @@ import settings as settings_lib
 from optparse import OptionParser
 import log
 import boto.sqs
-from multiprocessing import Pool
+from provider import process
 import json
 import importlib
 
@@ -102,4 +102,4 @@ workflow_data_processors = {
 }
 
 if __name__ == "__main__":
-    main()
+    process.monitor_interrupt(main)
