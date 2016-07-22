@@ -22,7 +22,7 @@ Amazon SQS worker
 """
 
 
-def work(ENV="dev"):
+def work(ENV, flag):
     # Specify run environment settings
     settings = settings_lib.get_settings(ENV)
 
@@ -44,7 +44,7 @@ def work(ENV="dev"):
 
     # Poll for an activity task indefinitely
     if queue is not None:
-        while True:
+        while flag.green():
 
             logger.info('reading message')
             queue_message = queue.read(30)
@@ -83,6 +83,8 @@ def work(ENV="dev"):
                     pass
             time.sleep(10)
 
+        logger.info("graceful shutdown")
+
     else:
         logger.error('error obtaining queue')
 
@@ -119,4 +121,4 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
-    process.monitor_interrupt(lambda: work(ENV))
+    process.monitor_interrupt(lambda flag: work(ENV, flag))
