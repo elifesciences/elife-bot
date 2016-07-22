@@ -14,7 +14,7 @@ import workflow
 Amazon SWF decider
 """
 
-def decide(ENV="dev"):
+def decide(ENV, flag):
     # Specify run environment settings
     settings = settingsLib.get_settings(ENV)
 
@@ -33,7 +33,7 @@ def decide(ENV="dev"):
     token = None
 
     # Poll for a decision task
-    while True:
+    while flag.green():
         if token is None:
             logger.info('polling for decision...')
 
@@ -86,6 +86,8 @@ def decide(ENV="dev"):
 
         # Reset and loop
         token = None
+
+    logger.info("graceful shutdown")
 
 def get_all_paged_events(decision, conn, domain, task_list, identity, maximum_page_size):
     """
@@ -211,4 +213,4 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
-    process.monitor_interrupt(lambda: decide(ENV))
+    process.monitor_interrupt(lambda flag: decide(ENV, flag))
