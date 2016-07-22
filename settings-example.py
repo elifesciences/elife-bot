@@ -75,10 +75,6 @@ class exp():
     simpledb_region = "eu-west-1"
     simpledb_domain_postfix = "_dev"
 
-    # Converter settings
-    converter_url = ""
-    converter_token = "abcd"
-
     # SES settings
     # email needs to be verified by AWS
     ses_region = "eu-west-1"
@@ -199,10 +195,6 @@ class dev():
     # SimpleDB settings
     simpledb_region = "us-east-1"
     simpledb_domain_postfix = "_dev"
-
-    # Converter settings
-    converter_url = ""
-    converter_token = "abcd"
 
     # SES settings
     # email needs to be verified by AWS
@@ -325,10 +317,6 @@ class live():
     # SWF queue settings
     domain = "Publish"
     default_task_list = "DefaultTaskList"
-
-    # Converter settings
-    converter_url = ""
-    converter_token = "abcd"
 
     # SimpleDB settings
     simpledb_region = "us-east-1"
