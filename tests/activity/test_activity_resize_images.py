@@ -1,4 +1,7 @@
+import pkgutil
+import sys
 import unittest
+import pytest
 from activity.activity_ResizeImages import activity_ResizeImages
 import settings_mock
 from mock import mock, patch
@@ -9,9 +12,10 @@ import classes_mock
 import shutil
 import unicodedata
 from PIL import Image
-import settings as settingsLib
 from boto.s3.connection import S3Connection
-settings = settingsLib.get_settings()
+if pkgutil.find_loader('settings'):
+    import settings as settingsLib
+    settings = settingsLib.get_settings()
 
 
 class TestResizeImages(unittest.TestCase):
@@ -59,6 +63,7 @@ class TestResizeImages(unittest.TestCase):
                     real_width, real_height = self.get_image_dimensions(fname)
                     self.assertEqual(width, real_width)
 
+    @pytest.mark.skipif('settings' not in sys.modules, reason='settings.py config not available to run the test on a real S3 bucket')
     def test_get_file_pointer_gives_a_local_pointer_to_a_full_copy_of_the_file(self):
         key = self.sample_bucket_key_for_a_tif_file()
         fp = self.resizeimages.get_file_pointer(key)
@@ -97,10 +102,10 @@ class TestResizeImages(unittest.TestCase):
 
     def sample_bucket_key_for_a_tif_file(self):
         conn = S3Connection(settings.aws_access_key_id,
-                        settings.aws_secret_access_key,
-                        host=settings.s3_hostname)
+                            settings.aws_secret_access_key,
+                            host=settings.s3_hostname)
         bucket = conn.get_bucket(settings.publishing_buckets_prefix +
-                                      settings.expanded_bucket)
+                                 settings.expanded_bucket)
         return bucket.get_key('00003.1/4676d5c8-8949-40bf-b055-b51fdffafd0a/elife-00003-fig5-v1.tif')
 
 
