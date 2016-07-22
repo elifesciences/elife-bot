@@ -109,7 +109,7 @@ class activity_ResizeImages(activity.activity):
             self.generate_images(formats, fp, info, cdn_path)
 
     def get_file_pointer(self, key):
-        file_name = key.name.split('/')[-1]
+        file_name = key.name.replace('/', '-')
         file_path = self.get_tmp_dir() + os.sep + file_name
         fp = open(file_path, mode='wb')
         key.get_file(fp)
