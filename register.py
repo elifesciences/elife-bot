@@ -44,7 +44,6 @@ def start(ENV="dev"):
     workflow_names.append("PublishFullArticleZip")
     workflow_names.append("PublishPerfectArticle")
     workflow_names.append("PostPerfectPublication")
-    workflow_names.append("ProcessXMLArticle")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries
