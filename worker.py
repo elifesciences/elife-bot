@@ -19,15 +19,13 @@ os.sys.path.insert(0, parentdir)
 Amazon SWF worker
 """
 
-def work(ENV="dev"):
+def work(ENV, flag):
     # Specify run environment settings
     settings = settingsLib.get_settings(ENV)
 
     # Log
     identity = "worker_%s" % int(random.random() * 1000)
-    logFile = "worker.log"
-    #logFile = None
-    logger = log.logger(logFile, settings.setLevel, identity)
+    logger = log.logger("worker.log", settings.setLevel, identity)
 
     # Simple connect
     conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
@@ -35,7 +33,7 @@ def work(ENV="dev"):
     token = None
 
     # Poll for an activity task indefinitely
-    while True:
+    while flag.green():
         if token is None:
             logger.info('polling for activity...')
             activity_task = conn.poll_for_activity_task(settings.domain,
@@ -118,6 +116,8 @@ def work(ENV="dev"):
 
         # Reset and loop
         token = None
+
+    logger.info("graceful shutdown")
 
 def get_input(activity_task):
     """
@@ -240,5 +240,5 @@ if __name__ == "__main__":
     if options.env:
         ENV = options.env
         
-    process.monitor_interrupt(lambda: work(ENV))
+    process.monitor_interrupt(lambda flag: work(ENV, flag))
 

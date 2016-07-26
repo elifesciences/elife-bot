@@ -18,7 +18,7 @@ class Shimmy:
     def __init__(self, settings):
         self._settings = settings
 
-    def listen(self):
+    def listen(self, flag):
         logging.info("started")
         conn = boto.sqs.connect_to_region(self._settings.sqs_region,
                                           aws_access_key_id=self._settings.aws_access_key_id,
@@ -26,7 +26,7 @@ class Shimmy:
         input_queue = conn.get_queue(self._settings.website_ingest_queue)
         output_queue = conn.get_queue(self._settings.workflow_starter_queue)
         if input_queue is not None:
-            while True:
+            while flag.green():
 
                 logging.debug('reading queue')
                 queue_message = input_queue.read(visibility_timeout=60, wait_time_seconds=20)
@@ -39,6 +39,8 @@ class Shimmy:
                     except ShortRetryException as e:
                         logging.info('short retry: %s because of %s', queue_message.id, e)
                         queue_message.change_visibility(visibility_timeout=10)
+
+            logger.info("graceful shutdown")
 
         else:
             logging.error("Could not obtain queue, exiting")
@@ -130,4 +132,4 @@ if __name__ == "__main__":
     settings_lib = __import__('settings')
     settings = settings_lib.get_settings(ENV)
     shimmy = Shimmy(settings)
-    process.monitor_interrupt(lambda: shimmy.listen())
+    process.monitor_interrupt(lambda flag: shimmy.listen(flag))
