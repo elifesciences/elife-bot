@@ -49,8 +49,6 @@ class activity_PostEIFBridge(activity.activity):
             status = data['status']
 
             update_date = data['update_date']
-            if update_date is None:
-                update_date = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
             run = data['run']
             eif_filename = data['eif_filename']

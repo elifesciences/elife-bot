@@ -48,7 +48,7 @@ PreparePostEIF_message_no_update_date = {'eif_filename': '00353.1/1ee54f9a-cb28-
 PreparePostEIF_json_output_return_example_no_update_date = json.loads(open("tests/test_data/PreparePostEIF_json_return_no_update_date.json", "r").read())
 
 
-def PostEIFBridge_data(published):
+def PostEIFBridge_data(published, update_date):
         return {
                 'eif_filename': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json',
                 'eif_bucket':  'jen-elife-publishing-eif',
@@ -59,11 +59,11 @@ def PostEIFBridge_data(published):
                 'published': published,
                 'expanded_folder': u'00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251',
                 'status': u'vor',
-                'update_date': u'2012-12-13T00:00:00Z'
+                'update_date': update_date
             }
 PostEIFBridge_test_dir = "fake_sqs_queue_container"
 PostEIFBridge_message = {'workflow_name': 'PostPerfectPublication', 'workflow_data': {'status': u'vor', 'update_date': u'2012-12-13T00:00:00Z', 'run': u'cf9c7e86-7355-4bb4-b48e-0bc284221251', 'expanded_folder': u'00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251', 'version': u'1', 'eif_location': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json', 'article_id': u'00353'}}
-
+PostEIFBridge_message_no_update_date = {'workflow_name': 'PostPerfectPublication', 'workflow_data': {'status': u'vor', 'update_date': None, 'run': u'cf9c7e86-7355-4bb4-b48e-0bc284221251', 'expanded_folder': u'00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251', 'version': u'1', 'eif_location': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json', 'article_id': u'00353'}}
 
 # ExpandArticle
 
