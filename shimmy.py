@@ -8,6 +8,7 @@ from requests.auth import HTTPBasicAuth
 from provider import process
 import logging
 import json
+import arrow
 
 logging.basicConfig(filename='shimmy.log', level=logging.INFO)
 
@@ -75,6 +76,7 @@ class Shimmy:
 
         if response.status_code == 200:
 
+            update_date = self.extract_update_date(passthrough, response.json())
             ingest_publish = response.json().get('publish')
             workflow_data = {
                 'eif_filename': filename,
@@ -85,7 +87,7 @@ class Shimmy:
                 'article_path': passthrough.get("article_path"),
                 'expanded_folder': passthrough.get("expanded_folder"),
                 'status': passthrough.get("status"),
-                'update_date': passthrough.get("update_date"),
+                'update_date': update_date,
                 'published': ingest_publish
             }
             response_message = {
@@ -104,6 +106,23 @@ class Shimmy:
             logging.error("Response body for ingest: %s", response.text)
             logging.error("Data sent (first 500 characters): %s", str(eif)[:500])
 
+    def extract_update_date(self, passthrough_json, response_json):
+        """
+        Given passthrough data and response data, both in json format
+        choose which should provide the update_date or update value
+        """
+        update_date = None
+        if passthrough_json.get("update_date"):
+            update_date = passthrough_json.get("update_date")
+        else:
+            update = response_json.get('update')
+            if update:
+                try:
+                    arrow_date = arrow.get(update, "YYYY-MM-DDTHH:mm:ssZZ")
+                    update_date = arrow_date.to('utc').format("YYYY-MM-DDTHH:mm:ss") + "Z"
+                except ParserError:
+                    pass
+        return update_date
 
     def slurp_eif(self, bucketname, filename):
 

@@ -7,6 +7,7 @@ import activity
 #from .activity import classes_mock
 from mock import Mock, patch
 from pprint import pprint
+from ddt import ddt, data, unpack
 
 class FakeResponse:
     def __init__(self, status_code):
@@ -17,6 +18,7 @@ class FakeResponse:
     def json(self):
         return {}
 
+@ddt
 class tests_Shimmy(unittest.TestCase):
     def setUp(self):
         settings = Mock()
@@ -51,6 +53,24 @@ class tests_Shimmy(unittest.TestCase):
         assert(error.called)
         self.queue.write.assert_not_called()
 
+    @data(({}, {}))
+    @unpack
+    def test_empty_empty_extract_update_date(self, passthrough_json, response_json):
+        update_date = self.shimmy.extract_update_date(passthrough_json, response_json)
+        self.assertEqual(update_date, None)
+
+    @data(({'update_date': u'2012-12-13T00:00:00Z'}, {}))
+    @unpack
+    def test_passthrough_extract_update_date(self, passthrough_json, response_json):
+        update_date = self.shimmy.extract_update_date(passthrough_json, response_json)
+        self.assertEqual(update_date, '2012-12-13T00:00:00Z')
+
+    @data(({}, {'update':'2012-12-13T00:00:00+00:00'}))
+    @unpack
+    def test_response_extract_update_date(self, passthrough_json, response_json):
+        update_date = self.shimmy.extract_update_date(passthrough_json, response_json)
+        self.assertEqual(update_date, '2012-12-13T00:00:00Z')
+
     def _post_some_eif(self):
         return lambda: self.shimmy.post_eif(
             '{"field":"value"}',
@@ -59,3 +79,5 @@ class tests_Shimmy(unittest.TestCase):
             { },
             self.queue
         )
+        
+
