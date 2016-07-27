@@ -21,34 +21,32 @@ class tests_Shimmy(unittest.TestCase):
     def setUp(self):
         settings = Mock()
         settings.drupal_EIF_endpoint = 'http://example.com/article.json'
-        self.shimmy = Shimmy(settings)
+        self.logger = Mock()
+        self.shimmy = Shimmy(settings, self.logger)
         self.queue = Mock()
 
-    @patch.object(logging, 'error')
     @patch.object(requests, 'post')
-    def test_200_response_code(self, post, error):
+    def test_200_response_code(self, post):
         post.return_value = FakeResponse(200)
         attempt = self._post_some_eif()
         attempt()
-        error.assert_not_called()
+        self.logger.error.assert_not_called()
         assert self.queue.write.called
 
-    @patch.object(logging, 'error')
     @patch.object(requests, 'post')
-    def test_429_response_code(self, post, error):
+    def test_429_response_code(self, post):
         post.return_value = FakeResponse(429)
         attempt = self._post_some_eif()
         self.assertRaises(shimmy.ShortRetryException, attempt)
-        error.assert_not_called()
+        self.logger.error.assert_not_called()
         self.queue.write.assert_not_called()
 
-    @patch.object(logging, 'error')
     @patch.object(requests, 'post')
-    def test_500_response_code(self, post, error):
+    def test_500_response_code(self, post):
         post.return_value = FakeResponse(500)
         attempt = self._post_some_eif()
         attempt()
-        assert(error.called)
+        self.logger.error.assert_called_with('Data sent (first 500 characters): %s', '{"field":"value"}')
         self.queue.write.assert_not_called()
 
     def _post_some_eif(self):
