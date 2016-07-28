@@ -28,7 +28,7 @@ settings = None
 logger = None
 
 
-def main():
+def main(flag):
     global settings
     global env
     parser = OptionParser()
@@ -48,7 +48,7 @@ def main():
     # Simple connect
     queue = get_queue()
 
-    while True:
+    while flag.green():
         messages = queue.get_messages(1, visibility_timeout=60,
                                       wait_time_seconds=20)
         if messages:
@@ -56,6 +56,8 @@ def main():
             process_message(messages[0])
         else:
             logger.debug("No messages received")
+
+    logger.info("graceful shutdown")
 
 def get_queue():
     conn = boto.sqs.connect_to_region(settings.sqs_region,

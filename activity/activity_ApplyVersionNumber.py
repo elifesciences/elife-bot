@@ -56,7 +56,7 @@ class activity_ApplyVersionNumber(activity.activity):
                 self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
             # Do not rename files if a version number is in the file_name
-            m = re.search(ur'-v([0-9]*?)[\.|-]', info.file_name)
+            m = self.version_in_file_name(info.file_name)
 
             if m is not None:
                 # Nothing to do
@@ -82,6 +82,9 @@ class activity_ApplyVersionNumber(activity.activity):
             return False
 
         return True
+
+    def version_in_file_name(self, file_name):
+        return re.search(ur'-v([0-9]*?)[\.|-]', file_name)
 
     def rename_article_s3_objects(self, bucket_folder_name, version):
         """
