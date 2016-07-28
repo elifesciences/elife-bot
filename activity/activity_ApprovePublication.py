@@ -92,6 +92,7 @@ class activity_ApprovePublication(activity.activity):
                                     " message:" + str(e.message))
             return False
 
+
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 "Approve Publication", "end",
                                 "Finished approving article" + article_id +

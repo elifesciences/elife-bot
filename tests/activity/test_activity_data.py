@@ -1,5 +1,6 @@
 import json
 import classes_mock
+import base64
 
 json_output_parameter_example_string = open("tests/test_data/ConvertJATS_json_output_for_add_update_date_to_json.json", "r").read()
 json_output_parameter_example = json.loads(open("tests/test_data/ConvertJATS_json_output_for_add_update_date_to_json.json", "r").read())
@@ -64,6 +65,29 @@ def PostEIFBridge_data(published, update_date):
 PostEIFBridge_test_dir = "fake_sqs_queue_container"
 PostEIFBridge_message = {'workflow_name': 'PostPerfectPublication', 'workflow_data': {'status': u'vor', 'update_date': u'2012-12-13T00:00:00Z', 'run': u'cf9c7e86-7355-4bb4-b48e-0bc284221251', 'expanded_folder': u'00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251', 'version': u'1', 'eif_location': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json', 'article_id': u'00353'}}
 PostEIFBridge_message_no_update_date = {'workflow_name': 'PostPerfectPublication', 'workflow_data': {'status': u'vor', 'update_date': None, 'run': u'cf9c7e86-7355-4bb4-b48e-0bc284221251', 'expanded_folder': u'00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251', 'version': u'1', 'eif_location': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json', 'article_id': u'00353'}}
+
+def ApprovePublication_publication_data(update_date):
+            return {
+                "workflow_name": "PostPerfectPublication",
+                "workflow_data": {
+                            "status": "vor",
+                            "update_date": update_date,
+                            "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
+                            "expanded_folder": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251",
+                            "version": "1",
+                            "eif_location": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json",
+                            "article_id": "00353"}
+                }
+
+def ApprovePublication_data(update_date):
+        return {
+            "article_id": "00353",
+            "version": "1",
+            "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
+            "publication_data": base64.encodestring(json.dumps(ApprovePublication_publication_data(update_date)))
+            }
+ApprovePublication_test_dir = "fake_sqs_queue_container"
+ApprovePublication_json_output_return_example = ApprovePublication_publication_data(None)
 
 # ExpandArticle
 
