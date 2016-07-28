@@ -76,8 +76,10 @@ class MyTestCase(unittest.TestCase):
         #then
         result_file = open(u'tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml', 'r')
         result_file_content = result_file.read()
+        result_file.close()
         expected_file = open(u'tests/files_source/ApplyVersionNumber/elife-15224-v1-rewritten.xml', 'r')
         expected_file_content = expected_file.read()
+        expected_file.close()
         self.assertEqual(result_file_content, expected_file_content)
 
         helpers.delete_folder('tests/files_dest_ApplyVersionNumber', True)
