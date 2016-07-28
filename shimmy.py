@@ -6,9 +6,9 @@ from boto.s3.connection import S3Connection
 import requests
 from requests.auth import HTTPBasicAuth
 from provider import process
+from provider import eif
 import log
 import json
-import arrow
 
 
 identity = log.identity('shimmy')
@@ -112,22 +112,7 @@ class Shimmy:
             self.logger.error("Data sent (first 500 characters): %s", str(eif)[:500])
 
     def extract_update_date(self, passthrough_json, response_json):
-        """
-        Given passthrough data and response data, both in json format
-        choose which should provide the update_date or update value
-        """
-        update_date = None
-        if passthrough_json.get("update_date"):
-            update_date = passthrough_json.get("update_date")
-        else:
-            update = response_json.get('update')
-            if update:
-                try:
-                    arrow_date = arrow.get(update, "YYYY-MM-DDTHH:mm:ssZZ")
-                    update_date = arrow_date.to('utc').format("YYYY-MM-DDTHH:mm:ss") + "Z"
-                except ParserError:
-                    pass
-        return update_date
+        return eif.extract_update_date(passthrough_json, response_json)
 
     def slurp_eif(self, bucketname, filename):
 

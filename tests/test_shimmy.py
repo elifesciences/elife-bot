@@ -51,23 +51,17 @@ class tests_Shimmy(unittest.TestCase):
         self.logger.error.assert_called_with('Data sent (first 500 characters): %s', '{"field":"value"}')
         self.queue.write.assert_not_called()
 
-    @data(({}, {}))
+    @data(
+        ({}, {}, None),
+        ({'update_date': u'2012-12-13T00:00:00Z'}, {}, '2012-12-13T00:00:00Z'),
+        ({}, {'update':'2012-12-13T00:00:00+00:00'}, '2012-12-13T00:00:00Z'),
+        ({}, {'update':'not_a_date'}, None),
+    )
     @unpack
-    def test_empty_empty_extract_update_date(self, passthrough_json, response_json):
-        update_date = self.shimmy.extract_update_date(passthrough_json, response_json)
-        self.assertEqual(update_date, None)
+    def test_extract_update_date(self, passthrough_json, response_json, update_date):
+        update_date_extracted = self.shimmy.extract_update_date(passthrough_json, response_json)
+        self.assertEqual(update_date, update_date_extracted)
 
-    @data(({'update_date': u'2012-12-13T00:00:00Z'}, {}))
-    @unpack
-    def test_passthrough_extract_update_date(self, passthrough_json, response_json):
-        update_date = self.shimmy.extract_update_date(passthrough_json, response_json)
-        self.assertEqual(update_date, '2012-12-13T00:00:00Z')
-
-    @data(({}, {'update':'2012-12-13T00:00:00+00:00'}))
-    @unpack
-    def test_response_extract_update_date(self, passthrough_json, response_json):
-        update_date = self.shimmy.extract_update_date(passthrough_json, response_json)
-        self.assertEqual(update_date, '2012-12-13T00:00:00Z')
 
     def _post_some_eif(self):
         return lambda: self.shimmy.post_eif(
