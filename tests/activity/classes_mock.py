@@ -74,13 +74,27 @@ class FakeSQSQueue:
         return self.dir.read(dir_name)
 
 
-def fake_monitor(self, settings, item_identifier, name, value, property_type, version=0):
-        settings = settings
-        item_identifier = item_identifier
-        name = name
-        value = value
-        property_type = property_type
-        version = version
+class FakeMonitorProperty:
+
+    def set(self, settings, item_identifier, name, value, property_type, version=0):
+
+        self.monitor_data = {'item_identifier': item_identifier,
+                             'name': name,
+                             'value': value,
+                             'property_type': property_type,
+                             'version': version }
+
+class FakeEmitMonitorEvent:
+
+    def set(self, settings, item_identifier, version, run, event_type, status, message):
+
+        self.monitor_data = {'item_identifier': item_identifier,
+                             'version': version,
+                             'run': run,
+                             'event_type': event_type,
+                             'status': status,
+                             'message': message }
+
 
 class FakeStorageProviderConnection:
     def get_connection(self, aws_access_key_id, aws_secret_access_key):
@@ -161,6 +175,18 @@ class FakeBucket:
 
     def get_key(self, key): #key will be u'00353.1/7d5fa403-cba9-486c-8273-3078a98a0b98/elife-00353-fig1-v1.tif' for example
         return key
+
+class FakeLogger:
+    def __init__(self):
+        self.logdebug = "First logger debug"
+        self.loginfo = "First logger info"
+        self.logexception = "First logger exception"
+    def debug(self, msg):
+        self.logdebug =  msg
+    def info(self, msg):
+        self.loginfo = msg
+    def exception(self, msg, *args, **kwargs):
+        self.logexception = msg
 
 
 
