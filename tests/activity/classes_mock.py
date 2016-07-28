@@ -77,22 +77,23 @@ class FakeSQSQueue:
 class FakeMonitorProperty:
 
     def set(self, settings, item_identifier, name, value, property_type, version=0):
-        self.settings = settings
-        self.item_identifier = item_identifier
-        self.name = name
-        self.value = value
-        self.property_type = property_type
-        self.version = version
+
+        self.monitor_data = {'item_identifier': item_identifier,
+                             'name': name,
+                             'value': value,
+                             'property_type': property_type,
+                             'version': version }
 
 class FakeEmitMonitorEvent:
+
     def set(self, settings, item_identifier, version, run, event_type, status, message):
-        self.settings = settings
-        self.item_identifier = item_identifier
-        self.version = version
-        self.run = run
-        self.event_type = event_type
-        self.status = status
-        self.message = message
+
+        self.monitor_data = {'item_identifier': item_identifier,
+                             'version': version,
+                             'run': run,
+                             'event_type': event_type,
+                             'status': status,
+                             'message': message }
 
 
 class FakeStorageProviderConnection:

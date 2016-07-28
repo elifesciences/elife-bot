@@ -9,7 +9,6 @@ from classes_mock import FakeSQSQueue
 from classes_mock import FakeMonitorProperty
 from classes_mock import FakeLogger
 from classes_mock import FakeEmitMonitorEvent
-import classes_mock
 from testfixtures import TempDirectory
 import json
 
@@ -47,18 +46,10 @@ class tests_PostEIFBridge(unittest.TestCase):
         self.assertEqual(True, success)
 
         self.assertEqual(json.dumps(data.PostEIFBridge_message), data_written_in_test_queue)
-        self.assertEqual(fake_monitor_property.item_identifier, '00353')
-        self.assertEqual(fake_monitor_property.name, 'publication-status')
-        self.assertEqual(fake_monitor_property.value, 'published')
-        self.assertEqual(fake_monitor_property.property_type, 'text')
-        self.assertEqual(fake_monitor_property.version, '1')
+        self.assertDictEqual(fake_monitor_property.monitor_data, self.monitor_property_expected_data("published"))
 
-        self.assertEqual(fake_monitor_event.item_identifier, '00353')
-        self.assertEqual(fake_monitor_event.version, '1')
-        self.assertEqual(fake_monitor_event.run, 'cf9c7e86-7355-4bb4-b48e-0bc284221251')
-        self.assertEqual(fake_monitor_event.event_type, 'Post EIF Bridge')
-        self.assertEqual(fake_monitor_event.status, 'end')
-        self.assertEqual(fake_monitor_event.message, "Finished Post EIF Bridge 00353")
+        self.assertDictEqual(fake_monitor_event.monitor_data,
+                         self.monitor_event_expected_data("end", "Finished Post EIF Bridge 00353"))
 
     @patch.object(activity_PostEIFBridge, 'emit_monitor_event')
     @patch.object(activity_PostEIFBridge, 'set_monitor_property')
@@ -76,18 +67,10 @@ class tests_PostEIFBridge(unittest.TestCase):
         #Then
         self.assertEqual(True, success)
 
-        self.assertEqual(fake_monitor_property.item_identifier, '00353')
-        self.assertEqual(fake_monitor_property.name, 'publication-status')
-        self.assertEqual(fake_monitor_property.value, 'ready to publish')
-        self.assertEqual(fake_monitor_property.property_type, 'text')
-        self.assertEqual(fake_monitor_property.version, '1')
+        self.assertDictEqual(fake_monitor_property.monitor_data, self.monitor_property_expected_data("ready to publish"))
 
-        self.assertEqual(fake_monitor_event.item_identifier, '00353')
-        self.assertEqual(fake_monitor_event.version, '1')
-        self.assertEqual(fake_monitor_event.run, 'cf9c7e86-7355-4bb4-b48e-0bc284221251')
-        self.assertEqual(fake_monitor_event.event_type, 'Post EIF Bridge')
-        self.assertEqual(fake_monitor_event.status, 'end')
-        self.assertEqual(fake_monitor_event.message, "Finished Post EIF Bridge 00353")
+        self.assertDictEqual(fake_monitor_event.monitor_data,
+                         self.monitor_event_expected_data("end", "Finished Post EIF Bridge 00353"))
 
     @patch.object(activity_PostEIFBridge, 'emit_monitor_event')
     def test_activity_exception(self, mock_emit_monitor_event):
@@ -105,14 +88,27 @@ class tests_PostEIFBridge(unittest.TestCase):
         self.assertRaises(Exception)
         self.assertEqual("Exception after submitting article EIF", fake_logger.logexception)
 
-        self.assertEqual(fake_monitor_event.item_identifier, '00353')
-        self.assertEqual(fake_monitor_event.version, '1')
-        self.assertEqual(fake_monitor_event.run, 'cf9c7e86-7355-4bb4-b48e-0bc284221251')
-        self.assertEqual(fake_monitor_event.event_type, 'Post EIF Bridge')
-        self.assertEqual(fake_monitor_event.status, 'error')
-        self.assertEqual(fake_monitor_event.message, "Error carrying over information after EIF For article 00353 message:'NoneType' object has no attribute 'get_queue'")
+        self.assertDictEqual(fake_monitor_event.monitor_data,
+                         self.monitor_event_expected_data("error","Error carrying over information after EIF For "
+                                                                  "article 00353 message:'NoneType' object has no "
+                                                                  "attribute 'get_queue'"))
 
         self.assertEqual(False, success)
+
+    def monitor_property_expected_data(self, value):
+        return {'item_identifier': '00353',
+                'name': 'publication-status',
+                'value': value,
+                'property_type': 'text',
+                'version': '1'}
+
+    def monitor_event_expected_data(self, status, message):
+        return {'item_identifier': '00353',
+                'version': '1',
+                'run': 'cf9c7e86-7355-4bb4-b48e-0bc284221251',
+                'event_type': 'Post EIF Bridge',
+                'status': status,
+                'message': message }
 
 if __name__ == '__main__':
     unittest.main()
