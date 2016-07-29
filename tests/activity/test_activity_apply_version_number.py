@@ -74,10 +74,10 @@ class MyTestCase(unittest.TestCase):
         self.applyversionnumber.rewrite_xml_file(u'elife-15224-v1.xml', example_file_name_map)
 
         #then
-        result_file = open(u'tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml', 'r')
-        result_file_content = result_file.read()
-        expected_file = open(u'tests/files_source/ApplyVersionNumber/elife-15224-v1-rewritten.xml', 'r')
-        expected_file_content = expected_file.read()
+        with open(u'tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml', 'r') as result_file:
+            result_file_content = result_file.read()
+        with open(u'tests/files_source/ApplyVersionNumber/elife-15224-v1-rewritten.xml', 'r') as expected_file:
+            expected_file_content = expected_file.read()
         self.assertEqual(result_file_content, expected_file_content)
 
         helpers.delete_folder('tests/files_dest_ApplyVersionNumber', True)
