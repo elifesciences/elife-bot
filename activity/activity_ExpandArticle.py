@@ -62,7 +62,9 @@ class activity_ExpandArticle(activity.activity):
         version = None
         status = None
         # zip name contains version information for previously archived zip files
-        version = self.get_version_from_zip_filename(filename_last_element)
+        article_structure = ArticleInfo(filename_last_element)
+
+        version = article_structure.get_version_from_zip_filename()
         if version is None:
             version = self.get_next_version(article_id)
         if version == '-1':
@@ -70,7 +72,7 @@ class activity_ExpandArticle(activity.activity):
                               filename_last_element)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE  # version could not be determined, will retry
 
-        article_structure = ArticleInfo(filename_last_element)
+
         status = article_structure.status
         if status is None or (status != 'vor' and status != 'poa'):
             self.logger.error("Name '%s' did not match expected pattern for status" %
@@ -86,7 +88,7 @@ class activity_ExpandArticle(activity.activity):
         session.store_value(self.get_workflowId(), 'version', version)
 
         # Extract and store updated date if supplied
-        update_date = self.get_update_date_from_zip_filename(filename_last_element)
+        update_date = article_structure.get_update_date_from_zip_filename()
         if update_date:
             session.store_value(self.get_workflowId(), 'update_date', update_date)
 
@@ -152,22 +154,3 @@ class activity_ExpandArticle(activity.activity):
         if version is None:
             return "-1"
         return version
-
-    def get_update_date_from_zip_filename(self, filename):
-        m = re.search(ur'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
-        if m is None:
-            return None
-        else:
-            try:
-                raw_update_date = m.group(1)
-                updated_date = datetime.datetime.strptime(raw_update_date, "%Y%m%d%H%M%S")
-                return updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
-            except:
-                return None
-
-    def get_version_from_zip_filename(self, filename):
-        m = re.search(ur'-v([0-9]+?)[\.|-]', filename)
-        if m is None:
-            return None
-        else:
-            return m.group(1)
