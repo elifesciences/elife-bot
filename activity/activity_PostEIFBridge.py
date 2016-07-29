@@ -95,11 +95,11 @@ class activity_PostEIFBridge(activity.activity):
         except Exception as e:
             self.logger.exception("Exception after submitting article EIF")
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF Bridge", "error",
-                            "Error carrying over information after EIF For article" + article_id +
+                            "Error carrying over information after EIF For article " + article_id +
                             " message:" + str(e.message))
             return False
 
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF Bridge", "end",
-                                "Finished Post EIF Bridge" + article_id)
+                                "Finished Post EIF Bridge " + article_id)
         return True
