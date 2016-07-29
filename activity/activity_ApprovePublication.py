@@ -5,6 +5,7 @@ import os
 import requests
 import boto.sqs
 from boto.sqs.message import Message
+from provider import eif
 
 """
 ConvertJATS.py activity
@@ -66,6 +67,8 @@ class activity_ApprovePublication(activity.activity):
                                           'published', "text", version=version)
                 message = base64.decodestring(publication_data)
 
+                message = self.modify_update_date(message, r)
+
                 sqs_conn = boto.sqs.connect_to_region(
                     self.settings.sqs_region,
                     aws_access_key_id=self.settings.aws_access_key_id,
@@ -98,3 +101,25 @@ class activity_ApprovePublication(activity.activity):
                                 "Finished approving article" + article_id +
                                 " status was " + str(r.status_code))
         return True
+
+    def modify_update_date(self, message, response):
+        update_date = self.extract_update_date(
+            self.workflow_data(message),
+            response.json())
+
+        if update_date:
+            message_json = json.loads(message)
+            if ("workflow_data" in message_json and
+                "update_date" in message_json["workflow_data"]):
+                message_json["workflow_data"]["update_date"] = update_date
+                message = json.dumps(message_json)
+        return message
+
+    def workflow_data(self, message):
+        message_json = json.loads(message)
+        if "workflow_data" in message_json:
+            return message_json["workflow_data"]
+        return {}
+
+    def extract_update_date(self, passthrough_json, response_json):
+        return eif.extract_update_date(passthrough_json, response_json)

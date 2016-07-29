@@ -87,7 +87,8 @@ def ApprovePublication_data(update_date):
             "publication_data": base64.encodestring(json.dumps(ApprovePublication_publication_data(update_date)))
             }
 ApprovePublication_test_dir = "fake_sqs_queue_container"
-ApprovePublication_json_output_return_example = ApprovePublication_publication_data(None)
+def ApprovePublication_json_output_return_example(update_date):
+            return ApprovePublication_publication_data(update_date)
 
 # ExpandArticle
 
