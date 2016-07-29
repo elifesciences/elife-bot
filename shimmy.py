@@ -6,7 +6,7 @@ from boto.s3.connection import S3Connection
 import requests
 from requests.auth import HTTPBasicAuth
 from provider import process
-from provider import eif
+from provider import eif as eif_provider
 import log
 import json
 
@@ -112,7 +112,7 @@ class Shimmy:
             self.logger.error("Data sent (first 500 characters): %s", str(eif)[:500])
 
     def extract_update_date(self, passthrough_json, response_json):
-        return eif.extract_update_date(passthrough_json, response_json)
+        return eif_provider.extract_update_date(passthrough_json, response_json)
 
     def slurp_eif(self, bucketname, filename):
 
