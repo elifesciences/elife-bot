@@ -116,7 +116,7 @@ class activity_ResizeImages(activity.activity):
         fp.close()
         assert key.size == os.path.getsize(file_path), \
                 ("The file size of the local cached copy does not correspond to the original size on S3 of %s. This points to a corrupted download, check what's in %s" % (key.name, file_path))
-        fp = open(file_path, mode='r')
+        fp = open(file_path, mode='rb')
         return fp
 
 
