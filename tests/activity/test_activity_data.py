@@ -147,3 +147,16 @@ ResizeImages_data = {u'event_time': u'2016-06-14T12:32:38.084176Z', u'event_name
 
 ApplyVersionNumber_data_with_renaming = {u'event_time': u'2016-07-25T15:42:26.853733Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-15224-vor-r2.zip', u'file_etag': u'e7f639f63171c097d4761e2d2efe8dc4', u'bucket_name': u'jen-elife-production-final', u'file_size': 27992113}
 ApplyVersionNumber_data_no_renaming = {u'event_time': u'2016-07-25T16:33:59.329727Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-00353-vor-v1-20121213000000.zip', u'file_etag': u'1e17ebb1fad6c467fce9cede16bb752f', u'bucket_name': u'jen-elife-production-final', u'file_size': 1097506}
+
+#RewriteEIF
+
+RewriteEIF_data = {
+            "status": "vor",
+            "update_date": "2012-12-13T00:00:00Z",
+            "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
+            "expanded_folder": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251",
+            "version": "1",
+            "eif_location": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json",
+            "article_id": "00353"}
+RewriteEIF_json_input_string = json.dumps({})
+RewriteEIF_json_output = {"update": "2012-12-13T00:00:00Z"}
