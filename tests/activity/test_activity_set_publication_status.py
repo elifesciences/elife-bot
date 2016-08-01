@@ -5,7 +5,7 @@ from mock import mock, patch
 from ddt import ddt, data
 
 @ddt
-class MyTestCase(unittest.TestCase):
+class TestSetPublicationStatus(unittest.TestCase):
 
 
     def setUp(self):
