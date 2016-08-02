@@ -55,8 +55,6 @@ class activity_PreparePostEIF(activity.activity):
             status = session.get_value(self.get_workflowId(), 'status')
 
             update_date = session.get_value(self.get_workflowId(), 'update_date')
-            if update_date is None:
-                update_date = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
             carry_over_data = {
                 'eif_filename': eif_filename,

@@ -68,11 +68,7 @@ class activity_ConvertJATS(activity.activity):
             json_output = jats_scraper.scrape(xml, article_version=version)
 
             # Add update date if it is in the session
-            update_date = None
-            try:
-                update_date = session.get_value(self.get_workflowId(), 'update_date')
-            except:
-                update_date = None
+            update_date = session.get_value(self.get_workflowId(), 'update_date')
             if update_date:
                 json_output = self.add_update_date_to_json(json_output, update_date, xml_filename)
 

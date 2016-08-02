@@ -13,6 +13,8 @@ aws_access_key_id = ""
 aws_secret_access_key = ""
 
 workflow_starter_queue = ""
+website_ingest_queue = ""
+event_monitor_queue = ""
 sqs_region = ""
 
 
@@ -24,6 +26,11 @@ poa_packaging_bucket = 'poa_packaging_bucket'
 poa_bucket = 'poa_bucket'
 ses_poa_sender_email = ""
 ses_poa_recipient_email = ""
+
+drupal_EIF_endpoint = "https://website/api/article.json"
+drupal_approve_endpoint = "https://website/api/publish/"
+drupal_update_user = ""
+drupal_update_pass = ""
 
 lax_article_versions = 'https://test/eLife.{article_id}/version/'
 verify_ssl = False

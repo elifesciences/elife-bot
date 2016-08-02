@@ -37,7 +37,7 @@ class tests_PostEIFBridge(unittest.TestCase):
         mock_emit_monitor_event.side_effect = fake_monitor_event.set
 
         #When
-        success = self.activity_PostEIFBridge.do_activity(data.PostEIFBridge_data(True))
+        success = self.activity_PostEIFBridge.do_activity(data.PostEIFBridge_data(True, u'2012-12-13T00:00:00Z'))
 
         fake_sqs_queue = FakeSQSQueue(directory)
         data_written_in_test_queue = fake_sqs_queue.read(data.PostEIFBridge_test_dir)
@@ -62,7 +62,7 @@ class tests_PostEIFBridge(unittest.TestCase):
         mock_emit_monitor_event.side_effect = fake_monitor_event.set
 
         #When
-        success = self.activity_PostEIFBridge.do_activity(data.PostEIFBridge_data(False))
+        success = self.activity_PostEIFBridge.do_activity(data.PostEIFBridge_data(False, u'2012-12-13T00:00:00Z'))
 
         #Then
         self.assertEqual(True, success)
@@ -71,6 +71,22 @@ class tests_PostEIFBridge(unittest.TestCase):
 
         self.assertDictEqual(fake_monitor_event.monitor_data,
                          self.monitor_event_expected_data("end", "Finished Post EIF Bridge 00353"))
+
+
+    @patch('boto.sqs.connect_to_region')
+    @patch('activity.activity_PostEIFBridge.Message')
+    def test_activity_published_article_no_update_date(self, mock_sqs_message, mock_sqs_connect):
+        directory = TempDirectory()
+        mock_sqs_connect.return_value = FakeSQSConn(directory)
+        mock_sqs_message.return_value = FakeSQSMessage(directory)
+        self.activity_PostEIFBridge.set_monitor_property = mock.MagicMock()
+        self.activity_PostEIFBridge.emit_monitor_event = mock.MagicMock()
+        success = self.activity_PostEIFBridge.do_activity(data.PostEIFBridge_data(True, None))
+        fake_sqs_queue = FakeSQSQueue(directory)
+        data_written_in_test_queue = fake_sqs_queue.read(data.PostEIFBridge_test_dir)
+        self.assertEqual(True, success)
+        self.assertEqual(json.dumps(data.PostEIFBridge_message_no_update_date), data_written_in_test_queue)
+
 
     @patch.object(activity_PostEIFBridge, 'emit_monitor_event')
     def test_activity_exception(self, mock_emit_monitor_event):
@@ -82,7 +98,7 @@ class tests_PostEIFBridge(unittest.TestCase):
         self.activity_PostEIFBridge_with_log = activity_PostEIFBridge(settings_mock, fake_logger, None, None, None)
 
         #When
-        success = self.activity_PostEIFBridge_with_log.do_activity(data.PostEIFBridge_data(False))
+        success = self.activity_PostEIFBridge_with_log.do_activity(data.PostEIFBridge_data(False, u'2012-12-13T00:00:00Z'))
 
         #Then
         self.assertRaises(Exception)
