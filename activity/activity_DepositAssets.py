@@ -44,7 +44,7 @@ class activity_DepositAssets(activity.activity):
             expanded_bucket = conn.get_bucket(expanded_folder_bucket)
             cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
 
-            no_download_extensions = [x.strip() for x in self.settings.no_download_extensions.split(',')]
+            no_download_extensions = self.get_no_download_extensions(self.settings.no_download_extensions)
 
             keys = self.get_keys(expanded_bucket, expanded_folder_name)
             for key in keys:
@@ -73,6 +73,9 @@ class activity_DepositAssets(activity.activity):
             return False
 
         return True
+
+    def get_no_download_extensions(self, no_download_extensions):
+        return [x.strip() for x in no_download_extensions.split(',')]
 
     @staticmethod
     def get_keys(bucket, expanded_folder_name):
