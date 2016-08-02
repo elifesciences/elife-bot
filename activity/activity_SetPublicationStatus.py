@@ -6,6 +6,7 @@ from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 from provider.execution_context import Session
 import yaml
+from provider.article_structure import ArticleInfo
 
 """
 activity_SetPublicationStatus.py activity
@@ -45,7 +46,7 @@ class activity_SetPublicationStatus(activity.activity):
                                 self.settings.aws_secret_access_key)
             eif_filename = session.get_value(self.get_workflowId(), 'eif_filename')
             data = self.get_eif(conn, eif_filename)
-            publication_status = self.get_publication_status(data)
+            publication_status = self.get_publication_status(data, eif_filename)
             data['publish'] = publication_status
             self.update_bucket(conn, data, eif_filename)
 
@@ -80,7 +81,10 @@ class activity_SetPublicationStatus(activity.activity):
         data = json.loads(json_input)
         return data
 
-    def get_publication_status(self, data):
+    def get_publication_status(self, data, filename):
+        if self.file_of_published_article(filename):
+            return True
+
         settings = self.load_settings()
         publish = False
         override = True
@@ -94,9 +98,18 @@ class activity_SetPublicationStatus(activity.activity):
         for key in override_rule_keys:
             value = data[key]
             for rule in override_rule_keys[key]:
-                if re.search(value, rule):
+                if re.search(rule, value):
                     publish = override
         return publish
+
+    def file_of_published_article(self, filename):
+        eif_filename_without_path = os.path.basename(filename)
+        article_info = ArticleInfo(eif_filename_without_path)
+        version = article_info.get_version_from_zip_filename()
+        update_date = article_info.get_update_date_from_zip_filename()
+        if version != None and update_date != None:
+            return True
+        return False
 
     @staticmethod
     def load_settings():
