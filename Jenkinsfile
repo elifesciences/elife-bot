@@ -8,13 +8,14 @@ elifePipeline {
 
     stage 'Project tests'
     lock('elife-bot--ci') {
-        def stacknameCi = 'elife-bot-develop-ci'
-        def testArtifact = "${env.BUILD_TAG}.junit.xml"
-        elifeSwitchRevision stacknameCi, commit
-        elifeCmd stacknameCi, 'cd /opt/elife-bot; ./project_tests.sh' // || echo TESTS FAILED!'
+        builderDeployRevision 'elife-bot--ci', commit
+        // execute and fail immediately if red, without waiting to download test artifacts
+        builderCmd 'elife-bot--ci', 'cd /opt/elife-bot; ./project_tests.sh'
+
         // part of the bot test suite is a series of lettuce processes which cannot produce a single XML report
         // until there is a single test suite, we won't have XML test artifacts in the bot
-        //elifeTestArtifact testArtifact, stacknameCi, '/opt/elife-bot/build/junit.xml'
+        //def testArtifact = "${env.BUILD_TAG}.junit.xml"
+        //builderTestArtifact testArtifact, 'elife-bot--ci', '/opt/elife-bot/build/junit.xml'
         //elifeVerifyJunitXml testArtifact
     }
 
