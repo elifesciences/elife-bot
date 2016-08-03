@@ -106,10 +106,10 @@ class workflow_PublishPerfectArticle(workflow.workflow):
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 60 * 8,
-                        "schedule_to_close_timeout": 60 * 8,
+                        "heartbeat_timeout": 60 * 30,
+                        "schedule_to_close_timeout": 60 * 30,
                         "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 8
+                        "start_to_close_timeout": 60 * 30
                     },
                     {
                         "activity_type": "DepositAssets",
