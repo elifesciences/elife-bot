@@ -22,7 +22,7 @@ elifePipeline {
     elifeMainlineOnly {
         stage 'End2end tests'
         elifeEnd2EndTest {
-            elifeSwitchRevision 'elife-bot-develop--end2end', commit
+            builderDeployRevision 'elife-bot--end2end', commit
         }
 
         stage 'Approval'
