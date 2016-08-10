@@ -3,9 +3,6 @@ elifePipeline {
     checkout scm
     def commit = elifeGitRevision()
 
-    echo "env.BUILDER_SCRIPTS_PREFIX"
-    echo env.BUILDER_SCRIPTS_PREFIX
-
     stage 'Project tests'
     lock('elife-bot--ci') {
         builderDeployRevision 'elife-bot--ci', commit
