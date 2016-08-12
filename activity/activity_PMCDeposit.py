@@ -132,21 +132,22 @@ class activity_PMCDeposit(activity.activity):
         # Get the new zip file name
         # TODO - may need to take into account the r1 r2 revision numbers when replacing an article
         revision = self.zip_revision_number(fid)
-        zip_file_name = self.new_zip_filename(self.journal, volume, fid, revision)
-        self.create_new_zip(zip_file_name)
+        self.zip_file_name = self.new_zip_filename(self.journal, volume, fid, revision)
+        print self.zip_file_name
+        self.create_new_zip(self.zip_file_name)
 
         # Set FTP settings
         self.set_ftp_settings(fid)
 
 
-        if verified and zip_file_name:
+        if verified and self.zip_file_name:
             self.ftp_to_endpoint(self.file_list(self.ZIP_DIR), self.FTP_SUBDIR, passive=True)
 
             self.upload_article_zip_to_s3()
 
             # Send email
-            file_size = self.file_size(os.path.join(self.ZIP_DIR, zip_file_name))
-            self.add_email_to_queue(self.journal, volume, fid, revision, zip_file_name, file_size)
+            file_size = self.file_size(os.path.join(self.ZIP_DIR, self.zip_file_name))
+            self.add_email_to_queue(self.journal, volume, fid, revision, self.zip_file_name, file_size)
 
         # Full Clean up
         #self.clean_directories(full = True)
