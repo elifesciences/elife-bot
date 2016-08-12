@@ -4,6 +4,7 @@ import shutil
 import zipfile
 from mock import mock, patch
 import settings_mock
+from ddt import ddt, data, unpack
 
 import os
 # Add parent directory for imports, so activity classes can use elife-poa-xml-generation
@@ -11,7 +12,7 @@ parentdir = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 os.sys.path.insert(0, parentdir)
 
-
+@ddt
 class TestPMCDeposit(unittest.TestCase):
 
     def setUp(self):
@@ -35,7 +36,7 @@ class TestPMCDeposit(unittest.TestCase):
 
         self.do_activity_passes.append({
             "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
-            "pmc_zip_key_names": ["pmc/zip/elife-05-19405.zip","pmc/zip/elife-05-19405.r1.zip"],
+            "pmc_zip_key_names": ["pmc/zip/elife-05-19405.zip", "pmc/zip/elife-05-19405.r1.zip"],
             "expected_zip_filename": "elife-05-19405.r2.zip",
             "zip_file_names": ['elife-19405-fig1.tif', 'elife-19405-inf1.tif',
                                'elife-19405.pdf', 'elife-19405.xml']})
@@ -84,6 +85,14 @@ class TestPMCDeposit(unittest.TestCase):
             self.assertEqual(self.zip_file_list(self.activity.zip_file_name),
                              test_data["zip_file_names"])
 
+    @data(
+        (None, [""]),
+        (1, ["e@example.org", "life@example.org"])
+    )
+    @unpack
+    def test_email_recipients(self, revision, expected_recipients):
+        recipients = self.activity.email_recipients(revision)
+        self.assertEqual(recipients, expected_recipients)
 
 if __name__ == '__main__':
     unittest.main()

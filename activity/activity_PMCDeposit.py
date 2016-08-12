@@ -629,13 +629,7 @@ class activity_PMCDeposit(activity.activity):
 
         sender_email = self.settings.ses_pmc_sender_email
 
-        recipient_email_list = []
-        # Handle multiple recipients, if specified
-        if type(self.settings.ses_poa_recipient_email) == list:
-            for email in self.settings.ses_pmc_recipient_email:
-                recipient_email_list.append(email)
-        else:
-            recipient_email_list.append(self.settings.ses_pmc_recipient_email)
+        recipient_email_list = self.email_recipients(revision)
 
         for email in recipient_email_list:
             # Add the email to the email queue
@@ -649,6 +643,27 @@ class activity_PMCDeposit(activity.activity):
 
 
         return True
+
+    def email_recipients(self, revision):
+        """
+        Get a list of email recipients depending on the revision number
+        because for PMC we will redirect a revision email to different recipients
+        """
+        recipient_email_list = []
+
+        if revision:
+            settings_email_recipient = self.settings.ses_pmc_revision_recipient_email
+        else:
+            settings_email_recipient = self.settings.ses_pmc_recipient_email
+
+        # Handle multiple recipients, if specified
+        if type(settings_email_recipient) == list:
+            for email in settings_email_recipient:
+                recipient_email_list.append(email)
+        else:
+            recipient_email_list.append(settings_email_recipient)
+
+        return recipient_email_list
 
     def get_email_subject(self, current_time, journal, volume, fid, revision,
                           file_name, file_size):
