@@ -85,8 +85,8 @@ class TestPMCDeposit(unittest.TestCase):
 
             self.assertEqual(True, success)
             self.assertEqual(self.activity.zip_file_name, test_data["expected_zip_filename"])
-            self.assertEqual(self.zip_file_list(self.activity.zip_file_name),
-                             test_data["zip_file_names"])
+            self.assertEqual(sorted(self.zip_file_list(self.activity.zip_file_name)),
+                             sorted(test_data["zip_file_names"]))
 
 
     @data(
