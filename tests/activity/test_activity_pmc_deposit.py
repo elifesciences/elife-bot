@@ -4,6 +4,7 @@ import shutil
 import zipfile
 from mock import mock, patch
 import settings_mock
+from classes_mock import FakeLogger
 from ddt import ddt, data, unpack
 import time
 
@@ -17,7 +18,8 @@ os.sys.path.insert(0, parentdir)
 class TestPMCDeposit(unittest.TestCase):
 
     def setUp(self):
-        self.activity = activity_PMCDeposit(settings_mock, None, None, None, None)
+        fake_logger = FakeLogger()
+        self.activity = activity_PMCDeposit(settings_mock, fake_logger, None, None, None)
 
         self.do_activity_passes = []
 
