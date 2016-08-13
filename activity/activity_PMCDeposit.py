@@ -671,8 +671,16 @@ class activity_PMCDeposit(activity.activity):
         datetime_string = time.strftime(date_format, current_time)
 
         subject = (journal + " PMC deposit " + datetime_string + ", article " + str(fid).zfill(5))
+        if revision:
+            subject += ", revision " + str(revision)
 
         return subject
+
+    def email_body_revision_header(self, revision):
+        header = None
+        if revision:
+            header = "Production please forward this to PMC with details of what changed"
+        return header
 
     def get_email_body(self, current_time, journal, volume, fid, revision,
                        file_name, file_size):
@@ -681,6 +689,11 @@ class activity_PMCDeposit(activity.activity):
 
         date_format = '%Y-%m-%dT%H:%M'
         datetime_string = time.strftime(date_format, current_time)
+
+        # Header
+        if self.email_body_revision_header(revision):
+            body += self.email_body_revision_header(revision)
+            body += "\n"
 
         # Bulk of body
         body += "PMCDeposit activity" + "\n"

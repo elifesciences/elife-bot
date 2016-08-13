@@ -5,6 +5,7 @@ import zipfile
 from mock import mock, patch
 import settings_mock
 from ddt import ddt, data, unpack
+import time
 
 import os
 # Add parent directory for imports, so activity classes can use elife-poa-xml-generation
@@ -85,6 +86,7 @@ class TestPMCDeposit(unittest.TestCase):
             self.assertEqual(self.zip_file_list(self.activity.zip_file_name),
                              test_data["zip_file_names"])
 
+
     @data(
         (None, [""]),
         (1, ["e@example.org", "life@example.org"])
@@ -93,6 +95,34 @@ class TestPMCDeposit(unittest.TestCase):
     def test_email_recipients(self, revision, expected_recipients):
         recipients = self.activity.email_recipients(revision)
         self.assertEqual(recipients, expected_recipients)
+
+
+    @data(
+        (None, None),
+        (1, "Production please forward this to PMC with details of what changed")
+    )
+    @unpack
+    def test_email_body_revision_header(self, revision, expected_header):
+        header = self.activity.email_body_revision_header(revision)
+        self.assertEqual(header, expected_header)
+
+
+    @data(
+        (1471046585, "elife", 5, "00013", None, 1, 2,
+         "elife PMC deposit 2016-08-13 00:03, article 00013"),
+        (1471046585, "elife", 5, "00013", 2, 1, 2,
+         "elife PMC deposit 2016-08-13 00:03, article 00013, revision 2"),
+    )
+    @unpack
+    def test_get_email_subject(self, timestamp, journal, volume, fid, revision,
+                                         file_name, file_size, expected_subject):
+
+        current_time = time.gmtime(timestamp)
+        subject = self.activity.get_email_subject(current_time, journal, volume, fid, revision,
+                                         file_name, file_size)
+        self.assertEqual(subject, expected_subject)
+
+
 
 if __name__ == '__main__':
     unittest.main()
