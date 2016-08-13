@@ -123,6 +123,12 @@ class TestPMCDeposit(unittest.TestCase):
         self.assertEqual(subject, expected_subject)
 
 
+    @data(None, True)
+    def test_clean_directories(self, full):
+        # No assertions, just calling for code coverage
+        self.activity.create_activity_directories()
+        self.activity.clean_directories()
+
 
 if __name__ == '__main__':
     unittest.main()
