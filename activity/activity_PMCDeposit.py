@@ -132,21 +132,22 @@ class activity_PMCDeposit(activity.activity):
         # Get the new zip file name
         # TODO - may need to take into account the r1 r2 revision numbers when replacing an article
         revision = self.zip_revision_number(fid)
-        zip_file_name = self.new_zip_filename(self.journal, volume, fid, revision)
-        self.create_new_zip(zip_file_name)
+        self.zip_file_name = self.new_zip_filename(self.journal, volume, fid, revision)
+        print self.zip_file_name
+        self.create_new_zip(self.zip_file_name)
 
         # Set FTP settings
         self.set_ftp_settings(fid)
 
 
-        if verified and zip_file_name:
+        if verified and self.zip_file_name:
             self.ftp_to_endpoint(self.file_list(self.ZIP_DIR), self.FTP_SUBDIR, passive=True)
 
             self.upload_article_zip_to_s3()
 
             # Send email
-            file_size = self.file_size(os.path.join(self.ZIP_DIR, zip_file_name))
-            self.add_email_to_queue(self.journal, volume, fid, revision, zip_file_name, file_size)
+            file_size = self.file_size(os.path.join(self.ZIP_DIR, self.zip_file_name))
+            self.add_email_to_queue(self.journal, volume, fid, revision, self.zip_file_name, file_size)
 
         # Full Clean up
         #self.clean_directories(full = True)
@@ -310,23 +311,6 @@ class activity_PMCDeposit(activity.activity):
     def file_size(self, file_name):
         return os.path.getsize(file_name)
 
-    def file_type(self, file_name):
-        """
-        File type is the file extension is not a zip, and
-        if a zip, then look for the second or last or third to last element
-        that is not r1, r2, etc.
-        """
-        if not self.file_extension(file_name):
-            return None
-
-        if self.file_extension(file_name) != 'zip':
-            return self.file_extension(file_name)
-        else:
-            if not file_name.split('.')[-2].startswith('r'):
-                return file_name.split('.')[-2]
-            elif not file_name.split('.')[-3].startswith('r'):
-                return file_name.split('.')[-3]
-        return None
 
     def unzip_or_move_file(self, file_name, to_dir, do_unzip=True):
         """
@@ -358,43 +342,6 @@ class activity_PMCDeposit(activity.activity):
                 if self.logger:
                     self.logger.info("unzipping or moving file " + file_name)
                 self.unzip_or_move_file(file_name, self.TMP_DIR)
-
-    def items_to_match(self, soup):
-        graphics = parser.graphics(soup)
-        media = parser.media(soup)
-        self_uri = parser.self_uri(soup)
-        inline_graphics = parser.inline_graphics(soup)
-        return graphics + media + self_uri + inline_graphics
-
-    def scan_soup_for_xlink_href(self, xlink_href, soup):
-        """
-        Look for the usual suspects that have an xlink_href of interest
-        and try to match it
-        """
-
-        for item in self.items_to_match(soup):
-            if 'xlink_href' in item:
-                # Try and match the exact filename first
-                if item['xlink_href'] == xlink_href:
-                    return item
-                elif item['xlink_href'] == xlink_href.split('.')[0]:
-                    # Try and match without the file extension
-                    return item
-        return None
-
-
-
-    def details_from_soup(self, old_filename, soup):
-        details = {}
-
-        matched_item = self.scan_soup_for_xlink_href(old_filename, soup)
-        if not matched_item:
-            return None
-
-        if 'ordinal' in matched_item:
-            details['ordinal'] = matched_item['ordinal']
-
-        return details
 
 
 
@@ -628,13 +575,7 @@ class activity_PMCDeposit(activity.activity):
 
         sender_email = self.settings.ses_pmc_sender_email
 
-        recipient_email_list = []
-        # Handle multiple recipients, if specified
-        if type(self.settings.ses_poa_recipient_email) == list:
-            for email in self.settings.ses_pmc_recipient_email:
-                recipient_email_list.append(email)
-        else:
-            recipient_email_list.append(self.settings.ses_pmc_recipient_email)
+        recipient_email_list = self.email_recipients(revision)
 
         for email in recipient_email_list:
             # Add the email to the email queue
@@ -649,14 +590,43 @@ class activity_PMCDeposit(activity.activity):
 
         return True
 
+    def email_recipients(self, revision):
+        """
+        Get a list of email recipients depending on the revision number
+        because for PMC we will redirect a revision email to different recipients
+        """
+        recipient_email_list = []
+
+        if revision:
+            settings_email_recipient = self.settings.ses_pmc_revision_recipient_email
+        else:
+            settings_email_recipient = self.settings.ses_pmc_recipient_email
+
+        # Handle multiple recipients, if specified
+        if type(settings_email_recipient) == list:
+            for email in settings_email_recipient:
+                recipient_email_list.append(email)
+        else:
+            recipient_email_list.append(settings_email_recipient)
+
+        return recipient_email_list
+
     def get_email_subject(self, current_time, journal, volume, fid, revision,
                           file_name, file_size):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
         subject = (journal + " PMC deposit " + datetime_string + ", article " + str(fid).zfill(5))
+        if revision:
+            subject += ", revision " + str(revision)
 
         return subject
+
+    def email_body_revision_header(self, revision):
+        header = None
+        if revision:
+            header = "Production please forward this to PMC with details of what changed"
+        return header
 
     def get_email_body(self, current_time, journal, volume, fid, revision,
                        file_name, file_size):
@@ -665,6 +635,11 @@ class activity_PMCDeposit(activity.activity):
 
         date_format = '%Y-%m-%dT%H:%M'
         datetime_string = time.strftime(date_format, current_time)
+
+        # Header
+        if self.email_body_revision_header(revision):
+            body += self.email_body_revision_header(revision)
+            body += "\n"
 
         # Bulk of body
         body += "PMCDeposit activity" + "\n"

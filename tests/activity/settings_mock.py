@@ -9,6 +9,8 @@ expanded_bucket = 'origin_bucket'
 publishing_buckets_prefix = ""
 production_bucket = "production_bucket"
 
+archive_bucket = "archive_bucket"
+
 aws_access_key_id = ""
 aws_secret_access_key = ""
 
@@ -34,3 +36,12 @@ drupal_update_pass = ""
 
 lax_article_versions = 'https://test/eLife.{article_id}/version/'
 verify_ssl = False
+
+PMC_FTP_URI = ""
+PMC_FTP_USERNAME = ""
+PMC_FTP_PASSWORD = ""
+PMC_FTP_CWD = ""
+
+ses_pmc_sender_email = ""
+ses_pmc_recipient_email = ""
+ses_pmc_revision_recipient_email = ["e@example.org", "life@example.org"]
