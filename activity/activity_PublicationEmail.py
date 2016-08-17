@@ -395,7 +395,7 @@ class activity_PublicationEmail(activity.activity):
         article = None
 
         for article in self.related_articles:
-            if article.doi_url == doi:
+            if article.doi == doi:
                 # Return an existing article object
                 if self.logger:
                     log_info = "Hit the article cache on " + doi

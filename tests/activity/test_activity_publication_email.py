@@ -37,15 +37,69 @@ class TestPublicationEmail(unittest.TestCase):
             "input_data": {},
             "templates_warmed": True,
             "article_xml_filenames": ["elife00013.xml"],
-            "article_id": "00013"})
+            "article_id": "00013",
+            "activity_success": True,
+            "articles_approved_len": 1,
+            "articles_approved_prepared_len": 1})
 
-        """
         self.do_activity_passes.append({
             "input_data": {"data": {"allow_duplicates": True}},
             "templates_warmed": True,
             "article_xml_filenames": ["elife00013.xml"],
-            "article_id": "00013"})
-        """
+            "article_id": "00013",
+            "activity_success": True,
+            "articles_approved_len": 1,
+            "articles_approved_prepared_len": 1})
+
+        self.do_activity_passes.append({
+            "input_data": {"data": {"allow_duplicates": False}},
+            "templates_warmed": True,
+            "article_xml_filenames": ["elife03385.xml"],
+            "article_id": "03385",
+            "activity_success": True,
+            "articles_approved_len": 1,
+            "articles_approved_prepared_len": 1})
+
+        self.do_activity_passes.append({
+            "input_data": {"data": {"allow_duplicates": False}},
+            "templates_warmed": True,
+            "article_xml_filenames": ["elife_poa_e03977.xml"],
+            "article_id": "03977",
+            "activity_success": True,
+            "articles_approved_len": 1,
+            "articles_approved_prepared_len": 1})
+
+        self.do_activity_passes.append({
+            "input_data": {"data": {"allow_duplicates": True}},
+            "templates_warmed": True,
+            "article_xml_filenames": ["does_not_exist.xml"],
+            "article_id": None,
+            "activity_success": True,
+            "articles_approved_len": 0,
+            "articles_approved_prepared_len": 0})
+
+        # article-commentary
+        self.do_activity_passes.append({
+            "input_data": {},
+            "templates_warmed": True,
+            "article_xml_filenames": ["elife-18753-v1.xml"],
+            "article_id": "18753",
+            "activity_success": True,
+            "articles_approved_len": 1,
+            "articles_approved_prepared_len": 1})
+
+        # article-commentary plus its matching insight
+        self.do_activity_passes.append({
+            "input_data": {},
+            "templates_warmed": True,
+            "article_xml_filenames": ["elife-18753-v1.xml", "elife-15747-v2.xml"],
+            "article_id": "18753",
+            "activity_success": True,
+            "articles_approved_len": 2,
+            "articles_approved_prepared_len": 1})
+
+
+
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -64,8 +118,11 @@ class TestPublicationEmail(unittest.TestCase):
         for filename in xml_filenames:
             source_doc = "tests/test_data/" + filename
             dest_doc = os.path.join(to_dir, filename)
-            shutil.copy(source_doc, dest_doc)
-            xml_filename_paths.append(dest_doc)
+            try:
+                shutil.copy(source_doc, dest_doc)
+                xml_filename_paths.append(dest_doc)
+            except IOError:
+                pass
         return xml_filename_paths
 
     def fake_article_get_folder_names_from_bucket(self):
@@ -108,6 +165,11 @@ class TestPublicationEmail(unittest.TestCase):
         directory = TempDirectory()
         fake_clean_tmp_dir = self.fake_clean_tmp_dir()
 
+        # Prime the related article property for when needed
+        related_article = article()
+        related_article.parse_article_file("tests/test_data/elife-15747-v2.xml")
+        self.activity.related_articles = [related_article]
+
         for test_data in self.do_activity_passes:
 
             fake_download_email_templates_from_s3 = self.fake_download_email_templates_from_s3(
@@ -126,9 +188,9 @@ class TestPublicationEmail(unittest.TestCase):
 
             success = self.activity.do_activity(test_data["input_data"])
 
-            self.assertEqual(True, success)
-
-
+            self.assertEqual(True, test_data["activity_success"])
+            self.assertEqual(len(self.activity.articles_approved), test_data["articles_approved_len"])
+            self.assertEqual(len(self.activity.articles_approved_prepared), test_data["articles_approved_prepared_len"])
 
 
 if __name__ == '__main__':
