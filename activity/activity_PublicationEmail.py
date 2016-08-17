@@ -735,7 +735,7 @@ class activity_PublicationEmail(activity.activity):
         # Authors will be none if there is not data
         if authors is None:
             if self.logger:
-                log_info = "No authors found for article doi id " + doi_id
+                log_info = "No authors found for article doi id " + str(doi_id)
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
             return None
@@ -761,6 +761,15 @@ class activity_PublicationEmail(activity.activity):
         """
         editor_list = []
         (column_headings, editors) = self.ejp.get_editors(doi_id=doi_id, document=document)
+
+        # Editors will be none if there is not data
+        if editors is None:
+            if self.logger:
+                log_info = "No editors found for article doi id " + str(doi_id)
+                self.admin_email_content += "\n" + log_info
+                self.logger.info(log_info)
+            return None
+
         for editor in editors:
             i = 0
             temp = {}
