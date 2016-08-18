@@ -122,6 +122,8 @@ class Templates(object):
         template_list.append("author_publication_email_VOR_after_POA.json")
         template_list.append("author_publication_email_VOR_no_POA.html")
         template_list.append("author_publication_email_VOR_no_POA.json")
+        template_list.append("author_publication_email_Feature.html")
+        template_list.append("author_publication_email_Feature.json")
 
         return template_list
 
@@ -258,7 +260,7 @@ class Templates(object):
 
         return template
 
-    def get_email_body(self, email_type, author, article, format="html"):
+    def get_email_body(self, email_type, author, article, authors, format="html"):
         """
         Given the email type and data objects, load the jinja environment,
         get the template, render it and return the
@@ -279,7 +281,7 @@ class Templates(object):
 
             jinja_env = self.get_jinja_env()
             tmpl = self.get_jinja_template(jinja_env, template_name)
-            body = tmpl.render(author=author, article=article)
+            body = tmpl.render(author=author, article=article, authors=authors)
             return body
 
         else:

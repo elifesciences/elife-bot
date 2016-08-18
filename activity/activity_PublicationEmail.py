@@ -67,13 +67,14 @@ class activity_PublicationEmail(activity.activity):
         self.article_types_do_not_send = []
         self.article_types_do_not_send.append('editorial')
         self.article_types_do_not_send.append('correction')
-        self.article_types_do_not_send.append('discussion')
+
         # Email types, for sending previews of each template
         self.email_types = []
         self.email_types.append('author_publication_email_POA')
         self.email_types.append('author_publication_email_VOR_after_POA')
         self.email_types.append('author_publication_email_VOR_no_POA')
         self.email_types.append('author_publication_email_Insight_to_VOR')
+        self.email_types.append('author_publication_email_Feature')
 
         self.date_stamp = self.set_datestamp()
 
@@ -124,7 +125,8 @@ class activity_PublicationEmail(activity.activity):
             email_type = self.choose_email_type(
                 article_type=article.article_type,
                 is_poa=article.is_poa,
-                was_ever_poa=article.was_ever_poa
+                was_ever_poa=article.was_ever_poa,
+                feature_article=self.is_feature_article(article)
             )
 
             # Get the authors depending on the article type
@@ -143,9 +145,14 @@ class activity_PublicationEmail(activity.activity):
                 # Make a note of this and we will not remove from the outbox, save for a later day
                 self.articles_do_not_remove_from_outbox.append(article.doi)
             else:
+                recipient_authors = self.choose_recipient_authors(
+                    authors=authors,
+                    article_type=article.article_type,
+                    feature_article=self.is_feature_article(article))
+
                 # Good, we can send emails
-                for author in authors:
-                    self.send_email(email_type, article.doi_id, author, article)
+                for recipient_author in recipient_authors:
+                    self.send_email(email_type, article.doi_id, recipient_author, article, authors)
 
 
           # Temporary for testing, send a test run - LATER FOR TESTING TEMPLATES
@@ -166,7 +173,7 @@ class activity_PublicationEmail(activity.activity):
                       str(a.datetime.day).zfill(2))
         return date_stamp
 
-    def choose_email_type(self, article_type, is_poa, was_ever_poa):
+    def choose_email_type(self, article_type, is_poa, was_ever_poa, feature_article):
         """
         Given some article details, we can choose the
         appropriate email template
@@ -176,6 +183,10 @@ class activity_PublicationEmail(activity.activity):
         if article_type == "article-commentary":
             # Insight
             email_type = "author_publication_email_Insight_to_VOR"
+
+        elif article_type == "discussion" and feature_article is True:
+            # Feature article
+            email_type = "author_publication_email_Feature"
 
         elif article_type == "research-article":
             if is_poa is True:
@@ -423,6 +434,12 @@ class activity_PublicationEmail(activity.activity):
 
         return article
 
+    def is_feature_article(self, article):
+        if (article.is_in_display_channel("Feature article") is True or
+            article.is_in_display_channel("Feature Article") is True):
+            return True
+        return False
+
     def approve_articles(self, articles):
         """
         Given a list of article objects, approve them for processing
@@ -438,15 +455,6 @@ class activity_PublicationEmail(activity.activity):
             if article.article_type in self.article_types_do_not_send:
                 if self.logger:
                     log_info = "Removing based on article type " + article.doi
-                    self.admin_email_content += "\n" + log_info
-                    self.logger.info(log_info)
-                remove_article_doi.append(article.doi)
-
-        # Remove if display channel is "Feature article"
-        for article in articles:
-            if article.is_in_display_channel("Feature article") is True:
-                if self.logger:
-                    log_info = "Removing because display channel is Feature article " + article.doi
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
@@ -519,8 +527,29 @@ class activity_PublicationEmail(activity.activity):
                                'author_publication_email_VOR_after_POA']:
                 self.send_email(email_type, elife_id, author, article)
 
+    def choose_recipient_authors(self, authors, article_type, feature_article):
+        """
+        The recipients of the email will change depending on if it is a
+        feature article
+        """
+        if feature_article is True:
+            # feature article recipients
+            recipient_authors = []
+            feature_author = {}
+            feature_author["first_nm"] = "Features"
+            feature_author["e_mail"] = "features@elifesciences.org"
 
-    def send_email(self, email_type, elife_id, author, article):
+            # Special: convert the dict to an object for use in templates
+            obj = Struct(**feature_author)
+            recipient_authors.append(obj)
+
+        else:
+            recipient_authors = authors
+
+        return recipient_authors
+
+
+    def send_email(self, email_type, elife_id, author, article, authors):
         """
         Given the email type and author,
         decide whether to send the email (after checking for duplicates)
@@ -586,12 +615,13 @@ class activity_PublicationEmail(activity.activity):
                 author=author,
                 headers=headers,
                 article=article,
+                authors=authors,
                 doi_id=elife_id,
                 date_scheduled_timestamp=date_scheduled_timestamp,
                 format="html")
 
 
-    def queue_author_email(self, email_type, author, headers, article, doi_id,
+    def queue_author_email(self, email_type, author, headers, article, authors, doi_id,
                            date_scheduled_timestamp, format="html"):
         """
         Format the email body and add it to the live queue
@@ -601,6 +631,7 @@ class activity_PublicationEmail(activity.activity):
             email_type=email_type,
             author=author,
             article=article,
+            authors=authors,
             format=format)
 
         # Add the email to the email queue

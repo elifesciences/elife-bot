@@ -1,5 +1,6 @@
 import unittest
 from activity.activity_PublicationEmail import activity_PublicationEmail
+from activity.activity_PublicationEmail import Struct
 import shutil
 
 from mock import mock, patch
@@ -107,6 +108,16 @@ class TestPublicationEmail(unittest.TestCase):
             "article_id": "18753",
             "activity_success": True,
             "articles_approved_len": 2,
+            "articles_approved_prepared_len": 1})
+
+        # feature article
+        self.do_activity_passes.append({
+            "input_data": {},
+            "templates_warmed": True,
+            "article_xml_filenames": ["elife-00353-v1.xml"],
+            "article_id": "00353",
+            "activity_success": True,
+            "articles_approved_len": 1,
             "articles_approved_prepared_len": 1})
 
 
@@ -222,6 +233,71 @@ class TestPublicationEmail(unittest.TestCase):
 
         if expected_0_last_nm:
             self.assertEqual(editor_list[0].last_nm, expected_0_last_nm)
+
+    @data(
+        ("article-commentary", None, None, False, "author_publication_email_Insight_to_VOR"),
+        ("discussion", None, None, True, "author_publication_email_Feature"),
+        ("research-article", True, None, False, "author_publication_email_POA"),
+        ("research-article", False, None, False, "author_publication_email_VOR_no_POA"),
+        ("research-article", False, False, False, "author_publication_email_VOR_no_POA"),
+        ("research-article", False, True, False, "author_publication_email_VOR_after_POA")
+    )
+    @unpack
+    def test_choose_email_type(self, article_type, is_poa, was_ever_poa,
+                               feature_article, expected_email_type):
+        email_type = self.activity.choose_email_type(article_type, is_poa,
+                                                     was_ever_poa, feature_article)
+        self.assertEqual(email_type, expected_email_type)
+
+    def fake_authors(self):
+        return self.activity.get_authors(3, None, "tests/test_data/ejp_author_file.csv")
+
+
+    @data(
+        (None, None, "Author", "author01@example.com"),
+        (None, True, "Features", "features@elifesciences.org")
+    )
+    @unpack
+    def test_choose_recipient_authors(self, article_type, feature_article,
+                                      expected_0_first_nm, expected_0_e_mail):
+        authors = self.fake_authors()
+        recipient_authors = self.activity.choose_recipient_authors(authors, article_type, feature_article)
+        if recipient_authors:
+            self.assertEqual(recipient_authors[0].first_nm, expected_0_first_nm)
+            self.assertEqual(recipient_authors[0].e_mail, expected_0_e_mail)
+
+
+    @patch.object(Templates, 'download_email_templates_from_s3')
+    def test_template_get_email_body_00353(self, fake_download_email_templates_from_s3):
+
+        fake_download_email_templates_from_s3 = self.fake_download_email_templates_from_s3(
+            self.activity.get_tmp_dir(), True)
+
+        email_type = "author_publication_email_Feature"
+
+        authors = self.fake_authors()
+
+        article_object = article()
+        article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
+        article_type = article_object.article_type
+        feature_article = True
+
+        recipient_authors = self.activity.choose_recipient_authors(authors, article_type, feature_article)
+        author = recipient_authors[0]
+
+        format = "html"
+
+        expected_body = 'Header\n<p>Dear Features</p>\n"A good life"\n<a href="http://dx.doi.org/10.7554/eLife.00353">read it</a>\n<a href="http://twitter.com/intent/tweet?text=http%3A%2F%2Fdx.doi.org%2F10.7554%2FeLife.00353+%40eLife">social media</a>\n<a href="http://lens.elifesciences.org/00353">online viewer</a>\n\nauthor01@example.com\n\nauthor02@example.org\n\nauthor03@example.com\n'
+
+        body = self.activity.templates.get_email_body(
+            email_type=email_type,
+            author=author,
+            article=article_object,
+            authors=authors,
+            format=format)
+
+        self.assertEqual(body, expected_body)
+
 
 
 

@@ -1,0 +1,1 @@
+{ "sender_email": "production@elifesciences.org", "email_type": "author_publication_email_Feature", "subject": "Your eLife article has been published: {{ article.article_title }}"}
