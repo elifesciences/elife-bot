@@ -46,12 +46,12 @@ If you have a contribution you wouldl like us to consider, please send a pull re
 
 ## Other eLife Resources
 
-This is part of the eLife suite of tools. You can find more resources at [dev.elifesciences.org](dev.elifesciences.org).
+This is part of the eLife suite of tools. You can find more resources at [elifesciences.org](elifesciences.org).
 
 
 ## About eLife
 
-eLife is an open access publisher in the life sciences. We are supported by [The Wellcome Trust](http://www.wellcome.ac.uk/), [The Howard Hughes Medical Institute](http://www.hhmi.org/) and [The Max Planck Society](http://www.mpg.de/en). We publish at [elife.elifescience.org](http://elife.elifesciences.org/).
+eLife is an open access publisher in the life sciences. We are supported by [The Wellcome Trust](http://www.wellcome.ac.uk/), [The Howard Hughes Medical Institute](http://www.hhmi.org/) and [The Max Planck Society](http://www.mpg.de/en). We publish at [elifescience.org](http://elifesciences.org/).
 
 # Copyright & Licence
 
