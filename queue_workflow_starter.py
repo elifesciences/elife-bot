@@ -73,8 +73,8 @@ def process_message(message):
         name = message_payload.get('workflow_name')
         data = message_payload.get('workflow_data')
         start_workflow(name, data)
-    except Exception:
-        logger.exception("Exception while processing message")
+    except Exception as e:
+        logger.exception("Exception while processing message. Error: " + e.message)
     message.delete()
 
 
@@ -98,9 +98,14 @@ def process_data_publishperfectarticle(workflow_name, workflow_data):
     data = {'info': S3NotificationInfo.from_dict(workflow_data)}
     return data
 
+def process_data_versioncontrol(workflow_name, workflow_data):
+    data = {'info': S3NotificationInfo.from_dict(workflow_data)}
+    return data
+
 
 workflow_data_processors = {
-    'PublishPerfectArticle': process_data_publishperfectarticle
+    'PublishPerfectArticle': process_data_publishperfectarticle,
+    'VersionControl': process_data_versioncontrol
 }
 
 if __name__ == "__main__":

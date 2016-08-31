@@ -24,6 +24,7 @@ def start(ENV="dev"):
     conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
     workflow_names = []
+    workflow_names.append("VersionControl")
     workflow_names.append("ArticleInformationSupplier")
     workflow_names.append("Ping")
     workflow_names.append("Sum")
@@ -62,6 +63,7 @@ def start(ENV="dev"):
         print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
 
     activity_names = []
+    activity_names.append("UpdateRepository")
     activity_names.append("PostEIFBridge")
     activity_names.append("PingWorker")
     activity_names.append("SetPublicationStatus")

@@ -25,3 +25,4 @@ Pillow==3.2.0
 ndg-httpsclient==0.4.2
 pyasn1==0.1.9
 pyOpenSSL==16.0.0
+pyGithub==1.27.1

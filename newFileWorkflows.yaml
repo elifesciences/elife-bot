@@ -2,3 +2,8 @@ ArticleZip:
   bucket_name_pattern: '.*elife-production-final$'
   file_name_pattern: '.*\.zip'
   starter_name: 'PublishPerfectArticle'
+
+ArticleXML:
+  bucket_name_pattern: '.*elife-cdn$'
+  file_name_pattern: '.*\.xml'
+  starter_name: 'VersionControl'
