@@ -570,8 +570,11 @@ class activity_PMCDeposit(activity.activity):
         body = self.get_email_body(current_time, journal, volume, fid, revision,
                                    file_name, file_size)
 
-        subject = self.get_email_subject(current_time, journal, volume, fid, revision,
-                                         file_name, file_size)
+        if revision:
+            subject = self.get_revision_email_subject(fid)
+        else:
+            subject = self.get_email_subject(current_time, journal, volume, fid, revision,
+                                             file_name, file_size)
 
         sender_email = self.settings.ses_pmc_sender_email
 
@@ -611,6 +614,13 @@ class activity_PMCDeposit(activity.activity):
 
         return recipient_email_list
 
+    def get_revision_email_subject(self, fid):
+        """
+        Email subject line for notifying production about a PMC revision
+        """
+        subject = "You need to email PMC: article " + str(fid).zfill(5) + "!!!"
+        return subject
+
     def get_email_subject(self, current_time, journal, volume, fid, revision,
                           file_name, file_size):
         date_format = '%Y-%m-%d %H:%M'
@@ -639,6 +649,11 @@ class activity_PMCDeposit(activity.activity):
         # Header
         if self.email_body_revision_header(revision):
             body += self.email_body_revision_header(revision)
+            body += "\n"
+            # Include the subject line to be used
+            revision_email_subject = self.get_email_subject(current_time, journal, volume, fid,
+                                                            revision, file_name, file_size)
+            body += str(revision_email_subject)
             body += "\n"
 
         # Bulk of body
