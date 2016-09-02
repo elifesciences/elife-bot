@@ -61,7 +61,8 @@ class activity_UpdateRepository(activity.activity):
 
         try:
             xml_file = article_xml_repo.get_contents(filename)
-        except GithubException:
+        except GithubException as e:
+            self.logger.info("GithubException - description: " + e.message)
             self.logger.info("GithubException: file " + filename + " may not exist in github yet. We will try to add it in the repo.")
             response = article_xml_repo.create_file("/" + filename, "Adds XML first time", content)
             self.logger.info("File " + filename + " successfully added. Commit: " + response)
@@ -78,7 +79,7 @@ class activity_UpdateRepository(activity.activity):
                 return
 
             #there are changes
-            response = article_xml_repo.update_file("/" + filename , "Updates xml 4", content, xml_file.sha)
+            response = article_xml_repo.update_file("/" + filename , "Updates xml", content, xml_file.sha)
             self.logger.info("File " + filename + " successfully updated. Commit: " + response)
             return
 
