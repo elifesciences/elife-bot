@@ -79,7 +79,7 @@ class activity_UpdateRepository(activity.activity):
                 return
 
             #there are changes
-            response = article_xml_repo.update_file("/" + filename , "Updates xml", content, xml_file.sha)
+            response = article_xml_repo.update_file(self.settings.git_repo_path + filename , "Updates xml", content, xml_file.sha)
             self.logger.info("File " + filename + " successfully updated. Commit: " + response)
             return
 
