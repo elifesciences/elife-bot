@@ -36,7 +36,7 @@ class Shimmy:
                 queue_message = input_queue.read(visibility_timeout=60, wait_time_seconds=20)
 
                 if queue_message is not None:
-                    self.logger.debug('got message id: %s', queue_message.id)
+                    self.logger.info('got message id: %s', queue_message.id)
                     try:
                         self.process_message(queue_message, output_queue)
                         queue_message.delete()
@@ -77,7 +77,7 @@ class Shimmy:
             self.logger.debug("Requests auth set for user %s", self._settings.drupal_update_user)
         headers = {'content-type': 'application/json'}
         response = requests.post(ingest_endpoint, data=eif, headers=headers, auth=auth)
-        self.logger.debug("Reponse code was %s . Reason was %s", response.status_code, response.reason)
+        self.logger.info("Response code was %s . Reason was %s", response.status_code, response.reason)
 
         if response.status_code == 200:
 
