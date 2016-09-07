@@ -12,6 +12,7 @@ import log
 import os
 import yaml
 import re
+import uuid
 
 # Add parent directory for imports, so activity classes can use elife-api-prototype
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -62,6 +63,8 @@ def work(ENV, flag):
                         logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
                         return False
 
+                    workflow_data = info.to_dict()
+                    workflow_data['unique_id'] = str(uuid.uuid4())
                     # build message
                     message = {
                         'workflow_name': workflow_name,

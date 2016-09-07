@@ -38,6 +38,9 @@ class activity_ExpandArticle(activity.activity):
         """
         Do the work
         """
+
+        run = data['run']
+
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
         info = S3NotificationInfo.from_dict(data)
@@ -53,7 +56,7 @@ class activity_ExpandArticle(activity.activity):
                               filename_last_element)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
         article_id = article_id_match.group(1)
-        session.store_value(self.get_workflowId(), 'article_id', article_id)
+        session.store_value(run, 'article_id', article_id)
 
         if self.logger:
             self.logger.info("Expanding file %s" % info.file_name)
@@ -79,23 +82,20 @@ class activity_ExpandArticle(activity.activity):
                               filename_last_element)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE  # status could not be determined, exit workflow.
 
-        # Get the run value from the session, if available, otherwise set it
-        run = session.get_value(self.get_workflowId(), 'run')
-        if run is None:
-            run = str(uuid.uuid4())
+
 
         # store version for other activities in this workflow execution
-        session.store_value(self.get_workflowId(), 'version', version)
+        session.store_value(run, 'version', version)
 
         # Extract and store updated date if supplied
         update_date = article_structure.get_update_date_from_zip_filename()
         if update_date:
-            session.store_value(self.get_workflowId(), 'update_date', update_date)
+            session.store_value(run, 'update_date', update_date)
 
         article_version_id = article_id + '.' + version
-        session.store_value(self.get_workflowId(), 'article_version_id', article_version_id)
-        session.store_value(self.get_workflowId(), 'run', run)
-        session.store_value(self.get_workflowId(), 'status', status)
+        session.store_value(run, 'article_version_id', article_version_id)
+        session.store_value(run, 'run', run)
+        session.store_value(run, 'status', status)
         self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "start",
                                 "Starting expansion of article " + article_id)
         self.set_monitor_property(self.settings, article_id, "article-id", article_id, "text")
@@ -133,7 +133,7 @@ class activity_ExpandArticle(activity.activity):
 
             self.clean_tmp_dir()
 
-            session.store_value(self.get_workflowId(), 'expanded_folder', bucket_folder_name)
+            session.store_value(run, 'expanded_folder', bucket_folder_name)
             self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article",
                                     "end", "Finished expansion of article " + article_id +
                                     " for version " + version + " run " + str(run) +

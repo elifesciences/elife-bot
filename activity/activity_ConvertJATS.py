@@ -30,11 +30,12 @@ class activity_ConvertJATS(activity.activity):
         Do the work
         """
 
+        run = data['run']
         session = Session(self.settings)
-        version = session.get_value(self.get_workflowId(), 'version')
-        article_id = session.get_value(self.get_workflowId(), 'article_id')
+        version = session.get_value(run, 'version')
+        article_id = session.get_value(run, 'article_id')
         article_version_id = article_id + '.' + version
-        run = session.get_value(self.get_workflowId(), 'run')
+
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Convert JATS", "start",
                                 "Starting conversion of article xml to EIF for " + article_id)
@@ -43,7 +44,7 @@ class activity_ConvertJATS(activity.activity):
 
             if self.logger:
                 self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
-            expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder')
+            expanded_folder_name = session.get_value(run, 'expanded_folder')
             expanded_folder_bucket = (self.settings.publishing_buckets_prefix
                                       + self.settings.expanded_bucket)
             print expanded_folder_name
@@ -68,7 +69,7 @@ class activity_ConvertJATS(activity.activity):
             json_output = jats_scraper.scrape(xml, article_version=version)
 
             # Add update date if it is in the session
-            update_date = session.get_value(self.get_workflowId(), 'update_date')
+            update_date = session.get_value(run, 'update_date')
             if update_date:
                 json_output = self.add_update_date_to_json(json_output, update_date, xml_filename)
 
@@ -90,9 +91,9 @@ class activity_ConvertJATS(activity.activity):
 
             self.set_dashboard_properties(json_output, article_id, version)
 
-            session.store_value(self.get_workflowId(), "eif_filename", output_key)
+            session.store_value(run, "eif_filename", output_key)
             eif_object = json.loads(json_output)
-            session.store_value(self.get_workflowId(), 'article_path', eif_object.get('path'))
+            session.store_value(run, 'article_path', eif_object.get('path'))
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     "Convert JATS", "end",
                                     "XML converted to EIF for article " +

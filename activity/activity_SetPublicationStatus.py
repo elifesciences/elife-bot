@@ -32,10 +32,12 @@ class activity_SetPublicationStatus(activity.activity):
         # TODO : better exception handling
 
     def do_activity(self, data=None):
+
+        run = data['run']
         session = Session(self.settings)
-        version = session.get_value(self.get_workflowId(), 'version')
-        article_id = session.get_value(self.get_workflowId(), 'article_id')
-        run = session.get_value(self.get_workflowId(), 'run')
+        version = session.get_value(run, 'version')
+        article_id = session.get_value(run, 'article_id')
+
 
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 "Set Publication Status", "start",
@@ -44,7 +46,7 @@ class activity_SetPublicationStatus(activity.activity):
         try:
             conn = S3Connection(self.settings.aws_access_key_id,
                                 self.settings.aws_secret_access_key)
-            eif_filename = session.get_value(self.get_workflowId(), 'eif_filename')
+            eif_filename = session.get_value(run, 'eif_filename')
             data = self.get_eif(conn, eif_filename)
             publication_status = self.get_publication_status(data, eif_filename)
             data['publish'] = publication_status

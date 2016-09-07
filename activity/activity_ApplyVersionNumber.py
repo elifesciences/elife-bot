@@ -40,11 +40,11 @@ class activity_ApplyVersionNumber(activity.activity):
                                      + self.settings.expanded_bucket)
 
         info = S3NotificationInfo.from_dict(data)
+        run = data['run']
         session = Session(self.settings)
-        version = session.get_value(self.get_workflowId(), 'version')
-        article_id = session.get_value(self.get_workflowId(), 'article_id')
+        version = session.get_value(run, 'version')
+        article_id = session.get_value(run, 'article_id')
         article_version_id = article_id + '.' + version
-        run = session.get_value(self.get_workflowId(), 'run')
 
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 "Apply Version Number", "start",
@@ -63,7 +63,7 @@ class activity_ApplyVersionNumber(activity.activity):
                 pass
 
             elif m is None and version is not None:
-                expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder')
+                expanded_folder_name = session.get_value(run, 'expanded_folder')
                 bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
                 self.rename_article_s3_objects(bucket_folder_name, version)
 
@@ -71,7 +71,6 @@ class activity_ApplyVersionNumber(activity.activity):
                                     "Apply Version Number", "end",
                                     "Finished applying version number to article " + article_id +
                                     " for version " + version + " run " + str(run))
-
 
         except Exception as e:
             self.logger.exception("Exception when applying version number to article")
