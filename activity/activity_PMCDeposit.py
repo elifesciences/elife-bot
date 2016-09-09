@@ -649,12 +649,12 @@ class activity_PMCDeposit(activity.activity):
         # Header
         if self.email_body_revision_header(revision):
             body += self.email_body_revision_header(revision)
-            body += "\n"
+            body += "\n\n"
             # Include the subject line to be used
             revision_email_subject = self.get_email_subject(current_time, journal, volume, fid,
                                                             revision, file_name, file_size)
             body += str(revision_email_subject)
-            body += "\n"
+            body += "\n\n"
 
         # Bulk of body
         body += "PMCDeposit activity" + "\n"
