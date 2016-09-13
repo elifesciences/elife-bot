@@ -17,7 +17,7 @@ Amazon SWF PublishArticle starter, for API and Lens publishing etc.
 
 class starter_PublishPerfectArticle():
 
-    def start(self, ENV="dev", info=None):
+    def start(self, ENV="dev", info=None, run=None):
 
         # TODO : much of this is common to many starters and could probably be streamlined
 
@@ -46,6 +46,7 @@ class starter_PublishPerfectArticle():
         child_policy = None
         execution_start_to_close_timeout = str(60 * 30)
         workflow_input = json.dumps(info, default=lambda ob: ob.__dict__)
+        workflow_input['run'] = run
 
         try:
             response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version,

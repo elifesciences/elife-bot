@@ -56,7 +56,7 @@ class tests_PreparePostEIF(unittest.TestCase):
             self.activity_PreparePostEIF.set_monitor_property = mock.MagicMock()
             self.activity_PreparePostEIF.emit_monitor_event = mock.MagicMock()
 
-            success = self.activity_PreparePostEIF.do_activity()
+            success = self.activity_PreparePostEIF.do_activity(data.PreparePostEIF_data)
 
             fake_sqs_queue = FakeSQSQueue(directory)
             data_written_in_test_queue = fake_sqs_queue.read(data.PreparePostEIF_test_dir)
