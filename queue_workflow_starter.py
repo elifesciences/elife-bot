@@ -9,6 +9,7 @@ import boto.sqs
 from provider import process
 import json
 import importlib
+import uuid
 
 # this is not an unused import, it is used dynamically
 import starter
@@ -72,6 +73,7 @@ def process_message(message):
         message_payload = json.loads(str(message.get_body()))
         name = message_payload.get('workflow_name')
         data = message_payload.get('workflow_data')
+        data['unique_id'] = str(uuid.uuid4())
         start_workflow(name, data)
     except Exception:
         logger.exception("Exception while processing message")
