@@ -96,7 +96,7 @@ def start_workflow(workflow_name, workflow_data):
 
 
 def process_data_publishperfectarticle(workflow_name, workflow_data):
-    data = {'info': S3NotificationInfo.from_dict(workflow_data).bucket_name,
+    data = {'info': S3NotificationInfo.from_dict(workflow_data),
             'run': str(uuid.uuid4())}
     return data
 
