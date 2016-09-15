@@ -9,6 +9,7 @@ import boto.sqs
 from provider import process
 import json
 import importlib
+import uuid
 
 # this is not an unused import, it is used dynamically
 import starter
@@ -96,7 +97,7 @@ def start_workflow(workflow_name, workflow_data):
 
 def process_data_publishperfectarticle(workflow_name, workflow_data):
     data = {'info': S3NotificationInfo.from_dict(workflow_data).bucket_name,
-            'run': workflow_data['unique_id']}
+            'run': str(uuid.uuid4())}
     return data
 
 
