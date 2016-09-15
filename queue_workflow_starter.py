@@ -73,7 +73,6 @@ def process_message(message):
         message_payload = json.loads(str(message.get_body()))
         name = message_payload.get('workflow_name')
         data = message_payload.get('workflow_data')
-        data['unique_id'] = str(uuid.uuid4())
         start_workflow(name, data)
     except Exception:
         logger.exception("Exception while processing message")
@@ -98,7 +97,7 @@ def start_workflow(workflow_name, workflow_data):
 
 def process_data_publishperfectarticle(workflow_name, workflow_data):
     data = {'info': S3NotificationInfo.from_dict(workflow_data).bucket_name,
-            'run': workflow_data['unique_id']}
+            'run': str(uuid.uuid4())}
     return data
 
 
