@@ -9,6 +9,7 @@ import log
 import json
 import random
 from optparse import OptionParser
+from S3utility.s3_notification_info import S3NotificationInfo
 
 """
 Amazon SWF PublishArticle starter, for API and Lens publishing etc.
@@ -45,8 +46,9 @@ class starter_PublishPerfectArticle():
         workflow_version = "1"
         child_policy = None
         execution_start_to_close_timeout = str(60 * 30)
-        workflow_input = json.dumps(info, default=lambda ob: ob.__dict__)
+        workflow_input = S3NotificationInfo.to_dict(info)
         workflow_input['run'] = run
+        workflow_input = json.dumps(workflow_input, default=lambda ob: ob.__dict__)
 
         try:
             response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version,
