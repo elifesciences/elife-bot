@@ -27,7 +27,7 @@ def work(ENV, flag):
     settings = settings_lib.get_settings(ENV)
 
     # Log
-    identity = "queue_worker_%s" % int(random.random() * 1000)
+    identity = "queue_worker_%s" % os.getpid()
     log_file = "queue_worker.log"
     # logFile = None
     logger = log.logger(log_file, settings.setLevel, identity)

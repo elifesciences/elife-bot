@@ -4,6 +4,7 @@ import log
 import json
 import random
 import importlib
+import os
 import time
 from optparse import OptionParser
 from provider import process
@@ -22,7 +23,7 @@ def decide(ENV, flag):
     maximum_page_size = 100
 
     # Log
-    identity = "decider_%s" % int(random.random() * 1000)
+    identity = "decider_%s" % os.getpid()
     logFile = "decider.log"
     #logFile = None
     logger = log.logger(logFile, settings.setLevel, identity)

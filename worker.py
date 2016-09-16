@@ -24,7 +24,7 @@ def work(ENV, flag):
     settings = settingsLib.get_settings(ENV)
 
     # Log
-    identity = "worker_%s" % int(random.random() * 1000)
+    identity = "worker_%s" % os.getpid()
     logger = log.logger("worker.log", settings.setLevel, identity)
 
     # Simple connect
