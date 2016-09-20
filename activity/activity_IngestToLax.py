@@ -11,7 +11,7 @@ from boto.sqs.message import Message
 from provider.article_structure import ArticleInfo
 
 """
-activity_PreparePostEIF.py activity
+activity_IngestToLax.py activity
 """
 import requests
 

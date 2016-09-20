@@ -105,17 +105,10 @@ def process_data_ingestarticlezip(workflow_name, workflow_data):
             'run': str(uuid.uuid4())}
     return data
 
-def process_data_processarticlezip(workflow_name, workflow_data):
-    run = workflow_data['run']
-    data = {'info': S3NotificationInfo.from_dict(workflow_data),
-            'run': run}
-    return data
-
 
 workflow_data_processors = {
     'PublishPerfectArticle': process_data_publishperfectarticle,
-    'IngestArticleZip': process_data_ingestarticlezip,
-    'ProcessArticleZip': process_data_processarticlezip
+    'IngestArticleZip': process_data_ingestarticlezip
 }
 
 if __name__ == "__main__":

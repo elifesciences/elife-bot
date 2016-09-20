@@ -18,7 +18,7 @@ Amazon SWF ProcessArticleZip starter, preparing article xml for lax.
 
 class starter_ProcessArticleZip():
 
-    def start(self, ENV="dev", info=None, run=None):
+    def start(self, article_id, status, run, date_time, message=None, ENV="dev"):
 
         # TODO : much of this is common to many starters and could probably be streamlined
 
@@ -31,23 +31,22 @@ class starter_ProcessArticleZip():
         # logFile = None
         logger = log.logger(log_file, settings.setLevel, identity)
 
-        filename = info.file_name
-
-        if filename is None:
-            logger.error("Did not get a filename")
-            return
-
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "ProcessArticleZip_%s" % filename.replace('/', '_') + str(int(random.random() * 1000))
+        workflow_id = "ProcessArticleZip_%s" % article_id + str(int(random.random() * 10000))
         workflow_name = "ProcessArticleZip"
         workflow_version = "1"
         child_policy = None
         execution_start_to_close_timeout = str(60 * 30)
-        workflow_input = S3NotificationInfo.to_dict(info)
-        workflow_input['run'] = run
+        workflow_input = {
+            "run": run,
+            "article_id": article_id,
+            "status": status,
+            "message": message,
+            "date_time": date_time
+        }
         workflow_input = json.dumps(workflow_input, default=lambda ob: ob.__dict__)
 
         try:

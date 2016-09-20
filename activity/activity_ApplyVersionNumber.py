@@ -7,7 +7,6 @@ from jats_scraper import jats_scraper
 import boto.s3
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
 from provider.article_structure import ArticleInfo
 import provider.s3lib as s3lib
@@ -39,12 +38,12 @@ class activity_ApplyVersionNumber(activity.activity):
         self.expanded_bucket_name = (self.settings.publishing_buckets_prefix
                                      + self.settings.expanded_bucket)
 
-        info = S3NotificationInfo.from_dict(data)
         run = data['run']
         session = Session(self.settings)
         version = session.get_value(run, 'version')
         article_id = session.get_value(run, 'article_id')
         article_version_id = article_id + '.' + version
+        file_name = session.get_value(run, 'file_name')
 
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 "Apply Version Number", "start",
@@ -56,7 +55,7 @@ class activity_ApplyVersionNumber(activity.activity):
                 self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
             # Do not rename files if a version number is in the file_name
-            m = self.version_in_file_name(info.file_name)
+            m = self.version_in_file_name(file_name)
 
             if m is not None:
                 # Nothing to do
