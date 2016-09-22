@@ -255,7 +255,7 @@ class TestPublicationEmail(unittest.TestCase):
 
     @data(
         (None, None, "Author", "author01@example.com"),
-        (None, True, "Features", "features@elifesciences.org")
+        (None, True, "Features", "features_team@example.org")
     )
     @unpack
     def test_choose_recipient_authors(self, article_type, feature_article,

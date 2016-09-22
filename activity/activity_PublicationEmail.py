@@ -535,13 +535,22 @@ class activity_PublicationEmail(activity.activity):
         if feature_article is True:
             # feature article recipients
             recipient_authors = []
-            feature_author = {}
-            feature_author["first_nm"] = "Features"
-            feature_author["e_mail"] = "features@elifesciences.org"
 
-            # Special: convert the dict to an object for use in templates
-            obj = Struct(**feature_author)
-            recipient_authors.append(obj)
+            recipient_email_list = []
+            # Handle multiple recipients, if specified
+            if type(self.settings.features_publication_recipient_email) == list:
+                for email in self.settings.features_publication_recipient_email:
+                    recipient_email_list.append(email)
+            else:
+                recipient_email_list.append(self.settings.features_publication_recipient_email)
+
+            for recipient_email in recipient_email_list:
+                feature_author = {}
+                feature_author["first_nm"] = "Features"
+                feature_author["e_mail"] = recipient_email
+                # Special: convert the dict to an object for use in templates
+                obj = Struct(**feature_author)
+                recipient_authors.append(obj)
 
         else:
             recipient_authors = authors
