@@ -42,16 +42,16 @@ class activity_ResizeImages(activity.activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        run = data['run']
         session = Session(self.settings)
-        version = session.get_value(self.get_workflowId(), 'version')
-        article_id = session.get_value(self.get_workflowId(), 'article_id')
-        run = session.get_value(self.get_workflowId(), 'run')
+        version = session.get_value(run, 'version')
+        article_id = session.get_value(run, 'article_id')
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Resize Images", "start",
                                 "Starting submission resize of images for article " + article_id)
 
         try:
-            expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder')
+            expanded_folder_name = session.get_value(run, 'expanded_folder')
             cdn_path = article_id
 
             if self.logger:

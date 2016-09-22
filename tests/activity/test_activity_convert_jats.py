@@ -9,6 +9,7 @@ from classes_mock import FakeSession
 from classes_mock import FakeKey
 from classes_mock import FakeS3Connection
 import settings_mock
+import test_activity_data as testdata
 
 
 class TestConvertJATS(unittest.TestCase):
@@ -40,10 +41,9 @@ class TestConvertJATS(unittest.TestCase):
         self.jats.emit_monitor_event = mock.MagicMock()
         self.jats.set_dashboard_properties = mock.MagicMock()
 
-        param_data = None
-        success = self.jats.do_activity(param_data)
+        success = self.jats.do_activity(testdata.ExpandArticle_data)
         self.assertDictEqual.__self__.maxDiff = None
-        self.assertEqual(success,True)
+        self.assertEqual(success, True)
         output_json = json.loads(directory.read("test_dest.json"))
         expected = data.json_output_return_example
         self.assertDictEqual(output_json, expected)

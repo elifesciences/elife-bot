@@ -52,18 +52,16 @@ class activity_LensArticle(activity.activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
-        elife_id = None
+        article_id = None
         # Support for both the starter method and the PostPerfectPublication method
-        if data and "data" in data:
-            elife_id = data["data"]["elife_id"]
-        elif data and "article_id" in data:
-            elife_id = data["article_id"]
+        if data and "article_id" in data:
+            article_id = data["article_id"]
 
-        article_xml_filename = self.article.download_article_xml_from_s3(doi_id=elife_id)
+        article_xml_filename = self.article.download_article_xml_from_s3(doi_id=article_id)
 
         if not article_xml_filename:
             if self.logger:
-                self.logger.info('LensArticle article xml file not found for %s' % str(elife_id))
+                self.logger.info('LensArticle article xml file not found for %s' % str(article_id))
             return True
 
         self.article.parse_article_file(self.get_tmp_dir() + os.sep + article_xml_filename)
@@ -71,10 +69,10 @@ class activity_LensArticle(activity.activity):
         # Check for PoA, we will not create lens article for
         if self.article.is_poa:
             if self.logger:
-                self.logger.info('LensArticle %s is PoA, not creating a lens page' % str(elife_id))
+                self.logger.info('LensArticle %s is PoA, not creating a lens page' % str(article_id))
             return True
 
-        article_s3key = self.get_article_s3key(elife_id)
+        article_s3key = self.get_article_s3key(article_id)
 
         filename = "index.html"
 
@@ -101,12 +99,12 @@ class activity_LensArticle(activity.activity):
 
         return True
 
-    def get_article_s3key(self, elife_id):
+    def get_article_s3key(self, article_id):
         """
         Given an eLife article DOI ID (5 digits) assemble the
         S3 key name for where to save the article index.html page
         """
-        article_s3key = "/" + str(elife_id).zfill(5) + "/index.html"
+        article_s3key = "/" + str(article_id).zfill(5) + "/index.html"
 
         return article_s3key
 

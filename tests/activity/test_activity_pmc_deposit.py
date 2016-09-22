@@ -124,6 +124,13 @@ class TestPMCDeposit(unittest.TestCase):
                                          file_name, file_size)
         self.assertEqual(subject, expected_subject)
 
+    @data(
+        ("00013", "You need to email PMC: article 00013!!!")
+    )
+    @unpack
+    def test_get_revision_email_subject(self, fid, expected_subject):
+        subject = self.activity.get_revision_email_subject(fid)
+        self.assertEqual(subject, expected_subject)
 
     @data(None, True)
     def test_clean_directories(self, full):

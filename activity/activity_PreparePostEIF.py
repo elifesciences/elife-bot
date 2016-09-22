@@ -35,26 +35,27 @@ class activity_PreparePostEIF(activity.activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        run = data['run']
         session = Session(self.settings)
-        version = session.get_value(self.get_workflowId(), 'version')
-        article_id = session.get_value(self.get_workflowId(), 'article_id')
-        run = session.get_value(self.get_workflowId(), 'run')
+        version = session.get_value(run, 'version')
+        article_id = session.get_value(run, 'article_id')
+
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Prepare Post EIF", "start",
                                 "Starting preparation of article for EIF " + article_id)
 
         try:
-            eif_filename = session.get_value(self.get_workflowId(), 'eif_filename')
+            eif_filename = session.get_value(run, 'eif_filename')
             eif_bucket = self.settings.publishing_buckets_prefix + self.settings.eif_bucket
 
-            article_path = session.get_value(self.get_workflowId(), 'article_path')
+            article_path = session.get_value(run, 'article_path')
             self.set_monitor_property(self.settings, article_id, 'path',
                                           article_path, 'text', version=version)
 
-            expanded_folder = session.get_value(self.get_workflowId(), 'expanded_folder')
-            status = session.get_value(self.get_workflowId(), 'status')
+            expanded_folder = session.get_value(run, 'expanded_folder')
+            status = session.get_value(run, 'status')
 
-            update_date = session.get_value(self.get_workflowId(), 'update_date')
+            update_date = session.get_value(run, 'update_date')
 
             carry_over_data = {
                 'eif_filename': eif_filename,

@@ -165,7 +165,8 @@ class article(object):
             return False
 
         # Download XML file via HTTP for now
-        xml_file_url = ('http://s3.amazonaws.com/elife-publishing-cdn/'
+        cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
+        xml_file_url = ('http://s3.amazonaws.com/' + cdn_bucket_name + '/'
                         + doi_id + '/' + 'elife-' + doi_id + '-v' + str(version) + '.xml')
         xml_filename = xml_file_url.split('/')[-1]
 

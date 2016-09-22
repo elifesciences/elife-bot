@@ -44,10 +44,11 @@ class activity_ScheduleCrossref(activity.activity):
         info = S3NotificationInfo.from_dict(data)
         session = Session(self.settings)
 
-        version = session.get_value(self.get_workflowId(), 'version')
-        article_id = session.get_value(self.get_workflowId(), 'article_id')
-        expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder')
-        run = session.get_value(self.get_workflowId(), 'run')
+        run = data['run']
+        version = session.get_value(run, 'version')
+        article_id = session.get_value(run, 'article_id')
+        expanded_folder_name = session.get_value(run, 'expanded_folder')
+
 
         conn = S3Connection(self.settings.aws_access_key_id,
                             self.settings.aws_secret_access_key)

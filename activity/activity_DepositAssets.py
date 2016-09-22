@@ -25,10 +25,10 @@ class activity_DepositAssets(activity.activity):
         Do the work
         """
 
+        run = data['run']
         session = Session(self.settings)
-        version = session.get_value(self.get_workflowId(), 'version')
-        article_id = session.get_value(self.get_workflowId(), 'article_id')
-        run = session.get_value(self.get_workflowId(), 'run')
+        version = session.get_value(run, 'version')
+        article_id = session.get_value(run, 'article_id')
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Deposit assets", "start",
                                 "Depositing assets for " + article_id)
@@ -37,7 +37,7 @@ class activity_DepositAssets(activity.activity):
             conn = S3Connection(self.settings.aws_access_key_id,
                                 self.settings.aws_secret_access_key)
 
-            expanded_folder_name = session.get_value(self.get_workflowId(), 'expanded_folder')
+            expanded_folder_name = session.get_value(run, 'expanded_folder')
             expanded_folder_bucket = (self.settings.publishing_buckets_prefix +
                                       self.settings.expanded_bucket)
 
