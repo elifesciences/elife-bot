@@ -137,13 +137,7 @@ class activity_PublicationEmail(activity.activity):
 
             # Send an email to each author
             if authors is None:
-                if self.logger:
-                    log_info = ("Leaving article in the outbox because we cannot " +
-                                "find its authors: " + article.doi)
-                    self.admin_email_content += "\n" + log_info
-                    self.logger.info(log_info)
-                # Make a note of this and we will not remove from the outbox, save for a later day
-                self.articles_do_not_remove_from_outbox.append(article.doi)
+                self.log_cannot_find_authors(article.doi)
             else:
                 recipient_authors = self.choose_recipient_authors(
                     authors=authors,
@@ -152,7 +146,9 @@ class activity_PublicationEmail(activity.activity):
 
                 # Good, we can send emails
                 for recipient_author in recipient_authors:
-                    self.send_email(email_type, article.doi_id, recipient_author, article, authors)
+                    result = self.send_email(email_type, article.doi_id, recipient_author, article, authors)
+                    if result is False:
+                        self.log_cannot_find_authors(article.doi)
 
 
           # Temporary for testing, send a test run - LATER FOR TESTING TEMPLATES
@@ -166,6 +162,15 @@ class activity_PublicationEmail(activity.activity):
         self.send_admin_email()
 
         return True
+
+    def log_cannot_find_authors(self, doi):
+        if self.logger:
+            log_info = ("Leaving article in the outbox because we cannot " +
+                        "find its authors: " + doi)
+            self.admin_email_content += "\n" + log_info
+            self.logger.info(log_info)
+        # Make a note of this and we will not remove from the outbox, save for a later day
+        self.articles_do_not_remove_from_outbox.append(doi)
 
     def set_datestamp(self):
         a = arrow.utcnow()
@@ -512,7 +517,7 @@ class activity_PublicationEmail(activity.activity):
         for author in authors:
             # Test sending each type of template
             for email_type in self.email_types:
-                self.send_email(email_type, elife_id, author, article)
+                result = self.send_email(email_type, elife_id, author, article)
 
             # For testing set the article as its own related article then send again
 
@@ -525,7 +530,7 @@ class activity_PublicationEmail(activity.activity):
             article.set_related_insight_article(related_article)
             for email_type in ['author_publication_email_VOR_no_POA',
                                'author_publication_email_VOR_after_POA']:
-                self.send_email(email_type, elife_id, author, article)
+                result = self.send_email(email_type, elife_id, author, article)
 
     def choose_recipient_authors(self, authors, article_type, feature_article):
         """
@@ -564,6 +569,13 @@ class activity_PublicationEmail(activity.activity):
         decide whether to send the email (after checking for duplicates)
         and queue the email
         """
+
+        if author is None:
+            return False
+        if not hasattr(author, 'e_mail'):
+            return False
+        if author.e_mail is None:
+            return False
 
         # First process the headers
         headers = self.templates.get_email_headers(
@@ -629,6 +641,7 @@ class activity_PublicationEmail(activity.activity):
                 date_scheduled_timestamp=date_scheduled_timestamp,
                 format="html")
 
+        return True
 
     def queue_author_email(self, email_type, author, headers, article, authors, doi_id,
                            date_scheduled_timestamp, format="html"):
