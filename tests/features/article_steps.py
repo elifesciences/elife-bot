@@ -176,6 +176,12 @@ def i_have_was_ever_poa(step, was_ever_poa):
     assert world.was_ever_poa is not None, \
       "Got was_ever_poa %s" % world.was_ever_poa
     
+@step(u'I have the feature article (\S+)')
+def i_have_the_feature_article(step, feature_article):
+    if feature_article == "True":  world.feature_article = True
+    if feature_article == "False": world.feature_article = False
+
+    
 @step(u'I have the article url (\S+)')
 def i_have_the_article_url(step, article_url):
   world.article_url = article_url

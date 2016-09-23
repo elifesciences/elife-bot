@@ -26,6 +26,7 @@ Feature: PublicationEmail activity
     And I have the article type <article_type>
     And I have is poa <is_poa>
     And I have was ever poa <was_ever_poa>
+    And I have the feature article False
     When I choose the email type using the activity object
     Then I get the email type <email_type>
 

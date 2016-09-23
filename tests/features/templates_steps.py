@@ -90,6 +90,12 @@ def i_have_the_article(step, article_json):
   assert world.article is not None, \
     "Got article %s" % world.article
 
+@step(u'I have the attribute authors (.+)')
+def and_i_have_the_attribute_authors(step, authors_json):
+  world.authors = json.loads(authors_json)
+  assert world.authors is not None, \
+    "Got authors %s" % world.authors
+
 @step('I have the elife json (.+)')
 def i_have_the_elife(step, elife_json):
   world.elife = json.loads(elife_json)
@@ -98,7 +104,7 @@ def i_have_the_elife(step, elife_json):
 
 @step('I get email body from the templates provider')
 def i_get_author_publication_email_body_from_the_templates_provider(step):
-  world.email_body = world.templates.get_email_body(world.email_type, world.author, world.article)
+  world.email_body = world.templates.get_email_body(world.email_type, world.author, world.article, world.authors)
   assert world.email_body is not None, \
     "Got email_body %s" % world.email_body
     

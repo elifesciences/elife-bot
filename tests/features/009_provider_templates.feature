@@ -31,6 +31,7 @@ Feature: Use Templates provider
     And I have the author json <author_json>
     And I have the article json <article_json>
     And I have the email type <email_type>
+    And I have the attribute authors []
     And I get email templates list from the template provider
     And I get a filesystem provider from the templates provider
     When I read each base dir plus templates list document to content

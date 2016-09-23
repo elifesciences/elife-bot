@@ -249,7 +249,8 @@ def i_choose_the_email_type_using_the_activity_object(step):
     world.email_type = world.activity_object.choose_email_type(
         world.article_type,
         world.is_poa,
-        world.was_ever_poa)
+        world.was_ever_poa,
+        world.feature_article)
     assert world.email_type is not None, \
         "Got email_type %s" % world.email_type
     
