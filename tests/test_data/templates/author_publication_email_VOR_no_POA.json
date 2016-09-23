@@ -1,0 +1,5 @@
+{
+  "sender_email": "press@elifesciences.org",
+  "email_type": "author_publication_email_VOR_no_POA",
+  "subject": "{{ author.first_nm }}, Your eLife paper is now online"
+}

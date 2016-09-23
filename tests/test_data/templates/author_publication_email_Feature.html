@@ -1,0 +1,1 @@
+{% include "email_header.html" %}<p>Dear {{ author.first_nm }}</p>"{{ article.article_title }}"<a href="{{ article.doi_url }}">read it</a><a href="{{ article.tweet_url }}">social media</a><a href="{{ article.lens_url }}">online viewer</a>{% for author in authors %}{{ author.e_mail }}{% endfor %}

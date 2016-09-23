@@ -112,6 +112,9 @@ class exp():
     ses_pmc_recipient_email = "admin@example.com"
     ses_pmc_revision_recipient_email = "sender@example.com"
 
+    # Publication email settings
+    features_publication_recipient_email = "features_team@example.com"
+
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
@@ -233,6 +236,9 @@ class dev():
     ses_pmc_sender_email = "sender@example.com"
     ses_pmc_recipient_email = "admin@example.com"
     ses_pmc_revision_recipient_email = "sender@example.com"
+
+    # Publication email settings
+    features_publication_recipient_email = "features_team@example.com"
 
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
@@ -360,6 +366,9 @@ class live():
     ses_pmc_sender_email = "sender@example.com"
     ses_pmc_recipient_email = "admin@example.com"
     ses_pmc_revision_recipient_email = "sender@example.com"
+
+    # Publication email settings
+    features_publication_recipient_email = "features_team@example.com"
 
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp'

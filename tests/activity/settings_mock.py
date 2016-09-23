@@ -2,6 +2,8 @@
 domain = ""
 default_task_list = ""
 
+bucket = "old_articles_bucket"
+
 storage_provider = 's3'
 eif_bucket = 'dest_bucket'
 expanded_bucket = 'origin_bucket'
@@ -28,6 +30,7 @@ poa_packaging_bucket = 'poa_packaging_bucket'
 poa_bucket = 'poa_bucket'
 ses_poa_sender_email = ""
 ses_poa_recipient_email = ""
+templates_bucket = ""
 
 drupal_EIF_endpoint = "https://website/api/article.json"
 drupal_approve_endpoint = "https://website/api/publish/"
@@ -45,3 +48,5 @@ PMC_FTP_CWD = ""
 ses_pmc_sender_email = ""
 ses_pmc_recipient_email = ""
 ses_pmc_revision_recipient_email = ["e@example.org", "life@example.org"]
+
+features_publication_recipient_email = "features_team@example.org"
