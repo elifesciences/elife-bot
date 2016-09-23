@@ -136,14 +136,14 @@ class activity_PublicationEmail(activity.activity):
                 authors = self.get_authors(article.doi_id)
 
             # Send an email to each author
-            if authors is None:
+            recipient_authors = self.choose_recipient_authors(
+                authors=authors,
+                article_type=article.article_type,
+                feature_article=self.is_feature_article(article))
+
+            if recipient_authors is None:
                 self.log_cannot_find_authors(article.doi)
             else:
-                recipient_authors = self.choose_recipient_authors(
-                    authors=authors,
-                    article_type=article.article_type,
-                    feature_article=self.is_feature_article(article))
-
                 # Good, we can send emails
                 for recipient_author in recipient_authors:
                     result = self.send_email(email_type, article.doi_id, recipient_author, article, authors)
