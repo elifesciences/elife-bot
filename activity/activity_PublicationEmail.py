@@ -139,7 +139,8 @@ class activity_PublicationEmail(activity.activity):
             recipient_authors = self.choose_recipient_authors(
                 authors=authors,
                 article_type=article.article_type,
-                feature_article=self.is_feature_article(article))
+                feature_article=self.is_feature_article(article),
+                related_insight_article=article.related_insight_article)
 
             if recipient_authors is None:
                 self.log_cannot_find_authors(article.doi)
@@ -532,14 +533,17 @@ class activity_PublicationEmail(activity.activity):
                                'author_publication_email_VOR_after_POA']:
                 result = self.send_email(email_type, elife_id, author, article)
 
-    def choose_recipient_authors(self, authors, article_type, feature_article):
+    def choose_recipient_authors(self, authors, article_type, feature_article,
+                                 related_insight_article):
         """
         The recipients of the email will change depending on if it is a
         feature article
         """
-        if feature_article is True:
+        recipient_authors = []
+        if (feature_article is True
+            or article_type == "article-commentary"
+            or related_insight_article is not None):
             # feature article recipients
-            recipient_authors = []
 
             recipient_email_list = []
             # Handle multiple recipients, if specified
@@ -557,6 +561,8 @@ class activity_PublicationEmail(activity.activity):
                 obj = Struct(**feature_author)
                 recipient_authors.append(obj)
 
+        if authors and len(recipient_authors) > 0:
+            recipient_authors = recipient_authors + authors
         else:
             recipient_authors = authors
 
