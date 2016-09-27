@@ -590,6 +590,11 @@ class activity_PublicationEmail(activity.activity):
             article=article,
             format="html")
 
+        if not headers:
+            log_info = ('Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s' %
+                        (str(elife_id), str(email_type), str(author.e_mail)))
+            self.admin_email_content += "\n" + log_info
+
         # Get the article published date timestamp
         pub_date_timestamp = None
         date_scheduled_timestamp = 0
@@ -611,7 +616,7 @@ class activity_PublicationEmail(activity.activity):
         if duplicate is True:
             if self.logger:
                 log_info = ('Duplicate email: doi_id: %s email_type: %s recipient_email: %s' %
-                            (str(elife_id), str(headers["email_type"]), str(author.e_mail)))
+                            (str(elife_id), str(email_type), str(author.e_mail)))
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
 
@@ -623,7 +628,7 @@ class activity_PublicationEmail(activity.activity):
                 if self.logger:
                     log_info = ('Article on do not send list for DOI: doi_id: %s ' +
                                 'email_type: %s recipient_email: %s' %
-                                (str(elife_id), str(headers["email_type"]), str(author.e_mail)))
+                                (str(elife_id), str(email_type), str(author.e_mail)))
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
 
