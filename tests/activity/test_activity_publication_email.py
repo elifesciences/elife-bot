@@ -254,14 +254,17 @@ class TestPublicationEmail(unittest.TestCase):
 
 
     @data(
-        (None, None, "Author", "author01@example.com"),
-        (None, True, "Features", "features_team@example.org")
+        (None, None, None, "Author", "author01@example.com"),
+        (None, True, None, "Features", "features_team@example.org"),
+        (None, None, "not_none", "Features", "features_team@example.org"),
+        ("article-commentary", False, None, "Features", "features_team@example.org")
     )
     @unpack
-    def test_choose_recipient_authors(self, article_type, feature_article,
+    def test_choose_recipient_authors(self, article_type, feature_article, related_insight_article,
                                       expected_0_first_nm, expected_0_e_mail):
         authors = self.fake_authors()
-        recipient_authors = self.activity.choose_recipient_authors(authors, article_type, feature_article)
+        recipient_authors = self.activity.choose_recipient_authors(authors, article_type,
+                                                                   feature_article, related_insight_article)
         if recipient_authors:
             self.assertEqual(recipient_authors[0].first_nm, expected_0_first_nm)
             self.assertEqual(recipient_authors[0].e_mail, expected_0_e_mail)
@@ -281,8 +284,10 @@ class TestPublicationEmail(unittest.TestCase):
         article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
         article_type = article_object.article_type
         feature_article = True
+        related_insight_article = None
 
-        recipient_authors = self.activity.choose_recipient_authors(authors, article_type, feature_article)
+        recipient_authors = self.activity.choose_recipient_authors(authors, article_type,
+                                                                   feature_article, related_insight_article)
         author = recipient_authors[0]
 
         format = "html"
