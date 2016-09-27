@@ -605,7 +605,7 @@ class activity_PublicationEmail(activity.activity):
         if duplicate is True:
             if self.logger:
                 log_info = ('Duplicate email: doi_id: %s email_type: %s recipient_email: %s' %
-                            (elife_id, headers["email_type"], author.e_mail))
+                            (str(elife_id), str(headers["email_type"]), str(author.e_mail)))
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
 
@@ -617,7 +617,7 @@ class activity_PublicationEmail(activity.activity):
                 if self.logger:
                     log_info = ('Article on do not send list for DOI: doi_id: %s ' +
                                 'email_type: %s recipient_email: %s' %
-                                (elife_id, headers["email_type"], author.e_mail))
+                                (str(elife_id), str(headers["email_type"]), str(author.e_mail)))
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
 
@@ -626,8 +626,8 @@ class activity_PublicationEmail(activity.activity):
             # Queue the email
             if self.logger:
                 log_info = ("Sending " + email_type + " type email" +
-                            " for article " + elife_id +
-                            " to recipient_email " + author.e_mail)
+                            " for article " + str(elife_id) +
+                            " to recipient_email " + str(author.e_mail))
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
 
