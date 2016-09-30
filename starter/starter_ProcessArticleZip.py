@@ -14,7 +14,8 @@ from S3utility.s3_notification_info import S3NotificationInfo
 """
 Amazon SWF ProcessArticleZip starter, preparing article xml for lax.
 """
-
+class NullArticleException(Exception):
+    pass
 
 class starter_ProcessArticleZip():
 
@@ -30,6 +31,9 @@ class starter_ProcessArticleZip():
         log_file = "starter.log"
         # logFile = None
         logger = log.logger(log_file, settings.setLevel, identity)
+
+        if article_id is None:
+            raise NullArticleException("article id is Null. Possible error: Lax did not send back valid data from ingest.")
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
@@ -60,6 +64,8 @@ class starter_ProcessArticleZip():
                                                      execution_start_to_close_timeout, workflow_input)
 
             logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+        except NullArticleException as e:
+            logger.error(e)
 
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
             # There is already a running workflow with that ID, cannot start another
