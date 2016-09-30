@@ -25,7 +25,7 @@ class activity_ScheduleDownstream(activity.activity):
         self.logger = logger
 
         # Bucket for outgoing files
-        self.publish_bucket = settings.poa_packaging_bucket
+        self.publish_bucket = (settings.publishing_buckets_prefix + settings.poa_packaging_bucket)
 
         # Outbox folders on S3
         self.pubmed_outbox_folder = "pubmed/outbox/"

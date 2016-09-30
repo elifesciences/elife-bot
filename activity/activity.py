@@ -16,6 +16,7 @@ class activity(object):
     ACTIVITY_SUCCESS = "ActivitySuccess"
     ACTIVITY_TEMPORARY_FAILURE = "ActivityTemporaryFailure"
     ACTIVITY_PERMANENT_FAILURE = "ActivityPermanentFailure"
+    ACTIVITY_EXIT_WORKFLOW = "ActivityExitWorkflow"
 
     # Base class
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):

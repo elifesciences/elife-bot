@@ -17,19 +17,7 @@ Amazon SWF PostPerfectPublication starter, for API and Lens publishing etc.
 
 class starter_PostPerfectPublication():
 
-    def start(self, article_id, version, expanded_folder, update_date,
-              run, status, eif_location, ENV="dev"):
-
-        info = {
-            'article_id': article_id,
-            'version': version,
-            'expanded_folder': expanded_folder,
-            'update_date': update_date,
-            'run': run,
-            'status': status,
-            'eif_location': eif_location,
-        }
-
+    def start(self, info, ENV="dev"):
         # Specify run environment settings
         settings = settingsLib.get_settings(ENV)
 

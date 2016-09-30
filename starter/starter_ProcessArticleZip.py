@@ -18,7 +18,7 @@ Amazon SWF ProcessArticleZip starter, preparing article xml for lax.
 
 class starter_ProcessArticleZip():
 
-    def start(self, article_id, status, run, date_time, message=None, ENV="dev"):
+    def start(self, article_id, version, requested_action, result, expanded_folder, status, eif_location, run, update_date, message=None, ENV="dev"):
 
         # TODO : much of this is common to many starters and could probably be streamlined
 
@@ -43,9 +43,14 @@ class starter_ProcessArticleZip():
         workflow_input = {
             "run": run,
             "article_id": article_id,
+            "result": result,
             "status": status,
+            "version": version,
+            "expanded_folder": expanded_folder,
+            "eif_location": eif_location,
+            "requested_action": requested_action,
             "message": message,
-            "date_time": date_time
+            "date_time": update_date
         }
         workflow_input = json.dumps(workflow_input, default=lambda ob: ob.__dict__)
 

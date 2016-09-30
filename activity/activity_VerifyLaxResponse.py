@@ -36,24 +36,24 @@ class activity_VerifyLaxResponse(activity.activity):
                                 "Starting verification of Lax response " + article_id)
 
         try:
-            if data['status'] == "ingested":
+            if data['result'] == "ingested":
 
-                self.emit_monitor_event(self.settings, article_id, version, run, "Ingest To Lax", "end",
-                                        " Finished Verification. Lax has responded with status: ingested."
+                self.emit_monitor_event(self.settings, article_id, version, run, "Verify Lax Response", "end",
+                                        " Finished Verification. Lax has responded with result: ingested."
                                         " Article: " + article_id)
 
                 return True
 
             self.emit_monitor_event(self.settings, article_id, version, run, "Ingest To Lax", "error",
                                     "Lax has not ingested article " + article_id +
-                                    " status from lax:" + str(data['status']) + '; message from lax: ' + data['message'])
+                                    " result from lax:" + str(data['result']) + '; message from lax: ' + data['message'])
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
             #########
 
         except Exception as e:
             self.logger.exception("Exception when Verifying Lax Response")
-            self.emit_monitor_event(self.settings, article_id, version, run, "Ingest To Lax", "error",
+            self.emit_monitor_event(self.settings, article_id, version, run, "Verify Lax Response", "error",
                                     "Error when verifying lax response" + article_id +
                                     " message:" + str(e.message))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE

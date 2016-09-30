@@ -76,8 +76,11 @@ class Shimmy:
                                                self._settings.drupal_update_pass)
             self.logger.debug("Requests auth set for user %s", self._settings.drupal_update_user)
         headers = {'content-type': 'application/json'}
-        response = requests.post(ingest_endpoint, data=eif, headers=headers, auth=auth)
-        self.logger.info("Response code was %s . Reason was %s", response.status_code, response.reason)
+        try:
+            response = requests.post(ingest_endpoint, data=eif, headers=headers, auth=auth)
+            self.logger.info("Response code was %s . Reason was %s", response.status_code, response.reason)
+        except Exception as e:
+            self.logger.error("Error: %s", e.message)
 
         if response.status_code == 200:
 

@@ -87,11 +87,9 @@ def work(ENV, flag):
                                           + str(activity_object.result))
                                 detail = ''
                                 respond_failed(conn, logger, token, detail, reason)
+
                             else:
-                                # (activitybase.ACTIVITY_PERMANENT_FAILURE)
-                                reason = ('error: activity failed with result '
-                                          + str(activity_object.result))
-                                detail = ''
+                                # (activitybase.ACTIVITY_PERMANENT_FAILURE or activitybase.ACTIVITY_EXIT_WORKFLOW)
                                 signal_fail_workflow(conn, logger, settings.domain,
                                                      activity_task['workflowExecution']['workflowId'],
                                                      activity_task['workflowExecution']['runId'])

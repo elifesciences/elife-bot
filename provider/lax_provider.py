@@ -1,5 +1,7 @@
 import requests
 import time
+from article import article
+import base64
 
 def article_versions(article_id, settings):
     url = settings.lax_article_versions.replace('{article_id}', article_id)
@@ -55,3 +57,28 @@ def article_publication_date(article_id, settings, logger=None):
         if logger:
             logger.error("Error obtaining version information from Lax" + str(status_code))
         return None
+
+
+def prepare_action_message(settings, article_id, run, expanded_folder, version, status, eif_location, action):
+        xml_bucket = settings.publishing_buckets_prefix + settings.expanded_bucket
+        Article = article()
+        xml_file_name = Article.get_xml_file_name(settings, expanded_folder, xml_bucket)
+        xml_path = 'https://s3.amazonaws.com/' + xml_bucket + '/' + expanded_folder + '/' + xml_file_name
+        carry_over_data = {
+            'action': action,
+            'location': xml_path,
+            'id': article_id,
+            'version': version,
+            'token': lax_token(run, version, expanded_folder, status, eif_location)
+        }
+        message = carry_over_data
+        return message
+
+def lax_token(run, version, expanded_folder, status, eif_location):
+    raw = '{"run": "' + run + '", ' \
+            '"version": "' + version + '", ' \
+            '"expanded_folder": "' + expanded_folder + '", ' \
+            '"eif_location": "' + eif_location + '", ' \
+            '"status": "' + status + '"}'
+    return base64.encodestring(raw)
+
