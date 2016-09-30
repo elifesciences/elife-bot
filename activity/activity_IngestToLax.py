@@ -70,5 +70,5 @@ class activity_IngestToLax(activity.activity):
             return False
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Ingest To Lax", "end",
-                                "Finished preparation of article for Lax " + article_id)
+                                "Finished preparation of article for Lax. Ingest sent to Lax" + article_id)
         return True
