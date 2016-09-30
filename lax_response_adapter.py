@@ -44,18 +44,22 @@ class LaxResponseAdapter:
         else:
             self.logger.error("Could not obtain queue, exiting")
 
+    def parse_token(self, token):
+        try:
+            token_parsed = base64.decodestring(token)
+            return json.loads(token_parsed)
+        except:
+            return {
+                "run": None,
+                "version": None,
+                "expanded_folder": None,
+                "status": None,
+                "eif_location": None
+            }
+
     def process_message(self, message, output_queue):
 
         message_data = json.loads(str(message.get_body()))
-        token = message_data['token']
-        token_parsed = base64.decodestring(token)
-        token_json = json.loads(token_parsed)
-        run = token_json['run']
-        version = token_json['version']
-        expanded_folder = token_json['expanded_folder']
-        status = token_json['status']
-        eif_location = token_json['eif_location'] #support for old journal
-
         result = message_data['status']
         date_time = message_data['datetime']
         article_id = message_data["id"]
@@ -63,6 +67,13 @@ class LaxResponseAdapter:
         response_message = None
         if "message" in message_data:
             response_message = message_data["message"]
+
+        token = self.parse_token(message_data['token'])
+        run = token['run']
+        version = token['version']
+        expanded_folder = token['expanded_folder']
+        status = token['status']
+        eif_location = token['eif_location'] #support for old journal
 
         workflow_data = {
             "run": run,
