@@ -4,15 +4,16 @@ import log
 import json
 from boto.sqs.message import Message
 from provider import process
+import base64
 
-identity = log.identity('ingest_response_adapter')
-logger = log.logger('ingest_response_adapter.log', 'INFO', identity)
+identity = log.identity('lax_response_adapter')
+logger = log.logger('lax_response_adapter.log', 'INFO', identity)
 
 class ShortRetryException(RuntimeError):
     pass
 
 
-class IngestResponseAdapter:
+class LaxResponseAdapter:
     def __init__(self, settings, logger):
         self._settings = settings
         self.logger = logger
@@ -46,10 +47,19 @@ class IngestResponseAdapter:
     def process_message(self, message, output_queue):
 
         message_data = json.loads(str(message.get_body()))
-        run = message_data['token']
-        status = message_data['status']
+        token = message_data['token']
+        token_parsed = base64.decodestring(token)
+        token_json = json.loads(token_parsed)
+        run = token_json['run']
+        version = token_json['version']
+        expanded_folder = token_json['expanded_folder']
+        status = token_json['status']
+        eif_location = token_json['eif_location'] #support for old journal
+
+        result = message_data['status']
         date_time = message_data['datetime']
         article_id = message_data["id"]
+        operation = message_data["requested-action"]
         response_message = None
         if "message" in message_data:
             response_message = message_data["message"]
@@ -57,15 +67,26 @@ class IngestResponseAdapter:
         workflow_data = {
             "run": run,
             "article_id": article_id,
-            "status": status,
+            "version": version,
+            "expanded_folder": expanded_folder,
+            "status": status, #vor/poa
+            "eif_location": eif_location,
+            "result": result,
             "message": response_message,
-            "date_time": date_time
+            "update_date": date_time,
+            "requested_action": operation
         }
 
-        workflow_starter_message = {
-                "workflow_name": "ProcessArticleZip",
-                "workflow_data": workflow_data
-            }
+        if operation == "ingest":
+            workflow_starter_message = {
+                    "workflow_name": "ProcessArticleZip",
+                    "workflow_data": workflow_data
+                }
+        else:
+            workflow_starter_message = {
+                    "workflow_name": "PostPerfectPublication",
+                    "workflow_data": workflow_data
+                }
         m = Message()
         m.set_body(json.dumps(workflow_starter_message))
         output_queue.write(m)
@@ -82,5 +103,5 @@ if __name__ == "__main__":
     ENV = options.env
     settings_lib = __import__('settings')
     settings = settings_lib.get_settings(ENV)
-    ingest_response_adapter = IngestResponseAdapter(settings, logger)
-    process.monitor_interrupt(lambda flag: ingest_response_adapter.listen(flag))
+    lax_response_adapter = LaxResponseAdapter(settings, logger)
+    process.monitor_interrupt(lambda flag: lax_response_adapter.listen(flag))
