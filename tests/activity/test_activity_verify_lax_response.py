@@ -24,7 +24,7 @@ class TestVerifyLaxResponse(unittest.TestCase):
             "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
             "requested_action": "ingest",
             "message": None,
-            "date_time": "2012-12-13T00:00:00Z"
+            "update_date": "2012-12-13T00:00:00Z"
         })
     @patch.object(activity_VerifyLaxResponse, 'emit_monitor_event')
     def test_do_activity(self, data, fake_emit_monitor):
@@ -52,7 +52,7 @@ class TestVerifyLaxResponse(unittest.TestCase):
             "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
             "requested_action": "ingest",
             "message": None,
-            "date_time": "2012-12-13T00:00:00Z"
+            "update_date": "2012-12-13T00:00:00Z"
         })
     @patch.object(activity_VerifyLaxResponse, 'emit_monitor_event')
     def test_do_activity_error_no_message(self, data, fake_emit_monitor):
@@ -78,7 +78,7 @@ class TestVerifyLaxResponse(unittest.TestCase):
             "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
             "requested_action": "ingest",
             "message": "An error has occurred",
-            "date_time": "2012-12-13T00:00:00Z"
+            "update_date": "2012-12-13T00:00:00Z"
         })
     @patch.object(activity_VerifyLaxResponse, 'emit_monitor_event')
     def test_do_activity_error(self, data, fake_emit_monitor):

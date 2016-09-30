@@ -11,6 +11,7 @@ class activity_VerifyPublishResponse(activity.activity):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
 
         self.name = "VerifyPublishResponse"
+        self.pretty_name = "Verify Publish Response"
         self.version = "1"
         self.default_task_heartbeat_timeout = 30
         self.default_task_schedule_to_close_timeout = 60 * 5
@@ -27,29 +28,28 @@ class activity_VerifyPublishResponse(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         run = data['run']
-        session = Session(self.settings)
-        version = session.get_value(run, 'version')
+        version = data['version']
         article_id = data['article_id']
 
-        self.emit_monitor_event(self.settings, article_id, version, run, "Verify Publish Response", "start",
+        self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Starting verification of Publish response " + article_id)
 
         try:
             # Verifies authority
-            if self.settings.publication_authority == 'Journal':
+            if self.publication_authority(self.settings) == 'Journal':
                 if 'requested_action' in data:
-                    self.emit_monitor_event(self.settings, article_id, version, run, "Verify Publish Response", "end",
+                    self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                             "Finish verification of Publish response. Authority: Old Journal. Exiting "
                                             "this workflow " + article_id)
 
-                    return activity.activity.ACTIVITY_EXIT_WORKFLOW# Terminate Workflow gracefully, log
+                    return activity.activity.ACTIVITY_EXIT_WORKFLOW # Terminate Workflow gracefully, log
 
-                self.emit_monitor_event(self.settings, article_id, version, run, "Verify Publish Response", "end",
+                self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                         "Finished verification of Publish response " + article_id)
-                return True
+                return activity.activity.ACTIVITY_SUCCESS
             # Default new site: 2.0
             if 'requested_action' not in data:
-                self.emit_monitor_event(self.settings, article_id, version, run, "Verify Publish Response", "end",
+                self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                         "Finish verification of Publish response. Authority: New site. Exiting this "
                                         "workflow " + article_id)
 
@@ -59,13 +59,13 @@ class activity_VerifyPublishResponse(activity.activity):
 
             if data['result'] == "published":
 
-                self.emit_monitor_event(self.settings, article_id, version, run, "Verify Publish Response", "end",
+                self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                         " Finished Verification. Lax has responded with result: published."
                                         " Article: " + article_id)
 
-                return True
+                return activity.activity.ACTIVITY_SUCCESS
 
-            self.emit_monitor_event(self.settings, article_id, version, run, "Verify Publish Response", "error",
+            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                     "Lax has not published article " + article_id +
                                     " result from lax:" + str(data['result']) + '; message from lax: ' + data['message'])
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
@@ -78,3 +78,6 @@ class activity_VerifyPublishResponse(activity.activity):
                                     "Error when verifying Publish response" + article_id +
                                     " message:" + str(e.message))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
+
+    def publication_authority(self, settings):
+        return settings.publication_authority
