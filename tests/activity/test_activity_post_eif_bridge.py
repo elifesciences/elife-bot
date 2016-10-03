@@ -1,18 +1,30 @@
 import unittest
 from activity.activity_PostEIFBridge import activity_PostEIFBridge
 import settings_mock
-import test_activity_data as data
-from mock import mock, patch
+import test_activity_data as test_data
+from mock import mock, patch, call
+from ddt import ddt, data
 from classes_mock import FakeSQSConn
 from classes_mock import FakeSQSMessage
 from classes_mock import FakeSQSQueue
-from classes_mock import FakeMonitorProperty
 from classes_mock import FakeLogger
-from classes_mock import FakeEmitMonitorEvent
 from testfixtures import TempDirectory
 import json
+import base64
 
+test_publication_data = {
+            'workflow_name': 'PostPerfectPublication',
+            'workflow_data':
+                {'status': u'vor',
+                 'update_date': u'2012-12-13T00:00:00Z',
+                 'run': u'cf9c7e86-7355-4bb4-b48e-0bc284221251',
+                 'expanded_folder': u'00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251',
+                 'version': u'1',
+                 'eif_location': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json',
+                 'article_id': u'00353'}
+            }
 
+@ddt
 class tests_PostEIFBridge(unittest.TestCase):
     def setUp(self):
         self.activity_PostEIFBridge = activity_PostEIFBridge(settings_mock, None, None, None, None)
@@ -30,48 +42,51 @@ class tests_PostEIFBridge(unittest.TestCase):
         mock_sqs_connect.return_value = FakeSQSConn(directory)
         mock_sqs_message.return_value = FakeSQSMessage(directory)
 
-        fake_monitor_property = FakeMonitorProperty()
-        mock_set_monitor_property.side_effect = fake_monitor_property.set
-
-        fake_monitor_event = FakeEmitMonitorEvent()
-        mock_emit_monitor_event.side_effect = fake_monitor_event.set
+        data = test_data.PostEIFBridge_data(True, u'2012-12-13T00:00:00Z')
 
         #When
-        success = self.activity_PostEIFBridge.do_activity(data.PostEIFBridge_data(True, u'2012-12-13T00:00:00Z'))
+        success = self.activity_PostEIFBridge.do_activity(data)
 
         fake_sqs_queue = FakeSQSQueue(directory)
-        data_written_in_test_queue = fake_sqs_queue.read(data.PostEIFBridge_test_dir)
+        data_written_in_test_queue = fake_sqs_queue.read(test_data.PostEIFBridge_test_dir)
 
         #Then
         self.assertEqual(True, success)
 
-        self.assertEqual(json.dumps(data.PostEIFBridge_message), data_written_in_test_queue)
-        self.assertDictEqual(fake_monitor_property.monitor_data, self.monitor_property_expected_data("published"))
+        self.assertEqual(json.dumps(test_data.PostEIFBridge_message), data_written_in_test_queue)
 
-        self.assertDictEqual(fake_monitor_event.monitor_data,
-                         self.monitor_event_expected_data("end", "Finished Post EIF Bridge 00353"))
+        mock_set_monitor_property.assert_has_calls(
+            [call(settings_mock, data["article_id"], "path", data['article_path'], "text", version="1")
+            ,call(settings_mock, data["article_id"], "publication-status", "published", "text", version="1")])
 
+        mock_emit_monitor_event.assert_called_with(settings_mock, data["article_id"], data["version"], data["run"],
+                                                   "Post EIF Bridge", "end",
+                                                   "Finished Post EIF Bridge " + data["article_id"])
+
+    @data(test_publication_data)
     @patch.object(activity_PostEIFBridge, 'emit_monitor_event')
     @patch.object(activity_PostEIFBridge, 'set_monitor_property')
-    def test_activity_unpublished_article(self, mock_set_monitor_property, mock_emit_monitor_event):
+    def test_activity_unpublished_article(self, expected_publication_data, mock_set_monitor_property, mock_emit_monitor_event):
 
-        fake_monitor_property = FakeMonitorProperty()
-        mock_set_monitor_property.side_effect = fake_monitor_property.set
-
-        fake_monitor_event = FakeEmitMonitorEvent()
-        mock_emit_monitor_event.side_effect = fake_monitor_event.set
+        #Given
+        data = test_data.PostEIFBridge_data(False, u'2012-12-13T00:00:00Z')
 
         #When
-        success = self.activity_PostEIFBridge.do_activity(data.PostEIFBridge_data(False, u'2012-12-13T00:00:00Z'))
+        success = self.activity_PostEIFBridge.do_activity(data)
 
         #Then
         self.assertEqual(True, success)
 
-        self.assertDictEqual(fake_monitor_property.monitor_data, self.monitor_property_expected_data("ready to publish"))
+        mock_set_monitor_property.assert_has_calls(
+            [call(settings_mock, data["article_id"], "_publication-data",
+                  base64.encodestring(json.dumps(expected_publication_data)), "text", version=data["version"])
+            ,call(settings_mock, data["article_id"], "publication-status",
+                  "ready to publish", "text", version=data["version"])]
+        )
 
-        self.assertDictEqual(fake_monitor_event.monitor_data,
-                         self.monitor_event_expected_data("end", "Finished Post EIF Bridge 00353"))
-
+        mock_emit_monitor_event.assert_called_with(settings_mock, data["article_id"], data["version"], data["run"],
+                                                   "Post EIF Bridge", "end",
+                                                   "Finished Post EIF Bridge " + data["article_id"])
 
     @patch('boto.sqs.connect_to_region')
     @patch('activity.activity_PostEIFBridge.Message')
@@ -81,50 +96,34 @@ class tests_PostEIFBridge(unittest.TestCase):
         mock_sqs_message.return_value = FakeSQSMessage(directory)
         self.activity_PostEIFBridge.set_monitor_property = mock.MagicMock()
         self.activity_PostEIFBridge.emit_monitor_event = mock.MagicMock()
-        success = self.activity_PostEIFBridge.do_activity(data.PostEIFBridge_data(True, None))
+        success = self.activity_PostEIFBridge.do_activity(test_data.PostEIFBridge_data(True, None))
         fake_sqs_queue = FakeSQSQueue(directory)
-        data_written_in_test_queue = fake_sqs_queue.read(data.PostEIFBridge_test_dir)
+        data_written_in_test_queue = fake_sqs_queue.read(test_data.PostEIFBridge_test_dir)
         self.assertEqual(True, success)
-        self.assertEqual(json.dumps(data.PostEIFBridge_message_no_update_date), data_written_in_test_queue)
-
+        self.assertEqual(json.dumps(test_data.PostEIFBridge_message_no_update_date), data_written_in_test_queue)
 
     @patch.object(activity_PostEIFBridge, 'emit_monitor_event')
     def test_activity_exception(self, mock_emit_monitor_event):
 
-        fake_monitor_event = FakeEmitMonitorEvent()
-        mock_emit_monitor_event.side_effect = fake_monitor_event.set
-
         fake_logger = FakeLogger()
         self.activity_PostEIFBridge_with_log = activity_PostEIFBridge(settings_mock, fake_logger, None, None, None)
 
+        data = test_data.PostEIFBridge_data(False, u'2012-12-13T00:00:00Z')
+
         #When
-        success = self.activity_PostEIFBridge_with_log.do_activity(data.PostEIFBridge_data(False, u'2012-12-13T00:00:00Z'))
+        success = self.activity_PostEIFBridge_with_log.do_activity(data)
 
         #Then
         self.assertRaises(Exception)
         self.assertEqual("Exception after submitting article EIF", fake_logger.logexception)
 
-        self.assertDictEqual(fake_monitor_event.monitor_data,
-                         self.monitor_event_expected_data("error","Error carrying over information after EIF For "
-                                                                  "article 00353 message:'NoneType' object has no "
-                                                                  "attribute 'get_queue'"))
+        mock_emit_monitor_event.assert_called_with(settings_mock, data["article_id"], data["version"], data["run"],
+                                                   "Post EIF Bridge", "error",
+                                                   "Error carrying over information after EIF For "
+                                                   "article 00353 message:'NoneType' object has no "
+                                                   "attribute 'get_queue'")
 
         self.assertEqual(False, success)
-
-    def monitor_property_expected_data(self, value):
-        return {'item_identifier': '00353',
-                'name': 'publication-status',
-                'value': value,
-                'property_type': 'text',
-                'version': '1'}
-
-    def monitor_event_expected_data(self, status, message):
-        return {'item_identifier': '00353',
-                'version': '1',
-                'run': 'cf9c7e86-7355-4bb4-b48e-0bc284221251',
-                'event_type': 'Post EIF Bridge',
-                'status': status,
-                'message': message }
 
 if __name__ == '__main__':
     unittest.main()

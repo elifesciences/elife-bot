@@ -8,7 +8,6 @@ from provider.execution_context import Session
 import datetime
 import boto.sqs
 from boto.sqs.message import Message
-from provider.execution_context import Session
 
 """
 activity_PostEIFBridge.py activity
@@ -42,9 +41,6 @@ class activity_PostEIFBridge(activity.activity):
 
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF Bridge", "start",
                                 "Starting " + article_id)
-
-            session = Session(self.settings)
-            session.store_value(run, 'eif_location', data['eif_filename'])
 
             published = data['published']
 
