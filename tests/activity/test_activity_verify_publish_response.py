@@ -39,20 +39,27 @@ data_error_lax = {
             "update_date": "2012-12-13T00:00:00Z"
         }
 
-def fake_emit_monitor_event(settings, item_identifier, version, run, event_type, status, message):
-    pass
-
-
 @ddt
 class TestVerifyPublishResponse(unittest.TestCase):
     def setUp(self):
         self.verifypublishresponse = activity_VerifyPublishResponse(settings_mock, None, None, None, None)
 
     @data(data_published_lax)
+    def test_get_events_data_published_lax(self, data):
+        (exp_start_msg, exp_end_msg, exp_result) = self.verifypublishresponse.get_events(data, "elife2.0")
+        self.assertEqual(exp_start_msg, [settings_mock, data["article_id"], data["version"],
+                                         data["run"], self.verifypublishresponse.pretty_name, "start",
+                                         "Starting verification of Publish response " + data["article_id"]])
+        self.assertEqual(exp_end_msg, [settings_mock, data["article_id"], data["version"],
+                                       data["run"], self.verifypublishresponse.pretty_name, "end",
+                                       " Finished Verification. Lax has responded with result: published."
+                                       " Article: " + data["article_id"]])
+        self.assertEqual(exp_result, self.verifypublishresponse.ACTIVITY_SUCCESS)
+
+    @data(data_published_lax)
     @patch.object(activity_VerifyPublishResponse, 'publication_authority')
     @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
     def test_do_activity_data_published_lax(self, data, fake_emit_monitor, fake_publication_authority):
-        fake_emit_monitor.side_effect = fake_emit_monitor_event
         fake_publication_authority.return_value = "elife2.0"
         result = self.verifypublishresponse.do_activity(data)
         fake_emit_monitor.assert_called_with(settings_mock,
@@ -69,7 +76,6 @@ class TestVerifyPublishResponse(unittest.TestCase):
     @patch.object(activity_VerifyPublishResponse, 'publication_authority')
     @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
     def test_do_activity_data_published_journal(self, data, fake_emit_monitor, fake_publication_authority):
-        fake_emit_monitor.side_effect = fake_emit_monitor_event
         fake_publication_authority.return_value = "Journal"
         result = self.verifypublishresponse.do_activity(data)
         fake_emit_monitor.assert_called_with(settings_mock,

@@ -73,29 +73,6 @@ class FakeSQSQueue:
     def read(self, dir_name):
         return self.dir.read(dir_name)
 
-
-class FakeMonitorProperty:
-
-    def set(self, settings, item_identifier, name, value, property_type, version=0):
-
-        self.monitor_data = {'item_identifier': item_identifier,
-                             'name': name,
-                             'value': value,
-                             'property_type': property_type,
-                             'version': version }
-
-class FakeEmitMonitorEvent:
-
-    def set(self, settings, item_identifier, version, run, event_type, status, message):
-
-        self.monitor_data = {'item_identifier': item_identifier,
-                             'version': version,
-                             'run': run,
-                             'event_type': event_type,
-                             'status': status,
-                             'message': message }
-
-
 class FakeStorageProviderConnection:
     def get_connection(self, aws_access_key_id, aws_secret_access_key):
         return None
