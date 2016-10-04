@@ -40,21 +40,26 @@ class activity_VerifyPublishResponse(activity.activity):
             run = data['run']
             version = data['version']
 
-            start_event = [self.settings, article_id, version, run, self.pretty_name, "start",
-                           "Starting verification of Publish response " + article_id]
             # Verifies authority
-            if pub_authority == 'Journal':
+            if pub_authority == 'elife-website':
 
                 if 'requested_action' in data:
                     # Publication authority is the old site but this call is from new lax.
                     # Terminate Workflow gracefully, log
+                    start_event = [self.settings, article_id, version, run, self.pretty_name + ": Lax", "start",
+                                   "Starting verification of Publish response " + article_id]
+
                     return [start_event
-                            , [self.settings, article_id, version, run, self.pretty_name, "end",
+                            , [self.settings, article_id, version, run, self.pretty_name + ": Lax", "end",
                                "Finish verification of Publish response. Authority: Old Journal. Exiting "
                                 "this workflow " + article_id]
                             , activity.activity.ACTIVITY_EXIT_WORKFLOW]
 
-                return [start_event, [self.settings, article_id, version, run, self.pretty_name, "end",
+                start_event = [self.settings, article_id, version, run, self.pretty_name + ": elife-website", "start",
+                               "Starting verification of Publish response " + article_id]
+                return [start_event, [self.settings, article_id, version, run,
+                                      self.pretty_name + ": elife-website",
+                                      "end",
                                       "Finished verification of Publish response " + article_id],
                         activity.activity.ACTIVITY_SUCCESS]
 
@@ -62,22 +67,27 @@ class activity_VerifyPublishResponse(activity.activity):
             if 'requested_action' not in data:
                 # Terminate Workflow gracefully, log - this message didn't come from lax. it was from the old
                 # pipeline, so Ignore it since the new site is the authority
+                start_event = [self.settings, article_id, version, run, self.pretty_name + ": elife-website", "start",
+                               "Starting verification of Publish response " + article_id]
                 return [start_event,
-                       [self.settings, article_id, version, run, self.pretty_name, "end",
-                        "Finish verification of Publish response. Authority: New site. Exiting this "
+                       [self.settings, article_id, version, run, self.pretty_name + ": elife-website", "end",
+                        "Finish verification of Publish response. Authority: Journal. Exiting this "
                         "workflow " + article_id],
-                       activity.activity.ACTIVITY_EXIT_WORKFLOW]
+                        activity.activity.ACTIVITY_EXIT_WORKFLOW]
 
             if data['result'] == "published":
-
+                start_event = [self.settings, article_id, version, run, self.pretty_name + ": Journal", "start",
+                               "Starting verification of Publish response " + article_id]
                 return [start_event,
-                        [self.settings, article_id, version, run, self.pretty_name, "end",
+                        [self.settings, article_id, version, run, self.pretty_name + ": Journal", "end",
                          " Finished Verification. Lax has responded with result: published."
                          " Article: " + article_id],
                         activity.activity.ACTIVITY_SUCCESS]
 
+            start_event = [self.settings, article_id, version, run, self.pretty_name + ": Journal", "start",
+                           "Starting verification of Publish response " + article_id]
             return [start_event,
-                    [self.settings, article_id, version, run, self.pretty_name, "error",
+                    [self.settings, article_id, version, run, self.pretty_name + ": Journal", "error",
                      "Lax has not published article " + article_id +
                      " result from lax:" + str(data['result']) + '; message from lax: ' +
                      data['message'] if ("message" in data) and (data['message'] is not None) else "(empty message)"],
