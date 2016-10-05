@@ -54,7 +54,7 @@ class starter_ProcessArticleZip():
             "eif_location": eif_location,
             "requested_action": requested_action,
             "message": message,
-            "date_time": update_date
+            "update_date": update_date
         }
         workflow_input = json.dumps(workflow_input, default=lambda ob: ob.__dict__)
 

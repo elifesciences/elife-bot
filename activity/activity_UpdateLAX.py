@@ -7,7 +7,9 @@ import requests
 UpdateLAX.py activity
 """
 
-
+##### **********
+##### This activity will be deprecated as soon as LAX on eLife 2.0 is running
+##### **********
 class activity_UpdateLAX(activity.activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
@@ -25,6 +27,14 @@ class activity_UpdateLAX(activity.activity):
         """
         Do the work
         """
+
+        ###########
+        if self.settings.consider_Lax_elife_2_0:
+            if self.logger:
+                self.logger.info('UpdateLax. Lax (eLife 2.0) IS running. Skipping activity.')
+            return True
+
+        ###########
 
         article_id = data['article_id']
         version = data['version']

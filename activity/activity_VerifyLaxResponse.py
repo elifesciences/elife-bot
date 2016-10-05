@@ -32,6 +32,11 @@ class activity_VerifyLaxResponse(activity.activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        ########
+        if not self.settings.consider_Lax_elife_2_0:
+            return activity.activity.ACTIVITY_SUCCESS
+        #######
+
         article_id = data['article_id']
         run = data['run']
         version = data['version']
