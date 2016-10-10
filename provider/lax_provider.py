@@ -1,6 +1,6 @@
 import requests
 import time
-from article import article
+from article import *
 import base64
 
 def article_versions(article_id, settings):
