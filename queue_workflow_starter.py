@@ -94,15 +94,25 @@ def start_workflow(workflow_name, workflow_data):
     s = eval(full_path)
     s.start(ENV=env, **workflow_data)
 
-
+# soon to be deprecated
 def process_data_publishperfectarticle(workflow_name, workflow_data):
     data = {'info': S3NotificationInfo.from_dict(workflow_data),
             'run': str(uuid.uuid4())}
     return data
 
+def process_data_ingestarticlezip(workflow_name, workflow_data):
+    data = {'info': S3NotificationInfo.from_dict(workflow_data),
+            'run': str(uuid.uuid4())}
+    return data
+def process_data_postperfectpublication(workflow_name, workflow_data):
+    data = {'info': workflow_data }
+    return data
+
 
 workflow_data_processors = {
-    'PublishPerfectArticle': process_data_publishperfectarticle
+    'PublishPerfectArticle': process_data_publishperfectarticle,
+    'IngestArticleZip': process_data_ingestarticlezip,
+    'PostPerfectPublication': process_data_postperfectpublication
 }
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ class activity_PreparePostEIF(activity.activity):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
 
         self.name = "PreparePostEIF"
+        self.pretty_name = "Prepare Post EIF"
         self.version = "1"
         self.default_task_heartbeat_timeout = 30
         self.default_task_schedule_to_close_timeout = 60 * 5
@@ -41,7 +42,7 @@ class activity_PreparePostEIF(activity.activity):
         article_id = session.get_value(run, 'article_id')
 
 
-        self.emit_monitor_event(self.settings, article_id, version, run, "Prepare Post EIF", "start",
+        self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Starting preparation of article for EIF " + article_id)
 
         try:
@@ -55,7 +56,7 @@ class activity_PreparePostEIF(activity.activity):
             expanded_folder = session.get_value(run, 'expanded_folder')
             status = session.get_value(run, 'status')
 
-            update_date = session.get_value(run, 'update_date')
+            update_date = data['update_date']
 
             carry_over_data = {
                 'eif_filename': eif_filename,
@@ -88,11 +89,11 @@ class activity_PreparePostEIF(activity.activity):
 
         except Exception as e:
             self.logger.exception("Exception when Preparing for PostEIF")
-            self.emit_monitor_event(self.settings, article_id, version, run, "PreparePost EIF", "error",
+            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                     "Error submitting EIF For article" + article_id +
                                     " message:" + str(e.message))
             return False
 
-        self.emit_monitor_event(self.settings, article_id, version, run, "Prepare Post EIF", "end",
+        self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                 "Finished preparation of article for EIF " + article_id)
         return True

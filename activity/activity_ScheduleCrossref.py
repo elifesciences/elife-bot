@@ -4,7 +4,6 @@ import activity
 
 from boto.s3.connection import S3Connection
 
-from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
 from activity_ConvertJATS import activity_ConvertJATS as ConvertJATS
 
@@ -41,7 +40,6 @@ class activity_ScheduleCrossref(activity.activity):
         self.crossref_bucket_name = (self.settings.publishing_buckets_prefix
                                      + self.settings.poa_packaging_bucket)
 
-        info = S3NotificationInfo.from_dict(data)
         session = Session(self.settings)
 
         run = data['run']

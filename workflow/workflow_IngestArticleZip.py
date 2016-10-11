@@ -1,19 +1,19 @@
 import workflow
 
 """
-ApproveArticlePublication workflow
+IngestArticleZip workflow
 """
 
 
-class workflow_ApproveArticlePublication(workflow.workflow):
+class workflow_IngestArticleZip(workflow.workflow):
     def __init__(self, settings, logger, conn=None, token=None, decision=None,
                  maximum_page_size=100):
         workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
 
         # SWF Defaults
-        self.name = "ApproveArticlePublication"
+        self.name = "IngestArticleZip"
         self.version = "1"
-        self.description = "Publish a previously submitted Article"
+        self.description = "Process Article XML up to ingestion to Lax (where it's going to be converted to Json)"
         self.default_execution_start_to_close_timeout = 60 * 5
         self.default_task_start_to_close_timeout = 30
 
@@ -46,28 +46,27 @@ class workflow_ApproveArticlePublication(workflow.workflow):
                         "start_to_close_timeout": 300
                     },
                     {
-                        "activity_type": "PublishToLax",
-                        "activity_id": "PublishToLax",
+                        "activity_type": "ExpandArticle",
+                        "activity_id": "ExpandArticle",
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
                         "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
+                        "start_to_close_timeout": 60 * 15
                     },
                     {
-                        "activity_type": "ApprovePublication",
-                        "activity_id": "ApprovePublication",
+                        "activity_type": "IngestToLax",
+                        "activity_id": "IngestToLax",
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
+                        "heartbeat_timeout": 60 * 10,
+                        "schedule_to_close_timeout": 60 * 10,
                         "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
+                        "start_to_close_timeout": 60 * 10
                     },
-
 
                 ],
 

@@ -11,7 +11,8 @@ from boto.s3.connection import S3Connection
 import provider.simpleDB as dblib
 import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
-import provider.lax_provider as lax_provider
+import lax_provider
+from provider.article_structure import ArticleInfo
 
 """
 Article data provider
@@ -799,3 +800,16 @@ class article(object):
             return True
         else:
             return False
+
+    def get_xml_file_name(self, settings, expanded_folder_name, xml_bucket):
+        conn = S3Connection(settings.aws_access_key_id,
+                        settings.aws_secret_access_key)
+        bucket = conn.get_bucket(xml_bucket)
+        files = bucket.list(expanded_folder_name + "/", "/")
+        for bucket_file in files:
+            key = bucket.get_key(bucket_file.key)
+            filename = key.name.rsplit('/', 1)[1]
+            info = ArticleInfo(filename)
+            if info.file_type == 'ArticleXML':
+                return filename
+        return None

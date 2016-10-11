@@ -57,6 +57,7 @@ class activity_ExpandArticle(activity.activity):
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
         article_id = article_id_match.group(1)
         session.store_value(run, 'article_id', article_id)
+        session.store_value(run, 'file_name', info.file_name)
 
         if self.logger:
             self.logger.info("Expanding file %s" % info.file_name)
