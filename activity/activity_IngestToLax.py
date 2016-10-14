@@ -7,7 +7,7 @@ from boto.s3.connection import S3Connection
 from provider.execution_context import Session
 import datetime
 import boto.sqs
-from boto.sqs.message import Message
+from boto.sqs.message import RawMessage
 import provider.lax_provider as lax_provider
 
 """
@@ -141,7 +141,7 @@ class activity_IngestToLax(activity.activity):
                         aws_access_key_id=connexion_settings["aws_access_key_id"],
                         aws_secret_access_key=connexion_settings["aws_secret_access_key"])
 
-        m = Message()
+        m = RawMessage()
         m.set_body(json.dumps(message_data))
         output_queue = sqs_conn.get_queue(queue)
         output_queue.write(m)

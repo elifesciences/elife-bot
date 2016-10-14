@@ -2,7 +2,7 @@ import activity
 import json
 from provider.execution_context import Session
 import boto.sqs
-from boto.sqs.message import Message
+from boto.sqs.message import RawMessage
 import provider.lax_provider as lax_provider
 import base64
 
@@ -60,7 +60,7 @@ class activity_PublishToLax(activity.activity):
                             aws_access_key_id=self.settings.aws_access_key_id,
                             aws_secret_access_key=self.settings.aws_secret_access_key)
             out_queue = sqs_conn.get_queue(self.settings.xml_info_queue)
-            m = Message()
+            m = RawMessage()
             m.set_body(json.dumps(message))
             out_queue.write(m)
 
