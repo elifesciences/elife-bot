@@ -67,7 +67,7 @@ def prepare_action_message(settings, article_id, run, expanded_folder, version, 
             'action': action,
             'location': xml_path,
             'id': article_id,
-            'version': version,
+            'version': int(version),
             'token': lax_token(run, version, expanded_folder, status, eif_location)
         }
         message = carry_over_data
