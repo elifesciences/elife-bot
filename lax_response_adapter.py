@@ -58,8 +58,10 @@ class LaxResponseAdapter:
             }
 
     def process_message(self, message, output_queue):
+        message_str = str(message.get_body())
+        logger.info('got the following message from Lax: %s', message_str)
 
-        message_data = json.loads(str(message.get_body()))
+        message_data = json.loads(message_str)
         result = message_data['status']
         date_time = message_data['datetime']
         article_id = message_data["id"]
