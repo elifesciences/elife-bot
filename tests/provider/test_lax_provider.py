@@ -55,7 +55,7 @@ class TestLaxProvider(unittest.TestCase):
                                        'id': '00353',
                                        'location': 'https://s3.amazonaws.com/origin_bucket/00353.1/bb2d37b8-e73c-43b3-a092-d555753316af/elife-00353-v1.xml',
                                        'token': 'eyJydW4iOiAiYmIyZDM3YjgtZTczYy00M2IzLWEwOTItZDU1NTc1MzMxNmFmIiwgInZlcnNpb24i\nOiAiMSIsICJleHBhbmRlZF9mb2xkZXIiOiAiMDAzNTMuMS9iYjJkMzdiOC1lNzNjLTQzYjMtYTA5\nMi1kNTU1NzUzMzE2YWYiLCAiZWlmX2xvY2F0aW9uIjogIiIsICJzdGF0dXMiOiAidm9yIn0=\n',
-                                       'version': '1'})
+                                       'version': 1})
 
     def test_lax_token(self):
         token = lax_provider.lax_token("bb2d37b8-e73c-43b3-a092-d555753316af",
