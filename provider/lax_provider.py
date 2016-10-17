@@ -61,8 +61,7 @@ def article_publication_date(article_id, settings, logger=None):
 
 def prepare_action_message(settings, article_id, run, expanded_folder, version, status, eif_location, action):
         xml_bucket = settings.publishing_buckets_prefix + settings.expanded_bucket
-        Article = article()
-        xml_file_name = Article.get_xml_file_name(settings, expanded_folder, xml_bucket)
+        xml_file_name = get_xml_file_name(settings, expanded_folder, xml_bucket)
         xml_path = 'https://s3.amazonaws.com/' + xml_bucket + '/' + expanded_folder + '/' + xml_file_name
         carry_over_data = {
             'action': action,
@@ -73,6 +72,11 @@ def prepare_action_message(settings, article_id, run, expanded_folder, version, 
         }
         message = carry_over_data
         return message
+
+def get_xml_file_name(settings, expanded_folder, xml_bucket):
+    Article = article()
+    xml_file_name = Article.get_xml_file_name(settings, expanded_folder, xml_bucket)
+    return xml_file_name
 
 def lax_token(run, version, expanded_folder, status, eif_location):
     raw = '{"run": "' + run + '", ' \
