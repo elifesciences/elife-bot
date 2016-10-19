@@ -563,7 +563,7 @@ class activity_PublicationEmail(activity.activity):
 
         if authors and len(recipient_authors) > 0:
             recipient_authors = recipient_authors + authors
-        else:
+        elif authors:
             recipient_authors = authors
 
         return recipient_authors
