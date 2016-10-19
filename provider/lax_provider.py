@@ -2,6 +2,7 @@ import requests
 import time
 from article import *
 import base64
+import json
 
 def article_versions(article_id, settings):
     url = settings.lax_article_versions.replace('{article_id}', article_id)
@@ -79,10 +80,12 @@ def get_xml_file_name(settings, expanded_folder, xml_bucket):
     return xml_file_name
 
 def lax_token(run, version, expanded_folder, status, eif_location):
-    raw = '{"run": "' + run + '", ' \
-            '"version": "' + version + '", ' \
-            '"expanded_folder": "' + expanded_folder + '", ' \
-            '"eif_location": "' + eif_location + '", ' \
-            '"status": "' + status + '"}'
-    return base64.encodestring(raw)
+    token = {
+        'run': run, 
+        'version': version,
+        'expanded_folder': expanded_folder,
+        'eif_location': eif_location,
+        'status': status,
+    }
+    return base64.encodestring(json.dumps(token))
 
