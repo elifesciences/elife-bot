@@ -3,6 +3,7 @@ import provider.lax_provider as lax_provider
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
 import base64
+import json
 
 from mock import mock, patch
 
@@ -51,10 +52,11 @@ class TestLaxProvider(unittest.TestCase):
                                                       "00353", "bb2d37b8-e73c-43b3-a092-d555753316af",
                                                       "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
                                                       "1", "vor", "", "ingest")
+        self.assertIn('token', message)
+        del message['token']
         self.assertDictEqual(message, {'action': 'ingest',
                                        'id': '00353',
                                        'location': 'https://s3.amazonaws.com/origin_bucket/00353.1/bb2d37b8-e73c-43b3-a092-d555753316af/elife-00353-v1.xml',
-                                       'token': 'eyJydW4iOiAiYmIyZDM3YjgtZTczYy00M2IzLWEwOTItZDU1NTc1MzMxNmFmIiwgInZlcnNpb24i\nOiAiMSIsICJleHBhbmRlZF9mb2xkZXIiOiAiMDAzNTMuMS9iYjJkMzdiOC1lNzNjLTQzYjMtYTA5\nMi1kNTU1NzUzMzE2YWYiLCAiZWlmX2xvY2F0aW9uIjogIiIsICJzdGF0dXMiOiAidm9yIn0=\n',
                                        'version': 1})
 
     def test_lax_token(self):
@@ -64,7 +66,7 @@ class TestLaxProvider(unittest.TestCase):
                                        "vor",
                                        "")
 
-        self.assertEqual(token, base64.encodestring('{"run": "bb2d37b8-e73c-43b3-a092-d555753316af", "version": "1", "expanded_folder": "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af", "eif_location": "", "status": "vor"}'))
+        self.assertEqual(json.loads(base64.decodestring(token)), {"run": "bb2d37b8-e73c-43b3-a092-d555753316af", "version": "1", "expanded_folder": "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af", "eif_location": "", "status": "vor"})
 
 
 if __name__ == '__main__':
