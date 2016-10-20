@@ -40,7 +40,7 @@ class LaxResponseAdapter:
                         self.logger.info('short retry: %s because of %s', queue_message.id, e)
                         queue_message.change_visibility(visibility_timeout=10)
 
-            logger.info("graceful shutdown")
+            self.logger.info("graceful shutdown")
 
         else:
             self.logger.error("Could not obtain queue, exiting")
@@ -61,7 +61,7 @@ class LaxResponseAdapter:
     def parse_message(self, message):
         try:
 
-            logger.info('got the following message from Lax: %s', message)
+            self.logger.info('got the following message from Lax: %s', message)
 
             message_data = json.loads(message)
             result = message_data['status']
