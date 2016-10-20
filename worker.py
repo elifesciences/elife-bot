@@ -41,10 +41,7 @@ def work(ENV, flag):
 
             token = get_taskToken(activity_task)
 
-            logger.info('got activity: [json omitted], token %s' % token)
-            #logger.info('got activity: \n%s' % json.dumps(activity_task, sort_keys=True, indent=4))
-
-
+            logger.info('got activity: \n%s' % json.dumps(activity_task, sort_keys=True, indent=4))
 
             # Complete the activity based on data and activity type
             activity_result = False

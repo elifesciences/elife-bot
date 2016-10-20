@@ -44,7 +44,7 @@ class Shimmy:
                         self.logger.info('short retry: %s because of %s', queue_message.id, e)
                         queue_message.change_visibility(visibility_timeout=10)
 
-            logger.info("graceful shutdown")
+            self.logger.info("graceful shutdown")
 
         else:
             self.logger.error("Could not obtain queue, exiting")
@@ -54,6 +54,7 @@ class Shimmy:
 
         # extract parameters from message
         message_data = json.loads(str(message.get_body()))
+        self.logger.info("message: %s", message_data)
         bucket = message_data.get("eif_bucket")
         filename = message_data.get("eif_filename")
         passthrough = message_data.get("passthrough")
