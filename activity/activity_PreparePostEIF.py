@@ -56,7 +56,7 @@ class activity_PreparePostEIF(activity.activity):
             expanded_folder = session.get_value(run, 'expanded_folder')
             status = session.get_value(run, 'status')
 
-            update_date = data['update_date']
+            update_date = session.get_value(run, 'update_date')
 
             carry_over_data = {
                 'eif_filename': eif_filename,
