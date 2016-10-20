@@ -8,7 +8,6 @@ from datetime import datetime
 import os
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from provider.execution_context import Session
 import settings as settings_lib
 
 """
@@ -21,6 +20,7 @@ class activity_ArchiveArticle(activity.activity):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
 
         self.name = "ArchiveArticle"
+        self.pretty_name = "Archive Article"
         self.version = "1"
         self.default_task_heartbeat_timeout = 30
         self.default_task_schedule_to_close_timeout = 60 * 5
@@ -37,8 +37,8 @@ class activity_ArchiveArticle(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         try:
-
-            session = Session(self.settings)
+            self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'], self.pretty_name,
+                                    "start", "Starting archiving article " + data['article_id'])
 
             id = data['article_id']
             version = data['version']
@@ -89,10 +89,16 @@ class activity_ArchiveArticle(activity.activity):
             self.clean_tmp_dir()
 
         except Exception as e:
-            # TODO: log
-            return False
+            self.logger.exception("Exception when archiving article. Message:" + e.message)
+            self.emit_monitor_event(self.settings, data['article_id'], version, data["run"], self.pretty_name,
+                                    "error", "Error expanding article " + data['article_id'] +
+                                    " message:" + e.message)
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-        return True
+        self.emit_monitor_event(self.settings, data['article_id'], version, data["run"], "Expand Article",
+                                "end", "Finished archiving article " + data['article_id'] +
+                                " for version " + version + " run " + data["run"])
+        return activity.activity.ACTIVITY_SUCCESS
 
 def main(args):
 
