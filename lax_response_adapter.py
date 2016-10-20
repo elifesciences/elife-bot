@@ -5,6 +5,7 @@ import json
 from boto.sqs.message import Message
 from provider import process
 import base64
+from dateutil.parser import parse
 
 identity = log.identity('lax_response_adapter')
 logger = log.logger('lax_response_adapter.log', 'INFO', identity)
@@ -57,49 +58,63 @@ class LaxResponseAdapter:
                 "eif_location": None
             }
 
+    def parse_message(self, message):
+        try:
+
+            logger.info('got the following message from Lax: %s', message)
+
+            message_data = json.loads(message)
+            result = message_data['status']
+
+            date_time = parse(message_data['datetime'])
+            date_time = date_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            article_id = message_data["id"]
+            operation = message_data["requested-action"]
+            response_message = None
+            if "message" in message_data:
+                response_message = message_data["message"]
+
+            token = self.parse_token(message_data['token'])
+            run = token['run']
+            version = token['version']
+            expanded_folder = token['expanded_folder']
+            status = token['status']
+            eif_location = token['eif_location'] #support for old journal
+
+            workflow_data = {
+                "run": run,
+                "article_id": article_id,
+                "version": version,
+                "expanded_folder": expanded_folder,
+                "status": status, #vor/poa
+                "eif_location": eif_location,
+                "result": result,
+                "message": response_message,
+                "update_date": date_time,
+                "requested_action": operation
+            }
+
+            if operation == "ingest":
+                workflow_starter_message = {
+                        "workflow_name": "ProcessArticleZip",
+                        "workflow_data": workflow_data
+                    }
+            else:
+                workflow_starter_message = {
+                        "workflow_name": "PostPerfectPublication",
+                        "workflow_data": workflow_data
+                    }
+
+            return workflow_starter_message
+        except Exception as e:
+            self.logger.error("Error parsing Lax message. Message: " + e.message)
+            raise
+
     def process_message(self, message, output_queue):
         message_str = str(message.get_body())
-        logger.info('got the following message from Lax: %s', message_str)
+        workflow_starter_message = self.parse_message(message_str)
 
-        message_data = json.loads(message_str)
-        result = message_data['status']
-        date_time = message_data['datetime']
-        article_id = message_data["id"]
-        operation = message_data["requested-action"]
-        response_message = None
-        if "message" in message_data:
-            response_message = message_data["message"]
-
-        token = self.parse_token(message_data['token'])
-        run = token['run']
-        version = token['version']
-        expanded_folder = token['expanded_folder']
-        status = token['status']
-        eif_location = token['eif_location'] #support for old journal
-
-        workflow_data = {
-            "run": run,
-            "article_id": article_id,
-            "version": version,
-            "expanded_folder": expanded_folder,
-            "status": status, #vor/poa
-            "eif_location": eif_location,
-            "result": result,
-            "message": response_message,
-            "update_date": date_time,
-            "requested_action": operation
-        }
-
-        if operation == "ingest":
-            workflow_starter_message = {
-                    "workflow_name": "ProcessArticleZip",
-                    "workflow_data": workflow_data
-                }
-        else:
-            workflow_starter_message = {
-                    "workflow_name": "PostPerfectPublication",
-                    "workflow_data": workflow_data
-                }
         m = Message()
         m.set_body(json.dumps(workflow_starter_message))
         output_queue.write(m)
