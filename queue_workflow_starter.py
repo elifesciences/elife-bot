@@ -54,6 +54,7 @@ def main(flag):
                                       wait_time_seconds=20)
         if messages:
             logger.info(str(len(messages)) + " message received")
+            logger.info('message contents: %s', messages[0])
             process_message(messages[0])
         else:
             logger.debug("No messages received")

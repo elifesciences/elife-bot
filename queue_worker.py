@@ -31,7 +31,6 @@ def work(ENV, flag):
     log_file = "queue_worker.log"
     # logFile = None
     logger = log.logger(log_file, settings.setLevel, identity)
-    # TODO : better logging
 
     # Simple connect
     conn = boto.sqs.connect_to_region(settings.sqs_region,
@@ -57,6 +56,7 @@ def work(ENV, flag):
                 logger.info('got message id: %s' % queue_message.id)
                 if queue_message.notification_type == 'S3Event':
                     info = S3NotificationInfo.from_S3SQSMessage(queue_message)
+                    logger.info("S3NotificationInfo: %s", info.to_dict())
                     workflow_name = get_starter_name(rules, info)
                     if workflow_name is None:
                         logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))

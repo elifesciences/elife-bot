@@ -48,8 +48,7 @@ def decide(ENV, flag):
 
             token = get_taskToken(decision)
 
-            logger.info('got decision: [json omitted], token %s' % token)
-            #logger.info('got decision: \n%s' % json.dumps(decision, sort_keys=True, indent=4))
+            logger.info('got decision: \n%s' % json.dumps(decision, sort_keys=True, indent=4))
 
             if token is not None:
                 # Get the workflowType and attempt to do the work
