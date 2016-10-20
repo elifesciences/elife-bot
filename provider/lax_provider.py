@@ -82,7 +82,7 @@ def get_xml_file_name(settings, expanded_folder, xml_bucket):
 def lax_token(run, version, expanded_folder, status, eif_location):
     token = {
         'run': run, 
-        'version': str(version),
+        'version': version,
         'expanded_folder': expanded_folder,
         'eif_location': eif_location,
         'status': status,

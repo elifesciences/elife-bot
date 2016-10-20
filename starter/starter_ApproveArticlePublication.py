@@ -38,7 +38,7 @@ class starter_ApproveArticlePublication():
 
         info = {
             'article_id': article_id,
-            'version': version,
+            'version': str(version),
             'run': run,
             'publication_data': publication_data
         }
