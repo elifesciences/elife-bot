@@ -39,7 +39,7 @@ class starter_NewS3File():
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "NewS3File_%s" % info.file_name + str(int(random.random() * 1000))
+        workflow_id = "NewS3File_%s.%s" % (info.file_name, str(int(random.random() * 1000)))
         workflow_name = "NewS3File"
         workflow_version = "1"
         child_policy = None

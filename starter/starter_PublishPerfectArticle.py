@@ -41,7 +41,7 @@ class starter_PublishPerfectArticle():
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "PublishPerfectArticle_%s" % filename.replace('/', '_') + str(int(random.random() * 1000))
+        workflow_id = "PublishPerfectArticle_%s.%s" % (filename.replace('/', '_'), str(int(random.random() * 1000)))
         workflow_name = "PublishPerfectArticle"
         workflow_version = "1"
         child_policy = None

@@ -39,7 +39,7 @@ class starter_ProcessArticleZip():
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "ProcessArticleZip_%s" % article_id + str(int(random.random() * 10000))
+        workflow_id = "ProcessArticleZip_%s.%s" % (article_id, str(int(random.random() * 10000)))
         workflow_name = "ProcessArticleZip"
         workflow_version = "1"
         child_policy = None
