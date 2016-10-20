@@ -2,11 +2,18 @@ import unittest
 from lax_response_adapter import LaxResponseAdapter
 from mock import Mock
 import json
+import base64
+
+fake_token = json.dumps({u'status': u'vor',
+                         u'expanded_folder': u'837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148',
+                         u'eif_location': u'837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148/elife-837411455-v1.json',
+                         u'version': u'1',
+                         u'run': u'a8bb05df-2df9-4fce-8f9f-219aca0b0148'})
 
 fake_lax_message = json.dumps({"status": "published",
                                "requested-action": "publish",
                                "datetime": "2013-03-26T00:00:00+00:00",
-                               "token": "eyJzdGF0dXMiOiAidm9yIiwgImV4cGFuZGVkX2ZvbGRlciI6ICI4Mzc0MTE0NTUuMS9hOGJiMDVk\nZi0yZGY5LTRmY2UtOGY5Zi0yMTlhY2EwYjAxNDgiLCAiZWlmX2xvY2F0aW9uIjogIjgzNzQxMTQ1\nNS4xL2E4YmIwNWRmLTJkZjktNGZjZS04ZjlmLTIxOWFjYTBiMDE0OC9lbGlmZS04Mzc0MTE0NTUt\ndjEuanNvbiIsICJ2ZXJzaW9uIjogIjEiLCAicnVuIjogImE4YmIwNWRmLTJkZjktNGZjZS04Zjlm\nLTIxOWFjYTBiMDE0OCJ9\n",
+                               "token": base64.encodestring(fake_token),
                                "id": "837411455"})
 
 workflow_message_expected = {'workflow_data':
