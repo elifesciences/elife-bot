@@ -32,6 +32,15 @@ def article_highest_version(article_id, settings, logger=None):
         return None
 
 
+def article_next_version(article_id, settings):
+    version = lax_provider.article_highest_version(article_id, settings)
+    if isinstance(version, (int,long)) and version >= 1:
+        version = str(version + 1)
+    if version is None:
+        return "-1"
+    return version
+
+
 def article_publication_date(article_id, settings, logger=None):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:

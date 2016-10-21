@@ -5,7 +5,7 @@ SilentCorrections workflow
 """
 
 
-class workflow_SilentCorrections(workflow.workflow):
+class workflow_SilentCorrectionsProcess(workflow.workflow):
     def __init__(self, settings, logger, conn=None, token=None, decision=None,
                  maximum_page_size=100):
         workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
@@ -44,28 +44,6 @@ class workflow_SilentCorrections(workflow.workflow):
                         "schedule_to_close_timeout": 300,
                         "schedule_to_start_timeout": 300,
                         "start_to_close_timeout": 300
-                    },
-                    {
-                        "activity_type": "ExpandArticle",
-                        "activity_id": "ExpandArticle",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    },
-                    {
-                        "activity_type": "ApplyVersionNumber",
-                        "activity_id": "ApplyVersionNumber",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 10,
-                        "schedule_to_close_timeout": 60 * 10,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 10
                     },
                     {
                         "activity_type": "ScheduleCrossref",
@@ -123,8 +101,8 @@ class workflow_SilentCorrections(workflow.workflow):
                         "start_to_close_timeout": 60 * 5
                     },
                     {
-                        "activity_type": "IngestPublishLax",
-                        "activity_id": "IngestPublishLax",
+                        "activity_type": "PublishToLax",
+                        "activity_id": "PublishToLax",
                         "version": "1",
                         "input": data,
                         "control": None,

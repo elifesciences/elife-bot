@@ -16,7 +16,7 @@ Amazon SWF IngestArticleZip starter, preparing article xml for lax.
 """
 
 
-class starter_IngestArticleZip():
+class starter_SilentCorrectionsIngest():
 
     def start(self, ENV="dev", info=None, run=None):
 
@@ -41,14 +41,15 @@ class starter_IngestArticleZip():
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "IngestArticleZip_%s" % filename.replace('/', '_') + str(int(random.random() * 1000))
-        workflow_name = "IngestArticleZip"
+        workflow_id = "SilentCorrectionsIngest_%s.%s" % filename.replace('/', '_'), str(int(random.random() * 1000))
+        workflow_name = "SilentCorrectionsIngest"
         workflow_version = "1"
         child_policy = None
         execution_start_to_close_timeout = str(60 * 30)
         workflow_input = S3NotificationInfo.to_dict(info)
         workflow_input['run'] = run
-        workflow_input['version_lookup_function'] = "article_next_version"
+        workflow_input['force'] = True
+        workflow_input['version_lookup_function'] = "article_highest_version"
         workflow_input = json.dumps(workflow_input, default=lambda ob: ob.__dict__)
 
         try:
@@ -81,6 +82,6 @@ if __name__ == "__main__":
     if options.filename:
         filename = options.filename
 
-    o = starter_IngestArticleZip()
+    o = starter_SilentCorrectionsIngest()
 
     o.start(ENV,)
