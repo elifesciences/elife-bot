@@ -47,32 +47,38 @@ class activity_VersionLookup(activity.activity):
 
         try:
 
-            version, error = self.get_version(article_structure, data['version_lookup_function'])
+            version, error = self.get_version(self.settings, article_structure, data['version_lookup_function'])
             session.store_value(data['run'], 'version', version)
 
             if error is not None:
                 self.logger.error(error)
                 self.emit_monitor_event(self.settings, article_structure.article_id, version, data['run'],
-                                        self.pretty_name,
-                                        "error", "Error Looking up version %s %s %s", article_structure.article_id,
-                                        " message: ", error)
+                                        self.pretty_name, "error",
+                                        " ".join(("Error Looking up version article", article_structure.article_id,
+                                                 "message:", error)))
                 return activity.activity.ACTIVITY_PERMANENT_FAILURE
+
+            return activity.activity.ACTIVITY_SUCCESS
 
         except Exception as e:
             self.logger.exception("Exception when trying to Lookup next version")
             self.emit_monitor_event(self.settings, article_structure.article_id, version, data['run'], self.pretty_name,
-                                    "error", "Error expanding article %s %s %s", article_structure.article_id,
-                                    " message:", e.message)
+                                    "error", " ".join(("Error looking up version for article",
+                                                      article_structure.article_id, "message:", e.message)))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-    def get_version(self, article_structure, lookup_function):
+    def get_version(self, settings, article_structure, lookup_function):
         try:
             version = None
-            #version = article_structure.get_version_from_zip_filename()
+            version = article_structure.get_version_from_zip_filename()
             if version is None:
-                version = lookup_functions[lookup_function](article_structure.article_id, self.settings)  #lax_provider.article_next_version(article_structure.article_id, self.settings)
+                version = self.execute_function(lookup_functions[lookup_function], article_structure.article_id, settings)  #lax_provider.article_next_version(article_structure.article_id, self.settings)
             if version == '-1':
                 return version, "Name '%s' did not match expected pattern for version" % article_structure.full_filename
             return version, None
         except Exception as e:
-            return version, "Exception when looking up version. Message: %s", e.message
+            error_message = "Exception when looking up version. Message: " + e.message
+            return version, error_message
+
+    def execute_function(self, the_function, arg1, arg2):
+        return the_function(arg1, arg2)
