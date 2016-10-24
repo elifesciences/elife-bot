@@ -1,6 +1,6 @@
 import requests
 import time
-from article import *
+from . import article
 import base64
 import json
 
@@ -85,7 +85,7 @@ def prepare_action_message(settings, article_id, run, expanded_folder, version, 
         return message
 
 def get_xml_file_name(settings, expanded_folder, xml_bucket):
-    Article = article()
+    Article = article.article()
     xml_file_name = Article.get_xml_file_name(settings, expanded_folder, xml_bucket)
     return xml_file_name
 

@@ -11,7 +11,6 @@ from boto.s3.connection import S3Connection
 import provider.simpleDB as dblib
 import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
-import lax_provider
 from provider.article_structure import ArticleInfo
 
 """
@@ -156,7 +155,9 @@ class article(object):
         article_id = doi_id
         # Get the highest published version from lax
         try:
-            version = lax_provider.article_highest_version(article_id, self.settings)
+            # hack: work around circular dependency between lax_provider.py and article.py
+            from lax_provider import article_highest_version
+            version = article_highest_version(article_id, self.settings)
             if not isinstance(version, (int,long)):
                 return False
         except:
