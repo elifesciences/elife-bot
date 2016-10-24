@@ -118,9 +118,11 @@ class activity_IngestToLax(activity.activity):
             start_event = [self.settings, article_id, version, run, self.pretty_name, "start",
                            "Starting preparation of article for Lax " + article_id]
 
+            force = True if ("force" in data and data["force"] == True) else False
+
             message = lax_provider.prepare_action_message(self.settings,
                                                           article_id, run, expanded_folder, version, status,
-                                                          eif_location, 'ingest')
+                                                          eif_location, 'ingest', force)
 
             return (message, self.settings.xml_info_queue, start_event, "end",
                     [self.settings, article_id, version, run, self.pretty_name, "end",

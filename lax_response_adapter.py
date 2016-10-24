@@ -81,6 +81,7 @@ class LaxResponseAdapter:
             expanded_folder = token['expanded_folder']
             status = token['status']
             eif_location = token['eif_location'] #support for old journal
+            force = token['force']
 
             workflow_data = {
                 "run": run,
@@ -96,10 +97,16 @@ class LaxResponseAdapter:
             }
 
             if operation == "ingest":
-                workflow_starter_message = {
-                        "workflow_name": "ProcessArticleZip",
-                        "workflow_data": workflow_data
-                    }
+                if force == True:
+                    workflow_starter_message = {
+                            "workflow_name": "SilentCorrectionsProcess",
+                            "workflow_data": workflow_data
+                        }
+                else:
+                    workflow_starter_message = {
+                            "workflow_name": "ProcessArticleZip",
+                            "workflow_data": workflow_data
+                        }
             else:
                 workflow_starter_message = {
                         "workflow_name": "PostPerfectPublication",

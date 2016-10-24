@@ -24,6 +24,8 @@ def start(ENV="dev"):
     conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
     workflow_names = []
+    workflow_names.append("SilentCorrectionsIngest")
+    workflow_names.append("SilentCorrectionsProcess")
     workflow_names.append("IngestArticleZip")
     workflow_names.append("ProcessArticleZip")
     workflow_names.append("ArticleInformationSupplier")
