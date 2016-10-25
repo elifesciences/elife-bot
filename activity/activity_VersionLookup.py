@@ -58,6 +58,10 @@ class activity_VersionLookup(activity.activity):
                                                  "message:", error)))
                 return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
+            self.emit_monitor_event(self.settings, article_structure.article_id, version, data['run'],
+                                    self.pretty_name, "end",
+                                    " ".join(("Finished Version Lookup for article", article_structure.article_id,
+                                    "version:", version)))
             return activity.activity.ACTIVITY_SUCCESS
 
         except Exception as e:
