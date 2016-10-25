@@ -7,10 +7,10 @@ Feature: Use article_structure as to examine filenames
   Scenario: Obtain basic information from a full filename
     Given I have imported the article_structure module
     When I create an ArticleStructure with <full_filename>
-    Then It exposes the correct <filename>, <extension>, <file_type> and <f_id>
+    Then It exposes the correct <filename>, <extension>, <file_type> and <article_id>
 
   Examples:
-    | full_filename                        | filename              | extension  | file_type   | f_id
+    | full_filename                        | filename              | extension  | file_type   | article_id
     | elife-00012-vor-r1.zip               | elife-00012-vor-r1    | zip        | ArticleZip  | 00012
     | elife-00123-poa.zip                  | elife-00123-poa       | zip        | ArticleZip  | 00123
     | elife-00288-supp-v1.zip              | elife-00288-supp-v1   | zip        | Other       | 00288
