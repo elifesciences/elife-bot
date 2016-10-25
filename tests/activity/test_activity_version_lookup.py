@@ -26,6 +26,8 @@ class TestVersionLookup(unittest.TestCase):
     def test_get_version_silent_corrections(self, fake_lookup_functions, fake_session):
         fake_session.return_value = FakeSession({})
         fake_lookup_functions.return_value = "1"
+        self.versionlookup.emit_monitor_event = MagicMock()
+
         result = self.versionlookup.do_activity(data("article_highest_version", "elife-00353-vor-r1.zip"))
 
         fake_lookup_functions.assert_called_with(provider.lax_provider.article_highest_version, '00353', settings_mock)
@@ -35,6 +37,7 @@ class TestVersionLookup(unittest.TestCase):
     @patch.object(activity_VersionLookup, 'execute_function')
     def test_get_version_silent_corrections_version_in_zip(self, fake_lookup_functions, fake_session):
         fake_session.return_value = FakeSession({})
+        self.versionlookup.emit_monitor_event = MagicMock()
 
         result = self.versionlookup.do_activity(data("article_next_version", "elife-00353-vor-v1.zip"))
 
@@ -46,6 +49,8 @@ class TestVersionLookup(unittest.TestCase):
     def test_get_version_normal_process_version_not_in_zip(self, fake_lookup_functions, fake_session):
         fake_session.return_value = FakeSession({})
         fake_lookup_functions.return_value = "1"
+        self.versionlookup.emit_monitor_event = MagicMock()
+
         result = self.versionlookup.do_activity(data("article_next_version", "elife-00353-vor-r1.zip"))
 
         fake_lookup_functions.assert_called_with(provider.lax_provider.article_next_version, '00353', settings_mock)
@@ -55,6 +60,7 @@ class TestVersionLookup(unittest.TestCase):
     @patch.object(activity_VersionLookup, 'execute_function')
     def test_get_version_normal_process(self, fake_lookup_functions, fake_session):
         fake_session.return_value = FakeSession({})
+        self.versionlookup.emit_monitor_event = MagicMock()
 
         result = self.versionlookup.do_activity(data("article_next_version", "elife-00353-vor-v1-20121213000000.zip"))
 
