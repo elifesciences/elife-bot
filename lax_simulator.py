@@ -70,13 +70,20 @@ class LaxSimulator:
         #         }
 
         response_message = {
-                "requested-action": action,
-                "status": "invalid",
-                "message": "invalid data",
-                "id": None,
-                "token": None,
-                "datetime": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-            }
+                    "requested-action": action,
+                    "status": action + "ed",
+                    "id": article_id,
+                    "token": token,
+                    "datetime": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+                }
+        # response_message = {
+        #         "requested-action": action,
+        #         "status": "invalid",
+        #         "message": "invalid data",
+        #         "id": None,
+        #         "token": None,
+        #         "datetime": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        #     }
 
         m = Message()
         m.set_body(json.dumps(response_message))

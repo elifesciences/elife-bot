@@ -1,7 +1,7 @@
 import workflow
 
 """
-SilentCorrections workflow
+SilentCorrectionsProcess workflow
 """
 
 
@@ -11,7 +11,7 @@ class workflow_SilentCorrectionsProcess(workflow.workflow):
         workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
 
         # SWF Defaults
-        self.name = "SilentCorrections"
+        self.name = "SilentCorrectionsProcess"
         self.version = "1"
         self.description = "Process JATS zip article as Silent Correction"
         self.default_execution_start_to_close_timeout = 60 * 5
