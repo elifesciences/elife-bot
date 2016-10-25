@@ -57,7 +57,8 @@ class TestLaxProvider(unittest.TestCase):
         self.assertDictEqual(message, {'action': 'ingest',
                                        'id': '00353',
                                        'location': 'https://s3.amazonaws.com/origin_bucket/00353.1/bb2d37b8-e73c-43b3-a092-d555753316af/elife-00353-v1.xml',
-                                       'version': 1})
+                                       'version': 1,
+                                       'force': False})
 
     def test_lax_token(self):
         token = lax_provider.lax_token("bb2d37b8-e73c-43b3-a092-d555753316af",
@@ -66,7 +67,12 @@ class TestLaxProvider(unittest.TestCase):
                                        "vor",
                                        "")
 
-        self.assertEqual(json.loads(base64.decodestring(token)), {"run": "bb2d37b8-e73c-43b3-a092-d555753316af", "version": "1", "expanded_folder": "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af", "eif_location": "", "status": "vor"})
+        self.assertEqual(json.loads(base64.decodestring(token)), {"run": "bb2d37b8-e73c-43b3-a092-d555753316af",
+                                                                  "version": "1",
+                                                                  "expanded_folder": "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
+                                                                  "eif_location": "",
+                                                                  "status": "vor",
+                                                                  "force": False})
 
 
 if __name__ == '__main__':
