@@ -19,8 +19,18 @@ session_example = {
             'expanded_folder': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'update_date': '2012-12-13T00:00:00Z',
             'file_name': 'elife-00353-vor-v1.zip',
-            'filename_last_element': 'elife-00353-vor-r1.zip'
+            'filename_last_element': 'elife-00353-vor-r1.zip',
+            'eif_filename': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json'
         }
+data_example_before_publish = {
+            "status": "vor",
+            "update_date": "2012-12-13T00:00:00Z",
+            "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
+            "expanded_folder": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251",
+            "version": "1",
+            "eif_location": "",
+            "article_id": "00353"}
+
 key_names = [u'00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-fig1-v1.tif', u'00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.pdf',
              u'00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.xml']
 

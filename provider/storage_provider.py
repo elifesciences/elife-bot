@@ -38,11 +38,23 @@ class S3StorageContext:
         key.key = s3_key
         key.get_contents_to_file(file)
 
+    def get_resource_as_string(self, resource):
+        bucket, s3_key = self.s3_storage_objects(resource)
+        key = Key(bucket)
+        key.key = s3_key
+        return key.get_contents_as_string()
+
     def set_resource_from_file(self, resource, file):
         bucket, s3_key = self.s3_storage_objects(resource)
         key = Key(bucket)
         key.key = s3_key
         key.set_contents_from_filename(file)
+
+    def set_resource_from_string(self, resource, data):
+        bucket, s3_key = self.s3_storage_objects(resource)
+        key = Key(bucket)
+        key.key = s3_key
+        key.set_contents_from_string(data)
 
     def get_bucket_from_cache(self, bucket_name):
 
