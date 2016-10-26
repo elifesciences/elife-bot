@@ -41,7 +41,7 @@ class starter_IngestArticleZip():
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "IngestArticleZip_%s" % filename.replace('/', '_') + str(int(random.random() * 1000))
+        workflow_id = "IngestArticleZip_%s.%s" % (filename.replace('/', '_'), os.getpid())
         workflow_name = "IngestArticleZip"
         workflow_version = "1"
         child_policy = None
