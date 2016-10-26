@@ -46,6 +46,17 @@ class workflow_SilentCorrectionsProcess(workflow.workflow):
                         "start_to_close_timeout": 300
                     },
                     {
+                        "activity_type": "VerifyLaxResponse",
+                        "activity_id": "VerifyLaxResponse",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 5,
+                        "schedule_to_close_timeout": 60 * 5,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 5
+                    },
+                    {
                         "activity_type": "ScheduleCrossref",
                         "activity_id": "ScheduleCrossref",
                         "version": "1",
@@ -92,6 +103,17 @@ class workflow_SilentCorrectionsProcess(workflow.workflow):
                     {
                         "activity_type": "DepositAssets",
                         "activity_id": "DepositAssets",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 5,
+                        "schedule_to_close_timeout": 60 * 5,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 5
+                    },
+                    {
+                        "activity_type": "SetEIFPublish",
+                        "activity_id": "SetEIFPublish",
                         "version": "1",
                         "input": data,
                         "control": None,
