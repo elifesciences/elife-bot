@@ -56,7 +56,7 @@ class activity_RewriteEIF(activity.activity):
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     "Rewrite EIF", "error",
                                     "Error rewriting EIF")
-            return False
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
 
         return True
