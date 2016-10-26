@@ -72,7 +72,7 @@ class activity_SetEIFPublish(activity.activity):
         try:
 
             eif_data['publish'] = True
-            storage_context.set_resource_from_string(json.dumps(eif_data))
+            storage_context.set_resource_from_string(eif_origin, json.dumps(eif_data))
             return True, None
 
         except Exception as e:
