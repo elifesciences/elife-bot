@@ -31,7 +31,7 @@ class activity_SetEIFPublish(activity.activity):
 
         try:
 
-            if not isinstance(eif_filename, str):
+            if not isinstance(eif_filename, basestring):
                 self.logger.error(self.pretty_name + " error. eif_filename must be string")
                 raise Exception("eif_filename not available")
 
