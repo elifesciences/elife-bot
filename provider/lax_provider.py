@@ -8,10 +8,11 @@ def article_versions(article_id, settings):
     url = settings.lax_article_versions.replace('{article_id}', article_id)
     response = requests.get(url, verify=settings.verify_ssl)
     status_code = response.status_code
-    data = None
     if status_code == 200:
         data = response.json()
-    return status_code, data
+        if "versions" in data:
+            return status_code, data["versions"]
+    return status_code, None
 
 
 def article_highest_version(article_id, settings, logger=None):
