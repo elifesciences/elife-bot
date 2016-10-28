@@ -95,14 +95,6 @@ class MyTestCase(unittest.TestCase):
         result = self.applyversionnumber.new_filename(file, version)
         self.assertEqual(result, expected)
 
-    def test_new_filename1(self):
-        result = self.applyversionnumber.new_filename(u'elife-15224.xml','1')
-        self.assertEqual(result, u'elife-15224-v1.xml')
-
-    def test_new_filename2(self):
-        result = self.applyversionnumber.new_filename(u'elife-15224-v1.xml','1')
-        self.assertEqual(result, u'elife-15224-v1.xml')
-
     @data(u'elife-15224-fig1-figsupp1.tif')
     def test_file_parts(self, filename):
         prefix, extension = self.applyversionnumber.file_parts(filename)
