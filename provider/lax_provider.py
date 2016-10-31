@@ -19,8 +19,8 @@ def article_highest_version(article_id, settings, logger=None):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:
         high_version = 0
-        for version in data:
-            int_version = int(version)
+        for version_data in data:
+            int_version = int(version_data["version"])
             if int_version > high_version:
                 high_version = int_version
         return high_version
@@ -46,20 +46,19 @@ def article_publication_date(article_id, settings, logger=None):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:
         date_str = None
-        for version in data:
-            if int(version) == 1:
-                article_data = data[version]
-                if 'datetime_published' in article_data:
+        for version_data in data:
+            if int(version_data["version"]) == 1:
+                if 'published' in version_data:
 
                     try:
-                        date_struct = time.strptime(article_data['datetime_published'],
+                        date_struct = time.strptime(version_data['published'],
                                                     "%Y-%m-%dT%H:%M:%SZ")
                         date_str = time.strftime('%Y%m%d%H%M%S', date_struct)
 
                     except:
                         if logger:
                             logger.error("Error parsing the datetime_published from Lax: "
-                                         + str(article_data['datetime_published']))
+                                         + str(version_data['published']))
 
         return date_str
     elif status_code == 404:

@@ -6,27 +6,23 @@ import json
 
 from mock import mock, patch
 
-lax_article_versions_response_data = {
-                                      "received": "2013-10-01",
-                                      "accepted": "2014-06-24",
-                                      "versions": [
+lax_article_versions_response_data = [
                                         {
                                           "status": "poa",
                                           "version": 1,
-                                          "published": "2014-06-24T00:00:00Z"
+                                          "published": "2015-11-26T00:00:00Z"
                                         },
                                         {
                                           "status": "poa",
                                           "version": 2,
-                                          "published": "2014-06-30T00:00:00Z"
+                                          "published": "2015-11-30T00:00:00Z"
                                         },
                                         {
                                           "status": "vor",
                                           "version": 3,
-                                          "published": "2014-07-29T00:00:00Z"
+                                          "published": "2015-12-29T00:00:00Z"
                                         }
                                       ]
-                                    }
 
 class TestLaxProvider(unittest.TestCase):
 
