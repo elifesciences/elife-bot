@@ -659,26 +659,10 @@ class article(object):
         doi_id = int(self.get_doi_id(doi))
         article_id = str(doi_id).zfill(5)
 
-        lax_url = self.settings.lax_article_versions.replace('{article_id}', article_id)
-        response = requests.get(lax_url)
+        status_code, data = lax_provider.article_versions(article_id, self.settings)
 
-        # We will check for any published version with these article status below
-        poa_status = None
-        vor_status = None
-
-        if response.status_code == 200:
-            data = response.json()
-
-            for version in data:
-                try:
-                    status = data[version]['status']
-                except:
-                    status = None
-
-                if status and status == 'poa':
-                    poa_status = True
-                if status and status == 'vor':
-                    vor_status = True
+        if status_code == 200:
+            poa_status, vor_status = lax_provider.poa_vor_status(data)
 
         # Now a decision can be made
         if (is_poa is True or

@@ -66,6 +66,16 @@ def article_publication_date(article_id, settings, logger=None):
         return None
 
 
+def poa_vor_status(data):
+    if len(data) < 1:
+        return None, None
+    check_status = lambda status_type : True if next((vd for vd in data if vd["status"] == status_type), None) \
+                                                is not None else None
+    poa_status = check_status("poa")
+    vor_status = check_status("vor")
+    return poa_status, vor_status
+
+
 def prepare_action_message(settings, article_id, run, expanded_folder, version, status, eif_location, action, force=False):
         xml_bucket = settings.publishing_buckets_prefix + settings.expanded_bucket
         xml_file_name = get_xml_file_name(settings, expanded_folder, xml_bucket)
