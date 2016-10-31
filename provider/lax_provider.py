@@ -18,18 +18,14 @@ def article_versions(article_id, settings):
 def article_highest_version(article_id, settings, logger=None):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:
-        high_version = 0
-        for version_data in data:
-            int_version = int(version_data["version"])
-            if int_version > high_version:
-                high_version = int_version
+        high_version = 0 if len(data) < 1 else max(map(lambda x: int(x["version"]), data))
         return high_version
     elif status_code == 404:
         return "1"
     else:
         if logger:
             logger.error("Error obtaining version information from Lax" +
-                              str(status_code))
+                         str(status_code))
         return None
 
 
@@ -45,20 +41,21 @@ def article_next_version(article_id, settings):
 def article_publication_date(article_id, settings, logger=None):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:
+        first_published_version_list = filter(lambda x: int(x["version"]) == 1, data)
+        if len(first_published_version_list) < 1:
+            return None
+        first_published_version = first_published_version_list[0]
+        if "published" not in first_published_version:
+            return None
         date_str = None
-        for version_data in data:
-            if int(version_data["version"]) == 1:
-                if 'published' in version_data:
+        try:
+            date_struct = time.strptime(first_published_version['published'], "%Y-%m-%dT%H:%M:%SZ")
+            date_str = time.strftime('%Y%m%d%H%M%S', date_struct)
 
-                    try:
-                        date_struct = time.strptime(version_data['published'],
-                                                    "%Y-%m-%dT%H:%M:%SZ")
-                        date_str = time.strftime('%Y%m%d%H%M%S', date_struct)
-
-                    except:
-                        if logger:
-                            logger.error("Error parsing the datetime_published from Lax: "
-                                         + str(version_data['published']))
+        except:
+            if logger:
+                logger.error("Error parsing the datetime_published from Lax: "
+                             + str(first_published_version['published']))
 
         return date_str
     elif status_code == 404:
