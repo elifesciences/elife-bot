@@ -24,13 +24,13 @@ class TestLaxProvider(unittest.TestCase):
 
     @patch('provider.lax_provider.article_versions')
     def test_article_highest_version(self, mock_lax_provider_article_versions):
-        mock_lax_provider_article_versions.return_value = 404, test_data.lax_article_versions_response_data
+        mock_lax_provider_article_versions.return_value = 404, None
         version = lax_provider.article_highest_version('08411', settings_mock)
         self.assertEqual("1", version)
 
     @patch('provider.lax_provider.article_versions')
     def test_article_highest_version(self, mock_lax_provider_article_versions):
-        mock_lax_provider_article_versions.return_value = 500, test_data.lax_article_versions_response_data
+        mock_lax_provider_article_versions.return_value = 500, None
         version = lax_provider.article_highest_version('08411', settings_mock)
         self.assertEqual(None, version)
 
@@ -48,13 +48,13 @@ class TestLaxProvider(unittest.TestCase):
 
     @patch('provider.lax_provider.article_versions')
     def test_article_publication_date_404(self, mock_lax_provider_article_versions):
-        mock_lax_provider_article_versions.return_value = 404, test_data.lax_article_versions_response_data
+        mock_lax_provider_article_versions.return_value = 404, None
         date_str = lax_provider.article_publication_date('08411', settings_mock)
         self.assertEqual(None, date_str)
 
     @patch('provider.lax_provider.article_versions')
     def test_article_publication_date_500(self, mock_lax_provider_article_versions):
-        mock_lax_provider_article_versions.return_value = 500, test_data.lax_article_versions_response_data
+        mock_lax_provider_article_versions.return_value = 500, None
         date_str = lax_provider.article_publication_date('08411', settings_mock)
         self.assertEqual(None, date_str)
 
