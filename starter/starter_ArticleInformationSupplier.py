@@ -53,7 +53,7 @@ class starter_ArticleInformationSupplier():
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "ArticleInformationSupplier_%s" % incoming_data['article_id'] + str(int(random.random() * 1000))
+        workflow_id = "ArticleInformationSupplier_%s.%s" % (incoming_data['article_id'], str(int(random.random() * 1000)))
         workflow_name = "ArticleInformationSupplier"
         workflow_version = "1"
         child_policy = None
