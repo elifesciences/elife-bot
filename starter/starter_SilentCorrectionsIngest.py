@@ -12,7 +12,7 @@ from optparse import OptionParser
 from S3utility.s3_notification_info import S3NotificationInfo
 
 """
-Amazon SWF IngestArticleZip starter, preparing article xml for lax.
+Amazon SWF SilentCorrectionsIngest starter, preparing article xml for lax.
 """
 
 
