@@ -95,7 +95,7 @@ class activity_ArchiveArticle(activity.activity):
                                     " message:" + e.message)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-        self.emit_monitor_event(self.settings, data['article_id'], version, data["run"], "Expand Article",
+        self.emit_monitor_event(self.settings, data['article_id'], version, data["run"], self.pretty_name,
                                 "end", "Finished archiving article " + data['article_id'] +
                                 " for version " + version + " run " + data["run"])
         return activity.activity.ACTIVITY_SUCCESS

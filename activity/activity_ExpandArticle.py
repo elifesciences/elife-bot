@@ -49,44 +49,23 @@ class activity_ExpandArticle(activity.activity):
 
         session = Session(self.settings)
 
-        filename_last_element = info.file_name[info.file_name.rfind('/')+1:]
-        article_id_match = re.match(ur'elife-(.*?)-', filename_last_element)
-        if article_id_match is None:
-            self.logger.error("Name '%s' did not match expected pattern for article id" %
-                              filename_last_element)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
-        article_id = article_id_match.group(1)
+        filename_last_element = session.get_value(run, 'filename_last_element')
+        # zip name contains version information for previously archived zip files
+        article_structure = ArticleInfo(filename_last_element)
+        article_id = article_structure.article_id
         session.store_value(run, 'article_id', article_id)
         session.store_value(run, 'file_name', info.file_name)
 
         if self.logger:
             self.logger.info("Expanding file %s" % info.file_name)
 
-        # extract any doi, version and updated date information from the filename
-        version = None
-        status = None
-        # zip name contains version information for previously archived zip files
-        article_structure = ArticleInfo(filename_last_element)
-
-        version = article_structure.get_version_from_zip_filename()
-        if version is None:
-            version = self.get_next_version(article_id)
-        if version == '-1':
-            self.logger.error("Name '%s' did not match expected pattern for version" %
-                              filename_last_element)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE  # version could not be determined, will retry
-
+        version = session.get_value(run, 'version')
 
         status = article_structure.status
         if status is None or (status != 'vor' and status != 'poa'):
             self.logger.error("Name '%s' did not match expected pattern for status" %
                               filename_last_element)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE  # status could not be determined, exit workflow.
-
-
-
-        # store version for other activities in this workflow execution
-        session.store_value(run, 'version', version)
 
         # Extract and store updated date if supplied
         update_date = article_structure.get_update_date_from_zip_filename()

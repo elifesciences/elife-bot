@@ -9,15 +9,14 @@ import log
 import json
 import random
 from optparse import OptionParser
-from S3utility.s3_notification_info import S3NotificationInfo
 
 """
-Amazon SWF ProcessArticleZip starter, preparing article xml for lax.
+Amazon SWF SilentCorrectionsProcess starter, preparing article xml for lax.
 """
 class NullArticleException(Exception):
     pass
 
-class starter_ProcessArticleZip():
+class starter_SilentCorrectionsProcess():
 
     def start(self, article_id, version, requested_action, result, expanded_folder, status, eif_location, run, update_date, message=None, ENV="dev"):
 
@@ -33,14 +32,14 @@ class starter_ProcessArticleZip():
         logger = log.logger(log_file, settings.setLevel, identity)
 
         if article_id is None:
-            raise NullArticleException("article id is Null. Possible error: Lax did not send back valid data from ingest.")
+            raise NullArticleException("article id is Null. Possible error: Lax did not send back valid data.")
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "ProcessArticleZip_%s.%s" % (article_id, os.getpid())
-        workflow_name = "ProcessArticleZip"
+        workflow_id = "SilentCorrectionsProcess_%s.%s" % (article_id, os.getpid())
+        workflow_name = "SilentCorrectionsProcess"
         workflow_version = "1"
         child_policy = None
         execution_start_to_close_timeout = str(60 * 30)
@@ -54,7 +53,8 @@ class starter_ProcessArticleZip():
             "eif_location": eif_location,
             "requested_action": requested_action,
             "message": message,
-            "update_date": update_date
+            "update_date": update_date,
+            "force": True
         }
         workflow_input = json.dumps(workflow_input, default=lambda ob: ob.__dict__)
 
@@ -90,6 +90,6 @@ if __name__ == "__main__":
     if options.filename:
         filename = options.filename
 
-    o = starter_ProcessArticleZip()
+    o = starter_SilentCorrectionsProcess()
 
     o.start(ENV,)

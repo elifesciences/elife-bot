@@ -1,19 +1,19 @@
 import workflow
 
 """
-IngestArticleZip workflow
+SilentCorrections workflow
 """
 
 
-class workflow_IngestArticleZip(workflow.workflow):
+class workflow_SilentCorrectionsIngest(workflow.workflow):
     def __init__(self, settings, logger, conn=None, token=None, decision=None,
                  maximum_page_size=100):
         workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
 
         # SWF Defaults
-        self.name = "IngestArticleZip"
+        self.name = "SilentCorrectionsIngest"
         self.version = "1"
-        self.description = "Process Article XML up to ingestion to Lax (where it's going to be converted to Json)"
+        self.description = "Ingests an article to lax as a Silent Correction"
         self.default_execution_start_to_close_timeout = 60 * 5
         self.default_task_start_to_close_timeout = 30
 
@@ -84,10 +84,10 @@ class workflow_IngestArticleZip(workflow.workflow):
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 60 * 10,
-                        "schedule_to_close_timeout": 60 * 10,
+                        "heartbeat_timeout": 60 * 5,
+                        "schedule_to_close_timeout": 60 * 5,
                         "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 10
+                        "start_to_close_timeout": 60 * 5
                     },
 
                 ],

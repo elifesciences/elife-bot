@@ -24,6 +24,8 @@ def start(ENV="dev"):
     conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
     workflow_names = []
+    workflow_names.append("SilentCorrectionsIngest")
+    workflow_names.append("SilentCorrectionsProcess")
     workflow_names.append("IngestArticleZip")
     workflow_names.append("ProcessArticleZip")
     workflow_names.append("ArticleInformationSupplier")
@@ -64,6 +66,8 @@ def start(ENV="dev"):
         print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
 
     activity_names = []
+    activity_names.append("SetEIFPublish")
+    activity_names.append("VersionLookup")
     activity_names.append("VerifyPublishResponse")
     activity_names.append("PublishToLax")
     activity_names.append("VerifyLaxResponse")

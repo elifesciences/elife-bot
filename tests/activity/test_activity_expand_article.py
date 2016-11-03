@@ -1,7 +1,7 @@
 import unittest
 from activity.activity_ExpandArticle import activity_ExpandArticle
 from activity.activity import activity
-import tests.settings_mock as settings_mock
+import settings_mock
 from mock import mock, patch
 from testfixtures import tempdir, compare
 import os
@@ -57,48 +57,24 @@ class TestExpandArticle(unittest.TestCase):
         mock_session.return_value = FakeSession(testdata.session_example)
 
         self.expandarticle.logger = mock.MagicMock()
+        self.expandarticle.emit_monitor_event = mock.MagicMock()
+        self.expandarticle.set_monitor_property = mock.MagicMock()
 
         success = self.expandarticle.do_activity(testdata.ExpandArticle_data_invalid_article)
         self.assertEqual(self.expandarticle.ACTIVITY_PERMANENT_FAILURE, success)
 
-    @patch('requests.get')
     @patch('activity.activity_ExpandArticle.Session')
     @patch('activity.activity_ExpandArticle.StorageContext')
-    def test_do_activity_invalid_version(self, mock_storage_context, mock_session, mock_requests_get):
+    @data(testdata.ExpandArticle_data_invalid_status1_session_example,
+          testdata.ExpandArticle_data_invalid_status2_session_example)
+    def test_do_activity_invalid_status(self, session_example, mock_storage_context, mock_session):
         mock_storage_context.return_value = FakeStorageContext()
-        mock_session.return_value = FakeSession(testdata.session_example)
-        mock_requests_get.return_value = classes_mock.FakeResponse(500, None)
+        mock_session.return_value = FakeSession(session_example)
 
         self.expandarticle.logger = mock.MagicMock()
 
-        success = self.expandarticle.do_activity(testdata.ExpandArticle_data_invalid_version)
+        success = self.expandarticle.do_activity(testdata.ExpandArticle_data_invalid_status)
         self.assertEqual(self.expandarticle.ACTIVITY_PERMANENT_FAILURE, success)
-
-
-    @patch('activity.activity_ExpandArticle.Session')
-    @patch('activity.activity_ExpandArticle.StorageContext')
-    @data(testdata.ExpandArticle_data_invalid_status1, testdata.ExpandArticle_data_invalid_status2)
-    def test_do_activity_invalid_status(self, status_example, mock_storage_context, mock_session):
-        mock_storage_context.return_value = FakeStorageContext()
-        mock_session.return_value = FakeSession(testdata.session_example)
-
-        self.expandarticle.logger = mock.MagicMock()
-
-        success = self.expandarticle.do_activity(status_example)
-        self.assertEqual(self.expandarticle.ACTIVITY_PERMANENT_FAILURE, success)
-
-    @patch('provider.lax_provider.article_versions')
-    def test_get_next_version_200(self, mock_article_versions):
-        mock_article_versions.return_value = 200, testdata.lax_article_versions_response_data
-        version = self.expandarticle.get_next_version("8411")
-        self.assertEqual("3", version)
-
-    @patch('provider.lax_provider.article_versions')
-    def test_get_next_version_500(self, mock_article_versions):
-        mock_article_versions.return_value = 500, None
-        version = self.expandarticle.get_next_version("8411")
-        self.assertEqual("-1", version)
-
 
     def create_temp_folder(self, plus=None):
         if not os.path.exists('tests/tmp'):

@@ -12,14 +12,13 @@ from optparse import OptionParser
 from S3utility.s3_notification_info import S3NotificationInfo
 
 """
-Amazon SWF ProcessArticleZip starter, preparing article xml for lax.
+Amazon SWF IngestArticleZip starter, preparing article xml for lax.
 """
-class NullArticleException(Exception):
-    pass
 
-class starter_ProcessArticleZip():
 
-    def start(self, article_id, version, requested_action, result, expanded_folder, status, eif_location, run, update_date, message=None, ENV="dev"):
+class starter_SilentCorrectionsIngest():
+
+    def start(self, ENV="dev", info=None, run=None):
 
         # TODO : much of this is common to many starters and could probably be streamlined
 
@@ -32,30 +31,25 @@ class starter_ProcessArticleZip():
         # logFile = None
         logger = log.logger(log_file, settings.setLevel, identity)
 
-        if article_id is None:
-            raise NullArticleException("article id is Null. Possible error: Lax did not send back valid data from ingest.")
+        filename = info.file_name
+
+        if filename is None:
+            logger.error("Did not get a filename")
+            return
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "ProcessArticleZip_%s.%s" % (article_id, os.getpid())
-        workflow_name = "ProcessArticleZip"
+        workflow_id = "SilentCorrectionsIngest_%s.%s" % (filename.replace('/', '_'), os.getpid())
+        workflow_name = "SilentCorrectionsIngest"
         workflow_version = "1"
         child_policy = None
         execution_start_to_close_timeout = str(60 * 30)
-        workflow_input = {
-            "run": run,
-            "article_id": article_id,
-            "result": result,
-            "status": status,
-            "version": version,
-            "expanded_folder": expanded_folder,
-            "eif_location": eif_location,
-            "requested_action": requested_action,
-            "message": message,
-            "update_date": update_date
-        }
+        workflow_input = S3NotificationInfo.to_dict(info)
+        workflow_input['run'] = run
+        workflow_input['force'] = True
+        workflow_input['version_lookup_function'] = "article_highest_version"
         workflow_input = json.dumps(workflow_input, default=lambda ob: ob.__dict__)
 
         try:
@@ -64,8 +58,6 @@ class starter_ProcessArticleZip():
                                                      execution_start_to_close_timeout, workflow_input)
 
             logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
-        except NullArticleException as e:
-            logger.error(e)
 
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
             # There is already a running workflow with that ID, cannot start another
@@ -90,6 +82,6 @@ if __name__ == "__main__":
     if options.filename:
         filename = options.filename
 
-    o = starter_ProcessArticleZip()
+    o = starter_SilentCorrectionsIngest()
 
     o.start(ENV,)

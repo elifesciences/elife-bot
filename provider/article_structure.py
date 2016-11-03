@@ -20,7 +20,7 @@ class ArticleInfo(object):
         - Other: file is something else
         (more required!)
     journal: the name of the journal (e.g. elife)
-    f_id: the file id (f-id) of the _article_ the file is part of (e.g. 00012)
+    article_id: referred to in the naming spec as the file id (f-id) of the article the file is part of (e.g. 00012)
     versioned: boolean representing if the file has a version number
     version: the version of the file (or None if not versioned)
     extra-info: the parts of the filename between the f-id (or status if present) and the version (if present) or extension
@@ -54,7 +54,7 @@ class ArticleInfo(object):
             return
 
         self.journal = parts[0]
-        self.f_id = parts[1]
+        self.article_id = parts[1]
         last_part_index = len(parts) - 1
         last_part = parts[last_part_index]
         if last_part.startswith('v'):
@@ -101,6 +101,8 @@ class ArticleInfo(object):
             return None
         else:
             return m.group(1)
+
+
 
 
 def main():

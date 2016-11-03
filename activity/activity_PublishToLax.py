@@ -43,8 +43,8 @@ class activity_PublishToLax(activity.activity):
         version = data['version']
         run = data['run']
 
-        publication_data = json.loads(base64.decodestring(data['publication_data']))
-        workflow_data = publication_data['workflow_data']
+        workflow_data = self.get_workflow_data(data)
+
         status = workflow_data['status']
         eif_location = workflow_data['eif_location']
         expanded_folder = workflow_data['expanded_folder']
@@ -53,8 +53,10 @@ class activity_PublishToLax(activity.activity):
                                 "Starting preparation of article for Lax " + article_id)
 
         try:
+            force = True if ("force" in data and data["force"] == True) else False
             message = lax_provider.prepare_action_message(self.settings,
-                                                          article_id, run, expanded_folder, version, status, eif_location, 'publish')
+                                                          article_id, run, expanded_folder, version, status,
+                                                          eif_location, 'publish', force)
             sqs_conn = boto.sqs.connect_to_region(
                             self.settings.sqs_region,
                             aws_access_key_id=self.settings.aws_access_key_id,
@@ -76,3 +78,10 @@ class activity_PublishToLax(activity.activity):
         self.emit_monitor_event(self.settings, article_id, version, run, "Publish To Lax", "end",
                                 "Finished preparation of article for Lax " + article_id)
         return True
+
+    def get_workflow_data(self, data):
+        if "publication_data" in data:
+            publication_data = json.loads(base64.decodestring(data['publication_data']))
+            workflow_data = publication_data['workflow_data']
+            return workflow_data
+        return data

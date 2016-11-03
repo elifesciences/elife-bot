@@ -37,7 +37,7 @@ class starter_PostPerfectPublication():
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
         # Start a workflow execution
-        workflow_id = "PostPerfectPublication_%s" % info['article_id'] + str(int(random.random() * 1000))
+        workflow_id = "PostPerfectPublication_%s.%s" % (info['article_id'], os.getpid())
         workflow_name = "PostPerfectPublication"
         workflow_version = "1"
         child_policy = None

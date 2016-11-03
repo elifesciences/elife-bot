@@ -22,6 +22,7 @@ class activity_ApplyVersionNumber(activity.activity):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
 
         self.name = "ApplyVersionNumber"
+        self.pretty_name = "Apply Version Number"
         self.version = "1"
         self.default_task_heartbeat_timeout = 30
         self.default_task_schedule_to_close_timeout = 60 * 5
@@ -42,11 +43,9 @@ class activity_ApplyVersionNumber(activity.activity):
         session = Session(self.settings)
         version = session.get_value(run, 'version')
         article_id = session.get_value(run, 'article_id')
-        article_version_id = article_id + '.' + version
-        file_name = session.get_value(run, 'file_name')
 
         self.emit_monitor_event(self.settings, article_id, version, run,
-                                "Apply Version Number", "start",
+                                self.pretty_name, "start",
                                 "Starting applying version number to files for " + article_id)
 
         try:
@@ -54,35 +53,31 @@ class activity_ApplyVersionNumber(activity.activity):
             if self.logger:
                 self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
-            # Do not rename files if a version number is in the file_name
-            m = self.version_in_file_name(file_name)
+            if version is None:
+                self.emit_monitor_event(self.settings, article_id, version, run,
+                                        self.pretty_name, "error",
+                                        "Error in applying version number to files for " + article_id +
+                                        " message: No version available")
+                return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-            if m is not None:
-                # Nothing to do
-                pass
-
-            elif m is None and version is not None:
-                expanded_folder_name = session.get_value(run, 'expanded_folder')
-                bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
-                self.rename_article_s3_objects(bucket_folder_name, version)
+            expanded_folder_name = session.get_value(run, 'expanded_folder')
+            bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
+            self.rename_article_s3_objects(bucket_folder_name, version)
 
             self.emit_monitor_event(self.settings, article_id, version, run,
-                                    "Apply Version Number", "end",
+                                    self.pretty_name, "end",
                                     "Finished applying version number to article " + article_id +
                                     " for version " + version + " run " + str(run))
 
         except Exception as e:
             self.logger.exception("Exception when applying version number to article")
             self.emit_monitor_event(self.settings, article_id, version, run,
-                                    "Apply Version Number", "error",
+                                    self.pretty_name, "error",
                                     "Error in applying version number to files for " + article_id +
                                     " message:" + e.message)
-            return False
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
         return True
-
-    def version_in_file_name(self, file_name):
-        return re.search(ur'-v([0-9]*?)[\.|-]', file_name)
 
     def rename_article_s3_objects(self, bucket_folder_name, version):
         """
@@ -176,8 +171,11 @@ class activity_ApplyVersionNumber(activity.activity):
         return file_name_map
 
     def new_filename(self, old_filename, version):
-        (file_prefix, file_extension) = self.file_parts(old_filename)
-        new_filename = file_prefix + '-v' + str(version) + '.' + file_extension
+        if re.search(ur'-v([0-9])[\.]', old_filename): #is version already in file name?
+            new_filename = re.sub(ur'-v([0-9])[\.]', '-v' + str(version) + '.', old_filename)
+        else:
+            (file_prefix, file_extension) = self.file_parts(old_filename)
+            new_filename = file_prefix + '-v' + str(version) + '.' + file_extension
         return new_filename
 
     def rename_s3_objects(self, bucket, bucket_name, bucket_folder_name, file_name_map):

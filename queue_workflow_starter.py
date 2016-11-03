@@ -113,6 +113,7 @@ def process_data_postperfectpublication(workflow_name, workflow_data):
 workflow_data_processors = {
     'PublishPerfectArticle': process_data_publishperfectarticle,
     'IngestArticleZip': process_data_ingestarticlezip,
+    'SilentCorrectionsIngest': process_data_ingestarticlezip,
     'PostPerfectPublication': process_data_postperfectpublication
 }
 

@@ -96,15 +96,25 @@ class LaxResponseAdapter:
             }
 
             if operation == "ingest":
-                workflow_starter_message = {
-                        "workflow_name": "ProcessArticleZip",
-                        "workflow_data": workflow_data
-                    }
+                if "force" in token and token['force'] == True:
+                    workflow_starter_message = {
+                            "workflow_name": "SilentCorrectionsProcess",
+                            "workflow_data": workflow_data
+                        }
+                    self.logger.info("calling workflow SilentCorrectionsProcess")
+                else:
+                    workflow_starter_message = {
+                            "workflow_name": "ProcessArticleZip",
+                            "workflow_data": workflow_data
+                        }
+                    self.logger.info("calling workflow ProcessArticleZip")
             else:
                 workflow_starter_message = {
                         "workflow_name": "PostPerfectPublication",
                         "workflow_data": workflow_data
                     }
+
+                self.logger.info("calling workflow PostPerfectPublication")
 
             return workflow_starter_message
         except Exception as e:
