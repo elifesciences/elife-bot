@@ -68,7 +68,7 @@ class activity_VersionLookup(activity.activity):
             self.logger.exception("Exception when trying to Lookup next version")
             self.emit_monitor_event(self.settings, article_structure.article_id, version, data['run'], self.pretty_name,
                                     "error", " ".join(("Error looking up version for article",
-                                                      article_structure.article_id, "message:", e.message)))
+                                                      article_structure.article_id, "message:", str(e))))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
     def get_version(self, settings, article_structure, lookup_function):
@@ -81,7 +81,7 @@ class activity_VersionLookup(activity.activity):
                 return version, "Name '%s' did not match expected pattern for version" % article_structure.full_filename
             return version, None
         except Exception as e:
-            error_message = "Exception when looking up version. Message: " + e.message
+            error_message = "Exception when looking up version. Message: " + str(e)
             return version, error_message
 
     def execute_function(self, the_function, arg1, arg2):
