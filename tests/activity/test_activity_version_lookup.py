@@ -5,6 +5,7 @@ import settings_mock
 import test_activity_data as testdata
 from classes_mock import FakeSession
 import provider.lax_provider
+from requests.exceptions import ConnectionError
 
 def data(lookup_function, file_name_to_change=None):
     data = testdata.raw_data_activity
@@ -85,6 +86,26 @@ class TestVersionLookup(unittest.TestCase):
                                              "error",
                                              "Error Looking up version article 00353 message: "
                                              "Exception when looking up version. Message: Time out.")
+
+
+    @patch('activity.activity_VersionLookup.Session')
+    @patch.object(activity_VersionLookup, 'emit_monitor_event')
+    @patch.object(activity_VersionLookup, 'execute_function')
+    def test_get_version_error(self, fake_execute_function, fake_emit_monitor, fake_session):
+        self.versionlookup.logger = MagicMock()
+        fake_execute_function.side_effect = ConnectionError("Protocol Error message.")
+        test_data = data("article_next_version", "elife-00353-vor-r1.zip")
+
+        result = self.versionlookup.do_activity(test_data)
+
+        fake_emit_monitor.assert_called_with(settings_mock,
+                                             "00353",
+                                             None,
+                                             test_data["run"],
+                                             self.versionlookup.pretty_name,
+                                             "error",
+                                             "Error Looking up version article 00353 message: "
+                                             "Exception when looking up version. Message: Protocol Error message.")
 
 
 if __name__ == '__main__':
