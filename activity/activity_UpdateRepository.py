@@ -3,9 +3,7 @@ from boto.s3.connection import S3Connection
 import tempfile
 from github import Github
 from github import GithubException
-import base64
-from S3utility.s3_notification_info import S3NotificationInfo
-import requests
+import provider.lax_provider as lax_provider
 
 """
 activity_UpdateRepository.py activity
@@ -27,8 +25,11 @@ class activity_UpdateRepository(activity.activity):
     def do_activity(self, data=None):
         try:
 
-            info = S3NotificationInfo.from_dict(data)
-            s3_file_path = info.file_name
+            xml_file = lax_provider.get_xml_file_name(self.settings,
+                                                          data['article_id'],
+                                                          self.settings.publishing_buckets_prefix +
+                                                          self.settings.ppp_cdn_bucket)
+            s3_file_path = data['article_id'] + "/" + xml_file
 
             #connect to bucket
             self.conn = S3Connection(self.settings.aws_access_key_id,
