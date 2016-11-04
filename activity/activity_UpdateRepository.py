@@ -35,7 +35,7 @@ class activity_UpdateRepository(activity.activity):
                                  self.settings.aws_secret_access_key,
                                  host=self.settings.s3_hostname)
             bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix +
-                                      self.settings.cdn_bucket)
+                                      self.settings.ppp_cdn_bucket)
 
             #download xml
             with tempfile.TemporaryFile(mode='r+') as tmp:
