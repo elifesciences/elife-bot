@@ -18,7 +18,7 @@ class NullArticleException(Exception):
 
 class starter_PostPerfectPublication():
 
-    def start(self, info, settings):
+    def start(self, info, settings, ENV="dev"):
 
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
