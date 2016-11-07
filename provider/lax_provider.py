@@ -33,7 +33,7 @@ def article_highest_version(article_id, settings, logger=None):
 
 
 def article_next_version(article_id, settings):
-    version = lax_provider.article_highest_version(article_id, settings)
+    version = article_highest_version(article_id, settings)
     if isinstance(version, (int,long)) and version >= 1:
         version = str(version + 1)
     if version is None:
