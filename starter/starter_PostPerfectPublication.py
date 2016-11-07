@@ -21,7 +21,7 @@ class starter_PostPerfectPublication():
     def start(self, info, settings, ENV="dev"):
 
         # Log
-        identity = "starter_%s" % int(random.random() * 1000)
+        identity = "starter_PostPerfectPublication.%s" % os.getpid()
         log_file = "starter.log"
         # logFile = None
         logger = log.logger(log_file, settings.setLevel, identity)
@@ -34,7 +34,7 @@ class starter_PostPerfectPublication():
         workflow_version, \
         child_policy, \
         execution_start_to_close_timeout, \
-        workflow_input = self.set_workflow_information("PostPerfectPublication", "1", None, info, os.getpid())
+        workflow_input = self.set_workflow_information("PostPerfectPublication", "1", None, info)
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
@@ -55,9 +55,9 @@ class starter_PostPerfectPublication():
                       'There is already a running workflow with ID %s' % workflow_id
             logger.info(message)
 
-    def set_workflow_information(self, name, workflow_version, child_policy, data, process_id):
+    def set_workflow_information(self, name, workflow_version, child_policy, data):
         publication_from = "lax" if 'requested_action' in data else 'website'
-        workflow_id = "%s_%s.%s.%s" % (name, data['article_id'], process_id, publication_from)
+        workflow_id = "%s_%s.%s" % (name, data['article_id'], publication_from)
         workflow_name = "PostPerfectPublication"
         workflow_version = workflow_version
         child_policy = child_policy

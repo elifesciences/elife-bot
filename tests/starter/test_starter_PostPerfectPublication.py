@@ -6,8 +6,7 @@ from ddt import ddt, data, unpack
 
 
 example_workflow_name = "PostPerfectPublication"
-example_process_id = "00000"
-example_workflow_id = lambda fe: "PostPerfectPublication_00353.00000." + fe
+example_workflow_id = lambda fe: "PostPerfectPublication_00353." + fe
 
 
 @ddt
@@ -29,8 +28,7 @@ class TestStarterPostPerfectPublication(unittest.TestCase):
         workflow_input = self.postperfectpublication.set_workflow_information(example_workflow_name,
                                                                               "1",
                                                                               None,
-                                                                              data,
-                                                                              example_process_id)
+                                                                              data)
 
         self.assertEqual(example_workflow_id(execution), workflow_id)
         self.assertEqual(example_workflow_name, workflow_name)
