@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -19,9 +18,7 @@ class NullArticleException(Exception):
 
 class starter_PostPerfectPublication():
 
-    def start(self, info, ENV="dev"):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
+    def start(self, info, settings):
 
         # Log
         identity = "starter_%s" % int(random.random() * 1000)

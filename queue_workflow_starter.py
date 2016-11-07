@@ -106,7 +106,8 @@ def process_data_ingestarticlezip(workflow_name, workflow_data):
             'run': str(uuid.uuid4())}
     return data
 def process_data_postperfectpublication(workflow_name, workflow_data):
-    data = {'info': workflow_data }
+    data = {'info': workflow_data,
+            'settings': settings}
     return data
 
 
