@@ -76,7 +76,7 @@ class activity_VersionLookup(activity.activity):
             version = None
             version = article_structure.get_version_from_zip_filename()
             if version is None:
-                version = self.execute_function(lookup_functions[lookup_function], article_structure.article_id, settings)  #lax_provider.article_next_version(article_structure.article_id, self.settings)
+                version = str(self.execute_function(lookup_functions[lookup_function], article_structure.article_id, settings))  #lax_provider.article_next_version(article_structure.article_id, self.settings)
             if version == '-1':
                 return version, "Name '%s' did not match expected pattern for version" % article_structure.full_filename
             return version, None
