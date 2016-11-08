@@ -51,7 +51,7 @@ class activity_VerifyPublishResponse(activity.activity):
 
                     return [start_event
                             , [self.settings, article_id, version, run, self.pretty_name + ": Lax", "end",
-                               "Finish verification of Publish response. Authority: Old Journal. Exiting "
+                               "Finish verification of Publish response. Authority: elife-website. Exiting "
                                 "this workflow " + article_id]
                             , activity.activity.ACTIVITY_EXIT_WORKFLOW]
 
