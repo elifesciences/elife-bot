@@ -180,6 +180,10 @@ class exp():
     redis_db = 0
     redis_expire_key = 86400  # seconds
 
+    #Version control for xml
+    github_token = "tokenhere"
+    git_repo_name = "repository-name"
+    git_repo_path = "/articles/"
 
 class dev():
 
@@ -311,6 +315,11 @@ class dev():
     redis_db = 0
     redis_expire_key = 86400  # seconds
 
+    #Version control for xml
+    github_token = "tokenhere"
+    git_repo_name = "repository-name"
+    git_repo_path = "/articles/"
+
 
 class live():
     # AWS settings
@@ -440,6 +449,11 @@ class live():
     redis_port = 6379
     redis_db = 0
     redis_expire_key = 86400  # seconds
+
+    #Version control for xml
+    github_token = "tokenhere"
+    git_repo_name = "elife-articles-xml"
+    git_repo_path = "/articles/"
 
 
 def get_settings(ENV="dev"):
