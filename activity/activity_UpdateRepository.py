@@ -14,6 +14,7 @@ class activity_UpdateRepository(activity.activity):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
 
         self.name = "UpdateRepository"
+        self.pretty_name = "Update Repository"
         self.version = "1"
         self.default_task_heartbeat_timeout = 30
         self.default_task_schedule_to_close_timeout = 60 * 5
@@ -24,6 +25,10 @@ class activity_UpdateRepository(activity.activity):
 
     def do_activity(self, data=None):
         try:
+
+            self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
+                                    self.pretty_name, "start",
+                                    "Starting Updating repository for article " + data['article_id'])
 
             xml_file = lax_provider.get_xml_file_name(self.settings,
                                                           data['article_id'],
@@ -45,46 +50,52 @@ class activity_UpdateRepository(activity.activity):
                 filename = s3_file_path.split('/')[-1]
                 s3_key.get_contents_to_file(tmp)
                 file_content = s3_key.get_contents_as_string()
-                self.update_github(filename, file_content)
+                message = self.update_github(self.settings.git_repo_path + filename, file_content)
 
+                self.logger.info(message)
+                self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
+                                self.pretty_name, "end",
+                                "Finished Updating repository for article. Details: " + message)
+                return True
 
         except Exception as e:
-            self.logger.info("Exception in do_activity. data: " + data)
-            raise
+            self.logger.info("Exception in do_activity. " + str(e))
+            self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
+                                    self.pretty_name, "error",
+                                    "Error Updating repository for article. Details: " + str(e))
+        finally:
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-        return True
 
-    def update_github(self, filename, content):
+
+    def update_github(self, repo_file, content):
 
         g = Github(self.settings.github_token)
         user = g.get_user()
         article_xml_repo = user.get_repo(self.settings.git_repo_name)
 
         try:
-            xml_file = article_xml_repo.get_contents(filename)
+            xml_file = article_xml_repo.get_contents(repo_file)
         except GithubException as e:
             self.logger.info("GithubException - description: " + e.message)
-            self.logger.info("GithubException: file " + filename + " may not exist in github yet. We will try to add it in the repo.")
-            response = article_xml_repo.create_file("/" + filename, "Adds XML first time", content)
-            self.logger.info("File " + filename + " successfully added. Commit: " + response)
-            return
+            self.logger.info("GithubException: file " + repo_file + " may not exist in github yet. We will try to add it in the repo.")
+            response = article_xml_repo.create_file(repo_file, "Adds XML first time", content)
+            return "File " + repo_file + " successfully added. Commit: " + str(response)
 
         except Exception as e:
-            self.logger.info("Exception: file " + filename + ". Error: " + e.message)
+            self.logger.info("Exception: file " + repo_file + ". Error: " + e.message)
             raise
 
         try:
             #check for changes first
             if content == xml_file.decoded_content:
-                self.logger.info("No changes in file " + filename)
-                return
+                return "No changes in file " + repo_file
 
             #there are changes
-            response = article_xml_repo.update_file(self.settings.git_repo_path + filename , "Updates xml", content, xml_file.sha)
-            self.logger.info("File " + filename + " successfully updated. Commit: " + response)
-            return
+            response = article_xml_repo.update_file(repo_file , "Updates xml", content, xml_file.sha)
+            return "File " + repo_file + " successfully updated. Commit: " + str(response)
 
         except Exception as e:
-            self.logger.info("Exception: file " + filename + ". Error: " + e.message)
+            self.logger.info("Exception: file " + repo_file + ". Error: " + e.message)
             raise
 
