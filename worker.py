@@ -6,6 +6,7 @@ import random
 import os
 import importlib
 import time
+import newrelic.agent
 from provider import process
 from optparse import OptionParser
 
@@ -54,60 +55,62 @@ def work(ENV, flag):
                     # Build a string for the object name
                     activity_name = get_activity_name(activityType)
 
-                    # Attempt to import the module for the activity
-                    if import_activity_class(activity_name):
-                        # Instantiate the activity object
-                        activity_object = get_activity_object(activity_name, settings,
-                                                              logger, conn, token, activity_task)
+                    application = newrelic.agent.application()
+                    with newrelic.agent.BackgroundTask(application, name=activity_name, group='worker.py'):
+                        # Attempt to import the module for the activity
+                        if import_activity_class(activity_name):
+                            # Instantiate the activity object
+                            activity_object = get_activity_object(activity_name, settings,
+                                                                  logger, conn, token, activity_task)
 
-                        # Get the data to pass
-                        data = get_input(activity_task)
+                            # Get the data to pass
+                            data = get_input(activity_task)
 
-                        # Do the activity
-                        try:
-                            activity_result = activity_object.do_activity(data)
-                        except Exception as e:
-                            logger.error('error executing activity %s' %
-                                         activity_name, exc_info=True)
+                            # Do the activity
+                            try:
+                                activity_result = activity_object.do_activity(data)
+                            except Exception as e:
+                                logger.error('error executing activity %s' %
+                                             activity_name, exc_info=True)
 
-                        # Print the result to the log
-                        logger.info('got result: \n%s' %
-                                    json.dumps(activity_object.result, sort_keys=True, indent=4))
-
-                        # Complete the activity task if it was successful
-                        if type(activity_result) == str:
-                            if activity_result == activitybase.ACTIVITY_SUCCESS:
-                                message = activity_object.result
-                                respond_completed(conn, logger, token, message)
-                            elif activity_result == activitybase.ACTIVITY_TEMPORARY_FAILURE:
-                                reason = ('error: activity failed with result '
-                                          + str(activity_object.result))
-                                detail = ''
-                                respond_failed(conn, logger, token, detail, reason)
-
-                            else:
-                                # (activitybase.ACTIVITY_PERMANENT_FAILURE or activitybase.ACTIVITY_EXIT_WORKFLOW)
-                                signal_fail_workflow(conn, logger, settings.domain,
-                                                     activity_task['workflowExecution']['workflowId'],
-                                                     activity_task['workflowExecution']['runId'])
-                        else:
-                            # for legacy actions
+                            # Print the result to the log
+                            logger.info('got result: \n%s' %
+                                        json.dumps(activity_object.result, sort_keys=True, indent=4))
 
                             # Complete the activity task if it was successful
-                            if activity_result:
-                                message = activity_object.result
-                                respond_completed(conn, logger, token, message)
-                            else:
-                                reason = ('error: activity failed with result '
-                                          + str(activity_object.result))
-                                detail = ''
-                                respond_failed(conn, logger, token, detail, reason)
+                            if type(activity_result) == str:
+                                if activity_result == activitybase.ACTIVITY_SUCCESS:
+                                    message = activity_object.result
+                                    respond_completed(conn, logger, token, message)
+                                elif activity_result == activitybase.ACTIVITY_TEMPORARY_FAILURE:
+                                    reason = ('error: activity failed with result '
+                                              + str(activity_object.result))
+                                    detail = ''
+                                    respond_failed(conn, logger, token, detail, reason)
 
-                    else:
-                        reason = 'error: could not load object %s\n' % activity_name
-                        detail = ''
-                        respond_failed(conn, logger, token, detail, reason)
-                        logger.info('error: could not load object %s\n' % activity_name)
+                                else:
+                                    # (activitybase.ACTIVITY_PERMANENT_FAILURE or activitybase.ACTIVITY_EXIT_WORKFLOW)
+                                    signal_fail_workflow(conn, logger, settings.domain,
+                                                         activity_task['workflowExecution']['workflowId'],
+                                                         activity_task['workflowExecution']['runId'])
+                            else:
+                                # for legacy actions
+
+                                # Complete the activity task if it was successful
+                                if activity_result:
+                                    message = activity_object.result
+                                    respond_completed(conn, logger, token, message)
+                                else:
+                                    reason = ('error: activity failed with result '
+                                              + str(activity_object.result))
+                                    detail = ''
+                                    respond_failed(conn, logger, token, detail, reason)
+
+                        else:
+                            reason = 'error: could not load object %s\n' % activity_name
+                            detail = ''
+                            respond_failed(conn, logger, token, detail, reason)
+                            logger.info('error: could not load object %s\n' % activity_name)
 
         # Reset and loop
         token = None
