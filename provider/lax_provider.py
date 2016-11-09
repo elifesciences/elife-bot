@@ -1,6 +1,6 @@
 import requests
 import time
-from article import *
+from . import article
 import base64
 import json
 
@@ -33,7 +33,7 @@ def article_highest_version(article_id, settings, logger=None):
 
 
 def article_next_version(article_id, settings):
-    version = lax_provider.article_highest_version(article_id, settings)
+    version = article_highest_version(article_id, settings)
     if isinstance(version, (int,long)) and version >= 1:
         version = str(version + 1)
     if version is None:
@@ -85,7 +85,7 @@ def prepare_action_message(settings, article_id, run, expanded_folder, version, 
         return message
 
 def get_xml_file_name(settings, expanded_folder, xml_bucket):
-    Article = article()
+    Article = article.article()
     xml_file_name = Article.get_xml_file_name(settings, expanded_folder, xml_bucket)
     return xml_file_name
 
