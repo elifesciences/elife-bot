@@ -6,20 +6,16 @@ os.sys.path.insert(0, parentdir)
 import boto.swf
 import log
 import json
-import random
 from optparse import OptionParser
 
 """
 Amazon SWF PostPerfectPublication starter, for API and Lens publishing etc.
 """
 
-class NullRequiredDataException(Exception):
-    pass
-
 
 class starter_PostPerfectPublication():
 
-    def start(self, info, settings, ENV="dev"):
+    def start(self, info, settings):
         try:
             # Log
             identity = "starter_PostPerfectPublication.%s" % os.getpid()
@@ -93,6 +89,9 @@ if __name__ == "__main__":
     if options.filename:
         filename = options.filename
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_PostPerfectPublication()
 
-    o.start(ENV,)
+    o.start(settings=settings,)

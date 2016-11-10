@@ -5,7 +5,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -20,11 +19,9 @@ Amazon SWF NewS3File starter
 
 class starter_NewS3File():
 
-    def start(self, ENV="dev", info=None):
+    def start(self, settings, info=None):
 
         # TODO : much of this is common to many starters and could probably be streamlined
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
         log_file = "starter.log"
@@ -76,7 +73,10 @@ if __name__ == "__main__":
     if options.filename:
         filename = options.filename
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_NewS3File()
 
     info = S3NotificationInfo("S3Event", "", "xxawsxx-drop-bucket", "elife-kitchen-sink.xml", "3f53f5c808dd58973cd93a368be739b4", "1")
-    o.start(ENV, info=info)
+    o.start(settings=settings, info=info)

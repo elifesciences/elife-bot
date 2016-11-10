@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -16,10 +15,7 @@ Amazon SWF PubRouterDeposit starter
 
 class starter_PubRouterDeposit():
 
-    def start(self, ENV="dev", workflow=None):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
-
+    def start(self, settings, workflow=None):
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
         logFile = "starter.log"
@@ -102,6 +98,9 @@ if __name__ == "__main__":
     if options.workflow:
         workflow = options.workflow
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_PubRouterDeposit()
 
-    o.start(ENV, workflow=workflow)
+    o.start(settings=settings, workflow=workflow)

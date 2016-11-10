@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -16,14 +15,10 @@ Amazon SWF PublishPOA starter
 
 class starter_PublishPOA():
 
-    def start(self, ENV="dev"):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
-
+    def start(self, settings):
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
         logFile = "starter.log"
-        #logFile = None
         logger = log.logger(logFile, settings.setLevel, identity)
 
         # Simple connect
@@ -65,6 +60,9 @@ if __name__ == "__main__":
     if options.env:
         ENV = options.env
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_PublishPOA()
 
-    o.start(ENV)
+    o.start(settings=settings)

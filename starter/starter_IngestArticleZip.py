@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -18,12 +17,9 @@ Amazon SWF IngestArticleZip starter, preparing article xml for lax.
 
 class starter_IngestArticleZip():
 
-    def start(self, ENV="dev", info=None, run=None):
+    def start(self, settings, info=None, run=None):
 
         # TODO : much of this is common to many starters and could probably be streamlined
-
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
 
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
@@ -81,6 +77,9 @@ if __name__ == "__main__":
     if options.filename:
         filename = options.filename
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_IngestArticleZip()
 
-    o.start(ENV,)
+    o.start(settings=settings,)

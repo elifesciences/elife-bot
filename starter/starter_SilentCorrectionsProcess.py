@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -18,12 +17,9 @@ class NullArticleException(Exception):
 
 class starter_SilentCorrectionsProcess():
 
-    def start(self, article_id, version, requested_action, result, expanded_folder, status, eif_location, run, update_date, message=None, ENV="dev"):
+    def start(self, settings, article_id, version, requested_action, result, expanded_folder, status, eif_location, run, update_date, message=None):
 
         # TODO : much of this is common to many starters and could probably be streamlined
-
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
 
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
@@ -90,6 +86,9 @@ if __name__ == "__main__":
     if options.filename:
         filename = options.filename
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_SilentCorrectionsProcess()
 
-    o.start(ENV,)
+    o.start(settings=settings,)

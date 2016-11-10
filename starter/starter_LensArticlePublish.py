@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -16,10 +15,7 @@ Amazon SWF LensArticlePublish starter
 
 class starter_LensArticlePublish():
 
-    def start(self, ENV="dev", all_doi=None, doi_id=None):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
-
+    def start(self, settings, all_doi=None, doi_id=None):
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
         logFile = "starter.log"
@@ -92,6 +88,9 @@ if __name__ == "__main__":
     if options.all_doi:
         all_doi = options.all_doi
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_LensArticlePublish()
 
-    o.start(ENV, all_doi=all_doi, doi_id=doi_id)
+    o.start(settings=settings, all_doi=all_doi, doi_id=doi_id)

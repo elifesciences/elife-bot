@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -17,14 +16,10 @@ Amazon SWF S3Monitor starter
 
 class starter_S3Monitor():
 
-    def start(self, ENV="dev", workflow="S3Monitor"):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
-
+    def start(self, settings, workflow="S3Monitor"):
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
         logFile = "starter.log"
-        #logFile = None
         logger = log.logger(logFile, settings.setLevel, identity)
 
         # Simple connect
@@ -99,6 +94,9 @@ if __name__ == "__main__":
     if options.workflow:
         workflow = options.workflow
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_S3Monitor()
 
-    o.start(ENV, workflow=workflow)
+    o.start(settings=settings, workflow=workflow)
