@@ -24,47 +24,63 @@ class activity_UpdateRepository(activity.activity):
         self.logger = logger
 
     def do_activity(self, data=None):
-        try:
-
             self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                     self.pretty_name, "start",
                                     "Starting Updating repository for article " + data['article_id'])
 
-            xml_file = lax_provider.get_xml_file_name(self.settings,
-                                                          data['article_id'],
-                                                          self.settings.publishing_buckets_prefix +
-                                                          self.settings.ppp_cdn_bucket)
-            s3_file_path = data['article_id'] + "/" + xml_file
+            # assert all Github settings have are not None when live
+            # if Github settings are null and we are testing, skip activity
+            if None in (self.settings.git_repo_path, self.settings.git_repo_name, self.settings.github_token):
+                import settings as settingsLib
+                if isinstance(self.settings(), settingsLib.live):
+                    self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
+                                            self.pretty_name, "error",
+                                            "Error Updating repository for article. Github settings are unavailable.")
+                    return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-            #connect to bucket
-            self.conn = S3Connection(self.settings.aws_access_key_id,
-                                 self.settings.aws_secret_access_key,
-                                 host=self.settings.s3_hostname)
-            bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix +
-                                      self.settings.ppp_cdn_bucket)
-
-            #download xml
-            with tempfile.TemporaryFile(mode='r+') as tmp:
-
-                s3_key = bucket.get_key(s3_file_path)
-                filename = s3_file_path.split('/')[-1]
-                s3_key.get_contents_to_file(tmp)
-                file_content = s3_key.get_contents_as_string()
-                message = self.update_github(self.settings.git_repo_path + filename, file_content)
-
-                self.logger.info(message)
                 self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
-                                self.pretty_name, "end",
-                                "Finished Updating repository for article. Details: " + message)
+                                        self.pretty_name, "end",
+                                        "UpdateRepository got skipped as there are no Github "
+                                        "settings (Test enviroment).")
                 return True
 
-        except Exception as e:
-            self.logger.info("Exception in do_activity. " + str(e))
-            self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
-                                    self.pretty_name, "error",
-                                    "Error Updating repository for article. Details: " + str(e))
-        finally:
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            try:
+
+                xml_file = lax_provider.get_xml_file_name(self.settings,
+                                                              data['article_id'],
+                                                              self.settings.publishing_buckets_prefix +
+                                                              self.settings.ppp_cdn_bucket)
+                s3_file_path = data['article_id'] + "/" + xml_file
+
+                #connect to bucket
+                self.conn = S3Connection(self.settings.aws_access_key_id,
+                                     self.settings.aws_secret_access_key,
+                                     host=self.settings.s3_hostname)
+                bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix +
+                                          self.settings.ppp_cdn_bucket)
+
+                #download xml
+                with tempfile.TemporaryFile(mode='r+') as tmp:
+
+                    s3_key = bucket.get_key(s3_file_path)
+                    filename = s3_file_path.split('/')[-1]
+                    s3_key.get_contents_to_file(tmp)
+                    file_content = s3_key.get_contents_as_string()
+                    message = self.update_github(self.settings.git_repo_path + filename, file_content)
+
+                    self.logger.info(message)
+                    self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
+                                    self.pretty_name, "end",
+                                    "Finished Updating repository for article. Details: " + message)
+                    return True
+
+            except Exception as e:
+                self.logger.info("Exception in do_activity. " + str(e))
+                self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
+                                        self.pretty_name, "error",
+                                        "Error Updating repository for article. Details: " + str(e))
+            finally:
+                return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
 
 
