@@ -79,7 +79,6 @@ class activity_UpdateRepository(activity.activity):
                 self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                         self.pretty_name, "error",
                                         "Error Updating repository for article. Details: " + str(e))
-            finally:
                 return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
 
