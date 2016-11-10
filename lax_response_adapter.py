@@ -6,6 +6,7 @@ from boto.sqs.message import Message
 from provider import process
 import base64
 from dateutil.parser import parse
+import newrelic.agent
 
 identity = log.identity('lax_response_adapter')
 logger = log.logger('lax_response_adapter.log', 'INFO', identity)
@@ -121,6 +122,7 @@ class LaxResponseAdapter:
             self.logger.error("Error parsing Lax message. Message: " + e.message)
             raise
 
+    @newrelic.agent.background_task()
     def process_message(self, message, output_queue):
         message_str = str(message.get_body())
         workflow_starter_message = self.parse_message(message_str)
