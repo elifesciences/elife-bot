@@ -1,4 +1,5 @@
 import logging
+from logging import handlers
 import os
 import random
 
@@ -10,7 +11,7 @@ def logger(logFile = None, setLevel = "INFO", identity = ""):
     """
     logger = logging.getLogger('myapp')
     if(logFile):
-        hdlr = logging.FileHandler(os.getcwd() + os.sep + logFile)
+        hdlr = handlers.WatchedFileHandler(os.getcwd() + os.sep + logFile)
     else:
         # No log file provided, use the stream handler
         hdlr = logging.StreamHandler()
