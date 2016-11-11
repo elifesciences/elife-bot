@@ -659,10 +659,12 @@ class article(object):
         doi_id = int(self.get_doi_id(doi))
         article_id = str(doi_id).zfill(5)
 
-        status_code, data = lax_provider.article_versions(article_id, self.settings)
+        # work around circular dependency article/lax_provider
+        from lax_provider import article_versions, poa_vor_status
+        status_code, data = article_versions(article_id, self.settings)
 
         if status_code == 200:
-            poa_status, vor_status = lax_provider.poa_vor_status(data)
+            poa_status, vor_status = poa_vor_status(data)
 
         # Now a decision can be made
         if (is_poa is True or
