@@ -10,6 +10,7 @@ from optparse import OptionParser
 from provider import process
 
 import workflow
+import newrelic.agent
 
 """
 Amazon SWF decider
@@ -32,6 +33,8 @@ def decide(ENV, flag):
     conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
     token = None
+    token = None
+    application = newrelic.agent.application()
 
     # Poll for a decision task
     while flag.green():
@@ -54,35 +57,36 @@ def decide(ENV, flag):
             if token is not None:
                 # Get the workflowType and attempt to do the work
                 workflowType = get_workflowType(decision)
-                if workflowType is not None:
+                with newrelic.agent.BackgroundTask(application, name=workflowType, group='decider.py'):
+                    if workflowType is not None:
 
-                    logger.info('workflowType: %s' % workflowType)
+                        logger.info('workflowType: %s' % workflowType)
 
-                    # Instantiate and object for the workflow using eval
-                    # Build a string for the object name
-                    workflow_name = get_workflow_name(workflowType)
+                        # Instantiate and object for the workflow using eval
+                        # Build a string for the object name
+                        workflow_name = get_workflow_name(workflowType)
 
-                    # Attempt to import the module for the workflow
-                    if import_workflow_class(workflow_name):
-                        # Instantiate the workflow object
-                        workflow_object = get_workflow_object(workflow_name, settings,
-                                                              logger, conn, token, decision,
-                                                              maximum_page_size)
+                        # Attempt to import the module for the workflow
+                        if import_workflow_class(workflow_name):
+                            # Instantiate the workflow object
+                            workflow_object = get_workflow_object(workflow_name, settings,
+                                                                  logger, conn, token, decision,
+                                                                  maximum_page_size)
 
-                        # Process the workflow
-                        try:
-                            success = workflow_object.do_workflow()
-                        except Exception as e:
-                            success = None
-                            logger.error('error processing workflow %s' %
-                                         workflow_name, exc_info=True)
+                            # Process the workflow
+                            try:
+                                success = workflow_object.do_workflow()
+                            except Exception as e:
+                                success = None
+                                logger.error('error processing workflow %s' %
+                                             workflow_name, exc_info=True)
 
-                        # Print the result to the log
-                        if success:
-                            logger.info('%s success %s' % (workflow_name, success))
+                            # Print the result to the log
+                            if success:
+                                logger.info('%s success %s' % (workflow_name, success))
 
-                    else:
-                        logger.info('error: could not load object %s\n' % workflow_name)
+                        else:
+                            logger.info('error: could not load object %s\n' % workflow_name)
 
         # Reset and loop
         token = None
