@@ -32,6 +32,7 @@ def work(ENV, flag):
     conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
     token = None
+    application = newrelic.agent.application()
 
     # Poll for an activity task indefinitely
     while flag.green():
@@ -55,7 +56,6 @@ def work(ENV, flag):
                     # Build a string for the object name
                     activity_name = get_activity_name(activityType)
 
-                    application = newrelic.agent.application()
                     with newrelic.agent.BackgroundTask(application, name=activity_name, group='worker.py'):
                         # Attempt to import the module for the activity
                         if import_activity_class(activity_name):
