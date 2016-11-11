@@ -32,7 +32,8 @@ class activity_UpdateRepository(activity.activity):
             # if Github settings are null and we are testing, skip activity
             if None in (self.settings.git_repo_path, self.settings.git_repo_name, self.settings.github_token):
                 import settings as settingsLib
-                if isinstance(self.settings(), settingsLib.live):
+                if isinstance(self.settings(), settingsLib.live) or isinstance(self.settings(), settingsLib.prod) or \
+                        isinstance(self.settings(), settingsLib.end2end):
                     self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                             self.pretty_name, "error",
                                             "Error Updating repository for article. Github settings are unavailable.")
