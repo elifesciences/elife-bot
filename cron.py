@@ -12,10 +12,13 @@ from boto.s3.connection import S3Connection
 import provider.swfmeta as swfmetalib
 import starter
 
+import newrelic.agent
+
 """
 SWF cron
 """
 
+@newrelic.agent.background_task()
 def run_cron(ENV="dev"):
     # Specify run environment settings
     settings = settingsLib.get_settings(ENV)

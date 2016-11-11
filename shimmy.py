@@ -9,6 +9,7 @@ from provider import process
 from provider import eif as eif_provider
 import log
 import json
+import newrelic.agent
 
 
 identity = log.identity('shimmy')
@@ -49,7 +50,7 @@ class Shimmy:
         else:
             self.logger.error("Could not obtain queue, exiting")
 
-
+    @newrelic.agent.background_task()
     def process_message(self, message, output_queue):
 
         # extract parameters from message

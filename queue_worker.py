@@ -12,6 +12,7 @@ import log
 import os
 import yaml
 import re
+import newrelic.agent
 
 # Add parent directory for imports, so activity classes can use elife-api-prototype
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -40,6 +41,7 @@ def work(ENV, flag):
     queue.set_message_class(S3SQSMessage)
 
     rules = load_rules()
+    application = newrelic.agent.application()
 
     # Poll for an activity task indefinitely
     if queue is not None:
@@ -53,34 +55,35 @@ def work(ENV, flag):
             if queue_message is None:
                 logger.info('no messages available')
             else:
-                logger.info('got message id: %s' % queue_message.id)
-                if queue_message.notification_type == 'S3Event':
-                    info = S3NotificationInfo.from_S3SQSMessage(queue_message)
-                    logger.info("S3NotificationInfo: %s", info.to_dict())
-                    workflow_name = get_starter_name(rules, info)
-                    if workflow_name is None:
-                        logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
-                        return False
+                with newrelic.agent.BackgroundTask(application, name=queue_message.notification_type, group='queue_worker.py'):
+                    logger.info('got message id: %s' % queue_message.id)
+                    if queue_message.notification_type == 'S3Event':
+                        info = S3NotificationInfo.from_S3SQSMessage(queue_message)
+                        logger.info("S3NotificationInfo: %s", info.to_dict())
+                        workflow_name = get_starter_name(rules, info)
+                        if workflow_name is None:
+                            logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
+                            return False
 
-                    # build message
-                    message = {
-                        'workflow_name': workflow_name,
-                        'workflow_data': info.to_dict()
-                    }
+                        # build message
+                        message = {
+                            'workflow_name': workflow_name,
+                            'workflow_data': info.to_dict()
+                        }
 
-                    # send workflow initiation message
-                    out_queue = conn.get_queue(settings.workflow_starter_queue)
-                    m = Message()
-                    m.set_body(json.dumps(message))
-                    out_queue.write(m)
+                        # send workflow initiation message
+                        out_queue = conn.get_queue(settings.workflow_starter_queue)
+                        m = Message()
+                        m.set_body(json.dumps(message))
+                        out_queue.write(m)
 
-                    # cancel incoming message
-                    logger.info("cancelling message")
-                    queue.delete_message(queue_message)
-                    logger.info("message cancelled")
-                else:
-                    # TODO : log
-                    pass
+                        # cancel incoming message
+                        logger.info("cancelling message")
+                        queue.delete_message(queue_message)
+                        logger.info("message cancelled")
+                    else:
+                        # TODO : log
+                        pass
             time.sleep(10)
 
         logger.info("graceful shutdown")

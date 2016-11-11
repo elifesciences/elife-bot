@@ -10,6 +10,7 @@ from provider import process
 import json
 import importlib
 import uuid
+import newrelic.agent
 
 # this is not an unused import, it is used dynamically
 import starter
@@ -79,7 +80,7 @@ def process_message(message):
         logger.exception("Exception while processing message")
     message.delete()
 
-
+@newrelic.agent.background_task()
 def start_workflow(workflow_name, workflow_data):
     data_processor = workflow_data_processors.get(workflow_name)
     workflow_name = 'starter_' + workflow_name
