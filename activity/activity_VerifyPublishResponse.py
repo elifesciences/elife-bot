@@ -45,15 +45,26 @@ class activity_VerifyPublishResponse(activity.activity):
 
                 if 'requested_action' in data:
                     # Publication authority is the old site but this call is from new lax.
-                    # Terminate Workflow gracefully, log
-                    start_event = [self.settings, article_id, version, run, self.pretty_name + ": Lax", "start",
+                    start_event = [self.settings, article_id, version, run, self.pretty_name + ": Journal", "start",
                                    "Starting verification of Publish response " + article_id]
 
-                    return [start_event
-                            , [self.settings, article_id, version, run, self.pretty_name + ": Lax", "end",
-                               "Finish verification of Publish response. Authority: elife-website. Exiting "
-                                "this workflow " + article_id]
-                            , activity.activity.ACTIVITY_EXIT_WORKFLOW]
+                    # Before terminating Workflow gracefully, emit the result of publication to lax on the dashboard
+                    # Terminate Workflow gracefully, log
+                    if data['result'] == "published":
+                        return [start_event,
+                                [self.settings, article_id, version, run, self.pretty_name + ": Journal", "end",
+                                 " Finished Verification. Lax has responded with result: published."
+                                 " Authority: elife-website. Exiting."
+                                 " Article: " + article_id],
+                                activity.activity.ACTIVITY_SUCCESS]
+                    else:
+                        return [start_event,
+                                [self.settings, article_id, version, run, self.pretty_name + ": Journal", "error",
+                                 " Lax has not published article " + article_id +
+                                 " We will exit this workflow as the publication authority is elife-website."
+                                 " result from lax:" + str(data['result']) + '; message from lax: ' +
+                                 data['message'] if ("message" in data) and (data['message'] is not None) else "(empty message)"],
+                                activity.activity.ACTIVITY_PERMANENT_FAILURE]
 
                 start_event = [self.settings, article_id, version, run, self.pretty_name + ": elife-website", "start",
                                "Starting verification of Publish response " + article_id]
@@ -88,7 +99,7 @@ class activity_VerifyPublishResponse(activity.activity):
                            "Starting verification of Publish response " + article_id]
             return [start_event,
                     [self.settings, article_id, version, run, self.pretty_name + ": Journal", "error",
-                     "Lax has not published article " + article_id +
+                     " Lax has not published article " + article_id +
                      " result from lax:" + str(data['result']) + '; message from lax: ' +
                      data['message'] if ("message" in data) and (data['message'] is not None) else "(empty message)"],
                     activity.activity.ACTIVITY_PERMANENT_FAILURE]

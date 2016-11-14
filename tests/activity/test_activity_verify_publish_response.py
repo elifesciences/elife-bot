@@ -17,7 +17,7 @@ data_published_lax = {
             "update_date": "2012-12-13T00:00:00Z"
         }
 
-data_published_journal = {
+data_published_website = {
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
             "article_id": "00353",
             "status": "vor",
@@ -72,7 +72,24 @@ class TestVerifyPublishResponse(unittest.TestCase):
                                              " Article: " + data["article_id"])
         self.assertEqual(result, self.verifypublishresponse.ACTIVITY_SUCCESS)
 
-    @data(data_published_journal)
+    @data(data_error_lax)
+    @patch.object(activity_VerifyPublishResponse, 'publication_authority')
+    @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
+    def test_do_activity_data_error_lax(self, data, fake_emit_monitor, fake_publication_authority):
+        fake_publication_authority.return_value = "Journal"
+        result = self.verifypublishresponse.do_activity(data)
+        fake_emit_monitor.assert_called_with(settings_mock,
+                                             data["article_id"],
+                                             data["version"],
+                                             data["run"],
+                                             self.verifypublishresponse.pretty_name + ": Journal",
+                                             "error",
+                                             " Lax has not published article " + data["article_id"] +
+                                             " result from lax:" + str(data['result']) + '; message from lax: ' +
+                                             data['message'])
+        self.assertEqual(result, self.verifypublishresponse.ACTIVITY_PERMANENT_FAILURE)
+
+    @data(data_published_website)
     @patch.object(activity_VerifyPublishResponse, 'publication_authority')
     @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
     def test_do_activity_data_published_journal(self, data, fake_emit_monitor, fake_publication_authority):
@@ -86,6 +103,25 @@ class TestVerifyPublishResponse(unittest.TestCase):
                                              "end",
                                              "Finished verification of Publish response " + data["article_id"])
         self.assertEqual(result, self.verifypublishresponse.ACTIVITY_SUCCESS)
+
+    @data(data_error_lax)
+    @patch.object(activity_VerifyPublishResponse, 'publication_authority')
+    @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
+    def test_do_activity_data_error_published_journal_publ_authority_website(self, data, fake_emit_monitor, fake_publication_authority):
+        fake_publication_authority.return_value = "elife-website"
+        result = self.verifypublishresponse.do_activity(data)
+        fake_emit_monitor.assert_called_with(settings_mock,
+                                             data["article_id"],
+                                             data["version"],
+                                             data["run"],
+                                             self.verifypublishresponse.pretty_name + ": Journal",
+                                             "error",
+                                             " Lax has not published article " + data["article_id"] +
+                                             " We will exit this workflow as the publication authority is"
+                                             " elife-website."
+                                             " result from lax:" + data['result'] + '; message from lax: ' +
+                                             data['message'])
+        self.assertEqual(result, self.verifypublishresponse.ACTIVITY_PERMANENT_FAILURE)
 
 
 if __name__ == '__main__':
