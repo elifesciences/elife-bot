@@ -12,6 +12,8 @@ def article_versions(article_id, settings):
         data = response.json()
         if "versions" in data:
             return status_code, data["versions"]
+        if data is None:
+            return status_code, []
     return status_code, None
 
 
