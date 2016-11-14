@@ -50,7 +50,7 @@ class Shimmy:
         else:
             self.logger.error("Could not obtain queue, exiting")
 
-    @newrelic.agent.background_task()
+    @newrelic.agent.background_task(group='shimmy.py')
     def process_message(self, message, output_queue):
 
         # extract parameters from message

@@ -18,7 +18,7 @@ import newrelic.agent
 SWF cron
 """
 
-@newrelic.agent.background_task()
+@newrelic.agent.background_task(group='cron.py')
 def run_cron(ENV="dev"):
     # Specify run environment settings
     settings = settingsLib.get_settings(ENV)

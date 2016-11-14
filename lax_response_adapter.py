@@ -122,7 +122,7 @@ class LaxResponseAdapter:
             self.logger.error("Error parsing Lax message. Message: " + e.message)
             raise
 
-    @newrelic.agent.background_task()
+    @newrelic.agent.background_task(group='lax_response_adapter.py')
     def process_message(self, message, output_queue):
         message_str = str(message.get_body())
         workflow_starter_message = self.parse_message(message_str)
