@@ -1,34 +1,21 @@
 
-lax_article_versions_response_data = {u'1':
-                                          {u'rev4_decision': None, u'date_initial_decision': u'2015-05-06',
-                                           u'datetime_record_updated': u'2016-05-24T16:45:13.815502Z',
-                                           u'date_initial_qc': u'2015-04-29', u'date_rev3_qc': None,
-                                           u'title': u'Multiple abiotic stimuli are integrated in the regulation of rice gene expression under field conditions',
-                                           u'decision': u'RVF',
-                                           u'version': 1, u'date_rev4_decision': None,
-                                           u'rev3_decision': None,
-                                           u'datetime_record_created': u'2016-02-24T15:11:51.831000Z',
-                                           u'type': u'research-article', u'status': u'poa', u'date_full_qc': u'2015-05-13',
-                                           u'date_rev3_decision': None, u'date_rev1_qc': u'2015-09-17', u'date_rev1_decision': u'2015-10-13',
-                                           u'datetime_submitted': None, u'ejp_type': u'RA', u'volume': 4, u'manuscript_id': 8411, u'doi': u'10.7554/eLife.08411',
-                                           u'initial_decision': u'EF', u'rev1_decision': u'RVF', u'rev2_decision': u'AF',
-                                           u'date_rev2_qc': u'2015-11-11', u'date_rev2_decision': u'2015-11-25', u'date_rev4_qc': None,
-                                           u'date_full_decision': u'2015-06-15', u'website_path': u'content/4/e08411v1',
-                                           u'datetime_published': u'2015-11-26T00:00:00Z'},
-                                      u'2':
-                                          {u'rev4_decision': None, u'date_initial_decision': u'2015-05-06',
-                                           u'datetime_record_updated': u'2016-05-24T16:45:13.815502Z', u'date_initial_qc': u'2015-04-29',
-                                           u'date_rev3_qc': None,
-                                           u'title': u'Multiple abiotic stimuli are integrated in the regulation of rice gene expression under field conditions',
-                                           u'decision': u'RVF', u'version': 2, u'date_rev4_decision': None, u'rev3_decision': None,
-                                           u'datetime_record_created': u'2016-02-24T15:11:51.831000Z',
-                                           u'type': u'research-article', u'status': u'vor', u'date_full_qc': u'2015-05-13', u'date_rev3_decision': None,
-                                           u'date_rev1_qc': u'2015-09-17', u'date_rev1_decision': u'2015-10-13', u'datetime_submitted': None,
-                                           u'ejp_type': u'RA', u'volume': 4, u'manuscript_id': 8411, u'doi': u'10.7554/eLife.08411',
-                                           u'initial_decision': u'EF', u'rev1_decision': u'RVF', u'rev2_decision': u'AF',
-                                           u'date_rev2_qc': u'2015-11-11', u'date_rev2_decision': u'2015-11-25', u'date_rev4_qc': None,
-                                           u'date_full_decision': u'2015-06-15', u'website_path': u'content/4/e08411v1', u'datetime_published': u'2015-12-31T00:00:00Z'}
-                                      }
+lax_article_versions_response_data = [
+                                        {
+                                          "status": "poa",
+                                          "version": 1,
+                                          "published": "2015-11-26T00:00:00Z"
+                                        },
+                                        {
+                                          "status": "poa",
+                                          "version": 2,
+                                          "published": "2015-11-30T00:00:00Z"
+                                        },
+                                        {
+                                          "status": "vor",
+                                          "version": 3,
+                                          "published": "2015-12-29T00:00:00Z"
+                                        }
+                                      ]
 
 
 data_published_lax = {
