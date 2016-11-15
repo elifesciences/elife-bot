@@ -24,23 +24,23 @@ class activity_SetEIFPublish(activity.activity):
     def do_activity(self, data):
 
         session = Session(self.settings)
-        eif_filename = session.get_value(data['run'], 'eif_filename')
+        eif_location = session.get_value(data['run'], 'eif_location')
 
         self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                 self.pretty_name, "start", "Starting to set EIF to publish")
 
         try:
 
-            if not isinstance(eif_filename, basestring):
-                self.logger.error(self.pretty_name + " error. eif_filename must be string")
-                raise Exception("eif_filename not available")
+            if not isinstance(eif_location, basestring):
+                self.logger.error(self.pretty_name + " error. eif_location must be string")
+                raise Exception("eif_location not available")
 
             storage_context = StorageContext(self.settings)
 
             eif_origin = "".join((self.settings.storage_provider,
                                   "://",
                                   self.settings.publishing_buckets_prefix + self.settings.eif_bucket,
-                                  "/", eif_filename))
+                                  "/", eif_location))
         except Exception as e:
 
             self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],

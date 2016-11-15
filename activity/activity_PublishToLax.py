@@ -91,7 +91,7 @@ class activity_PublishToLax(activity.activity):
         # it is an improvement to be made. Needs research on AWS SWF.
         # it will also work when not in Silent corrections, it will just override the setting with the same data
         session = Session(self.settings)
-        eif_location = session.get_value(data['run'], 'eif_filename')
+        eif_location = session.get_value(data['run'], 'eif_location')
         if eif_location is not None:
             data['eif_location'] = eif_location
 

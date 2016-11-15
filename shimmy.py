@@ -57,7 +57,7 @@ class Shimmy:
         message_data = json.loads(str(message.get_body()))
         self.logger.info("message: %s", message_data)
         bucket = message_data.get("eif_bucket")
-        filename = message_data.get("eif_filename")
+        filename = message_data.get("eif_location")
         passthrough = message_data.get("passthrough")
 
         if bucket is None or filename is None or passthrough is None:
@@ -89,7 +89,7 @@ class Shimmy:
             update_date = self.extract_update_date(passthrough, response.json())
             ingest_publish = response.json().get('publish')
             workflow_data = {
-                'eif_filename': filename,
+                'eif_location': filename,
                 'eif_bucket':  bucket,
                 'article_id': passthrough.get("article_id"),
                 'version': passthrough.get("version"),

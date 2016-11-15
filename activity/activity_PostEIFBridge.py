@@ -51,7 +51,7 @@ class activity_PostEIFBridge(activity.activity):
             update_date = data['update_date']
 
             run = data['run']
-            eif_filename = data['eif_filename']
+            eif_location = data['eif_location']
             follow_on_data = {
                 'article_id': article_id,
                 'version': version,
@@ -59,7 +59,7 @@ class activity_PostEIFBridge(activity.activity):
                 'update_date': update_date,
                 'run': run,
                 'status': status,
-                'eif_location': eif_filename,
+                'eif_location': eif_location,
             }
 
             message = {
