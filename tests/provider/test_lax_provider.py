@@ -35,6 +35,12 @@ class TestLaxProvider(unittest.TestCase):
         self.assertEqual(None, version)
 
     @patch('provider.lax_provider.article_versions')
+    def test_article_highest_version_no_versions(self, mock_lax_provider_article_versions):
+        mock_lax_provider_article_versions.return_value = 200, []
+        version = lax_provider.article_next_version('08411', settings_mock)
+        self.assertEqual("1", version)
+
+    @patch('provider.lax_provider.article_versions')
     def test_article_publication_date_200(self, mock_lax_provider_article_versions):
         mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
         date_str = lax_provider.article_publication_date('08411', settings_mock)
