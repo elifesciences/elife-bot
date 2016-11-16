@@ -87,7 +87,7 @@ class activity_UpdateRepository(activity.activity):
     def update_github(self, repo_file, content):
 
         g = Github(self.settings.github_token)
-        user = g.get_user()
+        user = g.get_user('elifesciences')
         article_xml_repo = user.get_repo(self.settings.git_repo_name)
 
         try:
