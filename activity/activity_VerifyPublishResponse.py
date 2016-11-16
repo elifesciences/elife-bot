@@ -56,7 +56,7 @@ class activity_VerifyPublishResponse(activity.activity):
                                  " Finished Verification. Lax has responded with result: published."
                                  " Authority: elife-website. Exiting."
                                  " Article: " + article_id],
-                                activity.activity.ACTIVITY_SUCCESS]
+                                activity.activity.ACTIVITY_EXIT_WORKFLOW]
                     else:
                         return [start_event,
                                 [self.settings, article_id, version, run, self.pretty_name + ": Journal", "error",
