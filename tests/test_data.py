@@ -77,3 +77,16 @@ data_error_lax = {
             "message": "An error abc has occurred",
             "update_date": "2012-12-13T00:00:00Z"
         }
+
+data_invalid_lax = {
+            "run": None,
+            "article_id": None,
+            "result": "invalid",
+            "status": None,
+            "version": None,
+            "expanded_folder": None,
+            "eif_location": None,
+            "requested_action": "publish",
+            "message": "An error abc has occurred - everything is invalid",
+            "update_date": None
+        }

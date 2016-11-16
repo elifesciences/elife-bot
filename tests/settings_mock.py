@@ -30,3 +30,6 @@ lax_article_versions = 'https://test/eLife.{article_id}/version/'
 verify_ssl = False
 
 no_download_extensions = 'tif'
+
+# Logging
+setLevel = "INFO"

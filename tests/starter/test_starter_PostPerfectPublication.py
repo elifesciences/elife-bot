@@ -1,42 +1,25 @@
 import unittest
 from starter.starter_PostPerfectPublication import starter_PostPerfectPublication
+import tests.settings_mock as settings_mock
 import tests.test_data as test_data
-import json
-from ddt import ddt, data, unpack
+from mock import patch
+from testfixtures import LogCapture
 
 
-example_workflow_name = "PostPerfectPublication"
-example_workflow_id = lambda fe: "PostPerfectPublication_00353." + fe
-
-
-@ddt
 class TestStarterPostPerfectPublication(unittest.TestCase):
     def setUp(self):
-        self.postperfectpublication = starter_PostPerfectPublication()
+        self.stater_post_perfect_publication = starter_PostPerfectPublication()
 
-    @unpack
-    @data({'data': test_data.data_published_lax, 'execution': 'lax'},
-          {'data': test_data.data_error_lax, 'execution':'lax'},
-          {'data': test_data.data_published_website, 'execution':'website'})
-    def test_set_workflow_information_lax(self, data, execution):
+    # def test_post_perfect_publication_starter(self):
+    #     self.stater_post_perfect_publication.start(settings=settings_mock, info=test_data.data_published_lax)
+    #     self.assertEqual(True, False)
 
-        workflow_id, \
-        workflow_name, \
-        workflow_version, \
-        child_policy, \
-        execution_start_to_close_timeout, \
-        workflow_input = self.postperfectpublication.set_workflow_information(example_workflow_name,
-                                                                              "1",
-                                                                              None,
-                                                                              data)
+    def test_post_perfect_publication_starter_no_article(self):
+        with LogCapture() as l:
+            self.stater_post_perfect_publication.start(settings=settings_mock, info=test_data.data_invalid_lax)
 
-        self.assertEqual(example_workflow_id(execution), workflow_id)
-        self.assertEqual(example_workflow_name, workflow_name)
-        self.assertEqual("1", workflow_version)
-        self.assertIsNone(child_policy)
-        self.assertEqual("1800", execution_start_to_close_timeout)
-        self.assertEqual(json.dumps(data), workflow_input)
-
+        l.check('root', 'ERROR', 'article id is Null. Possible error: '
+                                   'Lax did not send back valid data from ingest.')
 
 
 if __name__ == '__main__':
