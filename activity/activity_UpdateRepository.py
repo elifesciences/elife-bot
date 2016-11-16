@@ -76,7 +76,7 @@ class activity_UpdateRepository(activity.activity):
                     return True
 
             except Exception as e:
-                self.logger.info("Exception in do_activity. " + str(e))
+                self.logger.exception("Exception in do_activity")
                 self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                         self.pretty_name, "error",
                                         "Error Updating repository for article. Details: " + str(e))
