@@ -123,6 +123,23 @@ class TestVerifyPublishResponse(unittest.TestCase):
                                              data['message'])
         self.assertEqual(result, self.verifypublishresponse.ACTIVITY_PERMANENT_FAILURE)
 
+    @data(data_published_lax)
+    @patch.object(activity_VerifyPublishResponse, 'publication_authority')
+    @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
+    def test_do_activity_data_published_journal_publ_authority_website(self, data, fake_emit_monitor, fake_publication_authority):
+        fake_publication_authority.return_value = "elife-website"
+        result = self.verifypublishresponse.do_activity(data)
+        fake_emit_monitor.assert_called_with(settings_mock,
+                                             data["article_id"],
+                                             data["version"],
+                                             data["run"],
+                                             self.verifypublishresponse.pretty_name + ": Journal",
+                                             "end",
+                                             " Finished Verification. Lax has responded with result: published."
+                                             " Authority: elife-website. Exiting."
+                                             " Article: " + data["article_id"])
+        self.assertEqual(result, self.verifypublishresponse.ACTIVITY_EXIT_WORKFLOW)
+
 
 if __name__ == '__main__':
     unittest.main()
