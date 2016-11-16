@@ -18,7 +18,6 @@ import newrelic.agent
 SWF cron
 """
 
-@newrelic.agent.background_task(group='cron.py')
 def run_cron(ENV="dev"):
     # Specify run environment settings
     settings = settingsLib.get_settings(ENV)
@@ -267,7 +266,6 @@ def get_s3_key_names_from_bucket(bucket, prefix=None, delimiter='/', headers=Non
     return s3_key_names
 
 if __name__ == "__main__":
-
     # Add options
     parser = OptionParser()
     parser.add_option("-e", "--env", default="dev", action="store", type="string",
@@ -276,4 +274,6 @@ if __name__ == "__main__":
     if options.env:
         ENV = options.env
 
-    run_cron(ENV)
+    application = newrelic.agent.register_application(timeout=10.0)
+    with newrelic.agent.BackgroundTask(application, name='run_cron', group='cron.py'):
+        run_cron(ENV)
