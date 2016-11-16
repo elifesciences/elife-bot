@@ -72,7 +72,7 @@ class tests_SetEIFPublish(unittest.TestCase):
     @patch.object(activity_SetEIFPublish, 'emit_monitor_event')
     @patch('activity.activity_SetEIFPublish.Session')
     @data(test_data.data_example_before_publish)
-    def test_error_no_eif_filename(self, data, fake_session, fake_emit_monitor_event):
+    def test_error_no_eif_location(self, data, fake_session, fake_emit_monitor_event):
         fake_session.return_value = FakeSession({})
 
         self.seteifpublish.logger = MagicMock()
@@ -81,7 +81,7 @@ class tests_SetEIFPublish(unittest.TestCase):
 
         fake_emit_monitor_event.assert_called_with(settings_mock, data['article_id'], data['version'],
                                                    data['run'], self.seteifpublish.pretty_name, "error",
-                                                   "eif_filename not available")
+                                                   "eif_location not available")
         self.assertEqual(result, self.seteifpublish.ACTIVITY_PERMANENT_FAILURE)
 
 

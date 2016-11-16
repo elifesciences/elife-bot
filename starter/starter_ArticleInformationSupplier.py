@@ -17,10 +17,10 @@ Amazon SWF PublishArticle starter, for API and Lens publishing etc.
 
 class starter_ArticleInformationSupplier():
 
-    def start(self,eif_filename, eif_bucket, article_id, version, run, article_path ,expanded_folder, status, update_date, published, ENV="dev", info=None):
+    def start(self,eif_location, eif_bucket, article_id, version, run, article_path ,expanded_folder, status, update_date, published, ENV="dev", info=None):
 
         info = {
-            'eif_filename': eif_filename,
+            'eif_location': eif_location,
             'eif_bucket':  eif_bucket,
             'article_id': article_id,
             'version': version,

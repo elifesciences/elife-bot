@@ -84,4 +84,15 @@ class activity_PublishToLax(activity.activity):
             publication_data = json.loads(base64.decodestring(data['publication_data']))
             workflow_data = publication_data['workflow_data']
             return workflow_data
+
+        # added this block because when doing silent corrections we will not have the opportunity to get the data from
+        # the previous workflow (PreparePostEIF sets the data and when in silent corrections it is part of the same
+        # workflow) currently we cannot mutate the data and pass it through activities, only workflows
+        # it is an improvement to be made. Needs research on AWS SWF.
+        # it will also work when not in Silent corrections, it will just override the setting with the same data
+        session = Session(self.settings)
+        eif_location = session.get_value(data['run'], 'eif_location')
+        if eif_location is not None:
+            data['eif_location'] = eif_location
+
         return data

@@ -20,7 +20,7 @@ session_example = {
             'update_date': '2012-12-13T00:00:00Z',
             'file_name': 'elife-00353-vor-v1.zip',
             'filename_last_element': 'elife-00353-vor-r1.zip',
-            'eif_filename': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json'
+            'eif_location': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json'
         }
 data_example_before_publish = {
             "status": "vor",
@@ -51,19 +51,19 @@ def PreparePost_session_example(update_date):
             'update_date': update_date,
             'article_version_id': '00353.1',
             'status': 'vor',
-            'eif_filename': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.json',
+            'eif_location': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.json',
             'article_path': 'content/1/e00353v1'
         }
 PreparePostEIF_test_dir = "fake_sqs_queue_container"
-PreparePostEIF_message = {'eif_filename': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.json', 'passthrough': {'status': 'vor', 'update_date': '2012-12-13T00:00:00Z', 'run': '1ee54f9a-cb28-4c8e-8232-4b317cf4beda', 'expanded_folder': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda', 'version': '1', 'article_path': 'content/1/e00353v1', 'article_id': '00353'}, 'eif_bucket': 'dest_bucket'}
+PreparePostEIF_message = {'eif_location': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.json', 'passthrough': {'status': 'vor', 'update_date': '2012-12-13T00:00:00Z', 'run': '1ee54f9a-cb28-4c8e-8232-4b317cf4beda', 'expanded_folder': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda', 'version': '1', 'article_path': 'content/1/e00353v1', 'article_id': '00353'}, 'eif_bucket': 'dest_bucket'}
 PreparePostEIF_json_output_return_example = json.loads(open("tests/test_data/PreparePostEIF_json_return.json", "r").read())
-PreparePostEIF_message_no_update_date = {'eif_filename': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.json', 'passthrough': {'status': 'vor', 'update_date': None, 'run': '1ee54f9a-cb28-4c8e-8232-4b317cf4beda', 'expanded_folder': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda', 'version': '1', 'article_path': 'content/1/e00353v1', 'article_id': '00353'}, 'eif_bucket': 'dest_bucket'}
+PreparePostEIF_message_no_update_date = {'eif_location': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.json', 'passthrough': {'status': 'vor', 'update_date': None, 'run': '1ee54f9a-cb28-4c8e-8232-4b317cf4beda', 'expanded_folder': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda', 'version': '1', 'article_path': 'content/1/e00353v1', 'article_id': '00353'}, 'eif_bucket': 'dest_bucket'}
 PreparePostEIF_json_output_return_example_no_update_date = json.loads(open("tests/test_data/PreparePostEIF_json_return_no_update_date.json", "r").read())
 PreparePostEIF_data = {u'event_time': u'2016-06-07T10:45:18.141126Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-00353-vor-v1-20121213000000.zip', u'file_etag': u'1e17ebb1fad6c467fce9cede16bb752f', u'bucket_name': u'jen-elife-production-final', u'file_size': 1097506, u"run": u"1ee54f9a-cb28-4c8e-8232-4b317cf4beda", u"update_date": u"2012-12-13T00:00:00Z"}
 
 def PostEIFBridge_data(published, update_date):
         return {
-                'eif_filename': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json',
+                'eif_location': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json',
                 'eif_bucket':  'jen-elife-publishing-eif',
                 'article_id': u'00353',
                 'version': u'1',

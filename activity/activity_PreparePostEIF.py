@@ -46,7 +46,7 @@ class activity_PreparePostEIF(activity.activity):
                                 "Starting preparation of article for EIF " + article_id)
 
         try:
-            eif_filename = session.get_value(run, 'eif_filename')
+            eif_location = session.get_value(run, 'eif_location')
             eif_bucket = self.settings.publishing_buckets_prefix + self.settings.eif_bucket
 
             article_path = session.get_value(run, 'article_path')
@@ -59,7 +59,7 @@ class activity_PreparePostEIF(activity.activity):
             update_date = session.get_value(run, 'update_date')
 
             carry_over_data = {
-                'eif_filename': eif_filename,
+                'eif_location': eif_location,
                 'eif_bucket':  eif_bucket,
                 'passthrough': {
                     'article_id': article_id,

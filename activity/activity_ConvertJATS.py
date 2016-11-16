@@ -91,7 +91,7 @@ class activity_ConvertJATS(activity.activity):
 
             self.set_dashboard_properties(json_output, article_id, version)
 
-            session.store_value(run, "eif_filename", output_key)
+            session.store_value(run, "eif_location", output_key)
             eif_object = json.loads(json_output)
             session.store_value(run, 'article_path', eif_object.get('path'))
             self.emit_monitor_event(self.settings, article_id, version, run,

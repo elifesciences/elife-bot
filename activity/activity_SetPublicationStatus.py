@@ -46,11 +46,11 @@ class activity_SetPublicationStatus(activity.activity):
         try:
             conn = S3Connection(self.settings.aws_access_key_id,
                                 self.settings.aws_secret_access_key)
-            eif_filename = session.get_value(run, 'eif_filename')
-            data = self.get_eif(conn, eif_filename)
-            publication_status = self.get_publication_status(data, eif_filename)
+            eif_location = session.get_value(run, 'eif_location')
+            data = self.get_eif(conn, eif_location)
+            publication_status = self.get_publication_status(data, eif_location)
             data['publish'] = publication_status
-            self.update_bucket(conn, data, eif_filename)
+            self.update_bucket(conn, data, eif_location)
 
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     "Set Publication Status", "end",
