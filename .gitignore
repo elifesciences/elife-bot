@@ -1,6 +1,8 @@
 *sublime*
 ftp-credentials.txt
 *.log
+*.log.gz
+/newrelic.ini
 *.pyc
 *.swp
 settings.py
@@ -13,3 +15,4 @@ workflow-context/*
 /tmp
 .cache
 build/
+
