@@ -788,15 +788,24 @@ class article(object):
         else:
             return False
 
-    def get_xml_file_name(self, settings, expanded_folder_name, xml_bucket):
+    @staticmethod
+    def get_bucket_files(settings, expanded_folder_name, xml_bucket):
         conn = S3Connection(settings.aws_access_key_id,
                         settings.aws_secret_access_key)
         bucket = conn.get_bucket(xml_bucket)
         files = bucket.list(expanded_folder_name + "/", "/")
+        return bucket, files
+
+    def get_xml_file_name(self, settings, expanded_folder_name, xml_bucket, version):
+        bucket, files = self.get_bucket_files(settings, expanded_folder_name, xml_bucket)
         for bucket_file in files:
             key = bucket.get_key(bucket_file.key)
             filename = key.name.rsplit('/', 1)[1]
             info = ArticleInfo(filename)
             if info.file_type == 'ArticleXML':
-                return filename
+                if version is None:
+                    return filename
+                v_number = '-v'+ version + '.'
+                if v_number in filename:
+                    return filename
         return None

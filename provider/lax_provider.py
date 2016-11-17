@@ -91,9 +91,9 @@ def prepare_action_message(settings, article_id, run, expanded_folder, version, 
         message = carry_over_data
         return message
 
-def get_xml_file_name(settings, expanded_folder, xml_bucket):
+def get_xml_file_name(settings, expanded_folder, xml_bucket, version=None):
     Article = article.article()
-    xml_file_name = Article.get_xml_file_name(settings, expanded_folder, xml_bucket)
+    xml_file_name = Article.get_xml_file_name(settings, expanded_folder, xml_bucket, version)
     return xml_file_name
 
 def lax_token(run, version, expanded_folder, status, eif_location, force=False):
