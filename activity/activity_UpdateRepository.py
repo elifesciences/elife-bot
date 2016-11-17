@@ -48,9 +48,10 @@ class activity_UpdateRepository(activity.activity):
             try:
 
                 xml_file = lax_provider.get_xml_file_name(self.settings,
-                                                              data['article_id'],
-                                                              self.settings.publishing_buckets_prefix +
-                                                              self.settings.ppp_cdn_bucket)
+                                                          data['article_id'],
+                                                          self.settings.publishing_buckets_prefix +
+                                                          self.settings.ppp_cdn_bucket,
+                                                          data['version'])
                 s3_file_path = data['article_id'] + "/" + xml_file
 
                 #connect to bucket
