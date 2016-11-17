@@ -64,14 +64,14 @@ class TestProviderArticle(unittest.TestCase):
     def test_get_xml_file_name_by_version(self, mock_get_bucket_files):
         fake_bucket = FakeBucket()
         mock_get_bucket_files.return_value = fake_bucket, bucket_files_mock_version
-        result = self.articleprovider.get_xml_file_name(None, None, None, "2")
+        result = self.articleprovider.get_xml_file_name(None, None, None, version="2")
         self.assertEqual(result, "elife-06498-v2.xml")
 
     @patch.object(article, 'get_bucket_files')
     def test_get_xml_file_name_no_version(self, mock_get_bucket_files):
         fake_bucket = FakeBucket()
         mock_get_bucket_files.return_value = fake_bucket, bucket_files_mock
-        result = self.articleprovider.get_xml_file_name(None, None, None, None)
+        result = self.articleprovider.get_xml_file_name(None, None, None, version=None)
         self.assertEqual(result, "elife-06498-v1.xml")
 
     def test_tweet_url(self):
