@@ -139,6 +139,7 @@ class activity_ResizeImages(activity.activity):
                     filename, image = resizer.resize(format_spec, fp, info, self.logger)
                     if filename is not None and image is not None:
                         self.store_in_cdn(filename, image, cdn_path, download)
+                        self.logger.info("Stored image %s as %s" % (filename, cdn_path))
         finally:
             fp.close()
 
