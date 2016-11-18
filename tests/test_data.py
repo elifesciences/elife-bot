@@ -17,6 +17,30 @@ lax_article_versions_response_data = [
                                         }
                                       ]
 
+lax_article_by_version_response_data_incomplete = {
+                                                      "status": "vor",
+                                                      "versionDate": "2016-11-11T17:48:41.715Z",
+                                                      "abstract": {
+                                                        "content": [
+                                                          {
+                                                            "text": "Nutritional restriction leads "
+                                                                    "to protein translation attenuation that results "
+                                                                    "in the storage and",
+                                                            "type": "paragraph"
+                                                          }
+                                                        ],
+                                                        "doi": "10.7554/eLife.04132.001"
+                                                      },
+                                                      "keywords": [
+                                                        "protein transport through the secretory pathway",
+                                                        "amino-acid starvation",
+                                                        "ER exit sites",
+                                                        "COPII",
+                                                        "liquid droplets",
+                                                        "stress granules"
+                                                      ]
+                                                    }
+
 
 data_published_lax = {
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
