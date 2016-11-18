@@ -192,6 +192,9 @@ def get_activity_object(activity_name, settings, logger, conn, token, activity_t
     activity_object = f(settings, logger, conn, token, activity_task)
     return activity_object
 
+def _log_swf_response_error(logger, e):
+    logger.exception('SWFResponseError: status %s, reason %s, body %s', e.status, e.reason, e.body)
+
 def respond_completed(conn, logger, token, message):
     """
     Given an SWF connection and logger as resources,
@@ -201,8 +204,8 @@ def respond_completed(conn, logger, token, message):
     try:
         out = conn.respond_activity_task_completed(token, str(message))
         logger.info('respond_activity_task_completed returned %s' % out)
-    except boto.exception.SWFResponseError:
-        logger.info('SWFResponseError: SWFResponseError: 400 Bad Request on respond_completed')
+    except boto.exception.SWFResponseError as e:
+        _log_swf_response_error(logger, e)
 
 def respond_failed(conn, logger, token, details, reason):
     """
@@ -213,8 +216,8 @@ def respond_failed(conn, logger, token, details, reason):
     try:
         out = conn.respond_activity_task_failed(token, str(details), str(reason))
         logger.info('respond_activity_task_failed returned %s' % out)
-    except boto.exception.SWFResponseError:
-        logger.info('SWFResponseError: SWFResponseError: 400 Bad Request on respond_failed')
+    except boto.exception.SWFResponseError as e:
+        _log_swf_response_error(logger, e)
 
 def signal_fail_workflow(conn, logger, domain, workflow_id, run_id):
     """
@@ -226,8 +229,8 @@ def signal_fail_workflow(conn, logger, domain, workflow_id, run_id):
     try:
         out = conn.request_cancel_workflow_execution(domain, workflow_id, run_id=run_id)
         logger.info('request_cancel_workflow_execution %s' % out)
-    except boto.exception.SWFResponseError:
-        logger.info('SWFResponseError: SWFResponseError: 400 Bad Request on respond_failed')
+    except boto.exception.SWFResponseError as e:
+        _log_swf_response_error(logger, e)
 
 if __name__ == "__main__":
 
