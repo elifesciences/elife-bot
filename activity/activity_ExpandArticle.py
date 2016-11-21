@@ -67,11 +67,6 @@ class activity_ExpandArticle(activity.activity):
                               filename_last_element)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE  # status could not be determined, exit workflow.
 
-        # Extract and store updated date if supplied
-        update_date = article_structure.get_update_date_from_zip_filename()
-        if update_date:
-            session.store_value(run, 'update_date', update_date)
-
         article_version_id = article_id + '.' + version
         session.store_value(run, 'article_version_id', article_version_id)
         session.store_value(run, 'run', run)
