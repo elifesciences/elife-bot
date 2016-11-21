@@ -16,14 +16,6 @@ def article_versions(article_id, settings):
     return status_code, None
 
 
-def article_version(article_id, version, settings):
-    url = settings.lax_article_versions
-    url = url.replace('{article_id}', article_id)
-    url = url.replace('{version}', version)
-    response = requests.get(url, verify=settings.verify_ssl)
-    return response.status_code, response.json()
-
-
 def article_highest_version(article_id, settings, logger=None):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:
@@ -54,14 +46,6 @@ def article_publication_date_by_version(article_id, version, settings):
         version_data = (vd for vd in data if vd["version"] == int(version)).next()
         return parse(version_data["published"]).strftime("%Y-%m-%dT%H:%M:%SZ")
     raise Exception("Error in article_publication_date_by_version: Version date not found. Status: " + str(status_code))
-
-
-def article_version_date(article_id, version, settings):
-    status_code, data = article_version(article_id, version, settings)
-    if status_code == 200:
-        if "versionDate" in data:
-            return parse(data["versionDate"]).strftime("%Y-%m-%dT%H:%M:%SZ")
-    return None
 
 
 def article_publication_date(article_id, settings, logger=None):
