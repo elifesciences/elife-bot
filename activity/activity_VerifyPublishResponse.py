@@ -23,8 +23,7 @@ class activity_VerifyPublishResponse(activity.activity):
 
     def do_activity(self, data=None):
         (start_msg, end_msg, set_status, result) = self.get_events(data, self.publication_authority(self.settings))
-        if start_msg is not None:
-            self.emit_monitor_event(*start_msg)
+        self.emit_monitor_event(*start_msg)
         self.emit_monitor_event(*end_msg)
         if set_status is not None:
             self.set_monitor_property(*set_status, version=data['version'])
