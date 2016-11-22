@@ -64,6 +64,19 @@ class TestLaxProvider(unittest.TestCase):
         date_str = lax_provider.article_publication_date('08411', settings_mock)
         self.assertEqual(None, date_str)
 
+    @patch('provider.lax_provider.article_versions')
+    def test_article_publication_date_by_version(self, mock_lax_provider_article_versions):
+        mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
+        result = lax_provider.article_publication_date_by_version('08411', "2", settings_mock)
+        self.assertEqual("2015-11-30T00:00:00Z", result)
+
+    # endpoint currently not available
+    # @patch('provider.lax_provider.article_version')
+    # def test_article_publication_date_by_version_id_version(self, mock_lax_provider_article_version):
+    #     mock_lax_provider_article_version.return_value = 200, test_data.lax_article_by_version_response_data_incomplete
+    #     result = lax_provider.article_version_date('08411', "2", settings_mock)
+    #     self.assertEqual("2016-11-11T17:48:41Z", result)
+
     def test_poa_vor_status_both_true(self):
         exp_poa_status, exp_vor_status = lax_provider.poa_vor_status(test_data.lax_article_versions_response_data)
         self.assertEqual(True, exp_poa_status)

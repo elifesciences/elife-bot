@@ -3,6 +3,7 @@ import time
 from . import article
 import base64
 import json
+from dateutil.parser import parse
 
 def article_versions(article_id, settings):
     url = settings.lax_article_versions.replace('{article_id}', article_id)
@@ -36,6 +37,15 @@ def article_next_version(article_id, settings):
     if version is None:
         return "-1"
     return version
+
+
+def article_publication_date_by_version(article_id, version, settings):
+    status_code, data = article_versions(article_id, settings)
+    print data
+    if status_code == 200:
+        version_data = (vd for vd in data if vd["version"] == int(version)).next()
+        return parse(version_data["published"]).strftime("%Y-%m-%dT%H:%M:%SZ")
+    raise Exception("Error in article_publication_date_by_version: Version date not found. Status: " + str(status_code))
 
 
 def article_publication_date(article_id, settings, logger=None):
