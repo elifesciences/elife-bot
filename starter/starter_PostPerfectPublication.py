@@ -27,7 +27,7 @@ class starter_PostPerfectPublication():
             # logFile = None
             logger = log.logger(log_file, settings.setLevel, identity)
 
-            if ('article_id', 'version', 'run') not in info or \
+            if set(['article_id', 'version', 'run']).issubset(info) == False or \
                             info['article_id'] is None or \
                             info['version'] is None or \
                             info['run'] is None:
