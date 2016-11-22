@@ -26,7 +26,7 @@ class starter_PostPerfectPublication():
         # logFile = None
         logger = log.logger(log_file, settings.setLevel, identity)
 
-        if info['article_id'] is None:
+        if info['article_id'] is None: #TODO: check run and version
             raise NullArticleException("article id is Null. Possible error: Lax did not send back valid data from ingest.")
 
         workflow_id, \
