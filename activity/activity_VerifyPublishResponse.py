@@ -51,9 +51,9 @@ class activity_VerifyPublishResponse(activity.activity):
                     # Terminate Workflow gracefully, log
                     if data['result'] == "published":
 
-                        return self.publication_verification_results(data, pub_authority, 'Journal', success=True)
+                        return self.publication_verification_results(data, pub_authority, 'journal', success=True)
                     else:
-                        return self.publication_verification_results(data, pub_authority, 'Journal', success=False)
+                        return self.publication_verification_results(data, pub_authority, 'journal', success=False)
 
                 return self.publication_verification_results(data, pub_authority, pub_authority, success=True)
 
@@ -61,12 +61,12 @@ class activity_VerifyPublishResponse(activity.activity):
             if 'requested_action' not in data:
                 # Terminate Workflow gracefully, log - this message didn't come from lax. it was from the old
                 # pipeline, so Ignore it since the new site is the authority
-                return self.publication_verification_results(data, 'Journal', 'elife-website', success=True)
+                return self.publication_verification_results(data, 'journal', 'elife-website', success=True)
 
             if data['result'] == "published":
-                return self.publication_verification_results(data, 'Journal', 'Journal', success=True)
+                return self.publication_verification_results(data, 'journal', 'journal', success=True)
 
-            return self.publication_verification_results(data, 'Journal', 'Journal', success=False)
+            return self.publication_verification_results(data, 'journal', 'journal', success=False)
 
             #########
 
@@ -96,13 +96,13 @@ class activity_VerifyPublishResponse(activity.activity):
             success = activity.activity.ACTIVITY_SUCCESS
             return start_event, end_event, set_status_event, success
 
-        elif pub_authority == 'elife-website' and checking_result_from == 'Journal' and success:
+        elif pub_authority == 'elife-website' and checking_result_from == 'journal' and success:
             start_event = [self.settings, data['article_id'], data['version'], data['run'],
-                           self.pretty_name + ": Journal", "start",
+                           self.pretty_name + ": journal", "start",
                            "Starting verification of Publish response " + data['article_id']]
 
             end_event = [self.settings, data['article_id'], data['version'], data['run'],
-                         self.pretty_name + ": Journal", "end",
+                         self.pretty_name + ": journal", "end",
                          " Finished Verification. Lax has responded with result: published."
                          " Authority: elife-website. Exiting."
                          " Article: " + data['article_id']]
@@ -111,13 +111,13 @@ class activity_VerifyPublishResponse(activity.activity):
             success = activity.activity.ACTIVITY_EXIT_WORKFLOW
             return start_event, end_event, set_status_property, success
 
-        elif pub_authority == 'elife-website' and checking_result_from == 'Journal' and success is False:
+        elif pub_authority == 'elife-website' and checking_result_from == 'journal' and success is False:
 
             start_event = [self.settings, data['article_id'], data['version'], data['run'],
-                           self.pretty_name + ": Journal", "start",
+                           self.pretty_name + ": journal", "start",
                            "Starting verification of Publish response " + data['article_id']]
             end_event = [self.settings, data['article_id'], data['version'], data['run'],
-                         self.pretty_name + ": Journal", "error",
+                         self.pretty_name + ": journal", "error",
                          " Lax has not published article " + data['article_id'] +
                          " We will exit this workflow as the publication authority is elife-website."
                          " result from lax:" + str(data['result']) + '; message from lax: ' +
@@ -128,14 +128,14 @@ class activity_VerifyPublishResponse(activity.activity):
             success = activity.activity.ACTIVITY_PERMANENT_FAILURE
             return start_event, end_event, set_status_property, success
 
-        elif pub_authority == 'Journal' and checking_result_from == 'Journal' and success:
+        elif pub_authority == 'journal' and checking_result_from == 'journal' and success:
 
             start_event = [self.settings, data['article_id'], data['version'], data['run'],
-                           self.pretty_name + ": Journal", "start",
+                           self.pretty_name + ": journal", "start",
                            "Starting verification of Publish response " + data['article_id']]
 
             end_event = [self.settings, data['article_id'], data['version'], data['run'],
-                         self.pretty_name + ": Journal", "end",
+                         self.pretty_name + ": journal", "end",
                          " Finished Verification. Lax has responded with result: published."
                          " Article: " + data['article_id']]
 
@@ -143,14 +143,14 @@ class activity_VerifyPublishResponse(activity.activity):
             success = activity.activity.ACTIVITY_SUCCESS
             return start_event, end_event, set_status_property, success
 
-        elif pub_authority == 'Journal' and checking_result_from == 'Journal' and success is False:
+        elif pub_authority == 'journal' and checking_result_from == 'journal' and success is False:
 
             start_event = [self.settings, data['article_id'], data['version'], data['run'],
-                           self.pretty_name + ": Journal", "start",
+                           self.pretty_name + ": journal", "start",
                            "Starting verification of Publish response " + data['article_id']]
 
             end_event = [self.settings, data['article_id'], data['version'], data['run'],
-                         self.pretty_name + ": Journal", "error",
+                         self.pretty_name + ": journal", "error",
                          " Lax has not published article " + data['article_id'] +
                          " result from lax:" + str(data['result']) + '; message from lax: ' +
                          data['message'] if ("message" in data) and (data['message'] is not None) else "(empty message)"]
@@ -160,14 +160,14 @@ class activity_VerifyPublishResponse(activity.activity):
             success = activity.activity.ACTIVITY_PERMANENT_FAILURE
             return start_event, end_event, set_status_property, success
 
-        elif pub_authority == 'Journal' and checking_result_from == 'elife-website' and success:
+        elif pub_authority == 'journal' and checking_result_from == 'elife-website' and success:
 
             start_event = [self.settings, data['article_id'], data['version'], data['run'],
                            self.pretty_name + ": elife-website", "start",
                            "Starting verification of Publish response " + data['article_id']]
             end_event = [self.settings, data['article_id'], data['version'], data['run'],
                          self.pretty_name + ": elife-website", "end",
-                         "Finish verification of Publish response. Authority: Journal. Exiting this "
+                         "Finish verification of Publish response. Authority: journal. Exiting this "
                          "workflow " + data['article_id']]
 
             set_status_property = None
