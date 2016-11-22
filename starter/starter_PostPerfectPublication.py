@@ -51,7 +51,7 @@ class starter_PostPerfectPublication():
             logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
 
         except NullRequiredDataException as e:
-            logger.exception(e)
+            logger.exception(e.message)
 
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
             # There is already a running workflow with that ID, cannot start another
