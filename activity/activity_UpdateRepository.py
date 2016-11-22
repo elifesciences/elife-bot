@@ -96,7 +96,7 @@ class activity_UpdateRepository(activity.activity):
         except GithubException as e:
             self.logger.info("GithubException - description: " + e.message)
             self.logger.info("GithubException: file " + repo_file + " may not exist in github yet. We will try to add it in the repo.")
-            response = article_xml_repo.create_file(repo_file, "Adds XML first time", content)
+            response = article_xml_repo.create_file(repo_file, "Creates XML", content)
             return "File " + repo_file + " successfully added. Commit: " + str(response)
 
         except Exception as e:
