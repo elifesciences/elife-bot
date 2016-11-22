@@ -49,11 +49,8 @@ class activity_VerifyPublishResponse(activity.activity):
                     # Publication authority is the old site but this call is from new lax.
                     # Before terminating Workflow gracefully, emit the result of publication to lax on the dashboard
                     # Terminate Workflow gracefully, log
-                    if data['result'] == "published":
-
-                        return self.publication_verification_results(data, pub_authority, 'journal', success=True)
-                    else:
-                        return self.publication_verification_results(data, pub_authority, 'journal', success=False)
+                    return self.publication_verification_results(data, pub_authority, 'journal',
+                                                                 success=data['result'] == "published")
 
                 return self.publication_verification_results(data, pub_authority, pub_authority, success=True)
 
@@ -63,10 +60,8 @@ class activity_VerifyPublishResponse(activity.activity):
                 # pipeline, so Ignore it since the new site is the authority
                 return self.publication_verification_results(data, 'journal', 'elife-website', success=True)
 
-            if data['result'] == "published":
-                return self.publication_verification_results(data, 'journal', 'journal', success=True)
-
-            return self.publication_verification_results(data, 'journal', 'journal', success=False)
+            return self.publication_verification_results(data, 'journal', 'journal',
+                                                         success=data['result'] == "published")
 
             #########
 
@@ -173,3 +168,6 @@ class activity_VerifyPublishResponse(activity.activity):
             set_status_property = None
             success = activity.activity.ACTIVITY_EXIT_WORKFLOW
             return start_event, end_event, set_status_property, success
+
+        else:
+            raise RuntimeError("The publication result isn't a valid one.")
