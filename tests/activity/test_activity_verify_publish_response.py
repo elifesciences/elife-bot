@@ -1,7 +1,7 @@
 import unittest
 from activity.activity_VerifyPublishResponse import activity_VerifyPublishResponse
 from ddt import ddt, data
-from mock import patch
+from mock import patch, MagicMock
 import settings_mock
 
 data_published_lax = {
@@ -46,47 +46,56 @@ class TestVerifyPublishResponse(unittest.TestCase):
 
     @data(data_published_lax)
     def test_get_events_data_published_lax(self, data):
-        (exp_start_msg, exp_end_msg, exp_result) = self.verifypublishresponse.get_events(data, "Journal")
+        (exp_start_msg, exp_end_msg, exp_status, exp_result) = self.verifypublishresponse.get_events(data, "journal")
         self.assertEqual(exp_start_msg, [settings_mock, data["article_id"], data["version"],
-                                         data["run"], self.verifypublishresponse.pretty_name + ": Journal", "start",
+                                         data["run"], self.verifypublishresponse.pretty_name + ": journal", "start",
                                          "Starting verification of Publish response " + data["article_id"]])
         self.assertEqual(exp_end_msg, [settings_mock, data["article_id"], data["version"],
-                                       data["run"], self.verifypublishresponse.pretty_name + ": Journal", "end",
+                                       data["run"], self.verifypublishresponse.pretty_name + ": journal", "end",
                                        " Finished Verification. Lax has responded with result: published."
                                        " Article: " + data["article_id"]])
+        self.assertEqual(exp_status, [settings_mock, data['article_id'], "publication-status","published", "text"])
         self.assertEqual(exp_result, self.verifypublishresponse.ACTIVITY_SUCCESS)
 
     @data(data_published_lax)
     @patch.object(activity_VerifyPublishResponse, 'publication_authority')
+    @patch.object(activity_VerifyPublishResponse, 'set_monitor_property')
     @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
-    def test_do_activity_data_published_lax(self, data, fake_emit_monitor, fake_publication_authority):
-        fake_publication_authority.return_value = "Journal"
+    def test_do_activity_data_published_lax(self, data, fake_emit_monitor, fake_set_monitor_property, fake_publication_authority):
+        fake_publication_authority.return_value = "journal"
         result = self.verifypublishresponse.do_activity(data)
         fake_emit_monitor.assert_called_with(settings_mock,
                                              data["article_id"],
                                              data["version"],
                                              data["run"],
-                                             self.verifypublishresponse.pretty_name + ": Journal",
+                                             self.verifypublishresponse.pretty_name + ": journal",
                                              "end",
                                              " Finished Verification. Lax has responded with result: published."
                                              " Article: " + data["article_id"])
+        fake_set_monitor_property.assert_called_with(settings_mock, data['article_id'], "publication-status",
+                                                     "published", "text",
+                                                     version=data["version"])
         self.assertEqual(result, self.verifypublishresponse.ACTIVITY_SUCCESS)
 
     @data(data_error_lax)
     @patch.object(activity_VerifyPublishResponse, 'publication_authority')
+    @patch.object(activity_VerifyPublishResponse, 'set_monitor_property')
     @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
-    def test_do_activity_data_error_lax(self, data, fake_emit_monitor, fake_publication_authority):
-        fake_publication_authority.return_value = "Journal"
+    def test_do_activity_data_error_lax(self, data, fake_emit_monitor, fake_set_monitor_property, fake_publication_authority):
+        fake_publication_authority.return_value = "journal"
         result = self.verifypublishresponse.do_activity(data)
         fake_emit_monitor.assert_called_with(settings_mock,
                                              data["article_id"],
                                              data["version"],
                                              data["run"],
-                                             self.verifypublishresponse.pretty_name + ": Journal",
+                                             self.verifypublishresponse.pretty_name + ": journal",
                                              "error",
                                              " Lax has not published article " + data["article_id"] +
                                              " result from lax:" + str(data['result']) + '; message from lax: ' +
                                              data['message'])
+        fake_set_monitor_property.assert_called_with(settings_mock, data['article_id'], "publication-status",
+                                                     "publication issues", "text",
+                                                     version=data["version"])
         self.assertEqual(result, self.verifypublishresponse.ACTIVITY_PERMANENT_FAILURE)
 
     @data(data_published_website)
@@ -106,39 +115,54 @@ class TestVerifyPublishResponse(unittest.TestCase):
 
     @data(data_error_lax)
     @patch.object(activity_VerifyPublishResponse, 'publication_authority')
+    @patch.object(activity_VerifyPublishResponse, 'set_monitor_property')
     @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
-    def test_do_activity_data_error_published_journal_publ_authority_website(self, data, fake_emit_monitor, fake_publication_authority):
+    def test_do_activity_data_error_published_journal_publ_authority_website(self, data, fake_emit_monitor, fake_set_monitor_property, fake_publication_authority):
         fake_publication_authority.return_value = "elife-website"
         result = self.verifypublishresponse.do_activity(data)
         fake_emit_monitor.assert_called_with(settings_mock,
                                              data["article_id"],
                                              data["version"],
                                              data["run"],
-                                             self.verifypublishresponse.pretty_name + ": Journal",
+                                             self.verifypublishresponse.pretty_name + ": journal",
                                              "error",
                                              " Lax has not published article " + data["article_id"] +
                                              " We will exit this workflow as the publication authority is"
                                              " elife-website."
                                              " result from lax:" + data['result'] + '; message from lax: ' +
                                              data['message'])
+        fake_set_monitor_property.assert_called_with(settings_mock, data['article_id'], "publication-status",
+                                                     "publication issues", "text",
+                                                     version=data["version"])
         self.assertEqual(result, self.verifypublishresponse.ACTIVITY_PERMANENT_FAILURE)
 
     @data(data_published_lax)
     @patch.object(activity_VerifyPublishResponse, 'publication_authority')
+    @patch.object(activity_VerifyPublishResponse, 'set_monitor_property')
     @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
-    def test_do_activity_data_published_journal_publ_authority_website(self, data, fake_emit_monitor, fake_publication_authority):
+    def test_do_activity_data_published_journal_publ_authority_website(self, data, fake_emit_monitor, fake_set_monitor_property, fake_publication_authority):
         fake_publication_authority.return_value = "elife-website"
         result = self.verifypublishresponse.do_activity(data)
         fake_emit_monitor.assert_called_with(settings_mock,
                                              data["article_id"],
                                              data["version"],
                                              data["run"],
-                                             self.verifypublishresponse.pretty_name + ": Journal",
+                                             self.verifypublishresponse.pretty_name + ": journal",
                                              "end",
                                              " Finished Verification. Lax has responded with result: published."
                                              " Authority: elife-website. Exiting."
                                              " Article: " + data["article_id"])
+        fake_set_monitor_property.assert_called_with(settings_mock, data['article_id'], "publication-status",
+                                                         "published", "text",
+                                                         version=data["version"])
         self.assertEqual(result, self.verifypublishresponse.ACTIVITY_EXIT_WORKFLOW)
+
+    @data(data_error_lax)
+    def test_do_activity_key_error(self, data):
+        data_mock = data.copy()
+        del data_mock['result']
+        self.verifypublishresponse.logger = MagicMock()
+        self.assertRaises(KeyError, self.verifypublishresponse.do_activity, data_mock)
 
 
 if __name__ == '__main__':

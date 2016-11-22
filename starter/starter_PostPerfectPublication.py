@@ -13,41 +13,45 @@ from optparse import OptionParser
 Amazon SWF PostPerfectPublication starter, for API and Lens publishing etc.
 """
 
-class NullArticleException(Exception):
+class NullRequiredDataException(Exception):
     pass
+
 
 class starter_PostPerfectPublication():
 
     def start(self, info, settings, ENV="dev"):
-
-        # Log
-        identity = "starter_PostPerfectPublication.%s" % os.getpid()
-        log_file = "starter.log"
-        # logFile = None
-        logger = log.logger(log_file, settings.setLevel, identity)
-
-        if info['article_id'] is None:
-            raise NullArticleException("article id is Null. Possible error: Lax did not send back valid data from ingest.")
-
-        workflow_id, \
-        workflow_name, \
-        workflow_version, \
-        child_policy, \
-        execution_start_to_close_timeout, \
-        workflow_input = self.set_workflow_information("PostPerfectPublication", "1", None, info)
-
-        # Simple connect
-        conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
-
         try:
+            # Log
+            identity = "starter_PostPerfectPublication.%s" % os.getpid()
+            log_file = "starter.log"
+            # logFile = None
+            logger = log.logger(log_file, settings.setLevel, identity)
+
+            if ('article_id', 'version', 'run') not in info or \
+                            info['article_id'] is None or \
+                            info['version'] is None or \
+                            info['run'] is None:
+                raise NullRequiredDataException("article id, version or run is Null. Possible error: "
+                                                "Lax did not send back valid data from ingest.")
+
+            workflow_id, \
+            workflow_name, \
+            workflow_version, \
+            child_policy, \
+            execution_start_to_close_timeout, \
+            workflow_input = self.set_workflow_information("PostPerfectPublication", "1", None, info)
+
+            # Simple connect
+            conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+
             response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version,
                                                      settings.default_task_list, child_policy,
                                                      execution_start_to_close_timeout, workflow_input)
 
             logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
 
-        except NullArticleException as e:
-            logger.error(e)
+        except NullRequiredDataException:
+            logger.exception()
 
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
             # There is already a running workflow with that ID, cannot start another
