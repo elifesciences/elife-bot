@@ -34,10 +34,6 @@ class activity_VersionDateLookup(activity.activity):
 
     def do_activity(self, data=None):
 
-
-
-        #lax_article_single_version
-
         try:
             session = Session(self.settings)
             version = session.get_value(data['run'], 'version')
