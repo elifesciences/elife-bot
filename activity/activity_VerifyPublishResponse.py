@@ -71,18 +71,13 @@ class activity_VerifyPublishResponse(activity.activity):
 
             #########
 
-        except KeyError as e:
+        except KeyError:
             self.logger.exception("Exception when Verifying Publish Response")
             raise
 
-        except Exception as e:
+        except Exception:
             self.logger.exception("Exception when Verifying Publish Response")
-            return [None,
-                    [self.settings, article_id, version, run, "Verify Publish Response", "error",
-                     "Error when verifying Publish response" + article_id +
-                     " message:" + str(e.message)],
-                    None
-                    , activity.activity.ACTIVITY_PERMANENT_FAILURE]
+            raise
 
     def publication_authority(self, settings):
         return settings.publication_authority
