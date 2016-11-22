@@ -65,10 +65,6 @@ class activity_VerifyPublishResponse(activity.activity):
 
             #########
 
-        except KeyError:
-            self.logger.exception("Exception when Verifying Publish Response")
-            raise
-
         except Exception:
             self.logger.exception("Exception when Verifying Publish Response")
             raise
