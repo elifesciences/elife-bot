@@ -8,11 +8,11 @@ import log
 import json
 from optparse import OptionParser
 import starter_helper as helper
+from starter_helper import NullRequiredDataException
 
 """
 Amazon SWF PostPerfectPublication starter, for API and Lens publishing etc.
 """
-
 
 class starter_PostPerfectPublication():
     def __init__(self):
@@ -27,14 +27,15 @@ class starter_PostPerfectPublication():
                             info['article_id'] is None or \
                             info['version'] is None or \
                             info['run'] is None:
-                raise NullArticleException("article id is Null. Possible error: Lax did not send back valid data from ingest.")
+                raise NullArticleException("article id is Null. Possible error: "
+                                           "Lax did not send back valid data from ingest.")
 
             workflow_id, \
             workflow_name, \
             workflow_version, \
             child_policy, \
             execution_start_to_close_timeout, \
-        workflow_input = self.set_workflow_information("PostPerfectPublication", "1", None, info)
+            workflow_input = self.set_workflow_information("PostPerfectPublication", "1", None, info)
 
             # Simple connect
             conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)

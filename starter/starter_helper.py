@@ -2,6 +2,9 @@ import os
 import json
 import log
 
+class NullRequiredDataException(Exception):
+    pass
+
 def get_starter_identity(name):
         return "starter_" + name + "." + str(os.getpid())
 
