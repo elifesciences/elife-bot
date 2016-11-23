@@ -4,6 +4,7 @@ import tests.settings_mock as settings_mock
 import base64
 import json
 import tests.test_data as test_data
+from provider.lax_provider import ErrorCallingLaxException
 
 from mock import mock, patch
 
@@ -11,10 +12,10 @@ from mock import mock, patch
 class TestLaxProvider(unittest.TestCase):
 
     @patch('provider.lax_provider.article_versions')
-    def test_article_highest_version(self, mock_lax_provider_article_versions):
+    def test_article_highest_version_200(self, mock_lax_provider_article_versions):
         mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
         version = lax_provider.article_highest_version('08411', settings_mock)
-        self.assertEqual(2, version)
+        self.assertEqual(3, version)
 
     @patch('provider.lax_provider.article_versions')
     def test_article_highest_version_no_versions(self, mock_lax_provider_article_versions):
@@ -23,19 +24,18 @@ class TestLaxProvider(unittest.TestCase):
         self.assertEqual(0, version)
 
     @patch('provider.lax_provider.article_versions')
-    def test_article_highest_version(self, mock_lax_provider_article_versions):
+    def test_article_highest_version_404(self, mock_lax_provider_article_versions):
         mock_lax_provider_article_versions.return_value = 404, None
         version = lax_provider.article_highest_version('08411', settings_mock)
         self.assertEqual("1", version)
 
     @patch('provider.lax_provider.article_versions')
-    def test_article_highest_version(self, mock_lax_provider_article_versions):
+    def test_article_highest_version_500(self, mock_lax_provider_article_versions):
         mock_lax_provider_article_versions.return_value = 500, None
-        version = lax_provider.article_highest_version('08411', settings_mock)
-        self.assertEqual(None, version)
+        self.assertRaises(ErrorCallingLaxException, lax_provider.article_highest_version, '08411', settings_mock)
 
     @patch('provider.lax_provider.article_versions')
-    def test_article_highest_version_no_versions(self, mock_lax_provider_article_versions):
+    def test_article_next_version_no_versions(self, mock_lax_provider_article_versions):
         mock_lax_provider_article_versions.return_value = 200, []
         version = lax_provider.article_next_version('08411', settings_mock)
         self.assertEqual("1", version)
