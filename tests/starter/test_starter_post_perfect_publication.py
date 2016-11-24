@@ -4,12 +4,7 @@ from starter.starter_helper import NullRequiredDataException
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
 from mock import patch
-
-
-class FakeBotoConnection:
-    def start_workflow_execution(self, *args):
-        pass
-
+from tests.classes_mock import FakeBotoConnection
 
 class TestStarterPostPerfectPublication(unittest.TestCase):
     def setUp(self):

@@ -5,13 +5,9 @@ from S3utility.s3_notification_info import S3NotificationInfo
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
 from mock import patch
+from tests.classes_mock import FakeBotoConnection
 
 run_example = u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda'
-
-class FakeBotoConnection:
-    def start_workflow_execution(self, *args):
-        pass
-
 
 class TestStarterIngestArticleZip(unittest.TestCase):
     def setUp(self):
