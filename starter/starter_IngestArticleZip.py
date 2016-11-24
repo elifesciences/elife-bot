@@ -27,7 +27,7 @@ class starter_IngestArticleZip():
         # Log
         logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
 
-        if  hasattr(info, 'file_name') == False or info.file_name is None:
+        if hasattr(info, 'file_name') == False or info.file_name is None:
             raise NullRequiredDataException("filename is Null. Did not get a filename.")
 
         input = S3NotificationInfo.to_dict(info)
