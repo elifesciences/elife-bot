@@ -9,6 +9,8 @@ import json
 import random
 from optparse import OptionParser
 from S3utility.s3_notification_info import S3NotificationInfo
+import starter_helper as helper
+from starter_helper import NullRequiredDataException
 
 """
 Amazon SWF IngestArticleZip starter, preparing article xml for lax.
@@ -16,36 +18,32 @@ Amazon SWF IngestArticleZip starter, preparing article xml for lax.
 
 
 class starter_IngestArticleZip():
-
-    def start(self, settings, info=None, run=None):
-
+    def __init__(self):
+        self.const_name = "IngestArticleZip"
+        
+    def start(self, settings, run, info):
         # TODO : much of this is common to many starters and could probably be streamlined
 
         # Log
-        identity = "starter_%s" % int(random.random() * 1000)
-        log_file = "starter.log"
-        # logFile = None
-        logger = log.logger(log_file, settings.setLevel, identity)
+        logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
 
-        filename = info.file_name
+        if  hasattr(info, 'file_name') == False or info.file_name is None:
+            raise NullRequiredDataException("filename is Null. Did not get a filename.")
 
-        if filename is None:
-            logger.error("Did not get a filename")
-            return
+        input = S3NotificationInfo.to_dict(info)
+        input['run'] = run
+        input['version_lookup_function'] = "article_next_version"
+
+        workflow_id, \
+        workflow_name, \
+        workflow_version, \
+        child_policy, \
+        execution_start_to_close_timeout, \
+        workflow_input = helper.set_workflow_information(self.const_name, "1", None, input,
+                                                         info.file_name.replace('/', '_'), os.getpid())
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
-
-        # Start a workflow execution
-        workflow_id = "IngestArticleZip_%s.%s" % (filename.replace('/', '_'), os.getpid())
-        workflow_name = "IngestArticleZip"
-        workflow_version = "1"
-        child_policy = None
-        execution_start_to_close_timeout = str(60 * 30)
-        workflow_input = S3NotificationInfo.to_dict(info)
-        workflow_input['run'] = run
-        workflow_input['version_lookup_function'] = "article_next_version"
-        workflow_input = json.dumps(workflow_input, default=lambda ob: ob.__dict__)
 
         try:
             response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version,
@@ -54,9 +52,14 @@ class starter_IngestArticleZip():
 
             logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
 
+        except NullRequiredDataException as e:
+            logger.exception(e.message)
+            raise
+
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
             # There is already a running workflow with that ID, cannot start another
-            message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
+            message = 'SWFWorkflowExecutionAlreadyStartedError: ' \
+                      'There is already a running workflow with ID %s' % workflow_id
             logger.info(message)
 
 

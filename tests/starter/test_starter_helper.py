@@ -10,7 +10,7 @@ example_workflow_id = lambda fe: "PostPerfectPublication_00353." + fe
 
 
 @ddt
-class TestStarterPostPerfectPublication(unittest.TestCase):
+class TestStarterHelper(unittest.TestCase):
 
     @unpack
     @data({'data': test_data.data_published_lax, 'execution': 'lax'},
@@ -26,7 +26,9 @@ class TestStarterPostPerfectPublication(unittest.TestCase):
         workflow_input = starter_helper.set_workflow_information(example_workflow_name,
                                                                               "1",
                                                                               None,
-                                                                              data)
+                                                                              data,
+                                                                              data['article_id'],
+                                                                              execution)
 
         self.assertEqual(example_workflow_id(execution), workflow_id)
         self.assertEqual(example_workflow_name, workflow_name)

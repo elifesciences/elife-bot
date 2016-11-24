@@ -1,9 +1,10 @@
 import unittest
 from starter.starter_PostPerfectPublication import starter_PostPerfectPublication
-from starter.starter_PostPerfectPublication import NullRequiredDataException
+from starter.starter_helper import NullRequiredDataException
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
 from mock import patch
+
 
 class FakeBotoConnection:
     def start_workflow_execution(self, *args):

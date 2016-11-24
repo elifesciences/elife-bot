@@ -5,15 +5,17 @@ import log
 class NullRequiredDataException(Exception):
     pass
 
+
 def get_starter_identity(name):
         return "starter_" + name + "." + str(os.getpid())
+
 
 def get_starter_logger(set_level, identity, log_file="starter.log"):
         return log.logger(log_file, set_level, identity)
 
-def set_workflow_information(name, workflow_version, child_policy, data):
-        publication_from = "lax" if 'requested_action' in data else 'website'
-        workflow_id = "%s_%s.%s" % (name, data['article_id'], publication_from)
+
+def set_workflow_information(name, workflow_version, child_policy, data, workflow_id_part, extra=""):
+        workflow_id = "%s_%s.%s" % (name, workflow_id_part, extra)
         workflow_name = name
         workflow_version = workflow_version
         child_policy = child_policy
