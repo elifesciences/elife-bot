@@ -21,7 +21,7 @@ class starter_PostPerfectPublication():
 
     def start(self, info, settings):
         try:
-            logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
+        logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
 
             if set(['article_id', 'version', 'run']).issubset(info) == False or \
                             info['article_id'] is None or \
