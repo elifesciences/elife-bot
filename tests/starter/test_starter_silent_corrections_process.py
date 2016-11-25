@@ -1,5 +1,5 @@
 import unittest
-from starter.starter_ProcessArticleZip import starter_ProcessArticleZip
+from starter.starter_SilentCorrectionsProcess import starter_SilentCorrectionsProcess
 from starter.starter_helper import NullRequiredDataException
 from tests.classes_mock import FakeBotoConnection
 import tests.settings_mock as settings_mock
@@ -7,9 +7,9 @@ import tests.test_data as test_data
 from mock import patch
 
 
-class TestStarterProcessArticleZip(unittest.TestCase):
+class TestStarterSilentCorrectionsProcess(unittest.TestCase):
     def setUp(self):
-        self.stater_process_article_zip = starter_ProcessArticleZip()
+        self.stater_process_article_zip = starter_SilentCorrectionsProcess()
 
     def test_process_article_zip_no_article(self):
         self.assertRaises(NullRequiredDataException, self.stater_process_article_zip.start,

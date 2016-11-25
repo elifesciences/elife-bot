@@ -57,8 +57,10 @@ class starter_ProcessArticleZip():
                                                      execution_start_to_close_timeout, workflow_input)
 
             logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+
         except NullRequiredDataException as e:
-            logger.error(e)
+            logger.exception(e.message)
+            raise
 
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
             # There is already a running workflow with that ID, cannot start another
