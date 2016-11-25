@@ -73,10 +73,7 @@ class activity_ExpandArticle(activity.activity):
         session.store_value(run, 'status', status)
         self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "start",
                                 "Starting expansion of article " + article_id)
-        self.set_monitor_property(self.settings, article_id, "article-id", article_id, "text")
-        self.set_monitor_property(self.settings, article_id, "publication-status",
-                                  "publication in progress", "text",
-                                  version=version)
+
 
         try:
             # download zip to temp folder

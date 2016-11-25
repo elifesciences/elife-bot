@@ -21,6 +21,8 @@ class TestVersionLookup(unittest.TestCase):
 
     def setUp(self):
         self.versionlookup = activity_VersionLookup(settings_mock, None, None, None, None)
+        self.versionlookup.logger = MagicMock()
+        self.versionlookup.set_monitor_property = MagicMock()
 
     @patch('activity.activity_VersionLookup.Session')
     @patch.object(activity_VersionLookup, 'execute_function')
@@ -78,14 +80,8 @@ class TestVersionLookup(unittest.TestCase):
 
         result = self.versionlookup.do_activity(test_data)
 
-        fake_emit_monitor.assert_called_with(settings_mock,
-                                             "00353",
-                                             None,
-                                             test_data["run"],
-                                             self.versionlookup.pretty_name,
-                                             "error",
-                                             "Error Looking up version article 00353 message: "
-                                             "Exception when looking up version. Message: Time out.")
+        fake_emit_monitor.assert_not_called()
+        self.assertEqual(self.versionlookup.ACTIVITY_PERMANENT_FAILURE, result)
 
 
     @patch('activity.activity_VersionLookup.Session')
@@ -98,14 +94,8 @@ class TestVersionLookup(unittest.TestCase):
 
         result = self.versionlookup.do_activity(test_data)
 
-        fake_emit_monitor.assert_called_with(settings_mock,
-                                             "00353",
-                                             None,
-                                             test_data["run"],
-                                             self.versionlookup.pretty_name,
-                                             "error",
-                                             "Error Looking up version article 00353 message: "
-                                             "Exception when looking up version. Message: Protocol Error message.")
+        fake_emit_monitor.assert_not_called()
+        self.assertEqual(self.versionlookup.ACTIVITY_PERMANENT_FAILURE, result)
 
 
 if __name__ == '__main__':

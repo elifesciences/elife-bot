@@ -5,6 +5,11 @@ import base64
 import json
 from dateutil.parser import parse
 
+
+class ErrorCallingLaxException(Exception):
+    pass
+
+
 def article_versions(article_id, settings):
     url = settings.lax_article_versions.replace('{article_id}', article_id)
     response = requests.get(url, verify=settings.verify_ssl)
@@ -27,7 +32,8 @@ def article_highest_version(article_id, settings, logger=None):
         if logger:
             logger.error("Error obtaining version information from Lax" +
                          str(status_code))
-        return None
+        raise ErrorCallingLaxException("Error looking up article " + article_id + " version in Lax. "
+                                                                                  "Please check call to Lax.")
 
 
 def article_next_version(article_id, settings):
@@ -35,7 +41,7 @@ def article_next_version(article_id, settings):
     if isinstance(version, (int,long)) and version >= 0:
         version = str(version + 1)
     if version is None:
-        return "-1"
+        raise RuntimeError("Error looking up article next version. Version is Null. Check call to Lax.")
     return version
 
 
@@ -101,10 +107,12 @@ def prepare_action_message(settings, article_id, run, expanded_folder, version, 
         message = carry_over_data
         return message
 
+
 def get_xml_file_name(settings, expanded_folder, xml_bucket, version=None):
     Article = article.article()
     xml_file_name = Article.get_xml_file_name(settings, expanded_folder, xml_bucket, version)
     return xml_file_name
+
 
 def lax_token(run, version, expanded_folder, status, eif_location, force=False):
     token = {
