@@ -14,8 +14,6 @@ from starter_helper import NullRequiredDataException
 """
 Amazon SWF ProcessArticleZip starter, preparing article xml for lax.
 """
-class NullArticleException(Exception):
-    pass
 
 class starter_ProcessArticleZip():
     def __init__(self):
