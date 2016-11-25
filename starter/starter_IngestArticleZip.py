@@ -22,7 +22,6 @@ class starter_IngestArticleZip():
         self.const_name = "IngestArticleZip"
         
     def start(self, settings, run, info):
-        # TODO : much of this is common to many starters and could probably be streamlined
 
         # Log
         logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
