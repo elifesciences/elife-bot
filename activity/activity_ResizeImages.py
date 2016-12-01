@@ -12,6 +12,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from provider.article_structure import ArticleInfo
 from provider.execution_context import Session
+from provider.storage_provider import StorageContext
 
 """
 ResizeImages.py activity
@@ -144,23 +145,44 @@ class activity_ResizeImages(activity.activity):
             fp.close()
 
     def store_in_cdn(self, filename, image, cdn_path, download):
-        # for now we'l use an S3 bucket
         try:
-            content_type, encoding = guess_type(filename)
-            cdn_bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix +
-                                              self.settings.ppp_cdn_bucket)
-            key = Key(cdn_bucket)
-            key.key = cdn_path + "/" + filename
-            key.metadata['Content-Type'] = content_type
+            storage_context = StorageContext(self.settings)
+            storage_provider = self.settings.storage_provider + "://"
+
+            cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
+            storage_resource = storage_provider + cdn_bucket_name + "/" + cdn_path + "/" + filename
+            # adds image to bucket
             image.seek(0)
-            key.set_contents_from_file(image)
+            content_type, encoding = guess_type(filename)
+            storage_context.set_resource_from_file(storage_resource, image,
+                                                   metadata={ 'Content-Type': content_type })
+
+            #..
+            published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket_path
+            storage_resource_destination = storage_provider + published_bucket_path + "/" + cdn_path + "/" + filename
+
+            storage_context.copy_resource(storage_resource, storage_resource_destination)
+
             if download:
-                metadata = key.metadata.copy()
-                metadata['Content-Disposition'] = str("Content-Disposition: attachment; filename=" +
-                                                      filename + ";")
+                dict_metadata = {'Content-Disposition':
+                                     str("Content-Disposition: attachment; filename=" + filename + ";"),
+                                 'Content-Type': content_type}
                 filename_no_extension, extension = filename.rsplit('.', 1)
-                key.copy(cdn_bucket, cdn_path + "/" + filename_no_extension + "-download." +
-                         extension, metadata=metadata)
+                file_download = filename_no_extension + "-download." + extension
+
+                storage_resource_dest_download_cdn = storage_provider + cdn_bucket_name + "/" + cdn_path + "/" + \
+                                                     file_download
+                storage_context.copy_resource(storage_resource, storage_resource_dest_download_cdn,
+                                              additional_dict_metadata=dict_metadata)
+
+                storage_resource_orig_download = storage_resource_dest_download_cdn
+
+                published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket_path
+                storage_resource_destination_download = storage_provider + \
+                                                        published_bucket_path + "/" + cdn_path + "/" + file_download
+
+                storage_context.copy_resource(storage_resource_orig_download, storage_resource_destination_download)
+
         finally:
             image.close()
 

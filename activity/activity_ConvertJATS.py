@@ -47,7 +47,6 @@ class activity_ConvertJATS(activity.activity):
             expanded_folder_name = session.get_value(run, 'expanded_folder')
             expanded_folder_bucket = (self.settings.publishing_buckets_prefix
                                       + self.settings.expanded_bucket)
-            print expanded_folder_name
 
             conn = S3Connection(self.settings.aws_access_key_id,
                                 self.settings.aws_secret_access_key)

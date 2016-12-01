@@ -1,6 +1,8 @@
 import activity
 from boto.s3.connection import S3Connection
 from provider.execution_context import Session
+from provider.storage_provider import StorageContext
+from mimetypes import guess_type
 
 """
 DepositAssets.py activity
@@ -46,20 +48,41 @@ class activity_DepositAssets(activity.activity):
 
             no_download_extensions = self.get_no_download_extensions(self.settings.no_download_extensions)
 
+            storage_context = StorageContext(self.settings)
+            storage_provider = self.settings.storage_provider + "://"
+            published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket_path
+
             keys = self.get_keys(expanded_bucket, expanded_folder_name)
             for key in keys:
                 (file_key, file_name) = key
-                file_key.copy(cdn_bucket_name, article_id + "/" + file_name)
+                #file_key.copy(cdn_bucket_name, article_id + "/" + file_name)
+
+                orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name + "/" + file_name
+                dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/" + file_name
+                additional_dest_resource = storage_provider + published_bucket_path + "/" + article_id + "/" + file_name
+                storage_context.copy_resource(orig_resource, dest_resource)
+                storage_context.copy_resource(orig_resource, additional_dest_resource)
+
                 if self.logger:
                     self.logger.info("Uploaded key %s to %s" % (file_name, cdn_bucket_name))
                 file_name_no_extension, extension = file_name.rsplit('.', 1)
                 if extension not in no_download_extensions:
-                    download_metadata = file_key.metadata
-                    download_metadata['Content-Disposition'] = str(
-                        "Content-Disposition: attachment; filename=" + file_name + ";")
-                    file_key.copy(cdn_bucket_name, article_id + "/" +
-                                  file_name_no_extension + "-download." + extension,
-                                  metadata=download_metadata)
+
+                    content_type, encoding = guess_type(file_name)
+                    dict_metadata = {'Content-Disposition':
+                                     str("Content-Disposition: attachment; filename=" + file_name + ";"),
+                                     'Content-Type': content_type}
+
+                    dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/" + \
+                                    file_name_no_extension + "-download." + extension
+                    additional_dest_resource = storage_provider + published_bucket_path + "/" + article_id + "/" + \
+                                               file_name_no_extension + "-download." + extension
+                    storage_context.copy_resource(orig_resource, dest_resource, additional_dict_metadata=dict_metadata)
+                    storage_context.copy_resource(orig_resource, additional_dest_resource)
+
+
+
+
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     "Deposit assets", "end",
                                     "Deposited assets for article " + article_id)
