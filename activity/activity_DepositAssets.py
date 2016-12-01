@@ -72,13 +72,15 @@ class activity_DepositAssets(activity.activity):
                     dict_metadata = {'Content-Disposition':
                                      str("Content-Disposition: attachment; filename=" + file_name + ";"),
                                      'Content-Type': content_type}
+                    file_download = file_name_no_extension + "-download." + extension
 
-                    dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/" + \
-                                    file_name_no_extension + "-download." + extension
-                    additional_dest_resource = storage_provider + published_bucket_path + "/" + article_id + "/" + \
-                                               file_name_no_extension + "-download." + extension
-                    storage_context.copy_resource(orig_resource, dest_resource, additional_dict_metadata=dict_metadata)
-                    storage_context.copy_resource(orig_resource, additional_dest_resource)
+                    orig_resource_download = dest_resource
+                    dest_resource_download = storage_provider + cdn_bucket_name + "/" + article_id + "/" + file_download
+                    additional_dest_resource_download = storage_provider + published_bucket_path + "/" \
+                                                        + article_id + "/" + file_download
+                    storage_context.copy_resource(orig_resource_download, dest_resource_download,
+                                                  additional_dict_metadata=dict_metadata)
+                    storage_context.copy_resource(dest_resource_download, additional_dest_resource_download)
 
 
 
