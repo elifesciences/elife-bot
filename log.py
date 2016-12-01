@@ -9,7 +9,7 @@ def logger(logFile = None, setLevel = "INFO", identity = ""):
     set the level of logging, and optional identity for what is
     sending logging message, to identify multiple workers
     """
-    logger = logging.getLogger('myapp')
+    logger = logging.getLogger('elife-bot')
     if(logFile):
         hdlr = handlers.WatchedFileHandler(os.getcwd() + os.sep + logFile)
     else:
