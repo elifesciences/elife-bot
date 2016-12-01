@@ -2,6 +2,8 @@ import logging
 from logging import handlers
 import os
 import random
+import sys
+import newrelic.agent
 
 def logger(logFile = None, setLevel = "INFO", identity = ""):
     """
@@ -18,8 +20,13 @@ def logger(logFile = None, setLevel = "INFO", identity = ""):
     formatter = logging.Formatter('%(asctime)s %(levelname)s ' + identity + ' %(message)s', '%Y-%m-%dT%H:%M:%SZ')
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
+    logger.addHandler(NewRelicHandler())
     logger.setLevel(eval("logging." + setLevel))
     return logger
 
 def identity(process_name):
     return "%s_%s" % (process_name, int(random.random() * 1000))
+
+class NewRelicHandler(logging.Handler):
+    def emit(self, record):
+        newrelic.agent.record_exception(*sys.exc_info())
