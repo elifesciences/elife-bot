@@ -69,11 +69,9 @@ class S3StorageContext:
 
     def copy_resource(self, orig_resource, dest_resource, additional_dict_metadata=None):
         orig_bucket, orig_s3_key = self.s3_storage_objects(orig_resource)
-        orig_key = orig_bucket.get_key(orig_s3_key)
 
         metadata = None
         if additional_dict_metadata is not None:
-            metadata = orig_key.metadata.copy()
             for mdk in additional_dict_metadata:
                 metadata[mdk] = additional_dict_metadata[mdk]
 
@@ -84,7 +82,7 @@ class S3StorageContext:
             dest_key = dest_bucket.new_key(dest_s3_key)
             dest_key.set_contents_from_string('')
 
-        dest_bucket.copy_key(dest_key.name[1:], orig_bucket.name, orig_key.name[1:], metadata=metadata)
+        dest_bucket.copy_key(dest_key.name[1:], orig_bucket.name, orig_s3_key[1:], metadata=metadata)
 
     def get_bucket_from_cache(self, bucket_name):
 
