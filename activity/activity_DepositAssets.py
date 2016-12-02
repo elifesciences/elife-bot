@@ -78,8 +78,11 @@ class activity_DepositAssets(activity.activity):
                     dest_resource_download = storage_provider + cdn_bucket_name + "/" + article_id + "/" + file_download
                     additional_dest_resource_download = storage_provider + published_bucket_path + "/" \
                                                         + article_id + "/" + file_download
+
+                    # file is copied with additional metadata
                     storage_context.copy_resource(orig_resource_download, dest_resource_download,
                                                   additional_dict_metadata=dict_metadata)
+                    # additional metadata is already set in origin resource so it will be copied accross by default
                     storage_context.copy_resource(dest_resource_download, additional_dest_resource_download)
 
 

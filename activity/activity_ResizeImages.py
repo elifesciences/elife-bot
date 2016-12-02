@@ -172,6 +172,8 @@ class activity_ResizeImages(activity.activity):
 
                 storage_resource_dest_download_cdn = storage_provider + cdn_bucket_name + "/" + cdn_path + "/" + \
                                                      file_download
+
+                # file is copied with additional metadata
                 storage_context.copy_resource(storage_resource, storage_resource_dest_download_cdn,
                                               additional_dict_metadata=dict_metadata)
 
@@ -181,6 +183,7 @@ class activity_ResizeImages(activity.activity):
                 storage_resource_destination_download = storage_provider + \
                                                         published_bucket_path + "/" + cdn_path + "/" + file_download
 
+                # additional metadata is already set in origin resource so it will be copied accross by default
                 storage_context.copy_resource(storage_resource_orig_download, storage_resource_destination_download)
 
         finally:
