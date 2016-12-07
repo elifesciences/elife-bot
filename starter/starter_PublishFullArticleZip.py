@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -18,10 +17,7 @@ Amazon SWF PublishFullArticleZip starter
 
 class starter_PublishFullArticleZip():
 
-    def start(self, ENV="dev", doi_id=None, document=None, last_updated_since=None):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
-
+    def start(self, settings, doi_id=None, document=None, last_updated_since=None):
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
         logFile = "starter.log"
@@ -143,6 +139,9 @@ if __name__ == "__main__":
     if options.last_updated_since:
         last_updated_since = options.last_updated_since
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_PublishFullArticleZip()
 
-    o.start(ENV, doi_id=doi_id, document=document, last_updated_since=last_updated_since)
+    o.start(settings=settings, doi_id=doi_id, document=document, last_updated_since=last_updated_since)

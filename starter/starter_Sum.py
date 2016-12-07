@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -16,10 +15,7 @@ Amazon SWF Sum workflow starter
 
 class starter_Sum():
 
-    def start(self, ENV="dev", workflow="Sum"):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
-
+    def start(self, settings, workflow="Sum"):
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
         logFile = "starter.log"
@@ -78,6 +74,9 @@ if __name__ == "__main__":
     if options.env:
         ENV = options.env
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_Sum()
 
-    o.start(ENV)
+    o.start(settings=settings)

@@ -4,11 +4,13 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
 from optparse import OptionParser
+
+import starter_helper as helper
+from starter_helper import NullRequiredDataException
 
 """
 Amazon SWF PublishArticle starter, for API and Lens publishing etc.
@@ -16,10 +18,19 @@ Amazon SWF PublishArticle starter, for API and Lens publishing etc.
 
 
 class starter_ArticleInformationSupplier():
+    def __init__(self):
+        self.const_name = "ArticleInformationSupplier"
 
-    def start(self,eif_location, eif_bucket, article_id, version, run, article_path ,expanded_folder, status, update_date, published, ENV="dev", info=None):
+    def start(self,eif_location, eif_bucket, article_id, version, run, article_path ,expanded_folder, status, update_date, published, settings, info=None):
 
-        info = {
+        # Log
+        logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
+
+        if article_id is None or run is None or version is None:
+            raise NullRequiredDataException("article id or version or run is Null. "
+                                            "Possible error: Lax did not send back valid data from ingest.")
+
+        input = {
             'eif_location': eif_location,
             'eif_bucket':  eif_bucket,
             'article_id': article_id,
@@ -32,33 +43,15 @@ class starter_ArticleInformationSupplier():
             'published': published
         }
 
-        incoming_data = info
-
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
-
-        # Log
-        identity = "starter_%s" % int(random.random() * 1000)
-        log_file = "starter.log"
-        # logFile = None
-        logger = log.logger(log_file, settings.setLevel, identity)
-
-        #filename = info.file_name
-
-        # if filename is None:
-        #     logger.error("Did not get a filename")
-        #     return
+        workflow_id, \
+        workflow_name, \
+        workflow_version, \
+        child_policy, \
+        execution_start_to_close_timeout, \
+        workflow_input = helper.set_workflow_information(self.const_name, "1", None, input, article_id, os.getpid())
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
-
-        # Start a workflow execution
-        workflow_id = "ArticleInformationSupplier_%s" % incoming_data['article_id'] + str(int(random.random() * 1000))
-        workflow_name = "ArticleInformationSupplier"
-        workflow_version = "1"
-        child_policy = None
-        execution_start_to_close_timeout = str(60 * 30)
-        workflow_input = json.dumps(info, default=lambda ob: ob.__dict__)
 
         try:
             response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version,
@@ -66,6 +59,10 @@ class starter_ArticleInformationSupplier():
                                                      execution_start_to_close_timeout, workflow_input)
 
             logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+
+        except NullRequiredDataException as e:
+            logger.exception(e.message)
+            raise
 
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
             # There is already a running workflow with that ID, cannot start another
@@ -90,6 +87,9 @@ if __name__ == "__main__":
     if options.filename:
         filename = options.filename
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_ArticleInformationSupplier()
 
-    o.start(ENV,)
+    o.start(settings=settings,)

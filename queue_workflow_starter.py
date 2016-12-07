@@ -94,7 +94,7 @@ def start_workflow(workflow_name, workflow_data):
         pass
     full_path = "starter." + workflow_name + "." + workflow_name + "()"
     s = eval(full_path)
-    s.start(ENV=env, **workflow_data)
+    s.start(settings=settings, **workflow_data)
 
 # soon to be deprecated
 def process_data_publishperfectarticle(workflow_name, workflow_data):
@@ -107,8 +107,7 @@ def process_data_ingestarticlezip(workflow_name, workflow_data):
             'run': str(uuid.uuid4())}
     return data
 def process_data_postperfectpublication(workflow_name, workflow_data):
-    data = {'info': workflow_data,
-            'settings': settings}
+    data = {'info': workflow_data }
     return data
 
 

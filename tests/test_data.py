@@ -1,3 +1,5 @@
+import json
+import base64
 
 lax_article_versions_response_data = [
                                         {
@@ -55,6 +57,19 @@ data_published_lax = {
             "update_date": "2012-12-13T00:00:00Z"
         }
 
+data_ingested_lax = {
+            "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
+            "article_id": "00353",
+            "result": "ingested",
+            "status": "vor",
+            "version": "1",
+            "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
+            "eif_location": "",
+            "requested_action": "ingest",
+            "message": None,
+            "update_date": "2012-12-13T00:00:00Z"
+        }
+
 data_published_website = {
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
             "article_id": "00353",
@@ -77,3 +92,48 @@ data_error_lax = {
             "message": "An error abc has occurred",
             "update_date": "2012-12-13T00:00:00Z"
         }
+
+data_invalid_lax = {
+            "run": None,
+            "article_id": None,
+            "result": "invalid",
+            "status": None,
+            "version": None,
+            "expanded_folder": None,
+            "eif_location": None,
+            "requested_action": "publish",
+            "message": "An error abc has occurred - everything is invalid",
+            "update_date": None
+        }
+
+ingest_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
+                           u'event_time': u'2016-07-28T16:14:27.809576Z',
+                           u'event_name': u'ObjectCreated:Put',
+                           u'file_name': u'elife-00353-vor-r1.zip',
+                           u'file_etag': u'e7f639f63171c097d4761e2d2efe8dc4',
+                           u'bucket_name': u'jen-elife-production-final',
+                           u'file_size': 1097506}
+
+def ApprovePublication_data(update_date="2012-12-13T00:00:00Z"):
+        return {
+            "article_id": "00353",
+            "version": "1",
+            "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
+            "publication_data": base64.encodestring(json.dumps(ApprovePublication_publication_data(update_date)))
+            }
+
+def ApprovePublication_json_output_return_example(update_date):
+            return ApprovePublication_publication_data(update_date)
+
+def ApprovePublication_publication_data(update_date):
+            return {
+                "workflow_name": "PostPerfectPublication",
+                "workflow_data": {
+                            "status": "vor",
+                            "update_date": update_date,
+                            "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
+                            "expanded_folder": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251",
+                            "version": "1",
+                            "eif_location": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json",
+                            "article_id": "00353"}
+                }

@@ -1,5 +1,5 @@
 import unittest
-from starter.starter_PostPerfectPublication import starter_PostPerfectPublication
+import starter.starter_helper as starter_helper
 import tests.test_data as test_data
 import json
 from ddt import ddt, data, unpack
@@ -10,9 +10,7 @@ example_workflow_id = lambda fe: "PostPerfectPublication_00353." + fe
 
 
 @ddt
-class TestStarterPostPerfectPublication(unittest.TestCase):
-    def setUp(self):
-        self.postperfectpublication = starter_PostPerfectPublication()
+class TestStarterHelper(unittest.TestCase):
 
     @unpack
     @data({'data': test_data.data_published_lax, 'execution': 'lax'},
@@ -25,10 +23,12 @@ class TestStarterPostPerfectPublication(unittest.TestCase):
         workflow_version, \
         child_policy, \
         execution_start_to_close_timeout, \
-        workflow_input = self.postperfectpublication.set_workflow_information(example_workflow_name,
+        workflow_input = starter_helper.set_workflow_information(example_workflow_name,
                                                                               "1",
                                                                               None,
-                                                                              data)
+                                                                              data,
+                                                                              data['article_id'],
+                                                                              execution)
 
         self.assertEqual(example_workflow_id(execution), workflow_id)
         self.assertEqual(example_workflow_name, workflow_name)

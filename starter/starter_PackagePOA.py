@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -18,10 +17,7 @@ Amazon SWF PackagePOA starter
 
 class starter_PackagePOA():
 
-    def start(self, ENV="dev", document=None, last_updated_since=None):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
-
+    def start(self, settings, document=None, last_updated_since=None):
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
         logFile = "starter.log"
@@ -41,7 +37,7 @@ class starter_PackagePOA():
 
         elif last_updated_since is not None:
             # Publish only articles since the last_modified date, use SimpleDB as the source
-            docs = self.get_docs_from_SimpleDB(ENV, last_updated_since=last_updated_since)
+            docs = self.get_docs_from_SimpleDB(settings, last_updated_since=last_updated_since)
 
         if docs:
             for doc in docs:
@@ -82,14 +78,11 @@ class starter_PackagePOA():
                     logger.info(message)
 
 
-    def get_docs_from_SimpleDB(self, ENV="dev", last_updated_since=None):
+    def get_docs_from_SimpleDB(self, settings, last_updated_since=None):
         """
         Get the array of docs from the SimpleDB provider
         """
         docs = []
-
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
 
         db = dblib.SimpleDB(settings)
         db.connect()
@@ -131,6 +124,9 @@ if __name__ == "__main__":
     if options.last_updated_since:
         last_updated_since = options.last_updated_since
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_PackagePOA()
 
-    o.start(ENV, document=document, last_updated_since=last_updated_since)
+    o.start(settings=settings, document=document, last_updated_since=last_updated_since)

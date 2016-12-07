@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -16,10 +15,7 @@ Amazon SWF PMCDeposit starter
 
 class starter_PMCDeposit():
 
-    def start(self, ENV="dev", bucket=None, document=None):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
-
+    def start(self, settings, bucket=None, document=None):
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
         logFile = "starter.log"
@@ -105,6 +101,9 @@ if __name__ == "__main__":
     if options.bucket:
         bucket = options.bucket
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_PMCDeposit()
 
-    o.start(ENV, bucket=bucket, document=document)
+    o.start(settings=settings, bucket=bucket, document=document)

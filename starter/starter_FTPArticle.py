@@ -4,7 +4,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -18,10 +17,7 @@ Amazon SWF PublishArticle starter, for Fluidinfo API publishing
 
 class starter_FTPArticle():
 
-    def start(self, ENV="dev", workflow=None, doi_id=None):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
-
+    def start(self, settings, workflow=None, doi_id=None):
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
         logFile = "starter.log"
@@ -138,6 +134,9 @@ if __name__ == "__main__":
     if options.doi_id:
         doi_id = options.doi_id
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = starter_FTPArticle()
 
-    o.start(ENV, workflow=workflow, doi_id=doi_id)
+    o.start(settings=settings, workflow=workflow, doi_id=doi_id)
