@@ -44,6 +44,8 @@ class exp():
     archive_bucket = 'elife-publishing-archive'
     xml_bucket = 'elife-publishing-xml'
 
+    published_bucket_path = 'elife-published/articles'
+
     # REST endpoint for drupal node builder
     # drupal_naf_endpoint = 'http://localhost:5000/nodes'
     drupal_EIF_endpoint = 'http://52.4.182.179/api/article.json'
