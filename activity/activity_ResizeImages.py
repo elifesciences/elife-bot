@@ -158,7 +158,7 @@ class activity_ResizeImages(activity.activity):
                                                    metadata={ 'Content-Type': content_type })
 
             #..
-            published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket_path
+            published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket + '/articles'
             storage_resource_destination = storage_provider + published_bucket_path + "/" + cdn_path + "/" + filename
 
             storage_context.copy_resource(storage_resource, storage_resource_destination)
@@ -179,7 +179,6 @@ class activity_ResizeImages(activity.activity):
 
                 storage_resource_orig_download = storage_resource_dest_download_cdn
 
-                published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket_path
                 storage_resource_destination_download = storage_provider + \
                                                         published_bucket_path + "/" + cdn_path + "/" + file_download
 

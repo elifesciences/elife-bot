@@ -50,7 +50,7 @@ class activity_DepositAssets(activity.activity):
 
             storage_context = StorageContext(self.settings)
             storage_provider = self.settings.storage_provider + "://"
-            published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket_path
+            published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket + '/articles'
 
             keys = self.get_keys(expanded_bucket, expanded_folder_name)
             for key in keys:
