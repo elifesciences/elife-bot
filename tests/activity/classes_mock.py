@@ -97,7 +97,7 @@ class FakeStorageContext:
         bucket_name, s3_key = self.get_bucket_and_key(resource)
         copyfile(data.ExpandArticle_files_source_folder + s3_key, file.name)
 
-    def set_resource_from_file(self, resource, file):
+    def set_resource_from_filename(self, resource, file):
         #bucket_name, s3_key = self.get_bucket_and_key(resource)
         copy(file, data.ExpandArticle_files_dest_folder)
 
