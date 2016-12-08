@@ -70,10 +70,12 @@ class S3StorageContext:
     def copy_resource(self, orig_resource, dest_resource, additional_dict_metadata=None):
         orig_bucket, orig_s3_key = self.s3_storage_objects(orig_resource)
 
-        metadata = {}
         if additional_dict_metadata is not None:
+            metadata = {}
             for mdk in additional_dict_metadata:
                 metadata[mdk] = additional_dict_metadata[mdk]
+        else:
+            metadata = None
 
         dest_bucket, dest_s3_key = self.s3_storage_objects(dest_resource)
 
