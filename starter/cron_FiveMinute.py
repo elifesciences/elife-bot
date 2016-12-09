@@ -20,9 +20,7 @@ Cron job to check for workflows to start every five minutes, if applicable
 
 class cron_FiveMinute(object):
 
-    def start(self, ENV="dev"):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
+    def start(self, settings):
 
         ping_marker_id = "cron_FiveMinute"
 
@@ -66,7 +64,7 @@ class cron_FiveMinute(object):
                     starter_name = "starter_SendQueuedEmail"
                     self.import_starter_module(starter_name, logger)
                     s = self.get_starter_module(starter_name, logger)
-                    s.start(ENV=ENV)
+                    s.start(settings=settings)
                 except:
                     logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
                     logger.exception('')
@@ -143,6 +141,9 @@ if __name__ == "__main__":
     if options.env:
         ENV = options.env
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = cron_FiveMinute()
 
-    o.start(ENV)
+    o.start(settings=settings)

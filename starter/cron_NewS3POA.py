@@ -20,9 +20,7 @@ Cron job to check for new article S3 POA and start workflows
 
 class cron_NewS3POA(object):
 
-    def start(self, ENV="dev"):
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
+    def start(self, settings):
 
         ping_marker_id = "cron_NewS3POA"
 
@@ -42,7 +40,7 @@ class cron_NewS3POA(object):
             workflow_id=ping_marker_id)
 
         # Start a ping workflow as a marker
-        self.start_ping_marker(ping_marker_id, ENV)
+        self.start_ping_marker(ping_marker_id, settings)
 
         # Check for S3 XML files that were updated since the last run
         date_format = "%Y-%m-%dT%H:%M:%S.000Z"
@@ -72,19 +70,16 @@ class cron_NewS3POA(object):
                 starter_name = "starter_PackagePOA"
                 self.import_starter_module(starter_name, logger)
                 s = self.get_starter_module(starter_name, logger)
-                s.start(ENV=ENV, last_updated_since=last_startDate)
+                s.start(settings=settings, last_updated_since=last_startDate)
             except:
                 logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
                 logger.exception('')
 
-    def start_ping_marker(self, workflow_id, ENV="dev"):
+    def start_ping_marker(self, workflow_id, settings):
         """
         Start a ping workflow with a unique name to serve as a time marker
         for determining last time this was run
         """
-
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
 
         workflow_id = workflow_id
         workflow_name = "Ping"
@@ -146,6 +141,9 @@ if __name__ == "__main__":
     if options.env:
         ENV = options.env
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     o = cron_NewS3POA()
 
-    o.start(ENV)
+    o.start(settings=settings)
