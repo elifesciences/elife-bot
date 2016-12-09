@@ -40,7 +40,7 @@ class cron_FiveMinute(object):
             workflow_id=ping_marker_id)
 
         # Start a ping workflow as a marker
-        self.start_ping_marker(ping_marker_id, ENV)
+        self.start_ping_marker(ping_marker_id, settings)
 
         # Check for S3 XML files that were updated since the last run
         date_format = "%Y-%m-%dT%H:%M:%S.000Z"
@@ -72,14 +72,11 @@ class cron_FiveMinute(object):
             # Some error
             logger.info('Exception encountered starting %s: %s' % (ping_marker_id, last_startDate))
 
-    def start_ping_marker(self, workflow_id, ENV="dev"):
+    def start_ping_marker(self, workflow_id, settings):
         """
         Start a ping workflow with a unique name to serve as a time marker
         for determining last time this was run
         """
-
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
 
         workflow_id = workflow_id
         workflow_name = "Ping"
