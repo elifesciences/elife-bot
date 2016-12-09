@@ -9,6 +9,9 @@ import provider.lax_provider as lax_provider
 activity_UpdateRepository.py activity
 """
 
+class RetryException(RuntimeError):
+    pass
+
 class activity_UpdateRepository(activity.activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
@@ -76,6 +79,10 @@ class activity_UpdateRepository(activity.activity):
                                     "Finished Updating repository for article. Details: " + message)
                     return True
 
+            except RetryException as e:
+                self.logger.info(e.message)
+                return activity.activity.ACTIVITY_TEMPORARY_FAILURE
+
             except Exception as e:
                 self.logger.exception("Exception in do_activity")
                 self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
@@ -96,7 +103,13 @@ class activity_UpdateRepository(activity.activity):
         except GithubException as e:
             self.logger.info("GithubException - description: " + e.message)
             self.logger.info("GithubException: file " + repo_file + " may not exist in github yet. We will try to add it in the repo.")
-            response = article_xml_repo.create_file(repo_file, "Creates XML", content)
+            try:
+                response = article_xml_repo.create_file(repo_file, "Creates XML", content)
+            except GithubException as e:
+                if e.status == 409:
+                    raise RetryException(e.message)
+                else:
+                    raise e
             return "File " + repo_file + " successfully added. Commit: " + str(response)
 
         except Exception as e:
