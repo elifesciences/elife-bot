@@ -18,9 +18,7 @@ import newrelic.agent
 SWF cron
 """
 
-def run_cron(ENV="dev"):
-    # Specify run environment settings
-    settings = settingsLib.get_settings(ENV)
+def run_cron(settings):
 
     current_time = time.gmtime()
 
@@ -29,7 +27,7 @@ def run_cron(ENV="dev"):
         # Jobs to start at any time during the hour
 
         workflow_conditional_start(
-            ENV=ENV,
+            settings=settings,,
             starter_name="cron_FiveMinute",
             workflow_id="cron_FiveMinute",
             start_seconds=60 * 3)
@@ -40,13 +38,13 @@ def run_cron(ENV="dev"):
         #print "Top of the hour"
 
         #workflow_conditional_start(
-        #  ENV           = ENV,
+        #  settings           = settings,
         #  starter_name  = "starter_S3Monitor",
         #  workflow_id   = "S3Monitor",
         #  start_seconds = 60*31)
 
         workflow_conditional_start(
-            ENV=ENV,
+            settings=settings,
             starter_name="starter_DepositCrossref",
             workflow_id="DepositCrossref",
             start_seconds=60 * 31)
@@ -59,21 +57,21 @@ def run_cron(ENV="dev"):
         #  Set to 11:30 UTC during British Summer Time for 12:30 local UK time
         if current_time.tm_hour == 12:
             workflow_conditional_start(
-                ENV=ENV,
+                settings=settings,
                 starter_name="starter_PublishPOA",
                 workflow_id="PublishPOA",
                 start_seconds=60 * 31)
 
         # POA bucket polling
         workflow_conditional_start(
-            ENV=ENV,
+            settings=settings,
             starter_name="starter_S3Monitor",
             workflow_id="S3Monitor_POA",
             start_seconds=60 * 31)
 
         # Full article zip bucket polling
         workflow_conditional_start(
-            ENV=ENV,
+            settings=settings,
             starter_name="starter_S3Monitor",
             workflow_id="S3Monitor_FullArticle",
             start_seconds=60 * 31)
@@ -81,7 +79,7 @@ def run_cron(ENV="dev"):
         # PMC deposits once per day 20:30 UTC
         if current_time.tm_hour == 20:
             workflow_conditional_start(
-                ENV=ENV,
+                settings=settings,
                 starter_name="starter_PubRouterDeposit",
                 workflow_id="PubRouterDeposit_PMC",
                 start_seconds=60 * 31)
@@ -89,7 +87,7 @@ def run_cron(ENV="dev"):
         # Web of Science deposits once per day 21:30 UTC
         if current_time.tm_hour == 21:
             workflow_conditional_start(
-                ENV=ENV,
+                settings=settings,
                 starter_name="starter_PubRouterDeposit",
                 workflow_id="PubRouterDeposit_WoS",
                 start_seconds=60 * 31)
@@ -97,7 +95,7 @@ def run_cron(ENV="dev"):
         # Scopus deposits once per day 22:30 UTC
         if current_time.tm_hour == 22:
             workflow_conditional_start(
-                ENV=ENV,
+                settings=settings,
                 starter_name="starter_PubRouterDeposit",
                 workflow_id="PubRouterDeposit_Scopus",
                 start_seconds=60 * 31)
@@ -109,7 +107,7 @@ def run_cron(ENV="dev"):
         # Set to 10:45 UTC during British Summer Time for 11:45 local UK time
         if current_time.tm_hour == 11:
             workflow_conditional_start(
-                ENV=ENV,
+                settings=settings,
                 starter_name="cron_NewS3POA",
                 workflow_id="cron_NewS3POA",
                 start_seconds=60 * 31)
@@ -118,7 +116,7 @@ def run_cron(ENV="dev"):
         # Set to 16:45 UTC during British Summer Time for 17:45 local UK time
         if current_time.tm_hour == 17:
             workflow_conditional_start(
-                ENV=ENV,
+                settings=settings,
                 starter_name="starter_PublicationEmail",
                 workflow_id="PublicationEmail",
                 start_seconds=60 * 31)
@@ -126,7 +124,7 @@ def run_cron(ENV="dev"):
         # Pub router deposits once per day 23:45 UTC
         if current_time.tm_hour == 23:
             workflow_conditional_start(
-                ENV=ENV,
+                settings=settings,
                 starter_name="starter_PubRouterDeposit",
                 workflow_id="PubRouterDeposit_HEFCE",
                 start_seconds=60 * 31)
@@ -134,7 +132,7 @@ def run_cron(ENV="dev"):
         # Cengage deposits once per day 22:45 UTC
         if current_time.tm_hour == 22:
             workflow_conditional_start(
-                ENV=ENV,
+                settings=settings,
                 starter_name="starter_PubRouterDeposit",
                 workflow_id="PubRouterDeposit_Cengage",
                 start_seconds=60 * 31)
@@ -142,30 +140,30 @@ def run_cron(ENV="dev"):
         # GoOA / CAS deposits once per day 21:45 UTC
         if current_time.tm_hour == 21:
             workflow_conditional_start(
-                ENV=ENV,
+                settings=settings,
                 starter_name="starter_PubRouterDeposit",
                 workflow_id="PubRouterDeposit_GoOA",
                 start_seconds=60 * 31)
 
         workflow_conditional_start(
-            ENV=ENV,
+            settings=settings,
             starter_name="starter_PubmedArticleDeposit",
             workflow_id="PubmedArticleDeposit",
             start_seconds=60 * 31)
 
         workflow_conditional_start(
-            ENV=ENV,
+            settings=settings,
             starter_name="cron_NewS3FullArticle",
             workflow_id="cron_NewS3FullArticle",
             start_seconds=60 * 31)
 
         workflow_conditional_start(
-            ENV=ENV,
+            settings=settings,
             starter_name="starter_AdminEmail",
             workflow_id="AdminEmail",
             start_seconds=(60*60*4)-(14*60))
 
-def workflow_conditional_start(ENV, starter_name, start_seconds, data=None,
+def workflow_conditional_start(settings, starter_name, start_seconds, data=None,
                                workflow_id=None, workflow_name=None, workflow_version=None):
     """
     Given workflow criteria, check the workflow completion history for the last time run
@@ -174,8 +172,6 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data=None,
 
     diff_seconds = None
     last_startTimestamp = None
-
-    settings = settingsLib.get_settings(ENV)
 
     swfmeta = swfmetalib.SWFMeta(settings)
     swfmeta.connect()
@@ -203,14 +199,14 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data=None,
         if starter_name == "starter_S3Monitor":
 
             if workflow_id == "S3Monitor":
-                s.start(ENV=ENV, workflow="S3Monitor")
+                s.start(settings=settings, workflow="S3Monitor")
             if workflow_id == "S3Monitor_POA":
-                s.start(ENV=ENV, workflow="S3Monitor_POA")
+                s.start(settings=settings, workflow="S3Monitor_POA")
             if workflow_id == "S3Monitor_FullArticle":
-                s.start(ENV=ENV, workflow="S3Monitor_FullArticle")
+                s.start(settings=settings, workflow="S3Monitor_FullArticle")
 
         elif starter_name == "starter_AdminEmail":
-            s.start(ENV=ENV, workflow="AdminEmail")
+            s.start(settings=settings, workflow="AdminEmail")
 
         elif starter_name == "starter_PubmedArticleDeposit":
             # Special for pubmed, only start a workflow if the outbox is not empty
@@ -226,12 +222,12 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data=None,
                 prefix=outbox_folder
                 )
             if len(s3_key_names) > 0:
-                s.start(ENV=ENV)
+                s.start(settings=settings)
 
         elif starter_name == "starter_PubRouterDeposit":
             # PubRouterDeposit has different variants specified by the workflow variable
             workflow = workflow_id.split("_")[-1]
-            s.start(ENV=ENV, workflow=workflow)
+            s.start(settings=settings, workflow=workflow)
 
         elif (starter_name == "cron_FiveMinute"
               or starter_name == "starter_PublishPOA"
@@ -239,7 +235,7 @@ def workflow_conditional_start(ENV, starter_name, start_seconds, data=None,
               or starter_name == "starter_PublicationEmail"
               or starter_name == "starter_DepositCrossref"
               or starter_name == "cron_NewS3FullArticle"):
-            s.start(ENV=ENV)
+            s.start(settings=settings)
 
 def get_s3_key_names_from_bucket(bucket, prefix=None, delimiter='/', headers=None):
     """
@@ -274,6 +270,9 @@ if __name__ == "__main__":
     if options.env:
         ENV = options.env
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
     application = newrelic.agent.register_application(timeout=10.0)
     with newrelic.agent.BackgroundTask(application, name='run_cron', group='cron.py'):
-        run_cron(ENV)
+        run_cron(settings)
