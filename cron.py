@@ -27,7 +27,7 @@ def run_cron(settings):
         # Jobs to start at any time during the hour
 
         workflow_conditional_start(
-            settings=settings,,
+            settings=settings,
             starter_name="cron_FiveMinute",
             workflow_id="cron_FiveMinute",
             start_seconds=60 * 3)
@@ -275,4 +275,4 @@ if __name__ == "__main__":
 
     application = newrelic.agent.register_application(timeout=10.0)
     with newrelic.agent.BackgroundTask(application, name='run_cron', group='cron.py'):
-        run_cron(settings)
+        run_cron(settings=settings)
