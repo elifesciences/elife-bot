@@ -20,7 +20,7 @@ class TestDepositAssets(unittest.TestCase):
     @data(
         (None, None),
         ('image.jpg', 'image/jpeg'),
-        ('/folder/file.pdf.zip', 'application/x-zip-compressed'),
+        ('/folder/file.test.pdf', 'application/pdf'),
         ('/folder/weird_file.wdl', 'binary/octet-stream'),
         ('a_file', 'binary/octet-stream')
         )
