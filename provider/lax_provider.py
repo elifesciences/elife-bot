@@ -82,13 +82,19 @@ def article_publication_date(article_id, settings, logger=None):
         return None
 
 
+def check_status(data, status_type):
+    status = None
+    for vd in data:
+        if vd.get("status") and vd["status"] and vd["status"] == status_type:
+            status = True
+    return status
+
+
 def poa_vor_status(data):
-    if len(data) < 1:
+    if not data or len(data) < 1:
         return None, None
-    check_status = lambda status_type : True if next((vd for vd in data if vd["status"] == status_type), None) \
-                                                is not None else None
-    poa_status = check_status("poa")
-    vor_status = check_status("vor")
+    poa_status = check_status(data, "poa")
+    vor_status = check_status(data, "vor")
     return poa_status, vor_status
 
 

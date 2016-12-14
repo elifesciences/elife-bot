@@ -87,6 +87,18 @@ class TestLaxProvider(unittest.TestCase):
         self.assertEqual(None, exp_poa_status)
         self.assertEqual(None, exp_vor_status)
 
+    def test_poa_vor_status_not_found(self):
+        data = None
+        exp_poa_status, exp_vor_status = lax_provider.poa_vor_status(data)
+        self.assertEqual(None, exp_poa_status)
+        self.assertEqual(None, exp_vor_status)
+
+    def test_poa_vor_status_blank_version(self):
+        data = [{},{"status":"poa","version":1}]
+        exp_poa_status, exp_vor_status = lax_provider.poa_vor_status(data)
+        self.assertEqual(True, exp_poa_status)
+        self.assertEqual(None, exp_vor_status)
+
     @patch('provider.lax_provider.get_xml_file_name')
     def test_prepare_action_message(self, fake_xml_file_name):
         fake_xml_file_name.return_value = "elife-00353-v1.xml"
