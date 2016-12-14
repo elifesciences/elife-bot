@@ -57,13 +57,15 @@ class activity_PublishToLax(activity.activity):
             message = lax_provider.prepare_action_message(self.settings,
                                                           article_id, run, expanded_folder, version, status,
                                                           eif_location, 'publish', force)
+            message_body = json.dumps(message)
+            self.logger.info("Sending message to lax: %s", message_body)
             sqs_conn = boto.sqs.connect_to_region(
                             self.settings.sqs_region,
                             aws_access_key_id=self.settings.aws_access_key_id,
                             aws_secret_access_key=self.settings.aws_secret_access_key)
             out_queue = sqs_conn.get_queue(self.settings.xml_info_queue)
             m = RawMessage()
-            m.set_body(json.dumps(message))
+            m.set_body(message_body)
             out_queue.write(m)
 
             #########

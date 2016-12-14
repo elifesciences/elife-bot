@@ -137,13 +137,14 @@ class activity_IngestToLax(activity.activity):
                     str(e.message))
 
     def write_message(self, connexion_settings, queue, message_data):
-
+        message_body = json.dumps(message_data)
+        self.logger.info("Sending message to lax: %s", message_body)
         sqs_conn = boto.sqs.connect_to_region(
                         connexion_settings["sqs_region"],
                         aws_access_key_id=connexion_settings["aws_access_key_id"],
                         aws_secret_access_key=connexion_settings["aws_secret_access_key"])
 
         m = RawMessage()
-        m.set_body(json.dumps(message_data))
+        m.set_body(message_body)
         output_queue = sqs_conn.get_queue(queue)
         output_queue.write(m)
