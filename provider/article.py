@@ -665,6 +665,8 @@ class article(object):
 
         if status_code == 200:
             poa_status, vor_status = poa_vor_status(data)
+        else:
+            poa_status, vor_status = None, None
 
         # Now a decision can be made
         if (is_poa is True or
