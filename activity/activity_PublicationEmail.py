@@ -131,7 +131,12 @@ class activity_PublicationEmail(activity.activity):
 
             # Get the authors depending on the article type
             if article.article_type == "article-commentary":
-                authors = self.get_authors(article.related_insight_article.doi_id)
+                # Check if the related article object was instantiated properly
+                if hasattr(article.related_insight_article, "doi_id"):
+                    authors = self.get_authors(article.related_insight_article.doi_id)
+                else:
+                    authors = None
+                    self.log_cannot_find_authors(article.doi)
             else:
                 authors = self.get_authors(article.doi_id)
 

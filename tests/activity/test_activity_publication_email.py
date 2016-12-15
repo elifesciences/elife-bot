@@ -120,6 +120,15 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_len": 1,
             "articles_approved_prepared_len": 1})
 
+        # article-commentary with no related-article tag
+        self.do_activity_passes.append({
+            "input_data": {},
+            "templates_warmed": True,
+            "article_xml_filenames": ["elife-23065-v1.xml"],
+            "article_id": "23065",
+            "activity_success": True,
+            "articles_approved_len": 1,
+            "articles_approved_prepared_len": 1})
 
 
 
