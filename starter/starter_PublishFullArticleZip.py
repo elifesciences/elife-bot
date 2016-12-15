@@ -36,7 +36,7 @@ class starter_PublishFullArticleZip():
             docs.append(doc)
         elif last_updated_since is not None:
             # Publish only articles since the last_modified date, use SimpleDB as the source
-            docs = self.get_docs_from_SimpleDB(ENV, last_updated_since=last_updated_since)
+            docs = self.get_docs_from_SimpleDB(settings, last_updated_since=last_updated_since)
 
         if docs:
             for doc in docs:
@@ -72,14 +72,11 @@ class starter_PublishFullArticleZip():
                     print message
                     logger.info(message)
 
-    def get_docs_from_SimpleDB(self, ENV="dev", last_updated_since=None):
+    def get_docs_from_SimpleDB(self, settings, last_updated_since=None):
         """
         Get the array of docs from the SimpleDB provider
         """
         docs = []
-
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
 
         db = dblib.SimpleDB(settings)
         db.connect()
