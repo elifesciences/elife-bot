@@ -60,6 +60,12 @@ class TestProviderArticle(unittest.TestCase):
         result = self.articleprovider.check_is_article_published_by_lax('10.7554/eLife.00013', False, None)
         self.assertEqual(result, False)
 
+    @patch('provider.lax_provider.article_versions')
+    def test_check_is_article_published_by_lax_404(self, mock_lax_provider_article_versions):
+        mock_lax_provider_article_versions.return_value = 404, None
+        result = self.articleprovider.check_is_article_published_by_lax('10.7554/eLife.00013', False, None)
+        self.assertEqual(result, False)
+
     @patch.object(article, 'get_bucket_files')
     def test_get_xml_file_name_by_version(self, mock_get_bucket_files):
         fake_bucket = FakeBucket()
