@@ -86,32 +86,6 @@ class starter_FTPArticle():
                 execution_start_to_close_timeout, input)
 
 
-    def get_docs_from_SimpleDB(self, ENV="dev", doi_id=None):
-        """
-        Get the array of docs from the SimpleDB provider
-        """
-        docs = []
-
-        # Specify run environment settings
-        settings = settingsLib.get_settings(ENV)
-
-        db = dblib.SimpleDB(settings)
-        db.connect()
-
-        if doi_id is not None:
-            xml_item_list = db.elife_get_article_S3_file_items(file_data_type="xml",
-                                                               latest=True, doi_id=doi_id)
-
-        for x in xml_item_list:
-            tmp = {}
-            elife_id = str(x['name']).split("/")[0]
-            document = 'https://s3.amazonaws.com/' + x['item_name']
-            tmp['elife_id'] = elife_id
-            tmp['document'] = document
-            docs.append(tmp)
-
-        return docs
-
 if __name__ == "__main__":
 
     doi_id = None
