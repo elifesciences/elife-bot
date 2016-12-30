@@ -15,7 +15,7 @@ Amazon SWF PublicationEmail starter
 
 class starter_PublicationEmail():
 
-    def start(self, settings):
+    def start(self, settings, allow_duplicates=False):
 
         # Log
         identity = "starter_%s" % int(random.random() * 1000)
@@ -28,9 +28,6 @@ class starter_PublicationEmail():
 
         # Publication email variables
         allow_duplicates = False
-        if ENV == "dev":
-            # Dev workflow, set the default to allow duplicate emails
-            allow_duplicates = True
 
         data = {}
         data["allow_duplicates"] = allow_duplicates
