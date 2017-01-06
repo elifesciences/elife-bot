@@ -106,10 +106,7 @@ class activity_UpdateRepository(activity.activity):
             try:
                 response = article_xml_repo.create_file(repo_file, "Creates XML", content)
             except GithubException as e:
-                if e.status == 409:
-                    raise RetryException(e.message)
-                else:
-                    raise e
+                self._retry_or_cancel(e)
             return "File " + repo_file + " successfully added. Commit: " + str(response)
 
         except Exception as e:
@@ -122,10 +119,19 @@ class activity_UpdateRepository(activity.activity):
                 return "No changes in file " + repo_file
 
             #there are changes
-            response = article_xml_repo.update_file(repo_file , "Updates xml", content, xml_file.sha)
+            try:
+                response = article_xml_repo.update_file(repo_file , "Updates xml", content, xml_file.sha)
+            except GithubException as e:
+                self._retry_or_cancel(e)
             return "File " + repo_file + " successfully updated. Commit: " + str(response)
 
         except Exception as e:
             self.logger.info("Exception: file " + repo_file + ". Error: " + e.message)
             raise
+
+    def _retry_or_cancel(self, e):
+        if e.status == 409:
+            raise RetryException(e.message)
+        else:
+            raise e
 
