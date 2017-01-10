@@ -40,6 +40,7 @@ class activity_VersionLookup(activity.activity):
             version = self.get_version(self.settings, article_structure, data['version_lookup_function'])
             session.store_value(data['run'], 'version', version)
             article_id = article_structure.article_id
+            session.store_value(data['run'], 'article_id', article_id)
 
             self.emit_monitor_event(self.settings, article_id, version, data['run'],
                                     self.pretty_name, "start",
