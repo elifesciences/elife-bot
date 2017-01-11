@@ -57,8 +57,8 @@ class workflow_IngestArticleZip(workflow.workflow):
                         "start_to_close_timeout": 60 * 15
                     },
                     {
-                        "activity_type": "VerifyGlencoe",
-                        "activity_id": "VerifyGlencoe",
+                        "activity_type": "ExpandArticle",
+                        "activity_id": "ExpandArticle",
                         "version": "1",
                         "input": data,
                         "control": None,
@@ -68,8 +68,8 @@ class workflow_IngestArticleZip(workflow.workflow):
                         "start_to_close_timeout": 60 * 15
                     },
                     {
-                        "activity_type": "ExpandArticle",
-                        "activity_id": "ExpandArticle",
+                        "activity_type": "VerifyGlencoe",
+                        "activity_id": "VerifyGlencoe",
                         "version": "1",
                         "input": data,
                         "control": None,
