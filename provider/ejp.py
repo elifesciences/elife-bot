@@ -415,3 +415,22 @@ class EJP(object):
             self.tmp_dir = self.tmp_dir_default
 
         return self.tmp_dir
+
+    def decode_cp1252(self, str):
+        """
+        CSV files look to be in CP-1252 encoding (Western Europe)
+        Decoding to ASCII is normally fine, except when it gets an O umlaut, for example
+        In this case, values must be decoded from cp1252 in order to be added as unicode
+        to the final XML output.
+        This function helps do that in selected places, like on author surnames
+        """
+        try:
+            # See if it is not safe to encode to ascii first
+            junk = str.encode('ascii')
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            # Wrap the decode in another exception to make sure this never fails
+            try:
+                str = str.decode('cp1252')
+            except:
+                pass
+        return str
