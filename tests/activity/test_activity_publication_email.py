@@ -258,8 +258,8 @@ class TestPublicationEmail(unittest.TestCase):
                                                      was_ever_poa, feature_article)
         self.assertEqual(email_type, expected_email_type)
 
-    def fake_authors(self):
-        return self.activity.get_authors(3, None, "tests/test_data/ejp_author_file.csv")
+    def fake_authors(self, article_id=3):
+        return self.activity.get_authors(article_id, None, "tests/test_data/ejp_author_file.csv")
 
 
     @data(
@@ -277,6 +277,40 @@ class TestPublicationEmail(unittest.TestCase):
         if recipient_authors:
             self.assertEqual(recipient_authors[0].first_nm, expected_0_first_nm)
             self.assertEqual(recipient_authors[0].e_mail, expected_0_e_mail)
+
+
+    @patch.object(Templates, 'download_email_templates_from_s3')
+    def test_template_get_email_headers_00013(self, fake_download_email_templates_from_s3):
+
+        fake_download_email_templates_from_s3 = self.fake_download_email_templates_from_s3(
+            self.activity.get_tmp_dir(), True)
+
+        email_type = "author_publication_email_VOR_no_POA"
+
+        authors = self.fake_authors(13)
+
+        article_object = article()
+        article_object.parse_article_file("tests/test_data/elife00013.xml")
+        article_type = article_object.article_type
+        feature_article = False
+        related_insight_article = None
+
+        recipient_authors = self.activity.choose_recipient_authors(authors, article_type,
+                                                                   feature_article, related_insight_article)
+        author = recipient_authors[2]
+
+        format = "html"
+
+        expected_headers = {'format': 'html', u'email_type': u'author_publication_email_VOR_no_POA', u'sender_email': u'press@elifesciences.org', u'subject': u'Author\xe9, Your eLife paper is now online'}
+
+        body = self.activity.templates.get_email_headers(
+            email_type=email_type,
+            author=author,
+            article=article_object,
+            format=format)
+
+        self.assertEqual(body, expected_headers)
+
 
 
     @patch.object(Templates, 'download_email_templates_from_s3')
