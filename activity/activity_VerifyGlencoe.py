@@ -4,7 +4,6 @@ from provider.execution_context import Session
 import provider.lax_provider as lax_provider
 from provider.storage_provider import StorageContext
 import time
-
 import glencoe_check
 
 """
@@ -57,7 +56,7 @@ class activity_VerifyGlencoe(activity.activity):
 
         try:
             if self.has_videos(xml_content):
-                glencoe_check.dealwithit(glencoe_check.metadata(article_id))
+                glencoe_check.validate_sources(glencoe_check.metadata(self.pad_msid(article_id)))
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                         "Finished Verification. Glencoe is available. Article: " + article_id)
                 return True
@@ -83,3 +82,12 @@ class activity_VerifyGlencoe(activity.activity):
         if '<media content-type="glencoe' in xml_str:
             return True
         return False
+
+    def pad_msid(self, msid):
+        return str(int(msid)).zfill(5)
+
+    def check_msid(self, msid):
+        if int(msid) > 100000:
+            return self.pad_msid(msid[-5:])
+        return self.pad_msid(msid)
+
