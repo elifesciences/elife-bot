@@ -56,7 +56,7 @@ class activity_VerifyGlencoe(activity.activity):
 
         try:
             if self.has_videos(xml_content):
-                glencoe_check.validate_sources(glencoe_check.metadata(self.pad_msid(article_id)))
+                glencoe_check.validate_sources(glencoe_check.metadata(self.pad_msid(article_id), self.settings))
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                         "Finished Verification. Glencoe is available. Article: " + article_id)
                 return True

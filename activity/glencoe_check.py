@@ -1,6 +1,5 @@
 import sys, json
 import requests
-import settings
 
 '''
 glencoe_resp = {
@@ -48,7 +47,7 @@ def validate_sources(gc_data):
           (len(available_sources), v_id, ", ".join(set(known_sources) - set(available_sources)))
         assert len(available_sources) == len(known_sources), msg
 
-def metadata(msid):
+def metadata(msid, settings):
     padded_msid = str(msid).zfill(5)
     doi = "10.7554/eLife." + padded_msid
     url = settings.glencoe_url + doi
