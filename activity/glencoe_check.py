@@ -44,8 +44,8 @@ def dealwithit(gc_data):
         available_sources = filter(lambda mtype: mtype + "_href" in v_data, known_sources)
 
         # fail if we have partial data
-        msg = "number of available sources less than known sources for %r. missing: %s" % \
-          (v_id, ", ".join(set(known_sources) - set(available_sources)))
+        msg = "number of available sources (%r) less than known sources for %r. missing: %s" % \
+          (len(available_sources), v_id, ", ".join(set(known_sources) - set(available_sources)))
         assert len(available_sources) == len(known_sources), msg
 
 def metadata(msid):
@@ -65,7 +65,6 @@ def main(msid):
         dealwithit(metadata(msid))
         return True
     except AssertionError as err:
-        print err
         return False
 
 if __name__ == '__main__':
