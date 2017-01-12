@@ -26,7 +26,7 @@ glencoe_resp = {
 }
 '''
 
-def dealwithit(gc_data):
+def validate_sources(gc_data):
 
     sys.stderr.write(json.dumps(gc_data, indent=4))
     sys.stderr.write('\n')
@@ -62,7 +62,7 @@ def metadata(msid):
 
 def main(msid):
     try:
-        dealwithit(metadata(msid))
+        validate_sources(metadata(msid))
         return True
     except AssertionError as err:
         return False
