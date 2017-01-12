@@ -7,7 +7,7 @@ from provider.storage_provider import StorageContext
 import glencoe_check
 
 """
-activity_VerifyLaxResponse.py activity
+activity_VerifyGlencoe.py activity
 """
 
 
