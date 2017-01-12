@@ -9,6 +9,7 @@ import boto.sqs
 from provider import process
 import json
 import importlib
+import os
 import uuid
 import newrelic.agent
 
@@ -45,7 +46,8 @@ def main(flag):
 
     log_file = "queue_workflow_starter.log"
     global logger
-    logger = log.logger(log_file, settings.setLevel)
+    identity = "queue_workflow_starter_%s" % os.getpid()
+    logger = log.logger(log_file, settings.setLevel, identity=identity)
 
     # Simple connect
     queue = get_queue()
