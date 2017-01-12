@@ -94,6 +94,7 @@ class activity_ExpandArticle(activity.activity):
             for f in listdir(content_folder):
                 if isfile(join(content_folder, f)) and f[0] != '.' and not f[0] == '_':
                     upload_filenames.append(f)
+            self.check_filenames(upload_filenames)
 
             bucket_folder_name = article_version_id + '/' + run
             for filename in upload_filenames:
@@ -126,3 +127,11 @@ class activity_ExpandArticle(activity.activity):
         if version is None:
             return "-1"
         return version
+
+    def check_filenames(self, filenames):
+        xml_found = False
+        for filename in filenames:
+            if filename.endswith(".xml"):
+                xml_found = True
+        if not xml_found:
+            raise RuntimeError("No .xml file found. List of files found is %s" % filenames)

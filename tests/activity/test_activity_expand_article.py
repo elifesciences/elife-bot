@@ -76,6 +76,12 @@ class TestExpandArticle(unittest.TestCase):
         success = self.expandarticle.do_activity(testdata.ExpandArticle_data_invalid_status)
         self.assertEqual(self.expandarticle.ACTIVITY_PERMANENT_FAILURE, success)
 
+    def test_check_filenames(self):
+        self.expandarticle.check_filenames(['elife-12345-vor.xml'])
+        self.expandarticle.check_filenames(['elife-12345-vor.xml', 'elife-12345-vor.pdf'])
+        with self.assertRaises(RuntimeError):
+            self.expandarticle.check_filenames(['elife-12345'])
+
     def create_temp_folder(self, plus=None):
         if not os.path.exists('tests/tmp'):
             os.makedirs('tests/tmp')
