@@ -50,7 +50,7 @@ def validate_sources(gc_data):
 def metadata(msid, settings):
     padded_msid = str(msid).zfill(5)
     doi = "10.7554/eLife." + padded_msid
-    url = settings.glencoe_url + doi
+    url = settings.video_url + doi
 
     resp = requests.get(url)
 
