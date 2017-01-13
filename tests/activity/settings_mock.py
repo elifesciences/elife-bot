@@ -54,3 +54,5 @@ publication_authority = ""
 consider_Lax_elife_2_0 = True
 
 xml_info_queue = 'test-elife-xml-info'
+
+video_url = ""

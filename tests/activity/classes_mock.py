@@ -97,6 +97,9 @@ class FakeStorageContext:
         bucket_name, s3_key = self.get_bucket_and_key(resource)
         copyfile(data.ExpandArticle_files_source_folder + s3_key, file.name)
 
+    def get_resource_as_string(self, origin):
+        return '<mock><media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="wmv" mimetype="video" xlink:href="elife-00569-media1.wmv"></media></mock>'
+
     def set_resource_from_filename(self, resource, file):
         #bucket_name, s3_key = self.get_bucket_and_key(resource)
         copy(file, data.ExpandArticle_files_dest_folder)

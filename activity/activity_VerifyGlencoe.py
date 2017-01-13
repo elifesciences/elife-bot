@@ -4,7 +4,7 @@ from provider.execution_context import Session
 import provider.lax_provider as lax_provider
 from provider.storage_provider import StorageContext
 import time
-import glencoe_check
+import provider.glencoe_check as glencoe_check
 
 """
 activity_VerifyGlencoe.py activity
@@ -68,7 +68,7 @@ class activity_VerifyGlencoe(activity.activity):
         except AssertionError as err:
             self.logger.info(err)
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
-                                    "Glencoe video is not available for article " + article_id + '; message: ' + err)
+                                    "Glencoe video is not available for article " + article_id + '; message: ' + str(err))
             time.sleep(60)
             return activity.activity.ACTIVITY_TEMPORARY_FAILURE
         except Exception as e:
