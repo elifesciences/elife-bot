@@ -44,7 +44,6 @@ class activity_VerifyGlencoe(activity.activity):
                                 "Starting Glencoe video check for " + article_id)
         try:
             expanded_folder = session.get_value(run, 'expanded_folder')
-            self.logger.info("expanded_folder: " + expanded_folder)
             if expanded_folder is None:
                 raise RuntimeError("No session value for expanded folder")
 
@@ -52,18 +51,14 @@ class activity_VerifyGlencoe(activity.activity):
             self.logger.info("expanded_bucket: " + expanded_bucket)
 
             xml_filename = lax_provider.get_xml_file_name(self.settings, expanded_folder, expanded_bucket)
-            self.logger.info("xml_filename: " + xml_filename)
             if xml_filename is None:
                 raise RuntimeError("No xml_filename found.")
-
-
 
             xml_origin = "".join((self.settings.storage_provider, "://", expanded_bucket, "/", expanded_folder + '/' +
                                   xml_filename))
 
             storage_context = StorageContext(self.settings)
             xml_content = storage_context.get_resource_as_string(xml_origin)
-
 
             if self.has_videos(xml_content):
                 glencoe_check.validate_sources(glencoe_check.metadata(self.pad_msid(article_id), self.settings))
