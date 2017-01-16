@@ -47,15 +47,16 @@ def validate_sources(gc_data):
           (len(available_sources), v_id, ", ".join(set(known_sources) - set(available_sources)))
         assert len(available_sources) == len(known_sources), msg
 
-def metadata(msid, settings):
+def metadata(msid, settings, logger):
     padded_msid = str(msid).zfill(5)
     doi = "10.7554/eLife." + padded_msid
     url = settings.video_url + doi
 
     resp = requests.get(url)
 
-    assert resp.status_code != 404, "article has no videos"
-    assert resp.status_code == 200, "unhandled status code from Glencoe: %s" % resp.status_code
+    assert resp.status_code != 404, "article has no videos - url requested: %s" % url
+    assert resp.status_code == 200, "unhandled status code from Glencoe: %s - url requested: %s" % \
+                                    (resp.status_code, url)
     
     return resp.json()
 
