@@ -42,19 +42,24 @@ class activity_VerifyGlencoe(activity.activity):
 
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Starting Glencoe video check for " + article_id)
-
-        expanded_folder = session.get_value(run, 'expanded_folder')
-        expanded_bucket = self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
-
-        xml_filename = lax_provider.get_xml_file_name(self.settings, expanded_folder, expanded_bucket, version)
-
-        xml_origin = "".join((self.settings.storage_provider, "://", expanded_bucket, "/", expanded_folder + '/' +
-                              xml_filename))
-
-        storage_context = StorageContext(self.settings)
-        xml_content = storage_context.get_resource_as_string(xml_origin)
-
         try:
+            expanded_folder = session.get_value(run, 'expanded_folder')
+            if expanded_folder is None:
+                raise RuntimeError("No session value for expanded folder")
+
+            expanded_bucket = self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
+            self.logger.info("expanded_bucket: " + expanded_bucket)
+
+            xml_filename = lax_provider.get_xml_file_name(self.settings, expanded_folder, expanded_bucket)
+            if xml_filename is None:
+                raise RuntimeError("No xml_filename found.")
+
+            xml_origin = "".join((self.settings.storage_provider, "://", expanded_bucket, "/", expanded_folder + '/' +
+                                  xml_filename))
+
+            storage_context = StorageContext(self.settings)
+            xml_content = storage_context.get_resource_as_string(xml_origin)
+
             if self.has_videos(xml_content):
                 glencoe_check.validate_sources(glencoe_check.metadata(self.pad_msid(article_id), self.settings))
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
