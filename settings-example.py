@@ -187,6 +187,9 @@ class exp():
     git_repo_name = "repository-name"
     git_repo_path = "/articles/"
 
+    # videos
+    video_url = "https://video.url.here/"
+
 class dev():
 
     # AWS settings
@@ -322,6 +325,9 @@ class dev():
     git_repo_name = "repository-name"
     git_repo_path = "/articles/"
 
+    # videos
+    video_url = "https://video.url.here/"
+
 
 class live():
     # AWS settings
@@ -456,6 +462,9 @@ class live():
     github_token = "tokenhere"
     git_repo_name = "elife-articles-xml"
     git_repo_path = "/articles/"
+
+    # videos
+    video_url = "https://video.url.here/"
 
 
 def get_settings(ENV="dev"):
