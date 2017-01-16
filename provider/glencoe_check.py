@@ -54,8 +54,9 @@ def metadata(msid, settings):
 
     resp = requests.get(url)
 
-    assert resp.status_code != 404, "article has no videos"
-    assert resp.status_code == 200, "unhandled status code from Glencoe: %s" % resp.status_code
+    assert resp.status_code != 404, "article has no videos - url requested: %s" % url
+    assert resp.status_code == 200, "unhandled status code from Glencoe: %s - url requested: %s" % \
+                                    (resp.status_code, url)
     
     return resp.json()
 
