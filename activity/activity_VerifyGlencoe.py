@@ -50,7 +50,7 @@ class activity_VerifyGlencoe(activity.activity):
             expanded_bucket = self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
             self.logger.info("expanded_bucket: " + expanded_bucket)
 
-            xml_filename = lax_provider.get_xml_file_name(self.settings, expanded_folder, expanded_bucket)
+            xml_filename = lax_provider.get_xml_file_name(self.settings, expanded_folder, expanded_bucket, version)
             if xml_filename is None:
                 raise RuntimeError("No xml_filename found.")
 
