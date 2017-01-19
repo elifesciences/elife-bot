@@ -3,6 +3,7 @@ import json
 import time
 import os
 import arrow
+import requests
 
 import activity
 
@@ -404,6 +405,25 @@ class activity_PublicationEmail(activity.activity):
             except:
                 # Article XML for this DOI was not parsed so return None
                 return None
+
+            # article PDF cover
+            try:
+                url = self.settings.pdf_cover_generator + doi_id
+                resp = requests.get(url)
+
+                assert resp.status_code != 404, "PDF cover not found - url requested: %s" % url
+                assert resp.status_code == 200, "unhandled status code from PDF cover service: %s - url requested: %s" % \
+                                                (resp.status_code, url)
+
+                data = resp.json()
+                article.pdf_cover_link = data['cover']
+
+            except AssertionError as err:
+                self.logger.error(str(err))
+                article.pdf_cover_link = url
+            except Exception as e:
+                self.logger.error(str(e))
+                article.pdf_cover_link = url
 
         return article
 
