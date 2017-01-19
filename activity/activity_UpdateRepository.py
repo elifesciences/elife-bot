@@ -84,6 +84,7 @@ class activity_UpdateRepository(activity.activity):
 
             except RetryException as e:
                 self.logger.info(e.message)
+                time.sleep(30)
                 return activity.activity.ACTIVITY_TEMPORARY_FAILURE
 
             except Exception as e:
