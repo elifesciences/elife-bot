@@ -131,6 +131,7 @@ class activity_UpdateRepository(activity.activity):
 
     def _retry_or_cancel(self, e):
         if e.status == 409:
+            self.logger.warning("Retrying because of exception: %s", e)
             raise RetryException(e.message)
         else:
             raise e
