@@ -80,4 +80,4 @@ if __name__ == "__main__":
 
     o = starter_PostPerfectPublication()
 
-    o.start(settings=settings,)
+    o.start(settings=settings,info={})
