@@ -24,18 +24,18 @@ class activity_VersionLookup(activity.activity):
 
     def do_activity(self, data=None):
 
-        info = S3NotificationInfo.from_dict(data)
-        filename = info.file_name[info.file_name.rfind('/')+1:]
-        session = Session(self.settings)
-        session.store_value(data['run'], 'filename_last_element', filename)
-
-        article_structure = ArticleInfo(filename)
-
-        if article_structure.article_id is None:
-            self.logger.error("Name '%s' did not match expected pattern for article id" % filename)
-            raise RuntimeError("article_structure.article_id is None. File pattern problem.")
-
         try:
+
+            info = S3NotificationInfo.from_dict(data)
+            filename = info.file_name[info.file_name.rfind('/')+1:]
+            session = Session(self.settings)
+            session.store_value(data['run'], 'filename_last_element', filename)
+
+            article_structure = ArticleInfo(filename)
+
+            if article_structure.article_id is None:
+                self.logger.error("Name '%s' did not match expected pattern for article id" % filename)
+                raise RuntimeError("article_structure.article_id is None. File pattern problem.")
 
             version = self.get_version(self.settings, article_structure, data['version_lookup_function'])
             session.store_value(data['run'], 'version', version)
@@ -56,8 +56,8 @@ class activity_VersionLookup(activity.activity):
                                               "version:", version)))
             return activity.activity.ACTIVITY_SUCCESS
 
-        except Exception:
-            self.logger.exception("Exception when trying to Lookup Version")
+        except Exception as e:
+            self.logger.exception("Exception when trying to Lookup Version. Error: " + str(e))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
     def get_version(self, settings, article_structure, lookup_function):
