@@ -352,6 +352,7 @@ class activity_PublicationEmail(activity.activity):
 
             article = self.create_article()
             article.parse_article_file(article_xml_filename)
+            article.pdf_cover_link = article.get_pdf_cover_link(self.logger, article.doi_id)
             if self.logger:
                 log_info = "Parsed " + article.doi_url
                 self.admin_email_content += "\n" + log_info
@@ -406,26 +407,8 @@ class activity_PublicationEmail(activity.activity):
                 # Article XML for this DOI was not parsed so return None
                 return None
 
-            # article PDF cover
-            try:
-                url = self.settings.pdf_cover_generator + doi_id
-                resp = requests.get(url)
-
-                assert resp.status_code != 404, "PDF cover not found - url requested: %s" % url
-                assert resp.status_code == 200, "unhandled status code from PDF cover service: %s - url requested: %s" % \
-                                                (resp.status_code, url)
-
-                data = resp.json()
-                article.pdf_cover_link = data['cover']
-
-            except AssertionError as err:
-                self.logger.error(str(err))
-                article.pdf_cover_link = url
-            except Exception as e:
-                self.logger.error(str(e))
-                article.pdf_cover_link = url
-
         return article
+
 
     def get_related_article(self, doi):
         """

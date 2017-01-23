@@ -232,6 +232,26 @@ class article(object):
         doi_id = x[-1]
         return doi_id
 
+    def get_pdf_cover_link(self, logger, doi_id):
+        try:
+            url = self.settings.pdf_cover_generator + doi_id
+            urlbot = url + "/bot"
+            resp = requests.get(url)
+
+            assert resp.status_code != 404, "PDF cover not found - url requested: %s" % urlbot
+            assert resp.status_code == 200, "unhandled status code from PDF cover service: %s - url requested: %s" % \
+                                            (resp.status_code, urlbot)
+
+            data = resp.json()
+            return data['cover']
+
+        except AssertionError as err:
+            logger.error(str(err))
+            return url
+        except Exception as e:
+            logger.error(str(e))
+            return url
+
     def get_pub_date_timestamp(self, pub_date):
         """
         Given a time struct for a publish date
