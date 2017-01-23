@@ -234,9 +234,9 @@ class article(object):
 
     def get_pdf_cover_link(self, logger, doi_id):
         try:
-            url = self.settings.pdf_cover_generator + doi_id
+            url = self.settings.pdf_cover_generator + doi_id + "/a4"
             urlbot = url + "/bot"
-            resp = requests.get(url)
+            resp = requests.get(urlbot)
 
             assert resp.status_code != 404, "PDF cover not found - url requested: %s" % urlbot
             assert resp.status_code == 200, "unhandled status code from PDF cover service: %s - url requested: %s" % \
