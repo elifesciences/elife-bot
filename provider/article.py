@@ -232,9 +232,12 @@ class article(object):
         doi_id = x[-1]
         return doi_id
 
-    def get_pdf_cover_link(self, logger, doi_id):
+    def get_pdf_cover_link(self, logger, settings, doi_id):
         try:
-            url = self.settings.pdf_cover_generator + doi_id + "/a4"
+            url = ""
+            assert hasattr(settings, "pdf_cover_generator"), "pdf_cover_generator variable is missing from settings file!"
+
+            url = settings.pdf_cover_generator + str(doi_id) + "/a4"
             urlbot = url + "/bot"
             resp = requests.get(urlbot)
 
