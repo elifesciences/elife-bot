@@ -352,7 +352,7 @@ class activity_PublicationEmail(activity.activity):
 
             article = self.create_article()
             article.parse_article_file(article_xml_filename)
-            article.pdf_cover_link = article.get_pdf_cover_link(self.logger, article.doi_id)
+            article.pdf_cover_link = self.get_pdf_cover_page(article.doi_id)
             if self.logger:
                 log_info = "Parsed " + article.doi_url
                 self.admin_email_content += "\n" + log_info
@@ -364,6 +364,15 @@ class activity_PublicationEmail(activity.activity):
             self.xml_file_to_doi_map[article.doi] = article_xml_filename
 
         return articles
+
+    def get_pdf_cover_page(self, doi_id):
+        try:
+            assert hasattr(self.settings, "pdf_cover_landing_page"), \
+                "pdf_cover_landing_page variable is missing from settings file!"
+            return self.settings.pdf_cover_landing_page + doi_id
+        except AssertionError as err:
+            self.logger.error(str(err))
+            return ""
 
     def download_templates(self):
         """

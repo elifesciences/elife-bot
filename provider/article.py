@@ -232,28 +232,21 @@ class article(object):
         doi_id = x[-1]
         return doi_id
 
-    def get_pdf_cover_link(self, logger, settings, doi_id):
-        try:
-            url = ""
-            assert hasattr(settings, "pdf_cover_generator"), "pdf_cover_generator variable is missing from settings file!"
+    def get_pdf_cover_link(self, logger, settings, doi_id, format):
 
-            url = settings.pdf_cover_generator + str(doi_id) + "/a4"
-            urlbot = url + "/bot"
-            resp = requests.get(urlbot)
+        url = ""
+        assert hasattr(settings, "pdf_cover_generator"), "pdf_cover_generator variable is missing from settings file!"
 
-            assert resp.status_code != 404, "PDF cover not found - url requested: %s" % urlbot
-            assert resp.status_code == 200, "unhandled status code from PDF cover service: %s - url requested: %s" % \
-                                            (resp.status_code, urlbot)
+        url = settings.pdf_cover_generator + str(doi_id) + "/" + format
+        urlbot = url + "/bot"
+        resp = requests.get(urlbot)
 
-            data = resp.json()
-            return data['cover']
+        assert resp.status_code != 404, "PDF cover not found. Format: %s - url requested: %s" % (format, urlbot)
+        assert resp.status_code == 200, "unhandled status code from PDF cover service: %s . Format: %s - url requested: %s" % \
+                                        (resp.status_code, format, urlbot)
 
-        except AssertionError as err:
-            logger.error(str(err))
-            return url
-        except Exception as e:
-            logger.error(str(e))
-            return url
+        data = resp.json()
+        return data['cover']
 
     def get_pub_date_timestamp(self, pub_date):
         """
