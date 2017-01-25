@@ -6,7 +6,7 @@ import json
 import tests.test_data as test_data
 from provider.lax_provider import ErrorCallingLaxException
 
-from mock import mock, patch
+from mock import mock, patch, MagicMock
 
 
 class TestLaxProvider(unittest.TestCase):
@@ -28,11 +28,6 @@ class TestLaxProvider(unittest.TestCase):
         mock_lax_provider_article_versions.return_value = 404, None
         version = lax_provider.article_highest_version('08411', settings_mock)
         self.assertEqual("1", version)
-
-    @patch('provider.lax_provider.article_versions')
-    def test_article_highest_version_500(self, mock_lax_provider_article_versions):
-        mock_lax_provider_article_versions.return_value = 500, None
-        self.assertRaises(ErrorCallingLaxException, lax_provider.article_highest_version, '08411', settings_mock)
 
     @patch('provider.lax_provider.article_versions')
     def test_article_next_version_no_versions(self, mock_lax_provider_article_versions):
@@ -69,6 +64,32 @@ class TestLaxProvider(unittest.TestCase):
         mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
         result = lax_provider.article_publication_date_by_version('08411', "2", settings_mock)
         self.assertEqual("2015-11-30T00:00:00Z", result)
+
+    @patch('requests.get')
+    def test_article_version_200(self, mock_requests_get):
+        response = MagicMock()
+        response.status_code = 200
+        response.json.return_value = {'versions': [{'version': 1}]}
+        mock_requests_get.return_value = response
+        status_code, versions = lax_provider.article_versions('08411', settings_mock)
+        self.assertEqual(status_code, 200)
+        self.assertEqual(versions, [{'version': 1}])
+
+    @patch('requests.get')
+    def test_article_version_404(self, mock_requests_get):
+        response = MagicMock()
+        response.status_code = 404
+        mock_requests_get.return_value = response
+        status_code, versions = lax_provider.article_versions('08411', settings_mock)
+        self.assertEqual(status_code, 404)
+        self.assertIsNone(versions)
+
+    @patch('requests.get')
+    def test_article_version_500(self, mock_requests_get):
+        response = MagicMock()
+        response.status_code = 500
+        mock_requests_get.return_value = response
+        self.assertRaises(ErrorCallingLaxException, lax_provider.article_highest_version, '08411', settings_mock)
 
     # endpoint currently not available
     # @patch('provider.lax_provider.article_version')

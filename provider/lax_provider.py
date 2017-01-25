@@ -14,26 +14,24 @@ def article_versions(article_id, settings):
     url = settings.lax_article_versions.replace('{article_id}', article_id)
     response = requests.get(url, verify=settings.verify_ssl)
     status_code = response.status_code
+    if status_code not in [200, 404]:
+        raise ErrorCallingLaxException("Error looking up article " + article_id + " version in Lax: %s\n%s" % (status_code, response.content))
+
     if status_code == 200:
         data = response.json()
         if "versions" in data:
             return status_code, data["versions"]
+
     return status_code, None
 
 
-def article_highest_version(article_id, settings, logger=None):
+def article_highest_version(article_id, settings):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:
         high_version = 0 if len(data) < 1 else max(map(lambda x: int(x["version"]), data))
         return high_version
     elif status_code == 404:
         return "1"
-    else:
-        if logger:
-            logger.error("Error obtaining version information from Lax" +
-                         str(status_code))
-        raise ErrorCallingLaxException("Error looking up article " + article_id + " version in Lax. "
-                                                                                  "Please check call to Lax.")
 
 
 def article_next_version(article_id, settings):
