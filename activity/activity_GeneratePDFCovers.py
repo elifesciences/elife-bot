@@ -44,15 +44,17 @@ class activity_GeneratePDFCovers(activity.activity):
             return activity.activity.ACTIVITY_SUCCESS
 
         except AssertionError as err:
-            self.logger.error(str(err))
+            error_message = str(err)
+            self.logger.error(error_message)
             self.emit_monitor_event(self.settings, article_id, version, run,
-                                    self.pretty_name, "error", err)
+                                    self.pretty_name, "error", error_message)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
         except Exception as e:
-            self.logger.error(str(e))
+            error_message = str(e)
+            self.logger.error(error_message)
             self.emit_monitor_event(self.settings, article_id, version, run,
-                                    self.pretty_name, "error", str(e))
+                                    self.pretty_name, "error", error_message)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
 

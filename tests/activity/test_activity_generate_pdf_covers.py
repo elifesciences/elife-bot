@@ -5,6 +5,7 @@ from classes_mock import FakeLogger
 from classes_mock import FakeResponse
 from mock import patch
 from provider.article import article
+import json
 
 class TestGeneratePDFCovers(unittest.TestCase):
     def setUp(self):
@@ -17,6 +18,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
 
         self.assertEqual(self.fake_logger.logerror[:36], "Error retrieving basic article data.")
         self.assertEqual(result, self.generatepdfcovers.ACTIVITY_PERMANENT_FAILURE)
+        json.dumps(self.fake_logger.logerror)
 
     @patch('requests.get')
     @patch.object(activity_GeneratePDFCovers, 'emit_monitor_event')
@@ -30,6 +32,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
 
         self.assertEqual(self.fake_logger.logerror[:20], "PDF cover not found.")
         self.assertEqual(result, self.generatepdfcovers.ACTIVITY_PERMANENT_FAILURE)
+        json.dumps(self.fake_logger.logerror)
 
     @patch('requests.get')
     @patch.object(activity_GeneratePDFCovers, 'emit_monitor_event')
@@ -43,6 +46,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
 
         self.assertEqual(self.fake_logger.logerror[:44], "unhandled status code from PDF cover service")
         self.assertEqual(result, self.generatepdfcovers.ACTIVITY_PERMANENT_FAILURE)
+        json.dumps(self.fake_logger.logerror)
 
     @patch.object(article, 'get_pdf_cover_link')
     @patch.object(activity_GeneratePDFCovers, 'emit_monitor_event')
@@ -56,6 +60,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
 
         self.assertEqual(self.fake_logger.logerror[:44], "Unexpected result from pdf covers API.")
         self.assertEqual(result, self.generatepdfcovers.ACTIVITY_PERMANENT_FAILURE)
+        json.dumps(self.fake_logger.logerror)
 
     @patch('requests.get')
     @patch.object(activity_GeneratePDFCovers, 'emit_monitor_event')
