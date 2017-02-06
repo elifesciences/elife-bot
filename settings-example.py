@@ -190,6 +190,11 @@ class exp():
     # videos
     video_url = "https://video.url.here/"
 
+    # PDF cover
+    pdf_cover_generator = "http://localhost:8082/personalcover/generate/"
+    pdf_cover_landing_page = "http://localhost:8082/personalcover/landing/"
+
+
 class dev():
 
     # AWS settings

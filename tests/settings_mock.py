@@ -33,3 +33,6 @@ no_download_extensions = 'tif'
 
 # Logging
 setLevel = "INFO"
+
+# PDF cover
+pdf_cover_generator = ""
