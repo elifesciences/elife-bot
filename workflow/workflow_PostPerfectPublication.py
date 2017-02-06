@@ -111,8 +111,8 @@ class workflow_PostPerfectPublication(workflow.workflow):
                         "start_to_close_timeout": 60 * 5
                     },
                     {
-                        "activity_type": "GeneratePDFCovers",
-                        "activity_id": "GeneratePDFCovers",
+                        "activity_type": "UpdateRepository",
+                        "activity_id": "UpdateRepository",
                         "version": "1",
                         "input": data,
                         "control": None,
@@ -122,8 +122,8 @@ class workflow_PostPerfectPublication(workflow.workflow):
                         "start_to_close_timeout": 60 * 5
                     },
                     {
-                        "activity_type": "UpdateRepository",
-                        "activity_id": "UpdateRepository",
+                        "activity_type": "GeneratePDFCovers",
+                        "activity_id": "GeneratePDFCovers",
                         "version": "1",
                         "input": data,
                         "control": None,
