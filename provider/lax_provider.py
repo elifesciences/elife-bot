@@ -4,6 +4,12 @@ from . import article
 import base64
 import json
 from dateutil.parser import parse
+import log
+import os
+import settings
+
+identity = "process_%s" % os.getpid()
+logger = log.logger("lax_provider.log", settings.setLevel, identity)
 
 
 class ErrorCallingLaxException(Exception):
@@ -13,6 +19,8 @@ class ErrorCallingLaxException(Exception):
 def article_versions(article_id, settings):
     url = settings.lax_article_versions.replace('{article_id}', article_id)
     response = requests.get(url, verify=settings.verify_ssl)
+    logger.info("Request to lax: GET %s", url)
+    logger.info("Response from lax: %s\n%s", response.status_code, response.content)
     status_code = response.status_code
     if status_code not in [200, 404]:
         raise ErrorCallingLaxException("Error looking up article " + article_id + " version in Lax: %s\n%s" % (status_code, response.content))
