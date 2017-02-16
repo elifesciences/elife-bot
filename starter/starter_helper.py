@@ -15,7 +15,9 @@ def get_starter_logger(set_level, identity, log_file="starter.log"):
 
 def set_workflow_information(name, workflow_version, child_policy, data, workflow_id_part,
                              extra="", start_to_close_timeout=str(60 * 30)):
-        workflow_id = "%s_%s.%s" % (name, workflow_id_part, extra)
+        workflow_id = "%s_%s" % (name, workflow_id_part)
+        if extra:
+            workflow_id = workflow_id + (".%s" % extra)
         workflow_name = name
         workflow_version = workflow_version
         child_policy = child_policy

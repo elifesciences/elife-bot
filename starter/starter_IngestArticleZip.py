@@ -39,7 +39,7 @@ class starter_IngestArticleZip():
         child_policy, \
         execution_start_to_close_timeout, \
         workflow_input = helper.set_workflow_information(self.const_name, "1", None, input,
-                                                         info.file_name.replace('/', '_'), os.getpid(),
+                                                         info.file_name.replace('/', '_'),
                                                          start_to_close_timeout=str(60 * 60 * 5))
 
         # Simple connect

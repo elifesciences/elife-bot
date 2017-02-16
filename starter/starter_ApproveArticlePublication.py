@@ -46,8 +46,7 @@ class starter_ApproveArticlePublication():
         child_policy, \
         execution_start_to_close_timeout, \
         workflow_input = helper.set_workflow_information(self.const_name, "1", None, info,
-                                                         article_id + "." + str(version),
-                                                         os.getpid())
+                                                         article_id + "." + str(version))
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)

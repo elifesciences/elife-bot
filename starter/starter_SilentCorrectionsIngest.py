@@ -38,7 +38,7 @@ class starter_SilentCorrectionsIngest():
         child_policy, \
         execution_start_to_close_timeout, \
         workflow_input = helper.set_workflow_information(self.const_name, "1", None, input,
-                                                         info.file_name.replace('/', '_'), os.getpid())
+                                                         info.file_name.replace('/', '_'))
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
