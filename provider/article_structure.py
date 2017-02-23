@@ -57,7 +57,7 @@ class ArticleInfo(object):
         self.article_id = parts[1]
         last_part_index = len(parts) - 1
         last_part = parts[last_part_index]
-        if last_part.startswith('v'):
+        if last_part.startswith('v') and not last_part.startswith('video'):
             self.versioned = True
             self.version = last_part[1:]
             last_part_index -= 1
@@ -68,11 +68,20 @@ class ArticleInfo(object):
 
         if self.is_article_zip:
             self.file_type = "ArticleZip"
-        elif len(self.extra_info) > 0 and (self.extra_info[0].startswith('fig') or self.extra_info[0].startswith('figsupp')):
+        elif (len(self.extra_info) > 0
+              and (self.extra_info[-1].startswith('video')
+                   or self.extra_info[-1].startswith('code'))):
+            self.file_type = 'Other'
+        elif (len(self.extra_info) > 0
+              and (self.extra_info[0].startswith('fig')
+                   or self.extra_info[0].startswith('figsupp'))
+              and not self.extra_info[0].startswith('figures')):
             self.file_type = "Figure"
         elif len(self.extra_info) > 1 and self.extra_info[0].startswith('resp') and self.extra_info[1].startswith('fig'):
             self.file_type = "Figure"
         elif len(self.extra_info) > 1 and self.extra_info[0].startswith('app') and self.extra_info[1].startswith('fig'):
+            self.file_type = "Figure"
+        elif len(self.extra_info) > 1 and self.extra_info[0].startswith('box') and self.extra_info[1].startswith('fig'):
             self.file_type = "Figure"
         elif len(self.extra_info) > 0 and self.extra_info[0].startswith('inf'):
             self.file_type = "Inline"
