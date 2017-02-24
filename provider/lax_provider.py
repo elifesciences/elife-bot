@@ -6,10 +6,9 @@ import json
 from dateutil.parser import parse
 import log
 import os
-import settings
 
 identity = "process_%s" % os.getpid()
-logger = log.logger("lax_provider.log", settings.setLevel, identity)
+logger = log.logger("lax_provider.log", 'INFO', identity)
 
 
 class ErrorCallingLaxException(Exception):
