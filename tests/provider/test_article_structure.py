@@ -49,6 +49,8 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666-resp-fig1-v1.png', 'expected': 'Figure'},
         {'input': 'elife-00666-resp-video1.mp4', 'expected': 'Other'},
         {'input': 'elife-00666-supp1-v1.csv', 'expected': 'Other'},
+        {'input': 'elife-00666-supp2-v2.tif', 'expected': 'Other'},
+        {'input': 'elife-00666-supp2-v3.docx', 'expected': 'Other'},
         {'input': 'elife-00666-table3-data1-v1.xlsx', 'expected': 'Other'},
         {'input': 'elife-00666-video1.mp4', 'expected': 'Other'},
         {'input': 'elife-00666-video1-data1-v1.xlsx', 'expected': 'Other'},
