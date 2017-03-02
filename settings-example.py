@@ -194,6 +194,10 @@ class exp():
     pdf_cover_generator = "http://localhost:8082/personalcover/generate/"
     pdf_cover_landing_page = "http://localhost:8082/personalcover/landing/"
 
+    # IIIF
+    path_to_iiif_server = "https://pathto--iiif.elifesciences.org/"
+    iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
+
 
 class dev():
 

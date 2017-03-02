@@ -10,6 +10,7 @@ expanded_bucket = 'origin_bucket'
 
 publishing_buckets_prefix = ""
 production_bucket = "production_bucket"
+ppp_cdn_bucket = ""
 
 archive_bucket = "archive_bucket"
 
@@ -59,3 +60,6 @@ video_url = ""
 
 # PDF cover
 pdf_cover_generator = ""
+
+iiif_resolver = ""
+path_to_iiif_server = ""

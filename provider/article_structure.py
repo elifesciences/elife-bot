@@ -111,7 +111,18 @@ class ArticleInfo(object):
         else:
             return m.group(1)
 
+def article_figure(file):
+    article_info = ArticleInfo(file)
+    return article_info.file_type == "Figure"
 
+def get_original_files(files):
+    regex = re.compile(ur'-v([0-9])[\.]')
+    fs = list(filter(regex.search, files))
+    return fs
+
+def get_original_figures(files):
+    fs = [f for f in get_original_files(files) if article_figure(f)]
+    return fs
 
 
 def main():
