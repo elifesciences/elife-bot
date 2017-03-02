@@ -7,7 +7,7 @@ from activity.activity import activity
 from classes_mock import FakeStorageContext, FakeLogger, FakeLaxProvider
 
 @patch('activity.activity_UpdateRepository.provider')
-@patch('activity.activity_UpdateRepository.StorageContext')
+@patch('activity.activity_UpdateRepository.storage_context')
 @patch('dashboard_queue.send_message')
 class TestUpdateRepository(unittest.TestCase):
 
