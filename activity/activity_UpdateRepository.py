@@ -4,7 +4,7 @@ from boto.s3.connection import S3Connection
 import tempfile
 from github import Github
 from github import GithubException
-from provider import lax_provider
+import provider
 from provider.storage_provider import StorageContext
 
 """
@@ -52,7 +52,7 @@ class activity_UpdateRepository(activity.activity):
 
             try:
 
-                xml_file = lax_provider.get_xml_file_name(self.settings,
+                xml_file = provider.lax_provider.get_xml_file_name(self.settings,
                                                           data['article_id'],
                                                           self.settings.publishing_buckets_prefix +
                                                           self.settings.ppp_cdn_bucket,
@@ -92,6 +92,7 @@ class activity_UpdateRepository(activity.activity):
                     return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
             except Exception as e:
+                print e
                 self.logger.exception("Exception in do_activity")
                 self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                         self.pretty_name, "error",
