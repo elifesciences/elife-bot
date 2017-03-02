@@ -1,3 +1,4 @@
+from ssl import SSLError
 import activity
 from boto.s3.connection import S3Connection
 import tempfile
@@ -82,6 +83,14 @@ class activity_UpdateRepository(activity.activity):
             except RetryException as e:
                 self.logger.info(e.message)
                 return activity.activity.ACTIVITY_TEMPORARY_FAILURE
+
+            except SSLError as e:
+                if e.message == 'The read operation timed out':
+                    self.logger.info(e.message)
+                    return activity.activity.ACTIVITY_TEMPORARY_FAILURE
+                else:
+                    self.logger.exception("Exception in do_activity")
+                    return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
             except Exception as e:
                 self.logger.exception("Exception in do_activity")
