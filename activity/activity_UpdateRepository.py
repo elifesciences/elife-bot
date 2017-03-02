@@ -4,7 +4,7 @@ from boto.s3.connection import S3Connection
 import tempfile
 from github import Github
 from github import GithubException
-import provider.lax_provider as lax_provider
+from provider import lax_provider
 from provider.storage_provider import StorageContext
 
 """
@@ -59,9 +59,9 @@ class activity_UpdateRepository(activity.activity):
                                                           data['version'])
                 s3_file_path = data['article_id'] + "/" + xml_file
 
+                storage_context = StorageContext(self.settings)
                 #download xml
                 with tempfile.TemporaryFile(mode='r+') as tmp:
-                    storage_context = StorageContext(self.settings)
                     storage_provider = self.settings.storage_provider + "://"
                     published_path = storage_provider + self.settings.publishing_buckets_prefix + \
                                        self.settings.ppp_cdn_bucket
@@ -73,7 +73,6 @@ class activity_UpdateRepository(activity.activity):
                     file_content = storage_context.get_resource_as_string(resource)
 
                     message = self.update_github(self.settings.git_repo_path + xml_file, file_content)
-
                     self.logger.info(message)
                     self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                     self.pretty_name, "end",
