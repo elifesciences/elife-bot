@@ -89,6 +89,7 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666-table3-data1-v1.xlsx', 'expected': False},
         {'input': 'elife-00666-video1.mp4', 'expected': False},
         {'input': 'elife-00666-video1-data1-v1.xlsx', 'expected': False},
+        {'input': 'elife-00666-supp1-v1.tif', 'expected': False}
           )
     def test_article_figure(self, input, expected):
         self.assertEqual(article_structure.article_figure(input), expected)

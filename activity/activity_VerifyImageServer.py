@@ -3,6 +3,7 @@ import json
 from provider.execution_context import Session
 from provider.storage_provider import StorageContext
 import provider.article_structure as article_structure
+import provider.iiif as iiif
 import requests
 
 """
@@ -54,8 +55,7 @@ class activity_VerifyImageServer(activity.activity):
 
             iiif_path_for_article = self.settings.iiif_resolver.replace('{article_id}', article_id)
 
-            results = list(map(lambda fig: self.test_iiif_endpoint(self.iiif_endpoint(self.settings, iiif_path_for_article, fig)),
-                                                              original_figures))
+            results = self.retrieve_endpoints_check(original_figures, iiif_path_for_article)
 
             bad_images = list(filter(lambda x: x[0] == False, results))
 
@@ -77,19 +77,6 @@ class activity_VerifyImageServer(activity.activity):
                                     article_id + '; message: ' + str(e))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-
-    def iiif_endpoint(self, settings, iiif_path_for_article, figure):
-        iiif_path_for_figure = iiif_path_for_article.replace('{article_fig}', figure)
-        return settings.path_to_iiif_server + iiif_path_for_figure
-
-    def test_iiif_endpoint(self, endpoint):
-        try:
-            response = requests.head(endpoint)
-            if response.status_code != 200:
-                return False, endpoint
-            return True, endpoint
-        except Exception as e:
-            self.logger.exception(str(e))
-            return False, endpoint
-
-
+    def retrieve_endpoints_check(self, original_figures, iiif_path_for_article):
+        return list(map(lambda fig: iiif.try_endpoint(iiif.endpoint(self.settings, iiif_path_for_article, fig), self.logger),
+                        original_figures))

@@ -22,15 +22,13 @@ class TestVerifyImageServer(unittest.TestCase):
     def setUp(self):
         self.verifyimageserver = activity_VerifyImageServer(settings_mock, None, None, None, None)
 
-
-
     @patch('activity.activity_VerifyImageServer.StorageContext')
     @patch('activity.activity_VerifyImageServer.Session')
-    @patch.object(activity_VerifyImageServer, 'test_iiif_endpoint')
-    def test_do_activity_success(self, test_iiif_endpoint_mock, fake_session, fake_storage_context):
+    @patch.object(activity_VerifyImageServer,'retrieve_endpoints_check')
+    def test_do_activity_success(self, fake_retrieve_endpoints_check, fake_session, fake_storage_context):
         # Given
         data = test_data.data_example_before_publish
-        test_iiif_endpoint_mock.return_value = True, "test.path"
+        fake_retrieve_endpoints_check.return_value = [(True, "test.path")]
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext()
         self.verifyimageserver.emit_monitor_event = MagicMock()
@@ -42,11 +40,11 @@ class TestVerifyImageServer(unittest.TestCase):
 
     @patch('activity.activity_VerifyImageServer.StorageContext')
     @patch('activity.activity_VerifyImageServer.Session')
-    @patch.object(activity_VerifyImageServer, 'test_iiif_endpoint')
-    def test_do_activity_failure(self, test_iiif_endpoint_mock, fake_session, fake_storage_context):
+    @patch.object(activity_VerifyImageServer,'retrieve_endpoints_check')
+    def test_do_activity_failure(self, fake_retrieve_endpoints_check, fake_session, fake_storage_context):
         # Given
         data = test_data.data_example_before_publish
-        test_iiif_endpoint_mock.return_value = False, "test.path"
+        fake_retrieve_endpoints_check.return_value = [(False, "test.path")]
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext()
         self.verifyimageserver.emit_monitor_event = MagicMock()
@@ -58,11 +56,11 @@ class TestVerifyImageServer(unittest.TestCase):
 
     @patch('activity.activity_VerifyImageServer.StorageContext')
     @patch('activity.activity_VerifyImageServer.Session')
-    @patch.object(activity_VerifyImageServer, 'test_iiif_endpoint')
-    def test_do_activity_error(self, test_iiif_endpoint_mock, fake_session, fake_storage_context):
+    @patch.object(activity_VerifyImageServer,'retrieve_endpoints_check')
+    def test_do_activity_error(self, fake_retrieve_endpoints_check, fake_session, fake_storage_context):
         # Given
         data = test_data.data_example_before_publish
-        test_iiif_endpoint_mock.side_effect = Exception("Error!")
+        fake_retrieve_endpoints_check.side_effect = Exception("Error!")
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext()
         self.verifyimageserver.emit_monitor_event = MagicMock()
