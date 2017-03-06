@@ -67,6 +67,18 @@ class S3StorageContext:
         key.key = s3_key
         key.set_contents_from_string(data)
 
+    def list_resources(self, folder):
+        bucket, s3_key = self.s3_storage_objects(folder)
+        folder = s3_key.replace(s3_key[:1], "") if s3_key[:1] == "/" else s3_key
+        bucketlist = bucket.list(prefix=folder + "/")
+        files = []
+        for file in bucketlist:
+            key = bucket.get_key(file.key)
+            filename = key.name.rsplit('/', 1)[1]
+            files.append(filename)
+
+        return files
+
     def copy_resource(self, orig_resource, dest_resource, additional_dict_metadata=None):
         orig_bucket, orig_s3_key = self.s3_storage_objects(orig_resource)
 
