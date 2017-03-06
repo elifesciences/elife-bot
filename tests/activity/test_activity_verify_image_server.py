@@ -70,6 +70,3 @@ class TestVerifyImageServer(unittest.TestCase):
         # Then
         self.assertEqual(result, self.verifyimageserver.ACTIVITY_PERMANENT_FAILURE)
 
-
-if __name__ == '__main__':
-    unittest.main()
