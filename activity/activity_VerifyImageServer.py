@@ -51,7 +51,7 @@ class activity_VerifyImageServer(activity.activity):
             images_resource = "".join((self.settings.storage_provider, "://", bucket, "/", article_id))
 
             files_in_bucket = storage_context.list_resources(images_resource)
-            original_figures = article_structure.get_original_figures(files_in_bucket)
+            original_figures = article_structure.get_figures_for_iiif(files_in_bucket)
 
             iiif_path_for_article = self.settings.iiif_resolver.replace('{article_id}', article_id)
 

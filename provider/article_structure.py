@@ -125,7 +125,7 @@ def get_original_files(files):
     fs = list(filter(regex.search, files))
     return fs
 
-def get_original_figures(files):
+def get_figures_for_iiif(files):
     fs = [f for f in get_original_files(files) if (article_figure(f) and has_extensions(f, ['tif', 'jpg']))]
     return fs
 
