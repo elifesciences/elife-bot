@@ -115,7 +115,9 @@ class TestArticleStructure(unittest.TestCase):
                  'elife-00666-inf001-v1.jpg',
                  'elife-00666-inf001-v1-80w.jpg',
                  'elife-00666-table3-data1-v1.xlsx',
-                 'elife-07702-vor-r4.zip']
+                 'elife-07702-vor-r4.zip',
+                 'elife-6148691793723703318-fig10-v1.gif',
+                 'elife-9204580859652100230-fig2-data1-v1.xls']
         expected = ['elife-00666-app1-fig1-figsupp1-v1.tif',
                     'elife-00666-fig2-figsupp2-v1.tif']
         self.assertListEqual(article_structure.get_original_figures(files), expected)

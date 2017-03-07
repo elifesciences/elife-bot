@@ -115,13 +115,18 @@ def article_figure(file):
     article_info = ArticleInfo(file)
     return article_info.file_type == "Figure"
 
+def has_extensions(file, extensions):
+    article_info = ArticleInfo(file)
+    return article_info.extension in extensions
+
+
 def get_original_files(files):
     regex = re.compile(ur'-v([0-9])[\.]')
     fs = list(filter(regex.search, files))
     return fs
 
 def get_original_figures(files):
-    fs = [f for f in get_original_files(files) if article_figure(f)]
+    fs = [f for f in get_original_files(files) if (article_figure(f) and has_extensions(f, ['tif', 'jpg']))]
     return fs
 
 
