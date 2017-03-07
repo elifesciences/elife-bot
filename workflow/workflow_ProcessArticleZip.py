@@ -111,17 +111,17 @@ class workflow_ProcessArticleZip(workflow.workflow):
                         "schedule_to_start_timeout": 300,
                         "start_to_close_timeout": 60 * 5
                     },
-                    #{
-                    #    "activity_type": "VerifyImageServer",
-                    #    "activity_id": "VerifyImageServer",
-                    #    "version": "1",
-                    #    "input": data,
-                    #    "control": None,
-                    #    "heartbeat_timeout": 60 * 5,
-                    #    "schedule_to_close_timeout": 60 * 5,
-                    #    "schedule_to_start_timeout": 300,
-                    #    "start_to_close_timeout": 60 * 5
-                    #},
+                    {
+                       "activity_type": "VerifyImageServer",
+                       "activity_id": "VerifyImageServer",
+                       "version": "1",
+                       "input": data,
+                       "control": None,
+                       "heartbeat_timeout": 60 * 5,
+                       "schedule_to_close_timeout": 60 * 5,
+                       "schedule_to_start_timeout": 300,
+                       "start_to_close_timeout": 60 * 5
+                    },
                     {
                         "activity_type": "PreparePostEIF",
                         "activity_id": "PreparePostEIF",
