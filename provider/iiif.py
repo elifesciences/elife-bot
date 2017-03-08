@@ -8,6 +8,7 @@ def try_endpoint(endpoint, logger):
     try:
         response = requests.head(endpoint)
         if response.status_code != 200:
+            logger.error("Error status code != 200. Status code: " + str(response.status_code) + " for URL: " + endpoint)
             return False, endpoint
         return True, endpoint
     except Exception as e:
