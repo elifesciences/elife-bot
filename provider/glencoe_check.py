@@ -1,5 +1,6 @@
 import sys, json
 import requests
+from functional import seq
 
 '''
 glencoe_resp = {
@@ -47,6 +48,7 @@ def validate_sources(gc_data):
           (len(available_sources), v_id, ", ".join(set(known_sources) - set(available_sources)))
         assert len(available_sources) == len(known_sources), msg
 
+
 def metadata(msid, settings):
     padded_msid = str(msid).zfill(5)
     doi = "10.7554/eLife." + padded_msid
@@ -59,6 +61,30 @@ def metadata(msid, settings):
                                     (resp.status_code, url)
     
     return resp.json()
+
+
+def jpg_href_values(metadata):
+
+    return (seq(metadata.items())
+            .filter(lambda x: x[0].startswith('media') and 'jpg_href' in x[1])
+            .map(lambda y: y[1]['jpg_href']))
+
+
+def has_videos(xml_str):
+    if '<media content-type="glencoe' in xml_str:
+        return True
+    return False
+
+
+def pad_msid(msid):
+    return str(int(msid)).zfill(5)
+
+
+def check_msid(msid):
+    if int(msid) > 100000:
+        return pad_msid(msid[-5:])
+    return pad_msid(msid)
+
 
 def main(msid):
     try:

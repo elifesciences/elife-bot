@@ -66,6 +66,7 @@ def start(ENV="dev"):
         print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
 
     activity_names = []
+    activity_names.append("CopyGlencoeStillImages")
     activity_names.append("VerifyImageServer")
     activity_names.append("GeneratePDFCovers")
     activity_names.append("VerifyGlencoe")
