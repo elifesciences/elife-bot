@@ -50,7 +50,7 @@ class TestResizeImages(unittest.TestCase):
         self.resizeimages.logger = mock.MagicMock()
 
         success = self.resizeimages.do_activity(testdata.ResizeImages_data)
-        self.assertEqual(True, success)
+        self.assertEqual('ActivitySuccess', success)
 
         formats = self.resizeimages.get_formats('Figure')
         prefix = self.image_prefix #this is the name of the file (without extension) that is an image inside files_source folder
