@@ -82,8 +82,8 @@ class activity_ResizeImages(activity.activity):
                                     "Resize Images", "error",
                                     "Error resizing images for article" + article_id +
                                     " message:" + e.message)
-            return False
-        return True
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+        return activity.activity.ACTIVITY_SUCCESS
 
     def get_file_infos(self, folder_name):
         # connect to S3 and obtain the expanded article bucket

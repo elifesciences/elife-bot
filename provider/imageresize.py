@@ -39,9 +39,9 @@ def resize(format, filep, info, logger):
             image.save(file=image_buffer)
 
     except Exception as e:
-        logger.error("error resizing image %s" % info.filename, exc_info=True)
-        # TODO : raise this error, but only once the decider will terminate the worklfow on hard error
-        # raise e
+        message = "error resizing image %s" % info.filename
+        logger.error(message, exc_info=True)
+        raise RuntimeError("%s (%s)" % (message, e.message))
 
     filename = info.filename
     if format.get('prefix') is not None:
