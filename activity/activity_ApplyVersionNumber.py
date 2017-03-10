@@ -32,21 +32,23 @@ class activity_ApplyVersionNumber(activity.activity):
         self.logger = logger
 
     def do_activity(self, data=None):
-        """
-        Do the work
-        """
 
-        self.expanded_bucket_name = (self.settings.publishing_buckets_prefix
-                                     + self.settings.expanded_bucket)
+        try:
 
-        run = data['run']
-        session = Session(self.settings)
-        version = session.get_value(run, 'version')
-        article_id = session.get_value(run, 'article_id')
+            self.expanded_bucket_name = (self.settings.publishing_buckets_prefix
+                                         + self.settings.expanded_bucket)
 
-        self.emit_monitor_event(self.settings, article_id, version, run,
-                                self.pretty_name, "start",
-                                "Starting applying version number to files for " + article_id)
+            run = data['run']
+            session = Session(self.settings)
+            version = session.get_value(run, 'version')
+            article_id = session.get_value(run, 'article_id')
+
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    self.pretty_name, "start",
+                                    "Starting applying version number to files for " + article_id)
+        except Exception as e:
+            self.logger.exception(str(e))
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
         try:
 
@@ -70,14 +72,14 @@ class activity_ApplyVersionNumber(activity.activity):
                                     " for version " + version + " run " + str(run))
 
         except Exception as e:
-            self.logger.exception("Exception when applying version number to article")
+            self.logger.exception(str(e))
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error",
                                     "Error in applying version number to files for " + article_id +
                                     " message:" + e.message)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-        return True
+        return activity.activity.ACTIVITY_SUCCESS
 
     def rename_article_s3_objects(self, bucket_folder_name, version):
         """
