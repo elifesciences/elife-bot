@@ -12,18 +12,6 @@ class TestVerifyGlencoe(unittest.TestCase):
     def setUp(self):
         self.verifyglencoe = activity_VerifyGlencoe(settings_mock, None, None, None, None)
 
-    def test_check_msid_long_id(self):
-        result = self.verifyglencoe.check_msid("7777777701234")
-        self.assertEqual('01234', result)
-
-    def test_check_msdi_proper_id(self):
-        result = self.verifyglencoe.check_msid("01234")
-        self.assertEqual('01234', result)
-
-    def test_check_msdi_short_id(self):
-        result = self.verifyglencoe.check_msid("34")
-        self.assertEqual('00034', result)
-
     @patch('time.sleep')
     @patch('provider.lax_provider.get_xml_file_name')
     @patch('activity.activity_VerifyGlencoe.StorageContext')
