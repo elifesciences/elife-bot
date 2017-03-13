@@ -205,3 +205,36 @@ ConvertJATS_data = { "run": "1ee54f9a-cb28-4c8e-8232-4b317cf4beda"}
 
 raw_data_activity = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda', u'event_time': u'2016-07-28T16:14:27.809576Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-00353-vor-r1.zip', u'file_etag': u'e7f639f63171c097d4761e2d2efe8dc4', u'bucket_name': u'jen-elife-production-final', u'file_size': 1097506}
 
+glencoe_metadata = \
+    {"media2": {
+        "source_href": "http://static-movie-usa.glencoesoftware.com/source/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.mov", "doi": "10.7554/eLife.12620.008",
+        "flv_href": "http://static-movie-usa.glencoesoftware.com/flv/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.flv",
+        "uuid": "674a799d-20f8-40c2-99b2-b9bd18fe6b7b",
+        "title": "",
+        "video_id": "media2",
+        "solo_href": "http://movie-usa.glencoesoftware.com/video/10.7554/eLife.12620/media2",
+        "height": 512,
+        "ogv_href": "http://static-movie-usa.glencoesoftware.com/ogv/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.ogv",
+        "width": 512,
+        "href": "elife-12620-media2.mov",
+        "webm_href": "http://static-movie-usa.glencoesoftware.com/webm/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.webm",
+        "jpg_href": "http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.jpg",
+        "duration": 43.159999999999997,
+        "mp4_href": "http://static-movie-usa.glencoesoftware.com/mp4/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.mp4",
+        "legend": "<div class=\"caption\"><h3 class=\"title\">Effects of a highly-focused laser spot on directional motility in <i>Synechocystis.<\/i><\/h3><p>Cells are imaged by fluorescence from the photosynthetic pigments, and are moving towards an oblique LED light at the bottom of the frame: note the focused light spot at the rear edge of each cell. The superimposed red spot indicates the position of the laser, and time in min is shown at the top left.&#160;LED, light emitting diode.<\/p><p><b>DOI:<\/b> <a href=\"10.7554/eLife.12620.008\">http://dx.doi.org/10.7554/eLife.12620.008<\/a><\/p><\/div>", "size": 2578518},
+     "media1": {
+         "source_href": "http://static-movie-usa.glencoesoftware.com/source/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.mp4",
+         "doi": "10.7554/eLife.12620.004",
+         "flv_href": "http://static-movie-usa.glencoesoftware.com/flv/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.flv",
+         "uuid": "e1f617d7-a3d7-45ec-8fcc-6b66f8f26505",
+         "title": "",
+         "video_id": "media1",
+         "solo_href": "http://movie-usa.glencoesoftware.com/video/10.7554/eLife.12620/media1",
+         "height": 720,
+         "ogv_href": "http://static-movie-usa.glencoesoftware.com/ogv/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.ogv",
+         "width": 1280, "href": "elife-12620-media1.mp4",
+         "webm_href": "http://static-movie-usa.glencoesoftware.com/webm/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.webm",
+         "jpg_href": "http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.jpg",
+         "duration": 89.400000000000006, "mp4_href": "http://static-movie-usa.glencoesoftware.com/mp4/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.mp4",
+         "legend": "<div class=\"caption\"><h3 class=\"title\">Motility of <i>Synechocystis<\/i> cells under different illumination regimes.<\/h3><p>The video gives a schematic overview of the experimental set-up, followed by movement of cells in a projected light gradient, and with oblique illumination from two orthogonal directions, and then from both directions simultaneously. In each case, the raw video data is followed by the same movie clip with the tracks of cells superimposed. Time in minutes is indicated.<\/p><p><b>DOI:<\/b> <a href=\"10.7554/eLife.12620.004\">http://dx.doi.org/10.7554/eLife.12620.004<\/a><\/p><\/div>",
+         "size": 21300934}}

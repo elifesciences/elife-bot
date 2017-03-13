@@ -1,7 +1,6 @@
 import activity
 import json
 from provider.execution_context import Session
-import provider.lax_provider as lax_provider
 from provider.storage_provider import StorageContext
 import time
 import provider.glencoe_check as glencoe_check

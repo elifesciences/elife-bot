@@ -65,9 +65,9 @@ def metadata(msid, settings):
 
 def jpg_href_values(metadata):
 
-    return (seq(metadata.items())
-            .filter(lambda x: x[0].startswith('media') and 'jpg_href' in x[1])
-            .map(lambda y: y[1]['jpg_href']))
+    return list((seq(metadata.items())
+                .filter(lambda x: x[0].startswith('media') and 'jpg_href' in x[1])
+                .map(lambda y: y[1]['jpg_href'])))
 
 
 def has_videos(xml_str):
