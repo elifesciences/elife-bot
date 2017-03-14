@@ -40,7 +40,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
             article_id = session.get_value(run, 'article_id')
             version = session.get_value(run, 'version')
         except Exception as e:
-            self.logger.exception(str(e))
+            self.logger.exception("Error starting Copy Glencoe Still Images activity")
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
@@ -58,7 +58,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
 
             return activity.activity.ACTIVITY_SUCCESS
         except Exception as e:
-            self.logger.exception(str(e))
+            self.logger.exception("Error when checking/copying Glencoe still images.")
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                     "An error occurred when checking/copying Glencoe still images. Article " +
                                     article_id + '; message: ' + str(e))
