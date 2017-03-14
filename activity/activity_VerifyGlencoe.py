@@ -6,6 +6,7 @@ from provider.storage_provider import StorageContext
 import time
 import provider.glencoe_check as glencoe_check
 
+
 """
 activity_VerifyGlencoe.py activity
 """
@@ -60,8 +61,8 @@ class activity_VerifyGlencoe(activity.activity):
             storage_context = StorageContext(self.settings)
             xml_content = storage_context.get_resource_as_string(xml_origin)
 
-            if self.has_videos(xml_content):
-                glencoe_check.validate_sources(glencoe_check.metadata(self.check_msid(article_id), self.settings))
+            if glencoe_check.has_videos(xml_content):
+                glencoe_check.validate_sources(glencoe_check.metadata(glencoe_check.check_msid(article_id), self.settings))
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                         "Finished Verification. Glencoe is available. Article: " + article_id)
                 return True
@@ -83,16 +84,4 @@ class activity_VerifyGlencoe(activity.activity):
                                     article_id + '; message: ' + str(e))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-    def has_videos(self, xml_str):
-        if '<media content-type="glencoe' in xml_str:
-            return True
-        return False
-
-    def pad_msid(self, msid):
-        return str(int(msid)).zfill(5)
-
-    def check_msid(self, msid):
-        if int(msid) > 100000:
-            return self.pad_msid(msid[-5:])
-        return self.pad_msid(msid)
 
