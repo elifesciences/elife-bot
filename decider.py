@@ -33,7 +33,6 @@ def decide(ENV, flag):
     conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
     token = None
-    token = None
     application = newrelic.agent.application()
 
     # Poll for a decision task
@@ -51,6 +50,7 @@ def decide(ENV, flag):
                                             identity, maximum_page_size)
 
             token = get_taskToken(decision)
+            logger.info('got token: %s', token)
 
             if isinstance(decision, dict) and "startedEventId" in decision and decision["startedEventId"] == 0:
                 logger.debug('got decision: \n%s' % json.dumps(decision, sort_keys=True, indent=4))
