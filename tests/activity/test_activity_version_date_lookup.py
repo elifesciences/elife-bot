@@ -11,7 +11,7 @@ class TestVersionDateLookup(unittest.TestCase):
         self.versiondatelookup = activity_VersionDateLookup(settings_mock, None, None, None, None)
 
     @patch('activity.activity_VersionDateLookup.Session')
-    @patch('provider.lax_provider.article_publication_date_by_version')
+    @patch('provider.lax_provider.article_version_date_by_version')
     def test_get_version_date_silent_corrections(self, fake_date_lookup_function, fake_session):
         fake_session_obj = FakeSession(testdata.data_example_before_publish)
         fake_session.return_value = fake_session_obj
@@ -25,7 +25,7 @@ class TestVersionDateLookup(unittest.TestCase):
         self.assertEqual(fake_session_obj.session_dict["update_date"], '2015-11-30T00:00:00Z')
 
     @patch('activity.activity_VersionDateLookup.Session')
-    @patch('provider.lax_provider.article_publication_date_by_version')
+    @patch('provider.lax_provider.article_version_date_by_version')
     def test_get_version_silent_corrections_version_date_in_zip(self, fake_lookup_functions, fake_session):
         data_rep = testdata.data_example_before_publish.copy()
         data_rep['filename_last_element'] = "elife-00353-vor-v1-20121213000000.zip"
@@ -40,7 +40,7 @@ class TestVersionDateLookup(unittest.TestCase):
         self.assertEqual(fake_session_obj.session_dict["update_date"], '2012-12-13T00:00:00Z')
 
     @patch('activity.activity_VersionDateLookup.Session')
-    @patch('provider.lax_provider.article_publication_date_by_version')
+    @patch('provider.lax_provider.article_version_date_by_version')
     def test_get_version_date_silent_corrections_error(self, fake_date_lookup_function, fake_session):
         fake_session_obj = FakeSession(testdata.data_example_before_publish)
         fake_session.return_value = fake_session_obj

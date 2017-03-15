@@ -5,17 +5,20 @@ lax_article_versions_response_data = [
                                         {
                                           "status": "poa",
                                           "version": 1,
-                                          "published": "2015-11-26T00:00:00Z"
+                                          "published": "2015-11-26T00:00:00Z",
+                                          "versionDate": "2015-11-26T00:00:00Z"
                                         },
                                         {
                                           "status": "poa",
                                           "version": 2,
-                                          "published": "2015-11-30T00:00:00Z"
+                                          "published": "2015-11-26T00:00:00Z",
+                                          "versionDate": "2015-11-30T00:00:00Z"
                                         },
                                         {
                                           "status": "vor",
                                           "version": 3,
-                                          "published": "2015-12-29T00:00:00Z"
+                                          "published": "2015-11-26T00:00:00Z",
+                                          "versionDate": "2015-12-29T00:00:00Z"
                                         }
                                       ]
 

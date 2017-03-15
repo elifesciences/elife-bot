@@ -60,9 +60,9 @@ class TestLaxProvider(unittest.TestCase):
         self.assertEqual(None, date_str)
 
     @patch('provider.lax_provider.article_versions')
-    def test_article_publication_date_by_version(self, mock_lax_provider_article_versions):
+    def test_article_version_date_by_version(self, mock_lax_provider_article_versions):
         mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
-        result = lax_provider.article_publication_date_by_version('08411', "2", settings_mock)
+        result = lax_provider.article_version_date_by_version('08411', "2", settings_mock)
         self.assertEqual("2015-11-30T00:00:00Z", result)
 
     @patch('requests.get')

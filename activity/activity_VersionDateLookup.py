@@ -73,7 +73,7 @@ class activity_VersionDateLookup(activity.activity):
             version_date = article_structure.get_update_date_from_zip_filename()
             if version_date:
                 return version_date, None
-            version_date = lax_provider.article_publication_date_by_version(article_id, version, settings)
+            version_date = lax_provider.article_version_date_by_version(article_id, version, settings)
             return version_date, None
         except Exception as e:
             error_message = "Exception when looking up version Date. Message: " + str(e)
