@@ -129,6 +129,19 @@ def get_figures_for_iiif(files):
     fs = [f for f in get_original_files(files) if (article_figure(f) and has_extensions(f, ['tif', 'jpg']))]
     return fs
 
+def file_parts(filename):
+        prefix = filename.split('.')[0]
+        extension = filename.split('.')[-1]
+        return (prefix, extension)
+
+def is_media_file(filename):
+    (file_prefix, file_extension) = file_parts(filename)
+    file_type_plus_index = file_prefix.split('-')[-1]
+    if "media" in file_type_plus_index:
+        return True
+    else:
+        return False
+
 
 def main():
     a = ArticleInfo("elife-00012-fig3-figsupp1-data2.csv")

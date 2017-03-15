@@ -49,6 +49,19 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         # Then
         self.assertEqual(result, self.copyglencoestillimages.ACTIVITY_PERMANENT_FAILURE)
 
+    def test_validate_cdn(self):
+        # Given
+        files_in_cdn = test_activity_data.cdn_folder_files_article_07398
+
+        # When
+        res_do_videos_match_jpgs, res_files_in_cdn, res_videos = self.copyglencoestillimages.validate_cdn(files_in_cdn)
+
+        # Then
+        self.assertEqual(res_files_in_cdn, files_in_cdn)
+        self.assertEqual(res_videos, test_activity_data.cdn_folder_videos_article_07398)
+        self.assertEqual(res_do_videos_match_jpgs, True)
+
+
 
 if __name__ == '__main__':
     unittest.main()
