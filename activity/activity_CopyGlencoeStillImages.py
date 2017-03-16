@@ -49,17 +49,22 @@ class activity_CopyGlencoeStillImages(activity.activity):
         try:
             metadata = glencoe_check.metadata(glencoe_check.check_msid(article_id), self.settings)
             jpgs = glencoe_check.jpg_href_values(metadata)
+            jpg_filenames = []
             if len(jpgs) > 0:
                 for jpg in jpgs:
                     self.store_file(jpg, article_id)
+                    jpg_filename = os.path.split(jpg)[1]
+                    jpg_filenames.append(jpg_filename)
 
-            valid, files, videos = self.validate_cdn(self.list_files_from_cdn(article_id))
-            if not valid:
+
+            bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id), jpg_filenames)
+            if len(bad_files) > 0:
                 self.logger.error("Videos do not have a glencoe ")
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
-                                        "Not all videos have a .jpg with the same file name " +
-                                        "VIDEOS: " + str(videos) +
-                                        "Please check them against CDN files.")
+                                        "Not all still images .jpg have a video with the same name " +
+                                        "missing videos file names: " + str(bad_files.sort()) +
+                                        " Please check them against CDN files.")
+                return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                     "Finished Copying Glencoe still images to CDN. "
@@ -91,11 +96,20 @@ class activity_CopyGlencoeStillImages(activity.activity):
                               article_id
         return storage_context.list_resources(article_path_in_cdn)
 
-    def validate_cdn(self, files_in_cdn):
-        videos = list(filter(article_structure.is_media_file, files_in_cdn))
-        videos_as_jpg = list(map(lambda filename: os.path.splitext(filename[0]+'.jpg'), videos))
-        do_videos_match_jpgs = (len(set(videos_as_jpg) & set(files_in_cdn)) == len(videos))
-        return do_videos_match_jpgs, files_in_cdn, videos
+    def validate_jpgs_against_cdn(self, files_in_cdn, jpgs):
+        jpgs_rep_no_extension = map(lambda filename: os.path.splitext(filename)[0], jpgs)
+        files_in_cdn_no_extention = map(lambda filename: os.path.splitext(filename)[0], files_in_cdn)
+        jpgs_without_video = []
+        for file_no_ext in jpgs_rep_no_extension:
+            if len(list(filter(lambda filename: filename == file_no_ext, files_in_cdn_no_extention))) != 2:
+                jpgs_without_video.append(file_no_ext)
+        return jpgs_without_video
+
+    # def validate_cdn(self, files_in_cdn):
+    #     videos = list(filter(article_structure.is_media_file, files_in_cdn))
+    #     videos_as_jpg = list(map(lambda filename: os.path.splitext(filename[0]+'.jpg'), videos))
+    #     do_videos_match_jpgs = (len(set(videos_as_jpg) & set(files_in_cdn)) == len(videos))
+    #     return do_videos_match_jpgs, files_in_cdn, videos
 
 
 
