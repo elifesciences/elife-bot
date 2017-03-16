@@ -2,10 +2,9 @@ import activity
 import json
 from provider.execution_context import Session
 from provider.storage_provider import StorageContext
-import time
 import provider.glencoe_check as glencoe_check
 import os
-import provider.article_structure as article_structure
+import requests
 
 
 """
@@ -86,8 +85,11 @@ class activity_CopyGlencoeStillImages(activity.activity):
 
     def store_file(self, path, article_id):
         storage_context = StorageContext(self.settings)
-        with open(path) as still_image:
-            storage_context.set_resource_from_file(self.s3_resource(path, article_id), still_image)
+        r = requests.get(path)
+        if r.status_code == 200:
+            storage_context.set_resource_from_string(self.s3_resource(path, article_id), r.content,
+                                                     content_type=r.headers['content-type'])
+
 
     def list_files_from_cdn(self, article_id):
         storage_context = StorageContext(self.settings)
