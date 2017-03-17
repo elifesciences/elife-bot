@@ -113,10 +113,12 @@ class activity_CopyGlencoeStillImages(activity.activity):
         if r.status_code == 200:
             resource = self.s3_resource(path, article_id)
             self.logger.info("S3 resource: " + resource)
-            jpg_filename = os.path.split(path)[1]
+            jpg_filename = os.path.split(resource)[-1]
             storage_context.set_resource_from_string(resource, r.content,
                                                      content_type=r.headers['content-type'])
             return jpg_filename
+        else:
+            raise RuntimeError("Glencoe returned a %s status code for %s" % (r.status_code, path))
 
 
     def list_files_from_cdn(self, article_id):

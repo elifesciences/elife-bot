@@ -12,6 +12,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
 
     def setUp(self):
         self.copyglencoestillimages = activity_CopyGlencoeStillImages(settings_mock, None, None, None, None)
+        self.copyglencoestillimages.logger = FakeLogger()
 
     @patch.object(activity_CopyGlencoeStillImages, 'list_files_from_cdn')
     @patch.object(activity_CopyGlencoeStillImages, 'store_jpgs')
@@ -27,7 +28,6 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         fake_session.return_value = FakeSession(test_activity_data.session_example)
         fake_glencoe_metadata.return_value = test_activity_data.glencoe_metadata
         fake_store_jpgs.return_value = test_activity_data.jpgs_added_in_cdn
-        self.copyglencoestillimages.logger = FakeLogger()
         fake_list_files_from_cdn.return_value = test_activity_data.cdn_folder_files + \
                                                 test_activity_data.jpgs_added_in_cdn
 
@@ -50,7 +50,6 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext()
         fake_session.return_value = FakeSession(test_activity_data.session_example)
         fake_glencoe_metadata.side_effect = AssertionError("article has no videos - url requested: ...")
-        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result = self.copyglencoestillimages.do_activity(activity_data)
@@ -69,7 +68,6 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext()
         fake_session.return_value = FakeSession(test_activity_data.session_example)
         fake_glencoe_metadata.return_value = test_activity_data.glencoe_metadata
-        self.copyglencoestillimages.logger = MagicMock()
         fake_store_jpgs.side_effect = Exception("Something went wrong!")
 
         # When
@@ -124,7 +122,6 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         # Given
         files_in_cdn = test_activity_data.cdn_folder_files_article_07398
         jpgs_from_glencoe = test_activity_data.cdn_folder_jpgs_article_07398
-        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
@@ -139,7 +136,6 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
                         "elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
                         "elife-1234500230-fig1-figsupp1-v2-1084w.jpg"]
         jpgs_from_glencoe = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg"]
-        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
@@ -156,7 +152,6 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
                         "elife-1234500230-fig1-figsupp1-v2-1084w.jpg"]
         jpgs_from_glencoe = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
                              "elife-1234500230-media3-v1.jpg"]
-        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
@@ -164,6 +159,15 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
 
         # Then
         self.assertEqual(1, len(result_bad_files))
+
+    @patch('requests.get')
+    @patch('activity.activity_CopyGlencoeStillImages.StorageContext')
+    def test_store_file_according_to_the_current_article_id_whatever_is_the_filename_on_glencoe(self, fake_storage_context, fake_requests_get):
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_requests_get.return_value = MagicMock()
+        fake_requests_get.return_value.status_code = 200
+        cdn_jpg_filename = self.copyglencoestillimages.store_file("http://glencoe.com/some-dir/elife-00666-media1.jpg", "12345600666")
+        self.assertEqual(cdn_jpg_filename, "elife-12345600666-media1.jpg")
 
     # def test_validate_cdn(self):
     #     # Given
