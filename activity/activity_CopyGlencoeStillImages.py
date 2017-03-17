@@ -101,7 +101,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
 
     def s3_resource(self, path, article_id):
         filename = os.path.split(path)[1]
-        filename = glencoe_check.pad_article_for_end2end(filename, article_id)
+        filename = glencoe_check.extend_article_for_end2end(filename, article_id)
         return self.settings.storage_provider + "://" + \
                self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket + "/" + \
                article_id + "/" + filename
