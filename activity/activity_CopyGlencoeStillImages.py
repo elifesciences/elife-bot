@@ -62,9 +62,10 @@ class activity_CopyGlencoeStillImages(activity.activity):
                                                            article_id)
             if len(bad_files) > 0:
                 self.logger.error("Videos do not have a glencoe ")
+                bad_files.sort()
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                         "Not all still images .jpg have a video with the same name " +
-                                        "missing videos file names: " + str(bad_files.sort()) +
+                                        "missing videos file names: " + str(bad_files) +
                                         " Please check them against CDN files.")
                 return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
