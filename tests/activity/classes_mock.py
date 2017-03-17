@@ -104,7 +104,7 @@ class FakeStorageContext:
         #bucket_name, s3_key = self.get_bucket_and_key(resource)
         copy(file, data.ExpandArticle_files_dest_folder)
 
-    def set_resource_from_string(self, anyarg1, anyarg2):
+    def set_resource_from_string(self, resource, data, content_type=None):
         pass
 
     # def set_contents_from_filename(self, storage_object, key, path):
