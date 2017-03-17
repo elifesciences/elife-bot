@@ -46,17 +46,18 @@ class activity_CopyGlencoeStillImages(activity.activity):
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Starting check/copy of Glencoe video still images " + article_id)
         try:
-            metadata = glencoe_check.metadata(glencoe_check.check_msid(article_id), self.settings)
+            padded_article_id = glencoe_check.check_msid(article_id)
+            metadata = glencoe_check.metadata(padded_article_id, self.settings)
             jpgs = glencoe_check.jpg_href_values(metadata)
             jpg_filenames = []
             if len(jpgs) > 0:
                 for jpg in jpgs:
-                    self.store_file(jpg, article_id)
+                    self.store_file(jpg, padded_article_id)
                     jpg_filename = os.path.split(jpg)[1]
                     jpg_filenames.append(jpg_filename)
 
 
-            bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id), jpg_filenames)
+            bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(padded_article_id), jpg_filenames)
             if len(bad_files) > 0:
                 self.logger.error("Videos do not have a glencoe ")
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
