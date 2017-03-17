@@ -120,11 +120,11 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
 
     def test_validate_jpgs_against_cdn(self):
         # Given
-        files_in_cdn = test_activity_data.cdn_folder_files_article_07398
-        jpgs_from_glencoe = test_activity_data.cdn_folder_jpgs_article_07398
+        cdn_all_files = test_activity_data.cdn_folder_files_article_07398
+        cdn_still_jpgs = test_activity_data.cdn_folder_jpgs_article_07398
 
         # When
-        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
+        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(cdn_all_files, cdn_still_jpgs,
                                                                                  "07398")
 
         # Then
@@ -132,13 +132,13 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
 
     def test_validate_pgs_against_cdn_long_article_ids(self):
         # Given
-        files_in_cdn = ["elife-1234500230-media1-v1.wmv", "elife-1234500230-media2-v1.mp4",
+        cdn_all_files = ["elife-1234500230-media1-v1.wmv", "elife-1234500230-media2-v1.mp4",
                         "elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
                         "elife-1234500230-fig1-figsupp1-v2-1084w.jpg"]
-        jpgs_from_glencoe = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg"]
+        cdn_still_jpgs = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg"]
 
         # When
-        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
+        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(cdn_all_files, cdn_still_jpgs,
                                                                                  "00230")
 
         # Then
@@ -147,14 +147,14 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
 
     def test_validate_pgs_against_cdn_long_article_ids_one_missing(self):
         # Given
-        files_in_cdn = ["elife-1234500230-media1-v1.wmv", "elife-1234500230-media2-v1.mp4",
+        cdn_all_files = ["elife-1234500230-media1-v1.wmv", "elife-1234500230-media2-v1.mp4",
                         "elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
                         "elife-1234500230-fig1-figsupp1-v2-1084w.jpg"]
-        jpgs_from_glencoe = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
+        cdn_still_jpgs = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
                              "elife-1234500230-media3-v1.jpg"]
 
         # When
-        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
+        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(cdn_all_files, cdn_still_jpgs,
                                                                                  "00230")
 
         # Then
@@ -168,21 +168,6 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         fake_requests_get.return_value.status_code = 200
         cdn_jpg_filename = self.copyglencoestillimages.store_file("http://glencoe.com/some-dir/elife-00666-media1.jpg", "12345600666")
         self.assertEqual(cdn_jpg_filename, "elife-12345600666-media1.jpg")
-
-    # def test_validate_cdn(self):
-    #     # Given
-    #     files_in_cdn = test_activity_data.cdn_folder_files_article_07398
-    #
-    #     # When
-    #     res_do_videos_match_jpgs, res_files_in_cdn, res_videos = self.copyglencoestillimages.validate_cdn(files_in_cdn)
-    #
-    #     # Then
-    #     self.assertEqual(res_files_in_cdn, files_in_cdn)
-    #     self.assertEqual(res_videos, test_activity_data.cdn_folder_videos_article_07398)
-    #     self.assertEqual(res_do_videos_match_jpgs, True)
-
-
-
 
 if __name__ == '__main__':
     unittest.main()
