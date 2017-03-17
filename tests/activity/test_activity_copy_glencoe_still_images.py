@@ -113,7 +113,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
                                      self.copyglencoestillimages.pretty_name,
                                      "error",
                                      "Not all still images .jpg have a video with the same name " +
-                                     "missing videos file names: " + str(test_activity_data.jpgs_added_in_cdn.sort()) +
+                                     "missing videos file names: ['elife-12620-media1', 'elife-12620-media2']" +
                                      " Please check them against CDN files.")
 
 
