@@ -49,14 +49,10 @@ class activity_CopyGlencoeStillImages(activity.activity):
             padded_article_id = glencoe_check.check_msid(article_id)
             metadata = glencoe_check.metadata(padded_article_id, self.settings)
             jpgs = glencoe_check.jpg_href_values(metadata)
-            jpg_filenames = []
+            self.logger.info("jpgs from glencoe metadata " + str(jpgs))
             bad_files = []
             if len(jpgs) > 0:
-                for jpg in jpgs:
-                    self.store_file(jpg, padded_article_id)
-                    jpg_filename = os.path.split(jpg)[1]
-                    jpg_filenames.append(jpg_filename)
-
+                jpg_filenames = self.store_jpgs(jpgs, article_id)
 
                 bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id), jpg_filenames,
                                                            article_id)
@@ -96,8 +92,17 @@ class activity_CopyGlencoeStillImages(activity.activity):
                                     article_id + '; message: ' + str(e))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
+
+    def store_jpgs(self, jpgs, article_id):
+        jpg_filenames = []
+        for jpg in jpgs:
+                    jpg_filename = self.store_file(jpg, article_id)
+                    jpg_filenames.append(jpg_filename)
+        return jpg_filenames
+
     def s3_resource(self, path, article_id):
         filename = os.path.split(path)[1]
+        filename = glencoe_check.extend_article_for_end2end(filename, article_id)
         return self.settings.storage_provider + "://" + \
                self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket + "/" + \
                article_id + "/" + filename
@@ -106,8 +111,12 @@ class activity_CopyGlencoeStillImages(activity.activity):
         storage_context = StorageContext(self.settings)
         r = requests.get(path)
         if r.status_code == 200:
-            storage_context.set_resource_from_string(self.s3_resource(path, article_id), r.content,
+            resource = self.s3_resource(path, article_id)
+            self.logger.info("S3 resource: " + resource)
+            jpg_filename = os.path.split(path)[1]
+            storage_context.set_resource_from_string(resource, r.content,
                                                      content_type=r.headers['content-type'])
+            return jpg_filename
 
 
     def list_files_from_cdn(self, article_id):
@@ -118,14 +127,19 @@ class activity_CopyGlencoeStillImages(activity.activity):
         return storage_context.list_resources(article_path_in_cdn)
 
     def validate_jpgs_against_cdn(self, files_in_cdn, jpgs, article_id):
-        jpgs_rep_no_extension = map(lambda filename: os.path.splitext(filename)[0], jpgs)
-        files_in_cdn_no_extention = map(lambda filename: os.path.splitext(filename)[0], files_in_cdn)
-        files_in_cdn_article_padded = map(lambda filename: glencoe_check.pad_article_for_end2end(filename, article_id),
-                                          files_in_cdn_no_extention)
+        jpgs_rep_no_extension = list(map(lambda filename: os.path.splitext(filename)[0], jpgs))
+        self.logger.info("jpgs_rep_no_extension " + str(jpgs_rep_no_extension))
+        files_in_cdn_no_extension = list(map(lambda filename: os.path.splitext(filename)[0], files_in_cdn))
+        self.logger.info("files_in_cdn_no_extention " + str(files_in_cdn_no_extension))
+        # files_in_cdn_article_padded = list(map(lambda filename: glencoe_check.pad_article_for_end2end(filename, article_id),
+        #                                   files_in_cdn_no_extention))
+        # self.logger.info("files_in_cdn_article_padded " + str(files_in_cdn_article_padded))
         jpgs_without_video = []
         for file_no_ext in jpgs_rep_no_extension:
-            if len(list(filter(lambda filename: filename == file_no_ext, files_in_cdn_article_padded))) != 2:
+            if len(list(filter(lambda filename: filename == file_no_ext, files_in_cdn_no_extension))) != 2:
                 jpgs_without_video.append(file_no_ext)
+
+        self.logger.info("jpgs_without_video " + str(jpgs_without_video))
         return jpgs_without_video
 
     # def validate_cdn(self, files_in_cdn):

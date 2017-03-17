@@ -4,6 +4,7 @@ from activity.activity_CopyGlencoeStillImages import activity_CopyGlencoeStillIm
 from mock import patch, MagicMock
 from classes_mock import FakeSession
 from classes_mock import FakeStorageContext
+from classes_mock import FakeLogger
 import test_activity_data as test_activity_data
 import provider.glencoe_check as glencoe_check
 
@@ -13,19 +14,20 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         self.copyglencoestillimages = activity_CopyGlencoeStillImages(settings_mock, None, None, None, None)
 
     @patch.object(activity_CopyGlencoeStillImages, 'list_files_from_cdn')
-    @patch.object(activity_CopyGlencoeStillImages, 'store_file')
+    @patch.object(activity_CopyGlencoeStillImages, 'store_jpgs')
     @patch('provider.glencoe_check.metadata')
     @patch('activity.activity_CopyGlencoeStillImages.StorageContext')
     @patch('activity.activity_CopyGlencoeStillImages.Session')
     @patch.object(activity_CopyGlencoeStillImages, 'emit_monitor_event')
     def test_do_activity(self, fake_emit, fake_session, fake_storage_context, fake_glencoe_metadata,
-                         fake_store_file, fake_list_files_from_cdn):
+                         fake_store_jpgs, fake_list_files_from_cdn):
         # Given
         activity_data = test_activity_data.data_example_before_publish
         fake_storage_context.return_value = FakeStorageContext()
         fake_session.return_value = FakeSession(test_activity_data.session_example)
         fake_glencoe_metadata.return_value = test_activity_data.glencoe_metadata
-        self.copyglencoestillimages.logger = MagicMock()
+        fake_store_jpgs.return_value = test_activity_data.jpgs_added_in_cdn
+        self.copyglencoestillimages.logger = FakeLogger()
         fake_list_files_from_cdn.return_value = test_activity_data.cdn_folder_files + \
                                                 test_activity_data.jpgs_added_in_cdn
 
@@ -36,19 +38,19 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         self.assertEqual(self.copyglencoestillimages.ACTIVITY_SUCCESS, result)
 
     @patch.object(activity_CopyGlencoeStillImages, 'list_files_from_cdn')
-    @patch.object(activity_CopyGlencoeStillImages, 'store_file')
+    @patch.object(activity_CopyGlencoeStillImages, 'store_jpgs')
     @patch('provider.glencoe_check.metadata')
     @patch('activity.activity_CopyGlencoeStillImages.StorageContext')
     @patch('activity.activity_CopyGlencoeStillImages.Session')
     @patch.object(activity_CopyGlencoeStillImages, 'emit_monitor_event')
     def test_do_activity_success_no_videos_for_article(self, fake_emit, fake_session, fake_storage_context, fake_glencoe_metadata,
-                         fake_store_file, fake_list_files_from_cdn):
+                         fake_store_jpgs, fake_list_files_from_cdn):
         # Given
         activity_data = test_activity_data.data_example_before_publish
         fake_storage_context.return_value = FakeStorageContext()
         fake_session.return_value = FakeSession(test_activity_data.session_example)
         fake_glencoe_metadata.side_effect = AssertionError("article has no videos - url requested: ...")
-        self.copyglencoestillimages.logger = MagicMock()
+        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result = self.copyglencoestillimages.do_activity(activity_data)
@@ -56,19 +58,19 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         # Then
         self.assertEqual(self.copyglencoestillimages.ACTIVITY_SUCCESS, result)
 
-    @patch.object(activity_CopyGlencoeStillImages, 'store_file')
+    @patch.object(activity_CopyGlencoeStillImages, 'store_jpgs')
     @patch('provider.glencoe_check.metadata')
     @patch('activity.activity_CopyGlencoeStillImages.StorageContext')
     @patch('activity.activity_CopyGlencoeStillImages.Session')
     @patch.object(activity_CopyGlencoeStillImages, 'emit_monitor_event')
-    def test_do_activity_error(self, fake_emit, fake_session, fake_storage_context, fake_glencoe_metadata, fake_store_file):
+    def test_do_activity_error(self, fake_emit, fake_session, fake_storage_context, fake_glencoe_metadata, fake_store_jpgs):
         # Given
         activity_data = test_activity_data.data_example_before_publish
         fake_storage_context.return_value = FakeStorageContext()
         fake_session.return_value = FakeSession(test_activity_data.session_example)
         fake_glencoe_metadata.return_value = test_activity_data.glencoe_metadata
         self.copyglencoestillimages.logger = MagicMock()
-        fake_store_file.side_effect = Exception("Something went wrong!")
+        fake_store_jpgs.side_effect = Exception("Something went wrong!")
 
         # When
         result = self.copyglencoestillimages.do_activity(activity_data)
@@ -86,13 +88,13 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
 
 
     @patch.object(activity_CopyGlencoeStillImages, 'list_files_from_cdn')
-    @patch.object(activity_CopyGlencoeStillImages, 'store_file')
+    @patch.object(activity_CopyGlencoeStillImages, 'store_jpgs')
     @patch('provider.glencoe_check.metadata')
     @patch('activity.activity_CopyGlencoeStillImages.StorageContext')
     @patch('activity.activity_CopyGlencoeStillImages.Session')
     @patch.object(activity_CopyGlencoeStillImages, 'emit_monitor_event')
     def test_do_activity_bad_files(self, fake_emit, fake_session, fake_storage_context, fake_glencoe_metadata,
-                                   fake_store_file, fake_list_files_from_cdn):
+                                   fake_store_jpgs, fake_list_files_from_cdn):
         # Given
         activity_data = test_activity_data.data_example_before_publish
         fake_storage_context.return_value = FakeStorageContext()
@@ -100,6 +102,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         fake_glencoe_metadata.return_value = test_activity_data.glencoe_metadata
         self.copyglencoestillimages.logger = MagicMock()
         fake_list_files_from_cdn.return_value = test_activity_data.cdn_folder_files
+        fake_store_jpgs.return_value = test_activity_data.jpgs_added_in_cdn
 
         # When
         result = self.copyglencoestillimages.do_activity(activity_data)
@@ -121,6 +124,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         # Given
         files_in_cdn = test_activity_data.cdn_folder_files_article_07398
         jpgs_from_glencoe = test_activity_data.cdn_folder_jpgs_article_07398
+        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
@@ -135,6 +139,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
                         "elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
                         "elife-1234500230-fig1-figsupp1-v2-1084w.jpg"]
         jpgs_from_glencoe = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg"]
+        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
@@ -151,6 +156,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
                         "elife-1234500230-fig1-figsupp1-v2-1084w.jpg"]
         jpgs_from_glencoe = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
                              "elife-1234500230-media3-v1.jpg"]
+        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
