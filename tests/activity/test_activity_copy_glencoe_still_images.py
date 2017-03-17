@@ -123,10 +123,41 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         jpgs_from_glencoe = test_activity_data.cdn_folder_jpgs_article_07398
 
         # When
-        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe)
+        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
+                                                                                 "07398")
 
         # Then
         self.assertEqual(0, len(result_bad_files))
+
+    def test_validate_pgs_against_cdn_long_article_ids(self):
+        # Given
+        files_in_cdn = ["elife-1234500230-media1-v1.wmv", "elife-1234500230-media2-v1.mp4",
+                        "elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
+                        "elife-1234500230-fig1-figsupp1-v2-1084w.jpg"]
+        jpgs_from_glencoe = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg"]
+
+        # When
+        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
+                                                                                 "00230")
+
+        # Then
+        self.assertEqual(0, len(result_bad_files))
+
+
+    def test_validate_pgs_against_cdn_long_article_ids_one_missing(self):
+        # Given
+        files_in_cdn = ["elife-1234500230-media1-v1.wmv", "elife-1234500230-media2-v1.mp4",
+                        "elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
+                        "elife-1234500230-fig1-figsupp1-v2-1084w.jpg"]
+        jpgs_from_glencoe = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
+                             "elife-1234500230-media3-v1.jpg"]
+
+        # When
+        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
+                                                                                 "00230")
+
+        # Then
+        self.assertEqual(1, len(result_bad_files))
 
     # def test_validate_cdn(self):
     #     # Given

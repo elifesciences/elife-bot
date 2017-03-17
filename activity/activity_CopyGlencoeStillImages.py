@@ -58,7 +58,8 @@ class activity_CopyGlencoeStillImages(activity.activity):
                     jpg_filenames.append(jpg_filename)
 
 
-                bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id), jpg_filenames)
+                bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id), jpg_filenames,
+                                                           article_id)
             if len(bad_files) > 0:
                 self.logger.error("Videos do not have a glencoe ")
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
@@ -115,12 +116,14 @@ class activity_CopyGlencoeStillImages(activity.activity):
                               article_id
         return storage_context.list_resources(article_path_in_cdn)
 
-    def validate_jpgs_against_cdn(self, files_in_cdn, jpgs):
+    def validate_jpgs_against_cdn(self, files_in_cdn, jpgs, article_id):
         jpgs_rep_no_extension = map(lambda filename: os.path.splitext(filename)[0], jpgs)
         files_in_cdn_no_extention = map(lambda filename: os.path.splitext(filename)[0], files_in_cdn)
+        files_in_cdn_article_padded = map(lambda filename: glencoe_check.pad_article_for_end2end(filename, article_id),
+                                          files_in_cdn_no_extention)
         jpgs_without_video = []
         for file_no_ext in jpgs_rep_no_extension:
-            if len(list(filter(lambda filename: filename == file_no_ext, files_in_cdn_no_extention))) != 2:
+            if len(list(filter(lambda filename: filename == file_no_ext, files_in_cdn_article_padded))) != 2:
                 jpgs_without_video.append(file_no_ext)
         return jpgs_without_video
 
