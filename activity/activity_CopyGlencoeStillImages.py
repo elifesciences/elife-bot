@@ -118,13 +118,18 @@ class activity_CopyGlencoeStillImages(activity.activity):
 
     def validate_jpgs_against_cdn(self, files_in_cdn, jpgs, article_id):
         jpgs_rep_no_extension = map(lambda filename: os.path.splitext(filename)[0], jpgs)
+        self.logger.info("jpgs_rep_no_extension %s", str(jpgs_rep_no_extension))
         files_in_cdn_no_extention = map(lambda filename: os.path.splitext(filename)[0], files_in_cdn)
+        self.logger.info("files_in_cdn_no_extention %s", str(files_in_cdn_no_extention))
         files_in_cdn_article_padded = map(lambda filename: glencoe_check.pad_article_for_end2end(filename, article_id),
                                           files_in_cdn_no_extention)
+        self.logger.info("files_in_cdn_article_padded %s", str(files_in_cdn_article_padded))
         jpgs_without_video = []
         for file_no_ext in jpgs_rep_no_extension:
             if len(list(filter(lambda filename: filename == file_no_ext, files_in_cdn_article_padded))) != 2:
                 jpgs_without_video.append(file_no_ext)
+
+        self.logger.info("jpgs_without_video %s", str(jpgs_without_video))
         return jpgs_without_video
 
     # def validate_cdn(self, files_in_cdn):
