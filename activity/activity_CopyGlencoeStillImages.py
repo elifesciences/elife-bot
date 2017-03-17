@@ -46,6 +46,12 @@ class activity_CopyGlencoeStillImages(activity.activity):
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Starting check/copy of Glencoe video still images " + article_id)
         try:
+            file_name = session.get_value(run, 'file_name')
+            if "poa" in file_name:
+                self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
+                                        "Article is POA, no need for video check yet.")
+
+                return activity.activity.ACTIVITY_SUCCESS
             glencoe_article_id = glencoe_check.check_msid(article_id)
             metadata = glencoe_check.metadata(glencoe_article_id, self.settings)
             glencoe_jpgs = glencoe_check.jpg_href_values(metadata)
