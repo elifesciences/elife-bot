@@ -46,7 +46,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Starting check/copy of Glencoe video still images " + article_id)
         try:
-			file_name = session.get_value(run, 'file_name')
+            file_name = session.get_value(run, 'file_name')
             if "poa" in file_name:
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                         "Article is POA, no need for video check yet.")
