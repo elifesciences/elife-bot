@@ -85,11 +85,11 @@ def check_msid(msid):
         return pad_msid(msid[-5:])
     return pad_msid(msid)
 
-def pad_article_for_end2end(filename, article_id):
+def extend_article_for_end2end(filename, article_id):
     padded_article_id = check_msid(article_id)
     if padded_article_id == article_id:
         return filename
-    return filename.replace(article_id, padded_article_id)
+    return filename.replace(padded_article_id, article_id)
 
 
 def main(msid):

@@ -30,8 +30,8 @@ class TestGlencoeCheck(unittest.TestCase):
         results = glencoe_check.jpg_href_values(glencoe_metadata)
         self.assertItemsEqual(["value1", "value2", "value4"], results)
 
-    def test_pad_article_for_end2end(self):
-        filename = "elife-7777777701234-media1-v1.wmv"
+    def test_extend_article_for_end2end(self):
+        filename = "elife-01234-media1-v1.jpg"
         article_id = "7777777701234"
-        result  = glencoe_check.pad_article_for_end2end(filename, article_id)
-        self.assertEqual("elife-01234-media1-v1.wmv", result)
+        result  = glencoe_check.extend_article_for_end2end(filename, article_id)
+        self.assertEqual("elife-7777777701234-media1-v1.jpg", result)
