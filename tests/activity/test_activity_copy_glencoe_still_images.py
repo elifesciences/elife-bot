@@ -115,7 +115,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
                                      "error",
                                      "Not all still images .jpg have a video with the same name " +
                                      "missing videos file names: ['elife-12620-media1', 'elife-12620-media2']" +
-                                     " Please check them against CDN files.")
+                                     " Please check them against CDN files. Article: 00353")
 
 
     def test_validate_jpgs_against_cdn(self):
