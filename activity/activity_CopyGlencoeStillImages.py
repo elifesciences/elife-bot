@@ -49,6 +49,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
             padded_article_id = glencoe_check.check_msid(article_id)
             metadata = glencoe_check.metadata(padded_article_id, self.settings)
             jpgs = glencoe_check.jpg_href_values(metadata)
+            self.logger.info("jpgs from glencoe metadata %s", str(jpgs))
             jpg_filenames = []
             bad_files = []
             if len(jpgs) > 0:
