@@ -49,7 +49,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
             padded_article_id = glencoe_check.check_msid(article_id)
             metadata = glencoe_check.metadata(padded_article_id, self.settings)
             jpgs = glencoe_check.jpg_href_values(metadata)
-            self.logger.info("jpgs from glencoe metadata %s", str(jpgs))
+            self.logger.info("jpgs from glencoe metadata " + str(jpgs))
             jpg_filenames = []
             bad_files = []
             if len(jpgs) > 0:
@@ -118,19 +118,19 @@ class activity_CopyGlencoeStillImages(activity.activity):
         return storage_context.list_resources(article_path_in_cdn)
 
     def validate_jpgs_against_cdn(self, files_in_cdn, jpgs, article_id):
-        jpgs_rep_no_extension = map(lambda filename: os.path.splitext(filename)[0], jpgs)
-        self.logger.info("jpgs_rep_no_extension %s", str(jpgs_rep_no_extension))
-        files_in_cdn_no_extention = map(lambda filename: os.path.splitext(filename)[0], files_in_cdn)
-        self.logger.info("files_in_cdn_no_extention %s", str(files_in_cdn_no_extention))
-        files_in_cdn_article_padded = map(lambda filename: glencoe_check.pad_article_for_end2end(filename, article_id),
-                                          files_in_cdn_no_extention)
-        self.logger.info("files_in_cdn_article_padded %s", str(files_in_cdn_article_padded))
+        jpgs_rep_no_extension = list(map(lambda filename: os.path.splitext(filename)[0], jpgs))
+        self.logger.info("jpgs_rep_no_extension " + str(jpgs_rep_no_extension))
+        files_in_cdn_no_extention = list(map(lambda filename: os.path.splitext(filename)[0], files_in_cdn))
+        self.logger.info("files_in_cdn_no_extention " + str(files_in_cdn_no_extention))
+        files_in_cdn_article_padded = list(map(lambda filename: glencoe_check.pad_article_for_end2end(filename, article_id),
+                                          files_in_cdn_no_extention))
+        self.logger.info("files_in_cdn_article_padded " + str(files_in_cdn_article_padded))
         jpgs_without_video = []
         for file_no_ext in jpgs_rep_no_extension:
             if len(list(filter(lambda filename: filename == file_no_ext, files_in_cdn_article_padded))) != 2:
                 jpgs_without_video.append(file_no_ext)
 
-        self.logger.info("jpgs_without_video %s", str(jpgs_without_video))
+        self.logger.info("jpgs_without_video " + str(jpgs_without_video))
         return jpgs_without_video
 
     # def validate_cdn(self, files_in_cdn):

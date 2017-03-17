@@ -4,6 +4,7 @@ from activity.activity_CopyGlencoeStillImages import activity_CopyGlencoeStillIm
 from mock import patch, MagicMock
 from classes_mock import FakeSession
 from classes_mock import FakeStorageContext
+from classes_mock import FakeLogger
 import test_activity_data as test_activity_data
 import provider.glencoe_check as glencoe_check
 
@@ -48,7 +49,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext()
         fake_session.return_value = FakeSession(test_activity_data.session_example)
         fake_glencoe_metadata.side_effect = AssertionError("article has no videos - url requested: ...")
-        self.copyglencoestillimages.logger = MagicMock()
+        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result = self.copyglencoestillimages.do_activity(activity_data)
@@ -121,6 +122,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         # Given
         files_in_cdn = test_activity_data.cdn_folder_files_article_07398
         jpgs_from_glencoe = test_activity_data.cdn_folder_jpgs_article_07398
+        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
@@ -135,6 +137,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
                         "elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
                         "elife-1234500230-fig1-figsupp1-v2-1084w.jpg"]
         jpgs_from_glencoe = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg"]
+        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
@@ -151,6 +154,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
                         "elife-1234500230-fig1-figsupp1-v2-1084w.jpg"]
         jpgs_from_glencoe = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
                              "elife-1234500230-media3-v1.jpg"]
+        self.copyglencoestillimages.logger = FakeLogger()
 
         # When
         result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(files_in_cdn, jpgs_from_glencoe,
