@@ -50,6 +50,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
             metadata = glencoe_check.metadata(padded_article_id, self.settings)
             jpgs = glencoe_check.jpg_href_values(metadata)
             jpg_filenames = []
+            bad_files = []
             if len(jpgs) > 0:
                 for jpg in jpgs:
                     self.store_file(jpg, padded_article_id)
@@ -57,7 +58,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
                     jpg_filenames.append(jpg_filename)
 
 
-            bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id), jpg_filenames)
+                bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id), jpg_filenames)
             if len(bad_files) > 0:
                 self.logger.error("Videos do not have a glencoe ")
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
@@ -71,6 +72,21 @@ class activity_CopyGlencoeStillImages(activity.activity):
                                     "Article: " + article_id)
 
             return activity.activity.ACTIVITY_SUCCESS
+        except AssertionError as e:
+            self.logger.exception()
+            first_chars_error = str(e.message[:21])
+            if first_chars_error == "article has no videos":
+                self.logger.error("Glencoe returned 404, therefore article %s does not have videos", article_id)
+                self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
+                                        "Glencoe returned 404, therefore article has no videos")
+                return activity.activity.ACTIVITY_SUCCESS
+
+            self.logger.exception("Error when checking/copying Glencoe still images.")
+            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
+                                    "An error occurred when checking/copying Glencoe still images. Article " +
+                                    article_id + '; message: ' + str(e.message))
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+
         except Exception as e:
             self.logger.exception("Error when checking/copying Glencoe still images.")
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
