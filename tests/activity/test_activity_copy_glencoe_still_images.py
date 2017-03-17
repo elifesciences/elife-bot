@@ -57,6 +57,21 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         # Then
         self.assertEqual(self.copyglencoestillimages.ACTIVITY_SUCCESS, result)
 
+    @patch('activity.activity_CopyGlencoeStillImages.Session')
+    @patch.object(activity_CopyGlencoeStillImages, 'emit_monitor_event')
+    def test_do_activity_success_POA(self, fake_emit, fake_session):
+        # Given
+        activity_data = test_activity_data.data_example_before_publish
+        session_POA = test_activity_data.session_example.copy()
+        session_POA['file_name'] = 'elife-00353-poa-v1.zip'
+        fake_session.return_value = FakeSession(session_POA)
+
+        # When
+        result = self.copyglencoestillimages.do_activity(activity_data)
+
+        # Then
+        self.assertEqual(self.copyglencoestillimages.ACTIVITY_SUCCESS, result)
+
     @patch.object(activity_CopyGlencoeStillImages, 'store_jpgs')
     @patch('provider.glencoe_check.metadata')
     @patch('activity.activity_CopyGlencoeStillImages.StorageContext')
