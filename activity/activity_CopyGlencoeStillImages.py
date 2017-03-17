@@ -46,28 +46,34 @@ class activity_CopyGlencoeStillImages(activity.activity):
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Starting check/copy of Glencoe video still images " + article_id)
         try:
-            padded_article_id = glencoe_check.check_msid(article_id)
-            metadata = glencoe_check.metadata(padded_article_id, self.settings)
-            jpgs = glencoe_check.jpg_href_values(metadata)
-            self.logger.info("jpgs from glencoe metadata " + str(jpgs))
+            glencoe_article_id = glencoe_check.check_msid(article_id)
+            metadata = glencoe_check.metadata(glencoe_article_id, self.settings)
+            glencoe_jpgs = glencoe_check.jpg_href_values(metadata)
+            self.logger.info("glencoe_jpgs from glencoe metadata " + str(glencoe_jpgs))
             bad_files = []
-            if len(jpgs) > 0:
-                jpg_filenames = self.store_jpgs(jpgs, article_id)
+            if len(glencoe_jpgs) > 0:
+                cdn_still_jpgs = self.store_jpgs(glencoe_jpgs, article_id)
 
-                bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id), jpg_filenames,
+                bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id),
+                                                           cdn_still_jpgs,
                                                            article_id)
             if len(bad_files) > 0:
-                self.logger.error("Videos do not have a glencoe ")
                 bad_files.sort()
+                dashboard_message = ("Not all still images .jpg have a video with the same name " + \
+                                    "missing videos file names: %s" + \
+                                    " Please check them against CDN files. Article: %s") % \
+                                    (bad_files, article_id)
+                self.logger.error(dashboard_message)
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
-                                        "Not all still images .jpg have a video with the same name " +
-                                        "missing videos file names: " + str(bad_files) +
-                                        " Please check them against CDN files.")
+                                        dashboard_message)
                 return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
+            dashboard_message = ("Finished Copying Glencoe still images to CDN: %s" + \
+                                "Article: %s") % \
+                                (cdn_still_jpgs, article_id)
+            self.logger.info(dashboard_message)
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
-                                    "Finished Copying Glencoe still images to CDN. "
-                                    "Article: " + article_id)
+                                    dashboard_message)
 
             return activity.activity.ACTIVITY_SUCCESS
         except AssertionError as e:
@@ -93,12 +99,12 @@ class activity_CopyGlencoeStillImages(activity.activity):
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
 
-    def store_jpgs(self, jpgs, article_id):
-        jpg_filenames = []
-        for jpg in jpgs:
-                    jpg_filename = self.store_file(jpg, article_id)
-                    jpg_filenames.append(jpg_filename)
-        return jpg_filenames
+    def store_jpgs(self, glencoe_jpgs, article_id):
+        cdn_still_jpgs = []
+        for jpg in glencoe_jpgs:
+            jpg_filename = self.store_file(jpg, article_id)
+            cdn_still_jpgs.append(jpg_filename)
+        return cdn_still_jpgs
 
     def s3_resource(self, path, article_id):
         filename = os.path.split(path)[1]
@@ -128,30 +134,21 @@ class activity_CopyGlencoeStillImages(activity.activity):
                               article_id
         return storage_context.list_resources(article_path_in_cdn)
 
-    def validate_jpgs_against_cdn(self, files_in_cdn, jpgs, article_id):
-        jpgs_rep_no_extension = list(map(lambda filename: os.path.splitext(filename)[0], jpgs))
-        self.logger.info("jpgs_rep_no_extension " + str(jpgs_rep_no_extension))
-        files_in_cdn_no_extension = list(map(lambda filename: os.path.splitext(filename)[0], files_in_cdn))
-        self.logger.info("files_in_cdn_no_extention " + str(files_in_cdn_no_extension))
-        # files_in_cdn_article_padded = list(map(lambda filename: glencoe_check.pad_article_for_end2end(filename, article_id),
-        #                                   files_in_cdn_no_extention))
-        # self.logger.info("files_in_cdn_article_padded " + str(files_in_cdn_article_padded))
-        jpgs_without_video = []
-        for file_no_ext in jpgs_rep_no_extension:
-            if len(list(filter(lambda filename: filename == file_no_ext, files_in_cdn_no_extension))) != 2:
-                jpgs_without_video.append(file_no_ext)
+    def validate_jpgs_against_cdn(self, cdn_all_files, cdn_still_jpgs, article_id):
+        """checks that for each element of cdn_still_jpgs there are two files in the CDN.
 
-        self.logger.info("jpgs_without_video " + str(jpgs_without_video))
-        return jpgs_without_video
+        They are supposed to be a video and its still image"""
+        cdn_still_jpgs_no_extension = self._remove_extension(cdn_still_jpgs)
+        self.logger.info("cdn_still_jpgs_no_extension " + str(cdn_still_jpgs_no_extension))
+        cdn_all_files_no_extension = self._remove_extension(cdn_all_files)
+        self.logger.info("files_in_cdn_no_extention " + str(cdn_all_files_no_extension))
+        cdn_still_jpgs_without_video = []
+        for still in cdn_still_jpgs_no_extension:
+            if len(list(filter(lambda filename: filename == still, cdn_all_files_no_extension))) != 2:
+                cdn_still_jpgs_without_video.append(still)
 
-    # def validate_cdn(self, files_in_cdn):
-    #     videos = list(filter(article_structure.is_media_file, files_in_cdn))
-    #     videos_as_jpg = list(map(lambda filename: os.path.splitext(filename[0]+'.jpg'), videos))
-    #     do_videos_match_jpgs = (len(set(videos_as_jpg) & set(files_in_cdn)) == len(videos))
-    #     return do_videos_match_jpgs, files_in_cdn, videos
+        self.logger.info("cdn_still_jpgs_without_video " + str(cdn_still_jpgs_without_video))
+        return cdn_still_jpgs_without_video
 
-
-
-
-
-
+    def _remove_extension(self, filenames):
+        return list(map(lambda filename: os.path.splitext(filename)[0], filenames))
