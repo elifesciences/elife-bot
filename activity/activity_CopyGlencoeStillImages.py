@@ -57,7 +57,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
                     jpg_filenames.append(jpg_filename)
 
 
-            bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(padded_article_id), jpg_filenames)
+            bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id), jpg_filenames)
             if len(bad_files) > 0:
                 self.logger.error("Videos do not have a glencoe ")
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
