@@ -106,7 +106,9 @@ class activity_CopyGlencoeStillImages(activity.activity):
         storage_context = StorageContext(self.settings)
         r = requests.get(path)
         if r.status_code == 200:
-            storage_context.set_resource_from_string(self.s3_resource(path, article_id), r.content,
+            resource = self.s3_resource(path, article_id)
+            self.logger.info("S3 resource: " + resource)
+            storage_context.set_resource_from_string(resource, r.content,
                                                      content_type=r.headers['content-type'])
 
 
