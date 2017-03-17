@@ -58,17 +58,19 @@ class activity_CopyGlencoeStillImages(activity.activity):
                                                            cdn_still_jpgs,
                                                            article_id)
             if len(bad_files) > 0:
-                self.logger.error("Videos do not have a glencoe ")
                 bad_files.sort()
+                dashboard_message = "Not all still images .jpg have a video with the same name " + \
+                                    "missing videos file names: %s" + \
+                                    " Please check them against CDN files."
+                self.logger.error("Videos do not have a glencoe ")
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
-                                        "Not all still images .jpg have a video with the same name " +
-                                        "missing videos file names: " + str(bad_files) +
-                                        " Please check them against CDN files.")
+                                        dashboard_message % bad_files)
                 return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
+            dashboard_message = "Finished Copying Glencoe still images to CDN: %s" + \
+                                "Article: %s"
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
-                                    "Finished Copying Glencoe still images to CDN. "
-                                    "Article: " + article_id)
+                                    dashboard_message % (cdn_still_jpgs, article_id))
 
             return activity.activity.ACTIVITY_SUCCESS
         except AssertionError as e:
