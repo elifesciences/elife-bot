@@ -128,17 +128,24 @@ def get_original_files(files):
 def get_figures_for_iiif(files):
     # should only be tif
     fs = [f for f in get_original_files(files) if (article_figure(f) and has_extensions(f, ['tif']))]
+    fs = originals_and_figures + get_media_files(files)
     return fs
 
+
 def file_parts(filename):
-        prefix = filename.split('.')[0]
-        extension = filename.split('.')[-1]
-        return (prefix, extension)
+    prefix = filename.split('.')[0]
+    extension = filename.split('.')[-1]
+    return prefix, extension
+
+
+def get_media_files(files):
+    return list(filter(is_media_file, files))
+
 
 def is_media_file(filename):
     (file_prefix, file_extension) = file_parts(filename)
     file_type_plus_index = file_prefix.split('-')[-1]
-    if "media" in file_type_plus_index:
+    if ("media" in file_type_plus_index) or ("video" in file_type_plus_index):
         return True
     else:
         return False
