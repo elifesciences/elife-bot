@@ -221,7 +221,7 @@ class activity_ApplyVersionNumber(activity.activity):
 
         (file_prefix, file_extension) = self.file_parts(filename)
         file_type_plus_index = file_prefix.split('-')[-1]
-        if "media" in file_type_plus_index:
+        if ("media" in file_type_plus_index) or ("video" in file_type_plus_index):
             return True
         else:
             return False

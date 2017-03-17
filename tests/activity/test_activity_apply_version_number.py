@@ -158,7 +158,7 @@ class MyTestCase(unittest.TestCase):
         result = self.applyversionnumber.is_video_file(filename)
         self.assertFalse(result)
 
-    @data(u'elife-11792-media2.mp4', u'elife-15224-fig1-figsupp1-media.tif')
+    @data(u'elife-11792-media2.mp4', u'elife-15224-fig1-figsupp1-media.tif', u'elife-11792-video1.mp4')
     def test_is_video_file_true(self,filename):
         result = self.applyversionnumber.is_video_file(filename)
         self.assertTrue(result)
