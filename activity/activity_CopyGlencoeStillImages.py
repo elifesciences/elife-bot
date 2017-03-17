@@ -74,7 +74,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
 
             return activity.activity.ACTIVITY_SUCCESS
         except AssertionError as e:
-            self.logger.exception()
+            self.logger.info(str(e.message))
             first_chars_error = str(e.message[:21])
             if first_chars_error == "article has no videos":
                 self.logger.error("Glencoe returned 404, therefore article %s does not have videos", article_id)
