@@ -18,9 +18,9 @@ elifePipeline {
 
     elifeMainlineOnly {
         stage 'End2end tests'
-        elifeEnd2EndTest {
+        elifeEnd2EndTest({
             builderDeployRevision 'elife-bot--end2end', commit
-        }
+        }, "continuum")
 
         stage 'Approval'
         elifeGitMoveToBranch commit, 'approved'
