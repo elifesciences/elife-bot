@@ -86,7 +86,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
             self.logger.info(str(e.message))
             first_chars_error = str(e.message[:21])
             if first_chars_error == "article has no videos":
-                self.logger.error("Glencoe returned 404, therefore article %s does not have videos", article_id)
+                self.logger.info("Glencoe returned 404, therefore article %s does not have videos", article_id)
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                         "Glencoe returned 404, therefore article has no videos")
                 return activity.activity.ACTIVITY_SUCCESS
