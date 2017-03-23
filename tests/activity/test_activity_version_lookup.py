@@ -73,7 +73,7 @@ class TestVersionLookup(unittest.TestCase):
     @patch('activity.activity_VersionLookup.Session')
     @patch.object(activity_VersionLookup, 'emit_monitor_event')
     @patch.object(activity_VersionLookup, 'execute_function')
-    def test_get_version_error(self, fake_execute_function, fake_emit_monitor, fake_session):
+    def test_get_version_error_timeout(self, fake_execute_function, fake_emit_monitor, fake_session):
         self.versionlookup.logger = MagicMock()
         fake_execute_function.side_effect = Exception("Time out.")
         test_data = data("article_next_version", "elife-00353-vor-r1.zip")
@@ -87,7 +87,7 @@ class TestVersionLookup(unittest.TestCase):
     @patch('activity.activity_VersionLookup.Session')
     @patch.object(activity_VersionLookup, 'emit_monitor_event')
     @patch.object(activity_VersionLookup, 'execute_function')
-    def test_get_version_error(self, fake_execute_function, fake_emit_monitor, fake_session):
+    def test_get_version_error_protocol_error_message(self, fake_execute_function, fake_emit_monitor, fake_session):
         self.versionlookup.logger = MagicMock()
         fake_execute_function.side_effect = ConnectionError("Protocol Error message.")
         test_data = data("article_next_version", "elife-00353-vor-r1.zip")
