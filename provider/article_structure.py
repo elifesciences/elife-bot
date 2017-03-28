@@ -134,13 +134,6 @@ def file_parts(filename):
         extension = filename.split('.')[-1]
         return (prefix, extension)
 
-def is_media_file(filename):
-    (file_prefix, file_extension) = file_parts(filename)
-    file_type_plus_index = file_prefix.split('-')[-1]
-    if "media" in file_type_plus_index:
-        return True
-    else:
-        return False
 
 
 def main():
