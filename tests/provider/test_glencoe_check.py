@@ -35,3 +35,15 @@ class TestGlencoeCheck(unittest.TestCase):
         article_id = "7777777701234"
         result  = glencoe_check.extend_article_for_end2end(filename, article_id)
         self.assertEqual("elife-7777777701234-media1-v1.jpg", result)
+
+    def test_has_videos(self):
+        cases = [
+            ('<media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="avi" mimetype="video" xlink:href="elife-00007-media1.avi"></media>', True),
+            ('<media mimetype="video" mime-subtype="mp4" id="fig3video1" xlink:href="elife-00666-fig3-video1.mp4"></media>', True),
+            ('<media mimetype="video" mime-subtype="gif" id="video2" xlink:href="elife-00666-video2.gif"></media>', True),
+            ('<media mimetype="application" mime-subtype="xlsx" xlink:href="elife-00666-video1-data1.xlsx"/><media mimetype="video" mime-subtype="gif" id="video2" xlink:href="elife-00666-video2.gif"></media>', True),
+            ('<media mimetype="application" mime-subtype="xlsx" xlink:href="elife-00666-video1-data1.xlsx"/>', False)
+        ]
+        for xml_str, expected in cases:
+            self.assertEqual(glencoe_check.has_videos(xml_str), expected)
+
