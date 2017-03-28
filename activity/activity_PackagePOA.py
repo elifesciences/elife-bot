@@ -529,7 +529,8 @@ class activity_PackagePOA(activity.activity):
             "keywords"   : "poa_keywords.csv",
             "group_authors" : "poa_group_authors.csv",
             "datasets"   : "poa_datasets.csv",
-            "funding"    : "poa_funding.csv"
+            "funding"    : "poa_funding.csv",
+            "ethics"     : "poa_ethics.csv"
         }
 
     def import_poa_modules(self, dir_name="elife-poa-xml-generation"):
