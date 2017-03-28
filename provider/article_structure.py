@@ -126,7 +126,8 @@ def get_original_files(files):
     return fs
 
 def get_figures_for_iiif(files):
-    fs = [f for f in get_original_files(files) if (article_figure(f) and has_extensions(f, ['tif', 'jpg']))]
+    # should only be tif
+    fs = [f for f in get_original_files(files) if (article_figure(f) and has_extensions(f, ['tif']))]
     return fs
 
 def file_parts(filename):
