@@ -155,6 +155,12 @@ class TestArticleStructure(unittest.TestCase):
         result = article_structure.is_video_file(filename)
         self.assertTrue(result)
 
+    @data(u'elife-15224-fig1-figsupp1.tif')
+    def test_file_parts(self, filename):
+        prefix, extension = article_structure.file_parts(filename)
+        self.assertEqual(prefix, u'elife-15224-fig1-figsupp1')
+        self.assertEqual(extension, u'tif')
+
 
 
 if __name__ == '__main__':
