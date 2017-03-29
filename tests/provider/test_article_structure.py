@@ -141,6 +141,20 @@ class TestArticleStructure(unittest.TestCase):
                     'elife-07398-media1.jpg']
         self.assertListEqual(article_structure.get_figures_for_iiif(files), expected)
 
+    @data(u'elife-15224-fig1-figsupp1.tif',
+          u'elife-15224-resp-fig1.tif', u'elife-15224-figures.pdf',
+          u'elife-15802-fig9-data3.docx', u'elife-11792.mp4',
+          u'elife-00005-media1-code1.wrl')
+    def test_is_video_file_false(self, filename):
+        result = article_structure.is_video_file(filename)
+        self.assertFalse(result)
+
+    @data(u'elife-11792-media2.mp4', u'elife-15224-fig1-figsupp1-media.tif', u'elife-11792-video1.mp4',
+          u'elife-99999-resp-media1.avi', u'elife-00005-media1.mov')
+    def test_is_video_file_true(self,filename):
+        result = article_structure.is_video_file(filename)
+        self.assertTrue(result)
+
 
 
 if __name__ == '__main__':

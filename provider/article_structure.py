@@ -139,10 +139,17 @@ def file_parts(filename):
 
 
 def get_media_file_images(files):
-    return list(filter(lambda f: is_media_file(f) and has_extensions(f, ['jpg']), files))
+    return list(filter(lambda f: is_video_file(f) and has_extensions(f, ['jpg']), files))
 
 
-def is_media_file(filename):
+def is_video_file(filename):
+    """
+    Simple check for video file names
+    E.g. match True on elife-00005-media1.mov
+         match True on elife-99999-resp-media1.avi
+         match False on elife-00005-media1-code1.wrl
+    """
+
     (file_prefix, file_extension) = file_parts(filename)
     file_type_plus_index = file_prefix.split('-')[-1]
     if ("media" in file_type_plus_index) or ("video" in file_type_plus_index):
