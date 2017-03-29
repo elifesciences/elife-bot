@@ -128,7 +128,7 @@ def get_original_files(files):
 def get_figures_for_iiif(files):
     # should only be tif
     originals_figures_tif = [f for f in get_original_files(files) if (article_figure(f) and has_extensions(f, ['tif']))]
-    fs = originals_figures_tif + get_media_files(files)
+    fs = originals_figures_tif + get_media_file_images(files)
     return fs
 
 
@@ -138,8 +138,8 @@ def file_parts(filename):
     return prefix, extension
 
 
-def get_media_files(files):
-    return list(filter(is_media_file, files))
+def get_media_file_images(files):
+    return list(filter(lambda f: is_media_file(f) and has_extensions(f, ['jpg']), files))
 
 
 def is_media_file(filename):

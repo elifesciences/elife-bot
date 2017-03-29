@@ -109,7 +109,7 @@ class TestArticleStructure(unittest.TestCase):
 
         self.assertListEqual(article_structure.get_original_files(files), expected)
 
-    def test_get_media_files(self):
+    def test_get_media_file_images(self):
         files = ['elife-00666-fig2-figsupp2-v1.tif',
                  'elife-00666-inf001-v1.jpg',
                  'elife-00666-inf001-v1-80w.jpg',
@@ -120,7 +120,7 @@ class TestArticleStructure(unittest.TestCase):
         expected = ['elife-00666-video2.jpg',
                     'elife-07398-media1.jpg']
         self.assertListEqual.__self__.maxDiff = None
-        self.assertListEqual(article_structure.get_media_files(files), expected)
+        self.assertListEqual(article_structure.get_media_file_images(files), expected)
 
     def test_get_figures_for_iiif(self):
         "Only .tif of original figures"
