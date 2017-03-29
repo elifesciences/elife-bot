@@ -33,5 +33,5 @@ class TestGlencoeCheck(unittest.TestCase):
     def test_extend_article_for_end2end(self):
         filename = "elife-01234-media1-v1.jpg"
         article_id = "7777777701234"
-        result  = glencoe_check.extend_article_for_end2end(filename, article_id)
+        result  = glencoe_check.force_article_id(filename, article_id)
         self.assertEqual("elife-7777777701234-media1-v1.jpg", result)
