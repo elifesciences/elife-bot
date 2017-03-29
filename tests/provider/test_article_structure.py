@@ -106,12 +106,13 @@ class TestArticleStructure(unittest.TestCase):
                     'elife-00666-inf001-v1.jpg',
                     'elife-00666-table3-data1-v1.xlsx']
 
-        self.assertListEqual.__self__.maxDiff = None
         self.assertListEqual(article_structure.get_original_files(files), expected)
 
     def test_get_figures_for_iiif(self):
+        "Only .tif of original figures"
         files = ['elife-00666-app1-fig1-figsupp1-v1.tif',
                  'elife-00666-fig2-figsupp2-v1.tif',
+                 'elife-00666-fig2-figsupp2-v1.jpg',
                  'elife-00666-inf001-v1.jpg',
                  'elife-00666-inf001-v1-80w.jpg',
                  'elife-00666-table3-data1-v1.xlsx',
