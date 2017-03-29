@@ -119,7 +119,6 @@ class TestArticleStructure(unittest.TestCase):
                  'elife-07398-media1.jpg']
         expected = ['elife-00666-video2.jpg',
                     'elife-07398-media1.jpg']
-        self.assertListEqual.__self__.maxDiff = None
         self.assertListEqual(article_structure.get_media_file_images(files), expected)
 
     def test_get_figures_for_iiif(self):
