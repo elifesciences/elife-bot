@@ -147,22 +147,6 @@ class MyTestCase(unittest.TestCase):
         result = self.applyversionnumber.new_filename(file, version)
         self.assertEqual(result, expected)
 
-    @data(u'elife-15224-fig1-figsupp1.tif')
-    def test_file_parts(self, filename):
-        prefix, extension = self.applyversionnumber.file_parts(filename)
-        self.assertEqual(prefix, u'elife-15224-fig1-figsupp1')
-        self.assertEqual(extension, u'tif')
-
-    @data(u'elife-15224-fig1-figsupp1.tif', u'elife-15224-resp-fig1.tif', u'elife-15224-figures.pdf', u'elife-15802-fig9-data3.docx', u'elife-11792.mp4')
-    def test_is_video_file_false(self, filename):
-        result = self.applyversionnumber.is_video_file(filename)
-        self.assertFalse(result)
-
-    @data(u'elife-11792-media2.mp4', u'elife-15224-fig1-figsupp1-media.tif', u'elife-11792-video1.mp4')
-    def test_is_video_file_true(self,filename):
-        result = self.applyversionnumber.is_video_file(filename)
-        self.assertTrue(result)
-
     @patch('activity.activity_ApplyVersionNumber.path.join')
     def test_rewrite_xml_file(self, mock_path_join):
         #given

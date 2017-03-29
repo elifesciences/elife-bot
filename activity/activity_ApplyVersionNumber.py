@@ -9,6 +9,7 @@ from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 from provider.execution_context import Session
 from provider.article_structure import ArticleInfo
+import provider.article_structure as article_structure
 import provider.s3lib as s3lib
 from elifetools import xmlio
 
@@ -158,7 +159,7 @@ class activity_ApplyVersionNumber(activity.activity):
             # Get the new file name
             file_name_map[filename] = None
 
-            if self.is_video_file(filename) is False:
+            if article_structure.is_video_file(filename) is False:
                 renamed_filename = self.new_filename(filename, version)
             else:
                 # Keep video files named the same
@@ -176,7 +177,7 @@ class activity_ApplyVersionNumber(activity.activity):
         if re.search(ur'-v([0-9])[\.]', old_filename): #is version already in file name?
             new_filename = re.sub(ur'-v([0-9])[\.]', '-v' + str(version) + '.', old_filename)
         else:
-            (file_prefix, file_extension) = self.file_parts(old_filename)
+            (file_prefix, file_extension) = article_structure.file_parts(old_filename)
             new_filename = file_prefix + '-v' + str(version) + '.' + file_extension
         return new_filename
 
@@ -204,27 +205,6 @@ class activity_ApplyVersionNumber(activity.activity):
             if info.file_type == 'ArticleXML':
                 return new_name
 
-
-    def file_parts(self, filename):
-        prefix = filename.split('.')[0]
-        extension = filename.split('.')[-1]
-        return (prefix, extension)
-
-
-    def is_video_file(self, filename):
-        """
-        Simple check for video file names
-        E.g. match True on elife-00005-media1.mov
-             match True on elife-99999-resp-media1.avi
-             match False on elife-00005-media1-code1.wrl
-        """
-
-        (file_prefix, file_extension) = self.file_parts(filename)
-        file_type_plus_index = file_prefix.split('-')[-1]
-        if ("media" in file_type_plus_index) or ("video" in file_type_plus_index):
-            return True
-        else:
-            return False
 
     @staticmethod
     def get_article_xml_key(bucket, expanded_folder_name):
