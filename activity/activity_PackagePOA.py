@@ -270,7 +270,8 @@ class activity_PackagePOA(activity.activity):
             "poa_keywords"           : "poa_keywords.csv",
             "poa_group_authors"      : "poa_group_authors.csv",
             "poa_datasets"           : "poa_datasets.csv",
-            "poa_funding"            : "poa_funding.csv"
+            "poa_funding"            : "poa_funding.csv",
+            "poa_ethics"             : "poa_ethics.csv"
         }
 
         for file_type, filename in file_types.items():
