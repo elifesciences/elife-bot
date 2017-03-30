@@ -112,21 +112,27 @@ class activity_CopyGlencoeStillImages(activity.activity):
             cdn_still_jpgs.append(jpg_filename)
         return cdn_still_jpgs
 
-    def s3_resource(self, path, article_id):
+    def s3_resources(self, path, article_id):
         filename = os.path.split(path)[1]
         filename = glencoe_check.force_article_id(filename, article_id)
-        return self.settings.storage_provider + "://" + \
+        cdn = self.settings.storage_provider + "://" + \
                self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket + "/" + \
                article_id + "/" + filename
+        published_bucket = self.settings.storage_provider + "://" + \
+               self.settings.publishing_buckets_prefix + self.settings.published_bucket + "/articles/" + \
+               article_id + "/" + filename
+        return cdn, published_bucket
 
     def store_file(self, path, article_id):
         storage_context = StorageContext(self.settings)
         r = requests.get(path)
         if r.status_code == 200:
-            resource = self.s3_resource(path, article_id)
+            resource, additional_resource = self.s3_resources(path, article_id)
             self.logger.info("S3 resource: " + resource)
             jpg_filename = os.path.split(resource)[-1]
             storage_context.set_resource_from_string(resource, r.content,
+                                                     content_type=r.headers['content-type'])
+            storage_context.set_resource_from_string(additional_resource, r.content,
                                                      content_type=r.headers['content-type'])
             return jpg_filename
         else:
