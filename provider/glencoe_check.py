@@ -86,7 +86,8 @@ def check_msid(msid):
         return pad_msid(msid[-5:])
     return pad_msid(msid)
 
-def extend_article_for_end2end(filename, article_id):
+def force_article_id(filename, article_id):
+    "In case of testing, we have generated article ids pointing to real article ids on Glencoe. This function forces the generated article id on a file coming from outside."
     padded_article_id = check_msid(article_id)
     if padded_article_id == article_id:
         return filename

@@ -112,6 +112,28 @@ class workflow_SilentCorrectionsProcess(workflow.workflow):
                         "start_to_close_timeout": 60 * 5
                     },
                     {
+                        "activity_type": "CopyGlencoeStillImages",
+                        "activity_id": "CopyGlencoeStillImages",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 5,
+                        "schedule_to_close_timeout": 60 * 5,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 5
+                    },
+                    {
+                       "activity_type": "VerifyImageServer",
+                       "activity_id": "VerifyImageServer",
+                       "version": "1",
+                       "input": data,
+                       "control": None,
+                       "heartbeat_timeout": 60 * 5,
+                       "schedule_to_close_timeout": 60 * 5,
+                       "schedule_to_start_timeout": 300,
+                       "start_to_close_timeout": 60 * 5
+                    },
+                    {
                         "activity_type": "SetEIFPublish",
                         "activity_id": "SetEIFPublish",
                         "version": "1",
