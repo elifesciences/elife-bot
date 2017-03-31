@@ -56,6 +56,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
         (start_msg, end_msg, success) = self.get_events(article_id, poa, version, run)
         self.emit_monitor_event(*start_msg)
         self.emit_monitor_event(*end_msg)
+        return success
 
     def get_events(self, article_id, poa, version=None, run=None):
 
