@@ -18,6 +18,20 @@ class TestGlencoeCheck(unittest.TestCase):
 
     def test_jpg_href_values(self):
         result = glencoe_check.jpg_href_values(glencoe_metadata)
-        self.assertEqual(["http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.jpg",
+        self.assertItemsEqual(["http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.jpg",
                           "http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.jpg"],
                           result)
+
+    def test_simple_jpg_href_values(self):
+        glencoe_metadata = {"media_start1": {"jpg_href": "value1"},
+                            "media_start2": {"jpg_href": "value2"},
+                            "media_start3": {"no_jpg_href": "value3"},
+                            "anything_else": {"jpg_href": "value4"}}
+        results = glencoe_check.jpg_href_values(glencoe_metadata)
+        self.assertItemsEqual(["value1", "value2", "value4"], results)
+
+    def test_extend_article_for_end2end(self):
+        filename = "elife-01234-media1-v1.jpg"
+        article_id = "7777777701234"
+        result  = glencoe_check.force_article_id(filename, article_id)
+        self.assertEqual("elife-7777777701234-media1-v1.jpg", result)

@@ -71,7 +71,7 @@ class activity_ResizeImages(activity.activity):
                     # process each key in the folder
                     self.process_key(key, cdn_path)
             self.emit_monitor_event(self.settings, article_id, version, run, "Resize Images", "end",
-                                    "Finished converting images for  " + article_id +
+                                    "Finished converting images for " + article_id + ": " +
                                     str(image_count) + " images processed ")
 
             self.clean_tmp_dir()

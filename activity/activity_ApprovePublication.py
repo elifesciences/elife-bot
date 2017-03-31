@@ -60,7 +60,10 @@ class activity_ApprovePublication(activity.activity):
                 auth = requests.auth.HTTPBasicAuth(self.settings.drupal_update_user,
                                                    self.settings.drupal_update_pass)
             r = requests.put(destination, data="{ \"publish\": \"1\" }", headers=headers, auth=auth)
-            self.logger.info("PUT response was %s" % r.status_code)
+            self.logger.info("PUT response was %s, retrying" % r.status_code)
+
+            if r.status_code == 500:
+                return activity.activity.ACTIVITY_TEMPORARY_FAILURE
 
             if r.status_code == 200:
                 self.set_monitor_property(self.settings, article_id, 'publication-status',

@@ -104,7 +104,7 @@ class FakeStorageContext:
         #bucket_name, s3_key = self.get_bucket_and_key(resource)
         copy(file, data.ExpandArticle_files_dest_folder)
 
-    def set_resource_from_string(self, anyarg1, anyarg2):
+    def set_resource_from_string(self, resource, data, content_type=None):
         pass
 
     # def set_contents_from_filename(self, storage_object, key, path):
@@ -174,9 +174,9 @@ class FakeLogger:
         self.loginfo = "First logger info"
         self.logexception = "First logger exception"
         self.logerror = "First logger error"
-    def debug(self, msg):
+    def debug(self, msg, *args, **kwargs):
         self.logdebug =  msg
-    def info(self, msg):
+    def info(self, msg, *args, **kwargs):
         self.loginfo = msg
     def exception(self, msg, *args, **kwargs):
         self.logexception = msg
