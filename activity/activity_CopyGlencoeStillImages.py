@@ -49,14 +49,13 @@ class activity_CopyGlencoeStillImages(activity.activity):
             poa = False
             if "poa" in file_name:
                 poa = True
+            (start_msg, end_msg, success) = self.get_events(article_id, poa, version, run)
+            self.emit_monitor_event(*start_msg)
+            self.emit_monitor_event(*end_msg)
+            return success
         except Exception as e:
             self.logger.exception("Error starting Copy Glencoe Still Images activity")
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
-
-        (start_msg, end_msg, success) = self.get_events(article_id, poa, version, run)
-        self.emit_monitor_event(*start_msg)
-        self.emit_monitor_event(*end_msg)
-        return success
 
     def get_events(self, article_id, poa, version=None, run=None):
 
