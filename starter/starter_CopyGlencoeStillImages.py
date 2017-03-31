@@ -66,7 +66,10 @@ class starter_CopyGlencoeStillImages():
 
 def main():
 
-    # Add options
+    # example on how to run:
+    # From elife-bot folder run
+    # python starter/starter_CopyGlencoeStillImages.py --env=dev --article-id=15224 --no-poa
+
     parser = ArgumentParser()
     parser.add_argument("-e", "--env", action="store", type=str, dest="env",
                         help="set the environment to run, e.g. dev, live, prod, end2end")
