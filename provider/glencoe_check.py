@@ -1,5 +1,6 @@
 import sys, json
 import requests
+import re
 from functional import seq
 
 '''
@@ -71,7 +72,7 @@ def jpg_href_values(metadata):
 
 
 def has_videos(xml_str):
-    if '<media content-type="glencoe' in xml_str:
+    if re.search(ur'<media[^>]*mimetype="video".*?>', xml_str):
         return True
     return False
 
