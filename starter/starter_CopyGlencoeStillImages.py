@@ -6,7 +6,6 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.sys.path.insert(0, parentdir)
 
 import boto.swf
-import log
 import json
 from argparse import ArgumentParser
 
@@ -32,6 +31,8 @@ class starter_CopyGlencoeStillImages():
 
         info = {
             'run': run,
+            'article_id': article_id,
+            'version': version,
             'standalone': standalone,
             'standalone_is_poa': standalone_is_poa
         }
@@ -67,15 +68,15 @@ def main():
 
     # Add options
     parser = ArgumentParser()
-    parser.add_argument("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, e.g. dev, live, prod, end2end")
-    parser.add_argument("-i", "--article-id", default=None, action="store", type="string",
-                      dest="article_id", help="specify the article id to process")
-    parser.add_argument("-i", "--is-poa", default=False, action="store", type="string",
-                      dest="is_poa",
-                      help="True if article is POA. Defaults to False.")
-
-    args = parser.parse_args()
+    parser.add_argument("-e", "--env", action="store", type=str, dest="env",
+                        help="set the environment to run, e.g. dev, live, prod, end2end")
+    parser.add_argument("-a", "--article-id", action="store", type=str, dest="article_id",
+                        help="specify the article id to process")
+    parser.add_argument("-p", "--poa", action="store_true", dest="poa",
+                        help="Article is POA. If omitted it defaults to False.")
+    parser.add_argument("-np", "--no-poa", action="store_false", dest="poa",
+                        help="Article is NOT POA. If omitted it defaults to False.")
+    parser.set_defaults(env="dev", article_id=None, poa=False)
 
     args = parser.parse_args()
     ENV = None
@@ -85,8 +86,8 @@ def main():
     is_poa = False
     if args.article_id:
         article_id = args.article_id
-    if args.is_poa:
-        is_poa = args.is_poa
+    if args.poa:
+        is_poa = args.poa
 
     import settings as settingsLib
     settings = settingsLib.get_settings(ENV)

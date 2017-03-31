@@ -38,7 +38,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
                 article_id = data['article_id']
                 poa = data['standalone_is_poa']
                 (start_msg, end_msg, result) = self.get_events(article_id, poa, version=None, run=None)
-                self.logger.info(end_msg[7])
+                self.logger.info(end_msg[6])
                 return result
 
             run = data['run']
