@@ -139,27 +139,26 @@ class activity_PMCDeposit(activity.activity):
         # Set FTP settings
         self.set_ftp_settings(fid)
 
-
+        ftp_status = None
         if verified and self.zip_file_name:
-            self.ftp_to_endpoint(self.file_list(self.ZIP_DIR), self.FTP_SUBDIR, passive=True)
+            ftp_status = self.ftp_to_endpoint(self.file_list(self.ZIP_DIR), self.FTP_SUBDIR, passive=True)
 
-            self.upload_article_zip_to_s3()
+            if ftp_status is True:
+                self.upload_article_zip_to_s3()
 
-            # Send email
-            file_size = self.file_size(os.path.join(self.ZIP_DIR, self.zip_file_name))
-            self.add_email_to_queue(self.journal, volume, fid, revision, self.zip_file_name, file_size)
-
-        # Full Clean up
-        #self.clean_directories(full = True)
+                # Send email
+                file_size = self.file_size(os.path.join(self.ZIP_DIR, self.zip_file_name))
+                self.add_email_to_queue(self.journal, volume, fid, revision, self.zip_file_name, file_size)
 
         # Return the activity result, True or False
-        if verified is True:
+        if verified is True and ftp_status is True:
             result = True
         else:
             result = False
+            # Clean up disk
+            self.clean_tmp_dir()
 
         return result
-
 
 
     def set_ftp_settings(self, doi_id):
@@ -204,22 +203,26 @@ class activity_PMCDeposit(activity.activity):
         return cwd_success
 
     def ftp_to_endpoint(self, uploadfiles, sub_dir_list=None, passive=True):
-        for uploadfile in uploadfiles:
-            ftp = FTP()
-            if passive is False:
-                ftp.set_pasv(False)
-            ftp.connect(self.FTP_URI)
-            ftp.login(self.FTP_USERNAME, self.FTP_PASSWORD)
+        try:
+            for uploadfile in uploadfiles:
+                ftp = FTP()
+                if passive is False:
+                    ftp.set_pasv(False)
+                ftp.connect(self.FTP_URI)
+                ftp.login(self.FTP_USERNAME, self.FTP_PASSWORD)
 
-            self.ftp_cwd_mkd(ftp, "/")
-            if self.FTP_CWD != "":
-                self.ftp_cwd_mkd(ftp, self.FTP_CWD)
-            if sub_dir_list is not None:
-                for sub_dir in sub_dir_list:
-                    self.ftp_cwd_mkd(ftp, sub_dir)
+                self.ftp_cwd_mkd(ftp, "/")
+                if self.FTP_CWD != "":
+                    self.ftp_cwd_mkd(ftp, self.FTP_CWD)
+                if sub_dir_list is not None:
+                    for sub_dir in sub_dir_list:
+                        self.ftp_cwd_mkd(ftp, sub_dir)
 
-            self.ftp_upload(ftp, uploadfile)
-            ftp.quit()
+                self.ftp_upload(ftp, uploadfile)
+                ftp.quit()
+                return True
+        except:
+            return False
 
 
     def download_files_from_s3(self, document):
@@ -478,31 +481,6 @@ class activity_PMCDeposit(activity.activity):
             new_zipfile.write(df, filename)
 
         new_zipfile.close()
-
-    def clean_directories(self, full=False):
-        """
-        Deletes all the files from the activity directories
-        in order to save on disk space immediately
-        A full clean is only after all activities have finished,
-        a non-full clean can be done after each article
-        """
-        for file in self.file_list(self.TMP_DIR):
-            os.remove(file)
-        for file in self.file_list(self.OUTPUT_DIR):
-            os.remove(file)
-        for file in self.file_list(self.JUNK_DIR):
-            os.remove(file)
-        for file in self.file_list(self.EPS_DIR):
-            os.remove(file)
-        for file in self.file_list(self.TIF_DIR):
-            os.remove(file)
-
-        if full is True:
-            for file in self.file_list(self.ZIP_DIR):
-                os.remove(file)
-            for folder in self.folder_list(self.INPUT_DIR):
-                for file in self.file_list(folder):
-                    os.remove(file)
 
 
     def profile_article(self, document):
