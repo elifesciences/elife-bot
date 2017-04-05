@@ -30,28 +30,44 @@ class activity_CopyGlencoeStillImages(activity.activity):
         self.logger = logger
 
     def do_activity(self, data=None):
-
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         try:
+            if 'standalone' in data and data['standalone']:
+                article_id = data['article_id']
+                poa = data['standalone_is_poa']
+                (start_msg, end_msg, result) = self.get_events(article_id, poa, version=None, run=None)
+                self.logger.info(end_msg[6])
+                return result
+
             run = data['run']
             session = Session(self.settings)
             article_id = session.get_value(run, 'article_id')
             version = session.get_value(run, 'version')
+            file_name = session.get_value(run, 'file_name')
+            poa = False
+            if "poa" in file_name:
+                poa = True
+            (start_msg, end_msg, success) = self.get_events(article_id, poa, version, run)
+            self.emit_monitor_event(*start_msg)
+            self.emit_monitor_event(*end_msg)
+            return success
         except Exception as e:
             self.logger.exception("Error starting Copy Glencoe Still Images activity")
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-        self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
-                                "Starting check/copy of Glencoe video still images " + article_id)
-        try:
-            file_name = session.get_value(run, 'file_name')
-            if "poa" in file_name:
-                self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
-                                        "Article is POA, no need for video check yet.")
+    def get_events(self, article_id, poa, version=None, run=None):
 
-                return activity.activity.ACTIVITY_SUCCESS
+        start_event = [self.settings, article_id, version, run, self.pretty_name, "start",
+                       "Starting check/copy of Glencoe video still images " + article_id]
+        try:
+            if poa:
+
+                end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
+                             "Article is POA, no need for video check yet. " + article_id]
+
+                return start_event, end_event, activity.activity.ACTIVITY_SUCCESS
             glencoe_article_id = glencoe_check.check_msid(article_id)
             metadata = glencoe_check.metadata(glencoe_article_id, self.settings)
             glencoe_jpgs = glencoe_check.jpg_href_values(metadata)
@@ -70,39 +86,41 @@ class activity_CopyGlencoeStillImages(activity.activity):
                                     " Please check them against CDN files. Article: %s") % \
                                     (bad_files, article_id)
                 self.logger.error(dashboard_message)
-                self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
-                                        dashboard_message)
-                return activity.activity.ACTIVITY_PERMANENT_FAILURE
+
+                end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
+                             dashboard_message]
+
+                return start_event, end_event, activity.activity.ACTIVITY_PERMANENT_FAILURE
 
             dashboard_message = ("Finished Copying Glencoe still images to CDN: %s" + \
                                 "Article: %s") % \
                                 (cdn_still_jpgs, article_id)
             self.logger.info(dashboard_message)
-            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
-                                    dashboard_message)
 
-            return activity.activity.ACTIVITY_SUCCESS
+            end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
+                         dashboard_message]
+            return start_event, end_event, activity.activity.ACTIVITY_SUCCESS
         except AssertionError as e:
             self.logger.info(str(e.message))
             first_chars_error = str(e.message[:21])
             if first_chars_error == "article has no videos":
                 self.logger.info("Glencoe returned 404, therefore article %s does not have videos", article_id)
-                self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
-                                        "Glencoe returned 404, therefore article has no videos")
-                return activity.activity.ACTIVITY_SUCCESS
+                end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
+                             "Glencoe returned 404, therefore article has no videos"]
+                return start_event, end_event, activity.activity.ACTIVITY_SUCCESS
 
             self.logger.exception("Error when checking/copying Glencoe still images.")
-            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
-                                    "An error occurred when checking/copying Glencoe still images. Article " +
-                                    article_id + '; message: ' + str(e.message))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
+                         "An error occurred when checking/copying Glencoe still images. Article " +
+                         article_id + '; message: ' + str(e.message)]
+            return start_event, end_event, activity.activity.ACTIVITY_PERMANENT_FAILURE
 
         except Exception as e:
             self.logger.exception("Error when checking/copying Glencoe still images.")
-            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
-                                    "An error occurred when checking/copying Glencoe still images. Article " +
-                                    article_id + '; message: ' + str(e))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
+                         "An error occurred when checking/copying Glencoe still images. Article " +
+                         article_id + '; message: ' + str(e)]
+            return start_event, end_event, activity.activity.ACTIVITY_PERMANENT_FAILURE
 
 
     def store_jpgs(self, glencoe_jpgs, article_id):
