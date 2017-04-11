@@ -20,6 +20,10 @@ class tests_ApprovePublication(unittest.TestCase):
     def setUp(self):
         self.activity_ApprovePublication = activity_ApprovePublication(
             settings_mock, None, None, None, None)
+        self.activity_ApprovePublication.logger = mock.MagicMock()
+        self.activity_ApprovePublication.set_monitor_property = mock.MagicMock()
+        self.activity_ApprovePublication.emit_monitor_event = mock.MagicMock()
+ 
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -30,7 +34,7 @@ class tests_ApprovePublication(unittest.TestCase):
     @data(
         (200, None, {'update':'2012-12-13T00:00:00+00:00'}, "2012-12-13T00:00:00Z"),
         (200, "2015-12-13T00:00:00Z", {'update':'2012-12-13T00:00:00+00:00'}, "2015-12-13T00:00:00Z"),
-        (200, None, {}, None)
+        (200, None, {}, None),
     )
     @unpack
     def test_activity(self, status_code, response_update_date, update_json, expected_update_date,
@@ -39,9 +43,6 @@ class tests_ApprovePublication(unittest.TestCase):
 
         mock_sqs_connect.return_value = FakeSQSConn(directory)
         mock_sqs_message.return_value = FakeSQSMessage(directory)
-        self.activity_ApprovePublication.logger = mock.MagicMock()
-        self.activity_ApprovePublication.set_monitor_property = mock.MagicMock()
-        self.activity_ApprovePublication.emit_monitor_event = mock.MagicMock()
         mock_requests_put.return_value = classes_mock.FakeResponse(status_code, update_json)
 
         success = self.activity_ApprovePublication.do_activity(
@@ -55,6 +56,15 @@ class tests_ApprovePublication(unittest.TestCase):
         output_json = json.loads(directory.read(activity_data.ApprovePublication_test_dir))
         expected = activity_data.ApprovePublication_json_output_return_example(expected_update_date)
         self.assertDictEqual(output_json, expected)
+
+    @patch('requests.put')
+    def test_retry(self, mock_requests_put):
+        mock_requests_put.return_value = classes_mock.FakeResponse(500, {})
+        result = self.activity_ApprovePublication.do_activity(
+            activity_data.ApprovePublication_data(None))
+        self.assertEqual("ActivityTemporaryFailure", result)
+
+
 
 if __name__ == '__main__':
     unittest.main()

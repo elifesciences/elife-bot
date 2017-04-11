@@ -1,5 +1,6 @@
 import sys, json
 import requests
+import re
 from functional import seq
 
 '''
@@ -66,12 +67,12 @@ def metadata(msid, settings):
 def jpg_href_values(metadata):
 
     return list((seq(metadata.items())
-                .filter(lambda x: x[0].startswith('media') and 'jpg_href' in x[1])
-                .map(lambda y: y[1]['jpg_href'])))
+                .filter(lambda key_value: 'jpg_href' in key_value[1])
+                .map(lambda k_v: k_v[1]['jpg_href'])))
 
 
 def has_videos(xml_str):
-    if '<media content-type="glencoe' in xml_str:
+    if re.search(ur'<media[^>]*mimetype="video".*?>', xml_str):
         return True
     return False
 
@@ -84,6 +85,13 @@ def check_msid(msid):
     if int(msid) > 100000:
         return pad_msid(msid[-5:])
     return pad_msid(msid)
+
+def force_article_id(filename, article_id):
+    "In case of testing, we have generated article ids pointing to real article ids on Glencoe. This function forces the generated article id on a file coming from outside."
+    padded_article_id = check_msid(article_id)
+    if padded_article_id == article_id:
+        return filename
+    return filename.replace(padded_article_id, article_id)
 
 
 def main(msid):

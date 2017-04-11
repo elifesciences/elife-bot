@@ -126,8 +126,36 @@ def get_original_files(files):
     return fs
 
 def get_figures_for_iiif(files):
-    fs = [f for f in get_original_files(files) if (article_figure(f) and has_extensions(f, ['tif', 'jpg']))]
+    # should only be tif
+    originals_figures_tif = [f for f in get_original_files(files) if (article_figure(f) and has_extensions(f, ['tif']))]
+    fs = originals_figures_tif + get_media_file_images(files)
     return fs
+
+
+def file_parts(filename):
+    prefix = filename.split('.')[0]
+    extension = filename.split('.')[-1]
+    return prefix, extension
+
+
+def get_media_file_images(files):
+    return list(filter(lambda f: is_video_file(f) and has_extensions(f, ['jpg']), files))
+
+
+def is_video_file(filename):
+    """
+    Simple check for video file names
+    E.g. match True on elife-00005-media1.mov
+         match True on elife-99999-resp-media1.avi
+         match False on elife-00005-media1-code1.wrl
+    """
+
+    (file_prefix, file_extension) = file_parts(filename)
+    file_type_plus_index = file_prefix.split('-')[-1]
+    if ("media" in file_type_plus_index) or ("video" in file_type_plus_index):
+        return True
+    else:
+        return False
 
 
 def main():

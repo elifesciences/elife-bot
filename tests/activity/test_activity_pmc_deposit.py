@@ -80,6 +80,7 @@ class TestPMCDeposit(unittest.TestCase):
 
             fake_download_files_from_s3 = self.fake_download_files_from_s3(document)
             fake_s3_key_names.return_value = test_data["pmc_zip_key_names"]
+            fake_ftp_to_endpoint.return_value = True
 
             success = self.activity.do_activity(test_data["input_data"])
 
@@ -87,6 +88,28 @@ class TestPMCDeposit(unittest.TestCase):
             self.assertEqual(self.activity.zip_file_name, test_data["expected_zip_filename"])
             self.assertEqual(sorted(self.zip_file_list(self.activity.zip_file_name)),
                              sorted(test_data["zip_file_names"]))
+
+    @patch('activity.activity_PMCDeposit.s3lib.get_s3_key_names_from_bucket')
+    @patch('activity.activity_PMCDeposit.S3Connection')
+    @patch.object(activity_PMCDeposit, 'upload_article_zip_to_s3')
+    @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
+    @patch.object(activity_PMCDeposit, 'download_files_from_s3')
+    def test_do_activity_failed_ftp_to_endpoint(self, fake_download_files_from_s3, fake_ftp_to_endpoint,
+                         fake_upload_article_zip_to_s3, fake_s3_mock, fake_s3_key_names):
+
+        self.activity.create_activity_directories()
+
+        test_data = self.do_activity_passes[0]
+
+        document = test_data["input_data"]["data"]["document"]
+
+        fake_download_files_from_s3 = self.fake_download_files_from_s3(document)
+        fake_s3_key_names.return_value = test_data["pmc_zip_key_names"]
+        fake_ftp_to_endpoint.return_value = False
+
+        success = self.activity.do_activity(test_data["input_data"])
+
+        self.assertEqual(False, success)
 
 
     @data(
@@ -132,11 +155,6 @@ class TestPMCDeposit(unittest.TestCase):
         subject = self.activity.get_revision_email_subject(fid)
         self.assertEqual(subject, expected_subject)
 
-    @data(None, True)
-    def test_clean_directories(self, full):
-        # No assertions, just calling for code coverage
-        self.activity.create_activity_directories()
-        self.activity.clean_directories()
 
 
 if __name__ == '__main__':

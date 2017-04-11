@@ -61,10 +61,13 @@ class S3StorageContext:
 
         key.set_contents_from_file(file)
 
-    def set_resource_from_string(self, resource, data):
+    def set_resource_from_string(self, resource, data, content_type=None):
         bucket, s3_key = self.s3_storage_objects(resource)
         key = Key(bucket)
         key.key = s3_key
+        if content_type != None:
+            key.content_type = content_type
+
         key.set_contents_from_string(data)
 
     def list_resources(self, folder):
