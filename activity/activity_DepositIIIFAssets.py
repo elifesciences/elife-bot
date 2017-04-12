@@ -9,7 +9,7 @@ DepositIIIFAssets.py activity
 """
 
 
-class activity_DepositAssets(activity.activity):
+class activity_DepositIIIFAssets(activity.activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
 
