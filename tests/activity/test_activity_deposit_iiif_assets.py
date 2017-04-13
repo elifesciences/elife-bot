@@ -31,7 +31,7 @@ class TestDepositIIIFAssets(unittest.TestCase):
     @patch('activity.activity_DepositIIIFAssets.Session')
     @patch('activity.activity_DepositIIIFAssets.StorageContext')
     @patch.object(activity_DepositIIIFAssets, 'emit_monitor_event')
-    def test_activity_success(self, fake_emit, fake_storage_context, fake_session):
+    def test_activity_permanent_failure(self, fake_emit, fake_storage_context, fake_session):
 
         fake_storage_context.side_effect = Exception("An error occurred")
         fake_session.return_value = FakeSession(test_activity_data.session_example)
