@@ -3,6 +3,7 @@ from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 from boto.s3.bucket import Bucket
 import re
+import os
 
 
 class StorageContext(object):
@@ -69,6 +70,22 @@ class S3StorageContext:
             key.content_type = content_type
 
         key.set_contents_from_string(data)
+
+    def get_resource_to_file_pointer(self, resource, file_path):
+        bucket, s3_key = self.s3_storage_objects(resource)
+        key = Key(bucket)
+        key.key = s3_key
+
+        fp = open(file_path, mode='wb')
+
+        key.get_file(fp)
+        fp.close()
+
+        assert key.size == os.path.getsize(file_path), \
+                ("The file size of the local cached copy does not correspond to the original size on S3 of %s. "
+                 "This points to a corrupted download, check what's in %s" % (key.name, file_path))
+        fp = open(file_path, mode='rb')
+        return fp
 
     def list_resources(self, folder):
         bucket, s3_key = self.s3_storage_objects(folder)
