@@ -47,10 +47,11 @@ class activity_DepositIIIFAssets(activity.activity):
             orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name
             files_in_bucket = storage_context.list_resources(orig_resource)
             original_figures = article_structure.get_figures_for_iiif(files_in_bucket)
+            original_figures_and_videos = original_figures + article_structure.get_videos(files_in_bucket)
 
             published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket + '/articles'
 
-            for file_name in original_figures:
+            for file_name in original_figures_and_videos:
 
                 orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name + "/" + file_name
                 dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/" + file_name

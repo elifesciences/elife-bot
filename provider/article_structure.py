@@ -131,6 +131,8 @@ def get_figures_for_iiif(files):
     fs = originals_figures_tif + get_media_file_images(files)
     return fs
 
+def get_videos(files):
+    return [f for f in files if (is_video_file(f))]
 
 def file_parts(filename):
     prefix = filename.split('.')[0]
