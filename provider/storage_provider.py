@@ -72,7 +72,7 @@ class S3StorageContext:
 
     def list_resources(self, folder):
         bucket, s3_key = self.s3_storage_objects(folder)
-        folder = s3_key.replace(s3_key[:1], "") if s3_key[:1] == "/" else s3_key
+        folder = s3_key[1:] if s3_key[:1] == "/" else s3_key
         bucketlist = bucket.list(prefix=folder + "/")
         files = []
         for file in bucketlist:
