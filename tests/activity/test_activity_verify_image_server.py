@@ -4,7 +4,6 @@ from activity.activity_VerifyImageServer import activity_VerifyImageServer
 import test_activity_data as test_data
 from mock import patch, MagicMock
 from classes_mock import FakeSession
-from classes_mock import FakeStorageContext
 from ddt import ddt, data
 
 class FakeStorageContext:
