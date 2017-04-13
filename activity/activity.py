@@ -163,6 +163,9 @@ class activity(object):
             if os.path.isdir(full_dir_name):
                 self.tmp_dir = full_dir_name
 
+        if not self.tmp_dir:
+            raise RuntimeError("Cannot create temporary directory %s" % full_dir_name)
+
     def get_tmp_dir(self):
         """
         Get the temporary file directory, but if not set
