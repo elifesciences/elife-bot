@@ -107,6 +107,12 @@ class FakeStorageContext:
     def set_resource_from_string(self, resource, data, content_type=None):
         pass
 
+    def list_resources(self, resource):
+        return ["elife-00353-fig1-v1.tif", "elife-00353-v1.pdf", "elife-00353-v1.xml"]
+
+    def copy_resource(self, origin, destination):
+        pass
+
     # def set_contents_from_filename(self, storage_object, key, path):
     #     copyfile(file, "tests\\" + storage_object + key)
 
