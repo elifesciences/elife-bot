@@ -90,6 +90,39 @@ class workflow_IngestArticleZip(workflow.workflow):
                         "start_to_close_timeout": 60 * 15
                     },
                     {
+                        "activity_type": "DepositIIIFAssets",
+                        "activity_id": "DepositIIIFAssets",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 15
+                    },
+                    {
+                        "activity_type": "CopyGlencoeStillImages",
+                        "activity_id": "CopyGlencoeStillImages",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 15
+                    },
+                    {
+                        "activity_type": "VerifyImageServer",
+                        "activity_id": "VerifyImageServer",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 15
+                    },
+                    {
                         "activity_type": "IngestToLax",
                         "activity_id": "IngestToLax",
                         "version": "1",

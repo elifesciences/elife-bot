@@ -42,7 +42,6 @@ class TestConvertJATS(unittest.TestCase):
         self.jats.set_dashboard_properties = mock.MagicMock()
 
         success = self.jats.do_activity(testdata.ExpandArticle_data)
-        self.assertDictEqual.__self__.maxDiff = None
         self.assertEqual(success, True)
         output_json = json.loads(directory.read("test_dest.json"))
         expected = data.json_output_return_example
