@@ -51,8 +51,7 @@ class activity_ConvertImagesToJPG(activity.activity):
             formats = {"Original": {
                             "sources": "tif",
                             "format": "jpg",
-                            "resolution": 96,
-                            "download": "yes"
+                            "resolution": 96
                         }}
 
             for file_name in figures:
@@ -72,7 +71,7 @@ class activity_ConvertImagesToJPG(activity.activity):
 
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                     "Finished converting images for " + article_id + ": " +
-                                    str(len(files_in_bucket)) + " images processed ")
+                                    str(len(figures)) + " images processed ")
             return activity.activity.ACTIVITY_SUCCESS
 
         except Exception as e:

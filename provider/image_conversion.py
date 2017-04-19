@@ -16,6 +16,8 @@ def generate_images(settings, formats, fp, info, publish_locations, logger):
                     if filename is not None and image is not None:
                         store_in_publish_locations(settings, filename, image, publish_locations, download)
                         logger.info("Stored image %s as %s" % (filename, str(publish_locations)))
+                    else:
+                        raise RuntimeError("filename or image is None. resizer.resize problem.")
         finally:
             fp.close()
 
