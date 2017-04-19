@@ -113,6 +113,9 @@ class FakeStorageContext:
     def copy_resource(self, origin, destination):
         pass
 
+    def get_resource_to_file_pointer(self, resource, file_path):
+        return None
+
     # def set_contents_from_filename(self, storage_object, key, path):
     #     copyfile(file, "tests\\" + storage_object + key)
 
