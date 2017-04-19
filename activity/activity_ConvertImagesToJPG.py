@@ -23,7 +23,6 @@ class activity_ConvertImagesToJPG(activity.activity):
         self.default_task_start_to_close_timeout = 60 * 5
         self.description = "Converts article images to JPG"
         self.logger = logger
-        self.formats = self.load_formats()
 
     def do_activity(self, data=None):
         if self.logger:
@@ -49,14 +48,12 @@ class activity_ConvertImagesToJPG(activity.activity):
 
             figures = filter(article_structure.article_figure, files_in_bucket)
 
-            formats = [
-                    { "Original": {
-                        "sources": "tif",
-                        "format": "jpg",
-                        "resolution": 96,
-                        "download": "yes"
-                    }}
-                ]
+            formats = {"Original": {
+                            "sources": "tif",
+                            "format": "jpg",
+                            "resolution": 96,
+                            "download": "yes"
+                        }}
 
             for file_name in figures:
                 figure_resource = orig_resource + "/" + file_name
@@ -64,23 +61,24 @@ class activity_ConvertImagesToJPG(activity.activity):
                 file_pointer = storage_context.get_resource_to_file_pointer(figure_resource, file_path)
 
                 cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
-                cdn_resource_path = storage_provider + cdn_bucket_name + "/" + article_id + "/" + file_name
-                #addtional cdn
+                cdn_resource_path = storage_provider + cdn_bucket_name + "/" + article_id + "/"
+                published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket + '/articles'
+                add_resource_path = storage_provider + published_bucket_path + "/" + article_id + "/"
 
-                image_conversion.generate_images(formats, file_pointer, article_structure.ArticleInfo(file_name),
-                                                 cdn_resource_path)
+                publish_locations = [cdn_resource_path, add_resource_path]
 
+                image_conversion.generate_images(self.settings, formats, file_pointer, article_structure.ArticleInfo(file_name),
+                                                 publish_locations, self.logger)
 
+            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
+                                    "Finished converting images for " + article_id + ": " +
+                                    str(len(files_in_bucket)) + " images processed ")
+            return activity.activity.ACTIVITY_SUCCESS
 
-
-            original_format_filtered = [
-                {"Figure": [
-                    { "Original": {
-                        "sources": "tif",
-                        "format": "jpg",
-                        "resolution": 96,
-                        "download": "yes"
-                    }}
-                ]}]
-
-        except:
+        except Exception as e:
+            self.logger.exception("An error occurred during " + self.pretty_name)
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    self.pretty_name, "error",
+                                    "Error converting images to JPG for article" + article_id +
+                                    " message:" + e.message)
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
