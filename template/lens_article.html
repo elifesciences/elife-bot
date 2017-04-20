@@ -30,7 +30,7 @@
         styles: {".MathJax_Display": {padding: "0em 0em 0em 3em" },".MathJax_SVG_Display": {padding: "0em 0em 0em 3em" }}
       });
     </script>
-    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
     <script src='../dist/lens.js'></script>
 
@@ -61,7 +61,7 @@
         return query_string;
       } ();
 
-      var documentURL = "https://s3.amazonaws.com/{{ cdn_bucket }}/{{ article.doi_id }}/{{ article_xml_filename }}";
+      var documentURL = "https://cdn.elifesciences.org/articles/{{ article.doi_id }}/{{ article_xml_filename }}";
 
       $(function() {
 
