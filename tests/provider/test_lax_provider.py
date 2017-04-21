@@ -131,7 +131,7 @@ class TestLaxProvider(unittest.TestCase):
         del message['token']
         self.assertDictEqual(message, {'action': 'ingest',
                                        'id': '00353',
-                                       'location': 'https://s3.amazonaws.com/origin_bucket/00353.1/bb2d37b8-e73c-43b3-a092-d555753316af/elife-00353-v1.xml',
+                                       'location': 'https://s3-external-1.amazonaws.com/origin_bucket/00353.1/bb2d37b8-e73c-43b3-a092-d555753316af/elife-00353-v1.xml',
                                        'version': 1,
                                        'force': False})
 
