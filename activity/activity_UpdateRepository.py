@@ -1,9 +1,12 @@
 import activity
-from boto.s3.connection import S3Connection
+import provider.lax_provider as lax_provider
+
 import tempfile
+import time
+
+from boto.s3.connection import S3Connection
 from github import Github
 from github import GithubException
-import provider.lax_provider as lax_provider
 
 """
 activity_UpdateRepository.py activity
@@ -81,6 +84,7 @@ class activity_UpdateRepository(activity.activity):
 
             except RetryException as e:
                 self.logger.info(e.message)
+                time.sleep(30)
                 return activity.activity.ACTIVITY_TEMPORARY_FAILURE
 
             except Exception as e:
