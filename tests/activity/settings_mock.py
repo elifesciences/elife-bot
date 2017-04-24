@@ -64,3 +64,5 @@ pdf_cover_generator = ""
 
 iiif_resolver = ""
 path_to_iiif_server = ""
+
+no_download_extensions = "tif"
