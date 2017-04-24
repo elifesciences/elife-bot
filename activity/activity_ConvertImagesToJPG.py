@@ -48,6 +48,8 @@ class activity_ConvertImagesToJPG(activity.activity):
 
             figures = filter(article_structure.article_figure, files_in_bucket)
 
+            # download is not a IIIF asset but is currently kept for compatibility
+            # download may become obsolete in future
             formats = {"Original": {
                             "sources": "tif",
                             "format": "jpg",
