@@ -114,13 +114,3 @@ class activity_DepositAssets(activity.activity):
 
     def get_no_download_extensions(self, no_download_extensions):
         return [x.strip() for x in no_download_extensions.split(',')]
-
-    @staticmethod
-    def get_keys(bucket, expanded_folder_name):
-        keys = []
-        files = bucket.list(expanded_folder_name + "/", "/")
-        for bucket_file in files:
-            key = bucket.get_key(bucket_file.key)
-            filename = key.name.rsplit('/', 1)[1]
-            keys.append((key, filename))
-        return keys
