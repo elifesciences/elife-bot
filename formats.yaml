@@ -79,11 +79,12 @@ Figure:
     format: gif
     resolution: 96
 
-  Original:
-    sources: tif
-    format: jpg
-    resolution: 96
-    download: yes
+#  Original images are being converted under ConvertImagesToJPG Activity
+#  Original:
+#    sources: tif
+#    format: jpg
+#    resolution: 96
+#    download: yes
 
 
 Inline:

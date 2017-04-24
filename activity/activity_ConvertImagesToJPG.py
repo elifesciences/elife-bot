@@ -50,7 +50,8 @@ class activity_ConvertImagesToJPG(activity.activity):
 
             formats = {"Original": {
                             "sources": "tif",
-                            "format": "jpg"
+                            "format": "jpg",
+                            "download": "yes"
                         }}
 
             for file_name in figures:
