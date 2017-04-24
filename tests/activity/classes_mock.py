@@ -110,7 +110,7 @@ class FakeStorageContext:
     def list_resources(self, resource):
         return ["elife-00353-fig1-v1.tif", "elife-00353-v1.pdf", "elife-00353-v1.xml"]
 
-    def copy_resource(self, origin, destination):
+    def copy_resource(self, origin, destination, additional_dict_metadata=None):
         pass
 
     def get_resource_to_file_pointer(self, resource, file_path):

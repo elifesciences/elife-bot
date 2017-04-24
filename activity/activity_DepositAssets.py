@@ -101,7 +101,7 @@ class activity_DepositAssets(activity.activity):
                                     " message:" + e.message)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-        return True
+        return activity.activity.ACTIVITY_SUCCESS
 
     def content_type_from_file_name(self, file_name):
         if file_name is None:

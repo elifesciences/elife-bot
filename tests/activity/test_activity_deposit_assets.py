@@ -2,12 +2,31 @@ import unittest
 from activity.activity_DepositAssets import activity_DepositAssets
 import settings_mock
 from ddt import ddt, data, unpack
+from mock import patch
 
+from classes_mock import FakeStorageContext
+from classes_mock import FakeSession
+import test_activity_data as test_activity_data
+from classes_mock import FakeLogger
+
+activity_data = {
+                    "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
+                    "article_id": "00353",
+                    "result": "ingested",
+                    "status": "vor",
+                    "version": "1",
+                    "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
+                    "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
+                    "requested_action": "ingest",
+                    "message": None,
+                    "update_date": "2012-12-13T00:00:00Z"
+                }
 
 @ddt
 class TestDepositAssets(unittest.TestCase):
     def setUp(self):
         self.depositassets = activity_DepositAssets(settings_mock, None, None, None, None)
+        self.depositassets.logger = FakeLogger()
 
     @unpack
     @data({'input': '.tif', 'expected': ['.tif']},
@@ -27,6 +46,31 @@ class TestDepositAssets(unittest.TestCase):
     def test_content_type_from_file_name(self, input, expected):
         result = self.depositassets.content_type_from_file_name(input)
         self.assertEqual(result, expected)
+
+    @patch('activity.activity_DepositAssets.Session')
+    @patch('activity.activity_DepositAssets.StorageContext')
+    @patch.object(activity_DepositAssets, 'emit_monitor_event')
+    def test_activity_success(self, fake_emit, fake_storage_context, fake_session):
+
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_session.return_value = FakeSession(test_activity_data.session_example)
+
+        result = self.depositassets.do_activity(activity_data)
+
+        self.assertEqual(self.depositassets.ACTIVITY_SUCCESS, result)
+
+
+    @patch('activity.activity_DepositAssets.Session')
+    @patch('activity.activity_DepositAssets.StorageContext')
+    @patch.object(activity_DepositAssets, 'emit_monitor_event')
+    def test_activity_permanent_failure(self, fake_emit, fake_storage_context, fake_session):
+
+        fake_storage_context.side_effect = Exception("An error occurred")
+        fake_session.return_value = FakeSession(test_activity_data.session_example)
+
+        result = self.depositassets.do_activity(activity_data)
+
+        self.assertEqual(self.depositassets.ACTIVITY_PERMANENT_FAILURE, result)
 
 if __name__ == '__main__':
     unittest.main()
