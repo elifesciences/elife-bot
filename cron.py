@@ -69,13 +69,6 @@ def run_cron(settings):
             workflow_id="S3Monitor_POA",
             start_seconds=60 * 31)
 
-        # Full article zip bucket polling
-        workflow_conditional_start(
-            settings=settings,
-            starter_name="starter_S3Monitor",
-            workflow_id="S3Monitor_FullArticle",
-            start_seconds=60 * 31)
-
         # PMC deposits once per day 20:30 UTC
         if current_time.tm_hour == 20:
             workflow_conditional_start(
@@ -153,12 +146,6 @@ def run_cron(settings):
 
         workflow_conditional_start(
             settings=settings,
-            starter_name="cron_NewS3FullArticle",
-            workflow_id="cron_NewS3FullArticle",
-            start_seconds=60 * 31)
-
-        workflow_conditional_start(
-            settings=settings,
             starter_name="starter_AdminEmail",
             workflow_id="AdminEmail",
             start_seconds=(60*60*4)-(14*60))
@@ -202,8 +189,6 @@ def workflow_conditional_start(settings, starter_name, start_seconds, data=None,
                 s.start(settings=settings, workflow="S3Monitor")
             if workflow_id == "S3Monitor_POA":
                 s.start(settings=settings, workflow="S3Monitor_POA")
-            if workflow_id == "S3Monitor_FullArticle":
-                s.start(settings=settings, workflow="S3Monitor_FullArticle")
 
         elif starter_name == "starter_AdminEmail":
             s.start(settings=settings, workflow="AdminEmail")
@@ -233,8 +218,7 @@ def workflow_conditional_start(settings, starter_name, start_seconds, data=None,
               or starter_name == "starter_PublishPOA"
               or starter_name == "cron_NewS3POA"
               or starter_name == "starter_PublicationEmail"
-              or starter_name == "starter_DepositCrossref"
-              or starter_name == "cron_NewS3FullArticle"):
+              or starter_name == "starter_DepositCrossref"):
             s.start(settings=settings)
 
 def get_s3_key_names_from_bucket(bucket, prefix=None, delimiter='/', headers=None):

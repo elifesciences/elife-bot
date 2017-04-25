@@ -46,7 +46,6 @@ def start(ENV="dev"):
     workflow_names.append("FTPArticle")
     workflow_names.append("PubRouterDeposit")
     workflow_names.append("PMCDeposit")
-    workflow_names.append("PublishFullArticleZip")
     workflow_names.append("PublishPerfectArticle")
     workflow_names.append("PostPerfectPublication")
 
@@ -107,7 +106,6 @@ def start(ENV="dev"):
     activity_names.append("FTPArticle")
     activity_names.append("PubRouterDeposit")
     activity_names.append("PMCDeposit")
-    activity_names.append("UnzipFullArticle")
     activity_names.append("ScheduleCrossref")
     activity_names.append("ScheduleDownstream")
 
