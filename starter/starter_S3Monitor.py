@@ -62,10 +62,6 @@ class starter_S3Monitor():
             # POA delivery bucket monitor
             bucket = settings.poa_bucket
             workflow_id = "S3Monitor_POA"
-        elif workflow == "S3Monitor_FullArticle":
-            # Full article zip delivery bucket monitor
-            bucket = settings.publishing_buckets_prefix + settings.production_bucket
-            workflow_id = "S3Monitor_FullArticle"
 
         if bucket is not None:
             # workflow_id as set above
