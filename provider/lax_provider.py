@@ -106,7 +106,7 @@ def poa_vor_status(data):
 def prepare_action_message(settings, article_id, run, expanded_folder, version, status, eif_location, action, force=False):
         xml_bucket = settings.publishing_buckets_prefix + settings.expanded_bucket
         xml_file_name = get_xml_file_name(settings, expanded_folder, xml_bucket)
-        xml_path = 'https://s3.amazonaws.com/' + xml_bucket + '/' + expanded_folder + '/' + xml_file_name
+        xml_path = 'https://s3-external-1.amazonaws.com/' + xml_bucket + '/' + expanded_folder + '/' + xml_file_name
         carry_over_data = {
             'action': action,
             'location': xml_path,

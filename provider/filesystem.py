@@ -87,7 +87,7 @@ class Filesystem(object):
             else:
                 # If not supplied, rely on S3
                 scheme = "https"
-                netloc = "s3.amazonaws.com"
+                netloc = "s3-external-1.amazonaws.com"
             # Validate
             if o.scheme != scheme and o.netloc != netloc:
                 return None
