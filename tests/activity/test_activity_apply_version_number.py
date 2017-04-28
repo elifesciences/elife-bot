@@ -147,20 +147,27 @@ class MyTestCase(unittest.TestCase):
         result = self.applyversionnumber.new_filename(file, version)
         self.assertEqual(result, expected)
 
-    @patch('activity.activity_ApplyVersionNumber.path.join')
-    def test_rewrite_xml_file(self, mock_path_join):
+    @unpack
+    @data({'file': u'elife-15224-v1.xml', 'expected': u'elife-15224-v1-rewritten.xml'},
+          {'file': u'simple-jats-doctype-1.1d3.xml', 'expected': u'simple-jats-doctype-1.1d3.xml'},
+          {'file': u'simple-jats-doctype-1.1.xml', 'expected': u'simple-jats-doctype-1.1.xml'})
+    def test_rewrite_xml_file(self, file, expected):
+        # Patch here in order to use ddt data
+        patcher = patch('activity.activity_ApplyVersionNumber.path.join')
+        mock_path_join = patcher.start()
+
         #given
         helpers.create_folder('tests/files_dest_ApplyVersionNumber')
-        shutil.copy(u'tests/files_source/ApplyVersionNumber/elife-15224-v1.xml', u'tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml')
-        mock_path_join.return_value = u'tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml'
+        shutil.copy(u'tests/files_source/ApplyVersionNumber/'+ file, u'tests/files_dest_ApplyVersionNumber/'+ file)
+        mock_path_join.return_value = u'tests/files_dest_ApplyVersionNumber/'+ file
 
         #when
-        self.applyversionnumber.rewrite_xml_file(u'elife-15224-v1.xml', example_file_name_map)
+        self.applyversionnumber.rewrite_xml_file(file, example_file_name_map)
 
         #then
-        with open(u'tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml', 'r') as result_file:
+        with open(u'tests/files_dest_ApplyVersionNumber/'+ file, 'r') as result_file:
             result_file_content = result_file.read()
-        with open(u'tests/files_source/ApplyVersionNumber/elife-15224-v1-rewritten.xml', 'r') as expected_file:
+        with open(u'tests/files_source/ApplyVersionNumber/' + expected, 'r') as expected_file:
             expected_file_content = expected_file.read()
         self.assertEqual(result_file_content, expected_file_content)
 

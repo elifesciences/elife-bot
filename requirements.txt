@@ -10,7 +10,8 @@ requests==2.5.3
 wsgiref==0.1.2
 lxml==3.4.1
 xlrd==0.9.3
-elifetools==0.1.6
+#elifetools==0.1.6
+git+https://github.com/elifesciences/elife-tools.git@2e6c6a1f58bf16484611205b588e60e429e2f497#egg=elifetools
 PyYAML==3.11
 Wand==0.4.0
 paramiko==1.15.2
