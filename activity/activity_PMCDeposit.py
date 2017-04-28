@@ -411,14 +411,14 @@ class activity_PMCDeposit(activity.activity):
         # Register namespaces
         xmlio.register_xmlns()
 
-        root = xmlio.parse(xml_file)
+        root, doctype_dict = xmlio.parse(xml_file, return_doctype_dict=True)
 
         # Convert xlink href values
         total = xmlio.convert_xlink_href(root, file_name_map)
         # TODO - compare whether all file names were converted
 
         # Start the file output
-        reparsed_string = xmlio.output(root)
+        reparsed_string = xmlio.output(root, type=None, doctype_dict=doctype_dict)
 
         f = open(xml_file, 'wb')
         f.write(reparsed_string)

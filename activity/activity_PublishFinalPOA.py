@@ -228,7 +228,7 @@ class activity_PublishFinalPOA(activity.activity):
         # Register namespaces
         xmlio.register_xmlns()
 
-        root = xmlio.parse(xml_file)
+        root, doctype_dict = xmlio.parse(xml_file, return_doctype_dict=True)
 
         soup = self.article_soup(xml_file)
 
@@ -269,7 +269,7 @@ class activity_PublishFinalPOA(activity.activity):
 
 
         # Start the file output
-        reparsed_string = xmlio.output(root)
+        reparsed_string = xmlio.output(root, type=None, doctype_dict=doctype_dict)
 
         # Remove extra whitespace here for PoA articles to clean up and one VoR file too
         reparsed_string = reparsed_string.replace("\n", '').replace("\t", '')
