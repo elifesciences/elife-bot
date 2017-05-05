@@ -12,6 +12,7 @@ import provider.simpleDB as dblib
 import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
 from provider.article_structure import ArticleInfo
+from provider.storage_provider import StorageContext
 
 """
 Article data provider
@@ -808,17 +809,14 @@ class article(object):
 
     @staticmethod
     def get_bucket_files(settings, expanded_folder_name, xml_bucket):
-        conn = S3Connection(settings.aws_access_key_id,
-                        settings.aws_secret_access_key)
-        bucket = conn.get_bucket(xml_bucket)
-        files = bucket.list(expanded_folder_name + "/", "/")
-        return bucket, files
+        storage_context = StorageContext(settings)
+        resource = settings.storage_provider + "://" + xml_bucket + "/" + expanded_folder_name
+        files_in_bucket = storage_context.list_resources(resource)
+        return files_in_bucket
 
     def get_xml_file_name(self, settings, expanded_folder_name, xml_bucket, version):
-        bucket, files = self.get_bucket_files(settings, expanded_folder_name, xml_bucket)
-        for bucket_file in files:
-            key = bucket.get_key(bucket_file.key)
-            filename = key.name.rsplit('/', 1)[1]
+        files = self.get_bucket_files(settings, expanded_folder_name, xml_bucket)
+        for filename in files:
             info = ArticleInfo(filename)
             if info.file_type == 'ArticleXML':
                 if version is None:
