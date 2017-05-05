@@ -14,18 +14,18 @@ class ObjectView(object):
         self.__dict__ = d
 
 
-bucket_files_mock_version = [ObjectView({'key': ObjectView({'name':'06498/elife-06498-fig1-v1.tif'})}),
-                             ObjectView({'key': ObjectView({'name':'06498/elife-06498-resp-fig1-v3-80w.gif'})}),
-                             ObjectView({'key': ObjectView({'name':'06498/elife-06498-v1.xml'})}),
-                             ObjectView({'key': ObjectView({'name':'06498/elife-06498-v2.pdf'})}),
-                             ObjectView({'key': ObjectView({'name':'06498/elife-06498-v2.xml'})}),
-                             ObjectView({'key': ObjectView({'name':'06498/elife-06498-v3-download.xml'})})]
+bucket_files_mock_version = ['elife-06498-fig1-v1.tif',
+                             'elife-06498-resp-fig1-v3-80w.gif',
+                             'elife-06498-v1.xml',
+                             'elife-06498-v2.pdf',
+                             'elife-06498-v2.xml',
+                             'elife-06498-v3-download.xml']
 
-bucket_files_mock = [ObjectView({'key': ObjectView({'name':'06498/elife-06498-fig1-v1.tif'})}),
-                     ObjectView({'key': ObjectView({'name':'06498/elife-06498-resp-fig1-v1-80w.gif'})}),
-                     ObjectView({'key': ObjectView({'name':'06498/elife-06498-v1-download.xml'})}),
-                     ObjectView({'key': ObjectView({'name':'06498/elife-06498-v1.xml'})}),
-                     ObjectView({'key': ObjectView({'name':'06498/elife-06498-v1.pdf'})})]
+bucket_files_mock = ['elife-06498-fig1-v1.tif',
+                     'elife-06498-resp-fig1-v1-80w.gif',
+                     'elife-06498-v1-download.xml',
+                     'elife-06498-v1.xml',
+                     'elife-06498-v1.pdf']
 
 
 
@@ -69,14 +69,14 @@ class TestProviderArticle(unittest.TestCase):
     @patch.object(article, 'get_bucket_files')
     def test_get_xml_file_name_by_version(self, mock_get_bucket_files):
         fake_bucket = FakeBucket()
-        mock_get_bucket_files.return_value = fake_bucket, bucket_files_mock_version
+        mock_get_bucket_files.return_value = bucket_files_mock_version
         result = self.articleprovider.get_xml_file_name(None, None, None, version="2")
         self.assertEqual(result, "elife-06498-v2.xml")
 
     @patch.object(article, 'get_bucket_files')
     def test_get_xml_file_name_no_version(self, mock_get_bucket_files):
         fake_bucket = FakeBucket()
-        mock_get_bucket_files.return_value = fake_bucket, bucket_files_mock
+        mock_get_bucket_files.return_value = bucket_files_mock
         result = self.articleprovider.get_xml_file_name(None, None, None, version=None)
         self.assertEqual(result, "elife-06498-v1.xml")
 
