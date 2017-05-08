@@ -126,7 +126,7 @@ class article(object):
             self.article_type = parser.article_type(soup)
 
             self.authors = parser.authors(soup)
-            self.authors_string = self.authors_string(self.authors)
+            self.authors_string = self.get_authors_string(self.authors)
 
             self.related_articles = parser.related_article(soup)
 
@@ -174,7 +174,7 @@ class article(object):
         xml_filename = xml_file_url.split('/')[-1]
 
         r = requests.get(xml_file_url)
-        if r.status_code == requests.codes.ok:
+        if r.status_code == 200:
             filename_plus_path = self.get_tmp_dir() + os.sep + xml_filename
             f = open(filename_plus_path, "wb")
             f.write(r.content)
@@ -761,7 +761,7 @@ class article(object):
         #print lookup_url
 
         r = requests.head(lookup_url, allow_redirects=True)
-        if r.status_code == requests.codes.ok:
+        if r.status_code == 200:
             return r.url
         else:
             return None
@@ -774,7 +774,7 @@ class article(object):
         lookup_url = self.lookup_url_prefix + str(doi_id).zfill(5)
         return lookup_url
 
-    def authors_string(self, authors):
+    def get_authors_string(self, authors):
         """
         Given a list of authors return a string for all the article authors
         """
