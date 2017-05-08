@@ -47,7 +47,7 @@ class activity_UpdateRepository(activity.activity):
                                         self.pretty_name, "end",
                                         "UpdateRepository got skipped as there are no Github "
                                         "settings (Test enviroment).")
-                return True
+                return activity.activity.ACTIVITY_SUCCESS
 
             try:
 
