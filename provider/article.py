@@ -808,14 +808,14 @@ class article(object):
             return False
 
     @staticmethod
-    def get_bucket_files(settings, expanded_folder_name, xml_bucket):
+    def _get_bucket_files(settings, expanded_folder_name, xml_bucket):
         storage_context = StorageContext(settings)
         resource = settings.storage_provider + "://" + xml_bucket + "/" + expanded_folder_name
         files_in_bucket = storage_context.list_resources(resource)
         return files_in_bucket
 
     def get_xml_file_name(self, settings, expanded_folder_name, xml_bucket, version):
-        files = self.get_bucket_files(settings, expanded_folder_name, xml_bucket)
+        files = self._get_bucket_files(settings, expanded_folder_name, xml_bucket)
         for filename in files:
             info = ArticleInfo(filename)
             if info.file_type == 'ArticleXML':

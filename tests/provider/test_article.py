@@ -66,14 +66,14 @@ class TestProviderArticle(unittest.TestCase):
         result = self.articleprovider.check_is_article_published_by_lax('10.7554/eLife.00013', False, None)
         self.assertEqual(result, False)
 
-    @patch.object(article, 'get_bucket_files')
+    @patch.object(article, '_get_bucket_files')
     def test_get_xml_file_name_by_version(self, mock_get_bucket_files):
         fake_bucket = FakeBucket()
         mock_get_bucket_files.return_value = bucket_files_mock_version
         result = self.articleprovider.get_xml_file_name(None, None, None, version="2")
         self.assertEqual(result, "elife-06498-v2.xml")
 
-    @patch.object(article, 'get_bucket_files')
+    @patch.object(article, '_get_bucket_files')
     def test_get_xml_file_name_no_version(self, mock_get_bucket_files):
         fake_bucket = FakeBucket()
         mock_get_bucket_files.return_value = bucket_files_mock
