@@ -62,10 +62,10 @@ class activity_UpdateRepository(activity.activity):
                 with tempfile.TemporaryFile(mode='r+') as tmp:
                     storage_context = get_storage_context(self.settings)
                     storage_provider = self.settings.storage_provider + "://"
-                    published_bucket = storage_provider + self.settings.publishing_buckets_prefix + \
+                    published_path = storage_provider + self.settings.publishing_buckets_prefix + \
                                        self.settings.ppp_cdn_bucket
 
-                    resource = published_bucket + "/" + s3_file_path
+                    resource = published_path + "/" + s3_file_path
 
                     storage_context.get_resource_to_file(resource, tmp)
 
