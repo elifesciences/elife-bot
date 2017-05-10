@@ -103,7 +103,18 @@ class activity_SendQueuedEmail(activity.activity):
             except KeyError:
                 # Missing an expected value, handle exception and
                 #  continue the loop
+                if self.logger:
+                    self.logger.exception("KeyError exception attempting to send email %s", e)
                 continue
+            except boto.ses.exceptions.SESIllegalAddressError:
+                if self.logger:
+                    self.logger.exception("SESIllegalAddressError exception attempting to send email %s", e)
+                continue
+            except Exception as err:
+                # unhandled exception
+                if self.logger:
+                    self.logger.exception("unhandled exception %r attempting to send email %s", err, e)
+                raise
 
             if result is True:
                 item_attrs["date_sent_timestamp"] = calendar.timegm(time.gmtime())
