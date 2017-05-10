@@ -4,7 +4,7 @@ import tempfile
 from github import Github
 from github import GithubException
 import provider.lax_provider as lax_provider
-from provider.storage_provider import get_storage_context
+from provider.storage_provider import StorageContext
 
 """
 activity_UpdateRepository.py activity
@@ -60,7 +60,7 @@ class activity_UpdateRepository(activity.activity):
 
                 #download xml
                 with tempfile.TemporaryFile(mode='r+') as tmp:
-                    storage_context = get_storage_context(self.settings)
+                    storage_context = StorageContext(self.settings)
                     storage_provider = self.settings.storage_provider + "://"
                     published_path = storage_provider + self.settings.publishing_buckets_prefix + \
                                        self.settings.ppp_cdn_bucket

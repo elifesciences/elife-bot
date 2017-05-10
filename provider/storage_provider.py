@@ -6,12 +6,12 @@ import re
 import os
 
 
-def get_storage_context(*args):
+def StorageContext(*args):
     return S3StorageContext(args[0])
 
-class StorageContext(object):
-    def __new__(cls, *args):
-        return S3StorageContext(args[0])
+# class StorageContext(object):
+#     def __new__(cls, *args):
+#         return S3StorageContext(args[0])
 
 class S3StorageContext:
 

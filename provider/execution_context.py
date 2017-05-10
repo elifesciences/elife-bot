@@ -2,14 +2,22 @@ import redis
 from pydoc import locate
 
 
-class Session(object):
-    def __new__(self, settings):
-        settings_session_class = "RedisSession"  # Default
-        if hasattr(settings, 'session_class'):
-            settings_session_class = settings.session_class
+def Session(settings):
+    settings_session_class = "RedisSession"  # Default
+    if hasattr(settings, 'session_class'):
+        settings_session_class = settings.session_class
 
-        session_class = locate('provider.execution_context.' + settings_session_class)
-        return session_class(settings)
+    session_class = locate('provider.execution_context.' + settings_session_class)
+    return session_class(settings)
+
+# class Session(object):
+#     def __new__(self, settings):
+#         settings_session_class = "RedisSession"  # Default
+#         if hasattr(settings, 'session_class'):
+#             settings_session_class = settings.session_class
+#
+#         session_class = locate('provider.execution_context.' + settings_session_class)
+#         return session_class(settings)
 
 
 class FileSession(object):
