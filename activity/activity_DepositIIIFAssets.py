@@ -49,19 +49,14 @@ class activity_DepositIIIFAssets(activity.activity):
             original_figures = article_structure.get_figures_for_iiif(files_in_bucket)
             original_figures_and_videos = original_figures + article_structure.get_videos(files_in_bucket)
 
-            published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket + '/articles'
-
             for file_name in original_figures_and_videos:
 
                 orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name + "/" + file_name
                 dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/" + file_name
-                additional_dest_resource = storage_provider + published_bucket_path + "/" + article_id + "/" + file_name
                 storage_context.copy_resource(orig_resource, dest_resource)
-                storage_context.copy_resource(orig_resource, additional_dest_resource)
 
                 if self.logger:
-                    self.logger.info("Uploaded file %s to %s and %s" % (file_name, cdn_bucket_name,
-                                                                        published_bucket_path))
+                    self.logger.info("Uploaded file %s to %s" % (file_name, cdn_bucket_name))
 
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "end",

@@ -54,23 +54,19 @@ class activity_DepositAssets(activity.activity):
             original_figures_and_videos = original_figures + article_structure.get_videos(files_in_bucket)
             other_assets = filter(lambda asset: asset not in original_figures_and_videos, files_in_bucket)
 
-            # assets buckets
+            # assets bucket
             cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
-            published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket+'/articles'
 
             no_download_extensions = self.get_no_download_extensions(self.settings.no_download_extensions)
 
             for file_name in other_assets:
                 orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name + "/"
                 dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/"
-                additional_dest_resource = storage_provider + published_bucket_path + "/" + article_id + "/"
 
                 storage_context.copy_resource(orig_resource + file_name, dest_resource + file_name)
-                storage_context.copy_resource(orig_resource + file_name, additional_dest_resource + file_name)
 
                 if self.logger:
-                    self.logger.info("Uploaded file %s to %s and %s" % (file_name, cdn_bucket_name,
-                                                                        published_bucket_path))
+                    self.logger.info("Uploaded file %s to %s" % (file_name, cdn_bucket_name))
 
                 file_name_no_extension, extension = file_name.rsplit('.', 1)
                 if extension not in no_download_extensions:
@@ -84,10 +80,6 @@ class activity_DepositAssets(activity.activity):
                     storage_context.copy_resource(orig_resource + file_name,
                                                   dest_resource + file_download,
                                                   additional_dict_metadata=dict_metadata)
-
-                    # additional metadata is already set in origin resource so it will be copied accross by default
-                    storage_context.copy_resource(dest_resource + file_download,
-                                                  additional_dest_resource + file_download)
 
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "end",

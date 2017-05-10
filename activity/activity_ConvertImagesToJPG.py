@@ -63,10 +63,8 @@ class activity_ConvertImagesToJPG(activity.activity):
 
                 cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
                 cdn_resource_path = storage_provider + cdn_bucket_name + "/" + article_id + "/"
-                published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket + '/articles'
-                add_resource_path = storage_provider + published_bucket_path + "/" + article_id + "/"
 
-                publish_locations = [cdn_resource_path, add_resource_path]
+                publish_locations = [cdn_resource_path]
 
                 image_conversion.generate_images(self.settings, formats, file_pointer, article_structure.ArticleInfo(file_name),
                                                  publish_locations, self.logger)

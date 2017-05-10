@@ -6,8 +6,7 @@ source venv/bin/activate
 python -m pylint -E \
     *.py \
     activity/activity.py \
-    activity/activity_Update*.py \
-    activity/activity_Pubmed*.py \
+    activity/activity*.py \
     provider/article_structure.py \
     provider/imageresize.py \
     provider/lax_provider.py \
