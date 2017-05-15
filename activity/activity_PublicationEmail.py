@@ -597,6 +597,8 @@ class activity_PublicationEmail(activity.activity):
             return False
         if not hasattr(author, 'e_mail'):
             return False
+        if author.e_mail is not None and str(author.e_mail).strip() == "":
+            return False
         if author.e_mail is None:
             return False
 
