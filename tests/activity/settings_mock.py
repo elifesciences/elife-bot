@@ -11,7 +11,6 @@ expanded_bucket = 'origin_bucket'
 publishing_buckets_prefix = ""
 production_bucket = "production_bucket"
 ppp_cdn_bucket = ""
-published_bucket = ""
 
 archive_bucket = "archive_bucket"
 
