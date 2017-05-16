@@ -168,8 +168,8 @@ class article(object):
             return False
 
         # Download XML file via HTTP for now
-        bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
-        xml_file_url = ('http://s3-external-1.amazonaws.com/' + bucket_name + '/'
+        bucket_path = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
+        xml_file_url = ('http://s3-external-1.amazonaws.com/' + bucket_path + '/'
                         + doi_id + '/' + 'elife-' + doi_id + '-v' + str(version) + '.xml')
         xml_filename = xml_file_url.split('/')[-1]
 
