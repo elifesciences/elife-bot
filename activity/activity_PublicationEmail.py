@@ -171,8 +171,9 @@ class activity_PublicationEmail(activity.activity):
 
             return True
         except Exception:
-            self.logger.exception("An error occured on do_activity method.")
-            pass
+            if self.logger:
+                self.logger.exception("An error occured on do_activity method.")
+                pass
 
     def log_cannot_find_authors(self, doi):
         if self.logger:
@@ -679,8 +680,9 @@ class activity_PublicationEmail(activity.activity):
             return True
 
         except Exception:
-            self.logger.exception("An error has occurred on send_email method")
-            pass
+            if self.logger:
+                self.logger.exception("An error has occurred on send_email method")
+                pass
 
 
     def queue_author_email(self, email_type, author, headers, article, authors, doi_id,
