@@ -592,86 +592,92 @@ class activity_PublicationEmail(activity.activity):
         decide whether to send the email (after checking for duplicates)
         and queue the email
         """
-
-        if author is None:
-            return False
-        if not hasattr(author, 'e_mail'):
-            return False
-        if author.e_mail is not None and str(author.e_mail).strip() == "":
-            return False
-        if author.e_mail is None:
-            return False
-
-        # First process the headers
-        headers = self.templates.get_email_headers(
-            email_type=email_type,
-            author=author,
-            article=article,
-            format="html")
-
-        if not headers:
-            log_info = ('Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s' %
-                        (str(elife_id), str(email_type), str(author.e_mail)))
-            self.admin_email_content += "\n" + log_info
-
-        # Get the article published date timestamp
-        pub_date_timestamp = None
-        date_scheduled_timestamp = 0
         try:
-            pub_date_timestamp = article.pub_date_timestamp
-            date_scheduled_timestamp = pub_date_timestamp
-        except:
-            pass
 
-        # Duplicate email check, can bypass with allow_duplicates = True
-        if self.allow_duplicates is True:
-            duplicate = False
-        else:
-            duplicate = self.is_duplicate_email(
-                doi_id=elife_id,
-                email_type=headers["email_type"],
-                recipient_email=author.e_mail)
+            if author is None:
+                return False
+            if not hasattr(author, 'e_mail'):
+                return False
+            if author.e_mail is not None and str(author.e_mail).strip() == "":
+                return False
+            if author.e_mail is None:
+                return False
 
-        if duplicate is True:
-            if self.logger:
-                log_info = ('Duplicate email: doi_id: %s email_type: %s recipient_email: %s' %
+            # First process the headers
+            headers = self.templates.get_email_headers(
+                email_type=email_type,
+                author=author,
+                article=article,
+                format="html")
+
+            if not headers:
+                log_info = ('Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s' %
                             (str(elife_id), str(email_type), str(author.e_mail)))
                 self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
 
-        # Secondly, check if article is on the do not send list
-        if duplicate is False and self.allow_duplicates is not True:
-            duplicate = self.is_article_do_not_send(elife_id)
+            # Get the article published date timestamp
+            pub_date_timestamp = None
+            date_scheduled_timestamp = 0
+            try:
+                pub_date_timestamp = article.pub_date_timestamp
+                date_scheduled_timestamp = pub_date_timestamp
+            except:
+                pass
+
+            # Duplicate email check, can bypass with allow_duplicates = True
+            if self.allow_duplicates is True:
+                duplicate = False
+            else:
+                duplicate = self.is_duplicate_email(
+                    doi_id=elife_id,
+                    email_type=headers["email_type"],
+                    recipient_email=author.e_mail)
 
             if duplicate is True:
                 if self.logger:
-                    log_info = (('Article on do not send list for DOI: doi_id: %s ' +
-                                'email_type: %s recipient_email: %s') %
+                    log_info = ('Duplicate email: doi_id: %s email_type: %s recipient_email: %s' %
                                 (str(elife_id), str(email_type), str(author.e_mail)))
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
 
-        # Now we can actually queue the email to be sent
-        if duplicate is False:
-            # Queue the email
-            if self.logger:
-                log_info = ("Sending " + email_type + " type email" +
-                            " for article " + str(elife_id) +
-                            " to recipient_email " + str(author.e_mail))
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
+            # Secondly, check if article is on the do not send list
+            if duplicate is False and self.allow_duplicates is not True:
+                duplicate = self.is_article_do_not_send(elife_id)
 
-            self.queue_author_email(
-                email_type=email_type,
-                author=author,
-                headers=headers,
-                article=article,
-                authors=authors,
-                doi_id=elife_id,
-                date_scheduled_timestamp=date_scheduled_timestamp,
-                format="html")
+                if duplicate is True:
+                    if self.logger:
+                        log_info = (('Article on do not send list for DOI: doi_id: %s ' +
+                                    'email_type: %s recipient_email: %s') %
+                                    (str(elife_id), str(email_type), str(author.e_mail)))
+                        self.admin_email_content += "\n" + log_info
+                        self.logger.info(log_info)
 
-        return True
+            # Now we can actually queue the email to be sent
+            if duplicate is False:
+                # Queue the email
+                if self.logger:
+                    log_info = ("Sending " + email_type + " type email" +
+                                " for article " + str(elife_id) +
+                                " to recipient_email " + str(author.e_mail))
+                    self.admin_email_content += "\n" + log_info
+                    self.logger.info(log_info)
+
+                self.queue_author_email(
+                    email_type=email_type,
+                    author=author,
+                    headers=headers,
+                    article=article,
+                    authors=authors,
+                    doi_id=elife_id,
+                    date_scheduled_timestamp=date_scheduled_timestamp,
+                    format="html")
+
+            return True
+
+        except Exception:
+            self.logger.exception("An error has occurred on send_email method")
+            pass
+
 
     def queue_author_email(self, email_type, author, headers, article, authors, doi_id,
                            date_scheduled_timestamp, format="html"):
