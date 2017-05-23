@@ -31,7 +31,6 @@ class TestIiif(unittest.TestCase):
         fake_logger = FakeLogger()
         success, test_endpoint = iiif.try_endpoint("test_endpoint", fake_logger)
 
-        #self.assertRaises(ShortRetryException, iiif.try_endpoint, "", fake_logger)
         self.assertEqual(success, True)
         self.assertEqual(test_endpoint, "test_endpoint")
 
