@@ -5,22 +5,22 @@ from provider.storage_provider import StorageContext
 from provider import article_structure
 
 """
-DepositIIIFAssets.py activity
+DepositIngestAssets.py activity
 """
 
 
-class activity_DepositIIIFAssets(activity.activity):
+class activity_DepositIngestAssets(activity.activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
 
-        self.name = "DepositIIIFAssets"
-        self.pretty_name = "Deposit IIIF Assets"
+        self.name = "DepositIngestAssets"
+        self.pretty_name = "Deposit Ingest Assets"
         self.version = "1"
         self.default_task_heartbeat_timeout = 30
         self.default_task_schedule_to_close_timeout = 60 * 5
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
-        self.description = "Deposit IIIF assets"
+        self.description = "Deposit Ingest Assets (Pre-Ingest)"
         self.logger = logger
 
     def do_activity(self, data=None):
@@ -31,7 +31,7 @@ class activity_DepositIIIFAssets(activity.activity):
         article_id = session.get_value(run, 'article_id')
 
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
-                                "Depositing IIIF assets for " + article_id)
+                                "Depositing Ingest assets for " + article_id)
 
         try:
 
@@ -47,9 +47,14 @@ class activity_DepositIIIFAssets(activity.activity):
             orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name
             files_in_bucket = storage_context.list_resources(orig_resource)
             original_figures = article_structure.get_figures_for_iiif(files_in_bucket)
-            original_figures_and_videos = original_figures + article_structure.get_videos(files_in_bucket)
 
-            for file_name in original_figures_and_videos:
+            iiif_assets = original_figures + article_structure.get_videos(files_in_bucket)
+
+            pdf_figures = article_structure.get_pdf_figures(files_in_bucket)
+
+            ingest_assets = iiif_assets + pdf_figures
+
+            for file_name in ingest_assets:
 
                 orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name + "/" + file_name
                 dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/" + file_name
@@ -60,14 +65,14 @@ class activity_DepositIIIFAssets(activity.activity):
 
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "end",
-                                    "Deposited IIIF assets for article " + article_id)
+                                    "Deposited Ingest assets for article " + article_id)
             return activity.activity.ACTIVITY_SUCCESS
 
         except Exception as e:
-            self.logger.exception("Exception when Depositing IIIF assets")
+            self.logger.exception("Exception when Depositing Ingest assets")
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error",
-                                    "Error depositing IIIF assets for article " + article_id +
+                                    "Error depositing Ingest assets for article " + article_id +
                                     " message:" + e.message)
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 

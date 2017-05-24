@@ -73,6 +73,9 @@ class ArticleInfo(object):
                    or self.extra_info[-1].startswith('code'))):
             self.file_type = 'Other'
         elif (len(self.extra_info) > 0
+              and self.extra_info[0].startswith('figures')):
+            self.file_type = 'FigurePDF'
+        elif (len(self.extra_info) > 0
               and (self.extra_info[0].startswith('fig')
                    or self.extra_info[0].startswith('figsupp'))
               and not self.extra_info[0].startswith('figures')):
@@ -115,6 +118,10 @@ def article_figure(file):
     article_info = ArticleInfo(file)
     return article_info.file_type == "Figure"
 
+def figure_pdf(file):
+    article_info = ArticleInfo(file)
+    return article_info.file_type == "FigurePDF"
+
 def has_extensions(file, extensions):
     article_info = ArticleInfo(file)
     return article_info.extension in extensions
@@ -130,6 +137,9 @@ def get_figures_for_iiif(files):
     originals_figures_tif = [f for f in get_original_files(files) if (article_figure(f) and has_extensions(f, ['tif']))]
     fs = originals_figures_tif + get_media_file_images(files)
     return fs
+
+def get_pdf_figures(files):
+    return [f for f in files if (figure_pdf(f) and has_extensions(f, ['pdf']))]
 
 def get_videos(files):
     return [f for f in files if (is_video_file(f))]

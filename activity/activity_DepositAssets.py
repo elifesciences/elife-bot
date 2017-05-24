@@ -51,8 +51,11 @@ class activity_DepositAssets(activity.activity):
 
             # filter figures that have already been copied (see DepositIIIFAssets activity)
             original_figures = article_structure.get_figures_for_iiif(files_in_bucket)
-            original_figures_and_videos = original_figures + article_structure.get_videos(files_in_bucket)
-            other_assets = filter(lambda asset: asset not in original_figures_and_videos, files_in_bucket)
+            iiif_assets = original_figures + article_structure.get_videos(files_in_bucket)
+            pdf_figures = article_structure.get_pdf_figures(files_in_bucket)
+            pre_ingest_assets = iiif_assets + pdf_figures
+
+            other_assets = filter(lambda asset: asset not in pre_ingest_assets, files_in_bucket)
 
             # assets bucket
             cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket

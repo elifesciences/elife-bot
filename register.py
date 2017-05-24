@@ -67,7 +67,7 @@ def start(ENV="dev"):
 
     activity_names = []
     activity_names.append("ConvertImagesToJPG")
-    activity_names.append("DepositIIIFAssets")
+    activity_names.append("DepositIngestAssets")
     activity_names.append("CopyGlencoeStillImages")
     activity_names.append("VerifyImageServer")
     activity_names.append("GeneratePDFCovers")
