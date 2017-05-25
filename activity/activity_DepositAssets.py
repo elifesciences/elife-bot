@@ -49,10 +49,10 @@ class activity_DepositAssets(activity.activity):
             orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name
             files_in_bucket = storage_context.list_resources(orig_resource)
 
-            # filter figures that have already been copied (see DepositIIIFAssets activity)
-            original_figures = article_structure.get_figures_for_iiif(files_in_bucket)
-            original_figures_and_videos = original_figures + article_structure.get_videos(files_in_bucket)
-            other_assets = filter(lambda asset: asset not in original_figures_and_videos, files_in_bucket)
+            # filter figures that have already been copied (see DepositIngestAssets activity)
+            pre_ingest_assets = article_structure.pre_ingest_assets(files_in_bucket)
+
+            other_assets = filter(lambda asset: asset not in pre_ingest_assets, files_in_bucket)
 
             # assets bucket
             cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket

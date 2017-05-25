@@ -44,7 +44,7 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666-fig3-video1.mp4', 'expected': 'Other'},
         {'input': 'elife-00666-fig4-v1.tif', 'expected': 'Figure'},
         {'input': 'elife-00666-fig4-code1-v1.xlsx', 'expected': 'Other'},
-        {'input': 'elife-00666-figures-v1.pdf', 'expected': 'Other'},
+        {'input': 'elife-00666-figures-v1.pdf', 'expected': 'FigurePDF'},
         {'input': 'elife-00666-inf001-v1.jpeg', 'expected': 'Inline'},
         {'input': 'elife-00666-repstand1-v1.pdf', 'expected': 'Other'},
         {'input': 'elife-00666-resp-fig1-v1.png', 'expected': 'Figure'},
@@ -140,6 +140,18 @@ class TestArticleStructure(unittest.TestCase):
                     'elife-07398-media1.jpg']
         self.assertListEqual(article_structure.get_figures_for_iiif(files), expected)
 
+    # see https://github.com/elifesciences/elife-continuum-documentation/blob/master/file-naming/file_naming_spec.md
+    def test_get_figures_pdfs(self):
+        files = ['elife-07398-media1.jpg',
+                 'elife-00666-figures-v1.pdf',
+                 'elife-00353-v1.pdf',
+                 'elife-00353-v1.xml',
+                 'elife-18425-figures-v2.pdf']
+        expected = ['elife-00666-figures-v1.pdf',
+                    'elife-18425-figures-v2.pdf']
+        self.assertListEqual(article_structure.get_figures_pdfs(files), expected)
+
+
     @data(u'elife-15224-fig1-figsupp1.tif',
           u'elife-15224-resp-fig1.tif', u'elife-15224-figures.pdf',
           u'elife-15802-fig9-data3.docx', u'elife-11792.mp4',
@@ -166,6 +178,30 @@ class TestArticleStructure(unittest.TestCase):
         result = article_structure.get_videos(files)
 
         self.assertListEqual(result, [u'elife-13273-media1.mp4'])
+
+    def test_pre_ingest_assets(self):
+        files = ['elife-00666-app1-fig1-figsupp1-v1.tif',
+                 'elife-00666-fig2-figsupp2-v1.tif',
+                 'elife-00666-fig2-figsupp2-v1.jpg',
+                 'elife-00666-inf001-v1.jpg',
+                 'elife-00666-inf001-v1-80w.jpg',
+                 'elife-00666-table3-data1-v1.xlsx',
+                 'elife-07702-vor-r4.zip',
+                 'elife-6148691793723703318-fig10-v1.gif',
+                 'elife-9204580859652100230-fig2-data1-v1.xls',
+                 'elife-00666-video2.jpg',
+                 'elife-07398-media1.jpg',
+                 'elife-00666-figures-v1.pdf',
+                 'elife-18425-figures-v2.pdf',
+                 'elife-13273-media1.mp4']
+        expected = ['elife-00666-app1-fig1-figsupp1-v1.tif',
+                    'elife-00666-fig2-figsupp2-v1.tif',
+                    'elife-00666-video2.jpg',
+                    'elife-07398-media1.jpg',
+                    'elife-13273-media1.mp4',
+                    'elife-00666-figures-v1.pdf',
+                    'elife-18425-figures-v2.pdf']
+        self.assertItemsEqual(article_structure.pre_ingest_assets(files), expected)
 
 if __name__ == '__main__':
     unittest.main()
