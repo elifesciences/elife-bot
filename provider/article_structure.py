@@ -138,7 +138,7 @@ def get_figures_for_iiif(files):
     fs = originals_figures_tif + get_media_file_images(files)
     return fs
 
-def get_pdf_figures(files):
+def get_figures_pdfs(files):
     return [f for f in files if (figure_pdf(f) and has_extensions(f, ['pdf']))]
 
 def get_videos(files):
@@ -172,7 +172,7 @@ def is_video_file(filename):
 def pre_ingest_assets(files):
     original_figures = get_figures_for_iiif(files)
     iiif_assets = original_figures + get_videos(files)
-    pdf_figures = get_pdf_figures(files)
+    pdf_figures = get_figures_pdfs(files)
     return list(set(iiif_assets + pdf_figures))
 
 

@@ -141,7 +141,7 @@ class TestArticleStructure(unittest.TestCase):
         self.assertListEqual(article_structure.get_figures_for_iiif(files), expected)
 
     # see https://github.com/elifesciences/elife-continuum-documentation/blob/master/file-naming/file_naming_spec.md
-    def test_get_pdf_figures(self):
+    def test_get_figures_pdfs(self):
         files = ['elife-07398-media1.jpg',
                  'elife-00666-figures-v1.pdf',
                  'elife-00353-v1.pdf',
@@ -149,7 +149,7 @@ class TestArticleStructure(unittest.TestCase):
                  'elife-18425-figures-v2.pdf']
         expected = ['elife-00666-figures-v1.pdf',
                     'elife-18425-figures-v2.pdf']
-        self.assertListEqual(article_structure.get_pdf_figures(files), expected)
+        self.assertListEqual(article_structure.get_figures_pdfs(files), expected)
 
 
     @data(u'elife-15224-fig1-figsupp1.tif',
