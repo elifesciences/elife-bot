@@ -46,15 +46,10 @@ class activity_DepositIngestAssets(activity.activity):
 
             orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name
             files_in_bucket = storage_context.list_resources(orig_resource)
-            original_figures = article_structure.get_figures_for_iiif(files_in_bucket)
 
-            iiif_assets = original_figures + article_structure.get_videos(files_in_bucket)
+            pre_ingest_assets = article_structure.pre_ingest_assets(files_in_bucket)
 
-            pdf_figures = article_structure.get_pdf_figures(files_in_bucket)
-
-            ingest_assets = iiif_assets + pdf_figures
-
-            for file_name in ingest_assets:
+            for file_name in pre_ingest_assets:
 
                 orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name + "/" + file_name
                 dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/" + file_name

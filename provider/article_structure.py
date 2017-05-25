@@ -169,6 +169,12 @@ def is_video_file(filename):
     else:
         return False
 
+def pre_ingest_assets(files):
+    original_figures = get_figures_for_iiif(files)
+    iiif_assets = original_figures + get_videos(files)
+    pdf_figures = get_pdf_figures(files)
+    return list(set(iiif_assets + pdf_figures))
+
 
 def main():
     a = ArticleInfo("elife-00012-fig3-figsupp1-data2.csv")
