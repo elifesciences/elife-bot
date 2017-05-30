@@ -101,8 +101,8 @@ class workflow_IngestArticleZip(workflow.workflow):
                         "start_to_close_timeout": 60 * 15
                     },
                     {
-                        "activity_type": "DepositIIIFAssets",
-                        "activity_id": "DepositIIIFAssets",
+                        "activity_type": "DepositIngestAssets",
+                        "activity_id": "DepositIngestAssets",
                         "version": "1",
                         "input": data,
                         "control": None,
