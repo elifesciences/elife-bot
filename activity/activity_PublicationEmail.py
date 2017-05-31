@@ -603,16 +603,20 @@ class activity_PublicationEmail(activity.activity):
             return False
 
         # First process the headers
-        headers = self.templates.get_email_headers(
-            email_type=email_type,
-            author=author,
-            article=article,
-            format="html")
+        try:
+            headers = self.templates.get_email_headers(
+                email_type=email_type,
+                author=author,
+                article=article,
+                format="html")
+        except:
+            headers = None
 
         if not headers:
             log_info = ('Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s' %
                         (str(elife_id), str(email_type), str(author.e_mail)))
             self.admin_email_content += "\n" + log_info
+            return False
 
         # Get the article published date timestamp
         pub_date_timestamp = None
