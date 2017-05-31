@@ -535,7 +535,7 @@ class activity_PublicationEmail(activity.activity):
         for author in authors:
             # Test sending each type of template
             for email_type in self.email_types:
-                result = self.send_email(email_type, elife_id, author, article)
+                result = self.send_email(email_type, elife_id, author, article, authors)
 
             # For testing set the article as its own related article then send again
 
@@ -548,7 +548,7 @@ class activity_PublicationEmail(activity.activity):
             article.set_related_insight_article(related_article)
             for email_type in ['author_publication_email_VOR_no_POA',
                                'author_publication_email_VOR_after_POA']:
-                result = self.send_email(email_type, elife_id, author, article)
+                result = self.send_email(email_type, elife_id, author, article, authors)
 
     def choose_recipient_authors(self, authors, article_type, feature_article,
                                  related_insight_article):
@@ -597,20 +597,26 @@ class activity_PublicationEmail(activity.activity):
             return False
         if not hasattr(author, 'e_mail'):
             return False
+        if author.e_mail is not None and str(author.e_mail).strip() == "":
+            return False
         if author.e_mail is None:
             return False
 
         # First process the headers
-        headers = self.templates.get_email_headers(
-            email_type=email_type,
-            author=author,
-            article=article,
-            format="html")
+        try:
+            headers = self.templates.get_email_headers(
+                email_type=email_type,
+                author=author,
+                article=article,
+                format="html")
+        except:
+            headers = None
 
         if not headers:
             log_info = ('Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s' %
                         (str(elife_id), str(email_type), str(author.e_mail)))
             self.admin_email_content += "\n" + log_info
+            return False
 
         # Get the article published date timestamp
         pub_date_timestamp = None

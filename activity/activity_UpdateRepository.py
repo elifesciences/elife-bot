@@ -4,6 +4,7 @@ import tempfile
 from github import Github
 from github import GithubException
 import provider.lax_provider as lax_provider
+from provider.storage_provider import StorageContext
 
 """
 activity_UpdateRepository.py activity
@@ -57,21 +58,20 @@ class activity_UpdateRepository(activity.activity):
                                                           data['version'])
                 s3_file_path = data['article_id'] + "/" + xml_file
 
-                #connect to bucket
-                self.conn = S3Connection(self.settings.aws_access_key_id,
-                                     self.settings.aws_secret_access_key,
-                                     host=self.settings.s3_hostname)
-                bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix +
-                                          self.settings.ppp_cdn_bucket)
-
                 #download xml
                 with tempfile.TemporaryFile(mode='r+') as tmp:
+                    storage_context = StorageContext(self.settings)
+                    storage_provider = self.settings.storage_provider + "://"
+                    published_path = storage_provider + self.settings.publishing_buckets_prefix + \
+                                       self.settings.ppp_cdn_bucket
 
-                    s3_key = bucket.get_key(s3_file_path)
-                    filename = s3_file_path.split('/')[-1]
-                    s3_key.get_contents_to_file(tmp)
-                    file_content = s3_key.get_contents_as_string()
-                    message = self.update_github(self.settings.git_repo_path + filename, file_content)
+                    resource = published_path + "/" + s3_file_path
+
+                    storage_context.get_resource_to_file(resource, tmp)
+
+                    file_content = storage_context.get_resource_as_string(resource)
+
+                    message = self.update_github(self.settings.git_repo_path + xml_file, file_content)
 
                     self.logger.info(message)
                     self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],

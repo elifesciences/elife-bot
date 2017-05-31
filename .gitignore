@@ -1,7 +1,8 @@
 *sublime*
 ftp-credentials.txt
-*.log
-*.log.gz
+/*.bak
+/*.log
+/*.log.*.gz
 /newrelic.ini
 *.pyc
 *.swp

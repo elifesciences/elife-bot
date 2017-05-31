@@ -317,7 +317,7 @@ class activity_DepositCrossref(activity.activity):
             r = requests.post(url, data=payload, files=files)
 
             # Check for good HTTP status code
-            if r.status_code != requests.codes.ok:
+            if r.status_code != 200:
                 status = False
             #print r.text
             self.http_request_status_text.append("XML file: " + xml_file)

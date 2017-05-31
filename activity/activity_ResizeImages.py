@@ -157,12 +157,6 @@ class activity_ResizeImages(activity.activity):
             storage_context.set_resource_from_file(storage_resource, image,
                                                    metadata={ 'Content-Type': content_type })
 
-            #..
-            published_bucket_path = self.settings.publishing_buckets_prefix + self.settings.published_bucket + '/articles'
-            storage_resource_destination = storage_provider + published_bucket_path + "/" + cdn_path + "/" + filename
-
-            storage_context.copy_resource(storage_resource, storage_resource_destination)
-
             if download:
                 dict_metadata = {'Content-Disposition':
                                      str("Content-Disposition: attachment; filename=" + filename + ";"),
@@ -176,14 +170,6 @@ class activity_ResizeImages(activity.activity):
                 # file is copied with additional metadata
                 storage_context.copy_resource(storage_resource, storage_resource_dest_download_cdn,
                                               additional_dict_metadata=dict_metadata)
-
-                storage_resource_orig_download = storage_resource_dest_download_cdn
-
-                storage_resource_destination_download = storage_provider + \
-                                                        published_bucket_path + "/" + cdn_path + "/" + file_download
-
-                # additional metadata is already set in origin resource so it will be copied accross by default
-                storage_context.copy_resource(storage_resource_orig_download, storage_resource_destination_download)
 
         finally:
             image.close()

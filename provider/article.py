@@ -12,6 +12,7 @@ import provider.simpleDB as dblib
 import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
 from provider.article_structure import ArticleInfo
+from provider.storage_provider import StorageContext
 
 """
 Article data provider
@@ -125,7 +126,7 @@ class article(object):
             self.article_type = parser.article_type(soup)
 
             self.authors = parser.authors(soup)
-            self.authors_string = self.authors_string(self.authors)
+            self.authors_string = self.get_authors_string(self.authors)
 
             self.related_articles = parser.related_article(soup)
 
@@ -167,13 +168,13 @@ class article(object):
             return False
 
         # Download XML file via HTTP for now
-        cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
-        xml_file_url = ('http://s3-external-1.amazonaws.com/' + cdn_bucket_name + '/'
+        bucket_path = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
+        xml_file_url = ('http://s3-external-1.amazonaws.com/' + bucket_path + '/'
                         + doi_id + '/' + 'elife-' + doi_id + '-v' + str(version) + '.xml')
         xml_filename = xml_file_url.split('/')[-1]
 
         r = requests.get(xml_file_url)
-        if r.status_code == requests.codes.ok:
+        if r.status_code == 200:
             filename_plus_path = self.get_tmp_dir() + os.sep + xml_filename
             f = open(filename_plus_path, "wb")
             f.write(r.content)
@@ -760,7 +761,7 @@ class article(object):
         #print lookup_url
 
         r = requests.head(lookup_url, allow_redirects=True)
-        if r.status_code == requests.codes.ok:
+        if r.status_code == 200:
             return r.url
         else:
             return None
@@ -773,7 +774,7 @@ class article(object):
         lookup_url = self.lookup_url_prefix + str(doi_id).zfill(5)
         return lookup_url
 
-    def authors_string(self, authors):
+    def get_authors_string(self, authors):
         """
         Given a list of authors return a string for all the article authors
         """
@@ -807,18 +808,15 @@ class article(object):
             return False
 
     @staticmethod
-    def get_bucket_files(settings, expanded_folder_name, xml_bucket):
-        conn = S3Connection(settings.aws_access_key_id,
-                        settings.aws_secret_access_key)
-        bucket = conn.get_bucket(xml_bucket)
-        files = bucket.list(expanded_folder_name + "/", "/")
-        return bucket, files
+    def _get_bucket_files(settings, expanded_folder_name, xml_bucket):
+        storage_context = StorageContext(settings)
+        resource = settings.storage_provider + "://" + xml_bucket + "/" + expanded_folder_name
+        files_in_bucket = storage_context.list_resources(resource)
+        return files_in_bucket
 
     def get_xml_file_name(self, settings, expanded_folder_name, xml_bucket, version):
-        bucket, files = self.get_bucket_files(settings, expanded_folder_name, xml_bucket)
-        for bucket_file in files:
-            key = bucket.get_key(bucket_file.key)
-            filename = key.name.rsplit('/', 1)[1]
+        files = self._get_bucket_files(settings, expanded_folder_name, xml_bucket)
+        for filename in files:
             info = ArticleInfo(filename)
             if info.file_type == 'ArticleXML':
                 if version is None:

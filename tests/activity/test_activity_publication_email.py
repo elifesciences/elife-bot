@@ -346,8 +346,22 @@ class TestPublicationEmail(unittest.TestCase):
 
         self.assertEqual(body, expected_body)
 
+    @patch.object(activity_PublicationEmail, 'queue_author_email')
+    def test_send_email_bad_authors(self, fake_queue_author_email):
 
+        failed_authors = []
+        # None
+        failed_authors.append(None)
+        # Object with no e_mail
+        failed_authors.append(Struct())
+        # Object with e_mail as a blank string
+        failed_authors.append(Struct(**{"e_mail": " "}))
+        # Object with e_mail as None
+        failed_authors.append(Struct(**{"e_mail": None}))
 
+        for failed_author in failed_authors:
+            result = self.activity.send_email(None, None, failed_author, None, None)
+            self.assertEqual(result, False)
 
 
 if __name__ == '__main__':

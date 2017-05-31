@@ -77,7 +77,7 @@ class activity_ApplyVersionNumber(activity.activity):
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error",
                                     "Error in applying version number to files for " + article_id +
-                                    " message:" + e.message)
+                                    " message:" + str(e.message))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
         return activity.activity.ACTIVITY_SUCCESS

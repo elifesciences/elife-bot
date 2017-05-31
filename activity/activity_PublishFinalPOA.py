@@ -301,7 +301,7 @@ class activity_PublishFinalPOA(activity.activity):
                 subject_tag.text = self.title_case(subject_tag.text)
         return root
 
-    def add_tag_to_xml_before_elocation_id(self, add_tag, root):
+    def add_tag_to_xml_before_elocation_id(self, add_tag, root, doi_id=""):
         # Add the tag to the XML
         for tag in root.findall('./front/article-meta'):
             parent_tag_index = xmlio.get_first_element_index(tag, 'elocation-id')
@@ -331,7 +331,7 @@ class activity_PublishFinalPOA(activity.activity):
     def add_pub_date_to_xml(self, doi_id, date_struct, root):
         # Create the pub-date XML tag
         pub_date_tag = self.pub_date_xml_element(date_struct)
-        root = self.add_tag_to_xml_before_elocation_id(pub_date_tag, root)
+        root = self.add_tag_to_xml_before_elocation_id(pub_date_tag, root, doi_id)
         return root
 
     def pub_date_xml_element(self, pub_date):
@@ -354,7 +354,7 @@ class activity_PublishFinalPOA(activity.activity):
     def add_volume_to_xml(self, doi_id, volume, root):
         # Create the pub-date XML tag
         volume_tag = self.volume_xml_element(volume)
-        root = self.add_tag_to_xml_before_elocation_id(volume_tag, root)
+        root = self.add_tag_to_xml_before_elocation_id(volume_tag, root, doi_id)
         return root
 
     def volume_xml_element(self, volume):
