@@ -106,6 +106,11 @@ class MyTestCase(unittest.TestCase):
 
     def setUp(self):
         self.applyversionnumber = activity_ApplyVersionNumber(settings_mock, None, None, None, None)
+        self.test_dest_folder = 'tests/files_dest_ApplyVersionNumber'
+        helpers.create_folder(self.test_dest_folder)
+
+    def tearDown(self):
+        helpers.delete_folder(self.test_dest_folder, True)
 
     @patch.object(activity_ApplyVersionNumber, 'emit_monitor_event')
     @patch('activity.activity_ApplyVersionNumber.Session')
@@ -157,7 +162,6 @@ class MyTestCase(unittest.TestCase):
         mock_path_join = patcher.start()
 
         #given
-        helpers.create_folder('tests/files_dest_ApplyVersionNumber')
         shutil.copy(u'tests/files_source/ApplyVersionNumber/'+ file, u'tests/files_dest_ApplyVersionNumber/'+ file)
         mock_path_join.return_value = u'tests/files_dest_ApplyVersionNumber/'+ file
 
@@ -171,12 +175,11 @@ class MyTestCase(unittest.TestCase):
             expected_file_content = expected_file.read()
         self.assertEqual(result_file_content, expected_file_content)
 
-        helpers.delete_folder('tests/files_dest_ApplyVersionNumber', True)
+        patcher.stop()
 
     @patch('activity.activity_ApplyVersionNumber.path.join')
     def test_rewrite_xml_file_no_changes(self, mock_path_join):
         #given
-        helpers.create_folder('tests/files_dest_ApplyVersionNumber')
         shutil.copy(u'tests/files_source/ApplyVersionNumber/elife-15224-v1-rewritten.xml', u'tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml')
         mock_path_join.return_value = u'tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml'
 
@@ -189,8 +192,6 @@ class MyTestCase(unittest.TestCase):
         with open(u'tests/files_source/ApplyVersionNumber/elife-15224-v1-rewritten.xml', 'r') as expected_file:
             expected_file_content = expected_file.read()
         self.assertEqual(result_file_content, expected_file_content)
-
-        helpers.delete_folder('tests/files_dest_ApplyVersionNumber', True)
 
 if __name__ == '__main__':
     unittest.main()
