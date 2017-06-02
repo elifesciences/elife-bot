@@ -226,7 +226,6 @@ class activity_PubRouterDeposit(activity.activity):
         """
         Get the file name of the most recent archive zip from the archive bucket
         """
-        zip_file_name = None
         bucket_name = self.archive_bucket
 
         # Connect to S3 and bucket
@@ -237,8 +236,6 @@ class activity_PubRouterDeposit(activity.activity):
         s3_keys = []
         for key in bucket:
             s3_keys.append({"name": key.name, "last_modified": key.last_modified})
-
-        #s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket=bucket)
 
         return self.latest_archive_zip_revision(article.doi_id, s3_keys, self.journal, status)
 
