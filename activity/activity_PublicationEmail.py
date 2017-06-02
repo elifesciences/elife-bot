@@ -99,76 +99,81 @@ class activity_PublicationEmail(activity.activity):
             # Not specified? Ok, just use the default
             pass
 
-        # Download templates
-        templates_downloaded = self.download_templates()
-        if templates_downloaded is True:
+        try:
+            # Download templates
+            templates_downloaded = self.download_templates()
+            if templates_downloaded is True:
 
-            # Download the article XML from S3 and parse them
-            self.article_xml_filenames = self.download_files_from_s3_outbox()
-            self.articles = self.parse_article_xml(self.article_xml_filenames)
+                # Download the article XML from S3 and parse them
+                self.article_xml_filenames = self.download_files_from_s3_outbox()
+                self.articles = self.parse_article_xml(self.article_xml_filenames)
 
-            self.articles_approved = self.approve_articles(self.articles)
+                self.articles_approved = self.approve_articles(self.articles)
 
-            self.articles_approved_prepared = self.prepare_articles(self.articles_approved)
+                self.articles_approved_prepared = self.prepare_articles(self.articles_approved)
 
-            if self.logger:
-                log_info = "Total parsed articles: " + str(len(self.articles))
-                log_info += "\n" + "Total approved articles " + str(len(self.articles_approved))
-                log_info += ("\n" + "Total prepared articles " +
-                             str(len(self.articles_approved_prepared)))
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
+                if self.logger:
+                    log_info = "Total parsed articles: " + str(len(self.articles))
+                    log_info += "\n" + "Total approved articles " + str(len(self.articles_approved))
+                    log_info += ("\n" + "Total prepared articles " +
+                                 str(len(self.articles_approved_prepared)))
+                    self.admin_email_content += "\n" + log_info
+                    self.logger.info(log_info)
 
-        # For the set of articles now select the template, authors and queue the emails
-        for article in self.articles_approved_prepared:
+            # For the set of articles now select the template, authors and queue the emails
+            for article in self.articles_approved_prepared:
 
-            # Determine which email type or template to send
-            email_type = self.choose_email_type(
-                article_type=article.article_type,
-                is_poa=article.is_poa,
-                was_ever_poa=article.was_ever_poa,
-                feature_article=self.is_feature_article(article)
-            )
+                # Determine which email type or template to send
+                email_type = self.choose_email_type(
+                    article_type=article.article_type,
+                    is_poa=article.is_poa,
+                    was_ever_poa=article.was_ever_poa,
+                    feature_article=self.is_feature_article(article)
+                )
 
-            # Get the authors depending on the article type
-            if article.article_type == "article-commentary":
-                # Check if the related article object was instantiated properly
-                if hasattr(article.related_insight_article, "doi_id"):
-                    authors = self.get_authors(article.related_insight_article.doi_id)
-                else:
-                    authors = None
-                    self.log_cannot_find_authors(article.doi)
-            else:
-                authors = self.get_authors(article.doi_id)
-
-            # Send an email to each author
-            recipient_authors = self.choose_recipient_authors(
-                authors=authors,
-                article_type=article.article_type,
-                feature_article=self.is_feature_article(article),
-                related_insight_article=article.related_insight_article)
-
-            if recipient_authors is None:
-                self.log_cannot_find_authors(article.doi)
-            else:
-                # Good, we can send emails
-                for recipient_author in recipient_authors:
-                    result = self.send_email(email_type, article.doi_id, recipient_author, article, authors)
-                    if result is False:
+                # Get the authors depending on the article type
+                if article.article_type == "article-commentary":
+                    # Check if the related article object was instantiated properly
+                    if hasattr(article.related_insight_article, "doi_id"):
+                        authors = self.get_authors(article.related_insight_article.doi_id)
+                    else:
+                        authors = None
                         self.log_cannot_find_authors(article.doi)
+                else:
+                    authors = self.get_authors(article.doi_id)
+
+                # Send an email to each author
+                recipient_authors = self.choose_recipient_authors(
+                    authors=authors,
+                    article_type=article.article_type,
+                    feature_article=self.is_feature_article(article),
+                    related_insight_article=article.related_insight_article)
+
+                if recipient_authors is None:
+                    self.log_cannot_find_authors(article.doi)
+                else:
+                    # Good, we can send emails
+                    for recipient_author in recipient_authors:
+                        result = self.send_email(email_type, article.doi_id, recipient_author, article, authors)
+                        if result is False:
+                            self.log_cannot_find_authors(article.doi)
 
 
-          # Temporary for testing, send a test run - LATER FOR TESTING TEMPLATES
-          #self.send_email_testrun(self.email_types, article.doi_id, authors, article)
+              # Temporary for testing, send a test run - LATER FOR TESTING TEMPLATES
+              #self.send_email_testrun(self.email_types, article.doi_id, authors, article)
 
-        # Clean the outbox
-        self.clean_outbox()
+            # Clean the outbox
+            self.clean_outbox()
 
-        # Send email to admins with the status
-        self.activity_status = True
-        self.send_admin_email()
+            # Send email to admins with the status
+            self.activity_status = True
+            self.send_admin_email()
 
-        return True
+            return True
+        except Exception:
+            if self.logger:
+                self.logger.exception("An error occured on do_activity method.")
+                pass
 
     def log_cannot_find_authors(self, doi):
         if self.logger:
@@ -627,55 +632,60 @@ class activity_PublicationEmail(activity.activity):
         except:
             pass
 
-        # Duplicate email check, can bypass with allow_duplicates = True
-        if self.allow_duplicates is True:
-            duplicate = False
-        else:
-            duplicate = self.is_duplicate_email(
-                doi_id=elife_id,
-                email_type=headers["email_type"],
-                recipient_email=author.e_mail)
-
-        if duplicate is True:
-            if self.logger:
-                log_info = ('Duplicate email: doi_id: %s email_type: %s recipient_email: %s' %
-                            (str(elife_id), str(email_type), str(author.e_mail)))
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
-
-        # Secondly, check if article is on the do not send list
-        if duplicate is False and self.allow_duplicates is not True:
-            duplicate = self.is_article_do_not_send(elife_id)
+        try:
+            # Duplicate email check, can bypass with allow_duplicates = True
+            if self.allow_duplicates is True:
+                duplicate = False
+            else:
+                duplicate = self.is_duplicate_email(
+                    doi_id=elife_id,
+                    email_type=headers["email_type"],
+                    recipient_email=author.e_mail)
 
             if duplicate is True:
                 if self.logger:
-                    log_info = (('Article on do not send list for DOI: doi_id: %s ' +
-                                'email_type: %s recipient_email: %s') %
+                    log_info = ('Duplicate email: doi_id: %s email_type: %s recipient_email: %s' %
                                 (str(elife_id), str(email_type), str(author.e_mail)))
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
 
-        # Now we can actually queue the email to be sent
-        if duplicate is False:
-            # Queue the email
+            # Secondly, check if article is on the do not send list
+            if duplicate is False and self.allow_duplicates is not True:
+                duplicate = self.is_article_do_not_send(elife_id)
+
+                if duplicate is True:
+                    if self.logger:
+                        log_info = (('Article on do not send list for DOI: doi_id: %s ' +
+                                    'email_type: %s recipient_email: %s') %
+                                    (str(elife_id), str(email_type), str(author.e_mail)))
+                        self.admin_email_content += "\n" + log_info
+                        self.logger.info(log_info)
+
+            # Now we can actually queue the email to be sent
+            if duplicate is False:
+                # Queue the email
+                if self.logger:
+                    log_info = ("Sending " + email_type + " type email" +
+                                " for article " + str(elife_id) +
+                                " to recipient_email " + str(author.e_mail))
+                    self.admin_email_content += "\n" + log_info
+                    self.logger.info(log_info)
+
+                self.queue_author_email(
+                    email_type=email_type,
+                    author=author,
+                    headers=headers,
+                    article=article,
+                    authors=authors,
+                    doi_id=elife_id,
+                    date_scheduled_timestamp=date_scheduled_timestamp,
+                    format="html")
+
+            return True
+        except Exception:
             if self.logger:
-                log_info = ("Sending " + email_type + " type email" +
-                            " for article " + str(elife_id) +
-                            " to recipient_email " + str(author.e_mail))
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
-
-            self.queue_author_email(
-                email_type=email_type,
-                author=author,
-                headers=headers,
-                article=article,
-                authors=authors,
-                doi_id=elife_id,
-                date_scheduled_timestamp=date_scheduled_timestamp,
-                format="html")
-
-        return True
+                self.logger.exception("An error has occurred on send_email method")
+                pass
 
     def queue_author_email(self, email_type, author, headers, article, authors, doi_id,
                            date_scheduled_timestamp, format="html"):
