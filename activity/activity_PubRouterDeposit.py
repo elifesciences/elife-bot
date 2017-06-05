@@ -233,8 +233,10 @@ class activity_PubRouterDeposit(activity.activity):
                                self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
 
+        s3_keys_in_bucket = s3lib.get_s3_keys_from_bucket(bucket=bucket)
+
         s3_keys = []
-        for key in bucket:
+        for key in s3_keys_in_bucket:
             s3_keys.append({"name": key.name, "last_modified": key.last_modified})
 
         return self.latest_archive_zip_revision(article.doi_id, s3_keys, self.journal, status)
