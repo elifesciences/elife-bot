@@ -169,7 +169,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
         self.logger.info("files_in_cdn_no_extention " + str(cdn_all_files_no_extension))
         cdn_still_jpgs_without_video = []
         for still in cdn_still_jpgs_no_extension:
-            if len(list(filter(lambda filename: filename == still, cdn_all_files_no_extension))) != 2:
+            if len(list(filter(lambda filename: filename.lower() == still.lower(), cdn_all_files_no_extension))) != 2:
                 cdn_still_jpgs_without_video.append(still)
 
         self.logger.info("cdn_still_jpgs_without_video " + str(cdn_still_jpgs_without_video))

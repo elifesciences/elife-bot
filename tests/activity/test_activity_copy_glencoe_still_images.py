@@ -164,9 +164,10 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         # Given
         cdn_all_files = ["elife-1234500230-media1-v1.wmv", "elife-1234500230-media2-v1.mp4",
                         "elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
-                        "elife-1234500230-fig1-figsupp1-v2-1084w.jpg"]
+                        "elife-1234500230-fig1-figsupp1-v2-1084w.jpg", "eLife-00999-app2-video1.mp4",
+                         "elife-00999-app2-video1.jpg"]
         cdn_still_jpgs = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg",
-                             "elife-1234500230-media3-v1.jpg"]
+                             "elife-1234500230-media3-v1.jpg", "elife-00999-app2-video1.jpg"]
 
         # When
         result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(cdn_all_files, cdn_still_jpgs,
