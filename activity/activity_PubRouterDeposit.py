@@ -14,6 +14,7 @@ import provider.article as articlelib
 import provider.s3lib as s3lib
 import provider.blacklist as blacklist
 
+import dateutil.parser
 """
 PubRouterDeposit activity
 """
@@ -225,7 +226,6 @@ class activity_PubRouterDeposit(activity.activity):
         """
         Get the file name of the most recent archive zip from the archive bucket
         """
-        zip_file_name = None
         bucket_name = self.archive_bucket
 
         # Connect to S3 and bucket
@@ -233,11 +233,15 @@ class activity_PubRouterDeposit(activity.activity):
                                self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
 
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket=bucket)
+        s3_keys_in_bucket = s3lib.get_s3_keys_from_bucket(bucket=bucket)
 
-        return self.latest_archive_zip_revision(article.doi_id, s3_key_names, self.journal, status)
+        s3_keys = []
+        for key in s3_keys_in_bucket:
+            s3_keys.append({"name": key.name, "last_modified": key.last_modified})
 
-    def latest_archive_zip_revision(self, doi_id, s3_key_names, journal, status):
+        return self.latest_archive_zip_revision(article.doi_id, s3_keys, self.journal, status)
+
+    def latest_archive_zip_revision(self, doi_id, s3_keys, journal, status):
         """
         Get the most recent version of the article zip file from the
         list of bucket key names
@@ -247,17 +251,21 @@ class activity_PubRouterDeposit(activity.activity):
         name_prefix_to_match = (journal + '-' + str(doi_id).zfill(5)
                                 + '-' + status + '-v')
 
-        highest_version = 0
-        for key_name in s3_key_names:
-            if key_name.startswith(name_prefix_to_match):
-                version = None
+        highest = 0
+        for key in s3_keys:
+            if key["name"].startswith(name_prefix_to_match):
+                version_and_date = None
                 try:
-                    parts = key_name.split(name_prefix_to_match)
-                    version = int(parts[1].split('-')[0])
+                    parts = key["name"].split(name_prefix_to_match)
+                    version = parts[1].split('-')[0]
+                    date_formatted = dateutil.parser.parse(key["last_modified"])
+                    date_part = date_formatted.strftime('%Y%m%d%H%M%S')
+                    version_and_date = int(version + date_part)
                 except:
                     pass
-                if version and version > highest_version:
-                    s3_key_name = key_name
+                if version_and_date and version_and_date > highest:
+                    s3_key_name = key["name"]
+                    highest = version_and_date
 
         return s3_key_name
 

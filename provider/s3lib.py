@@ -15,8 +15,23 @@ def get_s3_key_names_from_bucket(bucket, key_type="key", prefix=None,
     key_type = "key" then look for s3 objects
     key_type = "prefix" then look for folders (also s3 objects of a different type)
     """
-    s3_keys = []
+    s3_keys = get_s3_keys_from_bucket(bucket, key_type, prefix,
+                                      delimiter, headers, file_extensions)
     s3_key_names = []
+    # Convert to key names instead of objects to make it testable later
+    for key in s3_keys:
+        s3_key_names.append(key.name)
+
+    # Filter by file_extension
+    if file_extensions is not None:
+        s3_key_names = filter_list_by_file_extensions(s3_key_names, file_extensions)
+
+    return s3_key_names
+
+def get_s3_keys_from_bucket(bucket, key_type="key", prefix=None,
+                                 delimiter='/', headers=None, file_extensions=None):
+
+    s3_keys = []
 
     # Get a list of S3 objects
     bucketList = bucket.list(prefix=prefix, delimiter=delimiter, headers=headers)
@@ -30,15 +45,7 @@ def get_s3_key_names_from_bucket(bucket, key_type="key", prefix=None,
             if isinstance(item, boto.s3.prefix.Prefix):
                 s3_keys.append(item)
 
-    # Convert to key names instead of objects to make it testable later
-    for key in s3_keys:
-        s3_key_names.append(key.name)
-
-    # Filter by file_extension
-    if file_extensions is not None:
-        s3_key_names = filter_list_by_file_extensions(s3_key_names, file_extensions)
-
-    return s3_key_names
+    return s3_keys
 
 def filter_list_by_file_extensions(s3_key_names, file_extensions):
     """
