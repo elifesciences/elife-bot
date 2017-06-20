@@ -40,6 +40,7 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666-fig2-figsupp1-v1.tif', 'expected': 'Figure'},
         {'input': 'elife-00666-fig2-figsupp2-v1.tif', 'expected': 'Figure'},
         {'input': 'elife-00666-fig3-v1.tif', 'expected': 'Figure'},
+        {'input': 'elife-00666-fig3-v10.tif', 'expected': 'Figure'},
         {'input': 'elife-00666-fig3-figsupp1-v1.tif', 'expected': 'Figure'},
         {'input': 'elife-00666-fig3-video1.mp4', 'expected': 'Other'},
         {'input': 'elife-00666-fig4-v1.tif', 'expected': 'Figure'},
@@ -98,12 +99,14 @@ class TestArticleStructure(unittest.TestCase):
 
     def test_get_original_files(self):
         files = ['elife-00666-fig2-figsupp2-v1.tif',
+                 'elife-00666-fig2-figsupp2-v10.tif',
                  'elife-00666-inf001-v1.jpg',
                  'elife-00666-inf001-v1-80w.jpg',
                  'elife-00666-table3-data1-v1.xlsx',
                  'elife-07702-vor-r4.zip',
                  'elife-07398-media1.jpg']
         expected = ['elife-00666-fig2-figsupp2-v1.tif',
+                    'elife-00666-fig2-figsupp2-v10.tif',
                     'elife-00666-inf001-v1.jpg',
                     'elife-00666-table3-data1-v1.xlsx']
 
