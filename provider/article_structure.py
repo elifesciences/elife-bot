@@ -128,7 +128,7 @@ def has_extensions(file, extensions):
 
 
 def get_original_files(files):
-    regex = re.compile(ur'-v([0-9])[\.]')
+    regex = re.compile(ur'-v([0-9]+)[\.]')
     fs = list(filter(regex.search, files))
     return fs
 
