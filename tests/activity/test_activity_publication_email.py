@@ -335,7 +335,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         format = "html"
 
-        expected_body = 'Header\n<p>Dear Features</p>\n"A good life"\n<a href="http://dx.doi.org/10.7554/eLife.00353">read it</a>\n<a href="http://twitter.com/intent/tweet?text=http%3A%2F%2Fdx.doi.org%2F10.7554%2FeLife.00353+%40eLife">social media</a>\n<a href="http://lens.elifesciences.org/00353">online viewer</a>\n\nauthor01@example.com\n\nauthor02@example.org\n\nauthor03@example.com\n'
+        expected_body = 'Header\n<p>Dear Features</p>\n"A good life"\n<a href="https://doi.org/10.7554/eLife.00353">read it</a>\n<a href="http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2FeLife.00353+%40eLife">social media</a>\n<a href="https://lens.elifesciences.org/00353">online viewer</a>\n\nauthor01@example.com\n\nauthor02@example.org\n\nauthor03@example.com\n'
 
         body = self.activity.templates.get_email_body(
             email_type=email_type,
