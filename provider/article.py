@@ -212,7 +212,7 @@ class article(object):
         """
         Given a DOI, get the URL for the DOI
         """
-        doi_url = "http://dx.doi.org/" + doi
+        doi_url = "https://doi.org/" + doi
         return doi_url
 
     def get_lens_url(self, doi):
@@ -220,7 +220,7 @@ class article(object):
         Given a DOI, get the URL for the lens article
         """
         doi_id = self.get_doi_id(doi)
-        lens_url = "http://lens.elifesciences.org/" + doi_id
+        lens_url = "https://lens.elifesciences.org/" + doi_id
         return lens_url
 
     def get_doi_id(self, doi):
