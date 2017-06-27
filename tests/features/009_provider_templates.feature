@@ -92,7 +92,7 @@ Feature: Use Templates provider
   
   Examples:
     | env | tmp_base_dir  | test_name     | base_dir             | author_json          | document_name	           | email_type               | email_body
-    | dev | tmp           | tmpl_provider | test_data/templates/ | {"first_nm": "Test"} | test_data/elife00013.xml | author_publication_email | Header\n<p>Dear Test, <a href="http://dx.doi.org/10.7554/eLife.00013">read it</a> online.</p>\nFooter
+    | dev | tmp           | tmpl_provider | test_data/templates/ | {"first_nm": "Test"} | test_data/elife00013.xml | author_publication_email | Header\n<p>Dear Test, <a href="https://doi.org/10.7554/eLife.00013">read it</a> online.</p>\nFooter
     
   Scenario: Render lens article template using the templates provider
     Given I have imported a settings module
