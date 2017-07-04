@@ -12,6 +12,8 @@ def try_endpoint(endpoint, logger):
         response = requests.head(endpoint)
         if response.status_code == 504:
             raise ShortRetryException("Response code was %s" % response.status_code)
+        if response.status_code == 404:
+            raise ShortRetryException("Response code was %s" % response.status_code)
         if response.status_code != 200:
             logger.error("Error status code != 200. Status code: %s for URL %s\nContent:\n%s", response.status_code, endpoint, response.content)
             return False, endpoint
