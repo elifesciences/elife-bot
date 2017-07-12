@@ -424,7 +424,7 @@ class activity_PubRouterDeposit(activity.activity):
             is_poa = article.is_poa
             # Need to check S3 for whether the DOI was ever POA
             #  using the blank article object to hopefully make only one S3 connection
-            was_ever_poa = blank_article.check_was_ever_poa(article.doi)
+            was_ever_poa = blank_article.check_was_ever_poa_by_lax(article.doi)
 
             # Set the value on the article object for later, it is useful
             article.was_ever_poa = was_ever_poa

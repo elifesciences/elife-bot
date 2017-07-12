@@ -177,7 +177,7 @@ class TestPublicationEmail(unittest.TestCase):
         """
         pass
 
-
+    @patch('provider.lax_provider.article_versions')
     @patch.object(activity_PublicationEmail, 'download_files_from_s3_outbox')
     @patch.object(Templates, 'download_email_templates_from_s3')
     @patch.object(article, 'get_folder_names_from_bucket')
@@ -192,7 +192,8 @@ class TestPublicationEmail(unittest.TestCase):
                          fake_check_is_article_published_by_lax,
                          fake_article_get_folder_names_from_bucket,
                          fake_download_email_templates_from_s3,
-                         fake_download_files_from_s3_outbox):
+                         fake_download_files_from_s3_outbox,
+                         mock_lax_provider_article_versions):
 
         directory = TempDirectory()
         fake_clean_tmp_dir = self.fake_clean_tmp_dir()
@@ -209,6 +210,7 @@ class TestPublicationEmail(unittest.TestCase):
             directory, self.activity.get_tmp_dir(), "authors.csv", "tests/test_data/ejp_author_file.csv")
         fake_find_latest_s3_file_name.return_value = mock.MagicMock()
         fake_elife_add_email_to_email_queue.return_value = mock.MagicMock()
+        mock_lax_provider_article_versions.return_value = 200, []
 
         # do_activity
         for test_data in self.do_activity_passes:

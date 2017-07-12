@@ -243,10 +243,10 @@ class activity_PubmedArticleDeposit(activity.activity):
                 # Edge case, ignore this article PoA
                 article.was_ever_poa = False
             elif (article.is_poa is False and
-                  self.article.check_was_ever_poa(article.doi) is True):
+                  self.article.check_was_ever_poa_by_lax(article.doi) is True):
                 article.was_ever_poa = True
             elif (article.is_poa is False and
-                  self.article.check_was_ever_poa(article.doi) is False):
+                  self.article.check_was_ever_poa_by_lax(article.doi) is False):
                 article.was_ever_poa = False
 
             # Check if each article is published
