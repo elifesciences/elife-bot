@@ -149,6 +149,34 @@ class TestLaxProvider(unittest.TestCase):
                                                                   "status": "vor",
                                                                   "force": False})
 
+    @patch('provider.lax_provider.article_versions')
+    def test_was_ever_poa_was_poa(self, mock_lax_provider_article_versions):
+        article_id = '04132'
+        mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
+        
+        result = lax_provider.was_ever_poa(article_id, settings_mock)
+        self.assertEqual(result, True)
+
+    @patch('provider.lax_provider.article_versions')
+    def test_was_ever_poa_was_not_poa(self, mock_lax_provider_article_versions):
+        article_id = '04132'
+        mock_lax_provider_article_versions.return_value = 200, [test_data.lax_article_by_version_response_data_incomplete]
+        result = lax_provider.was_ever_poa(article_id, settings_mock)
+        self.assertEqual(result, False)
+
+    @patch('provider.lax_provider.article_versions')
+    def test_was_ever_poa_was_not_poa_blank(self, mock_lax_provider_article_versions):
+        article_id = '04132'
+        mock_lax_provider_article_versions.return_value = 200, []
+        result = lax_provider.was_ever_poa(article_id, settings_mock)
+        self.assertEqual(result, False)
+
+    @patch('provider.lax_provider.article_versions')
+    def test_was_ever_poa_was_not_poa_500(self, mock_lax_provider_article_versions):
+        article_id = '04132'
+        mock_lax_provider_article_versions.return_value = 500, []
+        result = lax_provider.was_ever_poa(article_id, settings_mock)
+        self.assertEqual(result, None)
 
 if __name__ == '__main__':
     unittest.main()

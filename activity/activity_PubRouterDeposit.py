@@ -13,6 +13,7 @@ import provider.simpleDB as dblib
 import provider.article as articlelib
 import provider.s3lib as s3lib
 import provider.blacklist as blacklist
+import provider.lax_provider as lax_provider
 
 import dateutil.parser
 """
@@ -424,7 +425,7 @@ class activity_PubRouterDeposit(activity.activity):
             is_poa = article.is_poa
             # Need to check S3 for whether the DOI was ever POA
             #  using the blank article object to hopefully make only one S3 connection
-            was_ever_poa = blank_article.check_was_ever_poa_by_lax(article.doi)
+            was_ever_poa = lax_provider.was_ever_poa(article.doi_id, self.settings)
 
             # Set the value on the article object for later, it is useful
             article.was_ever_poa = was_ever_poa

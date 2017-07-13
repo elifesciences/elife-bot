@@ -103,6 +103,18 @@ def poa_vor_status(data):
     return poa_status, vor_status
 
 
+def was_ever_poa(article_id, settings):
+    "Use Lax data to check if the article was ever a PoA article"
+    status_code, data = article_versions(article_id, settings)
+    if status_code == 200:
+        poa_status, vor_status = poa_vor_status(data)
+        if poa_status is True:
+            return True
+        else:
+            return False
+    else:
+        return None
+
 def prepare_action_message(settings, article_id, run, expanded_folder, version, status, eif_location, action, force=False):
         xml_bucket = settings.publishing_buckets_prefix + settings.expanded_bucket
         xml_file_name = get_xml_file_name(settings, expanded_folder, xml_bucket)

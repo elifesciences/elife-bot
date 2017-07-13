@@ -86,34 +86,6 @@ class TestProviderArticle(unittest.TestCase):
             tweet_url,
             "http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2FeLife.08411+%40eLife")
 
-    @patch('provider.lax_provider.article_versions')
-    def test_check_was_ever_poa_by_lax_was_poa(self, mock_lax_provider_article_versions):
-        doi = '10.7554/eLife.04132'
-        mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
-        
-        result = self.articleprovider.check_was_ever_poa_by_lax(doi)
-        self.assertEqual(result, True)
-
-    @patch('provider.lax_provider.article_versions')
-    def test_check_was_ever_poa_by_lax_was_not_poa(self, mock_lax_provider_article_versions):
-        doi = '10.7554/eLife.04132'
-        mock_lax_provider_article_versions.return_value = 200, [test_data.lax_article_by_version_response_data_incomplete]
-        result = self.articleprovider.check_was_ever_poa_by_lax(doi)
-        self.assertEqual(result, False)
-
-    @patch('provider.lax_provider.article_versions')
-    def test_check_was_ever_poa_by_lax_was_not_poa_blank(self, mock_lax_provider_article_versions):
-        doi = '10.7554/eLife.04132'
-        mock_lax_provider_article_versions.return_value = 200, []
-        result = self.articleprovider.check_was_ever_poa_by_lax(doi)
-        self.assertEqual(result, False)
-
-    @patch('provider.lax_provider.article_versions')
-    def test_check_was_ever_poa_by_lax_was_not_poa_500(self, mock_lax_provider_article_versions):
-        doi = '10.7554/eLife.04132'
-        mock_lax_provider_article_versions.return_value = 500, []
-        result = self.articleprovider.check_was_ever_poa_by_lax(doi)
-        self.assertEqual(result, None)
 
 if __name__ == '__main__':
     unittest.main()

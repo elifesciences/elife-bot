@@ -574,26 +574,6 @@ class article(object):
         else:
             return False
 
-    def check_was_ever_poa_by_lax(self, doi):
-        """
-        Use Lax data to check if the article was ever a PoA article
-        Return true or false if Lax has status_code 200, otherwise return None
-        """
-        doi_id = int(self.get_doi_id(doi))
-        article_id = str(doi_id).zfill(5)
-        # work around circular dependency article/lax_provider
-        from lax_provider import article_versions, poa_vor_status
-        status_code, data = article_versions(article_id, self.settings)
-
-        if status_code == 200:
-            poa_status, vor_status = poa_vor_status(data)
-            if poa_status is True:
-                return True
-            else:
-                return False
-        else:
-            return None
-
     def get_doi_id_from_poa_s3_key_name(self, s3_key_name):
         """
         Extract just the integer doi_id value from the S3 key name
