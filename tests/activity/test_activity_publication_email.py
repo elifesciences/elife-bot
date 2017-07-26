@@ -17,6 +17,7 @@ from provider.simpleDB import SimpleDB
 from classes_mock import FakeKey
 
 from testfixtures import TempDirectory
+import tests.test_data as test_data
 
 import os
 # Add parent directory for imports, so activity classes can use elife-poa-xml-generation
@@ -181,15 +182,13 @@ class TestPublicationEmail(unittest.TestCase):
     @patch.object(activity_PublicationEmail, 'download_files_from_s3_outbox')
     @patch.object(Templates, 'download_email_templates_from_s3')
     @patch.object(article, 'get_folder_names_from_bucket')
-    @patch.object(article, 'check_is_article_published_by_lax')
     @patch.object(EJP, 'get_s3key')
     @patch.object(EJP, 'find_latest_s3_file_name')
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch.object(activity_PublicationEmail, 'clean_tmp_dir')
     def test_do_activity(self, fake_clean_tmp_dir, fake_elife_add_email_to_email_queue,
                          fake_find_latest_s3_file_name,
-                         fake_ejp_get_s3key, 
-                         fake_check_is_article_published_by_lax,
+                         fake_ejp_get_s3key,
                          fake_article_get_folder_names_from_bucket,
                          fake_download_email_templates_from_s3,
                          fake_download_files_from_s3_outbox,
@@ -205,28 +204,27 @@ class TestPublicationEmail(unittest.TestCase):
 
         # Basic fake data for all activity passes
         fake_article_get_folder_names_from_bucket.return_value = self.fake_article_get_folder_names_from_bucket()
-        fake_check_is_article_published_by_lax.return_value = True
         fake_ejp_get_s3key.return_value = self.fake_ejp_get_s3key(
             directory, self.activity.get_tmp_dir(), "authors.csv", "tests/test_data/ejp_author_file.csv")
         fake_find_latest_s3_file_name.return_value = mock.MagicMock()
         fake_elife_add_email_to_email_queue.return_value = mock.MagicMock()
-        mock_lax_provider_article_versions.return_value = 200, []
+        mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
 
         # do_activity
-        for test_data in self.do_activity_passes:
+        for pass_test_data in self.do_activity_passes:
 
             fake_download_email_templates_from_s3 = self.fake_download_email_templates_from_s3(
-                self.activity.get_tmp_dir(), test_data["templates_warmed"])
+                self.activity.get_tmp_dir(), pass_test_data["templates_warmed"])
 
             fake_download_files_from_s3_outbox.return_value = self.fake_download_files_from_s3_outbox(
-                test_data["article_xml_filenames"], self.activity.get_tmp_dir())
+                pass_test_data["article_xml_filenames"], self.activity.get_tmp_dir())
 
 
-            success = self.activity.do_activity(test_data["input_data"])
+            success = self.activity.do_activity(pass_test_data["input_data"])
 
-            self.assertEqual(True, test_data["activity_success"])
-            self.assertEqual(len(self.activity.articles_approved), test_data["articles_approved_len"])
-            self.assertEqual(len(self.activity.articles_approved_prepared), test_data["articles_approved_prepared_len"])
+            self.assertEqual(True, pass_test_data["activity_success"])
+            self.assertEqual(len(self.activity.articles_approved), pass_test_data["articles_approved_len"])
+            self.assertEqual(len(self.activity.articles_approved_prepared), pass_test_data["articles_approved_prepared_len"])
 
 
     @data(

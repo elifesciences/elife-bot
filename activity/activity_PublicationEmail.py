@@ -488,23 +488,16 @@ class activity_PublicationEmail(activity.activity):
                     self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
 
-        # Create a blank article object to use its functions
-        blank_article = self.create_article()
-        # Remove based on published status
-
         for article in articles:
-            # Article object knows if it is POA or not
-            is_poa = article.is_poa
-            # Need to check S3 for whether the DOI was ever POA
-            #  using the blank article object to hopefully make only one S3 connection
-            was_ever_poa = lax_provider.was_ever_poa(article.doi_id, self.settings)
-
-            # Set the value on the article object for later, it is useful
-            article.was_ever_poa = was_ever_poa
+            # Check whether the DOI was ever POA
+            article.was_ever_poa = lax_provider.was_ever_poa(article.doi_id, self.settings)
 
             # Now can check if published
-            is_published = blank_article.check_is_article_published(article.doi,
-                                                                    is_poa, was_ever_poa)
+            is_published = lax_provider.published_considering_poa_status(
+                article_id=article.doi_id,
+                settings=self.settings,
+                is_poa=article.is_poa,
+                was_ever_poa=article.was_ever_poa)
             if is_published is not True:
                 if self.logger:
                     log_info = "Removing because it is not published " + article.doi

@@ -115,6 +115,31 @@ def was_ever_poa(article_id, settings):
     else:
         return None
 
+def published_considering_poa_status(article_id, settings, is_poa, was_ever_poa):
+    """
+    Check the lax data for whether an article is published
+    considering whether it was or is PoA status
+    """
+    status_code, data = article_versions(article_id, settings)
+    if status_code == 200:
+        poa_status, vor_status = poa_vor_status(data)
+    else:
+        poa_status, vor_status = None, None
+    # Now a decision can be made
+    if ((is_poa is True and was_ever_poa is True) or
+        (is_poa is False and was_ever_poa is False)):
+        # In this case, any version is sufficient
+        if poa_status or vor_status:
+            return True
+    elif is_poa is False and was_ever_poa is True:
+        # In the case of was ever PoA but is not PoA
+        #  check there is a VoR version
+        if vor_status:
+            return True
+    # Default
+    return False
+
+
 def prepare_action_message(settings, article_id, run, expanded_folder, version, status, eif_location, action, force=False):
         xml_bucket = settings.publishing_buckets_prefix + settings.expanded_bucket
         xml_file_name = get_xml_file_name(settings, expanded_folder, xml_bucket)
