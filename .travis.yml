@@ -12,6 +12,5 @@ python:
   #- "3.5-dev" # 3.5 development branch
   #- "nightly" # currently points to 3.6-dev
 # command to install dependencies
-before_install: BOTO_CONFIG=/tmp/nowhere
 install: ./travis-install.sh
 script: ./travis-test.sh
