@@ -34,13 +34,19 @@ class activity_GeneratePDFCovers(activity.activity):
                                     self.pretty_name, "start", "Starting check for generation of pdf cover.")
 
             article = articlelib.article()
-            pdf_cover_a4 = article.get_pdf_cover_link(self.logger, self.settings, article_id, "a4")
-            pdf_cover_letter = article.get_pdf_cover_link(self.logger, self.settings, article_id, "letter")
+
+            assert hasattr(self.settings, "pdf_cover_generator"), "pdf_cover_generator variable is missing from " \
+                                                                  "settings file!"
+            pdf_cover = article.get_pdf_cover_link(self.settings.pdf_cover_generator, article_id)
+            pdf_cover_a4 = pdf_cover["a4"]
+            pdf_cover_letter = pdf_cover["letter"]
 
             assert len(pdf_cover_a4) > 1 and len(pdf_cover_letter) > 1, "Unexpected result from pdf covers API."
 
+            dashboard_message = ("Finished check for generation of pdf cover. S3 url for a4: %s; "
+                                 "S3 url for letter %s.") % (pdf_cover_a4, pdf_cover_letter)
             self.emit_monitor_event(self.settings, article_id, version, run,
-                                    self.pretty_name, "start", "Finished check for generation of pdf cover.")
+                                    self.pretty_name, "start", dashboard_message)
             return activity.activity.ACTIVITY_SUCCESS
 
         except AssertionError as err:
