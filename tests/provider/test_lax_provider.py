@@ -7,8 +7,9 @@ import tests.test_data as test_data
 from provider.lax_provider import ErrorCallingLaxException
 
 from mock import mock, patch, MagicMock
+from ddt import ddt, data, unpack
 
-
+@ddt
 class TestLaxProvider(unittest.TestCase):
 
     @patch('provider.lax_provider.article_versions')
@@ -177,6 +178,43 @@ class TestLaxProvider(unittest.TestCase):
         mock_lax_provider_article_versions.return_value = 500, []
         result = lax_provider.was_ever_poa(article_id, settings_mock)
         self.assertEqual(result, None)
+
+    @patch('provider.lax_provider.article_versions')
+    @data(
+        (True, True, True),
+        (True, False, False),
+        (True, None, False),
+        (False, True, True),
+        (False, False, True),
+        (False, None, False),
+    )
+    @unpack
+    def test_published_considering_poa_status(self, is_poa, was_ever_poa, expected_return_value,
+                                              mock_lax_provider_article_versions):
+        article_id = '04132'
+        mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
+        published = lax_provider.published_considering_poa_status(article_id, settings_mock,
+                                                                  is_poa, was_ever_poa)
+        self.assertEqual(published, expected_return_value)
+
+    @patch('provider.lax_provider.article_versions')
+    @data(
+        (True, True, False),
+        (True, False, False),
+        (True, None, False),
+        (False, True, False),
+        (False, False, False),
+        (False, None, False),
+    )
+    @unpack
+    def test_published_considering_poa_status_500(self, is_poa, was_ever_poa, expected_return_value,
+                                              mock_lax_provider_article_versions):
+        article_id = '04132'
+        mock_lax_provider_article_versions.return_value = 500, []
+        published = lax_provider.published_considering_poa_status(article_id, settings_mock,
+                                                                  is_poa, was_ever_poa)
+        self.assertEqual(published, expected_return_value)
+
 
 if __name__ == '__main__':
     unittest.main()

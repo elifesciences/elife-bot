@@ -252,10 +252,13 @@ class activity_PubmedArticleDeposit(activity.activity):
                 article.was_ever_poa = False
 
             # Check if each article is published
-            if self.article.check_is_article_published(
-                    doi=article.doi,
-                    is_poa=article.is_poa,
-                    was_ever_poa=article.was_ever_poa) is True:
+            is_published = lax_provider.published_considering_poa_status(
+                article_id=article.doi_id,
+                settings=self.settings,
+                is_poa=article.is_poa,
+                was_ever_poa=article.was_ever_poa)
+
+            if is_published is True:
 
                 # Try to add the article version if in lax
                 try:

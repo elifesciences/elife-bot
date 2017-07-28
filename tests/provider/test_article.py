@@ -48,24 +48,6 @@ class TestProviderArticle(unittest.TestCase):
         result = self.articleprovider.download_article_xml_from_s3('08411')
         self.assertEqual(result, False)
 
-    @patch('provider.lax_provider.article_versions')
-    def test_check_is_article_published_by_lax_200(self, mock_lax_provider_article_versions):
-        mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
-        result = self.articleprovider.check_is_article_published_by_lax('10.7554/eLife.00013', True, True)
-        self.assertEqual(result, True)
-
-    @patch('provider.lax_provider.article_versions')
-    def test_check_is_article_published_by_lax_200_empty_data(self, mock_lax_provider_article_versions):
-        mock_lax_provider_article_versions.return_value = 200, []
-        result = self.articleprovider.check_is_article_published_by_lax('10.7554/eLife.00013', False, None)
-        self.assertEqual(result, False)
-
-    @patch('provider.lax_provider.article_versions')
-    def test_check_is_article_published_by_lax_404(self, mock_lax_provider_article_versions):
-        mock_lax_provider_article_versions.return_value = 404, None
-        result = self.articleprovider.check_is_article_published_by_lax('10.7554/eLife.00013', False, None)
-        self.assertEqual(result, False)
-
     @patch.object(article, '_get_bucket_files')
     def test_get_xml_file_name_by_version(self, mock_get_bucket_files):
         fake_bucket = FakeBucket()

@@ -181,28 +181,6 @@ def i_have_the_feature_article(step, feature_article):
     if feature_article == "True":  world.feature_article = True
     if feature_article == "False": world.feature_article = False
 
-    
-@step(u'I have the article url (\S+)')
-def i_have_the_article_url(step, article_url):
-  world.article_url = article_url
-  assert world.article_url is not None, \
-    "Got article_url %s" % world.article_url
-    
-@step(u'I check is article published with the article provider')
-def i_check_is_article_published_with_the_article_provider(step):
-  world.is_published = world.article.check_is_article_published(
-    world.doi,
-    world.is_poa,
-    world.was_ever_poa,
-    world.article_url)
-  assert world.is_published is not None, \
-    "Got is_published %s" % world.is_published
-    
-@step(u'I have is published (\S+)')
-def i_have_is_published(step, is_published):
-  assert str(world.is_published) == is_published, \
-    "Got is_published %s" % world.is_published
-  
 @step(u'I have the article authors string (.*)')
 def i_have_the_article_authors_string_authors_string(step, authors_string):
   assert world.article.authors_string == authors_string, \

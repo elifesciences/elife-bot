@@ -31,30 +31,6 @@ Feature: Use article provider
     | env | doi_id  | lookup_url                
     | dev | 3       | http://elifesciences.org/lookup/doi/10.7554/eLife.00003
 
-  Scenario: Given article details check if it is published from the article provider
-    Given I have imported a settings module
-    And I have the settings environment <env>
-    And I get the settings
-    And I create an article provider
-    And I have a doi <doi>
-    And I have is poa <is_poa>
-    And I have was ever poa <was_ever_poa>
-    And I have the article url <article_url>
-    When I check is article published with the article provider
-    Then I have is published <is_published>
-
-  Examples:
-    | env | doi                  | is_poa   | was_ever_poa  | article_url                                                    | is_published
-    | dev | 10.7554/eLife.00003  | True     | True          | Test_None                                                      | False
-    | dev | 10.7554/eLife.00003  | False    | False         | Test_None                                                      | False
-    | dev | 10.7554/eLife.00003  | False    | True          | Test_None                                                      | False
-    | dev | 10.7554/eLife.00003  | False    | None          | Test_None                                                      | False
-    | dev | 10.7554/eLife.00003  | True     | True          | http://elifesciences.org/content/early/2012/01/01/eLife.00003  | True
-    | dev | 10.7554/eLife.00003  | False    | False         | http://elifesciences.org/content/1/e00003                      | True
-    | dev | 10.7554/eLife.00003  | False    | None          | http://elifesciences.org/content/1/e00003                      | True
-    | dev | 10.7554/eLife.00003  | False    | True          | http://elifesciences.org/content/early/2012/01/01/eLife.00003  | False
-    | dev | 10.7554/eLife.00003  | True     | None          | http://elifesciences.org/content/early/2012/01/01/eLife.00003  | True
-    | dev | 10.7554/eLife.00003  | True     | None          | Test_None                                                      | False
 
   Scenario: Given an article XML, parse it and return some values
     Given I have imported a settings module

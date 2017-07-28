@@ -24,7 +24,7 @@ Pillow==3.2.0
 -e hg+https://bitbucket.org/lskibinski/scraper#egg=scraper
 ndg-httpsclient==0.4.2
 pyasn1==0.1.9
-pyOpenSSL==16.0.0
+pyOpenSSL==16.2.0
 newrelic==2.72.0.52
 pylint==1.6.4
 pyGithub==1.27.1
