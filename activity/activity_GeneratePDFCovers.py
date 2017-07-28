@@ -35,8 +35,16 @@ class activity_GeneratePDFCovers(activity.activity):
 
             article = articlelib.article()
 
-            assert hasattr(self.settings, "pdf_cover_generator"), "pdf_cover_generator variable is missing from " \
-                                                                  "settings file!"
+            if not hasattr(self.settings, "pdf_cover_generator") or \
+                    (hasattr(self.settings, "pdf_cover_generator") and self.settings.pdf_cover_generator == None) or \
+                    (hasattr(self.settings, "pdf_cover_generator") and len(self.settings.pdf_cover_generator) < 1):
+
+                self.emit_monitor_event(self.settings, article_id, version, run,
+                                        self.pretty_name, "start", "pdf_cover_generator variable is missing from "
+                                                          "settings file. PDF not generated but flag is set "
+                                                          "for the activity to succeed.")
+                return activity.activity.ACTIVITY_SUCCESS
+
             pdf_cover = article.get_pdf_cover_link(self.settings.pdf_cover_generator, article_id)
 
             assert "a4" in pdf_cover and "letter" in pdf_cover and len(pdf_cover["a4"]) > 1 \
