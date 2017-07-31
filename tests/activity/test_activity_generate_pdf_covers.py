@@ -68,7 +68,11 @@ class TestGeneratePDFCovers(unittest.TestCase):
         data = {"run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
                 "article_id": "00353",
                 "version": "1"}
-        fake_request.return_value = FakeResponse(200, {"cover":"https://s3.eu-west-2.amazonaws.com/elifecoversht/09560"})
+        fake_request.return_value = FakeResponse(200, {"formats":
+                                                           {"a4":"https://s3.eu-west-2.amazonaws.com/a4/09560",
+                                                            "letter": "https://s3.eu-west-2.amazonaws.com/letter/09560"
+                                                           }
+                                                       })
 
         result = self.generatepdfcovers.do_activity(data)
 

@@ -34,13 +34,26 @@ class activity_GeneratePDFCovers(activity.activity):
                                     self.pretty_name, "start", "Starting check for generation of pdf cover.")
 
             article = articlelib.article()
-            pdf_cover_a4 = article.get_pdf_cover_link(self.logger, self.settings, article_id, "a4")
-            pdf_cover_letter = article.get_pdf_cover_link(self.logger, self.settings, article_id, "letter")
 
-            assert len(pdf_cover_a4) > 1 and len(pdf_cover_letter) > 1, "Unexpected result from pdf covers API."
+            if not hasattr(self.settings, "pdf_cover_generator") or \
+                    (hasattr(self.settings, "pdf_cover_generator") and self.settings.pdf_cover_generator == None) or \
+                    (hasattr(self.settings, "pdf_cover_generator") and len(self.settings.pdf_cover_generator) < 1):
 
+                self.emit_monitor_event(self.settings, article_id, version, run,
+                                        self.pretty_name, "start", "pdf_cover_generator variable is missing from "
+                                                          "settings file. PDF not generated but flag is set "
+                                                          "for the activity to succeed.")
+                return activity.activity.ACTIVITY_SUCCESS
+
+            pdf_cover = article.get_pdf_cover_link(self.settings.pdf_cover_generator, article_id)
+
+            assert "a4" in pdf_cover and "letter" in pdf_cover and len(pdf_cover["a4"]) > 1 \
+                   and len(pdf_cover["letter"]) > 1, "Unexpected result from pdf covers API."
+
+            dashboard_message = ("Finished check for generation of pdf cover. S3 url for a4: %s; "
+                                 "S3 url for letter %s.") % (pdf_cover["a4"], pdf_cover["letter"])
             self.emit_monitor_event(self.settings, article_id, version, run,
-                                    self.pretty_name, "start", "Finished check for generation of pdf cover.")
+                                    self.pretty_name, "start", dashboard_message)
             return activity.activity.ACTIVITY_SUCCESS
 
         except AssertionError as err:

@@ -59,7 +59,7 @@ xml_info_queue = 'test-elife-xml-info'
 video_url = ""
 
 # PDF cover
-pdf_cover_generator = ""
+pdf_cover_generator = "url_here"
 
 iiif_resolver = ""
 path_to_iiif_server = ""
