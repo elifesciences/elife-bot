@@ -35,7 +35,7 @@ class activity_GeneratePDFCovers(activity.activity):
 
             article = articlelib.article()
 
-            if not hasattr(self.settings, "pdf_cover_generator") or \
+            if not (hasattr(self.settings, "pdf_cover_generator")) or \
                     (hasattr(self.settings, "pdf_cover_generator") and self.settings.pdf_cover_generator == None) or \
                     (hasattr(self.settings, "pdf_cover_generator") and len(self.settings.pdf_cover_generator) < 1):
 
@@ -45,7 +45,7 @@ class activity_GeneratePDFCovers(activity.activity):
                                                           "for the activity to succeed.")
                 return activity.activity.ACTIVITY_SUCCESS
 
-            pdf_cover = article.get_pdf_cover_link(self.settings.pdf_cover_generator, article_id)
+            pdf_cover = article.get_pdf_cover_link(self.settings.pdf_cover_generator, article_id, self.logger)
 
             assert "a4" in pdf_cover and "letter" in pdf_cover and len(pdf_cover["a4"]) > 1 \
                    and len(pdf_cover["letter"]) > 1, "Unexpected result from pdf covers API."
