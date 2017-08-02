@@ -45,7 +45,7 @@ class TestLensArticle(unittest.TestCase):
         fake_download_article_xml.return_value = self.fake_download_xml(
             article_xml_file, self.activity.get_tmp_dir())
         fake_s3_mock.return_value = FakeS3Connection()
-        fake_key_mock.return_value = FakeKey(directory, article_s3key)
+        fake_key_mock.return_value = FakeKey(directory, "index.html")
 
         success = self.activity.do_activity(input_data)
         self.assertEqual(success, True)
