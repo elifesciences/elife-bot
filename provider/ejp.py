@@ -156,8 +156,8 @@ class EJP(object):
                 # Check corresponding column value
                 if corresponding and add is True:
 
-                    author_type_cde = a[5]
-                    dual_corr_author_ind = a[6]
+                    author_type_cde = a[4]
+                    dual_corr_author_ind = a[5]
                     is_corr = self.is_corresponding_author(author_type_cde, dual_corr_author_ind)
 
                     if corresponding is True:

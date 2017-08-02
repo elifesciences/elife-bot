@@ -31,7 +31,7 @@ Feature: Use EJP data provider
 
   Examples:
     | tmp_base_dir  | test_name       | document                      | column_headings
-    | tmp           | ejp_author_file | test_data/ejp_author_file.csv | ['ms_no', 'ms_title', 'author_seq', 'first_nm', 'last_nm', 'author_type_cde', 'dual_corr_author_ind', 'e_mail']
+    | tmp           | ejp_author_file | test_data/ejp_author_file.csv | ['ms_no', 'author_seq', 'first_nm', 'last_nm', 'author_type_cde', 'dual_corr_author_ind', 'e_mail']
     
   Scenario: Parse an author file with EJP provider and count the author rows returned
     Given I have a tmp_base_dir <tmp_base_dir>
@@ -85,7 +85,7 @@ Feature: Use EJP data provider
 
   Examples:
     | tmp_base_dir  | test_name       | document                      | column_headings
-    | tmp           | ejp_editor_file | test_data/ejp_editor_file.csv | ['ms_no', 'ms_title', 'first_nm', 'last_nm', 'e_mail']
+    | tmp           | ejp_editor_file | test_data/ejp_editor_file.csv | ['ms_no', 'first_nm', 'last_nm', 'e_mail']
     
   Scenario: Parse an editor file with EJP provider and count the author rows returned
     Given I have a tmp_base_dir <tmp_base_dir>
