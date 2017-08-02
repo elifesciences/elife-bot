@@ -21,6 +21,7 @@ simpledb_region = ""
 simpledb_domain_postfix = "_test"
 ejp_bucket = 'ejp_bucket'
 bot_bucket = 'bot_bucket'
+lens_bucket = 'dest_bucket'
 poa_packaging_bucket = 'poa_packaging_bucket'
 poa_bucket = 'poa_bucket'
 ses_poa_sender_email = ""
