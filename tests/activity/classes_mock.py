@@ -162,6 +162,10 @@ class FakeKey:
     def set_contents_from_string(self, json_output):
         self.d.write(self.destination, json_output)
 
+    def set_contents_from_filename(self, filename, replace=None):
+        with open(filename, 'rb') as fp:
+            self.d.write(self.destination, fp.read())
+
     def check_file_contents(self, directory, file):
         return directory.read(file)
 

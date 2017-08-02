@@ -5,8 +5,8 @@ import codecs
 
 import activity
 
-import boto.s3
 from boto.s3.connection import S3Connection
+from boto.s3.key import Key
 
 import provider.templates as templatelib
 import provider.article as articlelib
@@ -45,6 +45,10 @@ class activity_LensArticle(activity.activity):
         # CDN bucket
         self.cdn_bucket = settings.publishing_buckets_prefix + settings.ppp_cdn_bucket
 
+        self.article_xml_filename = None
+        self.article_s3key = None
+        self.article_html = None
+
     def do_activity(self, data=None):
         """
         Do the work
@@ -57,14 +61,14 @@ class activity_LensArticle(activity.activity):
         if data and "article_id" in data:
             article_id = data["article_id"]
 
-        article_xml_filename = self.article.download_article_xml_from_s3(doi_id=article_id)
+        self.article_xml_filename = self.article.download_article_xml_from_s3(doi_id=article_id)
 
-        if not article_xml_filename:
+        if not self.article_xml_filename:
             if self.logger:
                 self.logger.info('LensArticle article xml file not found for %s' % str(article_id))
             return True
 
-        self.article.parse_article_file(self.get_tmp_dir() + os.sep + article_xml_filename)
+        self.article.parse_article_file(self.get_tmp_dir() + os.sep + self.article_xml_filename)
 
         # Check for PoA, we will not create lens article for
         if self.article.is_poa:
@@ -72,30 +76,31 @@ class activity_LensArticle(activity.activity):
                 self.logger.info('LensArticle %s is PoA, not creating a lens page' % str(article_id))
             return True
 
-        article_s3key = self.get_article_s3key(article_id)
+        self.article_s3key = self.get_article_s3key(article_id)
 
         filename = "index.html"
 
-        article_html = self.get_article_html(from_dir=self.from_dir,
-                                             article=self.article,
-                                             cdn_bucket=self.cdn_bucket,
-                                             article_xml_filename=article_xml_filename)
+        self.article_html = self.get_article_html(
+            from_dir=self.from_dir,
+            article=self.article,
+            cdn_bucket=self.cdn_bucket,
+            article_xml_filename=self.article_xml_filename)
 
         # Write the document to disk first
-        filename_plus_path = self.write_html_file(article_html, filename)
+        filename_plus_path = self.write_html_file(self.article_html, filename)
 
         # Now, set the S3 object to the contents of the filename
         # Connect to S3
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         # Lookup bucket
         bucket_name = self.settings.lens_bucket
-        bucket = s3_conn.lookup(bucket_name)
-        s3key = boto.s3.key.Key(bucket)
-        s3key.key = article_s3key
+        bucket = s3_conn.get_bucket(bucket_name)
+        s3key = Key(bucket)
+        s3key.key = self.article_s3key
         s3key.set_contents_from_filename(filename_plus_path, replace=True)
 
         if self.logger:
-            self.logger.info('LensArticle created for: %s' % article_s3key)
+            self.logger.info('LensArticle created for: %s' % self.article_s3key)
 
         return True
 
@@ -117,7 +122,6 @@ class activity_LensArticle(activity.activity):
         if from_dir is None:
             from_dir = self.from_dir
 
-        print article_xml_filename
         article_html = self.templates.get_lens_article_html(from_dir,
                                                             article,
                                                             cdn_bucket,
