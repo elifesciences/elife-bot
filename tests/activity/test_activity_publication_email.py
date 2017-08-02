@@ -222,7 +222,7 @@ class TestPublicationEmail(unittest.TestCase):
 
             success = self.activity.do_activity(pass_test_data["input_data"])
 
-            self.assertEqual(True, pass_test_data["activity_success"])
+            self.assertEqual(success, pass_test_data["activity_success"])
             self.assertEqual(len(self.activity.articles_approved), pass_test_data["articles_approved_len"])
             self.assertEqual(len(self.activity.articles_approved_prepared), pass_test_data["articles_approved_prepared_len"])
 
