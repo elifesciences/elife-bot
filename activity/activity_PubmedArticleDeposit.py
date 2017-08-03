@@ -237,23 +237,25 @@ class activity_PubmedArticleDeposit(activity.activity):
 
             xml_file_name = self.xml_file_to_doi_map[article.doi]
 
+            article_id = self.article.get_doi_id(article.doi)
+
             # Check if article was ever poa
             # Must be set to True or False to get it published
             if article.doi and article.doi == '10.7554/eLife.11190':
                 # Edge case, ignore this article PoA
                 article.was_ever_poa = False
             elif (article.is_poa is False and
-                  lax_provider.was_ever_poa(self.article.get_doi_id(article.doi),
+                  lax_provider.was_ever_poa(article_id,
                                             self.settings) is True):
                 article.was_ever_poa = True
             elif (article.is_poa is False and
-                  lax_provider.was_ever_poa(self.article.get_doi_id(article.doi),
+                  lax_provider.was_ever_poa(article_id,
                                             self.settings) is False):
                 article.was_ever_poa = False
 
             # Check if each article is published
             is_published = lax_provider.published_considering_poa_status(
-                article_id=article.doi_id,
+                article_id=article_id,
                 settings=self.settings,
                 is_poa=article.is_poa,
                 was_ever_poa=article.was_ever_poa)
@@ -262,7 +264,7 @@ class activity_PubmedArticleDeposit(activity.activity):
 
                 # Try to add the article version if in lax
                 try:
-                    version = self.get_article_version_from_lax(article.doi.split('.')[-1])
+                    version = self.get_article_version_from_lax(article_id)
                 except:
                     version = None
                 if version and version > 0:
