@@ -53,7 +53,7 @@ class activity_GeneratePDFCovers(activity.activity):
             dashboard_message = ("Finished check for generation of pdf cover. S3 url for a4: %s; "
                                  "S3 url for letter %s.") % (pdf_cover["a4"], pdf_cover["letter"])
             self.emit_monitor_event(self.settings, article_id, version, run,
-                                    self.pretty_name, "start", dashboard_message)
+                                    self.pretty_name, "end", dashboard_message)
             return activity.activity.ACTIVITY_SUCCESS
 
         except AssertionError as err:
