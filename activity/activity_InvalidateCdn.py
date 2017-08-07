@@ -48,6 +48,13 @@ class activity_InvalidateCdn(activity.activity):
                                     self.pretty_name, "end", dashboard_message)
             return activity.activity.ACTIVITY_SUCCESS
 
+        except AssertionError as err:
+            error_message = str(err)
+            self.logger.error(error_message)
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    self.pretty_name, "error", error_message)
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+
         except Exception as e:
             error_message = str(e)
             self.logger.error(error_message)
