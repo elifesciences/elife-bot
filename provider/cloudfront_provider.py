@@ -1,7 +1,6 @@
 import boto.cloudfront as cloudfront
-import settings
 
 
-def create_invalidation(article):
+def create_invalidation(article, settings):
     cloudfront.create_invalidation_request(settings.cloudfront_distribution_id_cdn,
                                            "/articles/" + article + "/*")
