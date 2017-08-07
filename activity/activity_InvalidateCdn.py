@@ -10,13 +10,13 @@ class activity_InvalidateCdn(activity.activity):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
 
         self.name = "InvalidateCdn"
-        self.pretty_name = "CF Invalidate Cdn"
+        self.pretty_name = "CloudFront Invalidate Cdn"
         self.version = "1"
         self.default_task_heartbeat_timeout = 30
         self.default_task_schedule_to_close_timeout = 60 * 5
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
-        self.description = "Invalidate Cdn todo"
+        self.description = "Runs CloudFront Invalidation request on Cdn bucket."
         self.logger = logger
 
     def do_activity(self, data):
@@ -41,19 +41,12 @@ class activity_InvalidateCdn(activity.activity):
             #     else:
             #         dashboard_message = "CloudFront Invalidation was not necessary for article %s." % str(article_id)
 
-            cloudfront_provider.create_invalidation(article_id, self.settings)
+            cloudfront_provider.create_invalidation(article_id, self.settings.cloudfront_distribution_id_cdn)
 
             dashboard_message = "CloudFront Invalidation command sent for article %s." % str(article_id)
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "end", dashboard_message)
             return activity.activity.ACTIVITY_SUCCESS
-
-        except AssertionError as err:
-            error_message = str(err)
-            self.logger.error(error_message)
-            self.emit_monitor_event(self.settings, article_id, version, run,
-                                    self.pretty_name, "error", error_message)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
         except Exception as e:
             error_message = str(e)
