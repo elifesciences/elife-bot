@@ -143,13 +143,13 @@ class exp():
     HEFCE_FTP_USERNAME = ""
     HEFCE_FTP_PASSWORD = ""
     HEFCE_FTP_CWD = ""
-    
+
     # HEFCE Archive SFTP settings
     HEFCE_SFTP_URI = ""
     HEFCE_SFTP_USERNAME = ""
     HEFCE_SFTP_PASSWORD = ""
     HEFCE_SFTP_CWD = ""
-    
+
     # GoOA FTP settings
     GOOA_FTP_URI = ""
     GOOA_FTP_USERNAME = ""
@@ -195,6 +195,8 @@ class exp():
     # IIIF
     path_to_iiif_server = "https://pathto--iiif.elifesciences.org/"
     iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
+
+    cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
 
 
 class dev():
@@ -335,6 +337,17 @@ class dev():
     # videos
     video_url = "https://video.url.here/"
 
+     # PDF cover
+    pdf_cover_generator = "http://localhost:8082/personalcover/generate/"
+    pdf_cover_landing_page = "http://localhost:8082/personalcover/landing/"
+
+    # IIIF
+    path_to_iiif_server = "https://pathto--iiif.elifesciences.org/"
+    iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
+
+    # CloudFront
+    cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
+
 
 class live():
     # AWS settings
@@ -472,6 +485,17 @@ class live():
 
     # videos
     video_url = "https://video.url.here/"
+
+     # PDF cover
+    pdf_cover_generator = "http://localhost:8082/personalcover/generate/"
+    pdf_cover_landing_page = "http://localhost:8082/personalcover/landing/"
+
+    # IIIF
+    path_to_iiif_server = "https://pathto--iiif.elifesciences.org/"
+    iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
+
+    # CloudFront
+    cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
 
 
 def get_settings(ENV="dev"):
