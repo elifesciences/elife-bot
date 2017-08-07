@@ -66,3 +66,5 @@ iiif_resolver = ""
 path_to_iiif_server = ""
 
 no_download_extensions = "tif"
+
+cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
