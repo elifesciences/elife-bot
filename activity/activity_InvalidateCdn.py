@@ -41,7 +41,7 @@ class activity_InvalidateCdn(activity.activity):
             #     else:
             #         dashboard_message = "CloudFront Invalidation was not necessary for article %s." % str(article_id)
 
-            cloudfront_provider.create_invalidation(article_id, self.settings.cloudfront_distribution_id_cdn)
+            cloudfront_provider.create_invalidation(article_id, self.settings)
 
             dashboard_message = "CloudFront Invalidation command sent for article %s." % str(article_id)
             self.emit_monitor_event(self.settings, article_id, version, run,
