@@ -31,6 +31,13 @@ elifePipeline {
             )
         }
 
+        stage 'Deploy on continuumtest', {
+            lock('elife-bot--continuumtest') {
+                builderDeployRevision 'elife-bot--continuumtest', commit
+                builderSmokeTests 'elife-bot--continuumtest', '/opt/elife-bot'
+            }
+        }
+
         stage 'Approval', {
             elifeGitMoveToBranch commit, 'approved'
         }
