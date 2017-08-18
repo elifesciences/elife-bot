@@ -20,7 +20,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
         self.assertEqual(result, self.generatepdfcovers.ACTIVITY_PERMANENT_FAILURE)
         json.dumps(self.fake_logger.logerror)
 
-    @patch('requests.get')
+    @patch('requests.post')
     @patch.object(activity_GeneratePDFCovers, 'emit_monitor_event')
     def test_do_activity_error_404(self, fake_monitor_event, fake_request):
         data = {"run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
@@ -34,7 +34,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
         self.assertEqual(result, self.generatepdfcovers.ACTIVITY_PERMANENT_FAILURE)
         json.dumps(self.fake_logger.logerror)
 
-    @patch('requests.get')
+    @patch('requests.post')
     @patch.object(activity_GeneratePDFCovers, 'emit_monitor_event')
     def test_do_activity_error_500(self, fake_monitor_event, fake_request):
         data = {"run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
@@ -62,7 +62,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
         self.assertEqual(result, self.generatepdfcovers.ACTIVITY_PERMANENT_FAILURE)
         json.dumps(self.fake_logger.logerror)
 
-    @patch('requests.get')
+    @patch('requests.post')
     @patch.object(activity_GeneratePDFCovers, 'emit_monitor_event')
     def test_do_activity_success(self, fake_monitor_event, fake_request):
         data = {"run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",

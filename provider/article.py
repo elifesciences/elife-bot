@@ -237,13 +237,12 @@ class article(object):
 
         url = pdf_cover_generator_url + str(doi_id)
         logger.info("URL for PDF Generator %s", url)
-        resp = requests.get(url)
+        resp = requests.post(url)
         logger.info("Response code for PDF Generator %s", str(resp.status_code))
         assert resp.status_code != 404, "PDF cover not found. Format: %s - url requested: %s" % (format, url)
-        assert (resp.status_code == 200) or (resp.status_code == 202), \
-            "unhandled status code from PDF cover service: %s . " \
-            "Format: %s - url requested: %s" % \
-            (resp.status_code, format, url)
+        assert (resp.status_code == 200), "unhandled status code from PDF cover service: %s . " \
+                                          "Format: %s - url requested: %s" % \
+                                          (resp.status_code, format, url)
         logger.info("PDF Generator Response %s", str(resp))
         data = resp.json()
         return data['formats']
