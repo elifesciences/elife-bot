@@ -1,4 +1,4 @@
-boto==2.34.0
+boto==2.48.0
 Fom==0.9.10
 GitPython==0.3.2.1
 Jinja2==2.7.3
