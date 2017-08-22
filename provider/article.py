@@ -243,8 +243,8 @@ class article(object):
         assert (resp.status_code == 200), "unhandled status code from PDF cover service: %s . " \
                                           "Format: %s - url requested: %s" % \
                                           (resp.status_code, format, url)
-        logger.info("PDF Generator Response %s", str(resp))
         data = resp.json()
+        logger.info("PDF Generator Response %s", str(data))
         return data['formats']
 
     def get_pub_date_timestamp(self, pub_date):
