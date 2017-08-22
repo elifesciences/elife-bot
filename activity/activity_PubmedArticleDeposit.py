@@ -244,14 +244,8 @@ class activity_PubmedArticleDeposit(activity.activity):
             if article.doi and article.doi == '10.7554/eLife.11190':
                 # Edge case, ignore this article PoA
                 article.was_ever_poa = False
-            elif (article.is_poa is False and
-                  lax_provider.was_ever_poa(article_id,
-                                            self.settings) is True):
-                article.was_ever_poa = True
-            elif (article.is_poa is False and
-                  lax_provider.was_ever_poa(article_id,
-                                            self.settings) is False):
-                article.was_ever_poa = False
+            else:
+                article.was_ever_poa = lax_provider.was_ever_poa(article_id, self.settings)
 
             # Check if each article is published
             is_published = lax_provider.published_considering_poa_status(
