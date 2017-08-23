@@ -629,11 +629,11 @@ class activity_PubRouterDeposit(activity.activity):
 
         recipient_email_list = []
         # Handle multiple recipients, if specified
-        if type(self.settings.ses_poa_recipient_email) == list:
-            for email in self.settings.ses_poa_recipient_email:
+        if type(self.settings.ses_admin_email) == list:
+            for email in self.settings.ses_admin_email:
                 recipient_email_list.append(email)
         else:
-            recipient_email_list.append(self.settings.ses_poa_recipient_email)
+            recipient_email_list.append(self.settings.ses_admin_email)
 
         for email in recipient_email_list:
             # Add the email to the email queue
@@ -668,11 +668,11 @@ class activity_PubRouterDeposit(activity.activity):
         recipient_email_list = self.get_friendly_email_recipients(workflow)
 
         # Handle multiple recipients, if specified
-        if type(self.settings.ses_poa_recipient_email) == list:
-            for email in self.settings.ses_poa_recipient_email:
+        if type(self.settings.ses_admin_email) == list:
+            for email in self.settings.ses_admin_email:
                 recipient_email_list.append(email)
         else:
-            recipient_email_list.append(self.settings.ses_poa_recipient_email)
+            recipient_email_list.append(self.settings.ses_admin_email)
 
         for email in recipient_email_list:
             # Add the email to the email queue
