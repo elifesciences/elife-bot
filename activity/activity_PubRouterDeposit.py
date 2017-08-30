@@ -156,6 +156,8 @@ class activity_PubRouterDeposit(activity.activity):
             return "scopus/outbox/"
         elif workflow == "PMC":
             return "pmc/outbox/"
+        elif workflow == "CNPIEC":
+            return "cnpiec/outbox/"
 
         return None
 
@@ -175,6 +177,8 @@ class activity_PubRouterDeposit(activity.activity):
             return "scopus/published/"
         elif workflow == "PMC":
             return "pmc/published/"
+        elif workflow == "CNPIEC":
+            return "cnpiec/published/"
 
         return None
 
@@ -703,6 +707,8 @@ class activity_PubRouterDeposit(activity.activity):
                 recipients = self.settings.WOS_EMAIL
             elif workflow == "Scopus":
                 recipients = self.settings.SCOPUS_EMAIL
+            elif workflow == "CNPIEC":
+                recipients = self.settings.CNPIEC_EMAIL
         except:
             pass
 
