@@ -117,6 +117,13 @@ class activity_FTPArticle(activity.activity):
                 zipfiles = glob.glob(self.get_tmp_dir() + os.sep +
                                      self.FTP_TO_SOMEWHERE_DIR + file_type)
                 self.ftp_to_endpoint(zipfiles, passive=True)
+
+            if workflow == 'CNPIEC':
+                file_type = "/*.zip"
+                zipfiles = glob.glob(self.get_tmp_dir() + os.sep +
+                                     self.FTP_TO_SOMEWHERE_DIR + file_type)
+                self.ftp_to_endpoint(zipfiles, passive=True)
+
         except:
             # Something went wrong, fail
             if self.logger:
@@ -176,6 +183,12 @@ class activity_FTPArticle(activity.activity):
             self.FTP_PASSWORD = self.settings.GOOA_FTP_PASSWORD
             self.FTP_CWD = self.settings.GOOA_FTP_CWD
 
+        if workflow == 'CNPIEC':
+            self.FTP_URI = self.settings.CNPIEC_FTP_URI
+            self.FTP_USERNAME = self.settings.CNPIEC_FTP_USERNAME
+            self.FTP_PASSWORD = self.settings.CNPIEC_FTP_PASSWORD
+            self.FTP_CWD = self.settings.CNPIEC_FTP_CWD
+
     def download_files_from_s3(self, doi_id, workflow):
 
         # Download PMC zip file if present
@@ -190,7 +203,7 @@ class activity_FTPArticle(activity.activity):
 
             if item_list and len(item_list) > 0:
 
-                if workflow == 'HEFCE' or workflow == 'GoOA':
+                if workflow == 'HEFCE' or workflow == 'GoOA' or workflow == 'CNPIEC':
                     # Download files from the articles bucket
                     self.download_data_file_from_s3(doi_id, 'xml', workflow)
                     self.download_data_file_from_s3(doi_id, 'pdf', workflow)
