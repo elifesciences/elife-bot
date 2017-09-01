@@ -69,3 +69,43 @@ path_to_iiif_server = ""
 no_download_extensions = "tif"
 
 cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
+
+HEFCE_FTP_URI = "hefce_ftp.localhost"
+HEFCE_FTP_USERNAME = ""
+HEFCE_FTP_PASSWORD = ""
+HEFCE_FTP_CWD = ""
+HEFCE_EMAIL = ""
+
+HEFCE_SFTP_URI = "hefce_sftp.localhost"
+HEFCE_SFTP_USERNAME = ""
+HEFCE_SFTP_PASSWORD = ""
+HEFCE_SFTP_CWD = ""
+HEFCE_EMAIL = ""
+
+CENGAGE_FTP_URI = "cengage.localhost"
+CENGAGE_FTP_USERNAME = ""
+CENGAGE_FTP_PASSWORD = ""
+CENGAGE_FTP_CWD = ""
+CENGAGE_EMAIL = ""
+
+GOOA_FTP_URI = "gooa.localhost"
+GOOA_FTP_USERNAME = ""
+GOOA_FTP_PASSWORD = ""
+GOOA_FTP_CWD = ""
+
+SCOPUS_FTP_URI = "scopus.localhost"
+SCOPUS_FTP_USERNAME = ""
+SCOPUS_FTP_PASSWORD = ""
+SCOPUS_FTP_CWD = ""
+SCOPUS_EMAIL = ""
+
+WOS_FTP_URI = "wos.localhost"
+WOS_FTP_USERNAME = ""
+WOS_FTP_PASSWORD = ""
+WOS_FTP_CWD = ""
+WOS_EMAIL = ""
+
+CNPIEC_FTP_URI = "cnpiec.localhost"
+CNPIEC_FTP_USERNAME = ""
+CNPIEC_FTP_PASSWORD = ""
+CNPIEC_FTP_CWD = ""
