@@ -32,6 +32,7 @@ poa_packaging_bucket = 'poa_packaging_bucket'
 poa_bucket = 'poa_bucket'
 ses_poa_sender_email = ""
 ses_poa_recipient_email = ""
+ses_admin_email = ""
 templates_bucket = ""
 
 drupal_EIF_endpoint = "https://website/api/article.json"
