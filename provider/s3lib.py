@@ -94,8 +94,6 @@ def latest_pmc_zip_revision(doi_id, s3_key_names):
                 if highest_revision is None:
                     # First value with no revision on it
                     s3_key_name = key_name
-                else:
-                    continue
             elif revision_match is not None:
                 # Use either the first revision number found or the highest revision number
                 if (highest_revision is None or
