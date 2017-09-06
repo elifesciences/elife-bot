@@ -65,6 +65,9 @@ class activity_FTPArticle(activity.activity):
         # journal
         self.journal = 'elife'
 
+        self.workflow = None
+        self.doi_id = None
+
     def do_activity(self, data=None):
         """
         Activity, do the work
@@ -75,6 +78,10 @@ class activity_FTPArticle(activity.activity):
         # Data passed to this activity
         elife_id = data["data"]["elife_id"]
         workflow = data["data"]["workflow"]
+
+        # Set some variables to use in logging
+        self.workflow = workflow
+        self.doi_id = elife_id
 
         # Create output directories
         self.create_activity_directories()
@@ -87,44 +94,26 @@ class activity_FTPArticle(activity.activity):
 
         # FTP to endpoint
         try:
+            file_type = "/*.zip"
+            zipfiles = glob.glob(self.get_tmp_dir() + os.sep +
+                                 self.FTP_TO_SOMEWHERE_DIR + file_type)
+            if self.logger:
+                self.logger.info("FTPArticle running %s workflow for article %s, attempting to send files: %s"
+                                 % (self.workflow, self.doi_id, zipfiles))
             if workflow == 'HEFCE':
-                file_type = "/*.zip"
-                zipfiles = glob.glob(self.get_tmp_dir() + os.sep +
-                                     self.FTP_TO_SOMEWHERE_DIR + file_type)
-
                 #self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR, passive=True)
                 # SFTP now
                 sub_dir = "{:05d}".format(int(elife_id))
                 self.sftp_to_endpoint(zipfiles, sub_dir)
-
             if workflow == 'Cengage':
-                file_type = "/*.zip"
-                zipfiles = glob.glob(self.get_tmp_dir() + os.sep +
-                                     self.FTP_TO_SOMEWHERE_DIR + file_type)
                 self.ftp_to_endpoint(zipfiles, passive=True)
-
             if workflow == 'Scopus':
-                file_type = "/*.zip"
-                zipfiles = glob.glob(self.get_tmp_dir() + os.sep +
-                                     self.FTP_TO_SOMEWHERE_DIR + file_type)
                 self.ftp_to_endpoint(zipfiles, passive=True)
-
             if workflow == 'WoS':
-                file_type = "/*.zip"
-                zipfiles = glob.glob(self.get_tmp_dir() + os.sep +
-                                     self.FTP_TO_SOMEWHERE_DIR + file_type)
                 self.ftp_to_endpoint(zipfiles, passive=True)
-
             if workflow == 'GoOA':
-                file_type = "/*.zip"
-                zipfiles = glob.glob(self.get_tmp_dir() + os.sep +
-                                     self.FTP_TO_SOMEWHERE_DIR + file_type)
                 self.ftp_to_endpoint(zipfiles, passive=True)
-
             if workflow == 'CNPIEC':
-                file_type = "/*.zip"
-                zipfiles = glob.glob(self.get_tmp_dir() + os.sep +
-                                     self.FTP_TO_SOMEWHERE_DIR + file_type)
                 self.ftp_to_endpoint(zipfiles, passive=True)
 
         except:
@@ -137,6 +126,9 @@ class activity_FTPArticle(activity.activity):
             return result
 
         # Return the activity result, True or False
+        if self.logger:
+            self.logger.info("FTPArticle running %s workflow for article %s, finished sending files: %s"
+                             % (self.workflow, self.doi_id, zipfiles))
         result = True
         self.clean_tmp_dir()
         return result
@@ -206,6 +198,9 @@ class activity_FTPArticle(activity.activity):
 
         if pmc_zip_downloaded or archive_zip_repackaged:
             self.move_or_repackage_pmc_zip(doi_id, workflow)
+        else:
+            self.logger.info("FTPArticle running %s workflow for article %s, failed to package any zip files"
+                             % (self.workflow, self.doi_id))
 
 
     def download_archive_zip_from_s3(self, doi_id):
@@ -233,8 +228,14 @@ class activity_FTPArticle(activity.activity):
             mode = "wb"
             with open(filename_plus_path, mode) as fp:
                 s3_key.get_contents_to_file(fp)
+            if self.logger:
+                self.logger.info("FTPArticle running %s workflow for article %s, downloaded archive zip %s"
+                                 % (self.workflow, self.doi_id, filename))
             return True
         else:
+            if self.logger:
+                self.logger.info("FTPArticle running %s workflow for article %s, could not download an archive zip"
+                                 % (self.workflow, self.doi_id))
             return False
 
 
@@ -253,6 +254,10 @@ class activity_FTPArticle(activity.activity):
             files_dir = zip_extracted_dir,
             output_dir = zip_renamed_files_dir
         )
+        if self.logger:
+            self.logger.info("FTPArticle running %s workflow for article %s, file_name_map"
+                             % (self.workflow, self.doi_id))
+            self.logger.info(file_name_map)
         # convert the XML
         article_xml_file = glob.glob(zip_renamed_files_dir + "/*.xml")[0]
         article_processing.convert_xml(xml_file=article_xml_file,
@@ -301,9 +306,14 @@ class activity_FTPArticle(activity.activity):
             f = open(filename_plus_path, mode)
             s3_key.get_contents_to_file(f)
             f.close()
-
+            if self.logger:
+                self.logger.info("FTPArticle running %s workflow for article %s, downloaded PMC zip %s"
+                                 % (self.workflow, self.doi_id, filename))
             return True
         else:
+            if self.logger:
+                self.logger.info("FTPArticle running %s workflow for article %s, could not download a PMC zip"
+                                 % (self.workflow, self.doi_id))
             return False
 
 
