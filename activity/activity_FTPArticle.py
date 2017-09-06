@@ -196,6 +196,7 @@ class activity_FTPArticle(activity.activity):
 
         # Download PMC zip file if present
         pmc_zip_downloaded = self.download_pmc_zip_from_s3(doi_id, workflow)
+        archive_zip_repackaged = None
 
         # if there is no PMC zip then download and convert the archive zip
         if not pmc_zip_downloaded:
