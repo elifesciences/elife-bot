@@ -1,4 +1,7 @@
 import unittest
+import shutil
+import os
+import zipfile
 from activity.activity_FTPArticle import activity_FTPArticle
 from mock import patch, MagicMock
 import tests.activity.settings_mock as settings_mock
@@ -70,6 +73,28 @@ class TestFTPArticle(unittest.TestCase):
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
 
 
+    @data(
+        ('tests/test_data/pmc/elife-05-19405.zip', 19405, 'Cengage', 'elife-19405-xml-pdf.zip',
+         ['elife-19405.pdf', 'elife-19405.xml']),
+        ('tests/test_data/pmc/elife-05-19405.zip', 19405, 'HEFCE', 'elife-05-19405.zip',
+         ['elife-19405.pdf', 'elife-19405.xml', 'elife-19405-inf1.tif', 'elife-19405-fig1.tif']),
+    )
+    @unpack
+    def test_move_or_repackage_pmc_zip(self, input_zip_file_path, doi_id, workflow,
+                                       expected_zip_file, expected_zip_file_contents):
+        # create activity directories
+        self.activity.create_activity_directories()
+        # copy in some sample data
+        dest_input_zip_file_path = os.path.join(
+            self.activity.get_tmp_dir(), self.activity.INPUT_DIR, input_zip_file_path.split('/')[-1])
+        shutil.copy(input_zip_file_path, dest_input_zip_file_path)
+        # call the activity function
+        self.activity.move_or_repackage_pmc_zip(doi_id, workflow)
+        # confirm the output
+        ftp_outbox_dir = os.path.join(self.activity.get_tmp_dir(), self.activity.FTP_TO_SOMEWHERE_DIR)
+        self.assertTrue(expected_zip_file in os.listdir(ftp_outbox_dir))
+        with zipfile.ZipFile(os.path.join(ftp_outbox_dir, expected_zip_file)) as zip_file:
+            self.assertEqual(zip_file.namelist(), expected_zip_file_contents)
 
 
 if __name__ == '__main__':
