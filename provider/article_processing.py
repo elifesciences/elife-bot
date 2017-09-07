@@ -126,7 +126,7 @@ def latest_archive_zip_revision(doi_id, s3_keys, journal, status):
                 parts = key["name"].split(name_prefix_to_match)
                 version = parts[1].split('-')[0]
                 date_formatted = dateutil.parser.parse(key["last_modified"])
-                date_part = date_formatted.strftime('%Y%m%d%H%M%S')
+                date_part = date_formatted.strftime(utils.S3_DATE_FORMAT)
                 version_and_date = int(version + date_part)
             except:
                 pass
