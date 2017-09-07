@@ -2,6 +2,7 @@ import os
 import shutil
 import dateutil.parser
 from elifetools import xmlio
+from provider import utils
 
 """
 Functions for processing article zip and XML for reuse by different activities
@@ -99,8 +100,8 @@ def verify_rename_files(file_name_map):
 
 def new_pmc_zip_filename(journal, volume, fid, revision=None):
     filename = journal
-    filename = filename + '-' + str(volume).zfill(2)
-    filename = filename + '-' + str(fid).zfill(5)
+    filename = filename + '-' + utils.pad_volume(volume)
+    filename = filename + '-' + utils.pad_msid(fid)
     if revision:
         filename = filename + '.r' + str(revision)
     filename += '.zip'
@@ -114,7 +115,7 @@ def latest_archive_zip_revision(doi_id, s3_keys, journal, status):
     """
     s3_key_name = None
 
-    name_prefix_to_match = (journal + '-' + str(doi_id).zfill(5)
+    name_prefix_to_match = (journal + '-' + utils.pad_msid(doi_id)
                             + '-' + status + '-v')
 
     highest = 0
