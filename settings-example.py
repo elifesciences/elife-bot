@@ -168,6 +168,12 @@ class exp():
     WOS_FTP_PASSWORD = ""
     WOS_FTP_CWD = ""
 
+    # CNPIEC FTP settings
+    CNPIEC_FTP_URI = ""
+    CNPIEC_FTP_USERNAME = ""
+    CNPIEC_FTP_PASSWORD = ""
+    CNPIEC_FTP_CWD = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -317,6 +323,12 @@ class dev():
     WOS_FTP_PASSWORD = ""
     WOS_FTP_CWD = ""
 
+    # CNPIEC FTP settings
+    CNPIEC_FTP_URI = ""
+    CNPIEC_FTP_USERNAME = ""
+    CNPIEC_FTP_PASSWORD = ""
+    CNPIEC_FTP_CWD = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -465,7 +477,13 @@ class live():
     WOS_FTP_USERNAME = ""
     WOS_FTP_PASSWORD = ""
     WOS_FTP_CWD = ""
-    
+
+    # CNPIEC FTP settings
+    CNPIEC_FTP_URI = ""
+    CNPIEC_FTP_USERNAME = ""
+    CNPIEC_FTP_PASSWORD = ""
+    CNPIEC_FTP_CWD = ""
+
     # Logging
     setLevel = "INFO"
 

@@ -62,7 +62,8 @@ class starter_PubRouterDeposit():
                 or workflow == 'GoOA'
                 or workflow == 'WoS'
                 or workflow == 'Scopus'
-                or workflow == 'PMC'):
+                or workflow == 'PMC'
+                or workflow == 'CNPIEC'):
             workflow_id = "PubRouterDeposit_" + workflow
 
         # workflow_id as set above
