@@ -1,5 +1,6 @@
 import unittest
 import json
+import os
 from provider.ejp import EJP
 import tests.settings_mock as settings_mock
 from testfixtures import tempdir
@@ -34,7 +35,7 @@ class TestProviderEJP(unittest.TestCase):
     @unpack
     def test_get_authors(self, doi_id, corresponding, expected_authors,
                          fake_filesystem_write, fake_filesystem_open):
-        author_csv_file = "tests/test_data/ejp_author_file.csv"
+        author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
         expected_column_headings = ['ms_no', 'author_seq', 'first_nm', 'last_nm', 'author_type_cde', 'dual_corr_author_ind', 'e_mail']
         # mock things
         fake_filesystem_write = MagicMock()
@@ -60,7 +61,7 @@ class TestProviderEJP(unittest.TestCase):
     @unpack
     def test_get_editors(self, doi_id, expected_editors,
                          fake_filesystem_write, fake_filesystem_open):
-        editor_csv_file = "tests/test_data/ejp_editor_file.csv"
+        editor_csv_file = os.path.join("tests", "test_data", "ejp_editor_file.csv")
         expected_column_headings = ['ms_no', 'first_nm', 'last_nm', 'e_mail']
         # mock things
         fake_filesystem_write = MagicMock()
@@ -89,7 +90,7 @@ class TestProviderEJP(unittest.TestCase):
     @unpack
     def test_find_latest_s3_file_name(self, file_type, expected_s3_key_name,
                          fake_ejp_bucket_file_list):
-        bucket_list_file = "tests/test_data/ejp_bucket_list.json"
+        bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list.json")
         # mock things
         with open(bucket_list_file, 'rb') as fp:
             fake_ejp_bucket_file_list.return_value = json.loads(fp.read())

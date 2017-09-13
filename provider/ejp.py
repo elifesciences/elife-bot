@@ -3,6 +3,7 @@ import time
 from operator import itemgetter
 import csv
 import re
+import os
 
 import boto.s3
 from boto.s3.connection import S3Connection
@@ -76,22 +77,22 @@ class EJP(object):
 
         return s3key
 
+    def write_content_to_file(self, filename, content, mode="wb"):
+        "write the content to a file in the tmp_dir"
+        document = os.path.join(self.get_tmp_dir(), filename)
+        with open(document, 'wb') as fp:
+            fp.write(content)
+            return document
+        # default if it does not work
+        return None
 
-    def parse_author_file(self, document, filename=None):
+    def parse_author_file(self, document):
         """
         Given a filename to an author file, download
         or copy it using the filesystem provider,
         then parse it
         """
-
-        if self.fs is None:
-            self.fs = self.get_fs()
-
-        # Save the document to the tmp_dir
-        self.fs.write_document_to_tmp_dir(document, filename)
-
-        (column_headings, author_rows) = self.parse_author_data(self.fs.document)
-
+        (column_headings, author_rows) = self.parse_author_data(document)
         return (column_headings, author_rows)
 
     def parse_author_data(self, document):
@@ -103,19 +104,18 @@ class EJP(object):
         column_headings = None
         author_rows = []
 
-        f = self.fs.open_file_from_tmp_dir(document, mode='rb')
-
-        filereader = csv.reader(f)
-
-        for row in filereader:
-            # For now throw out header rows
-            if filereader.line_num <= 3:
-                pass
-            elif filereader.line_num == 4:
-                # Column headers
-                column_headings = row
-            else:
-                author_rows.append(row)
+        # open the file and parse it
+        with open(document, 'rb') as fp:
+            filereader = csv.reader(fp)
+            for row in filereader:
+                # For now throw out header rows
+                if filereader.line_num <= 3:
+                    pass
+                elif filereader.line_num == 4:
+                    # Column headers
+                    column_headings = row
+                else:
+                    author_rows.append(row)
 
         return (column_headings, author_rows)
 
@@ -134,17 +134,18 @@ class EJP(object):
         if document is None:
             # No document? Find it on S3, save the content to
             #  the tmp_dir
-            if self.fs is None:
-                self.fs = self.get_fs()
             s3_key_name = self.find_latest_s3_file_name(file_type="author")
             s3_key = self.get_s3key(s3_key_name)
             contents = s3_key.get_contents_as_string()
-            self.fs.write_content_to_document(contents, self.author_default_filename)
-            document = self.fs.get_document
+            document = self.write_content_to_file(contents)
+        else:
+            # copy the document to the tmp_dir if provided
+            with open(document, 'rb') as fp:
+                self.write_content_to_file(self.author_default_filename, fp.read())
 
         # Parse the author file
         filename = self.author_default_filename
-        (column_headings, author_rows) = self.parse_author_file(document, filename)
+        (column_headings, author_rows) = self.parse_author_file(document)
 
         if author_rows:
             for a in author_rows:
