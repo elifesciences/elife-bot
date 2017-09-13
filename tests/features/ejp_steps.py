@@ -18,16 +18,10 @@ def i_create_a_ejp_provider(step):
     
 @step('I parse author file the document with ejp')
 def i_parse_author_file_the_document_with_ejp(step):
-  (world.column_headings, world.author_rows) = world.ejp.parse_author_file(world.document, world.filename)
-  assert world.ejp.fs.document is not None, \
-    "Got document %s" % world.ejp.fs.document
+  (world.column_headings, world.author_rows) = world.ejp.parse_author_file(world.document)
+  assert world.column_headings is not None, \
+    "Got column_headings %s" % world.column_headings
 
-@step('I get the ejp fs document') 
-def i_get_the_ejp_fs_document(step):
-  world.ejp_document = world.ejp.fs.get_document()
-  assert world.ejp_document is not None, \
-    "Got ejp_document %s" % world.ejp_document
-    
 @step('I have the ejp document (\S+)')
 def i_have_the_ejp_document_count_count(step, ejp_document):
   assert world.ejp_document == ejp_document, \
@@ -92,9 +86,9 @@ def i_have_s3_file_name_s3_file_name(step, s3_file_name):
   
 @step('I parse editor file the document with ejp')
 def i_parse_editor_file_the_document_with_ejp(step):
-  (world.column_headings, world.editor_rows) = world.ejp.parse_editor_file(world.document, world.filename)
-  assert world.ejp.fs.document is not None, \
-    "Got document %s" % world.ejp.fs.document
+  (world.column_headings, world.editor_rows) = world.ejp.parse_editor_file(world.document)
+  assert world.column_headings is not None, \
+    "Got column_headings %s" % world.column_headings
     
 @step('I get the editors from ejp')
 def i_get_the_editors_from_ejp(step):

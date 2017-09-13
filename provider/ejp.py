@@ -8,8 +8,6 @@ import os
 import boto.s3
 from boto.s3.connection import S3Connection
 
-import provider.filesystem as fslib
-
 """
 EJP data provider
 Connects to S3, discovers, downloads, and parses files exported by EJP
@@ -31,9 +29,6 @@ class EJP(object):
 
         # S3 connection
         self.s3_conn = None
-
-        # Filesystem provider
-        self.fs = None
 
         # Some EJP file types we expect
         self.author_default_filename = "authors.csv"
@@ -377,17 +372,6 @@ class EJP(object):
                 #print 'Key: ' + item.name
 
         return keys, folders
-
-
-    def get_fs(self):
-        """
-        For running tests, return the filesystem provider
-        so it can be interrogated
-        """
-        if self.fs is None:
-            # Create the filesystem provider
-            self.fs = fslib.Filesystem(self.get_tmp_dir())
-        return self.fs
 
     def get_tmp_dir(self):
         """
