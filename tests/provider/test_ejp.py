@@ -12,7 +12,7 @@ class TestProviderEJP(unittest.TestCase):
 
     def setUp(self):
         self.directory = TempDirectory()
-        self.ejp = EJP(settings_mock, tmp_dir=self.directory)
+        self.ejp = EJP(settings_mock, tmp_dir=self.directory.path)
 
     def tearDown(self):
         TempDirectory.cleanup_all()
