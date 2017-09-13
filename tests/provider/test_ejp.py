@@ -47,6 +47,30 @@ class TestProviderEJP(unittest.TestCase):
         authors_fp.close()
 
 
+    @tempdir()
+    @patch('provider.filesystem.Filesystem.open_file_from_tmp_dir')
+    @patch('provider.filesystem.Filesystem.write_document_to_tmp_dir')
+    @data(
+        (3, [
+            ['3', 'Editor', 'One', 'ed_one@example.com']
+        ]),
+        (666, None),
+    )
+    @unpack
+    def test_get_editors(self, doi_id, expected_editors,
+                         fake_filesystem_write, fake_filesystem_open):
+        editor_csv_file = "tests/test_data/ejp_editor_file.csv"
+        expected_column_headings = ['ms_no', 'first_nm', 'last_nm', 'e_mail']
+        # mock things
+        fake_filesystem_write = MagicMock()
+        editors_fp = open(editor_csv_file, 'rb')
+        fake_filesystem_open.return_value = editors_fp
+        # call the function
+        (column_headings, authors) = self.ejp.get_editors(doi_id, editor_csv_file)
+        # assert results
+        self.assertEqual(column_headings, expected_column_headings)
+        self.assertEqual(authors, expected_editors)
+        editors_fp.close()
 
 if __name__ == '__main__':
     unittest.main()
