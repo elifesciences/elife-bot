@@ -11,11 +11,9 @@ Feature: Use Templates provider
     And I create a templates provider
     And I have a document <document>
     And I have the template name <template_name>
-    And I get a filesystem provider from the templates provider
     When I read the document to content
     And I save template contents to tmp dir with templates provider
-    And I get the filesystem document
-    Then I have the world filesystem document <filesystem_document>
+    Then I have the in the tmp dir the document <filesystem_document>
 
   Examples:
     | tmp_base_dir  | test_name     | document                              | template_name     | filesystem_document 
@@ -33,7 +31,6 @@ Feature: Use Templates provider
     And I have the email type <email_type>
     And I have the attribute authors []
     And I get email templates list from the template provider
-    And I get a filesystem provider from the templates provider
     When I read each base dir plus templates list document to content
     And I set the templates provider email templates warmed to True
     And I get email body from the templates provider
@@ -55,7 +52,6 @@ Feature: Use Templates provider
     And I have the article json <article_json>
     And I have the email type <email_type>
     And I get email templates list from the template provider
-    And I get a filesystem provider from the templates provider
     And I read each base dir plus templates list document to content
     And I set the templates provider email templates warmed to True
     And I get email body from the templates provider
@@ -84,7 +80,6 @@ Feature: Use Templates provider
     And I have the email type <email_type>
     And I parse the document with the article provider
     And I get email templates list from the template provider
-    And I get a filesystem provider from the templates provider
     When I read each base dir plus templates list document to content
     And I set the templates provider email templates warmed to True
     And I get email body from the templates provider
@@ -109,7 +104,6 @@ Feature: Use Templates provider
     And I have the cdn bucket <cdn_bucket>
     And I have the article xml filename <article_xml_filename>
     And I get lens templates list from the template provider
-    And I get a filesystem provider from the templates provider
     When I read each base dir plus templates list document to content
     And I set the templates provider email templates warmed to True
     And I parse the document with the article provider

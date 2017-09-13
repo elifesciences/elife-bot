@@ -36,6 +36,11 @@ def i_get_the_tmp_dir_from_the_world(step):
   if(tmp_dir == ""):
     tmp_dir = None
   world.tmp_dir = tmp_dir
+  # also try to create the directory if it does not exist
+  try:
+    os.mkdir(world.tmp_dir)
+  except OSError as e:
+    pass
   assert world.tmp_dir is not None, \
     "Got tmp_dir %s" % world.tmp_dir
     

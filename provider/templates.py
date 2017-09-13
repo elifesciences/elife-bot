@@ -5,8 +5,6 @@ from jinja2 import Environment, FileSystemLoader
 
 from boto.s3.connection import S3Connection
 
-import provider.filesystem as fslib
-
 """
 Templates provider
 Connects to S3, discovers, downloads, and parses templates using jinja2
@@ -31,9 +29,6 @@ class Templates(object):
 
         # S3 connection
         self.s3_conn = None
-
-        # Filesystem provider
-        self.fs = None
 
         # Jinja stuff
         self.jinja_env = None
@@ -80,16 +75,6 @@ class Templates(object):
         s3key = bucket.get_key(s3_key_name)
 
         return s3key
-
-    def get_fs(self):
-        """
-        For running tests, return the filesystem provider
-        so it can be interrogated
-        """
-        if self.fs is None:
-            # Create the filesystem provider
-            self.fs = fslib.Filesystem(self.get_tmp_dir())
-        return self.fs
 
     def get_tmp_dir(self):
         """
@@ -147,13 +132,11 @@ class Templates(object):
 
         template_missing = False
 
-        if self.fs is None:
-            self.fs = self.get_fs()
-
-        for t in template_list:
-            filename = from_dir + os.sep + t
+        for template in template_list:
+            filename = os.path.join(from_dir, template)
             try:
-                self.fs.write_document_to_tmp_dir(document=filename, filename=t)
+                with open(filename, 'r') as fp:
+                    self.save_template_contents_to_tmp_dir(template, fp.read())
             except:
                 template_missing = True
 
@@ -216,12 +199,9 @@ class Templates(object):
         Can be used from S3 object content, or local filesystem
         loaded content in the case of running tests
         """
-
-        if self.fs is None:
-            self.fs = self.get_fs()
-
         if contents is not None:
-            self.fs.write_content_to_document(contents, template_name)
+            with open(os.path.join(self.get_tmp_dir(), template_name), 'w') as fp:
+                fp.write(contents)
             return True
 
         # Default
