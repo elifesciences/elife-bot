@@ -1,4 +1,5 @@
 import unittest
+import json
 from provider.ejp import EJP
 import tests.settings_mock as settings_mock
 from testfixtures import tempdir
@@ -71,6 +72,34 @@ class TestProviderEJP(unittest.TestCase):
         self.assertEqual(column_headings, expected_column_headings)
         self.assertEqual(authors, expected_editors)
         editors_fp.close()
+
+
+    @tempdir()
+    @patch('provider.ejp.EJP.ejp_bucket_file_list')
+    @data(
+        ('author', 'ejp_query_tool_query_id_152_15a)_Accepted_Paper_Details_2013_10_31_eLife.csv'),
+        ('editor', 'ejp_query_tool_query_id_158_15b)_Accepted_Paper_Details_2013_10_31_eLife.csv'),
+        ('poa_manuscript', 'ejp_query_tool_query_id_176_POA_Manuscript_2014_03_19_eLife.csv'),
+        ('poa_author', 'ejp_query_tool_query_id_177_POA_Author_2014_03_19_eLife.csv'),
+        ('poa_license', 'ejp_query_tool_query_id_178_POA_License_2014_03_19_eLife.csv'),
+        ('poa_subject_area', 'ejp_query_tool_query_id_179_POA_Subject_Area_2014_03_19_eLife.csv'),
+        ('poa_received', 'ejp_query_tool_query_id_180_POA_Received_2014_03_19_eLife.csv'),
+        ('poa_research_organism', 'ejp_query_tool_query_id_182_POA_Research_Organism_2014_03_19_eLife.csv'),
+    )
+    @unpack
+    def test_find_latest_s3_file_name(self, file_type, expected_s3_key_name,
+                         fake_ejp_bucket_file_list):
+        bucket_list_file = "tests/test_data/ejp_bucket_list.json"
+        # mock things
+        with open(bucket_list_file, 'rb') as fp:
+            fake_ejp_bucket_file_list.return_value = json.loads(fp.read())
+        # call the function
+        s3_key_name = self.ejp.find_latest_s3_file_name(file_type)
+        # assert results
+        self.assertEqual(s3_key_name, expected_s3_key_name)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
