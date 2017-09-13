@@ -88,9 +88,7 @@ class EJP(object):
 
     def parse_author_file(self, document):
         """
-        Given a filename to an author file, download
-        or copy it using the filesystem provider,
-        then parse it
+        Given a filename to an author file, parse it
         """
         (column_headings, author_rows) = self.parse_author_data(document)
         return (column_headings, author_rows)
@@ -137,14 +135,13 @@ class EJP(object):
             s3_key_name = self.find_latest_s3_file_name(file_type="author")
             s3_key = self.get_s3key(s3_key_name)
             contents = s3_key.get_contents_as_string()
-            document = self.write_content_to_file(contents)
+            document = self.write_content_to_file(self.author_default_filename, contents)
         else:
             # copy the document to the tmp_dir if provided
             with open(document, 'rb') as fp:
                 self.write_content_to_file(self.author_default_filename, fp.read())
 
         # Parse the author file
-        filename = self.author_default_filename
         (column_headings, author_rows) = self.parse_author_file(document)
 
         if author_rows:
@@ -194,21 +191,11 @@ class EJP(object):
 
         return is_corr
 
-    def parse_editor_file(self, document, filename=None):
+    def parse_editor_file(self, document):
         """
-        Given a filename to an author file, download
-        or copy it using the filesystem provider,
-        then parse it
+        Given a filename to an editor file, parse it
         """
-
-        if self.fs is None:
-            self.fs = self.get_fs()
-
-        # Save the document to the tmp_dir
-        self.fs.write_document_to_tmp_dir(document, filename)
-
-        (column_headings, editor_rows) = self.parse_editor_data(self.fs.document)
-
+        (column_headings, editor_rows) = self.parse_editor_data(document)
         return (column_headings, editor_rows)
 
     def parse_editor_data(self, document):
@@ -220,19 +207,17 @@ class EJP(object):
         column_headings = None
         editor_rows = []
 
-        f = self.fs.open_file_from_tmp_dir(self.fs.document, mode='rb')
-
-        filereader = csv.reader(f)
-
-        for row in filereader:
-            # For now throw out header rows
-            if filereader.line_num <= 3:
-                pass
-            elif filereader.line_num == 4:
-                # Column headers
-                column_headings = row
-            else:
-                editor_rows.append(row)
+        with open(document, 'rb') as fp:
+            filereader = csv.reader(fp)
+            for row in filereader:
+                # For now throw out header rows
+                if filereader.line_num <= 3:
+                    pass
+                elif filereader.line_num == 4:
+                    # Column headers
+                    column_headings = row
+                else:
+                    editor_rows.append(row)
 
         return (column_headings, editor_rows)
 
@@ -245,19 +230,17 @@ class EJP(object):
         editors = []
         # Check for the document
         if document is None:
-            # No document? Find it on S3, save the content to
-            #  the tmp_dir
-            if self.fs is None:
-                self.fs = self.get_fs()
             s3_key_name = self.find_latest_s3_file_name(file_type="editor")
             s3_key = self.get_s3key(s3_key_name)
             contents = s3_key.get_contents_as_string()
-            self.fs.write_content_to_document(contents, self.editor_default_filename)
-            document = self.fs.get_document
+            document = self.write_content_to_file(self.editor_default_filename, contents)
+        else:
+            # copy the document to the tmp_dir if provided
+            with open(document, 'rb') as fp:
+                self.write_content_to_file(self.editor_default_filename, fp.read())
 
         # Parse the file
-        filename = self.editor_default_filename
-        (column_headings, editor_rows) = self.parse_editor_file(document, filename)
+        (column_headings, editor_rows) = self.parse_editor_file(document)
 
         if editor_rows:
             for a in editor_rows:
