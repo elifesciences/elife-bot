@@ -53,9 +53,6 @@ class exp():
 
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://2015-09-03.lax.elifesciences.org/api/v1/article/10.7554/eLife.{article_id}/version/'
-    lax_update = 'http://2015-09-03.lax.elifesciences.org/api/v1/import/article/'
-    lax_update_user = ''
-    lax_update_pass = ''
     verify_ssl = True # False when testing
 
     no_download_extensions = 'tif'
