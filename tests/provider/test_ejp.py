@@ -19,8 +19,6 @@ class TestProviderEJP(unittest.TestCase):
         TempDirectory.cleanup_all()
 
     @tempdir()
-    @patch('provider.filesystem.Filesystem.open_file_from_tmp_dir')
-    @patch('provider.filesystem.Filesystem.write_document_to_tmp_dir')
     @data(
         (3, False, [
             ['3', '1', 'Author', 'One', 'Contributing Author', ' ', 'author01@example.com'],
@@ -33,25 +31,17 @@ class TestProviderEJP(unittest.TestCase):
         (666, True, None),
     )
     @unpack
-    def test_get_authors(self, doi_id, corresponding, expected_authors,
-                         fake_filesystem_write, fake_filesystem_open):
+    def test_get_authors(self, doi_id, corresponding, expected_authors):
         author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
         expected_column_headings = ['ms_no', 'author_seq', 'first_nm', 'last_nm', 'author_type_cde', 'dual_corr_author_ind', 'e_mail']
-        # mock things
-        fake_filesystem_write = MagicMock()
-        authors_fp = open(author_csv_file, 'rb')
-        fake_filesystem_open.return_value = authors_fp
         # call the function
         (column_headings, authors) = self.ejp.get_authors(doi_id, corresponding, author_csv_file)
         # assert results
         self.assertEqual(column_headings, expected_column_headings)
         self.assertEqual(authors, expected_authors)
-        authors_fp.close()
 
 
     @tempdir()
-    @patch('provider.filesystem.Filesystem.open_file_from_tmp_dir')
-    @patch('provider.filesystem.Filesystem.write_document_to_tmp_dir')
     @data(
         (3, [
             ['3', 'Editor', 'One', 'ed_one@example.com']
@@ -59,20 +49,14 @@ class TestProviderEJP(unittest.TestCase):
         (666, None),
     )
     @unpack
-    def test_get_editors(self, doi_id, expected_editors,
-                         fake_filesystem_write, fake_filesystem_open):
+    def test_get_editors(self, doi_id, expected_editors):
         editor_csv_file = os.path.join("tests", "test_data", "ejp_editor_file.csv")
         expected_column_headings = ['ms_no', 'first_nm', 'last_nm', 'e_mail']
-        # mock things
-        fake_filesystem_write = MagicMock()
-        editors_fp = open(editor_csv_file, 'rb')
-        fake_filesystem_open.return_value = editors_fp
         # call the function
         (column_headings, authors) = self.ejp.get_editors(doi_id, editor_csv_file)
         # assert results
         self.assertEqual(column_headings, expected_column_headings)
         self.assertEqual(authors, expected_editors)
-        editors_fp.close()
 
 
     @tempdir()

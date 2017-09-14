@@ -112,7 +112,7 @@ class EJP(object):
 
         return (column_headings, author_rows)
 
-    def get_authors(self, doi_id=None, corresponding=None, document=None):
+    def get_authors(self, doi_id=None, corresponding=None, local_document=None):
         """
         Get a list of authors for an article
           If doi_id is None, return all authors
@@ -124,7 +124,7 @@ class EJP(object):
         """
         authors = []
         # Check for the document
-        if document is None:
+        if local_document is None:
             # No document? Find it on S3, save the content to
             #  the tmp_dir
             s3_key_name = self.find_latest_s3_file_name(file_type="author")
@@ -133,8 +133,8 @@ class EJP(object):
             document = self.write_content_to_file(self.author_default_filename, contents)
         else:
             # copy the document to the tmp_dir if provided
-            with open(document, 'rb') as fp:
-                self.write_content_to_file(self.author_default_filename, fp.read())
+            with open(local_document, 'rb') as fp:
+                document = self.write_content_to_file(self.author_default_filename, fp.read())
 
         # Parse the author file
         (column_headings, author_rows) = self.parse_author_file(document)
@@ -216,7 +216,7 @@ class EJP(object):
 
         return (column_headings, editor_rows)
 
-    def get_editors(self, doi_id=None, document=None):
+    def get_editors(self, doi_id=None, local_document=None):
         """
         Get a list of editors for an article
           If doi_id is None, return all editors
@@ -224,15 +224,15 @@ class EJP(object):
         """
         editors = []
         # Check for the document
-        if document is None:
+        if local_document is None:
             s3_key_name = self.find_latest_s3_file_name(file_type="editor")
             s3_key = self.get_s3key(s3_key_name)
             contents = s3_key.get_contents_as_string()
             document = self.write_content_to_file(self.editor_default_filename, contents)
         else:
             # copy the document to the tmp_dir if provided
-            with open(document, 'rb') as fp:
-                self.write_content_to_file(self.editor_default_filename, fp.read())
+            with open(local_document, 'rb') as fp:
+                document = self.write_content_to_file(self.editor_default_filename, fp.read())
 
         # Parse the file
         (column_headings, editor_rows) = self.parse_editor_file(document)
