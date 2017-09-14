@@ -74,12 +74,21 @@ class EJP(object):
 
     def write_content_to_file(self, filename, content, mode="wb"):
         "write the content to a file in the tmp_dir"
-        document = os.path.join(self.get_tmp_dir(), filename)
-        with open(document, 'wb') as fp:
-            fp.write(content)
-            return document
-        # default if it does not work
-        return None
+        document = None
+        # set the document path
+        try:
+            document_path = os.path.join(self.get_tmp_dir(), filename)
+        except TypeError:
+            document_path = None
+        # write the content to the file
+        try:
+            with open(document_path, mode) as fp:
+                fp.write(content)
+                # success, set the document value to return
+                document = document_path
+        except TypeError, IOError:
+            document = None
+        return document
 
     def parse_author_file(self, document):
         """

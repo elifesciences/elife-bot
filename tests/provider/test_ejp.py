@@ -20,6 +20,26 @@ class TestProviderEJP(unittest.TestCase):
 
     @tempdir()
     @data(
+        (None, '', 'wb', TypeError, None),
+        ('read_mode_failure.txt', '', 'r', IOError, None),
+        ('good.txt', 'good', 'wb', None, 'good.txt'),
+    )
+    @unpack
+    def test_write_content_to_file(self, filename, content, mode, exception_raised, expected_document):
+        # if we expect a document, for comparison we need to add the tmp_dir path to it
+        if expected_document:
+            expected_document = os.path.join(self.directory.path, expected_document)
+        try:
+            document = self.ejp.write_content_to_file(filename, content, mode)
+            # check the returned value
+            self.assertEqual(document, expected_document)
+        except:
+            # check the exception
+            self.assertRaises(exception_raised)
+
+
+    @tempdir()
+    @data(
         (3, False, [
             ['3', '1', 'Author', 'One', 'Contributing Author', ' ', 'author01@example.com'],
             ['3', '2', 'Author', 'Two', 'Contributing Author', ' ', 'author02@example.org'],
