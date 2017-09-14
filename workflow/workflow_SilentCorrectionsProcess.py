@@ -90,17 +90,6 @@ class workflow_SilentCorrectionsProcess(workflow.workflow):
                         "start_to_close_timeout": 60 * 5
                     },
                     {
-                        "activity_type": "ResizeImages",
-                        "activity_id": "ResizeImages",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 30,
-                        "schedule_to_close_timeout": 60 * 30,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 30
-                    },
-                    {
                         "activity_type": "DepositAssets",
                         "activity_id": "DepositAssets",
                         "version": "1",
