@@ -46,7 +46,6 @@ def start(ENV="dev"):
     workflow_names.append("FTPArticle")
     workflow_names.append("PubRouterDeposit")
     workflow_names.append("PMCDeposit")
-    workflow_names.append("PublishPerfectArticle")
     workflow_names.append("PostPerfectPublication")
 
     for workflow_name in workflow_names:
