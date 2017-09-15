@@ -46,7 +46,6 @@ def start(ENV="dev"):
     workflow_names.append("FTPArticle")
     workflow_names.append("PubRouterDeposit")
     workflow_names.append("PMCDeposit")
-    workflow_names.append("PublishPerfectArticle")
     workflow_names.append("PostPerfectPublication")
 
     for workflow_name in workflow_names:
@@ -91,7 +90,6 @@ def start(ENV="dev"):
     activity_names.append("RewriteEIF")
     activity_names.append("DepositAssets")
     activity_names.append("ApprovePublication")
-    activity_names.append("ResizeImages")
     activity_names.append("PreparePostEIF")
     activity_names.append("Sum")
     activity_names.append("S3Monitor")
