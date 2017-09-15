@@ -46,7 +46,7 @@ class activity_ConvertImagesToJPG(activity.activity):
             storage_context = StorageContext(self.settings)
             files_in_bucket = storage_context.list_resources(orig_resource)
 
-            figures = filter(article_structure.article_figure, files_in_bucket)
+            figures = filter(article_structure.article_figure, files_in_bucket) + filter(article_structure.inline_figure, files_in_bucket)
 
             # download is not a IIIF asset but is currently kept for compatibility
             # download may become obsolete in future

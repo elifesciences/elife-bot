@@ -122,6 +122,10 @@ def figure_pdf(file):
     article_info = ArticleInfo(file)
     return article_info.file_type == "FigurePDF"
 
+def inline_figure(file):
+    article_info = ArticleInfo(file)
+    return article_info.file_type == "Inline"
+
 def has_extensions(file, extensions):
     article_info = ArticleInfo(file)
     return article_info.extension in extensions

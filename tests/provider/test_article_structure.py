@@ -97,6 +97,15 @@ class TestArticleStructure(unittest.TestCase):
     def test_article_figure(self, input, expected):
         self.assertEqual(article_structure.article_figure(input), expected)
 
+    @unpack
+    @data(
+        {'input': 'elife-00666-app1-fig1-v1.tif', 'expected': False},
+        {'input': 'elife-00666-fig1-v1.tif', 'expected': False},
+        {'input': 'elife-00666-inf1-v1.tif', 'expected': True},
+          )
+    def test_inline_figure(self, input, expected):
+        self.assertEqual(article_structure.inline_figure(input), expected, "Case %s" % input)
+
     def test_get_original_files(self):
         files = ['elife-00666-fig2-figsupp2-v1.tif',
                  'elife-00666-fig2-figsupp2-v10.tif',
