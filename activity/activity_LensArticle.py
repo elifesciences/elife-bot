@@ -11,8 +11,6 @@ from boto.s3.key import Key
 import provider.templates as templatelib
 import provider.article as articlelib
 
-import provider.filesystem as fslib
-
 """
 LensArticle activity
 """
@@ -29,9 +27,6 @@ class activity_LensArticle(activity.activity):
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
         self.description = "Create a lens article index.html page for the particular article."
-
-        # Create the filesystem provider
-        self.fs = fslib.Filesystem(self.get_tmp_dir())
 
         # Templates provider
         self.templates = templatelib.Templates(settings, self.get_tmp_dir())

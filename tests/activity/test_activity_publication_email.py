@@ -233,8 +233,8 @@ class TestPublicationEmail(unittest.TestCase):
         (666, "tests/test_data/ejp_editor_file.csv", 0, None)
     )
     @unpack
-    def test_get_editors(self, doi_id, document, expected_editor_list_len, expected_0_last_nm):
-        editor_list = self.activity.get_editors(doi_id, document)
+    def test_get_editors(self, doi_id, local_document, expected_editor_list_len, expected_0_last_nm):
+        editor_list = self.activity.get_editors(doi_id, local_document)
         if editor_list:
             self.assertEqual(len(editor_list), expected_editor_list_len)
         else:

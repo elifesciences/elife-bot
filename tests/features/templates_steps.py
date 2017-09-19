@@ -15,12 +15,6 @@ def i_create_a_templates_provider(step):
   world.templates = templateslib.Templates(world.settings, world.tmp_dir)
   assert world.templates is not None, \
     "Got templates %s" % world.templates
-    
-@step('I get a filesystem provider from the templates provider')
-def get_the_filesystem_provider_from_the_templates_provider(step):
-  world.fs = world.templates.get_fs()
-  assert world.fs is not None, \
-    "Got filesystem provider %s" % world.fs
 
 @step('I have the template name (\S+)')
 def i_have_the_template_name_template_name(step, template_name):
@@ -38,14 +32,15 @@ def i_read_the_document_to_content(step):
 
 @step('I save template contents to tmp dir with templates provider')
 def i_save_template_contents_to_tmp_dir_with_templates_provider(step):
-  world.templates.save_template_contents_to_tmp_dir(world.template_name, world.content)
-  assert world.fs.document is not None, \
-    "Got document %s" % world.fs.document
+  return_value = world.templates.save_template_contents_to_tmp_dir(world.template_name, world.content)
+  assert return_value is True, \
+    "Got save_template_contents_to_tmp_dir return_value %s" % return_value
   
-@step('I have the world filesystem document (\S+)')
-def i_have_the_world_filesystem_document(step, filesystem_document):
-  assert world.fs.document == filesystem_document, \
-    "Got document %s" % world.fs.document
+@step('I have the in the tmp dir the document (\S+)')
+def i_have_in_the_tmp_dir_the_document(step, document):
+  document_exists = os.path.exists(os.path.join(world.templates.get_tmp_dir(), document))
+  assert document_exists is True, \
+    "Got document_exists %s" % document_exists
 
 @step('I have a base directory (\S+)')
 def i_have_a_base_directory(step, base_dir):

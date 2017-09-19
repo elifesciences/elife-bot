@@ -3,11 +3,10 @@ import time
 from operator import itemgetter
 import csv
 import re
+import os
 
 import boto.s3
 from boto.s3.connection import S3Connection
-
-import provider.filesystem as fslib
 
 """
 EJP data provider
@@ -30,9 +29,6 @@ class EJP(object):
 
         # S3 connection
         self.s3_conn = None
-
-        # Filesystem provider
-        self.fs = None
 
         # Some EJP file types we expect
         self.author_default_filename = "authors.csv"
@@ -76,22 +72,29 @@ class EJP(object):
 
         return s3key
 
+    def write_content_to_file(self, filename, content, mode="wb"):
+        "write the content to a file in the tmp_dir"
+        document = None
+        # set the document path
+        try:
+            document_path = os.path.join(self.get_tmp_dir(), filename)
+        except TypeError:
+            document_path = None
+        # write the content to the file
+        try:
+            with open(document_path, mode) as fp:
+                fp.write(content)
+                # success, set the document value to return
+                document = document_path
+        except TypeError, IOError:
+            document = None
+        return document
 
-    def parse_author_file(self, document, filename=None):
+    def parse_author_file(self, document):
         """
-        Given a filename to an author file, download
-        or copy it using the filesystem provider,
-        then parse it
+        Given a filename to an author file, parse it
         """
-
-        if self.fs is None:
-            self.fs = self.get_fs()
-
-        # Save the document to the tmp_dir
-        self.fs.write_document_to_tmp_dir(document, filename)
-
-        (column_headings, author_rows) = self.parse_author_data(self.fs.document)
-
+        (column_headings, author_rows) = self.parse_author_data(document)
         return (column_headings, author_rows)
 
     def parse_author_data(self, document):
@@ -103,23 +106,22 @@ class EJP(object):
         column_headings = None
         author_rows = []
 
-        f = self.fs.open_file_from_tmp_dir(document, mode='rb')
-
-        filereader = csv.reader(f)
-
-        for row in filereader:
-            # For now throw out header rows
-            if filereader.line_num <= 3:
-                pass
-            elif filereader.line_num == 4:
-                # Column headers
-                column_headings = row
-            else:
-                author_rows.append(row)
+        # open the file and parse it
+        with open(document, 'rb') as fp:
+            filereader = csv.reader(fp)
+            for row in filereader:
+                # For now throw out header rows
+                if filereader.line_num <= 3:
+                    pass
+                elif filereader.line_num == 4:
+                    # Column headers
+                    column_headings = row
+                else:
+                    author_rows.append(row)
 
         return (column_headings, author_rows)
 
-    def get_authors(self, doi_id=None, corresponding=None, document=None):
+    def get_authors(self, doi_id=None, corresponding=None, local_document=None):
         """
         Get a list of authors for an article
           If doi_id is None, return all authors
@@ -131,20 +133,20 @@ class EJP(object):
         """
         authors = []
         # Check for the document
-        if document is None:
+        if local_document is None:
             # No document? Find it on S3, save the content to
             #  the tmp_dir
-            if self.fs is None:
-                self.fs = self.get_fs()
             s3_key_name = self.find_latest_s3_file_name(file_type="author")
             s3_key = self.get_s3key(s3_key_name)
             contents = s3_key.get_contents_as_string()
-            self.fs.write_content_to_document(contents, self.author_default_filename)
-            document = self.fs.get_document
+            document = self.write_content_to_file(self.author_default_filename, contents)
+        else:
+            # copy the document to the tmp_dir if provided
+            with open(local_document, 'rb') as fp:
+                document = self.write_content_to_file(self.author_default_filename, fp.read())
 
         # Parse the author file
-        filename = self.author_default_filename
-        (column_headings, author_rows) = self.parse_author_file(document, filename)
+        (column_headings, author_rows) = self.parse_author_file(document)
 
         if author_rows:
             for a in author_rows:
@@ -193,21 +195,11 @@ class EJP(object):
 
         return is_corr
 
-    def parse_editor_file(self, document, filename=None):
+    def parse_editor_file(self, document):
         """
-        Given a filename to an author file, download
-        or copy it using the filesystem provider,
-        then parse it
+        Given a filename to an editor file, parse it
         """
-
-        if self.fs is None:
-            self.fs = self.get_fs()
-
-        # Save the document to the tmp_dir
-        self.fs.write_document_to_tmp_dir(document, filename)
-
-        (column_headings, editor_rows) = self.parse_editor_data(self.fs.document)
-
+        (column_headings, editor_rows) = self.parse_editor_data(document)
         return (column_headings, editor_rows)
 
     def parse_editor_data(self, document):
@@ -219,23 +211,21 @@ class EJP(object):
         column_headings = None
         editor_rows = []
 
-        f = self.fs.open_file_from_tmp_dir(self.fs.document, mode='rb')
-
-        filereader = csv.reader(f)
-
-        for row in filereader:
-            # For now throw out header rows
-            if filereader.line_num <= 3:
-                pass
-            elif filereader.line_num == 4:
-                # Column headers
-                column_headings = row
-            else:
-                editor_rows.append(row)
+        with open(document, 'rb') as fp:
+            filereader = csv.reader(fp)
+            for row in filereader:
+                # For now throw out header rows
+                if filereader.line_num <= 3:
+                    pass
+                elif filereader.line_num == 4:
+                    # Column headers
+                    column_headings = row
+                else:
+                    editor_rows.append(row)
 
         return (column_headings, editor_rows)
 
-    def get_editors(self, doi_id=None, document=None):
+    def get_editors(self, doi_id=None, local_document=None):
         """
         Get a list of editors for an article
           If doi_id is None, return all editors
@@ -243,20 +233,18 @@ class EJP(object):
         """
         editors = []
         # Check for the document
-        if document is None:
-            # No document? Find it on S3, save the content to
-            #  the tmp_dir
-            if self.fs is None:
-                self.fs = self.get_fs()
+        if local_document is None:
             s3_key_name = self.find_latest_s3_file_name(file_type="editor")
             s3_key = self.get_s3key(s3_key_name)
             contents = s3_key.get_contents_as_string()
-            self.fs.write_content_to_document(contents, self.editor_default_filename)
-            document = self.fs.get_document
+            document = self.write_content_to_file(self.editor_default_filename, contents)
+        else:
+            # copy the document to the tmp_dir if provided
+            with open(local_document, 'rb') as fp:
+                document = self.write_content_to_file(self.editor_default_filename, fp.read())
 
         # Parse the file
-        filename = self.editor_default_filename
-        (column_headings, editor_rows) = self.parse_editor_file(document, filename)
+        (column_headings, editor_rows) = self.parse_editor_file(document)
 
         if editor_rows:
             for a in editor_rows:
@@ -393,17 +381,6 @@ class EJP(object):
                 #print 'Key: ' + item.name
 
         return keys, folders
-
-
-    def get_fs(self):
-        """
-        For running tests, return the filesystem provider
-        so it can be interrogated
-        """
-        if self.fs is None:
-            # Create the filesystem provider
-            self.fs = fslib.Filesystem(self.get_tmp_dir())
-        return self.fs
 
     def get_tmp_dir(self):
         """

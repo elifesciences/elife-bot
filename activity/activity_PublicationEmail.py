@@ -812,7 +812,7 @@ class activity_PublicationEmail(activity.activity):
                     old_s3_key.delete()
 
 
-    def get_authors(self, doi_id=None, corresponding=None, document=None):
+    def get_authors(self, doi_id=None, corresponding=None, local_document=None):
         """
         Using the EJP data provider, get the column headings
         and author data, and reassemble into a list of authors
@@ -821,7 +821,7 @@ class activity_PublicationEmail(activity.activity):
         author_list = []
         (column_headings, authors) = self.ejp.get_authors(doi_id=doi_id,
                                                           corresponding=corresponding,
-                                                          document=document)
+                                                          local_document=local_document)
 
         # Authors will be none if there is not data
         if authors is None:
@@ -844,14 +844,14 @@ class activity_PublicationEmail(activity.activity):
 
         return author_list
 
-    def get_editors(self, doi_id=None, document=None):
+    def get_editors(self, doi_id=None, local_document=None):
         """
         Using the EJP data provider, get the column headings
         and editor data, and reassemble into a list of editors
         document is only provided when running tests, otherwise just specify the doi_id
         """
         editor_list = []
-        (column_headings, editors) = self.ejp.get_editors(doi_id=doi_id, document=document)
+        (column_headings, editors) = self.ejp.get_editors(doi_id=doi_id, local_document=local_document)
 
         # Editors will be none if there is not data
         if editors is None:

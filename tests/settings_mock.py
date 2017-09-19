@@ -20,6 +20,7 @@ sqs_region = ""
 simpledb_region = ""
 simpledb_domain_postfix = "_test"
 ejp_bucket = 'ejp_bucket'
+templates_bucket = 'templates_bucket'
 bot_bucket = 'bot_bucket'
 lens_bucket = 'dest_bucket'
 poa_packaging_bucket = 'poa_packaging_bucket'
