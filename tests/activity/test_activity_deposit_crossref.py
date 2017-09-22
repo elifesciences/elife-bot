@@ -8,8 +8,7 @@ from provider.simpleDB import SimpleDB
 
 import os
 # Add parent directory for imports, so activity classes can use elife-poa-xml-generation
-PARENTDIR = os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+PARENTDIR = os.path.realpath(os.path.dirname(os.path.abspath(__file__)) + '/../../../')
 os.sys.path.insert(0, PARENTDIR)
 
 
@@ -76,9 +75,6 @@ class TestDepositCrossref(unittest.TestCase):
                 except AssertionError:
                     print expected, ' not found in crossref_xml'
                     raise
-
-
-
 
 
 if __name__ == '__main__':
