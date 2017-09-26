@@ -1,15 +1,17 @@
 import unittest
 from activity.activity_ScheduleCrossref import activity_ScheduleCrossref
-from activity.activity_ConvertJATS import activity_ConvertJATS as ConvertJATS
 from mock import mock, patch
 from tests.activity.classes_mock import FakeSession
-from tests.activity.classes_mock import FakeKey
 from tests.activity.classes_mock import FakeS3Connection
 from tests.activity.classes_mock import FakeLogger
 import tests.activity.settings_mock as settings_mock
 import tests.activity.test_activity_data as testdata
 from ddt import ddt, data, unpack
 
+class FakeKey:
+    "just want a fake key object which can have a property set"
+    def __init__(self):
+        self.name = None
 
 @ddt
 class TestScheduleCrossref(unittest.TestCase):
@@ -21,7 +23,7 @@ class TestScheduleCrossref(unittest.TestCase):
         pass
 
     @patch.object(activity_ScheduleCrossref, 'copy_article_xml_to_crossref_outbox')
-    @patch.object(ConvertJATS, 'get_article_xml_key')
+    @patch('activity.activity_ScheduleCrossref.get_article_xml_key')
     @patch('activity.activity_ScheduleCrossref.S3Connection')
     @patch('activity.activity_ScheduleCrossref.Session')
     @patch.object(activity_ScheduleCrossref, 'emit_monitor_event')
@@ -39,7 +41,7 @@ class TestScheduleCrossref(unittest.TestCase):
         fake_copy_article_xml = mock.MagicMock()
         # create a fake Key if specified
         if xml_key:
-            fake_key = FakeKey
+            fake_key = FakeKey()
             fake_key.name = xml_key
         else:
             fake_key = None

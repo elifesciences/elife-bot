@@ -5,7 +5,7 @@ import activity
 from boto.s3.connection import S3Connection
 
 from provider.execution_context import Session
-from activity_ConvertJATS import activity_ConvertJATS as ConvertJATS
+from provider.article_structure import get_article_xml_key
 
 """
 ScheduleCrossref.py activity
@@ -57,7 +57,7 @@ class activity_ScheduleCrossref(activity.activity):
                                 "Starting scheduling of crossref deposit for " + article_id)
 
         try:
-            (xml_key, xml_filename) = ConvertJATS.get_article_xml_key(bucket, expanded_folder_name)
+            (xml_key, xml_filename) = get_article_xml_key(bucket, expanded_folder_name)
 
             # Rename the XML file to match what is used already
             new_key_name = self.new_crossref_xml_name(
