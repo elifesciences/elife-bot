@@ -181,7 +181,10 @@ def pre_ingest_assets(files):
 
 
 def get_article_xml_key(bucket, expanded_folder_name):
-    "locate the article XML file in the expanded article bucket on S3"
+    """
+    locate the article XML file in the expanded article bucket on S3
+    and return the S3 key and the filename of the object
+    """
     files = bucket.list(expanded_folder_name + "/", "/")
     for bucket_file in files:
         key = bucket.get_key(bucket_file.key)
