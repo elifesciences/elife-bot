@@ -5,11 +5,7 @@ from mock import patch
 import tests.activity.settings_mock as settings_mock
 from provider.article import article
 from provider.simpleDB import SimpleDB
-
 import os
-# Add parent directory for imports, so activity classes can use elife-poa-xml-generation
-PARENTDIR = os.path.realpath(os.path.dirname(os.path.abspath(__file__)) + '/../../../')
-os.sys.path.insert(0, PARENTDIR)
 
 
 class TestDepositCrossref(unittest.TestCase):
@@ -22,19 +18,19 @@ class TestDepositCrossref(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
 
-    def staging_dir(self):
+    def input_dir(self):
         "return the staging dir name for the activity"
-        return self.activity.elife_poa_lib.settings.STAGING_TO_HW_DIR
+        return os.path.join(self.activity.get_tmp_dir(), self.activity.INPUT_DIR)
 
 
     def tmp_dir(self):
         "return the tmp dir name for the activity"
-        return self.activity.elife_poa_lib.settings.TMP_DIR
+        return os.path.join(self.activity.get_tmp_dir(), self.activity.TMP_DIR)
 
 
     def fake_download_files_from_s3_outbox(self, document):
         source_doc = "tests/test_data/crossref/" + document
-        dest_doc = self.staging_dir() + os.sep + document
+        dest_doc = self.input_dir() + os.sep + document
         shutil.copy(source_doc, dest_doc)
 
 
