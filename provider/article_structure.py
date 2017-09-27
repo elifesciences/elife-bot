@@ -180,6 +180,20 @@ def pre_ingest_assets(files):
     return list(set(iiif_assets + pdf_figures))
 
 
+def get_article_xml_key(bucket, expanded_folder_name):
+    """
+    locate the article XML file in the expanded article bucket on S3
+    and return the S3 key and the filename of the object
+    """
+    files = bucket.list(expanded_folder_name + "/", "/")
+    for bucket_file in files:
+        key = bucket.get_key(bucket_file.key)
+        filename = key.name.rsplit('/', 1)[1]
+        info = ArticleInfo(filename)
+        if info.file_type == 'ArticleXML':
+            return key, filename
+    return None, None
+
 def main():
     a = ArticleInfo("elife-00012-fig3-figsupp1-data2.csv")
     print a
