@@ -94,7 +94,6 @@ class activity_UpdateRepository(activity.activity):
                     return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
             except Exception as e:
-                print e
                 self.logger.exception("Exception in do_activity")
                 self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                         self.pretty_name, "error",
