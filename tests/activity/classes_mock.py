@@ -100,10 +100,6 @@ class FakeStorageContext:
         if type(filelike) == file:
             with open(src) as fsrc:
                 copyfileobj(fsrc, filelike)
-        else:
-            # I suspect this branch is not working very well
-            # what type is `filelike` here?
-            copyfile(data.ExpandArticle_files_source_folder + s3_key, filelike.name)
 
     def get_resource_as_string(self, origin):
         return '<mock><media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="wmv" mimetype="video" xlink:href="elife-00569-media1.wmv"></media></mock>'
