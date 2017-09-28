@@ -59,7 +59,7 @@ class activity_UpdateRepository(activity.activity):
                                                           data['version'])
                 s3_file_path = data['article_id'] + "/" + xml_file
 
-                storage_context = storage_context(self.settings)
+                storage = storage_context(self.settings)
                 bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
 
                 #download xml
