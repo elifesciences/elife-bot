@@ -60,7 +60,7 @@ class TestDepositCrossref(unittest.TestCase):
                 ]
         },
         {
-            "article_xml_filenames": ['elife-18753-v1.xml', 'elife-23065-v1.xml'],
+            "article_xml_filenames": ['elife-18753-v1.xml', 'elife-23065-v1.xml', 'fake-00000-v1.xml'],
             "deposit_files_return_value": True,
             "expected_result": True,
             "expected_approve_status": True,
