@@ -5,6 +5,7 @@ from shutil import copy
 import shutil
 import re
 import os
+from mock import MagicMock
 
 
 class FakeSession:
@@ -201,8 +202,9 @@ class FakeLogger:
         self.logerror = msg
 
 
-
-
+FakeLaxProvider = MagicMock()
+FakeLaxProvider.get_xml_file_name = MagicMock()
+FakeLaxProvider.get_xml_file_name.return_value = 'fake.xml'
 
 
 
