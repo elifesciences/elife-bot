@@ -275,20 +275,6 @@ class activity_DepositCrossref(activity.activity):
 
         return status
 
-    def get_filename_from_path(self, f, extension):
-        """
-        Get a filename minus the supplied file extension
-        and without any folder or path
-        """
-        filename = f.split(extension)[0]
-        # Remove path if present
-        try:
-            filename = filename.split(os.sep)[-1]
-        except:
-            pass
-
-        return filename
-
     def deposit_files_to_endpoint(self, file_type, sub_dir=None):
         """
         Using an HTTP POST, deposit the file to the endpoint
@@ -426,7 +412,7 @@ class activity_DepositCrossref(activity.activity):
 
         for xml_file in xml_files:
             s3key = boto.s3.key.Key(bucket)
-            s3key.key = s3_folder_name + self.get_filename_from_path(xml_file, '.xml') + '.xml'
+            s3key.key = s3_folder_name + xml_file.split(os.sep)[-1]
             s3key.set_contents_from_filename(xml_file, replace=True)
 
     def add_email_to_queue(self):
