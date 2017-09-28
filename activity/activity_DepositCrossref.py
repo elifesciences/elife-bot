@@ -223,7 +223,8 @@ class activity_DepositCrossref(activity.activity):
             else:
                 try:
                     # Will write the XML to the TMP_DIR
-                    generate.crossref_xml_to_disk(article_list)
+                    generate.crossref_xml_to_disk(
+                        article_list, config_section=self.settings.elifecrossref_config)
                 except:
                     generate_status = False
 

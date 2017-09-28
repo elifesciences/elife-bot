@@ -70,6 +70,8 @@ no_download_extensions = "tif"
 
 cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
 
+elifecrossref_config = 'elife'
+
 HEFCE_FTP_URI = "hefce_ftp.localhost"
 HEFCE_FTP_USERNAME = ""
 HEFCE_FTP_PASSWORD = ""

@@ -36,7 +36,6 @@ class TestDepositCrossref(unittest.TestCase):
         dest_doc = self.input_dir() + os.sep + document
         shutil.copy(source_doc, dest_doc)
 
-
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch.object(activity_DepositCrossref, 'upload_crossref_xml_to_s3')
     @patch.object(activity_DepositCrossref, 'clean_outbox')
@@ -124,6 +123,17 @@ class TestDepositCrossref(unittest.TestCase):
                         print expected, ' not found in crossref_xml'
                         raise
 
+    """
+    @data(
+        ('tests/test_data/elife_poa_e03977.xml')
+        )
+    def test_parse_article_xml(self, xml_file):
+        articles = self.activity.parse_article_xml([xml_file])
+        article = articles[0]
+        print article.doi
+        print article.doi
+        self.assertTrue(False)
+    """
 
 if __name__ == '__main__':
     unittest.main()
