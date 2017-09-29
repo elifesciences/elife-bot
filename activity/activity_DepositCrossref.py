@@ -16,7 +16,11 @@ from boto.s3.connection import S3Connection
 import provider.simpleDB as dblib
 import provider.article as articlelib
 import provider.s3lib as s3lib
+import provider.lax_provider as lax_provider
+from provider import utils
 from elifecrossref import generate
+from elifecrossref.conf import config, parse_raw_config
+from elifearticle.article import ArticleDate
 
 """
 DepositCrossref activity
@@ -161,6 +165,11 @@ class activity_DepositCrossref(activity.activity):
             s3_key.get_contents_to_file(f)
             f.close()
 
+    def elifecrossref_config(self, config_section):
+        "parse the config values from the elifecrossref config"
+        raw_config = config[config_section]
+        return parse_raw_config(raw_config)
+
     def parse_article_xml(self, article_xml_files):
         """
         Given a list of article XML files, parse them into objects
@@ -170,31 +179,41 @@ class activity_DepositCrossref(activity.activity):
         # For each article XML file, parse it and save the filename for later
         articles = []
         for article_xml in article_xml_files:
+            article = None
             article_list = None
             article_xml_list = [article_xml]
             try:
                 # Convert the XML files to article objects
                 generate.TMP_DIR = os.path.join(self.get_tmp_dir(), self.TMP_DIR)
                 article_list = generate.build_articles(article_xml_list)
+                article = article_list[0]
             except:
                 continue
 
-            # Set the published date on v2, v3 etc. files
-            if article_xml.find('v') > -1:
-                article = None
-                if len(article_list) > 0:
-                    article = article_list[0]
+            # Check for a pub date
+            crossref_config = self.elifecrossref_config(self.settings.elifecrossref_config)
+            article_pub_date = None
+            if crossref_config.get('pub_date_types'):
+                # check for any useable pub date
+                for pub_date_type in crossref_config.get('pub_date_types'):
+                    if article.get_date(pub_date_type):
+                        article_pub_date = article.get_date(pub_date_type)
+                        break
+            # if no date was found then look for one on Lax
+            if not article_pub_date:
+                lax_pub_date = lax_provider.article_publication_date(article.manuscript, self.settings, self.logger)
+                if lax_pub_date:
+                    date_struct = time.strptime(lax_pub_date, utils.S3_DATE_FORMAT)
+                    pub_date_object = ArticleDate(crossref_config.get('pub_date_types')[0], date_struct)
+                    article.add_date(pub_date_object)
 
-                pub_date_date = self.article.get_article_bucket_pub_date(article.doi, "poa")
+            # Check for a version number
+            if not article.version:
+                lax_version = lax_provider.article_highest_version(article.manuscript, self.settings)
+                if lax_version:
+                    article.version = lax_version
 
-                if article is not None and pub_date_date is not None:
-                    # Emmulate the eLifeDate object use in the POA generation package
-                    eLifeDate = namedtuple("eLifeDate", "date_type date")
-                    pub_date = eLifeDate("pub", pub_date_date)
-                    article.add_date(pub_date)
-
-            if len(article_list) > 0:
-                article = article_list[0]
+            if article:
                 articles.append(article)
 
         return articles

@@ -6,6 +6,8 @@ import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 from provider.article import article
 from provider.simpleDB import SimpleDB
+import provider.lax_provider as lax_provider
+import tests.test_data as test_case_data
 import os
 from ddt import ddt, data
 
@@ -35,6 +37,7 @@ class TestDepositCrossref(unittest.TestCase):
         source_doc = "tests/test_data/crossref/" + document
         dest_doc = self.input_dir() + os.sep + document
         shutil.copy(source_doc, dest_doc)
+
 
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch.object(activity_DepositCrossref, 'upload_crossref_xml_to_s3')
@@ -123,17 +126,16 @@ class TestDepositCrossref(unittest.TestCase):
                         print expected, ' not found in crossref_xml'
                         raise
 
-    """
-    @data(
-        ('tests/test_data/elife_poa_e03977.xml')
-        )
-    def test_parse_article_xml(self, xml_file):
-        articles = self.activity.parse_article_xml([xml_file])
+
+    @patch('provider.lax_provider.article_versions')
+    def test_parse_article_xml(self, mock_lax_provider_article_versions):
+        "example where there is not pub date and no version for an article"
+        mock_lax_provider_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
+        articles = self.activity.parse_article_xml(['tests/test_data/crossref/elife_poa_e03977.xml'])
         article = articles[0]
-        print article.doi
-        print article.doi
-        self.assertTrue(False)
-    """
+        self.assertIsNotNone(article.get_date('pub'))
+        self.assertIsNotNone(article.version)
+
 
 if __name__ == '__main__':
     unittest.main()
