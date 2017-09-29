@@ -119,6 +119,7 @@ class exp():
     templates_bucket = 'elife-bot-dev'
 
     # Crossref generation
+    elifecrossref_config_file = 'crossref.cfg'
     elifecrossref_config = 'elife'
 
     # Crossref
@@ -271,6 +272,7 @@ class dev():
     templates_bucket = 'elife-bot-dev'
 
     # Crossref generation
+    elifecrossref_config_file = 'crossref.cfg'
     elifecrossref_config = 'elife'
 
     # Crossref
@@ -429,6 +431,7 @@ class live():
     templates_bucket = 'elife-bot'
 
     # Crossref generation
+    elifecrossref_config_file = 'crossref.cfg'
     elifecrossref_config = 'elife'
 
     # Crossref

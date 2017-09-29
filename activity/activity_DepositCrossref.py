@@ -167,6 +167,7 @@ class activity_DepositCrossref(activity.activity):
 
     def elifecrossref_config(self, config_section):
         "parse the config values from the elifecrossref config"
+        config.read(self.settings.elifecrossref_config_file)
         raw_config = config[config_section]
         return parse_raw_config(raw_config)
 
