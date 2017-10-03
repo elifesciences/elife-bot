@@ -34,6 +34,7 @@ ses_poa_sender_email = ""
 ses_poa_recipient_email = ""
 ses_admin_email = ""
 templates_bucket = ""
+ppp_cdn_bucket = 'ppd_cdn_bucket'
 
 drupal_EIF_endpoint = "https://website/api/article.json"
 drupal_approve_endpoint = "https://website/api/publish/"
@@ -112,3 +113,7 @@ CNPIEC_FTP_URI = "cnpiec.localhost"
 CNPIEC_FTP_USERNAME = ""
 CNPIEC_FTP_PASSWORD = ""
 CNPIEC_FTP_CWD = ""
+
+git_repo_name = 'elife-article-xml-ci'
+git_repo_path = '/articles/'
+github_token = '1234567890abcdef'

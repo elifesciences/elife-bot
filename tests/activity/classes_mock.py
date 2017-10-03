@@ -1,10 +1,11 @@
 from testfixtures import TempDirectory
 import test_activity_data as data
-from shutil import copyfile
+from shutil import copyfile, copyfileobj
 from shutil import copy
 import shutil
 import re
 import os
+from mock import MagicMock
 
 
 class FakeSession:
@@ -93,9 +94,11 @@ class FakeStorageContext:
         s3_key = match.group(3)
         return bucket_name, s3_key
 
-    def get_resource_to_file(self, resource, file):
+    def get_resource_to_file(self, resource, filelike):
         bucket_name, s3_key = self.get_bucket_and_key(resource)
-        copyfile(data.ExpandArticle_files_source_folder + s3_key, file.name)
+        src = data.ExpandArticle_files_source_folder + s3_key
+        with open(src) as fsrc:
+            copyfileobj(fsrc, filelike)
 
     def get_resource_as_string(self, origin):
         return '<mock><media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="wmv" mimetype="video" xlink:href="elife-00569-media1.wmv"></media></mock>'
@@ -201,8 +204,8 @@ class FakeLogger:
         self.logerror = msg
 
 
-
-
+FakeLaxProvider = MagicMock()
+FakeLaxProvider.get_xml_file_name = MagicMock(return_value='fake.xml')
 
 
 
