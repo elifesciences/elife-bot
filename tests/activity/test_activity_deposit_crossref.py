@@ -6,7 +6,7 @@ import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 from provider.article import article
 from provider.simpleDB import SimpleDB
-import provider.lax_provider as lax_provider
+from provider import lax_provider
 import tests.test_data as test_case_data
 import os
 from ddt import ddt, data
@@ -120,11 +120,9 @@ class TestDepositCrossref(unittest.TestCase):
             with open(crossref_xml_filename_path, 'rb') as fp:
                 crossref_xml = fp.read()
                 for expected in test_data.get("expected_crossref_xml_contains"):
-                    try:
-                        self.assertTrue(expected in crossref_xml)
-                    except AssertionError:
-                        print expected, ' not found in crossref_xml'
-                        raise
+                    self.assertTrue(
+                        expected in crossref_xml, '{expected} not found in crossref_xml {path}'.format(
+                            expected=expected, path=crossref_xml_filename_path))
 
 
     @patch('provider.lax_provider.article_versions')
@@ -133,8 +131,8 @@ class TestDepositCrossref(unittest.TestCase):
         mock_lax_provider_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
         articles = self.activity.parse_article_xml(['tests/test_data/crossref/elife_poa_e03977.xml'])
         article = articles[0]
-        self.assertIsNotNone(article.get_date('pub'))
-        self.assertIsNotNone(article.version)
+        self.assertIsNotNone(article.get_date('pub'), 'date of type pub not found in article get_date()')
+        self.assertIsNotNone(article.version, 'version is None in article')
 
 
 if __name__ == '__main__':
