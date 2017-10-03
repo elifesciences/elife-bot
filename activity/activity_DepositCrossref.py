@@ -192,7 +192,7 @@ class activity_DepositCrossref(activity.activity):
                 continue
 
             # Check for a pub date
-            crossref_config = self.elifecrossref_config(self.settings.elifecrossref_config)
+            crossref_config = self.elifecrossref_config(self.settings.elifecrossref_config_section)
             article_pub_date = None
             if crossref_config.get('pub_date_types'):
                 # check for any useable pub date
@@ -244,7 +244,7 @@ class activity_DepositCrossref(activity.activity):
                 try:
                     # Will write the XML to the TMP_DIR
                     generate.crossref_xml_to_disk(
-                        article_list, config_section=self.settings.elifecrossref_config)
+                        article_list, config_section=self.settings.elifecrossref_config_section)
                 except:
                     generate_status = False
 

@@ -120,7 +120,7 @@ class exp():
 
     # Crossref generation
     elifecrossref_config_file = 'crossref.cfg'
-    elifecrossref_config = 'elife'
+    elifecrossref_config_section = 'elife'
 
     # Crossref
     crossref_url = 'http://test.crossref.org/servlet/deposit'
@@ -273,7 +273,7 @@ class dev():
 
     # Crossref generation
     elifecrossref_config_file = 'crossref.cfg'
-    elifecrossref_config = 'elife'
+    elifecrossref_config_section = 'elife'
 
     # Crossref
     crossref_url = 'http://test.crossref.org/servlet/deposit'
@@ -432,7 +432,7 @@ class live():
 
     # Crossref generation
     elifecrossref_config_file = 'crossref.cfg'
-    elifecrossref_config = 'elife'
+    elifecrossref_config_section = 'elife'
 
     # Crossref
     crossref_url = 'http://doi.crossref.org/servlet/deposit'
