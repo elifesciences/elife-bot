@@ -4,7 +4,7 @@ from boto.s3.connection import S3Connection
 import tempfile
 from github import Github
 from github import GithubException
-import provider
+import provider.lax_provider
 from provider.storage_provider import storage_context
 
 """
