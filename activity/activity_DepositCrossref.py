@@ -16,7 +16,7 @@ from boto.s3.connection import S3Connection
 import provider.simpleDB as dblib
 import provider.article as articlelib
 import provider.s3lib as s3lib
-import provider.lax_provider as lax_provider
+from provider import lax_provider
 from provider import utils
 from elifecrossref import generate
 from elifecrossref.conf import config, parse_raw_config
