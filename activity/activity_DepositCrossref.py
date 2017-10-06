@@ -171,6 +171,18 @@ class activity_DepositCrossref(activity.activity):
         raw_config = config[config_section]
         return parse_raw_config(raw_config)
 
+    def article_first_pub_date(self, article):
+        "find the first article pub date from the list of crossref config pub_date_types"
+        pub_date = None
+        crossref_config = self.elifecrossref_config(self.settings.elifecrossref_config_section)
+        if crossref_config.get('pub_date_types'):
+            # check for any useable pub date
+            for pub_date_type in crossref_config.get('pub_date_types'):
+                if article.get_date(pub_date_type):
+                    pub_date = article.get_date(pub_date_type)
+                    break
+        return pub_date
+
     def parse_article_xml(self, article_xml_files):
         """
         Given a list of article XML files, parse them into objects
@@ -192,19 +204,13 @@ class activity_DepositCrossref(activity.activity):
                 continue
 
             # Check for a pub date
-            crossref_config = self.elifecrossref_config(self.settings.elifecrossref_config_section)
-            article_pub_date = None
-            if crossref_config.get('pub_date_types'):
-                # check for any useable pub date
-                for pub_date_type in crossref_config.get('pub_date_types'):
-                    if article.get_date(pub_date_type):
-                        article_pub_date = article.get_date(pub_date_type)
-                        break
+            article_pub_date = self.article_first_pub_date(article)
             # if no date was found then look for one on Lax
             if not article_pub_date:
                 lax_pub_date = lax_provider.article_publication_date(article.manuscript, self.settings, self.logger)
                 if lax_pub_date:
                     date_struct = time.strptime(lax_pub_date, utils.S3_DATE_FORMAT)
+                    crossref_config = self.elifecrossref_config(self.settings.elifecrossref_config_section)
                     pub_date_object = ArticleDate(crossref_config.get('pub_date_types')[0], date_struct)
                     article.add_date(pub_date_object)
 
@@ -265,10 +271,10 @@ class activity_DepositCrossref(activity.activity):
         """
         approved = None
         # Embargo if the pub date is in the future
-        if article.get_date('pub'):
-            pub_date = article.get_date('pub').date
+        article_pub_date = self.article_first_pub_date(article)
+        if article_pub_date:
             now_date = time.gmtime()
-            if pub_date < now_date:
+            if article_pub_date.date < now_date:
                 approved = True
             else:
                 # Pub date is later than now, do not approve
