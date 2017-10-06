@@ -3,38 +3,39 @@ from activity.activity_DepositCrossref import activity_DepositCrossref
 import shutil
 from mock import patch
 import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger
 from provider.article import article
 from provider.simpleDB import SimpleDB
-
+from provider import lax_provider
+import tests.test_data as test_case_data
 import os
-# Add parent directory for imports, so activity classes can use elife-poa-xml-generation
-PARENTDIR = os.path.realpath(os.path.dirname(os.path.abspath(__file__)) + '/../../../')
-os.sys.path.insert(0, PARENTDIR)
+from ddt import ddt, data
 
-
+@ddt
 class TestDepositCrossref(unittest.TestCase):
 
     def setUp(self):
-        self.activity = activity_DepositCrossref(settings_mock, None, None, None, None)
+        fake_logger = FakeLogger()
+        self.activity = activity_DepositCrossref(settings_mock, fake_logger, None, None, None)
 
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
 
 
-    def staging_dir(self):
+    def input_dir(self):
         "return the staging dir name for the activity"
-        return self.activity.elife_poa_lib.settings.STAGING_TO_HW_DIR
+        return os.path.join(self.activity.get_tmp_dir(), self.activity.INPUT_DIR)
 
 
     def tmp_dir(self):
         "return the tmp dir name for the activity"
-        return self.activity.elife_poa_lib.settings.TMP_DIR
+        return os.path.join(self.activity.get_tmp_dir(), self.activity.TMP_DIR)
 
 
     def fake_download_files_from_s3_outbox(self, document):
         source_doc = "tests/test_data/crossref/" + document
-        dest_doc = self.staging_dir() + os.sep + document
+        dest_doc = self.input_dir() + os.sep + document
         shutil.copy(source_doc, dest_doc)
 
 
@@ -45,36 +46,93 @@ class TestDepositCrossref(unittest.TestCase):
     @patch.object(article, 'get_article_bucket_pub_date')
     @patch.object(activity_DepositCrossref, 'get_outbox_s3_key_names')
     @patch.object(activity_DepositCrossref, 'download_files_from_s3_outbox')
-    def test_do_activity(self, fake_download_files_from_s3_outbox, fake_get_outbox_s3_key_names,
+    @data(
+        {
+            "article_xml_filenames": ['elife-15747-v2.xml'],
+            "deposit_files_return_value": True,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": True,
+            "expected_activity_status": True,
+            "expected_file_count": 1,
+            "expected_crossref_xml_contains": [
+                '<doi>10.7554/eLife.15747</doi>',
+                '<publication_date media_type="online"><month>06</month><day>16</day><year>2016</year></publication_date>'
+                ]
+        },
+        {
+            "article_xml_filenames": ['elife-18753-v1.xml', 'elife-23065-v1.xml', 'fake-00000-v1.xml'],
+            "deposit_files_return_value": True,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": True,
+            "expected_activity_status": True,
+            "expected_file_count": 2,
+        },
+        {
+            "article_xml_filenames": [],
+            "deposit_files_return_value": True,
+            "expected_result": True,
+            "expected_approve_status": False,
+            "expected_generate_status": True,
+            "expected_publish_status": None,
+            "expected_activity_status": True,
+            "expected_file_count": 0,
+        },
+        {
+            "article_xml_filenames": ['elife-18753-v1.xml'],
+            "deposit_files_return_value": False,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": False,
+            "expected_activity_status": False,
+            "expected_file_count": 1,
+        },
+    )
+    def test_do_activity(self, test_data, fake_download_files_from_s3_outbox, fake_get_outbox_s3_key_names,
                          fake_get_article_bucket_pub_date, fake_deposit_files_to_endpoint,
                          fake_clean_outbox, fake_upload_crossref_xml_to_s3,
                          fake_elife_add_email_to_email_queue):
-        article_xml_filename = 'elife-15747-v2.xml'
-        expected_crossref_xml_contains = [
-            '<doi>10.7554/eLife.15747</doi>',
-            '<publication_date media_type="online"><month>06</month><day>16</day><year>2016</year></publication_date>'
-        ]
-        fake_download_files_from_s3_outbox = self.fake_download_files_from_s3_outbox(article_xml_filename)
-        fake_get_outbox_s3_key_names.return_value = [article_xml_filename]
+        # copy XML files into the input directory
+        for article_xml in test_data.get("article_xml_filenames"):
+            fake_download_files_from_s3_outbox = self.fake_download_files_from_s3_outbox(article_xml)
+        # set some return values for the mocks
+        fake_get_outbox_s3_key_names.return_value = test_data.get("article_xml_filenames")
         fake_get_article_bucket_pub_date.return_value = None
-        fake_deposit_files_to_endpoint.return_value = True
+        fake_deposit_files_to_endpoint.return_value = test_data.get("deposit_files_return_value")
         # do the activity
         result = self.activity.do_activity()
-        self.assertTrue(result)
-        self.assertTrue(self.activity.approve_status)
-        self.assertTrue(self.activity.generate_status)
-        # Will have one crossref XML file in the tmp directory
-        self.assertEqual(len(os.listdir(self.tmp_dir())), 1)
-        crossref_xml_filename_path = os.path.join(self.tmp_dir(), os.listdir(self.tmp_dir())[0])
-        # Open the crossref XML and check some of its contents
-        with open(crossref_xml_filename_path, 'rb') as fp:
-            crossref_xml = fp.read()
-            for expected in expected_crossref_xml_contains:
-                try:
-                    self.assertTrue(expected in crossref_xml)
-                except AssertionError:
-                    print expected, ' not found in crossref_xml'
-                    raise
+        # check assertions
+        self.assertEqual(result, test_data.get("expected_result"))
+        self.assertEqual(self.activity.approve_status, test_data.get("expected_approve_status"))
+        self.assertEqual(self.activity.generate_status, test_data.get("expected_generate_status"))
+        self.assertEqual(self.activity.publish_status, test_data.get("expected_publish_status"))
+        self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"))
+        # Count crossref XML file in the tmp directory
+        file_count = len(os.listdir(self.tmp_dir()))
+        self.assertEqual(file_count, test_data.get("expected_file_count"))
+        if file_count > 0 and test_data.get("expected_crossref_xml_contains"):
+            # Open the first crossref XML and check some of its contents
+            crossref_xml_filename_path = os.path.join(self.tmp_dir(), os.listdir(self.tmp_dir())[0])
+            with open(crossref_xml_filename_path, 'rb') as fp:
+                crossref_xml = fp.read()
+                for expected in test_data.get("expected_crossref_xml_contains"):
+                    self.assertTrue(
+                        expected in crossref_xml, '{expected} not found in crossref_xml {path}'.format(
+                            expected=expected, path=crossref_xml_filename_path))
+
+
+    @patch('provider.lax_provider.article_versions')
+    def test_parse_article_xml(self, mock_lax_provider_article_versions):
+        "example where there is not pub date and no version for an article"
+        mock_lax_provider_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
+        articles = self.activity.parse_article_xml(['tests/test_data/crossref/elife_poa_e03977.xml'])
+        article = articles[0]
+        self.assertIsNotNone(article.get_date('pub'), 'date of type pub not found in article get_date()')
+        self.assertIsNotNone(article.version, 'version is None in article')
 
 
 if __name__ == '__main__':

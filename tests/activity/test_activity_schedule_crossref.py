@@ -29,7 +29,7 @@ class TestScheduleCrossref(unittest.TestCase):
     @patch.object(activity_ScheduleCrossref, 'emit_monitor_event')
     @patch.object(activity_ScheduleCrossref, 'set_monitor_property')
     @data(
-        ('key_name', 'tests/test_data/elife-00353-v1.xml', True),
+        ('key_name', 'elife-00353-v1.xml', True),
         (None, None, False),
         )
     @unpack
@@ -51,13 +51,13 @@ class TestScheduleCrossref(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     @data(
-        ('crossref/outbox/', 'elife', '00353', 'crossref/outbox/elife00353.xml'),
-        ('crossref/outbox/', 'elife', None, None),
+        ('crossref/outbox/', 'elife-00353-v1.xml', 'crossref/outbox/elife-00353-v1.xml'),
+        ('crossref/outbox/', None, None),
         )
     @unpack
-    def test_new_crossref_xml_name(self, prefix, journal, article_id, expected_result):
+    def test_outbox_new_key_name(self, prefix, xml_filename, expected_result):
         self.assertEqual(
-            self.activity.new_crossref_xml_name(prefix, journal, article_id), expected_result)
+            self.activity.outbox_new_key_name(prefix, xml_filename), expected_result)
 
 
 if __name__ == '__main__':

@@ -58,12 +58,11 @@ class activity_ScheduleCrossref(activity.activity):
 
         try:
             (xml_key, xml_filename) = get_article_xml_key(bucket, expanded_folder_name)
-
+    
             # Rename the XML file to match what is used already
-            new_key_name = self.new_crossref_xml_name(
+            new_key_name = self.outbox_new_key_name(
                 prefix=self.crossref_outbox_folder,
-                journal='elife',
-                article_id=str(article_id).zfill(5))
+                xml_filename=xml_filename)
 
             self.copy_article_xml_to_crossref_outbox(
                 new_key_name=new_key_name,
@@ -73,6 +72,7 @@ class activity_ScheduleCrossref(activity.activity):
             self.emit_monitor_event(self.settings, article_id, version, run, "Schedule Crossref",
                                     "end", "Finished scheduling of crossref deposit " + article_id +
                                     " for version " + version + " run " + str(run))
+
         except Exception as e:
             self.logger.exception("Exception when scheduling crossref")
             self.emit_monitor_event(self.settings, article_id, version, run, "Schedule Crossref",
@@ -82,14 +82,14 @@ class activity_ScheduleCrossref(activity.activity):
 
         return True
 
-    def new_crossref_xml_name(self, prefix, journal, article_id):
-        """
-        New name we want e.g.: elife99999.xml
-        """
+
+    def outbox_new_key_name(self, prefix, xml_filename):
+        "key name for where on S3 to place the XML file"
         try:
-            return prefix + journal + article_id + '.xml'
+            return prefix + xml_filename
         except TypeError:
             return None
+
 
     def copy_article_xml_to_crossref_outbox(self, new_key_name, source_bucket_name, old_key_name):
         """
@@ -100,6 +100,3 @@ class activity_ScheduleCrossref(activity.activity):
         bucket = s3_conn.lookup(self.crossref_bucket_name)
 
         key = bucket.copy_key(new_key_name, source_bucket_name, old_key_name)
-
-
-
