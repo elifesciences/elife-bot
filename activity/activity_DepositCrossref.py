@@ -1,7 +1,6 @@
 import os
 import boto.swf
 import json
-import importlib
 import time
 import arrow
 from collections import namedtuple
@@ -17,6 +16,11 @@ from boto.s3.connection import S3Connection
 import provider.simpleDB as dblib
 import provider.article as articlelib
 import provider.s3lib as s3lib
+from provider import lax_provider
+from provider import utils
+from elifecrossref import generate
+from elifecrossref.conf import config, parse_raw_config
+from elifearticle.article import ArticleDate
 
 """
 DepositCrossref activity
@@ -36,14 +40,9 @@ class activity_DepositCrossref(activity.activity):
         self.description = ("Download article XML from crossref outbox, " +
                             "generate crossref XML, and deposit with crossref.")
 
-        # Directory where POA library is stored
-        self.poa_lib_dir_name = "elife-poa-xml-generation"
-
-        # Where we specify the library to be imported
-        self.elife_poa_lib = None
-
-        # Import the libraries we will need
-        self.import_imports()
+        # Local directory settings
+        self.TMP_DIR = "tmp_dir"
+        self.INPUT_DIR = "input_dir"
 
         # Create output directories
         self.create_activity_directories()
@@ -98,7 +97,7 @@ class activity_DepositCrossref(activity.activity):
                 # Publish files
                 self.publish_status = self.deposit_files_to_endpoint(
                     file_type="/*.xml",
-                    sub_dir=self.elife_poa_lib.settings.TMP_DIR)
+                    sub_dir=os.path.join(self.get_tmp_dir(), self.TMP_DIR))
             except:
                 self.publish_status = False
 
@@ -158,13 +157,31 @@ class activity_DepositCrossref(activity.activity):
 
             # Save .xml and .pdf to different folders
             if re.search(".*\\.xml$", name):
-                dirname = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
+                dirname = os.path.join(self.get_tmp_dir(), self.INPUT_DIR)
 
             filename_plus_path = dirname + os.sep + filename
             mode = "wb"
             f = open(filename_plus_path, mode)
             s3_key.get_contents_to_file(f)
             f.close()
+
+    def elifecrossref_config(self, config_section):
+        "parse the config values from the elifecrossref config"
+        config.read(self.settings.elifecrossref_config_file)
+        raw_config = config[config_section]
+        return parse_raw_config(raw_config)
+
+    def article_first_pub_date(self, article):
+        "find the first article pub date from the list of crossref config pub_date_types"
+        pub_date = None
+        crossref_config = self.elifecrossref_config(self.settings.elifecrossref_config_section)
+        if crossref_config.get('pub_date_types'):
+            # check for any useable pub date
+            for pub_date_type in crossref_config.get('pub_date_types'):
+                if article.get_date(pub_date_type):
+                    pub_date = article.get_date(pub_date_type)
+                    break
+        return pub_date
 
     def parse_article_xml(self, article_xml_files):
         """
@@ -175,30 +192,35 @@ class activity_DepositCrossref(activity.activity):
         # For each article XML file, parse it and save the filename for later
         articles = []
         for article_xml in article_xml_files:
+            article = None
             article_list = None
             article_xml_list = [article_xml]
             try:
                 # Convert the XML files to article objects
-                article_list = self.elife_poa_lib.parse.build_articles_from_article_xmls(article_xml_list)
+                generate.TMP_DIR = os.path.join(self.get_tmp_dir(), self.TMP_DIR)
+                article_list = generate.build_articles(article_xml_list)
+                article = article_list[0]
             except:
                 continue
 
-            # Set the published date on v2, v3 etc. files
-            if article_xml.find('v') > -1:
-                article = None
-                if len(article_list) > 0:
-                    article = article_list[0]
+            # Check for a pub date
+            article_pub_date = self.article_first_pub_date(article)
+            # if no date was found then look for one on Lax
+            if not article_pub_date:
+                lax_pub_date = lax_provider.article_publication_date(article.manuscript, self.settings, self.logger)
+                if lax_pub_date:
+                    date_struct = time.strptime(lax_pub_date, utils.S3_DATE_FORMAT)
+                    crossref_config = self.elifecrossref_config(self.settings.elifecrossref_config_section)
+                    pub_date_object = ArticleDate(crossref_config.get('pub_date_types')[0], date_struct)
+                    article.add_date(pub_date_object)
 
-                pub_date_date = self.article.get_article_bucket_pub_date(article.doi, "poa")
+            # Check for a version number
+            if not article.version:
+                lax_version = lax_provider.article_highest_version(article.manuscript, self.settings)
+                if lax_version:
+                    article.version = lax_version
 
-                if article is not None and pub_date_date is not None:
-                    # Emmulate the eLifeDate object use in the POA generation package
-                    eLifeDate = namedtuple("eLifeDate", "date_type date")
-                    pub_date = eLifeDate("pub", pub_date_date)
-                    article.add_date(pub_date)
-
-            if len(article_list) > 0:
-                article = article_list[0]
+            if article:
                 articles.append(article)
 
         return articles
@@ -207,7 +229,7 @@ class activity_DepositCrossref(activity.activity):
         """
         Using the POA generateCrossrefXml module
         """
-        article_xml_files = glob.glob(self.elife_poa_lib.settings.STAGING_TO_HW_DIR + "/*.xml")
+        article_xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.INPUT_DIR) + "/*.xml")
 
         for xml_file in article_xml_files:
             generate_status = True
@@ -227,9 +249,9 @@ class activity_DepositCrossref(activity.activity):
             else:
                 try:
                     # Will write the XML to the TMP_DIR
-                    self.elife_poa_lib.generate.build_crossref_xml_for_articles(article_list)
+                    generate.crossref_xml_to_disk(
+                        article_list, config_section=self.settings.elifecrossref_config_section)
                 except:
-
                     generate_status = False
 
             if generate_status is True:
@@ -249,10 +271,10 @@ class activity_DepositCrossref(activity.activity):
         """
         approved = None
         # Embargo if the pub date is in the future
-        if article.get_date('pub'):
-            pub_date = article.get_date('pub').date
+        article_pub_date = self.article_first_pub_date(article)
+        if article_pub_date:
             now_date = time.gmtime()
-            if pub_date < now_date:
+            if article_pub_date.date < now_date:
                 approved = True
             else:
                 # Pub date is later than now, do not approve
@@ -271,7 +293,7 @@ class activity_DepositCrossref(activity.activity):
         status = None
 
         # Check for empty directory
-        article_xml_files = glob.glob(self.elife_poa_lib.settings.STAGING_TO_HW_DIR + "/*.xml")
+        article_xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.INPUT_DIR) + "/*.xml")
         if len(article_xml_files) <= 0:
             status = False
         else:
@@ -279,20 +301,6 @@ class activity_DepositCrossref(activity.activity):
             status = True
 
         return status
-
-    def get_filename_from_path(self, f, extension):
-        """
-        Get a filename minus the supplied file extension
-        and without any folder or path
-        """
-        filename = f.split(extension)[0]
-        # Remove path if present
-        try:
-            filename = filename.split(os.sep)[-1]
-        except:
-            pass
-
-        return filename
 
     def deposit_files_to_endpoint(self, file_type, sub_dir=None):
         """
@@ -418,7 +426,7 @@ class activity_DepositCrossref(activity.activity):
         """
         Upload a copy of the crossref XML to S3 for reference
         """
-        xml_files = glob.glob(self.elife_poa_lib.settings.TMP_DIR + "/*.xml")
+        xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.TMP_DIR) + "/*.xml")
 
         bucket_name = self.publish_bucket
 
@@ -431,7 +439,7 @@ class activity_DepositCrossref(activity.activity):
 
         for xml_file in xml_files:
             s3key = boto.s3.key.Key(bucket)
-            s3key.key = s3_folder_name + self.get_filename_from_path(xml_file, '.xml') + '.xml'
+            s3key.key = s3_folder_name + xml_file.split(os.sep)[-1]
             s3key.set_contents_from_filename(xml_file, replace=True)
 
     def add_email_to_queue(self):
@@ -578,64 +586,6 @@ class activity_DepositCrossref(activity.activity):
 
         return body
 
-    def import_imports(self):
-        """
-        Customised importing of the external library
-        to override the settings
-        MUST load settings module first, override the values
-        BEFORE loading anything else, or the override will not take effect
-        """
-
-        # Load the files from parent directory - hellish imports but they
-        #  seem to work now
-        dir_name = self.poa_lib_dir_name
-
-        self.import_poa_lib(dir_name)
-        self.override_poa_settings(dir_name)
-        self.import_poa_modules(dir_name)
-
-    def import_poa_lib(self, dir_name):
-        """
-        POA lib import Step 1: import external library by directory name
-        """
-        self.elife_poa_lib = __import__(dir_name)
-        self.reload_module(self.elife_poa_lib)
-
-    def override_poa_settings(self, dir_name):
-        """
-        POA lib import Step 2: import settings modules then override
-        """
-
-        # Load external library settings
-        importlib.import_module(dir_name + ".settings")
-        # Reload the module fresh, so original directory names are reset
-        self.reload_module(self.elife_poa_lib.settings)
-
-        settings = self.elife_poa_lib.settings
-
-        # Override the settings
-        settings.STAGING_TO_HW_DIR = self.get_tmp_dir() + os.sep + settings.STAGING_TO_HW_DIR
-        settings.TMP_DIR = self.get_tmp_dir() + os.sep + settings.TMP_DIR
-
-    def import_poa_modules(self, dir_name="elife-poa-xml-generation"):
-        """
-        POA lib import Step 3: import modules now that settings are overridden
-        """
-
-        # Now we can continue with imports
-        self.elife_poa_lib.parse = importlib.import_module(dir_name + ".parsePoaXml")
-        self.reload_module(self.elife_poa_lib.parse)
-        self.elife_poa_lib.generate = importlib.import_module(dir_name + ".generateCrossrefXml")
-        self.reload_module(self.elife_poa_lib.generate)
-
-    def reload_module(self, module):
-        """
-        Attempt to reload an imported module to reset it
-        """
-        try:
-            reload(module)
-        except:
-            pass
 
     def create_activity_directories(self):
         """
@@ -643,7 +593,7 @@ class activity_DepositCrossref(activity.activity):
         """
 
         try:
-            os.mkdir(self.elife_poa_lib.settings.STAGING_TO_HW_DIR)
-            os.mkdir(self.elife_poa_lib.settings.TMP_DIR)
+            os.mkdir(os.path.join(self.get_tmp_dir(), self.TMP_DIR))
+            os.mkdir(os.path.join(self.get_tmp_dir(), self.INPUT_DIR))
         except:
             pass

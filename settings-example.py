@@ -118,6 +118,10 @@ class exp():
     # Templates S3 settings
     templates_bucket = 'elife-bot-dev'
 
+    # Crossref generation
+    elifecrossref_config_file = 'crossref.cfg'
+    elifecrossref_config_section = 'elife'
+
     # Crossref
     crossref_url = 'http://test.crossref.org/servlet/deposit'
     crossref_login_id = ''
@@ -272,6 +276,10 @@ class dev():
 
     # Templates S3 settings
     templates_bucket = 'elife-bot-dev'
+
+    # Crossref generation
+    elifecrossref_config_file = 'crossref.cfg'
+    elifecrossref_config_section = 'elife'
 
     # Crossref
     crossref_url = 'http://test.crossref.org/servlet/deposit'
@@ -433,6 +441,10 @@ class live():
 
     # Templates S3 settings
     templates_bucket = 'elife-bot'
+
+    # Crossref generation
+    elifecrossref_config_file = 'crossref.cfg'
+    elifecrossref_config_section = 'elife'
 
     # Crossref
     crossref_url = 'http://doi.crossref.org/servlet/deposit'
