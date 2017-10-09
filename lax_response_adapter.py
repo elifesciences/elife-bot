@@ -4,6 +4,7 @@ import log
 import json
 from boto.sqs.message import Message
 from provider import process
+from provider import utils
 import base64
 from dateutil.parser import parse
 import newrelic.agent
@@ -70,7 +71,7 @@ class LaxResponseAdapter:
             date_time = parse(message_data['datetime'])
             date_time = date_time.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-            article_id = message_data["id"]
+            article_id = utils.pad_msid(message_data["id"])
             operation = message_data["requested-action"]
             response_message = None
             if "message" in message_data:
