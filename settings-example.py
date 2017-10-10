@@ -163,6 +163,12 @@ class exp():
     SCOPUS_FTP_PASSWORD = ""
     SCOPUS_FTP_CWD = ""
 
+    # Scopus SFTP settings
+    SCOPUS_SFTP_URI = ""
+    SCOPUS_SFTP_USERNAME = ""
+    SCOPUS_SFTP_PASSWORD = ""
+    SCOPUS_SFTP_CWD = ""
+
     # Web of Science WoS FTP settings
     WOS_FTP_URI = ""
     WOS_FTP_USERNAME = ""
@@ -322,6 +328,12 @@ class dev():
     SCOPUS_FTP_PASSWORD = ""
     SCOPUS_FTP_CWD = ""
 
+    # Scopus SFTP settings
+    SCOPUS_SFTP_URI = ""
+    SCOPUS_SFTP_USERNAME = ""
+    SCOPUS_SFTP_PASSWORD = ""
+    SCOPUS_SFTP_CWD = ""
+
     # Web of Science WoS FTP settings
     WOS_FTP_URI = ""
     WOS_FTP_USERNAME = ""
@@ -480,6 +492,12 @@ class live():
     SCOPUS_FTP_USERNAME = ""
     SCOPUS_FTP_PASSWORD = ""
     SCOPUS_FTP_CWD = ""
+
+    # Scopus SFTP settings
+    SCOPUS_SFTP_URI = ""
+    SCOPUS_SFTP_USERNAME = ""
+    SCOPUS_SFTP_PASSWORD = ""
+    SCOPUS_SFTP_CWD = ""
 
     # Web of Science WoS FTP settings
     WOS_FTP_URI = ""
