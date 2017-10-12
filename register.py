@@ -28,6 +28,7 @@ def start(ENV="dev"):
     workflow_names.append("SilentCorrectionsIngest")
     workflow_names.append("SilentCorrectionsProcess")
     workflow_names.append("IngestArticleZip")
+    workflow_names.append("InitialArticleZip")
     workflow_names.append("ProcessArticleZip")
     workflow_names.append("Ping")
     workflow_names.append("Sum")
@@ -63,7 +64,7 @@ def start(ENV="dev"):
         print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
 
     activity_names = []
-    activity_names.append("ReadyToPublish")
+    activity_names.append("VersionReasonDecider")
     activity_names.append("InvalidateCdn")
     activity_names.append("ConvertImagesToJPG")
     activity_names.append("SendDashboardProperties")
