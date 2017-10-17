@@ -70,6 +70,8 @@ class TestExpandArticle(unittest.TestCase):
         mock_session.return_value = FakeSession(session_example)
 
         self.expandarticle.logger = mock.MagicMock()
+        self.expandarticle.emit_monitor_event = mock.MagicMock()
+        self.expandarticle.set_monitor_property = mock.MagicMock()
 
         success = self.expandarticle.do_activity(testdata.ExpandArticle_data_invalid_status)
         self.assertEqual(self.expandarticle.ACTIVITY_PERMANENT_FAILURE, success)
