@@ -45,9 +45,9 @@ class activity_ExpandArticle(activity.activity):
         version = data['version']
 
         # set some values in the session that were created in previous workflow and carried over
-        session.set_value(run, 'version', version)
-        session.set_value(run, 'filename_last_element', data['filename_last_element'])
-        session.set_value(run, 'article_id', article_id)
+        session.store_value(run, 'version', version)
+        session.store_value(run, 'filename_last_element', data['filename_last_element'])
+        session.store_value(run, 'article_id', article_id)
 
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
