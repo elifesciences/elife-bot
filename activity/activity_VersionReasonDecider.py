@@ -1,4 +1,7 @@
 import activity
+import boto
+import json
+from boto.sqs.message import Message
 from provider.execution_context import Session
 
 
@@ -13,6 +16,8 @@ class activity_VersionReasonDecider(activity.activity):
 
         self.name = "VersionReasonDecider"
         self.version = "1"
+        self.out_queue = self.get_queue(settings.workflow_starter_queue)
+
         self.default_task_heartbeat_timeout = 30
         self.default_task_schedule_to_close_timeout = 60 * 5
         self.default_task_schedule_to_start_timeout = 30
@@ -50,5 +55,14 @@ class activity_VersionReasonDecider(activity.activity):
         # else:
 
         # start workflow
+        m = Message()
+        m.set_body(json.dumps(message))
+        self.out_queue.write(m)
 
         return activity.activity.ACTIVITY_SUCCESS
+
+    def get_queue(self, queue_name):
+
+        sqs_conn = boto.sqs.connect_to_region(self.settings.sqs_region)
+        queue = sqs_conn.get_queue(queue_name)
+        return queue
