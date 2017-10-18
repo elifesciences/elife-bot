@@ -10,9 +10,9 @@ requests==2.5.3
 wsgiref==0.1.2
 lxml==3.4.1
 xlrd==0.9.3
-git+https://github.com/elifesciences/elife-tools.git@59582da15b420b7ff932d2b19859657368089400#egg=elifetools
-git+https://github.com/elifesciences/elife-article.git@5c124dbe6bb6f3e5aadea3a3659c17e30183c741#egg=elifearticle
-git+https://github.com/elifesciences/elife-crossref-xml-generation.git@e31f4c9585c751557b34a46d9ab585f7e36bc3ff#egg=elifecrossref
+git+https://github.com/elifesciences/elife-tools.git@05def8780aaf7ffb247c409ad77d62d186f1abdd#egg=elifetools
+git+https://github.com/elifesciences/elife-article.git@3f5f2998f8fa1ab5f04de2fc22daaf1174a0d207#egg=elifearticle
+git+https://github.com/elifesciences/elife-crossref-xml-generation.git@d8680042dbfbf1ac2b8b6d7d1d9bb65f16861fc3#egg=elifecrossref
 PyYAML==3.11
 Wand==0.4.0
 paramiko==1.15.2
