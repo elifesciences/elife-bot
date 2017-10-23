@@ -1,7 +1,7 @@
 import activity
 import json
 from provider.execution_context import Session
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 import provider.article_structure as article_structure
 import provider.iiif as iiif
 import requests
@@ -46,7 +46,7 @@ class activity_VerifyImageServer(activity.activity):
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
         try:
-            storage_context = StorageContext(self.settings)
+            storage_context = storage_context(self.settings)
             bucket = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
             images_resource = "".join((self.settings.storage_provider, "://", bucket, "/", article_id))
 

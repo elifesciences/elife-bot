@@ -12,7 +12,7 @@ import datetime
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
 import requests
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 from provider.article_structure import ArticleInfo
 import provider.lax_provider as lax_provider
 

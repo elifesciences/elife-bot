@@ -1,7 +1,7 @@
 import activity
 import json
 from provider.execution_context import Session
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 import provider.glencoe_check as glencoe_check
 import os
 import requests
@@ -139,7 +139,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
         return cdn
 
     def store_file(self, path, article_id):
-        storage_context = StorageContext(self.settings)
+        storage_context = storage_context(self.settings)
         r = requests.get(path)
         if r.status_code == 200:
             resource = self.s3_resources(path, article_id)
@@ -153,7 +153,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
 
 
     def list_files_from_cdn(self, article_id):
-        storage_context = StorageContext(self.settings)
+        storage_context = storage_context(self.settings)
         article_path_in_cdn = self.settings.storage_provider + "://" + \
                               self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket + "/" + \
                               article_id

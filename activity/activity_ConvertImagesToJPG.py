@@ -1,7 +1,7 @@
 import activity
 import json
 from provider.execution_context import Session
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 import provider.article_structure as article_structure
 import provider.image_conversion as image_conversion
 import os
@@ -43,7 +43,7 @@ class activity_ConvertImagesToJPG(activity.activity):
             storage_provider = self.settings.storage_provider + "://"
             orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name
 
-            storage_context = StorageContext(self.settings)
+            storage_context = storage_context(self.settings)
             files_in_bucket = storage_context.list_resources(orig_resource)
 
             figures = filter(article_structure.article_figure, files_in_bucket) + filter(article_structure.inline_figure, files_in_bucket)

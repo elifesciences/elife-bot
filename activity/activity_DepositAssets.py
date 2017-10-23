@@ -1,7 +1,7 @@
 import activity
 from boto.s3.connection import S3Connection
 from provider.execution_context import Session
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 from mimetypes import guess_type
 from provider import article_structure
 
@@ -43,7 +43,7 @@ class activity_DepositAssets(activity.activity):
             expanded_folder_bucket = (self.settings.publishing_buckets_prefix +
                                       self.settings.expanded_bucket)
 
-            storage_context = StorageContext(self.settings)
+            storage_context = storage_context(self.settings)
             storage_provider = self.settings.storage_provider + "://"
 
             orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name

@@ -1,6 +1,6 @@
 import activity
 from provider.execution_context import Session
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 import json
 
 """
@@ -35,7 +35,7 @@ class activity_SetEIFPublish(activity.activity):
                 self.logger.error(self.pretty_name + " error. eif_location must be string")
                 raise Exception("eif_location not available")
 
-            storage_context = StorageContext(self.settings)
+            storage_context = storage_context(self.settings)
 
             eif_origin = "".join((self.settings.storage_provider,
                                   "://",
