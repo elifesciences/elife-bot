@@ -9,10 +9,6 @@ import os
 def StorageContext(*args):
     return S3StorageContext(args[0])
 
-# class StorageContext(object):
-#     def __new__(cls, *args):
-#         return S3StorageContext(args[0])
-
 def storage_context(*args):
     return S3StorageContext(*args)
 
