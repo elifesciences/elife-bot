@@ -15,7 +15,7 @@ class TestDepositIngestAssets(unittest.TestCase):
 
 
     @patch('activity.activity_DepositIngestAssets.Session')
-    @patch('activity.activity_DepositIngestAssets.StorageContext')
+    @patch('activity.activity_DepositIngestAssets.storage_context')
     @patch.object(activity_DepositIngestAssets, 'emit_monitor_event')
     def test_activity_success(self, fake_emit, fake_storage_context, fake_session):
 
@@ -29,7 +29,7 @@ class TestDepositIngestAssets(unittest.TestCase):
 
 
     @patch('activity.activity_DepositIngestAssets.Session')
-    @patch('activity.activity_DepositIngestAssets.StorageContext')
+    @patch('activity.activity_DepositIngestAssets.storage_context')
     @patch.object(activity_DepositIngestAssets, 'emit_monitor_event')
     def test_activity_permanent_failure(self, fake_emit, fake_storage_context, fake_session):
 

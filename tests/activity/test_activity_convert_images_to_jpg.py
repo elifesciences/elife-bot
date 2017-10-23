@@ -15,7 +15,7 @@ class TestConvertImagesToJPG(unittest.TestCase):
 
     @patch('provider.image_conversion.generate_images')
     @patch('activity.activity_ConvertImagesToJPG.Session')
-    @patch('activity.activity_ConvertImagesToJPG.StorageContext')
+    @patch('activity.activity_ConvertImagesToJPG.storage_context')
     @patch.object(activity_ConvertImagesToJPG, 'emit_monitor_event')
     def test_activity_success(self, fake_emit, fake_storage_context, fake_session, fake_gen_images):
 
@@ -29,7 +29,7 @@ class TestConvertImagesToJPG(unittest.TestCase):
 
 
     @patch('activity.activity_ConvertImagesToJPG.Session')
-    @patch('activity.activity_ConvertImagesToJPG.StorageContext')
+    @patch('activity.activity_ConvertImagesToJPG.storage_context')
     @patch.object(activity_ConvertImagesToJPG, 'emit_monitor_event')
     def test_activity_failure(self, fake_emit, fake_storage_context, fake_session):
 
