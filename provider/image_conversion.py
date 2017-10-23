@@ -1,5 +1,5 @@
 import provider.imageresize as resizer
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 from mimetypes import guess_type
 
 
@@ -24,7 +24,7 @@ def generate_images(settings, formats, fp, info, publish_locations, logger):
 
 def store_in_publish_locations(settings, filename, image, publish_locations, download):
         try:
-            storage_context = StorageContext(settings)
+            storage_context = storage_context(settings)
 
             for resource in publish_locations:
                 image.seek(0)
