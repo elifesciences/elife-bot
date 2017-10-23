@@ -41,11 +41,11 @@ class activity_DepositIngestAssets(activity.activity):
 
             cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
 
-            storage_context = storage_context(self.settings)
+            storage = storage_context(self.settings)
             storage_provider = self.settings.storage_provider + "://"
 
             orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name
-            files_in_bucket = storage_context.list_resources(orig_resource)
+            files_in_bucket = storage.list_resources(orig_resource)
 
             pre_ingest_assets = article_structure.pre_ingest_assets(files_in_bucket)
 
@@ -53,7 +53,7 @@ class activity_DepositIngestAssets(activity.activity):
 
                 orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name + "/" + file_name
                 dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/" + file_name
-                storage_context.copy_resource(orig_resource, dest_resource)
+                storage.copy_resource(orig_resource, dest_resource)
 
                 if self.logger:
                     self.logger.info("Uploaded file %s to %s" % (file_name, cdn_bucket_name))

@@ -46,11 +46,11 @@ class activity_VerifyImageServer(activity.activity):
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
         try:
-            storage_context = storage_context(self.settings)
+            storage = storage_context(self.settings)
             bucket = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
             images_resource = "".join((self.settings.storage_provider, "://", bucket, "/", article_id))
 
-            files_in_bucket = storage_context.list_resources(images_resource)
+            files_in_bucket = storage.list_resources(images_resource)
             original_figures = article_structure.get_figures_for_iiif(files_in_bucket)
 
             iiif_path_for_article = self.settings.iiif_resolver.replace('{article_id}', article_id)

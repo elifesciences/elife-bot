@@ -712,9 +712,9 @@ class article(object):
 
     @staticmethod
     def _get_bucket_files(settings, expanded_folder_name, xml_bucket):
-        storage_context = storage_context(settings)
+        storage = storage_context(settings)
         resource = settings.storage_provider + "://" + xml_bucket + "/" + expanded_folder_name
-        files_in_bucket = storage_context.list_resources(resource)
+        files_in_bucket = storage.list_resources(resource)
         return files_in_bucket
 
     def get_xml_file_name(self, settings, expanded_folder_name, xml_bucket, version):

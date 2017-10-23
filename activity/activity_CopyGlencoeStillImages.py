@@ -139,25 +139,28 @@ class activity_CopyGlencoeStillImages(activity.activity):
         return cdn
 
     def store_file(self, path, article_id):
-        storage_context = storage_context(self.settings)
+        storage = storage_context(self.settings)
         r = requests.get(path)
         if r.status_code == 200:
             resource = self.s3_resources(path, article_id)
             self.logger.info("S3 resource: " + resource)
             jpg_filename = os.path.split(resource)[-1]
-            storage_context.set_resource_from_string(resource, r.content,
-                                                     content_type=r.headers['content-type'])
+            storage.set_resource_from_string(
+                resource,
+                r.content,
+                content_type=r.headers['content-type']
+            )
             return jpg_filename
         else:
             raise RuntimeError("Glencoe returned a %s status code for %s" % (r.status_code, path))
 
 
     def list_files_from_cdn(self, article_id):
-        storage_context = storage_context(self.settings)
+        storage = storage_context(self.settings)
         article_path_in_cdn = self.settings.storage_provider + "://" + \
                               self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket + "/" + \
                               article_id
-        return storage_context.list_resources(article_path_in_cdn)
+        return storage.list_resources(article_path_in_cdn)
 
     def validate_jpgs_against_cdn(self, cdn_all_files, cdn_still_jpgs, article_id):
         """checks that for each element of cdn_still_jpgs there are two files in the CDN.

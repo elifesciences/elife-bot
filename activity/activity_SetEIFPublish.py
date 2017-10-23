@@ -35,7 +35,7 @@ class activity_SetEIFPublish(activity.activity):
                 self.logger.error(self.pretty_name + " error. eif_location must be string")
                 raise Exception("eif_location not available")
 
-            storage_context = storage_context(self.settings)
+            storage = storage_context(self.settings)
 
             eif_origin = "".join((self.settings.storage_provider,
                                   "://",
@@ -48,7 +48,7 @@ class activity_SetEIFPublish(activity.activity):
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
 
-        success, error = self.set_eif_to_publish(storage_context, eif_origin)
+        success, error = self.set_eif_to_publish(storage, eif_origin)
 
         if success:
             self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
@@ -60,10 +60,10 @@ class activity_SetEIFPublish(activity.activity):
                                 self.pretty_name, "error", error)
         return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-    def set_eif_to_publish(self, storage_context, eif_origin):
+    def set_eif_to_publish(self, storage, eif_origin):
         try:
 
-            eif_data = self.get_eif(storage_context, eif_origin)
+            eif_data = self.get_eif(storage, eif_origin)
 
         except Exception as e:
 
@@ -72,15 +72,15 @@ class activity_SetEIFPublish(activity.activity):
         try:
 
             eif_data['publish'] = True
-            storage_context.set_resource_from_string(eif_origin, json.dumps(eif_data))
+            storage.set_resource_from_string(eif_origin, json.dumps(eif_data))
             return True, None
 
         except Exception as e:
             return False, "There is something wrong with EIF data and/or we could not upload it. " \
                           "Error details: " + e.message
 
-    def get_eif(self, storage_context, eif_origin):
-        return json.loads(storage_context.get_resource_as_string(eif_origin))
+    def get_eif(self, storage, eif_origin):
+        return json.loads(storage.get_resource_as_string(eif_origin))
 
 
 
