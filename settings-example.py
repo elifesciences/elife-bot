@@ -19,10 +19,12 @@ class exp():
 
     workflow_context_path = 'workflow-context/'
 
+    # SNS settings
+    event_monitor_topic = 'arn:aws:sns:eu-west-1:123456789012:elife-event-property-topic'
+
     # SQS settings
     # sqs_region = 'eu-west-1'
     S3_monitor_queue = 'xxawsxx-incoming-queue'
-    event_monitor_queue = 'event-property-incoming-queue'
     workflow_starter_queue = 'workflow-starter-queue'
     website_ingest_queue = 'website-ingest-queue'
     workflow_starter_queue_pool_size = 5
