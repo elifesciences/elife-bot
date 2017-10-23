@@ -121,7 +121,7 @@ class tests_PostEIFBridge(unittest.TestCase):
                                                    "Post EIF Bridge", "error",
                                                    "Error carrying over information after EIF For "
                                                    "article 00353 message:'NoneType' object has no "
-                                                   "attribute 'get_queue'")
+                                                   "attribute 'publish'")
 
         self.assertEqual(False, success)
 

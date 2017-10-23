@@ -1,18 +1,17 @@
 import boto.sqs
+import boto.sns
 from boto.sqs.message import Message
 import json
 import uuid
 
 
 def send_message(message, settings):
-    conn = boto.sqs.connect_to_region(settings.sqs_region,
+
+    conn = boto.sns.connect_to_region(settings.sqs_region,
                                       aws_access_key_id=settings.aws_access_key_id,
                                       aws_secret_access_key=settings.aws_secret_access_key)
-    queue = conn.get_queue(settings.event_monitor_queue)
-
-    m = Message()
-    m.set_body(json.dumps(message))
-    queue.write(m)
+    payload = unicode(json.dumps(message), "utf-8")
+    conn.publish(topic=settings.event_monitor_topic, message=payload)
 
 
 def build_event_message(item_identifier, version, run, event_type, timestamp, status, message):
