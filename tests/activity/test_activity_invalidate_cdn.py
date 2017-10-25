@@ -30,23 +30,12 @@ class TestInvalidateCdn(unittest.TestCase):
         result = self.invalidatecdn.do_activity(activity_data)
         self.assertEqual(result, self.invalidatecdn.ACTIVITY_PERMANENT_FAILURE)
 
-    @patch('time.sleep')
     @patch('provider.cloudfront_provider.create_invalidation')
     @patch.object(activity_InvalidateCdn, 'emit_monitor_event')
-    def test_invalidation_temporary_failure_due_to_rate_limiting(self, fake_emit, invalidation_mock, sleep_mock):
+    def test_invalidation_temporary_failure_due_to_rate_limiting(self, fake_emit, invalidation_mock):
         invalidation_mock.side_effect = CloudFrontServerError(400, 'Bad Request', '<ErrorResponse xmlns="http://cloudfront.amazonaws.com/doc/2010-11-01/"><Error><Type>Sender</Type><Code>TooManyInvalidationsInProgress</Code><Message>Processing your request will cause you to exceed the maximum number of in-progress wildcard invalidations.</Message></Error><RequestId>b47186e6-b7d7-11e7-bd6c-d7fe045b879d</RequestId></ErrorResponse>')
         result = self.invalidatecdn.do_activity(activity_data)
         self.assertEqual(result, self.invalidatecdn.ACTIVITY_TEMPORARY_FAILURE)
-
-    @patch('time.sleep')
-    @patch('provider.cloudfront_provider.create_invalidation')
-    @patch.object(activity_InvalidateCdn, 'emit_monitor_event')
-    def test_invalidation_temporary_failure_fixed_backoff(self, fake_emit, invalidation_mock, sleep_mock):
-        invalidation_mock.side_effect = CloudFrontServerError(400, 'Bad Request', '<ErrorResponse xmlns="http://cloudfront.amazonaws.com/doc/2010-11-01/"><Error><Type>Sender</Type><Code>TooManyInvalidationsInProgress</Code><Message>...</Message></Error><RequestId>...</RequestId></ErrorResponse>')
-        result = self.invalidatecdn.do_activity(activity_data)
-        self.assertEqual(result, self.invalidatecdn.ACTIVITY_TEMPORARY_FAILURE)
-        self.assertEqual(sleep_mock.mock_calls, [call(60)])
-
 
 
 if __name__ == '__main__':

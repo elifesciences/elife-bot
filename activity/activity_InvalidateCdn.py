@@ -1,4 +1,3 @@
-import time
 import activity
 from provider import cloudfront_provider
 from boto.cloudfront.exception import CloudFrontServerError
@@ -56,7 +55,6 @@ class activity_InvalidateCdn(activity.activity):
                         "error",
                         "Glencoe video is not available for article " + article_id + '; message: ' + str(e)
                     )
-                    time.sleep(60)
                     return activity.activity.ACTIVITY_TEMPORARY_FAILURE
                 raise
 
