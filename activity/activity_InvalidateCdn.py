@@ -53,7 +53,7 @@ class activity_InvalidateCdn(activity.activity):
                         run,
                         self.pretty_name,
                         "error",
-                        "Glencoe video is not available for article " + article_id + '; message: ' + str(e)
+                        "Too many CloudFront invalidations in progress; message: " + str(e)
                     )
                     return activity.activity.ACTIVITY_TEMPORARY_FAILURE
                 raise
