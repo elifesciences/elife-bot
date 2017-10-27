@@ -1,5 +1,6 @@
 import activity
 from provider import cloudfront_provider
+from boto.cloudfront.exception import CloudFrontServerError
 
 """
 activity_InvalidateCdn.py activity
@@ -40,8 +41,22 @@ class activity_InvalidateCdn(activity.activity):
             #         dashboard_message = "CloudFront Invalidation command sent for article %s." % str(article_id)
             #     else:
             #         dashboard_message = "CloudFront Invalidation was not necessary for article %s." % str(article_id)
-
-            cloudfront_provider.create_invalidation(article_id, self.settings)
+            try: 
+                cloudfront_provider.create_invalidation(article_id, self.settings)
+            except CloudFrontServerError as e:
+                if e.error_code == 'TooManyInvalidationsInProgress':
+                    self.logger.warning(e)
+                    self.emit_monitor_event(
+                        self.settings,
+                        article_id, 
+                        version,
+                        run,
+                        self.pretty_name,
+                        "error",
+                        "Too many CloudFront invalidations in progress; message: " + str(e)
+                    )
+                    return activity.activity.ACTIVITY_TEMPORARY_FAILURE
+                raise
 
             dashboard_message = "CloudFront Invalidation command sent for article %s." % str(article_id)
             self.emit_monitor_event(self.settings, article_id, version, run,

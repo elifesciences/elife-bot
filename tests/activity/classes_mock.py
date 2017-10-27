@@ -198,6 +198,8 @@ class FakeLogger:
         self.logdebug =  msg
     def info(self, msg, *args, **kwargs):
         self.loginfo = msg
+    def warning(self, msg, *args, **kwargs):
+        self.logwarning = msg
     def exception(self, msg, *args, **kwargs):
         self.logexception = msg
     def error(self, msg, *args, **kwargs):
