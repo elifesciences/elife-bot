@@ -21,7 +21,7 @@ class TestVerifyImageServer(unittest.TestCase):
     def setUp(self):
         self.verifyimageserver = activity_VerifyImageServer(settings_mock, None, None, None, None)
 
-    @patch('activity.activity_VerifyImageServer.StorageContext')
+    @patch('activity.activity_VerifyImageServer.storage_context')
     @patch('activity.activity_VerifyImageServer.Session')
     @patch.object(activity_VerifyImageServer,'retrieve_endpoints_check')
     def test_do_activity_success(self, fake_retrieve_endpoints_check, fake_session, fake_storage_context):
@@ -37,7 +37,7 @@ class TestVerifyImageServer(unittest.TestCase):
         # Then
         self.assertEqual(result, self.verifyimageserver.ACTIVITY_SUCCESS)
 
-    @patch('activity.activity_VerifyImageServer.StorageContext')
+    @patch('activity.activity_VerifyImageServer.storage_context')
     @patch('activity.activity_VerifyImageServer.Session')
     @patch.object(activity_VerifyImageServer,'retrieve_endpoints_check')
     def test_do_activity_failure(self, fake_retrieve_endpoints_check, fake_session, fake_storage_context):
@@ -53,7 +53,7 @@ class TestVerifyImageServer(unittest.TestCase):
         # Then
         self.assertEqual(result, self.verifyimageserver.ACTIVITY_PERMANENT_FAILURE)
 
-    @patch('activity.activity_VerifyImageServer.StorageContext')
+    @patch('activity.activity_VerifyImageServer.storage_context')
     @patch('activity.activity_VerifyImageServer.Session')
     @patch.object(activity_VerifyImageServer,'retrieve_endpoints_check')
     def test_do_activity_error(self, fake_retrieve_endpoints_check, fake_session, fake_storage_context):

@@ -14,7 +14,7 @@ class TestVerifyGlencoe(unittest.TestCase):
 
     @patch('time.sleep')
     @patch('provider.lax_provider.get_xml_file_name')
-    @patch('activity.activity_VerifyGlencoe.StorageContext')
+    @patch('activity.activity_VerifyGlencoe.storage_context')
     @patch('activity.activity_VerifyGlencoe.Session')
     @patch.object(activity_VerifyGlencoe, 'emit_monitor_event')
     @patch('requests.get')
@@ -48,7 +48,7 @@ class TestVerifyGlencoe(unittest.TestCase):
 
     @patch('time.sleep')
     @patch('provider.lax_provider.get_xml_file_name')
-    @patch('activity.activity_VerifyGlencoe.StorageContext')
+    @patch('activity.activity_VerifyGlencoe.storage_context')
     @patch('activity.activity_VerifyGlencoe.Session')
     @patch.object(activity_VerifyGlencoe, 'emit_monitor_event')
     @patch('requests.get')
@@ -74,7 +74,7 @@ class TestVerifyGlencoe(unittest.TestCase):
     @patch('provider.glencoe_check.metadata')
     @patch('provider.glencoe_check.validate_sources')
     @patch('provider.lax_provider.get_xml_file_name')
-    @patch('activity.activity_VerifyGlencoe.StorageContext')
+    @patch('activity.activity_VerifyGlencoe.storage_context')
     @patch('activity.activity_VerifyGlencoe.Session')
     @patch.object(activity_VerifyGlencoe, 'emit_monitor_event')
     def test_do_acitvity_exception(self, fake_emit_monitor, fake_session, fake_storage_context, fake_get_xml_file_name,

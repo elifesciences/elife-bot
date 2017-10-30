@@ -1,7 +1,7 @@
 import activity
 from boto.s3.connection import S3Connection
 from provider.execution_context import Session
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 from mimetypes import guess_type
 from provider import article_structure
 
@@ -43,11 +43,11 @@ class activity_DepositAssets(activity.activity):
             expanded_folder_bucket = (self.settings.publishing_buckets_prefix +
                                       self.settings.expanded_bucket)
 
-            storage_context = StorageContext(self.settings)
+            storage = storage_context(self.settings)
             storage_provider = self.settings.storage_provider + "://"
 
             orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name
-            files_in_bucket = storage_context.list_resources(orig_resource)
+            files_in_bucket = storage.list_resources(orig_resource)
 
             # filter figures that have already been copied (see DepositIngestAssets activity)
             pre_ingest_assets = article_structure.pre_ingest_assets(files_in_bucket)
@@ -63,7 +63,7 @@ class activity_DepositAssets(activity.activity):
                 orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name + "/"
                 dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/"
 
-                storage_context.copy_resource(orig_resource + file_name, dest_resource + file_name)
+                storage.copy_resource(orig_resource + file_name, dest_resource + file_name)
 
                 if self.logger:
                     self.logger.info("Uploaded file %s to %s" % (file_name, cdn_bucket_name))
@@ -77,7 +77,7 @@ class activity_DepositAssets(activity.activity):
                     file_download = file_name_no_extension + "-download." + extension
 
                     # file is copied with additional metadata
-                    storage_context.copy_resource(orig_resource + file_name,
+                    storage.copy_resource(orig_resource + file_name,
                                                   dest_resource + file_download,
                                                   additional_dict_metadata=dict_metadata)
 

@@ -1,5 +1,5 @@
 import provider.imageresize as resizer
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 from mimetypes import guess_type
 
 
@@ -24,12 +24,12 @@ def generate_images(settings, formats, fp, info, publish_locations, logger):
 
 def store_in_publish_locations(settings, filename, image, publish_locations, download):
         try:
-            storage_context = StorageContext(settings)
+            storage = storage_context(settings)
 
             for resource in publish_locations:
                 image.seek(0)
                 content_type, encoding = guess_type(filename)
-                storage_context.set_resource_from_file(resource + filename, image, metadata={'Content-Type': content_type})
+                storage.set_resource_from_file(resource + filename, image, metadata={'Content-Type': content_type})
 
                 if download:
                     dict_metadata = {'Content-Disposition':
@@ -37,7 +37,7 @@ def store_in_publish_locations(settings, filename, image, publish_locations, dow
                                      'Content-Type': content_type}
                     filename_no_extension, extension = filename.rsplit('.', 1)
                     file_download = filename_no_extension + "-download." + extension
-                    storage_context.copy_resource(resource + filename, resource + file_download,
+                    storage.copy_resource(resource + filename, resource + file_download,
                                                   additional_dict_metadata=dict_metadata)
 
         finally:

@@ -12,7 +12,7 @@ import datetime
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import Session
 import requests
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 from provider.article_structure import ArticleInfo
 import provider.lax_provider as lax_provider
 
@@ -45,7 +45,7 @@ class activity_ExpandArticle(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
         info = S3NotificationInfo.from_dict(data)
 
-        storage_context = StorageContext(self.settings)
+        storage = storage_context(self.settings)
 
         session = Session(self.settings)
 
@@ -80,7 +80,7 @@ class activity_ExpandArticle(activity.activity):
             tmp = self.get_tmp_dir()
             local_zip_file = self.open_file_from_tmp_dir(filename_last_element, mode='wb')
             storage_resource_origin = self.settings.storage_provider + "://" + info.bucket_name + "/" + info.file_name
-            storage_context.get_resource_to_file(storage_resource_origin, local_zip_file)
+            storage.get_resource_to_file(storage_resource_origin, local_zip_file)
             local_zip_file.close()
 
             # extract zip contents
@@ -102,7 +102,7 @@ class activity_ExpandArticle(activity.activity):
                 dest_path = bucket_folder_name + '/' + filename
                 storage_resource_dest = self.settings.storage_provider + "://" + self.settings.publishing_buckets_prefix + \
                                         self.settings.expanded_bucket + "/" + dest_path
-                storage_context.set_resource_from_filename(storage_resource_dest, source_path)
+                storage.set_resource_from_filename(storage_resource_dest, source_path)
 
             self.clean_tmp_dir()
 

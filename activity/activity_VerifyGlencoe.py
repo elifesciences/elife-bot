@@ -2,7 +2,7 @@ import activity
 import json
 from provider.execution_context import Session
 import provider.lax_provider as lax_provider
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 import time
 import provider.glencoe_check as glencoe_check
 
@@ -58,8 +58,8 @@ class activity_VerifyGlencoe(activity.activity):
             xml_origin = "".join((self.settings.storage_provider, "://", expanded_bucket, "/", expanded_folder + '/' +
                                   xml_filename))
 
-            storage_context = StorageContext(self.settings)
-            xml_content = storage_context.get_resource_as_string(xml_origin)
+            storage = storage_context(self.settings)
+            xml_content = storage.get_resource_as_string(xml_origin)
 
             if glencoe_check.has_videos(xml_content):
                 glencoe_check.validate_sources(glencoe_check.metadata(glencoe_check.check_msid(article_id), self.settings))
