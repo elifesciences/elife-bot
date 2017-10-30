@@ -11,5 +11,11 @@ source venv/bin/activate
 if pip list | grep elifetools; then
     pip uninstall -y elifetools
 fi
+if pip list | grep elifearticle; then
+    pip uninstall -y elifearticle
+fi
+if pip list | grep elifecrossref; then
+    pip uninstall -y elifecrossref
+fi
 pip install -r requirements.txt
 
