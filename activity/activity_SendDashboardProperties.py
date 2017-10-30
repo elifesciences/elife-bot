@@ -80,6 +80,17 @@ class activity_SendDashboardProperties(activity.activity):
 
         return True
 
+    @staticmethod
+    def get_article_xml_key(bucket, expanded_folder_name):
+        files = bucket.list(expanded_folder_name + "/", "/")
+        for bucket_file in files:
+            key = bucket.get_key(bucket_file.key)
+            filename = key.name.rsplit('/', 1)[1]
+            info = ArticleInfo(filename)
+            if info.file_type == 'ArticleXML':
+                return key, filename
+        return None
+
     def set_dashboard_properties(self, soup, article_id, version):
 
         doi = parser.doi(soup)
@@ -131,3 +142,15 @@ class activity_SendDashboardProperties(activity.activity):
         authors_text = str.join(", ", authors)
         self.set_monitor_property(self.settings, article_id, "authors", authors_text,
                                   "text", version=version)
+
+
+def tidy_whitespace(string):
+
+    string = re.sub('\n', ' ', string)
+    string = re.sub(' +', ' ', string)
+    string = string.strip()
+    return string
+
+
+def article_status(is_poa):
+    return 'POA' if is_poa else 'VOR'
