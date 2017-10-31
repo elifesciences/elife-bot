@@ -25,7 +25,7 @@ class TestConvertJATS(unittest.TestCase):
 
     @tempdir()
     @patch.object(activity_ConvertJATS, 'add_update_date_to_json')
-    @patch.object(activity_ConvertJATS, 'get_article_xml_key')
+    @patch('activity.activity_ConvertJATS.get_article_xml_key')
     @patch('activity.activity_ConvertJATS.Key')
     @patch('activity.activity_ConvertJATS.S3Connection')
     @patch('activity.activity_ConvertJATS.Session')
