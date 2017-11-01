@@ -205,14 +205,3 @@ class activity_ApplyVersionNumber(activity.activity):
             if info.file_type == 'ArticleXML':
                 return new_name
 
-
-    @staticmethod
-    def get_article_xml_key(bucket, expanded_folder_name):
-        files = bucket.list(expanded_folder_name + "/", "/")
-        for bucket_file in files:
-            key = bucket.get_key(bucket_file.key)
-            filename = key.name.rsplit('/', 1)[1]
-            info = ArticleInfo(filename)
-            if info.file_type == 'ArticleXML':
-                return key, filename
-        return None

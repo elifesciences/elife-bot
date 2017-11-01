@@ -4,7 +4,7 @@ import activity
 
 from boto.s3.connection import S3Connection
 
-from activity_ConvertJATS import activity_ConvertJATS as ConvertJATS
+from provider.article_structure import get_article_xml_key
 
 """
 ScheduleDownstream.py activity
@@ -64,7 +64,7 @@ class activity_ScheduleDownstream(activity.activity):
                                 "Starting scheduling of downstream deposits for " + article_id)
 
         try:
-            (xml_key, xml_filename) = ConvertJATS.get_article_xml_key(bucket, expanded_folder_name)
+            (xml_key, xml_filename) = get_article_xml_key(bucket, expanded_folder_name)
 
             outbox_list = self.choose_outboxes(status)
 
