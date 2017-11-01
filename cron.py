@@ -93,6 +93,14 @@ def run_cron(settings):
                 workflow_id="PubRouterDeposit_Scopus",
                 start_seconds=60 * 31)
 
+        # CNPIEC deposits once per day 23:30 UTC
+        if current_time.tm_hour == 23:
+            workflow_conditional_start(
+                settings=settings,
+                starter_name="starter_PubRouterDeposit",
+                workflow_id="PubRouterDeposit_CNPIEC",
+                start_seconds=60 * 31)
+
     if current_time.tm_min >= 45 and current_time.tm_min <= 59:
         # Bottom quarter of the hour
 
