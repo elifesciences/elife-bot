@@ -57,6 +57,28 @@ class workflow_InitialArticleZip(workflow.workflow):
                         "start_to_close_timeout": 60 * 15
                     },
                     {
+                        "activity_type": "ExpandArticle",
+                        "activity_id": "ExpandArticle",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 15
+                    },
+                    {
+                        "activity_type": "SendDashboardProperties",
+                        "activity_id": "SendDashboardProperties",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 15
+                    },
+                    {
                         "activity_type": "VersionReasonDecider",
                         "activity_id": "VersionReasonDecider",
                         "version": "1",
