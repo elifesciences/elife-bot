@@ -25,6 +25,23 @@ class TestUtils(unittest.TestCase):
     def test_pad_volume(self, volume, expected):
         self.assertEqual(utils.pad_volume(volume), expected)
 
+    @unpack
+    @data(
+        ('clean', 'clean'),
+        ("  very \n   messy  ", 'very messy'),
+        )
+    def test_tidy_whitespace(self, string, expected):
+        self.assertEqual(utils.tidy_whitespace(string), expected)
+
+    @unpack
+    @data(
+        (None, 'VOR'),
+        (True, 'POA'),
+        (False, 'VOR'),
+        ('Anything', 'POA'),
+        )
+    def test_article_status(self, value, expected):
+        self.assertEqual(utils.article_status(value), expected)
 
 
 if __name__ == '__main__':
