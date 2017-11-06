@@ -7,6 +7,7 @@ from elifetools import parseJATS as parser
 from boto.s3.connection import S3Connection
 from provider.execution_context import Session
 from provider.article_structure import ArticleInfo
+from provider.article_structure import get_article_xml_key
 
 """
 SendDashboardProperties.py activity
@@ -53,7 +54,7 @@ class activity_SendDashboardProperties(activity.activity):
             bucket = conn.get_bucket(expanded_folder_bucket)
 
             bucket_folder_name = expanded_folder_name
-            (xml_key, xml_filename) = self.get_article_xml_key(bucket, bucket_folder_name)
+            (xml_key, xml_filename) = get_article_xml_key(bucket, bucket_folder_name)
             if xml_key is None:
                 self.logger.error("Article XML path not found")
                 return False
@@ -77,17 +78,6 @@ class activity_SendDashboardProperties(activity.activity):
             return False
 
         return True
-
-    @staticmethod
-    def get_article_xml_key(bucket, expanded_folder_name):
-        files = bucket.list(expanded_folder_name + "/", "/")
-        for bucket_file in files:
-            key = bucket.get_key(bucket_file.key)
-            filename = key.name.rsplit('/', 1)[1]
-            info = ArticleInfo(filename)
-            if info.file_type == 'ArticleXML':
-                return key, filename
-        return None
 
     def set_dashboard_properties(self, soup, article_id, version):
 

@@ -18,7 +18,7 @@ class TestSendDashboardEvents(unittest.TestCase):
 
     @tempdir()
     @patch.object(activity_SendDashboardProperties, 'emit_monitor_event')
-    @patch.object(activity_SendDashboardProperties, 'get_article_xml_key')
+    @patch('activity.activity_SendDashboardProperties.get_article_xml_key')
     @patch('activity.activity_SendDashboardProperties.S3Connection')
     @patch('activity.activity_SendDashboardProperties.Session')
     @patch.object(activity_SendDashboardProperties, 'set_monitor_property')
