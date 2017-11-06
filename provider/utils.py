@@ -1,6 +1,7 @@
 import re
 
 S3_DATE_FORMAT = '%Y%m%d%H%M%S'
+PUB_DATE_FORMAT = "%Y-%m-%d"
 
 def pad_msid(msid):
     return '{:05d}'.format(int(msid))

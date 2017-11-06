@@ -94,7 +94,7 @@ class activity_SendDashboardProperties(activity.activity):
         self.set_monitor_property(self.settings, article_id, "status", status,
                                   "text", version=version)
 
-        pub_date = datetime.fromtimestamp(time.mktime(parser.pub_date(soup))).strftime("%Y-%m-%d")
+        pub_date = time.strftime(utils.PUB_DATE_FORMAT, parser.pub_date(soup))
         self.set_monitor_property(self.settings, article_id, "publication-date", pub_date,
                                   "text", version=version)
 
