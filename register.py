@@ -67,6 +67,7 @@ def start(ENV="dev"):
     activity_names = []
     activity_names.append("InvalidateCdn")
     activity_names.append("ConvertImagesToJPG")
+    activity_names.append("SendDashboardProperties")
     activity_names.append("DepositIngestAssets")
     activity_names.append("CopyGlencoeStillImages")
     activity_names.append("VerifyImageServer")
