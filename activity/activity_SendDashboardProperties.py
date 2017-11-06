@@ -8,6 +8,7 @@ from boto.s3.connection import S3Connection
 from provider.execution_context import Session
 from provider.article_structure import ArticleInfo
 from provider.article_structure import get_article_xml_key
+from provider import utils
 
 """
 SendDashboardProperties.py activity
@@ -85,11 +86,11 @@ class activity_SendDashboardProperties(activity.activity):
         self.set_monitor_property(self.settings, article_id, "doi", doi,
                                   "text", version=version)
 
-        title = tidy_whitespace(parser.full_title(soup))
+        title = utils.tidy_whitespace(parser.full_title(soup))
         self.set_monitor_property(self.settings, article_id, "title", title,
                                   "text", version=version)
 
-        status = article_status(parser.is_poa(soup))
+        status = utils.article_status(parser.is_poa(soup))
         self.set_monitor_property(self.settings, article_id, "status", status,
                                   "text", version=version)
 
@@ -130,15 +131,3 @@ class activity_SendDashboardProperties(activity.activity):
         authors_text = str.join(", ", authors)
         self.set_monitor_property(self.settings, article_id, "authors", authors_text,
                                   "text", version=version)
-
-
-def tidy_whitespace(string):
-
-    string = re.sub('\n', ' ', string)
-    string = re.sub(' +', ' ', string)
-    string = string.strip()
-    return string
-
-
-def article_status(is_poa):
-    return 'POA' if is_poa else 'VOR'
