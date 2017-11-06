@@ -4,13 +4,13 @@ elifeUpdatePipeline(
         lock('elife-bot--ci') {
             builderDeployRevision 'elife-bot--ci', commit
             builderCmd "elife-bot--ci", "./update-elife-poa-xml-generation.sh", "/opt/elife-bot"
-            builderSync "ci--elife-bot.elife.internal", "/opt/elife-bot/"
+            builderSync "ci--bot.elife.internal", "/opt/elife-bot/"
             sh "git add elife-poa-xml-generation.sha1"
             elifePoaXmlGenerationSummary = builderCmd "elife-bot--ci", "git log -1 --pretty=\"%B\" | head -n 1", "/opt/elife-poa-xml-generation", true
         }
     },
     {
-        return "Updated bot-lax-adaptor to: ${elifePoaXmlGenerationSummary}"
+        return "Updated elife-poa-xml-generation to: ${elifePoaXmlGenerationSummary}"
     },
-    'update_bot_lax_adaptor_'
+    'update_elife_poa_xml_generation/'
 )
