@@ -63,6 +63,7 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666-table3-data1-v1.xlsx', 'expected': 'Other'},
         {'input': 'elife-00666-video1.mp4', 'expected': 'Other'},
         {'input': 'elife-00666-video1-data1-v1.xlsx', 'expected': 'Other'},
+        {'input': 'elife-00666.xml', 'expected': 'ArticleXML'},
           )
     def test_get_file_type_from_zip_filename(self, input, expected):
         self.articleinfo = ArticleInfo(input)
