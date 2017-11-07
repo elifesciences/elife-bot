@@ -33,7 +33,6 @@ def start(ENV="dev"):
     workflow_names.append("Ping")
     workflow_names.append("Sum")
     workflow_names.append("ApproveArticlePublication")
-    workflow_names.append("NewS3File")
     workflow_names.append("S3Monitor")
     workflow_names.append("LensArticlePublish")
     workflow_names.append("AdminEmail")
