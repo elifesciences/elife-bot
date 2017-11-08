@@ -4,7 +4,7 @@ import activity
 
 from boto.s3.connection import S3Connection
 
-from provider.execution_context import Session
+from provider.execution_context import get_session
 from provider.article_structure import get_article_xml_key
 
 """
@@ -40,12 +40,12 @@ class activity_ScheduleCrossref(activity.activity):
         self.crossref_bucket_name = (self.settings.publishing_buckets_prefix
                                      + self.settings.poa_packaging_bucket)
 
-        session = Session(self.settings)
-
         run = data['run']
-        version = session.get_value(run, 'version')
-        article_id = session.get_value(run, 'article_id')
-        expanded_folder_name = session.get_value(run, 'expanded_folder')
+        session = get_session(self.settings, data, run)
+
+        version = session.get_value('version')
+        article_id = session.get_value('article_id')
+        expanded_folder_name = session.get_value('expanded_folder')
 
 
         conn = S3Connection(self.settings.aws_access_key_id,

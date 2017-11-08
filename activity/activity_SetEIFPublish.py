@@ -1,5 +1,5 @@
 import activity
-from provider.execution_context import Session
+from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 import json
 
@@ -23,8 +23,9 @@ class activity_SetEIFPublish(activity.activity):
 
     def do_activity(self, data):
 
-        session = Session(self.settings)
-        eif_location = session.get_value(data['run'], 'eif_location')
+        run = data['run']
+        session = get_session(self.settings, data, run)
+        eif_location = session.get_value('eif_location')
 
         self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                 self.pretty_name, "start", "Starting to set EIF to publish")

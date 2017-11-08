@@ -1,6 +1,6 @@
 import activity
 import json
-from provider.execution_context import Session
+from provider.execution_context import get_session
 import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
 import time
@@ -37,14 +37,14 @@ class activity_VerifyGlencoe(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         run = data['run']
-        session = Session(self.settings)
-        article_id = session.get_value(run, 'article_id')
-        version = session.get_value(run, 'version')
+        session = get_session(self.settings, data, run)
+        article_id = session.get_value('article_id')
+        version = session.get_value('version')
 
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Starting Glencoe video check for " + article_id)
         try:
-            expanded_folder = session.get_value(run, 'expanded_folder')
+            expanded_folder = session.get_value('expanded_folder')
             if expanded_folder is None:
                 raise RuntimeError("No session value for expanded folder")
 

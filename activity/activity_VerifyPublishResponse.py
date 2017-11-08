@@ -1,6 +1,6 @@
 import activity
 import json
-from provider.execution_context import Session
+from provider.execution_context import get_session
 
 """
 activity_VerifyPublishResponse.py activity

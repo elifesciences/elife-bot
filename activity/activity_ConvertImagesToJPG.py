@@ -1,6 +1,6 @@
 import activity
 import json
-from provider.execution_context import Session
+from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 import provider.article_structure as article_structure
 import provider.image_conversion as image_conversion
@@ -29,15 +29,15 @@ class activity_ConvertImagesToJPG(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         run = data['run']
-        session = Session(self.settings)
-        version = session.get_value(run, 'version')
-        article_id = session.get_value(run, 'article_id')
+        session = get_session(self.settings, data, run)
+        version = session.get_value('version')
+        article_id = session.get_value('article_id')
 
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Starting submission convert images to jpg for article " + article_id)
 
         try:
-            expanded_folder_name = session.get_value(run, 'expanded_folder')
+            expanded_folder_name = session.get_value('expanded_folder')
             expanded_folder_bucket = (self.settings.publishing_buckets_prefix +
                                       self.settings.expanded_bucket)
             storage_provider = self.settings.storage_provider + "://"

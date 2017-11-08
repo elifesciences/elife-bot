@@ -7,7 +7,7 @@ from jats_scraper import jats_scraper
 import boto.s3
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from provider.execution_context import Session
+from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 import provider.article_structure as article_structure
 import provider.s3lib as s3lib
@@ -40,9 +40,9 @@ class activity_ApplyVersionNumber(activity.activity):
                                          + self.settings.expanded_bucket)
 
             run = data['run']
-            session = Session(self.settings)
-            version = session.get_value(run, 'version')
-            article_id = session.get_value(run, 'article_id')
+            session = get_session(self.settings, data, run)
+            version = session.get_value('version')
+            article_id = session.get_value('article_id')
 
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "start",
@@ -63,7 +63,7 @@ class activity_ApplyVersionNumber(activity.activity):
                                         " message: No version available")
                 return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-            expanded_folder_name = session.get_value(run, 'expanded_folder')
+            expanded_folder_name = session.get_value('expanded_folder')
             bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
             self.rename_article_s3_objects(bucket_folder_name, version)
 

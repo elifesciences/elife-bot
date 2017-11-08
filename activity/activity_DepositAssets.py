@@ -1,6 +1,6 @@
 import activity
 from boto.s3.connection import S3Connection
-from provider.execution_context import Session
+from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from mimetypes import guess_type
 from provider import article_structure
@@ -30,16 +30,16 @@ class activity_DepositAssets(activity.activity):
         """
 
         run = data['run']
-        session = Session(self.settings)
-        version = session.get_value(run, 'version')
-        article_id = session.get_value(run, 'article_id')
+        session = get_session(self.settings, data, run)
+        version = session.get_value('version')
+        article_id = session.get_value('article_id')
 
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Depositing assets for " + article_id)
 
         try:
 
-            expanded_folder_name = session.get_value(run, 'expanded_folder')
+            expanded_folder_name = session.get_value('expanded_folder')
             expanded_folder_bucket = (self.settings.publishing_buckets_prefix +
                                       self.settings.expanded_bucket)
 

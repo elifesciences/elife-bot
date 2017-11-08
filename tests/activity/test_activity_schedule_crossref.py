@@ -25,7 +25,7 @@ class TestScheduleCrossref(unittest.TestCase):
     @patch.object(activity_ScheduleCrossref, 'copy_article_xml_to_crossref_outbox')
     @patch('activity.activity_ScheduleCrossref.get_article_xml_key')
     @patch('activity.activity_ScheduleCrossref.S3Connection')
-    @patch('activity.activity_ScheduleCrossref.Session')
+    @patch('activity.activity_ScheduleCrossref.get_session')
     @patch.object(activity_ScheduleCrossref, 'emit_monitor_event')
     @patch.object(activity_ScheduleCrossref, 'set_monitor_property')
     @data(

@@ -1,6 +1,6 @@
 import activity
 import json
-from provider.execution_context import Session
+from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 import provider.article_structure as article_structure
 import provider.iiif as iiif
@@ -37,9 +37,9 @@ class activity_VerifyImageServer(activity.activity):
                 self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
             run = data['run']
-            session = Session(self.settings)
-            article_id = session.get_value(run, 'article_id')
-            version = session.get_value(run, 'version')
+            session = get_session(self.settings, data, run)
+            article_id = session.get_value('article_id')
+            version = session.get_value('version')
 
         except Exception as e:
             self.logger.exception(str(e))

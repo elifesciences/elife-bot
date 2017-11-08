@@ -15,7 +15,7 @@ class TestVerifyGlencoe(unittest.TestCase):
     @patch('time.sleep')
     @patch('provider.lax_provider.get_xml_file_name')
     @patch('activity.activity_VerifyGlencoe.storage_context')
-    @patch('activity.activity_VerifyGlencoe.Session')
+    @patch('activity.activity_VerifyGlencoe.get_session')
     @patch.object(activity_VerifyGlencoe, 'emit_monitor_event')
     @patch('requests.get')
     def test_do_activity_bad_response_glencoe_404(self, request_mock, fake_emit_monitor, fake_session,
@@ -49,7 +49,7 @@ class TestVerifyGlencoe(unittest.TestCase):
     @patch('time.sleep')
     @patch('provider.lax_provider.get_xml_file_name')
     @patch('activity.activity_VerifyGlencoe.storage_context')
-    @patch('activity.activity_VerifyGlencoe.Session')
+    @patch('activity.activity_VerifyGlencoe.get_session')
     @patch.object(activity_VerifyGlencoe, 'emit_monitor_event')
     @patch('requests.get')
     def test_do_activity_bad_response_glencoe_500(self, request_mock, fake_emit_monitor, fake_session,
@@ -75,7 +75,7 @@ class TestVerifyGlencoe(unittest.TestCase):
     @patch('provider.glencoe_check.validate_sources')
     @patch('provider.lax_provider.get_xml_file_name')
     @patch('activity.activity_VerifyGlencoe.storage_context')
-    @patch('activity.activity_VerifyGlencoe.Session')
+    @patch('activity.activity_VerifyGlencoe.get_session')
     @patch.object(activity_VerifyGlencoe, 'emit_monitor_event')
     def test_do_acitvity_exception(self, fake_emit_monitor, fake_session, fake_storage_context, fake_get_xml_file_name,
                                    fake_glencoe_check_validate_sources, fake_glencoe_check_metadata):
