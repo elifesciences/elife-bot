@@ -230,6 +230,7 @@ class SWFMeta(object):
             next_page_token = None
 
         # Continue, we have a nextPageToken. Assemble a full array of events by continually polling
+        all_infos = None
         if next_page_token is not None:
             all_infos = infos["executionInfos"]
             while next_page_token is not None:
@@ -252,7 +253,8 @@ class SWFMeta(object):
                     next_page_token = None
 
         # Finally, reset the original decision response with the full set of events
-        infos["executionInfos"] = all_infos
+        if all_infos:
+            infos["executionInfos"] = all_infos
 
         self.infos = infos
         return infos
