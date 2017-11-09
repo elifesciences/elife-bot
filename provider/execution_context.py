@@ -38,14 +38,14 @@ class FileSession(object):
             f = open(self.settings.workflow_context_path + self.get_full_key(self.session_key, key), 'r')
             value = json.loads(f.readline())
         except:
-            if key in self.input_data:
+            if self.input_data is not None and key in self.input_data:
                 value = self.input_data[key]
         return value
 
     @staticmethod
-    def get_full_key(execution_id, key):
+    def get_full_key(session_key, key):
 
-        return execution_id + '__' + key
+        return session_key + '__' + key
 
 
 class RedisSession(object):
@@ -63,9 +63,9 @@ class RedisSession(object):
         self.r.hset(self.session_key, key, value)
         self.r.expire(self.session_key, self.expire_key)
 
-    def get_value(self, execution_id, key):
+    def get_value(self, key):
 
-        value = self.r.hget(execution_id, key)
+        value = self.r.hget(self.session_key, key)
         if value is None:
             if key in self.input_data:
                 value = self.input_data[key]
@@ -99,7 +99,7 @@ class S3Session(object):
             value = s3_key.get_contents_as_string()
             value = json.loads(value)
         except S3ResponseError:
-            if key in self.input_data:
+            if self.input_data is not None and key in self.input_data:
                 value = self.input_data[key]
         return value
 
