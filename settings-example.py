@@ -183,6 +183,12 @@ class exp():
     CNPIEC_FTP_PASSWORD = ""
     CNPIEC_FTP_CWD = ""
 
+    # CNKI FTP settings
+    CNKI_FTP_URI = ""
+    CNKI_FTP_USERNAME = ""
+    CNKI_FTP_PASSWORD = ""
+    CNKI_FTP_CWD = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -348,6 +354,12 @@ class dev():
     CNPIEC_FTP_PASSWORD = ""
     CNPIEC_FTP_CWD = ""
 
+    # CNKI FTP settings
+    CNKI_FTP_URI = ""
+    CNKI_FTP_USERNAME = ""
+    CNKI_FTP_PASSWORD = ""
+    CNKI_FTP_CWD = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -512,6 +524,12 @@ class live():
     CNPIEC_FTP_USERNAME = ""
     CNPIEC_FTP_PASSWORD = ""
     CNPIEC_FTP_CWD = ""
+
+    # CNKI FTP settings
+    CNKI_FTP_URI = ""
+    CNKI_FTP_USERNAME = ""
+    CNKI_FTP_PASSWORD = ""
+    CNKI_FTP_CWD = ""
 
     # Logging
     setLevel = "INFO"
