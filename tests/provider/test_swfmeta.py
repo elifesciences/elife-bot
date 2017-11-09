@@ -41,6 +41,14 @@ class FakeSWFConnection:
             self.infos_counter = 0
             return self.infos[self.infos_counter]
 
+    def list_closed_workflow_executions(self, domain=None, workflow_id=None, workflow_name=None,
+                                        workflow_version=None, start_oldest_date=None,
+                                        start_latest_date=None, close_status=None,
+                                        maximum_page_size=None, next_page_token=None):
+        "for testing piggy-back list_open_workflow_executions to return infos"
+        return self.list_open_workflow_executions()
+
+
 class TestProviderSWFMeta(unittest.TestCase):
 
     def setUp(self):
@@ -96,6 +104,46 @@ class TestProviderSWFMeta(unittest.TestCase):
         infos = self.swfmeta.get_open_workflow_executionInfos(workflow_name="S3Monitor")
         self.assertIsNotNone(infos)
 
+
+    @patch("provider.swfmeta.SWFMeta.connect")
+    def test_get_closed_workflow_executionInfos(self, mock_connect):
+        "test getting closed workflow executions"
+        # prepare some test data first
+        base_infos = None
+        next_page_token_infos = None
+        with open('tests/test_data/completed_workflow_executions.json', 'rb') as json_file:
+            infos_data = json_file.read()
+            base_infos = json.loads(infos_data)
+            # also create the example with a nextPageToken
+            next_page_token_infos = json.loads(infos_data)
+            next_page_token_infos["nextPageToken"] = "a_next_page_token_for_testing"
+
+        # first test is without a next_page_token
+        mock_connect = FakeSWFConnection()
+        mock_connect.add_infos(base_infos)
+        self.swfmeta.conn = mock_connect
+        infos = self.swfmeta.get_closed_workflow_executionInfos(workflow_name="S3Monitor")
+        self.assertIsNotNone(infos)
+        self.assertEqual(len(infos.get("executionInfos")), 43)
+
+        # second test is without a next_page_token and a close_status
+        mock_connect = FakeSWFConnection()
+        mock_connect.add_infos(base_infos)
+        self.swfmeta.conn = mock_connect
+        infos = self.swfmeta.get_closed_workflow_executionInfos(
+            workflow_name="S3Monitor", close_status="COMPLETED")
+        self.assertIsNotNone(infos)
+        self.assertEqual(len(infos.get("executionInfos")), 25)
+
+        # third test is to add the data that has a nextPageToken to test pagination
+        mock_connect = FakeSWFConnection()
+        mock_connect.add_infos(next_page_token_infos)
+        mock_connect.add_infos(base_infos)
+        self.swfmeta.conn = mock_connect
+        infos = self.swfmeta.get_closed_workflow_executionInfos(
+            workflow_name="S3Monitor", close_status="TERMINATED")
+        self.assertIsNotNone(infos)
+        self.assertEqual(len(infos.get("executionInfos")), 15)
 
 
 if __name__ == '__main__':
