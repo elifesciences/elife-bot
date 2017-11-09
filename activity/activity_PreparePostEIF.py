@@ -4,7 +4,7 @@ import activity
 import json
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from provider.execution_context import Session
+from provider.execution_context import get_session
 import datetime
 import boto.sqs
 from boto.sqs.message import Message
@@ -37,26 +37,26 @@ class activity_PreparePostEIF(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         run = data['run']
-        session = Session(self.settings)
-        version = session.get_value(run, 'version')
-        article_id = session.get_value(run, 'article_id')
+        session = get_session(self.settings, data, run)
+        version = session.get_value('version')
+        article_id = session.get_value('article_id')
 
 
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Starting preparation of article for EIF " + article_id)
 
         try:
-            eif_location = session.get_value(run, 'eif_location')
+            eif_location = session.get_value('eif_location')
             eif_bucket = self.settings.publishing_buckets_prefix + self.settings.eif_bucket
 
-            article_path = session.get_value(run, 'article_path')
+            article_path = session.get_value('article_path')
             self.set_monitor_property(self.settings, article_id, 'path',
                                           article_path, 'text', version=version)
 
-            expanded_folder = session.get_value(run, 'expanded_folder')
-            status = session.get_value(run, 'status')
+            expanded_folder = session.get_value('expanded_folder')
+            status = session.get_value('status')
 
-            update_date = session.get_value(run, 'update_date')
+            update_date = session.get_value('update_date')
 
             carry_over_data = {
                 'eif_location': eif_location,

@@ -28,7 +28,7 @@ class TestConvertJATS(unittest.TestCase):
     @patch('activity.activity_ConvertJATS.get_article_xml_key')
     @patch('activity.activity_ConvertJATS.Key')
     @patch('activity.activity_ConvertJATS.S3Connection')
-    @patch('activity.activity_ConvertJATS.Session')
+    @patch('activity.activity_ConvertJATS.get_session')
     def test_do_activity(self, fake_session_mock, fake_s3_mock, fake_key_mock, fake_get_article_xml_key, fake_add_update_date_to_json):
         directory = TempDirectory()
 

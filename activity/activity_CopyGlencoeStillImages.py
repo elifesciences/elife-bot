@@ -1,6 +1,6 @@
 import activity
 import json
-from provider.execution_context import Session
+from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 import provider.glencoe_check as glencoe_check
 import os
@@ -42,10 +42,10 @@ class activity_CopyGlencoeStillImages(activity.activity):
                 return result
 
             run = data['run']
-            session = Session(self.settings)
-            article_id = session.get_value(run, 'article_id')
-            version = session.get_value(run, 'version')
-            file_name = session.get_value(run, 'file_name')
+            session = get_session(self.settings, data, run)
+            article_id = session.get_value('article_id')
+            version = session.get_value('version')
+            file_name = session.get_value('file_name')
             poa = False
             if "poa" in file_name:
                 poa = True

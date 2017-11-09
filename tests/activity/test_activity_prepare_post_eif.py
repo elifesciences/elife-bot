@@ -39,7 +39,7 @@ class tests_PreparePostEIF(unittest.TestCase):
     @patch('activity.activity_PreparePostEIF.Message')
     @patch('activity.activity_PreparePostEIF.Key')
     @patch('activity.activity_PreparePostEIF.S3Connection')
-    @patch('activity.activity_PreparePostEIF.Session')
+    @patch('activity.activity_PreparePostEIF.get_session')
     def test_activity(self, fake_session_mock, fake_s3_mock, fake_key_mock,
                       mock_sqs_message, mock_sqs_connect):
         directory = TempDirectory()

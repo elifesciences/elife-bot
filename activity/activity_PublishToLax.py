@@ -1,6 +1,6 @@
 import activity
 import json
-from provider.execution_context import Session
+from provider.execution_context import get_session
 import boto.sqs
 from boto.sqs.message import RawMessage
 import provider.lax_provider as lax_provider
@@ -92,8 +92,9 @@ class activity_PublishToLax(activity.activity):
         # workflow) currently we cannot mutate the data and pass it through activities, only workflows
         # it is an improvement to be made. Needs research on AWS SWF.
         # it will also work when not in Silent corrections, it will just override the setting with the same data
-        session = Session(self.settings)
-        eif_location = session.get_value(data['run'], 'eif_location')
+        run = data['run']
+        session = get_session(self.settings, data, run)
+        eif_location = session.get_value('eif_location')
         if eif_location is not None:
             data['eif_location'] = eif_location
 

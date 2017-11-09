@@ -113,7 +113,7 @@ class MyTestCase(unittest.TestCase):
         helpers.delete_folder(self.test_dest_folder, True)
 
     @patch.object(activity_ApplyVersionNumber, 'emit_monitor_event')
-    @patch('activity.activity_ApplyVersionNumber.Session')
+    @patch('activity.activity_ApplyVersionNumber.get_session')
     @data(test_data.session_example)
     def test_do_activity_no_version_error(self, session_example, mock_session, fake_emit_monitor_event):
         #given

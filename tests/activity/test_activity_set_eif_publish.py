@@ -16,7 +16,7 @@ class tests_SetEIFPublish(unittest.TestCase):
     @patch.object(activity_SetEIFPublish, 'emit_monitor_event')
     @patch('activity.activity_SetEIFPublish.storage_context')
     @patch.object(activity_SetEIFPublish, 'get_eif')
-    @patch('activity.activity_SetEIFPublish.Session')
+    @patch('activity.activity_SetEIFPublish.get_session')
     @data(test_data.data_example_before_publish)
     def test_do_activity(self, data, fake_session, fake_get_eif, fake_storage_context, fake_emit_monitor_event):
         fake_session.return_value = FakeSession(test_data.session_example)
@@ -34,7 +34,7 @@ class tests_SetEIFPublish(unittest.TestCase):
 
     @patch.object(activity_SetEIFPublish, 'emit_monitor_event')
     @patch.object(activity_SetEIFPublish, 'get_eif')
-    @patch('activity.activity_SetEIFPublish.Session')
+    @patch('activity.activity_SetEIFPublish.get_session')
     @data(test_data.data_example_before_publish)
     def test_error_fetch_eif(self, data, fake_session, fake_get_eif, fake_emit_monitor_event):
         fake_session.return_value = FakeSession(test_data.session_example)
@@ -51,7 +51,7 @@ class tests_SetEIFPublish(unittest.TestCase):
     @patch.object(activity_SetEIFPublish, 'emit_monitor_event')
     @patch('activity.activity_SetEIFPublish.storage_context')
     @patch.object(activity_SetEIFPublish, 'get_eif')
-    @patch('activity.activity_SetEIFPublish.Session')
+    @patch('activity.activity_SetEIFPublish.get_session')
     @data(test_data.data_example_before_publish)
     def test_error_update_eif(self, data, fake_session, fake_get_eif, fake_storage_context, fake_emit_monitor_event):
         fake_session.return_value = FakeSession(test_data.session_example)
@@ -70,7 +70,7 @@ class tests_SetEIFPublish(unittest.TestCase):
         self.assertEqual(result, self.seteifpublish.ACTIVITY_PERMANENT_FAILURE)
 
     @patch.object(activity_SetEIFPublish, 'emit_monitor_event')
-    @patch('activity.activity_SetEIFPublish.Session')
+    @patch('activity.activity_SetEIFPublish.get_session')
     @data(test_data.data_example_before_publish)
     def test_error_no_eif_location(self, data, fake_session, fake_emit_monitor_event):
         fake_session.return_value = FakeSession({})

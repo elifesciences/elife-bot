@@ -24,7 +24,7 @@ class TestVersionLookup(unittest.TestCase):
         self.versionlookup.logger = MagicMock()
         self.versionlookup.set_monitor_property = MagicMock()
 
-    @patch('activity.activity_VersionLookup.Session')
+    @patch('activity.activity_VersionLookup.get_session')
     @patch.object(activity_VersionLookup, 'execute_function')
     def test_get_version_silent_corrections(self, fake_lookup_functions, fake_session):
         fake_session.return_value = FakeSession({})
@@ -36,7 +36,7 @@ class TestVersionLookup(unittest.TestCase):
         fake_lookup_functions.assert_called_with(provider.lax_provider.article_highest_version, '00353', settings_mock)
         self.assertEqual(self.versionlookup.ACTIVITY_SUCCESS, result)
 
-    @patch('activity.activity_VersionLookup.Session')
+    @patch('activity.activity_VersionLookup.get_session')
     @patch.object(activity_VersionLookup, 'execute_function')
     def test_get_version_silent_corrections_version_in_zip(self, fake_lookup_functions, fake_session):
         fake_session.return_value = FakeSession({})
@@ -47,7 +47,7 @@ class TestVersionLookup(unittest.TestCase):
         fake_lookup_functions.assert_not_called()
         self.assertEqual(self.versionlookup.ACTIVITY_SUCCESS, result)
 
-    @patch('activity.activity_VersionLookup.Session')
+    @patch('activity.activity_VersionLookup.get_session')
     @patch.object(activity_VersionLookup, 'execute_function')
     def test_get_version_normal_process_version_not_in_zip(self, fake_lookup_functions, fake_session):
         fake_session.return_value = FakeSession({})
@@ -59,7 +59,7 @@ class TestVersionLookup(unittest.TestCase):
         fake_lookup_functions.assert_called_with(provider.lax_provider.article_next_version, '00353', settings_mock)
         self.assertEqual(self.versionlookup.ACTIVITY_SUCCESS, result)
 
-    @patch('activity.activity_VersionLookup.Session')
+    @patch('activity.activity_VersionLookup.get_session')
     @patch.object(activity_VersionLookup, 'execute_function')
     def test_get_version_normal_process(self, fake_lookup_functions, fake_session):
         fake_session.return_value = FakeSession({})
@@ -70,7 +70,7 @@ class TestVersionLookup(unittest.TestCase):
         fake_lookup_functions.assert_not_called()
         self.assertEqual(self.versionlookup.ACTIVITY_SUCCESS, result)
 
-    @patch('activity.activity_VersionLookup.Session')
+    @patch('activity.activity_VersionLookup.get_session')
     @patch.object(activity_VersionLookup, 'emit_monitor_event')
     @patch.object(activity_VersionLookup, 'execute_function')
     def test_get_version_error_timeout(self, fake_execute_function, fake_emit_monitor, fake_session):
@@ -84,7 +84,7 @@ class TestVersionLookup(unittest.TestCase):
         self.assertEqual(self.versionlookup.ACTIVITY_PERMANENT_FAILURE, result)
 
 
-    @patch('activity.activity_VersionLookup.Session')
+    @patch('activity.activity_VersionLookup.get_session')
     @patch.object(activity_VersionLookup, 'emit_monitor_event')
     @patch.object(activity_VersionLookup, 'execute_function')
     def test_get_version_error_protocol_error_message(self, fake_execute_function, fake_emit_monitor, fake_session):

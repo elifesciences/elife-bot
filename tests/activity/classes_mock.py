@@ -15,10 +15,10 @@ class FakeSession:
         #default test data
         self.session_dict = fake_session
 
-    def store_value(self, execution_id, key, value):
+    def store_value(self, key, value):
         self.session_dict[key] = value
 
-    def get_value(self, execution_id, key):
+    def get_value(self, key):
         try:
             return self.session_dict[key]
         except:

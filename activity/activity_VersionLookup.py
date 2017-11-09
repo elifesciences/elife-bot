@@ -1,7 +1,7 @@
 
 import activity
 from S3utility.s3_notification_info import S3NotificationInfo
-from provider.execution_context import Session
+from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 import provider.lax_provider
 
@@ -28,8 +28,9 @@ class activity_VersionLookup(activity.activity):
 
             info = S3NotificationInfo.from_dict(data)
             filename = info.file_name[info.file_name.rfind('/')+1:]
-            session = Session(self.settings)
-            session.store_value(data['run'], 'filename_last_element', filename)
+            run = data['run']
+            session = get_session(self.settings, data, run)
+            session.store_value('filename_last_element', filename)
 
             article_structure = ArticleInfo(filename)
 
@@ -38,7 +39,7 @@ class activity_VersionLookup(activity.activity):
                 raise RuntimeError("article_structure.article_id is None. File pattern problem.")
 
             version = self.get_version(self.settings, article_structure, data['version_lookup_function'])
-            session.store_value(data['run'], 'version', version)
+            session.store_value('version', version)
             article_id = article_structure.article_id
 
             self.emit_monitor_event(self.settings, article_id, version, data['run'],
