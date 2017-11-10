@@ -66,7 +66,8 @@ class starter_FTPArticle():
                 or workflow == 'Scopus'
                 or workflow == 'WoS'
                 or workflow == 'GoOA'
-                or workflow == 'CNPIEC'):
+                or workflow == 'CNPIEC'
+                or workflow == 'CNKI'):
             workflow_id = "FTPArticle_" + workflow + "_" + str(doi_id)
 
         # workflow_id as set above
