@@ -42,10 +42,9 @@ class FileSession(object):
                 value = self.input_data[key]
         return value
 
-    @staticmethod
-    def get_full_key(session_key, key):
+    def get_full_key(self, key):
 
-        return session_key + '__' + key
+        return self.session_key + '__' + key
 
 
 class RedisSession(object):

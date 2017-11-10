@@ -1,10 +1,10 @@
 import activity
 import json
-from provider.execution_context import get_session
 
 """
 activity_VerifyPublishResponse.py activity
 """
+
 
 class activity_VerifyPublishResponse(activity.activity):
 
