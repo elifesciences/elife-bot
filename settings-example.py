@@ -152,6 +152,13 @@ class exp():
     HEFCE_SFTP_USERNAME = ""
     HEFCE_SFTP_PASSWORD = ""
     HEFCE_SFTP_CWD = ""
+    HEFCE_EMAIL = "hefce@example.org"
+
+    # Cengage Archive FTP settings
+    CENGAGE_FTP_URI = ""
+    CENGAGE_FTP_USERNAME = ""
+    CENGAGE_FTP_PASSWORD = ""
+    CENGAGE_FTP_CWD = ""
 
     # GoOA FTP settings
     GOOA_FTP_URI = ""
@@ -164,6 +171,7 @@ class exp():
     SCOPUS_FTP_USERNAME = ""
     SCOPUS_FTP_PASSWORD = ""
     SCOPUS_FTP_CWD = ""
+    SCOPUS_EMAIL = "scopus@example.org"
 
     # Scopus SFTP settings
     SCOPUS_SFTP_URI = ""
@@ -176,12 +184,20 @@ class exp():
     WOS_FTP_USERNAME = ""
     WOS_FTP_PASSWORD = ""
     WOS_FTP_CWD = ""
+    WOS_EMAIL = "wos@example.org"
 
     # CNPIEC FTP settings
     CNPIEC_FTP_URI = ""
     CNPIEC_FTP_USERNAME = ""
     CNPIEC_FTP_PASSWORD = ""
     CNPIEC_FTP_CWD = ""
+
+    # CNKI FTP settings
+    CNKI_FTP_URI = ""
+    CNKI_FTP_USERNAME = ""
+    CNKI_FTP_PASSWORD = ""
+    CNKI_FTP_CWD = ""
+    CNKI_EMAIL = "cnki@example.org"
 
     # Logging
     setLevel = "INFO"
@@ -311,13 +327,14 @@ class dev():
     HEFCE_SFTP_USERNAME = ""
     HEFCE_SFTP_PASSWORD = ""
     HEFCE_SFTP_CWD = ""
+    HEFCE_EMAIL = "hefce@example.org"
 
     # Cengage Archive FTP settings
     CENGAGE_FTP_URI = ""
     CENGAGE_FTP_USERNAME = ""
     CENGAGE_FTP_PASSWORD = ""
     CENGAGE_FTP_CWD = ""
-    
+
     # GoOA FTP settings
     GOOA_FTP_URI = ""
     GOOA_FTP_USERNAME = ""
@@ -329,6 +346,7 @@ class dev():
     SCOPUS_FTP_USERNAME = ""
     SCOPUS_FTP_PASSWORD = ""
     SCOPUS_FTP_CWD = ""
+    SCOPUS_EMAIL = "scopus@example.org"
 
     # Scopus SFTP settings
     SCOPUS_SFTP_URI = ""
@@ -341,12 +359,20 @@ class dev():
     WOS_FTP_USERNAME = ""
     WOS_FTP_PASSWORD = ""
     WOS_FTP_CWD = ""
+    WOS_EMAIL = "wos@example.org"
 
     # CNPIEC FTP settings
     CNPIEC_FTP_URI = ""
     CNPIEC_FTP_USERNAME = ""
     CNPIEC_FTP_PASSWORD = ""
     CNPIEC_FTP_CWD = ""
+
+    # CNKI FTP settings
+    CNKI_FTP_URI = ""
+    CNKI_FTP_USERNAME = ""
+    CNKI_FTP_PASSWORD = ""
+    CNKI_FTP_CWD = ""
+    CNKI_EMAIL = "cnki@example.org"
 
     # Logging
     setLevel = "INFO"
@@ -476,24 +502,26 @@ class live():
     HEFCE_SFTP_USERNAME = ""
     HEFCE_SFTP_PASSWORD = ""
     HEFCE_SFTP_CWD = ""
+    HEFCE_EMAIL = "hefce@example.org"
 
     # Cengage Archive FTP settings
     CENGAGE_FTP_URI = ""
     CENGAGE_FTP_USERNAME = ""
     CENGAGE_FTP_PASSWORD = ""
     CENGAGE_FTP_CWD = ""
-    
+
     # GoOA FTP settings
     GOOA_FTP_URI = ""
     GOOA_FTP_USERNAME = ""
     GOOA_FTP_PASSWORD = ""
     GOOA_FTP_CWD = ""
-    
+
     # Scopus FTP settings
     SCOPUS_FTP_URI = ""
     SCOPUS_FTP_USERNAME = ""
     SCOPUS_FTP_PASSWORD = ""
     SCOPUS_FTP_CWD = ""
+    SCOPUS_EMAIL = "scopus@example.org"
 
     # Scopus SFTP settings
     SCOPUS_SFTP_URI = ""
@@ -506,12 +534,20 @@ class live():
     WOS_FTP_USERNAME = ""
     WOS_FTP_PASSWORD = ""
     WOS_FTP_CWD = ""
+    WOS_EMAIL = "wos@example.org"
 
     # CNPIEC FTP settings
     CNPIEC_FTP_URI = ""
     CNPIEC_FTP_USERNAME = ""
     CNPIEC_FTP_PASSWORD = ""
     CNPIEC_FTP_CWD = ""
+
+    # CNKI FTP settings
+    CNKI_FTP_URI = ""
+    CNKI_FTP_USERNAME = ""
+    CNKI_FTP_PASSWORD = ""
+    CNKI_FTP_CWD = ""
+    CNKI_EMAIL = "cnki@example.org"
 
     # Logging
     setLevel = "INFO"

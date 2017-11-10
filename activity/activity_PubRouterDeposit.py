@@ -158,6 +158,8 @@ class activity_PubRouterDeposit(activity.activity):
             return "pmc/outbox/"
         elif workflow == "CNPIEC":
             return "cnpiec/outbox/"
+        elif workflow == "CNKI":
+            return "cnki/outbox/"
 
         return None
 
@@ -179,6 +181,8 @@ class activity_PubRouterDeposit(activity.activity):
             return "pmc/published/"
         elif workflow == "CNPIEC":
             return "cnpiec/published/"
+        elif workflow == "CNKI":
+            return "cnki/published/"
 
         return None
 
@@ -442,7 +446,7 @@ class activity_PubRouterDeposit(activity.activity):
                 remove_article_doi.append(article.doi)
 
         # Check if article is a resupply
-        if workflow != 'GoOA' and workflow != 'PMC':
+        if workflow not in ['GoOA', 'PMC', 'CNKI']:
             for article in articles:
                 was_ever_published = blank_article.was_ever_published(article.doi, workflow)
                 if was_ever_published is True:
@@ -709,6 +713,8 @@ class activity_PubRouterDeposit(activity.activity):
                 recipients = self.settings.SCOPUS_EMAIL
             elif workflow == "CNPIEC":
                 recipients = self.settings.CNPIEC_EMAIL
+            elif workflow == "CNKI":
+                recipients = self.settings.CNKI_EMAIL
         except:
             pass
 

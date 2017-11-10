@@ -115,6 +115,8 @@ class activity_FTPArticle(activity.activity):
                 self.ftp_to_endpoint(zipfiles, passive=True)
             if workflow == 'CNPIEC':
                 self.ftp_to_endpoint(zipfiles, passive=True)
+            if workflow == 'CNKI':
+                self.ftp_to_endpoint(zipfiles, passive=True)
 
         except:
             # Something went wrong, fail
@@ -189,6 +191,12 @@ class activity_FTPArticle(activity.activity):
             self.FTP_USERNAME = self.settings.CNPIEC_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.CNPIEC_FTP_PASSWORD
             self.FTP_CWD = self.settings.CNPIEC_FTP_CWD
+
+        if workflow == 'CNKI':
+            self.FTP_URI = self.settings.CNKI_FTP_URI
+            self.FTP_USERNAME = self.settings.CNKI_FTP_USERNAME
+            self.FTP_PASSWORD = self.settings.CNKI_FTP_PASSWORD
+            self.FTP_CWD = self.settings.CNKI_FTP_CWD
 
     def download_files_from_s3(self, doi_id, workflow):
 

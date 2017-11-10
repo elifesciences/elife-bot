@@ -31,6 +31,8 @@ class TestFTPArticle(unittest.TestCase):
         ('WoS', True, None, 'wos.localhost', None, True),
         ('CNPIEC', True, None, 'cnpiec.localhost', None, True),
         ('CNPIEC', False, True, 'cnpiec.localhost', None, True),
+        ('CNKI', True, None, 'cnki.localhost', None, True),
+        ('CNKI', False, True, 'cnki.localhost', None, True),
     )
     @unpack
     def test_do_activity(self, workflow, pmc_zip_return_value, archive_zip_return_value,

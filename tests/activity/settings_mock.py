@@ -119,6 +119,11 @@ CNPIEC_FTP_USERNAME = ""
 CNPIEC_FTP_PASSWORD = ""
 CNPIEC_FTP_CWD = ""
 
+CNKI_FTP_URI = "cnki.localhost"
+CNKI_FTP_USERNAME = ""
+CNKI_FTP_PASSWORD = ""
+CNKI_FTP_CWD = ""
+
 git_repo_name = 'elife-article-xml-ci'
 git_repo_path = '/articles/'
 github_token = '1234567890abcdef'

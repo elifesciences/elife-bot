@@ -431,6 +431,8 @@ class article(object):
             published_folder = "scopus/published/"
         if workflow == "CNPIEC":
             published_folder = "cnpiec/published/"
+        if workflow == "CNKI":
+            published_folder = "cnki/published/"
 
         file_extensions = []
         file_extensions.append(".xml")
