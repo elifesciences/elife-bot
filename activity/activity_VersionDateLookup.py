@@ -10,7 +10,7 @@ from os import listdir, makedirs
 from os import path
 import datetime
 from S3utility.s3_notification_info import S3NotificationInfo
-from provider.execution_context import Session
+from provider.execution_context import get_session
 import requests
 from provider.storage_provider import storage_context
 from provider.article_structure import ArticleInfo
@@ -35,9 +35,10 @@ class activity_VersionDateLookup(activity.activity):
     def do_activity(self, data=None):
 
         try:
-            session = Session(self.settings)
-            version = session.get_value(data['run'], 'version')
-            filename = session.get_value(data['run'], 'filename_last_element')
+            run = data['run']
+            session = get_session(self.settings, data, run)
+            version = session.get_value('version')
+            filename = session.get_value('filename_last_element')
 
             article_structure = ArticleInfo(filename)
 
@@ -57,7 +58,7 @@ class activity_VersionDateLookup(activity.activity):
                                     " ".join(("Finished Version Lookup for article", article_structure.article_id,
                                     "version:", version)))
 
-            session.store_value(data['run'], 'update_date', version_date)
+            session.store_value('update_date', version_date)
 
             return activity.activity.ACTIVITY_SUCCESS
 

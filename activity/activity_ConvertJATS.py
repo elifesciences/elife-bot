@@ -4,7 +4,7 @@ import datetime
 from jats_scraper import jats_scraper
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from provider.execution_context import Session
+from provider.execution_context import get_session
 from provider.article_structure import get_article_xml_key
 
 """
@@ -31,9 +31,9 @@ class activity_ConvertJATS(activity.activity):
         """
 
         run = data['run']
-        session = Session(self.settings)
-        version = session.get_value(run, 'version')
-        article_id = session.get_value(run, 'article_id')
+        session = get_session(self.settings, data, run)
+        version = session.get_value('version')
+        article_id = session.get_value('article_id')
         article_version_id = article_id + '.' + version
 
 
@@ -44,7 +44,7 @@ class activity_ConvertJATS(activity.activity):
 
             if self.logger:
                 self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
-            expanded_folder_name = session.get_value(run, 'expanded_folder')
+            expanded_folder_name = session.get_value('expanded_folder')
             expanded_folder_bucket = (self.settings.publishing_buckets_prefix
                                       + self.settings.expanded_bucket)
 
@@ -68,7 +68,7 @@ class activity_ConvertJATS(activity.activity):
             json_output = jats_scraper.scrape(xml, article_version=version)
 
             # Add update date if it is in the session
-            update_date = session.get_value(run, 'update_date')
+            update_date = session.get_value('update_date')
             if update_date:
                 json_output = self.add_update_date_to_json(json_output, update_date, xml_filename)
 
@@ -88,9 +88,9 @@ class activity_ConvertJATS(activity.activity):
             if self.logger:
                 self.logger.info("Uploaded key %s to %s" % (output_path, output_bucket))
 
-            session.store_value(run, "eif_location", output_key)
+            session.store_value("eif_location", output_key)
             eif_object = json.loads(json_output)
-            session.store_value(run, 'article_path', eif_object.get('path'))
+            session.store_value('article_path', eif_object.get('path'))
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     "Convert JATS", "end",
                                     "XML converted to EIF for article " +

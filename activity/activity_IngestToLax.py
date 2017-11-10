@@ -4,7 +4,7 @@ import activity
 import json
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from provider.execution_context import Session
+from provider.execution_context import get_session
 import datetime
 import boto.sqs
 from boto.sqs.message import RawMessage
@@ -36,12 +36,12 @@ class activity_IngestToLax(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         run = data["run"]
-        session = Session(self.settings)
-        data['version'] = session.get_value(run, 'version')
-        data['article_id'] = session.get_value(run, 'article_id')
-        data['status'] = session.get_value(run, 'status')
-        data['expanded_folder'] = session.get_value(run, 'expanded_folder')
-        data['update_date'] = session.get_value(run, 'update_date')
+        session = get_session(self.settings, data, run)
+        data['version'] = session.get_value('version')
+        data['article_id'] = session.get_value('article_id')
+        data['status'] = session.get_value('status')
+        data['expanded_folder'] = session.get_value('expanded_folder')
+        data['update_date'] = session.get_value('update_date')
 
         queue_connection_settings = {"sqs_region": self.settings.sqs_region,
                                      "aws_access_key_id":self.settings.aws_access_key_id,

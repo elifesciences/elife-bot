@@ -20,7 +20,7 @@ class TestSendDashboardEvents(unittest.TestCase):
     @patch.object(activity_SendDashboardProperties, 'emit_monitor_event')
     @patch('activity.activity_SendDashboardProperties.get_article_xml_key')
     @patch('activity.activity_SendDashboardProperties.S3Connection')
-    @patch('activity.activity_SendDashboardProperties.Session')
+    @patch('activity.activity_SendDashboardProperties.get_session')
     @patch.object(activity_SendDashboardProperties, 'set_monitor_property')
     def test_do_activity(self, fake_emit_monitor_property, fake_session, fake_s3_mock, fake_get_article_xml_key,
                          fake_emit_monitor_event):

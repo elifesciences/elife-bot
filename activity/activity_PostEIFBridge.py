@@ -4,7 +4,7 @@ import activity
 import json
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from provider.execution_context import Session
+from provider.execution_context import get_session
 import datetime
 import boto.sqs
 from boto.sqs.message import Message

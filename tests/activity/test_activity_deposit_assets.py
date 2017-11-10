@@ -47,7 +47,7 @@ class TestDepositAssets(unittest.TestCase):
         result = self.depositassets.content_type_from_file_name(input)
         self.assertEqual(result, expected)
 
-    @patch('activity.activity_DepositAssets.Session')
+    @patch('activity.activity_DepositAssets.get_session')
     @patch('activity.activity_DepositAssets.storage_context')
     @patch.object(activity_DepositAssets, 'emit_monitor_event')
     def test_activity_success(self, fake_emit, fake_storage_context, fake_session):
@@ -60,7 +60,7 @@ class TestDepositAssets(unittest.TestCase):
         self.assertEqual(self.depositassets.ACTIVITY_SUCCESS, result)
 
 
-    @patch('activity.activity_DepositAssets.Session')
+    @patch('activity.activity_DepositAssets.get_session')
     @patch('activity.activity_DepositAssets.storage_context')
     @patch.object(activity_DepositAssets, 'emit_monitor_event')
     def test_activity_permanent_failure(self, fake_emit, fake_storage_context, fake_session):

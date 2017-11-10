@@ -18,7 +18,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
     @patch.object(activity_CopyGlencoeStillImages, 'store_jpgs')
     @patch('provider.glencoe_check.metadata')
     @patch('activity.activity_CopyGlencoeStillImages.storage_context')
-    @patch('activity.activity_CopyGlencoeStillImages.Session')
+    @patch('activity.activity_CopyGlencoeStillImages.get_session')
     @patch.object(activity_CopyGlencoeStillImages, 'emit_monitor_event')
     def test_do_activity(self, fake_emit, fake_session, fake_storage_context, fake_glencoe_metadata,
                          fake_store_jpgs, fake_list_files_from_cdn):
@@ -41,7 +41,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
     @patch.object(activity_CopyGlencoeStillImages, 'store_jpgs')
     @patch('provider.glencoe_check.metadata')
     @patch('activity.activity_CopyGlencoeStillImages.storage_context')
-    @patch('activity.activity_CopyGlencoeStillImages.Session')
+    @patch('activity.activity_CopyGlencoeStillImages.get_session')
     @patch.object(activity_CopyGlencoeStillImages, 'emit_monitor_event')
     def test_do_activity_success_no_videos_for_article(self, fake_emit, fake_session, fake_storage_context, fake_glencoe_metadata,
                          fake_store_jpgs, fake_list_files_from_cdn):
@@ -57,7 +57,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         # Then
         self.assertEqual(self.copyglencoestillimages.ACTIVITY_SUCCESS, result)
 
-    @patch('activity.activity_CopyGlencoeStillImages.Session')
+    @patch('activity.activity_CopyGlencoeStillImages.get_session')
     @patch.object(activity_CopyGlencoeStillImages, 'emit_monitor_event')
     def test_do_activity_success_POA(self, fake_emit, fake_session):
         # Given
@@ -75,7 +75,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
     @patch.object(activity_CopyGlencoeStillImages, 'store_jpgs')
     @patch('provider.glencoe_check.metadata')
     @patch('activity.activity_CopyGlencoeStillImages.storage_context')
-    @patch('activity.activity_CopyGlencoeStillImages.Session')
+    @patch('activity.activity_CopyGlencoeStillImages.get_session')
     @patch.object(activity_CopyGlencoeStillImages, 'emit_monitor_event')
     def test_do_activity_error(self, fake_emit, fake_session, fake_storage_context, fake_glencoe_metadata, fake_store_jpgs):
         # Given
@@ -104,7 +104,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
     @patch.object(activity_CopyGlencoeStillImages, 'store_jpgs')
     @patch('provider.glencoe_check.metadata')
     @patch('activity.activity_CopyGlencoeStillImages.storage_context')
-    @patch('activity.activity_CopyGlencoeStillImages.Session')
+    @patch('activity.activity_CopyGlencoeStillImages.get_session')
     @patch.object(activity_CopyGlencoeStillImages, 'emit_monitor_event')
     def test_do_activity_bad_files(self, fake_emit, fake_session, fake_storage_context, fake_glencoe_metadata,
                                    fake_store_jpgs, fake_list_files_from_cdn):

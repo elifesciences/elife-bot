@@ -25,7 +25,7 @@ class TestExpandArticle(unittest.TestCase):
         helpers.delete_folder(testdata.ExpandArticle_files_dest_folder)
 
     @patch.object(activity_ExpandArticle, 'get_tmp_dir')
-    @patch('activity.activity_ExpandArticle.Session')
+    @patch('activity.activity_ExpandArticle.get_session')
     @patch('activity.activity_ExpandArticle.storage_context')
     def test_do_activity(self, mock_storage_context, mock_session, mock_get_tmp_dir):
         mock_storage_context.return_value = FakeStorageContext()
@@ -50,7 +50,7 @@ class TestExpandArticle(unittest.TestCase):
             self.assertEqual(testdata.ExpandArticle_files_dest_bytes_expected[index]['bytes'], statinfo.st_size)
             index += 1
 
-    @patch('activity.activity_ExpandArticle.Session')
+    @patch('activity.activity_ExpandArticle.get_session')
     @patch('activity.activity_ExpandArticle.storage_context')
     def test_do_activity_invalid_articleid(self, mock_storage_context, mock_session):
         mock_storage_context.return_value = FakeStorageContext()
@@ -63,7 +63,7 @@ class TestExpandArticle(unittest.TestCase):
         success = self.expandarticle.do_activity(testdata.ExpandArticle_data_invalid_article)
         self.assertEqual(self.expandarticle.ACTIVITY_PERMANENT_FAILURE, success)
 
-    @patch('activity.activity_ExpandArticle.Session')
+    @patch('activity.activity_ExpandArticle.get_session')
     @patch('activity.activity_ExpandArticle.storage_context')
     @data(testdata.ExpandArticle_data_invalid_status1_session_example,
           testdata.ExpandArticle_data_invalid_status2_session_example)

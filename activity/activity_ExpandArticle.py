@@ -10,7 +10,7 @@ from os import listdir, makedirs
 from os import path
 import datetime
 from S3utility.s3_notification_info import S3NotificationInfo
-from provider.execution_context import Session
+from provider.execution_context import get_session
 import requests
 from provider.storage_provider import storage_context
 from provider.article_structure import ArticleInfo
@@ -47,19 +47,19 @@ class activity_ExpandArticle(activity.activity):
 
         storage = storage_context(self.settings)
 
-        session = Session(self.settings)
+        session = get_session(self.settings, data, run)
 
-        filename_last_element = session.get_value(run, 'filename_last_element')
+        filename_last_element = session.get_value('filename_last_element')
         # zip name contains version information for previously archived zip files
         article_structure = ArticleInfo(filename_last_element)
         article_id = article_structure.article_id
-        session.store_value(run, 'article_id', article_id)
-        session.store_value(run, 'file_name', info.file_name)
+        session.store_value('article_id', article_id)
+        session.store_value('file_name', info.file_name)
 
         if self.logger:
             self.logger.info("Expanding file %s" % info.file_name)
 
-        version = session.get_value(run, 'version')
+        version = session.get_value('version')
 
         status = article_structure.status
         if status is None or (status != 'vor' and status != 'poa'):
@@ -68,9 +68,9 @@ class activity_ExpandArticle(activity.activity):
             return activity.activity.ACTIVITY_PERMANENT_FAILURE  # status could not be determined, exit workflow.
 
         article_version_id = article_id + '.' + version
-        session.store_value(run, 'article_version_id', article_version_id)
-        session.store_value(run, 'run', run)
-        session.store_value(run, 'status', status)
+        session.store_value('article_version_id', article_version_id)
+        session.store_value('run', run)
+        session.store_value('status', status)
         self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article", "start",
                                 "Starting expansion of article " + article_id)
 
@@ -106,7 +106,7 @@ class activity_ExpandArticle(activity.activity):
 
             self.clean_tmp_dir()
 
-            session.store_value(run, 'expanded_folder', bucket_folder_name)
+            session.store_value('expanded_folder', bucket_folder_name)
             self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article",
                                     "end", "Finished expansion of article " + article_id +
                                     " for version " + version + " run " + str(run) +

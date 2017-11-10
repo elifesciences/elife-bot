@@ -4,7 +4,7 @@ import os
 import re
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from provider.execution_context import Session
+from provider.execution_context import get_session
 import yaml
 from provider.article_structure import ArticleInfo
 
@@ -34,9 +34,9 @@ class activity_SetPublicationStatus(activity.activity):
     def do_activity(self, data=None):
 
         run = data['run']
-        session = Session(self.settings)
-        version = session.get_value(run, 'version')
-        article_id = session.get_value(run, 'article_id')
+        session = get_session(self.settings, data, run)
+        version = session.get_value('version')
+        article_id = session.get_value('article_id')
 
 
         self.emit_monitor_event(self.settings, article_id, version, run,
@@ -46,7 +46,7 @@ class activity_SetPublicationStatus(activity.activity):
         try:
             conn = S3Connection(self.settings.aws_access_key_id,
                                 self.settings.aws_secret_access_key)
-            eif_location = session.get_value(run, 'eif_location')
+            eif_location = session.get_value('eif_location')
             data = self.get_eif(conn, eif_location)
             publication_status = self.get_publication_status(data, eif_location)
             data['publish'] = publication_status

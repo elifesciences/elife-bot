@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 from elifetools import parseJATS as parser
 from boto.s3.connection import S3Connection
-from provider.execution_context import Session
+from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 from provider.article_structure import get_article_xml_key
 from provider import utils
@@ -35,9 +35,9 @@ class activity_SendDashboardProperties(activity.activity):
         """
 
         run = data['run']
-        session = Session(self.settings)
-        version = session.get_value(run, 'version')
-        article_id = session.get_value(run, 'article_id')
+        session = get_session(self.settings, data, run)
+        version = session.get_value('version')
+        article_id = session.get_value('article_id')
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Send dashboard properties", "start",
                                 "Starting send of article properties to dashboard for article " + article_id)
@@ -46,7 +46,7 @@ class activity_SendDashboardProperties(activity.activity):
 
             if self.logger:
                 self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
-            expanded_folder_name = session.get_value(run, 'expanded_folder')
+            expanded_folder_name = session.get_value('expanded_folder')
             expanded_folder_bucket = (self.settings.publishing_buckets_prefix
                                       + self.settings.expanded_bucket)
 
