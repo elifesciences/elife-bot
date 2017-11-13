@@ -2,7 +2,7 @@ import activity
 import boto
 import json
 from boto.sqs.message import Message
-from provider.execution_context import Session
+from provider.execution_context import get_session
 
 
 """
@@ -32,9 +32,9 @@ class activity_VersionReasonDecider(activity.activity):
         """
 
         run = data['run']
-        session = Session(self.settings)
-        version = session.get_value(run, 'version')
-        article_id = session.get_value(run, 'article_id')
+        session = get_session(self.settings, data, run)
+        version = session.get_value('version')
+        article_id = session.get_value('article_id')
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Decide version reason", "start",
                                 "Starting decision of version reason workflow for " + article_id)
@@ -43,14 +43,14 @@ class activity_VersionReasonDecider(activity.activity):
 
         workflow_data['article_id'] = article_id
         workflow_data['version'] = version
-        workflow_data['filename_last_element'] = session.get_value['filename_last_element']
+        workflow_data['run'] = run
 
         message = {
-            'workflow_name': 'ApproveArticlePublication',
+            'workflow_name': 'IngestArticleZip',
             'workflow_data': workflow_data
         }
 
-        # if status == 'POA' and version > 1:
+        # if status == 'POA' and version > 1 (and not a silent correction!):
         #    send_to_dashboard()
         # else:
 

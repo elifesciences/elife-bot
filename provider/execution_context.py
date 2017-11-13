@@ -28,14 +28,14 @@ class FileSession(object):
     def store_value(self, key, value):
 
         value = json.dumps(value)
-        f = open(self.settings.workflow_context_path + self.get_full_key(self.session_key, key), 'w')
+        f = open(self.settings.workflow_context_path + self.get_full_key(key), 'w')
         f.write(value)
 
     def get_value(self, key):
 
         value = None
         try:
-            f = open(self.settings.workflow_context_path + self.get_full_key(self.session_key, key), 'r')
+            f = open(self.settings.workflow_context_path + self.get_full_key(key), 'r')
             value = json.loads(f.readline())
         except:
             if self.input_data is not None and key in self.input_data:

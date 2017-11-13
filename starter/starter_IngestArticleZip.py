@@ -21,7 +21,7 @@ class starter_IngestArticleZip():
     def __init__(self):
         self.const_name = "IngestArticleZip"
         
-    def start(self, settings, run, info, article_id, version, filename_last_element):
+    def start(self, settings, run, info):
 
         # Log
         logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
@@ -32,9 +32,6 @@ class starter_IngestArticleZip():
         input = S3NotificationInfo.to_dict(info)
         input['run'] = run
         input['version_lookup_function'] = "article_next_version"
-        input['article_id'] = article_id
-        input['version'] = version
-        input['filename_last_element'] = filename_last_element
 
         workflow_id, \
         workflow_name, \

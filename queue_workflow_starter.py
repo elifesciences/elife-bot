@@ -100,10 +100,7 @@ def start_workflow(workflow_name, workflow_data):
 
 def process_data_ingestarticlezip(workflow_name, workflow_data):
     data = {'info': S3NotificationInfo.from_dict(workflow_data),
-            'run': workflow_data['run'],
-            'article_id': workflow_data['article_id'],
-            'version': workflow_data['version'],
-            'filename_last_element': workflow_data['filename_last_element']}
+            'run': workflow_data['run']}
     return data
 
 def process_data_initialarticlezip(workflow_name, workflow_data):
