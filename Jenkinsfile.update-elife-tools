@@ -1,0 +1,15 @@
+def elifeToolsSummary;
+elifeUpdatePipeline(
+    { commit ->
+        lock('elife-bot--ci') {
+            builderDeployRevision 'elife-bot--ci', commit
+            elifeToolsSummary = builderCmd "elife-bot--ci", "source venv/bin/activate && update_python_dependency elifetools https://github.com/elifesciences/elife-tools.git 2>/tmp/update-elife-tools.log", "/opt/elife-bot", true
+            builderSync "ci--bot.elife.internal", "/opt/elife-bot/"
+            sh "git add requirements.txt"
+        }
+    },
+    {
+        return "Updated elifetools: ${elifeToolsSummary}"
+    },
+    'update_elife_tools/'
+)
