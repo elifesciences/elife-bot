@@ -160,6 +160,22 @@ class TestArticleStructure(unittest.TestCase):
                     'elife-07398-media1.jpg']
         self.assertListEqual(article_structure.get_figures_for_iiif(files), expected)
 
+    def test_get_inline_figures_for_iiif(self):
+        "should return all inline figure files"
+        files = ['elife-00666-app1-fig1-figsupp1-v1.tif',
+                 'elife-00666-fig2-figsupp2-v1.tif',
+                 'elife-00666-fig2-figsupp2-v1.jpg',
+                 'elife-00666-inf001-v1.jpg',
+                 'elife-00666-inf001-v1-80w.jpg',
+                 'elife-00666-table3-data1-v1.xlsx',
+                 'elife-07702-vor-r4.zip',
+                 'elife-6148691793723703318-fig10-v1.gif',
+                 'elife-9204580859652100230-fig2-data1-v1.xls',
+                 'elife-00666-video2.jpg',
+                 'elife-07398-media1.jpg']
+        expected = ['elife-00666-inf001-v1.jpg']
+        self.assertListEqual(article_structure.get_inline_figures_for_iiif(files), expected)
+
     # see https://github.com/elifesciences/elife-continuum-documentation/blob/master/file-naming/file_naming_spec.md
     def test_get_figures_pdfs(self):
         files = ['elife-07398-media1.jpg',
@@ -216,6 +232,7 @@ class TestArticleStructure(unittest.TestCase):
                  'elife-13273-media1.mp4']
         expected = ['elife-00666-app1-fig1-figsupp1-v1.tif',
                     'elife-00666-fig2-figsupp2-v1.tif',
+                    'elife-00666-inf001-v1.jpg',
                     'elife-00666-video2.jpg',
                     'elife-07398-media1.jpg',
                     'elife-13273-media1.mp4',
