@@ -161,10 +161,11 @@ class TestArticleStructure(unittest.TestCase):
         self.assertListEqual(article_structure.get_figures_for_iiif(files), expected)
 
     def test_get_inline_figures_for_iiif(self):
-        "should return all inline figure files"
+        "should return only .tif of inline figure files"
         files = ['elife-00666-app1-fig1-figsupp1-v1.tif',
                  'elife-00666-fig2-figsupp2-v1.tif',
                  'elife-00666-fig2-figsupp2-v1.jpg',
+                 'elife-00666-inf001-v1.tif',
                  'elife-00666-inf001-v1.jpg',
                  'elife-00666-inf001-v1-80w.jpg',
                  'elife-00666-table3-data1-v1.xlsx',
@@ -173,7 +174,7 @@ class TestArticleStructure(unittest.TestCase):
                  'elife-9204580859652100230-fig2-data1-v1.xls',
                  'elife-00666-video2.jpg',
                  'elife-07398-media1.jpg']
-        expected = ['elife-00666-inf001-v1.jpg']
+        expected = ['elife-00666-inf001-v1.tif']
         self.assertListEqual(article_structure.get_inline_figures_for_iiif(files), expected)
 
     # see https://github.com/elifesciences/elife-continuum-documentation/blob/master/file-naming/file_naming_spec.md
@@ -219,6 +220,7 @@ class TestArticleStructure(unittest.TestCase):
         files = ['elife-00666-app1-fig1-figsupp1-v1.tif',
                  'elife-00666-fig2-figsupp2-v1.tif',
                  'elife-00666-fig2-figsupp2-v1.jpg',
+                 'elife-00666-inf001-v1.tif',
                  'elife-00666-inf001-v1.jpg',
                  'elife-00666-inf001-v1-80w.jpg',
                  'elife-00666-table3-data1-v1.xlsx',
@@ -232,7 +234,7 @@ class TestArticleStructure(unittest.TestCase):
                  'elife-13273-media1.mp4']
         expected = ['elife-00666-app1-fig1-figsupp1-v1.tif',
                     'elife-00666-fig2-figsupp2-v1.tif',
-                    'elife-00666-inf001-v1.jpg',
+                    'elife-00666-inf001-v1.tif',
                     'elife-00666-video2.jpg',
                     'elife-07398-media1.jpg',
                     'elife-13273-media1.mp4',

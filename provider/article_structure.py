@@ -143,8 +143,9 @@ def get_figures_for_iiif(files):
     return fs
 
 def get_inline_figures_for_iiif(files):
+    # should only be tif
     "return a list of all inline figure files"
-    return [f for f in get_original_files(files) if (inline_figure(f))]
+    return [f for f in get_original_files(files) if (inline_figure(f) and has_extensions(f, ['tif']))]
 
 def get_figures_pdfs(files):
     return [f for f in files if (figure_pdf(f) and has_extensions(f, ['pdf']))]
