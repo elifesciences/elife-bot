@@ -142,6 +142,11 @@ def get_figures_for_iiif(files):
     fs = originals_figures_tif + get_media_file_images(files)
     return fs
 
+def get_inline_figures_for_iiif(files):
+    # should only be tif
+    "return a list of all inline figure files"
+    return [f for f in get_original_files(files) if (inline_figure(f) and has_extensions(f, ['tif']))]
+
 def get_figures_pdfs(files):
     return [f for f in files if (figure_pdf(f) and has_extensions(f, ['pdf']))]
 
@@ -175,7 +180,8 @@ def is_video_file(filename):
 
 def pre_ingest_assets(files):
     original_figures = get_figures_for_iiif(files)
-    iiif_assets = original_figures + get_videos(files)
+    inline_figures = get_inline_figures_for_iiif(files)
+    iiif_assets = original_figures + inline_figures + get_videos(files)
     pdf_figures = get_figures_pdfs(files)
     return list(set(iiif_assets + pdf_figures))
 
