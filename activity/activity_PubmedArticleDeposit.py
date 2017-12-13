@@ -80,6 +80,9 @@ class activity_PubmedArticleDeposit(activity.activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        # Load the config
+        self.pubmed_config = self.elifepubmed_config(self.settings.elifecrossref_config_section)
+
         # Download the S3 objects
         self.download_files_from_s3_outbox()
 
@@ -169,6 +172,12 @@ class activity_PubmedArticleDeposit(activity.activity):
             f = open(filename_plus_path, mode)
             s3_key.get_contents_to_file(f)
             f.close()
+
+    def elifepubmed_config(self, config_section):
+        "parse the config values from the elifepubmed config"
+        config.read(self.settings.elifepubmed_config_file)
+        raw_config = config[config_section]
+        return parse_raw_config(raw_config)
 
     def parse_article_xml(self, article_xml_files):
         """
