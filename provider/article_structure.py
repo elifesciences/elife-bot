@@ -37,7 +37,7 @@ class ArticleInfo(object):
         (self.filename, self.extension) = full_filename.rsplit('.', 1)
         parts = self.filename.split('-')
 
-        match = re.match('.*?-[0-9]+?-(poa|vor)(-*?(v|r)[0-9]+?)?(-([0-9]+))?\.zip', self.full_filename, re.IGNORECASE)
+        match = re.match('.*?-[a-zA-Z0-9]+?-(poa|vor)(-*?(v|r)[0-9]+?)?(-([0-9]+))?\.zip', self.full_filename, re.IGNORECASE)
         first_other_index = 2
         if match is not None:
             self.status = match.group(1)
