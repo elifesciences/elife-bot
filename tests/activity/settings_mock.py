@@ -132,3 +132,6 @@ PUBMED_FTP_URI = ""
 PUBMED_FTP_USERNAME = ""
 PUBMED_FTP_PASSWORD = ""
 PUBMED_FTP_CWD = ""
+
+elifepubmed_config_file = 'tests/activity/pubmed.cfg'
+elifepubmed_config_section = 'elife'

@@ -18,6 +18,8 @@ import provider.simpleDB as dblib
 import provider.article as articlelib
 import provider.s3lib as s3lib
 import provider.lax_provider as lax_provider
+from elifepubmed import generate
+from elifepubmed.conf import config, parse_raw_config
 
 """
 PubmedArticleDeposit activity
@@ -37,14 +39,9 @@ class activity_PubmedArticleDeposit(activity.activity):
         self.description = ("Download article XML from pubmed outbox, generate pubmed " +
                             "article XML, and deposit with pubmed.")
 
-        # Directory where POA library is stored
-        self.poa_lib_dir_name = "elife-poa-xml-generation"
-
-        # Where we specify the library to be imported
-        self.elife_poa_lib = None
-
-        # Import the libraries we will need
-        self.import_imports()
+        # Local directory settings
+        self.TMP_DIR = "tmp_dir"
+        self.INPUT_DIR = "input_dir"
 
         # Create output directories
         self.create_activity_directories()
@@ -96,7 +93,7 @@ class activity_PubmedArticleDeposit(activity.activity):
             try:
                 # Publish files
                 self.ftp_files_to_endpoint(
-                    from_dir=self.elife_poa_lib.settings.TMP_DIR,
+                    from_dir=os.path.join(self.get_tmp_dir(), self.TMP_DIR),
                     file_type="/*.xml",
                     sub_dir="")
                 self.ftp_status = True
@@ -165,7 +162,7 @@ class activity_PubmedArticleDeposit(activity.activity):
 
             # Save .xml and .pdf to different folders
             if re.search(".*\\.xml$", name):
-                dirname = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
+                dirname =  os.path.join(self.get_tmp_dir(), self.INPUT_DIR)
 
             filename_plus_path = dirname + os.sep + filename
             mode = "wb"
@@ -186,26 +183,12 @@ class activity_PubmedArticleDeposit(activity.activity):
             article_xml_list = [article_xml]
             try:
                 # Convert the XML files to article objects
-                article_list = self.elife_poa_lib.parse.build_articles_from_article_xmls(
-                    article_xml_list)
+                generate.TMP_DIR = os.path.join(self.get_tmp_dir(), self.TMP_DIR)
+                article_list = generate.build_articles(article_xml_list)
             except:
                 continue
 
-            # Set the published date on v2, v3 etc. files
-            if article_xml.find('v') > -1:
-                article = None
-                if len(article_list) > 0:
-                    article = article_list[0]
-
-                pub_date_date = self.article.get_article_bucket_pub_date(article.doi, "poa")
-
-                if article is not None and pub_date_date is not None:
-                    # Emmulate the eLifeDate object use in the POA generation package
-                    eLifeDate = namedtuple("eLifeDate", "date_type date")
-                    pub_date = eLifeDate("pub", pub_date_date)
-                    article.add_date(pub_date)
-
-            if len(article_list) > 0:
+            if article_list:
                 article = article_list[0]
                 articles.append(article)
                 # Add article to the DOI to file name map
@@ -226,37 +209,32 @@ class activity_PubmedArticleDeposit(activity.activity):
         """
         Using the POA generatePubMedXml module
         """
-        article_xml_files = glob.glob(self.elife_poa_lib.settings.STAGING_TO_HW_DIR + "/*.xml")
+        article_xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.INPUT_DIR) + "/*.xml")
 
-        articles = self.parse_article_xml(article_xml_files)
+        for xml_file in article_xml_files:
+            generate_status = True
 
-        # For each VoR article, set was_ever_poa property
-        published_articles = []
+            # Convert the single value to a list for processing
+            xml_files = [xml_file]
+            article_list = self.parse_article_xml(xml_files)
 
-        for article in articles:
-
-            xml_file_name = self.xml_file_to_doi_map[article.doi]
-
-            article_id = self.article.get_doi_id(article.doi)
-
-            # Check if article was ever poa
-            # Must be set to True or False to get it published
-            if article.doi and article.doi == '10.7554/eLife.11190':
-                # Edge case, ignore this article PoA
-                article.was_ever_poa = False
+            if len(article_list) == 0:
+                self.article_not_published_file_names.append(xml_file_name)
+                continue
             else:
-                article.was_ever_poa = lax_provider.was_ever_poa(article_id, self.settings)
+                article = article_list[0]
+
+            article.was_ever_poa = lax_provider.was_ever_poa(article.manuscript, self.settings)
 
             # Check if each article is published
             is_published = lax_provider.published_considering_poa_status(
-                article_id=article_id,
+                article_id=article.manuscript,
                 settings=self.settings,
                 is_poa=article.is_poa,
                 was_ever_poa=article.was_ever_poa)
 
             if is_published is True:
-
-                # Try to add the article version if in lax
+                # can now generate the output
                 try:
                     version = self.get_article_version_from_lax(article_id)
                 except:
@@ -264,23 +242,24 @@ class activity_PubmedArticleDeposit(activity.activity):
                 if version and version > 0:
                     article.version = version
 
-                # Add published article object to be processed
-                published_articles.append(article)
+                # generate pubmed deposit
+                article_list = [article]
+                try:
+                    generate.pubmed_xml_to_disk(
+                        article_list, config_section=self.settings.elifepubmed_config_section)
+                except:
+                    generate_status = False
+            else:
+                generate_status = False
 
+            if generate_status is True:
                 # Add filename to the list of published files
-                self.article_published_file_names.append(xml_file_name)
+                self.article_published_file_names.append(xml_file)
             else:
                 # Add the file to the list of not published articles, may be used later
-                self.article_not_published_file_names.append(xml_file_name)
+                self.article_not_published_file_names.append(xml_file)
 
-        # Will write the XML to the TMP_DIR
-        if len(published_articles) > 0:
-            try:
-                self.elife_poa_lib.generate.build_pubmed_xml_for_articles(published_articles)
-            except:
-                return False
-
-        return True
+        return generate_status
 
     def approve_for_publishing(self):
         """
@@ -289,7 +268,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         status = None
 
         # Check for empty directory
-        xml_files = glob.glob(self.elife_poa_lib.settings.TMP_DIR + "/*.xml")
+        xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.TMP_DIR) + "/*.xml")
         if len(xml_files) <= 0:
             status = False
         else:
@@ -314,10 +293,11 @@ class activity_PubmedArticleDeposit(activity.activity):
 
     def ftp_files_to_endpoint(self, from_dir, file_type, sub_dir=None):
         """
-        Using the POA module, FTP files to endpoint
+        FTP files to endpoint
         as specified by the file_type to use in the glob
         e.g. "/*.zip"
         """
+        # TODO!!!
         zipfiles = glob.glob(from_dir + file_type)
         self.elife_poa_lib.ftp.ftp_to_endpoint(zipfiles, sub_dir)
 
@@ -412,7 +392,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         """
         Upload a copy of the pubmed XML to S3 for reference
         """
-        xml_files = glob.glob(self.elife_poa_lib.settings.TMP_DIR + "/*.xml")
+        xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.TMP_DIR) + "/*.xml")
 
         bucket_name = self.publish_bucket
 
@@ -566,80 +546,13 @@ class activity_PubmedArticleDeposit(activity.activity):
 
         return body
 
-    def import_imports(self):
-        """
-        Customised importing of the external library
-        to override the settings
-        MUST load settings module first, override the values
-        BEFORE loading anything else, or the override will not take effect
-        """
-
-        # Load the files from parent directory - hellish imports but they
-        #  seem to work now
-        dir_name = self.poa_lib_dir_name
-
-        self.import_poa_lib(dir_name)
-        self.override_poa_settings(dir_name)
-        self.import_poa_modules(dir_name)
-
-    def import_poa_lib(self, dir_name):
-        """
-        POA lib import Step 1: import external library by directory name
-        """
-        self.elife_poa_lib = __import__(dir_name)
-        self.reload_module(self.elife_poa_lib)
-
-    def override_poa_settings(self, dir_name):
-        """
-        POA lib import Step 2: import settings modules then override
-        """
-
-        # Load external library settings
-        importlib.import_module(dir_name + ".settings")
-        # Reload the module fresh, so original directory names are reset
-        self.reload_module(self.elife_poa_lib.settings)
-
-        settings = self.elife_poa_lib.settings
-
-        # Override the settings
-        settings.STAGING_TO_HW_DIR = self.get_tmp_dir() + os.sep + settings.STAGING_TO_HW_DIR
-        settings.TMP_DIR = self.get_tmp_dir() + os.sep + settings.TMP_DIR
-
-        # Override the FTP settings with the bot environment settings
-        settings.FTP_URI = self.settings.PUBMED_FTP_URI
-        settings.FTP_USERNAME = self.settings.PUBMED_FTP_USERNAME
-        settings.FTP_PASSWORD = self.settings.PUBMED_FTP_PASSWORD
-        settings.FTP_CWD = self.settings.PUBMED_FTP_CWD
-
-    def import_poa_modules(self, dir_name="elife-poa-xml-generation"):
-        """
-        POA lib import Step 3: import modules now that settings are overridden
-        """
-
-        # Now we can continue with imports
-        self.elife_poa_lib.parse = importlib.import_module(dir_name + ".parsePoaXml")
-        self.reload_module(self.elife_poa_lib.parse)
-        self.elife_poa_lib.generate = importlib.import_module(dir_name + ".generatePubMedXml")
-        self.reload_module(self.elife_poa_lib.generate)
-        self.elife_poa_lib.ftp = importlib.import_module(dir_name + ".ftp_to_highwire")
-        self.reload_module(self.elife_poa_lib.ftp)
-
-    def reload_module(self, module):
-        """
-        Attempt to reload an imported module to reset it
-        """
-        try:
-            reload(module)
-        except:
-            pass
-
     def create_activity_directories(self):
         """
         Create the directories in the activity tmp_dir
         """
 
         try:
-            os.mkdir(self.elife_poa_lib.settings.STAGING_TO_HW_DIR)
-            os.mkdir(self.elife_poa_lib.settings.TMP_DIR)
+            os.mkdir(os.path.join(self.get_tmp_dir(), self.TMP_DIR))
+            os.mkdir(os.path.join(self.get_tmp_dir(), self.INPUT_DIR))
         except OSError:
             pass

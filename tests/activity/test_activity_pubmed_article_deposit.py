@@ -11,10 +11,6 @@ import tests.test_data as test_case_data
 import os
 from ddt import ddt, data
 
-# Add parent directory for imports, so activity classes can use elife-poa-xml-generation
-PARENTDIR = os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-os.sys.path.insert(0, PARENTDIR)
 
 @ddt
 class TestPubmedArticleDeposit(unittest.TestCase):
@@ -30,12 +26,12 @@ class TestPubmedArticleDeposit(unittest.TestCase):
 
     def input_dir(self):
         "return the staging dir name for the activity"
-        return self.activity.elife_poa_lib.settings.STAGING_TO_HW_DIR
+        return os.path.join(self.activity.get_tmp_dir(), self.activity.INPUT_DIR)
 
 
     def tmp_dir(self):
         "return the tmp dir name for the activity"
-        return self.activity.elife_poa_lib.settings.TMP_DIR
+        return os.path.join(self.activity.get_tmp_dir(), self.activity.TMP_DIR)
 
 
     def fake_download_files_from_s3_outbox(self, document):
@@ -83,7 +79,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "highest_version": 1,
             "expected_result": True,
             "expected_approve_status": False,
-            "expected_generate_status": True,
+            "expected_generate_status": False,
             "expected_publish_status": None,
             "expected_ftp_status": None,
             "expected_activity_status": True,
