@@ -129,6 +129,10 @@ class exp():
     crossref_login_id = ''
     crossref_login_passwd = ''
 
+    # PubMed generation
+    elifepubmed_config_file = 'pubmed.cfg'
+    elifepubmed_config_section = 'elife'
+
     # PubMed FTP settings
     PUBMED_FTP_URI = ""
     PUBMED_FTP_USERNAME = ""
@@ -304,6 +308,10 @@ class dev():
     crossref_login_id = ''
     crossref_login_passwd = ''
 
+    # PubMed generation
+    elifepubmed_config_file = 'pubmed.cfg'
+    elifepubmed_config_section = 'elife'
+
     # PubMed FTP settings
     PUBMED_FTP_URI = ""
     PUBMED_FTP_USERNAME = ""
@@ -478,6 +486,10 @@ class live():
     crossref_url = 'http://doi.crossref.org/servlet/deposit'
     crossref_login_id = ''
     crossref_login_passwd = ''
+
+    # PubMed generation
+    elifepubmed_config_file = 'pubmed.cfg'
+    elifepubmed_config_section = 'elife'
 
     # PubMed FTP settings
     PUBMED_FTP_URI = ""
