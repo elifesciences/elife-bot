@@ -17,6 +17,7 @@ from boto.s3.connection import S3Connection
 import provider.simpleDB as dblib
 import provider.article as articlelib
 import provider.s3lib as s3lib
+from provider.ftp import FTP
 import provider.lax_provider as lax_provider
 from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
@@ -97,8 +98,7 @@ class activity_PubmedArticleDeposit(activity.activity):
                 # Publish files
                 self.ftp_files_to_endpoint(
                     from_dir=os.path.join(self.get_tmp_dir(), self.TMP_DIR),
-                    file_type="/*.xml",
-                    sub_dir="")
+                    file_type="/*.xml")
                 self.ftp_status = True
             except:
                 self.ftp_status = False
@@ -300,15 +300,27 @@ class activity_PubmedArticleDeposit(activity.activity):
 
         return filename
 
-    def ftp_files_to_endpoint(self, from_dir, file_type, sub_dir=None):
+    def ftp_files_to_endpoint(self, from_dir, file_type):
         """
         FTP files to endpoint
         as specified by the file_type to use in the glob
         e.g. "/*.zip"
         """
-        # TODO!!!
+        ftp_provider = FTP()
+        ftp_instance = ftp_provider.ftp_connect(
+            uri=self.settings.PUBMED_FTP_URI,
+            username=self.settings.PUBMED_FTP_USERNAME,
+            password=self.settings.PUBMED_FTP_PASSWORD
+        )
+        # collect the list of files
         zipfiles = glob.glob(from_dir + file_type)
-        self.elife_poa_lib.ftp.ftp_to_endpoint(zipfiles, sub_dir)
+        # transfer them by FTP to the endpoint
+        ftp_provider.ftp_to_endpoint(
+            ftp_instance=ftp_instance,
+            uploadfiles=zipfiles,
+            sub_dir_list=[self.settings.PUBMED_FTP_CWD])
+        # disconnect the FTP connection
+        ftp_provider.ftp_disconnect(ftp_instance)
 
     def get_outbox_s3_key_names(self, force=None):
         """
