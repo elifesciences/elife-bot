@@ -81,7 +81,7 @@ class activity_PubmedArticleDeposit(activity.activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         # Load the config
-        self.pubmed_config = self.elifepubmed_config(self.settings.elifecrossref_config_section)
+        self.pubmed_config = self.elifepubmed_config(self.settings.elifepubmed_config_section)
 
         # Download the S3 objects
         self.download_files_from_s3_outbox()
