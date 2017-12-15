@@ -13,7 +13,7 @@ xlrd==0.9.3
 git+https://github.com/elifesciences/elife-tools.git@352226be98e6adec488406268acb50a9b76876db#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@e83828ab496a66bacd713879f5ee9c35eceeeb7c#egg=elifearticle
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@e0127fa983c96b8beeb5068bcfcff3f16f566787#egg=elifecrossref
-git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@f7988a2519d65a840f89a0bc0e123cd31bc228c3#egg=elifepubmed
+git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@db34ec23ce5364f9624a27380a5455cc6b347c83#egg=elifepubmed
 PyYAML==3.11
 Wand==0.4.0
 paramiko==1.15.2

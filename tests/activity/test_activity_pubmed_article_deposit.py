@@ -51,6 +51,27 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     @patch.object(activity_PubmedArticleDeposit, 'get_outbox_s3_key_names')
     @patch.object(activity_PubmedArticleDeposit, 'download_files_from_s3_outbox')
     @data(
+        # example PoA file will have an aheadofprint
+        {
+            "article_xml_filenames": ['elife-29353-v1.xml'],
+            "ftp_files_return_value": True,
+            "was_ever_poa": True,
+            "published": True,
+            "highest_version": 1,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": True,
+            "expected_ftp_status": True,
+            "expected_activity_status": True,
+            "expected_file_count": 1,
+            "expected_pubmed_xml_contains": [
+                '<ArticleTitle>An evolutionary young defense metabolite influences the root growth of plants via the ancient TOR signaling pathway</ArticleTitle>',
+                '<PubDate PubStatus="aheadofprint"><Year>2017</Year><Month>December</Month><Day>12</Day></PubDate>',
+                '<ELocationID EIdType="doi">10.7554/eLife.29353</ELocationID>'
+                ]
+        },
+        # example VoR file will have a Replaces tag
         {
             "article_xml_filenames": ['elife-15747-v2.xml'],
             "ftp_files_return_value": True,
@@ -67,10 +88,12 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "expected_pubmed_xml_contains": [
                 '<Replaces IdType="doi">10.7554/eLife.15747</Replaces>',
                 '<ArticleTitle>Community-level cohesion without cooperation</ArticleTitle>',
+                '<PubDate PubStatus="epublish"><Year>2016</Year><Month>June</Month><Day>16</Day></PubDate>',
                 '<ELocationID EIdType="doi">10.7554/eLife.15747</ELocationID>',
                 '<Identifier Source="ORCID">http://orcid.org/0000-0002-9558-1121</Identifier>'
                 ]
         },
+        # test for if the article is published False (not published yet)
         {
             "article_xml_filenames": ['elife-15747-v2.xml'],
             "ftp_files_return_value": True,
