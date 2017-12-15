@@ -140,6 +140,7 @@ class article(object):
         except:
             return False
 
+
     def download_article_xml_from_s3(self, doi_id=None):
         """
         Return the article data for use in templates
@@ -246,6 +247,15 @@ class article(object):
         data = resp.json()
         logger.info("PDF Generator Response %s", str(data))
         return data['formats']
+
+    def get_pdf_cover_page(self, doi_id, settings, logger):
+        try:
+            assert hasattr(settings, "pdf_cover_landing_page"), \
+                "pdf_cover_landing_page variable is missing from settings file!"
+            return settings.pdf_cover_landing_page + doi_id
+        except AssertionError as err:
+            logger.error(str(err))
+            return ""
 
     def get_pub_date_timestamp(self, pub_date):
         """

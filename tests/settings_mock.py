@@ -37,4 +37,5 @@ no_download_extensions = 'tif'
 setLevel = "INFO"
 
 # PDF cover
-pdf_cover_generator = ""
+pdf_cover_generator = "https://localhost/personalised-covers/"
+pdf_cover_landing_page = "https://localhost.org/download-your-cover/"
