@@ -184,7 +184,9 @@ class activity_PubmedArticleDeposit(activity.activity):
             try:
                 # Convert the XML files to article objects
                 generate.TMP_DIR = os.path.join(self.get_tmp_dir(), self.TMP_DIR)
-                article_list = generate.build_articles(article_xml_list)
+                article_list = generate.build_articles(
+                    article_xmls=article_xml_list,
+                    build_parts=self.pubmed_config.get('build_parts'))
             except:
                 continue
 
