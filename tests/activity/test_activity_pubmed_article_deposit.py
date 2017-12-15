@@ -44,7 +44,6 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     @patch.object(activity_PubmedArticleDeposit, 'upload_pubmed_xml_to_s3')
     @patch.object(activity_PubmedArticleDeposit, 'clean_outbox')
     @patch.object(activity_PubmedArticleDeposit, 'ftp_files_to_endpoint')
-    @patch.object(article, 'get_article_bucket_pub_date')
     @patch.object(lax_provider, 'was_ever_poa')
     @patch.object(lax_provider, 'published_considering_poa_status')
     @patch.object(lax_provider, 'article_highest_version')
@@ -126,7 +125,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_download_files_from_s3_outbox, fake_get_outbox_s3_key_names,
                          fake_article_highest_version, fake_published_considering_poa_status, fake_was_ever_poa,
-                         fake_get_article_bucket_pub_date, fake_ftp_files_to_endpoint,
+                         fake_ftp_files_to_endpoint,
                          fake_clean_outbox, fake_upload_pubmed_xml_to_s3,
                          fake_elife_add_email_to_email_queue):
         # copy XML files into the input directory
@@ -134,7 +133,6 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             fake_download_files_from_s3_outbox = self.fake_download_files_from_s3_outbox(article_xml)
         # set some return values for the mocks
         fake_get_outbox_s3_key_names.return_value = test_data.get("article_xml_filenames")
-        fake_get_article_bucket_pub_date.return_value = None
         # lax data overrides
         fake_was_ever_poa.return_value = test_data.get("was_ever_poa")
         fake_published_considering_poa_status.return_value = test_data.get("published")
