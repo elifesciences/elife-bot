@@ -170,6 +170,29 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                             comment=test_data.get("comment"), expected=expected,
                             path=pubmed_xml_filename_path))
 
+    @data(
+        {
+            "article_xml": 'elife-29353-v1.xml',
+            "expected_article_count": 1,
+            "expected_doi": '10.7554/eLife.29353'
+        },
+        {
+            "article_xml": 'bad_xml.xml',
+            "expected_article_count": 0
+        }
+    )
+    def test_parse_article_xml(self, test_data):
+        source_doc = "tests/test_data/pubmed/" + test_data.get('article_xml')
+        articles = self.activity.parse_article_xml([source_doc])
+        self.assertEqual(len(articles), test_data.get('expected_article_count'),
+                         'failed comparing expected_article_count')
+        if articles:
+            article = articles[0]
+            self.assertEqual(article.doi, test_data.get('expected_doi'),
+                         'failed comparing expected_doi')
+            # test the file name to DOI map
+            self.assertEqual(self.activity.xml_file_to_doi_map.get(article.doi),
+                             source_doc, 'failed checking the xml_file_to_doi_map')
 
 
 if __name__ == '__main__':

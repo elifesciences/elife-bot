@@ -74,15 +74,15 @@ class activity_PubmedArticleDeposit(activity.activity):
         self.article_published_file_names = []
         self.article_not_published_file_names = []
 
+        # Load the config
+        self.pubmed_config = self.elifepubmed_config(self.settings.elifepubmed_config_section)
+
     def do_activity(self, data=None):
         """
         Activity, do the work
         """
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
-
-        # Load the config
-        self.pubmed_config = self.elifepubmed_config(self.settings.elifepubmed_config_section)
 
         # Download the S3 objects
         self.download_files_from_s3_outbox()
