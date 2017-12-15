@@ -169,31 +169,24 @@ class activity_PubmedArticleDeposit(activity.activity):
         raw_config = config[config_section]
         return parse_raw_config(raw_config)
 
-    def parse_article_xml(self, article_xml_files):
+    def parse_article_xml(self, xml_file):
         """
-        Given a list of article XML files, parse them into objects
-        and save the file name for later use
+        Given an article XML files, parse it into an article object
         """
-
-        # For each article XML file, parse it and save the filename for later
-        articles = []
-        for article_xml in article_xml_files:
-            article_list = None
-            article_xml_list = [article_xml]
-            try:
-                # Convert the XML files to article objects
-                generate.TMP_DIR = os.path.join(self.get_tmp_dir(), self.TMP_DIR)
-                article_list = generate.build_articles(
-                    article_xmls=article_xml_list,
-                    build_parts=self.pubmed_config.get('build_parts'))
-            except:
-                continue
-
+        article = None
+        generate.TMP_DIR = os.path.join(self.get_tmp_dir(), self.TMP_DIR)
+        try:
+            # Convert the XML file to article objects
+            article_list = generate.build_articles(
+                article_xmls=[xml_file],
+                build_parts=self.pubmed_config.get('build_parts'))
+            # take the first article from the list
             if article_list:
                 article = article_list[0]
-                articles.append(article)
+        except:
+            article = None 
 
-        return articles
+        return article
 
     def get_article_version_from_lax(self, article_id):
         """
@@ -204,6 +197,23 @@ class activity_PubmedArticleDeposit(activity.activity):
             return "-1"
         return version
 
+    def enhance_article(self, article):
+        "set additional details on the article object from Lax data or other sources"
+
+        article.was_ever_poa = lax_provider.was_ever_poa(article.manuscript, self.settings)
+
+        # Check if each article is published
+        article.is_published = lax_provider.published_considering_poa_status(
+            article_id=article.manuscript,
+            settings=self.settings,
+            is_poa=article.is_poa,
+            was_ever_poa=article.was_ever_poa)
+
+        if not article.version:
+            article.version = self.get_article_version_from_lax(article.manuscript)
+
+        return article
+
     def generate_pubmed_xml(self):
         """
         Using the POA generatePubMedXml module
@@ -213,39 +223,19 @@ class activity_PubmedArticleDeposit(activity.activity):
         for xml_file in article_xml_files:
             generate_status = True
 
-            # Convert the single value to a list for processing
-            xml_files = [xml_file]
-            article_list = self.parse_article_xml(xml_files)
+            article = self.parse_article_xml(xml_file)
 
-            if len(article_list) == 0:
+            if article is None:
                 self.article_not_published_file_names.append(xml_file)
                 continue
-            else:
-                article = article_list[0]
 
-            article.was_ever_poa = lax_provider.was_ever_poa(article.manuscript, self.settings)
+            article = self.enhance_article(article)
 
-            # Check if each article is published
-            is_published = lax_provider.published_considering_poa_status(
-                article_id=article.manuscript,
-                settings=self.settings,
-                is_poa=article.is_poa,
-                was_ever_poa=article.was_ever_poa)
-
-            if is_published is True:
-                # can now generate the output
-                try:
-                    version = self.get_article_version_from_lax(article_id)
-                except:
-                    version = None
-                if version and version > 0:
-                    article.version = version
-
+            if article.is_published is True:
                 # generate pubmed deposit
-                article_list = [article]
                 try:
                     generate.pubmed_xml_to_disk(
-                        article_list, config_section=self.settings.elifepubmed_config_section)
+                        [article], config_section=self.settings.elifepubmed_config_section)
                 except:
                     generate_status = False
             else:

@@ -171,21 +171,23 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     @data(
         {
             "article_xml": 'elife-29353-v1.xml',
-            "expected_article_count": 1,
+            "expected_article": "not none",
             "expected_doi": '10.7554/eLife.29353'
         },
         {
             "article_xml": 'bad_xml.xml',
-            "expected_article_count": 0
+            "expected_article": None
         }
     )
     def test_parse_article_xml(self, test_data):
         source_doc = "tests/test_data/pubmed/" + test_data.get('article_xml')
-        articles = self.activity.parse_article_xml([source_doc])
-        self.assertEqual(len(articles), test_data.get('expected_article_count'),
-                         'failed comparing expected_article_count')
-        if articles:
-            article = articles[0]
+        article = self.activity.parse_article_xml(source_doc)
+        if test_data.get('expected_article') is None:
+            self.assertEqual(article, test_data.get('expected_article'),
+                             'failed comparing expected_article')
+        else:
+            self.assertIsNotNone(article, 'failed comparing expected_article')
+        if article:
             self.assertEqual(article.doi, test_data.get('expected_doi'),
                          'failed comparing expected_doi')
 
