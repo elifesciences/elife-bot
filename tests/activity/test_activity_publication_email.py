@@ -325,7 +325,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         article_object = article()
         article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
-        article.pdf_cover_link = article_object.get_pdf_cover_page(article_object.doi_id, self.activity.settings, self.activity.logger)
+        article_object.pdf_cover_link = article_object.get_pdf_cover_page(article_object.doi_id, self.activity.settings, self.activity.logger)
         article_type = article_object.article_type
         feature_article = True
         related_insight_article = None
