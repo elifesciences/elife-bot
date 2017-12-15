@@ -325,7 +325,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         article_object = article()
         article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
-        article_object.pdf_cover_link = article_object.get_pdf_cover_page(article_object.doi_id, self.activity.settings, self.activity.logger)
+        article_object.pdf_cover_link = "https://localhost.org/download-your-cover/00353"
         article_type = article_object.article_type
         feature_article = True
         related_insight_article = None
@@ -346,6 +346,14 @@ class TestPublicationEmail(unittest.TestCase):
             format=format)
 
         self.assertEqual(body, expected_body)
+
+    def test_get_pdf_cover_page(self):
+
+        article_object = article()
+        article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
+        article_object.pdf_cover_link = article_object.get_pdf_cover_page(article_object.doi_id, self.activity.settings, self.activity.logger)
+        self.assertEqual(article_object.pdf_cover_link, "https://localhost.org/download-your-cover/00353")
+
 
     @patch.object(activity_PublicationEmail, 'queue_author_email')
     def test_send_email_bad_authors(self, fake_queue_author_email):
