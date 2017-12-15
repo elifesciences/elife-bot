@@ -70,7 +70,6 @@ class activity_PubmedArticleDeposit(activity.activity):
         self.outbox_s3_key_names = None
 
         # Track XML files selected for pubmed XML
-        self.xml_file_to_doi_map = {}
         self.article_published_file_names = []
         self.article_not_published_file_names = []
 
@@ -193,8 +192,6 @@ class activity_PubmedArticleDeposit(activity.activity):
             if article_list:
                 article = article_list[0]
                 articles.append(article)
-                # Add article to the DOI to file name map
-                self.xml_file_to_doi_map[article.doi] = article_xml
 
         return articles
 
@@ -221,7 +218,7 @@ class activity_PubmedArticleDeposit(activity.activity):
             article_list = self.parse_article_xml(xml_files)
 
             if len(article_list) == 0:
-                self.article_not_published_file_names.append(xml_file_name)
+                self.article_not_published_file_names.append(xml_file)
                 continue
             else:
                 article = article_list[0]

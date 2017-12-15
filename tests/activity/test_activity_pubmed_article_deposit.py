@@ -188,9 +188,6 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             article = articles[0]
             self.assertEqual(article.doi, test_data.get('expected_doi'),
                          'failed comparing expected_doi')
-            # test the file name to DOI map
-            self.assertEqual(self.activity.xml_file_to_doi_map.get(article.doi),
-                             source_doc, 'failed checking the xml_file_to_doi_map')
 
 
 if __name__ == '__main__':
