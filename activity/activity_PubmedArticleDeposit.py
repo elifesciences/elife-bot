@@ -94,26 +94,20 @@ class activity_PubmedArticleDeposit(activity.activity):
         self.approve_status = self.approve_for_publishing()
 
         if self.approve_status is True:
-            try:
-                # Publish files
-                self.ftp_files_to_endpoint(
-                    from_dir=os.path.join(self.get_tmp_dir(), self.TMP_DIR),
-                    file_type="/*.xml")
-                self.ftp_status = True
-            except:
-                self.ftp_status = False
+            # Publish files
+            self.ftp_status = self.ftp_files_to_endpoint(
+                from_dir=os.path.join(self.get_tmp_dir(), self.TMP_DIR),
+                file_type="/*.xml")
 
-            if self.ftp_status is True:
-                # Clean up outbox
-                print "Moving files from outbox folder to published folder"
-                self.clean_outbox()
-                self.upload_pubmed_xml_to_s3()
-                self.outbox_status = True
-
-            if self.ftp_status is True:
-                self.publish_status = True
-            elif self.ftp_status is False:
-                self.publish_status = False
+        if self.ftp_status is True:
+            # Clean up outbox
+            print "Moving files from outbox folder to published folder"
+            self.clean_outbox()
+            self.upload_pubmed_xml_to_s3()
+            self.outbox_status = True
+            self.publish_status = True
+        elif self.ftp_status is False:
+            self.publish_status = False
 
         # Set the activity status of this activity based on successes
         if self.publish_status is not False:
@@ -126,10 +120,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         if len(self.article_published_file_names) > 0:
             self.add_email_to_queue()
 
-        # Return the activity result, True or False
-        result = True
-
-        return result
+        return self.activity_status
 
     def set_datestamp(self):
         a = arrow.utcnow()
@@ -306,21 +297,27 @@ class activity_PubmedArticleDeposit(activity.activity):
         as specified by the file_type to use in the glob
         e.g. "/*.zip"
         """
-        ftp_provider = FTP()
-        ftp_instance = ftp_provider.ftp_connect(
-            uri=self.settings.PUBMED_FTP_URI,
-            username=self.settings.PUBMED_FTP_USERNAME,
-            password=self.settings.PUBMED_FTP_PASSWORD
-        )
-        # collect the list of files
-        zipfiles = glob.glob(from_dir + file_type)
-        # transfer them by FTP to the endpoint
-        ftp_provider.ftp_to_endpoint(
-            ftp_instance=ftp_instance,
-            uploadfiles=zipfiles,
-            sub_dir_list=[self.settings.PUBMED_FTP_CWD])
-        # disconnect the FTP connection
-        ftp_provider.ftp_disconnect(ftp_instance)
+        ftp_status = None
+        try:
+            ftp_provider = FTP()
+            ftp_instance = ftp_provider.ftp_connect(
+                uri=self.settings.PUBMED_FTP_URI,
+                username=self.settings.PUBMED_FTP_USERNAME,
+                password=self.settings.PUBMED_FTP_PASSWORD
+            )
+            # collect the list of files
+            zipfiles = glob.glob(from_dir + file_type)
+            # transfer them by FTP to the endpoint
+            ftp_provider.ftp_to_endpoint(
+                ftp_instance=ftp_instance,
+                uploadfiles=zipfiles,
+                sub_dir_list=[self.settings.PUBMED_FTP_CWD])
+            # disconnect the FTP connection
+            ftp_provider.ftp_disconnect(ftp_instance)
+            ftp_status = True
+        except:
+            ftp_status = False
+        return ftp_status
 
     def get_outbox_s3_key_names(self, force=None):
         """

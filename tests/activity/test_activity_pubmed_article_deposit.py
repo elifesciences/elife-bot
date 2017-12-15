@@ -51,8 +51,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     @patch.object(activity_PubmedArticleDeposit, 'get_outbox_s3_key_names')
     @patch.object(activity_PubmedArticleDeposit, 'download_files_from_s3_outbox')
     @data(
-        # example PoA file will have an aheadofprint
         {
+            "comment": 'example PoA file will have an aheadofprint',
             "article_xml_filenames": ['elife-29353-v1.xml'],
             "ftp_files_return_value": True,
             "was_ever_poa": True,
@@ -71,8 +71,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                 '<ELocationID EIdType="doi">10.7554/eLife.29353</ELocationID>'
                 ]
         },
-        # example VoR file will have a Replaces tag
         {
+            "comment": 'example VoR file will have a Replaces tag',
             "article_xml_filenames": ['elife-15747-v2.xml'],
             "ftp_files_return_value": True,
             "was_ever_poa": False,
@@ -93,8 +93,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                 '<Identifier Source="ORCID">http://orcid.org/0000-0002-9558-1121</Identifier>'
                 ]
         },
-        # test for if the article is published False (not published yet)
         {
+            "comment": 'test for if the article is published False (not published yet)',
             "article_xml_filenames": ['elife-15747-v2.xml'],
             "ftp_files_return_value": True,
             "was_ever_poa": False,
@@ -107,6 +107,21 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "expected_ftp_status": None,
             "expected_activity_status": True,
             "expected_file_count": 0
+        },
+        {
+            "comment": 'test for if FTP status is False',
+            "article_xml_filenames": ['elife-15747-v2.xml'],
+            "ftp_files_return_value": False,
+            "was_ever_poa": False,
+            "published": True,
+            "highest_version": 2,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": False,
+            "expected_ftp_status": False,
+            "expected_activity_status": False,
+            "expected_file_count": 1,
         },
     )
     def test_do_activity(self, test_data, fake_download_files_from_s3_outbox, fake_get_outbox_s3_key_names,
@@ -129,14 +144,20 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         # do the activity
         result = self.activity.do_activity()
         # check assertions
-        self.assertEqual(result, test_data.get("expected_result"))
-        self.assertEqual(self.activity.approve_status, test_data.get("expected_approve_status"))
-        self.assertEqual(self.activity.generate_status, test_data.get("expected_generate_status"))
-        self.assertEqual(self.activity.publish_status, test_data.get("expected_publish_status"))
-        self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"))
+        self.assertEqual(result, test_data.get("expected_result"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
+        self.assertEqual(self.activity.approve_status, test_data.get("expected_approve_status"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
+        self.assertEqual(self.activity.generate_status, test_data.get("expected_generate_status"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
+        self.assertEqual(self.activity.publish_status, test_data.get("expected_publish_status"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
+        self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
         # Count PubMed XML file in the tmp directory
         file_count = len(os.listdir(self.tmp_dir()))
-        self.assertEqual(file_count, test_data.get("expected_file_count"))
+        self.assertEqual(file_count, test_data.get("expected_file_count"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
         if file_count > 0 and test_data.get("expected_pubmed_xml_contains"):
             # Open the first Pubmed XML and check some of its contents
             pubmed_xml_filename_path = os.path.join(self.tmp_dir(), os.listdir(self.tmp_dir())[0])
@@ -144,8 +165,10 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                 pubmed_xml = fp.read()
                 for expected in test_data.get("expected_pubmed_xml_contains"):
                     self.assertTrue(
-                        expected in pubmed_xml, '{expected} not found in pubmed_xml {path}'.format(
-                            expected=expected, path=pubmed_xml_filename_path))
+                        expected in pubmed_xml,
+                        'failed in {comment}: {expected} not found in pubmed_xml {path}'.format(
+                            comment=test_data.get("comment"), expected=expected,
+                            path=pubmed_xml_filename_path))
 
 
 
