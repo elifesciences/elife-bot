@@ -115,7 +115,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "was_ever_poa": False,
             "published": True,
             "highest_version": 2,
-            "expected_result": True,
+            "expected_result": False,
             "expected_approve_status": True,
             "expected_generate_status": True,
             "expected_publish_status": False,
