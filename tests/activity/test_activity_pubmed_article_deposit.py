@@ -10,6 +10,7 @@ from provider import lax_provider
 import tests.test_data as test_case_data
 import os
 from ddt import ddt, data
+from classes_mock import FakeStorageContext
 
 
 @ddt
@@ -34,23 +35,18 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         return os.path.join(self.activity.get_tmp_dir(), self.activity.TMP_DIR)
 
 
-    def fake_download_files_from_s3_outbox(self, document):
-        source_doc = "tests/test_data/pubmed/" + document
-        dest_doc = self.input_dir() + os.sep + document
-        shutil.copy(source_doc, dest_doc)
-
-
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch.object(lax_provider, 'article_versions')
     @patch.object(activity_PubmedArticleDeposit, 'upload_pubmed_xml_to_s3')
     @patch.object(activity_PubmedArticleDeposit, 'clean_outbox')
     @patch.object(activity_PubmedArticleDeposit, 'ftp_files_to_endpoint')
     @patch.object(activity_PubmedArticleDeposit, 'get_outbox_s3_key_names')
-    @patch.object(activity_PubmedArticleDeposit, 'download_files_from_s3_outbox')
+    @patch('activity.activity_PubmedArticleDeposit.storage_context')
+    @patch.object(FakeStorageContext, 'list_resources')
     @data(
         {
             "comment": 'example PoA file will have an aheadofprint',
-            "article_xml_filenames": ['elife-29353-v1.xml'],
+            "outbox_filenames": ['elife-29353-v1.xml', 'not_an_xml_file.pdf'],
             "ftp_files_return_value": True,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
@@ -68,7 +64,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         },
         {
             "comment": 'example VoR file will have a Replaces tag',
-            "article_xml_filenames": ['elife-15747-v2.xml'],
+            "outbox_filenames": ['elife-15747-v2.xml'],
             "ftp_files_return_value": True,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
@@ -88,7 +84,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         },
         {
             "comment": 'test for if the article is published False (not published yet)',
-            "article_xml_filenames": ['elife-15747-v2.xml'],
+            "outbox_filenames": ['elife-15747-v2.xml'],
             "ftp_files_return_value": True,
             "article_versions_data": [],
             "expected_result": True,
@@ -101,7 +97,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         },
         {
             "comment": 'test for if FTP status is False',
-            "article_xml_filenames": ['elife-15747-v2.xml'],
+            "outbox_filenames": ['elife-15747-v2.xml'],
             "ftp_files_return_value": False,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": False,
@@ -114,7 +110,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         },
         {
             "comment": 'test for if the XML file has no version it will use lax data',
-            "article_xml_filenames": ['elife-15747.xml'],
+            "outbox_filenames": ['elife-15747.xml'],
             "ftp_files_return_value": True,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
@@ -129,15 +125,14 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                 ]
         },
     )
-    def test_do_activity(self, test_data, fake_download_files_from_s3_outbox, fake_get_outbox_s3_key_names,
-                         fake_ftp_files_to_endpoint,
-                         fake_clean_outbox, fake_upload_pubmed_xml_to_s3, fake_lax_provider_article_versions,
-                         fake_elife_add_email_to_email_queue):
-        # copy XML files into the input directory
-        for article_xml in test_data.get("article_xml_filenames"):
-            fake_download_files_from_s3_outbox = self.fake_download_files_from_s3_outbox(article_xml)
+    def test_do_activity(self, test_data, fake_list_resources, fake_storage_context, fake_get_outbox_s3_key_names,
+                         fake_ftp_files_to_endpoint, fake_clean_outbox, fake_upload_pubmed_xml_to_s3,
+                         fake_lax_provider_article_versions, fake_elife_add_email_to_email_queue):
+        # copy XML files into the input directory using the storage context
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = test_data.get("outbox_filenames")
         # set some return values for the mocks
-        fake_get_outbox_s3_key_names.return_value = test_data.get("article_xml_filenames")
+        fake_get_outbox_s3_key_names.return_value = test_data.get("outbox_filenames")
         # lax data overrides
         fake_lax_provider_article_versions.return_value = 200, test_data.get("article_versions_data")
         # ftp
@@ -170,6 +165,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                         'failed in {comment}: {expected} not found in pubmed_xml {path}'.format(
                             comment=test_data.get("comment"), expected=expected,
                             path=pubmed_xml_filename_path))
+        # clean directory after each test
+        self.activity.clean_tmp_dir()
 
     @data(
         {

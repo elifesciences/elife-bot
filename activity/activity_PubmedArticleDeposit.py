@@ -19,6 +19,7 @@ import provider.article as articlelib
 import provider.s3lib as s3lib
 from provider.ftp import FTP
 import provider.lax_provider as lax_provider
+from provider.storage_provider import storage_context
 from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
 
@@ -130,38 +131,28 @@ class activity_PubmedArticleDeposit(activity.activity):
     def download_files_from_s3_outbox(self):
         """
         Connect to the S3 bucket, and from the outbox folder,
-        download the .xml and .pdf files to be bundled.
+        download the .xml files
         """
-        file_extensions = []
-        file_extensions.append(".xml")
-
         bucket_name = self.publish_bucket
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + bucket_name + "/" + self.outbox_folder
+        files_in_bucket = storage.list_resources(orig_resource)
 
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=self.outbox_folder,
-            file_extensions=file_extensions)
-
-        for name in s3_key_names:
+        for name in files_in_bucket:
             # Download objects from S3 and save to disk
-            s3_key = bucket.get_key(name)
-
+            # Only need to copy .xml files
+            if not re.search(".*\\.xml$", name):
+                continue
             filename = name.split("/")[-1]
+            dirname = os.path.join(self.get_tmp_dir(), self.INPUT_DIR)
+            if dirname:
+                filename_plus_path = dirname + os.sep + filename
+                with open(filename_plus_path, 'wb') as open_file:
+                    storage_resource_origin = orig_resource + name
+                    storage.get_resource_to_file(storage_resource_origin, open_file)
 
-            # Save .xml and .pdf to different folders
-            if re.search(".*\\.xml$", name):
-                dirname =  os.path.join(self.get_tmp_dir(), self.INPUT_DIR)
-
-            filename_plus_path = dirname + os.sep + filename
-            mode = "wb"
-            f = open(filename_plus_path, mode)
-            s3_key.get_contents_to_file(f)
-            f.close()
 
     def elifepubmed_config(self, config_section):
         "parse the config values from the elifepubmed config"
