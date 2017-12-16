@@ -41,12 +41,10 @@ class TestPubmedArticleDeposit(unittest.TestCase):
 
 
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
+    @patch.object(lax_provider, 'article_versions')
     @patch.object(activity_PubmedArticleDeposit, 'upload_pubmed_xml_to_s3')
     @patch.object(activity_PubmedArticleDeposit, 'clean_outbox')
     @patch.object(activity_PubmedArticleDeposit, 'ftp_files_to_endpoint')
-    @patch.object(lax_provider, 'was_ever_poa')
-    @patch.object(lax_provider, 'published_considering_poa_status')
-    @patch.object(lax_provider, 'article_highest_version')
     @patch.object(activity_PubmedArticleDeposit, 'get_outbox_s3_key_names')
     @patch.object(activity_PubmedArticleDeposit, 'download_files_from_s3_outbox')
     @data(
@@ -54,9 +52,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "comment": 'example PoA file will have an aheadofprint',
             "article_xml_filenames": ['elife-29353-v1.xml'],
             "ftp_files_return_value": True,
-            "was_ever_poa": True,
-            "published": True,
-            "highest_version": 1,
+            "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
             "expected_approve_status": True,
             "expected_generate_status": True,
@@ -74,9 +70,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "comment": 'example VoR file will have a Replaces tag',
             "article_xml_filenames": ['elife-15747-v2.xml'],
             "ftp_files_return_value": True,
-            "was_ever_poa": False,
-            "published": True,
-            "highest_version": 2,
+            "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
             "expected_approve_status": True,
             "expected_generate_status": True,
@@ -96,9 +90,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "comment": 'test for if the article is published False (not published yet)',
             "article_xml_filenames": ['elife-15747-v2.xml'],
             "ftp_files_return_value": True,
-            "was_ever_poa": False,
-            "published": False,
-            "highest_version": 1,
+            "article_versions_data": [],
             "expected_result": True,
             "expected_approve_status": False,
             "expected_generate_status": False,
@@ -111,9 +103,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "comment": 'test for if FTP status is False',
             "article_xml_filenames": ['elife-15747-v2.xml'],
             "ftp_files_return_value": False,
-            "was_ever_poa": False,
-            "published": True,
-            "highest_version": 2,
+            "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": False,
             "expected_approve_status": True,
             "expected_generate_status": True,
@@ -122,11 +112,26 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "expected_activity_status": False,
             "expected_file_count": 1,
         },
+        {
+            "comment": 'test for if the XML file has no version it will use lax data',
+            "article_xml_filenames": ['elife-15747.xml'],
+            "ftp_files_return_value": True,
+            "article_versions_data": test_case_data.lax_article_versions_response_data,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": True,
+            "expected_ftp_status": True,
+            "expected_activity_status": True,
+            "expected_file_count": 1,
+            "expected_pubmed_xml_contains": [
+                '<Replaces IdType="doi">10.7554/eLife.15747</Replaces>'
+                ]
+        },
     )
     def test_do_activity(self, test_data, fake_download_files_from_s3_outbox, fake_get_outbox_s3_key_names,
-                         fake_article_highest_version, fake_published_considering_poa_status, fake_was_ever_poa,
                          fake_ftp_files_to_endpoint,
-                         fake_clean_outbox, fake_upload_pubmed_xml_to_s3,
+                         fake_clean_outbox, fake_upload_pubmed_xml_to_s3, fake_lax_provider_article_versions,
                          fake_elife_add_email_to_email_queue):
         # copy XML files into the input directory
         for article_xml in test_data.get("article_xml_filenames"):
@@ -134,9 +139,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         # set some return values for the mocks
         fake_get_outbox_s3_key_names.return_value = test_data.get("article_xml_filenames")
         # lax data overrides
-        fake_was_ever_poa.return_value = test_data.get("was_ever_poa")
-        fake_published_considering_poa_status.return_value = test_data.get("published")
-        fake_article_highest_version.return_value = test_data.get("highest_version")
+        fake_lax_provider_article_versions.return_value = 200, test_data.get("article_versions_data")
         # ftp
         fake_ftp_files_to_endpoint.return_value = test_data.get("ftp_files_return_value")
         # do the activity
