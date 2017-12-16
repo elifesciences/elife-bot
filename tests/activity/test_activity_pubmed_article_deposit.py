@@ -180,7 +180,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         }
     )
     def test_parse_article_xml(self, test_data):
-        source_doc = "tests/test_data/pubmed/" + test_data.get('article_xml')
+        source_doc = "tests/files_source/pubmed/outbox/" + test_data.get('article_xml')
         article = self.activity.parse_article_xml(source_doc)
         if test_data.get('expected_article') is None:
             self.assertEqual(article, test_data.get('expected_article'),
