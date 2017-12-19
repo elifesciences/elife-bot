@@ -325,6 +325,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         article_object = article()
         article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
+        article_object.pdf_cover_link = "https://localhost.org/download-your-cover/00353"
         article_type = article_object.article_type
         feature_article = True
         related_insight_article = None
@@ -335,7 +336,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         format = "html"
 
-        expected_body = 'Header\n<p>Dear Features</p>\n"A good life"\n<a href="https://doi.org/10.7554/eLife.00353">read it</a>\n<a href="http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2FeLife.00353+%40eLife">social media</a>\n<a href="https://lens.elifesciences.org/00353">online viewer</a>\n\nauthor01@example.com\n\nauthor02@example.org\n\nauthor03@example.com\n'
+        expected_body = 'Header\n<p>Dear Features</p>\n"A good life"\n<a href="https://doi.org/10.7554/eLife.00353">read it</a>\n<a href="http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2FeLife.00353+%40eLife">social media</a>\n<a href="https://lens.elifesciences.org/00353">online viewer</a>\n<a href="https://localhost.org/download-your-cover/00353">pdf cover</a>\n\nauthor01@example.com\n\nauthor02@example.org\n\nauthor03@example.com\n'
 
         body = self.activity.templates.get_email_body(
             email_type=email_type,
@@ -345,6 +346,14 @@ class TestPublicationEmail(unittest.TestCase):
             format=format)
 
         self.assertEqual(body, expected_body)
+
+    def test_get_pdf_cover_page(self):
+
+        article_object = article()
+        article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
+        article_object.pdf_cover_link = article_object.get_pdf_cover_page(article_object.doi_id, self.activity.settings, self.activity.logger)
+        self.assertEqual(article_object.pdf_cover_link, "https://localhost.org/download-your-cover/00353")
+
 
     @patch.object(activity_PublicationEmail, 'queue_author_email')
     def test_send_email_bad_authors(self, fake_queue_author_email):
