@@ -11,12 +11,8 @@ from collections import namedtuple
 
 import activity
 
-import boto.s3
-from boto.s3.connection import S3Connection
-
 import provider.simpleDB as dblib
 import provider.article as articlelib
-import provider.s3lib as s3lib
 from provider.ftp import FTP
 import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
@@ -376,18 +372,17 @@ class activity_PubmedArticleDeposit(activity.activity):
 
         bucket_name = self.publish_bucket
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
 
         date_folder_name = self.date_stamp
-        s3_folder_name = self.published_folder + '/' + date_folder_name + "/" + "batch/"
+        s3_folder_name = self.published_folder + '/' + date_folder_name + "/" + "batch"
 
         for xml_file in xml_files:
-            s3key = boto.s3.key.Key(bucket)
-            s3key.key = s3_folder_name + self.get_filename_from_path(xml_file, '.xml') + '.xml'
-            s3key.set_contents_from_filename(xml_file, replace=True)
+            resource_dest = (storage_provider + bucket_name + "/" +
+                             s3_folder_name + "/" +
+                             self.get_filename_from_path(xml_file, '.xml') + '.xml')
+            storage.set_resource_from_filename(resource_dest, xml_file)
 
     def add_email_to_queue(self):
         """
