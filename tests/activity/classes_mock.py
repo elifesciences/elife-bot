@@ -116,6 +116,9 @@ class FakeStorageContext:
     def copy_resource(self, origin, destination, additional_dict_metadata=None):
         pass
 
+    def delete_resource(self, resource):
+        pass
+
     def get_resource_to_file_pointer(self, resource, file_path):
         return None
 

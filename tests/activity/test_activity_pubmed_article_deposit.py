@@ -38,7 +38,6 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch.object(lax_provider, 'article_versions')
     @patch.object(activity_PubmedArticleDeposit, 'upload_pubmed_xml_to_s3')
-    @patch.object(activity_PubmedArticleDeposit, 'clean_outbox')
     @patch.object(activity_PubmedArticleDeposit, 'ftp_files_to_endpoint')
     @patch('activity.activity_PubmedArticleDeposit.storage_context')
     @patch.object(FakeStorageContext, 'list_resources')
@@ -125,13 +124,11 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         },
     )
     def test_do_activity(self, test_data, fake_list_resources, fake_storage_context,
-                         fake_ftp_files_to_endpoint, fake_clean_outbox, fake_upload_pubmed_xml_to_s3,
+                         fake_ftp_files_to_endpoint, fake_upload_pubmed_xml_to_s3,
                          fake_lax_provider_article_versions, fake_elife_add_email_to_email_queue):
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
         fake_list_resources.return_value = test_data.get("outbox_filenames")
-        # set some return values for the mocks
-
         # lax data overrides
         fake_lax_provider_article_versions.return_value = 200, test_data.get("article_versions_data")
         # ftp
@@ -151,7 +148,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         # check the outbox_s3_key_names values
         self.assertEqual(self.activity.outbox_s3_key_names,
-                         [self.activity.outbox_folder + file for file in test_data.get("outbox_filenames")],
+                         [self.activity.outbox_folder + '/' + filename
+                          for filename in test_data.get("outbox_filenames")],
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         # Count PubMed XML file in the tmp directory
         file_count = len(os.listdir(self.tmp_dir()))

@@ -57,8 +57,8 @@ class activity_PubmedArticleDeposit(activity.activity):
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
-        self.outbox_folder = "pubmed/outbox/"
-        self.published_folder = "pubmed/published/"
+        self.outbox_folder = "pubmed/outbox"
+        self.published_folder = "pubmed/published"
 
         # Track the success of some steps
         self.activity_status = None
@@ -153,7 +153,7 @@ class activity_PubmedArticleDeposit(activity.activity):
             if dirname:
                 filename_plus_path = dirname + os.sep + filename
                 with open(filename_plus_path, 'wb') as open_file:
-                    storage_resource_origin = orig_resource + name
+                    storage_resource_origin = orig_resource + '/' + name
                     storage.get_resource_to_file(storage_resource_origin, open_file)
 
 
@@ -212,6 +212,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         """
         Using the POA generatePubMedXml module
         """
+        generate_status = None
         article_xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.INPUT_DIR) + "/*.xml")
 
         for xml_file in article_xml_files:
@@ -318,9 +319,11 @@ class activity_PubmedArticleDeposit(activity.activity):
         storage_provider = self.settings.storage_provider + "://"
         orig_resource = storage_provider + bucket_name + "/" + self.outbox_folder
         files_in_bucket = storage.list_resources(orig_resource)
-
         # add the prefix back to the file name to set the value
-        self.outbox_s3_key_names = [self.outbox_folder + file for file in files_in_bucket]
+        # and ignore the original folder name
+        self.outbox_s3_key_names = [self.outbox_folder + '/' + filename
+                                    for filename in files_in_bucket
+                                    if filename != '']
 
         return self.outbox_s3_key_names
 
@@ -332,7 +335,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         to_folder = None
 
         date_folder_name = self.date_stamp
-        to_folder = self.published_folder + date_folder_name + "/"
+        to_folder = self.published_folder + "/" + date_folder_name + "/"
 
         return to_folder
 
@@ -343,42 +346,27 @@ class activity_PubmedArticleDeposit(activity.activity):
         # Save the list of outbox contents to report on later
         outbox_s3_key_names = self.get_outbox_s3_key_names()
 
-        to_folder = self.get_to_folder_name()
-
         # Move only the published files from the S3 outbox to the published folder
         bucket_name = self.publish_bucket
+        to_folder = self.get_to_folder_name()
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
 
         # Concatenate the expected S3 outbox file names
         s3_key_names = []
         for name in self.article_published_file_names:
             filename = name.split(os.sep)[-1]
-            s3_key_name = self.outbox_folder + filename
+            s3_key_name = self.outbox_folder + '/' + filename
             s3_key_names.append(s3_key_name)
 
         for name in s3_key_names:
-            # Download objects from S3 and save to disk
-
-            # Do not delete the from_folder itself, if it is in the list
-            if name != self.outbox_folder:
-                filename = name.split("/")[-1]
-                new_s3_key_name = to_folder + filename
-
-                # First copy
-                new_s3_key = None
-                try:
-                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
-                except:
-                    pass
-
-                # Then delete the old key if successful
-                if isinstance(new_s3_key, boto.s3.key.Key):
-                    old_s3_key = bucket.get_key(name)
-                    old_s3_key.delete()
+            filename = name.split("/")[-1]
+            orig_resource = storage_provider + bucket_name + "/" + name
+            dest_resource = storage_provider + bucket_name + "/" + to_folder + filename
+            storage.copy_resource(orig_resource, dest_resource)
+            # Then delete the old key
+            storage.delete_resource(orig_resource)
 
     def upload_pubmed_xml_to_s3(self):
         """
@@ -394,7 +382,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         bucket = s3_conn.lookup(bucket_name)
 
         date_folder_name = self.date_stamp
-        s3_folder_name = self.published_folder + date_folder_name + "/" + "batch/"
+        s3_folder_name = self.published_folder + '/' + date_folder_name + "/" + "batch/"
 
         for xml_file in xml_files:
             s3key = boto.s3.key.Key(bucket)
