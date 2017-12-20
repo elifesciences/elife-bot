@@ -40,7 +40,6 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     @patch.object(activity_PubmedArticleDeposit, 'upload_pubmed_xml_to_s3')
     @patch.object(activity_PubmedArticleDeposit, 'clean_outbox')
     @patch.object(activity_PubmedArticleDeposit, 'ftp_files_to_endpoint')
-    @patch.object(activity_PubmedArticleDeposit, 'get_outbox_s3_key_names')
     @patch('activity.activity_PubmedArticleDeposit.storage_context')
     @patch.object(FakeStorageContext, 'list_resources')
     @data(
@@ -125,14 +124,14 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                 ]
         },
     )
-    def test_do_activity(self, test_data, fake_list_resources, fake_storage_context, fake_get_outbox_s3_key_names,
+    def test_do_activity(self, test_data, fake_list_resources, fake_storage_context,
                          fake_ftp_files_to_endpoint, fake_clean_outbox, fake_upload_pubmed_xml_to_s3,
                          fake_lax_provider_article_versions, fake_elife_add_email_to_email_queue):
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
         fake_list_resources.return_value = test_data.get("outbox_filenames")
         # set some return values for the mocks
-        fake_get_outbox_s3_key_names.return_value = test_data.get("outbox_filenames")
+
         # lax data overrides
         fake_lax_provider_article_versions.return_value = 200, test_data.get("article_versions_data")
         # ftp
@@ -149,6 +148,10 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         self.assertEqual(self.activity.publish_status, test_data.get("expected_publish_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
+        # check the outbox_s3_key_names values
+        self.assertEqual(self.activity.outbox_s3_key_names,
+                         [self.activity.outbox_folder + file for file in test_data.get("outbox_filenames")],
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         # Count PubMed XML file in the tmp directory
         file_count = len(os.listdir(self.tmp_dir()))

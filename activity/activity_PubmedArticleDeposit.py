@@ -84,6 +84,9 @@ class activity_PubmedArticleDeposit(activity.activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        # Get a list of outbox file names always
+        self.outbox_s3_key_names = self.get_outbox_s3_key_names()
+
         # Download the S3 objects
         self.download_files_from_s3_outbox()
 
@@ -301,7 +304,7 @@ class activity_PubmedArticleDeposit(activity.activity):
 
     def get_outbox_s3_key_names(self, force=None):
         """
-        Separately get a list of S3 key names form the outbox
+        Separately get a list of S3 key names from the outbox
         for reporting purposes, excluding the outbox folder itself
         """
 
@@ -311,22 +314,13 @@ class activity_PubmedArticleDeposit(activity.activity):
 
         bucket_name = self.publish_bucket
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + bucket_name + "/" + self.outbox_folder
+        files_in_bucket = storage.list_resources(orig_resource)
 
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=self.outbox_folder)
-
-        # Remove the outbox_folder from the list, if present
-        try:
-            s3_key_names.remove(self.outbox_folder)
-        except:
-            pass
-
-        self.outbox_s3_key_names = s3_key_names
+        # add the prefix back to the file name to set the value
+        self.outbox_s3_key_names = [self.outbox_folder + file for file in files_in_bucket]
 
         return self.outbox_s3_key_names
 
