@@ -40,7 +40,7 @@ class starter_IngestArticleZip():
         execution_start_to_close_timeout, \
         workflow_input = helper.set_workflow_information(self.const_name, "1", None, input,
                                                          info.file_name.replace('/', '_'),
-                                                         start_to_close_timeout=str(60 * 60 * 5))
+                                                         start_to_close_timeout=str(60 * 60 * 1))
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
