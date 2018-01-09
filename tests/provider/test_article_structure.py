@@ -1,6 +1,7 @@
 import unittest
 from ddt import ddt, data, unpack
 from mock import patch
+from collections import OrderedDict
 from provider.article_structure import ArticleInfo
 import provider.article_structure as article_structure
 from tests.activity.classes_mock import FakeBucket
@@ -13,6 +14,48 @@ class TestArticleStructure(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
+
+    @unpack
+    @data(
+        {
+            'full_filename': 'elife-07702-vor-r4.zip',
+            'attrs': OrderedDict([
+                ('filename', 'elife-07702-vor-r4'),
+                ('extension', 'zip'),
+                ('status', 'vor'),
+                ('is_article_zip', True),
+                ('journal', 'elife'),
+                ('article_id', '07702'),
+                ('versioned', False),
+                ('version', None),
+                ('extra_info', ['r4']),
+                ('file_type', 'ArticleZip')
+            ])
+        },
+        {
+            'full_filename': 'journal-test1-vor-r1.zip',
+            'attrs': OrderedDict([
+                ('filename', 'journal-test1-vor-r1'),
+                ('extension', 'zip'),
+                ('status', 'vor'),
+                ('is_article_zip', True),
+                ('journal', 'journal'),
+                ('article_id', 'test1'),
+                ('versioned', False),
+                ('version', None),
+                ('extra_info', ['r1']),
+                ('file_type', 'ArticleZip')
+            ])
+        },
+    )
+    def test_article_info(self, full_filename, attrs):
+        self.articleinfo = ArticleInfo(full_filename)
+        for attr, value in attrs.items():
+            info_value = getattr(self.articleinfo, attr)
+            self.assertEqual(info_value, value,
+                             '{attr} not equal for {full_filename}: {info_value} != value'.format(
+                                attr=attr, full_filename=full_filename, info_value=info_value,
+                                value=value))
 
     @unpack
     @data({'input': 'elife-07702-vor-r4.zip', 'expected': None},
