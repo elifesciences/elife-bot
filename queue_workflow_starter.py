@@ -106,11 +106,15 @@ def process_data_postperfectpublication(workflow_name, workflow_data):
     data = {'info': workflow_data }
     return data
 
+def process_data_pubmedarticledeposit(workflow_name, workflow_data):
+    data = {}
+    return data
 
 workflow_data_processors = {
     'IngestArticleZip': process_data_ingestarticlezip,
     'SilentCorrectionsIngest': process_data_ingestarticlezip,
-    'PostPerfectPublication': process_data_postperfectpublication
+    'PostPerfectPublication': process_data_postperfectpublication,
+    'PubmedArticleDeposit': process_data_pubmedarticledeposit
 }
 
 if __name__ == "__main__":
