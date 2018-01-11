@@ -112,15 +112,15 @@ class workflow_ProcessArticleZip(workflow.workflow):
                         "start_to_close_timeout": 60 * 5
                     },
                     {
-                        "activity_type": "PostEIFBridge",
-                        "activity_id": "PostEIFBridge",
+                        "activity_type": "PreparePostEIF",
+                        "activity_id": "PreparePostEIF",
                         "version": "1",
                         "input": data,
                         "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
+                        "heartbeat_timeout": 60 * 5,
+                        "schedule_to_close_timeout": 60 * 5,
                         "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
+                        "start_to_close_timeout": 60 * 5
                     },
 
                 ],
