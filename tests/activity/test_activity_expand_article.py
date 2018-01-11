@@ -87,13 +87,6 @@ class TestExpandArticle(unittest.TestCase):
             if not os.path.exists('tests/tmp/'+ testdata.ExpandArticle_path):
                 os.makedirs('tests/tmp/' + testdata.ExpandArticle_path)
 
-    def create_folder(self, folder):
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-
-    def delete_folder(self, folder):
-        os.rmdir(folder)
-
 
 
 if __name__ == '__main__':
