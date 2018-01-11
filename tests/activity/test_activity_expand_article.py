@@ -15,14 +15,12 @@ import helpers
 @ddt
 class TestExpandArticle(unittest.TestCase):
     def setUp(self):
-        self.create_folder(testdata.ExpandArticle_files_dest_folder)
         self.expandarticle = activity_ExpandArticle(settings_mock, None, None, None, None)
         self.create_temp_folder(testdata.ExpandArticle_path)
 
     def tearDown(self):
         helpers.delete_files_in_folder('tests/tmp', filter_out=['.keepme'])
         helpers.delete_files_in_folder(testdata.ExpandArticle_files_dest_folder)
-        helpers.delete_folder(testdata.ExpandArticle_files_dest_folder)
 
     @patch.object(activity_ExpandArticle, 'get_tmp_dir')
     @patch('activity.activity_ExpandArticle.get_session')
@@ -88,13 +86,6 @@ class TestExpandArticle(unittest.TestCase):
         if plus is not None:
             if not os.path.exists('tests/tmp/'+ testdata.ExpandArticle_path):
                 os.makedirs('tests/tmp/' + testdata.ExpandArticle_path)
-
-    def create_folder(self, folder):
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-
-    def delete_folder(self, folder):
-        os.rmdir(folder)
 
 
 
