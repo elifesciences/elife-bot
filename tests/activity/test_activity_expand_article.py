@@ -15,14 +15,12 @@ import helpers
 @ddt
 class TestExpandArticle(unittest.TestCase):
     def setUp(self):
-        self.create_folder(testdata.ExpandArticle_files_dest_folder)
         self.expandarticle = activity_ExpandArticle(settings_mock, None, None, None, None)
         self.create_temp_folder(testdata.ExpandArticle_path)
 
     def tearDown(self):
         helpers.delete_files_in_folder('tests/tmp', filter_out=['.keepme'])
         helpers.delete_files_in_folder(testdata.ExpandArticle_files_dest_folder)
-        helpers.delete_folder(testdata.ExpandArticle_files_dest_folder)
 
     @patch.object(activity_ExpandArticle, 'get_tmp_dir')
     @patch('activity.activity_ExpandArticle.get_session')
