@@ -69,6 +69,7 @@ data_ingested_lax = {
             "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
             "eif_location": "",
             "requested_action": "ingest",
+            "force": False,
             "message": None,
             "update_date": "2012-12-13T00:00:00Z"
         }
@@ -105,6 +106,7 @@ data_invalid_lax = {
             "expanded_folder": None,
             "eif_location": None,
             "requested_action": "publish",
+            "force": False,
             "message": "An error abc has occurred - everything is invalid",
             "update_date": None
         }
