@@ -31,10 +31,11 @@ class activity_PostEIFBridge(activity.activity):
     def do_activity(self, data=None):
         try:
 
-            article_path = data['article_path']
             article_id = data['article_id']
             version = data['version']
             run = data['run']
+            session = get_session(self.settings, data, run)
+            article_path = session.get_value('article_path')
             self.set_monitor_property(self.settings, article_id, 'path',
                                   article_path, 'text', version=version)
 
@@ -42,7 +43,7 @@ class activity_PostEIFBridge(activity.activity):
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF Bridge", "start",
                                 "Starting " + article_id)
 
-            published = data['published']
+            published = session.get_value('published')
 
             # assemble data to start post-publication workflow
             expanded_folder = data['expanded_folder']
