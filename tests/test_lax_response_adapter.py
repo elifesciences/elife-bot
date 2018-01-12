@@ -8,6 +8,7 @@ fake_token = json.dumps({u'status': u'vor',
                          u'expanded_folder': u'837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148',
                          u'eif_location': u'837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148/elife-837411455-v1.json',
                          u'version': u'1',
+                         u'force': False,
                          u'run': u'a8bb05df-2df9-4fce-8f9f-219aca0b0148'})
 
 fake_lax_message = json.dumps({"status": "published",
@@ -22,6 +23,7 @@ workflow_message_expected = {'workflow_data':
                                   'expanded_folder': u'837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148',
                                   'message': None,
                                   'requested_action': u'publish',
+                                  'force': False,
                                   'result': u'published',
                                   'run': u'a8bb05df-2df9-4fce-8f9f-219aca0b0148',
                                   'status': u'vor',
@@ -33,6 +35,7 @@ fake_token_269 = json.dumps({u'status': u'vor',
                          u'expanded_folder': u'00269.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148',
                          u'eif_location': u'00269.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148/elife-00269-v1.json',
                          u'version': u'1',
+                         u'force': False,
                          u'run': u'a8bb05df-2df9-4fce-8f9f-219aca0b0148'})
 
 fake_lax_message_269 = json.dumps({"status": "published",
@@ -47,6 +50,7 @@ workflow_message_expected_269 = {'workflow_data':
                                   'expanded_folder': u'00269.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148',
                                   'message': None,
                                   'requested_action': u'publish',
+                                  'force': False,
                                   'result': u'published',
                                   'run': u'a8bb05df-2df9-4fce-8f9f-219aca0b0148',
                                   'status': u'vor',

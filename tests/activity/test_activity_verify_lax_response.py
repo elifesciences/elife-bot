@@ -2,6 +2,7 @@ import unittest
 from activity.activity_VerifyLaxResponse import activity_VerifyLaxResponse
 import activity
 import settings_mock
+from classes_mock import FakeSession
 from ddt import ddt, data
 from mock import patch
 
@@ -23,12 +24,16 @@ class TestVerifyLaxResponse(unittest.TestCase):
             "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
             "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
             "requested_action": "ingest",
+            "force": False,
             "message": None,
             "update_date": "2012-12-13T00:00:00Z"
         })
+    @patch('activity.activity_VerifyLaxResponse.get_session')
     @patch.object(activity_VerifyLaxResponse, 'emit_monitor_event')
-    def test_do_activity(self, data, fake_emit_monitor):
+    def test_do_activity(self, data, fake_emit_monitor, fake_get_session):
         fake_emit_monitor.side_effect = fake_emit_monitor_event
+        fake_session = FakeSession({})
+        fake_get_session.return_value = fake_session
         result = self.verifylaxresponse.do_activity(data)
         fake_emit_monitor.assert_called_with(settings_mock,
                                              data["article_id"],
@@ -39,7 +44,39 @@ class TestVerifyLaxResponse(unittest.TestCase):
                                              " Finished Verification. Lax has responded with result: ingested."
                                              " Article: " + data["article_id"])
         self.assertEqual(result, self.verifylaxresponse.ACTIVITY_SUCCESS)
+        self.assertEqual(fake_session.get_value('published'), False)
 
+
+    @data({
+            "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
+            "article_id": "00353",
+            "result": "ingested",
+            "status": "vor",
+            "version": "1",
+            "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
+            "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
+            "requested_action": "ingest",
+            "force": True,
+            "message": None,
+            "update_date": "2012-12-13T00:00:00Z"
+        })
+    @patch('activity.activity_VerifyLaxResponse.get_session')
+    @patch.object(activity_VerifyLaxResponse, 'emit_monitor_event')
+    def test_do_activity_force_true(self, data, fake_emit_monitor, fake_get_session):
+        fake_emit_monitor.side_effect = fake_emit_monitor_event
+        fake_session = FakeSession({})
+        fake_get_session.return_value = fake_session
+        result = self.verifylaxresponse.do_activity(data)
+        fake_emit_monitor.assert_called_with(settings_mock,
+                                             data["article_id"],
+                                             data["version"],
+                                             data["run"],
+                                             "Verify Lax Response",
+                                             "end",
+                                             " Finished Verification. Lax has responded with result: ingested."
+                                             " Article: " + data["article_id"])
+        self.assertEqual(result, self.verifylaxresponse.ACTIVITY_SUCCESS)
+        self.assertEqual(fake_session.get_value('published'), True)
 
 
     @data({
@@ -51,12 +88,15 @@ class TestVerifyLaxResponse(unittest.TestCase):
             "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
             "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
             "requested_action": "ingest",
+            "force": False,
             "message": None,
             "update_date": "2012-12-13T00:00:00Z"
         })
+    @patch('activity.activity_VerifyLaxResponse.get_session')
     @patch.object(activity_VerifyLaxResponse, 'emit_monitor_event')
-    def test_do_activity_error_no_message(self, data, fake_emit_monitor):
+    def test_do_activity_error_no_message(self, data, fake_emit_monitor, fake_session):
         fake_emit_monitor.side_effect = fake_emit_monitor_event
+        fake_session.return_value = FakeSession({})
         result = self.verifylaxresponse.do_activity(data)
         fake_emit_monitor.assert_called_with(settings_mock,
                                              data["article_id"],
@@ -77,12 +117,15 @@ class TestVerifyLaxResponse(unittest.TestCase):
             "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
             "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
             "requested_action": "ingest",
+            "force": False,
             "message": "An error has occurred",
             "update_date": "2012-12-13T00:00:00Z"
         })
+    @patch('activity.activity_VerifyLaxResponse.get_session')
     @patch.object(activity_VerifyLaxResponse, 'emit_monitor_event')
-    def test_do_activity_error(self, data, fake_emit_monitor):
+    def test_do_activity_error(self, data, fake_emit_monitor, fake_session):
         fake_emit_monitor.side_effect = fake_emit_monitor_event
+        fake_session.return_value = FakeSession({})
         result = self.verifylaxresponse.do_activity(data)
         fake_emit_monitor.assert_called_with(settings_mock,
                                              data["article_id"],

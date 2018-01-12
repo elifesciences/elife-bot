@@ -83,6 +83,7 @@ class LaxResponseAdapter:
             expanded_folder = token['expanded_folder']
             status = token['status']
             eif_location = token['eif_location'] #support for old journal
+            force = token['force']
 
             workflow_data = {
                 "run": run,
@@ -94,7 +95,8 @@ class LaxResponseAdapter:
                 "result": result,
                 "message": response_message,
                 "update_date": date_time,
-                "requested_action": operation
+                "requested_action": operation,
+                "force": force
             }
 
             if operation == "ingest":
