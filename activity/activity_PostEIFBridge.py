@@ -31,10 +31,11 @@ class activity_PostEIFBridge(activity.activity):
     def do_activity(self, data=None):
         try:
 
-            article_path = data['article_path']
             article_id = data['article_id']
             version = data['version']
             run = data['run']
+            session = get_session(self.settings, data, run)
+            article_path = session.get_value('article_path')
             self.set_monitor_property(self.settings, article_id, 'path',
                                   article_path, 'text', version=version)
 
