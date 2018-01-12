@@ -19,7 +19,7 @@ class starter_SilentCorrectionsProcess():
     def __init__(self):
         self.const_name = "SilentCorrectionsProcess"
 
-    def start(self, settings, article_id, version, requested_action, result, expanded_folder, status, eif_location, run, update_date, message=None):
+    def start(self, settings, article_id, version, requested_action, force, result, expanded_folder, status, eif_location, run, update_date, message=None):
 
         # Log
         logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
