@@ -43,7 +43,7 @@ class activity_PostEIFBridge(activity.activity):
             self.emit_monitor_event(self.settings, article_id, version, run, "Post EIF Bridge", "start",
                                 "Starting " + article_id)
 
-            published = data['published']
+            published = session.get_value('published')
 
             # assemble data to start post-publication workflow
             expanded_folder = data['expanded_folder']
