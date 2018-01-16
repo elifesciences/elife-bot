@@ -3,6 +3,7 @@ from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 import requests
 from provider import eif as eif_provider
+from provider.execution_context import get_session
 
 """
 RewriteEIF.py activity
@@ -30,7 +31,8 @@ class activity_RewriteEIF(activity.activity):
         article_id = data['article_id']
         version = data['version']
         run = data['run']
-        eif_location = data['eif_location']
+        session = get_session(self.settings, data, run)
+        eif_location = session.get_value('eif_location')
         update_date = data['update_date']
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Rewrite EIF", "start",

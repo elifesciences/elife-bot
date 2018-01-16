@@ -40,13 +40,18 @@ class activity_VerifyLaxResponse(activity.activity):
         article_id = data['article_id']
         run = data['run']
         version = data['version']
+        force = data['force']
+        session = get_session(self.settings, data, run)
 
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
                                 "Starting verification of Lax response " + article_id)
 
         try:
             if data['result'] == "ingested":
-
+                if force is True:
+                    session.store_value('published', True)
+                else:
+                    session.store_value('published', False)
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                         " Finished Verification. Lax has responded with result: ingested."
                                         " Article: " + article_id)
