@@ -27,7 +27,7 @@ elifePipeline {
                     revision: commit,
                     folder: '/opt/elife-bot',
                 ],
-                marker: 'continuum'
+                marker: 'bot'
             )
         }
 
