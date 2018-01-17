@@ -72,6 +72,7 @@ class activity_ConvertImagesToJPG(activity.activity):
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                     "Finished converting images for " + article_id + ": " +
                                     str(len(figures)) + " images processed ")
+            self.clean_tmp_dir()
             return activity.activity.ACTIVITY_SUCCESS
 
         except Exception as e:
