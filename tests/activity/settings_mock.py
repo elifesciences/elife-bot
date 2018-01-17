@@ -136,3 +136,6 @@ PUBMED_FTP_CWD = ""
 # PDF cover
 pdf_cover_landing_page = "https://localhost.org/download-your-cover/"
 pdf_cover_generator = "https://localhost/personalised-covers/"
+
+elifepubmed_config_file = 'tests/activity/pubmed.cfg'
+elifepubmed_config_section = 'elife'

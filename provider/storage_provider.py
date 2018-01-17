@@ -123,6 +123,10 @@ class S3StorageContext:
 
         dest_bucket.copy_key(dest_key.name[1:], orig_bucket.name, orig_s3_key[1:], metadata=metadata)
 
+    def delete_resource(self, resource):
+        bucket, s3_key = self.s3_storage_objects(resource)
+        bucket.delete_key(s3_key)
+
     def get_bucket_from_cache(self, bucket_name):
 
         if bucket_name in self.context['buckets']:

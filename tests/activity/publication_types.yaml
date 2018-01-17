@@ -1,0 +1,40 @@
+---
+# matching patterns to choose a publication_type for an article
+#   article_type to match the article_type
+#   display_channel also match the display channel (optional)
+#   case_sensitive, if true, do case sensitive matches, otherwise case insensitive
+#   publication_type, to use as the PublicationType value in the PubMed deposit
+# the first rule that matches the criteria will be used
+-
+  article_type: correction
+  case_sensitive: false
+  publication_type: Published Erratum
+-
+  article_type: editorial
+  case_sensitive: false
+  publication_type: Editorial
+-
+  article_type: article-commentary
+  display_channel: insight
+  case_sensitive: false
+  publication_type: Editorial
+-
+  article_type: article-commentary
+  display_channel: feature article
+  case_sensitive: false
+  publication_type: Journal Article
+-
+  article_type: book-review
+  display_channel: feature article
+  case_sensitive: false
+  publication_type: Journal Article
+-
+  article_type: discussion
+  display_channel: feature article
+  case_sensitive: false
+  publication_type: Journal Article
+-
+# default
+  article_type: research-article
+  case_sensitive: false
+  publication_type: Journal Article

@@ -11,13 +11,13 @@ from collections import namedtuple
 
 import activity
 
-import boto.s3
-from boto.s3.connection import S3Connection
-
 import provider.simpleDB as dblib
 import provider.article as articlelib
-import provider.s3lib as s3lib
+from provider.ftp import FTP
 import provider.lax_provider as lax_provider
+from provider.storage_provider import storage_context
+from elifepubmed import generate
+from elifepubmed.conf import config, parse_raw_config
 
 """
 PubmedArticleDeposit activity
@@ -37,14 +37,9 @@ class activity_PubmedArticleDeposit(activity.activity):
         self.description = ("Download article XML from pubmed outbox, generate pubmed " +
                             "article XML, and deposit with pubmed.")
 
-        # Directory where POA library is stored
-        self.poa_lib_dir_name = "elife-poa-xml-generation"
-
-        # Where we specify the library to be imported
-        self.elife_poa_lib = None
-
-        # Import the libraries we will need
-        self.import_imports()
+        # Local directory settings
+        self.TMP_DIR = "tmp_dir"
+        self.INPUT_DIR = "input_dir"
 
         # Create output directories
         self.create_activity_directories()
@@ -58,8 +53,8 @@ class activity_PubmedArticleDeposit(activity.activity):
 
         # Bucket for outgoing files
         self.publish_bucket = settings.publishing_buckets_prefix + settings.poa_packaging_bucket
-        self.outbox_folder = "pubmed/outbox/"
-        self.published_folder = "pubmed/published/"
+        self.outbox_folder = "pubmed/outbox"
+        self.published_folder = "pubmed/published"
 
         # Track the success of some steps
         self.activity_status = None
@@ -72,9 +67,11 @@ class activity_PubmedArticleDeposit(activity.activity):
         self.outbox_s3_key_names = None
 
         # Track XML files selected for pubmed XML
-        self.xml_file_to_doi_map = {}
         self.article_published_file_names = []
         self.article_not_published_file_names = []
+
+        # Load the config
+        self.pubmed_config = self.elifepubmed_config(self.settings.elifepubmed_config_section)
 
     def do_activity(self, data=None):
         """
@@ -82,6 +79,9 @@ class activity_PubmedArticleDeposit(activity.activity):
         """
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+
+        # Get a list of outbox file names always
+        self.outbox_s3_key_names = self.get_outbox_s3_key_names()
 
         # Download the S3 objects
         self.download_files_from_s3_outbox()
@@ -93,27 +93,20 @@ class activity_PubmedArticleDeposit(activity.activity):
         self.approve_status = self.approve_for_publishing()
 
         if self.approve_status is True:
-            try:
-                # Publish files
-                self.ftp_files_to_endpoint(
-                    from_dir=self.elife_poa_lib.settings.TMP_DIR,
-                    file_type="/*.xml",
-                    sub_dir="")
-                self.ftp_status = True
-            except:
-                self.ftp_status = False
+            # Publish files
+            self.ftp_status = self.ftp_files_to_endpoint(
+                from_dir=os.path.join(self.get_tmp_dir(), self.TMP_DIR),
+                file_type="/*.xml")
 
-            if self.ftp_status is True:
-                # Clean up outbox
-                print "Moving files from outbox folder to published folder"
-                self.clean_outbox()
-                self.upload_pubmed_xml_to_s3()
-                self.outbox_status = True
-
-            if self.ftp_status is True:
-                self.publish_status = True
-            elif self.ftp_status is False:
-                self.publish_status = False
+        if self.ftp_status is True:
+            # Clean up outbox
+            print "Moving files from outbox folder to published folder"
+            self.clean_outbox()
+            self.upload_pubmed_xml_to_s3()
+            self.outbox_status = True
+            self.publish_status = True
+        elif self.ftp_status is False:
+            self.publish_status = False
 
         # Set the activity status of this activity based on successes
         if self.publish_status is not False:
@@ -126,10 +119,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         if len(self.article_published_file_names) > 0:
             self.add_email_to_queue()
 
-        # Return the activity result, True or False
-        result = True
-
-        return result
+        return self.activity_status
 
     def set_datestamp(self):
         a = arrow.utcnow()
@@ -140,78 +130,53 @@ class activity_PubmedArticleDeposit(activity.activity):
     def download_files_from_s3_outbox(self):
         """
         Connect to the S3 bucket, and from the outbox folder,
-        download the .xml and .pdf files to be bundled.
+        download the .xml files
         """
-        file_extensions = []
-        file_extensions.append(".xml")
-
         bucket_name = self.publish_bucket
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + bucket_name + "/" + self.outbox_folder
+        files_in_bucket = storage.list_resources(orig_resource)
 
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=self.outbox_folder,
-            file_extensions=file_extensions)
-
-        for name in s3_key_names:
+        for name in files_in_bucket:
             # Download objects from S3 and save to disk
-            s3_key = bucket.get_key(name)
-
-            filename = name.split("/")[-1]
-
-            # Save .xml and .pdf to different folders
-            if re.search(".*\\.xml$", name):
-                dirname = self.elife_poa_lib.settings.STAGING_TO_HW_DIR
-
-            filename_plus_path = dirname + os.sep + filename
-            mode = "wb"
-            f = open(filename_plus_path, mode)
-            s3_key.get_contents_to_file(f)
-            f.close()
-
-    def parse_article_xml(self, article_xml_files):
-        """
-        Given a list of article XML files, parse them into objects
-        and save the file name for later use
-        """
-
-        # For each article XML file, parse it and save the filename for later
-        articles = []
-        for article_xml in article_xml_files:
-            article_list = None
-            article_xml_list = [article_xml]
-            try:
-                # Convert the XML files to article objects
-                article_list = self.elife_poa_lib.parse.build_articles_from_article_xmls(
-                    article_xml_list)
-            except:
+            # Only need to copy .xml files
+            if not re.search(".*\\.xml$", name):
                 continue
+            filename = name.split("/")[-1]
+            dirname = os.path.join(self.get_tmp_dir(), self.INPUT_DIR)
+            if dirname:
+                filename_plus_path = dirname + os.sep + filename
+                with open(filename_plus_path, 'wb') as open_file:
+                    storage_resource_origin = orig_resource + '/' + name
+                    storage.get_resource_to_file(storage_resource_origin, open_file)
 
-            # Set the published date on v2, v3 etc. files
-            if article_xml.find('v') > -1:
-                article = None
-                if len(article_list) > 0:
-                    article = article_list[0]
 
-                pub_date_date = self.article.get_article_bucket_pub_date(article.doi, "poa")
+    def elifepubmed_config(self, config_section):
+        "parse the config values from the elifepubmed config"
+        config.read(self.settings.elifepubmed_config_file)
+        raw_config = config[config_section]
+        return parse_raw_config(raw_config)
 
-                if article is not None and pub_date_date is not None:
-                    # Emmulate the eLifeDate object use in the POA generation package
-                    eLifeDate = namedtuple("eLifeDate", "date_type date")
-                    pub_date = eLifeDate("pub", pub_date_date)
-                    article.add_date(pub_date)
-
-            if len(article_list) > 0:
+    def parse_article_xml(self, xml_file):
+        """
+        Given an article XML files, parse it into an article object
+        """
+        article = None
+        generate.TMP_DIR = os.path.join(self.get_tmp_dir(), self.TMP_DIR)
+        try:
+            # Convert the XML file to article objects
+            article_list = generate.build_articles(
+                article_xmls=[xml_file],
+                build_parts=self.pubmed_config.get('build_parts'))
+            # take the first article from the list
+            if article_list:
                 article = article_list[0]
-                articles.append(article)
-                # Add article to the DOI to file name map
-                self.xml_file_to_doi_map[article.doi] = article_xml
+        except:
+            article = None 
 
-        return articles
+        return article
 
     def get_article_version_from_lax(self, article_id):
         """
@@ -222,65 +187,59 @@ class activity_PubmedArticleDeposit(activity.activity):
             return "-1"
         return version
 
+    def enhance_article(self, article):
+        "set additional details on the article object from Lax data or other sources"
+
+        article.was_ever_poa = lax_provider.was_ever_poa(article.manuscript, self.settings)
+
+        # Check if each article is published
+        article.is_published = lax_provider.published_considering_poa_status(
+            article_id=article.manuscript,
+            settings=self.settings,
+            is_poa=article.is_poa,
+            was_ever_poa=article.was_ever_poa)
+
+        if not article.version:
+            article.version = self.get_article_version_from_lax(article.manuscript)
+
+        return article
+
     def generate_pubmed_xml(self):
         """
         Using the POA generatePubMedXml module
         """
-        article_xml_files = glob.glob(self.elife_poa_lib.settings.STAGING_TO_HW_DIR + "/*.xml")
+        generate_status = None
+        article_xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.INPUT_DIR) + "/*.xml")
 
-        articles = self.parse_article_xml(article_xml_files)
+        for xml_file in article_xml_files:
+            generate_status = True
 
-        # For each VoR article, set was_ever_poa property
-        published_articles = []
+            article = self.parse_article_xml(xml_file)
 
-        for article in articles:
+            if article is None:
+                self.article_not_published_file_names.append(xml_file)
+                continue
 
-            xml_file_name = self.xml_file_to_doi_map[article.doi]
+            article = self.enhance_article(article)
 
-            article_id = self.article.get_doi_id(article.doi)
-
-            # Check if article was ever poa
-            # Must be set to True or False to get it published
-            if article.doi and article.doi == '10.7554/eLife.11190':
-                # Edge case, ignore this article PoA
-                article.was_ever_poa = False
-            else:
-                article.was_ever_poa = lax_provider.was_ever_poa(article_id, self.settings)
-
-            # Check if each article is published
-            is_published = lax_provider.published_considering_poa_status(
-                article_id=article_id,
-                settings=self.settings,
-                is_poa=article.is_poa,
-                was_ever_poa=article.was_ever_poa)
-
-            if is_published is True:
-
-                # Try to add the article version if in lax
+            if article.is_published is True:
+                # generate pubmed deposit
                 try:
-                    version = self.get_article_version_from_lax(article_id)
+                    generate.pubmed_xml_to_disk(
+                        [article], config_section=self.settings.elifepubmed_config_section)
                 except:
-                    version = None
-                if version and version > 0:
-                    article.version = version
+                    generate_status = False
+            else:
+                generate_status = False
 
-                # Add published article object to be processed
-                published_articles.append(article)
-
+            if generate_status is True:
                 # Add filename to the list of published files
-                self.article_published_file_names.append(xml_file_name)
+                self.article_published_file_names.append(xml_file)
             else:
                 # Add the file to the list of not published articles, may be used later
-                self.article_not_published_file_names.append(xml_file_name)
+                self.article_not_published_file_names.append(xml_file)
 
-        # Will write the XML to the TMP_DIR
-        if len(published_articles) > 0:
-            try:
-                self.elife_poa_lib.generate.build_pubmed_xml_for_articles(published_articles)
-            except:
-                return False
-
-        return True
+        return generate_status
 
     def approve_for_publishing(self):
         """
@@ -289,7 +248,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         status = None
 
         # Check for empty directory
-        xml_files = glob.glob(self.elife_poa_lib.settings.TMP_DIR + "/*.xml")
+        xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.TMP_DIR) + "/*.xml")
         if len(xml_files) <= 0:
             status = False
         else:
@@ -312,18 +271,37 @@ class activity_PubmedArticleDeposit(activity.activity):
 
         return filename
 
-    def ftp_files_to_endpoint(self, from_dir, file_type, sub_dir=None):
+    def ftp_files_to_endpoint(self, from_dir, file_type):
         """
-        Using the POA module, FTP files to endpoint
+        FTP files to endpoint
         as specified by the file_type to use in the glob
         e.g. "/*.zip"
         """
-        zipfiles = glob.glob(from_dir + file_type)
-        self.elife_poa_lib.ftp.ftp_to_endpoint(zipfiles, sub_dir)
+        ftp_status = None
+        try:
+            ftp_provider = FTP()
+            ftp_instance = ftp_provider.ftp_connect(
+                uri=self.settings.PUBMED_FTP_URI,
+                username=self.settings.PUBMED_FTP_USERNAME,
+                password=self.settings.PUBMED_FTP_PASSWORD
+            )
+            # collect the list of files
+            zipfiles = glob.glob(from_dir + file_type)
+            # transfer them by FTP to the endpoint
+            ftp_provider.ftp_to_endpoint(
+                ftp_instance=ftp_instance,
+                uploadfiles=zipfiles,
+                sub_dir_list=[self.settings.PUBMED_FTP_CWD])
+            # disconnect the FTP connection
+            ftp_provider.ftp_disconnect(ftp_instance)
+            ftp_status = True
+        except:
+            ftp_status = False
+        return ftp_status
 
     def get_outbox_s3_key_names(self, force=None):
         """
-        Separately get a list of S3 key names form the outbox
+        Separately get a list of S3 key names from the outbox
         for reporting purposes, excluding the outbox folder itself
         """
 
@@ -333,22 +311,15 @@ class activity_PubmedArticleDeposit(activity.activity):
 
         bucket_name = self.publish_bucket
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=self.outbox_folder)
-
-        # Remove the outbox_folder from the list, if present
-        try:
-            s3_key_names.remove(self.outbox_folder)
-        except:
-            pass
-
-        self.outbox_s3_key_names = s3_key_names
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + bucket_name + "/" + self.outbox_folder
+        files_in_bucket = storage.list_resources(orig_resource)
+        # add the prefix back to the file name to set the value
+        # and ignore the original folder name
+        self.outbox_s3_key_names = [self.outbox_folder + '/' + filename
+                                    for filename in files_in_bucket
+                                    if filename != '']
 
         return self.outbox_s3_key_names
 
@@ -360,7 +331,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         to_folder = None
 
         date_folder_name = self.date_stamp
-        to_folder = self.published_folder + date_folder_name + "/"
+        to_folder = self.published_folder + "/" + date_folder_name + "/"
 
         return to_folder
 
@@ -371,63 +342,47 @@ class activity_PubmedArticleDeposit(activity.activity):
         # Save the list of outbox contents to report on later
         outbox_s3_key_names = self.get_outbox_s3_key_names()
 
-        to_folder = self.get_to_folder_name()
-
         # Move only the published files from the S3 outbox to the published folder
         bucket_name = self.publish_bucket
+        to_folder = self.get_to_folder_name()
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
 
         # Concatenate the expected S3 outbox file names
         s3_key_names = []
         for name in self.article_published_file_names:
             filename = name.split(os.sep)[-1]
-            s3_key_name = self.outbox_folder + filename
+            s3_key_name = self.outbox_folder + '/' + filename
             s3_key_names.append(s3_key_name)
 
         for name in s3_key_names:
-            # Download objects from S3 and save to disk
-
-            # Do not delete the from_folder itself, if it is in the list
-            if name != self.outbox_folder:
-                filename = name.split("/")[-1]
-                new_s3_key_name = to_folder + filename
-
-                # First copy
-                new_s3_key = None
-                try:
-                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
-                except:
-                    pass
-
-                # Then delete the old key if successful
-                if isinstance(new_s3_key, boto.s3.key.Key):
-                    old_s3_key = bucket.get_key(name)
-                    old_s3_key.delete()
+            filename = name.split("/")[-1]
+            orig_resource = storage_provider + bucket_name + "/" + name
+            dest_resource = storage_provider + bucket_name + "/" + to_folder + filename
+            storage.copy_resource(orig_resource, dest_resource)
+            # Then delete the old key
+            storage.delete_resource(orig_resource)
 
     def upload_pubmed_xml_to_s3(self):
         """
         Upload a copy of the pubmed XML to S3 for reference
         """
-        xml_files = glob.glob(self.elife_poa_lib.settings.TMP_DIR + "/*.xml")
+        xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.TMP_DIR) + "/*.xml")
 
         bucket_name = self.publish_bucket
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
 
         date_folder_name = self.date_stamp
-        s3_folder_name = self.published_folder + date_folder_name + "/" + "batch/"
+        s3_folder_name = self.published_folder + '/' + date_folder_name + "/" + "batch"
 
         for xml_file in xml_files:
-            s3key = boto.s3.key.Key(bucket)
-            s3key.key = s3_folder_name + self.get_filename_from_path(xml_file, '.xml') + '.xml'
-            s3key.set_contents_from_filename(xml_file, replace=True)
+            resource_dest = (storage_provider + bucket_name + "/" +
+                             s3_folder_name + "/" +
+                             self.get_filename_from_path(xml_file, '.xml') + '.xml')
+            storage.set_resource_from_filename(resource_dest, xml_file)
 
     def add_email_to_queue(self):
         """
@@ -566,80 +521,13 @@ class activity_PubmedArticleDeposit(activity.activity):
 
         return body
 
-    def import_imports(self):
-        """
-        Customised importing of the external library
-        to override the settings
-        MUST load settings module first, override the values
-        BEFORE loading anything else, or the override will not take effect
-        """
-
-        # Load the files from parent directory - hellish imports but they
-        #  seem to work now
-        dir_name = self.poa_lib_dir_name
-
-        self.import_poa_lib(dir_name)
-        self.override_poa_settings(dir_name)
-        self.import_poa_modules(dir_name)
-
-    def import_poa_lib(self, dir_name):
-        """
-        POA lib import Step 1: import external library by directory name
-        """
-        self.elife_poa_lib = __import__(dir_name)
-        self.reload_module(self.elife_poa_lib)
-
-    def override_poa_settings(self, dir_name):
-        """
-        POA lib import Step 2: import settings modules then override
-        """
-
-        # Load external library settings
-        importlib.import_module(dir_name + ".settings")
-        # Reload the module fresh, so original directory names are reset
-        self.reload_module(self.elife_poa_lib.settings)
-
-        settings = self.elife_poa_lib.settings
-
-        # Override the settings
-        settings.STAGING_TO_HW_DIR = self.get_tmp_dir() + os.sep + settings.STAGING_TO_HW_DIR
-        settings.TMP_DIR = self.get_tmp_dir() + os.sep + settings.TMP_DIR
-
-        # Override the FTP settings with the bot environment settings
-        settings.FTP_URI = self.settings.PUBMED_FTP_URI
-        settings.FTP_USERNAME = self.settings.PUBMED_FTP_USERNAME
-        settings.FTP_PASSWORD = self.settings.PUBMED_FTP_PASSWORD
-        settings.FTP_CWD = self.settings.PUBMED_FTP_CWD
-
-    def import_poa_modules(self, dir_name="elife-poa-xml-generation"):
-        """
-        POA lib import Step 3: import modules now that settings are overridden
-        """
-
-        # Now we can continue with imports
-        self.elife_poa_lib.parse = importlib.import_module(dir_name + ".parsePoaXml")
-        self.reload_module(self.elife_poa_lib.parse)
-        self.elife_poa_lib.generate = importlib.import_module(dir_name + ".generatePubMedXml")
-        self.reload_module(self.elife_poa_lib.generate)
-        self.elife_poa_lib.ftp = importlib.import_module(dir_name + ".ftp_to_highwire")
-        self.reload_module(self.elife_poa_lib.ftp)
-
-    def reload_module(self, module):
-        """
-        Attempt to reload an imported module to reset it
-        """
-        try:
-            reload(module)
-        except:
-            pass
-
     def create_activity_directories(self):
         """
         Create the directories in the activity tmp_dir
         """
 
         try:
-            os.mkdir(self.elife_poa_lib.settings.STAGING_TO_HW_DIR)
-            os.mkdir(self.elife_poa_lib.settings.TMP_DIR)
+            os.mkdir(os.path.join(self.get_tmp_dir(), self.TMP_DIR))
+            os.mkdir(os.path.join(self.get_tmp_dir(), self.INPUT_DIR))
         except OSError:
             pass
