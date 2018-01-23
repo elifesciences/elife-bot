@@ -25,6 +25,7 @@ class TestReadyToPublish(unittest.TestCase):
     @patch.object(activity_ReadyToPublish, 'emit_monitor_event')
     def test_ready_to_publish(self, fake_emit_monitor, fake_session, fake_prepare):
         fake_session.return_value = FakeSession(session_example)
+        fake_prepare.side_effect = MagicMock()
         result = self.readytopublish.do_activity(test_data)
         self.assertEqual(result, self.readytopublish.ACTIVITY_SUCCESS)
 
