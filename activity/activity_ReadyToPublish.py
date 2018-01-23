@@ -21,7 +21,7 @@ class activity_ReadyToPublish(activity.activity):
     def do_activity(self, data=None):
 
         run = data['run']
-        session = get_session(data, run)
+        session = get_session(self.settings, data, run)
         version = session.get_value('version')
         article_id = session.get_value('article_id')
 
