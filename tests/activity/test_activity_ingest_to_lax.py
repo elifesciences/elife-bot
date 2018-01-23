@@ -8,7 +8,6 @@ from classes_mock import FakeLogger
 data_example = {
     "article_id": "00353",
     "update_date": "2016-10-05T10:31:54Z",
-    "eif_location": "",
     "expanded_folder": "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
     "message": None,
     "requested_action": "ingest",
@@ -67,7 +66,6 @@ class TestIngestToLax(unittest.TestCase):
                                     "status": data['status'],
                                     "version": data['version'],
                                     "expanded_folder": data['expanded_folder'],
-                                    "eif_location": "",
                                     "requested_action": "",
                                     "message": "",
                                     "update_date": data['update_date']

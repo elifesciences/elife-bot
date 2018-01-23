@@ -74,8 +74,6 @@ class activity_IngestToLax(activity.activity):
         article_id = data['article_id']
         status = data['status']
 
-        eif_location = "" #not available yet
-
         try:
             expanded_folder = data['expanded_folder']
 
@@ -95,7 +93,6 @@ class activity_IngestToLax(activity.activity):
                                 "status": status,
                                 "version": version,
                                 "expanded_folder": expanded_folder,
-                                "eif_location": "",
                                 "requested_action": "",
                                 "message": "",
                                 "update_date": data['update_date']
@@ -121,8 +118,7 @@ class activity_IngestToLax(activity.activity):
             force = True if ("force" in data and data["force"] == True) else False
 
             message = lax_provider.prepare_action_message(self.settings,
-                                                          article_id, run, expanded_folder, version, status,
-                                                          eif_location, 'ingest', force)
+                                                          article_id, run, expanded_folder, version, status, 'ingest', force)
 
             return (message, self.settings.xml_info_queue, start_event, "end",
                     [self.settings, article_id, version, run, self.pretty_name, "end",

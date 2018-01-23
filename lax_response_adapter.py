@@ -56,8 +56,7 @@ class LaxResponseAdapter:
                 "run": None,
                 "version": None,
                 "expanded_folder": None,
-                "status": None,
-                "eif_location": None
+                "status": None
             }
 
     def parse_message(self, message):
@@ -82,7 +81,6 @@ class LaxResponseAdapter:
             version = token['version']
             expanded_folder = token['expanded_folder']
             status = token['status']
-            eif_location = token['eif_location'] #support for old journal
             force = token['force']
 
             workflow_data = {
@@ -91,7 +89,6 @@ class LaxResponseAdapter:
                 "version": version,
                 "expanded_folder": expanded_folder,
                 "status": status, #vor/poa
-                "eif_location": eif_location,
                 "result": result,
                 "message": response_message,
                 "update_date": date_time,

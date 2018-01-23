@@ -54,7 +54,6 @@ data_published_lax = {
             "status": "vor",
             "version": "1",
             "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
             "requested_action": "publish",
             "message": None,
             "update_date": "2012-12-13T00:00:00Z"
@@ -67,7 +66,6 @@ data_ingested_lax = {
             "status": "vor",
             "version": "1",
             "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "eif_location": "",
             "requested_action": "ingest",
             "force": False,
             "message": None,
@@ -80,7 +78,6 @@ data_published_website = {
             "status": "vor",
             "version": "1",
             "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
             "update_date": "2012-12-13T00:00:00Z"
         }
 
@@ -91,7 +88,6 @@ data_error_lax = {
             "status": "vor",
             "version": "1",
             "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
             "requested_action": "publish",
             "message": "An error abc has occurred",
             "update_date": "2012-12-13T00:00:00Z"
@@ -104,7 +100,6 @@ data_invalid_lax = {
             "status": None,
             "version": None,
             "expanded_folder": None,
-            "eif_location": None,
             "requested_action": "publish",
             "force": False,
             "message": "An error abc has occurred - everything is invalid",
@@ -139,7 +134,6 @@ def ApprovePublication_publication_data(update_date):
                             "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
                             "expanded_folder": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251",
                             "version": "1",
-                            "eif_location": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json",
                             "article_id": "00353"}
                 }
 

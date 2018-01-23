@@ -16,7 +16,6 @@ activity_data = {
                     "status": "vor",
                     "version": "1",
                     "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-                    "eif_location": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff/elife-00353-v1.json",
                     "requested_action": "ingest",
                     "message": None,
                     "update_date": "2012-12-13T00:00:00Z"
