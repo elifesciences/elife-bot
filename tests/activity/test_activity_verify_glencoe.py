@@ -6,6 +6,7 @@ from classes_mock import FakeResponse
 from classes_mock import FakeSession
 from classes_mock import FakeStorageContext
 import test_activity_data as test_data
+from classes_mock import FakeLogger
 
 class TestVerifyGlencoe(unittest.TestCase):
 
@@ -27,8 +28,7 @@ class TestVerifyGlencoe(unittest.TestCase):
             'expanded_folder': '7777777701234.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'update_date': '2012-12-13T00:00:00Z',
             'file_name': 'elife-7777777701234-vor-v1.zip',
-            'filename_last_element': 'elife-7777777701234-vor-r1.zip',
-            'eif_location': '7777777701234.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-7777777701234-v1.json'
+            'filename_last_element': 'elife-7777777701234-vor-r1.zip'
         }
         request_mock.return_value = FakeResponse(404, None)
         fake_session.return_value = FakeSession(session_example)

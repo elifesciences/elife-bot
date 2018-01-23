@@ -127,7 +127,7 @@ class TestLaxProvider(unittest.TestCase):
         message = lax_provider.prepare_action_message(settings_mock,
                                                       "00353", "bb2d37b8-e73c-43b3-a092-d555753316af",
                                                       "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
-                                                      "1", "vor", "", "ingest")
+                                                      "1", "vor", "ingest")
         self.assertIn('token', message)
         del message['token']
         self.assertDictEqual(message, {'action': 'ingest',
@@ -140,13 +140,11 @@ class TestLaxProvider(unittest.TestCase):
         token = lax_provider.lax_token("bb2d37b8-e73c-43b3-a092-d555753316af",
                                        "1",
                                        "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
-                                       "vor",
-                                       "")
+                                       "vor")
 
         self.assertEqual(json.loads(base64.decodestring(token)), {"run": "bb2d37b8-e73c-43b3-a092-d555753316af",
                                                                   "version": "1",
                                                                   "expanded_folder": "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
-                                                                  "eif_location": "",
                                                                   "status": "vor",
                                                                   "force": False})
 

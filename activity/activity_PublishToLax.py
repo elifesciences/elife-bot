@@ -46,7 +46,6 @@ class activity_PublishToLax(activity.activity):
         workflow_data = self.get_workflow_data(data)
 
         status = workflow_data['status']
-        eif_location = workflow_data['eif_location']
         expanded_folder = workflow_data['expanded_folder']
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Publish To Lax", "start",
@@ -55,8 +54,7 @@ class activity_PublishToLax(activity.activity):
         try:
             force = True if ("force" in data and data["force"] == True) else False
             message = lax_provider.prepare_action_message(self.settings,
-                                                          article_id, run, expanded_folder, version, status,
-                                                          eif_location, 'publish', force)
+                                                          article_id, run, expanded_folder, version, status, 'publish', force)
             message_body = json.dumps(message)
             self.logger.info("Sending message to lax: %s", message_body)
             sqs_conn = boto.sqs.connect_to_region(
@@ -86,16 +84,5 @@ class activity_PublishToLax(activity.activity):
             publication_data = json.loads(base64.decodestring(data['publication_data']))
             workflow_data = publication_data['workflow_data']
             return workflow_data
-
-        # added this block because when doing silent corrections we will not have the opportunity to get the data from
-        # the previous workflow (PreparePostEIF sets the data and when in silent corrections it is part of the same
-        # workflow) currently we cannot mutate the data and pass it through activities, only workflows
-        # it is an improvement to be made. Needs research on AWS SWF.
-        # it will also work when not in Silent corrections, it will just override the setting with the same data
-        run = data['run']
-        session = get_session(self.settings, data, run)
-        eif_location = session.get_value('eif_location')
-        if eif_location is not None:
-            data['eif_location'] = eif_location
 
         return data
