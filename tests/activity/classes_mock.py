@@ -41,11 +41,6 @@ class FakeS3Connection:
         return self.buckets_dict[mock_bucket_name]
 
 
-
-
-
-## PostEIFBridge Tests TODO: split in 2 files?
-
 class FakeSQSMessage:
     def __init__(self, directory):
         self.dir = directory
