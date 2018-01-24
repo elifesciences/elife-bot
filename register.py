@@ -81,7 +81,6 @@ def start(ENV="dev"):
     activity_names.append("PublishToLax")
     activity_names.append("VerifyLaxResponse")
     activity_names.append("IngestToLax")
-    activity_names.append("PostEIFBridge")
     activity_names.append("PingWorker")
     activity_names.append("SetPublicationStatus")
     activity_names.append("ConvertJATS")
