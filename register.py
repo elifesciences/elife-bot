@@ -87,7 +87,6 @@ def start(ENV="dev"):
     activity_names.append("ExpandArticle")
     activity_names.append("ApplyVersionNumber")
     activity_names.append("ArchiveArticle")
-    activity_names.append("RewriteEIF")
     activity_names.append("DepositAssets")
     activity_names.append("ApprovePublication")
     activity_names.append("PreparePostEIF")
