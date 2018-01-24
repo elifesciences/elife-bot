@@ -41,6 +41,10 @@ class TestReadyToPublish(unittest.TestCase):
         result = self.activity_ReadyToPublish_with_log.do_activity(test_data)
         self.assertEqual(result, self.readytopublish.ACTIVITY_PERMANENT_FAILURE)
 
+    def test_preview_path(self):
+        result = self.readytopublish.preview_path(settings_mock.article_path_pattern, "34427", "1")
+        self.assertEqual(result, "/articles/34427v1")
+
 
 if __name__ == '__main__':
     unittest.main()

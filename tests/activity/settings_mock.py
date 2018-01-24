@@ -139,3 +139,6 @@ pdf_cover_generator = "https://localhost/personalised-covers/"
 
 elifepubmed_config_file = 'tests/activity/pubmed.cfg'
 elifepubmed_config_section = 'elife'
+
+# Article path
+article_path_pattern = "/articles/{id}v{version}"

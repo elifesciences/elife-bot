@@ -34,8 +34,10 @@ class activity_ReadyToPublish(activity.activity):
             status = session.get_value('status')
             update_date = session.get_value('update_date')
 
+            article_path = self.preview_path(self.settings.article_path_pattern, article_id, version)
+
             self.prepare_ready_to_publish_message(article_id, version, run, expanded_folder_name, status,
-                                                  update_date)
+                                                  update_date, article_path)
 
         except Exception as e:
             self.logger.exception("Exception when sending Ready To Publish message")
@@ -51,7 +53,11 @@ class activity_ReadyToPublish(activity.activity):
 
         return activity.activity.ACTIVITY_SUCCESS
 
-    def prepare_ready_to_publish_message(self, article_id, version, run, expanded_folder, status, update_date):
+    def preview_path(self, article_path_pattern, article_id, version):
+        return article_path_pattern.format(id=article_id, version=version)
+
+    def prepare_ready_to_publish_message(self, article_id, version, run, expanded_folder, status, update_date,
+                                         article_path):
         workflow_data = {
                 'article_id': article_id,
                 'version': version,
@@ -67,6 +73,10 @@ class activity_ReadyToPublish(activity.activity):
         }
 
         encoded_message = base64.encodestring(json.dumps(message))
+
+        self.set_monitor_property(self.settings, article_id, 'path',
+                                  article_path, 'text', version=version)
+
         # store message in dashboard for later
         self.set_monitor_property(self.settings, article_id, "_publication-data",
                                   encoded_message, "text", version=version)
