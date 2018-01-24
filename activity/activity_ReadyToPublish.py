@@ -54,8 +54,7 @@ class activity_ReadyToPublish(activity.activity):
         return activity.activity.ACTIVITY_SUCCESS
 
     def preview_path(self, article_path_pattern, article_id, version):
-        path = article_path_pattern.format(id=article_id, version=version)
-        return path
+        return article_path_pattern.format(id=article_id, version=version)
 
     def prepare_ready_to_publish_message(self, article_id, version, run, expanded_folder, status, update_date,
                                          article_path):
