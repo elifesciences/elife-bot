@@ -74,7 +74,6 @@ def start(ENV="dev"):
     activity_names.append("GeneratePDFCovers")
     activity_names.append("VerifyGlencoe")
     activity_names.append("UpdateRepository")
-    activity_names.append("SetEIFPublish")
     activity_names.append("VersionLookup")
     activity_names.append("VersionDateLookup")
     activity_names.append("VerifyPublishResponse")
