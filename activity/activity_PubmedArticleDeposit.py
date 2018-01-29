@@ -119,7 +119,11 @@ class activity_PubmedArticleDeposit(activity.activity):
         if len(self.article_published_file_names) > 0:
             self.add_email_to_queue()
 
-        return self.activity_status
+        # return a value based on the activity_status
+        if self.activity_status is True:
+            return True
+        else:
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
     def set_datestamp(self):
         a = arrow.utcnow()

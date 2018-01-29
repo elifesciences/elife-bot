@@ -97,7 +97,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "outbox_filenames": ['elife-15747-v2.xml'],
             "ftp_files_return_value": False,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
-            "expected_result": False,
+            "expected_result": activity_PubmedArticleDeposit.ACTIVITY_PERMANENT_FAILURE,
             "expected_approve_status": True,
             "expected_generate_status": True,
             "expected_publish_status": False,
