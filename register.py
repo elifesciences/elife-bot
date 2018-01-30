@@ -29,7 +29,6 @@ def start(ENV="dev"):
     workflow_names.append("SilentCorrectionsProcess")
     workflow_names.append("IngestArticleZip")
     workflow_names.append("ProcessArticleZip")
-    workflow_names.append("ArticleInformationSupplier")
     workflow_names.append("Ping")
     workflow_names.append("Sum")
     workflow_names.append("ApproveArticlePublication")
