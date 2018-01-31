@@ -14,4 +14,3 @@ source /opt/elife-bot/venv/bin/activate && python decider.py -e $1 &
 source /opt/elife-bot/venv/bin/activate && python worker.py -e $1 &
 source /opt/elife-bot/venv/bin/activate && python queue_worker.py -e $1 &
 source /opt/elife-bot/venv/bin/activate && python queue_workflow_starter.py -e $1 &
-source /opt/elife-bot/venv/bin/activate && python shimmy.py -e $1 &
