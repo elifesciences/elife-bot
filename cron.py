@@ -49,6 +49,14 @@ def run_cron(settings):
             workflow_id="DepositCrossref",
             start_seconds=60 * 31)
 
+        # CNKI deposits once per day 23:00 UTC
+        if current_time.tm_hour == 23:
+            workflow_conditional_start(
+                settings=settings,
+                starter_name="starter_PubRouterDeposit",
+                workflow_id="PubRouterDeposit_CNKI",
+                start_seconds=60 * 31)
+
     elif current_time.tm_min >= 30 and current_time.tm_min <= 59:
         # Jobs to start at the bottom of the hour
         #print "Bottom of the hour"
