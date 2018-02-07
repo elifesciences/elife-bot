@@ -37,6 +37,7 @@ class activity_ScheduleDownstream(activity.activity):
         self.wos_outbox_folder = "wos/outbox/"
         self.scopus_outbox_folder = "scopus/outbox/"
         self.cnpiec_outbox_folder = "cnpiec/outbox/"
+        self.cnki_outbox_folder = "cnki/outbox/"
 
     def do_activity(self, data=None):
 
@@ -101,6 +102,7 @@ class activity_ScheduleDownstream(activity.activity):
             outbox_list.append(self.wos_outbox_folder)
             outbox_list.append(self.scopus_outbox_folder)
             outbox_list.append(self.cnpiec_outbox_folder)
+            outbox_list.append(self.cnki_outbox_folder)
 
         return outbox_list
 
