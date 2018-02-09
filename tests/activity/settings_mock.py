@@ -142,3 +142,7 @@ elifepubmed_config_section = 'elife'
 
 # Article path
 article_path_pattern = "/articles/{id}v{version}"
+
+# Article subjects data
+article_subjects_data_bucket = "bucket_name/modify_article_subjects"
+article_subjects_data_file = "article_subjects.csv"
