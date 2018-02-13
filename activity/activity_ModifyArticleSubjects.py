@@ -95,7 +95,7 @@ class activity_ModifyArticleSubjects(activity.activity):
     def load_subjects_data(self):
         "download and parse the subjects data from the CSV in the bucket"
         subjects_data = None
-        (data_bucket_name, data_file_name) = self.data_settings()
+        data_bucket_name, data_file_name = self.data_settings()
         # log if no subjects data
         if not data_bucket_name:
             if self.logger:
@@ -150,8 +150,6 @@ class activity_ModifyArticleSubjects(activity.activity):
             storage_resource_origin = orig_resource + '/' + article_xml_filename
             storage.get_resource_to_file(storage_resource_origin, open_file)
             return filename_plus_path
-        # default
-        return None
 
     def article_doi(self, xml_filename):
         "parse the doi of the article XML"
@@ -166,7 +164,7 @@ class activity_ModifyArticleSubjects(activity.activity):
                 hasattr(self.settings, 'article_subjects_data_file')):
             data_bucket_name = self.settings.article_subjects_data_bucket
             data_file_name = self.settings.article_subjects_data_file
-        return (data_bucket_name, data_file_name)
+        return data_bucket_name, data_file_name
 
     def download_subjects_file(self, data_bucket_name, data_file_name):
                                                         
@@ -256,9 +254,8 @@ class activity_ModifyArticleSubjects(activity.activity):
 
         # Start the file output
         reparsed_string = xmlio.output(root, type=None, doctype_dict=doctype_dict)
-        open_file = open(article_xml_file, 'wb')
-        open_file.write(reparsed_string)
-        open_file.close()
+        with open(article_xml_file, 'wb') as open_file:
+            open_file.write(reparsed_string)
 
         return total
 

@@ -7,9 +7,7 @@ from ddt import ddt, data, unpack
 from activity.activity_ModifyArticleSubjects import activity_ModifyArticleSubjects
 from mock import patch
 import tests.activity.test_activity_data as test_data
-from tests.activity.classes_mock import FakeLogger
-from tests.activity.classes_mock import FakeSession
-from tests.activity.classes_mock import FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
 import tests.activity.settings_mock as settings_mock
 import tests.activity.helpers as helpers
 
@@ -43,6 +41,13 @@ class TestModifyArticleSubjects(unittest.TestCase):
         self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder('tests/tmp', filter_out=['.keepme'])
         #helpers.delete_files_in_folder(test_data.ExpandArticle_files_dest_folder)
+
+    def copy_test_file(self, file_name):
+        "copy a file from the test files directory to the activity tmp dir"
+        source_file_name = os.path.join(self.test_files_dir_name, file_name)
+        destination_file_name =  os.path.join(self.activity.get_tmp_dir(), file_name)
+        shutil.copy(source_file_name, destination_file_name)
+        return destination_file_name
 
     @patch('activity.activity_ModifyArticleSubjects.storage_context')
     @patch.object(activity_ModifyArticleSubjects, 'emit_monitor_event')
@@ -191,16 +196,15 @@ class TestModifyArticleSubjects(unittest.TestCase):
 
 
     def test_article_doi(self):
-        xml_file_name = os.path.join(self.test_files_dir_name, 'elife-29353-v1.xml')
-        file_name = xml_file_name.split('/')[-1]
-        shutil.copy(xml_file_name, os.path.join(self.activity.get_tmp_dir(), file_name))
+        "test parsing the doi from an article XML file"
+        xml_file_name = self.copy_test_file('elife-29353-v1.xml')
         expected = '10.7554/eLife.29353'
         doi = self.activity.article_doi(xml_file_name)
         self.assertEqual(doi, expected)
 
 
     def test_data_settings(self):
-        "test for when no settings are provided"
+        "test reading the data settings"
         expected = ('bucket_name/modify_article_subjects',
                     'article_subjects.csv')
         self.assertEqual(self.activity.data_settings(), expected)
@@ -306,9 +310,7 @@ class TestModifyArticleSubjects(unittest.TestCase):
                                      expected_total, expected_snippet_file):
         "test rewriting the XML file"
         # copy the XML file in
-        article_xml_file = os.path.join(self.activity.get_tmp_dir(), xml_file_name)
-        shutil.copy(os.path.join(self.test_files_dir_name, xml_file_name),
-                    article_xml_file)
+        article_xml_file = self.copy_test_file(xml_file_name)
         # do the rewrite
         total = self.activity.modify_article_subjects(article_xml_file, subjects_map)
         # check the total
@@ -334,9 +336,7 @@ class TestModifyArticleSubjects(unittest.TestCase):
         xml_file_name = 'elife-29353-v1.xml'
         data_bucket_name = 'bucket_name/modify_article_subjects'
         # copy the file to the folder first
-        article_xml_file = os.path.join(self.activity.get_tmp_dir(), xml_file_name)
-        shutil.copy(os.path.join(self.test_files_dir_name, xml_file_name),
-                    article_xml_file)
+        article_xml_file = self.copy_test_file(xml_file_name)
         # run the upload
         self.activity.upload_file_to_bucket(data_bucket_name, article_xml_file)
         # check the result
