@@ -30,18 +30,18 @@ class activity_ModifyArticleSubjects(activity.activity):
         self.description = "Modify subject tags in the article XML file"
         self.logger = logger
 
-        self.expanded_bucket_name = (self.settings.publishing_buckets_prefix
-                                     + self.settings.expanded_bucket)
 
     def do_activity(self, data=None):
 
-        try:
+        if self.logger:
+            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        try:
             run = data['run']
             session = get_session(self.settings, data, run)
             version = session.get_value('version')
             article_id = session.get_value('article_id')
-    
+
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "start",
                                     "Starting modify article subjects to files for " + article_id)
@@ -51,33 +51,32 @@ class activity_ModifyArticleSubjects(activity.activity):
 
         try:
 
-            if self.logger:
-                self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
-    
             expanded_folder_name = session.get_value('expanded_folder')
             bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
-    
+            expanded_bucket_name = (self.settings.publishing_buckets_prefix
+                                         + self.settings.expanded_bucket)
+
             # main
-            # download article XML and get its doi
-            self.article_xml_file = self.download_article_xml(self.expanded_bucket_name,
-                                                              expanded_folder_name)
-            self.doi = self.article_doi(self.article_xml_file)
+            article_xml_file = self.download_article_xml(expanded_bucket_name,
+                                                         expanded_folder_name)
+            if not article_xml_file:
+                if self.logger:
+                    self.logger.info('unable to download article xml file')
+            # parse the doi
+            doi = self.article_doi(article_xml_file)
+            if not article_xml_file:
+                if self.logger:
+                    self.logger.info('could not parse doi from the article xml')
             # download article subjects data
-            (data_bucket_name, data_file_name) = self.data_settings()
-            raw_data_file = self.download_subjects_file(data_bucket_name,
-                                                        data_file_name)
-            with open(raw_data_file) as csv_file:
-                subjects_data = self.parse_subjects_file(csv_file)
-            subjects_index = None
-            subjects_data_by_doi = []
-            if subjects_data:
-                subjects_data_by_doi = self.subjects_by_doi(subjects_data, self.doi)
-            if subjects_data_by_doi:
-                subjects_map = self.create_subjects_map(subjects_data_by_doi, self.doi)
-                self.modify_article_subjects(self.article_xml_file, subjects_map)
-                # upload back to the bucket
-                self.upload_file_to_bucket(expanded_folder_name, self.article_xml_file)
-    
+            subjects_data = self.load_subjects_data()
+            # index the subjects by doi
+            subjects_data_by_doi = self.subjects_by_doi(subjects_data, doi)
+            # rewrite the XML
+            total = self.rewrite_xml(article_xml_file, subjects_data_by_doi, doi)
+            # upload back to the bucket
+            if total and total > 0:
+                self.upload_file_to_bucket(expanded_folder_name, article_xml_file)
+
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "end",
                                     "Finished modify article subjects to article " + article_id +
@@ -93,8 +92,42 @@ class activity_ModifyArticleSubjects(activity.activity):
 
         return activity.activity.ACTIVITY_SUCCESS
 
+
+    def load_subjects_data(self):
+        "download and parse the subjects data from the CSV in the bucket"
+        subjects_data = None
+        (data_bucket_name, data_file_name) = self.data_settings()
+        # log if no subjects data
+        if not data_bucket_name:
+            if self.logger:
+                self.logger.info('no data_bucket_name settings for load_subjects_data')
+            return None
+        if not data_file_name:
+            if self.logger:
+                self.logger.info('no data_file_name settings for load_subjects_data')
+            return None
+        raw_data_file = self.download_subjects_file(data_bucket_name,
+                                                    data_file_name)
+        with open(raw_data_file) as csv_file:
+            subjects_data = self.parse_subjects_file(csv_file)
+        return subjects_data
+
+
+    def rewrite_xml(self, article_xml_file, subjects_data_by_doi, doi):
+        "rewrite the article XML with the subject values"
+        total = None
+        if subjects_data_by_doi:
+            subjects_map = self.create_subjects_map(subjects_data_by_doi, doi)
+            total = self.modify_article_subjects(article_xml_file, subjects_map)
+        return total
+
+
     def download_article_xml(self, expanded_bucket_name, expanded_folder_name):
         "download the article xml from the expanded bucket"
+        if not expanded_bucket_name or not expanded_folder_name:
+            if self.logger:
+                self.logger.info('could not download article xml without bucket settings')
+            return False
         bucket_name = expanded_bucket_name
         bucket_folder_name = expanded_folder_name
         storage = storage_context(self.settings)
@@ -107,6 +140,10 @@ class activity_ModifyArticleSubjects(activity.activity):
             if info.file_type == 'ArticleXML':
                 article_xml_s3_key_name = filename
                 break
+        if not article_xml_s3_key_name:
+            if self.logger:
+                self.logger.info('article xml file not found in the bucket')
+            return False
         # download the file
         article_xml_filename = article_xml_s3_key_name.split('/')[-1]
         filename_plus_path = os.path.join(self.get_tmp_dir(), article_xml_filename)
@@ -167,6 +204,8 @@ class activity_ModifyArticleSubjects(activity.activity):
 
     def subjects_by_doi(self, subjects_data, doi):
         "filter the subjects data by doi"
+        if not subjects_data or not doi:
+            return None
         return [subject for subject in subjects_data if subject.get('DOI') == doi]
 
     def validate_subject(self, subject_data):

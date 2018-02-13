@@ -87,7 +87,7 @@ class TestModifyArticleSubjects(unittest.TestCase):
         csv_file = StringIO(test_csv_data)
         doi = '10.7554/eLife.29353'
         subjects_data = self.activity.parse_subjects_file(csv_file)
-        subjects_data_by_id = self.activity.subjects_by_doi(subjects_data, doi)
+        subjects_data_by_doi = self.activity.subjects_by_doi(subjects_data, doi)
         expected = [
             OrderedDict([
                 ('DOI', '10.7554/eLife.29353'),
@@ -100,20 +100,70 @@ class TestModifyArticleSubjects(unittest.TestCase):
                 ('subject', 'Subject 2, and more')
                 ])
             ]
-        self.assertEqual(subjects_data_by_id, expected)
+        self.assertEqual(subjects_data_by_doi, expected)
+
+
+    @data(
+        # empty data
+        (None, None, None),
+        )
+    @unpack
+    def test_subjects_by_doi_bad_data(self, subjects_data, doi, expected):
+        subjects_data_by_doi = self.activity.subjects_by_doi(subjects_data, doi)
+        self.assertEqual(subjects_data_by_doi, expected)
+
+
+    @patch.object(activity_ModifyArticleSubjects, 'data_settings')
+    @data(
+        (None, None, None),
+        ('bucket', None, None),
+        (None, 'file_name', None)
+        )
+    @unpack
+    def test_load_subjects_data_bad_data(self, data_bucket_name, data_file_name,
+                                expected, fake_data_settings):
+        "test when settings are incomplete"
+        fake_data_settings.return_value = (data_bucket_name, data_file_name)
+        subjects_data = self.activity.load_subjects_data()
+        self.assertEqual(subjects_data, expected)
 
 
     @patch('activity.activity_ModifyArticleSubjects.storage_context')
     @patch.object(FakeStorageContext, 'list_resources')
-    def test_download_article_xml(self, fake_list_resources, fake_storage_context):
-        xml_file_name = 'elife-29353-v1.xml'
-        expanded_bucket_name = 'bucket'
-        expanded_folder_name = 'modify_article_subjects'
+    @data(
+        # test good data
+        {
+            "resources": ['elife-29353-v1.xml'],
+            "expanded_bucket_name": 'bucket',
+            "expanded_folder_name": 'modify_article_subjects',
+            "expected": 'elife-29353-v1.xml'
+        },
+        # test for missing XML file
+        {
+            "resources": [],
+            "expanded_bucket_name": 'bucket',
+            "expanded_folder_name": 'modify_article_subjects',
+            "expected": False
+        },
+        # test for no bucket settings
+        {
+            "resources": [],
+            "expanded_bucket_name": None,
+            "expanded_folder_name": None,
+            "expected": False
+        },
+        )
+    def test_download_article_xml(self, test_data, fake_list_resources, fake_storage_context):
         fake_storage_context.return_value = FakeStorageContext()
-        fake_list_resources.return_value = [xml_file_name]
-        result = self.activity.download_article_xml(expanded_bucket_name, expanded_folder_name)
-        result_file_name = result.split(os.sep)[-1]
-        self.assertEqual(result_file_name, xml_file_name)
+        fake_list_resources.return_value = test_data.get('resources')
+        result = self.activity.download_article_xml(
+            expanded_bucket_name = test_data.get('expanded_bucket_name'),
+            expanded_folder_name = test_data.get('expanded_folder_name'))
+        result_file_name = result
+        if result:
+            # strip the directory name from the result to compare the result
+            result_file_name = result.split(os.sep)[-1]
+        self.assertEqual(result_file_name, test_data.get('expected'))
 
 
     def test_article_doi(self):
@@ -200,6 +250,19 @@ class TestModifyArticleSubjects(unittest.TestCase):
                 'Subject 1',
                 'Subject 2, and more'])
             ])
+        self.assertEqual(self.activity.create_subjects_map(subjects_data, doi), expected)
+
+
+    def test_create_subjects_map_bad_data(self):
+        "test when validate_subject() encounters incomplete subject_group_type data"
+        csv_file = StringIO(test_csv_data)
+        doi = '10.7554/eLife.29353'
+        subjects_data = [OrderedDict([
+            ('DOI', '10.7554/eLife.29353'),
+            ('subject_group_type', ''),
+            ('subject', 'Subject')
+            ])]
+        expected = OrderedDict()
         self.assertEqual(self.activity.create_subjects_map(subjects_data, doi), expected)
 
 
