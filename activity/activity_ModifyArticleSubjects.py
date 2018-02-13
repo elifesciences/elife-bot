@@ -49,6 +49,7 @@ class activity_ModifyArticleSubjects(activity.activity):
             self.logger.exception(str(e))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
+        self.total_replacements = None
         try:
 
             expanded_folder_name = session.get_value('expanded_folder')
@@ -64,7 +65,7 @@ class activity_ModifyArticleSubjects(activity.activity):
                     self.logger.info('unable to download article xml file')
             # parse the doi
             doi = self.article_doi(article_xml_file)
-            if not article_xml_file:
+            if not doi:
                 if self.logger:
                     self.logger.info('could not parse doi from the article xml')
             # download article subjects data
@@ -72,10 +73,13 @@ class activity_ModifyArticleSubjects(activity.activity):
             # index the subjects by doi
             subjects_data_by_doi = self.subjects_by_doi(subjects_data, doi)
             # rewrite the XML
-            total = self.rewrite_xml(article_xml_file, subjects_data_by_doi, doi)
+            self.total_replacements = self.rewrite_xml(article_xml_file, subjects_data_by_doi, doi)
             # upload back to the bucket
-            if total and total > 0:
+            if self.total_replacements and self.total_replacements > 0:
                 self.upload_file_to_bucket(expanded_folder_name, article_xml_file)
+            else:
+                if self.logger:
+                    self.logger.info('did not modify any article subjects in the article xml')
 
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "end",
@@ -220,7 +224,7 @@ class activity_ModifyArticleSubjects(activity.activity):
 
     def create_subjects_map(self, subjects_data, doi):
         "create a subject_group_type to list of subjects map"
-        subject_map = OrderedDict()
+        subjects_map = OrderedDict()
         # filter the data by doi just to be safe
         subjects_data_by_doi = self.subjects_by_doi(subjects_data, doi)
         # compile the map of data
@@ -230,11 +234,11 @@ class activity_ModifyArticleSubjects(activity.activity):
                 continue
             subject_group_type = subject_data.get('subject_group_type')
             subject = subject_data.get('subject')
-            if subject_group_type not in subject_map:
-                subject_map[subject_group_type] = []
+            if subject_group_type not in subjects_map:
+                subjects_map[subject_group_type] = []
             # add it to the map
-            subject_map[subject_group_type].append(subject)
-        return subject_map
+            subjects_map[subject_group_type].append(subject)
+        return subjects_map
 
     def modify_article_subjects(self, article_xml_file, subjects_map):
         """

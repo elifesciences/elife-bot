@@ -49,14 +49,39 @@ class TestModifyArticleSubjects(unittest.TestCase):
     @patch.object(activity_ModifyArticleSubjects, 'emit_monitor_event')
     @patch('activity.activity_ModifyArticleSubjects.get_session')
     @patch.object(FakeStorageContext, 'list_resources')
-    def test_do_activity(self, fake_list_resources, fake_session, fake_emit_monitor_event,
+    @data(
+        # test where there is replacement data
+        {
+            'resources': ['elife-29353-v1.xml'],
+            'expected_total_replacements': 2,
+            'expected_result': activity_ModifyArticleSubjects.ACTIVITY_SUCCESS
+        },
+        # test where there is no replacement data
+        {
+            'resources': ['elife-00353-v1.xml'],
+            'expected_total_replacements': None,
+            'expected_result': activity_ModifyArticleSubjects.ACTIVITY_SUCCESS
+        },
+        # test no article XML downloaded
+        {
+            'resources': [],
+            'expected_total_replacements': None,
+            'expected_result': activity_ModifyArticleSubjects.ACTIVITY_PERMANENT_FAILURE
+        }
+    )
+    def test_do_activity(self, test_scenario_data, fake_list_resources, fake_session, fake_emit_monitor_event,
                          fake_storage_context):
         "test do_activity"
         fake_session.return_value = FakeSession(session_example)
         fake_storage_context.return_value = FakeStorageContext()
-        fake_list_resources.return_value = [os.path.join(self.test_files_dir_name,  'elife-29353-v1.xml')]
+        resources = []
+        for resource in test_scenario_data.get('resources'):
+            resources.append(os.path.join(self.test_files_dir_name,  resource))
+        fake_list_resources.return_value = resources
         result = self.activity.do_activity(test_data.ExpandArticle_data)
-        self.assertEqual(result, self.activity.ACTIVITY_SUCCESS)
+        self.assertEqual(self.activity.total_replacements,
+                         test_scenario_data.get('expected_total_replacements'))
+        self.assertEqual(result, test_scenario_data.get('expected_result'))
 
 
     def test_parse_subjects_file(self):
@@ -293,7 +318,6 @@ class TestModifyArticleSubjects(unittest.TestCase):
         # check the XML file content
         with open(article_xml_file) as open_file:
             file_content = open_file.read()
-            print file_content
             # see if the expected snippet of content is in the rewritten XML
             with open(os.path.join(self.test_files_dir_name, expected_snippet_file)) as snippet_file:
                 snippet_content = snippet_file.read()
