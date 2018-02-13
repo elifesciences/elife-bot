@@ -1,11 +1,8 @@
 import activity
 import json
 import os
-import re
 import csv
-from os import path
 from collections import OrderedDict
-from jats_scraper import jats_scraper
 from elifetools import parseJATS as parser
 from provider.storage_provider import storage_context
 from provider.execution_context import get_session
@@ -30,6 +27,7 @@ class activity_ModifyArticleSubjects(activity.activity):
         self.description = "Modify subject tags in the article XML file"
         self.logger = logger
 
+        self.total_replacements = None
 
     def do_activity(self, data=None):
 
@@ -49,13 +47,10 @@ class activity_ModifyArticleSubjects(activity.activity):
             self.logger.exception(str(e))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
-        self.total_replacements = None
         try:
-
             expanded_folder_name = session.get_value('expanded_folder')
-            bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
             expanded_bucket_name = (self.settings.publishing_buckets_prefix
-                                         + self.settings.expanded_bucket)
+                                    + self.settings.expanded_bucket)
 
             # main
             article_xml_file = self.download_article_xml(expanded_bucket_name,
@@ -168,7 +163,7 @@ class activity_ModifyArticleSubjects(activity.activity):
         data_bucket_name = None
         data_file_name = None
         if (hasattr(self.settings, 'article_subjects_data_bucket') and
-            hasattr(self.settings, 'article_subjects_data_file')):
+                hasattr(self.settings, 'article_subjects_data_file')):
             data_bucket_name = self.settings.article_subjects_data_bucket
             data_file_name = self.settings.article_subjects_data_file
         return (data_bucket_name, data_file_name)
@@ -190,13 +185,13 @@ class activity_ModifyArticleSubjects(activity.activity):
 
     def parse_subjects_file(self, csv_file):
         "parse the raw data into structured data"
-        DATA_START_ROW = 1
+        data_start_row = 1
         subjects_data = []
         csv_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
         # columns: DOI,subject_group_type,subject
         for row in csv_reader:
             # skip header row
-            if csv_reader.line_num <= DATA_START_ROW:
+            if csv_reader.line_num <= data_start_row:
                 continue
             subject = OrderedDict()
             subject['DOI'] = row[0]
@@ -217,7 +212,7 @@ class activity_ModifyArticleSubjects(activity.activity):
         non_blank_values = ['DOI', 'subject_group_type', 'subject']
         for value in non_blank_values:
             if (not subject_data.get(value) or
-                subject_data.get(value).strip() == ''):
+                    subject_data.get(value).strip() == ''):
                 return False
         # default
         return True
@@ -261,9 +256,9 @@ class activity_ModifyArticleSubjects(activity.activity):
 
         # Start the file output
         reparsed_string = xmlio.output(root, type=None, doctype_dict=doctype_dict)
-        f = open(article_xml_file, 'wb')
-        f.write(reparsed_string)
-        f.close()
+        open_file = open(article_xml_file, 'wb')
+        open_file.write(reparsed_string)
+        open_file.close()
 
         return total
 
