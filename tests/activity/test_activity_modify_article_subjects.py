@@ -1,32 +1,31 @@
 import unittest
+import shutil
+import os
 from io import StringIO
 from collections import OrderedDict
 from ddt import ddt, data, unpack
-import settings_mock
 from activity.activity_ModifyArticleSubjects import activity_ModifyArticleSubjects
-from mock import mock, patch
-import test_activity_data as test_data
-from classes_mock import FakeLogger
-from classes_mock import FakeSession
-from classes_mock import FakeStorageContext
-import shutil
-import os
-import helpers
+from mock import patch
+import tests.activity.test_activity_data as test_data
+from tests.activity.classes_mock import FakeLogger
+from tests.activity.classes_mock import FakeSession
+from tests.activity.classes_mock import FakeStorageContext
+import tests.activity.settings_mock as settings_mock
+import tests.activity.helpers as helpers
+
 
 session_example = {
-            'version': '1',
-            'article_id': '29353',
-            'run': '1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
-            'expanded_folder': 'modify_article_subjects'
-        }
+    'version': '1',
+    'article_id': '29353',
+    'run': '1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
+    'expanded_folder': 'modify_article_subjects'
+}
 
 test_csv_data = u'''DOI,subj-group-type,subject
 10.7554/eLife.29353,heading,Subject 1
 10.7554/eLife.29353,heading,Subject 2, and more
 10.7554/eLife.99999,heading,Subject 1
 '''
-
-
 
 
 @ddt
@@ -146,7 +145,7 @@ class TestModifyArticleSubjects(unittest.TestCase):
         )
     @unpack
     def test_load_subjects_data_bad_data(self, data_bucket_name, data_file_name,
-                                expected, fake_data_settings):
+                                         expected, fake_data_settings):
         "test when settings are incomplete"
         fake_data_settings.return_value = (data_bucket_name, data_file_name)
         subjects_data = self.activity.load_subjects_data()
@@ -178,17 +177,17 @@ class TestModifyArticleSubjects(unittest.TestCase):
             "expected": False
         },
         )
-    def test_download_article_xml(self, test_data, fake_list_resources, fake_storage_context):
+    def test_download_article_xml(self, test_scenario_data, fake_list_resources, fake_storage_context):
         fake_storage_context.return_value = FakeStorageContext()
-        fake_list_resources.return_value = test_data.get('resources')
+        fake_list_resources.return_value = test_scenario_data.get('resources')
         result = self.activity.download_article_xml(
-            expanded_bucket_name = test_data.get('expanded_bucket_name'),
-            expanded_folder_name = test_data.get('expanded_folder_name'))
+            expanded_bucket_name = test_scenario_data.get('expanded_bucket_name'),
+            expanded_folder_name = test_scenario_data.get('expanded_folder_name'))
         result_file_name = result
         if result:
             # strip the directory name from the result to compare the result
             result_file_name = result.split(os.sep)[-1]
-        self.assertEqual(result_file_name, test_data.get('expected'))
+        self.assertEqual(result_file_name, test_scenario_data.get('expected'))
 
 
     def test_article_doi(self):
@@ -280,7 +279,6 @@ class TestModifyArticleSubjects(unittest.TestCase):
 
     def test_create_subjects_map_bad_data(self):
         "test when validate_subject() encounters incomplete subject_group_type data"
-        csv_file = StringIO(test_csv_data)
         doi = '10.7554/eLife.29353'
         subjects_data = [OrderedDict([
             ('DOI', '10.7554/eLife.29353'),
@@ -295,10 +293,10 @@ class TestModifyArticleSubjects(unittest.TestCase):
         # successful rewriting of heading subjects
         ('elife-29353-v1.xml',
          OrderedDict([
-            ('heading', [
-                'Subject 1',
-                'Subject 2, and more'])
-            ]),
+             ('heading', [
+                 'Subject 1',
+                 'Subject 2, and more'])
+             ]),
          2,
          'modify_article_subjects_snippet_01.xml'
         ),
@@ -325,7 +323,7 @@ class TestModifyArticleSubjects(unittest.TestCase):
                                 '{snippet_content} not found in {article_xml_file}'.format(
                                     snippet_content=snippet_content,
                                     article_xml_file=article_xml_file)
-                                )
+                               )
         # clean up
         self.clean_directories()
 
