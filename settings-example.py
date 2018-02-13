@@ -102,6 +102,10 @@ class exp():
     # POA packaging bucket
     poa_packaging_bucket = 'elife-poa-packaging-dev'
 
+    # Article subjects data
+    article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
+    article_subjects_data_file = "article_subjects.csv"
+
     # POA email settings
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
@@ -280,6 +284,10 @@ class dev():
 
     # POA packaging bucket
     poa_packaging_bucket = 'elife-poa-packaging-dev'
+
+    # Article subjects data
+    article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
+    article_subjects_data_file = "article_subjects.csv"
 
     # POA email settings
     ses_poa_sender_email = "sender@example.com"
@@ -464,6 +472,10 @@ class live():
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
 
+    # Article subjects data
+    article_subjects_data_bucket = "elife-bot/article_subjects_data"
+    article_subjects_data_file = "article_subjects.csv"
+
     # PMC email settings
     ses_pmc_sender_email = "sender@example.com"
     ses_pmc_recipient_email = "admin@example.com"
@@ -591,7 +603,6 @@ class live():
 
     # CloudFront
     cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
-
 
 def get_settings(ENV="dev"):
     """
