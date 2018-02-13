@@ -126,7 +126,7 @@ class activity_ModifyArticleSubjects(activity.activity):
         if not expanded_bucket_name or not expanded_folder_name:
             if self.logger:
                 self.logger.info('could not download article xml without bucket settings')
-            return False
+            return None
         bucket_name = expanded_bucket_name
         bucket_folder_name = expanded_folder_name
         storage = storage_context(self.settings)
@@ -142,7 +142,7 @@ class activity_ModifyArticleSubjects(activity.activity):
         if not article_xml_s3_key_name:
             if self.logger:
                 self.logger.info('article xml file not found in the bucket')
-            return False
+            return None
         # download the file
         article_xml_filename = article_xml_s3_key_name.split('/')[-1]
         filename_plus_path = os.path.join(self.get_tmp_dir(), article_xml_filename)
@@ -151,7 +151,7 @@ class activity_ModifyArticleSubjects(activity.activity):
             storage.get_resource_to_file(storage_resource_origin, open_file)
             return filename_plus_path
         # default
-        return False
+        return None
 
     def article_doi(self, xml_filename):
         "parse the doi of the article XML"

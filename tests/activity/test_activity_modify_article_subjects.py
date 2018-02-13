@@ -167,26 +167,26 @@ class TestModifyArticleSubjects(unittest.TestCase):
             "resources": [],
             "expanded_bucket_name": 'bucket',
             "expanded_folder_name": 'modify_article_subjects',
-            "expected": False
+            "expected": None
         },
         # test for no bucket settings
         {
             "resources": [],
             "expanded_bucket_name": None,
             "expanded_folder_name": None,
-            "expected": False
+            "expected": None
         },
         )
     def test_download_article_xml(self, test_scenario_data, fake_list_resources, fake_storage_context):
         fake_storage_context.return_value = FakeStorageContext()
         fake_list_resources.return_value = test_scenario_data.get('resources')
         result = self.activity.download_article_xml(
-            expanded_bucket_name = test_scenario_data.get('expanded_bucket_name'),
-            expanded_folder_name = test_scenario_data.get('expanded_folder_name'))
-        result_file_name = result
+            expanded_bucket_name=test_scenario_data.get('expanded_bucket_name'),
+            expanded_folder_name=test_scenario_data.get('expanded_folder_name'))
         if result:
-            # strip the directory name from the result to compare the result
             result_file_name = result.split(os.sep)[-1]
+        else:
+            result_file_name = result
         self.assertEqual(result_file_name, test_scenario_data.get('expected'))
 
 
