@@ -1,7 +1,6 @@
 import unittest
 from starter.starter_CopyGlencoeStillImages import starter_CopyGlencoeStillImages
 from starter.starter_helper import NullRequiredDataException
-from S3utility.s3_notification_info import S3NotificationInfo
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
 from mock import patch

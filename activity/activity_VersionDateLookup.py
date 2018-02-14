@@ -9,7 +9,6 @@ from os.path import isfile, join
 from os import listdir, makedirs
 from os import path
 import datetime
-from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import get_session
 import requests
 from provider.storage_provider import storage_context
