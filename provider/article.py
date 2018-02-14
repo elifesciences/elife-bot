@@ -241,7 +241,7 @@ class article(object):
         resp = requests.post(url)
         logger.info("Response code for PDF Generator %s", str(resp.status_code))
         assert resp.status_code != 404, "PDF cover not found. Format: %s - url requested: %s" % (format, url)
-        assert (resp.status_code == 200), "unhandled status code from PDF cover service: %s . " \
+        assert (resp.status_code in [200, 202]), "unhandled status code from PDF cover service: %s . " \
                                           "Format: %s - url requested: %s" % \
                                           (resp.status_code, format, url)
         data = resp.json()
