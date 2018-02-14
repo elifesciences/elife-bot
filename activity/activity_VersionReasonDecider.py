@@ -37,27 +37,31 @@ class activity_VersionReasonDecider(activity.activity):
         article_id = session.get_value('article_id')
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Decide version reason", "start",
-                                "Starting decision of version reason workflow for " + article_id)
+                                "Starting decision of version reason decision for " + article_id)
 
-        workflow_data = data.copy()
+        # workflow_data = data.copy()
+        for key in data.keys():
+            session.store_value(key, data[key])
 
-        workflow_data['article_id'] = article_id
-        workflow_data['version'] = version
-        workflow_data['run'] = run
+        workflow_data = {'article_id': article_id, 'version': version, 'run': run}
 
         message = {
             'workflow_name': 'IngestArticleZip',
             'workflow_data': workflow_data
         }
 
+        # uncomment to enable dashboard path
         # if status == 'POA' and version > 1 (and not a silent correction!):
-        #    send_to_dashboard()
+        #   # TODO : alter publication status property in dashboard
         # else:
 
         # start workflow
         m = Message()
         m.set_body(json.dumps(message))
         self.out_queue.write(m)
+
+        self.emit_monitor_event(self.settings, article_id, version, run, "Decide version reason", "end",
+                                "Decided version reason for " + article_id)
 
         return activity.activity.ACTIVITY_SUCCESS
 

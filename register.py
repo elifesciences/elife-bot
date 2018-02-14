@@ -64,6 +64,7 @@ def start(ENV="dev"):
         print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
 
     activity_names = []
+    activity_names.append("ReadyToPublish")
     activity_names.append("VersionReasonDecider")
     activity_names.append("InvalidateCdn")
     activity_names.append("ConvertImagesToJPG")
