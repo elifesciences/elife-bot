@@ -237,6 +237,17 @@ class TestModifyArticleSubjects(unittest.TestCase):
             data_bucket_name, data_file_name), expected)
 
 
+    @patch('activity.activity_ModifyArticleSubjects.storage_context')
+    def test_download_subjects_file_no_data_file(self, fake_storage_context):
+        "test for if the subjects data file is missing"
+        fake_storage_context.return_value = FakeStorageContext()
+        data_bucket_name = 'bucket_name/modify_article_subjects'
+        data_file_name = 'does_not_exist.csv'
+        expected = None
+        self.assertEqual(self.activity.download_subjects_file(
+            data_bucket_name, data_file_name), expected)
+
+
     @data(
         # empty data
         (OrderedDict(), False),

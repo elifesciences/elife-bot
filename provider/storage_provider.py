@@ -38,6 +38,13 @@ class S3StorageContext:
         bucket = self.get_bucket_from_cache(bucket_name)
         return bucket, s3_key
 
+    def resource_exists(self, resource):
+        "check if a key exists in the bucket"
+        bucket, s3_key = self.s3_storage_objects(resource)
+        key = Key(bucket)
+        key.key = s3_key
+        return key.exists()
+
     def get_resource_to_file(self, resource, file):
         bucket, s3_key = self.s3_storage_objects(resource)
         key = Key(bucket)
