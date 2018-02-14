@@ -345,11 +345,13 @@ class TestModifyArticleSubjects(unittest.TestCase):
     def test_upload_file_to_bucket(self, fake_storage_context):
         fake_storage_context.return_value = FakeStorageContext()
         xml_file_name = 'elife-29353-v1.xml'
-        data_bucket_name = 'bucket_name/modify_article_subjects'
+        expanded_bucket_name = 'bucket'
+        expanded_folder_name = 'modify_article_subjects'
         # copy the file to the folder first
         article_xml_file = self.copy_test_file(xml_file_name)
         # run the upload
-        self.activity.upload_file_to_bucket(data_bucket_name, article_xml_file)
+        self.activity.upload_file_to_bucket(expanded_bucket_name, expanded_folder_name,
+                                            article_xml_file)
         # check the result
         files = sorted(os.listdir(test_data.ExpandArticle_files_dest_folder))
         self.assertTrue(xml_file_name in files,
