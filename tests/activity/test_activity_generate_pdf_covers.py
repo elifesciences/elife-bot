@@ -64,7 +64,23 @@ class TestGeneratePDFCovers(unittest.TestCase):
 
     @patch('requests.post')
     @patch.object(activity_GeneratePDFCovers, 'emit_monitor_event')
-    def test_do_activity_success(self, fake_monitor_event, fake_request):
+    def test_do_activity_success_first_generation(self, fake_monitor_event, fake_request):
+        data = {"run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
+                "article_id": "00353",
+                "version": "1"}
+        fake_request.return_value = FakeResponse(202, {"formats":
+                                                           {"a4":"https://s3.eu-west-2.amazonaws.com/a4/09560",
+                                                            "letter": "https://s3.eu-west-2.amazonaws.com/letter/09560"
+                                                           }
+                                                       })
+
+        result = self.generatepdfcovers.do_activity(data)
+
+        self.assertEqual(result, self.generatepdfcovers.ACTIVITY_SUCCESS)
+
+    @patch('requests.post')
+    @patch.object(activity_GeneratePDFCovers, 'emit_monitor_event')
+    def test_do_activity_success_already_existing(self, fake_monitor_event, fake_request):
         data = {"run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
                 "article_id": "00353",
                 "version": "1"}
@@ -77,7 +93,6 @@ class TestGeneratePDFCovers(unittest.TestCase):
         result = self.generatepdfcovers.do_activity(data)
 
         self.assertEqual(result, self.generatepdfcovers.ACTIVITY_SUCCESS)
-
 
 
 if __name__ == '__main__':
