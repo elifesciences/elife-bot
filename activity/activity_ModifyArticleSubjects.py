@@ -107,8 +107,9 @@ class activity_ModifyArticleSubjects(activity.activity):
             return None
         raw_data_file = self.download_subjects_file(data_bucket_name,
                                                     data_file_name)
-        with open(raw_data_file) as csv_file:
-            subjects_data = self.parse_subjects_file(csv_file)
+        if raw_data_file:
+            with open(raw_data_file) as csv_file:
+                subjects_data = self.parse_subjects_file(csv_file)
         return subjects_data
 
 
@@ -177,6 +178,9 @@ class activity_ModifyArticleSubjects(activity.activity):
         orig_resource = storage_provider + data_bucket_name
         storage_resource_origin = orig_resource + '/' + data_file_name
         filename_plus_path = self.get_tmp_dir() + os.sep + data_file_name
+        # check the storage object exists before attempting to download it
+        if not storage.resource_exists(storage_resource_origin):
+            return None
         with open(filename_plus_path, 'wb') as open_file:
             storage.get_resource_to_file(storage_resource_origin, open_file)
         return filename_plus_path

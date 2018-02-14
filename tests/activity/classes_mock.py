@@ -89,6 +89,12 @@ class FakeStorageContext:
         s3_key = match.group(3)
         return bucket_name, s3_key
 
+    def resource_exists(self, resource):
+        "check if a key exists"
+        bucket, s3_key = self.get_bucket_and_key(resource)
+        src = data.ExpandArticle_files_source_folder + s3_key
+        return os.path.exists(src)
+
     def get_resource_to_file(self, resource, filelike):
         bucket_name, s3_key = self.get_bucket_and_key(resource)
         src = data.ExpandArticle_files_source_folder + s3_key
