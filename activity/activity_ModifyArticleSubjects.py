@@ -71,7 +71,7 @@ class activity_ModifyArticleSubjects(activity.activity):
             self.total_replacements = self.rewrite_xml(article_xml_file, subjects_data_by_doi, doi)
             # upload back to the bucket
             if self.total_replacements and self.total_replacements > 0:
-                self.upload_file_to_bucket(expanded_folder_name, article_xml_file)
+                self.upload_file_to_bucket(expanded_bucket_name, expanded_folder_name, article_xml_file)
             else:
                 if self.logger:
                     self.logger.info('did not modify any article subjects in the article xml')
@@ -263,12 +263,14 @@ class activity_ModifyArticleSubjects(activity.activity):
 
         return total
 
-    def upload_file_to_bucket(self, expanded_bucket_name, article_xml_file):
+    def upload_file_to_bucket(self, expanded_bucket_name, expanded_folder_name, article_xml_file):
         "upload the XML back to the bucket"
         bucket_name = expanded_bucket_name
+        bucket_folder_name = expanded_folder_name
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
         file_name_plus_path = article_xml_file
         s3_key_name = file_name_plus_path.split(os.sep)[-1]
-        resource_dest = (storage_provider + bucket_name + "/" + s3_key_name)
-        storage.set_resource_from_filename(resource_dest + '_', article_xml_file)
+        resource_dest = (storage_provider + bucket_name + "/" +
+                         bucket_folder_name + "/" + s3_key_name)
+        storage.set_resource_from_filename(resource_dest, article_xml_file)
