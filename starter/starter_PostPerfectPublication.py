@@ -34,8 +34,9 @@ class starter_PostPerfectPublication():
         workflow_version, \
         child_policy, \
         execution_start_to_close_timeout, \
-        workflow_input = helper.set_workflow_information(self.const_name, "1", None, info, info['article_id'],
-                                                         publication_from)
+        workflow_input = helper.set_workflow_information(
+            self.const_name, "1", None, info, info['article_id'] + "." + str(info['version']),
+            publication_from)
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
