@@ -6,7 +6,7 @@ from ddt import ddt, data, unpack
 
 
 example_workflow_name = "PostPerfectPublication"
-example_workflow_id = lambda fe: "PostPerfectPublication_00353." + fe
+example_workflow_id = lambda fe, version: "PostPerfectPublication_00353." + version + "." + fe
 
 
 @ddt
@@ -23,14 +23,15 @@ class TestStarterHelper(unittest.TestCase):
         workflow_version, \
         child_policy, \
         execution_start_to_close_timeout, \
-        workflow_input = starter_helper.set_workflow_information(example_workflow_name,
-                                                                              "1",
-                                                                              None,
-                                                                              data,
-                                                                              data['article_id'],
-                                                                              execution)
+        workflow_input = starter_helper.set_workflow_information(
+            example_workflow_name,
+            "1",
+            None,
+            data,
+            "%s.%s" % (data.get('article_id'), data.get('version')),
+            execution)
 
-        self.assertEqual(example_workflow_id(execution), workflow_id)
+        self.assertEqual(example_workflow_id(execution, data.get('version')), workflow_id)
         self.assertEqual(example_workflow_name, workflow_name)
         self.assertEqual("1", workflow_version)
         self.assertIsNone(child_policy)

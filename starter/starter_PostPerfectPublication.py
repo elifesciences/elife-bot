@@ -35,7 +35,7 @@ class starter_PostPerfectPublication():
         child_policy, \
         execution_start_to_close_timeout, \
         workflow_input = helper.set_workflow_information(
-            self.const_name, "1", None, info, info['article_id'] + "." + str(info['version']),
+            self.const_name, "1", None, info, "%s.%s" % (info.get('article_id'), info.get('version')),
             publication_from)
 
         # Simple connect
