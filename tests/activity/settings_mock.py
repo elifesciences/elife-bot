@@ -18,7 +18,6 @@ aws_access_key_id = ""
 aws_secret_access_key = ""
 
 workflow_starter_queue = ""
-website_ingest_queue = ""
 event_monitor_queue = ""
 sqs_region = ""
 
