@@ -31,8 +31,7 @@ class starter_IngestArticleZip():
 
         input = S3NotificationInfo.to_dict(info)
         input['run'] = run
-        input['version_lookup_function'] = "article_next_version"
-
+     
         workflow_id, \
         workflow_name, \
         workflow_version, \
