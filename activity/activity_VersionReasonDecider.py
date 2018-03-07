@@ -69,6 +69,6 @@ class activity_VersionReasonDecider(activity.activity):
 
         sqs_conn = boto.sqs.connect_to_region(self.settings.sqs_region,
                                               aws_access_key_id=self.settings.aws_access_key_id,
-                                              aws_secret_access_keys=self.settings.aws_secret_access_key)
+                                              aws_secret_access_key=self.settings.aws_secret_access_key)
         queue = sqs_conn.get_queue(queue_name)
         return queue
