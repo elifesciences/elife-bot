@@ -13,13 +13,13 @@ import starter_helper as helper
 from starter_helper import NullRequiredDataException
 
 """
-Amazon SWF IngestArticleZip starter, preparing article xml for lax.
+Amazon SWF InitialArticleZip starter
 """
 
 
-class starter_IngestArticleZip():
+class starter_InitialArticleZip():
     def __init__(self):
-        self.const_name = "IngestArticleZip"
+        self.const_name = "InitialArticleZip"
         
     def start(self, settings, run, info):
 
@@ -31,6 +31,8 @@ class starter_IngestArticleZip():
 
         input = S3NotificationInfo.to_dict(info)
         input['run'] = run
+        input['version_lookup_function'] = "article_next_version"
+
 
         workflow_id, \
         workflow_name, \
@@ -39,7 +41,7 @@ class starter_IngestArticleZip():
         execution_start_to_close_timeout, \
         workflow_input = helper.set_workflow_information(self.const_name, "1", None, input,
                                                          info.file_name.replace('/', '_'),
-                                                         start_to_close_timeout=str(60 * 60 * 1))
+                                                         start_to_close_timeout=str(60 * 60 * 5))
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
@@ -82,6 +84,6 @@ if __name__ == "__main__":
     import settings as settingsLib
     settings = settingsLib.get_settings(ENV)
 
-    o = starter_IngestArticleZip()
+    o = starter_InitialArticleZip()
 
     o.start(settings=settings,)

@@ -40,6 +40,8 @@ class activity_ExpandArticle(activity.activity):
         """
 
         run = data['run']
+        session = get_session(self.settings, data, run)
+        article_id = session.get_value('article_id')
 
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
@@ -50,10 +52,8 @@ class activity_ExpandArticle(activity.activity):
         session = get_session(self.settings, data, run)
 
         filename_last_element = session.get_value('filename_last_element')
-        # zip name contains version information for previously archived zip files
+
         article_structure = ArticleInfo(filename_last_element)
-        article_id = article_structure.article_id
-        session.store_value('article_id', article_id)
         session.store_value('file_name', info.file_name)
 
         if self.logger:
