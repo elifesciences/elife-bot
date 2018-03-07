@@ -46,6 +46,17 @@ class workflow_IngestArticleZip(workflow.workflow):
                         "start_to_close_timeout": 300
                     },
                     {
+                        "activity_type": "AcceptVersionReason",
+                        "activity_id": "AcceptVersionReason",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 10,
+                        "schedule_to_close_timeout": 60 * 10,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 10
+                    },
+                    {
                         "activity_type": "ApplyVersionNumber",
                         "activity_id": "ApplyVersionNumber",
                         "version": "1",

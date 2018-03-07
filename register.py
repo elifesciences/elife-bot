@@ -65,7 +65,8 @@ def start(ENV="dev"):
 
     activity_names = []
     activity_names.append("ReadyToPublish")
-    activity_names.append("VersionReasonDecider")
+    activity_names.append("VersionReasonDecider"),
+    activity_names.append("AcceptVersionReason"),
     activity_names.append("InvalidateCdn")
     activity_names.append("ConvertImagesToJPG")
     activity_names.append("SendDashboardProperties")
