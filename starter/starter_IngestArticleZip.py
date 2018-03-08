@@ -21,16 +21,17 @@ class starter_IngestArticleZip():
     def __init__(self):
         self.const_name = "IngestArticleZip"
         
-    def start(self, settings, run, info):
+    def start(self, settings, run, article_id, version_reason, scheduled_publication_date):
 
         # Log
         logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
 
-        if hasattr(info, 'file_name') == False or info.file_name is None:
-            raise NullRequiredDataException("filename is Null. Did not get a filename.")
-
-        input = S3NotificationInfo.to_dict(info)
-        input['run'] = run
+        input = {
+                    "run": run,
+                    "article_id": article_id,
+                    "version_reason": version_reason,
+                    "scheduled_publication_data": scheduled_publication_date
+        }
 
         workflow_id, \
         workflow_name, \
@@ -38,7 +39,7 @@ class starter_IngestArticleZip():
         child_policy, \
         execution_start_to_close_timeout, \
         workflow_input = helper.set_workflow_information(self.const_name, "1", None, input,
-                                                         info.file_name.replace('/', '_'),
+                                                         "ingest-" + article_id,
                                                          start_to_close_timeout=str(60 * 60 * 1))
 
         # Simple connect
