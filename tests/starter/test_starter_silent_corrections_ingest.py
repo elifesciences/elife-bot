@@ -22,7 +22,7 @@ class TestStarterSilentCorrectionsIngest(unittest.TestCase):
     def test_silent_corrections_ingest_starter_(self, fake_boto_conn, fake_logger):
         fake_boto_conn.return_value = FakeBotoConnection()
         self.stater_silent_corrections_ingest.start(settings=settings_mock, run=run_example,
-                                             info=S3NotificationInfo.from_dict(test_data.ingest_article_zip_data))
+                                             info=S3NotificationInfo.from_dict(test_data.silent_ingest_article_zip_data))
 
 
 if __name__ == '__main__':

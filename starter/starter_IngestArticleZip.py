@@ -21,7 +21,7 @@ class starter_IngestArticleZip():
     def __init__(self):
         self.const_name = "IngestArticleZip"
         
-    def start(self, settings, run, article_id, version_reason, scheduled_publication_date):
+    def start(self, settings, run, article_id, version_reason=None, scheduled_publication_date=None):
 
         # Log
         logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
@@ -30,7 +30,7 @@ class starter_IngestArticleZip():
                     "run": run,
                     "article_id": article_id,
                     "version_reason": version_reason,
-                    "scheduled_publication_data": scheduled_publication_date
+                    "scheduled_publication_date": scheduled_publication_date
         }
 
         workflow_id, \
