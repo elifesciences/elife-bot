@@ -106,21 +106,30 @@ data_invalid_lax = {
             "update_date": None
         }
 
+silent_ingest_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
+                                  u'event_time': u'2016-07-28T16:14:27.809576Z',
+                                  u'event_name': u'ObjectCreated:Put',
+                                  u'file_name': u'elife-00353-vor-r1.zip',
+                                  u'file_etag': u'e7f639f63171c097d4761e2d2efe8dc4',
+                                  u'bucket_name': u'jen-elife-production-final',
+                                  u'file_size': 1097506}
+
 ingest_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
-                           u'event_time': u'2016-07-28T16:14:27.809576Z',
-                           u'event_name': u'ObjectCreated:Put',
-                           u'file_name': u'elife-00353-vor-r1.zip',
-                           u'file_etag': u'e7f639f63171c097d4761e2d2efe8dc4',
-                           u'bucket_name': u'jen-elife-production-final',
-                           u'file_size': 1097506}
+                           u"article_id": u"00353",
+                           u"version_reason": "article version reason",
+                           u"scheduled_publication_date": "1520585023"}
+
+ingest_article_zip_no_vr_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
+                                 u"article_id": u"00353"}
 
 initial_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
-                           u'event_time': u'2016-07-28T16:14:27.809576Z',
-                           u'event_name': u'ObjectCreated:Put',
-                           u'file_name': u'elife-00353-vor-r1.zip',
-                           u'file_etag': u'e7f639f63171c097d4761e2d2efe8dc4',
-                           u'bucket_name': u'jen-elife-production-final',
-                           u'file_size': 1097506}
+                            u'event_time': u'2016-07-28T16:14:27.809576Z',
+                            u'event_name': u'ObjectCreated:Put',
+                            u'file_name': u'elife-00353-vor-r1.zip',
+                            u'file_etag': u'e7f639f63171c097d4761e2d2efe8dc4',
+                            u'bucket_name': u'jen-elife-production-final',
+                            u'file_size': 1097506}
+
 
 def ApprovePublication_data(update_date="2012-12-13T00:00:00Z"):
         return {

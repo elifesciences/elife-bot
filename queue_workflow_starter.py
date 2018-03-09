@@ -99,8 +99,9 @@ def start_workflow(workflow_name, workflow_data):
     s.start(settings=settings, **workflow_data)
 
 def process_data_ingestarticlezip(workflow_name, workflow_data):
-    data = {'info': S3NotificationInfo.from_dict(workflow_data),
-            'run': workflow_data['run']}
+    data = {'article_id': workflow_data['article_id'],
+            'run': workflow_data['run'], 'version_reason': workflow_data.get('version_reason'),
+            'scheduled_publication_date': workflow_data.get('scheduled_publication_date')}
     return data
 
 def process_data_initialarticlezip(workflow_name, workflow_data):
