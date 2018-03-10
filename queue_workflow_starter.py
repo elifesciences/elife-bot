@@ -120,7 +120,7 @@ def process_data_pubmedarticledeposit(workflow_name, workflow_data):
 workflow_data_processors = {
     'IngestArticleZip': process_data_ingestarticlezip,
     'InitialArticleZip': process_data_initialarticlezip,
-    'SilentCorrectionsIngest': process_data_ingestarticlezip,
+    'SilentCorrectionsIngest': process_data_initialarticlezip,
     'PostPerfectPublication': process_data_postperfectpublication,
     'PubmedArticleDeposit': process_data_pubmedarticledeposit
 }
