@@ -1,20 +1,24 @@
 import unittest
+import os
 from activity.activity_SendDashboardProperties import activity_SendDashboardProperties
 import settings_mock
 from mock import patch, ANY
-from classes_mock import FakeSession
-from classes_mock import FakeS3Connection
-from classes_mock import FakeKey
-from testfixtures import TempDirectory
-from testfixtures import tempdir
+from tests.activity.classes_mock import FakeSession, FakeS3Connection, FakeKey, FakeLogger
+from testfixtures import TempDirectory, tempdir
 import test_activity_data as test_data
 
 
 class TestSendDashboardEvents(unittest.TestCase):
 
     def setUp(self):
+        fake_logger = FakeLogger()
+        self.send_dashboard_properties = activity_SendDashboardProperties(
+            settings_mock, fake_logger, None, None, None)
+        self.directory = TempDirectory()
 
-        self.send_dashboard_properties = activity_SendDashboardProperties(settings_mock, None, None, None, None)
+    def tearDown(self):
+        self.directory.cleanup()
+        TempDirectory.cleanup_all()
 
     @tempdir()
     @patch.object(activity_SendDashboardProperties, 'emit_monitor_event')
@@ -25,10 +29,9 @@ class TestSendDashboardEvents(unittest.TestCase):
     def test_do_activity(self, fake_emit_monitor_property, fake_session, fake_s3_mock, fake_get_article_xml_key,
                          fake_emit_monitor_event):
 
-        directory = TempDirectory()
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_s3_mock.return_value = FakeS3Connection()
-        fake_get_article_xml_key.return_value = FakeKey(directory), test_data.bucket_origin_file_name
+        fake_get_article_xml_key.return_value = FakeKey(self.directory), test_data.bucket_origin_file_name
 
         result = self.send_dashboard_properties.do_activity(test_data.ConvertJATS_data)
 
@@ -49,7 +52,51 @@ class TestSendDashboardEvents(unittest.TestCase):
                                                 'Send dashboard properties', 'end',
                                                 'Article properties sent to dashboard for article  00353')
 
-        directory.cleanup()
+        self.directory.cleanup()
+
+
+    @tempdir()
+    @patch.object(activity_SendDashboardProperties, 'emit_monitor_event')
+    @patch('activity.activity_SendDashboardProperties.get_article_xml_key')
+    @patch('activity.activity_SendDashboardProperties.S3Connection')
+    @patch('activity.activity_SendDashboardProperties.get_session')
+    @patch.object(activity_SendDashboardProperties, 'set_monitor_property')
+    def test_do_activity_failure_no_xml(self, fake_emit_monitor_property, fake_session, fake_s3_mock, fake_get_article_xml_key,
+                         fake_emit_monitor_event):
+        "test if no XML file is supplied, will fail"
+        fake_session.return_value = FakeSession(test_data.session_example)
+        fake_s3_mock.return_value = FakeS3Connection()
+        fake_get_article_xml_key.return_value = None, None
+
+        result = self.send_dashboard_properties.do_activity(test_data.ConvertJATS_data)
+
+        self.assertEqual(result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE)
+
+        self.directory.cleanup()
+
+
+    @tempdir()
+    @patch.object(activity_SendDashboardProperties, 'emit_monitor_event')
+    @patch('activity.activity_SendDashboardProperties.get_article_xml_key')
+    @patch('activity.activity_SendDashboardProperties.S3Connection')
+    @patch('activity.activity_SendDashboardProperties.get_session')
+    @patch.object(activity_SendDashboardProperties, 'set_monitor_property')
+    def test_do_activity_failure_invalid_xml(self, fake_emit_monitor_property, fake_session, fake_s3_mock, fake_get_article_xml_key,
+                         fake_emit_monitor_event):
+        "test if XML fails to parse, here an incorrect pub_date, will fail"
+        fake_session.return_value = FakeSession(test_data.session_example)
+        fake_s3_mock.return_value = FakeS3Connection()
+        with open(os.path.join('tests', 'files_source', 'elife-00353-v1_bad_pub_date.xml')) as open_file:
+            fake_get_article_xml_key.return_value = (
+                FakeKey(self.directory, 'elife-00353-v1.xml', open_file.read()),
+                test_data.bucket_origin_file_name)
+
+        result = self.send_dashboard_properties.do_activity(test_data.ConvertJATS_data)
+
+        self.assertEqual(result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE)
+
+        self.directory.cleanup()
+
 
 if __name__ == '__main__':
     unittest.main()

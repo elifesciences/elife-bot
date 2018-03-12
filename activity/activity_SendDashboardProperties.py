@@ -42,8 +42,8 @@ class activity_SendDashboardProperties(activity.activity):
         self.emit_monitor_event(self.settings, article_id, version, run, "Send dashboard properties", "start",
                                 "Starting send of article properties to dashboard for article " + article_id)
 
+        # first download the XML and parse it, a permanent failure if does not succeed
         try:
-
             if self.logger:
                 self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
             expanded_folder_name = session.get_value('expanded_folder')
@@ -58,13 +58,23 @@ class activity_SendDashboardProperties(activity.activity):
             (xml_key, xml_filename) = get_article_xml_key(bucket, bucket_folder_name)
             if xml_key is None:
                 self.logger.error("Article XML path not found")
-                return False
+                return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
             xml = xml_key.get_contents_as_string()
             soup = parser.parse_xml(xml)
 
             self.set_dashboard_properties(soup, article_id, version)
 
+        except Exception as e:
+            self.logger.exception("Exception emitting dashboard properties")
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    "Send dashboard properties", "error",
+                                    "Error in send of article properties to dashboard for article  " + article_id +
+                                    " message:" + e.message)
+            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+
+        # next emit the monitor event, return False if not able to emit the message
+        try:
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     "Send dashboard properties", "end",
                                     "Article properties sent to dashboard for article  " +
