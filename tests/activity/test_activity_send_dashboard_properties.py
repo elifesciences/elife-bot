@@ -1,6 +1,5 @@
 import unittest
 import os
-from io import StringIO
 from activity.activity_SendDashboardProperties import activity_SendDashboardProperties
 import settings_mock
 from mock import patch, ANY
