@@ -15,8 +15,10 @@ class TestSendDashboardEvents(unittest.TestCase):
         fake_logger = FakeLogger()
         self.send_dashboard_properties = activity_SendDashboardProperties(
             settings_mock, fake_logger, None, None, None)
+        self.directory = TempDirectory()
 
     def tearDown(self):
+        self.directory.cleanup()
         TempDirectory.cleanup_all()
 
     @tempdir()
@@ -28,10 +30,9 @@ class TestSendDashboardEvents(unittest.TestCase):
     def test_do_activity(self, fake_emit_monitor_property, fake_session, fake_s3_mock, fake_get_article_xml_key,
                          fake_emit_monitor_event):
 
-        directory = TempDirectory()
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_s3_mock.return_value = FakeS3Connection()
-        fake_get_article_xml_key.return_value = FakeKey(directory), test_data.bucket_origin_file_name
+        fake_get_article_xml_key.return_value = FakeKey(self.directory), test_data.bucket_origin_file_name
 
         result = self.send_dashboard_properties.do_activity(test_data.ConvertJATS_data)
 
@@ -52,7 +53,7 @@ class TestSendDashboardEvents(unittest.TestCase):
                                                 'Send dashboard properties', 'end',
                                                 'Article properties sent to dashboard for article  00353')
 
-        directory.cleanup()
+        self.directory.cleanup()
 
 
     @tempdir()
@@ -64,7 +65,6 @@ class TestSendDashboardEvents(unittest.TestCase):
     def test_do_activity_failure_no_xml(self, fake_emit_monitor_property, fake_session, fake_s3_mock, fake_get_article_xml_key,
                          fake_emit_monitor_event):
         "test if no XML file is supplied, will fail"
-        directory = TempDirectory()
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_s3_mock.return_value = FakeS3Connection()
         fake_get_article_xml_key.return_value = None, None
@@ -73,7 +73,7 @@ class TestSendDashboardEvents(unittest.TestCase):
 
         self.assertEqual(result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE)
 
-        directory.cleanup()
+        self.directory.cleanup()
 
 
     @tempdir()
@@ -85,19 +85,18 @@ class TestSendDashboardEvents(unittest.TestCase):
     def test_do_activity_failure_invalid_xml(self, fake_emit_monitor_property, fake_session, fake_s3_mock, fake_get_article_xml_key,
                          fake_emit_monitor_event):
         "test if XML fails to parse, here an incorrect pub_date, will fail"
-        directory = TempDirectory()
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_s3_mock.return_value = FakeS3Connection()
         with open(os.path.join('tests', 'files_source', 'elife-00353-v1_bad_pub_date.xml')) as open_file:
             fake_get_article_xml_key.return_value = (
-                FakeKey(directory, 'elife-00353-v1.xml', open_file.read()),
+                FakeKey(self.directory, 'elife-00353-v1.xml', open_file.read()),
                 test_data.bucket_origin_file_name)
 
         result = self.send_dashboard_properties.do_activity(test_data.ConvertJATS_data)
 
         self.assertEqual(result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE)
 
-        directory.cleanup()
+        self.directory.cleanup()
 
 
 if __name__ == '__main__':
