@@ -17,5 +17,8 @@ fi
 if pip list | grep elifecrossref; then
     pip uninstall -y elifecrossref
 fi
+if pip list | grep elifepubmed; then
+    pip uninstall -y elifepubmed
+fi
 pip install -r requirements.txt
 
