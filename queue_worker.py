@@ -7,7 +7,6 @@ from S3utility.s3_notification_info import S3NotificationInfo
 from S3utility.s3_sqs_message import S3SQSMessage
 import boto.sqs
 from boto.sqs.message import Message
-import settings as settings_lib
 import log
 import os
 import yaml
@@ -147,6 +146,7 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
+    settings_lib = __import__('settings')
     settings = settings_lib.get_settings(ENV)
     queue_worker = QueueWorker(settings)
     process.monitor_interrupt(lambda flag: queue_worker.work(flag))
