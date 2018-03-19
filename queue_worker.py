@@ -29,6 +29,10 @@ class QueueWorker:
             self.logger = logger
         else:
             self.create_log()
+        self.conn = None
+        # queues for reading and writing
+        self.queue = None
+        self.out_queue = None
 
     def create_log(self):
         # Log
@@ -37,26 +41,38 @@ class QueueWorker:
         # logFile = None
         self.logger = log.logger(log_file, self.settings.setLevel, identity)
 
-    def work(self, flag):
-        # Specify run environment settings
-        #settings = settings_lib.get_settings(ENV)
+    def connect(self):
+        "connect to the queue service"
+        if not self.conn:
+            self.conn = boto.sqs.connect_to_region(
+                self.settings.sqs_region,
+                aws_access_key_id=self.settings.aws_access_key_id,
+                aws_secret_access_key=self.settings.aws_secret_access_key)
 
-        # Simple connect
-        conn = boto.sqs.connect_to_region(self.settings.sqs_region,
-                                          aws_access_key_id=self.settings.aws_access_key_id,
-                                          aws_secret_access_key=self.settings.aws_secret_access_key)
-        queue = conn.get_queue(self.settings.S3_monitor_queue)
-        queue.set_message_class(S3SQSMessage)
+    def queues(self):
+        "get the queues"
+        self.connect()
+        if not self.queue:
+            self.queue = self.conn.get_queue(self.settings.S3_monitor_queue)
+            self.queue.set_message_class(S3SQSMessage)
+        if not self.out_queue:
+            self.out_queue = self.conn.get_queue(self.settings.workflow_starter_queue)
+
+    def work(self, flag):
+        "read messages from the queue"
+
+        # Simple connect to the queues
+        self.queues()
 
         rules = self.load_rules()
         application = newrelic.agent.application()
 
         # Poll for an activity task indefinitely
-        if queue is not None:
+        if self.queue is not None:
             while flag.green():
 
                 self.logger.info('reading message')
-                queue_message = queue.read(30)
+                queue_message = self.queue.read(30)
                 # TODO : check for more-than-once delivery
                 # ( Dynamo conditional write? http://tinyurl.com/of3tmop )
 
@@ -80,14 +96,13 @@ class QueueWorker:
                             }
 
                             # send workflow initiation message
-                            out_queue = conn.get_queue(self.settings.workflow_starter_queue)
                             m = Message()
                             m.set_body(json.dumps(message))
-                            out_queue.write(m)
+                            self.out_queue.write(m)
 
                             # cancel incoming message
                             self.logger.info("cancelling message")
-                            queue.delete_message(queue_message)
+                            self.queue.delete_message(queue_message)
                             self.logger.info("message cancelled")
                         else:
                             # TODO : log
