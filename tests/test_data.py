@@ -130,6 +130,25 @@ initial_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
                             u'bucket_name': u'jen-elife-production-final',
                             u'file_size': 1097506}
 
+queue_worker_rules = {
+    'ArticleZip': {
+        'bucket_name_pattern': '.*elife-production-final$',
+        'file_name_pattern': '.*\.zip',
+        'starter_name': 'InitialArticleZip'
+        },
+    'SilentCorrectionsArticleZip': {
+       'bucket_name_pattern': '.*elife-silent-corrections$',
+       'file_name_pattern': '.*\.zip',
+       'starter_name': 'SilentCorrectionsIngest'
+       }
+    }
+
+queue_worker_article_zip_data = {u'event_time': u'2016-07-28T16:14:27.809576Z',
+                                 u'event_name': u'ObjectCreated:Put',
+                                 u'file_name': u'elife-00353-vor-r1.zip',
+                                 u'file_etag': u'e7f639f63171c097d4761e2d2efe8dc4',
+                                 u'bucket_name': u'jen-elife-production-final',
+                                 u'file_size': 1097506}
 
 def ApprovePublication_data(update_date="2012-12-13T00:00:00Z"):
         return {
