@@ -1,15 +1,17 @@
 import unittest
 from mock import Mock
-import queue_worker
+import settings_mock
+from queue_worker import QueueWorker
 
 
 class TestQueueWorker(unittest.TestCase):
     def setUp(self):
-        queue_worker.settings = Mock()
+        self.logger = Mock()
+        self.worker = QueueWorker(settings_mock, self.logger)
 
     def test_get_starter_name(self):
         "test rules in the new file workflows YAML file"
-        rules = queue_worker.load_rules()
+        rules = self.worker.load_rules()
         self.assertIsNotNone(rules)
 
 
