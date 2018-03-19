@@ -83,7 +83,7 @@ class QueueWorker:
                         if queue_message.notification_type == 'S3Event':
                             info = S3NotificationInfo.from_S3SQSMessage(queue_message)
                             self.logger.info("S3NotificationInfo: %s", info.to_dict())
-                            workflow_name = get_starter_name(rules, info)
+                            workflow_name = self.get_starter_name(rules, info)
                             if workflow_name is None:
                                 self.logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
                                 return False
