@@ -29,9 +29,7 @@ class QueueWorker:
         else:
             self.create_log()
         self.conn = None
-        # queues for reading and writing
-        self.queue = None
-        self.out_queue = None
+        self.sleep_seconds = 10
 
     def create_log(self):
         # Log
@@ -51,27 +49,26 @@ class QueueWorker:
     def queues(self):
         "get the queues"
         self.connect()
-        if not self.queue:
-            self.queue = self.conn.get_queue(self.settings.S3_monitor_queue)
-            self.queue.set_message_class(S3SQSMessage)
-        if not self.out_queue:
-            self.out_queue = self.conn.get_queue(self.settings.workflow_starter_queue)
+        queue = self.conn.get_queue(self.settings.S3_monitor_queue)
+        queue.set_message_class(S3SQSMessage)
+        out_queue = self.conn.get_queue(self.settings.workflow_starter_queue)
+        return queue, out_queue
 
     def work(self, flag):
         "read messages from the queue"
 
         # Simple connect to the queues
-        self.queues()
+        queue, out_queue = self.queues()
 
         rules = self.load_rules()
         application = newrelic.agent.application()
 
         # Poll for an activity task indefinitely
-        if self.queue is not None:
+        if queue is not None:
             while flag.green():
 
                 self.logger.info('reading message')
-                queue_message = self.queue.read(30)
+                queue_message = queue.read(30)
                 # TODO : check for more-than-once delivery
                 # ( Dynamo conditional write? http://tinyurl.com/of3tmop )
 
@@ -97,16 +94,16 @@ class QueueWorker:
                             # send workflow initiation message
                             m = Message()
                             m.set_body(json.dumps(message))
-                            self.out_queue.write(m)
+                            out_queue.write(m)
 
                             # cancel incoming message
                             self.logger.info("cancelling message")
-                            self.queue.delete_message(queue_message)
+                            queue.delete_message(queue_message)
                             self.logger.info("message cancelled")
                         else:
                             # TODO : log
                             pass
-                time.sleep(10)
+                time.sleep(self.sleep_seconds)
 
             self.logger.info("graceful shutdown")
 

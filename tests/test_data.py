@@ -150,6 +150,18 @@ queue_worker_article_zip_data = {u'event_time': u'2016-07-28T16:14:27.809576Z',
                                  u'bucket_name': u'jen-elife-production-final',
                                  u'file_size': 1097506}
 
+queue_worker_starter_message = {
+    "workflow_name": "InitialArticleZip",
+    "workflow_data": {
+        "event_time": "2016-07-28T16:14:27.809576Z",
+        "event_name": "ObjectCreated:Put",
+        "file_name": "elife-00353-vor-r1.zip",
+        "file_etag": "e7f639f63171c097d4761e2d2efe8dc4",
+        "bucket_name": "jen-elife-production-final",
+        "file_size": 1097506
+        }
+    }
+
 def ApprovePublication_data(update_date="2012-12-13T00:00:00Z"):
         return {
             "article_id": "00353",
