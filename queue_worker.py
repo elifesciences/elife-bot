@@ -126,16 +126,6 @@ class QueueWorker:
             pass
 
 
-def reload_module(module_name):
-    """
-    Given an module name,
-    attempt to reload the module
-    """
-    try:
-        reload(eval(module_name))
-    except:
-        pass
-
 if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
