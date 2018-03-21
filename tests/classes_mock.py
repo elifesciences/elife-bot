@@ -11,10 +11,12 @@ class FakeFlag():
         self.green_value = True
 
     def green(self):
-        "first return True, wait, then return False"
+        "first return True, second call return False after waiting timeout_seconds"
         return_value = self.green_value
         self.green_value = False
-        time.sleep(self.timeout_seconds)
+        # return immediately when returning True, wait before return False
+        if return_value is False:
+            time.sleep(self.timeout_seconds)
         return return_value
 
 class FakeS3Event():
