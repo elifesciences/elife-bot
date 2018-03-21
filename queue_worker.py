@@ -1,4 +1,3 @@
-import random
 import time
 import json
 from provider import process
@@ -123,7 +122,6 @@ class QueueWorker:
             if re.match(rule['bucket_name_pattern'], info.bucket_name) and \
                     re.match(rule['file_name_pattern'], info.file_name):
                 return rule['starter_name']
-            pass
 
 
 if __name__ == "__main__":
