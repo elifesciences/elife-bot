@@ -69,6 +69,9 @@ class FakeSQSQueue:
     def read(self, dir_name):
         return self.dir.read(dir_name)
 
+    def delete_message(self, message):
+        pass
+
 class FakeStorageProviderConnection:
     def get_connection(self, aws_access_key_id, aws_secret_access_key):
         return None

@@ -2,3 +2,8 @@ ArticleZip:
   bucket_name_pattern: '.*elife-production-final$'
   file_name_pattern: '.*\.zip'
   starter_name: 'InitialArticleZip'
+
+SilentCorrectionsArticleZip:
+  bucket_name_pattern: '.*elife-silent-corrections$'
+  file_name_pattern: '.*\.zip'
+  starter_name: 'SilentCorrectionsIngest'

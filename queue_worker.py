@@ -1,4 +1,3 @@
-import random
 import time
 import json
 from provider import process
@@ -7,7 +6,6 @@ from S3utility.s3_notification_info import S3NotificationInfo
 from S3utility.s3_sqs_message import S3SQSMessage
 import boto.sqs
 from boto.sqs.message import Message
-import settings as settings_lib
 import log
 import os
 import yaml
@@ -22,100 +20,109 @@ os.sys.path.insert(0, parentdir)
 Amazon SQS worker
 """
 
+class QueueWorker:
+    def __init__(self, settings, logger=None):
+        self.settings = settings
+        if logger:
+            self.logger = logger
+        else:
+            self.create_log()
+        self.conn = None
+        self.sleep_seconds = 10
 
-def work(ENV, flag):
-    # Specify run environment settings
-    settings = settings_lib.get_settings(ENV)
+    def create_log(self):
+        # Log
+        identity = "queue_worker_%s" % os.getpid()
+        log_file = "queue_worker.log"
+        # logFile = None
+        self.logger = log.logger(log_file, self.settings.setLevel, identity)
 
-    # Log
-    identity = "queue_worker_%s" % os.getpid()
-    log_file = "queue_worker.log"
-    # logFile = None
-    logger = log.logger(log_file, settings.setLevel, identity)
+    def connect(self):
+        "connect to the queue service"
+        if not self.conn:
+            self.conn = boto.sqs.connect_to_region(
+                self.settings.sqs_region,
+                aws_access_key_id=self.settings.aws_access_key_id,
+                aws_secret_access_key=self.settings.aws_secret_access_key)
 
-    # Simple connect
-    conn = boto.sqs.connect_to_region(settings.sqs_region,
-                                      aws_access_key_id=settings.aws_access_key_id,
-                                      aws_secret_access_key=settings.aws_secret_access_key)
-    queue = conn.get_queue(settings.S3_monitor_queue)
-    queue.set_message_class(S3SQSMessage)
+    def queues(self):
+        "get the queues"
+        self.connect()
+        queue = self.conn.get_queue(self.settings.S3_monitor_queue)
+        queue.set_message_class(S3SQSMessage)
+        out_queue = self.conn.get_queue(self.settings.workflow_starter_queue)
+        return queue, out_queue
 
-    rules = load_rules()
-    application = newrelic.agent.application()
+    def work(self, flag):
+        "read messages from the queue"
 
-    # Poll for an activity task indefinitely
-    if queue is not None:
-        while flag.green():
+        # Simple connect to the queues
+        queue, out_queue = self.queues()
 
-            logger.info('reading message')
-            queue_message = queue.read(30)
-            # TODO : check for more-than-once delivery
-            # ( Dynamo conditional write? http://tinyurl.com/of3tmop )
+        rules = self.load_rules()
+        application = newrelic.agent.application()
 
-            if queue_message is None:
-                logger.info('no messages available')
-            else:
-                with newrelic.agent.BackgroundTask(application, name=queue_message.notification_type, group='queue_worker.py'):
-                    logger.info('got message id: %s' % queue_message.id)
-                    if queue_message.notification_type == 'S3Event':
-                        info = S3NotificationInfo.from_S3SQSMessage(queue_message)
-                        logger.info("S3NotificationInfo: %s", info.to_dict())
-                        workflow_name = get_starter_name(rules, info)
-                        if workflow_name is None:
-                            logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
-                            return False
+        # Poll for an activity task indefinitely
+        if queue is not None:
+            while flag.green():
 
-                        # build message
-                        message = {
-                            'workflow_name': workflow_name,
-                            'workflow_data': info.to_dict()
-                        }
+                self.logger.info('reading message')
+                queue_message = queue.read(30)
+                # TODO : check for more-than-once delivery
+                # ( Dynamo conditional write? http://tinyurl.com/of3tmop )
 
-                        # send workflow initiation message
-                        out_queue = conn.get_queue(settings.workflow_starter_queue)
-                        m = Message()
-                        m.set_body(json.dumps(message))
-                        out_queue.write(m)
+                if queue_message is None:
+                    self.logger.info('no messages available')
+                else:
+                    with newrelic.agent.BackgroundTask(application, name=queue_message.notification_type, group='queue_worker.py'):
+                        self.logger.info('got message id: %s' % queue_message.id)
+                        if queue_message.notification_type == 'S3Event':
+                            info = S3NotificationInfo.from_S3SQSMessage(queue_message)
+                            self.logger.info("S3NotificationInfo: %s", info.to_dict())
+                            workflow_name = self.get_starter_name(rules, info)
+                            if workflow_name is None:
+                                self.logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
+                                return False
 
-                        # cancel incoming message
-                        logger.info("cancelling message")
-                        queue.delete_message(queue_message)
-                        logger.info("message cancelled")
-                    else:
-                        # TODO : log
-                        pass
-            time.sleep(10)
+                            # build message
+                            message = {
+                                'workflow_name': workflow_name,
+                                'workflow_data': info.to_dict()
+                            }
 
-        logger.info("graceful shutdown")
+                            # send workflow initiation message
+                            m = Message()
+                            m.set_body(json.dumps(message))
+                            out_queue.write(m)
 
-    else:
-        logger.error('error obtaining queue')
+                            # cancel incoming message
+                            self.logger.info("cancelling message")
+                            queue.delete_message(queue_message)
+                            self.logger.info("message cancelled")
+                        else:
+                            # TODO : log
+                            pass
+                time.sleep(self.sleep_seconds)
 
+            self.logger.info("graceful shutdown")
 
-def load_rules():
-    # load the rules from the YAML file
-    stream = file('newFileWorkflows.yaml', 'r')
-    return yaml.load(stream)
-
-
-def get_starter_name(rules, info):
-    for rule_name in rules:
-        rule = rules[rule_name]
-        if re.match(rule['bucket_name_pattern'], info.bucket_name) and \
-                re.match(rule['file_name_pattern'], info.file_name):
-            return rule['starter_name']
-        pass
+        else:
+            self.logger.error('error obtaining queue')
 
 
-def reload_module(module_name):
-    """
-    Given an module name,
-    attempt to reload the module
-    """
-    try:
-        reload(eval(module_name))
-    except:
-        pass
+    def load_rules(self):
+        # load the rules from the YAML file
+        stream = file('newFileWorkflows.yaml', 'r')
+        return yaml.load(stream)
+
+
+    def get_starter_name(self, rules, info):
+        for rule_name in rules:
+            rule = rules[rule_name]
+            if re.match(rule['bucket_name_pattern'], info.bucket_name) and \
+                    re.match(rule['file_name_pattern'], info.file_name):
+                return rule['starter_name']
+
 
 if __name__ == "__main__":
     parser = OptionParser()
@@ -124,4 +131,7 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
-    process.monitor_interrupt(lambda flag: work(ENV, flag))
+    settings_lib = __import__('settings')
+    settings = settings_lib.get_settings(ENV)
+    queue_worker = QueueWorker(settings)
+    process.monitor_interrupt(lambda flag: queue_worker.work(flag))
