@@ -155,8 +155,9 @@ class activity_PMCDeposit(activity.activity):
             result = True
         else:
             result = False
-            # Clean up disk
-            self.clean_tmp_dir()
+
+        # Clean up disk
+        self.clean_tmp_dir()
 
         return result
 
