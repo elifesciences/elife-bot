@@ -63,14 +63,15 @@ class TestPMCDeposit(unittest.TestCase):
             file_list = open_zip_file.namelist()
         return file_list
 
-
+    @patch.object(activity_PMCDeposit, 'clean_tmp_dir')
     @patch('activity.activity_PMCDeposit.s3lib.get_s3_key_names_from_bucket')
     @patch('activity.activity_PMCDeposit.S3Connection')
     @patch.object(activity_PMCDeposit, 'upload_article_zip_to_s3')
     @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
     @patch.object(activity_PMCDeposit, 'download_files_from_s3')
     def test_do_activity(self, fake_download_files_from_s3, fake_ftp_to_endpoint,
-                         fake_upload_article_zip_to_s3, fake_s3_mock, fake_s3_key_names):
+                         fake_upload_article_zip_to_s3, fake_s3_mock, fake_s3_key_names,
+                         fake_clean_tmp_dir):
 
         self.activity.create_activity_directories()
 
