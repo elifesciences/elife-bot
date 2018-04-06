@@ -383,7 +383,7 @@ class TestPublicationEmail(unittest.TestCase):
         return article_object
 
     @patch('provider.lax_provider.article_versions')
-    def test_approve_articles(self, mock_lax_provider_article_versions):
+    def test_removes_articles_based_on_article_type(self, mock_lax_provider_article_versions):
         "test removing articles based on article type"
         mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
         research_article_doi = '10.7554/eLife.99996'
