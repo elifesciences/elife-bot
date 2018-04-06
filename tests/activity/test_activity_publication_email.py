@@ -18,6 +18,7 @@ from classes_mock import FakeKey
 
 from testfixtures import TempDirectory
 import tests.test_data as test_data
+from tests.activity.helpers import instantiate_article
 
 import os
 # Add parent directory for imports, so activity classes can use elife-poa-xml-generation
@@ -372,25 +373,15 @@ class TestPublicationEmail(unittest.TestCase):
             result = self.activity.send_email(None, None, failed_author, None, None)
             self.assertEqual(result, False)
 
-    def instantiate_article(self, article_type, doi, is_poa=None, was_ever_poa=None):
-        "for testing purposes, generate an article object"
-        article_object = article()
-        article_object.article_type = article_type
-        article_object.doi = doi
-        article_object.doi_id = article_object.get_doi_id(doi)
-        article_object.is_poa = is_poa
-        article_object.was_ever_poa = was_ever_poa
-        return article_object
-
     @patch('provider.lax_provider.article_versions')
     def test_removes_articles_based_on_article_type(self, mock_lax_provider_article_versions):
         "test removing articles based on article type"
         mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
         research_article_doi = '10.7554/eLife.99996'
-        editorial_article = self.instantiate_article('editorial', '10.7554/eLife.99999')
-        correction_article = self.instantiate_article('correction', '10.7554/eLife.99998')
-        retraction_article = self.instantiate_article('retraction', '10.7554/eLife.99997')
-        research_article = self.instantiate_article('research-article', research_article_doi, True, True)
+        editorial_article = instantiate_article('editorial', '10.7554/eLife.99999')
+        correction_article = instantiate_article('correction', '10.7554/eLife.99998')
+        retraction_article = instantiate_article('retraction', '10.7554/eLife.99997')
+        research_article = instantiate_article('research-article', research_article_doi, True, True)
         articles = [editorial_article, correction_article, retraction_article, research_article]
         approved_articles = self.activity.approve_articles(articles)
         # one article will remain, the research-article
