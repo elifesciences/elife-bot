@@ -69,6 +69,7 @@ class activity_PublicationEmail(activity.activity):
         self.article_types_do_not_send = []
         self.article_types_do_not_send.append('editorial')
         self.article_types_do_not_send.append('correction')
+        self.article_types_do_not_send.append('retraction')
 
         # Email types, for sending previews of each template
         self.email_types = []
