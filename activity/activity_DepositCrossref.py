@@ -19,7 +19,7 @@ import provider.s3lib as s3lib
 from provider import lax_provider
 from provider import utils
 from elifecrossref import generate
-from elifecrossref.conf import config, parse_raw_config
+from elifecrossref.conf import raw_config, parse_raw_config
 from elifearticle.article import ArticleDate
 
 """
@@ -167,9 +167,9 @@ class activity_DepositCrossref(activity.activity):
 
     def elifecrossref_config(self, config_section):
         "parse the config values from the elifecrossref config"
-        config.read(self.settings.elifecrossref_config_file)
-        raw_config = config[config_section]
-        return parse_raw_config(raw_config)
+        return parse_raw_config(raw_config(
+            config_section,
+            self.settings.elifecrossref_config_file))
 
     def article_first_pub_date(self, article):
         "find the first article pub date from the list of crossref config pub_date_types"
@@ -247,10 +247,11 @@ class activity_DepositCrossref(activity.activity):
             if self.approve_to_generate(article) is not True:
                 generate_status = False
             else:
+                crossref_config = self.elifecrossref_config(
+                    self.settings.elifecrossref_config_section)
                 try:
                     # Will write the XML to the TMP_DIR
-                    generate.crossref_xml_to_disk(
-                        article_list, config_section=self.settings.elifecrossref_config_section)
+                    generate.crossref_xml_to_disk(article_list, crossref_config)
                 except:
                     generate_status = False
 

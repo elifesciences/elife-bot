@@ -58,7 +58,8 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_file_count": 1,
             "expected_crossref_xml_contains": [
                 '<doi>10.7554/eLife.15747</doi>',
-                '<publication_date media_type="online"><month>06</month><day>16</day><year>2016</year></publication_date>'
+                '<publication_date media_type="online"><month>06</month><day>16</day><year>2016</year></publication_date>',
+                '<item_number item_number_type="article_number">e15747</item_number>'
                 ]
         },
         {
