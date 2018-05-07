@@ -11,7 +11,7 @@ from boto.s3.connection import S3Connection
 import settings as settings_lib
 
 """
-activity_PostEIF.py activity
+activity_ArchiveArticle.py activity
 """
 
 

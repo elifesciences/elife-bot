@@ -14,8 +14,7 @@ session_example = {
             'expanded_folder': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'update_date': '2012-12-13T00:00:00Z',
             'file_name': 'elife-00353-vor-v1.zip',
-            'filename_last_element': 'elife-00353-vor-r1.zip',
-            'eif_location': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json'
+            'filename_last_element': 'elife-00353-vor-r1.zip'
         }
 data_example_before_publish = {
             "status": "vor",
@@ -23,7 +22,6 @@ data_example_before_publish = {
             "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
             "expanded_folder": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251",
             "version": "1",
-            "eif_location": "",
             "article_id": "00353",
             'file_name': 'elife-00353-vor-v1.zip',
             'filename_last_element': 'elife-00353-vor-r1.zip'}
