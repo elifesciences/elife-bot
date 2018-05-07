@@ -43,30 +43,6 @@ bucket = {
 
 run_example = '1ee54f9a-cb28-4c8e-8232-4b317cf4beda'
 
-def ApprovePublication_publication_data(update_date):
-            return {
-                "workflow_name": "PostPerfectPublication",
-                "workflow_data": {
-                            "status": "vor",
-                            "update_date": update_date,
-                            "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
-                            "expanded_folder": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251",
-                            "version": "1",
-                            "eif_location": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.json",
-                            "article_id": "00353"}
-                }
-
-def ApprovePublication_data(update_date):
-        return {
-            "article_id": "00353",
-            "version": "1",
-            "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
-            "publication_data": base64.encodestring(json.dumps(ApprovePublication_publication_data(update_date)))
-            }
-ApprovePublication_test_dir = "fake_sqs_queue_container"
-def ApprovePublication_json_output_return_example(update_date):
-            return ApprovePublication_publication_data(update_date)
-
 # ExpandArticle
 
 ExpandArticle_data = {u'event_time': u'2016-06-07T10:45:18.141126Z', u'event_name': u'ObjectCreated:Put', u'file_name': u'elife-00353-vor-v1-20121213000000.zip', u'file_etag': u'1e17ebb1fad6c467fce9cede16bb752f', u'bucket_name': u'jen-elife-production-final', u'file_size': 1097506, u"run": u"1ee54f9a-cb28-4c8e-8232-4b317cf4beda"}
