@@ -88,7 +88,6 @@ def start(ENV="dev"):
     activity_names.append("ApplyVersionNumber")
     activity_names.append("ArchiveArticle")
     activity_names.append("DepositAssets")
-    activity_names.append("ApprovePublication")
     activity_names.append("Sum")
     activity_names.append("S3Monitor")
     activity_names.append("AdminEmailHistory")
