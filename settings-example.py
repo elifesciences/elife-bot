@@ -39,18 +39,10 @@ class exp():
 
     s3_hostname = 's3-eu-west-1.amazonaws.com'
     production_bucket = 'elife-production-final'
-    eif_bucket = 'elife-publishing-eif'
     expanded_bucket = 'elife-publishing-expanded'
     ppp_cdn_bucket = 'elife-publishing-cdn'
     archive_bucket = 'elife-publishing-archive'
     xml_bucket = 'elife-publishing-xml'
-
-    # REST endpoint for drupal node builder
-    # drupal_naf_endpoint = 'http://localhost:5000/nodes'
-    drupal_EIF_endpoint = 'http://52.4.182.179/api/article.json'
-    drupal_approve_endpoint = 'http://52.2.70.162/api/publish/'
-    drupal_update_user = ''
-    drupal_update_pass = ''
 
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://2015-09-03.lax.elifesciences.org/api/v1/article/10.7554/eLife.{article_id}/version/'
