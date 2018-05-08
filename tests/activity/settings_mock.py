@@ -5,7 +5,6 @@ default_task_list = ""
 bucket = "old_articles_bucket"
 
 storage_provider = 's3'
-eif_bucket = 'dest_bucket'
 expanded_bucket = 'origin_bucket'
 
 publishing_buckets_prefix = ""
@@ -34,11 +33,6 @@ ses_poa_recipient_email = ""
 ses_admin_email = ""
 templates_bucket = ""
 ppp_cdn_bucket = 'ppd_cdn_bucket'
-
-drupal_EIF_endpoint = "https://website/api/article.json"
-drupal_approve_endpoint = "https://website/api/publish/"
-drupal_update_user = ""
-drupal_update_pass = ""
 
 lax_article_versions = 'https://test/eLife.{article_id}/version/'
 verify_ssl = False

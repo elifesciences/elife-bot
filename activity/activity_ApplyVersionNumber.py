@@ -3,7 +3,6 @@ import json
 import os
 import re
 from os import path
-from jats_scraper import jats_scraper
 import boto.s3
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection

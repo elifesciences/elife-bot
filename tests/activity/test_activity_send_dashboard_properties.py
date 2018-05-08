@@ -33,7 +33,7 @@ class TestSendDashboardEvents(unittest.TestCase):
         fake_s3_mock.return_value = FakeS3Connection()
         fake_get_article_xml_key.return_value = FakeKey(self.directory), test_data.bucket_origin_file_name
 
-        result = self.send_dashboard_properties.do_activity(test_data.ConvertJATS_data)
+        result = self.send_dashboard_properties.do_activity(test_data.dashboard_data)
 
         self.assertEqual(result, True)
 
@@ -68,7 +68,7 @@ class TestSendDashboardEvents(unittest.TestCase):
         fake_s3_mock.return_value = FakeS3Connection()
         fake_get_article_xml_key.return_value = None, None
 
-        result = self.send_dashboard_properties.do_activity(test_data.ConvertJATS_data)
+        result = self.send_dashboard_properties.do_activity(test_data.dashboard_data)
 
         self.assertEqual(result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE)
 
@@ -91,7 +91,7 @@ class TestSendDashboardEvents(unittest.TestCase):
                 FakeKey(self.directory, 'elife-00353-v1.xml', open_file.read()),
                 test_data.bucket_origin_file_name)
 
-        result = self.send_dashboard_properties.do_activity(test_data.ConvertJATS_data)
+        result = self.send_dashboard_properties.do_activity(test_data.dashboard_data)
 
         self.assertEqual(result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE)
 
