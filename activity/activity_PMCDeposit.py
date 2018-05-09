@@ -1,7 +1,7 @@
 import os
 import boto.swf
 import json
-
+from collections import OrderedDict
 import datetime
 import time
 import zipfile
@@ -350,16 +350,16 @@ class activity_PMCDeposit(activity.activity):
 
     def stripped_file_name_map(self, file_names):
         "from a list of file names, build a map of old to new file name with the version removed"
-        file_name_map = {}
+        file_name_map = OrderedDict()
         for df in file_names:
             filename = df.split(os.sep)[-1]
 
             # Get the new file name
             file_name_map[filename] = None
 
-            # TODO strip the -v1 from it
+            # strip the -v1 from it
             file_extension = filename.split('.')[-1]
-            if '-v' in filename:
+            if '-v' in filename and '-video' not in filename:
                 # Use part before the -v number
                 part_without_version = filename.split('-v')[0]
             else:
