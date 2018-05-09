@@ -348,19 +348,10 @@ class activity_PMCDeposit(activity.activity):
                 self.unzip_or_move_file(file_name, self.TMP_DIR)
 
 
-
-    def rename_files_remove_version_number(self):
-        """
-        Rename files to not include the version number, if present
-        Pre-PPP files will not have a version number, for before PPP is launched
-        """
-
+    def stripped_file_name_map(self, file_names):
+        "from a list of file names, build a map of old to new file name with the version removed"
         file_name_map = {}
-
-        # Get a list of all files
-        dirfiles = self.file_list(self.TMP_DIR)
-
-        for df in dirfiles:
+        for df in file_names:
             filename = df.split(os.sep)[-1]
 
             # Get the new file name
@@ -382,6 +373,21 @@ class activity_PMCDeposit(activity.activity):
             else:
                 if self.logger:
                     self.logger.info('there is no renamed file for ' + filename)
+        return file_name_map
+
+
+    def rename_files_remove_version_number(self):
+        """
+        Rename files to not include the version number, if present
+        Pre-PPP files will not have a version number, for before PPP is launched
+        """
+
+        file_name_map = {}
+
+        # Get a list of all files
+        dirfiles = self.file_list(self.TMP_DIR)
+
+        file_name_map = self.stripped_file_name_map(dirfiles)
 
         for old_name, new_name in file_name_map.iteritems():
             if new_name is not None:
