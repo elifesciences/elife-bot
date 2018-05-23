@@ -1,0 +1,3 @@
+
+def purge(*args):
+    pass
