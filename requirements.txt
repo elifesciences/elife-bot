@@ -31,3 +31,4 @@ pylint==1.6.4
 pyGithub==1.27.1
 pyFunctional==1.0.0
 func_timeout==4.3.0
+fastly==0.1.3
