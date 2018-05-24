@@ -228,6 +228,10 @@ class exp():
 
     cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
 
+    # Fastly CDNs
+    fastly_service_id = '3M35rb7puabccOLrFFxy2'
+    fastly_api_key = 'fake_fastly_api_key'
+
 
 class dev():
 
@@ -412,6 +416,11 @@ class dev():
     # CloudFront
     cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
 
+    # Fastly CDNs
+    fastly_service_id = '3M35rb7puabccOLrFFxy2'
+    fastly_api_key = 'fake_fastly_api_key'
+
+
 
 class live():
     # AWS settings
@@ -594,6 +603,11 @@ class live():
 
     # CloudFront
     cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
+
+    # Fastly CDNs
+    fastly_service_id = '3M35rb7puabccOLrFFxy2'
+    fastly_api_key = 'fake_fastly_api_key'
+
 
 def get_settings(ENV="dev"):
     """

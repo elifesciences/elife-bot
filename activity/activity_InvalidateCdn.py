@@ -1,5 +1,5 @@
 import activity
-from provider import cloudfront_provider
+from provider import cloudfront_provider, fastly_provider
 from boto.cloudfront.exception import CloudFrontServerError
 
 """
@@ -57,6 +57,9 @@ class activity_InvalidateCdn(activity.activity):
                     )
                     return activity.activity.ACTIVITY_TEMPORARY_FAILURE
                 raise
+
+            fastly_response = fastly_provider.purge(article_id, self.settings)
+            self.logger.info("Fastly response: %s\n%s", fastly_response.status_code, fastly_response.content)
 
             dashboard_message = "CloudFront Invalidation command sent for article %s." % str(article_id)
             self.emit_monitor_event(self.settings, article_id, version, run,
