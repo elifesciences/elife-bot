@@ -8,7 +8,6 @@ python -m pylint -E \
     activity/activity*.py \
     provider/article_structure.py \
     provider/imageresize.py \
-    provider/lax_provider.py \
-    provider/storage_provider.py \
+    provider/*_provider.py \
     tests/activity/*.py \
     tests/provider/*.py
