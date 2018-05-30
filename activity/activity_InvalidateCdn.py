@@ -30,11 +30,11 @@ class activity_InvalidateCdn(activity.activity):
 
         try:
             self.emit_monitor_event(self.settings, article_id, version, run, 
-                                    self.pretty_name, "start", "Starting Fastly purge API call.") 
-            fastly_response = fastly_provider.purge(article_id, self.settings)
+                                    self.pretty_name, "start", "Starting Fastly purge API calls.") 
+            fastly_response = fastly_provider.purge(article_id, version, self.settings)
             self.logger.info("Fastly response: %s\n%s", fastly_response.status_code, fastly_response.content)
 
-            dashboard_message = "Fastly purge API call performed for article %s." % str(article_id)
+            dashboard_message = "Fastly purge API calls performed for article %s." % str(article_id)
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "end", dashboard_message)
             return activity.activity.ACTIVITY_SUCCESS

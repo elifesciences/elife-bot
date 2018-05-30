@@ -14,11 +14,11 @@ class Purge:
         response.raise_for_status()
         return response
 
-KEYS = ['articles/%s']
+KEYS = ['articles/{article_id}v{version}', 'articles/{article_id}/videos']
 
-def purge(article_id, settings):
+def purge(article_id, version, settings):
     p = Purge(settings.fastly_api_key)
     for service_id in settings.fastly_service_ids:
         for key in KEYS:
-            surrogate_key = key % article_id.zfill(5)
+            surrogate_key = key.format(article_id=article_id.zfill(5), version=version)
             p.of_key(surrogate_key, service_id)

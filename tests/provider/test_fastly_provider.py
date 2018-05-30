@@ -11,18 +11,19 @@ class TestFastlyProvider(unittest.TestCase):
         response = Response()
         response.status_code = 200
         post_mock.return_value = response
-        fastly_provider.purge('10627', settings_mock)
+        fastly_provider.purge('10627', '1', settings_mock)
 
     @patch('requests.post')
     def test_purge_various_keys(self, post_mock):
         response = Response()
         response.status_code = 200
         post_mock.return_value = response
-        fastly_provider.purge('10627', settings_mock)
+        fastly_provider.purge('10627', '1', settings_mock)
         self.assertEqual(
             [c[1][0] for c in post_mock.mock_calls],
             [
-                'https://api.fastly.com/service/3M35rb7puabccOLrFFxy2/purge/articles/10627',
+                'https://api.fastly.com/service/3M35rb7puabccOLrFFxy2/purge/articles/10627v1',
+                'https://api.fastly.com/service/3M35rb7puabccOLrFFxy2/purge/articles/10627/videos',
             ]
         )
 
@@ -31,4 +32,4 @@ class TestFastlyProvider(unittest.TestCase):
         response = Response()
         response.status_code = 500
         post_mock.return_value = response
-        self.assertRaises(HTTPError, lambda: fastly_provider.purge('10627', settings_mock))
+        self.assertRaises(HTTPError, lambda: fastly_provider.purge('10627', '1', settings_mock))
