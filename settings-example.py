@@ -220,7 +220,7 @@ class exp():
     iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
 
     # Fastly CDNs
-    fastly_service_id = '3M35rb7puabccOLrFFxy2'
+    fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
     fastly_api_key = 'fake_fastly_api_key'
 
 
@@ -398,7 +398,7 @@ class dev():
     iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
 
     # Fastly CDNs
-    fastly_service_id = '3M35rb7puabccOLrFFxy2'
+    fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
     fastly_api_key = 'fake_fastly_api_key'
 
 
@@ -576,7 +576,7 @@ class live():
     iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
 
     # Fastly CDNs
-    fastly_service_id = '3M35rb7puabccOLrFFxy2'
+    fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
     fastly_api_key = 'fake_fastly_api_key'
 
 
