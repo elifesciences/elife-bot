@@ -14,6 +14,10 @@ import activity
 import boto.s3
 from boto.s3.connection import S3Connection
 
+from jatsgenerator import generate
+from jatsgenerator import settings as generate_settings
+from elifearticle.article import ArticleDate
+
 import provider.ejp as ejplib
 import provider.simpleDB as dblib
 import provider.lax_provider as lax_provider
@@ -297,25 +301,30 @@ class activity_PackagePOA(activity.activity):
         article XML from the CSV files
         """
         result = None
-
-        article, self.error_count, self.error_messages = (
-            self.elife_poa_lib.xml_generation.build_article_for_article(article_id))
+        # TODO config_section
+        config_section = 'elife'
+        # TODO override the CSV directory
+        generate.data.CSV_PATH = 'tests/test_data/poa/'
+        article = generate.build_article_from_csv(article_id, config_section)
 
         if article:
             # Here can set the pub-date and volume, if provided
             if pub_date:
-                date_pub = self.elife_poa_lib.generatePoaXml.eLifeDate("pub", pub_date)
-                article.add_date(date_pub)
-
+                pub_date_object = ArticleDate("pub", pub_date)
+                article.add_date(pub_date_object)
+    
             if volume:
                 article.volume = volume
 
-            result = self.elife_poa_lib.xml_generation.output_xml_for_article(article, article_id)
+            # TODO set the output_dir in the generate config
+            output_dir = os.path.join(self.get_tmp_dir(), 'tmp')
+            result = generate.build_xml_to_disk(
+                article_id, article, config_section, True)
         else:
             result = False
 
         # Copy to STAGING_TO_HW_DIR because we need it there
-        xml_files = glob.glob(self.elife_poa_lib.settings.TARGET_OUTPUT_DIR + "/*.xml")
+        xml_files = glob.glob(output_dir + "/*.xml")
         for f in xml_files:
             shutil.copy(f, self.elife_poa_lib.settings.STAGING_TO_HW_DIR)
 
