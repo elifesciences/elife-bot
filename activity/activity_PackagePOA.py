@@ -43,8 +43,12 @@ class activity_PackagePOA(activity.activity):
         self.poa_lib_dir_name = "elife-poa-xml-generation"
 
         # Activity directories
-        self.TARGET_OUTPUT_DIR = os.path.join(self.get_tmp_dir(), 'generated_xml_output')
+        self.EJP_INPUT_DIR = os.path.join(self.get_tmp_dir(), 'ejp_input')
+        self.XML_OUTPUT_DIR = os.path.join(self.get_tmp_dir(), 'generated_xml_output')
         self.CSV_DIR = os.path.join(self.get_tmp_dir(), 'csv_data')
+        self.DECAPITATE_PDF_DIR = os.path.join(self.get_tmp_dir(), 'decapitate_pdf_dir')
+        self.TMP_DIR = os.path.join(self.get_tmp_dir(), 'tmp')
+        self.OUTPUT_DIR = os.path.join(self.get_tmp_dir(), 'output_dir')
 
         # Where we specify the library to be imported
         self.elife_poa_lib = None
@@ -201,7 +205,7 @@ class activity_PackagePOA(activity.activity):
         s3_key = bucket.get_key(document)
 
         # Download and save to disk
-        filename_plus_path = self.elife_poa_lib.settings.EJP_INPUT_DIR + os.sep + document
+        filename_plus_path = self.EJP_INPUT_DIR + os.sep + document
         mode = "wb"
         f = open(filename_plus_path, mode)
         s3_key.get_contents_to_file(f)
@@ -242,7 +246,7 @@ class activity_PackagePOA(activity.activity):
         try:
             self.elife_poa_lib.transform.process_zipfile(
                 zipfile_name=self.poa_zip_filename,
-                output_dir=self.elife_poa_lib.settings.STAGING_TO_HW_DIR
+                output_dir=self.OUTPUT_DIR
             )
             return True
         except:
@@ -253,7 +257,7 @@ class activity_PackagePOA(activity.activity):
         After processing the zipfile there should be a PDF present, as a
         result of decapitating the file. If not, return false
         """
-        pdf_files = glob.glob(self.elife_poa_lib.settings.STAGING_DECAPITATE_PDF_DIR  + "/*.pdf")
+        pdf_files = glob.glob(self.DECAPITATE_PDF_DIR  + "/*.pdf")
         if len(pdf_files) <= 0:
             return False
         elif len(pdf_files) > 0:
@@ -326,16 +330,16 @@ class activity_PackagePOA(activity.activity):
                 article.volume = volume
 
             # Override the output_dir in the jatsgenerator config
-            jats_config['target_output_dir'] = self.TARGET_OUTPUT_DIR
+            jats_config['target_output_dir'] = self.XML_OUTPUT_DIR
             result = generate.build_xml_to_disk(
                 article_id, article, jats_config, True)
         else:
             result = False
 
-        # Copy to STAGING_TO_HW_DIR because we need it there
-        xml_files = glob.glob(self.TARGET_OUTPUT_DIR + "/*.xml")
+        # Copy to OUTPUT_DIR because we need it there
+        xml_files = glob.glob(self.XML_OUTPUT_DIR + "/*.xml")
         for f in xml_files:
-            shutil.copy(f, self.elife_poa_lib.settings.STAGING_TO_HW_DIR)
+            shutil.copy(f, self.OUTPUT_DIR)
 
         return result
 
@@ -347,17 +351,17 @@ class activity_PackagePOA(activity.activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(self.publish_bucket)
 
-        pdf_files = glob.glob(self.elife_poa_lib.settings.STAGING_DECAPITATE_PDF_DIR  + "/*.pdf")
+        pdf_files = glob.glob(self.DECAPITATE_PDF_DIR  + "/*.pdf")
         for absname in pdf_files:
             # Copy decap PDF to S3 outbox
             self.copy_file_to_bucket(bucket, absname)
 
-        xml_files = glob.glob(self.TARGET_OUTPUT_DIR  + "/*.xml")
+        xml_files = glob.glob(self.XML_OUTPUT_DIR  + "/*.xml")
         for absname in xml_files:
             # Copy XML file to S3 outbox
             self.copy_file_to_bucket(bucket, absname)
 
-        zip_files = glob.glob(self.elife_poa_lib.settings.FTP_TO_HW_DIR  + "/*.zip")
+        zip_files = glob.glob(self.OUTPUT_DIR  + "/*.zip")
         for absname in zip_files:
             # Copy supplements zip file to S3 outbox
             self.copy_file_to_bucket(bucket, absname)
@@ -521,17 +525,11 @@ class activity_PackagePOA(activity.activity):
 
         settings = self.elife_poa_lib.settings
 
-        full_path = os.path.realpath(__file__)
-        base_path = os.path.dirname(full_path) + os.sep + '..' +  os.sep
-
         # Override the settings
-        settings.STAGING_TO_HW_DIR = (base_path + self.get_tmp_dir() + os.sep +
-                                      settings.STAGING_TO_HW_DIR)
-        settings.FTP_TO_HW_DIR = self.get_tmp_dir() + os.sep + settings.FTP_TO_HW_DIR
-        settings.EJP_INPUT_DIR = self.get_tmp_dir() + os.sep + settings.EJP_INPUT_DIR
-        settings.STAGING_DECAPITATE_PDF_DIR = (base_path + self.get_tmp_dir() + os.sep +
-                                               settings.STAGING_DECAPITATE_PDF_DIR)
-        settings.TMP_DIR = base_path + self.get_tmp_dir() + os.sep + settings.TMP_DIR
+        settings.STAGING_TO_HW_DIR = self.OUTPUT_DIR
+        settings.FTP_TO_HW_DIR = self.OUTPUT_DIR
+        settings.STAGING_DECAPITATE_PDF_DIR = self.DECAPITATE_PDF_DIR
+        settings.TMP_DIR = self.TMP_DIR
 
 
     def import_poa_modules(self, dir_name="elife-poa-xml-generation"):
@@ -540,10 +538,6 @@ class activity_PackagePOA(activity.activity):
         """
 
         # Now we can continue with imports
-        self.elife_poa_lib.xml = importlib.import_module(dir_name + ".xml_generation")
-        self.reload_module(self.elife_poa_lib.xml)
-        self.elife_poa_lib.csv = importlib.import_module(dir_name + ".parseCSVFiles")
-        self.reload_module(self.elife_poa_lib.csv)
         self.elife_poa_lib.transform = importlib.import_module(dir_name +
                                                                ".transform-ejp-zip-to-hw-zip")
         self.reload_module(self.elife_poa_lib.transform)
@@ -562,13 +556,12 @@ class activity_PackagePOA(activity.activity):
         Create the directories in the activity tmp_dir
         """
         for dir_name in [
-            self.TARGET_OUTPUT_DIR,
+            self.XML_OUTPUT_DIR,
             self.CSV_DIR,
-            self.elife_poa_lib.settings.STAGING_TO_HW_DIR,
-            self.elife_poa_lib.settings.FTP_TO_HW_DIR,
-            self.elife_poa_lib.settings.EJP_INPUT_DIR,
-            self.elife_poa_lib.settings.STAGING_DECAPITATE_PDF_DIR,
-            self.elife_poa_lib.settings.TMP_DIR
+            self.EJP_INPUT_DIR,
+            self.DECAPITATE_PDF_DIR,
+            self.TMP_DIR,
+            self.OUTPUT_DIR
             ]:
             try:
                 os.mkdir(dir_name)

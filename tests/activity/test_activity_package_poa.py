@@ -47,7 +47,7 @@ class TestPackagePOA(unittest.TestCase):
 
     def fake_download_poa_zip(self, document):
         source_doc = "tests/test_data/poa/" + document
-        dest_doc = self.poa.elife_poa_lib.settings.EJP_INPUT_DIR + os.sep + document
+        dest_doc = self.poa.EJP_INPUT_DIR + os.sep + document
         shutil.copy(source_doc, dest_doc)
         self.poa.poa_zip_filename = dest_doc
 
