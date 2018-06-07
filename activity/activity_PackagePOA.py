@@ -15,7 +15,7 @@ import boto.s3
 from boto.s3.connection import S3Connection
 
 from jatsgenerator import generate
-from jatsgenerator import settings as generate_settings
+from jatsgenerator.conf import raw_config, parse_raw_config
 from elifearticle.article import ArticleDate
 
 import provider.ejp as ejplib
@@ -41,6 +41,9 @@ class activity_PackagePOA(activity.activity):
 
         # Directory where POA library is stored
         self.poa_lib_dir_name = "elife-poa-xml-generation"
+
+        # Activity directories
+        self.TARGET_OUTPUT_DIR = os.path.join(self.get_tmp_dir(), 'generated_xml_output')
 
         # Where we specify the library to be imported
         self.elife_poa_lib = None
@@ -295,17 +298,22 @@ class activity_PackagePOA(activity.activity):
             f.write(contents)
             f.close()
 
+    def jatsgenerator_config(self, config_section):
+        "parse the config values from the jatsgenerator config"
+        return parse_raw_config(raw_config(
+            config_section,
+            self.settings.jatsgenerator_config_file))
+
     def generate_xml(self, article_id, pub_date=None, volume=None):
         """
         Given DOI number as article_id, use the POA library to generate
         article XML from the CSV files
         """
         result = None
-        # TODO config_section
-        config_section = 'elife'
         # TODO override the CSV directory
         generate.data.CSV_PATH = 'tests/test_data/poa/'
-        article = generate.build_article_from_csv(article_id, config_section)
+        jats_config = self.jatsgenerator_config(self.settings.jatsgenerator_config_section)
+        article = generate.build_article_from_csv(article_id, jats_config)
 
         if article:
             # Here can set the pub-date and volume, if provided
@@ -316,15 +324,15 @@ class activity_PackagePOA(activity.activity):
             if volume:
                 article.volume = volume
 
-            # TODO set the output_dir in the generate config
-            output_dir = os.path.join(self.get_tmp_dir(), 'tmp')
+            # Override the output_dir in the jatsgenerator config
+            jats_config['target_output_dir'] = self.TARGET_OUTPUT_DIR
             result = generate.build_xml_to_disk(
-                article_id, article, config_section, True)
+                article_id, article, jats_config, True)
         else:
             result = False
 
         # Copy to STAGING_TO_HW_DIR because we need it there
-        xml_files = glob.glob(output_dir + "/*.xml")
+        xml_files = glob.glob(self.TARGET_OUTPUT_DIR + "/*.xml")
         for f in xml_files:
             shutil.copy(f, self.elife_poa_lib.settings.STAGING_TO_HW_DIR)
 
@@ -343,7 +351,7 @@ class activity_PackagePOA(activity.activity):
             # Copy decap PDF to S3 outbox
             self.copy_file_to_bucket(bucket, absname)
 
-        xml_files = glob.glob(self.elife_poa_lib.settings.TARGET_OUTPUT_DIR  + "/*.xml")
+        xml_files = glob.glob(self.TARGET_OUTPUT_DIR  + "/*.xml")
         for absname in xml_files:
             # Copy XML file to S3 outbox
             self.copy_file_to_bucket(bucket, absname)
@@ -517,7 +525,6 @@ class activity_PackagePOA(activity.activity):
 
         # Override the settings
         settings.XLS_PATH = self.get_tmp_dir() + os.sep + 'ejp-csv' + os.sep
-        settings.TARGET_OUTPUT_DIR = self.get_tmp_dir() + os.sep + settings.TARGET_OUTPUT_DIR
         settings.STAGING_TO_HW_DIR = (base_path + self.get_tmp_dir() + os.sep +
                                       settings.STAGING_TO_HW_DIR)
         settings.FTP_TO_HW_DIR = self.get_tmp_dir() + os.sep + settings.FTP_TO_HW_DIR
@@ -576,7 +583,7 @@ class activity_PackagePOA(activity.activity):
             pass
 
         try:
-            os.mkdir(self.elife_poa_lib.settings.TARGET_OUTPUT_DIR)
+            os.mkdir(self.TARGET_OUTPUT_DIR)
             os.mkdir(self.elife_poa_lib.settings.STAGING_TO_HW_DIR)
             os.mkdir(self.elife_poa_lib.settings.FTP_TO_HW_DIR)
             os.mkdir(self.elife_poa_lib.settings.MADE_FTP_READY)

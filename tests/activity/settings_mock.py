@@ -65,6 +65,9 @@ no_download_extensions = "tif"
 elifecrossref_config_file = 'tests/activity/crossref.cfg'
 elifecrossref_config_section = 'elife'
 
+jatsgenerator_config_file = 'tests/activity/jatsgenerator.cfg'
+jatsgenerator_config_section = 'elife'
+
 HEFCE_FTP_URI = "hefce_ftp.localhost"
 HEFCE_FTP_USERNAME = ""
 HEFCE_FTP_PASSWORD = ""

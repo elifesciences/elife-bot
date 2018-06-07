@@ -15,7 +15,7 @@ git+https://github.com/elifesciences/elife-article.git@bb61d4c0e3742403503efe108
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@3cf16976fa57e94fd3af45e2162b251674c168d8#egg=elifecrossref
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@2b770b5942de763a34b92e378600ed53c175c7e6#egg=elifepubmed
 git+https://github.com/elifesciences/ejp-csv-parser.git@e4e215b3b3842a78473bf384bc8ba60b4c50339d#egg=ejpcsvparser
-git+https://github.com/elifesciences/jats-generator.git@b7431faaf009895a66d46c2f3fbe1e87b95a297e#egg=jatsgenerator
+git+https://github.com/elifesciences/jats-generator.git@69e0fa6aa30015ec5e746ce5c9b33db082cd7d10#egg=jatsgenerator
 git+https://github.com/elifesciences/package-poa.git@79de0c8555c1471658a72fa2c817477b03caaca3#egg=packagepoa
 PyYAML==3.11
 Wand==0.4.0
