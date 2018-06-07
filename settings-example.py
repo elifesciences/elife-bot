@@ -71,15 +71,8 @@ class exp():
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
 
-    # CDN bucket settings
-    cdn_bucket = 'elife-cdn-dev'
-    cdn_distribution_id = u'E1HPZ2QWOYE9NX'
-    cdn_domain_name = 'dhkzd83nokruv.cloudfront.net'
-
     # Lens bucket settings
     lens_bucket = 'elife-lens-dev'
-    lens_distribution_id = u'E30WWCB2DNEOKI'
-    lens_domain_name = 'd32g8kubfuccxs.cloudfront.net'
 
     # Lens jpg bucket
     lens_jpg_bucket = "exp-elife-production-lens-jpg"
@@ -226,10 +219,8 @@ class exp():
     path_to_iiif_server = "https://pathto--iiif.elifesciences.org/"
     iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
 
-    cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
-
     # Fastly CDNs
-    fastly_service_id = '3M35rb7puabccOLrFFxy2'
+    fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
     fastly_api_key = 'fake_fastly_api_key'
 
 
@@ -258,15 +249,8 @@ class dev():
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
 
-    # CDN bucket settings
-    cdn_bucket = 'elife-cdn-dev'
-    cdn_distribution_id = u'E1HPZ2QWOYE9NX'
-    cdn_domain_name = 'dhkzd83nokruv.cloudfront.net'
-
     # Lens bucket settings
     lens_bucket = 'elife-lens-dev'
-    lens_distribution_id = u'E30WWCB2DNEOKI'
-    lens_domain_name = 'd32g8kubfuccxs.cloudfront.net'
 
     # Lens jpg bucket
     lens_jpg_bucket = "exp-elife-production-lens-jpg"
@@ -413,11 +397,8 @@ class dev():
     path_to_iiif_server = "https://pathto--iiif.elifesciences.org/"
     iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
 
-    # CloudFront
-    cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
-
     # Fastly CDNs
-    fastly_service_id = '3M35rb7puabccOLrFFxy2'
+    fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
     fastly_api_key = 'fake_fastly_api_key'
 
 
@@ -446,15 +427,8 @@ class live():
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
 
-    # CDN bucket settings
-    cdn_bucket = 'elife-cdn'
-    cdn_distribution_id = u'E3EXVOTTI6XCOZ'
-    cdn_domain_name = 'cdn.elifesciences.org'
-
     # Lens bucket settings
     lens_bucket = 'elife-lens'
-    lens_distribution_id = u'EK4HKRQWIF6B3'
-    cdn_domain_name = 'lens.elifesciences.org'
 
     # Lens jpg bucket
     lens_jpg_bucket = "elife-production-lens-jpg"
@@ -601,11 +575,8 @@ class live():
     path_to_iiif_server = "https://pathto--iiif.elifesciences.org/"
     iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
 
-    # CloudFront
-    cloudfront_distribution_id_cdn = "DISTRIBUTIONID"
-
     # Fastly CDNs
-    fastly_service_id = '3M35rb7puabccOLrFFxy2'
+    fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
     fastly_api_key = 'fake_fastly_api_key'
 
 

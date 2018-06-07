@@ -40,5 +40,5 @@ pdf_cover_generator = "https://localhost/personalised-covers/"
 pdf_cover_landing_page = "https://localhost.org/download-your-cover/"
 
 # Fastly CDNs
-fastly_service_id = '3M35rb7puabccOLrFFxy2'
+fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
 fastly_api_key = 'fake_fastly_api_key'
