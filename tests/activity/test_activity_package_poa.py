@@ -2,6 +2,7 @@ import unittest
 from activity.activity_PackagePOA import activity_PackagePOA
 import json
 import shutil
+from shutil import Error
 import glob
 from mock import mock, patch
 import settings_mock
@@ -42,7 +43,7 @@ class TestPackagePOA(unittest.TestCase):
         csv_files = glob.glob("tests/test_data/poa/*.csv")
         for file in csv_files:
             file_name = file.split(os.sep)[-1]
-            shutil.copy(file, self.poa.elife_poa_lib.settings.XLS_PATH + file_name)
+            shutil.copy(file, self.poa.CSV_DIR + os.sep + file_name)
 
     def fake_download_poa_zip(self, document):
         source_doc = "tests/test_data/poa/" + document

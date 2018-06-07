@@ -44,6 +44,7 @@ class activity_PackagePOA(activity.activity):
 
         # Activity directories
         self.TARGET_OUTPUT_DIR = os.path.join(self.get_tmp_dir(), 'generated_xml_output')
+        self.CSV_DIR = os.path.join(self.get_tmp_dir(), 'csv_data')
 
         # Where we specify the library to be imported
         self.elife_poa_lib = None
@@ -261,7 +262,7 @@ class activity_PackagePOA(activity.activity):
     def download_latest_csv(self):
         """
         Download the latest CSV files from S3, rename them, and
-        save to the XLS_PATH directory
+        save to the CSV_DIR directory
         """
 
         # Key: File types, value: file to save as to disk
@@ -283,7 +284,7 @@ class activity_PackagePOA(activity.activity):
 
         for file_type, filename in file_types.items():
 
-            filename_plus_path = self.elife_poa_lib.settings.XLS_PATH + filename
+            filename_plus_path = self.CSV_DIR + os.sep + filename
             s3_key_name = self.ejp.find_latest_s3_file_name(file_type)
 
             # Download
@@ -310,8 +311,8 @@ class activity_PackagePOA(activity.activity):
         article XML from the CSV files
         """
         result = None
-        # TODO override the CSV directory
-        generate.data.CSV_PATH = 'tests/test_data/poa/'
+        # override the CSV directory in the ejp-csv-parser library
+        generate.data.CSV_PATH = self.CSV_DIR + os.sep
         jats_config = self.jatsgenerator_config(self.settings.jatsgenerator_config_section)
         article = generate.build_article_from_csv(article_id, jats_config)
 
@@ -524,31 +525,14 @@ class activity_PackagePOA(activity.activity):
         base_path = os.path.dirname(full_path) + os.sep + '..' +  os.sep
 
         # Override the settings
-        settings.XLS_PATH = self.get_tmp_dir() + os.sep + 'ejp-csv' + os.sep
         settings.STAGING_TO_HW_DIR = (base_path + self.get_tmp_dir() + os.sep +
                                       settings.STAGING_TO_HW_DIR)
         settings.FTP_TO_HW_DIR = self.get_tmp_dir() + os.sep + settings.FTP_TO_HW_DIR
-        settings.MADE_FTP_READY = self.get_tmp_dir() + os.sep + settings.MADE_FTP_READY
         settings.EJP_INPUT_DIR = self.get_tmp_dir() + os.sep + settings.EJP_INPUT_DIR
         settings.STAGING_DECAPITATE_PDF_DIR = (base_path + self.get_tmp_dir() + os.sep +
                                                settings.STAGING_DECAPITATE_PDF_DIR)
         settings.TMP_DIR = base_path + self.get_tmp_dir() + os.sep + settings.TMP_DIR
 
-        settings.XLS_FILES = {
-            "authors"    : "poa_author.csv",
-            "license"    : "poa_license.csv",
-            "manuscript" : "poa_manuscript.csv",
-            "received"   : "poa_received.csv",
-            "subjects"   : "poa_subject_area.csv",
-            "organisms"  : "poa_research_organism.csv",
-            "abstract"   : "poa_abstract.csv",
-            "title"      : "poa_title.csv",
-            "keywords"   : "poa_keywords.csv",
-            "group_authors" : "poa_group_authors.csv",
-            "datasets"   : "poa_datasets.csv",
-            "funding"    : "poa_funding.csv",
-            "ethics"     : "poa_ethics.csv"
-        }
 
     def import_poa_modules(self, dir_name="elife-poa-xml-generation"):
         """
@@ -577,18 +561,16 @@ class activity_PackagePOA(activity.activity):
         """
         Create the directories in the activity tmp_dir
         """
-        try:
-            os.mkdir(self.elife_poa_lib.settings.XLS_PATH)
-        except:
-            pass
-
-        try:
-            os.mkdir(self.TARGET_OUTPUT_DIR)
-            os.mkdir(self.elife_poa_lib.settings.STAGING_TO_HW_DIR)
-            os.mkdir(self.elife_poa_lib.settings.FTP_TO_HW_DIR)
-            os.mkdir(self.elife_poa_lib.settings.MADE_FTP_READY)
-            os.mkdir(self.elife_poa_lib.settings.EJP_INPUT_DIR)
-            os.mkdir(self.elife_poa_lib.settings.STAGING_DECAPITATE_PDF_DIR)
-            os.mkdir(self.elife_poa_lib.settings.TMP_DIR)
-        except OSError:
-            pass
+        for dir_name in [
+            self.TARGET_OUTPUT_DIR,
+            self.CSV_DIR,
+            self.elife_poa_lib.settings.STAGING_TO_HW_DIR,
+            self.elife_poa_lib.settings.FTP_TO_HW_DIR,
+            self.elife_poa_lib.settings.EJP_INPUT_DIR,
+            self.elife_poa_lib.settings.STAGING_DECAPITATE_PDF_DIR,
+            self.elife_poa_lib.settings.TMP_DIR
+            ]:
+            try:
+                os.mkdir(dir_name)
+            except OSError:
+                pass
