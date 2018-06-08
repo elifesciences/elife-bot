@@ -139,7 +139,8 @@ class activity_PackagePOA(activity.activity):
     def get_pub_date(self, doi_id):
         # Get the date for the first version
         date_struct = None
-        date_str = self.get_pub_date_str_from_lax(doi_id)
+        date_str = lax_provider.article_publication_date(
+            utils.pad_msid(doi_id), self.settings, self.logger)
 
         if date_str is not None:
             date_struct = time.strptime(date_str, "%Y%m%d000000")
@@ -149,12 +150,11 @@ class activity_PackagePOA(activity.activity):
 
         return date_struct
 
-    def get_pub_date_str_from_lax(self, doi_id):
+    def get_pub_date_str_from_lax(self, article_id):
         """
         Check lax for any article published version
         If found, get the pub date and format it as a string YYYYMMDDhhmmss
         """
-        article_id = str(doi_id).zfill(5)
         return lax_provider.article_publication_date(article_id, self.settings, self.logger)
 
     def download_poa_zip(self, document, bucket_name=None):

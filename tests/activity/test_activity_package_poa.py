@@ -1,5 +1,6 @@
 import unittest
 from activity.activity_PackagePOA import activity_PackagePOA
+import provider.lax_provider as lax_provider
 from packagepoa import transform
 import json
 import shutil
@@ -20,14 +21,20 @@ class TestPackagePOA(unittest.TestCase):
         self.poa = activity_PackagePOA(settings_mock, FakeLogger(), None, None, None)
 
         self.do_activity_passes = []
-        activity_pass = {
+        self.do_activity_passes.append({
             "poa_input_zip": "18022_1_supp_mat_highwire_zip_268991_x75s4v.zip",
             "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
             "doi": "10.7554/eLife.12717",
             "ds_zip": "elife_poa_e12717_ds.zip",
             "pub_date": "20160514000000"
-        }
-        self.do_activity_passes.append(activity_pass)
+        })
+        self.do_activity_passes.append({
+            "poa_input_zip": "18022_1_supp_mat_highwire_zip_268991_x75s4v.zip",
+            "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
+            "doi": "10.7554/eLife.12717",
+            "ds_zip": "elife_poa_e12717_ds.zip",
+            "pub_date": None
+        })
 
     def tearDown(self):
         self.poa.clean_tmp_dir()
@@ -70,9 +77,9 @@ class TestPackagePOA(unittest.TestCase):
     @patch.object(activity_PackagePOA, 'download_poa_zip')
     @patch.object(activity_PackagePOA, 'download_latest_csv')
     @patch.object(activity_PackagePOA, 'copy_files_to_s3_outbox')
-    @patch.object(activity_PackagePOA, 'get_pub_date_str_from_lax')
+    @patch.object(lax_provider, 'article_publication_date')
     @patch.object(activity_PackagePOA, 'clean_tmp_dir')
-    def test_do_activity(self, fake_clean_tmp_dir, fake_get_pub_date_str_from_lax,
+    def test_do_activity(self, fake_clean_tmp_dir, fake_article_publication_date,
                          fake_copy_files_to_s3_outbox,
                          fake_download_latest_csv, fake_download_poa_zip):
 
@@ -81,9 +88,9 @@ class TestPackagePOA(unittest.TestCase):
             fake_download_latest_csv = self.fake_download_latest_csv()
             fake_download_poa_zip = self.fake_download_poa_zip(test_data["poa_input_zip"])
             if "pub_date" in test_data and test_data["pub_date"]:
-                fake_get_pub_date_str_from_lax.return_value = test_data["pub_date"]
+                fake_article_publication_date.return_value = test_data["pub_date"]
             else:
-                fake_get_pub_date_str_from_lax.return_value = None
+                fake_article_publication_date.return_value = None
             fake_clean_tmp_dir = self.fake_clean_tmp_dir()
 
             # For now mock the PDF decapitator during tests
