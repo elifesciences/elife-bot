@@ -11,10 +11,7 @@ import settings_mock
 from types import MethodType
 
 import os
-# Add parent directory for imports, so activity classes can use elife-poa-xml-generation
-parentdir = os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-os.sys.path.insert(0, parentdir)
+
 
 class TestPackagePOA(unittest.TestCase):
 
@@ -69,7 +66,7 @@ class TestPackagePOA(unittest.TestCase):
         """
         After do_activity, check the directory contains a zip with ds_zip file name
         """
-        file_names = glob.glob(self.poa.elife_poa_lib.settings.FTP_TO_HW_DIR + os.sep + "*")
+        file_names = glob.glob(self.poa.OUTPUT_DIR + os.sep + "*")
         for file in file_names:
             if file.split(os.sep)[-1] == ds_zip:
                 return True

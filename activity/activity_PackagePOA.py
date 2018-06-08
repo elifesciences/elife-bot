@@ -41,9 +41,6 @@ class activity_PackagePOA(activity.activity):
         self.default_task_start_to_close_timeout = 60 * 15
         self.description = "Process POA zip file input, repackage, and save to S3."
 
-        # Directory where POA library is stored
-        self.poa_lib_dir_name = "elife-poa-xml-generation"
-
         # Activity directories
         self.EJP_INPUT_DIR = os.path.join(self.get_tmp_dir(), 'ejp_input')
         self.XML_OUTPUT_DIR = os.path.join(self.get_tmp_dir(), 'generated_xml_output')
@@ -51,12 +48,6 @@ class activity_PackagePOA(activity.activity):
         self.DECAPITATE_PDF_DIR = os.path.join(self.get_tmp_dir(), 'decapitate_pdf_dir')
         self.TMP_DIR = os.path.join(self.get_tmp_dir(), 'tmp')
         self.OUTPUT_DIR = os.path.join(self.get_tmp_dir(), 'output_dir')
-
-        # Where we specify the library to be imported
-        self.elife_poa_lib = None
-
-        # Import the libraries we will need
-        self.import_imports()
 
         # Create output directories
         self.create_activity_directories()
@@ -503,67 +494,6 @@ class activity_PackagePOA(activity.activity):
         body += "\n\nSincerely\n\neLife bot"
 
         return body
-
-    def import_imports(self):
-        """
-        Customised importing of the external library
-        to override the settings
-        MUST load settings module first, override the values
-        BEFORE loading anything else, or the override will not take effect
-        """
-
-        # Load the files from parent directory - hellish imports but they
-        #  seem to work now
-        dir_name = self.poa_lib_dir_name
-
-        self.import_poa_lib(dir_name)
-        self.override_poa_settings(dir_name)
-        self.import_poa_modules(dir_name)
-
-    def import_poa_lib(self, dir_name):
-        """
-        POA lib import Step 1: import external library by directory name
-        """
-        self.elife_poa_lib = __import__(dir_name)
-        self.reload_module(self.elife_poa_lib)
-
-    def override_poa_settings(self, dir_name):
-        """
-        POA lib import Step 2: import settings modules then override
-        """
-
-        # Load external library settings
-        self.elife_poa_lib.settings = importlib.import_module(dir_name + ".settings")
-        # Reload the module fresh, so original directory names are reset
-        self.reload_module(self.elife_poa_lib.settings)
-
-        settings = self.elife_poa_lib.settings
-
-        # Override the settings
-        settings.STAGING_TO_HW_DIR = self.OUTPUT_DIR
-        settings.FTP_TO_HW_DIR = self.OUTPUT_DIR
-        settings.STAGING_DECAPITATE_PDF_DIR = self.DECAPITATE_PDF_DIR
-        settings.TMP_DIR = self.TMP_DIR
-
-
-    def import_poa_modules(self, dir_name="elife-poa-xml-generation"):
-        """
-        POA lib import Step 3: import modules now that settings are overridden
-        """
-
-        # Now we can continue with imports
-        self.elife_poa_lib.transform = importlib.import_module(dir_name +
-                                                               ".transform-ejp-zip-to-hw-zip")
-        self.reload_module(self.elife_poa_lib.transform)
-
-    def reload_module(self, module):
-        """
-        Attempt to reload an imported module to reset it
-        """
-        try:
-            reload(module)
-        except:
-            pass
 
     def create_activity_directories(self):
         """
