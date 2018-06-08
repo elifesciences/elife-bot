@@ -91,7 +91,7 @@ class activity_PackagePOA(activity.activity):
         self.download_poa_zip(self.document)
 
         # Get the DOI from the zip file
-        self.get_doi_from_zip_file()
+        self.doi = self.get_doi_from_zip_file()
         doi_id = utils.msid_from_doi(self.doi)
 
         # Approve the DOI for packaging
@@ -196,9 +196,7 @@ class activity_PackagePOA(activity.activity):
 
         # Good, continue
         current_zipfile = zipfile.ZipFile(filename, 'r')
-        doi = transform.get_doi_from_zipfile(current_zipfile)
-
-        self.doi = doi
+        return transform.get_doi_from_zipfile(current_zipfile)
 
     def approve_for_packaging(self, doi_id):
         """

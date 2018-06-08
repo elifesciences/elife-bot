@@ -7,6 +7,7 @@ import shutil
 from shutil import Error
 import glob
 from mock import mock, patch
+from ddt import ddt, data, unpack
 import settings_mock
 from tests.activity.classes_mock import FakeLogger
 
@@ -14,7 +15,7 @@ from types import MethodType
 
 import os
 
-
+@ddt
 class TestPackagePOA(unittest.TestCase):
 
     def setUp(self):
@@ -73,6 +74,16 @@ class TestPackagePOA(unittest.TestCase):
             if file.split(os.sep)[-1] == ds_zip:
                 return True
         return False
+
+    @unpack
+    @data(
+        (None, None),
+        ('tests/test_data/poa/18022_1_supp_mat_highwire_zip_268991_x75s4v.zip',
+         '10.7554/eLife.12717'),
+        )
+    def test_get_doi_from_zip_file(self, filename, expected):
+        "test getting doi from the zip file manifest"
+        self.assertEqual(self.poa.get_doi_from_zip_file(filename), expected)
 
     @patch.object(activity_PackagePOA, 'download_poa_zip')
     @patch.object(activity_PackagePOA, 'download_latest_csv')
