@@ -88,10 +88,10 @@ class activity_PackagePOA(activity.activity):
         self.document = data["data"]["document"]
 
         # Download POA zip file
-        self.download_poa_zip(self.document)
+        self.poa_zip_filename = self.download_poa_zip(self.document)
 
         # Get the DOI from the zip file
-        self.doi = self.get_doi_from_zip_file()
+        self.doi = self.get_doi_from_zip_file(self.poa_zip_filename)
         doi_id = utils.msid_from_doi(self.doi)
 
         # Approve the DOI for packaging
@@ -105,7 +105,7 @@ class activity_PackagePOA(activity.activity):
             # Good, continue
 
             # Transform zip file
-            self.process_status = self.process_poa_zipfile()
+            self.process_status = self.process_poa_zipfile(self.poa_zip_filename)
             self.pdf_decap_status = self.check_pdf_decap_failure()
 
             # Set the DOI and generate XML
@@ -175,8 +175,7 @@ class activity_PackagePOA(activity.activity):
         s3_key.get_contents_to_file(f)
         f.close()
 
-        # Save the zip file name for later use
-        self.poa_zip_filename = filename_plus_path
+        return filename_plus_path
 
     def packagepoa_config(self, config_section):
         "parse the config values from the jatsgenerator config"
@@ -190,13 +189,13 @@ class activity_PackagePOA(activity.activity):
         Use the object variable as the default if not specified
         """
         if filename is None:
-            filename = self.poa_zip_filename
-        if filename is None:
             return None
-
         # Good, continue
-        current_zipfile = zipfile.ZipFile(filename, 'r')
-        return transform.get_doi_from_zipfile(current_zipfile)
+        try:
+            with zipfile.ZipFile(filename, 'r') as current_zipfile:
+                return transform.get_doi_from_zipfile(current_zipfile)
+        except:
+            return None
 
     def approve_for_packaging(self, doi_id):
         """
@@ -207,7 +206,7 @@ class activity_PackagePOA(activity.activity):
             return False
         return True
 
-    def process_poa_zipfile(self):
+    def process_poa_zipfile(self, poa_zip_filename):
         """
         Using the POA transform-ejp-zip-to-hw-zip module
         """
@@ -218,7 +217,7 @@ class activity_PackagePOA(activity.activity):
         poa_config['tmp_dir'] = self.TMP_DIR
         try:
             transform.process_zipfile(
-                zipfile_name=self.poa_zip_filename,
+                zipfile_name=poa_zip_filename,
                 poa_config=poa_config
             )
             return True

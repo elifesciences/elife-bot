@@ -36,9 +36,9 @@ class TestPackagePOA(unittest.TestCase):
             dest_doc = self.poa.EJP_INPUT_DIR + os.sep + document
             try:
                 shutil.copy(source_doc, dest_doc)
-                self.poa.poa_zip_filename = dest_doc
             except IOError:
                 pass
+            return dest_doc
 
     def fake_copy_pdf_to_hw_staging_dir(self, decap_pdf):
         if decap_pdf:
@@ -72,6 +72,9 @@ class TestPackagePOA(unittest.TestCase):
         (None, None),
         ('tests/test_data/poa/18022_1_supp_mat_highwire_zip_268991_x75s4v.zip',
          '10.7554/eLife.12717'),
+        # test not a zip file
+        ('tests/test_data/poa/poa_abstract.csv',
+         None),
         )
     def test_get_doi_from_zip_file(self, filename, expected):
         "test getting doi from the zip file manifest"
@@ -86,6 +89,30 @@ class TestPackagePOA(unittest.TestCase):
     def test_approve_for_packaging(self, doi_id, expected):
         "test approving to package or not"
         self.assertEqual(self.poa.approve_for_packaging(doi_id), expected)
+
+
+    @patch.object(transform, 'copy_pdf_to_output_dir')
+    @data(
+        {
+            'filename': '18022_1_supp_mat_highwire_zip_268991_x75s4v.zip',
+            'expected': True
+        },
+        {
+            'filename': None,
+            'expected': False
+        },
+        {
+            # test not a zip file
+            'filename': 'poa_abstract.csv',
+            'expected': False
+        }
+        )
+    def test_process_poa_zipfile(self, test_data, fake_copy_pdf_to_output_dir):
+        "test processing the zip file directly"
+        fake_copy_pdf_to_output_dir = self.fake_copy_pdf_to_hw_staging_dir(
+            test_data.get('poa_decap_pdf'))
+        file_path = self.fake_download_poa_zip(test_data.get('filename'))
+        self.assertEqual(self.poa.process_poa_zipfile(file_path), test_data.get('expected'))
 
 
     @patch.object(activity_PackagePOA, 'download_poa_zip')
@@ -160,7 +187,7 @@ class TestPackagePOA(unittest.TestCase):
                          fake_download_latest_csv, fake_download_poa_zip):
 
         fake_download_latest_csv = self.fake_download_latest_csv()
-        fake_download_poa_zip = self.fake_download_poa_zip(test_data["poa_input_zip"])
+        fake_download_poa_zip.return_value = self.fake_download_poa_zip(test_data["poa_input_zip"])
         if "pub_date" in test_data and test_data["pub_date"]:
             fake_article_publication_date.return_value = test_data["pub_date"]
         else:
