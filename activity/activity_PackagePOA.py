@@ -412,7 +412,7 @@ class activity_PackagePOA(activity.activity):
         activity_status_text = self.get_activity_status_text(self.activity_status)
 
         subject = (
-            self.name + " " + activity_status_text + " doi: " + self.doi + ", " +
+            self.name + " " + activity_status_text + " doi: " + str(self.doi) + ", " +
             datetime_string + ", eLife SWF domain: " + self.settings.domain
         )
 
