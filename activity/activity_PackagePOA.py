@@ -1,10 +1,8 @@
 import os
 import boto.swf
 import json
-import importlib
 import time
 import zipfile
-import requests
 
 import glob
 import shutil
@@ -16,7 +14,7 @@ from boto.s3.connection import S3Connection
 
 from jatsgenerator import generate
 from jatsgenerator import conf as jats_conf
-from packagepoa import transform, decapitate_pdf
+from packagepoa import transform
 from packagepoa import conf as poa_conf
 from elifearticle.article import ArticleDate
 
@@ -223,7 +221,6 @@ class activity_PackagePOA(activity.activity):
         if filename is None:
             return None
 
-        poa_config = self.packagepoa_config(self.settings.packagepoa_config_section)
         # Good, continue
         current_zipfile = zipfile.ZipFile(filename, 'r')
         doi = transform.get_doi_from_zipfile(current_zipfile)
@@ -500,12 +497,12 @@ class activity_PackagePOA(activity.activity):
         Create the directories in the activity tmp_dir
         """
         for dir_name in [
-            self.XML_OUTPUT_DIR,
-            self.CSV_DIR,
-            self.EJP_INPUT_DIR,
-            self.DECAPITATE_PDF_DIR,
-            self.TMP_DIR,
-            self.OUTPUT_DIR
+                self.XML_OUTPUT_DIR,
+                self.CSV_DIR,
+                self.EJP_INPUT_DIR,
+                self.DECAPITATE_PDF_DIR,
+                self.TMP_DIR,
+                self.OUTPUT_DIR
             ]:
             try:
                 os.mkdir(dir_name)
