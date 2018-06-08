@@ -111,7 +111,7 @@ class activity_PackagePOA(activity.activity):
             # Set the DOI and generate XML
             self.download_latest_csv()
             pub_date = self.get_pub_date(doi_id)
-            volume = self.elife_volume_from_pub_date(pub_date)
+            volume = utils.volume_from_pub_date(pub_date)
             self.generate_xml_status = self.generate_xml(doi_id, pub_date, volume)
 
             # Copy finished files to S3 outbox
@@ -135,16 +135,6 @@ class activity_PackagePOA(activity.activity):
             self.clean_tmp_dir()
 
         return result
-
-    def elife_volume_from_pub_date(self, pub_date):
-        """
-        eLife volume is based on starting to publish in year 2011
-        pub_date is time.struct_time
-        """
-        volume = None
-        if pub_date:
-            volume = pub_date[0] - 2011
-        return volume
 
     def get_pub_date(self, doi_id):
         # Get the date for the first version
