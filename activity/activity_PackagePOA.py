@@ -150,13 +150,6 @@ class activity_PackagePOA(activity.activity):
 
         return date_struct
 
-    def get_pub_date_str_from_lax(self, article_id):
-        """
-        Check lax for any article published version
-        If found, get the pub date and format it as a string YYYYMMDDhhmmss
-        """
-        return lax_provider.article_publication_date(article_id, self.settings, self.logger)
-
     def download_poa_zip(self, document, bucket_name=None):
         """
         Given the s3 object name as document, download it from the
