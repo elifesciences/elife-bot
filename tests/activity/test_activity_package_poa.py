@@ -7,6 +7,7 @@ from shutil import Error
 import glob
 from mock import mock, patch
 import settings_mock
+from tests.activity.classes_mock import FakeLogger
 
 from types import MethodType
 
@@ -16,7 +17,7 @@ import os
 class TestPackagePOA(unittest.TestCase):
 
     def setUp(self):
-        self.poa = activity_PackagePOA(settings_mock, None, None, None, None)
+        self.poa = activity_PackagePOA(settings_mock, FakeLogger(), None, None, None)
 
         self.do_activity_passes = []
         activity_pass = {
@@ -30,12 +31,6 @@ class TestPackagePOA(unittest.TestCase):
 
     def tearDown(self):
         self.poa.clean_tmp_dir()
-
-    def test_get_doi_id_from_doi(self):
-        result = self.poa.get_doi_id_from_doi("10.7554/eLife.00003")
-        self.assertEqual(result, 3)
-        result = self.poa.get_doi_id_from_doi("not_a_doi")
-        self.assertEqual(result, None)
 
     def fake_download_latest_csv(self):
         csv_files = glob.glob("tests/test_data/poa/*.csv")

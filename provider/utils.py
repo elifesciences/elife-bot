@@ -17,3 +17,11 @@ def tidy_whitespace(string):
 
 def article_status(is_poa):
     return 'POA' if is_poa else 'VOR'
+
+def msid_from_doi(doi):
+    "return just the id portion of the doi"
+    try:
+        msid = int(doi.split(".")[-1])
+    except:
+        msid = None
+    return msid

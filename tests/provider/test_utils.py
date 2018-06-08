@@ -43,6 +43,14 @@ class TestUtils(unittest.TestCase):
     def test_article_status(self, value, expected):
         self.assertEqual(utils.article_status(value), expected)
 
+    @unpack
+    @data(
+        (None, None),
+        ("10.7554/eLife.00003", 3),
+        ("not_a_doi", None)
+        )
+    def test_msid_from_doi(self, value, expected):
+        self.assertEqual(utils.msid_from_doi(value), expected)
 
 if __name__ == '__main__':
     unittest.main()

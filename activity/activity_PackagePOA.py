@@ -21,6 +21,7 @@ from elifearticle.article import ArticleDate
 import provider.ejp as ejplib
 import provider.simpleDB as dblib
 import provider.lax_provider as lax_provider
+from provider import utils
 
 """
 PackagePOA activity
@@ -91,7 +92,7 @@ class activity_PackagePOA(activity.activity):
 
         # Get the DOI from the zip file
         self.get_doi_from_zip_file()
-        doi_id = self.get_doi_id_from_doi(self.doi)
+        doi_id = utils.msid_from_doi(self.doi)
 
         # Approve the DOI for packaging
         self.approve_status = self.approve_for_packaging(doi_id)
@@ -134,17 +135,6 @@ class activity_PackagePOA(activity.activity):
             self.clean_tmp_dir()
 
         return result
-
-    def get_doi_id_from_doi(self, doi):
-        """
-        Extract just the integer doi_id value from the DOI string
-        """
-        try:
-            doi_id = int(doi.split(".")[-1])
-        except:
-            doi_id = None
-
-        return doi_id
 
     def elife_volume_from_pub_date(self, pub_date):
         """
