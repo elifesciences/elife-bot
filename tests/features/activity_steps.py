@@ -220,12 +220,6 @@ def have_the_s3key_name_s3key_name(step, S3key_name):
     assert world.S3key_name == S3key_name, \
         "Got S3key_name %s" % world.S3key_name
     
-@step('I get a ejp provider from the activity object')
-def get_the_ejp_provider_from_the_activity_object(step):
-    world.ejp = world.activity_object.ejp
-    assert world.ejp is not None, \
-        "Got ejp provider %s" % world.ejp
-    
 @step('I get authors from the activity object')
 def i_get_authors_from_the_activity_object(step):
     world.authors = world.activity_object.get_authors(document = world.document)
