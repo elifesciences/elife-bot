@@ -1,5 +1,6 @@
 import unittest
 from activity.activity_PackagePOA import activity_PackagePOA
+from packagepoa import transform
 import json
 import shutil
 from shutil import Error
@@ -51,9 +52,9 @@ class TestPackagePOA(unittest.TestCase):
         shutil.copy(source_doc, dest_doc)
         self.poa.poa_zip_filename = dest_doc
 
-    def fake_copy_pdf_to_hw_staging_dir(self, decap_pdf, junk_a, junk_b, junk_c, junk_d):
+    def fake_copy_pdf_to_hw_staging_dir(self, decap_pdf, junk_a, junk_b, junk_c, junk_d, junk_e):
         source_doc = "tests/test_data/poa/" + decap_pdf
-        dest_doc = self.poa.elife_poa_lib.settings.STAGING_DECAPITATE_PDF_DIR + os.sep + decap_pdf
+        dest_doc = self.poa.DECAPITATE_PDF_DIR + os.sep + decap_pdf
         shutil.copy(source_doc, dest_doc)
 
     def fake_clean_tmp_dir(self):
@@ -94,9 +95,7 @@ class TestPackagePOA(unittest.TestCase):
             fake_clean_tmp_dir = self.fake_clean_tmp_dir()
 
             # For now mock the PDF decapitator during tests
-            # Because elife_poa_lib is loaded dynamically, mock or patch do not work very well
-            #  hence the function replacement done below
-            self.poa.elife_poa_lib.transform.copy_pdf_to_hw_staging_dir = (
+            transform.copy_pdf_to_output_dir = (
                 MethodType(self.fake_copy_pdf_to_hw_staging_dir, test_data["poa_decap_pdf"]))
 
             param_data = json.loads('{"data": {"document": "' +

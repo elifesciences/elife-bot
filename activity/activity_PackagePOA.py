@@ -15,7 +15,9 @@ import boto.s3
 from boto.s3.connection import S3Connection
 
 from jatsgenerator import generate
-from jatsgenerator.conf import raw_config, parse_raw_config
+from jatsgenerator import conf as jats_conf
+from packagepoa import transform, decapitate_pdf
+from packagepoa import conf as poa_conf
 from elifearticle.article import ArticleDate
 
 import provider.ejp as ejplib
@@ -214,6 +216,12 @@ class activity_PackagePOA(activity.activity):
         # Save the zip file name for later use
         self.poa_zip_filename = filename_plus_path
 
+    def packagepoa_config(self, config_section):
+        "parse the config values from the jatsgenerator config"
+        return poa_conf.parse_raw_config(poa_conf.raw_config(
+            config_section,
+            self.settings.packagepoa_config_file))
+
     def get_doi_from_zip_file(self, filename=None):
         """
         Get the DOI from the zip file manifest.xml using the POA library
@@ -224,9 +232,10 @@ class activity_PackagePOA(activity.activity):
         if filename is None:
             return None
 
+        poa_config = self.packagepoa_config(self.settings.packagepoa_config_section)
         # Good, continue
         current_zipfile = zipfile.ZipFile(filename, 'r')
-        doi = self.elife_poa_lib.transform.get_doi_from_zipfile(current_zipfile)
+        doi = transform.get_doi_from_zipfile(current_zipfile)
 
         self.doi = doi
 
@@ -243,10 +252,15 @@ class activity_PackagePOA(activity.activity):
         """
         Using the POA transform-ejp-zip-to-hw-zip module
         """
+        poa_config = self.packagepoa_config(self.settings.packagepoa_config_section)
+        # override the output directories
+        poa_config['output_dir'] = self.OUTPUT_DIR
+        poa_config['decapitate_pdf_dir'] = self.DECAPITATE_PDF_DIR
+        poa_config['tmp_dir'] = self.TMP_DIR
         try:
-            self.elife_poa_lib.transform.process_zipfile(
+            transform.process_zipfile(
                 zipfile_name=self.poa_zip_filename,
-                output_dir=self.OUTPUT_DIR
+                poa_config=poa_config
             )
             return True
         except:
@@ -305,7 +319,7 @@ class activity_PackagePOA(activity.activity):
 
     def jatsgenerator_config(self, config_section):
         "parse the config values from the jatsgenerator config"
-        return parse_raw_config(raw_config(
+        return jats_conf.parse_raw_config(jats_conf.raw_config(
             config_section,
             self.settings.jatsgenerator_config_file))
 
