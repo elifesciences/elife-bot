@@ -85,6 +85,17 @@ class TestPackagePOA(unittest.TestCase):
         "test getting doi from the zip file manifest"
         self.assertEqual(self.poa.get_doi_from_zip_file(filename), expected)
 
+
+    @unpack
+    @data(
+        (None, False),
+        ('10.7554/eLife.12717', True),
+        )
+    def test_approve_for_packaging(self, doi_id, expected):
+        "test approving to package or not"
+        self.assertEqual(self.poa.approve_for_packaging(doi_id), expected)
+
+
     @patch.object(activity_PackagePOA, 'download_poa_zip')
     @patch.object(activity_PackagePOA, 'download_latest_csv')
     @patch.object(activity_PackagePOA, 'copy_files_to_s3_outbox')
