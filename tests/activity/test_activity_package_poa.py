@@ -21,22 +21,6 @@ class TestPackagePOA(unittest.TestCase):
     def setUp(self):
         self.poa = activity_PackagePOA(settings_mock, FakeLogger(), None, None, None)
 
-        self.do_activity_passes = []
-        self.do_activity_passes.append({
-            "poa_input_zip": "18022_1_supp_mat_highwire_zip_268991_x75s4v.zip",
-            "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
-            "doi": "10.7554/eLife.12717",
-            "ds_zip": "elife_poa_e12717_ds.zip",
-            "pub_date": "20160514000000"
-        })
-        self.do_activity_passes.append({
-            "poa_input_zip": "18022_1_supp_mat_highwire_zip_268991_x75s4v.zip",
-            "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
-            "doi": "10.7554/eLife.12717",
-            "ds_zip": "elife_poa_e12717_ds.zip",
-            "pub_date": None
-        })
-
     def tearDown(self):
         self.poa.clean_tmp_dir()
 
@@ -101,36 +85,52 @@ class TestPackagePOA(unittest.TestCase):
     @patch.object(activity_PackagePOA, 'copy_files_to_s3_outbox')
     @patch.object(lax_provider, 'article_publication_date')
     @patch.object(activity_PackagePOA, 'clean_tmp_dir')
-    def test_do_activity(self, fake_clean_tmp_dir, fake_article_publication_date,
+    @data(
+        {
+            "poa_input_zip": "18022_1_supp_mat_highwire_zip_268991_x75s4v.zip",
+            "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
+            "doi": "10.7554/eLife.12717",
+            "ds_zip": "elife_poa_e12717_ds.zip",
+            "pub_date": "20160514000000"
+        },
+        {
+            "poa_input_zip": "18022_1_supp_mat_highwire_zip_268991_x75s4v.zip",
+            "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
+            "doi": "10.7554/eLife.12717",
+            "ds_zip": "elife_poa_e12717_ds.zip",
+            "pub_date": None
+        },
+    )
+    def test_do_activity(self, test_data, fake_clean_tmp_dir,
+                         fake_article_publication_date,
                          fake_copy_files_to_s3_outbox,
                          fake_download_latest_csv, fake_download_poa_zip):
 
-        for test_data in self.do_activity_passes:
+        fake_download_latest_csv = self.fake_download_latest_csv()
+        fake_download_poa_zip = self.fake_download_poa_zip(test_data["poa_input_zip"])
+        if "pub_date" in test_data and test_data["pub_date"]:
+            fake_article_publication_date.return_value = test_data["pub_date"]
+        else:
+            fake_article_publication_date.return_value = None
+        fake_clean_tmp_dir = self.fake_clean_tmp_dir()
 
-            fake_download_latest_csv = self.fake_download_latest_csv()
-            fake_download_poa_zip = self.fake_download_poa_zip(test_data["poa_input_zip"])
-            if "pub_date" in test_data and test_data["pub_date"]:
-                fake_article_publication_date.return_value = test_data["pub_date"]
-            else:
-                fake_article_publication_date.return_value = None
-            fake_clean_tmp_dir = self.fake_clean_tmp_dir()
+        # For now mock the PDF decapitator during tests
+        transform.copy_pdf_to_output_dir = (
+            MethodType(self.fake_copy_pdf_to_hw_staging_dir, test_data["poa_decap_pdf"]))
 
-            # For now mock the PDF decapitator during tests
-            transform.copy_pdf_to_output_dir = (
-                MethodType(self.fake_copy_pdf_to_hw_staging_dir, test_data["poa_decap_pdf"]))
+        param_data = json.loads('{"data": {"document": "' +
+                                test_data["poa_input_zip"] + '"}}')
+        success = self.poa.do_activity(param_data)
 
-            param_data = json.loads('{"data": {"document": "' +
-                                    test_data["poa_input_zip"] + '"}}')
-            success = self.poa.do_activity(param_data)
+        self.assertEqual(test_data["doi"], self.poa.doi)
+        self.assertEqual(self.poa.generate_xml_status, True)
+        self.assertEqual(self.poa.process_status, True)
+        self.assertEqual(self.poa.approve_status, True)
+        self.assertEqual(self.poa.pdf_decap_status, True)
+        self.assertEqual(self.poa.activity_status, True)
+        self.assertEqual(self.check_ds_zip_exists(test_data["ds_zip"]), True)
+        self.assertEqual(True, success)
 
-            self.assertEqual(test_data["doi"], self.poa.doi)
-            self.assertEqual(self.poa.generate_xml_status, True)
-            self.assertEqual(self.poa.process_status, True)
-            self.assertEqual(self.poa.approve_status, True)
-            self.assertEqual(self.poa.pdf_decap_status, True)
-            self.assertEqual(self.poa.activity_status, True)
-            self.assertEqual(self.check_ds_zip_exists(test_data["ds_zip"]), True)
-            self.assertEqual(True, success)
 
 
 if __name__ == '__main__':
