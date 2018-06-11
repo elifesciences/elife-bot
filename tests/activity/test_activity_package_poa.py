@@ -1,19 +1,18 @@
 import unittest
+import os
+import json
+import shutil
+import glob
+from mock import patch
+from ddt import ddt, data, unpack
+import tests.activity.settings_mock as settings_mock
 from activity.activity_PackagePOA import activity_PackagePOA
 import provider.lax_provider as lax_provider
 from packagepoa import transform
-import json
-import shutil
-from shutil import Error
-import glob
-from mock import mock, patch
-from ddt import ddt, data, unpack
-import settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 import tests.activity.test_activity_data as activity_test_data
-from types import MethodType
+import tests.activity.helpers as helpers
 
-import os
 
 @ddt
 class TestPackagePOA(unittest.TestCase):
@@ -24,12 +23,14 @@ class TestPackagePOA(unittest.TestCase):
 
     def tearDown(self):
         self.poa.clean_tmp_dir()
+        helpers.delete_files_in_folder(activity_test_data.ExpandArticle_files_dest_folder,
+                                       filter_out=['.gitkeep'])
 
     def fake_download_latest_csv(self):
         csv_files = glob.glob(self.test_data_dir + "/*.csv")
-        for file in csv_files:
-            file_name = file.split(os.sep)[-1]
-            shutil.copy(file, self.poa.CSV_DIR + os.sep + file_name)
+        for file_name_path in csv_files:
+            file_name = file_name_path.split(os.sep)[-1]
+            shutil.copy(file_name_path, self.poa.CSV_DIR + os.sep + file_name)
 
     def fake_download_poa_zip(self, document):
         if document:
@@ -63,8 +64,8 @@ class TestPackagePOA(unittest.TestCase):
         After do_activity, check the directory contains a zip with ds_zip file name
         """
         file_names = glob.glob(self.poa.OUTPUT_DIR + os.sep + "*")
-        for file in file_names:
-            if file.split(os.sep)[-1] == ds_zip:
+        for file_name_path in file_names:
+            if file_name_path.split(os.sep)[-1] == ds_zip:
                 return True
         return False
 
@@ -121,12 +122,12 @@ class TestPackagePOA(unittest.TestCase):
 
     @patch('activity.activity_PackagePOA.storage_context')
     @patch('provider.ejp.EJP.ejp_bucket_file_list')
-    @patch.object(activity_PackagePOA, 'copy_files_to_s3_outbox')
     @patch.object(lax_provider, 'article_publication_date')
     @patch.object(activity_PackagePOA, 'clean_tmp_dir')
     @patch.object(transform, 'copy_pdf_to_output_dir')
     @data(
         {
+            "scenario": "1",
             "poa_input_zip": "18022_1_supp_mat_highwire_zip_268991_x75s4v.zip",
             "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
             "doi": "10.7554/eLife.12717",
@@ -139,8 +140,10 @@ class TestPackagePOA(unittest.TestCase):
             "expected_activity_status": True,
             "expected_ds_zip_exists": True,
             "expected_result": True,
+            "expected_outbox_count": 3
         },
         {
+            "scenario": "2",
             "poa_input_zip": "18022_1_supp_mat_highwire_zip_268991_x75s4v.zip",
             "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
             "doi": "10.7554/eLife.12717",
@@ -153,9 +156,11 @@ class TestPackagePOA(unittest.TestCase):
             "expected_activity_status": True,
             "expected_ds_zip_exists": True,
             "expected_result": True,
+            "expected_outbox_count": 3
         },
         {
             # test bad input file
+            "scenario": "3",
             "poa_input_zip": None,
             "poa_decap_pdf": None,
             "doi": None,
@@ -168,9 +173,11 @@ class TestPackagePOA(unittest.TestCase):
             "expected_activity_status": False,
             "expected_ds_zip_exists": False,
             "expected_result": True,
+            "expected_outbox_count": 0
         },
         {
             # test pdf decap failure
+            "scenario": "4",
             "poa_input_zip": "18022_1_supp_mat_highwire_zip_268991_x75s4v.zip",
             "poa_decap_pdf": None,
             "doi": "10.7554/eLife.12717",
@@ -183,13 +190,14 @@ class TestPackagePOA(unittest.TestCase):
             "expected_activity_status": False,
             "expected_ds_zip_exists": True,
             "expected_result": True,
+            "expected_outbox_count": 2
         },
     )
     def test_do_activity(self, test_data, fake_copy_pdf_to_output_dir, fake_clean_tmp_dir,
-                         fake_article_publication_date,
-                         fake_copy_files_to_s3_outbox, fake_ejp_bucket_file_list,
+                         fake_article_publication_date, fake_ejp_bucket_file_list,
                          fake_storage_context):
         # mock things
+        test_outbox_folder = activity_test_data.ExpandArticle_files_dest_folder
         bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list.json")
         with open(bucket_list_file, 'rb') as fp:
             fake_ejp_bucket_file_list.return_value = json.loads(fp.read())
@@ -209,21 +217,44 @@ class TestPackagePOA(unittest.TestCase):
         success = self.poa.do_activity(param_data)
 
         self.assertEqual(test_data["doi"], self.poa.doi)
-        self.assertEqual(self.poa.generate_xml_status,
-                         test_data.get('expected_generate_xml_status'))
-        self.assertEqual(self.poa.process_status,
-                         test_data.get('expected_process_status'))
-        self.assertEqual(self.poa.approve_status,
-                         test_data.get('expected_approve_status'))
-        self.assertEqual(self.poa.pdf_decap_status,
-                         test_data.get('expected_pdf_decap_status'))
-        self.assertEqual(self.poa.activity_status,
-                         test_data.get('expected_activity_status'))
-        self.assertEqual(self.check_ds_zip_exists(test_data["ds_zip"]),
-                         test_data.get('expected_ds_zip_exists'))
-        self.assertEqual(success, test_data.get('expected_result'))
+        self.boolean_assertion(self.poa.generate_xml_status,
+                               test_data.get('expected_generate_xml_status'),
+                               test_data.get('scenario'))
+        self.boolean_assertion(self.poa.process_status,
+                               test_data.get('expected_process_status'),
+                               test_data.get('scenario'))
+        self.boolean_assertion(self.poa.approve_status,
+                               test_data.get('expected_approve_status'),
+                               test_data.get('scenario'))
+        self.boolean_assertion(self.poa.pdf_decap_status,
+                               test_data.get('expected_pdf_decap_status'),
+                               test_data.get('scenario'))
+        self.boolean_assertion(self.poa.activity_status,
+                               test_data.get('expected_activity_status'),
+                               test_data.get('scenario'))
+        self.boolean_assertion(self.check_ds_zip_exists(test_data["ds_zip"]),
+                               test_data.get('expected_ds_zip_exists'),
+                               test_data.get('scenario'))
+        self.boolean_assertion(success,
+                               test_data.get('expected_result'),
+                               test_data.get('scenario'))
+        # count the outbox files except the hidden .gitkeep file
+        if test_data.get('expected_outbox_count'):
+            self.boolean_assertion(len(self.outbox_files(test_outbox_folder)),
+                                   test_data.get('expected_outbox_count'),
+                                   test_data.get('scenario'))
 
+    def outbox_files(self, folder):
+        "count the files in the folder ignoring .gitkeep or files starting with ."
+        return [file_name for file_name in os.listdir(folder) if not file_name.startswith('.')]
 
+    def boolean_assertion(self, value, expected, scenario=None):
+        "shorthand for checking and displaying output for equality assertions"
+        self.assertEqual(value, expected,
+                         "{value} does not equal {expected}, scenario {scenario}".format(
+                             value=value,
+                             expected=expected,
+                             scenario=scenario))
 
 if __name__ == '__main__':
     unittest.main()

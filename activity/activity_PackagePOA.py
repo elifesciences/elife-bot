@@ -9,9 +9,6 @@ import shutil
 
 import activity
 
-import boto.s3
-from boto.s3.connection import S3Connection
-
 from jatsgenerator import generate
 from jatsgenerator import conf as jats_conf
 from packagepoa import transform
@@ -310,37 +307,38 @@ class activity_PackagePOA(activity.activity):
         """
         Copy local files to the S3 bucket outbox
         """
-
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(self.publish_bucket)
-
         pdf_files = glob.glob(self.DECAPITATE_PDF_DIR  + "/*.pdf")
-        for absname in pdf_files:
+        for file_name_path in pdf_files:
             # Copy decap PDF to S3 outbox
-            self.copy_file_to_bucket(bucket, absname)
+            self.copy_file_to_bucket(file_name_path)
 
         xml_files = glob.glob(self.XML_OUTPUT_DIR  + "/*.xml")
-        for absname in xml_files:
+        for file_name_path in xml_files:
             # Copy XML file to S3 outbox
-            self.copy_file_to_bucket(bucket, absname)
+            self.copy_file_to_bucket(file_name_path)
 
         zip_files = glob.glob(self.OUTPUT_DIR  + "/*.zip")
-        for absname in zip_files:
+        for file_name_path in zip_files:
             # Copy supplements zip file to S3 outbox
-            self.copy_file_to_bucket(bucket, absname)
+            self.copy_file_to_bucket(file_name_path)
 
-    def copy_file_to_bucket(self, bucket, absname):
+
+    def copy_file_to_bucket(self, file_name_path):
         """
         Given a boto bucket (already connected) and path to the file,
         copy the file to the publish_bucket using the same filename
         """
         # Get the file name from the full file path
-        arcname = absname.split(os.sep)[-1]
-        s3_key_name = self.outbox_folder + arcname
+        file_name = file_name_path.split(os.sep)[-1]
+
         # Create S3 object and save
-        s3key = boto.s3.key.Key(bucket)
-        s3key.key = s3_key_name
-        s3key.set_contents_from_filename(absname, replace=True)
+        bucket_name = self.publish_bucket
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        s3_folder_name = self.outbox_folder
+        resource_dest = storage_provider + bucket_name + "/" + s3_folder_name + file_name
+        storage.set_resource_from_filename(resource_dest, file_name_path)
+
 
     def add_email_to_queue(self):
         """

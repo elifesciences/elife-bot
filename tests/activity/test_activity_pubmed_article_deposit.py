@@ -4,10 +4,12 @@ import shutil
 from mock import patch
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
+import tests.activity.helpers as helpers
 from provider.article import article
 from provider.simpleDB import SimpleDB
 from provider import lax_provider
 import tests.test_data as test_case_data
+import tests.activity.test_activity_data as activity_test_data
 import os
 from ddt import ddt, data
 from classes_mock import FakeStorageContext
@@ -23,6 +25,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
+        helpers.delete_files_in_folder(activity_test_data.ExpandArticle_files_dest_folder,
+                                       filter_out=['.gitkeep'])
 
 
     def input_dir(self):
