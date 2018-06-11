@@ -413,5 +413,75 @@
         "last_modified_timestamp": 1395277474,
         "last_modified": "2014-03-20T01:04:34.000Z",
         "name": "ejp_query_tool_query_id_182_POA_Research_Organism_2014_03_19_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1394746286,
+        "last_modified": "2018-03-13T21:31:26.000Z",
+        "name": "ejp_query_tool_query_id_242_POA_Group_Authors_2018_02_12_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1395277474,
+        "last_modified": "2018-03-20T01:04:34.000Z",
+        "name": "ejp_query_tool_query_id_242_POA_Group_Authors_2018_03_19_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1394746286,
+        "last_modified": "2018-03-13T21:31:26.000Z",
+        "name": "ejp_query_tool_query_id_191_POA_Title_2018_02_12_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1395277474,
+        "last_modified": "2018-03-20T01:04:34.000Z",
+        "name": "ejp_query_tool_query_id_191_POA_Title_2018_03_19_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1394746286,
+        "last_modified": "2018-03-13T21:31:26.000Z",
+        "name": "ejp_query_tool_query_id_199_POA_Datasets_2018_02_12_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1395277474,
+        "last_modified": "2018-03-20T01:04:34.000Z",
+        "name": "ejp_query_tool_query_id_199_POA_Datasets_2018_03_19_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1394746286,
+        "last_modified": "2018-03-13T21:31:26.000Z",
+        "name": "ejp_query_tool_query_id_345_POA_Funding_2018_02_12_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1395277474,
+        "last_modified": "2018-03-20T01:04:34.000Z",
+        "name": "ejp_query_tool_query_id_345_POA_Funding_2018_03_19_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1394746286,
+        "last_modified": "2018-03-13T21:31:26.000Z",
+        "name": "ejp_query_tool_query_id_198_POA_Ethics_2018_02_12_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1395277474,
+        "last_modified": "2018-03-20T01:04:34.000Z",
+        "name": "ejp_query_tool_query_id_198_POA_Ethics_2018_03_19_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1394746286,
+        "last_modified": "2018-03-13T21:31:26.000Z",
+        "name": "ejp_query_tool_query_id_226_POA_Keywords_2018_02_12_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1395277474,
+        "last_modified": "2018-03-20T01:04:34.000Z",
+        "name": "ejp_query_tool_query_id_226_POA_Keywords_2018_03_19_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1394746286,
+        "last_modified": "2018-03-13T21:31:26.000Z",
+        "name": "ejp_query_tool_query_id_196_POA_Abstract_2018_02_12_eLife.csv"
+    },
+    {
+        "last_modified_timestamp": 1395277474,
+        "last_modified": "2018-03-20T01:04:34.000Z",
+        "name": "ejp_query_tool_query_id_196_POA_Abstract_2018_03_19_eLife.csv"
     }
 ]

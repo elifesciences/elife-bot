@@ -120,7 +120,7 @@ class TestPackagePOA(unittest.TestCase):
 
 
     @patch('activity.activity_PackagePOA.storage_context')
-    @patch.object(activity_PackagePOA, 'download_latest_csv')
+    @patch('provider.ejp.EJP.ejp_bucket_file_list')
     @patch.object(activity_PackagePOA, 'copy_files_to_s3_outbox')
     @patch.object(lax_provider, 'article_publication_date')
     @patch.object(activity_PackagePOA, 'clean_tmp_dir')
@@ -187,10 +187,12 @@ class TestPackagePOA(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_copy_pdf_to_output_dir, fake_clean_tmp_dir,
                          fake_article_publication_date,
-                         fake_copy_files_to_s3_outbox,
-                         fake_download_latest_csv, fake_storage_context):
-
-        fake_download_latest_csv = self.fake_download_latest_csv()
+                         fake_copy_files_to_s3_outbox, fake_ejp_bucket_file_list,
+                         fake_storage_context):
+        # mock things
+        bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list.json")
+        with open(bucket_list_file, 'rb') as fp:
+            fake_ejp_bucket_file_list.return_value = json.loads(fp.read())
         fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
         if "pub_date" in test_data and test_data["pub_date"]:
             fake_article_publication_date.return_value = test_data["pub_date"]

@@ -54,6 +54,7 @@ class activity_PackagePOA(activity.activity):
 
         # Create an EJP provider to access S3 bucket holding CSV files
         self.ejp = ejplib.EJP(settings, self.get_tmp_dir())
+        self.ejp_bucket = self.settings.ejp_bucket
 
         # Data provider where email body is saved
         self.db = dblib.SimpleDB(settings)
@@ -254,21 +255,16 @@ class activity_PackagePOA(activity.activity):
         }
 
         for file_type, filename in file_types.items():
-
-            filename_plus_path = self.CSV_DIR + os.sep + filename
-            s3_key_name = self.ejp.find_latest_s3_file_name(file_type)
-
             # Download
-            #print "downloading " + s3_key_name
-            s3_key = self.ejp.get_s3key(s3_key_name)
-            contents = s3_key.get_contents_as_string()
-
-            # Save to disk
-            #print "saving to " + filename_plus_path
-            mode = "w"
-            f = open(filename_plus_path, mode)
-            f.write(contents)
-            f.close()
+            s3_key_name = self.ejp.find_latest_s3_file_name(file_type)
+            bucket_name = self.settings.ejp_bucket
+            storage = storage_context(self.settings)
+            storage_provider = self.settings.storage_provider + "://"
+            orig_resource = storage_provider + bucket_name + "/"
+            storage_resource_origin = orig_resource + s3_key_name
+            filename_plus_path = self.CSV_DIR + os.sep + filename
+            with open(filename_plus_path, 'wb') as open_file:
+                storage.get_resource_to_file(storage_resource_origin, open_file)
 
     def jatsgenerator_config(self, config_section):
         "parse the config values from the jatsgenerator config"
