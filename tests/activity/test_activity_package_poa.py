@@ -20,21 +20,20 @@ class TestPackagePOA(unittest.TestCase):
 
     def setUp(self):
         self.poa = activity_PackagePOA(settings_mock, FakeLogger(), None, None, None)
-        # override the storage context input directory
-        activity_test_data.ExpandArticle_files_source_folder = "tests/test_data/poa"
+        self.test_data_dir = "tests/test_data/poa"
 
     def tearDown(self):
         self.poa.clean_tmp_dir()
 
     def fake_download_latest_csv(self):
-        csv_files = glob.glob("tests/test_data/poa/*.csv")
+        csv_files = glob.glob(self.test_data_dir + "/*.csv")
         for file in csv_files:
             file_name = file.split(os.sep)[-1]
             shutil.copy(file, self.poa.CSV_DIR + os.sep + file_name)
 
     def fake_download_poa_zip(self, document):
         if document:
-            source_doc = "tests/test_data/poa/" + document
+            source_doc = self.test_data_dir + "/" + document
             dest_doc = self.poa.EJP_INPUT_DIR + os.sep + document
             try:
                 shutil.copy(source_doc, dest_doc)
@@ -44,7 +43,7 @@ class TestPackagePOA(unittest.TestCase):
 
     def fake_copy_pdf_to_hw_staging_dir(self, decap_pdf):
         if decap_pdf:
-            source_doc = "tests/test_data/poa/" + decap_pdf
+            source_doc = self.test_data_dir + "/" + decap_pdf
             dest_doc = self.poa.DECAPITATE_PDF_DIR + os.sep + decap_pdf
             try:
                 shutil.copy(source_doc, dest_doc)
@@ -192,7 +191,7 @@ class TestPackagePOA(unittest.TestCase):
                          fake_download_latest_csv, fake_storage_context):
 
         fake_download_latest_csv = self.fake_download_latest_csv()
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
         if "pub_date" in test_data and test_data["pub_date"]:
             fake_article_publication_date.return_value = test_data["pub_date"]
         else:

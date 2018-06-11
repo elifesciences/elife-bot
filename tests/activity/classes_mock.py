@@ -84,6 +84,10 @@ class FakeStorageProviderConnection:
 
 class FakeStorageContext:
 
+    def __init__(self, directory=data.ExpandArticle_files_source_folder):
+        "can instantiate specifying a data directory or use the default"
+        self.dir = directory
+
     def get_bucket_and_key(self, resource):
         p = re.compile(ur'(.*?)://(.*?)(/.*)')
         match = p.match(resource)
@@ -95,12 +99,12 @@ class FakeStorageContext:
     def resource_exists(self, resource):
         "check if a key exists"
         bucket, s3_key = self.get_bucket_and_key(resource)
-        src = data.ExpandArticle_files_source_folder + s3_key
+        src = self.dir + s3_key
         return os.path.exists(src)
 
     def get_resource_to_file(self, resource, filelike):
         bucket_name, s3_key = self.get_bucket_and_key(resource)
-        src = data.ExpandArticle_files_source_folder + s3_key
+        src = self.dir + s3_key
         with open(src, 'rb') as fsrc:
             filelike.write(fsrc.read())
 
