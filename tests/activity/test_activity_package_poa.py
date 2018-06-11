@@ -9,8 +9,8 @@ import glob
 from mock import mock, patch
 from ddt import ddt, data, unpack
 import settings_mock
-from tests.activity.classes_mock import FakeLogger
-
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+import tests.activity.test_activity_data as activity_test_data
 from types import MethodType
 
 import os
@@ -20,6 +20,8 @@ class TestPackagePOA(unittest.TestCase):
 
     def setUp(self):
         self.poa = activity_PackagePOA(settings_mock, FakeLogger(), None, None, None)
+        # override the storage context input directory
+        activity_test_data.ExpandArticle_files_source_folder = "tests/test_data/poa"
 
     def tearDown(self):
         self.poa.clean_tmp_dir()
@@ -95,15 +97,18 @@ class TestPackagePOA(unittest.TestCase):
     @data(
         {
             'filename': '18022_1_supp_mat_highwire_zip_268991_x75s4v.zip',
+            "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
             'expected': True
         },
         {
             'filename': None,
+            "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
             'expected': False
         },
         {
             # test not a zip file
             'filename': 'poa_abstract.csv',
+            "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
             'expected': False
         }
         )
@@ -115,7 +120,7 @@ class TestPackagePOA(unittest.TestCase):
         self.assertEqual(self.poa.process_poa_zipfile(file_path), test_data.get('expected'))
 
 
-    @patch.object(activity_PackagePOA, 'download_poa_zip')
+    @patch('activity.activity_PackagePOA.storage_context')
     @patch.object(activity_PackagePOA, 'download_latest_csv')
     @patch.object(activity_PackagePOA, 'copy_files_to_s3_outbox')
     @patch.object(lax_provider, 'article_publication_date')
@@ -184,10 +189,10 @@ class TestPackagePOA(unittest.TestCase):
     def test_do_activity(self, test_data, fake_copy_pdf_to_output_dir, fake_clean_tmp_dir,
                          fake_article_publication_date,
                          fake_copy_files_to_s3_outbox,
-                         fake_download_latest_csv, fake_download_poa_zip):
+                         fake_download_latest_csv, fake_storage_context):
 
         fake_download_latest_csv = self.fake_download_latest_csv()
-        fake_download_poa_zip.return_value = self.fake_download_poa_zip(test_data["poa_input_zip"])
+        fake_storage_context.return_value = FakeStorageContext()
         if "pub_date" in test_data and test_data["pub_date"]:
             fake_article_publication_date.return_value = test_data["pub_date"]
         else:

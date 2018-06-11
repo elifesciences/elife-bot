@@ -21,6 +21,7 @@ from elifearticle.article import ArticleDate
 import provider.ejp as ejplib
 import provider.simpleDB as dblib
 import provider.lax_provider as lax_provider
+from provider.storage_provider import storage_context
 from provider import utils
 
 """
@@ -150,31 +151,23 @@ class activity_PackagePOA(activity.activity):
 
         return date_struct
 
-    def download_poa_zip(self, document, bucket_name=None):
+    def download_poa_zip(self, document):
         """
         Given the s3 object name as document, download it from the
         POA delivery bucket and save file to disk in the EJP_INPUT_DIR
         """
-        if bucket_name is None:
-            # Default bucket
-            bucket_name = self.settings.poa_bucket
+        bucket_name = self.settings.poa_bucket
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + bucket_name + "/"
 
-        #print bucket_name
-        #print document
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-        # Get the S3 object key
-        s3_key = bucket.get_key(document)
-
-        # Download and save to disk
+        storage_resource_origin = orig_resource + document
         filename_plus_path = self.EJP_INPUT_DIR + os.sep + document
-        mode = "wb"
-        f = open(filename_plus_path, mode)
-        s3_key.get_contents_to_file(f)
-        f.close()
-
+        try:
+            with open(filename_plus_path, 'wb') as open_file:
+                storage.get_resource_to_file(storage_resource_origin, open_file)
+        except IOError:
+            return None
         return filename_plus_path
 
     def packagepoa_config(self, config_section):
@@ -210,6 +203,8 @@ class activity_PackagePOA(activity.activity):
         """
         Using the POA transform-ejp-zip-to-hw-zip module
         """
+        if poa_zip_filename is None:
+            return False
         poa_config = self.packagepoa_config(self.settings.packagepoa_config_section)
         # override the output directories
         poa_config['output_dir'] = self.OUTPUT_DIR
