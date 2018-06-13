@@ -259,6 +259,15 @@ class activity_PackagePOA(activity.activity):
             storage_provider = self.settings.storage_provider + "://"
             orig_resource = storage_provider + bucket_name + "/"
             storage_resource_origin = orig_resource + s3_key_name
+            try:
+                storage_resource_origin = orig_resource + s3_key_name
+            except TypeError:
+                if self.logger:
+                    self.logger.info(
+                        'PackagePoA unable to download CSV file for {file_type}'.format(
+                            file_type=file_type
+                        ))
+                continue
             filename_plus_path = self.CSV_DIR + os.sep + filename
             with open(filename_plus_path, 'wb') as open_file:
                 storage.get_resource_to_file(storage_resource_origin, open_file)
