@@ -46,6 +46,7 @@ def start(ENV="dev"):
     workflow_names.append("PubRouterDeposit")
     workflow_names.append("PMCDeposit")
     workflow_names.append("PostPerfectPublication")
+    workflow_names.append("IngestDigest")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries
