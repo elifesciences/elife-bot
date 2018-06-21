@@ -99,6 +99,10 @@ class exp():
     ses_pmc_recipient_email = "admin@example.com"
     ses_pmc_revision_recipient_email = "sender@example.com"
 
+    # Digest email settings
+    ses_digest_sender_email = "sender@example.org"
+    ses_digest_recipient_email = ["e@example.org", "life@example.org"]
+
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
 
@@ -277,6 +281,10 @@ class dev():
     ses_pmc_recipient_email = "admin@example.com"
     ses_pmc_revision_recipient_email = "sender@example.com"
 
+    # Digest email settings
+    ses_digest_sender_email = "sender@example.org"
+    ses_digest_recipient_email = ["e@example.org", "life@example.org"]
+
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
 
@@ -454,6 +462,10 @@ class live():
     ses_pmc_sender_email = "sender@example.com"
     ses_pmc_recipient_email = "admin@example.com"
     ses_pmc_revision_recipient_email = "sender@example.com"
+
+    # Digest email settings
+    ses_digest_sender_email = "sender@example.org"
+    ses_digest_recipient_email = ["e@example.org", "life@example.org"]
 
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"

@@ -46,6 +46,9 @@ ses_pmc_sender_email = ""
 ses_pmc_recipient_email = ""
 ses_pmc_revision_recipient_email = ["e@example.org", "life@example.org"]
 
+ses_digest_sender_email = ""
+ses_digest_recipient_email = ["e@example.org", "life@example.org"]
+
 features_publication_recipient_email = "features_team@example.org"
 publication_authority = ""
 consider_Lax_elife_2_0 = True
