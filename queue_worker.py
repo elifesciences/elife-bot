@@ -82,7 +82,7 @@ class QueueWorker:
                             workflow_name = self.get_starter_name(rules, info)
                             if workflow_name is None:
                                 self.logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
-                                return False
+                                continue
 
                             # build message
                             message = {

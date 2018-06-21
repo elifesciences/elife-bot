@@ -55,6 +55,29 @@ class TestQueueWorker(unittest.TestCase):
         self.assertEqual(out_queue_message, test_data.queue_worker_starter_message)
         self.assertEqual(return_value, None)
 
+    @patch('queue_worker.Message')
+    @patch('tests.activity.classes_mock.FakeSQSQueue.read')
+    @patch('queue_worker.QueueWorker.queues')
+    @patch('queue_worker.QueueWorker.connect')
+    def test_work_unknown_bucket(self, mock_sqs_connect, mock_queues, mock_queue_read, mock_sqs_message):
+        "test work method with an unrecognised bucket name"
+        directory = TempDirectory()
+        mock_sqs_connect = FakeSQSConn(directory)
+        mock_queues.return_value = FakeSQSQueue(directory), FakeSQSQueue(directory)
+        mock_sqs_message.return_value = FakeSQSMessage(directory)
+        # create an S3 event message
+        s3_event = FakeS3Event()
+        # here override the bucket name
+        s3_event._bucket_name = 'not_a_real_bucket'
+        mock_queue_read.return_value = s3_event
+        # create a fake green flag
+        flag = FakeFlag()
+        # invoke queue worker to work
+        return_value = self.worker.work(flag)
+        # assertion, should be no message in the sqs queue
+        out_queue_list = directory.listdir()
+        self.assertIsNone(out_queue_list, None)
+        self.assertEqual(return_value, None)
 
 if __name__ == '__main__':
     unittest.main()
