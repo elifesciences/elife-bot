@@ -28,10 +28,11 @@ class activity_EmailDigest(activity.activity):
 
         # Track some values
         self.input_file = None
+        self.digest = None
 
         # Local directory settings
-        self.temp_dir = "tmp_dir"
-        self.input_dir = "input_dir"
+        self.temp_dir = os.path.join(self.get_tmp_dir(), "tmp_dir")
+        self.input_dir = os.path.join(self.get_tmp_dir(), "input_dir")
 
         # Create output directories
         self.create_activity_directories()
@@ -65,11 +66,11 @@ class activity_EmailDigest(activity.activity):
         self.input_file = self.download_digest_from_s3(filename, bucket_name, bucket_folder)
 
         # Parse input and build digest
-        self.build_status, digest_content = self.build_digest(self.input_file)
+        self.build_status, self.digest = self.build_digest(self.input_file)
 
         # Generate output
         # todo!!!
-        self.generate_status = self.generate_output(digest_content)
+        self.generate_status = self.generate_output(self.digest)
 
         if self.generate_status is True:
             self.activity_status = True
@@ -98,7 +99,7 @@ class activity_EmailDigest(activity.activity):
         storage_provider = self.settings.storage_provider + "://"
         orig_resource = storage_provider + bucket_name + "/" + bucket_folder
         storage_resource_origin = orig_resource + '/' + filename
-        dirname = os.path.join(self.get_tmp_dir(), self.input_dir)
+        dirname = self.input_dir
         filename_plus_path = dirname + os.sep + filename
         with open(filename_plus_path, 'wb') as open_file:
             storage.get_resource_to_file(storage_resource_origin, open_file)
@@ -107,10 +108,10 @@ class activity_EmailDigest(activity.activity):
 
     def build_digest(self, input_file):
         "Parse input and build a Digest object"
-        # todo!!!
         if not input_file:
             return False, None
-        return True, 'fake_digest_content'
+        digest = build.build_digest(input_file, self.temp_dir)
+        return True, digest
 
 
     def generate_output(self, digest_content):
@@ -231,10 +232,7 @@ class activity_EmailDigest(activity.activity):
         """
         Create the directories in the activity tmp_dir
         """
-        for dir_name in [
-                os.path.join(self.get_tmp_dir(), self.temp_dir),
-                os.path.join(self.get_tmp_dir(), self.input_dir)
-            ]:
+        for dir_name in [self.temp_dir, self.input_dir]:
             try:
                 os.mkdir(dir_name)
             except OSError:

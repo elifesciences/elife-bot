@@ -51,6 +51,7 @@ class TestEmailDigest(unittest.TestCase):
             "expected_generate_status": True,
             "expected_approve_status": True,
             "expected_email_status": True,
+            "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999'
         },
         {
             "comment": 'digest zip file example',
@@ -61,6 +62,8 @@ class TestEmailDigest(unittest.TestCase):
             "expected_generate_status": True,
             "expected_approve_status": True,
             "expected_email_status": True,
+            "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
+            "expected_digest_image_file": u'IMAGE 99999.jpeg'
         },
         {
             "comment": 'digest bad file example',
@@ -92,6 +95,16 @@ class TestEmailDigest(unittest.TestCase):
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.email_status, test_data.get("expected_email_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
+        # check digest values
+        if self.activity.digest and test_data.get("expected_digest_doi"):
+            self.assertEqual(self.activity.digest.doi, test_data.get("expected_digest_doi"),
+                             'failed in {comment}'.format(comment=test_data.get("comment")))
+        # check digest image values
+        if (self.activity.digest and self.activity.digest.image and
+            test_data.get("expected_digest_image_file")):
+            file_name = self.activity.digest.image.file.split(os.sep)[-1]
+            self.assertEqual(file_name, test_data.get("expected_digest_image_file"),
+                             'failed in {comment}'.format(comment=test_data.get("comment")))
 
 
 if __name__ == '__main__':
