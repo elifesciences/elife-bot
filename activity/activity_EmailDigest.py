@@ -6,7 +6,7 @@ import activity
 from S3utility.s3_notification_info import S3NotificationInfo
 import provider.simpleDB as dblib
 from provider.storage_provider import storage_context
-from digestparser import parse
+from digestparser import build
 
 """
 EmailDigest activity
@@ -41,7 +41,7 @@ class activity_EmailDigest(activity.activity):
 
         # Track the success of some steps
         self.activity_status = None
-        self.parse_status = None
+        self.build_status = None
         self.generate_status = None
         self.approve_status = None
         self.email_status = None
@@ -64,8 +64,8 @@ class activity_EmailDigest(activity.activity):
         # Download from S3
         self.input_file = self.download_digest_from_s3(filename, bucket_name, bucket_folder)
 
-        # Parse input
-        self.parse_status, digest_content = self.parse_digest(self.input_file)
+        # Parse input and build digest
+        self.build_status, digest_content = self.build_digest(self.input_file)
 
         # Generate output
         # todo!!!
@@ -105,8 +105,8 @@ class activity_EmailDigest(activity.activity):
         return filename_plus_path
 
 
-    def parse_digest(self, input_file):
-        "Parse input into an object"
+    def build_digest(self, input_file):
+        "Parse input and build a Digest object"
         # todo!!!
         if not input_file:
             return False, None
@@ -205,7 +205,7 @@ class activity_EmailDigest(activity.activity):
         body += "\n"
 
         body += "activity_status: " + str(self.activity_status) + "\n"
-        body += "parse_status: " + str(self.parse_status) + "\n"
+        body += "build_status: " + str(self.build_status) + "\n"
         body += "generate_status: " + str(self.generate_status) + "\n"
         body += "approve_status: " + str(self.approve_status) + "\n"
         body += "email_status: " + str(self.email_status) + "\n"

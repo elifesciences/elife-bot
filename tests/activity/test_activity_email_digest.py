@@ -47,7 +47,7 @@ class TestEmailDigest(unittest.TestCase):
             "filename": None,
             "expected_result": True,
             "expected_activity_status": True,
-            "expected_parse_status": True,
+            "expected_build_status": True,
             "expected_generate_status": True,
             "expected_approve_status": True,
             "expected_email_status": True,
@@ -57,7 +57,7 @@ class TestEmailDigest(unittest.TestCase):
             "filename": 'DIGEST 99999.zip',
             "expected_result": True,
             "expected_activity_status": True,
-            "expected_parse_status": True,
+            "expected_build_status": True,
             "expected_generate_status": True,
             "expected_approve_status": True,
             "expected_email_status": True,
@@ -67,7 +67,7 @@ class TestEmailDigest(unittest.TestCase):
             "filename": '',
             "expected_result": activity_EmailDigest.ACTIVITY_PERMANENT_FAILURE,
             "expected_activity_status": None,
-            "expected_parse_status": False,
+            "expected_build_status": False,
             "expected_generate_status": False,
             "expected_approve_status": True,
             "expected_email_status": True,
@@ -84,7 +84,7 @@ class TestEmailDigest(unittest.TestCase):
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.parse_status, test_data.get("expected_parse_status"),
+        self.assertEqual(self.activity.build_status, test_data.get("expected_build_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.generate_status, test_data.get("expected_generate_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
