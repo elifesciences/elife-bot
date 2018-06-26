@@ -42,6 +42,7 @@ class activity_PackagePOA(activity.activity):
         self.EJP_INPUT_DIR = os.path.join(self.get_tmp_dir(), 'ejp_input')
         self.XML_OUTPUT_DIR = os.path.join(self.get_tmp_dir(), 'generated_xml_output')
         self.CSV_DIR = os.path.join(self.get_tmp_dir(), 'csv_data')
+        self.CSV_TMP_DIR = os.path.join(self.get_tmp_dir(), 'csv_data', 'tmp')
         self.DECAPITATE_PDF_DIR = os.path.join(self.get_tmp_dir(), 'decapitate_pdf_dir')
         self.TMP_DIR = os.path.join(self.get_tmp_dir(), 'tmp')
         self.OUTPUT_DIR = os.path.join(self.get_tmp_dir(), 'output_dir')
@@ -285,8 +286,9 @@ class activity_PackagePOA(activity.activity):
         """
         result = None
         # override the CSV directory in the ejp-csv-parser library
-        generate.data.CSV_PATH = self.CSV_DIR + os.sep
         jats_config = self.jatsgenerator_config(self.settings.jatsgenerator_config_section)
+        generate.parse.data.CSV_PATH = self.CSV_DIR + os.sep
+        generate.parse.data.TMP_DIR = os.path.join(self.CSV_DIR, 'tmp')
         article = generate.build_article_from_csv(article_id, jats_config)
 
         if article:
@@ -467,6 +469,7 @@ class activity_PackagePOA(activity.activity):
         for dir_name in [
                 self.XML_OUTPUT_DIR,
                 self.CSV_DIR,
+                self.CSV_TMP_DIR,
                 self.EJP_INPUT_DIR,
                 self.DECAPITATE_PDF_DIR,
                 self.TMP_DIR,

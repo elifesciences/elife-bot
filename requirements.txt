@@ -14,9 +14,9 @@ git+https://github.com/elifesciences/elife-tools.git@df537e13da03accf1f4dee83c6c
 git+https://github.com/elifesciences/elife-article.git@bb61d4c0e3742403503efe10852114aeb1e07269#egg=elifearticle
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@3cf16976fa57e94fd3af45e2162b251674c168d8#egg=elifecrossref
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@2b770b5942de763a34b92e378600ed53c175c7e6#egg=elifepubmed
-git+https://github.com/elifesciences/ejp-csv-parser.git@e4e215b3b3842a78473bf384bc8ba60b4c50339d#egg=ejpcsvparser
-git+https://github.com/elifesciences/jats-generator.git@52ca44b3ef64f575867e22d6f532a19f2ac0e487#egg=jatsgenerator
-git+https://github.com/elifesciences/package-poa.git@8e772b122919a78a126d5d8eab62ad661b24c323#egg=packagepoa
+git+https://github.com/elifesciences/ejp-csv-parser.git@6ee4b02bbc0adce309c4bcf07a0ea90fb74b5e89#egg=ejpcsvparser
+git+https://github.com/elifesciences/jats-generator.git@7e106d80836e0249686adbf204e95fcc420f7a21#egg=jatsgenerator
+git+https://github.com/elifesciences/package-poa.git@b4b937d4639a080ec073796a1ffe18caa3a639c1#egg=packagepoa
 PyYAML==3.11
 Wand==0.4.0
 paramiko==1.15.2
