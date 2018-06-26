@@ -30,12 +30,12 @@ class TestPackagePOA(unittest.TestCase):
         csv_files = glob.glob(self.test_data_dir + "/*.csv")
         for file_name_path in csv_files:
             file_name = file_name_path.split(os.sep)[-1]
-            shutil.copy(file_name_path, self.poa.CSV_DIR + os.sep + file_name)
+            shutil.copy(file_name_path, self.poa.csv_dir + os.sep + file_name)
 
     def fake_download_poa_zip(self, document):
         if document:
             source_doc = self.test_data_dir + "/" + document
-            dest_doc = self.poa.EJP_INPUT_DIR + os.sep + document
+            dest_doc = self.poa.ejp_input_dir + os.sep + document
             try:
                 shutil.copy(source_doc, dest_doc)
             except IOError:
@@ -45,7 +45,7 @@ class TestPackagePOA(unittest.TestCase):
     def fake_copy_pdf_to_hw_staging_dir(self, decap_pdf):
         if decap_pdf:
             source_doc = self.test_data_dir + "/" + decap_pdf
-            dest_doc = self.poa.DECAPITATE_PDF_DIR + os.sep + decap_pdf
+            dest_doc = self.poa.decapitate_pdf_dir + os.sep + decap_pdf
             try:
                 shutil.copy(source_doc, dest_doc)
             except IOError:
@@ -63,7 +63,7 @@ class TestPackagePOA(unittest.TestCase):
         """
         After do_activity, check the directory contains a zip with ds_zip file name
         """
-        file_names = glob.glob(self.poa.OUTPUT_DIR + os.sep + "*")
+        file_names = glob.glob(self.poa.output_dir + os.sep + "*")
         for file_name_path in file_names:
             if file_name_path.split(os.sep)[-1] == ds_zip:
                 return True

@@ -39,13 +39,13 @@ class activity_PackagePOA(activity.activity):
         self.description = "Process POA zip file input, repackage, and save to S3."
 
         # Activity directories
-        self.EJP_INPUT_DIR = os.path.join(self.get_tmp_dir(), 'ejp_input')
-        self.XML_OUTPUT_DIR = os.path.join(self.get_tmp_dir(), 'generated_xml_output')
-        self.CSV_DIR = os.path.join(self.get_tmp_dir(), 'csv_data')
-        self.CSV_TMP_DIR = os.path.join(self.get_tmp_dir(), 'csv_data', 'tmp')
-        self.DECAPITATE_PDF_DIR = os.path.join(self.get_tmp_dir(), 'decapitate_pdf_dir')
-        self.TMP_DIR = os.path.join(self.get_tmp_dir(), 'tmp')
-        self.OUTPUT_DIR = os.path.join(self.get_tmp_dir(), 'output_dir')
+        self.ejp_input_dir = os.path.join(self.get_tmp_dir(), 'ejp_input')
+        self.xml_output_dir = os.path.join(self.get_tmp_dir(), 'generated_xml_output')
+        self.csv_dir = os.path.join(self.get_tmp_dir(), 'csv_data')
+        self.csv_tmp_dir = os.path.join(self.get_tmp_dir(), 'csv_data', 'tmp')
+        self.decapitate_pdf_dir = os.path.join(self.get_tmp_dir(), 'decapitate_pdf_dir')
+        self.poa_tmp_dir = os.path.join(self.get_tmp_dir(), 'tmp')
+        self.output_dir = os.path.join(self.get_tmp_dir(), 'output_dir')
 
         # Create output directories
         self.create_activity_directories()
@@ -55,7 +55,7 @@ class activity_PackagePOA(activity.activity):
         self.ejp_bucket = self.settings.ejp_bucket
 
         # Data provider where email body is saved
-        self.db = dblib.SimpleDB(settings)
+        self.db_object = dblib.SimpleDB(settings)
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
@@ -153,7 +153,7 @@ class activity_PackagePOA(activity.activity):
     def download_poa_zip(self, document):
         """
         Given the s3 object name as document, download it from the
-        POA delivery bucket and save file to disk in the EJP_INPUT_DIR
+        POA delivery bucket and save file to disk in the ejp_input_dir
         """
         bucket_name = self.settings.poa_bucket
         storage = storage_context(self.settings)
@@ -161,7 +161,7 @@ class activity_PackagePOA(activity.activity):
         orig_resource = storage_provider + bucket_name + "/"
 
         storage_resource_origin = orig_resource + document
-        filename_plus_path = self.EJP_INPUT_DIR + os.sep + document
+        filename_plus_path = self.ejp_input_dir + os.sep + document
         try:
             with open(filename_plus_path, 'wb') as open_file:
                 storage.get_resource_to_file(storage_resource_origin, open_file)
@@ -206,9 +206,9 @@ class activity_PackagePOA(activity.activity):
             return False
         poa_config = self.packagepoa_config(self.settings.packagepoa_config_section)
         # override the output directories
-        poa_config['output_dir'] = self.OUTPUT_DIR
-        poa_config['decapitate_pdf_dir'] = self.DECAPITATE_PDF_DIR
-        poa_config['tmp_dir'] = self.TMP_DIR
+        poa_config['output_dir'] = self.output_dir
+        poa_config['decapitate_pdf_dir'] = self.decapitate_pdf_dir
+        poa_config['tmp_dir'] = self.poa_tmp_dir
         try:
             transform.process_zipfile(
                 zipfile_name=poa_zip_filename,
@@ -223,7 +223,7 @@ class activity_PackagePOA(activity.activity):
         After processing the zipfile there should be a PDF present, as a
         result of decapitating the file. If not, return false
         """
-        pdf_files = glob.glob(self.DECAPITATE_PDF_DIR  + "/*.pdf")
+        pdf_files = glob.glob(self.decapitate_pdf_dir  + "/*.pdf")
         if len(pdf_files) <= 0:
             return False
         elif len(pdf_files) > 0:
@@ -232,7 +232,7 @@ class activity_PackagePOA(activity.activity):
     def download_latest_csv(self):
         """
         Download the latest CSV files from S3, rename them, and
-        save to the CSV_DIR directory
+        save to the csv_dir directory
         """
 
         # Key: File types, value: file to save as to disk
@@ -269,7 +269,7 @@ class activity_PackagePOA(activity.activity):
                             file_type=file_type
                         ))
                 continue
-            filename_plus_path = self.CSV_DIR + os.sep + filename
+            filename_plus_path = self.csv_dir + os.sep + filename
             with open(filename_plus_path, 'wb') as open_file:
                 storage.get_resource_to_file(storage_resource_origin, open_file)
 
@@ -287,8 +287,8 @@ class activity_PackagePOA(activity.activity):
         result = None
         # override the CSV directory in the ejp-csv-parser library
         jats_config = self.jatsgenerator_config(self.settings.jatsgenerator_config_section)
-        generate.parse.data.CSV_PATH = self.CSV_DIR + os.sep
-        generate.parse.data.TMP_DIR = os.path.join(self.CSV_DIR, 'tmp')
+        generate.parse.data.CSV_PATH = self.csv_dir + os.sep
+        generate.parse.data.TMP_DIR = self.csv_tmp_dir
         article = generate.build_article_from_csv(article_id, jats_config)
 
         if article:
@@ -301,16 +301,16 @@ class activity_PackagePOA(activity.activity):
                 article.volume = volume
 
             # Override the output_dir in the jatsgenerator config
-            jats_config['target_output_dir'] = self.XML_OUTPUT_DIR
+            jats_config['target_output_dir'] = self.xml_output_dir
             result = generate.build_xml_to_disk(
                 article_id, article, jats_config, True)
         else:
             result = False
 
-        # Copy to OUTPUT_DIR because we need it there
-        xml_files = glob.glob(self.XML_OUTPUT_DIR + "/*.xml")
-        for f in xml_files:
-            shutil.copy(f, self.OUTPUT_DIR)
+        # Copy to output_dir because we need it there
+        xml_files = glob.glob(self.xml_output_dir + "/*.xml")
+        for xml_file in xml_files:
+            shutil.copy(xml_file, self.output_dir)
 
         return result
 
@@ -318,17 +318,17 @@ class activity_PackagePOA(activity.activity):
         """
         Copy local files to the S3 bucket outbox
         """
-        pdf_files = glob.glob(self.DECAPITATE_PDF_DIR  + "/*.pdf")
+        pdf_files = glob.glob(self.decapitate_pdf_dir  + "/*.pdf")
         for file_name_path in pdf_files:
             # Copy decap PDF to S3 outbox
             self.copy_file_to_bucket(file_name_path)
 
-        xml_files = glob.glob(self.XML_OUTPUT_DIR  + "/*.xml")
+        xml_files = glob.glob(self.xml_output_dir  + "/*.xml")
         for file_name_path in xml_files:
             # Copy XML file to S3 outbox
             self.copy_file_to_bucket(file_name_path)
 
-        zip_files = glob.glob(self.OUTPUT_DIR  + "/*.zip")
+        zip_files = glob.glob(self.output_dir  + "/*.zip")
         for file_name_path in zip_files:
             # Copy supplements zip file to S3 outbox
             self.copy_file_to_bucket(file_name_path)
@@ -357,7 +357,7 @@ class activity_PackagePOA(activity.activity):
         on the status
         """
         # Connect to DB
-        db_conn = self.db.connect()
+        db_conn = self.db_object.connect()
 
         # Note: Create a verified sender email address, only done once
         #conn.verify_email_address(self.settings.ses_sender_email)
@@ -378,7 +378,7 @@ class activity_PackagePOA(activity.activity):
 
         for email in recipient_email_list:
             # Add the email to the email queue
-            self.db.elife_add_email_to_email_queue(
+            self.db_object.elife_add_email_to_email_queue(
                 recipient_email=email,
                 sender_email=sender_email,
                 email_type="PackagePOA",
@@ -467,13 +467,13 @@ class activity_PackagePOA(activity.activity):
         Create the directories in the activity tmp_dir
         """
         for dir_name in [
-                self.XML_OUTPUT_DIR,
-                self.CSV_DIR,
-                self.CSV_TMP_DIR,
-                self.EJP_INPUT_DIR,
-                self.DECAPITATE_PDF_DIR,
-                self.TMP_DIR,
-                self.OUTPUT_DIR
+                self.xml_output_dir,
+                self.csv_dir,
+                self.csv_tmp_dir,
+                self.ejp_input_dir,
+                self.decapitate_pdf_dir,
+                self.poa_tmp_dir,
+                self.output_dir
             ]:
             try:
                 os.mkdir(dir_name)
