@@ -81,19 +81,18 @@ class QueueWorker:
                             self.logger.info("S3NotificationInfo: %s", info.to_dict())
                             workflow_name = self.get_starter_name(rules, info)
                             if workflow_name is None:
-                                self.logger.info("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
-                                continue
-
-                            # build message
-                            message = {
-                                'workflow_name': workflow_name,
-                                'workflow_data': info.to_dict()
-                            }
-
-                            # send workflow initiation message
-                            m = Message()
-                            m.set_body(json.dumps(message))
-                            out_queue.write(m)
+                                self.logger.error("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
+                            else:
+                                # build message
+                                message = {
+                                    'workflow_name': workflow_name,
+                                    'workflow_data': info.to_dict()
+                                }
+    
+                                # send workflow initiation message
+                                m = Message()
+                                m.set_body(json.dumps(message))
+                                out_queue.write(m)
 
                             # cancel incoming message
                             self.logger.info("cancelling message")
