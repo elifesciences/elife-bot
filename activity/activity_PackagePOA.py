@@ -21,6 +21,7 @@ from provider import utils
 PackagePOA activity
 """
 
+
 class activity_PackagePOA(activity.activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
@@ -219,7 +220,7 @@ class activity_PackagePOA(activity.activity):
         After processing the zipfile there should be a PDF present, as a
         result of decapitating the file. If not, return false
         """
-        pdf_files = glob.glob(self.decapitate_pdf_dir  + "/*.pdf")
+        pdf_files = glob.glob(self.decapitate_pdf_dir + "/*.pdf")
         if len(pdf_files) <= 0:
             return False
         elif len(pdf_files) > 0:
@@ -233,19 +234,19 @@ class activity_PackagePOA(activity.activity):
 
         # Key: File types, value: file to save as to disk
         file_types = {
-            "poa_author"             : "poa_author.csv",
-            "poa_license"            : "poa_license.csv",
-            "poa_manuscript"         : "poa_manuscript.csv",
-            "poa_received"           : "poa_received.csv",
-            "poa_subject_area"       : "poa_subject_area.csv",
-            "poa_research_organism"  : "poa_research_organism.csv",
-            "poa_abstract"           : "poa_abstract.csv",
-            "poa_title"              : "poa_title.csv",
-            "poa_keywords"           : "poa_keywords.csv",
-            "poa_group_authors"      : "poa_group_authors.csv",
-            "poa_datasets"           : "poa_datasets.csv",
-            "poa_funding"            : "poa_funding.csv",
-            "poa_ethics"             : "poa_ethics.csv"
+            "poa_author": "poa_author.csv",
+            "poa_license": "poa_license.csv",
+            "poa_manuscript": "poa_manuscript.csv",
+            "poa_received": "poa_received.csv",
+            "poa_subject_area": "poa_subject_area.csv",
+            "poa_research_organism": "poa_research_organism.csv",
+            "poa_abstract": "poa_abstract.csv",
+            "poa_title": "poa_title.csv",
+            "poa_keywords": "poa_keywords.csv",
+            "poa_group_authors": "poa_group_authors.csv",
+            "poa_datasets": "poa_datasets.csv",
+            "poa_funding": "poa_funding.csv",
+            "poa_ethics": "poa_ethics.csv"
         }
 
         for file_type, filename in file_types.items():
@@ -292,7 +293,7 @@ class activity_PackagePOA(activity.activity):
             if pub_date:
                 pub_date_object = ArticleDate("pub", pub_date)
                 article.add_date(pub_date_object)
-    
+
             if volume:
                 article.volume = volume
 
@@ -314,21 +315,20 @@ class activity_PackagePOA(activity.activity):
         """
         Copy local files to the S3 bucket outbox
         """
-        pdf_files = glob.glob(self.decapitate_pdf_dir  + "/*.pdf")
+        pdf_files = glob.glob(self.decapitate_pdf_dir + "/*.pdf")
         for file_name_path in pdf_files:
             # Copy decap PDF to S3 outbox
             self.copy_file_to_bucket(file_name_path)
 
-        xml_files = glob.glob(self.xml_output_dir  + "/*.xml")
+        xml_files = glob.glob(self.xml_output_dir + "/*.xml")
         for file_name_path in xml_files:
             # Copy XML file to S3 outbox
             self.copy_file_to_bucket(file_name_path)
 
-        zip_files = glob.glob(self.output_dir  + "/*.zip")
+        zip_files = glob.glob(self.output_dir + "/*.zip")
         for file_name_path in zip_files:
             # Copy supplements zip file to S3 outbox
             self.copy_file_to_bucket(file_name_path)
-
 
     def copy_file_to_bucket(self, file_name_path):
         """
@@ -346,7 +346,6 @@ class activity_PackagePOA(activity.activity):
         resource_dest = storage_provider + bucket_name + "/" + s3_folder_name + file_name
         storage.set_resource_from_filename(resource_dest, file_name_path)
 
-
     def add_email_to_queue(self):
         """
         After do_activity is finished, send emails to recipients
@@ -356,7 +355,7 @@ class activity_PackagePOA(activity.activity):
         db_conn = self.db_object.connect()
 
         # Note: Create a verified sender email address, only done once
-        #conn.verify_email_address(self.settings.ses_sender_email)
+        # conn.verify_email_address(self.settings.ses_sender_email)
 
         current_time = time.gmtime()
 
@@ -381,7 +380,6 @@ class activity_PackagePOA(activity.activity):
                 format="text",
                 subject=subject,
                 body=body)
-
 
         return True
 
@@ -469,8 +467,7 @@ class activity_PackagePOA(activity.activity):
                 self.ejp_input_dir,
                 self.decapitate_pdf_dir,
                 self.poa_tmp_dir,
-                self.output_dir
-            ]:
+                self.output_dir]:
             try:
                 os.mkdir(dir_name)
             except OSError:
