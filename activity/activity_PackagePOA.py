@@ -1,20 +1,16 @@
 import os
-import boto.swf
 import json
 import time
 import zipfile
-
 import glob
 import shutil
-
-import activity
-
+import boto.swf
 from jatsgenerator import generate
 from jatsgenerator import conf as jats_conf
 from packagepoa import transform
 from packagepoa import conf as poa_conf
 from elifearticle.article import ArticleDate
-
+import activity.activity
 import provider.ejp as ejplib
 import provider.simpleDB as dblib
 import provider.lax_provider as lax_provider
