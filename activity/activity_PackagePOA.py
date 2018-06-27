@@ -54,7 +54,7 @@ class activity_PackagePOA(activity.activity):
         self.db = dblib.SimpleDB(settings)
 
         # Bucket for outgoing files
-        self.publish_bucket = settings.poa_packaging_bucket
+        self.publish_bucket = settings.publishing_buckets_prefix + settings.poa_packaging_bucket
         self.outbox_folder = "outbox/"
 
         # Some values to set later
