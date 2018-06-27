@@ -17,13 +17,9 @@ import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
 from provider import utils
 
-"""
-PackagePOA activity
-"""
-
 
 class activity_PackagePOA(activity.activity):
-
+    "PackagePOA activity"
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
 
@@ -115,12 +111,9 @@ class activity_PackagePOA(activity.activity):
             self.copy_files_to_s3_outbox()
 
             # Set the activity status of this activity based on successes
-            if (self.process_status is True and
-                    self.pdf_decap_status is True and
-                    self.generate_xml_status is True):
-                self.activity_status = True
-            else:
-                self.activity_status = False
+            self.activity_status = bool(self.process_status is True and
+                                        self.pdf_decap_status is True and
+                                        self.generate_xml_status is True)
 
         # Send email
         self.add_email_to_queue()
@@ -183,7 +176,7 @@ class activity_PackagePOA(activity.activity):
         try:
             with zipfile.ZipFile(filename, 'r') as current_zipfile:
                 return transform.get_doi_from_zipfile(current_zipfile)
-        except:
+        except zipfile.BadZipfile:
             return None
 
     def approve_for_packaging(self, doi_id):
@@ -212,7 +205,7 @@ class activity_PackagePOA(activity.activity):
                 poa_config=poa_config
             )
             return True
-        except:
+        except zipfile.BadZipfile:
             return False
 
     def check_pdf_decap_failure(self):
@@ -364,7 +357,7 @@ class activity_PackagePOA(activity.activity):
 
         recipient_email_list = []
         # Handle multiple recipients, if specified
-        if type(self.settings.ses_poa_recipient_email) == list:
+        if isinstance(self.settings.ses_poa_recipient_email, list):
             for email in self.settings.ses_poa_recipient_email:
                 recipient_email_list.append(email)
         else:
