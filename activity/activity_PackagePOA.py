@@ -10,7 +10,7 @@ from jatsgenerator import conf as jats_conf
 from packagepoa import transform
 from packagepoa import conf as poa_conf
 from elifearticle.article import ArticleDate
-import activity.activity
+import activity
 import provider.ejp as ejplib
 import provider.simpleDB as dblib
 import provider.lax_provider as lax_provider
@@ -221,10 +221,9 @@ class activity_PackagePOA(activity.activity):
         result of decapitating the file. If not, return false
         """
         pdf_files = glob.glob(self.decapitate_pdf_dir + "/*.pdf")
-        if len(pdf_files) <= 0:
+        if not pdf_files:
             return False
-        elif len(pdf_files) > 0:
-            return True
+        return True
 
     def download_latest_csv(self):
         """
@@ -352,7 +351,7 @@ class activity_PackagePOA(activity.activity):
         on the status
         """
         # Connect to DB
-        db_conn = self.db_object.connect()
+        self.db_object.connect()
 
         # Note: Create a verified sender email address, only done once
         # conn.verify_email_address(self.settings.ses_sender_email)
