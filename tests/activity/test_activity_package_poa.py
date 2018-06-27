@@ -7,6 +7,7 @@ from mock import patch
 from ddt import ddt, data, unpack
 import tests.activity.settings_mock as settings_mock
 from activity.activity_PackagePOA import activity_PackagePOA
+from activity.activity_PackagePOA import get_doi_from_zip_file, approve_for_packaging
 import provider.lax_provider as lax_provider
 from packagepoa import transform
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
@@ -80,7 +81,7 @@ class TestPackagePOA(unittest.TestCase):
         )
     def test_get_doi_from_zip_file(self, filename, expected):
         "test getting doi from the zip file manifest"
-        self.assertEqual(self.poa.get_doi_from_zip_file(filename), expected)
+        self.assertEqual(get_doi_from_zip_file(filename), expected)
 
 
     @unpack
@@ -90,7 +91,7 @@ class TestPackagePOA(unittest.TestCase):
         )
     def test_approve_for_packaging(self, doi_id, expected):
         "test approving to package or not"
-        self.assertEqual(self.poa.approve_for_packaging(doi_id), expected)
+        self.assertEqual(approve_for_packaging(doi_id), expected)
 
 
     @patch.object(transform, 'copy_pdf_to_output_dir')

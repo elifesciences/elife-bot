@@ -84,11 +84,11 @@ class activity_PackagePOA(activity.activity):
         self.poa_zip_filename = self.download_poa_zip(self.document)
 
         # Get the DOI from the zip file
-        self.doi = self.get_doi_from_zip_file(self.poa_zip_filename)
+        self.doi = get_doi_from_zip_file(self.poa_zip_filename)
         doi_id = utils.msid_from_doi(self.doi)
 
         # Approve the DOI for packaging
-        self.approve_status = self.approve_for_packaging(doi_id)
+        self.approve_status = approve_for_packaging(doi_id)
 
         if self.approve_status is False:
             # Bad. Fail the activity
@@ -164,29 +164,6 @@ class activity_PackagePOA(activity.activity):
         return poa_conf.parse_raw_config(poa_conf.raw_config(
             config_section,
             self.settings.packagepoa_config_file))
-
-    def get_doi_from_zip_file(self, filename=None):
-        """
-        Get the DOI from the zip file manifest.xml using the POA library
-        Use the object variable as the default if not specified
-        """
-        if filename is None:
-            return None
-        # Good, continue
-        try:
-            with zipfile.ZipFile(filename, 'r') as current_zipfile:
-                return transform.get_doi_from_zipfile(current_zipfile)
-        except zipfile.BadZipfile:
-            return None
-
-    def approve_for_packaging(self, doi_id):
-        """
-        After downloading the zip file but before starting to package it,
-        do all the pre-packaging steps and checks, including to have a DOI
-        """
-        if doi_id is None:
-            return False
-        return True
 
     def process_poa_zipfile(self, poa_zip_filename):
         """
@@ -375,18 +352,6 @@ class activity_PackagePOA(activity.activity):
 
         return True
 
-    def get_activity_status_text(self, activity_status):
-        """
-        Given the activity status boolean, return a human
-        readable text version
-        """
-        if activity_status is True:
-            activity_status_text = "Success!"
-        else:
-            activity_status_text = "FAILED."
-
-        return activity_status_text
-
     def get_email_subject(self, current_time):
         """
         Assemble the email subject
@@ -394,7 +359,7 @@ class activity_PackagePOA(activity.activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = get_activity_status_text(self.activity_status)
 
         subject = (
             self.name + " " + activity_status_text + " doi: " + str(self.doi) + ", " +
@@ -413,7 +378,7 @@ class activity_PackagePOA(activity.activity):
         date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = get_activity_status_text(self.activity_status)
 
         # Bulk of body
         body += self.name + " status:" + "\n"
@@ -464,3 +429,40 @@ class activity_PackagePOA(activity.activity):
                 os.mkdir(dir_name)
             except OSError:
                 pass
+
+
+def get_doi_from_zip_file(filename=None):
+    """
+    Get the DOI from the zip file manifest.xml using the POA library
+    Use the object variable as the default if not specified
+    """
+    if filename is None:
+        return None
+    # Good, continue
+    try:
+        with zipfile.ZipFile(filename, 'r') as current_zipfile:
+            return transform.get_doi_from_zipfile(current_zipfile)
+    except zipfile.BadZipfile:
+        return None
+
+
+def approve_for_packaging(doi_id):
+    """
+    After downloading the zip file but before starting to package it,
+    do all the pre-packaging steps and checks, including to have a DOI
+    """
+    if doi_id is None:
+        return False
+    return True
+
+
+def get_activity_status_text(activity_status):
+    """
+    Given the activity status boolean, return a human
+    readable text version
+    """
+    if activity_status is True:
+        activity_status_text = "Success!"
+    else:
+        activity_status_text = "FAILED."
+    return activity_status_text
