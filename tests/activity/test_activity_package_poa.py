@@ -5,14 +5,19 @@ import shutil
 import glob
 from mock import patch
 from ddt import ddt, data, unpack
-import tests.activity.settings_mock as settings_mock
-from activity.activity_PackagePOA import activity_PackagePOA
-from activity.activity_PackagePOA import get_doi_from_zip_file, approve_for_packaging
-import provider.lax_provider as lax_provider
 from packagepoa import transform
+import provider.lax_provider as lax_provider
+import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 import tests.activity.test_activity_data as activity_test_data
 import tests.activity.helpers as helpers
+from activity.activity_PackagePOA import activity_PackagePOA
+from activity.activity_PackagePOA import get_doi_from_zip_file, approve_for_packaging
+
+
+def outbox_files(folder):
+    "count the files in the folder ignoring .gitkeep or files starting with ."
+    return [file_name for file_name in os.listdir(folder) if not file_name.startswith('.')]
 
 
 @ddt
@@ -42,6 +47,7 @@ class TestPackagePOA(unittest.TestCase):
             except IOError:
                 pass
             return dest_doc
+        return None
 
     def fake_copy_pdf_to_hw_staging_dir(self, decap_pdf):
         if decap_pdf:
@@ -83,7 +89,6 @@ class TestPackagePOA(unittest.TestCase):
         "test getting doi from the zip file manifest"
         self.assertEqual(get_doi_from_zip_file(filename), expected)
 
-
     @unpack
     @data(
         (None, False),
@@ -92,7 +97,6 @@ class TestPackagePOA(unittest.TestCase):
     def test_approve_for_packaging(self, doi_id, expected):
         "test approving to package or not"
         self.assertEqual(approve_for_packaging(doi_id), expected)
-
 
     @patch.object(transform, 'copy_pdf_to_output_dir')
     @data(
@@ -119,7 +123,6 @@ class TestPackagePOA(unittest.TestCase):
             test_data.get('poa_decap_pdf'))
         file_path = self.fake_download_poa_zip(test_data.get('filename'))
         self.assertEqual(self.poa.process_poa_zipfile(file_path), test_data.get('expected'))
-
 
     @patch('activity.activity_PackagePOA.storage_context')
     @patch('provider.ejp.EJP.ejp_bucket_file_list')
@@ -200,8 +203,8 @@ class TestPackagePOA(unittest.TestCase):
         # mock things
         test_outbox_folder = activity_test_data.ExpandArticle_files_dest_folder
         bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list.json")
-        with open(bucket_list_file, 'rb') as fp:
-            fake_ejp_bucket_file_list.return_value = json.loads(fp.read())
+        with open(bucket_list_file, 'rb') as open_file:
+            fake_ejp_bucket_file_list.return_value = json.loads(open_file.read())
         fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
         if "pub_date" in test_data and test_data["pub_date"]:
             fake_article_publication_date.return_value = test_data["pub_date"]
@@ -241,13 +244,9 @@ class TestPackagePOA(unittest.TestCase):
                                test_data.get('scenario'))
         # count the outbox files except the hidden .gitkeep file
         if test_data.get('expected_outbox_count'):
-            self.boolean_assertion(len(self.outbox_files(test_outbox_folder)),
+            self.boolean_assertion(len(outbox_files(test_outbox_folder)),
                                    test_data.get('expected_outbox_count'),
                                    test_data.get('scenario'))
-
-    def outbox_files(self, folder):
-        "count the files in the folder ignoring .gitkeep or files starting with ."
-        return [file_name for file_name in os.listdir(folder) if not file_name.startswith('.')]
 
     def boolean_assertion(self, value, expected, scenario=None):
         "shorthand for checking and displaying output for equality assertions"
@@ -256,6 +255,7 @@ class TestPackagePOA(unittest.TestCase):
                              value=value,
                              expected=expected,
                              scenario=scenario))
+
 
 if __name__ == '__main__':
     unittest.main()
