@@ -1,19 +1,16 @@
 import os
-import boto.swf
 import json
 import time
+import boto.swf
+from digestparser import build, output
 import activity
 from S3utility.s3_notification_info import S3NotificationInfo
 import provider.simpleDB as dblib
 from provider.storage_provider import storage_context
-from digestparser import build, output
 
-"""
-EmailDigest activity
-"""
 
 class activity_EmailDigest(activity.activity):
-
+    "EmailDigest activity"
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         activity.activity.__init__(self, settings, logger, conn, token, activity_task)
 
@@ -47,7 +44,6 @@ class activity_EmailDigest(activity.activity):
         self.generate_status = None
         self.approve_status = None
         self.email_status = None
-
 
     def do_activity(self, data=None):
         """
@@ -88,9 +84,8 @@ class activity_EmailDigest(activity.activity):
         # return a value based on the activity_status
         if self.activity_status is True:
             return True
-        else:
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
+        return activity.activity.ACTIVITY_PERMANENT_FAILURE
 
     def download_digest_from_s3(self, filename, bucket_name, bucket_folder):
         "Connect to the S3 bucket and download the input"
@@ -106,14 +101,12 @@ class activity_EmailDigest(activity.activity):
             storage.get_resource_to_file(storage_resource_origin, open_file)
         return filename_plus_path
 
-
     def build_digest(self, input_file):
         "Parse input and build a Digest object"
         if not input_file:
             return False, None
         digest = build.build_digest(input_file, self.temp_dir)
         return True, digest
-
 
     def generate_output(self, digest_content):
         "From the parsed digest content generate the output"
@@ -122,7 +115,6 @@ class activity_EmailDigest(activity.activity):
         file_name = output_file_name(digest_content)
         output.digest_docx(digest_content, file_name, self.output_dir)
         return True
-
 
     def add_email_to_queue(self):
         """
@@ -133,7 +125,7 @@ class activity_EmailDigest(activity.activity):
         self.db_provider.connect()
 
         # Note: Create a verified sender email address, only done once
-        #conn.verify_email_address(self.settings.ses_sender_email)
+        # conn.verify_email_address(self.settings.ses_sender_email)
 
         current_time = time.gmtime()
 
@@ -161,20 +153,6 @@ class activity_EmailDigest(activity.activity):
 
         return True
 
-
-    def get_activity_status_text(self, activity_status):
-        """
-        Given the activity status boolean, return a human
-        readable text version
-        """
-        if activity_status is True:
-            activity_status_text = "Success!"
-        else:
-            activity_status_text = "FAILED."
-
-        return activity_status_text
-
-
     def get_email_subject(self, current_time):
         """
         Assemble the email subject
@@ -182,14 +160,13 @@ class activity_EmailDigest(activity.activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = get_activity_status_text(self.activity_status)
 
         subject = (self.name + " " + activity_status_text +
                    ", " + datetime_string +
                    ", eLife SWF domain: " + self.settings.domain)
 
         return subject
-
 
     def get_email_body(self, current_time):
         """
@@ -200,7 +177,7 @@ class activity_EmailDigest(activity.activity):
         date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = get_activity_status_text(self.activity_status)
 
         # Bulk of body
         body += self.name + " status:" + "\n"
@@ -230,7 +207,6 @@ class activity_EmailDigest(activity.activity):
 
         return body
 
-
     def create_activity_directories(self):
         """
         Create the directories in the activity tmp_dir
@@ -240,6 +216,19 @@ class activity_EmailDigest(activity.activity):
                 os.mkdir(dir_name)
             except OSError:
                 pass
+
+
+def get_activity_status_text(activity_status):
+    """
+    Given the activity status boolean, return a human
+    readable text version
+    """
+    if activity_status is True:
+        activity_status_text = "Success!"
+    else:
+        activity_status_text = "FAILED."
+
+    return activity_status_text
 
 
 def output_file_name(digest_content):
