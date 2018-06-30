@@ -66,7 +66,6 @@ class activity_EmailDigest(activity.activity):
         self.build_status, self.digest = self.build_digest(self.input_file)
 
         # Generate output
-        # todo!!!
         self.generate_status = self.generate_output(self.digest)
 
         if self.generate_status is True:
