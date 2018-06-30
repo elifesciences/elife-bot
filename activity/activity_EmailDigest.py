@@ -6,7 +6,7 @@ import activity
 from S3utility.s3_notification_info import S3NotificationInfo
 import provider.simpleDB as dblib
 from provider.storage_provider import storage_context
-from digestparser import build
+from digestparser import build, output
 
 """
 EmailDigest activity
@@ -33,6 +33,7 @@ class activity_EmailDigest(activity.activity):
         # Local directory settings
         self.temp_dir = os.path.join(self.get_tmp_dir(), "tmp_dir")
         self.input_dir = os.path.join(self.get_tmp_dir(), "input_dir")
+        self.output_dir = os.path.join(self.get_tmp_dir(), "output_dir")
 
         # Create output directories
         self.create_activity_directories()
@@ -118,6 +119,8 @@ class activity_EmailDigest(activity.activity):
         "From the parsed digest content generate the output"
         if not digest_content:
             return False
+        file_name = output_file_name(digest_content)
+        output.digest_docx(digest_content, file_name, self.output_dir)
         return True
 
 
@@ -232,8 +235,18 @@ class activity_EmailDigest(activity.activity):
         """
         Create the directories in the activity tmp_dir
         """
-        for dir_name in [self.temp_dir, self.input_dir]:
+        for dir_name in [self.temp_dir, self.input_dir, self.output_dir]:
             try:
                 os.mkdir(dir_name)
             except OSError:
                 pass
+
+
+def output_file_name(digest_content):
+    "from the digest content return the file name for the DOCX output"
+    try:
+        doi = getattr(digest_content, 'doi')
+        msid = doi.split(".")[-1]
+    except AttributeError:
+        msid = None
+    return 'Digest {msid:0>5}.docx'.format(msid=msid)
