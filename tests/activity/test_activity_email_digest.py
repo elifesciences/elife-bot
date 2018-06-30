@@ -1,15 +1,15 @@
+import os
 import unittest
+from mock import patch
+from ddt import ddt, data
+from digestparser.objects import Digest
+from provider.simpleDB import SimpleDB
 import activity.activity_EmailDigest as activity_module
 from activity.activity_EmailDigest import activity_EmailDigest as activity_object
-from mock import patch
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
-from provider.simpleDB import SimpleDB
 import tests.test_data as test_case_data
-import os
-from ddt import ddt, data
 from tests.activity.classes_mock import FakeStorageContext
-from digestparser.objects import Digest
 
 
 def input_data(file_name_to_change=None):
@@ -99,8 +99,9 @@ class TestEmailDigest(unittest.TestCase):
             self.assertEqual(self.activity.digest.doi, test_data.get("expected_digest_doi"),
                              'failed in {comment}'.format(comment=test_data.get("comment")))
         # check digest image values
-        if (self.activity.digest and self.activity.digest.image and
-            test_data.get("expected_digest_image_file")):
+        if (
+                self.activity.digest and self.activity.digest.image and
+                test_data.get("expected_digest_image_file")):
             file_name = self.activity.digest.image.file.split(os.sep)[-1]
             self.assertEqual(file_name, test_data.get("expected_digest_image_file"),
                              'failed in {comment}'.format(comment=test_data.get("comment")))
