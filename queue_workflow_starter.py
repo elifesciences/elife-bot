@@ -57,7 +57,7 @@ def main(flag):
                                       wait_time_seconds=20)
         if messages:
             logger.info(str(len(messages)) + " message received")
-            logger.info('message contents: %s', messages[0])
+            logger.info('message contents: %s', messages[0].get_body())
             process_message(messages[0])
         else:
             logger.debug("No messages received")
@@ -79,7 +79,7 @@ def process_message(message):
         data = message_payload.get('workflow_data')
         start_workflow(name, data)
     except Exception:
-        logger.exception("Exception while processing message")
+        logger.exception("Exception while processing %s", message.get_body())
     message.delete()
 
 @newrelic.agent.background_task(group='queue_workflow_starter.py')
@@ -90,6 +90,7 @@ def start_workflow(workflow_name, workflow_data):
         workflow_data = data_processor(workflow_name, workflow_data)
     module_name = "starter." + workflow_name
     module = importlib.import_module(module_name)
+    # TODO: deprecate reloading a module, this should not be needed as every deploy restarts all long-running processes?
     try:
         reload(eval(module))
     except:
