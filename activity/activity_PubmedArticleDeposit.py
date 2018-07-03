@@ -52,7 +52,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         self.article = articlelib.article(self.settings, self.get_tmp_dir())
 
         # Bucket for outgoing files
-        self.publish_bucket = settings.publishing_buckets_prefix + settings.poa_packaging_bucket
+        self.publish_bucket = settings.poa_packaging_bucket
         self.outbox_folder = "pubmed/outbox"
         self.published_folder = "pubmed/published"
 
