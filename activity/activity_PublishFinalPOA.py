@@ -50,7 +50,7 @@ class activity_PublishFinalPOA(activity.activity):
         self.DONE_DIR = self.get_tmp_dir() + os.sep + "done_dir"
 
         # Bucket for outgoing files
-        self.input_bucket = settings.poa_packaging_bucket
+        self.input_bucket = settings.publishing_buckets_prefix + settings.poa_packaging_bucket
         self.outbox_folder = "outbox/"
         self.published_folder_prefix = "published/"
         self.published_folder_name = None
