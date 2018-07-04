@@ -5,8 +5,8 @@ import boto.swf
 from digestparser import build, output
 import activity
 from S3utility.s3_notification_info import S3NotificationInfo
-import provider.simpleDB as dblib
 from provider.storage_provider import storage_context
+import provider.email_provider as email_provider
 
 
 class activity_EmailDigest(activity.activity):
@@ -34,9 +34,6 @@ class activity_EmailDigest(activity.activity):
 
         # Create output directories
         self.create_activity_directories()
-
-        # Data provider where email body is saved
-        self.db_provider = dblib.SimpleDB(settings)
 
         # Track the success of some steps
         self.activity_status = None
@@ -66,7 +63,7 @@ class activity_EmailDigest(activity.activity):
         self.build_status, self.digest = self.build_digest(self.input_file)
 
         # Generate output
-        self.generate_status = self.generate_output(self.digest)
+        self.generate_status, output_file = self.generate_output(self.digest)
 
         if self.generate_status is True:
             self.activity_status = True
@@ -77,8 +74,10 @@ class activity_EmailDigest(activity.activity):
 
         if self.approve_status is True:
             # Email files
-            # todo!!!!
-            self.email_status = self.add_email_to_queue()
+            if self.generate_status is True:
+                self.email_status = self.email_digest(self.digest, output_file)
+            else:
+                self.email_status = self.email_error_report()
 
         # return a value based on the activity_status
         if self.activity_status is True:
@@ -110,26 +109,17 @@ class activity_EmailDigest(activity.activity):
     def generate_output(self, digest_content):
         "From the parsed digest content generate the output"
         if not digest_content:
-            return False
+            return False, None
         file_name = output_file_name(digest_content)
-        output.digest_docx(digest_content, file_name, self.output_dir)
-        return True
+        output_file = output.digest_docx(digest_content, file_name, self.output_dir)
+        return True, output_file
 
-    def add_email_to_queue(self):
-        """
-        After do_activity is finished, send emails to recipients
-        on the status
-        """
-        # Connect to DB
-        self.db_provider.connect()
-
-        # Note: Create a verified sender email address, only done once
-        # conn.verify_email_address(self.settings.ses_sender_email)
+    def email_digest(self, digest_content, output_file):
+        "email the digest as an attachment to the recipients"
 
         current_time = time.gmtime()
-
-        body = self.get_email_body(current_time)
-        subject = self.get_email_subject(current_time)
+        body = success_email_body(current_time)
+        subject = success_email_subject(digest_content)
         sender_email = self.settings.ses_digest_sender_email
 
         recipient_email_list = []
@@ -140,71 +130,21 @@ class activity_EmailDigest(activity.activity):
         else:
             recipient_email_list.append(self.settings.ses_digest_recipient_email)
 
-        for email in recipient_email_list:
-            # Add the email to the email queue
-            self.db_provider.elife_add_email_to_email_queue(
-                recipient_email=email,
-                sender_email=sender_email,
-                email_type="EmailDigest",
-                format="text",
-                subject=subject,
-                body=body)
+        connection = email_provider.connect(self.settings)
+        # send the emails
+        for recipient in recipient_email_list:
+            # create the email
+            email_message = email_provider.message(subject, sender_email, recipient)
+            email_provider.add_text(email_message, body)
+            email_provider.add_attachment(email_message, output_file)
+            # send the email
+            email_provider.send(connection, sender_email, recipient, email_message)
 
         return True
 
-    def get_email_subject(self, current_time):
-        """
-        Assemble the email subject
-        """
-        date_format = '%Y-%m-%d %H:%M'
-        datetime_string = time.strftime(date_format, current_time)
-
-        activity_status_text = get_activity_status_text(self.activity_status)
-
-        subject = (self.name + " " + activity_status_text +
-                   ", " + datetime_string +
-                   ", eLife SWF domain: " + self.settings.domain)
-
-        return subject
-
-    def get_email_body(self, current_time):
-        """
-        Format the body of the email
-        """
-        body = ""
-
-        date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-        datetime_string = time.strftime(date_format, current_time)
-
-        activity_status_text = get_activity_status_text(self.activity_status)
-
-        # Bulk of body
-        body += self.name + " status:" + "\n"
-        body += "\n"
-        body += activity_status_text + "\n"
-        body += "\n"
-
-        body += "activity_status: " + str(self.activity_status) + "\n"
-        body += "build_status: " + str(self.build_status) + "\n"
-        body += "generate_status: " + str(self.generate_status) + "\n"
-        body += "approve_status: " + str(self.approve_status) + "\n"
-        body += "email_status: " + str(self.email_status) + "\n"
-
-        body += "\n"
-
-        body += "\n"
-        body += "-------------------------------\n"
-        body += "SWF workflow details: " + "\n"
-        body += "activityId: " + str(self.get_activityId()) + "\n"
-        body += "As part of workflowId: " + str(self.get_workflowId()) + "\n"
-        body += "As at " + datetime_string + "\n"
-        body += "Domain: " + self.settings.domain + "\n"
-
-        body += "\n"
-
-        body += "\n\nSincerely\n\neLife bot"
-
-        return body
+    def email_error_report(self):
+        "todo!!"
+        return True
 
     def create_activity_directories(self):
         """
@@ -217,19 +157,6 @@ class activity_EmailDigest(activity.activity):
                 pass
 
 
-def get_activity_status_text(activity_status):
-    """
-    Given the activity status boolean, return a human
-    readable text version
-    """
-    if activity_status is True:
-        activity_status_text = "Success!"
-    else:
-        activity_status_text = "FAILED."
-
-    return activity_status_text
-
-
 def output_file_name(digest_content):
     "from the digest content return the file name for the DOCX output"
     try:
@@ -238,3 +165,28 @@ def output_file_name(digest_content):
     except AttributeError:
         msid = None
     return 'Digest {msid:0>5}.docx'.format(msid=msid)
+
+
+def success_email_subject(digest_content):
+    "the email subject"
+    # author todo!!
+    author = 'test'
+    try:
+        doi = getattr(digest_content, 'doi')
+        msid = doi.split(".")[-1]
+    except AttributeError:
+        msid = None
+    return 'Digest: {author}_{msid}'.format(author=author, msid=msid)
+
+
+def success_email_body(current_time):
+    """
+    Format the body of the email
+    """
+    body = ""
+    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
+    datetime_string = time.strftime(date_format, current_time)
+    body += "As at " + datetime_string + "\n"
+    body += "\n"
+    body += "\n\nSincerely\n\neLife bot"
+    return body

@@ -3,7 +3,6 @@ import unittest
 from mock import patch
 from ddt import ddt, data
 from digestparser.objects import Digest
-from provider.simpleDB import SimpleDB
 import activity.activity_EmailDigest as activity_module
 from activity.activity_EmailDigest import activity_EmailDigest as activity_object
 import tests.activity.settings_mock as settings_mock
@@ -35,7 +34,7 @@ class TestEmailDigest(unittest.TestCase):
     def tearDown(self):
         self.activity.clean_tmp_dir()
 
-    @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
+    @patch.object(activity_module.email_provider, 'connect')
     @patch('activity.activity_EmailDigest.storage_context')
     @data(
         {
@@ -76,7 +75,7 @@ class TestEmailDigest(unittest.TestCase):
         },
     )
     def test_do_activity(self, test_data, fake_storage_context,
-                         fake_add_email):
+                         fake_email_connect):
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
         # do the activity
