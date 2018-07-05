@@ -145,5 +145,5 @@ smtp_host = 'localhost'
 smtp_port = 2525
 smtp_starttls = False
 smtp_ssl = False
-smtp_user = None
+smtp_username = None
 smtp_password = None

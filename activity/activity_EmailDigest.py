@@ -116,6 +116,7 @@ class activity_EmailDigest(activity.activity):
 
     def email_digest(self, digest_content, output_file):
         "email the digest as an attachment to the recipients"
+        success = True
 
         current_time = time.gmtime()
         body = success_email_body(current_time)
@@ -130,7 +131,7 @@ class activity_EmailDigest(activity.activity):
         else:
             recipient_email_list.append(self.settings.ses_digest_recipient_email)
 
-        connection = email_provider.smtp_connect(self.settings)
+        connection = email_provider.smtp_connect(self.settings, self.logger)
         # send the emails
         for recipient in recipient_email_list:
             # create the email
@@ -138,9 +139,12 @@ class activity_EmailDigest(activity.activity):
             email_provider.add_text(email_message, body)
             email_provider.add_attachment(email_message, output_file)
             # send the email
-            email_provider.smtp_send(connection, sender_email, recipient, email_message)
-
-        return True
+            email_success = email_provider.smtp_send(connection, sender_email, recipient,
+                                                     email_message, self.logger)
+            if not email_success:
+                # for now any failure in sending a mail return False
+                success = False
+        return success
 
     def email_error_report(self):
         "todo!!"

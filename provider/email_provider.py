@@ -16,14 +16,21 @@ def ses_connect(settings):
         aws_secret_access_key=settings.aws_secret_access_key)
 
 
+def smtp_setting(settings, name):
+    "return the property from the settings object otherwise return None"
+    if hasattr(settings, name):
+        return getattr(settings, name)
+    return None
+
+
 def smtp_connect(settings, logger=None):
     "connect to SMTP"
-    smtp_host = settings.smtp_host
-    smtp_port = settings.smtp_port
-    smtp_starttls = settings.smtp_starttls
-    smtp_ssl = settings.smtp_ssl
-    smtp_user = settings.smtp_user
-    smtp_password = settings.smtp_password
+    smtp_host = smtp_setting(settings, 'smtp_host')
+    smtp_port = smtp_setting(settings, 'smtp_port')
+    smtp_starttls = smtp_setting(settings, 'smtp_starttls')
+    smtp_ssl = smtp_setting(settings, 'smtp_ssl')
+    smtp_username = smtp_setting(settings, 'smtp_username')
+    smtp_password = smtp_setting(settings, 'smtp_password')
     try:
         connection = (smtplib.SMTP_SSL(smtp_host, smtp_port)
                       if smtp_ssl else smtplib.SMTP(smtp_host, smtp_port))
@@ -32,9 +39,9 @@ def smtp_connect(settings, logger=None):
         if logger:
             logger.error('error in smtp_connect: %s ', traceback.format_exc())
     if smtp_starttls:
-        connection.starttlconnection()
-    if smtp_user and smtp_password:
-        connection.login(smtp_user, smtp_password)
+        connection.starttls()
+    if smtp_username and smtp_password:
+        connection.login(smtp_username, smtp_password)
     return connection
 
 
@@ -79,6 +86,12 @@ def ses_send(connection, sender, recipient, message):
     return connection.send_raw_email(message.as_string(), source=sender, destinations=recipient)
 
 
-def smtp_send(connection, sender, recipient, message):
+def smtp_send(connection, sender, recipient, message, logger=None):
     "send a MIMEMultipart email to the recipient from sender by SMTP"
-    connection.sendmail(sender, recipient, message.as_string())
+    try:
+        connection.sendmail(sender, recipient, message.as_string())
+    except smtplib.SMTPSenderRefused:
+        if logger:
+            logger.error('error in smtp_send: %s ', traceback.format_exc())
+        return False
+    return True
