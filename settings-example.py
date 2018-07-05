@@ -71,6 +71,14 @@ class exp():
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
 
+    # SMTP settings
+    smtp_host = 'localhost'
+    smtp_port = 2525
+    smtp_starttls = False
+    smtp_ssl = False
+    smtp_user = None
+    smtp_password = None
+
     # Lens bucket settings
     lens_bucket = 'elife-lens-dev'
 
@@ -253,6 +261,14 @@ class dev():
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
 
+    # SMTP settings
+    smtp_host = 'localhost'
+    smtp_port = 2525
+    smtp_starttls = False
+    smtp_ssl = False
+    smtp_user = None
+    smtp_password = None
+
     # Lens bucket settings
     lens_bucket = 'elife-lens-dev'
 
@@ -434,6 +450,14 @@ class live():
     ses_region = "us-east-1"
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
+
+    # SMTP settings
+    smtp_host = 'localhost'
+    smtp_port = 2525
+    smtp_starttls = False
+    smtp_ssl = False
+    smtp_user = None
+    smtp_password = None
 
     # Lens bucket settings
     lens_bucket = 'elife-lens'

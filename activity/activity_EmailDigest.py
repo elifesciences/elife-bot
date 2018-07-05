@@ -130,7 +130,7 @@ class activity_EmailDigest(activity.activity):
         else:
             recipient_email_list.append(self.settings.ses_digest_recipient_email)
 
-        connection = email_provider.connect(self.settings)
+        connection = email_provider.smtp_connect(self.settings)
         # send the emails
         for recipient in recipient_email_list:
             # create the email
@@ -138,7 +138,7 @@ class activity_EmailDigest(activity.activity):
             email_provider.add_text(email_message, body)
             email_provider.add_attachment(email_message, output_file)
             # send the email
-            email_provider.send(connection, sender_email, recipient, email_message)
+            email_provider.smtp_send(connection, sender_email, recipient, email_message)
 
         return True
 

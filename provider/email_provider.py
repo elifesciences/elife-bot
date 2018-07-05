@@ -1,17 +1,41 @@
 "provider for sending email"
 import os
+import smtplib
+import traceback
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import boto.ses
 
 
-def connect(settings):
+def ses_connect(settings):
     "connect to SES"
     return boto.ses.connect_to_region(
         settings.ses_region,
         aws_access_key_id=settings.aws_access_key_id,
         aws_secret_access_key=settings.aws_secret_access_key)
+
+
+def smtp_connect(settings, logger=None):
+    "connect to SMTP"
+    smtp_host = settings.smtp_host
+    smtp_port = settings.smtp_port
+    smtp_starttls = settings.smtp_starttls
+    smtp_ssl = settings.smtp_ssl
+    smtp_user = settings.smtp_user
+    smtp_password = settings.smtp_password
+    try:
+        connection = (smtplib.SMTP_SSL(smtp_host, smtp_port)
+                      if smtp_ssl else smtplib.SMTP(smtp_host, smtp_port))
+    except:
+        connection = None
+        if logger:
+            logger.error('error in smtp_connect: %s ', traceback.format_exc())
+    if smtp_starttls:
+        connection.starttlconnection()
+    if smtp_user and smtp_password:
+        connection.login(smtp_user, smtp_password)
+    return connection
 
 
 def attachment(file_name,
@@ -50,6 +74,11 @@ def message(subject, sender, recipient):
     return message
 
 
-def send(connection, sender, recipient, message):
+def ses_send(connection, sender, recipient, message):
     "send a MIMEMultipart email to the recipient from sender"
     return connection.send_raw_email(message.as_string(), source=sender, destinations=recipient)
+
+
+def smtp_send(connection, sender, recipient, message):
+    "send a MIMEMultipart email to the recipient from sender by SMTP"
+    connection.sendmail(sender, recipient, message.as_string())

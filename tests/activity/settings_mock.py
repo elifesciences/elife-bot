@@ -46,7 +46,7 @@ ses_pmc_sender_email = ""
 ses_pmc_recipient_email = ""
 ses_pmc_revision_recipient_email = ["e@example.org", "life@example.org"]
 
-ses_digest_sender_email = ""
+ses_digest_sender_email = "sender@example.org"
 ses_digest_recipient_email = ["e@example.org", "life@example.org"]
 
 features_publication_recipient_email = "features_team@example.org"
@@ -140,3 +140,10 @@ article_path_pattern = "/articles/{id}v{version}"
 # Article subjects data
 article_subjects_data_bucket = "bucket_name/modify_article_subjects"
 article_subjects_data_file = "article_subjects.csv"
+
+smtp_host = 'localhost'
+smtp_port = 2525
+smtp_starttls = False
+smtp_ssl = False
+smtp_user = None
+smtp_password = None
