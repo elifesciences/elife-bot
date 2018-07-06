@@ -56,7 +56,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "expected_pubmed_xml_contains": [
                 '<ArticleTitle>An evolutionary young defense metabolite influences the root growth of plants via the ancient TOR signaling pathway</ArticleTitle>',
                 '<PubDate PubStatus="aheadofprint"><Year>2017</Year><Month>December</Month><Day>12</Day></PubDate>',
-                '<ELocationID EIdType="doi">10.7554/eLife.29353</ELocationID>'
+                '<ELocationID EIdType="doi">10.7554/eLife.29353</ELocationID>',
+                '<AbstractText Label="">To optimize fitness a plant should monitor its metabolism to appropriately control growth and defense.'
                 ]
         },
         {
