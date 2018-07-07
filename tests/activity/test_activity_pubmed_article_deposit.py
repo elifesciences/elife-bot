@@ -1,18 +1,16 @@
 import unittest
-from activity.activity_PubmedArticleDeposit import activity_PubmedArticleDeposit
-import shutil
-from mock import patch
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger
-import tests.activity.helpers as helpers
-from provider.article import article
-from provider.simpleDB import SimpleDB
-from provider import lax_provider
-import tests.test_data as test_case_data
-import tests.activity.test_activity_data as activity_test_data
 import os
 from ddt import ddt, data
-from classes_mock import FakeStorageContext
+from mock import patch
+from activity.activity_PubmedArticleDeposit import activity_PubmedArticleDeposit
+from provider.simpleDB import SimpleDB
+from provider import lax_provider
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger
+from tests.activity.classes_mock import FakeStorageContext
+import tests.activity.test_activity_data as activity_test_data
+import tests.test_data as test_case_data
+import tests.activity.helpers as helpers
 
 
 @ddt
@@ -22,22 +20,18 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         fake_logger = FakeLogger()
         self.activity = activity_PubmedArticleDeposit(settings_mock, fake_logger, None, None, None)
 
-
     def tearDown(self):
         self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder(activity_test_data.ExpandArticle_files_dest_folder,
                                        filter_out=['.gitkeep'])
 
-
     def input_dir(self):
         "return the staging dir name for the activity"
         return os.path.join(self.activity.get_tmp_dir(), self.activity.INPUT_DIR)
 
-
     def tmp_dir(self):
         "return the tmp dir name for the activity"
         return os.path.join(self.activity.get_tmp_dir(), self.activity.TMP_DIR)
-
 
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch.object(lax_provider, 'article_versions')
@@ -58,9 +52,13 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "expected_activity_status": True,
             "expected_file_count": 1,
             "expected_pubmed_xml_contains": [
-                '<ArticleTitle>An evolutionary young defense metabolite influences the root growth of plants via the ancient TOR signaling pathway</ArticleTitle>',
-                '<PubDate PubStatus="aheadofprint"><Year>2017</Year><Month>December</Month><Day>12</Day></PubDate>',
-                '<ELocationID EIdType="doi">10.7554/eLife.29353</ELocationID>'
+                ('<ArticleTitle>An evolutionary young defense metabolite influences the root' +
+                 ' growth of plants via the ancient TOR signaling pathway</ArticleTitle>'),
+                ('<PubDate PubStatus="aheadofprint"><Year>2017</Year>' +
+                 '<Month>December</Month><Day>12</Day></PubDate>'),
+                '<ELocationID EIdType="doi">10.7554/eLife.29353</ELocationID>',
+                ('<AbstractText Label="">To optimize fitness a plant should monitor its' +
+                 ' metabolism to appropriately control growth and defense.')
                 ]
         },
         {
@@ -78,7 +76,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "expected_pubmed_xml_contains": [
                 '<Replaces IdType="doi">10.7554/eLife.15747</Replaces>',
                 '<ArticleTitle>Community-level cohesion without cooperation</ArticleTitle>',
-                '<PubDate PubStatus="epublish"><Year>2016</Year><Month>June</Month><Day>16</Day></PubDate>',
+                ('<PubDate PubStatus="epublish"><Year>2016</Year>' +
+                 '<Month>June</Month><Day>16</Day></PubDate>'),
                 '<ELocationID EIdType="doi">10.7554/eLife.15747</ELocationID>',
                 '<Identifier Source="ORCID">http://orcid.org/0000-0002-9558-1121</Identifier>'
                 ]
@@ -127,13 +126,13 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         },
     )
     def test_do_activity(self, test_data, fake_list_resources, fake_storage_context,
-                         fake_ftp_files_to_endpoint, fake_lax_provider_article_versions,
-                         fake_elife_add_email_to_email_queue):
+                         fake_ftp_files_to_endpoint, fake_article_versions,
+                         fake_email_queue):
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
         fake_list_resources.return_value = test_data.get("outbox_filenames")
         # lax data overrides
-        fake_lax_provider_article_versions.return_value = 200, test_data.get("article_versions_data")
+        fake_article_versions.return_value = 200, test_data.get("article_versions_data")
         # ftp
         fake_ftp_files_to_endpoint.return_value = test_data.get("ftp_files_return_value")
         # do the activity
@@ -161,8 +160,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         if file_count > 0 and test_data.get("expected_pubmed_xml_contains"):
             # Open the first Pubmed XML and check some of its contents
             pubmed_xml_filename_path = os.path.join(self.tmp_dir(), os.listdir(self.tmp_dir())[0])
-            with open(pubmed_xml_filename_path, 'rb') as fp:
-                pubmed_xml = fp.read()
+            with open(pubmed_xml_filename_path, 'rb') as open_file:
+                pubmed_xml = open_file.read()
                 for expected in test_data.get("expected_pubmed_xml_contains"):
                     self.assertTrue(
                         expected in pubmed_xml,
@@ -193,7 +192,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             self.assertIsNotNone(article, 'failed comparing expected_article')
         if article:
             self.assertEqual(article.doi, test_data.get('expected_doi'),
-                         'failed comparing expected_doi')
+                             'failed comparing expected_doi')
 
 
 if __name__ == '__main__':

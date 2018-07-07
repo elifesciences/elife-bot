@@ -13,7 +13,7 @@ xlrd==0.9.3
 git+https://github.com/elifesciences/elife-tools.git@df537e13da03accf1f4dee83c6c0892742860b07#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@bb61d4c0e3742403503efe10852114aeb1e07269#egg=elifearticle
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@3cf16976fa57e94fd3af45e2162b251674c168d8#egg=elifecrossref
-git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@2b770b5942de763a34b92e378600ed53c175c7e6#egg=elifepubmed
+git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@32a9a831eca98a03b36b8c9a369c622a34d04a7a#egg=elifepubmed
 git+https://github.com/elifesciences/ejp-csv-parser.git@2d584ff98810d2f2dbf61a85b6711bc8a19e2ff4#egg=ejpcsvparser
 git+https://github.com/elifesciences/jats-generator.git@7e106d80836e0249686adbf204e95fcc420f7a21#egg=jatsgenerator
 git+https://github.com/elifesciences/package-poa.git@2649777a020661e507de4087d447f50ca8c2fe57#egg=packagepoa
