@@ -9,5 +9,6 @@ python -m pylint -E \
     provider/article_structure.py \
     provider/imageresize.py \
     provider/*_provider.py \
+    starter/starter_PackagePOA.py \
     tests/activity/*.py \
     tests/provider/*.py

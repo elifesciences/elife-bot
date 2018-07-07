@@ -19,10 +19,11 @@ class starter_PackagePOA():
 
     def start(self, settings, document=None, last_updated_since=None):
         # Log
-        identity = "starter_%s" % int(random.random() * 1000)
+        identity = "starter_PackagePOA_%s" % int(random.random() * 1000)
         logFile = "starter.log"
         #logFile = None
         logger = log.logger(logFile, settings.setLevel, identity)
+        logger.info("input: document=%s, last_updated_since=%s", document, last_updated_since)
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
@@ -37,7 +38,9 @@ class starter_PackagePOA():
 
         elif last_updated_since is not None:
             # Publish only articles since the last_modified date, use SimpleDB as the source
-            docs = self.get_docs_from_SimpleDB(settings, last_updated_since=last_updated_since)
+            docs = self.get_docs_from_SimpleDB(settings, logger, last_updated_since=last_updated_since)
+
+        logger.info("docs: %s", docs)
 
         if docs:
             for doc in docs:
@@ -60,6 +63,7 @@ class starter_PackagePOA():
                 input = '{"data": ' + json.dumps(doc) + '}'
 
                 try:
+                    logger.info('starting workflow_id: %s', workflow_id)
                     response = conn.start_workflow_execution(settings.domain, workflow_id,
                                                              workflow_name, workflow_version,
                                                              settings.default_task_list,
@@ -78,7 +82,7 @@ class starter_PackagePOA():
                     logger.info(message)
 
 
-    def get_docs_from_SimpleDB(self, settings, last_updated_since=None):
+    def get_docs_from_SimpleDB(self, settings, logger, last_updated_since=None):
         """
         Get the array of docs from the SimpleDB provider
         """
@@ -94,6 +98,7 @@ class starter_PackagePOA():
             # Get all - not implemented for now to avoid mistakes running too many workflows
             pass
 
+        logger.debug('SimpleDB xml_item_list: %s', xml_item_list)
         for x in xml_item_list:
             tmp = {}
             name = x['name']
