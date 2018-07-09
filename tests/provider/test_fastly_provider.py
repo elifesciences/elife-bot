@@ -18,8 +18,8 @@ class TestFastlyProvider(unittest.TestCase):
         self.assertEqual(
             [c[1][0] for c in post_mock.mock_calls],
             [
-                'https://api.fastly.com/service/3M35rb7puabccOLrFFxy2/purge/articles/10627v1',
-                'https://api.fastly.com/service/3M35rb7puabccOLrFFxy2/purge/articles/10627/videos',
+                'https://api.fastly.com/service/3M35rb7puabccOLrFFxy2/purge/article/10627v1',
+                'https://api.fastly.com/service/3M35rb7puabccOLrFFxy2/purge/article/10627/videos',
             ]
         )
 
