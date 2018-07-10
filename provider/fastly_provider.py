@@ -10,11 +10,12 @@ class FastlyApi:
         response = requests.post(url, headers={
             'Accept': 'application/json',
             'Fastly-Key': self._fastly_api_key,
+            'Fastly-Soft-Purge': '1',
         })
         response.raise_for_status()
         return response
 
-KEYS = ['articles/{article_id}v{version}', 'articles/{article_id}/videos']
+KEYS = ['article/{article_id}v{version}', 'article/{article_id}/videos']
 
 def purge(article_id, version, settings):
     responses = []
