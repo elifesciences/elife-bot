@@ -64,9 +64,9 @@ class TestEmailDigest(unittest.TestCase):
             "expected_approve_status": True,
             "expected_email_status": True,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
-            "expected_output_dir_files": ['Digest 99999.docx'],
+            "expected_output_dir_files": ['Anonymous_99999.docx'],
             "expected_email_count": 2,
-            "expected_email_subject": "Subject: Digest: test_99999",
+            "expected_email_subject": "Subject: Digest: Anonymous_99999",
             "expected_email_from": "From: sender@example.org"
         },
         {
@@ -80,9 +80,9 @@ class TestEmailDigest(unittest.TestCase):
             "expected_email_status": True,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
             "expected_digest_image_file": u'IMAGE 99999.jpeg',
-            "expected_output_dir_files": ['Digest 99999.docx'],
+            "expected_output_dir_files": ['Anonymous_99999.docx'],
             "expected_email_count": 2,
-            "expected_email_subject": "Subject: Digest: test_99999",
+            "expected_email_subject": "Subject: Digest: Anonymous_99999",
             "expected_email_from": "From: sender@example.org"
         },
         {
@@ -152,22 +152,23 @@ class TestEmailDigestFileName(unittest.TestCase):
     def test_output_file_name(self):
         "docx output file name with good input"
         digest_content = Digest()
+        digest_content.author = 'Anonymous'
         digest_content.doi = '10.7554/eLife.99999'
-        expected = 'Digest 99999.docx'
+        expected = 'Anonymous_99999.docx'
         file_name = activity_module.output_file_name(digest_content)
         self.assertEqual(file_name, expected)
 
     def test_output_file_name_no_doi(self):
-        "docx output file name with good input"
+        "docx output file name when no doi attribute"
         digest_content = Digest()
-        expected = 'Digest 0None.docx'
+        expected = 'None_0None.docx'
         file_name = activity_module.output_file_name(digest_content)
         self.assertEqual(file_name, expected)
 
     def test_output_file_name_bad_object(self):
-        "docx output file name with good input"
+        "docx output file name when digest is None"
         digest_content = None
-        expected = 'Digest 0None.docx'
+        expected = None
         file_name = activity_module.output_file_name(digest_content)
         self.assertEqual(file_name, expected)
 

@@ -163,24 +163,26 @@ class activity_EmailDigest(activity.activity):
 
 def output_file_name(digest_content):
     "from the digest content return the file name for the DOCX output"
+    if not digest_content:
+        return
     try:
         doi = getattr(digest_content, 'doi')
         msid = doi.split(".")[-1]
     except AttributeError:
         msid = None
-    return 'Digest {msid:0>5}.docx'.format(msid=msid)
+    return '{author}_{msid:0>5}.docx'.format(author=digest_content.author, msid=msid)
 
 
 def success_email_subject(digest_content):
     "the email subject"
-    # author todo!!
-    author = 'test'
+    if not digest_content:
+        return
     try:
         doi = getattr(digest_content, 'doi')
         msid = doi.split(".")[-1]
     except AttributeError:
         msid = None
-    return 'Digest: {author}_{msid}'.format(author=author, msid=msid)
+    return 'Digest: {author}_{msid}'.format(author=digest_content.author, msid=msid)
 
 
 def success_email_body(current_time):
