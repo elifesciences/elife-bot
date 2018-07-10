@@ -133,6 +133,12 @@ class exp():
     elifepubmed_config_file = 'pubmed.cfg'
     elifepubmed_config_section = 'elife'
 
+    # PoA generation
+    jatsgenerator_config_file = 'jatsgenerator.cfg'
+    jatsgenerator_config_section = 'elife'
+    packagepoa_config_file = 'packagepoa.cfg'
+    packagepoa_config_section = 'elife'
+
     # PubMed FTP settings
     PUBMED_FTP_URI = ""
     PUBMED_FTP_USERNAME = ""
@@ -323,6 +329,12 @@ class dev():
     elifepubmed_config_file = 'pubmed.cfg'
     elifepubmed_config_section = 'elife'
 
+    # PoA generation
+    jatsgenerator_config_file = 'jatsgenerator.cfg'
+    jatsgenerator_config_section = 'elife'
+    packagepoa_config_file = 'packagepoa.cfg'
+    packagepoa_config_section = 'elife'
+
     # PubMed FTP settings
     PUBMED_FTP_URI = ""
     PUBMED_FTP_USERNAME = ""
@@ -512,6 +524,12 @@ class live():
     # PubMed generation
     elifepubmed_config_file = 'pubmed.cfg'
     elifepubmed_config_section = 'elife'
+
+    # PoA generation
+    jatsgenerator_config_file = 'jatsgenerator.cfg'
+    jatsgenerator_config_section = 'elife'
+    packagepoa_config_file = 'packagepoa.cfg'
+    packagepoa_config_section = 'elife'
 
     # PubMed FTP settings
     PUBMED_FTP_URI = ""
