@@ -513,8 +513,13 @@ class activity_PublishFinalPOA(activity.activity):
         if len(zipfiles) == 1:
             zipfile_file = zipfiles[0]
             zipfile_filename = zipfile_file.split(os.sep)[-1]
-            # Extract the zip
             myzip = zipfile.ZipFile(zipfile_file, 'r')
+            # New style zip file, if no manifest.xml file then leave the zip file alone
+            if 'manifest.xml' not in myzip.namelist():
+                myzip.close()
+                return
+
+            # Extract the zip
             myzip.extractall(self.TMP_DIR)
             myzip.close()
 
@@ -653,11 +658,6 @@ class activity_PublishFinalPOA(activity.activity):
 
             if current_zipfile:
                 filename = current_zipfile.filename.split(os.sep)[-1]
-                # Check for those with missing or empty manifest.xml
-                if self.manifest_xml_not_empty(current_zipfile) is not True:
-                    badfile = True
-                    self.malformed_ds_file_names.append(filename)
-
                 # Check for those with no zipped folder contents
                 if self.check_empty_supplemental_files(current_zipfile) is not True:
                     badfile = True
@@ -731,6 +731,10 @@ class activity_PublishFinalPOA(activity.activity):
         for name in input_zipfile.namelist():
             if re.match(r"^.*\.zip$", name):
                 sub_folder_name = name
+
+        # skip this check if there is no internal zip file
+        if not sub_folder_name and len(input_zipfile.namelist()) > 0:
+            return True
 
         if sub_folder_name:
             zipextfile = input_zipfile.open(sub_folder_name)
