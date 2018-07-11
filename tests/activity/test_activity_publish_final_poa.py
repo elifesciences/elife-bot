@@ -89,7 +89,7 @@ class TestPublishFinalPOA(unittest.TestCase):
                                  "elife_poa_e13833_ds.zip",
                                  "decap_elife_poa_e14692.pdf", "elife_poa_e14692.xml",
                                  "elife_poa_e14692_ds.zip",
-                                 "elife_poa_e99999_ds.zip", "elife_poa_e99998_ds.zip",
+                                 "elife_poa_e99999_ds.zip",
                                  "elife_poa_e99997_ds.zip"],
             "done_dir_file_count": 6,
             "approve_status": True,
@@ -101,9 +101,9 @@ class TestPublishFinalPOA(unittest.TestCase):
                                         "elife_poa_e13833_ds.zip",
                                         "decap_elife_poa_e14692.pdf", "elife_poa_e14692.xml",
                                         "elife_poa_e14692_ds.zip"],
-            "malformed_ds_file_names": ["elife_poa_e99998_ds.zip", "elife_poa_e99999_ds.zip"],
-            "empty_ds_file_names": ["elife_poa_e99997_ds.zip", "elife_poa_e99998_ds.zip"],
-            "unmatched_ds_file_names": ["elife_poa_e99997_ds.zip", "elife_poa_e99998_ds.zip"]
+            "malformed_ds_file_names": ["elife_poa_e99999_ds.zip"],
+            "empty_ds_file_names": [],
+            "unmatched_ds_file_names": ["elife_poa_e99997_ds.zip"]
         })
 
         # Full set of files for one article
