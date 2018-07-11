@@ -121,10 +121,10 @@ class activity_EmailDigest(activity.activity):
         current_time = time.gmtime()
         body = success_email_body(current_time)
         subject = success_email_subject(digest_content)
-        sender_email = self.settings.ses_digest_sender_email
+        sender_email = self.settings.digest_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.ses_digest_recipient_email)
+            self.settings.digest_recipient_email)
 
         connection = email_provider.smtp_connect(self.settings, self.logger)
         # send the emails
@@ -146,10 +146,10 @@ class activity_EmailDigest(activity.activity):
         current_time = time.gmtime()
         body = error_email_body(current_time)
         subject = error_email_subject(filename)
-        sender_email = self.settings.ses_digest_sender_email
+        sender_email = self.settings.digest_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.ses_digest_error_recipient_email)
+            self.settings.digest_error_recipient_email)
 
         connection = email_provider.smtp_connect(self.settings, self.logger)
         # send the emails

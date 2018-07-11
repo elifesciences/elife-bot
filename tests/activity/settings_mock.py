@@ -46,9 +46,9 @@ ses_pmc_sender_email = ""
 ses_pmc_recipient_email = ""
 ses_pmc_revision_recipient_email = ["e@example.org", "life@example.org"]
 
-ses_digest_sender_email = "sender@example.org"
-ses_digest_recipient_email = ["e@example.org", "life@example.org"]
-ses_digest_error_recipient_email = "error@example.org"
+digest_sender_email = "sender@example.org"
+digest_recipient_email = ["e@example.org", "life@example.org"]
+digest_error_recipient_email = "error@example.org"
 
 features_publication_recipient_email = "features_team@example.org"
 publication_authority = ""
