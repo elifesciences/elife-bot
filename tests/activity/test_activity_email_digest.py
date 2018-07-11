@@ -95,7 +95,9 @@ class TestEmailDigest(unittest.TestCase):
             "expected_approve_status": True,
             "expected_email_status": True,
             "expected_output_dir_files": [],
-            "expected_email_count": 0
+            "expected_email_count": 1,
+            "expected_email_subject": "Error processing digest file: ",
+            "expected_email_from": "From: sender@example.org"
         },
     )
     def test_do_activity(self, test_data, fake_storage_context):
@@ -134,7 +136,7 @@ class TestEmailDigest(unittest.TestCase):
         # check email files and contents
         email_files_filter = os.path.join(self.activity.temp_dir, "*.eml")
         email_files = glob.glob(email_files_filter)
-        if test_data.get("expected_email_count"):
+        if "expected_email_count" in test_data:
             self.assertEqual(len(email_files), test_data.get("expected_email_count"))
             # can look at the first email for the subject and sender
             first_email_content = None
