@@ -148,7 +148,12 @@ queue_worker_rules = {
        'bucket_name_pattern': '.*elife-silent-corrections$',
        'file_name_pattern': '.*\.zip',
        'starter_name': 'SilentCorrectionsIngest'
-       }
+       },
+    'DigestInputFile': {
+       'bucket_name_pattern': '.*elife-bot-digests-input$',
+       'file_name_pattern': '.*\.(docx|zip)',
+       'starter_name': 'IngestDigest'
+       },
     }
 
 queue_worker_article_zip_data = {u'event_time': u'2016-07-28T16:14:27.809576Z',

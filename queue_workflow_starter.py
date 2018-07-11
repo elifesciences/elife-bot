@@ -118,12 +118,20 @@ def process_data_pubmedarticledeposit(workflow_name, workflow_data):
     data = {}
     return data
 
+
+def process_data_ingestdigest(workflow_name, workflow_data):
+    data = {'info': S3NotificationInfo.from_dict(workflow_data),
+            'run': str(uuid.uuid4())}
+    return data
+
+
 workflow_data_processors = {
     'IngestArticleZip': process_data_ingestarticlezip,
     'InitialArticleZip': process_data_initialarticlezip,
     'SilentCorrectionsIngest': process_data_initialarticlezip,
     'PostPerfectPublication': process_data_postperfectpublication,
-    'PubmedArticleDeposit': process_data_pubmedarticledeposit
+    'PubmedArticleDeposit': process_data_pubmedarticledeposit,
+    'IngestDigest': process_data_ingestdigest
 }
 
 if __name__ == "__main__":
