@@ -123,13 +123,7 @@ class activity_EmailDigest(activity.activity):
         subject = success_email_subject(digest_content)
         sender_email = self.settings.ses_digest_sender_email
 
-        recipient_email_list = []
-        # Handle multiple recipients, if specified
-        if isinstance(self.settings.ses_digest_recipient_email, list):
-            for email in self.settings.ses_digest_recipient_email:
-                recipient_email_list.append(email)
-        else:
-            recipient_email_list.append(self.settings.ses_digest_recipient_email)
+        recipient_email_list = list_email_recipients(self.settings.ses_digest_recipient_email)
 
         connection = email_provider.smtp_connect(self.settings, self.logger)
         # send the emails
@@ -183,6 +177,18 @@ def success_email_subject(digest_content):
     except AttributeError:
         msid = None
     return 'Digest: {author}_{msid}'.format(author=digest_content.author, msid=msid)
+
+
+def list_email_recipients(email_list):
+    "return a list of email recipients from a string or list input"
+    recipient_email_list = []
+    # Handle multiple recipients, if specified
+    if isinstance(email_list, list):
+        for email in email_list:
+            recipient_email_list.append(email)
+    else:
+        recipient_email_list.append(email_list)
+    return recipient_email_list
 
 
 def success_email_body(current_time):
