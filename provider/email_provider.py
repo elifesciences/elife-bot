@@ -95,3 +95,15 @@ def smtp_send(connection, sender, recipient, message, logger=None):
             logger.error('error in smtp_send: %s ', traceback.format_exc())
         return False
     return True
+
+
+def list_email_recipients(email_list):
+    "return a list of email recipients from a string or list input"
+    recipient_email_list = []
+    # Handle multiple recipients, if specified
+    if isinstance(email_list, list):
+        for email in email_list:
+            recipient_email_list.append(email)
+    else:
+        recipient_email_list.append(email_list)
+    return recipient_email_list

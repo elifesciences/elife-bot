@@ -172,28 +172,6 @@ class TestEmailDigestFileName(unittest.TestCase):
         file_name = activity_module.output_file_name(digest_content)
         self.assertEqual(file_name, expected)
 
-@ddt
-class TestListEmailRecipients(unittest.TestCase):
-
-    @data(
-        {
-            "email_list": 'one@example.org',
-            "expected": ['one@example.org'],
-        },
-        {
-            "email_list": ['one@example.org'],
-            "expected": ['one@example.org'],
-        },
-        {
-            "email_list": ['one@example.org', 'two@example.org'],
-            "expected": ['one@example.org', 'two@example.org'],
-        },
-        )
-    def test_list_email_recipients(self, test_data):
-        ""
-        email_list = activity_module.list_email_recipients(test_data.get('email_list'))
-        self.assertEqual(email_list, test_data.get('expected'))
-
 
 if __name__ == '__main__':
     unittest.main()
