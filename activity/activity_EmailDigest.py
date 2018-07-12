@@ -1,8 +1,10 @@
 import os
 import json
 import time
+import traceback
 import boto.swf
 from digestparser import build, output
+from docx.opc.exceptions import PackageNotFoundError
 import activity
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.storage_provider import storage_context
@@ -106,7 +108,14 @@ class activity_EmailDigest(activity.activity):
         "Parse input and build a Digest object"
         if not input_file:
             return False, None
-        digest = build.build_digest(input_file, self.temp_dir)
+        try:
+            digest = build.build_digest(input_file, self.temp_dir)
+        except PackageNotFoundError:
+            # bad docx file
+            if self.logger:
+                self.logger.exception('exception in EmailDigest build_digest: %s' %
+                                      traceback.format_exc())
+            return False, None
         return True, digest
 
     def generate_output(self, digest_content):

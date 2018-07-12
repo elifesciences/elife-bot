@@ -34,4 +34,5 @@ pylint==1.6.4
 pyGithub==1.27.1
 pyFunctional==1.0.0
 func_timeout==4.3.0
+python-docx==0.8.6
 git+https://github.com/elifesciences/digest-parser.git@55c0e21abccb65fe361f78d9edc28ffb3c8ec708#egg=digestparser

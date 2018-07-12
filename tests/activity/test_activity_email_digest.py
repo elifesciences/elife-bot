@@ -72,8 +72,22 @@ class TestEmailDigest(unittest.TestCase):
             "expected_email_from": "From: sender@example.org"
         },
         {
-            "comment": 'digest bad file example',
+            "comment": 'digest file does not exist example',
             "filename": '',
+            "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
+            "expected_activity_status": None,
+            "expected_build_status": False,
+            "expected_generate_status": False,
+            "expected_approve_status": True,
+            "expected_email_status": True,
+            "expected_output_dir_files": [],
+            "expected_email_count": 1,
+            "expected_email_subject": "Error processing digest file: ",
+            "expected_email_from": "From: sender@example.org"
+        },
+        {
+            "comment": 'bad digest docx file example',
+            "filename": 'DIGEST+99998.docx',
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
             "expected_activity_status": None,
             "expected_build_status": False,
