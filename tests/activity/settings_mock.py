@@ -148,8 +148,8 @@ article_path_pattern = "/articles/{id}v{version}"
 article_subjects_data_bucket = "bucket_name/modify_article_subjects"
 article_subjects_data_file = "article_subjects.csv"
 
-smtp_host = 'localhost'
-smtp_port = 2525
+smtp_host = ''
+smtp_port = ''
 smtp_starttls = False
 smtp_ssl = False
 smtp_username = None
