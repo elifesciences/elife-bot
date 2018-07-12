@@ -1,7 +1,6 @@
 import time
 import os
 from datetime import datetime
-from smtpd import SMTPServer
 
 class FakeBotoConnection:
     def start_workflow_execution(self, *args):
