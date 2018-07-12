@@ -20,5 +20,14 @@ fi
 if pip list | grep elifepubmed; then
     pip uninstall -y elifepubmed
 fi
+if pip list | grep ejpcsvparser; then
+    pip uninstall -y ejpcsvparser
+fi
+if pip list | grep jatsgenerator; then
+    pip uninstall -y jatsgenerator
+fi
+if pip list | grep packagepoa; then
+    pip uninstall -y packagepoa
+fi
 pip install -r requirements.txt
 
