@@ -108,6 +108,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
     @patch.object(activity_CopyGlencoeStillImages, 'emit_monitor_event')
     def test_do_activity_bad_files(self, fake_emit, fake_session, fake_storage_context, fake_glencoe_metadata,
                                    fake_store_jpgs, fake_list_files_from_cdn):
+        # updated July 2018: bad files will not cause an error, we do not need to check for these
         # Given
         activity_data = test_activity_data.data_example_before_publish
         fake_storage_context.return_value = FakeStorageContext()
@@ -121,17 +122,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         result = self.copyglencoestillimages.do_activity(activity_data)
 
         # Then
-        self.assertEqual(result, self.copyglencoestillimages.ACTIVITY_PERMANENT_FAILURE)
-        fake_emit.assert_called_with(settings_mock,
-                                     activity_data["article_id"],
-                                     activity_data["version"],
-                                     activity_data["run"],
-                                     self.copyglencoestillimages.pretty_name,
-                                     "error",
-                                     "Not all still images .jpg have a video with the same name " +
-                                     "missing videos file names: ['elife-12620-media1', 'elife-12620-media2']" +
-                                     " Please check them against CDN files. Article: 00353")
-
+        self.assertEqual(self.copyglencoestillimages.ACTIVITY_SUCCESS, result)
 
     def test_validate_jpgs_against_cdn(self):
         # Given

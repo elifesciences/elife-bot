@@ -79,18 +79,6 @@ class activity_CopyGlencoeStillImages(activity.activity):
                 bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id),
                                                            cdn_still_jpgs,
                                                            article_id)
-            if len(bad_files) > 0:
-                bad_files.sort()
-                dashboard_message = ("Not all still images .jpg have a video with the same name " + \
-                                    "missing videos file names: %s" + \
-                                    " Please check them against CDN files. Article: %s") % \
-                                    (bad_files, article_id)
-                self.logger.error(dashboard_message)
-
-                end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
-                             dashboard_message]
-
-                return start_event, end_event, activity.activity.ACTIVITY_PERMANENT_FAILURE
 
             dashboard_message = ("Finished Copying Glencoe still images to CDN: %s" + \
                                 "Article: %s") % \
