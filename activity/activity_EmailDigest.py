@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import traceback
 import boto.swf
 from digestparser import build, output
 from docx.opc.exceptions import PackageNotFoundError
@@ -111,6 +112,9 @@ class activity_EmailDigest(activity.activity):
             digest = build.build_digest(input_file, self.temp_dir)
         except PackageNotFoundError:
             # bad docx file
+            if self.logger:
+                self.logger.exception('exception in EmailDigest build_digest: %s' %
+                                      traceback.format_exc())
             return False, None
         return True, digest
 
