@@ -133,7 +133,7 @@ initial_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
 ingest_digest_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
                       u'event_time': u'2018-06-18T16:14:27.809576Z',
                       u'event_name': u'ObjectCreated:Put',
-                      u'file_name': u'DIGEST 99999.docx',
+                      u'file_name': u'DIGEST+99999.docx',
                       u'file_etag': u'e7f639f63171c097d4761e2d2efe8dc4',
                       u'bucket_name': u'exp-elife-bot-digests-input',
                       u'file_size': 14086}

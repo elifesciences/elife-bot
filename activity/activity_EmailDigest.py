@@ -7,6 +7,7 @@ import activity
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.storage_provider import storage_context
 import provider.email_provider as email_provider
+import provider.utils as utils
 
 
 class activity_EmailDigest(activity.activity):
@@ -55,9 +56,11 @@ class activity_EmailDigest(activity.activity):
         bucket_folder = None
         if filename:
             bucket_folder = info.file_name.split(filename)[0]
+        # replace + with spaces if present into a real_filename
+        real_filename = utils.unquote_plus(filename)
 
         # Download from S3
-        self.input_file = self.download_digest_from_s3(filename, bucket_name, bucket_folder)
+        self.input_file = self.download_digest_from_s3(real_filename, bucket_name, bucket_folder)
 
         # Parse input and build digest
         self.build_status, self.digest = self.build_digest(self.input_file)
