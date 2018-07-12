@@ -1,10 +1,11 @@
 import unittest
 import settings_mock
-from activity.activity_VerifyImageServer import activity_VerifyImageServer
-import test_activity_data as test_data
-from mock import patch, MagicMock
-from classes_mock import FakeSession
 from ddt import ddt, data
+from tests.activity.classes_mock import FakeSession
+from activity.activity_VerifyImageServer import activity_VerifyImageServer
+import tests.activity.test_activity_data as test_data
+from mock import patch, MagicMock
+
 
 class FakeStorageContext:
     def list_resources(self, resource):
