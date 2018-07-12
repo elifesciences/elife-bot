@@ -29,5 +29,8 @@ fi
 if pip list | grep packagepoa; then
     pip uninstall -y packagepoa
 fi
+if pip list | grep digestparser; then
+    pip uninstall -y digestparser
+fi
 pip install -r requirements.txt
 
