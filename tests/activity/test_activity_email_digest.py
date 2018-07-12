@@ -1,17 +1,15 @@
 import os
 import glob
 import unittest
-import asyncore
-from multiprocessing import Process
 from mock import patch
 from ddt import ddt, data
 from digestparser.objects import Digest
-from tests.classes_mock import FakeSMTPServer
 import activity.activity_EmailDigest as activity_module
 from activity.activity_EmailDigest import activity_EmailDigest as activity_object
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 import tests.test_data as test_case_data
+from tests.classes_mock import FakeSMTPServer
 from tests.activity.classes_mock import FakeStorageContext
 
 
@@ -28,30 +26,18 @@ def list_test_dir(dir_name, ignore=('.keepme')):
     return [file_name for file_name in file_names if file_name not in ignore]
 
 
-def run_fake_smtp_server(tmp_dir):
-    localaddr = settings_mock.smtp_host, settings_mock.smtp_port
-    remoteaddr = None
-    smtp_server = FakeSMTPServer(tmp_dir, localaddr, remoteaddr)
-    # run on an asynchronous socket
-    asyncore.loop()
-
-
 @ddt
 class TestEmailDigest(unittest.TestCase):
 
     def setUp(self):
         fake_logger = FakeLogger()
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
-        # start up a fake SMTP server
-        self.smtp_process = Process(target=run_fake_smtp_server, args=(self.activity.temp_dir,))
-        self.smtp_process.start()
 
     def tearDown(self):
-        # terminate the SMTP server
-        self.smtp_process.terminate()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
+    @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('activity.activity_EmailDigest.storage_context')
     @data(
         {
@@ -100,9 +86,10 @@ class TestEmailDigest(unittest.TestCase):
             "expected_email_from": "From: sender@example.org"
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context):
+    def test_do_activity(self, test_data, fake_storage_context, fake_email_smtp_connect):
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         # check assertions

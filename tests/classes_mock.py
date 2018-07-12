@@ -48,15 +48,14 @@ class FakeS3Event():
         return self._file_size
 
 
-class FakeSMTPServer(SMTPServer):
+class FakeSMTPServer():
 
-    def __init__(self, tmp_dir, *args):
+    def __init__(self, tmp_dir):
         self.number = 0
         self.tmp_dir = tmp_dir
-        localaddr = args[0]
-        remoteaddr = args[1]
-        # instantiate the base class, python 2 compatible method only for now
-        SMTPServer.__init__(self, localaddr, remoteaddr)
+
+    def sendmail(self, sender, recipient, message):
+        self.process_message(None, sender, recipient, message)
 
     def process_message(self, peer, mailfrom, rcpttos, data):
         filename = os.path.join(
