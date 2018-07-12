@@ -1,4 +1,5 @@
 import re
+import urllib
 
 S3_DATE_FORMAT = '%Y%m%d%H%M%S'
 PUB_DATE_FORMAT = "%Y-%m-%d"
@@ -41,3 +42,13 @@ def volume_from_pub_date(pub_date, start_year=2011):
     except:
         volume = None
     return volume
+
+
+def unquote_plus(string):
+    "unescape plus sign url with python 2 or 3 method"
+    if not string:
+        return string
+    if hasattr(urllib, 'parse'):
+        # python 3
+        return urllib.parse.unquote_plus(string)
+    return urllib.unquote_plus(string)

@@ -80,6 +80,14 @@ class TestUtils(unittest.TestCase):
         else:
             self.assertEqual(utils.volume_from_pub_date(pub_date), expected)
 
+    @unpack
+    @data(
+        (None, None),
+        ("file_name.jpg", "file_name.jpg"),
+        ("file+name.jpg", "file name.jpg")
+        )
+    def test_unquote_plus(self, value, expected):
+        self.assertEqual(utils.unquote_plus(value), expected)
 
 
 if __name__ == '__main__':

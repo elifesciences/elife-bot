@@ -57,7 +57,7 @@ class TestEmailDigest(unittest.TestCase):
         },
         {
             "comment": 'digest zip file example',
-            "filename": 'DIGEST 99999.zip',
+            "filename": 'DIGEST+99999.zip',
             "expected_result": True,
             "expected_activity_status": True,
             "expected_build_status": True,
