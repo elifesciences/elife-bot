@@ -46,6 +46,7 @@ def start(ENV="dev"):
     workflow_names.append("PubRouterDeposit")
     workflow_names.append("PMCDeposit")
     workflow_names.append("PostPerfectPublication")
+    workflow_names.append("IngestDigest")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries
@@ -103,6 +104,7 @@ def start(ENV="dev"):
     activity_names.append("ScheduleCrossref")
     activity_names.append("ScheduleDownstream")
     activity_names.append("ModifyArticleSubjects")
+    activity_names.append("EmailDigest")
 
     for activity_name in activity_names:
         # Import the activity libraries

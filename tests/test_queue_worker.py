@@ -33,6 +33,14 @@ class TestQueueWorker(unittest.TestCase):
         starter_name = self.worker.get_starter_name(rules, info)
         self.assertEqual(starter_name, expected_starter_name)
 
+    def test_get_starter_name_ingest_digest(self):
+        "test S3 notification info matching for the ingest digest workflow"
+        rules = test_data.queue_worker_rules
+        info = S3NotificationInfo.from_dict(test_data.ingest_digest_data)
+        expected_starter_name = 'IngestDigest'
+        starter_name = self.worker.get_starter_name(rules, info)
+        self.assertEqual(starter_name, expected_starter_name)
+
     @patch('queue_worker.Message')
     @patch('tests.activity.classes_mock.FakeSQSQueue.read')
     @patch('queue_worker.QueueWorker.queues')

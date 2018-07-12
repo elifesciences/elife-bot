@@ -1,4 +1,6 @@
 import time
+import os
+from datetime import datetime
 
 class FakeBotoConnection:
     def start_workflow_execution(self, *args):
@@ -43,3 +45,21 @@ class FakeS3Event():
         return self._file_etag
     def file_size(self):
         return self._file_size
+
+
+class FakeSMTPServer():
+
+    def __init__(self, tmp_dir):
+        self.number = 0
+        self.tmp_dir = tmp_dir
+
+    def sendmail(self, sender, recipient, message):
+        self.process_message(None, sender, recipient, message)
+
+    def process_message(self, peer, mailfrom, rcpttos, data):
+        filename = os.path.join(
+            self.tmp_dir,
+            '%s-%d.eml' % (datetime.now().strftime('%Y%m%d%H%M%S'), self.number))
+        with open(filename, 'w') as open_file:
+            open_file.write(data)
+        self.number += 1

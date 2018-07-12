@@ -71,6 +71,14 @@ class exp():
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
 
+    # SMTP settings
+    smtp_host = 'localhost'
+    smtp_port = 2525
+    smtp_starttls = False
+    smtp_ssl = False
+    smtp_user = None
+    smtp_password = None
+
     # Lens bucket settings
     lens_bucket = 'elife-lens-dev'
 
@@ -98,6 +106,11 @@ class exp():
     ses_pmc_sender_email = "sender@example.com"
     ses_pmc_recipient_email = "admin@example.com"
     ses_pmc_revision_recipient_email = "sender@example.com"
+
+    # Digest email settings
+    digest_sender_email = "sender@example.org"
+    digest_recipient_email = ["e@example.org", "life@example.org"]
+    digest_error_recipient_email = "error@example.org"
 
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
@@ -255,6 +268,14 @@ class dev():
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
 
+    # SMTP settings
+    smtp_host = 'localhost'
+    smtp_port = 2525
+    smtp_starttls = False
+    smtp_ssl = False
+    smtp_user = None
+    smtp_password = None
+
     # Lens bucket settings
     lens_bucket = 'elife-lens-dev'
 
@@ -282,6 +303,11 @@ class dev():
     ses_pmc_sender_email = "sender@example.com"
     ses_pmc_recipient_email = "admin@example.com"
     ses_pmc_revision_recipient_email = "sender@example.com"
+
+    # Digest email settings
+    digest_sender_email = "sender@example.org"
+    digest_recipient_email = ["e@example.org", "life@example.org"]
+    digest_error_recipient_email = "error@example.org"
 
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
@@ -439,6 +465,14 @@ class live():
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
 
+    # SMTP settings
+    smtp_host = 'localhost'
+    smtp_port = 2525
+    smtp_starttls = False
+    smtp_ssl = False
+    smtp_user = None
+    smtp_password = None
+
     # Lens bucket settings
     lens_bucket = 'elife-lens'
 
@@ -466,6 +500,11 @@ class live():
     ses_pmc_sender_email = "sender@example.com"
     ses_pmc_recipient_email = "admin@example.com"
     ses_pmc_revision_recipient_email = "sender@example.com"
+
+    # Digest email settings
+    digest_sender_email = "sender@example.org"
+    digest_recipient_email = ["e@example.org", "life@example.org"]
+    digest_error_recipient_email = "error@example.org"
 
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"

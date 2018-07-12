@@ -3,7 +3,8 @@ import json
 import log
 
 class NullRequiredDataException(Exception):
-    pass
+    def __init__(self, message):
+        self.message = message
 
 def get_starter_identity(name):
         return "starter_" + name + "." + str(os.getpid())
