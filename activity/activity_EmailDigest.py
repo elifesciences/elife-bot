@@ -82,7 +82,7 @@ class activity_EmailDigest(activity.activity):
             if self.generate_status is True:
                 self.email_status = self.email_digest(self.digest, output_file)
             else:
-                self.email_status = self.email_error_report(filename)
+                self.email_status = self.email_error_report(real_filename)
 
         # return a value based on the activity_status
         if self.activity_status is True:
