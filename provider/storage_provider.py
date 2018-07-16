@@ -26,7 +26,7 @@ class S3StorageContext:
 
     #Resource format expected s3://my-bucket/my/path/abc.zip
     def s3_storage_objects(self, resource):
-        p = re.compile(ur'(.*?)://(.*?)(/.*)')
+        p = re.compile(r'(.*?)://(.*?)(/.*)')
         match = p.match(resource)
         protocol = match.group(1)
         if protocol != 's3':

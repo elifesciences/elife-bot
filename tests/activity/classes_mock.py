@@ -1,5 +1,5 @@
 from testfixtures import TempDirectory
-import test_activity_data as data
+import tests.activity.test_activity_data as data
 from shutil import copyfile, copyfileobj
 from shutil import copy
 import shutil
@@ -89,7 +89,7 @@ class FakeStorageContext:
         self.dir = directory
 
     def get_bucket_and_key(self, resource):
-        p = re.compile(ur'(.*?)://(.*?)(/.*)')
+        p = re.compile(r'(.*?)://(.*?)(/.*)')
         match = p.match(resource)
         protocol = match.group(1)
         bucket_name = match.group(2)
