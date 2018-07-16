@@ -52,7 +52,7 @@ def article_next_version(article_id, settings):
 
 def article_version_date_by_version(article_id, version, settings):
     status_code, data = article_versions(article_id, settings)
-    print data
+    print(data)
     if status_code == 200:
         version_data = (vd for vd in data if vd["version"] == int(version)).next()
         return parse(version_data["versionDate"]).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -62,7 +62,7 @@ def article_version_date_by_version(article_id, version, settings):
 def article_publication_date(article_id, settings, logger=None):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:
-        first_published_version_list = filter(lambda x: int(x["version"]) == 1, data)
+        first_published_version_list = list(filter(lambda x: int(x["version"]) == 1, data))
         if len(first_published_version_list) < 1:
             return None
         first_published_version = first_published_version_list[0]

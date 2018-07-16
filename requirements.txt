@@ -1,6 +1,6 @@
 boto==2.48.0
 Fom==0.9.10
-GitPython==0.3.2.1
+GitPython==2.1.11
 Jinja2==2.7.3
 PyPDF2==1.23
 arrow==0.4.4
@@ -31,7 +31,7 @@ pyOpenSSL==16.2.0
 newrelic==2.72.0.52
 pylint==1.6.4
 pyGithub==1.27.1
-pyFunctional==1.0.0
+pyFunctional==1.1.3
 func_timeout==4.3.0
 python-docx==0.8.6
 git+https://github.com/elifesciences/digest-parser.git@55c0e21abccb65fe361f78d9edc28ffb3c8ec708#egg=digestparser

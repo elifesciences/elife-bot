@@ -8,7 +8,7 @@ import requests
 import glob
 import re
 
-import activity
+from .activity import Activity
 
 import boto.s3
 from boto.s3.connection import S3Connection
@@ -26,10 +26,10 @@ from elifearticle.article import ArticleDate
 DepositCrossref activity
 """
 
-class activity_DepositCrossref(activity.activity):
+class activity_DepositCrossref(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        Activity.__init__(self, settings, logger, conn, token, activity_task)
 
         self.name = "DepositCrossref"
         self.version = "1"
@@ -103,7 +103,7 @@ class activity_DepositCrossref(activity.activity):
 
             if self.publish_status is True:
                 # Clean up outbox
-                print "Moving files from outbox folder to published folder"
+                print("Moving files from outbox folder to published folder")
                 self.clean_outbox()
                 self.upload_crossref_xml_to_s3()
                 self.outbox_status = True
