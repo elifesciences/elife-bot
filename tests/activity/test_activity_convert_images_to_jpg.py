@@ -1,9 +1,7 @@
 import unittest
 from activity.activity_ConvertImagesToJPG import activity_ConvertImagesToJPG
 from tests.activity import settings_mock
-from tests.activity.classes_mock import FakeLogger
-from tests.activity.classes_mock import FakeStorageContext
-from tests.activity.classes_mock import FakeSession
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext, FakeSession
 from tests.activity import test_activity_data
 from mock import patch
 
