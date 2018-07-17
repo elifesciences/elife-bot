@@ -86,6 +86,7 @@ class activity_PackagePOA(activity.activity):
         # Get the DOI from the zip file
         self.doi = get_doi_from_zip_file(self.poa_zip_filename)
         doi_id = utils.msid_from_doi(self.doi)
+        self.logger.info('DOI: %s' % doi_id)
 
         # Approve the DOI for packaging
         self.approve_status = approve_for_packaging(doi_id)
@@ -99,13 +100,16 @@ class activity_PackagePOA(activity.activity):
 
             # Transform zip file
             self.process_status = self.process_poa_zipfile(self.poa_zip_filename)
+            self.logger.info('Process status: %s' % self.process_status)
             self.pdf_decap_status = self.check_pdf_decap_failure()
+            self.logger.info('PDF decapitation status: %s' % self.pdf_decap_status)
 
             # Set the DOI and generate XML
             self.download_latest_csv()
             pub_date = self.get_pub_date(doi_id)
             volume = utils.volume_from_pub_date(pub_date)
             self.generate_xml_status = self.generate_xml(doi_id, pub_date, volume)
+            self.logger.info('XML generation status: %s' % self.generate_xml_status)
 
             # Copy finished files to S3 outbox
             self.copy_files_to_s3_outbox()
@@ -284,6 +288,7 @@ class activity_PackagePOA(activity.activity):
         """
         Copy local files to the S3 bucket outbox
         """
+        # TODO: log which files will be created
         pdf_files = glob.glob(self.decapitate_pdf_dir + "/*.pdf")
         for file_name_path in pdf_files:
             # Copy decap PDF to S3 outbox
@@ -314,6 +319,7 @@ class activity_PackagePOA(activity.activity):
         s3_folder_name = self.outbox_folder
         resource_dest = storage_provider + bucket_name + "/" + s3_folder_name + file_name
         storage.set_resource_from_filename(resource_dest, file_name_path)
+        self.logger.info("Copied %s to %s", file_name_path, resource_dest)
 
     def add_email_to_queue(self):
         """
