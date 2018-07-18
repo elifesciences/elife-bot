@@ -95,7 +95,7 @@ class ArticleInfo(object):
 
     def get_update_date_from_zip_filename(self):
         filename = self.full_filename
-        m = re.search(ur'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
+        m = re.search(r'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
         if m is None:
             return None
         else:
@@ -108,7 +108,7 @@ class ArticleInfo(object):
 
     def get_version_from_zip_filename(self):
         filename = self.full_filename
-        m = re.search(ur'-v([0-9]+?)[\.|-]', filename)
+        m = re.search(r'-v([0-9]+?)[\.|-]', filename)
         if m is None:
             return None
         else:
@@ -132,7 +132,7 @@ def has_extensions(file, extensions):
 
 
 def get_original_files(files):
-    regex = re.compile(ur'-v([0-9]+)[\.]')
+    regex = re.compile(r'-v([0-9]+)[\.]')
     fs = list(filter(regex.search, files))
     return fs
 
@@ -202,7 +202,7 @@ def get_article_xml_key(bucket, expanded_folder_name):
 
 def main():
     a = ArticleInfo("elife-00012-fig3-figsupp1-data2.csv")
-    print a
+    print(a)
 
 
 if __name__ == '__main__':

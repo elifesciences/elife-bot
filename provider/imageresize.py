@@ -1,4 +1,4 @@
-import StringIO
+from io import StringIO
 
 from wand.image import Image
 

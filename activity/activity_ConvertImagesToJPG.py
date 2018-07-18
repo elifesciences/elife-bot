@@ -1,16 +1,18 @@
-import activity
+import os
+from .activity import Activity
 import json
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 import provider.article_structure as article_structure
 import provider.image_conversion as image_conversion
-import os
 
 
 
-class activity_ConvertImagesToJPG(activity.activity):
+
+class activity_ConvertImagesToJPG(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_ConvertImagesToJPG, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "ConvertImagesToJPG"
         self.pretty_name = "Convert Images To JPG"
@@ -45,9 +47,11 @@ class activity_ConvertImagesToJPG(activity.activity):
 
             storage = storage_context(self.settings)
             files_in_bucket = storage.list_resources(orig_resource)
-
-            figures = filter(article_structure.article_figure, files_in_bucket) + filter(article_structure.inline_figure, files_in_bucket)
-
+    
+            figures = []
+            figures += filter(article_structure.article_figure, files_in_bucket)
+            figures += filter(article_structure.inline_figure, files_in_bucket)
+    
             # download is not a IIIF asset but is currently kept for compatibility
             # download may become obsolete in future
             formats = {"Original": {
@@ -73,12 +77,12 @@ class activity_ConvertImagesToJPG(activity.activity):
                                     "Finished converting images for " + article_id + ": " +
                                     str(len(figures)) + " images processed ")
             self.clean_tmp_dir()
-            return activity.activity.ACTIVITY_SUCCESS
+            return Activity.ACTIVITY_SUCCESS
 
         except Exception as e:
             self.logger.exception("An error occurred during " + self.pretty_name)
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error",
                                     "Error converting images to JPG for article" + article_id +
-                                    " message:" + e.message)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                                    " message:" + str(e))
+            return Activity.ACTIVITY_PERMANENT_FAILURE
