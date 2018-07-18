@@ -29,7 +29,8 @@ DepositCrossref activity
 class activity_DepositCrossref(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        Activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_DepositCrossref, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "DepositCrossref"
         self.version = "1"
