@@ -11,7 +11,8 @@ import provider.image_conversion as image_conversion
 
 class activity_ConvertImagesToJPG(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        Activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_ConvertImagesToJPG, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "ConvertImagesToJPG"
         self.pretty_name = "Convert Images To JPG"
