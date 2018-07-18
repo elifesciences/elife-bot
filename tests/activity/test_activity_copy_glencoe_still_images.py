@@ -1,11 +1,9 @@
 import unittest
-import settings_mock
+import tests.activity.settings_mock as settings_mock
 from activity.activity_CopyGlencoeStillImages import activity_CopyGlencoeStillImages
 from mock import patch, MagicMock
-from classes_mock import FakeSession
-from classes_mock import FakeStorageContext
-from classes_mock import FakeLogger
-import test_activity_data as test_activity_data
+from tests.activity.classes_mock import FakeSession, FakeStorageContext, FakeLogger
+import tests.activity.test_activity_data as test_activity_data
 import provider.glencoe_check as glencoe_check
 
 class TestCopyGlencoeStillImages(unittest.TestCase):
