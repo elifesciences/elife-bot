@@ -1,4 +1,4 @@
-from io import BytesIO
+from StringIO import StringIO
 
 from wand.image import Image
 
@@ -35,7 +35,7 @@ def resize(format, filep, info, logger):
             if target_height is not image.height or target_width is not image.width:
                 image.resize(width=target_width, height=target_height)
 
-            image_buffer = BytesIO()
+            image_buffer = StringIO()
             image.save(file=image_buffer)
 
     except Exception as e:
