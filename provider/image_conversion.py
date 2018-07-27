@@ -1,7 +1,7 @@
 import provider.imageresize as resizer
 from provider.storage_provider import storage_context
+from provider import memory
 from mimetypes import guess_type
-
 
 def generate_images(settings, formats, fp, info, publish_locations, logger):
         try:
@@ -12,6 +12,7 @@ def generate_images(settings, formats, fp, info, publish_locations, logger):
                         x.strip() for x in format_spec['sources'].split(',')]:
                     download = 'download' in format_spec and format_spec['download']
                     fp.seek(0)  # rewind the tape
+                    logger.info("Attempting new conversion/resize (current RSS memory: %s)", memory.current())
                     filename, image = resizer.resize(format_spec, fp, info, logger)
                     if filename is not None and image is not None:
                         store_in_publish_locations(settings, filename, image, publish_locations, download)
