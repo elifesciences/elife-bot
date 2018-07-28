@@ -62,7 +62,7 @@ def article_version_date_by_version(article_id, version, settings):
 def article_publication_date(article_id, settings, logger=None):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:
-        first_published_version_list = list(filter(lambda x: int(x["version"]) == 1, data))
+        first_published_version_list = [x for x in data if int(x['version']) == 1]
         if len(first_published_version_list) < 1:
             return None
         first_published_version = first_published_version_list[0]
