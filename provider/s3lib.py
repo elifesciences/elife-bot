@@ -88,7 +88,7 @@ def latest_pmc_zip_revision(doi_id, s3_key_names):
         highest_revision = None
         for key_name in name_matches:
 
-            revision_match = re.match(ur'.*r(.*)\.zip$', key_name)
+            revision_match = re.match(r'.*r(.*)\.zip$', key_name)
 
             if revision_match is None:
                 if highest_revision is None:
