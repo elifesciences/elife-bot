@@ -9,9 +9,9 @@ class TestGlencoeCheck(unittest.TestCase):
         "return function with different assertion function names in python 2 and 3"
         if hasattr(self, 'assertItemsEqual'):
             # python 2
-            return self.assertItemsEqual
+            return super(TestGlencoeCheck, self).assertItemsEqual
         # python 3
-        return self.assertCountEqual
+        return super(TestGlencoeCheck, self).assertCountEqual
 
     def test_check_msid_long_id(self):
         result = glencoe_check.check_msid("7777777701234")
