@@ -1,8 +1,8 @@
 import json
-import classes_mock
+import tests.activity.classes_mock
 import base64
 
-xml_content_for_xml_key = open("tests/test_data/content_for_test_origin.xml", "r").read()
+xml_content_for_xml_key = open("tests/test_data/content_for_test_origin.xml", "rb").read()
 
 bucket_origin_file_name = "test_origin.xml"
 bucket_dest_file_name = "test_dest.json"
