@@ -202,7 +202,7 @@ def success_email_subject(digest_content):
         msid = doi.split(".")[-1]
     except AttributeError:
         msid = None
-    return 'Digest: {author}_{msid}'.format(author=digest_content.author, msid=msid)
+    return u'Digest: {author}_{msid}'.format(author=digest_content.author, msid=msid)
 
 
 def success_email_body(current_time):

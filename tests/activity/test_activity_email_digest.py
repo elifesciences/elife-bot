@@ -187,5 +187,24 @@ class TestEmailDigestFileName(unittest.TestCase):
         self.assertEqual(file_name, expected)
 
 
+class TestEmailSubject(unittest.TestCase):
+
+    def test_success_email_subject(self):
+        "email subject line with correct, unicode data"
+        digest_content = Digest()
+        digest_content.author = u'Nö'
+        digest_content.doi = '10.7554/eLife.99999'
+        expected = u'Digest: Nö_99999'
+        subject = activity_module.success_email_subject(digest_content)
+        self.assertEqual(subject, expected)
+
+    def test_success_email_subject_bad_object(self):
+        "email subject line when digest is None"
+        digest_content = None
+        expected = None
+        subject = activity_module.success_email_subject(digest_content)
+        self.assertEqual(subject, expected)
+
+
 if __name__ == '__main__':
     unittest.main()
