@@ -202,7 +202,7 @@ def success_email_subject(digest_content):
         msid = doi.split(".")[-1]
     except AttributeError:
         msid = None
-    return u'Digest: {author}_{msid}'.format(author=digest_content.author, msid=msid)
+    return u'Digest: {author}_{msid:0>5}'.format(author=digest_content.author, msid=msid)
 
 
 def success_email_body(current_time):
@@ -220,7 +220,7 @@ def success_email_body(current_time):
 
 def error_email_subject(filename):
     "email subject for an error email"
-    return 'Error processing digest file: {filename}'.format(filename=filename)
+    return u'Error processing digest file: {filename}'.format(filename=filename)
 
 
 def error_email_body(current_time):

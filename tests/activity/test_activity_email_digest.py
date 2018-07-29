@@ -198,11 +198,25 @@ class TestEmailSubject(unittest.TestCase):
         subject = activity_module.success_email_subject(digest_content)
         self.assertEqual(subject, expected)
 
+    def test_success_email_subject_no_doi(self):
+        "email subject line when no doi attribute"
+        digest_content = Digest()
+        expected = u'Digest: None_0None'
+        file_name = activity_module.success_email_subject(digest_content)
+        self.assertEqual(file_name, expected)
+
     def test_success_email_subject_bad_object(self):
         "email subject line when digest is None"
         digest_content = None
         expected = None
         subject = activity_module.success_email_subject(digest_content)
+        self.assertEqual(subject, expected)
+
+    def test_error_email_subject(self):
+        "email subject for error emails with a unicode filename"
+        filename = u'DIGESTö 99999.zip'
+        expected = u'Error processing digest file: DIGESTö 99999.zip'
+        subject = activity_module.error_email_subject(filename)
         self.assertEqual(subject, expected)
 
 
