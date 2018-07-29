@@ -143,7 +143,7 @@ class TestEmailDigest(unittest.TestCase):
             self.assertEqual(len(email_files), test_data.get("expected_email_count"))
             # can look at the first email for the subject and sender
             first_email_content = None
-            with open(email_files[0], 'rb') as open_file:
+            with open(email_files[0]) as open_file:
                 first_email_content = open_file.read()
             if first_email_content:
                 if test_data.get("expected_email_subject"):

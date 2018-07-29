@@ -5,17 +5,18 @@ import traceback
 import boto.swf
 from digestparser import build, output
 from docx.opc.exceptions import PackageNotFoundError
-import activity
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.storage_provider import storage_context
 import provider.email_provider as email_provider
 import provider.utils as utils
+from .activity import Activity
 
 
-class activity_EmailDigest(activity.activity):
+class activity_EmailDigest(Activity):
     "EmailDigest activity"
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_EmailDigest, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "EmailDigest"
         self.version = "1"
@@ -88,7 +89,7 @@ class activity_EmailDigest(activity.activity):
         if self.activity_status is True:
             return True
 
-        return activity.activity.ACTIVITY_PERMANENT_FAILURE
+        return self.ACTIVITY_PERMANENT_FAILURE
 
     def download_digest_from_s3(self, filename, bucket_name, bucket_folder):
         "Connect to the S3 bucket and download the input"
@@ -202,7 +203,7 @@ def success_email_subject(digest_content):
         msid = doi.split(".")[-1]
     except AttributeError:
         msid = None
-    return u'Digest: {author}_{msid:0>5}'.format(author=digest_content.author, msid=msid)
+    return u'Digest: {author}_{msid:0>5}'.format(author=digest_content.author, msid=str(msid))
 
 
 def success_email_body(current_time):
