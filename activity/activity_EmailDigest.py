@@ -189,12 +189,8 @@ def output_file_name(digest_content):
     "from the digest content return the file name for the DOCX output"
     if not digest_content:
         return
-    try:
-        doi = getattr(digest_content, 'doi')
-        msid = doi.split(".")[-1]
-    except AttributeError:
-        msid = None
-    return '{author}_{msid:0>5}.docx'.format(author=digest_content.author, msid=msid)
+    # use the digestparser library to generate the output docx file name
+    return output.docx_file_name(digest_content)
 
 
 def success_email_subject(digest_content):

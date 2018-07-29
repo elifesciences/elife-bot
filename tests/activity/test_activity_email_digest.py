@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import os
 import glob
 import unittest
@@ -158,6 +160,15 @@ class TestEmailDigestFileName(unittest.TestCase):
         digest_content.author = 'Anonymous'
         digest_content.doi = '10.7554/eLife.99999'
         expected = 'Anonymous_99999.docx'
+        file_name = activity_module.output_file_name(digest_content)
+        self.assertEqual(file_name, expected)
+
+    def test_output_file_name_unicode(self):
+        "docx output file name with unicode author name"
+        digest_content = Digest()
+        digest_content.author = u'Nö'
+        digest_content.doi = '10.7554/eLife.99999'
+        expected = u'Nö_99999.docx'
         file_name = activity_module.output_file_name(digest_content)
         self.assertEqual(file_name, expected)
 
