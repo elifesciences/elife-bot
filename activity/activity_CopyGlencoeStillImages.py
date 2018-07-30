@@ -1,4 +1,4 @@
-import activity
+from .activity import Activity
 import json
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
@@ -15,9 +15,10 @@ activity_CopyGlencoeStillImages.py activity
 class ValidationException(RuntimeError):
     pass
 
-class activity_CopyGlencoeStillImages(activity.activity):
+class activity_CopyGlencoeStillImages(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_CopyGlencoeStillImages, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "CopyGlencoeStillImages"
         self.pretty_name = "Copy Glencoe Still Images"
@@ -55,7 +56,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
             return success
         except Exception as e:
             self.logger.exception("Error starting Copy Glencoe Still Images activity")
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
     def get_events(self, article_id, poa, version=None, run=None):
 
@@ -67,7 +68,7 @@ class activity_CopyGlencoeStillImages(activity.activity):
                 end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
                              "Article is POA, no need for video check yet. " + article_id]
 
-                return start_event, end_event, activity.activity.ACTIVITY_SUCCESS
+                return start_event, end_event, self.ACTIVITY_SUCCESS
             glencoe_article_id = glencoe_check.check_msid(article_id)
             metadata = glencoe_check.metadata(glencoe_article_id, self.settings)
             glencoe_jpgs = glencoe_check.jpg_href_values(metadata)
@@ -87,28 +88,28 @@ class activity_CopyGlencoeStillImages(activity.activity):
 
             end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
                          dashboard_message]
-            return start_event, end_event, activity.activity.ACTIVITY_SUCCESS
+            return start_event, end_event, self.ACTIVITY_SUCCESS
         except AssertionError as e:
-            self.logger.info(str(e.message))
-            first_chars_error = str(e.message[:21])
+            self.logger.info(str(e))
+            first_chars_error = str(e)[:21]
             if first_chars_error == "article has no videos":
                 self.logger.info("Glencoe returned 404, therefore article %s does not have videos", article_id)
                 end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
                              "Glencoe returned 404, therefore article has no videos"]
-                return start_event, end_event, activity.activity.ACTIVITY_SUCCESS
+                return start_event, end_event, self.ACTIVITY_SUCCESS
 
             self.logger.exception("Error when checking/copying Glencoe still images.")
             end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
                          "An error occurred when checking/copying Glencoe still images. Article " +
-                         article_id + '; message: ' + str(e.message)]
-            return start_event, end_event, activity.activity.ACTIVITY_PERMANENT_FAILURE
+                         article_id + '; message: ' + str(e)]
+            return start_event, end_event, self.ACTIVITY_PERMANENT_FAILURE
 
         except Exception as e:
             self.logger.exception("Error when checking/copying Glencoe still images.")
             end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
                          "An error occurred when checking/copying Glencoe still images. Article " +
                          article_id + '; message: ' + str(e)]
-            return start_event, end_event, activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return start_event, end_event, self.ACTIVITY_PERMANENT_FAILURE
 
 
     def store_jpgs(self, glencoe_jpgs, article_id):
