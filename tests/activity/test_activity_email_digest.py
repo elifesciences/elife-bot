@@ -48,7 +48,7 @@ class TestEmailDigest(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module.email_provider, 'smtp_connect')
-    @patch('activity.activity_EmailDigest.storage_context')
+    @patch('activity.activity_EmailDigest.digest_provider.storage_context')
     @data(
         {
             "comment": 'digest docx file example',

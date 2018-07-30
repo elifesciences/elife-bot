@@ -6,7 +6,6 @@ import boto.swf
 from digestparser import build, output
 from docx.opc.exceptions import PackageNotFoundError
 import provider.digest_provider as digest_provider
-from provider.storage_provider import storage_context
 import provider.email_provider as email_provider
 from .activity import Activity
 
@@ -56,7 +55,8 @@ class activity_EmailDigest(Activity):
         real_filename, bucket_name, bucket_folder = digest_provider.parse_data(data)
 
         # Download from S3
-        self.input_file = self.download_digest_from_s3(real_filename, bucket_name, bucket_folder)
+        self.input_file = digest_provider.download_digest_from_s3(
+            self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
 
         # Parse input and build digest
         self.build_status, self.digest = self.build_digest(self.input_file)
@@ -82,20 +82,6 @@ class activity_EmailDigest(Activity):
             return True
 
         return self.ACTIVITY_PERMANENT_FAILURE
-
-    def download_digest_from_s3(self, filename, bucket_name, bucket_folder):
-        "Connect to the S3 bucket and download the input"
-        if not filename or not bucket_name or bucket_folder is None:
-            return None
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-        orig_resource = storage_provider + bucket_name + "/" + bucket_folder
-        storage_resource_origin = orig_resource + '/' + filename
-        dirname = self.input_dir
-        filename_plus_path = dirname + os.sep + filename
-        with open(filename_plus_path, 'wb') as open_file:
-            storage.get_resource_to_file(storage_resource_origin, open_file)
-        return filename_plus_path
 
     def build_digest(self, input_file):
         "Parse input and build a Digest object"
@@ -194,6 +180,7 @@ def approve_sending(digest_content):
         error_message += '\nDigest DOI is missing'
 
     return approve_status, error_message
+
 
 def output_file_name(digest_content):
     "from the digest content return the file name for the DOCX output"
