@@ -75,15 +75,14 @@ class activity_EmailDigest(Activity):
             self.activity_status = True
 
         # Approve files for emailing
-        # todo!!!
-        self.approve_status = True
+        self.approve_status, error_message = approve_sending(self.digest)
 
-        if self.approve_status is True:
-            # Email files
-            if self.generate_status is True:
-                self.email_status = self.email_digest(self.digest, output_file)
-            else:
-                self.email_status = self.email_error_report(real_filename)
+        if self.approve_status is True and self.generate_status is True:
+            # Email file
+            self.email_status = self.email_digest(self.digest, output_file)
+        else:
+            # Send error email
+            self.email_status = self.email_error_report(real_filename, error_message)
 
         # return a value based on the activity_status
         if self.activity_status is True:
@@ -154,10 +153,10 @@ class activity_EmailDigest(Activity):
                 success = False
         return success
 
-    def email_error_report(self, filename):
+    def email_error_report(self, filename, error_message=None):
         "send an email on error"
         current_time = time.gmtime()
-        body = error_email_body(current_time)
+        body = error_email_body(current_time, error_message)
         subject = error_email_subject(filename)
         sender_email = self.settings.digest_sender_email
 
@@ -185,6 +184,23 @@ class activity_EmailDigest(Activity):
             except OSError:
                 pass
 
+
+def approve_sending(digest_content):
+    "validate the data for whether it is suitable to email"
+    approve_status = True
+    error_message = ''
+
+    if not digest_content:
+        approve_status = False
+        error_message += '\nDigest was empty'
+    if digest_content and not digest_content.author:
+        approve_status = False
+        error_message += '\nDigest author is missing'
+    if digest_content and not digest_content.doi:
+        approve_status = False
+        error_message += '\nDigest DOI is missing'
+
+    return approve_status, error_message
 
 def output_file_name(digest_content):
     "from the digest content return the file name for the DOCX output"
@@ -224,12 +240,14 @@ def error_email_subject(filename):
     return u'Error processing digest file: {filename}'.format(filename=filename)
 
 
-def error_email_body(current_time):
+def error_email_body(current_time, error_message=None):
     "body of an error email"
     body = ""
+    if error_message:
+        body += str(error_message)
     date_format = '%Y-%m-%dT%H:%M:%S.000Z'
     datetime_string = time.strftime(date_format, current_time)
-    body += "As at " + datetime_string + "\n"
+    body += "\nAs at " + datetime_string + "\n"
     body += "\n"
     body += "\n\nSincerely\n\neLife bot"
     return body
