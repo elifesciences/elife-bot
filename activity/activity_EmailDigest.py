@@ -5,17 +5,18 @@ import traceback
 import boto.swf
 from digestparser import build, output
 from docx.opc.exceptions import PackageNotFoundError
-import activity
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.storage_provider import storage_context
 import provider.email_provider as email_provider
 import provider.utils as utils
+from .activity import Activity
 
 
-class activity_EmailDigest(activity.activity):
+class activity_EmailDigest(Activity):
     "EmailDigest activity"
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_EmailDigest, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "EmailDigest"
         self.version = "1"
@@ -74,21 +75,20 @@ class activity_EmailDigest(activity.activity):
             self.activity_status = True
 
         # Approve files for emailing
-        # todo!!!
-        self.approve_status = True
+        self.approve_status, error_message = approve_sending(self.digest)
 
-        if self.approve_status is True:
-            # Email files
-            if self.generate_status is True:
-                self.email_status = self.email_digest(self.digest, output_file)
-            else:
-                self.email_status = self.email_error_report(filename)
+        if self.approve_status is True and self.generate_status is True:
+            # Email file
+            self.email_status = self.email_digest(self.digest, output_file)
+        else:
+            # Send error email
+            self.email_status = self.email_error_report(real_filename, error_message)
 
         # return a value based on the activity_status
         if self.activity_status is True:
             return True
 
-        return activity.activity.ACTIVITY_PERMANENT_FAILURE
+        return self.ACTIVITY_PERMANENT_FAILURE
 
     def download_digest_from_s3(self, filename, bucket_name, bucket_folder):
         "Connect to the S3 bucket and download the input"
@@ -153,10 +153,10 @@ class activity_EmailDigest(activity.activity):
                 success = False
         return success
 
-    def email_error_report(self, filename):
+    def email_error_report(self, filename, error_message=None):
         "send an email on error"
         current_time = time.gmtime()
-        body = error_email_body(current_time)
+        body = error_email_body(current_time, error_message)
         subject = error_email_subject(filename)
         sender_email = self.settings.digest_sender_email
 
@@ -185,16 +185,29 @@ class activity_EmailDigest(activity.activity):
                 pass
 
 
+def approve_sending(digest_content):
+    "validate the data for whether it is suitable to email"
+    approve_status = True
+    error_message = ''
+
+    if not digest_content:
+        approve_status = False
+        error_message += '\nDigest was empty'
+    if digest_content and not digest_content.author:
+        approve_status = False
+        error_message += '\nDigest author is missing'
+    if digest_content and not digest_content.doi:
+        approve_status = False
+        error_message += '\nDigest DOI is missing'
+
+    return approve_status, error_message
+
 def output_file_name(digest_content):
     "from the digest content return the file name for the DOCX output"
     if not digest_content:
         return
-    try:
-        doi = getattr(digest_content, 'doi')
-        msid = doi.split(".")[-1]
-    except AttributeError:
-        msid = None
-    return '{author}_{msid:0>5}.docx'.format(author=digest_content.author, msid=msid)
+    # use the digestparser library to generate the output docx file name
+    return output.docx_file_name(digest_content)
 
 
 def success_email_subject(digest_content):
@@ -206,7 +219,7 @@ def success_email_subject(digest_content):
         msid = doi.split(".")[-1]
     except AttributeError:
         msid = None
-    return 'Digest: {author}_{msid}'.format(author=digest_content.author, msid=msid)
+    return u'Digest: {author}_{msid:0>5}'.format(author=digest_content.author, msid=str(msid))
 
 
 def success_email_body(current_time):
@@ -224,15 +237,17 @@ def success_email_body(current_time):
 
 def error_email_subject(filename):
     "email subject for an error email"
-    return 'Error processing digest file: {filename}'.format(filename=filename)
+    return u'Error processing digest file: {filename}'.format(filename=filename)
 
 
-def error_email_body(current_time):
+def error_email_body(current_time, error_message=None):
     "body of an error email"
     body = ""
+    if error_message:
+        body += str(error_message)
     date_format = '%Y-%m-%dT%H:%M:%S.000Z'
     datetime_string = time.strftime(date_format, current_time)
-    body += "As at " + datetime_string + "\n"
+    body += "\nAs at " + datetime_string + "\n"
     body += "\n"
     body += "\n\nSincerely\n\neLife bot"
     return body

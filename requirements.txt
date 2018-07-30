@@ -1,6 +1,6 @@
 boto==2.48.0
 Fom==0.9.10
-GitPython==0.3.2.1
+GitPython==2.1.11
 Jinja2==2.7.3
 PyPDF2==1.23
 arrow==0.4.4
@@ -17,7 +17,7 @@ git+https://github.com/elifesciences/ejp-csv-parser.git@9fdfa6a37c00b6134f8a2a46
 git+https://github.com/elifesciences/jats-generator.git@ea0d4d90a28198eb2953cc982da85392fbfee360#egg=jatsgenerator
 git+https://github.com/elifesciences/package-poa.git@2649777a020661e507de4087d447f50ca8c2fe57#egg=packagepoa
 PyYAML==3.11
-Wand==0.4.4
+Wand==0.4.2
 paramiko==2.4.1
 mock==1.3.0
 redis==2.10.5
@@ -31,8 +31,9 @@ pyOpenSSL==16.2.0
 newrelic==2.72.0.52
 pylint==1.6.4
 pyGithub==1.27.1
+six==1.10.0
 pyFunctional==1.0.0
 func_timeout==4.3.0
 python-docx==0.8.6
-git+https://github.com/elifesciences/digest-parser.git@55c0e21abccb65fe361f78d9edc28ffb3c8ec708#egg=digestparser
+git+https://github.com/elifesciences/digest-parser.git@1915547a103331ca5f1de127dfe4a6b29f774263#egg=digestparser
 psutil==5.4.6

@@ -119,7 +119,7 @@ class TestDepositCrossref(unittest.TestCase):
             # Open the first crossref XML and check some of its contents
             crossref_xml_filename_path = os.path.join(self.tmp_dir(), os.listdir(self.tmp_dir())[0])
             with open(crossref_xml_filename_path, 'rb') as fp:
-                crossref_xml = fp.read()
+                crossref_xml = fp.read().decode('utf8')
                 for expected in test_data.get("expected_crossref_xml_contains"):
                     self.assertTrue(
                         expected in crossref_xml, '{expected} not found in crossref_xml {path}'.format(
