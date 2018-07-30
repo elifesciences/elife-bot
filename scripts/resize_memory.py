@@ -1,3 +1,4 @@
+# useful for testing Wand upgrades
 from provider import imageresize, memory
 from collections import namedtuple
 
