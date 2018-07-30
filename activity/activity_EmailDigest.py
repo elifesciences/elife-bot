@@ -5,10 +5,9 @@ import traceback
 import boto.swf
 from digestparser import build, output
 from docx.opc.exceptions import PackageNotFoundError
-from S3utility.s3_notification_info import S3NotificationInfo
+import provider.digest_provider as digest_provider
 from provider.storage_provider import storage_context
 import provider.email_provider as email_provider
-import provider.utils as utils
 from .activity import Activity
 
 
@@ -53,14 +52,8 @@ class activity_EmailDigest(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
-        info = S3NotificationInfo.from_dict(data)
-        filename = info.file_name[info.file_name.rfind('/')+1:]
-        bucket_name = info.bucket_name
-        bucket_folder = None
-        if filename:
-            bucket_folder = info.file_name.split(filename)[0]
-        # replace + with spaces if present into a real_filename
-        real_filename = utils.unquote_plus(filename)
+        # parse the data with the digest_provider
+        real_filename, bucket_name, bucket_folder = digest_provider.parse_data(data)
 
         # Download from S3
         self.input_file = self.download_digest_from_s3(real_filename, bucket_name, bucket_folder)
