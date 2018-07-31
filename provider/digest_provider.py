@@ -51,3 +51,11 @@ def download_digest_from_s3(settings, filename, bucket_name, bucket_folder, to_d
         resource_origin=resource_origin,
         to_dir=to_dir,
         )
+
+def has_image(digest_content):
+    "check if the Digest object has an image file"
+    if not digest_content.image:
+        return False
+    if not digest_content.image.file:
+        return False
+    return True
