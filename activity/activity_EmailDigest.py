@@ -4,6 +4,7 @@ import time
 import traceback
 import boto.swf
 from digestparser import build, output
+import digestparser.conf as digest_conf
 from docx.opc.exceptions import PackageNotFoundError
 import provider.digest_provider as digest_provider
 import provider.email_provider as email_provider
@@ -44,6 +45,9 @@ class activity_EmailDigest(Activity):
         self.approve_status = None
         self.email_status = None
 
+        # Load the config
+        self.digest_config = self.elifedigest_config(self.settings.digest_config_section)
+
     def do_activity(self, data=None):
         """
         Activity, do the work
@@ -83,6 +87,12 @@ class activity_EmailDigest(Activity):
 
         return self.ACTIVITY_PERMANENT_FAILURE
 
+    def elifedigest_config(self, config_section):
+        "parse the config values from the digest config"
+        return digest_conf.parse_raw_config(digest_conf.raw_config(
+            config_section,
+            self.settings.digest_config_file))
+
     def build_digest(self, input_file):
         "Parse input and build a Digest object"
         if not input_file:
@@ -101,7 +111,7 @@ class activity_EmailDigest(Activity):
         "From the parsed digest content generate the output"
         if not digest_content:
             return False, None
-        file_name = output_file_name(digest_content)
+        file_name = output_file_name(digest_content, self.digest_config)
         output_file = output.digest_docx(digest_content, file_name, self.output_dir)
         return True, output_file
 
@@ -182,12 +192,13 @@ def approve_sending(digest_content):
     return approve_status, error_message
 
 
-def output_file_name(digest_content):
+def output_file_name(digest_content, digest_config=None):
+
     "from the digest content return the file name for the DOCX output"
     if not digest_content:
         return
     # use the digestparser library to generate the output docx file name
-    return output.docx_file_name(digest_content)
+    return output.docx_file_name(digest_content, digest_config)
 
 
 def success_email_subject(digest_content):
