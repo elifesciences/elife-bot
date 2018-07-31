@@ -121,7 +121,9 @@ class TestEmailDigest(unittest.TestCase):
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
+                         'failed in {comment}, got {result}'.format(
+                            comment=test_data.get("comment"),
+                            result=result))
         self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.build_status, test_data.get("expected_build_status"),
