@@ -5,7 +5,6 @@ import glob
 import unittest
 from mock import patch
 from ddt import ddt, data
-import provider.digest_provider as digest_provider
 from digestparser.objects import Digest
 import activity.activity_EmailDigest as activity_module
 from activity.activity_EmailDigest import activity_EmailDigest as activity_object
@@ -16,10 +15,9 @@ from tests.classes_mock import FakeSMTPServer
 from tests.activity.classes_mock import FakeStorageContext
 
 
-def input_data(file_name_to_change=None):
+def input_data(file_name_to_change=''):
     activity_data = test_case_data.ingest_digest_data
-    if file_name_to_change is not None:
-        activity_data["file_name"] = file_name_to_change
+    activity_data["file_name"] = file_name_to_change
     return activity_data
 
 
@@ -53,7 +51,7 @@ class TestEmailDigest(unittest.TestCase):
     @data(
         {
             "comment": 'digest docx file example',
-            "filename": None,
+            "filename": 'DIGEST+99999.docx',
             "expected_result": True,
             "expected_activity_status": True,
             "expected_build_status": True,
