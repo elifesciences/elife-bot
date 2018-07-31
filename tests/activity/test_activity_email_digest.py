@@ -122,9 +122,10 @@ class TestEmailDigest(unittest.TestCase):
         filename_used = input_data(test_data.get("filename")).get("file_name")
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
-                         'failed in {comment}, got {result}, filename {filename}, digest {digest}'.format(
+                         'failed in {comment}, got {result}, filename {filename}, input_file {input_file}, digest {digest}'.format(
                             comment=test_data.get("comment"),
                             result=result,
+                            input_file=self.activity.input_file,
                             filename=filename_used,
                             digest=self.activity.digest))
         self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"),
