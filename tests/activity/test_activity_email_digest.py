@@ -119,11 +119,14 @@ class TestEmailDigest(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
+        filename_used = input_data(test_data.get("filename")).get("file_name")
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
-                         'failed in {comment}, got {result}'.format(
+                         'failed in {comment}, got {result}, filename {filename}, digest {digest}'.format(
                             comment=test_data.get("comment"),
-                            result=result))
+                            result=result,
+                            filename=filename_used,
+                            digest=self.activity.digest))
         self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.build_status, test_data.get("expected_build_status"),
