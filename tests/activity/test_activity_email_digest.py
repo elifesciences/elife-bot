@@ -221,6 +221,17 @@ class TestEmailDigestFileName(unittest.TestCase):
         file_name = activity_module.output_file_name(digest_content)
         self.assertEqual(file_name, expected)
 
+    def test_output_file_name_using_cfg_file(self):
+        "docx output file name with good input"
+        # instantiate an activity object to get its digest_config
+        fake_logger = FakeLogger()
+        activity = activity_object(settings_mock, fake_logger, None, None, None)
+        # continue
+        digest_content = create_digest('Anonymous', '10.7554/eLife.99999')
+        expected = 'Anonymous_99999.docx'
+        file_name = activity_module.output_file_name(digest_content, activity.digest_config)
+        self.assertEqual(file_name, expected)
+
     def test_output_file_name_unicode(self):
         "docx output file name with unicode author name"
         digest_content = create_digest(u'Nö', '10.7554/eLife.99999')

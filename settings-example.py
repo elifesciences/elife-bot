@@ -108,6 +108,8 @@ class exp():
     ses_pmc_revision_recipient_email = "sender@example.com"
 
     # Digest email settings
+    digest_config_file = 'digest.cfg'
+    digest_config_section = 'elife'
     digest_sender_email = "sender@example.org"
     digest_recipient_email = ["e@example.org", "life@example.org"]
     digest_error_recipient_email = "error@example.org"
@@ -305,6 +307,8 @@ class dev():
     ses_pmc_revision_recipient_email = "sender@example.com"
 
     # Digest email settings
+    digest_config_file = 'digest.cfg'
+    digest_config_section = 'elife'
     digest_sender_email = "sender@example.org"
     digest_recipient_email = ["e@example.org", "life@example.org"]
     digest_error_recipient_email = "error@example.org"
@@ -502,6 +506,8 @@ class live():
     ses_pmc_revision_recipient_email = "sender@example.com"
 
     # Digest email settings
+    digest_config_file = 'digest.cfg'
+    digest_config_section = 'elife'
     digest_sender_email = "sender@example.org"
     digest_recipient_email = ["e@example.org", "life@example.org"]
     digest_error_recipient_email = "error@example.org"
