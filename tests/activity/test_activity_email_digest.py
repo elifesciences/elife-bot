@@ -5,6 +5,7 @@ import glob
 import unittest
 from mock import patch
 from ddt import ddt, data
+import provider.digest_provider as digest_provider
 from digestparser.objects import Digest
 import activity.activity_EmailDigest as activity_module
 from activity.activity_EmailDigest import activity_EmailDigest as activity_object
@@ -48,7 +49,7 @@ class TestEmailDigest(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module.email_provider, 'smtp_connect')
-    @patch('activity.activity_EmailDigest.digest_provider.storage_context')
+    @patch.object(digest_provider, 'storage_context')
     @data(
         {
             "comment": 'digest docx file example',
