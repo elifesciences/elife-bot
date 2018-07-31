@@ -1,5 +1,8 @@
 "functions shared by digest related activities"
 import os
+import traceback
+from docx.opc.exceptions import PackageNotFoundError
+from digestparser import build
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.storage_provider import storage_context
 import provider.utils as utils
@@ -16,6 +19,21 @@ def parse_data(data):
     # replace + with spaces if present into a real_filename
     real_filename = utils.unquote_plus(filename)
     return real_filename, bucket_name, bucket_folder
+
+
+def build_digest(input_file, temp_dir, logger=None):
+    "Parse input and build a Digest object"
+    if not input_file:
+        return False, None
+    try:
+        digest = build.build_digest(input_file, temp_dir)
+    except PackageNotFoundError:
+        # bad docx file
+        if logger:
+            logger.exception('exception in EmailDigest build_digest: %s' %
+                             traceback.format_exc())
+        return False, None
+    return True, digest
 
 
 def digest_resource_origin(storage_provider, filename, bucket_name, bucket_folder):
@@ -51,6 +69,7 @@ def download_digest_from_s3(settings, filename, bucket_name, bucket_folder, to_d
         resource_origin=resource_origin,
         to_dir=to_dir,
         )
+
 
 def has_image(digest_content):
     "check if the Digest object has an image file"

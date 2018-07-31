@@ -1,11 +1,9 @@
 import os
 import json
 import time
-import traceback
 import boto.swf
-from digestparser import build, output
+from digestparser import output
 import digestparser.conf as digest_conf
-from docx.opc.exceptions import PackageNotFoundError
 import provider.digest_provider as digest_provider
 import provider.email_provider as email_provider
 from .activity import Activity
@@ -63,7 +61,8 @@ class activity_EmailDigest(Activity):
             self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
 
         # Parse input and build digest
-        self.build_status, self.digest = self.build_digest(self.input_file)
+        self.build_status, self.digest = digest_provider.build_digest(
+            self.input_file, self.temp_dir, self.logger)
 
         # Generate output
         self.generate_status, output_file = self.generate_output(self.digest)
@@ -92,20 +91,6 @@ class activity_EmailDigest(Activity):
         return digest_conf.parse_raw_config(digest_conf.raw_config(
             config_section,
             self.settings.digest_config_file))
-
-    def build_digest(self, input_file):
-        "Parse input and build a Digest object"
-        if not input_file:
-            return False, None
-        try:
-            digest = build.build_digest(input_file, self.temp_dir)
-        except PackageNotFoundError:
-            # bad docx file
-            if self.logger:
-                self.logger.exception('exception in EmailDigest build_digest: %s' %
-                                      traceback.format_exc())
-            return False, None
-        return True, digest
 
     def generate_output(self, digest_content):
         "From the parsed digest content generate the output"
