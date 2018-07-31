@@ -4,6 +4,7 @@ import os
 import unittest
 from mock import patch
 from ddt import ddt, data
+import provider.digest_provider as digest_provider
 from activity.activity_DepositDigestIngestAssets import (
     activity_DepositDigestIngestAssets as activity_object)
 import tests.activity.settings_mock as settings_mock
@@ -30,7 +31,7 @@ class TestDepositDigestIngestAssets(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
-    @patch('activity.activity_EmailDigest.digest_provider.storage_context')
+    @patch.object(digest_provider, 'storage_context')
     @data(
         {
             "comment": 'digest docx file example',
