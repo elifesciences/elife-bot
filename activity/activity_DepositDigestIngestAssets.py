@@ -1,10 +1,8 @@
 import os
 import json
-import traceback
-from digestparser import build
-from docx.opc.exceptions import PackageNotFoundError
 from provider.storage_provider import storage_context
 import provider.digest_provider as digest_provider
+import provider.utils as utils
 from .activity import Activity
 
 """
@@ -29,6 +27,7 @@ class activity_DepositDigestIngestAssets(Activity):
         # Track some values
         self.input_file = None
         self.digest = None
+        self.dest_resource = None
 
         # Local directory settings
         self.temp_dir = os.path.join(self.get_tmp_dir(), "tmp_dir")
@@ -64,14 +63,36 @@ class activity_DepositDigestIngestAssets(Activity):
                              real_filename)
             return self.ACTIVITY_SUCCESS
 
+        # bucket name
+        cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
+
         # deposit the image file to S3
-        self.deposit_digest_image(self.digest)
+        self.deposit_digest_image(self.digest, cdn_bucket_name)
 
         return self.ACTIVITY_SUCCESS
 
-    def deposit_digest_image(self, digest):
+    def image_dest_resource(self, digest, cdn_bucket_name):
+        "concatenate the S3 bucket object path we copy the file to"
+        folder_name = 'digests'
+        msid = utils.msid_from_doi(digest.doi)
+        article_id = utils.pad_msid(msid)
+        # file name from the digest image file
+        file_name = digest.image.file.split(os.sep)[-1]
+        storage_provider = self.settings.storage_provider + "://"
+        dest_resource = (storage_provider + cdn_bucket_name + "/" + folder_name +
+                         "/" + article_id + "/" + file_name)
+        return dest_resource
+
+    def deposit_digest_image(self, digest, cdn_bucket_name):
         "deposit the image file from the digest to the bucket"
-        # todo!!!
+        self.dest_resource = self.image_dest_resource(digest, cdn_bucket_name)
+        storage = storage_context(self.settings)
+        self.logger.info("Depositing digest image to S3 key %s",
+                         self.dest_resource)
+        # set the bucket object resource from the local file
+        storage.set_resource_from_filename(self.dest_resource, digest.image.file)
+        self.logger.info("Deposited digest image %s to S3",
+                         digest.image.file)
         return True
 
     def create_activity_directories(self):
