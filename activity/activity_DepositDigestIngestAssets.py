@@ -50,7 +50,8 @@ class activity_DepositDigestIngestAssets(Activity):
         self.input_file = digest_provider.download_digest_from_s3(
             self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
         # Parse input and build digest
-        self.build_status, self.digest = self.build_digest(self.input_file)
+        self.build_status, self.digest = digest_provider.build_digest(
+            self.input_file, self.temp_dir, self.logger)
 
         if not self.build_status:
             self.logger.info("Failed to build the Digest in Deposit Digest Ingest Assets for %s",
@@ -67,20 +68,6 @@ class activity_DepositDigestIngestAssets(Activity):
         self.deposit_digest_image(self.digest)
 
         return self.ACTIVITY_SUCCESS
-
-    def build_digest(self, input_file):
-        "Parse input and build a Digest object"
-        if not input_file:
-            return False, None
-        try:
-            digest = build.build_digest(input_file, self.temp_dir)
-        except PackageNotFoundError:
-            # bad docx file
-            if self.logger:
-                self.logger.exception('exception in DepositDigestIngestAssets build_digest: %s' %
-                                      traceback.format_exc())
-            return False, None
-        return True, digest
 
     def deposit_digest_image(self, digest):
         "deposit the image file from the digest to the bucket"
