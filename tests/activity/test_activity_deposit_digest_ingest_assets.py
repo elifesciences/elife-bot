@@ -33,7 +33,8 @@ class TestDepositDigestIngestAssets(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
         # clean out the bucket destination folder
-        helpers.delete_files_in_folder(testdata.ExpandArticle_files_dest_folder, filter_out=['.gitkeep'])
+        helpers.delete_files_in_folder(testdata.ExpandArticle_files_dest_folder,
+                                       filter_out=['.gitkeep'])
 
     @patch.object(digest_provider, 'storage_context')
     @patch('activity.activity_DepositDigestIngestAssets.storage_context')
@@ -43,6 +44,8 @@ class TestDepositDigestIngestAssets(unittest.TestCase):
             "filename": None,
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
+            "expected_digest_image_file": None,
+            "expected_dest_resource": None,
             "expected_file_list": []
         },
         {
@@ -57,12 +60,20 @@ class TestDepositDigestIngestAssets(unittest.TestCase):
         {
             "comment": 'digest file does not exist example',
             "filename": '',
+            "expected_digest_doi": None,
+            "expected_digest_image_file": None,
+            "expected_dest_resource": None,
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
+            "expected_file_list": []
         },
         {
             "comment": 'bad digest docx file example',
             "filename": 'DIGEST+99998.docx',
+            "expected_digest_doi": None,
+            "expected_digest_image_file": None,
+            "expected_dest_resource": None,
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
+            "expected_file_list": []
         },
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_provider_storage_context):
@@ -71,31 +82,30 @@ class TestDepositDigestIngestAssets(unittest.TestCase):
         fake_provider_storage_context.return_value = FakeStorageContext()
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
+
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-
         # check digest values
-        if self.activity.digest and test_data.get("expected_digest_doi"):
-            self.assertEqual(self.activity.digest.doi, test_data.get("expected_digest_doi"),
-                             'failed in {comment}'.format(comment=test_data.get("comment")))
+        digest_doi = None
+        if self.activity.digest:
+            digest_doi = self.activity.digest.doi
+        self.assertEqual(digest_doi, test_data.get("expected_digest_doi"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
         # check digest image values
-        if (
-                self.activity.digest and self.activity.digest.image and
-                test_data.get("expected_digest_image_file")):
-            file_name = self.activity.digest.image.file.split(os.sep)[-1]
-            self.assertEqual(file_name, test_data.get("expected_digest_image_file"),
-                             'failed in {comment}'.format(comment=test_data.get("comment")))
-
+        digest_image_file = None
+        if self.activity.digest and self.activity.digest.image and self.activity.digest.image.file:
+            digest_image_file = self.activity.digest.image.file.split(os.sep)[-1]
+        self.assertEqual(digest_image_file, test_data.get("expected_digest_image_file"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
         # Check the S3 object destination resource
-        if 'expected_dest_resource' in test_data:
-            self.assertEqual(self.activity.dest_resource, test_data.get("expected_dest_resource"))
-
+        self.assertEqual(self.activity.dest_resource, test_data.get("expected_dest_resource"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
         # Check destination folder as a list
-        if 'expected_file_list' in test_data:
-            files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
-            compare_files = [file for file in files if file != '.gitkeep']
-            self.assertEqual(compare_files, test_data.get("expected_file_list"))
+        files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
+        compare_files = [file_name for file_name in files if file_name != '.gitkeep']
+        self.assertEqual(compare_files, test_data.get("expected_file_list"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
 
 
 if __name__ == '__main__':
