@@ -41,6 +41,7 @@ class exp():
     production_bucket = 'elife-production-final'
     expanded_bucket = 'elife-publishing-expanded'
     ppp_cdn_bucket = 'elife-publishing-cdn'
+    digest_cdn_bucket = 'elife-publishing-cdn/digests'
     archive_bucket = 'elife-publishing-archive'
     xml_bucket = 'elife-publishing-xml'
 
