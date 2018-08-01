@@ -55,7 +55,18 @@ class workflow_IngestDigest(workflow.workflow):
                         "schedule_to_close_timeout": 300,
                         "schedule_to_start_timeout": 300,
                         "start_to_close_timeout": 300
-                    }
+                    },
+                    {
+                        "activity_type": "DepositDigestIngestAssets",
+                        "activity_id": "DepositDigestIngestAssets",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 300,
+                        "schedule_to_close_timeout": 300,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 300
+                    },
                 ],
 
             "finish":
