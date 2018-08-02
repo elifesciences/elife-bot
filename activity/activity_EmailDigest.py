@@ -4,6 +4,7 @@ import time
 import boto.swf
 from digestparser import output
 import digestparser.conf as digest_conf
+from S3utility.s3_notification_info import parse_activity_data
 import provider.digest_provider as digest_provider
 import provider.email_provider as email_provider
 from .activity import Activity
@@ -54,7 +55,7 @@ class activity_EmailDigest(Activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         # parse the data with the digest_provider
-        real_filename, bucket_name, bucket_folder = digest_provider.parse_data(data)
+        real_filename, bucket_name, bucket_folder = parse_activity_data(data)
 
         # Download from S3
         self.input_file = digest_provider.download_digest_from_s3(

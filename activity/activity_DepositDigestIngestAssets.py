@@ -1,7 +1,7 @@
 import os
 import json
-from provider.storage_provider import storage_context
 from S3utility.s3_notification_info import parse_activity_data
+from provider.storage_provider import storage_context
 import provider.digest_provider as digest_provider
 import provider.utils as utils
 from .activity import Activity
