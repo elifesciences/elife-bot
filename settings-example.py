@@ -14,43 +14,41 @@
 
 class exp():
     # AWS settings
-    # aws_access_key_id = ''
-    aws_secret_access_key = ''
+    aws_access_key_id = '<your access key>'
+    aws_secret_access_key = '<your secret key>'
 
     workflow_context_path = 'workflow-context/'
 
-    # SNS settings
-    event_monitor_topic = 'arn:aws:sns:eu-west-1:123456789012:elife-event-property-topic'
-
     # SQS settings
-    # sqs_region = 'eu-west-1'
+    sqs_region = 'eu-west-1'
     S3_monitor_queue = 'xxawsxx-incoming-queue'
-    workflow_starter_queue = 'workflow-starter-queue'
+    event_monitor_topic = 'arn:aws:sns:eu-west-1:123456789012:elife-bot-event-property--exp'
+    event_monitor_queue = 'exp-event-property-incoming-queue'
+    workflow_starter_queue = 'exp-workflow-starter-queue'
     workflow_starter_queue_pool_size = 5
     workflow_starter_queue_message_count = 5
 
-    # Storage settings
+    # PPP S3 settings
     storage_provider = "s3"
-
-    # S3 settings
-    publishing_buckets_prefix = 'jr-'
+    publishing_buckets_prefix = 'exp-'
     # shouldn't need this but uploads seem to fail without. Should correspond with the s3 region
     # hostname list here http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
 
     s3_hostname = 's3-eu-west-1.amazonaws.com'
     production_bucket = 'elife-production-final'
     expanded_bucket = 'elife-publishing-expanded'
-    ppp_cdn_bucket = 'elife-publishing-cdn'
+    ppp_cdn_bucket = 'elife-published/articles'
+    digest_cdn_bucket = 'elife-published/digests'
     archive_bucket = 'elife-publishing-archive'
     xml_bucket = 'elife-publishing-xml'
 
     # lax endpoint to retrieve information about published versions of articles
-    lax_article_versions = 'http://2015-09-03.lax.elifesciences.org/api/v1/article/10.7554/eLife.{article_id}/version/'
-    verify_ssl = True # False when testing
+    lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
+    verify_ssl = True  # False when testing
 
     no_download_extensions = 'tif'
 
-    # end JR settings
+    # end PPP settings
 
     # S3 settings
     bucket = 'elife-articles'
@@ -76,7 +74,7 @@ class exp():
     smtp_port = 2525
     smtp_starttls = False
     smtp_ssl = False
-    smtp_user = None
+    smtp_username = None
     smtp_password = None
 
     # Lens bucket settings
@@ -122,6 +120,10 @@ class exp():
 
     # Templates S3 settings
     templates_bucket = 'elife-bot-dev'
+
+    # Article subjects data
+    article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
+    article_subjects_data_file = "article_subjects.csv"
 
     # Crossref generation
     elifecrossref_config_file = 'crossref.cfg'
@@ -217,6 +219,7 @@ class exp():
 
     # Session
     session_class = "RedisSession"
+    s3_session_bucket = "exp-elife-bot-sessions"
 
     # Redis
     redis_host = "127.0.0.1"
@@ -224,10 +227,17 @@ class exp():
     redis_db = 0
     redis_expire_key = 86400  # seconds
 
-    #Version control for xml
+    # Version control for xml
     github_token = "tokenhere"
     git_repo_name = "repository-name"
     git_repo_path = "/articles/"
+
+    # eLife 2.0 bot lax communication settings
+    xml_info_queue = "bot-lax-exp-inc"
+    lax_response_queue = "bot-lax-exp-out"
+    # eLife 2.0 transition settings
+    publication_authority = "journal"
+    consider_Lax_elife_2_0 = True
 
     # videos
     video_url = "https://video.url.here/"
@@ -244,12 +254,46 @@ class exp():
     fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
     fastly_api_key = 'fake_fastly_api_key'
 
+    article_path_pattern = "/articles/{id}v{version}"
+
 
 class dev():
-
     # AWS settings
     aws_access_key_id = '<your access key>'
     aws_secret_access_key = '<your secret key>'
+
+    workflow_context_path = 'workflow-context/'
+
+    # SQS settings
+    sqs_region = 'eu-west-1'
+    S3_monitor_queue = 'xxawsxx-incoming-queue'
+    event_monitor_topic = 'arn:aws:sns:eu-west-1:123456789012:elife-bot-event-property--dev'
+    event_monitor_queue = 'dev-event-property-incoming-queue'
+    workflow_starter_queue = 'dev-workflow-starter-queue'
+    workflow_starter_queue_pool_size = 5
+    workflow_starter_queue_message_count = 5
+
+    # PPP S3 settings
+    storage_provider = "s3"
+    publishing_buckets_prefix = 'dev-'
+    # shouldn't need this but uploads seem to fail without. Should correspond with the s3 region
+    # hostname list here http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+
+    s3_hostname = 's3-eu-west-1.amazonaws.com'
+    production_bucket = 'elife-production-final'
+    expanded_bucket = 'elife-publishing-expanded'
+    ppp_cdn_bucket = 'elife-published/articles'
+    digest_cdn_bucket = 'elife-published/digests'
+    archive_bucket = 'elife-publishing-archive'
+    xml_bucket = 'elife-publishing-xml'
+
+    # lax endpoint to retrieve information about published versions of articles
+    lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
+    verify_ssl = True  # False when testing
+
+    no_download_extensions = 'tif'
+
+    # end PPP settings
 
     # S3 settings
     bucket = 'elife-articles'
@@ -275,14 +319,14 @@ class dev():
     smtp_port = 2525
     smtp_starttls = False
     smtp_ssl = False
-    smtp_user = None
+    smtp_username = None
     smtp_password = None
 
     # Lens bucket settings
     lens_bucket = 'elife-lens-dev'
 
     # Lens jpg bucket
-    lens_jpg_bucket = "exp-elife-production-lens-jpg"
+    lens_jpg_bucket = "dev-elife-production-lens-jpg"
 
     # Bot S3 settings
     bot_bucket = 'elife-bot-dev'
@@ -321,6 +365,10 @@ class dev():
 
     # Templates S3 settings
     templates_bucket = 'elife-bot-dev'
+
+    # Article subjects data
+    article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
+    article_subjects_data_file = "article_subjects.csv"
 
     # Crossref generation
     elifecrossref_config_file = 'crossref.cfg'
@@ -416,6 +464,7 @@ class dev():
 
     # Session
     session_class = "RedisSession"
+    s3_session_bucket = "dev-elife-bot-sessions"
 
     # Redis
     redis_host = "127.0.0.1"
@@ -423,7 +472,7 @@ class dev():
     redis_db = 0
     redis_expire_key = 86400  # seconds
 
-    #Version control for xml
+    # Version control for xml
     github_token = "tokenhere"
     git_repo_name = "repository-name"
     git_repo_path = "/articles/"
@@ -431,7 +480,7 @@ class dev():
     # videos
     video_url = "https://video.url.here/"
 
-     # PDF cover
+    # PDF cover
     pdf_cover_generator = "http://localhost:8082/personalcover/generate/"
     pdf_cover_landing_page = "http://localhost:8082/personalcover/landing/"
 
@@ -443,12 +492,47 @@ class dev():
     fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
     fastly_api_key = 'fake_fastly_api_key'
 
+    article_path_pattern = "/articles/{id}v{version}"
 
 
 class live():
     # AWS settings
     aws_access_key_id = '<your access key>'
     aws_secret_access_key = '<your secret key>'
+
+    workflow_context_path = 'workflow-context/'
+
+    # SQS settings
+    sqs_region = 'eu-west-1'
+    S3_monitor_queue = 'incoming-queue'
+    event_monitor_topic = 'arn:aws:sns:eu-west-1:123456789012:elife-bot-event-property--prod'
+    event_monitor_queue = 'event-property-incoming-queue'
+    workflow_starter_queue = 'workflow-starter-queue'
+    workflow_starter_queue_pool_size = 5
+    workflow_starter_queue_message_count = 5
+
+    # PPP S3 settings
+    storage_provider = "s3"
+    publishing_buckets_prefix = ''
+    # shouldn't need this but uploads seem to fail without. Should correspond with the s3 region
+    # hostname list here http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+
+    s3_hostname = 's3-eu-west-1.amazonaws.com'
+    production_bucket = 'elife-production-final'
+    expanded_bucket = 'elife-publishing-expanded'
+    # since prefix is empty
+    ppp_cdn_bucket = 'prod-elife-published/articles'
+    digest_cdn_bucket = 'prod-elife-published/digests'
+    archive_bucket = 'prod-elife-publishing-archive'
+    xml_bucket = 'elife-publishing-xml'
+
+    # lax endpoint to retrieve information about published versions of articles
+    lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
+    verify_ssl = True  # False when testing
+
+    no_download_extensions = 'tif'
+
+    # end PPP settings
 
     # S3 settings
     bucket = 'elife-articles'
@@ -474,7 +558,7 @@ class live():
     smtp_port = 2525
     smtp_starttls = False
     smtp_ssl = False
-    smtp_user = None
+    smtp_username = None
     smtp_password = None
 
     # Lens bucket settings
@@ -492,13 +576,13 @@ class live():
     # POA packaging bucket
     poa_packaging_bucket = 'elife-poa-packaging'
 
-    # POA email settings
-    ses_poa_sender_email = "sender@example.com"
-    ses_poa_recipient_email = "admin@example.com"
-
     # Article subjects data
     article_subjects_data_bucket = "elife-bot/article_subjects_data"
     article_subjects_data_file = "article_subjects.csv"
+
+    # POA email settings
+    ses_poa_sender_email = "sender@example.com"
+    ses_poa_recipient_email = "admin@example.com"
 
     # PMC email settings
     ses_pmc_sender_email = "sender@example.com"
@@ -615,6 +699,7 @@ class live():
 
     # Session
     session_class = "RedisSession"
+    s3_session_bucket = "prod-elife-bot-sessions"
 
     # Redis
     redis_host = "127.0.0.1"
@@ -622,15 +707,22 @@ class live():
     redis_db = 0
     redis_expire_key = 86400  # seconds
 
-    #Version control for xml
+    # Version control for xml
     github_token = "tokenhere"
     git_repo_name = "elife-articles-xml"
     git_repo_path = "/articles/"
 
+    # eLife 2.0 bot lax communication settings
+    xml_info_queue = "bot-lax-prod-inc"
+    lax_response_queue = "bot-lax-prod-out"
+    # eLife 2.0 transition settings
+    publication_authority = "journal"
+    consider_Lax_elife_2_0 = True
+
     # videos
     video_url = "https://video.url.here/"
 
-     # PDF cover
+    # PDF cover
     pdf_cover_generator = "http://localhost:8082/personalcover/generate/"
     pdf_cover_landing_page = "http://localhost:8082/personalcover/landing/"
 
@@ -641,6 +733,8 @@ class live():
     # Fastly CDNs
     fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
     fastly_api_key = 'fake_fastly_api_key'
+
+    article_path_pattern = "/articles/{id}v{version}"
 
 
 def get_settings(ENV="dev"):

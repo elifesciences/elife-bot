@@ -105,6 +105,7 @@ def start(ENV="dev"):
     activity_names.append("ScheduleDownstream")
     activity_names.append("ModifyArticleSubjects")
     activity_names.append("EmailDigest")
+    activity_names.append("DepositDigestIngestAssets")
 
     for activity_name in activity_names:
         # Import the activity libraries

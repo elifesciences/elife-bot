@@ -1,3 +1,5 @@
+import provider.utils as utils
+
 
 class S3NotificationInfo:
     def __init__(self, event_name, event_time, bucket_name, file_name, file_etag, file_size):
@@ -27,3 +29,16 @@ class S3NotificationInfo:
             'file_etag': self.file_etag,
             'file_size': self.file_size
         }
+
+
+def parse_activity_data(data):
+    "parse activity data from an S3 notification into useful bucket and file values"
+    info = S3NotificationInfo.from_dict(data)
+    filename = info.file_name[info.file_name.rfind('/')+1:]
+    bucket_name = info.bucket_name
+    bucket_folder = None
+    if filename:
+        bucket_folder = info.file_name.split(filename)[0]
+    # replace + with spaces if present into a real_filename
+    real_filename = utils.unquote_plus(filename)
+    return real_filename, bucket_name, bucket_folder

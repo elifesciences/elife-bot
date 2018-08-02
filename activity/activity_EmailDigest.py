@@ -1,15 +1,12 @@
 import os
 import json
 import time
-import traceback
 import boto.swf
-from digestparser import build, output
+from digestparser import output
 import digestparser.conf as digest_conf
-from docx.opc.exceptions import PackageNotFoundError
-from S3utility.s3_notification_info import S3NotificationInfo
-from provider.storage_provider import storage_context
+from S3utility.s3_notification_info import parse_activity_data
+import provider.digest_provider as digest_provider
 import provider.email_provider as email_provider
-import provider.utils as utils
 from .activity import Activity
 
 
@@ -57,20 +54,16 @@ class activity_EmailDigest(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
-        info = S3NotificationInfo.from_dict(data)
-        filename = info.file_name[info.file_name.rfind('/')+1:]
-        bucket_name = info.bucket_name
-        bucket_folder = None
-        if filename:
-            bucket_folder = info.file_name.split(filename)[0]
-        # replace + with spaces if present into a real_filename
-        real_filename = utils.unquote_plus(filename)
+        # parse the data with the digest_provider
+        real_filename, bucket_name, bucket_folder = parse_activity_data(data)
 
         # Download from S3
-        self.input_file = self.download_digest_from_s3(real_filename, bucket_name, bucket_folder)
+        self.input_file = digest_provider.download_digest_from_s3(
+            self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
 
         # Parse input and build digest
-        self.build_status, self.digest = self.build_digest(self.input_file)
+        self.build_status, self.digest = digest_provider.build_digest(
+            self.input_file, self.temp_dir, self.logger)
 
         # Generate output
         self.generate_status, output_file = self.generate_output(self.digest)
@@ -99,34 +92,6 @@ class activity_EmailDigest(Activity):
         return digest_conf.parse_raw_config(digest_conf.raw_config(
             config_section,
             self.settings.digest_config_file))
-
-    def download_digest_from_s3(self, filename, bucket_name, bucket_folder):
-        "Connect to the S3 bucket and download the input"
-        if not filename or not bucket_name or bucket_folder is None:
-            return None
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-        orig_resource = storage_provider + bucket_name + "/" + bucket_folder
-        storage_resource_origin = orig_resource + '/' + filename
-        dirname = self.input_dir
-        filename_plus_path = dirname + os.sep + filename
-        with open(filename_plus_path, 'wb') as open_file:
-            storage.get_resource_to_file(storage_resource_origin, open_file)
-        return filename_plus_path
-
-    def build_digest(self, input_file):
-        "Parse input and build a Digest object"
-        if not input_file:
-            return False, None
-        try:
-            digest = build.build_digest(input_file, self.temp_dir)
-        except PackageNotFoundError:
-            # bad docx file
-            if self.logger:
-                self.logger.exception('exception in EmailDigest build_digest: %s' %
-                                      traceback.format_exc())
-            return False, None
-        return True, digest
 
     def generate_output(self, digest_content):
         "From the parsed digest content generate the output"
@@ -214,6 +179,7 @@ def approve_sending(digest_content):
 
 
 def output_file_name(digest_content, digest_config=None):
+
     "from the digest content return the file name for the DOCX output"
     if not digest_content:
         return

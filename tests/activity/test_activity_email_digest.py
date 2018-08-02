@@ -15,10 +15,9 @@ from tests.classes_mock import FakeSMTPServer
 from tests.activity.classes_mock import FakeStorageContext
 
 
-def input_data(file_name_to_change=None):
+def input_data(file_name_to_change=''):
     activity_data = test_case_data.ingest_digest_data
-    if file_name_to_change is not None:
-        activity_data["file_name"] = file_name_to_change
+    activity_data["file_name"] = file_name_to_change
     return activity_data
 
 
@@ -48,11 +47,11 @@ class TestEmailDigest(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module.email_provider, 'smtp_connect')
-    @patch('activity.activity_EmailDigest.storage_context')
+    @patch.object(activity_module.digest_provider, 'storage_context')
     @data(
         {
             "comment": 'digest docx file example',
-            "filename": None,
+            "filename": 'DIGEST+99999.docx',
             "expected_result": True,
             "expected_activity_status": True,
             "expected_build_status": True,
@@ -118,9 +117,15 @@ class TestEmailDigest(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
+        filename_used = input_data(test_data.get("filename")).get("file_name")
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
+                         'failed in {comment}, got {result}, filename {filename}, input_file {input_file}, digest {digest}'.format(
+                            comment=test_data.get("comment"),
+                            result=result,
+                            input_file=self.activity.input_file,
+                            filename=filename_used,
+                            digest=self.activity.digest))
         self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.build_status, test_data.get("expected_build_status"),

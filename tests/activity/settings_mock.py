@@ -33,6 +33,7 @@ ses_poa_recipient_email = ""
 ses_admin_email = ""
 templates_bucket = ""
 ppp_cdn_bucket = 'ppd_cdn_bucket'
+digest_cdn_bucket = 'ppd_cdn_bucket/digests'
 
 lax_article_versions = 'https://test/eLife.{article_id}/version/'
 verify_ssl = False
