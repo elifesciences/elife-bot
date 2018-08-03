@@ -40,7 +40,6 @@ class exp():
     ppp_cdn_bucket = 'elife-published/articles'
     digest_cdn_bucket = 'elife-published/digests'
     archive_bucket = 'elife-publishing-archive'
-    xml_bucket = 'elife-publishing-xml'
 
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
@@ -285,7 +284,6 @@ class dev():
     ppp_cdn_bucket = 'elife-published/articles'
     digest_cdn_bucket = 'elife-published/digests'
     archive_bucket = 'elife-publishing-archive'
-    xml_bucket = 'elife-publishing-xml'
 
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
@@ -524,7 +522,6 @@ class live():
     ppp_cdn_bucket = 'prod-elife-published/articles'
     digest_cdn_bucket = 'prod-elife-published/digests'
     archive_bucket = 'prod-elife-publishing-archive'
-    xml_bucket = 'elife-publishing-xml'
 
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
