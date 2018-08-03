@@ -12,9 +12,7 @@ from optparse import OptionParser
 
 import activity
 from activity.activity import activity as activitybase
-# Add parent directory for imports, so activity classes can use elife-poa-xml-generation
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0, parentdir)
+
 
 """
 Amazon SWF worker
