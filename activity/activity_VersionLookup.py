@@ -5,8 +5,8 @@ from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 import provider.lax_provider
 
-lookup_functions = { "article_next_version": provider.lax_provider.article_next_version,
-                     "article_highest_version": provider.lax_provider.article_highest_version }
+lookup_functions = {"article_next_version": provider.lax_provider.article_next_version,
+                    "article_highest_version": provider.lax_provider.article_highest_version}
 
 class activity_VersionLookup(activity.activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
@@ -36,27 +36,33 @@ class activity_VersionLookup(activity.activity):
             article_structure = ArticleInfo(filename)
 
             if article_structure.article_id is None:
-                self.logger.error("Name '%s' did not match expected pattern for article id" % filename)
-                raise RuntimeError("article_structure.article_id is None. File pattern problem.")
+                self.logger.error(
+                    "Name '%s' did not match expected pattern for article id" % filename)
+                raise RuntimeError(
+                    "article_structure.article_id is None. File pattern problem.")
 
-            version = self.get_version(self.settings, article_structure, data['version_lookup_function'])
+            version = self.get_version(self.settings, article_structure,
+                                       data['version_lookup_function'])
             session.store_value('version', version)
             article_id = article_structure.article_id
             session.store_value('article_id', article_id)
 
-            self.emit_monitor_event(self.settings, article_id, version, data['run'],
-                                    self.pretty_name, "start",
-                                    " ".join(("Version Lookup for article", article_id, "version:", version)))
+            self.emit_monitor_event(
+                self.settings, article_id, version, data['run'],
+                self.pretty_name, "start",
+                " ".join(("Version Lookup for article", article_id, "version:", version)))
 
             self.set_monitor_property(self.settings, article_id, "article-id", article_id, "text")
-            self.set_monitor_property(self.settings, article_id, "publication-status", "publication in progress",
-                                      "text",
-                                      version=version)
+            self.set_monitor_property(
+                self.settings, article_id, "publication-status", "publication in progress",
+                "text",
+                version=version)
 
-            self.emit_monitor_event(self.settings, article_structure.article_id, version, data['run'],
-                                    self.pretty_name, "end",
-                                    " ".join(("Finished Version Lookup for article", article_structure.article_id,
-                                              "version:", version)))
+            self.emit_monitor_event(
+                self.settings, article_structure.article_id, version, data['run'],
+                self.pretty_name, "end",
+                " ".join(("Finished Version Lookup for article", article_structure.article_id,
+                          "version:", version)))
             return activity.activity.ACTIVITY_SUCCESS
 
         except Exception as e:
@@ -67,7 +73,8 @@ class activity_VersionLookup(activity.activity):
         try:
             version = article_structure.get_version_from_zip_filename()
             if version is None:
-                return str(self.execute_function(lookup_functions[lookup_function], article_structure.article_id, settings))
+                return str(self.execute_function(lookup_functions[lookup_function],
+                                                 article_structure.article_id, settings))
             return version
         except Exception:
             self.logger.exception("Exception on function `get_version`")
