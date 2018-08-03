@@ -31,7 +31,7 @@ class TestVersionLookup(unittest.TestCase):
     @patch('activity.activity_VersionLookup.get_session')
     @patch('activity.activity_VersionLookup.execute_function')
     def test_get_version_silent_corrections(self, fake_lookup_functions, fake_session):
-        run_type = "silent_correction"
+        run_type = "silent-correction"
         named_session = FakeSession({})
         fake_session.return_value = named_session
         fake_lookup_functions.return_value = "1"
