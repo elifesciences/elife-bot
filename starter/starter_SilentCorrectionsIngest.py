@@ -30,6 +30,7 @@ class starter_SilentCorrectionsIngest():
         input = S3NotificationInfo.to_dict(info)
         input['run'] = run
         input['version_lookup_function'] = "article_highest_version"
+        input['run_type'] = "silent-correction"
         input['force'] = True
 
         workflow_id, \

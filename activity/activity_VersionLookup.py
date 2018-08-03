@@ -1,16 +1,19 @@
 
-import activity
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 import provider.lax_provider
+from .activity import Activity
 
-lookup_functions = { "article_next_version": provider.lax_provider.article_next_version,
-                     "article_highest_version": provider.lax_provider.article_highest_version }
 
-class activity_VersionLookup(activity.activity):
+lookup_functions = {"article_next_version": provider.lax_provider.article_next_version,
+                    "article_highest_version": provider.lax_provider.article_highest_version}
+
+
+class activity_VersionLookup(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_VersionLookup, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "VersionLookup"
         self.pretty_name = "Version Lookup"
@@ -31,46 +34,56 @@ class activity_VersionLookup(activity.activity):
             run = data['run']
             session = get_session(self.settings, data, run)
             session.store_value('filename_last_element', filename)
+            session.store_value('run_type', data.get('run_type'))
 
             article_structure = ArticleInfo(filename)
 
             if article_structure.article_id is None:
-                self.logger.error("Name '%s' did not match expected pattern for article id" % filename)
-                raise RuntimeError("article_structure.article_id is None. File pattern problem.")
+                self.logger.error(
+                    "Name '%s' did not match expected pattern for article id" % filename)
+                raise RuntimeError(
+                    "article_structure.article_id is None. File pattern problem.")
 
-            version = self.get_version(self.settings, article_structure, data['version_lookup_function'])
+            version = self.get_version(self.settings, article_structure,
+                                       data['version_lookup_function'])
             session.store_value('version', version)
             article_id = article_structure.article_id
             session.store_value('article_id', article_id)
 
-            self.emit_monitor_event(self.settings, article_id, version, data['run'],
-                                    self.pretty_name, "start",
-                                    " ".join(("Version Lookup for article", article_id, "version:", version)))
+            self.emit_monitor_event(
+                self.settings, article_id, version, data['run'],
+                self.pretty_name, "start",
+                " ".join(("Version Lookup for article", article_id, "version:", version)))
 
             self.set_monitor_property(self.settings, article_id, "article-id", article_id, "text")
-            self.set_monitor_property(self.settings, article_id, "publication-status", "publication in progress",
-                                      "text",
-                                      version=version)
+            self.set_monitor_property(
+                self.settings, article_id, "publication-status", "publication in progress",
+                "text",
+                version=version)
 
-            self.emit_monitor_event(self.settings, article_structure.article_id, version, data['run'],
-                                    self.pretty_name, "end",
-                                    " ".join(("Finished Version Lookup for article", article_structure.article_id,
-                                              "version:", version)))
-            return activity.activity.ACTIVITY_SUCCESS
+            self.emit_monitor_event(
+                self.settings, article_structure.article_id, version, data['run'],
+                self.pretty_name, "end",
+                " ".join(("Finished Version Lookup for article", article_structure.article_id,
+                          "version:", version)))
+            return self.ACTIVITY_SUCCESS
 
-        except Exception as e:
-            self.logger.exception("Exception when trying to Lookup Version. Error: " + str(e))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+        except Exception as exception:
+            self.logger.exception(
+                "Exception when trying to Lookup Version. Error: " + str(exception))
+            return self.ACTIVITY_PERMANENT_FAILURE
 
     def get_version(self, settings, article_structure, lookup_function):
         try:
             version = article_structure.get_version_from_zip_filename()
             if version is None:
-                return str(self.execute_function(lookup_functions[lookup_function], article_structure.article_id, settings))
+                return str(execute_function(lookup_functions[lookup_function],
+                                            article_structure.article_id, settings))
             return version
         except Exception:
             self.logger.exception("Exception on function `get_version`")
             raise
 
-    def execute_function(self, the_function, arg1, arg2):
-        return the_function(arg1, arg2)
+
+def execute_function(the_function, arg1, arg2):
+    return the_function(arg1, arg2)
