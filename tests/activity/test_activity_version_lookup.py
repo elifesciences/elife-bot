@@ -29,7 +29,7 @@ class TestVersionLookup(unittest.TestCase):
         self.versionlookup.set_monitor_property = MagicMock()
 
     @patch('activity.activity_VersionLookup.get_session')
-    @patch.object(activity_VersionLookup, 'execute_function')
+    @patch('activity.activity_VersionLookup.execute_function')
     def test_get_version_silent_corrections(self, fake_lookup_functions, fake_session):
         run_type = "silent_correction"
         named_session = FakeSession({})
@@ -47,7 +47,7 @@ class TestVersionLookup(unittest.TestCase):
         self.assertEqual(named_session.get_value('run_type'), run_type)
 
     @patch('activity.activity_VersionLookup.get_session')
-    @patch.object(activity_VersionLookup, 'execute_function')
+    @patch('activity.activity_VersionLookup.execute_function')
     def test_get_version_silent_corrections_version_in_zip(self, fake_lookup_functions,
                                                            fake_session):
         named_session = FakeSession({})
@@ -63,7 +63,7 @@ class TestVersionLookup(unittest.TestCase):
         self.assertEqual(named_session.get_value('run_type'), None)
 
     @patch('activity.activity_VersionLookup.get_session')
-    @patch.object(activity_VersionLookup, 'execute_function')
+    @patch('activity.activity_VersionLookup.execute_function')
     def test_get_version_normal_process_version_not_in_zip(self, fake_lookup_functions,
                                                            fake_session):
         fake_session.return_value = FakeSession({})
@@ -78,7 +78,7 @@ class TestVersionLookup(unittest.TestCase):
         self.assertEqual(self.versionlookup.ACTIVITY_SUCCESS, result)
 
     @patch('activity.activity_VersionLookup.get_session')
-    @patch.object(activity_VersionLookup, 'execute_function')
+    @patch('activity.activity_VersionLookup.execute_function')
     def test_get_version_normal_process(self, fake_lookup_functions, fake_session):
         fake_session.return_value = FakeSession({})
         self.versionlookup.emit_monitor_event = MagicMock()
@@ -91,7 +91,7 @@ class TestVersionLookup(unittest.TestCase):
 
     @patch('activity.activity_VersionLookup.get_session')
     @patch.object(activity_VersionLookup, 'emit_monitor_event')
-    @patch.object(activity_VersionLookup, 'execute_function')
+    @patch('activity.activity_VersionLookup.execute_function')
     def test_get_version_error_timeout(self, fake_execute_function,
                                        fake_emit_monitor, fake_session):
         fake_session.return_value = FakeSession({})
@@ -106,7 +106,7 @@ class TestVersionLookup(unittest.TestCase):
 
     @patch('activity.activity_VersionLookup.get_session')
     @patch.object(activity_VersionLookup, 'emit_monitor_event')
-    @patch.object(activity_VersionLookup, 'execute_function')
+    @patch('activity.activity_VersionLookup.execute_function')
     def test_get_version_error_protocol_error_message(self, fake_execute_function,
                                                       fake_emit_monitor, fake_session):
         fake_session.return_value = FakeSession({})

@@ -1,16 +1,19 @@
 
-import activity
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 import provider.lax_provider
+from .activity import Activity
+
 
 lookup_functions = {"article_next_version": provider.lax_provider.article_next_version,
                     "article_highest_version": provider.lax_provider.article_highest_version}
 
-class activity_VersionLookup(activity.activity):
+
+class activity_VersionLookup(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_VersionLookup, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "VersionLookup"
         self.pretty_name = "Version Lookup"
@@ -63,22 +66,24 @@ class activity_VersionLookup(activity.activity):
                 self.pretty_name, "end",
                 " ".join(("Finished Version Lookup for article", article_structure.article_id,
                           "version:", version)))
-            return activity.activity.ACTIVITY_SUCCESS
+            return self.ACTIVITY_SUCCESS
 
-        except Exception as e:
-            self.logger.exception("Exception when trying to Lookup Version. Error: " + str(e))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+        except Exception as exception:
+            self.logger.exception(
+                "Exception when trying to Lookup Version. Error: " + str(exception))
+            return self.ACTIVITY_PERMANENT_FAILURE
 
     def get_version(self, settings, article_structure, lookup_function):
         try:
             version = article_structure.get_version_from_zip_filename()
             if version is None:
-                return str(self.execute_function(lookup_functions[lookup_function],
-                                                 article_structure.article_id, settings))
+                return str(execute_function(lookup_functions[lookup_function],
+                                            article_structure.article_id, settings))
             return version
         except Exception:
             self.logger.exception("Exception on function `get_version`")
             raise
 
-    def execute_function(self, the_function, arg1, arg2):
-        return the_function(arg1, arg2)
+
+def execute_function(the_function, arg1, arg2):
+    return the_function(arg1, arg2)
