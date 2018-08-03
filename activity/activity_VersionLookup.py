@@ -31,6 +31,7 @@ class activity_VersionLookup(activity.activity):
             run = data['run']
             session = get_session(self.settings, data, run)
             session.store_value('filename_last_element', filename)
+            session.store_value('run_type', data.get('run_type'))
 
             article_structure = ArticleInfo(filename)
 
