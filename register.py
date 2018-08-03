@@ -8,9 +8,6 @@ import settings as settingsLib
 import workflow
 import activity
 
-# Add parent directory for imports, so activity classes can use elife-poa-xml-generation
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0, parentdir)
 
 """
 Amazon SWF register workflow or activity utility

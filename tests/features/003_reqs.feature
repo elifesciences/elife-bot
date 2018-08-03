@@ -16,7 +16,6 @@ Feature: Use python imports and requirements
     | lxml
     | bs4
     | fom
-    | elife-poa-xml-generation
     | git
     | arrow
     | xml.etree

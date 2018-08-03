@@ -10,10 +10,7 @@ from types import MethodType
 import xml.etree.ElementTree as ET
 
 import os
-# Add parent directory for imports, so activity classes can use elife-poa-xml-generation
-parentdir = os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-os.sys.path.insert(0, parentdir)
+
 
 class TestPublishFinalPOA(unittest.TestCase):
 
