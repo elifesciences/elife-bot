@@ -41,7 +41,7 @@ class TestDepositDigestIngestAssets(unittest.TestCase):
     @data(
         {
             "comment": 'digest docx file example',
-            "filename": None,
+            "filename": 'DIGEST+99999.docx',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
             "expected_digest_image_file": None,
