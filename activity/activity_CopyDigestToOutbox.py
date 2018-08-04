@@ -37,6 +37,9 @@ class activity_CopyDigestToOutbox(Activity):
         # Create output directories
         self.create_activity_directories()
 
+        # Track the success of some steps
+        self.build_status = None
+
     def do_activity(self, data=None):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
@@ -58,7 +61,6 @@ class activity_CopyDigestToOutbox(Activity):
 
         # bucket name
         bucket_name = self.settings.bot_bucket
-
 
         return self.ACTIVITY_SUCCESS
 
