@@ -4,6 +4,7 @@ import os
 import unittest
 from mock import patch
 from ddt import ddt, data
+from digestparser.objects import Digest
 import provider.digest_provider as digest_provider
 from activity.activity_CopyDigestToOutbox import activity_CopyDigestToOutbox as activity_object
 import tests.activity.settings_mock as settings_mock
@@ -85,6 +86,26 @@ class TestCopyDigestToOutbox(unittest.TestCase):
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
+
+    def test_dest_resource_path(self):
+        "test building the path to the bucket folder"
+        digest = Digest()
+        digest.doi = '10.7554/eLife.99999'
+        bucket_name = 'elife-bot'
+        expected = 's3://elife-bot/digests/outbox/99999/'
+        resource_path = self.activity.dest_resource_path(digest, bucket_name)
+        self.assertEqual(resource_path, expected)
+
+    def test_file_dest_resource(self):
+        "test the bucket destination resource path for a file"
+        digest = Digest()
+        digest.doi = '10.7554/eLife.99999'
+        bucket_name = 'elife-bot'
+        # create a full path to test stripping out folder names
+        file_path = os.getcwd() + os.sep + 'DIGEST 99999.docx'
+        expected = 's3://elife-bot/digests/outbox/99999/DIGEST 99999.docx'
+        dest_resource = self.activity.file_dest_resource(digest, bucket_name, file_path)
+        self.assertEqual(dest_resource, expected)
 
 
 if __name__ == '__main__':

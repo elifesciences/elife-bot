@@ -54,9 +54,27 @@ class activity_CopyDigestToOutbox(Activity):
                              real_filename)
             return self.ACTIVITY_PERMANENT_FAILURE
 
-        # todo!!  the rest of the logic
+        # continue with copying files now
+
+        # bucket name
+        bucket_name = self.settings.bot_bucket
+
 
         return self.ACTIVITY_SUCCESS
+
+    def dest_resource_path(self, digest, bucket_name):
+        "the bucket folder where files will be saved"
+        msid = utils.msid_from_doi(digest.doi)
+        article_id = utils.pad_msid(msid)
+        storage_provider = self.settings.storage_provider + "://"
+        return storage_provider + bucket_name + "/digests/outbox/" + article_id + "/"
+
+    def file_dest_resource(self, digest, bucket_name, file_path):
+        "concatenate the S3 bucket object path we copy the file to"
+        resource_path = self.dest_resource_path(digest, bucket_name)
+        file_name = file_path.split(os.sep)[-1]
+        dest_resource = resource_path + file_name
+        return dest_resource
 
     def create_activity_directories(self):
         """
