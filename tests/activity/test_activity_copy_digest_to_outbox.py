@@ -41,28 +41,22 @@ class TestCopyDigestToOutbox(unittest.TestCase):
     @data(
         {
             "comment": 'digest docx file example',
-            "filename": None,
+            "filename": 'DIGEST+99999.docx',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
-            "expected_digest_image_file": None,
-            "expected_dest_resource": None,
-            "expected_file_list": []
+            "expected_file_list": ['DIGEST 99999.docx']
         },
         {
             "comment": 'digest zip file example',
             "filename": 'DIGEST+99999.zip',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
-            "expected_digest_image_file": u'IMAGE 99999.jpeg',
-            "expected_dest_resource": 's3://ppd_cdn_bucket/digests/99999/IMAGE 99999.jpeg',
-            "expected_file_list": [u'IMAGE 99999.jpeg']
+            "expected_file_list": ['DIGEST 99999.docx', 'IMAGE 99999.jpeg']
         },
         {
             "comment": 'digest file does not exist example',
             "filename": '',
             "expected_digest_doi": None,
-            "expected_digest_image_file": None,
-            "expected_dest_resource": None,
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
             "expected_file_list": []
         },
@@ -70,8 +64,6 @@ class TestCopyDigestToOutbox(unittest.TestCase):
             "comment": 'bad digest docx file example',
             "filename": 'DIGEST+99998.docx',
             "expected_digest_doi": None,
-            "expected_digest_image_file": None,
-            "expected_dest_resource": None,
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
             "expected_file_list": []
         },
@@ -85,6 +77,11 @@ class TestCopyDigestToOutbox(unittest.TestCase):
 
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
+        # Check destination folder as a list
+        files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
+        compare_files = [file_name for file_name in files if file_name != '.gitkeep']
+        self.assertEqual(compare_files, test_data.get("expected_file_list"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
 
     def test_dest_resource_path(self):

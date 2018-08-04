@@ -1,5 +1,6 @@
 import os
 import json
+import glob
 from S3utility.s3_notification_info import parse_activity_data
 from provider.storage_provider import storage_context
 import provider.digest_provider as digest_provider
@@ -62,6 +63,16 @@ class activity_CopyDigestToOutbox(Activity):
         # bucket name
         bucket_name = self.settings.bot_bucket
 
+        # clean out the outbox if not empty
+        # todo!!!
+
+        # copy the files to S3
+        # if it is zip file take the files from the temp_dir, otherwise from the input_dir
+        from_dir = self.input_dir
+        if self.input_file.endswith('.zip'):
+            from_dir = self.temp_dir
+        self.copy_files_to_outbox(self.digest, bucket_name, from_dir)
+
         return self.ACTIVITY_SUCCESS
 
     def dest_resource_path(self, digest, bucket_name):
@@ -77,6 +88,15 @@ class activity_CopyDigestToOutbox(Activity):
         file_name = file_path.split(os.sep)[-1]
         dest_resource = resource_path + file_name
         return dest_resource
+
+    def copy_files_to_outbox(self, digest, bucket_name, from_dir):
+        "copy all the files from the from_dir to the bucket"
+        file_list = glob.glob(from_dir + "/*")
+        storage = storage_context(self.settings)
+        for file_path in file_list:
+            resource_dest = self.file_dest_resource(digest, bucket_name, file_path)
+            storage.set_resource_from_filename(resource_dest, file_path)
+            self.logger.info("Copied %s to %s", file_path, resource_dest)
 
     def create_activity_directories(self):
         """
