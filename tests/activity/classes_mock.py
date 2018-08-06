@@ -87,6 +87,7 @@ class FakeStorageContext:
     def __init__(self, directory=data.ExpandArticle_files_source_folder):
         "can instantiate specifying a data directory or use the default"
         self.dir = directory
+        self.resources = ["elife-00353-fig1-v1.tif", "elife-00353-v1.pdf", "elife-00353-v1.xml"]
 
     def get_bucket_and_key(self, resource):
         p = re.compile(r'(.*?)://(.*?)(/.*)')
@@ -119,13 +120,17 @@ class FakeStorageContext:
         pass
 
     def list_resources(self, resource):
-        return ["elife-00353-fig1-v1.tif", "elife-00353-v1.pdf", "elife-00353-v1.xml"]
+        return self.resources
 
     def copy_resource(self, origin, destination, additional_dict_metadata=None):
         pass
 
     def delete_resource(self, resource):
-        pass
+        # delete from the destination folder
+        bucket, s3_key = self.get_bucket_and_key(resource)
+        src = data.ExpandArticle_files_dest_folder + s3_key
+        if os.path.exists(src):
+            os.remove(src)
 
     def get_resource_to_file_pointer(self, resource, file_path):
         return None

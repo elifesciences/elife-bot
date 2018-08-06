@@ -64,7 +64,7 @@ class activity_CopyDigestToOutbox(Activity):
         bucket_name = self.settings.bot_bucket
 
         # clean out the outbox if not empty
-        # todo!!!
+        self.clean_outbox(self.digest, bucket_name)
 
         # copy the files to S3
         # if it is zip file take the files from the temp_dir, otherwise from the input_dir
@@ -88,6 +88,15 @@ class activity_CopyDigestToOutbox(Activity):
         file_name = file_path.split(os.sep)[-1]
         dest_resource = resource_path + file_name
         return dest_resource
+
+    def clean_outbox(self, digest, bucket_name):
+        "remove files from the outbox folder"
+        resource_path = self.dest_resource_path(digest, bucket_name)
+        storage = storage_context(self.settings)
+        files_in_bucket = storage.list_resources(resource_path)
+        for resource in files_in_bucket:
+            self.logger.info("Deleting %s from the outbox", resource)
+            storage.delete_resource(resource)
 
     def copy_files_to_outbox(self, digest, bucket_name, from_dir):
         "copy all the files from the from_dir to the bucket"
