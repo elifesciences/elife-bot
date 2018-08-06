@@ -53,7 +53,7 @@ class TestCopyDigestToOutbox(unittest.TestCase):
             "bucket_resources": ['s3://bucket/DIGEST 99999_alternate.docx'],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
-            "expected_file_list": ['DIGEST 99999.docx']
+            "expected_file_list": ['digest-99999.docx']
         },
         {
             "comment": 'digest zip file example',
@@ -62,7 +62,7 @@ class TestCopyDigestToOutbox(unittest.TestCase):
                                  's3://bucket/DIGEST 99999_old.docx'],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
-            "expected_file_list": ['DIGEST 99999.docx', 'IMAGE 99999.jpeg']
+            "expected_file_list": ['IMAGE 99999.jpeg', 'digest-99999.docx']
         },
         {
             "comment": 'digest file does not exist example',
@@ -116,7 +116,7 @@ class TestCopyDigestToOutbox(unittest.TestCase):
         bucket_name = 'elife-bot'
         # create a full path to test stripping out folder names
         file_path = os.getcwd() + os.sep + 'DIGEST 99999.docx'
-        expected = 's3://elife-bot/digests/outbox/99999/DIGEST 99999.docx'
+        expected = 's3://elife-bot/digests/outbox/99999/digest-99999.docx'
         dest_resource = self.activity.file_dest_resource(digest, bucket_name, file_path)
         self.assertEqual(dest_resource, expected)
 

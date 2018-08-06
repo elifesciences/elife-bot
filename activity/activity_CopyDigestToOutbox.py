@@ -86,7 +86,10 @@ class activity_CopyDigestToOutbox(Activity):
         "concatenate the S3 bucket object path we copy the file to"
         resource_path = self.dest_resource_path(digest, bucket_name)
         file_name = file_path.split(os.sep)[-1]
-        dest_resource = resource_path + file_name
+        new_file_name = digest_provider.new_file_name(
+            msid=utils.msid_from_doi(digest.doi),
+            file_name=file_name)
+        dest_resource = resource_path + new_file_name
         return dest_resource
 
     def clean_outbox(self, digest, bucket_name):

@@ -112,9 +112,11 @@ class FakeStorageContext:
     def get_resource_as_string(self, origin):
         return '<mock><media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="wmv" mimetype="video" xlink:href="elife-00569-media1.wmv"></media></mock>'
 
-    def set_resource_from_filename(self, resource, file):
-        #bucket_name, s3_key = self.get_bucket_and_key(resource)
-        copy(file, data.ExpandArticle_files_dest_folder)
+    def set_resource_from_filename(self, resource, file_name):
+        "resource name can be different than the file name"
+        to_file_name = resource.split('/')[-1]
+        dest = data.ExpandArticle_files_dest_folder + '/' + to_file_name
+        copy(file_name, dest)
 
     def set_resource_from_string(self, resource, data, content_type=None):
         pass
