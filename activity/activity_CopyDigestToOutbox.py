@@ -101,8 +101,8 @@ class activity_CopyDigestToOutbox(Activity):
         storage = storage_context(self.settings)
         for file_path in file_list:
             resource_dest = self.file_dest_resource(digest, bucket_name, file_path)
+            self.logger.info("Copying %s to %s", file_path, resource_dest)
             storage.set_resource_from_filename(resource_dest, file_path)
-            self.logger.info("Copied %s to %s", file_path, resource_dest)
 
     def create_activity_directories(self):
         """
