@@ -99,7 +99,13 @@ class activity_EmailDigest(Activity):
         if not digest_content:
             return False, None
         file_name = output_file_name(digest_content, self.digest_config)
-        output_file = output.digest_docx(digest_content, file_name, self.output_dir)
+        self.logger.info('EmailDigest output file_name: %s', file_name)
+        try:
+            output_file = output.digest_docx(digest_content, file_name, self.output_dir)
+        except UnicodeEncodeError as exception:
+            self.logger.exception("EmailDigest generate_output exception. Message: %s",
+                                  exception.message)
+            return False, None
         return True, output_file
 
     def email_digest(self, digest_content, output_file):
