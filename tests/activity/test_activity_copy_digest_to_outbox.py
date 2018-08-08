@@ -52,7 +52,6 @@ class TestCopyDigestToOutbox(unittest.TestCase):
             "filename": 'DIGEST+99999.docx',
             "bucket_resources": ['s3://bucket/DIGEST 99999_alternate.docx'],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
             "expected_file_list": ['digest-99999.docx']
         },
         {
@@ -61,14 +60,12 @@ class TestCopyDigestToOutbox(unittest.TestCase):
             "bucket_resources": ['s3://bucket/IMAGE 99999.jpg',
                                  's3://bucket/DIGEST 99999_old.docx'],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
             "expected_file_list": ['IMAGE 99999.jpeg', 'digest-99999.docx']
         },
         {
             "comment": 'digest file does not exist example',
             "filename": '',
             "bucket_resources": [],
-            "expected_digest_doi": None,
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
             "expected_file_list": []
         },
@@ -76,7 +73,6 @@ class TestCopyDigestToOutbox(unittest.TestCase):
             "comment": 'bad digest docx file example',
             "filename": 'DIGEST+99998.docx',
             "bucket_resources": [],
-            "expected_digest_doi": None,
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
             "expected_file_list": []
         },
