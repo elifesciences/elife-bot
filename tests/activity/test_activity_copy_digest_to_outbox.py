@@ -60,7 +60,7 @@ class TestCopyDigestToOutbox(unittest.TestCase):
             "bucket_resources": ['s3://bucket/IMAGE 99999.jpg',
                                  's3://bucket/DIGEST 99999_old.docx'],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_file_list": ['IMAGE 99999.jpeg', 'digest-99999.docx']
+            "expected_file_list": [ 'digest-99999.docx', 'digest-99999.jpeg']
         },
         {
             "comment": 'digest file does not exist example',
