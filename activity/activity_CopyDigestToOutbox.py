@@ -25,7 +25,8 @@ class activity_CopyDigestToOutbox(Activity):
         self.default_task_schedule_to_close_timeout = 60 * 5
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
-        self.description = "Copies the Digest files to a bucket folder for later use"
+        self.description = ("Copies the Digest files to a bucket folder for later use" +
+                            " in article ingestion")
 
         # Track some values
         self.input_file = None
