@@ -21,6 +21,16 @@ def build_digest(input_file, temp_dir, logger=None):
     return True, digest
 
 
+def new_file_name(file_name, msid):
+    "new name for the files stored for internal use"
+    if file_name and file_name.endswith('.docx'):
+        return 'digest-{msid:0>5}.docx'.format(msid=msid)
+    else:
+        # current only one optional image will be in a package, rename it too
+        extension = file_name.split('.')[-1]
+        return 'digest-{msid:0>5}.{extension}'.format(msid=msid, extension=extension)
+
+
 def digest_resource_origin(storage_provider, filename, bucket_name, bucket_folder):
     "concatenate the origin of a digest file for the storage provider"
     if not filename or not bucket_name or bucket_folder is None:

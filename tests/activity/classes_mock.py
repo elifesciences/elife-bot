@@ -87,6 +87,7 @@ class FakeStorageContext:
     def __init__(self, directory=data.ExpandArticle_files_source_folder):
         "can instantiate specifying a data directory or use the default"
         self.dir = directory
+        self.resources = ["elife-00353-fig1-v1.tif", "elife-00353-v1.pdf", "elife-00353-v1.xml"]
 
     def get_bucket_and_key(self, resource):
         p = re.compile(r'(.*?)://(.*?)(/.*)')
@@ -111,21 +112,27 @@ class FakeStorageContext:
     def get_resource_as_string(self, origin):
         return '<mock><media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="wmv" mimetype="video" xlink:href="elife-00569-media1.wmv"></media></mock>'
 
-    def set_resource_from_filename(self, resource, file):
-        #bucket_name, s3_key = self.get_bucket_and_key(resource)
-        copy(file, data.ExpandArticle_files_dest_folder)
+    def set_resource_from_filename(self, resource, file_name):
+        "resource name can be different than the file name"
+        to_file_name = resource.split('/')[-1]
+        dest = data.ExpandArticle_files_dest_folder + '/' + to_file_name
+        copy(file_name, dest)
 
     def set_resource_from_string(self, resource, data, content_type=None):
         pass
 
     def list_resources(self, resource):
-        return ["elife-00353-fig1-v1.tif", "elife-00353-v1.pdf", "elife-00353-v1.xml"]
+        return self.resources
 
     def copy_resource(self, origin, destination, additional_dict_metadata=None):
         pass
 
     def delete_resource(self, resource):
-        pass
+        # delete from the destination folder
+        bucket, s3_key = self.get_bucket_and_key(resource)
+        src = data.ExpandArticle_files_dest_folder + s3_key
+        if os.path.exists(src):
+            os.remove(src)
 
     def get_resource_to_file_pointer(self, resource, file_path):
         return None
