@@ -4,6 +4,7 @@ import time
 import boto.swf
 from digestparser import output
 import digestparser.conf as digest_conf
+import digestparser.utils as digest_utils
 from S3utility.s3_notification_info import parse_activity_data
 import provider.digest_provider as digest_provider
 import provider.email_provider as email_provider
@@ -196,7 +197,8 @@ def success_email_subject(digest_content):
         msid = doi.split(".")[-1]
     except AttributeError:
         msid = None
-    return u'Digest: {author}_{msid:0>5}'.format(author=digest_content.author, msid=str(msid))
+    return u'Digest: {author}_{msid:0>5}'.format(
+        author=digest_utils.unicode_decode(digest_content.author), msid=str(msid))
 
 
 def success_email_body(current_time):

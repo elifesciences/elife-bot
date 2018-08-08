@@ -110,6 +110,21 @@ class TestEmailDigest(unittest.TestCase):
             "expected_email_from": "From: sender@example.org",
             "expected_email_body": "Digest was empty"
         },
+        {
+            "comment": 'digest author name encoding file example',
+            "filename": 'DIGEST+99997.docx',
+            "expected_result": True,
+            "expected_activity_status": True,
+            "expected_build_status": True,
+            "expected_generate_status": True,
+            "expected_approve_status": True,
+            "expected_email_status": True,
+            "expected_digest_doi": u'https://doi.org/10.7554/eLife.99997',
+            "expected_output_dir_files": ['Gonz\xe1lez_99997.docx'],
+            "expected_email_count": 2,
+            "expected_email_subject": "Subject: =?utf-8?q?Digest=3A_Gonz=C3=A1lez=5F99997?=",
+            "expected_email_from": "From: sender@example.org"
+        },
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_email_smtp_connect):
         # copy XML files into the input directory using the storage context
