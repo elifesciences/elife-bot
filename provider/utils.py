@@ -52,3 +52,12 @@ def unquote_plus(string):
         # python 3
         return urllib.parse.unquote_plus(string)
     return urllib.unquote_plus(string)
+
+
+def unicode_decode(string):
+    "try to decode from utf8"
+    try:
+        string = string.decode('utf8')
+    except (UnicodeEncodeError, AttributeError):
+        pass
+    return string

@@ -95,16 +95,23 @@ class activity_EmailDigest(Activity):
             config_section,
             self.settings.digest_config_file))
 
+    def output_path(self, output_dir, file_name):
+        "for python 2 and 3 support, only encode sometimes"
+        try:
+            return os.path.join(output_dir, unicode_value(file_name)).encode('utf8')
+        except AttributeError:
+            return os.path.join(output_dir, unicode_value(file_name))
+
     def generate_output(self, digest_content):
         "From the parsed digest content generate the output"
         if not digest_content:
             return False, None
         file_name = output_file_name(digest_content, self.digest_config)
         self.logger.info('EmailDigest output file_name: %s', file_name)
-        full_file_name = output_file = os.path.join(self.output_dir, unicode_value(file_name))
+        full_file_name = self.output_path(self.output_dir, unicode_value(file_name))
         self.logger.info('EmailDigest output full_file_name: %s', full_file_name)
         try:
-            output_file = output.digest_docx(digest_content, full_file_name, '')
+            output_file = output.digest_docx(digest_content, full_file_name)
         except UnicodeEncodeError as exception:
             self.logger.exception("EmailDigest generate_output exception. Message: %s",
                                   exception.message)
