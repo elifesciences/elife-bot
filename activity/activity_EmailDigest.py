@@ -2,6 +2,7 @@ import os
 import json
 import time
 import boto.swf
+from elifetools.utils import unicode_value
 from digestparser import output
 import digestparser.conf as digest_conf
 import digestparser.utils as digest_utils
@@ -100,8 +101,10 @@ class activity_EmailDigest(Activity):
             return False, None
         file_name = output_file_name(digest_content, self.digest_config)
         self.logger.info('EmailDigest output file_name: %s', file_name)
+        full_file_name = output_file = os.path.join(self.output_dir, unicode_value(file_name))
+        self.logger.info('EmailDigest output full_file_name: %s', full_file_name)
         try:
-            output_file = output.digest_docx(digest_content, file_name, self.output_dir)
+            output_file = output.digest_docx(digest_content, full_file_name, '')
         except UnicodeEncodeError as exception:
             self.logger.exception("EmailDigest generate_output exception. Message: %s",
                                   exception.message)
