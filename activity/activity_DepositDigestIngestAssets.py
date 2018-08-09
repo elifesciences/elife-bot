@@ -78,8 +78,9 @@ class activity_DepositDigestIngestAssets(Activity):
         article_id = utils.pad_msid(msid)
         # file name from the digest image file
         file_name = digest.image.file.split(os.sep)[-1]
+        new_file_name = digest_provider.new_file_name(file_name, msid)
         storage_provider = self.settings.storage_provider + "://"
-        dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/" + file_name
+        dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/" + new_file_name
         return dest_resource
 
     def deposit_digest_image(self, digest, cdn_bucket_name):
