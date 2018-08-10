@@ -54,8 +54,8 @@ class TestDepositDigestIngestAssets(unittest.TestCase):
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
             "expected_digest_image_file": u'IMAGE 99999.jpeg',
-            "expected_dest_resource": 's3://ppd_cdn_bucket/digests/99999/IMAGE 99999.jpeg',
-            "expected_file_list": [u'IMAGE 99999.jpeg']
+            "expected_dest_resource": 's3://ppd_cdn_bucket/digests/99999/digest-99999.jpeg',
+            "expected_file_list": [u'digest-99999.jpeg']
         },
         {
             "comment": 'digest file does not exist example',
