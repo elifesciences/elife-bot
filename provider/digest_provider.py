@@ -2,16 +2,16 @@
 import os
 import traceback
 from docx.opc.exceptions import PackageNotFoundError
-from digestparser import build
+from digestparser import build, conf
 from provider.storage_provider import storage_context
 
 
-def build_digest(input_file, temp_dir, logger=None):
+def build_digest(input_file, temp_dir, logger=None, digest_config=None):
     "Parse input and build a Digest object"
     if not input_file:
         return False, None
     try:
-        digest = build.build_digest(input_file, temp_dir)
+        digest = build.build_digest(input_file, temp_dir, digest_config)
     except PackageNotFoundError:
         # bad docx file
         if logger:
@@ -19,6 +19,11 @@ def build_digest(input_file, temp_dir, logger=None):
                              traceback.format_exc())
         return False, None
     return True, digest
+
+
+def digest_config(config_section, config_file):
+    "parse the config values from the digest config"
+    return conf.parse_raw_config(conf.raw_config(config_section, config_file))
 
 
 def new_file_name(file_name, msid):

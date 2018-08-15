@@ -4,7 +4,6 @@ import time
 import boto.swf
 from elifetools.utils import unicode_value
 from digestparser import output
-import digestparser.conf as digest_conf
 import digestparser.utils as digest_utils
 from S3utility.s3_notification_info import parse_activity_data
 import provider.digest_provider as digest_provider
@@ -47,7 +46,9 @@ class activity_EmailDigest(Activity):
         self.email_status = None
 
         # Load the config
-        self.digest_config = self.elifedigest_config(self.settings.digest_config_section)
+        self.digest_config = digest_provider.digest_config(
+            self.settings.digest_config_section,
+            self.settings.digest_config_file)
 
     def do_activity(self, data=None):
         """
@@ -65,7 +66,7 @@ class activity_EmailDigest(Activity):
 
         # Parse input and build digest
         self.build_status, self.digest = digest_provider.build_digest(
-            self.input_file, self.temp_dir, self.logger)
+            self.input_file, self.temp_dir, self.logger, self.digest_config)
 
         # Generate output
         self.generate_status, output_file = self.generate_output(self.digest)
@@ -88,12 +89,6 @@ class activity_EmailDigest(Activity):
             return True
 
         return self.ACTIVITY_PERMANENT_FAILURE
-
-    def elifedigest_config(self, config_section):
-        "parse the config values from the digest config"
-        return digest_conf.parse_raw_config(digest_conf.raw_config(
-            config_section,
-            self.settings.digest_config_file))
 
     def output_path(self, output_dir, file_name):
         "for python 2 and 3 support, only encode sometimes"
@@ -191,7 +186,7 @@ def approve_sending(digest_content):
     if digest_content and not digest_content.doi:
         approve_status = False
         error_message += '\nDigest DOI is missing'
-
+    print(error_message)
     return approve_status, error_message
 
 

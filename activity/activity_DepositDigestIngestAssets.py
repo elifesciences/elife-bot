@@ -50,8 +50,11 @@ class activity_DepositDigestIngestAssets(Activity):
         self.input_file = digest_provider.download_digest_from_s3(
             self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
         # Parse input and build digest
+        digest_config = digest_provider.digest_config(
+            self.settings.digest_config_section,
+            self.settings.digest_config_file)
         self.build_status, self.digest = digest_provider.build_digest(
-            self.input_file, self.temp_dir, self.logger)
+            self.input_file, self.temp_dir, self.logger, digest_config)
 
         if not self.build_status:
             self.logger.info("Failed to build the Digest in Deposit Digest Ingest Assets for %s",
@@ -71,6 +74,12 @@ class activity_DepositDigestIngestAssets(Activity):
         self.deposit_digest_image(self.digest, cdn_bucket_name)
 
         return self.ACTIVITY_SUCCESS
+
+    def elifedigest_config(self, config_section):
+        "parse the config values from the digest config"
+        return digest_conf.parse_raw_config(digest_conf.raw_config(
+            config_section,
+            self.settings.digest_config_file))
 
     def image_dest_resource(self, digest, cdn_bucket_name):
         "concatenate the S3 bucket object path we copy the file to"

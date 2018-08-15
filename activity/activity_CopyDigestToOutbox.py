@@ -44,8 +44,11 @@ class activity_CopyDigestToOutbox(Activity):
         input_file = digest_provider.download_digest_from_s3(
             self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
         # Parse input and build digest
+        digest_config = digest_provider.digest_config(
+            self.settings.digest_config_section,
+            self.settings.digest_config_file)
         build_status, digest = digest_provider.build_digest(
-            input_file, self.temp_dir, self.logger)
+            input_file, self.temp_dir, self.logger, digest_config)
 
         if not build_status:
             self.logger.info("Failed to build the Digest in Copy Digest To Outbox for %s",
