@@ -50,8 +50,11 @@ class activity_DepositDigestIngestAssets(Activity):
         self.input_file = digest_provider.download_digest_from_s3(
             self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
         # Parse input and build digest
+        digest_config = digest_provider.digest_config(
+            self.settings.digest_config_section,
+            self.settings.digest_config_file)
         self.build_status, self.digest = digest_provider.build_digest(
-            self.input_file, self.temp_dir, self.logger)
+            self.input_file, self.temp_dir, self.logger, digest_config)
 
         if not self.build_status:
             self.logger.info("Failed to build the Digest in Deposit Digest Ingest Assets for %s",
