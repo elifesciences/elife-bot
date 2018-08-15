@@ -75,12 +75,6 @@ class activity_DepositDigestIngestAssets(Activity):
 
         return self.ACTIVITY_SUCCESS
 
-    def elifedigest_config(self, config_section):
-        "parse the config values from the digest config"
-        return digest_conf.parse_raw_config(digest_conf.raw_config(
-            config_section,
-            self.settings.digest_config_file))
-
     def image_dest_resource(self, digest, cdn_bucket_name):
         "concatenate the S3 bucket object path we copy the file to"
         msid = utils.msid_from_doi(digest.doi)
