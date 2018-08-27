@@ -9,7 +9,7 @@ lettuce==0.2.20
 requests==2.11.1
 lxml==4.1.1
 xlrd==0.9.3
-git+https://github.com/elifesciences/elife-tools.git@f848c3b3b8922a8b2c68d18ffbcb295f7f16d55f#egg=elifetools
+git+https://github.com/elifesciences/elife-tools.git@9fc987c11b195c895d13027f2e31de327ecf0f70#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@bb61d4c0e3742403503efe10852114aeb1e07269#egg=elifearticle
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@078ce423fb17186c5c92967c326119630846252b#egg=elifecrossref
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@32a9a831eca98a03b36b8c9a369c622a34d04a7a#egg=elifepubmed
