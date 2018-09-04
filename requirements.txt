@@ -35,5 +35,5 @@ six==1.10.0
 pyFunctional==1.0.0
 func_timeout==4.3.0
 python-docx==0.8.6
-git+https://github.com/elifesciences/digest-parser.git@03a8d6b0a5a406f99cb7a31a1a763c7fe31e1942#egg=digestparser
+git+https://github.com/elifesciences/digest-parser.git@95377b5e374a1b0a6487e67284cd45a1ef51e6ca#egg=digestparser
 psutil==5.4.6
