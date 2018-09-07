@@ -4,7 +4,6 @@ import glob
 from S3utility.s3_notification_info import parse_activity_data
 from provider.storage_provider import storage_context
 import provider.digest_provider as digest_provider
-import provider.utils as utils
 from .activity import Activity
 
 
@@ -72,26 +71,10 @@ class activity_CopyDigestToOutbox(Activity):
 
         return self.ACTIVITY_SUCCESS
 
-    def dest_resource_path(self, digest, bucket_name):
-        "the bucket folder where files will be saved"
-        msid = utils.msid_from_doi(digest.doi)
-        article_id = utils.pad_msid(msid)
-        storage_provider = self.settings.storage_provider + "://"
-        return storage_provider + bucket_name + "/digests/outbox/" + article_id + "/"
-
-    def file_dest_resource(self, digest, bucket_name, file_path):
-        "concatenate the S3 bucket object path we copy the file to"
-        resource_path = self.dest_resource_path(digest, bucket_name)
-        file_name = file_path.split(os.sep)[-1]
-        new_file_name = digest_provider.new_file_name(
-            msid=utils.msid_from_doi(digest.doi),
-            file_name=file_name)
-        dest_resource = resource_path + new_file_name
-        return dest_resource
-
     def clean_outbox(self, digest, bucket_name):
         "remove files from the outbox folder"
-        resource_path = self.dest_resource_path(digest, bucket_name)
+        resource_path = digest_provider.outbox_dest_resource_path(
+            self.settings.storage_provider, digest, bucket_name)
         storage = storage_context(self.settings)
         files_in_bucket = storage.list_resources(resource_path)
         for resource in files_in_bucket:
@@ -103,7 +86,8 @@ class activity_CopyDigestToOutbox(Activity):
         file_list = glob.glob(from_dir + "/*")
         storage = storage_context(self.settings)
         for file_path in file_list:
-            resource_dest = self.file_dest_resource(digest, bucket_name, file_path)
+            resource_dest = digest_provider.outbox_file_dest_resource(
+                self.settings.storage_provider, digest, bucket_name, file_path)
             self.logger.info("Copying %s to %s", file_path, resource_dest)
             storage.set_resource_from_filename(resource_dest, file_path)
 

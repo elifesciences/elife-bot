@@ -3,6 +3,7 @@ import os
 import traceback
 from docx.opc.exceptions import PackageNotFoundError
 from digestparser import build, conf
+import provider.utils as utils
 from provider.storage_provider import storage_context
 
 
@@ -43,6 +44,25 @@ def digest_resource_origin(storage_provider, filename, bucket_name, bucket_folde
     storage_provider_prefix = storage_provider + "://"
     orig_resource = storage_provider_prefix + bucket_name + "/" + bucket_folder
     return orig_resource + '/' + filename
+
+
+def outbox_dest_resource_path(storage_provider, digest, bucket_name):
+    "the bucket folder where files will be saved"
+    msid = utils.msid_from_doi(digest.doi)
+    article_id = utils.pad_msid(msid)
+    storage_provider = storage_provider + "://"
+    return storage_provider + bucket_name + "/digests/outbox/" + article_id + "/"
+
+
+def outbox_file_dest_resource(storage_provider, digest, bucket_name, file_path):
+    "concatenate the S3 bucket object path we copy the file to"
+    resource_path = outbox_dest_resource_path(storage_provider, digest, bucket_name)
+    file_name = file_path.split(os.sep)[-1]
+    dest_file_name = new_file_name(
+        msid=utils.msid_from_doi(digest.doi),
+        file_name=file_name)
+    dest_resource = resource_path + dest_file_name
+    return dest_resource
 
 
 def download_digest(storage, filename, resource_origin, to_dir):

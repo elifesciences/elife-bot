@@ -96,26 +96,6 @@ class TestCopyDigestToOutbox(unittest.TestCase):
         self.assertEqual(compare_files, test_data.get("expected_file_list"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
 
-    def test_dest_resource_path(self):
-        "test building the path to the bucket folder"
-        digest = Digest()
-        digest.doi = '10.7554/eLife.99999'
-        bucket_name = 'elife-bot'
-        expected = 's3://elife-bot/digests/outbox/99999/'
-        resource_path = self.activity.dest_resource_path(digest, bucket_name)
-        self.assertEqual(resource_path, expected)
-
-    def test_file_dest_resource(self):
-        "test the bucket destination resource path for a file"
-        digest = Digest()
-        digest.doi = '10.7554/eLife.99999'
-        bucket_name = 'elife-bot'
-        # create a full path to test stripping out folder names
-        file_path = os.getcwd() + os.sep + 'DIGEST 99999.docx'
-        expected = 's3://elife-bot/digests/outbox/99999/digest-99999.docx'
-        dest_resource = self.activity.file_dest_resource(digest, bucket_name, file_path)
-        self.assertEqual(dest_resource, expected)
-
 
 if __name__ == '__main__':
     unittest.main()
