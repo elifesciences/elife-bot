@@ -46,12 +46,17 @@ def digest_resource_origin(storage_provider, filename, bucket_name, bucket_folde
     return orig_resource + '/' + filename
 
 
-def outbox_dest_resource_path(storage_provider, digest, bucket_name):
-    "the bucket folder where files will be saved"
-    msid = utils.msid_from_doi(digest.doi)
+def outbox_resource_path(storage_provider, msid, bucket_name):
+    "the digest outbox bucket folder as a resource"
     article_id = utils.pad_msid(msid)
     storage_provider = storage_provider + "://"
     return storage_provider + bucket_name + "/digests/outbox/" + article_id + "/"
+
+
+def outbox_dest_resource_path(storage_provider, digest, bucket_name):
+    "the bucket folder where files will be saved"
+    msid = utils.msid_from_doi(digest.doi)
+    return outbox_resource_path(storage_provider, msid, bucket_name)
 
 
 def outbox_file_dest_resource(storage_provider, digest, bucket_name, file_path):
