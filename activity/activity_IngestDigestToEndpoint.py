@@ -36,6 +36,7 @@ class activity_IngestDigestToEndpoint(Activity):
 
         # Track the success of some steps
         self.approve_status = None
+        self.download_status = None
 
     def do_activity(self, data=None):
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
@@ -59,8 +60,14 @@ class activity_IngestDigestToEndpoint(Activity):
         # Approve for ingestion
         self.approve_status, errors = self.approve(article_id, status, version, run_type)
 
-        # bucket name
-        bucket_name = self.settings.bot_bucket
+        # Download digest from the S3 outbox
+        docx_file = None
+        if self.approve_status:
+            docx_file = self.download_docx_from_s3(article_id, self.settings.bot_bucket,
+                                                   self.input_dir)
+            if docx_file:
+                self.download_status = True
+            image_file = self.image_file_name_from_s3(article_id, self.settings.bot_bucket)
 
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 self.pretty_name, "end",
@@ -87,6 +94,35 @@ class activity_IngestDigestToEndpoint(Activity):
             approve_errors += errors
 
         return approve_status, approve_errors
+
+    def outbox_resource_path(self, article_id, bucket_name):
+        "storage resource path for the outbox"
+        return digest_provider.outbox_resource_path(
+            self.settings.storage_provider, article_id, bucket_name)
+
+    def download_docx_from_s3(self, article_id, bucket_name, to_dir):
+        "download the docx file from the S3 outbox"
+        docx_file = None
+        resource_path = self.outbox_resource_path(article_id, bucket_name)
+        docx_file_name = digest_provider.new_file_name('.docx', article_id)
+        resource_origin = resource_path + docx_file_name
+        storage = storage_context(self.settings)
+        if storage.resource_exists(resource_origin):
+            docx_file = digest_provider.download_digest(
+                storage, docx_file_name, resource_origin, to_dir)
+        return docx_file
+
+    def image_file_name_from_s3(self, article_id, bucket_name):
+        "image file in the outbox is the non .docx file"
+        image_file_name = None
+        resource_path = self.outbox_resource_path(article_id, bucket_name)
+        storage = storage_context(self.settings)
+        object_list = storage.list_resources(resource_path)
+        if object_list:
+            for name in object_list:
+                if not name.endswith('.docx'):
+                    image_file_name = name.split('/')[-1]
+        return image_file_name
 
     def create_activity_directories(self):
         """

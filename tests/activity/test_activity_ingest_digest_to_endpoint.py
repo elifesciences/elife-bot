@@ -40,31 +40,36 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch('activity.activity_IngestDigestToEndpoint.storage_context')
     @data(
         {
-            "comment": 'article with no digest files',
+            "comment": "article with no digest files",
             "article_id": '00000',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
+            "expected_download_status": None
         },
         {
-            "comment": 'digest files with version greater than lax highest version',
+            "comment": "digest files with version greater than lax highest version",
+            "bucket_resources": ["s3://bucket/digests/outbox/99999/digest-99999.docx",
+                                 "s3://bucket/digests/outbox/99999/digest-99999.jpg"],
             "article_id": '99999',
             "status": 'vor',
             'version': '2',
             "lax_highest_version": '1',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
+            "expected_download_status": True
         },
         {
-            "comment": 'poa article has no digest',
+            "comment": "poa article has no digest",
             "article_id": '99999',
             "status": 'poa',
             'version': '1',
             "lax_highest_version": '1',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": False,
+            "expected_download_status": None
         },
         {
-            "comment": 'silent correction of a previous version',
+            "comment": "silent correction of a previous version",
             "article_id": '99999',
             "run_type": "silent-correction",
             "status": 'vor',
@@ -72,15 +77,17 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "lax_highest_version": '2',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": False,
+            "expected_download_status": None
         },
         {
-            "comment": 'silent correction exception for bad version number',
+            "comment": "silent correction exception for bad version number",
             "article_id": '99999',
             "run_type": "silent-correction",
             "status": 'vor',
             "lax_highest_version": None,
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": False,
+            "expected_download_status": None
         },
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_emit,
@@ -102,7 +109,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.approve_status, test_data.get("expected_approve_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-
+        self.assertEqual(self.activity.download_status, test_data.get("expected_download_status"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
 
 if __name__ == '__main__':
     unittest.main()
