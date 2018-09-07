@@ -15,7 +15,7 @@ import tests.activity.test_activity_data as test_activity_data
 def session_data(test_data):
     "return the session data for testing with values rewritten if specified"
     session_data = copy.copy(test_activity_data.session_example)
-    for value in ['article_id', 'status', 'version']:
+    for value in ['article_id', 'run_type', 'status', 'version']:
         if test_data.get(value):
             session_data[value] = test_data.get(value)
     return session_data
@@ -41,6 +41,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "comment": 'article with no digest files',
             "article_id": '00000',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_approve_status": True,
         },
         {
             "comment": 'digest files with version greater than lax highest version',
@@ -49,6 +50,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             'version': '2',
             "lax_highest_version": '1',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_approve_status": True,
         },
         {
             "comment": 'poa article has no digest',
@@ -57,10 +59,21 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             'version': '1',
             "lax_highest_version": '1',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_approve_status": False,
+        },
+        {
+            "comment": 'silent correction of a previous version',
+            "article_id": '99999',
+            "run_type": "silent-correction",
+            "status": 'vor',
+            'version': '1',
+            "lax_highest_version": '2',
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_approve_status": True,
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, fake_session,
-                         fake_emit, fake_provider_storage_context):
+    def test_do_activity(self, test_data, fake_storage_context, fake_emit,
+                         fake_session, fake_provider_storage_context):
         # copy files into the input directory using the storage context
         named_fake_storage_context = FakeStorageContext()
         named_fake_storage_context.resources = test_data.get('bucket_resources')
@@ -74,7 +87,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-
+        self.assertEqual(self.activity.approve_status, test_data.get("expected_approve_status"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
 
 if __name__ == '__main__':
     unittest.main()

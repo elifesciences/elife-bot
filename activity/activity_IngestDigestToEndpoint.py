@@ -33,6 +33,9 @@ class activity_IngestDigestToEndpoint(Activity):
         # Create output directories
         self.create_activity_directories()
 
+        # Track the success of some steps
+        self.approve_status = None
+
     def do_activity(self, data=None):
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
@@ -42,6 +45,7 @@ class activity_IngestDigestToEndpoint(Activity):
             version = session.get_value("version")
             article_id = session.get_value("article_id")
             status = session.get_value("status")
+            run_type = session.get_value("run_type")
 
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "start",
@@ -50,6 +54,9 @@ class activity_IngestDigestToEndpoint(Activity):
             self.logger.exception("Exception when getting the session for Starting ingest digest " +
                                   " to endpoint. Details: %s", str(exception))
             return self.ACTIVITY_PERMANENT_FAILURE
+
+        # Approve for ingestion
+        self.approve_status, error_message = self.approve(article_id, status, version, run_type)
 
         # bucket name
         bucket_name = self.settings.bot_bucket
@@ -60,6 +67,17 @@ class activity_IngestDigestToEndpoint(Activity):
 
         return self.ACTIVITY_SUCCESS
 
+    def approve(self, article_id, status, version, run_type):
+        "should we ingest based on some basic attributes"
+        approve_status = True
+        error_message = ''
+        # PoA do not ingest digests
+        if status == 'poa':
+            approve_status = False
+            error_message += '\nNot ingesting digest for PoA article {article_id}'.format(
+                article_id=article_id
+            )
+        return approve_status, error_message
 
     def create_activity_directories(self):
         """
