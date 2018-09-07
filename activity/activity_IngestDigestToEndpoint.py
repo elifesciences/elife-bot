@@ -1,5 +1,6 @@
 import os
 import json
+from digestparser import json_output
 from provider.storage_provider import storage_context
 from provider.execution_context import get_session
 import provider.digest_provider as digest_provider
@@ -38,6 +39,11 @@ class activity_IngestDigestToEndpoint(Activity):
         self.approve_status = None
         self.download_status = None
 
+        # Load the config
+        self.digest_config = digest_provider.digest_config(
+            self.settings.digest_config_section,
+            self.settings.digest_config_file)
+
     def do_activity(self, data=None):
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
@@ -62,12 +68,21 @@ class activity_IngestDigestToEndpoint(Activity):
 
         # Download digest from the S3 outbox
         docx_file = None
+        image_file = None
         if self.approve_status:
             docx_file = self.download_docx_from_s3(article_id, self.settings.bot_bucket,
                                                    self.input_dir)
             if docx_file:
                 self.download_status = True
             image_file = self.image_file_name_from_s3(article_id, self.settings.bot_bucket)
+
+        json_content = None
+        if docx_file:
+            # todo jats file
+            jats_file_name = None
+            # todo related article data
+            related = None
+            json_content = self.digest_json(docx_file, jats_file_name, image_file, related)
 
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 self.pretty_name, "end",
@@ -123,6 +138,13 @@ class activity_IngestDigestToEndpoint(Activity):
                 if not name.endswith('.docx'):
                     image_file_name = name.split('/')[-1]
         return image_file_name
+
+    def digest_json(self, docx_file, jats_file=None, image_file=None, related=None):
+        "generate the digest json content from the docx file and other data"
+        json_content = None
+        json_content = json_output.build_json(docx_file, self.temp_dir, self.digest_config,
+                                              jats_file, image_file, related)
+        return json_content
 
     def create_activity_directories(self):
         """
