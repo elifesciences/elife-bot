@@ -5,6 +5,7 @@ import unittest
 from mock import patch
 from ddt import ddt, data
 import provider.digest_provider as digest_provider
+import provider.lax_provider as lax_provider
 from activity.activity_IngestDigestToEndpoint import (
     activity_IngestDigestToEndpoint as activity_object)
 import tests.activity.settings_mock as settings_mock
@@ -32,6 +33,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
+    @patch.object(lax_provider, 'article_highest_version')
     @patch.object(digest_provider, 'storage_context')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
     @patch.object(activity_object, 'emit_monitor_event')
@@ -69,15 +71,26 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             'version': '1',
             "lax_highest_version": '2',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_approve_status": True,
+            "expected_approve_status": False,
+        },
+        {
+            "comment": 'silent correction exception for bad version number',
+            "article_id": '99999',
+            "run_type": "silent-correction",
+            "status": 'vor',
+            "lax_highest_version": None,
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_approve_status": False,
         },
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_emit,
-                         fake_session, fake_provider_storage_context):
+                         fake_session, fake_provider_storage_context,
+                         fake_highest_version):
         # copy files into the input directory using the storage context
         named_fake_storage_context = FakeStorageContext()
         named_fake_storage_context.resources = test_data.get('bucket_resources')
         fake_storage_context.return_value = named_fake_storage_context
+        fake_highest_version.return_value = test_data.get('lax_highest_version')
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
         fake_provider_storage_context.return_value = FakeStorageContext()
@@ -89,6 +102,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.approve_status, test_data.get("expected_approve_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
+
 
 if __name__ == '__main__':
     unittest.main()
