@@ -104,6 +104,7 @@ def start(ENV="dev"):
     activity_names.append("EmailDigest")
     activity_names.append("DepositDigestIngestAssets")
     activity_names.append("CopyDigestToOutbox")
+    activity_names.append("IngestDigestToEndpoint")
 
     for activity_name in activity_names:
         # Import the activity libraries
