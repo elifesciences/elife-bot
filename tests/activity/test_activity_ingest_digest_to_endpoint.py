@@ -8,8 +8,9 @@ import provider.digest_provider as digest_provider
 import provider.lax_provider as lax_provider
 from activity.activity_IngestDigestToEndpoint import (
     activity_IngestDigestToEndpoint as activity_object)
+from tests import read_fixture
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext, FakeSession
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext, FakeSession, FakeResponse
 import tests.activity.test_activity_data as test_activity_data
 
 
@@ -20,6 +21,24 @@ def session_data(test_data):
         if test_data.get(value):
             session_data[value] = test_data.get(value)
     return session_data
+
+
+IMAGE_JSON = {"width": 1, "height": 1}
+
+
+RELATED_DATA = [{
+    'id': '99999',
+    'type': 'research-article',
+    'status': 'vor',
+    'version': 1,
+    'doi': '10.7554/eLife.99999',
+    'authorLine': 'Anonymous et al.',
+    'title': 'A research article related to the digest',
+    'stage': 'published',
+    'published': '2018-06-04T00:00:00Z',
+    'statusDate': '2018-06-04T00:00:00Z',
+    'volume': 7,
+    'elocationId': 'e99999'}]
 
 
 @ddt
@@ -33,6 +52,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
+    @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
     @patch.object(lax_provider, 'article_highest_version')
     @patch.object(digest_provider, 'storage_context')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
@@ -92,7 +112,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_emit,
                          fake_session, fake_provider_storage_context,
-                         fake_highest_version):
+                         fake_highest_version, fake_get):
         # copy files into the input directory using the storage context
         named_fake_storage_context = FakeStorageContext()
         named_fake_storage_context.resources = test_data.get('bucket_resources')
@@ -101,6 +121,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
         fake_provider_storage_context.return_value = FakeStorageContext()
+        fake_get.return_value = FakeResponse(200, IMAGE_JSON)
         activity_data = test_activity_data.data_example_before_publish
         # do the activity
         result = self.activity.do_activity(activity_data)
@@ -111,6 +132,55 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.download_status, test_data.get("expected_download_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
+
+    @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
+    @data(
+        {
+            "comment": "Minimal json output of digest only",
+            "docx_file": "tests/files_source/digests/outbox/99999/digest-99999.docx",
+            "image_file": None,
+            "jats_file": None,
+            "related": None,
+            "expected_json_file": "json_content_99999_minimal.py"
+        },
+        {
+            "comment": "Basic json output including an image file",
+            "docx_file": "tests/files_source/digests/outbox/99999/digest-99999.docx",
+            "image_file": "digest-99999.jpg",
+            "jats_file": None,
+            "related": None,
+            "expected_json_file": "json_content_99999_basic.py"
+        },
+        {
+            "comment": "JSON output with image file and JATS paragraph replacements",
+            "docx_file": "tests/files_source/digests/outbox/99999/digest-99999.docx",
+            "image_file": "digest-99999.jpg",
+            "jats_file": "tests/test_data/elife-15747-v2.xml",
+            "related": None,
+            "expected_json_file": "json_content_99999_jats.py"
+        },
+        {
+            "comment": "JSON output from all possible source data",
+            "docx_file": "tests/files_source/digests/outbox/99999/digest-99999.docx",
+            "image_file": "digest-99999.jpg",
+            "jats_file": "tests/test_data/elife-15747-v2.xml",
+            "related": RELATED_DATA,
+            "expected_json_file": "json_content_99999_full.py"
+        },
+    )
+    def test_digest_json(self, test_data, fake_get):
+        "test producing digest json with various inputs"
+        fake_get.return_value = FakeResponse(200, IMAGE_JSON)
+        json_content = self.activity.digest_json(
+            test_data.get("docx_file"),
+            test_data.get("jats_file"),
+            test_data.get("image_file"),
+            test_data.get("related"),
+        )
+        folder_name = "digests"
+        expected_json = read_fixture(test_data.get("expected_json_file"), folder_name)
+        self.assertEqual(json_content, expected_json)
+
 
 if __name__ == '__main__':
     unittest.main()
