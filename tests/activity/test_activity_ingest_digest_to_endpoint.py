@@ -1,10 +1,13 @@
 # coding=utf-8
 
+import os
+import json
 import copy
 import unittest
 from mock import patch
 from ddt import ddt, data
 import provider.digest_provider as digest_provider
+import provider.article as article
 import provider.lax_provider as lax_provider
 from activity.activity_IngestDigestToEndpoint import (
     activity_IngestDigestToEndpoint as activity_object)
@@ -17,7 +20,7 @@ import tests.activity.test_activity_data as test_activity_data
 def session_data(test_data):
     "return the session data for testing with values rewritten if specified"
     session_data = copy.copy(test_activity_data.session_example)
-    for value in ['article_id', 'run_type', 'status', 'version']:
+    for value in ['article_id', 'run_type', 'status', 'version', 'expanded_folder']:
         if test_data.get(value):
             session_data[value] = test_data.get(value)
     return session_data
@@ -53,6 +56,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
+    @patch.object(article, 'storage_context')
     @patch.object(lax_provider, 'article_highest_version')
     @patch.object(digest_provider, 'storage_context')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
@@ -68,15 +72,21 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         },
         {
             "comment": "digest files with version greater than lax highest version",
-            "bucket_resources": ["s3://bucket/digests/outbox/99999/digest-99999.docx",
-                                 "s3://bucket/digests/outbox/99999/digest-99999.jpg"],
+            "bucket_resources": ["elife-15747-v2.xml"],
+            "expanded_folder": "digests",
             "article_id": '99999',
             "status": 'vor',
             'version': '2',
             "lax_highest_version": '1',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
-            "expected_download_status": True
+            "expected_download_status": True,
+            "expected_docx_file": "digest-99999.docx",
+            "expected_jats_file": "elife-15747-v2.xml",
+            "expected_json_contains": [
+                u'"title": "Fishing for errors in the\u00a0tests"',
+                "Microbes live in us and on us"
+                ]
         },
         {
             "comment": "poa article has no digest",
@@ -112,14 +122,16 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_emit,
                          fake_session, fake_provider_storage_context,
-                         fake_highest_version, fake_get):
+                         fake_highest_version, fake_article_storage_context, fake_get):
         # copy files into the input directory using the storage context
         named_fake_storage_context = FakeStorageContext()
-        named_fake_storage_context.resources = test_data.get('bucket_resources')
-        fake_storage_context.return_value = named_fake_storage_context
-        fake_highest_version.return_value = test_data.get('lax_highest_version')
+        if test_data.get('bucket_resources'):
+            named_fake_storage_context.resources = test_data.get('bucket_resources')
+        fake_article_storage_context.return_value = named_fake_storage_context
+        fake_storage_context.return_value = FakeStorageContext()
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
+        fake_highest_version.return_value = test_data.get('lax_highest_version')
         fake_provider_storage_context.return_value = FakeStorageContext()
         fake_get.return_value = FakeResponse(200, IMAGE_JSON)
         activity_data = test_activity_data.data_example_before_publish
@@ -132,6 +144,22 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.download_status, test_data.get("expected_download_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
+        if self.activity.values.get("docx_file"):
+            expected_docx_file = (os.path.join(self.activity.input_dir,
+                                               test_data.get("expected_docx_file")))
+            self.assertEqual(self.activity.values.get("docx_file"), expected_docx_file,
+                             'failed in {comment}'.format(comment=test_data.get("comment")))
+        if self.activity.values.get("jats_file"):
+            expected_jats_file = (os.path.join(self.activity.temp_dir,
+                                               test_data.get("expected_jats_file")))
+            self.assertEqual(self.activity.values.get("jats_file"), expected_jats_file,
+                             'failed in {comment}'.format(comment=test_data.get("comment")))
+        if self.activity.values.get("json_content") and test_data.get("expected_json_contains"):
+            json_string = json.dumps(self.activity.values.get("json_content"))
+            for expected in test_data.get("expected_json_contains"):
+                self.assertTrue(
+                    (expected in json_string, 'failed in json_content in {comment}'.format(
+                        comment=test_data.get("comment"))))
 
     @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
     @data(

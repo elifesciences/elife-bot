@@ -39,6 +39,9 @@ class activity_IngestDigestToEndpoint(Activity):
         self.approve_status = None
         self.download_status = None
 
+        # Keep track of object values
+        self.values = {}
+
         # Load the config
         self.digest_config = digest_provider.digest_config(
             self.settings.digest_config_section,
@@ -67,22 +70,28 @@ class activity_IngestDigestToEndpoint(Activity):
         self.approve_status, errors = self.approve(article_id, status, version, run_type)
 
         # Download digest from the S3 outbox
-        docx_file = None
-        image_file = None
         if self.approve_status:
-            docx_file = self.download_docx_from_s3(article_id, self.settings.bot_bucket,
-                                                   self.input_dir)
-            if docx_file:
+            self.values["docx_file"] = self.download_docx_from_s3(
+                article_id, self.settings.bot_bucket, self.input_dir)
+            if self.values.get("docx_file"):
                 self.download_status = True
-            image_file = self.image_file_name_from_s3(article_id, self.settings.bot_bucket)
+            self.values["image_file"] = self.image_file_name_from_s3(
+                article_id, self.settings.bot_bucket)
 
-        json_content = None
-        if docx_file:
-            # todo jats file
-            jats_file_name = None
+        if self.download_status:
+            # download jats file
+            expanded_folder_name = session.get_value('expanded_folder')
+            expanded_bucket_name = (self.settings.publishing_buckets_prefix
+                                    + self.settings.expanded_bucket)
+            self.values["jats_file"] = download_article_xml(
+                self.settings, self.temp_dir, expanded_folder_name, expanded_bucket_name)
             # todo related article data
             related = None
-            json_content = self.digest_json(docx_file, jats_file_name, image_file, related)
+            self.values["json_content"] = self.digest_json(
+                self.values.get("docx_file"),
+                self.values.get("jats_file"),
+                self.values.get("image_file"),
+                related)
 
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 self.pretty_name, "end",
@@ -198,3 +207,18 @@ def approve_by_run_type(settings, logger, article_id, run_type, version):
             errors.append(message)
             logger.exception(message.lstrip())
     return approve_status, errors
+
+
+def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=None):
+    xml_file = lax_provider.get_xml_file_name(
+        settings, bucket_folder, bucket_name, version)
+    storage = storage_context(settings)
+    storage_provider = settings.storage_provider + "://"
+    orig_resource = storage_provider + bucket_name + "/" + bucket_folder
+    # download the file
+    article_xml_filename = xml_file.split('/')[-1]
+    filename_plus_path = os.path.join(to_dir, article_xml_filename)
+    with open(filename_plus_path, 'wb') as open_file:
+        storage_resource_origin = orig_resource + '/' + article_xml_filename
+        storage.get_resource_to_file(storage_resource_origin, open_file)
+        return filename_plus_path
