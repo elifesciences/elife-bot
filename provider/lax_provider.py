@@ -15,14 +15,16 @@ class ErrorCallingLaxException(Exception):
     pass
 
 
-def article_versions(article_id, settings):
-    url = settings.lax_article_versions.replace('{article_id}', article_id)
-    response = requests.get(url, verify=settings.verify_ssl)
+def lax_request(url, article_id, verify_ssl, request_type='version'):
+    "common request logic to Lax"
+    response = requests.get(url, verify=verify_ssl)
     logger.info("Request to lax: GET %s", url)
     logger.info("Response from lax: %s\n%s", response.status_code, response.content)
     status_code = response.status_code
     if status_code not in [200, 404]:
-        raise ErrorCallingLaxException("Error looking up article " + article_id + " version in Lax: %s\n%s" % (status_code, response.content))
+        raise ErrorCallingLaxException(
+            "Error looking up article " + article_id + " %s in Lax: %s\n%s" %
+            (request_type, status_code, response.content))
 
     if status_code == 200:
         data = response.json()
@@ -30,6 +32,17 @@ def article_versions(article_id, settings):
             return status_code, data["versions"]
 
     return status_code, None
+
+
+def article_versions(article_id, settings):
+    "get json for article versions from lax"
+    url = settings.lax_article_versions.replace('{article_id}', article_id)
+    return lax_request(url, article_id, settings.verify_ssl, 'version')
+
+
+def article_json(article_id, version, settings):
+    url = settings.lax_article_versions.replace('{article_id}', article_id) + '/' + version
+    return lax_request(url, article_id, settings.verify_ssl, 'json')
 
 
 def article_highest_version(article_id, settings):
