@@ -92,6 +92,33 @@ class TestLaxProvider(unittest.TestCase):
         mock_requests_get.return_value = response
         self.assertRaises(ErrorCallingLaxException, lax_provider.article_highest_version, '08411', settings_mock)
 
+    def test_lax_auth_header_none(self):
+        expected = {}
+        self.assertEqual(lax_provider.lax_auth_header(None), expected)
+
+    def test_lax_auth_header_true(self):
+        auth_key = 'a_key'
+        expected = {'Authorization': 'a_key'}
+        self.assertEqual(lax_provider.lax_auth_header(auth_key), expected)
+
+    def test_lax_auth_key_false(self):
+        expected = 'public'
+        self.assertEqual(lax_provider.lax_auth_key(settings_mock), expected)
+
+    def test_lax_auth_key_true(self):
+        expected = 'an_auth_key'
+        self.assertEqual(lax_provider.lax_auth_key(settings_mock, True), expected)
+
+    @patch('requests.get')
+    def test_article_json_200_auth(self, mock_requests_get):
+        response = MagicMock()
+        response.status_code = 200
+        response.json.return_value = {'type': 'research-article'}
+        mock_requests_get.return_value = response
+        status_code, data = lax_provider.article_json('08411', 1, settings_mock, True)
+        self.assertEqual(status_code, 200)
+        self.assertEqual(data, {'type': 'research-article'})
+
     # endpoint currently not available
     # @patch('provider.lax_provider.article_version')
     # def test_article_publication_date_by_version_id_version(self, mock_lax_provider_article_version):

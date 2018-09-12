@@ -15,9 +15,9 @@ class ErrorCallingLaxException(Exception):
     pass
 
 
-def lax_request(url, article_id, verify_ssl, request_type='version'):
+def lax_request(url, article_id, verify_ssl, request_type='version', auth_key=None):
     "common request logic to Lax"
-    response = requests.get(url, verify=verify_ssl)
+    response = requests.get(url, verify=verify_ssl, headers=lax_auth_header(auth_key))
     logger.info("Request to lax: GET %s", url)
     logger.info("Response from lax: %s\n%s", response.status_code, response.content)
     status_code = response.status_code
@@ -30,19 +30,38 @@ def lax_request(url, article_id, verify_ssl, request_type='version'):
         data = response.json()
         if "versions" in data:
             return status_code, data["versions"]
+        else:
+            return status_code, data
 
     return status_code, None
 
 
-def article_versions(article_id, settings):
+def lax_auth_header(auth_key):
+    "headers for requests to lax"
+    if auth_key:
+        return {'Authorization': auth_key}
+    return {}
+
+
+def lax_auth_key(settings, auth=False):
+    "value for the Authorization header in lax for public or auth by key"
+    if auth:
+        return settings.lax_auth_key
+    return 'public'
+
+
+def article_versions(article_id, settings, auth=False):
     "get json for article versions from lax"
     url = settings.lax_article_versions.replace('{article_id}', article_id)
-    return lax_request(url, article_id, settings.verify_ssl, 'version')
+    return lax_request(url, article_id, settings.verify_ssl, 'version',
+                       lax_auth_key(settings, auth))
 
 
-def article_json(article_id, version, settings):
-    url = settings.lax_article_versions.replace('{article_id}', article_id) + '/' + version
-    return lax_request(url, article_id, settings.verify_ssl, 'json')
+def article_json(article_id, version, settings, auth=False):
+    url = settings.lax_article_json.replace(
+        '{article_id}', article_id).replace('{version}', str(version))
+    return lax_request(url, article_id, settings.verify_ssl, 'json',
+                       lax_auth_key(settings, auth))
 
 
 def article_highest_version(article_id, settings):
