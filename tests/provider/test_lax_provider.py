@@ -111,13 +111,26 @@ class TestLaxProvider(unittest.TestCase):
 
     @patch('requests.get')
     def test_article_json_200_auth(self, mock_requests_get):
+        expected_data = {'type': 'research-article'}
+        expected_status_code = 200
         response = MagicMock()
-        response.status_code = 200
-        response.json.return_value = {'type': 'research-article'}
+        response.status_code = expected_status_code
+        response.json.return_value = expected_data
         mock_requests_get.return_value = response
         status_code, data = lax_provider.article_json('08411', 1, settings_mock, True)
-        self.assertEqual(status_code, 200)
-        self.assertEqual(data, {'type': 'research-article'})
+        self.assertEqual(status_code, expected_status_code)
+        self.assertEqual(data, expected_data)
+
+    @patch('requests.get')
+    def test_article_version_403(self, mock_requests_get):
+        "scenario where the request is not authorized"
+        expected_status_code = 403
+        response = MagicMock()
+        response.status_code = expected_status_code
+        mock_requests_get.return_value = response
+        status_code, data = lax_provider.article_json('08411', 1, settings_mock, True)
+        self.assertEqual(status_code, expected_status_code)
+        self.assertIsNone(data)
 
     # endpoint currently not available
     # @patch('provider.lax_provider.article_version')
