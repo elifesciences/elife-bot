@@ -21,7 +21,7 @@ def lax_request(url, article_id, verify_ssl, request_type='version', auth_key=No
     logger.info("Request to lax: GET %s", url)
     logger.info("Response from lax: %s\n%s", response.status_code, response.content)
     status_code = response.status_code
-    if status_code not in [200, 403, 404]:
+    if status_code not in [200, 404]:
         raise ErrorCallingLaxException(
             "Error looking up article " + article_id + " %s in Lax: %s\n%s" %
             (request_type, status_code, response.content))

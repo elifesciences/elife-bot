@@ -124,13 +124,11 @@ class TestLaxProvider(unittest.TestCase):
     @patch('requests.get')
     def test_article_version_403(self, mock_requests_get):
         "scenario where the request is not authorized"
-        expected_status_code = 403
         response = MagicMock()
-        response.status_code = expected_status_code
+        response.status_code = 403
         mock_requests_get.return_value = response
-        status_code, data = lax_provider.article_json('08411', 1, settings_mock, True)
-        self.assertEqual(status_code, expected_status_code)
-        self.assertIsNone(data)
+        self.assertRaises(ErrorCallingLaxException, lax_provider.article_json,
+                          '08411', 1, settings_mock, True)
 
     # endpoint currently not available
     # @patch('provider.lax_provider.article_version')
