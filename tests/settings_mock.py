@@ -32,6 +32,8 @@ lax_article_json = 'https://test/eLife.{article_id}/version/{version}'
 verify_ssl = False
 lax_auth_key = 'an_auth_key'
 
+digest_endpoint = 'https://digests/{digest_id}'
+
 no_download_extensions = 'tif'
 
 # Logging

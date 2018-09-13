@@ -1,10 +1,20 @@
 "functions shared by digest related activities"
 import os
 import traceback
+import requests
+import log
 from docx.opc.exceptions import PackageNotFoundError
 from digestparser import build, conf
 import provider.utils as utils
 from provider.storage_provider import storage_context
+
+
+IDENTITY = "process_%s" % os.getpid()
+LOGGER = log.logger("digest_provider.log", 'INFO', IDENTITY)
+
+
+class ErrorCallingDigestException(Exception):
+    pass
 
 
 def build_digest(input_file, temp_dir, logger=None, digest_config=None):
@@ -103,3 +113,27 @@ def has_image(digest_content):
     if not digest_content.image.file:
         return False
     return True
+
+
+def digest_get_request(url, verify_ssl, digest_id):
+    "common get request logic to digests API"
+    response = requests.get(url, verify=verify_ssl)
+    LOGGER.info("Request to digest API: GET %s", url)
+    LOGGER.info("Response from digest API: %s\n%s", response.status_code, response.content)
+    status_code = response.status_code
+    if status_code not in [200, 404]:
+        raise ErrorCallingDigestException(
+            "Error looking up digest " + digest_id + " in digest API: %s\n%s" %
+            (status_code, response.content))
+
+    if status_code == 200:
+        data = response.json()
+        return status_code, data
+
+    return status_code, None
+
+
+def get_digest(digest_id, settings):
+    "get digest from the endpoint"
+    url = settings.digest_endpoint.replace('{digest_id}', str(digest_id))
+    return digest_get_request(url, settings.verify_ssl, digest_id)

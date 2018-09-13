@@ -1,7 +1,10 @@
 import unittest
 import os
+import tests.settings_mock as settings_mock
 from digestparser.objects import Digest, Image
+from mock import patch, MagicMock
 import provider.digest_provider as digest_provider
+from provider.digest_provider import ErrorCallingDigestException
 
 
 class TestDigestProvider(unittest.TestCase):
@@ -48,3 +51,33 @@ class TestDigestProvider(unittest.TestCase):
         digest = Digest()
         digest.image = Image()
         self.assertEqual(digest_provider.has_image(digest), False)
+
+    @patch('requests.get')
+    def test_get_digest_200(self, mock_requests_get):
+        expected_status_code = 200
+        expected_data = {'id': u'99999'}
+        response = MagicMock()
+        response.status_code = 200
+        response.json.return_value = {'id': u'99999'}
+        mock_requests_get.return_value = response
+        status_code, data = digest_provider.get_digest('99999', settings_mock)
+        self.assertEqual(status_code, expected_status_code)
+        self.assertEqual(data, expected_data)
+
+    @patch('requests.get')
+    def test_get_digest_404(self, mock_requests_get):
+        expected_status_code = 404
+        response = MagicMock()
+        response.status_code = expected_status_code
+        mock_requests_get.return_value = response
+        status_code, data = digest_provider.get_digest('99999', settings_mock)
+        self.assertEqual(status_code, expected_status_code)
+        self.assertIsNone(data)
+
+    @patch('requests.get')
+    def test_get_digest_500(self, mock_requests_get):
+        response = MagicMock()
+        response.status_code = 500
+        mock_requests_get.return_value = response
+        self.assertRaises(ErrorCallingDigestException, digest_provider.get_digest,
+                          '99999', settings_mock)
