@@ -36,7 +36,9 @@ ppp_cdn_bucket = 'ppd_cdn_bucket'
 digest_cdn_bucket = 'ppd_cdn_bucket/digests'
 
 lax_article_versions = 'https://test/eLife.{article_id}/version/'
+lax_article_json = 'https://test/eLife.{article_id}/version/{version}'
 verify_ssl = False
+lax_auth_key = 'an_auth_key'
 
 PMC_FTP_URI = ""
 PMC_FTP_USERNAME = ""

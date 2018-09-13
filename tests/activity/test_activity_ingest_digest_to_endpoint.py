@@ -57,6 +57,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
 
     @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
     @patch.object(article, 'storage_context')
+    @patch.object(lax_provider, 'article_json')
     @patch.object(lax_provider, 'article_highest_version')
     @patch.object(digest_provider, 'storage_context')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
@@ -78,6 +79,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "status": 'vor',
             'version': '2',
             "lax_highest_version": '1',
+            "article_json": RELATED_DATA[0],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
             "expected_download_status": True,
@@ -85,7 +87,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "expected_jats_file": "elife-15747-v2.xml",
             "expected_json_contains": [
                 u'"title": "Fishing for errors in the\u00a0tests"',
-                "Microbes live in us and on us"
+                "Microbes live in us and on us",
+                u'"relatedContent": [{"type": "research-article"'
                 ]
         },
         {
@@ -122,7 +125,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_emit,
                          fake_session, fake_provider_storage_context,
-                         fake_highest_version, fake_article_storage_context, fake_get):
+                         fake_highest_version, fake_article_json,
+                         fake_article_storage_context, fake_get):
         # copy files into the input directory using the storage context
         named_fake_storage_context = FakeStorageContext()
         if test_data.get('bucket_resources'):
@@ -132,6 +136,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
         fake_highest_version.return_value = test_data.get('lax_highest_version')
+        fake_article_json.return_value = 200, test_data.get('article_json')
         fake_provider_storage_context.return_value = FakeStorageContext()
         fake_get.return_value = FakeResponse(200, IMAGE_JSON)
         activity_data = test_activity_data.data_example_before_publish

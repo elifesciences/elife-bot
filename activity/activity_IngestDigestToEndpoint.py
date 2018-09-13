@@ -85,8 +85,8 @@ class activity_IngestDigestToEndpoint(Activity):
                                     + self.settings.expanded_bucket)
             self.values["jats_file"] = download_article_xml(
                 self.settings, self.temp_dir, expanded_folder_name, expanded_bucket_name)
-            # todo related article data
-            related = None
+            # related article data
+            status_code, related = related_from_lax(article_id, version, self.settings)
             self.values["json_content"] = self.digest_json(
                 self.values.get("docx_file"),
                 self.values.get("jats_file"),
@@ -222,3 +222,11 @@ def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=N
         storage_resource_origin = orig_resource + '/' + article_xml_filename
         storage.get_resource_to_file(storage_resource_origin, open_file)
         return filename_plus_path
+
+def related_from_lax(article_id, version, settings, auth=True):
+    "get article json from Lax and return as a list of related data"
+    related = None
+    status_code, related_json = lax_provider.article_json(article_id, version, settings, auth)
+    if related_json:
+        related = [related_json]
+    return status_code, related
