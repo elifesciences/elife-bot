@@ -81,3 +81,34 @@ class TestDigestProvider(unittest.TestCase):
         mock_requests_get.return_value = response
         self.assertRaises(ErrorCallingDigestException, digest_provider.get_digest,
                           '99999', settings_mock)
+
+    @patch('requests.put')
+    def test_put_digest_204(self, mock_requests_get):
+        digest_id = '99999'
+        data = {}
+        expected_status_code = 204
+        response = MagicMock()
+        response.status_code = expected_status_code
+        mock_requests_get.return_value = response
+        status_code, content = digest_provider.put_digest(digest_id, data, settings_mock)
+        self.assertEqual(status_code, expected_status_code)
+
+    @patch('requests.put')
+    def test_put_digest_400(self, mock_requests_get):
+        digest_id = '99999'
+        data = {}
+        response = MagicMock()
+        response.status_code = 400
+        mock_requests_get.return_value = response
+        self.assertRaises(ErrorCallingDigestException, digest_provider.put_digest,
+                          digest_id, data, settings_mock)
+
+    @patch('requests.put')
+    def test_put_digest_403(self, mock_requests_get):
+        digest_id = '99999'
+        data = {}
+        response = MagicMock()
+        response.status_code = 403
+        mock_requests_get.return_value = response
+        self.assertRaises(ErrorCallingDigestException, digest_provider.put_digest,
+                          digest_id, data, settings_mock)

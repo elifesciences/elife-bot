@@ -33,6 +33,7 @@ verify_ssl = False
 lax_auth_key = 'an_auth_key'
 
 digest_endpoint = 'https://digests/{digest_id}'
+digest_auth_key = 'digest_auth_key'
 
 no_download_extensions = 'tif'
 

@@ -137,3 +137,41 @@ def get_digest(digest_id, settings):
     "get digest from the endpoint"
     url = settings.digest_endpoint.replace('{digest_id}', str(digest_id))
     return digest_get_request(url, settings.verify_ssl, digest_id)
+
+
+def digest_auth_key(settings, auth=False):
+    "value for the Authorization header for digest API"
+    if auth:
+        return settings.digest_auth_key
+
+
+def digest_auth_header(auth_key):
+    "headers for requests to digest API"
+    if auth_key:
+        return {'Authorization': auth_key}
+    return {}
+
+
+def digest_put_request(url, verify_ssl, digest_id, data, auth_key=None):
+    "put request logic to digests API"
+    response = requests.put(url, json=data, verify=verify_ssl,
+                            headers=digest_auth_header(auth_key))
+    LOGGER.info("Put to digest API: PUT %s", url)
+    LOGGER.info("Response from digest API: %s\n%s", response.status_code, response.content)
+    status_code = response.status_code
+    if status_code not in [204]:
+        raise ErrorCallingDigestException(
+            "Error put digest " + digest_id + " to digest API: %s\n%s" %
+            (status_code, response.content))
+
+    if status_code == 204:
+        return status_code, response.content
+
+    return status_code, None
+
+
+def put_digest(digest_id, data, settings, auth=True):
+    "put digest to the endpoint"
+    url = settings.digest_endpoint.replace('{digest_id}', str(digest_id))
+    return digest_put_request(url, settings.verify_ssl, digest_id, data,
+                              digest_auth_key(settings, auth))
