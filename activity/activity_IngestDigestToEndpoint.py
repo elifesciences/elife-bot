@@ -101,6 +101,8 @@ class activity_IngestDigestToEndpoint(Activity):
             if digest_id:
                 digest_status_code, digest_json = digest_provider.get_digest(digest_id, self.settings)
                 self.values["json_content"] = sync_json(self.values["json_content"], digest_json)
+            # set the stage attribute if missing
+            set_stage(self.values["json_content"])
 
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 self.pretty_name, "end",
@@ -244,7 +246,15 @@ def related_from_lax(article_id, version, settings, auth=True):
 
 def sync_json(json_content, digest_json):
     "update values in json_content with some from digest_json if present"
+    if not digest_json:
+        return json_content
     for attr in ['published', 'stage']:
         if digest_json.get(attr):
             json_content[attr] = digest_json.get(attr)
     return json_content
+
+
+def set_stage(json_content):
+    "set the stage attribute if missing"
+    if 'stage' not in json_content:
+        json_content['stage'] = 'preview'

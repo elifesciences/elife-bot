@@ -97,6 +97,23 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                 ]
         },
         {
+            "comment": "digest files with no existing digest json ingested",
+            "bucket_resources": ["elife-15747-v2.xml"],
+            "expanded_folder": "digests",
+            "article_id": '99999',
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_approve_status": True,
+            "expected_download_status": True,
+            "expected_generate_status": True,
+            "expected_docx_file": "digest-99999.docx",
+            "expected_jats_file": "elife-15747-v2.xml",
+            "expected_json_contains": [
+                u'"title": "Fishing for errors in the\u00a0tests"',
+                "Microbes live in us and on us",
+                '"stage": "preview"',
+                ]
+        },
+        {
             "comment": "poa article has no digest",
             "article_id": '99999',
             "status": 'poa',
