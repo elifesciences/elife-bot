@@ -38,6 +38,7 @@ class activity_IngestDigestToEndpoint(Activity):
         # Track the success of some steps
         self.approve_status = None
         self.download_status = None
+        self.generate_status = None
 
         # Keep track of object values
         self.values = {}
@@ -86,12 +87,20 @@ class activity_IngestDigestToEndpoint(Activity):
             self.values["jats_file"] = download_article_xml(
                 self.settings, self.temp_dir, expanded_folder_name, expanded_bucket_name)
             # related article data
-            status_code, related = related_from_lax(article_id, version, self.settings)
+            lax_status_code, related = related_from_lax(article_id, version, self.settings)
             self.values["json_content"] = self.digest_json(
                 self.values.get("docx_file"),
                 self.values.get("jats_file"),
                 self.values.get("image_file"),
                 related)
+            if self.values["json_content"]:
+                self.generate_status = True
+        if self.generate_status:
+            # get existing digest data
+            digest_id = self.values["json_content"].get("id")
+            if digest_id:
+                digest_status_code, digest_json = digest_provider.get_digest(digest_id, self.settings)
+                self.values["json_content"] = sync_json(self.values["json_content"], digest_json)
 
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 self.pretty_name, "end",
@@ -223,6 +232,7 @@ def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=N
         storage.get_resource_to_file(storage_resource_origin, open_file)
         return filename_plus_path
 
+
 def related_from_lax(article_id, version, settings, auth=True):
     "get article json from Lax and return as a list of related data"
     related = None
@@ -230,3 +240,11 @@ def related_from_lax(article_id, version, settings, auth=True):
     if related_json:
         related = [related_json]
     return status_code, related
+
+
+def sync_json(json_content, digest_json):
+    "update values in json_content with some from digest_json if present"
+    for attr in ['published', 'stage']:
+        if digest_json.get(attr):
+            json_content[attr] = digest_json.get(attr)
+    return json_content

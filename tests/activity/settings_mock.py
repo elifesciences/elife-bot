@@ -55,6 +55,8 @@ digest_sender_email = "sender@example.org"
 digest_recipient_email = ["e@example.org", "life@example.org"]
 digest_error_recipient_email = "error@example.org"
 
+digest_endpoint = 'https://digests/{digest_id}'
+
 features_publication_recipient_email = "features_team@example.org"
 publication_authority = ""
 consider_Lax_elife_2_0 = True
