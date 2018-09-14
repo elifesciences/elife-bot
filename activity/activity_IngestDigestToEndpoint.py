@@ -81,7 +81,7 @@ class activity_IngestDigestToEndpoint(Activity):
 
         if self.download_status:
             # download jats file
-            expanded_folder_name = session.get_value('expanded_folder')
+            expanded_folder_name = session.get_value("expanded_folder")
             expanded_bucket_name = (self.settings.publishing_buckets_prefix
                                     + self.settings.expanded_bucket)
             self.values["jats_file"] = download_article_xml(
@@ -139,7 +139,7 @@ class activity_IngestDigestToEndpoint(Activity):
         "download the docx file from the S3 outbox"
         docx_file = None
         resource_path = self.outbox_resource_path(article_id, bucket_name)
-        docx_file_name = digest_provider.new_file_name('.docx', article_id)
+        docx_file_name = digest_provider.new_file_name(".docx", article_id)
         resource_origin = resource_path + docx_file_name
         storage = storage_context(self.settings)
         if storage.resource_exists(resource_origin):
@@ -155,8 +155,8 @@ class activity_IngestDigestToEndpoint(Activity):
         object_list = storage.list_resources(resource_path)
         if object_list:
             for name in object_list:
-                if not name.endswith('.docx'):
-                    image_file_name = name.split('/')[-1]
+                if not name.endswith(".docx"):
+                    image_file_name = name.split("/")[-1]
         return image_file_name
 
     def digest_json(self, docx_file, jats_file=None, image_file=None, related=None):
@@ -227,10 +227,10 @@ def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=N
     storage_provider = settings.storage_provider + "://"
     orig_resource = storage_provider + bucket_name + "/" + bucket_folder
     # download the file
-    article_xml_filename = xml_file.split('/')[-1]
+    article_xml_filename = xml_file.split("/")[-1]
     filename_plus_path = os.path.join(to_dir, article_xml_filename)
-    with open(filename_plus_path, 'wb') as open_file:
-        storage_resource_origin = orig_resource + '/' + article_xml_filename
+    with open(filename_plus_path, "wb") as open_file:
+        storage_resource_origin = orig_resource + "/" + article_xml_filename
         storage.get_resource_to_file(storage_resource_origin, open_file)
         return filename_plus_path
 
@@ -248,7 +248,7 @@ def sync_json(json_content, digest_json):
     "update values in json_content with some from digest_json if present"
     if not digest_json:
         return json_content
-    for attr in ['published', 'stage']:
+    for attr in ["published", "stage"]:
         if digest_json.get(attr):
             json_content[attr] = digest_json.get(attr)
     return json_content
@@ -256,5 +256,5 @@ def sync_json(json_content, digest_json):
 
 def set_stage(json_content):
     "set the stage attribute if missing"
-    if 'stage' not in json_content:
-        json_content['stage'] = 'preview'
+    if "stage" not in json_content:
+        json_content["stage"] = "preview"
