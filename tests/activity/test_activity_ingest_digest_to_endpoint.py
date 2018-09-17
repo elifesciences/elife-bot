@@ -246,6 +246,26 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         expected_json = read_fixture(test_data.get("expected_json_file"), folder_name)
         self.assertEqual(json_content, expected_json)
 
+    def test_session_data_none_data(self):
+        "test no data supplied"
+        success, run, session, article_id, version = self.activity.session_data(None)
+        self.assertEqual(success, False)
+
+    def test_session_data_bad_data(self):
+        "test missing data run attribute"
+        success, run, session, article_id, version = self.activity.session_data({})
+        self.assertEqual(success, False)
+
+    def test_emit_start_none_data(self):
+        "test missing data run attribute"
+        success =  self.activity.emit_start(None, None, None)
+        self.assertEqual(success, False)
+
+    def test_emit_start_no_connection(self):
+        "test a possible bad connection to the emit queue"
+        success =  self.activity.emit_start("", "", "")
+        self.assertEqual(success, False)
+
 
 if __name__ == '__main__':
     unittest.main()

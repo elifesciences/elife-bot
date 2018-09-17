@@ -52,24 +52,18 @@ class activity_IngestDigestToEndpoint(Activity):
     def do_activity(self, data=None):
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
-        try:
-            run = data["run"]
-            session = get_session(self.settings, data, run)
-            version = session.get_value("version")
-            article_id = session.get_value("article_id")
-            status = session.get_value("status")
-            run_type = session.get_value("run_type")
-
-            self.emit_monitor_event(self.settings, article_id, version, run,
-                                    self.pretty_name, "start",
-                                    "Starting ingest digest to endpoint for " + article_id)
-        except Exception as exception:
-            self.logger.exception("Exception when getting the session for Starting ingest digest " +
-                                  " to endpoint. Details: %s", str(exception))
+        # get session data
+        success, run, session, article_id, version = self.session_data(data)
+        if success is not True:
+            return self.ACTIVITY_PERMANENT_FAILURE
+        # emit start message
+        success = self.emit_start(article_id, version, run)
+        if success is not True:
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # Approve for ingestion
-        self.approve_status, errors = self.approve(article_id, status, version, run_type)
+        self.approve_status, errors = self.approve(
+            article_id, session.get_value("status"), version, session.get_value("run_type"))
 
         # Download digest from the S3 outbox
         if self.approve_status:
@@ -116,6 +110,38 @@ class activity_IngestDigestToEndpoint(Activity):
                                 "Finished ingest digest to endpoint for " + article_id)
 
         return self.ACTIVITY_SUCCESS
+
+    def session_data(self, data):
+        "get session data and return basic values"
+        run = None
+        session = None
+        version = None
+        article_id = None
+        success = None
+        try:
+            run = data["run"]
+            session = get_session(self.settings, data, run)
+            version = session.get_value("version")
+            article_id = session.get_value("article_id")
+            success = True
+        except (TypeError, KeyError) as exception:
+            self.logger.exception("Exception when getting the session for Starting ingest digest " +
+                                  " to endpoint. Details: %s", str(exception))
+            success = False
+        return success, run, session, article_id, version
+
+    def emit_start(self, article_id, version, run):
+        "emit the start message to the queue"
+        success = None
+        try:
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    self.pretty_name, "start",
+                                    "Starting ingest digest to endpoint for " + article_id)
+            success = True
+        except Exception as exception:
+            self.logger.exception("Exception emitting start message. Details: %s", str(exception))
+            success = False
+        return success
 
     def approve(self, article_id, status, version, run_type):
         "should we ingest based on some basic attributes"
