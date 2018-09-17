@@ -61,6 +61,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch.object(lax_provider, 'article_highest_version')
     @patch.object(digest_provider, 'storage_context')
     @patch.object(digest_provider, 'get_digest')
+    @patch.object(digest_provider, 'put_digest')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
     @patch.object(activity_object, 'emit_monitor_event')
     @patch('activity.activity_IngestDigestToEndpoint.storage_context')
@@ -86,6 +87,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "expected_approve_status": True,
             "expected_download_status": True,
             "expected_generate_status": True,
+            "expected_ingest_status": True,
             "expected_docx_file": "digest-99999.docx",
             "expected_jats_file": "elife-15747-v2.xml",
             "expected_json_contains": [
@@ -105,6 +107,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "expected_approve_status": True,
             "expected_download_status": True,
             "expected_generate_status": True,
+            "expected_ingest_status": True,
             "expected_docx_file": "digest-99999.docx",
             "expected_jats_file": "elife-15747-v2.xml",
             "expected_json_contains": [
@@ -146,7 +149,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         },
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_emit,
-                         fake_session, fake_get_digest, fake_provider_storage_context,
+                         fake_session, fake_put_digest, fake_get_digest,
+                         fake_provider_storage_context,
                          fake_highest_version, fake_article_json,
                          fake_article_storage_context, fake_get):
         # copy files into the input directory using the storage context
@@ -158,6 +162,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
         fake_get_digest.return_value = 200, test_data.get('digest_json')
+        fake_put_digest.return_value = 204, None
         fake_highest_version.return_value = test_data.get('lax_highest_version')
         fake_article_json.return_value = 200, test_data.get('article_json')
         fake_provider_storage_context.return_value = FakeStorageContext()
@@ -173,6 +178,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         self.assertEqual(self.activity.download_status, test_data.get("expected_download_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.generate_status, test_data.get("expected_generate_status"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
+        self.assertEqual(self.activity.ingest_status, test_data.get("expected_ingest_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         if self.activity.values.get("docx_file"):
             expected_docx_file = (os.path.join(self.activity.input_dir,

@@ -56,6 +56,7 @@ digest_recipient_email = ["e@example.org", "life@example.org"]
 digest_error_recipient_email = "error@example.org"
 
 digest_endpoint = 'https://digests/{digest_id}'
+digest_auth_key = 'digest_auth_key'
 
 features_publication_recipient_email = "features_team@example.org"
 publication_authority = ""

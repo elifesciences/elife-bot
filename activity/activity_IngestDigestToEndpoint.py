@@ -39,6 +39,7 @@ class activity_IngestDigestToEndpoint(Activity):
         self.approve_status = None
         self.download_status = None
         self.generate_status = None
+        self.ingest_status = None
 
         # Keep track of object values
         self.values = {}
@@ -95,6 +96,7 @@ class activity_IngestDigestToEndpoint(Activity):
                 related)
             if self.values["json_content"]:
                 self.generate_status = True
+        digest_id = None
         if self.generate_status:
             # get existing digest data
             digest_id = self.values["json_content"].get("id")
@@ -103,6 +105,11 @@ class activity_IngestDigestToEndpoint(Activity):
                 self.values["json_content"] = sync_json(self.values["json_content"], digest_json)
             # set the stage attribute if missing
             set_stage(self.values["json_content"])
+        if digest_id:
+            put_status_code, response = digest_provider.put_digest(
+                digest_id, self.values["json_content"], self.settings)
+            if put_status_code == 204:
+                self.ingest_status = True
 
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 self.pretty_name, "end",
