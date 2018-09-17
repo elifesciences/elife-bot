@@ -198,6 +198,22 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                     (expected in json_string, 'failed in json_content in {comment}'.format(
                         comment=test_data.get("comment"))))
 
+    @patch('activity.activity_IngestDigestToEndpoint.get_session')
+    def test_do_activity_bad_data(self, fake_session):
+        "test bad data will be a permanent failure"
+        activity_data = None
+        expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
+        result = self.activity.do_activity(activity_data)
+        self.assertEqual(result, expected_result)
+
+    @patch('activity.activity_IngestDigestToEndpoint.get_session')
+    def test_do_activity_bad_queue(self, fake_session):
+        "test a bad message queue by not mocking it"
+        activity_data = test_activity_data.data_example_before_publish
+        expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
+        result = self.activity.do_activity(activity_data)
+        self.assertEqual(result, expected_result)
+
     @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
     @data(
         {
@@ -256,15 +272,21 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         success, run, session, article_id, version = self.activity.session_data({})
         self.assertEqual(success, False)
 
-    def test_emit_start_none_data(self):
+    def test_emit_start_message_none_data(self):
         "test missing data run attribute"
-        success =  self.activity.emit_start(None, None, None)
+        success = self.activity.emit_start_message(None, None, None)
         self.assertEqual(success, False)
 
-    def test_emit_start_no_connection(self):
+    def test_emit_start_message_no_connection(self):
         "test a possible bad connection to the emit queue"
-        success =  self.activity.emit_start("", "", "")
+        success = self.activity.emit_start_message("", "", "")
         self.assertEqual(success, False)
+
+    @patch.object(activity_object, 'emit_monitor_event')
+    def test_emit_error_message(self, fake_emit):
+        "test a possible bad connection to the emit queue"
+        success = self.activity.emit_error_message("", "", "", "")
+        self.assertEqual(success, True)
 
 
 if __name__ == '__main__':

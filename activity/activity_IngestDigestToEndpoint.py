@@ -55,15 +55,20 @@ class activity_IngestDigestToEndpoint(Activity):
         # get session data
         success, run, session, article_id, version = self.session_data(data)
         if success is not True:
+            self.logger.error("Failed to parse session data in %s" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
         # emit start message
-        success = self.emit_start(article_id, version, run)
+        success = self.emit_start_message(article_id, version, run)
         if success is not True:
+            self.logger.error("Failed to emit a start message in %s" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # Approve for ingestion
-        self.approve_status, errors = self.approve(
+        self.approve_status = self.approve(
             article_id, session.get_value("status"), version, session.get_value("run_type"))
+        if self.approve_status is not True:
+            self.logger.info("Digest for article %s was not approved for ingestion" % article_id)
+            return self.ACTIVITY_SUCCESS
 
         # Download digest from the S3 outbox
         if self.approve_status:
@@ -105,9 +110,7 @@ class activity_IngestDigestToEndpoint(Activity):
             if put_status_code == 204:
                 self.ingest_status = True
 
-        self.emit_monitor_event(self.settings, article_id, version, run,
-                                self.pretty_name, "end",
-                                "Finished ingest digest to endpoint for " + article_id)
+        emit_status = self.emit_end_message(article_id, version, run)
 
         return self.ACTIVITY_SUCCESS
 
@@ -126,42 +129,56 @@ class activity_IngestDigestToEndpoint(Activity):
             success = True
         except (TypeError, KeyError) as exception:
             self.logger.exception("Exception when getting the session for Starting ingest digest " +
-                                  " to endpoint. Details: %s", str(exception))
+                                  " to endpoint. Details: %s" % str(exception))
             success = False
         return success, run, session, article_id, version
 
-    def emit_start(self, article_id, version, run):
-        "emit the start message to the queue"
+    def emit_message(self, article_id, version, run, status, message):
+        "emit message to the queue"
         success = None
         try:
             self.emit_monitor_event(self.settings, article_id, version, run,
-                                    self.pretty_name, "start",
-                                    "Starting ingest digest to endpoint for " + article_id)
+                                    self.pretty_name, status, message)
             success = True
         except Exception as exception:
-            self.logger.exception("Exception emitting start message. Details: %s", str(exception))
+            self.logger.exception("Exception emitting %s message. Details: %s" %
+                                  (str(status), str(exception)))
             success = False
         return success
+
+    def emit_start_message(self, article_id, version, run):
+        "emit the start message to the queue"
+        return self.emit_message(
+            article_id, version, run, "start",
+            "Starting ingest digest to endpoint for " + str(article_id))
+
+    def emit_end_message(self, article_id, version, run):
+        "emit the end message to the queue"
+        return self.emit_message(
+            article_id, version, run, "end",
+            "Finished ingest digest to endpoint for " + str(article_id))
+
+    def emit_error_message(self, article_id, version, run, message):
+        "emit an error message to the queue"
+        return self.emit_message(
+            article_id, version, run, "error", message)
 
     def approve(self, article_id, status, version, run_type):
         "should we ingest based on some basic attributes"
         approve_status = True
-        approve_errors = []
 
         # check by status
-        return_status, errors = approve_by_status(self.logger, article_id, status)
+        return_status = approve_by_status(self.logger, article_id, status)
         if return_status is False:
             approve_status = return_status
-            approve_errors += errors
 
         # check silent corrections
-        return_status, errors = approve_by_run_type(
+        return_status = approve_by_run_type(
             self.settings, self.logger, article_id, run_type, version)
         if return_status is False:
             approve_status = return_status
-            approve_errors += errors
 
-        return approve_status, approve_errors
+        return approve_status
 
     def outbox_resource_path(self, article_id, bucket_name):
         "storage resource path for the outbox"
@@ -213,7 +230,6 @@ class activity_IngestDigestToEndpoint(Activity):
 def approve_by_status(logger, article_id, status):
     "determine approval status by article status value"
     approve_status = None
-    errors = []
     # PoA do not ingest digests
     if status == "poa":
         approve_status = False
@@ -221,13 +237,11 @@ def approve_by_status(logger, article_id, status):
             article_id=article_id
         ))
         logger.info(message)
-        errors.append(message)
-    return approve_status, errors
+    return approve_status
 
 
 def approve_by_run_type(settings, logger, article_id, run_type, version):
     approve_status = None
-    errors = []
     # VoR and is a silent correction, consult Lax for if it is not the highest version
     if run_type == "silent-correction":
         highest_version = lax_provider.article_highest_version(article_id, settings)
@@ -240,7 +254,6 @@ def approve_by_run_type(settings, logger, article_id, run_type, version):
                         article_id=article_id,
                         version=version,
                         highest=highest_version)
-                errors.append(message)
                 logger.info(message)
         except TypeError as exception:
             approve_status = False
@@ -248,9 +261,8 @@ def approve_by_run_type(settings, logger, article_id, run_type, version):
                 "\nException converting version to int for {article_id}, {exc}").format(
                     article_id=article_id,
                     exc=str(exception))
-            errors.append(message)
             logger.exception(message.lstrip())
-    return approve_status, errors
+    return approve_status
 
 
 def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=None):
