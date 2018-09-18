@@ -107,9 +107,13 @@ class activity_IngestDigestToEndpoint(Activity):
         # get existing digest data
         digest_id = self.digest_content.get("id")
         digest_status_code, digest_json = digest_provider.get_digest(digest_id, self.settings)
+        if not digest_json:
+            self.logger.info(
+                "Did not get existing digest json from the endpoint for digest_id %s" % str(digest_id))
         self.digest_content = sync_json(self.digest_content, digest_json)
         # set the stage attribute if missing
         set_stage(self.digest_content)
+        self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
         put_status_code, response = digest_provider.put_digest(
             digest_id, self.digest_content, self.settings)
@@ -330,7 +334,12 @@ def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=N
 def related_from_lax(article_id, version, settings, auth=True):
     "get article json from Lax and return as a list of related data"
     related = None
-    status_code, related_json = lax_provider.article_json(article_id, version, settings, auth)
+    try:
+        status_code, related_json = lax_provider.article_json(article_id, version, settings, auth)
+    except Exception as exception:
+        self.logger.exception(
+            "Exception in getting article_json from Lax for article_id %s, version %s. Details: %s" %
+            (str(article_id), str(version), str(exception)))
     if related_json:
         related = [related_json]
     return status_code, related
