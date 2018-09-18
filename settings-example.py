@@ -111,6 +111,10 @@ class exp():
     digest_recipient_email = ["e@example.org", "life@example.org"]
     digest_error_recipient_email = "error@example.org"
 
+    # digest endpoint
+    digest_endpoint = 'https://digests/{digest_id}'
+    digest_auth_key = 'digest_auth_key'
+
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
 
@@ -355,6 +359,10 @@ class dev():
     digest_recipient_email = ["e@example.org", "life@example.org"]
     digest_error_recipient_email = "error@example.org"
 
+    # digest endpoint
+    digest_endpoint = 'https://digests/{digest_id}'
+    digest_auth_key = 'digest_auth_key'
+
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
 
@@ -592,6 +600,10 @@ class live():
     digest_sender_email = "sender@example.org"
     digest_recipient_email = ["e@example.org", "life@example.org"]
     digest_error_recipient_email = "error@example.org"
+
+    # digest endpoint
+    digest_endpoint = 'https://digests/{digest_id}'
+    digest_auth_key = 'digest_auth_key'
 
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
