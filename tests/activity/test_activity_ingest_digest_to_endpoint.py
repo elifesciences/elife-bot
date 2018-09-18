@@ -88,8 +88,6 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "expected_download_status": True,
             "expected_generate_status": True,
             "expected_ingest_status": True,
-            "expected_docx_file": "digest-99999.docx",
-            "expected_jats_file": "elife-15747-v2.xml",
             "expected_json_contains": [
                 u'"title": "Fishing for errors in the\u00a0tests"',
                 "Microbes live in us and on us",
@@ -108,8 +106,6 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "expected_download_status": True,
             "expected_generate_status": True,
             "expected_ingest_status": True,
-            "expected_docx_file": "digest-99999.docx",
-            "expected_jats_file": "elife-15747-v2.xml",
             "expected_json_contains": [
                 u'"title": "Fishing for errors in the\u00a0tests"',
                 "Microbes live in us and on us",
@@ -181,18 +177,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.ingest_status, test_data.get("expected_ingest_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-        if self.activity.values.get("docx_file"):
-            expected_docx_file = (os.path.join(self.activity.input_dir,
-                                               test_data.get("expected_docx_file")))
-            self.assertEqual(self.activity.values.get("docx_file"), expected_docx_file,
-                             'failed in {comment}'.format(comment=test_data.get("comment")))
-        if self.activity.values.get("jats_file"):
-            expected_jats_file = (os.path.join(self.activity.temp_dir,
-                                               test_data.get("expected_jats_file")))
-            self.assertEqual(self.activity.values.get("jats_file"), expected_jats_file,
-                             'failed in {comment}'.format(comment=test_data.get("comment")))
-        if self.activity.values.get("json_content") and test_data.get("expected_json_contains"):
-            json_string = json.dumps(self.activity.values.get("json_content"))
+        if self.activity.digest_content and test_data.get("expected_json_contains"):
+            json_string = json.dumps(self.activity.digest_content)
             for expected in test_data.get("expected_json_contains"):
                 self.assertTrue(
                     (expected in json_string, 'failed in json_content in {comment}'.format(
@@ -209,6 +195,28 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
     def test_do_activity_bad_queue(self, fake_session):
         "test a bad message queue by not mocking it"
+        activity_data = test_activity_data.data_example_before_publish
+        expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
+        result = self.activity.do_activity(activity_data)
+        self.assertEqual(result, expected_result)
+
+    @patch.object(activity_object, 'emit_monitor_event')
+    @patch('activity.activity_IngestDigestToEndpoint.get_session')
+    def test_do_activity_docx_exists_exception(self, fake_session, fake_emit):
+        "test and error when checking if a docx exists"
+        activity_data = test_activity_data.data_example_before_publish
+        expected_result = activity_object.ACTIVITY_SUCCESS
+        result = self.activity.do_activity(activity_data)
+        self.assertEqual(result, expected_result)
+
+    @patch.object(activity_object, 'emit_monitor_event')
+    @patch('activity.activity_IngestDigestToEndpoint.storage_context')
+    @patch('activity.activity_IngestDigestToEndpoint.get_session')
+    def test_do_activity_bad_download(self, fake_session, fake_storage_context, fake_emit):
+        "test unable to download a digest docx file"
+        named_fake_storage_context = FakeStorageContext()
+        named_fake_storage_context.resource_exists = lambda return_true: True
+        fake_storage_context.return_value = named_fake_storage_context
         activity_data = test_activity_data.data_example_before_publish
         expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
         result = self.activity.do_activity(activity_data)

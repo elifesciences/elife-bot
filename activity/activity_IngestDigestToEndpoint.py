@@ -41,8 +41,8 @@ class activity_IngestDigestToEndpoint(Activity):
         self.generate_status = None
         self.ingest_status = None
 
-        # Keep track of object values
-        self.values = {}
+        # Digest JSON content
+        self.digest_content = None
 
         # Load the config
         self.digest_config = digest_provider.digest_config(
@@ -70,43 +70,50 @@ class activity_IngestDigestToEndpoint(Activity):
             self.logger.info("Digest for article %s was not approved for ingestion" % article_id)
             return self.ACTIVITY_SUCCESS
 
+        # check if there is a digest docx in the bucket for this article
+        docx_file_exists = self.docx_exists_in_s3(article_id, self.settings.bot_bucket)
+        if docx_file_exists is not True:
+            self.logger.info("Digest docx file does not exist in S3 for article %s" % article_id)
+            return self.ACTIVITY_SUCCESS
+
         # Download digest from the S3 outbox
-        if self.approve_status:
-            self.values["docx_file"] = self.download_docx_from_s3(
-                article_id, self.settings.bot_bucket, self.input_dir)
-            if self.values.get("docx_file"):
-                self.download_status = True
-            self.values["image_file"] = self.image_file_name_from_s3(
-                article_id, self.settings.bot_bucket)
+        docx_file = self.download_docx_from_s3(
+            article_id, self.settings.bot_bucket, self.input_dir)
+        if docx_file:
+            self.download_status = True
+        if self.download_status is not True:
+            self.logger.info("Unable to download digest file %s for article %s" %
+                             (docx_file, article_id))
+            return self.ACTIVITY_PERMANENT_FAILURE
+        # find the image file name
+        image_file = self.image_file_name_from_s3(
+            article_id, self.settings.bot_bucket)
 
         if self.download_status:
             # download jats file
             expanded_folder_name = session.get_value("expanded_folder")
             expanded_bucket_name = (self.settings.publishing_buckets_prefix
                                     + self.settings.expanded_bucket)
-            self.values["jats_file"] = download_article_xml(
+            jats_file = download_article_xml(
                 self.settings, self.temp_dir, expanded_folder_name, expanded_bucket_name)
             # related article data
             lax_status_code, related = related_from_lax(article_id, version, self.settings)
-            self.values["json_content"] = self.digest_json(
-                self.values.get("docx_file"),
-                self.values.get("jats_file"),
-                self.values.get("image_file"),
-                related)
-            if self.values["json_content"]:
+            self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
+            if self.digest_content:
                 self.generate_status = True
+
         digest_id = None
         if self.generate_status:
             # get existing digest data
-            digest_id = self.values["json_content"].get("id")
+            digest_id = self.digest_content.get("id")
             if digest_id:
                 digest_status_code, digest_json = digest_provider.get_digest(digest_id, self.settings)
-                self.values["json_content"] = sync_json(self.values["json_content"], digest_json)
+                self.digest_content = sync_json(self.digest_content, digest_json)
             # set the stage attribute if missing
-            set_stage(self.values["json_content"])
+            set_stage(self.digest_content)
         if digest_id:
             put_status_code, response = digest_provider.put_digest(
-                digest_id, self.values["json_content"], self.settings)
+                digest_id, self.digest_content, self.settings)
             if put_status_code == 204:
                 self.ingest_status = True
 
@@ -185,16 +192,38 @@ class activity_IngestDigestToEndpoint(Activity):
         return digest_provider.outbox_resource_path(
             self.settings.storage_provider, article_id, bucket_name)
 
+    def docx_file_name(self, article_id):
+        "file name for the digest docx file"
+        return digest_provider.new_file_name(".docx", article_id)
+
+    def docx_resource_origin(self, article_id, bucket_name):
+        "the resource_origin of the docx file in the storage context"
+        resource_path = self.outbox_resource_path(article_id, bucket_name)
+        return resource_path + self.docx_file_name(article_id)
+
+    def docx_exists_in_s3(self, article_id, bucket_name):
+        "check if a digest docx exists in the S3 outbox"
+        resource_origin = self.docx_resource_origin(article_id, bucket_name)
+        storage = storage_context(self.settings)
+        try:
+            return storage.resource_exists(resource_origin)
+        except Exception as exception:
+            self.logger.exception(
+                "Exception checking if digest docx exists for article %s. Details: %s" %
+                (str(article_id), str(exception)))
+
     def download_docx_from_s3(self, article_id, bucket_name, to_dir):
         "download the docx file from the S3 outbox"
         docx_file = None
-        resource_path = self.outbox_resource_path(article_id, bucket_name)
-        docx_file_name = digest_provider.new_file_name(".docx", article_id)
-        resource_origin = resource_path + docx_file_name
+        resource_origin = self.docx_resource_origin(article_id, bucket_name)
         storage = storage_context(self.settings)
-        if storage.resource_exists(resource_origin):
+        try:
             docx_file = digest_provider.download_digest(
-                storage, docx_file_name, resource_origin, to_dir)
+                storage, self.docx_file_name(article_id), resource_origin, to_dir)
+        except Exception as exception:
+            self.logger.exception(
+                "Exception downloading docx for article %s. Details: %s" %
+                (str(article_id), str(exception)))
         return docx_file
 
     def image_file_name_from_s3(self, article_id, bucket_name):
