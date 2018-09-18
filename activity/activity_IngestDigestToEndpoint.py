@@ -109,16 +109,15 @@ class activity_IngestDigestToEndpoint(Activity):
         digest_status_code, digest_json = digest_provider.get_digest(digest_id, self.settings)
         if not digest_json:
             self.logger.info(
-                "Did not get existing digest json from the endpoint for digest_id %s" % str(digest_id))
+                "Did not get existing digest json from the endpoint for digest_id %s" %
+                str(digest_id))
         self.digest_content = sync_json(self.digest_content, digest_json)
         # set the stage attribute if missing
         set_stage(self.digest_content)
         self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
-        put_status_code, response = digest_provider.put_digest(
+        self.ingest_status = self.put_digest_to_endpoint(
             digest_id, self.digest_content, self.settings)
-        if put_status_code == 204:
-            self.ingest_status = True
 
         self.emit_end_message(article_id, version, run)
 
@@ -266,6 +265,23 @@ class activity_IngestDigestToEndpoint(Activity):
                 "Exception generating digest json for docx_file %s. Details: %s" %
                 (str(docx_file), str(exception)))
         return json_content
+
+    def put_digest_to_endpoint(self, digest_id, digest_content, settings):
+        "handle issuing the PUT to the digest endpoint"
+        put_status = None
+        try:
+            status_code, response = digest_provider.put_digest(digest_id, digest_content, settings)
+            if status_code == 204:
+                put_status = True
+            else:
+                self.logger.error("PUT to digest endpoint status code  %s. Response: %s" %
+                                  str(status_code), str(response))
+        except Exception as exception:
+            self.logger.exception(
+                "Exception issuing PUT to the digest endpoint for digest_id %s. Details: %s" %
+                (str(digest_id), str(exception)))
+            put_status = False
+        return put_status
 
     def create_activity_directories(self):
         """
