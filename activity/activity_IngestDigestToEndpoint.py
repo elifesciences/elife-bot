@@ -89,35 +89,34 @@ class activity_IngestDigestToEndpoint(Activity):
         image_file = self.image_file_name_from_s3(
             article_id, self.settings.bot_bucket)
 
-        if self.download_status:
-            # download jats file
-            expanded_folder_name = session.get_value("expanded_folder")
-            expanded_bucket_name = (self.settings.publishing_buckets_prefix
-                                    + self.settings.expanded_bucket)
-            jats_file = download_article_xml(
-                self.settings, self.temp_dir, expanded_folder_name, expanded_bucket_name)
-            # related article data
-            lax_status_code, related = related_from_lax(article_id, version, self.settings)
-            self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
-            if self.digest_content:
-                self.generate_status = True
+        # download jats file
+        jats_file = self.download_jats(session.get_value("expanded_folder"))
+        # related article data
+        lax_status_code, related = related_from_lax(article_id, version, self.settings)
+        # generate the digest content
+        self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
+        if self.digest_content:
+            self.generate_status = True
+        if self.generate_status is not True:
+            self.logger.info(
+                "Unable to generate Digest content for docx_file %s, jats_file %s, image_file %s" %
+                (docx_file, jats_file, image_file))
+            # for now return success to not impede the article ingest workflow
+            return self.ACTIVITY_SUCCESS
 
-        digest_id = None
-        if self.generate_status:
-            # get existing digest data
-            digest_id = self.digest_content.get("id")
-            if digest_id:
-                digest_status_code, digest_json = digest_provider.get_digest(digest_id, self.settings)
-                self.digest_content = sync_json(self.digest_content, digest_json)
-            # set the stage attribute if missing
-            set_stage(self.digest_content)
-        if digest_id:
-            put_status_code, response = digest_provider.put_digest(
-                digest_id, self.digest_content, self.settings)
-            if put_status_code == 204:
-                self.ingest_status = True
+        # get existing digest data
+        digest_id = self.digest_content.get("id")
+        digest_status_code, digest_json = digest_provider.get_digest(digest_id, self.settings)
+        self.digest_content = sync_json(self.digest_content, digest_json)
+        # set the stage attribute if missing
+        set_stage(self.digest_content)
 
-        emit_status = self.emit_end_message(article_id, version, run)
+        put_status_code, response = digest_provider.put_digest(
+            digest_id, self.digest_content, self.settings)
+        if put_status_code == 204:
+            self.ingest_status = True
+
+        self.emit_end_message(article_id, version, run)
 
         return self.ACTIVITY_SUCCESS
 
@@ -238,11 +237,30 @@ class activity_IngestDigestToEndpoint(Activity):
                     image_file_name = name.split("/")[-1]
         return image_file_name
 
+    def download_jats(self, expanded_folder_name):
+        "download the jats file from the expanded folder on S3"
+        jats_file = None
+        expanded_bucket_name = (self.settings.publishing_buckets_prefix
+                                + self.settings.expanded_bucket)
+        try:
+            jats_file = download_article_xml(
+                self.settings, self.temp_dir, expanded_folder_name, expanded_bucket_name)
+        except Exception as exception:
+            self.logger.exception(
+                "Exception generating digest json for docx_file %s. Details: %s" %
+                (str(docx_file), str(exception)))
+        return jats_file
+
     def digest_json(self, docx_file, jats_file=None, image_file=None, related=None):
         "generate the digest json content from the docx file and other data"
         json_content = None
-        json_content = json_output.build_json(docx_file, self.temp_dir, self.digest_config,
-                                              jats_file, image_file, related)
+        try:
+            json_content = json_output.build_json(docx_file, self.temp_dir, self.digest_config,
+                                                  jats_file, image_file, related)
+        except Exception as exception:
+            self.logger.exception(
+                "Exception generating digest json for docx_file %s. Details: %s" %
+                (str(docx_file), str(exception)))
         return json_content
 
     def create_activity_directories(self):
