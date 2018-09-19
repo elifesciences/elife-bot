@@ -270,17 +270,12 @@ class activity_IngestDigestToEndpoint(Activity):
         "handle issuing the PUT to the digest endpoint"
         put_status = None
         try:
-            status_code, response = digest_provider.put_digest(digest_id, digest_content, settings)
-            if status_code == 204:
-                put_status = True
-            else:
-                self.logger.error("PUT to digest endpoint status code  %s. Response: %s" %
-                                  str(status_code), str(response))
+            digest_provider.put_digest(digest_id, digest_content, settings)
+            put_status = True
         except Exception as exception:
             self.logger.exception(
                 "Exception issuing PUT to the digest endpoint for digest_id %s. Details: %s" %
                 (str(digest_id), str(exception)))
-            put_status = False
         return put_status
 
     def create_activity_directories(self):

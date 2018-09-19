@@ -156,15 +156,12 @@ def digest_put_request(url, verify_ssl, digest_id, data, auth_key=None):
     LOGGER.info("Put to digest API: PUT %s", url)
     LOGGER.info("Response from digest API: %s\n%s", response.status_code, response.content)
     status_code = response.status_code
-    if status_code not in [204]:
+    if not 300 > status_code >= 200:
         raise ErrorCallingDigestException(
             "Error put digest " + digest_id + " to digest API: %s\n%s" %
             (status_code, response.content))
-
-    if status_code == 204:
-        return status_code, response.content
-
-    return status_code, None
+    else:
+        return response.content
 
 
 def put_digest(digest_id, data, settings, auth=True):

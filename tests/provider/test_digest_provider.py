@@ -82,12 +82,14 @@ class TestDigestProvider(unittest.TestCase):
     def test_put_digest_204(self, mock_requests_get):
         digest_id = '99999'
         data = {}
-        expected_status_code = 204
         response = MagicMock()
-        response.status_code = expected_status_code
+        response.status_code = 204
         mock_requests_get.return_value = response
-        status_code, content = digest_provider.put_digest(digest_id, data, settings_mock)
-        self.assertEqual(status_code, expected_status_code)
+        # cannot depend on a return value, just check there is no exception
+        try:
+            digest_provider.put_digest(digest_id, data, settings_mock)
+        except ErrorCallingDigestException:
+            self.assertFalse(True)
 
     @patch('requests.put')
     def test_put_digest_400(self, mock_requests_get):
