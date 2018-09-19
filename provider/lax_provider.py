@@ -57,11 +57,13 @@ def article_versions(article_id, settings, auth=False):
                        lax_auth_key(settings, auth))
 
 
-def article_json(article_id, version, settings, auth=False):
-    url = settings.lax_article_json.replace(
-        '{article_id}', article_id).replace('{version}', str(version))
-    return lax_request(url, article_id, settings.verify_ssl, 'json',
-                       lax_auth_key(settings, auth))
+def article_snippet(article_id, version, settings, auth=False):
+    "snippet from the versions list for this version"
+    status_code, data = article_versions(article_id, settings, auth)
+    if status_code == 200:
+        snippet = (vd for vd in data if vd["version"] == int(version)).next()
+        return snippet
+    raise Exception("Error in article_snippet: Version not found. Status: " + str(status_code))
 
 
 def article_highest_version(article_id, settings):

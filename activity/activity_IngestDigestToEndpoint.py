@@ -92,8 +92,7 @@ class activity_IngestDigestToEndpoint(Activity):
         # download jats file
         jats_file = self.download_jats(session.get_value("expanded_folder"))
         # related article data
-        lax_status_code, related = related_from_lax(article_id, version,
-                                                    self.settings, self.logger)
+        related = related_from_lax(article_id, version, self.settings, self.logger)
         # generate the digest content
         self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
         if self.digest_content:
@@ -351,15 +350,16 @@ def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=N
 def related_from_lax(article_id, version, settings, logger=None, auth=True):
     "get article json from Lax and return as a list of related data"
     related = None
+    related_json = None
     try:
-        status_code, related_json = lax_provider.article_json(article_id, version, settings, auth)
+        related_json = lax_provider.article_snippet(article_id, version, settings, auth)
     except Exception as exception:
         logger.exception(
-            "Exception in getting article_json from Lax for article_id %s, version %s. Details: %s" %
+            "Exception in getting article snippet from Lax for article_id %s, version %s. Details: %s" %
             (str(article_id), str(version), str(exception)))
     if related_json:
         related = [related_json]
-    return status_code, related
+    return related
 
 
 def sync_json(json_content, digest_json):

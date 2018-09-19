@@ -57,7 +57,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
 
     @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
     @patch.object(article, 'storage_context')
-    @patch.object(lax_provider, 'article_json')
+    @patch.object(lax_provider, 'article_snippet')
     @patch.object(lax_provider, 'article_highest_version')
     @patch.object(digest_provider, 'storage_context')
     @patch.object(digest_provider, 'get_digest')
@@ -81,7 +81,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "status": 'vor',
             'version': '2',
             "lax_highest_version": '1',
-            "article_json": RELATED_DATA[0],
+            "article_snippet": RELATED_DATA[0],
             "digest_json": {"stage": "published", "published": "2018-07-06T09:06:01Z"},
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
@@ -147,7 +147,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     def test_do_activity(self, test_data, fake_storage_context, fake_emit,
                          fake_session, fake_put_digest, fake_get_digest,
                          fake_provider_storage_context,
-                         fake_highest_version, fake_article_json,
+                         fake_highest_version, fake_article_snippet,
                          fake_article_storage_context, fake_get):
         # copy files into the input directory using the storage context
         named_fake_storage_context = FakeStorageContext()
@@ -160,7 +160,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         fake_get_digest.return_value = 200, test_data.get('digest_json')
         fake_put_digest.return_value = 204, None
         fake_highest_version.return_value = test_data.get('lax_highest_version')
-        fake_article_json.return_value = 200, test_data.get('article_json')
+        fake_article_snippet.return_value = 200, test_data.get('article_snippet')
         fake_provider_storage_context.return_value = FakeStorageContext()
         fake_get.return_value = FakeResponse(200, IMAGE_JSON)
         activity_data = test_activity_data.data_example_before_publish

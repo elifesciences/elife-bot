@@ -28,7 +28,6 @@ ses_poa_sender_email = ""
 ses_poa_recipient_email = ""
 
 lax_article_versions = 'https://test/eLife.{article_id}/version/'
-lax_article_json = 'https://test/eLife.{article_id}/version/{version}'
 verify_ssl = False
 lax_auth_key = 'an_auth_key'
 
