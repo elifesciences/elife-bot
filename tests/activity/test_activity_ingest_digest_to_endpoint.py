@@ -169,13 +169,17 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.approve_status, test_data.get("expected_approve_status"),
+        self.assertEqual(self.activity.statuses.get("approve"),
+                         test_data.get("expected_approve_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.download_status, test_data.get("expected_download_status"),
+        self.assertEqual(self.activity.statuses.get("download"),
+                         test_data.get("expected_download_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.generate_status, test_data.get("expected_generate_status"),
+        self.assertEqual(self.activity.statuses.get("generate"),
+                         test_data.get("expected_generate_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.ingest_status, test_data.get("expected_ingest_status"),
+        self.assertEqual(self.activity.statuses.get("ingest"),
+                         test_data.get("expected_ingest_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         if self.activity.digest_content and test_data.get("expected_json_contains"):
             json_string = json.dumps(self.activity.digest_content)

@@ -36,10 +36,12 @@ class activity_IngestDigestToEndpoint(Activity):
         self.create_activity_directories()
 
         # Track the success of some steps
-        self.approve_status = None
-        self.download_status = None
-        self.generate_status = None
-        self.ingest_status = None
+        self.statuses = {
+            "approve": None,
+            "download": None,
+            "generate": None,
+            "ingest": None
+        }
 
         # Digest JSON content
         self.digest_content = None
@@ -64,9 +66,9 @@ class activity_IngestDigestToEndpoint(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # Approve for ingestion
-        self.approve_status = self.approve(
+        self.statuses["approve"] = self.approve(
             article_id, session.get_value("status"), version, session.get_value("run_type"))
-        if self.approve_status is not True:
+        if self.statuses.get("approve") is not True:
             self.logger.info("Digest for article %s was not approved for ingestion" % article_id)
             return self.ACTIVITY_SUCCESS
 
@@ -80,8 +82,8 @@ class activity_IngestDigestToEndpoint(Activity):
         docx_file = self.download_docx_from_s3(
             article_id, self.settings.bot_bucket, self.input_dir)
         if docx_file:
-            self.download_status = True
-        if self.download_status is not True:
+            self.statuses["download"] = True
+        if self.statuses.get("download") is not True:
             self.logger.info("Unable to download digest file %s for article %s" %
                              (docx_file, article_id))
             return self.ACTIVITY_PERMANENT_FAILURE
@@ -96,8 +98,8 @@ class activity_IngestDigestToEndpoint(Activity):
         # generate the digest content
         self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
         if self.digest_content:
-            self.generate_status = True
-        if self.generate_status is not True:
+            self.statuses["generate"] = True
+        if self.statuses.get("generate") is not True:
             self.logger.info(
                 "Unable to generate Digest content for docx_file %s, jats_file %s, image_file %s" %
                 (docx_file, jats_file, image_file))
@@ -116,7 +118,7 @@ class activity_IngestDigestToEndpoint(Activity):
         set_stage(self.digest_content)
         self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
-        self.ingest_status = self.put_digest_to_endpoint(
+        self.statuses["ingest"] = self.put_digest_to_endpoint(
             digest_id, self.digest_content, self.settings)
 
         self.emit_end_message(article_id, version, run)
