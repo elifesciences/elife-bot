@@ -82,7 +82,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             'version': '2',
             "lax_highest_version": '1',
             "article_snippet": RELATED_DATA[0],
-            "digest_json": {"stage": "published", "published": "2018-07-06T09:06:01Z"},
+            "existing_digest_json": {"stage": "published", "published": "2018-07-06T09:06:01Z"},
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
             "expected_download_status": True,
@@ -157,7 +157,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext()
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
-        fake_get_digest.return_value = 200, test_data.get('digest_json')
+        fake_get_digest.return_value = test_data.get('existing_digest_json')
         fake_put_digest.return_value = 204, None
         fake_highest_version.return_value = test_data.get('lax_highest_version')
         fake_article_snippet.return_value = 200, test_data.get('article_snippet')

@@ -127,10 +127,7 @@ def digest_get_request(url, verify_ssl, digest_id):
             (status_code, response.content))
 
     if status_code == 200:
-        data = response.json()
-        return status_code, data
-
-    return status_code, None
+        return response.json()
 
 
 def get_digest(digest_id, settings):

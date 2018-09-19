@@ -106,12 +106,12 @@ class activity_IngestDigestToEndpoint(Activity):
 
         # get existing digest data
         digest_id = self.digest_content.get("id")
-        digest_status_code, digest_json = digest_provider.get_digest(digest_id, self.settings)
-        if not digest_json:
+        existing_digest_json = digest_provider.get_digest(digest_id, self.settings)
+        if not existing_digest_json:
             self.logger.info(
                 "Did not get existing digest json from the endpoint for digest_id %s" %
                 str(digest_id))
-        self.digest_content = sync_json(self.digest_content, digest_json)
+        self.digest_content = sync_json(self.digest_content, existing_digest_json)
         # set the stage attribute if missing
         set_stage(self.digest_content)
         self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
@@ -362,13 +362,13 @@ def related_from_lax(article_id, version, settings, logger=None, auth=True):
     return related
 
 
-def sync_json(json_content, digest_json):
-    "update values in json_content with some from digest_json if present"
-    if not digest_json:
+def sync_json(json_content, existing_digest_json):
+    "update values in json_content with some from existing digest json if present"
+    if not existing_digest_json:
         return json_content
     for attr in ["published", "stage"]:
-        if digest_json.get(attr):
-            json_content[attr] = digest_json.get(attr)
+        if existing_digest_json.get(attr):
+            json_content[attr] = existing_digest_json.get(attr)
     return json_content
 
 

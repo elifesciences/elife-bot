@@ -54,24 +54,20 @@ class TestDigestProvider(unittest.TestCase):
 
     @patch('requests.get')
     def test_get_digest_200(self, mock_requests_get):
-        expected_status_code = 200
         expected_data = {'id': u'99999'}
         response = MagicMock()
         response.status_code = 200
         response.json.return_value = {'id': u'99999'}
         mock_requests_get.return_value = response
-        status_code, data = digest_provider.get_digest('99999', settings_mock)
-        self.assertEqual(status_code, expected_status_code)
+        data = digest_provider.get_digest('99999', settings_mock)
         self.assertEqual(data, expected_data)
 
     @patch('requests.get')
     def test_get_digest_404(self, mock_requests_get):
-        expected_status_code = 404
         response = MagicMock()
-        response.status_code = expected_status_code
+        response.status_code = 404
         mock_requests_get.return_value = response
-        status_code, data = digest_provider.get_digest('99999', settings_mock)
-        self.assertEqual(status_code, expected_status_code)
+        data = digest_provider.get_digest('99999', settings_mock)
         self.assertIsNone(data)
 
     @patch('requests.get')
