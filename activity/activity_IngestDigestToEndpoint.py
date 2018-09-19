@@ -92,7 +92,8 @@ class activity_IngestDigestToEndpoint(Activity):
         # download jats file
         jats_file = self.download_jats(session.get_value("expanded_folder"))
         # related article data
-        lax_status_code, related = related_from_lax(article_id, version, self.settings)
+        lax_status_code, related = related_from_lax(article_id, version,
+                                                    self.settings, self.logger)
         # generate the digest content
         self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
         if self.digest_content:
@@ -250,8 +251,8 @@ class activity_IngestDigestToEndpoint(Activity):
                 self.settings, self.temp_dir, expanded_folder_name, expanded_bucket_name)
         except Exception as exception:
             self.logger.exception(
-                "Exception generating digest json for docx_file %s. Details: %s" %
-                (str(docx_file), str(exception)))
+                "Exception downloading jats from from expanded folder %s. Details: %s" %
+                (str(expanded_folder_name), str(exception)))
         return jats_file
 
     def digest_json(self, docx_file, jats_file=None, image_file=None, related=None):
@@ -347,13 +348,13 @@ def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=N
         return filename_plus_path
 
 
-def related_from_lax(article_id, version, settings, auth=True):
+def related_from_lax(article_id, version, settings, logger=None, auth=True):
     "get article json from Lax and return as a list of related data"
     related = None
     try:
         status_code, related_json = lax_provider.article_json(article_id, version, settings, auth)
     except Exception as exception:
-        self.logger.exception(
+        logger.exception(
             "Exception in getting article_json from Lax for article_id %s, version %s. Details: %s" %
             (str(article_id), str(version), str(exception)))
     if related_json:
