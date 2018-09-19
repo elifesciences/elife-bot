@@ -200,14 +200,10 @@ class activity_IngestDigestToEndpoint(Activity):
         return digest_provider.outbox_resource_path(
             self.settings.storage_provider, article_id, bucket_name)
 
-    def docx_file_name(self, article_id):
-        "file name for the digest docx file"
-        return digest_provider.new_file_name(".docx", article_id)
-
     def docx_resource_origin(self, article_id, bucket_name):
         "the resource_origin of the docx file in the storage context"
         resource_path = self.outbox_resource_path(article_id, bucket_name)
-        return resource_path + self.docx_file_name(article_id)
+        return resource_path + digest_provider.docx_file_name(article_id)
 
     def docx_exists_in_s3(self, article_id, bucket_name):
         "check if a digest docx exists in the S3 outbox"
@@ -227,7 +223,7 @@ class activity_IngestDigestToEndpoint(Activity):
         storage = storage_context(self.settings)
         try:
             docx_file = digest_provider.download_digest(
-                storage, self.docx_file_name(article_id), resource_origin, to_dir)
+                storage, digest_provider.docx_file_name(article_id), resource_origin, to_dir)
         except Exception as exception:
             self.logger.exception(
                 "Exception downloading docx for article %s. Details: %s" %

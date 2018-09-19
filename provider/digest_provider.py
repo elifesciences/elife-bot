@@ -47,6 +47,11 @@ def new_file_name(file_name, msid):
         return 'digest-{msid:0>5}.{extension}'.format(msid=msid, extension=extension)
 
 
+def docx_file_name(article_id):
+    "file name for the digest docx file"
+    return new_file_name(".docx", article_id)
+
+
 def digest_resource_origin(storage_provider, filename, bucket_name, bucket_folder):
     "concatenate the origin of a digest file for the storage provider"
     if not filename or not bucket_name or bucket_folder is None:
