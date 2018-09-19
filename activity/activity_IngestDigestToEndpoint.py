@@ -54,74 +54,82 @@ class activity_IngestDigestToEndpoint(Activity):
     def do_activity(self, data=None):
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
-        # get session data
-        success, run, session, article_id, version = self.session_data(data)
-        if success is not True:
-            self.logger.error("Failed to parse session data in %s" % self.pretty_name)
-            return self.ACTIVITY_PERMANENT_FAILURE
-        # emit start message
-        success = self.emit_start_message(article_id, version, run)
-        if success is not True:
-            self.logger.error("Failed to emit a start message in %s" % self.pretty_name)
-            return self.ACTIVITY_PERMANENT_FAILURE
+        # Wrap in an exception during testing phase
+        try:
 
-        # Approve for ingestion
-        self.statuses["approve"] = self.approve(
-            article_id, session.get_value("status"), version, session.get_value("run_type"))
-        if self.statuses.get("approve") is not True:
-            self.logger.info("Digest for article %s was not approved for ingestion" % article_id)
-            return self.ACTIVITY_SUCCESS
+            # get session data
+            success, run, session, article_id, version = self.session_data(data)
+            if success is not True:
+                self.logger.error("Failed to parse session data in %s" % self.pretty_name)
+                return self.ACTIVITY_PERMANENT_FAILURE
+            # emit start message
+            success = self.emit_start_message(article_id, version, run)
+            if success is not True:
+                self.logger.error("Failed to emit a start message in %s" % self.pretty_name)
+                return self.ACTIVITY_PERMANENT_FAILURE
 
-        # check if there is a digest docx in the bucket for this article
-        docx_file_exists = self.docx_exists_in_s3(article_id, self.settings.bot_bucket)
-        if docx_file_exists is not True:
-            self.logger.info("Digest docx file does not exist in S3 for article %s" % article_id)
-            return self.ACTIVITY_SUCCESS
+            # Approve for ingestion
+            self.statuses["approve"] = self.approve(
+                article_id, session.get_value("status"), version, session.get_value("run_type"))
+            if self.statuses.get("approve") is not True:
+                self.logger.info(
+                    "Digest for article %s was not approved for ingestion" % article_id)
+                return self.ACTIVITY_SUCCESS
 
-        # Download digest from the S3 outbox
-        docx_file = self.download_docx_from_s3(
-            article_id, self.settings.bot_bucket, self.input_dir)
-        if docx_file:
-            self.statuses["download"] = True
-        if self.statuses.get("download") is not True:
-            self.logger.info("Unable to download digest file %s for article %s" %
-                             (docx_file, article_id))
-            return self.ACTIVITY_PERMANENT_FAILURE
-        # find the image file name
-        image_file = self.image_file_name_from_s3(
-            article_id, self.settings.bot_bucket)
+            # check if there is a digest docx in the bucket for this article
+            docx_file_exists = self.docx_exists_in_s3(article_id, self.settings.bot_bucket)
+            if docx_file_exists is not True:
+                self.logger.info(
+                    "Digest docx file does not exist in S3 for article %s" % article_id)
+                return self.ACTIVITY_SUCCESS
 
-        # download jats file
-        jats_file = self.download_jats(session.get_value("expanded_folder"))
-        # related article data
-        related = related_from_lax(article_id, version, self.settings, self.logger)
-        # generate the digest content
-        self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
-        if self.digest_content:
-            self.statuses["generate"] = True
-        if self.statuses.get("generate") is not True:
-            self.logger.info(
-                "Unable to generate Digest content for docx_file %s, jats_file %s, image_file %s" %
-                (docx_file, jats_file, image_file))
-            # for now return success to not impede the article ingest workflow
-            return self.ACTIVITY_SUCCESS
+            # Download digest from the S3 outbox
+            docx_file = self.download_docx_from_s3(
+                article_id, self.settings.bot_bucket, self.input_dir)
+            if docx_file:
+                self.statuses["download"] = True
+            if self.statuses.get("download") is not True:
+                self.logger.info("Unable to download digest file %s for article %s" %
+                                 (docx_file, article_id))
+                return self.ACTIVITY_PERMANENT_FAILURE
+            # find the image file name
+            image_file = self.image_file_name_from_s3(
+                article_id, self.settings.bot_bucket)
 
-        # get existing digest data
-        digest_id = self.digest_content.get("id")
-        existing_digest_json = digest_provider.get_digest(digest_id, self.settings)
-        if not existing_digest_json:
-            self.logger.info(
-                "Did not get existing digest json from the endpoint for digest_id %s" %
-                str(digest_id))
-        self.digest_content = sync_json(self.digest_content, existing_digest_json)
-        # set the stage attribute if missing
-        set_stage(self.digest_content)
-        self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
+            # download jats file
+            jats_file = self.download_jats(session.get_value("expanded_folder"))
+            # related article data
+            related = related_from_lax(article_id, version, self.settings, self.logger)
+            # generate the digest content
+            self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
+            if self.digest_content:
+                self.statuses["generate"] = True
+            if self.statuses.get("generate") is not True:
+                self.logger.info(
+                    ("Unable to generate Digest content for docx_file %s, " +
+                     "jats_file %s, image_file %s") %
+                    (docx_file, jats_file, image_file))
+                # for now return success to not impede the article ingest workflow
+                return self.ACTIVITY_SUCCESS
 
-        self.statuses["ingest"] = self.put_digest_to_endpoint(
-            digest_id, self.digest_content, self.settings)
+            # get existing digest data
+            digest_id = self.digest_content.get("id")
+            existing_digest_json = digest_provider.get_digest(digest_id, self.settings)
+            if not existing_digest_json:
+                self.logger.info(
+                    "Did not get existing digest json from the endpoint for digest_id %s" %
+                    str(digest_id))
+            self.digest_content = sync_json(self.digest_content, existing_digest_json)
+            # set the stage attribute if missing
+            set_stage(self.digest_content)
+            self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
-        self.emit_end_message(article_id, version, run)
+            self.statuses["ingest"] = self.put_digest_to_endpoint(
+                digest_id, self.digest_content, self.settings)
+
+            self.emit_end_message(article_id, version, run)
+        except Exception as exception:
+            self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
 
         return self.ACTIVITY_SUCCESS
 
