@@ -139,21 +139,17 @@ class activity_IngestDigestToEndpoint(Activity):
         except (TypeError, KeyError) as exception:
             self.logger.exception("Exception when getting the session for Starting ingest digest " +
                                   " to endpoint. Details: %s" % str(exception))
-            success = False
         return success, run, session, article_id, version
 
     def emit_message(self, article_id, version, run, status, message):
         "emit message to the queue"
-        success = None
         try:
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, status, message)
-            success = True
+            return True
         except Exception as exception:
             self.logger.exception("Exception emitting %s message. Details: %s" %
                                   (str(status), str(exception)))
-            success = False
-        return success
 
     def emit_start_message(self, article_id, version, run):
         "emit the start message to the queue"

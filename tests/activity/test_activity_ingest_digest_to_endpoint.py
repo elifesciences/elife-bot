@@ -273,22 +273,22 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     def test_session_data_none_data(self):
         "test no data supplied"
         success, run, session, article_id, version = self.activity.session_data(None)
-        self.assertEqual(success, False)
+        self.assertEqual(success, None)
 
     def test_session_data_bad_data(self):
         "test missing data run attribute"
         success, run, session, article_id, version = self.activity.session_data({})
-        self.assertEqual(success, False)
+        self.assertEqual(success, None)
 
     def test_emit_start_message_none_data(self):
         "test missing data run attribute"
         success = self.activity.emit_start_message(None, None, None)
-        self.assertEqual(success, False)
+        self.assertEqual(success, None)
 
     def test_emit_start_message_no_connection(self):
         "test a possible bad connection to the emit queue"
         success = self.activity.emit_start_message("", "", "")
-        self.assertEqual(success, False)
+        self.assertEqual(success, None)
 
     @patch.object(activity_object, 'emit_monitor_event')
     def test_emit_error_message(self, fake_emit):
