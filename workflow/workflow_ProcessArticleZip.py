@@ -90,17 +90,6 @@ class workflow_ProcessArticleZip(workflow.workflow):
                         "start_to_close_timeout": 60 * 5
                     },
                     {
-                        "activity_type": "ReadyToPublish",
-                        "activity_id": "ReadyToPublish",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
-                    {
                         "activity_type": "IngestDigestToEndpoint",
                         "activity_id": "IngestDigestToEndpoint",
                         "version": "1",
@@ -111,6 +100,17 @@ class workflow_ProcessArticleZip(workflow.workflow):
                         "schedule_to_start_timeout": 300,
                         "start_to_close_timeout": 60 * 5
                     },
+                    {
+                        "activity_type": "ReadyToPublish",
+                        "activity_id": "ReadyToPublish",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 300,
+                        "schedule_to_close_timeout": 300,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 300
+                    }
                 ],
 
             "finish":
