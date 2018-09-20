@@ -53,21 +53,20 @@ class activity_IngestDigestToEndpoint(Activity):
 
     def do_activity(self, data=None):
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
+        success, run, session, article_id, version = self.session_data(data)
+
+        # get session data
+        if success is not True:
+            self.logger.error("Failed to parse session data in %s" % self.pretty_name)
+            return self.ACTIVITY_PERMANENT_FAILURE
+        # emit start message
+        success = self.emit_start_message(article_id, version, run)
+        if success is not True:
+            self.logger.error("Failed to emit a start message in %s" % self.pretty_name)
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         # Wrap in an exception during testing phase
         try:
-
-            # get session data
-            success, run, session, article_id, version = self.session_data(data)
-            if success is not True:
-                self.logger.error("Failed to parse session data in %s" % self.pretty_name)
-                return self.ACTIVITY_PERMANENT_FAILURE
-            # emit start message
-            success = self.emit_start_message(article_id, version, run)
-            if success is not True:
-                self.logger.error("Failed to emit a start message in %s" % self.pretty_name)
-                return self.ACTIVITY_PERMANENT_FAILURE
-
             # Approve for ingestion
             self.statuses["approve"] = self.approve(
                 article_id, session.get_value("status"), version, session.get_value("run_type"))
@@ -127,9 +126,10 @@ class activity_IngestDigestToEndpoint(Activity):
             self.statuses["ingest"] = self.put_digest_to_endpoint(
                 digest_id, self.digest_content, self.settings)
 
-            self.emit_end_message(article_id, version, run)
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
+
+        self.emit_end_message(article_id, version, run)
 
         return self.ACTIVITY_SUCCESS
 
