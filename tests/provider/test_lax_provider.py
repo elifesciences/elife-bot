@@ -250,6 +250,73 @@ class TestLaxProvider(unittest.TestCase):
                                                                   is_poa, was_ever_poa)
         self.assertEqual(published, expected_return_value)
 
+    @patch('provider.lax_provider.article_versions')
+    def test_article_status_version_map(self, mock_lax_provider_article_versions):
+        expected = {"poa": [1, 2], "vor": [3]}
+        article_id = '04132'
+        mock_lax_provider_article_versions.return_value = (
+            200, test_data.lax_article_versions_response_data)
+        version_status_map = lax_provider.article_status_version_map(article_id, settings_mock)
+        self.assertEqual(version_status_map, expected)
+
+    @patch('provider.lax_provider.article_versions')
+    def test_article_status_version_map_500(self, mock_lax_provider_article_versions):
+        expected = {}
+        article_id = '04132'
+        mock_lax_provider_article_versions.return_value = 500, []
+        version_status_map = lax_provider.article_status_version_map(article_id, settings_mock)
+        self.assertEqual(version_status_map, expected)
+
+    @patch('provider.lax_provider.article_status_version_map')
+    def test_article_first_by_status_first_vor(self, mock_version_status_map):
+        mock_version_status_map.return_value = {"poa": [1, 2], "vor": [3]}
+        article_id = '04132'
+        version = 3
+        status = 'vor'
+        expected = True
+        first = lax_provider.article_first_by_status(article_id, version, status, settings_mock)
+        self.assertEqual(first, expected)
+
+    @patch('provider.lax_provider.article_status_version_map')
+    def test_article_first_by_status_first_poa(self, mock_version_status_map):
+        mock_version_status_map.return_value = {"poa": [1, 2], "vor": [3]}
+        article_id = '04132'
+        version = 1
+        status = 'poa'
+        expected = True
+        first = lax_provider.article_first_by_status(article_id, version, status, settings_mock)
+        self.assertEqual(first, expected)
+
+    @patch('provider.lax_provider.article_status_version_map')
+    def test_article_first_by_status_not_first_vor(self, mock_version_status_map):
+        mock_version_status_map.return_value = {"poa": [1, 2], "vor": [4, 3]}
+        article_id = '04132'
+        version = 4
+        status = 'vor'
+        expected = False
+        first = lax_provider.article_first_by_status(article_id, version, status, settings_mock)
+        self.assertEqual(first, expected)
+
+    @patch('provider.lax_provider.article_status_version_map')
+    def test_article_first_by_status_not_first_poa(self, mock_version_status_map):
+        mock_version_status_map.return_value = {"poa": [1, 2], "vor": [3]}
+        article_id = '04132'
+        version = 2
+        status = 'poa'
+        expected = False
+        first = lax_provider.article_first_by_status(article_id, version, status, settings_mock)
+        self.assertEqual(first, expected)
+
+    @patch('provider.lax_provider.article_status_version_map')
+    def test_article_first_by_status_no_vor(self, mock_version_status_map):
+        mock_version_status_map.return_value = {"poa": [1, 2]}
+        article_id = '04132'
+        version = 2
+        status = 'vor'
+        expected = None
+        first = lax_provider.article_first_by_status(article_id, version, status, settings_mock)
+        self.assertEqual(first, expected)
+
 
 if __name__ == '__main__':
     unittest.main()

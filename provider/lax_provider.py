@@ -66,6 +66,30 @@ def article_snippet(article_id, version, settings, auth=False):
     raise Exception("Error in article_snippet: Version not found. Status: " + str(status_code))
 
 
+def article_status_version_map(article_id, settings, auth=False):
+    "map article status and a list of versions"
+    status_version_map = {}
+    status_code, data = article_versions(article_id, settings, auth)
+    if status_code == 200:
+        for version_data in data:
+            if version_data.get('status') not in status_version_map:
+                status_version_map[version_data.get('status')] = []
+            status_version_map[version_data.get('status')].append(version_data.get('version'))
+    return status_version_map
+
+
+def article_first_by_status(article_id, version, status, settings, auth=False):
+    "for this article version is it the first of its status, e.g. the first vor version"
+    status_version_map = article_status_version_map(article_id, settings, auth)
+    if not status_version_map or status not in status_version_map:
+        return None
+    for article_version in status_version_map.get(status):
+        if int(article_version) < int(version):
+            # we found an article of the status with an earlier version
+            return False
+    return True
+
+
 def article_highest_version(article_id, settings):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:
