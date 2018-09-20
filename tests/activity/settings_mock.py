@@ -37,6 +37,7 @@ digest_cdn_bucket = 'ppd_cdn_bucket/digests'
 
 lax_article_versions = 'https://test/eLife.{article_id}/version/'
 verify_ssl = False
+lax_auth_key = 'an_auth_key'
 
 PMC_FTP_URI = ""
 PMC_FTP_USERNAME = ""
@@ -52,6 +53,9 @@ digest_config_section = 'elife'
 digest_sender_email = "sender@example.org"
 digest_recipient_email = ["e@example.org", "life@example.org"]
 digest_error_recipient_email = "error@example.org"
+
+digest_endpoint = 'https://digests/{digest_id}'
+digest_auth_key = 'digest_auth_key'
 
 features_publication_recipient_email = "features_team@example.org"
 publication_authority = ""
