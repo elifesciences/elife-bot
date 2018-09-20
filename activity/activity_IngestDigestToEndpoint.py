@@ -187,12 +187,17 @@ class activity_IngestDigestToEndpoint(Activity):
         if return_status is False:
             approve_status = return_status
 
-        # check silent corrections
-        return_status = approve_by_run_type(
+        # check silent corrections and consider the first vor version
+        run_type_status = approve_by_run_type(
             self.settings, self.logger, article_id, run_type, version)
-        if return_status is False:
-            approve_status = return_status
-
+        first_vor_status = approve_by_first_vor(self.settings, self.logger, article_id, version, status)
+        if first_vor_status is False and run_type != "silent-correction":
+            # not the first vor and not a silent correction, do not approve
+            approve_status = False
+        elif run_type_status is False:
+            # otherwise depend on the silent correction run_type logic
+            approve_status = False
+ 
         return approve_status
 
     def outbox_resource_path(self, article_id, bucket_name):
@@ -326,6 +331,18 @@ def approve_by_run_type(settings, logger, article_id, run_type, version):
                     article_id=article_id,
                     exc=str(exception))
             logger.exception(message.lstrip())
+    return approve_status
+
+
+def approve_by_first_vor(settings, logger, article_id, version, status, auth=True):
+    "check if it is not the first vor or not the highest version"
+    approve_status = None
+    first_vor = lax_provider.article_first_by_status(article_id, version, status, settings, auth)
+    highest_version = lax_provider.article_highest_version(article_id, settings, auth)
+    if not first_vor:
+        approve_status = False
+    elif first_vor and version and highest_version and int(version) < int(highest_version):
+        approve_status = False
     return approve_status
 
 

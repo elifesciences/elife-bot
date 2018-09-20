@@ -57,6 +57,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
 
     @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
     @patch.object(article, 'storage_context')
+    @patch.object(lax_provider, 'article_first_by_status')
     @patch.object(lax_provider, 'article_snippet')
     @patch.object(lax_provider, 'article_highest_version')
     @patch.object(digest_provider, 'storage_context')
@@ -69,6 +70,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         {
             "comment": "article with no digest files",
             "article_id": '00000',
+            "first_vor": True,
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
             "expected_download_status": None
@@ -80,6 +82,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "article_id": '99999',
             "status": 'vor',
             'version': '2',
+            "first_vor": True,
             "lax_highest_version": '1',
             "article_snippet": RELATED_DATA[0],
             "existing_digest_json": {"stage": "published", "published": "2018-07-06T09:06:01Z"},
@@ -101,6 +104,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "bucket_resources": ["elife-15747-v2.xml"],
             "expanded_folder": "digests",
             "article_id": '99999',
+            "first_vor": True,
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
             "expected_download_status": True,
@@ -128,6 +132,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "run_type": "silent-correction",
             "status": 'vor',
             'version': '1',
+            "first_vor": False,
             "lax_highest_version": '2',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": False,
@@ -148,13 +153,14 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                          fake_session, fake_put_digest, fake_get_digest,
                          fake_provider_storage_context,
                          fake_highest_version, fake_article_snippet,
-                         fake_article_storage_context, fake_get):
+                         fake_first, fake_article_storage_context, fake_get):
         # copy files into the input directory using the storage context
         named_fake_storage_context = FakeStorageContext()
         if test_data.get('bucket_resources'):
             named_fake_storage_context.resources = test_data.get('bucket_resources')
         fake_article_storage_context.return_value = named_fake_storage_context
         fake_storage_context.return_value = FakeStorageContext()
+        fake_first.return_value = test_data.get("first_vor")
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
         fake_get_digest.return_value = test_data.get('existing_digest_json')
@@ -204,20 +210,30 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         result = self.activity.do_activity(activity_data)
         self.assertEqual(result, expected_result)
 
+    @patch.object(lax_provider, 'article_highest_version')
+    @patch.object(lax_provider, 'article_first_by_status')
     @patch.object(activity_object, 'emit_monitor_event')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
-    def test_do_activity_docx_exists_exception(self, fake_session, fake_emit):
+    def test_do_activity_docx_exists_exception(self, fake_session, fake_emit, fake_first,
+                                               fake_highest_version):
         "test and error when checking if a docx exists"
+        fake_first.return_value = True
+        fake_highest_version.return_value = 1
         activity_data = test_activity_data.data_example_before_publish
         expected_result = activity_object.ACTIVITY_SUCCESS
         result = self.activity.do_activity(activity_data)
         self.assertEqual(result, expected_result)
 
+    @patch.object(lax_provider, 'article_highest_version')
+    @patch.object(lax_provider, 'article_first_by_status')
     @patch.object(activity_object, 'emit_monitor_event')
     @patch('activity.activity_IngestDigestToEndpoint.storage_context')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
-    def test_do_activity_bad_download(self, fake_session, fake_storage_context, fake_emit):
+    def test_do_activity_bad_download(self, fake_session, fake_storage_context, fake_emit,
+                                      fake_first, fake_highest_version):
         "test unable to download a digest docx file"
+        fake_first.return_value = True
+        fake_highest_version.return_value = 1
         named_fake_storage_context = FakeStorageContext()
         named_fake_storage_context.resource_exists = lambda return_true: True
         fake_storage_context.return_value = named_fake_storage_context
@@ -300,6 +316,72 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         success = self.activity.emit_error_message("", "", "", "")
         self.assertEqual(success, True)
 
+    @patch.object(lax_provider, 'article_status_version_map')
+    @patch.object(lax_provider, 'article_highest_version')
+    @data(
+        {
+            "comment": "normal first vor",
+            "article_id": '00000',
+            "status": "vor",
+            "version": 2,
+            "run_type": None,
+            "highest_version": "2",
+            "version_map": {"poa": [1], "vor": [2]},
+            "expected": True
+        },
+        {
+            "comment": "poa is not approved",
+            "article_id": '00000',
+            "status": "poa",
+            "version": 2,
+            "run_type": None,
+            "highest_version": "2",
+            "version_map": {"poa": [1], "poa": [2]},
+            "expected": False
+        },
+        {
+            "comment": "silent correction of highest vor",
+            "article_id": '00000',
+            "status": "vor",
+            "version": 3,
+            "run_type": "silent-correction",
+            "highest_version": "3",
+            "version_map": {"poa": [1], "vor": [2, 3]},
+            "expected": True
+        },
+        {
+            "comment": "silent correction of older version of vor",
+            "article_id": '00000',
+            "status": "vor",
+            "version": 2,
+            "run_type": "silent-correction",
+            "highest_version": "3",
+            "version_map": {"poa": [1], "vor": [2, 3]},
+            "expected": False
+        },
+        {
+            "comment": "ingest a non-first vor",
+            "article_id": '00000',
+            "status": "vor",
+            "version": 3,
+            "run_type": None,
+            "highest_version": "3",
+            "version_map": {"poa": [1], "vor": [2, 3]},
+            "expected": False
+        },
+        )
+    def test_approve(self, test_data, fake_highest_version, fake_version_map):
+        "test various scenarios for digest ingest approval"
+        fake_highest_version.return_value = test_data.get("highest_version")
+        fake_version_map.return_value = test_data.get("version_map")
+        status = self.activity.approve(
+            test_data.get("article_id"),
+            test_data.get("status"),
+            test_data.get("version"),
+            test_data.get("run_type")
+        )
+        self.assertEqual(status, test_data.get("expected"),
+                         "failed in {comment}".format(comment=test_data.get("comment")))
 
 if __name__ == '__main__':
     unittest.main()
