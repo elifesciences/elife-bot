@@ -1,0 +1,15 @@
+def digestParserSummary;
+elifeUpdatePipeline(
+    { commit ->
+        lock('elife-bot--ci') {
+            builderDeployRevision 'elife-bot--ci', commit
+            elifeToolsSummary = builderCmd "elife-bot--ci", "source venv/bin/activate && update_python_dependency digestparser https://github.com/elifesciences/digest-parser.git 2>/tmp/update-digest-parser.log", "/opt/elife-bot", true
+            builderSync "ci--bot.elife.internal", "/opt/elife-bot/"
+            sh "git add requirements.txt"
+        }
+    },
+    {
+        return "Updated digestparser: ${digestParserSummary}"
+    },
+    'update_digest_parser/'
+)
