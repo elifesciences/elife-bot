@@ -1,4 +1,5 @@
 "functions shared by digest related activities"
+from pprint import pformat
 import os
 import traceback
 import requests
@@ -165,7 +166,7 @@ def digest_put_request(url, verify_ssl, digest_id, data, auth_key=None):
     headers.update(digest_content_type_header())
     response = requests.put(url, json=data, verify=verify_ssl,
                             headers=headers)
-    LOGGER.info("Put to digest API: PUT %s", url)
+    LOGGER.info("Put to digest API: PUT %s\n%s", url, pformat(data))
     LOGGER.info("Response from digest API: %s\n%s", response.status_code, response.content)
     status_code = response.status_code
     if not 300 > status_code >= 200:
