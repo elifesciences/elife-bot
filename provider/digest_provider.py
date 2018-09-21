@@ -148,16 +148,23 @@ def digest_auth_key(settings, auth=False):
 
 
 def digest_auth_header(auth_key):
-    "headers for requests to digest API"
+    "headers for edit and view unpublished content on the digest API"
     if auth_key:
         return {'Authorization': auth_key}
     return {}
 
 
+def digest_content_type_header():
+    "headers for describing the digest body"
+    return {'Content-Type': 'application/vnd.elife.digest+json; version=1'}
+
+
 def digest_put_request(url, verify_ssl, digest_id, data, auth_key=None):
     "put request logic to digests API"
+    headers = digest_auth_header(auth_key)
+    headers.update(digest_content_type_header())
     response = requests.put(url, json=data, verify=verify_ssl,
-                            headers=digest_auth_header(auth_key))
+                            headers=headers)
     LOGGER.info("Put to digest API: PUT %s", url)
     LOGGER.info("Response from digest API: %s\n%s", response.status_code, response.content)
     status_code = response.status_code
