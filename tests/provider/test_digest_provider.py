@@ -15,7 +15,7 @@ class TestDigestProvider(unittest.TestCase):
         digest = Digest()
         digest.doi = '10.7554/eLife.99999'
         bucket_name = 'elife-bot'
-        expected = 's3://elife-bot/digests/outbox/99999/'
+        expected = 's3://elife-bot/digests/outbox/99999'
         resource_path = digest_provider.outbox_dest_resource_path(
             storage_provider, digest, bucket_name)
         self.assertEqual(resource_path, expected)

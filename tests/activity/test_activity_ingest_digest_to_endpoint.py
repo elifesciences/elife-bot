@@ -78,6 +78,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         {
             "comment": "digest files with version greater than lax highest version",
             "bucket_resources": ["elife-15747-v2.xml"],
+            "bot_bucket_resources": ["digests/outbox/99999/digest-99999.docx",
+                                     "digests/outbox/99999/digest-99999.jpg"],
             "expanded_folder": "digests",
             "article_id": '99999',
             "status": 'vor',
@@ -96,12 +98,15 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                 "Microbes live in us and on us",
                 u'"relatedContent": [{"type": "research-article"',
                 '"stage": "published"',
-                '"published": "2018-07-06T09:06:01Z"'
+                '"published": "2018-07-06T09:06:01Z"',
+                '"filename": "digest-99999.jpg"}'
                 ]
         },
         {
             "comment": "digest files with no existing digest json ingested",
             "bucket_resources": ["elife-15747-v2.xml"],
+            "bot_bucket_resources": ["digests/outbox/99999/digest-99999.docx",
+                                     "digests/outbox/99999/digest-99999.jpg"],
             "expanded_folder": "digests",
             "article_id": '99999',
             "first_vor": True,
@@ -155,11 +160,14 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                          fake_highest_version, fake_article_snippet,
                          fake_first, fake_article_storage_context, fake_get):
         # copy files into the input directory using the storage context
-        named_fake_storage_context = FakeStorageContext()
+        named_storage_context = FakeStorageContext()
         if test_data.get('bucket_resources'):
-            named_fake_storage_context.resources = test_data.get('bucket_resources')
-        fake_article_storage_context.return_value = named_fake_storage_context
-        fake_storage_context.return_value = FakeStorageContext()
+            named_storage_context.resources = test_data.get('bucket_resources')
+        fake_article_storage_context.return_value = named_storage_context
+        bot_storage_context = FakeStorageContext()
+        if test_data.get('bot_bucket_resources'):
+            bot_storage_context.resources = test_data.get('bot_bucket_resources')
+        fake_storage_context.return_value = bot_storage_context
         fake_first.return_value = test_data.get("first_vor")
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)

@@ -208,7 +208,7 @@ class activity_IngestDigestToEndpoint(Activity):
     def docx_resource_origin(self, article_id, bucket_name):
         "the resource_origin of the docx file in the storage context"
         resource_path = self.outbox_resource_path(article_id, bucket_name)
-        return resource_path + digest_provider.docx_file_name(article_id)
+        return resource_path + "/" + digest_provider.docx_file_name(article_id)
 
     def docx_exists_in_s3(self, article_id, bucket_name):
         "check if a digest docx exists in the S3 outbox"
