@@ -73,6 +73,7 @@ class activity_IngestDigestToEndpoint(Activity):
             if self.statuses.get("approve") is not True:
                 self.logger.info(
                     "Digest for article %s was not approved for ingestion" % article_id)
+                self.emit_end_message(article_id, version, run)
                 return self.ACTIVITY_SUCCESS
 
             # check if there is a digest docx in the bucket for this article
@@ -80,6 +81,7 @@ class activity_IngestDigestToEndpoint(Activity):
             if docx_file_exists is not True:
                 self.logger.info(
                     "Digest docx file does not exist in S3 for article %s" % article_id)
+                self.emit_end_message(article_id, version, run)
                 return self.ACTIVITY_SUCCESS
 
             # Download digest from the S3 outbox
