@@ -1,4 +1,5 @@
 "functions shared by digest related activities"
+from pprint import pformat
 import os
 import traceback
 import requests
@@ -64,8 +65,8 @@ def digest_resource_origin(storage_provider, filename, bucket_name, bucket_folde
 def outbox_resource_path(storage_provider, msid, bucket_name):
     "the digest outbox bucket folder as a resource"
     article_id = utils.pad_msid(msid)
-    storage_provider = storage_provider + "://"
-    return storage_provider + bucket_name + "/digests/outbox/" + article_id + "/"
+    storage_provider_prefix = storage_provider + "://"
+    return storage_provider_prefix + bucket_name + "/digests/outbox/" + article_id
 
 
 def outbox_dest_resource_path(storage_provider, digest, bucket_name):
@@ -81,7 +82,7 @@ def outbox_file_dest_resource(storage_provider, digest, bucket_name, file_path):
     dest_file_name = new_file_name(
         msid=utils.msid_from_doi(digest.doi),
         file_name=file_name)
-    dest_resource = resource_path + dest_file_name
+    dest_resource = resource_path + "/" + dest_file_name
     return dest_resource
 
 
@@ -148,17 +149,24 @@ def digest_auth_key(settings, auth=False):
 
 
 def digest_auth_header(auth_key):
-    "headers for requests to digest API"
+    "headers for edit and view unpublished content on the digest API"
     if auth_key:
         return {'Authorization': auth_key}
     return {}
 
 
+def digest_content_type_header():
+    "headers for describing the digest body"
+    return {'Content-Type': 'application/vnd.elife.digest+json; version=1'}
+
+
 def digest_put_request(url, verify_ssl, digest_id, data, auth_key=None):
     "put request logic to digests API"
+    headers = digest_auth_header(auth_key)
+    headers.update(digest_content_type_header())
     response = requests.put(url, json=data, verify=verify_ssl,
-                            headers=digest_auth_header(auth_key))
-    LOGGER.info("Put to digest API: PUT %s", url)
+                            headers=headers)
+    LOGGER.info("Put to digest API: PUT %s\n%s", url, pformat(data))
     LOGGER.info("Response from digest API: %s\n%s", response.status_code, response.content)
     status_code = response.status_code
     if not 300 > status_code >= 200:

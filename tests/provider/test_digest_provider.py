@@ -15,7 +15,7 @@ class TestDigestProvider(unittest.TestCase):
         digest = Digest()
         digest.doi = '10.7554/eLife.99999'
         bucket_name = 'elife-bot'
-        expected = 's3://elife-bot/digests/outbox/99999/'
+        expected = 's3://elife-bot/digests/outbox/99999'
         resource_path = digest_provider.outbox_dest_resource_path(
             storage_provider, digest, bucket_name)
         self.assertEqual(resource_path, expected)
@@ -79,12 +79,12 @@ class TestDigestProvider(unittest.TestCase):
                           '99999', settings_mock)
 
     @patch('requests.put')
-    def test_put_digest_204(self, mock_requests_get):
+    def test_put_digest_204(self, mock_requests_put):
         digest_id = '99999'
         data = {}
         response = MagicMock()
         response.status_code = 204
-        mock_requests_get.return_value = response
+        mock_requests_put.return_value = response
         # cannot depend on a return value, just check there is no exception
         try:
             digest_provider.put_digest(digest_id, data, settings_mock)
@@ -92,21 +92,35 @@ class TestDigestProvider(unittest.TestCase):
             self.assertFalse(True)
 
     @patch('requests.put')
-    def test_put_digest_400(self, mock_requests_get):
+    def test_put_digest_request_headers(self, mock_requests_put):
+        digest_id = '99999'
+        data = {}
+        response = MagicMock()
+        response.status_code = 204
+        mock_requests_put.return_value = response
+        digest_provider.put_digest(digest_id, data, settings_mock)
+        request_named_arguments = mock_requests_put.call_args_list[0][1]
+        headers = request_named_arguments['headers']
+        self.assertIn('Authorization', headers)
+        self.assertIn('Content-Type', headers)
+        self.assertEqual(headers['Content-Type'], 'application/vnd.elife.digest+json; version=1')
+
+    @patch('requests.put')
+    def test_put_digest_400(self, mock_requests_put):
         digest_id = '99999'
         data = {}
         response = MagicMock()
         response.status_code = 400
-        mock_requests_get.return_value = response
+        mock_requests_put.return_value = response
         self.assertRaises(ErrorCallingDigestException, digest_provider.put_digest,
                           digest_id, data, settings_mock)
 
     @patch('requests.put')
-    def test_put_digest_403(self, mock_requests_get):
+    def test_put_digest_403(self, mock_requests_put):
         digest_id = '99999'
         data = {}
         response = MagicMock()
         response.status_code = 403
-        mock_requests_get.return_value = response
+        mock_requests_put.return_value = response
         self.assertRaises(ErrorCallingDigestException, digest_provider.put_digest,
                           digest_id, data, settings_mock)
