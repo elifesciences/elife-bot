@@ -185,14 +185,14 @@ class activity_IngestDigestToEndpoint(Activity):
         approve_status = True
 
         # check by status
-        return_status = approve_by_status(self.logger, article_id, status)
+        return_status = digest_provider.approve_by_status(self.logger, article_id, status)
         if return_status is False:
             approve_status = return_status
 
         # check silent corrections and consider the first vor version
-        run_type_status = approve_by_run_type(
+        run_type_status = digest_provider.approve_by_run_type(
             self.settings, self.logger, article_id, run_type, version)
-        first_vor_status = approve_by_first_vor(self.settings, self.logger, article_id, version, status)
+        first_vor_status = digest_provider.approve_by_first_vor(self.settings, self.logger, article_id, version, status)
         if first_vor_status is False and run_type != "silent-correction":
             # not the first vor and not a silent correction, do not approve
             approve_status = False
@@ -296,56 +296,6 @@ class activity_IngestDigestToEndpoint(Activity):
                 os.mkdir(dir_name)
             except OSError:
                 pass
-
-
-def approve_by_status(logger, article_id, status):
-    "determine approval status by article status value"
-    approve_status = None
-    # PoA do not ingest digests
-    if status == "poa":
-        approve_status = False
-        message = ("\nNot ingesting digest for PoA article {article_id}".format(
-            article_id=article_id
-        ))
-        logger.info(message)
-    return approve_status
-
-
-def approve_by_run_type(settings, logger, article_id, run_type, version):
-    approve_status = None
-    # VoR and is a silent correction, consult Lax for if it is not the highest version
-    if run_type == "silent-correction":
-        highest_version = lax_provider.article_highest_version(article_id, settings)
-        try:
-            if int(version) < int(highest_version):
-                approve_status = False
-                message = (
-                    "\nNot ingesting digest for silent correction {article_id}" +
-                    " version {version} is less than highest version {highest}").format(
-                        article_id=article_id,
-                        version=version,
-                        highest=highest_version)
-                logger.info(message)
-        except TypeError as exception:
-            approve_status = False
-            message = (
-                "\nException converting version to int for {article_id}, {exc}").format(
-                    article_id=article_id,
-                    exc=str(exception))
-            logger.exception(message.lstrip())
-    return approve_status
-
-
-def approve_by_first_vor(settings, logger, article_id, version, status, auth=True):
-    "check if it is not the first vor or not the highest version"
-    approve_status = None
-    first_vor = lax_provider.article_first_by_status(article_id, version, status, settings, auth)
-    highest_version = lax_provider.article_highest_version(article_id, settings, auth)
-    if not first_vor:
-        approve_status = False
-    elif first_vor and version and highest_version and int(version) < int(highest_version):
-        approve_status = False
-    return approve_status
 
 
 def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=None):

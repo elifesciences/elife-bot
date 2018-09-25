@@ -135,7 +135,7 @@ class activity_PublishDigest(Activity):
         approve_status = True
 
         # check by status
-        return_status = approve_by_status(self.logger, article_id, status)
+        return_status = digest_provider.approve_by_status(self.logger, article_id, status)
         if return_status is False:
             approve_status = return_status
 
@@ -152,19 +152,6 @@ class activity_PublishDigest(Activity):
                 "Exception issuing PUT to the digest endpoint for digest_id %s. Details: %s" %
                 (str(digest_id), str(exception)))
         return put_status
-
-
-def approve_by_status(logger, article_id, status):
-    "determine approval status by article status value"
-    approve_status = None
-    # PoA do not ingest digests
-    if status == "poa":
-        approve_status = False
-        message = ("\nNot ingesting digest for PoA article {article_id}".format(
-            article_id=article_id
-        ))
-        logger.info(message)
-    return approve_status
 
 
 def set_stage(json_content, stage="preview"):
