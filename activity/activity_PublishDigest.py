@@ -69,7 +69,7 @@ class activity_PublishDigest(Activity):
 
             # set the stage attribute if is not published
             if existing_digest_json.get("stage") != "published":
-                self.digest_content = set_stage(existing_digest_json, 'published')
+                self.digest_content = digest_provider.set_stage(existing_digest_json, 'published')
                 self.logger.info("Set Digest stage value of %s to published" % article_id)
                 self.statuses["stage"] = True
             if self.statuses.get("stage"):
@@ -154,7 +154,3 @@ class activity_PublishDigest(Activity):
         return put_status
 
 
-def set_stage(json_content, stage="preview"):
-    "set the stage attribute if missing"
-    json_content["stage"] = stage
-    return json_content

@@ -122,7 +122,7 @@ class activity_IngestDigestToEndpoint(Activity):
                     str(digest_id))
             self.digest_content = sync_json(self.digest_content, existing_digest_json)
             # set the stage attribute if missing
-            set_stage(self.digest_content)
+            digest_provider.set_stage(self.digest_content)
             self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
             self.statuses["ingest"] = self.put_digest_to_endpoint(
@@ -336,9 +336,3 @@ def sync_json(json_content, existing_digest_json):
         if existing_digest_json.get(attr):
             json_content[attr] = existing_digest_json.get(attr)
     return json_content
-
-
-def set_stage(json_content):
-    "set the stage attribute if missing"
-    if "stage" not in json_content:
-        json_content["stage"] = "preview"

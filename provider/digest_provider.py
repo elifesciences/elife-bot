@@ -234,3 +234,9 @@ def approve_by_first_vor(settings, logger, article_id, version, status, auth=Tru
     elif first_vor and version and highest_version and int(version) < int(highest_version):
         approve_status = False
     return approve_status
+
+
+def set_stage(json_content, stage="preview"):
+    "set the stage attribute"
+    json_content["stage"] = stage
+    return json_content
