@@ -109,6 +109,8 @@ class Templates(object):
         template_list.append("author_publication_email_VOR_no_POA.json")
         template_list.append("author_publication_email_Feature.html")
         template_list.append("author_publication_email_Feature.json")
+        template_list.append("video_article_publication.html")
+        template_list.append("video_article_publication.json")
 
         return template_list
 

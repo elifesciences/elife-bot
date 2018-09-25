@@ -58,6 +58,7 @@ digest_endpoint = 'https://digests/{digest_id}'
 digest_auth_key = 'digest_auth_key'
 
 features_publication_recipient_email = "features_team@example.org"
+email_video_recipient_email = "features_team@example.org"
 publication_authority = ""
 consider_Lax_elife_2_0 = True
 
