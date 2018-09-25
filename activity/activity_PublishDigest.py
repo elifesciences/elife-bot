@@ -73,8 +73,8 @@ class activity_PublishDigest(Activity):
                 self.logger.info("Set Digest stage value of %s to published" % article_id)
                 self.statuses["stage"] = True
             if self.statuses.get("stage"):
-                self.statuses["put"] = self.put_digest_to_endpoint(
-                    digest_id, self.digest_content, self.settings)
+                self.statuses["put"] = digest_provider.put_digest_to_endpoint(
+                    self.logger, digest_id, self.digest_content, self.settings)
                 if self.statuses.get("put"):
                     self.logger.info("Put Digest for %s to the endpoint" % article_id)
 
@@ -133,24 +133,8 @@ class activity_PublishDigest(Activity):
     def approve(self, article_id, status):
         "should we ingest based on some basic attributes"
         approve_status = True
-
         # check by status
         return_status = digest_provider.approve_by_status(self.logger, article_id, status)
         if return_status is False:
             approve_status = return_status
-
         return approve_status
-
-    def put_digest_to_endpoint(self, digest_id, digest_content, settings):
-        "handle issuing the PUT to the digest endpoint"
-        put_status = None
-        try:
-            digest_provider.put_digest(digest_id, digest_content, settings)
-            put_status = True
-        except Exception as exception:
-            self.logger.exception(
-                "Exception issuing PUT to the digest endpoint for digest_id %s. Details: %s" %
-                (str(digest_id), str(exception)))
-        return put_status
-
-

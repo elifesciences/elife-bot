@@ -185,6 +185,19 @@ def put_digest(digest_id, data, settings, auth=True):
                               digest_auth_key(settings, auth))
 
 
+def put_digest_to_endpoint(logger, digest_id, digest_content, settings):
+    "handle issuing the PUT to the digest endpoint"
+    put_status = None
+    try:
+        put_digest(digest_id, digest_content, settings)
+        put_status = True
+    except Exception as exception:
+        logger.exception(
+            "Exception issuing PUT to the digest endpoint for digest_id %s. Details: %s" %
+            (str(digest_id), str(exception)))
+    return put_status
+
+
 def approve_by_status(logger, article_id, status):
     "determine approval status by article status value"
     approve_status = None

@@ -125,8 +125,8 @@ class activity_IngestDigestToEndpoint(Activity):
             digest_provider.set_stage(self.digest_content)
             self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
-            self.statuses["ingest"] = self.put_digest_to_endpoint(
-                digest_id, self.digest_content, self.settings)
+            self.statuses["ingest"] = digest_provider.put_digest_to_endpoint(
+                self.logger, digest_id, self.digest_content, self.settings)
 
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
@@ -274,18 +274,6 @@ class activity_IngestDigestToEndpoint(Activity):
                 "Exception generating digest json for docx_file %s. Details: %s" %
                 (str(docx_file), str(exception)))
         return json_content
-
-    def put_digest_to_endpoint(self, digest_id, digest_content, settings):
-        "handle issuing the PUT to the digest endpoint"
-        put_status = None
-        try:
-            digest_provider.put_digest(digest_id, digest_content, settings)
-            put_status = True
-        except Exception as exception:
-            self.logger.exception(
-                "Exception issuing PUT to the digest endpoint for digest_id %s. Details: %s" %
-                (str(digest_id), str(exception)))
-        return put_status
 
     def create_activity_directories(self):
         """
