@@ -21,7 +21,6 @@ class activity_PublishDigest(Activity):
         # Track the success of some steps
         self.statuses = {
             "approve": None,
-            "stage": None,
             "put": None
         }
 
@@ -71,11 +70,10 @@ class activity_PublishDigest(Activity):
             if existing_digest_json.get("stage") != "published":
                 self.digest_content = digest_provider.set_stage(existing_digest_json, 'published')
                 self.logger.info("Set Digest stage value of %s to published" % article_id)
-                self.statuses["stage"] = True
-            if self.statuses.get("stage"):
-                self.statuses["put"] = digest_provider.put_digest_to_endpoint(
+                put_response = digest_provider.put_digest_to_endpoint(
                     self.logger, digest_id, self.digest_content, self.settings)
-                if self.statuses.get("put"):
+                if put_response:
+                    self.statuses["put"] = True
                     self.logger.info("Put Digest for %s to the endpoint" % article_id)
 
         except Exception as exception:

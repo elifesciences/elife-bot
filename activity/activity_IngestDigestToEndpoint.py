@@ -125,8 +125,10 @@ class activity_IngestDigestToEndpoint(Activity):
             digest_provider.set_stage(self.digest_content)
             self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
-            self.statuses["ingest"] = digest_provider.put_digest_to_endpoint(
+            put_response = digest_provider.put_digest_to_endpoint(
                 self.logger, digest_id, self.digest_content, self.settings)
+            if put_response:
+                self.statuses["ingest"] = True
 
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))

@@ -8,7 +8,7 @@ from ddt import ddt, data
 import provider.digest_provider as digest_provider
 from activity.activity_PublishDigest import activity_PublishDigest as activity_object
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger
+from tests.activity.classes_mock import FakeLogger, FakeResponse
 
 
 ACTIVITY_DATA = {
@@ -68,12 +68,24 @@ class TestPublishDigest(unittest.TestCase):
             "article_id": "99999",
             "status": "vor",
             "existing_digest_json": DIGEST_DATA,
+            "put_response": FakeResponse(204, None),
             "stage": "preview",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_stage": "published",
             "expected_approve_status": True,
-            "expected_stage_status": True,
             "expected_put_status": True
+        },
+        {
+            "comment": "fail to put a digest",
+            "article_id": "99999",
+            "status": "vor",
+            "existing_digest_json": DIGEST_DATA,
+            "put_response": None,
+            "stage": "preview",
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_stage": "published",
+            "expected_approve_status": True,
+            "expected_put_status": None
         },
         {
             "comment": "an already published digest",
@@ -82,7 +94,6 @@ class TestPublishDigest(unittest.TestCase):
             "stage": "published",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
-            "expected_stage_status": None,
             "expected_put_status": None
         },
         {
@@ -93,7 +104,6 @@ class TestPublishDigest(unittest.TestCase):
             "stage": "published",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": False,
-            "expected_stage_status": None,
             "expected_put_status": None
         },
         {
@@ -103,7 +113,6 @@ class TestPublishDigest(unittest.TestCase):
             "stage": "published",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
-            "expected_stage_status": None,
             "expected_put_status": None
         },
     )
@@ -114,7 +123,7 @@ class TestPublishDigest(unittest.TestCase):
             test_data.get("existing_digest_json"),
             test_data.get("stage")
             )
-        fake_put_digest.return_value = None
+        fake_put_digest.return_value = test_data.get("put_response")
         activity_data = digest_activity_data(
             ACTIVITY_DATA,
             test_data.get("status")
@@ -126,9 +135,6 @@ class TestPublishDigest(unittest.TestCase):
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.statuses.get("approve"),
                          test_data.get("expected_approve_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.statuses.get("stage"),
-                         test_data.get("expected_stage_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.statuses.get("put"),
                          test_data.get("expected_put_status"),

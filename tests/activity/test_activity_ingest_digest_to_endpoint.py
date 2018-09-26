@@ -172,7 +172,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
         fake_get_digest.return_value = test_data.get('existing_digest_json')
-        fake_put_digest.return_value = None
+        fake_put_digest.return_value = FakeResponse(204, None)
         fake_highest_version.return_value = test_data.get('lax_highest_version')
         fake_article_snippet.return_value = 200, test_data.get('article_snippet')
         fake_provider_storage_context.return_value = FakeStorageContext()

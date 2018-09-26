@@ -175,7 +175,7 @@ def digest_put_request(url, verify_ssl, digest_id, data, auth_key=None):
             "Error put digest " + digest_id + " to digest API: %s\n%s" %
             (status_code, response.content))
     else:
-        return response.content
+        return response
 
 
 def put_digest(digest_id, data, settings, auth=True):
@@ -187,15 +187,12 @@ def put_digest(digest_id, data, settings, auth=True):
 
 def put_digest_to_endpoint(logger, digest_id, digest_content, settings):
     "handle issuing the PUT to the digest endpoint"
-    put_status = None
     try:
-        put_digest(digest_id, digest_content, settings)
-        put_status = True
+        return put_digest(digest_id, digest_content, settings)
     except Exception as exception:
         logger.exception(
             "Exception issuing PUT to the digest endpoint for digest_id %s. Details: %s" %
             (str(digest_id), str(exception)))
-    return put_status
 
 
 def approve_by_status(logger, article_id, status):
