@@ -62,7 +62,7 @@ class activity_PublishDigest(Activity):
             existing_digest_json = digest_provider.get_digest(digest_id, self.settings)
             if not existing_digest_json:
                 self.logger.info(
-                    "Did not get existing digest json from the endpoint for digest_id %s" %
+                    "There is no existing digest for digest_id %s" %
                     str(digest_id))
                 self.emit_end_message(article_id, version, run)
                 return self.ACTIVITY_SUCCESS
