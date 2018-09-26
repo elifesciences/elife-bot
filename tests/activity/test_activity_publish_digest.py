@@ -134,7 +134,7 @@ class TestPublishDigest(unittest.TestCase):
                          test_data.get("expected_put_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         # check stage value in json_content
-        if self.activity.digest_content:
+        if test_data.get("expected_stage"):
             self.assertEqual(self.activity.digest_content.get("stage"),
                              test_data.get("expected_stage"))
 
