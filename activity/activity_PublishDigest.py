@@ -72,9 +72,8 @@ class activity_PublishDigest(Activity):
                 self.logger.info("Set Digest stage value of %s to published" % article_id)
                 put_response = digest_provider.put_digest_to_endpoint(
                     self.logger, digest_id, self.digest_content, self.settings)
-                if put_response:
-                    self.statuses["put"] = True
-                    self.logger.info("Put Digest for %s to the endpoint" % article_id)
+                self.statuses["put"] = True
+                self.logger.info("Put Digest for %s to the endpoint: " % article_id, put_response)
 
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
