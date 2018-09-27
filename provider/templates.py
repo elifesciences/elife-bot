@@ -109,9 +109,16 @@ class Templates(object):
         template_list.append("author_publication_email_VOR_no_POA.json")
         template_list.append("author_publication_email_Feature.html")
         template_list.append("author_publication_email_Feature.json")
+
+        return template_list
+
+    def get_video_email_templates_list(self):
+        "list of templates for sending video article published emails"
+        template_list = []
+        template_list.append("email_header.html")
+        template_list.append("email_footer.html")
         template_list.append("video_article_publication.html")
         template_list.append("video_article_publication.json")
-
         return template_list
 
     def get_lens_templates_list(self):
@@ -147,27 +154,27 @@ class Templates(object):
         elif template_missing is False:
             self.lens_templates_warmed = True
 
-    def download_email_templates_from_s3(self):
-        """
-        Prepare the tmp_dir jinja template directory
-        to hold template files used in author publication
-        and editor publication emails
-        """
-        template_list = self.get_email_templates_list()
-
+    def download_templates_from_s3(self, template_list):
+        "download template files from s3"
         template_missing = False
-
         for t in template_list:
             success = self.download_template_from_s3(
                 template_type="email",
                 template_name=t)
             if not success:
                 template_missing = True
-
         if template_missing:
             self.email_templates_warmed = False
         elif template_missing is False:
             self.email_templates_warmed = True
+
+    def download_email_templates_from_s3(self):
+        "donwload template files used in author publication emails"
+        self.download_templates_from_s3(self.get_email_templates_list())
+
+    def download_video_email_templates_from_s3(self):
+        "donwload template files used in video published emails"
+        self.download_templates_from_s3(self.get_video_email_templates_list())
 
     def download_template_from_s3(self, template_type=None, template_name=None, s3_key_name=None):
         """

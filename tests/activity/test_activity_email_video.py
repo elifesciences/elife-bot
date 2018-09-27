@@ -39,15 +39,15 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
     def tearDown(self):
         self.activity.clean_tmp_dir()
 
-    def fake_download_email_templates(self, to_dir, templates_warmed):
-        template_list = self.activity.templates.get_email_templates_list()
+    def fake_download_video_email_templates(self, to_dir, templates_warmed):
+        template_list = self.activity.templates.get_video_email_templates_list()
         for filename in template_list:
             source_doc = "tests/test_data/templates/" + filename
             dest_doc = os.path.join(to_dir, filename)
             shutil.copy(source_doc, dest_doc)
         self.activity.templates.email_templates_warmed = templates_warmed
 
-    @patch.object(Templates, 'download_email_templates_from_s3')
+    @patch.object(Templates, 'download_video_email_templates_from_s3')
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch('provider.lax_provider.get_xml_file_name')
     @patch.object(activity_object, 'is_duplicate_email')
@@ -78,17 +78,17 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
         fake_is_duplicate_email.return_value = test_data.get("is_duplicate_email")
         fake_storage_context.return_value = FakeStorageContext()
         fake_elife_add_email.return_value = mock.MagicMock()
-        fake_download_email_templates.return_value = self.fake_download_email_templates(
+        fake_download_email_templates.return_value = self.fake_download_video_email_templates(
             self.activity.get_tmp_dir(), test_data.get("templates_warmed"))
         # do the activity
         success = self.activity.do_activity(test_data.get("input_data"))
         # check assertions
         self.assertEqual(success, test_data.get("activity_success"))
 
-    @patch.object(Templates, 'download_email_templates_from_s3')
+    @patch.object(Templates, 'download_video_email_templates_from_s3')
     def test_template_get_email_headers_00013(self, fake_download_email_templates):
 
-        fake_download_email_templates.return_value = self.fake_download_email_templates(
+        fake_download_email_templates.return_value = self.fake_download_video_email_templates(
             self.activity.get_tmp_dir(), True)
 
         email_type = "video_article_publication"
@@ -114,10 +114,10 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
 
         self.assertEqual(body, expected_headers)
 
-    @patch.object(Templates, 'download_email_templates_from_s3')
+    @patch.object(Templates, 'download_video_email_templates_from_s3')
     def test_template_get_email_body_00353(self, fake_download_email_templates):
 
-        fake_download_email_templates.return_value = self.fake_download_email_templates(
+        fake_download_email_templates.return_value = self.fake_download_video_email_templates(
             self.activity.get_tmp_dir(), True)
 
         email_type = "video_article_publication"
