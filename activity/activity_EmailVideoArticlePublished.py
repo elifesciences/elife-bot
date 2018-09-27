@@ -31,9 +31,6 @@ class activity_EmailVideoArticlePublished(Activity):
         # Templates provider
         self.templates = templatelib.Templates(settings, self.get_tmp_dir())
 
-        # Default is do not send duplicate emails
-        self.allow_duplicates = False
-
         # Email types, for sending previews of each template
         self.email_template = 'video_article_publication'
 
@@ -89,13 +86,10 @@ class activity_EmailVideoArticlePublished(Activity):
         self.database.connect()
         for recipient in recipients:
             send = None
-            if self.allow_duplicates is True:
+            is_duplicate = self.is_duplicate_email(
+                article_id, email_type, recipient.get("e_mail"))
+            if not is_duplicate:
                 send = True
-            else:
-                is_duplicate = self.is_duplicate_email(
-                    article_id, email_type, recipient.get("e_mail"))
-                if not is_duplicate:
-                    send = True
             if not send:
                 self.logger.info(
                     "Will not send email for article %s to %s in Email Video Article Published " %
