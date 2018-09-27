@@ -115,6 +115,11 @@ class activity_IngestDigestToEndpoint(Activity):
 
             # get existing digest data
             digest_id = self.digest_content.get("id")
+            # TODO: what are we doing this for?
+            # assumption: we are ingesting the digest multiple times on the first VoR version
+            # assumption: we are not ingesting the digest on any other version
+            # only possible case is silent correction?
+            # but then, only do it on silent correction?
             existing_digest_json = digest_provider.get_digest(digest_id, self.settings)
             if not existing_digest_json:
                 self.logger.info(
@@ -122,7 +127,7 @@ class activity_IngestDigestToEndpoint(Activity):
                     str(digest_id))
             self.digest_content = sync_json(self.digest_content, existing_digest_json)
             # set the stage attribute if missing
-            digest_provider.set_stage(self.digest_content)
+            digest_provider.set_stage(self.digest_content, "preview")
             self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
             put_response = digest_provider.put_digest_to_endpoint(

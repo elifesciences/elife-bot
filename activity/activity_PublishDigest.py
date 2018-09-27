@@ -58,7 +58,7 @@ class activity_PublishDigest(Activity):
 
             # get existing digest data
             digest_id = article_id
-            existing_digest_json = digest_provider.get_digest(digest_id, self.settings)
+            existing_digest_json = digest_provider.get_digest_preview(digest_id, self.settings)
             if not existing_digest_json:
                 self.logger.info(
                     "There is no existing digest for digest_id %s" %

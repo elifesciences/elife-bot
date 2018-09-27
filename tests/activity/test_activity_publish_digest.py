@@ -60,7 +60,7 @@ class TestPublishDigest(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     @patch.object(digest_provider, 'put_digest')
-    @patch.object(digest_provider, 'get_digest')
+    @patch.object(digest_provider, 'get_digest_preview')
     @patch.object(activity_object, 'emit_monitor_event')
     @data(
         {
