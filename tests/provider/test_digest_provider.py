@@ -78,6 +78,18 @@ class TestDigestProvider(unittest.TestCase):
         self.assertRaises(ErrorCallingDigestException, digest_provider.get_digest,
                           '99999', settings_mock)
 
+    @patch('requests.get')
+    def test_get_digest_preview(self, mock_requests_get):
+        expected_data = {'id': u'99999'}
+        response = MagicMock()
+        response.status_code = 200
+        response.json.return_value = {'id': u'99999'}
+        mock_requests_get.return_value = response
+        data = digest_provider.get_digest_preview('99999', settings_mock)
+        request_named_arguments = mock_requests_get.call_args_list[0][1]
+        headers = request_named_arguments['headers']
+        self.assertIn('Authorization', headers)
+
     @patch('requests.put')
     def test_put_digest_204(self, mock_requests_put):
         digest_id = '99999'
