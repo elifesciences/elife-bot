@@ -8,6 +8,7 @@ from docx.opc.exceptions import PackageNotFoundError
 from digestparser import build, conf
 import provider.utils as utils
 from provider.storage_provider import storage_context
+import provider.lax_provider as lax_provider
 
 
 IDENTITY = "process_%s" % os.getpid()
@@ -174,7 +175,7 @@ def digest_put_request(url, verify_ssl, digest_id, data, auth_key=None):
             "Error put digest " + digest_id + " to digest API: %s\n%s" %
             (status_code, response.content))
     else:
-        return response.content
+        return response
 
 
 def put_digest(digest_id, data, settings, auth=True):
@@ -182,3 +183,70 @@ def put_digest(digest_id, data, settings, auth=True):
     url = settings.digest_endpoint.replace('{digest_id}', str(digest_id))
     return digest_put_request(url, settings.verify_ssl, digest_id, data,
                               digest_auth_key(settings, auth))
+
+
+def put_digest_to_endpoint(logger, digest_id, digest_content, settings):
+    "handle issuing the PUT to the digest endpoint"
+    try:
+        return put_digest(digest_id, digest_content, settings)
+    except Exception as exception:
+        logger.exception(
+            "Exception issuing PUT to the digest endpoint for digest_id %s. Details: %s" %
+            (str(digest_id), str(exception)))
+
+
+def approve_by_status(logger, article_id, status):
+    "determine approval status by article status value"
+    approve_status = None
+    # PoA do not ingest digests
+    if status == "poa":
+        approve_status = False
+        message = ("\nNot ingesting digest for PoA article {article_id}".format(
+            article_id=article_id
+        ))
+        logger.info(message)
+    return approve_status
+
+
+def approve_by_run_type(settings, logger, article_id, run_type, version):
+    "determine ingest approval based on the run_type and version"
+    approve_status = None
+    # VoR and is a silent correction, consult Lax for if it is not the highest version
+    if run_type == "silent-correction":
+        highest_version = lax_provider.article_highest_version(article_id, settings)
+        try:
+            if int(version) < int(highest_version):
+                approve_status = False
+                message = (
+                    "\nNot ingesting digest for silent correction {article_id}" +
+                    " version {version} is less than highest version {highest}").format(
+                        article_id=article_id,
+                        version=version,
+                        highest=highest_version)
+                logger.info(message)
+        except TypeError as exception:
+            approve_status = False
+            message = (
+                "\nException converting version to int for {article_id}, {exc}").format(
+                    article_id=article_id,
+                    exc=str(exception))
+            logger.exception(message.lstrip())
+    return approve_status
+
+
+def approve_by_first_vor(settings, logger, article_id, version, status, auth=True):
+    "check if it is not the first vor or not the highest version"
+    approve_status = None
+    first_vor = lax_provider.article_first_by_status(article_id, version, status, settings, auth)
+    highest_version = lax_provider.article_highest_version(article_id, settings, auth)
+    if not first_vor:
+        approve_status = False
+    elif first_vor and version and highest_version and int(version) < int(highest_version):
+        approve_status = False
+    return approve_status
+
+
+def set_stage(json_content, stage="preview"):
+    "set the stage attribute"
+    json_content["stage"] = stage
+    return json_content
