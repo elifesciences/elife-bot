@@ -1,6 +1,7 @@
 import os
 import unittest
 import shutil
+import copy
 from mock import mock, patch
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
@@ -12,7 +13,7 @@ from activity.activity_EmailVideoArticlePublished import (
     activity_EmailVideoArticlePublished as activity_object)
 
 
-NO_VIDEO_ACTIVITY_DATA = {
+BASE_ACTIVITY_DATA = {
     "run": "",
     "article_id": "00353",
     "version": "1",
@@ -20,13 +21,12 @@ NO_VIDEO_ACTIVITY_DATA = {
     "expanded_folder": "email_video"
     }
 
-HAS_VIDEO_ACTIVITY_DATA = {
-    "run": "",
-    "article_id": "00007",
-    "version": "1",
-    "status": "vor",
-    "expanded_folder": "email_video"
-    }
+def activity_data(data, article_id, status):
+    "customise the input data for test scenarios"
+    new_data = copy.copy(data)
+    new_data["article_id"] = article_id
+    new_data["status"] = status
+    return new_data
 
 
 @ddt
@@ -49,33 +49,56 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
 
     @patch.object(Templates, 'download_video_email_templates_from_s3')
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
+    @patch.object(SimpleDB, 'elife_get_email_queue_items')
     @patch('provider.lax_provider.get_xml_file_name')
-    @patch.object(activity_object, 'is_duplicate_email')
     @patch('activity.activity_EmailVideoArticlePublished.storage_context')
     @patch.object(activity_object, 'emit_monitor_event')
     @data(
         {
+            "comment": "article has video and not a duplicate email",
             "xml_file": "elife-00007-v1.xml",
             "templates_warmed": True,
-            "is_duplicate_email": False,
-            "input_data": HAS_VIDEO_ACTIVITY_DATA,
-            "activity_success": activity_object.ACTIVITY_SUCCESS,
+            "email_queue_items": [],
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor"),
+            "activity_success": activity_object.ACTIVITY_SUCCESS
         },
         {
+            "comment": "poa article does not send an email",
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "poa"),
+            "activity_success": activity_object.ACTIVITY_SUCCESS
+        },
+        {
+            "comment": "article does not have a video",
             "xml_file": "elife-00353-v1.xml",
             "templates_warmed": None,
-            "is_duplicate_email": None,
-            "input_data": NO_VIDEO_ACTIVITY_DATA,
-            "activity_success": activity_object.ACTIVITY_SUCCESS,
+            "email_queue_items": [],
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "00353", "vor"),
+            "activity_success": activity_object.ACTIVITY_SUCCESS
         },
+        {
+            "comment": "article has video but is a duplicate email",
+            "xml_file": "elife-00007-v1.xml",
+            "templates_warmed": True,
+            "email_queue_items": ["duplicate"],
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor"),
+            "activity_success": activity_object.ACTIVITY_SUCCESS
+        },
+        {
+            "comment": "article has video but templates were not downloaded",
+            "xml_file": "elife-00007-v1.xml",
+            "templates_warmed": False,
+            "email_queue_items": ["duplicate"],
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor"),
+            "activity_success": activity_object.ACTIVITY_PERMANENT_FAILURE
+        }
     )
-    def test_do_activity(self, test_data, fake_emit, fake_storage_context, fake_is_duplicate_email,
-                         fake_get_xml_file_name, fake_elife_add_email,
+    def test_do_activity(self, test_data, fake_emit, fake_storage_context,
+                         fake_get_xml_file_name, fake_email_queue_items, fake_elife_add_email,
                          fake_download_email_templates):
         # mock objects
         fake_emit.return_value = None
         fake_get_xml_file_name.return_value = test_data.get("xml_file")
-        fake_is_duplicate_email.return_value = test_data.get("is_duplicate_email")
+        fake_email_queue_items.return_value = test_data.get("email_queue_items")
         fake_storage_context.return_value = FakeStorageContext()
         fake_elife_add_email.return_value = mock.MagicMock()
         fake_download_email_templates.return_value = self.fake_download_video_email_templates(
