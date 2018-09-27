@@ -12,7 +12,7 @@ import provider.lax_provider as lax_provider
 
 
 IDENTITY = "process_%s" % os.getpid()
-LOGGER = log.logger("digest_provider.log", 'INFO', IDENTITY)
+LOGGER = log.logger("digest_provider.log", 'INFO', IDENTITY, loggerName=__name__)
 
 
 class ErrorCallingDigestException(Exception):
