@@ -122,9 +122,10 @@ def has_image(digest_content):
     return True
 
 
-def digest_get_request(url, verify_ssl, digest_id):
+def digest_get_request(url, verify_ssl, digest_id, auth_key=None):
     "common get request logic to digests API"
-    response = requests.get(url, verify=verify_ssl)
+    headers = digest_auth_header(auth_key)
+    response = requests.get(url, verify=verify_ssl, headers=headers)
     LOGGER.info("Request to digest API: GET %s", url)
     LOGGER.info("Response from digest API: %s\n%s", response.status_code, response.content)
     status_code = response.status_code
@@ -141,6 +142,11 @@ def get_digest(digest_id, settings):
     "get digest from the endpoint"
     url = settings.digest_endpoint.replace('{digest_id}', str(digest_id))
     return digest_get_request(url, settings.verify_ssl, digest_id)
+
+def get_digest_preview(digest_id, settings):
+    "get digest from the endpoint, including digests in preview"
+    url = settings.digest_endpoint.replace('{digest_id}', str(digest_id))
+    return digest_get_request(url, settings.verify_ssl, digest_id, digest_auth_key(settings, auth=True))
 
 
 def digest_auth_key(settings, auth=False):
