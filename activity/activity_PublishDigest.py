@@ -114,13 +114,15 @@ class activity_PublishDigest(Activity):
         "emit the start message to the queue"
         return self.emit_message(
             article_id, version, run, "start",
-            "Starting ingest digest to endpoint for " + str(article_id))
+            "Starting ingest digest to endpoint for %s" % article_id)
 
     def emit_end_message(self, article_id, version, run):
         "emit the end message to the queue"
         return self.emit_message(
             article_id, version, run, "end",
-            "Finished ingest digest to endpoint for " + str(article_id))
+            "Finished ingest digest to endpoint for %s. Statuses: %s" % \
+                (article_id, self.statuses)
+        )
 
     def emit_error_message(self, article_id, version, run, message):
         "emit an error message to the queue"
