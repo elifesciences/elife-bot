@@ -216,7 +216,7 @@ class activity_EmailVideoArticlePublished(Activity):
         except Exception as exception:
             log_info = (
                 'Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s' %
-                (str(article_id), str(email_type), str(recipient.e_mail)))
+                (str(article_id), str(email_type), str(recipient.get("e_mail"))))
             self.logger.info(log_info)
             self.logger.exception(str(exception))
             return False
@@ -229,7 +229,7 @@ class activity_EmailVideoArticlePublished(Activity):
             if self.logger:
                 log_info = ("Sending " + email_type + " type email" +
                             " for article " + str(article_id) +
-                            " to recipient_email " + str(recipient.e_mail))
+                            " to recipient_email " + str(recipient.get("e_mail")))
                 self.logger.info(log_info)
 
             self.queue_email(
@@ -263,7 +263,7 @@ class activity_EmailVideoArticlePublished(Activity):
 
         # Add the email to the email queue
         self.database.elife_add_email_to_email_queue(
-            recipient_email=recipient.e_mail,
+            recipient_email=recipient.get("e_mail"),
             sender_email=headers["sender_email"],
             email_type=headers["email_type"],
             format=headers["format"],
