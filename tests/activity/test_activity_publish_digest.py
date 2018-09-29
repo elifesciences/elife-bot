@@ -2,6 +2,7 @@
 
 import unittest
 import copy
+import requests
 from collections import OrderedDict
 from mock import patch
 from ddt import ddt, data
@@ -59,7 +60,7 @@ class TestPublishDigest(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
-    @patch.object(digest_provider, 'put_digest')
+    @patch.object(requests, 'put')
     @patch.object(digest_provider, 'get_digest_preview')
     @patch.object(activity_object, 'emit_monitor_event')
     @data(
@@ -80,7 +81,7 @@ class TestPublishDigest(unittest.TestCase):
             "article_id": "99999",
             "status": "vor",
             "existing_digest_json": DIGEST_DATA,
-            "put_response": None,
+            "put_response": FakeResponse(500, None),
             "stage": "preview",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_stage": "published",
