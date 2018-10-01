@@ -99,30 +99,3 @@ class activity_ArchiveArticle(activity.activity):
                                 "end", "Finished archiving article " + data['article_id'] +
                                 " for version " + version + " run " + data["run"])
         return activity.activity.ACTIVITY_SUCCESS
-
-def main(args):
-
-    """
-    This sets up dummy SWF activity data, creates an instance of this activity and runs it only for
-    testing and debugging. This activity would usually be executed by worker.py
-    """
-
-    data = {
-        'id': '00353',
-        'expanded_folder': '00353.1/9a0f0b0d-1f0b-47c8-88ef-050bd9cdff92',
-        'version': '1',
-        'status': 'VOR',
-        'updated_date': datetime.strftime(datetime.utcnow(), "%Y-%m-%dT%H:%M:%S")
-    }
-
-    settings = settings_lib.get_settings('exp')
-    identity = "resize_%s" % int(random.random() * 1000)
-    log_file = "worker.log"
-    logger = log.logger(log_file, settings.setLevel, identity)
-    conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
-    act = activity_ArchiveArticle(settings, logger, conn=conn)
-    act.do_activity(data)
-
-if __name__ == '__main__':
-    import sys
-    main(sys.argv[1:])

@@ -8,7 +8,7 @@ import log
 import os
 
 identity = "process_%s" % os.getpid()
-logger = log.logger("lax_provider.log", 'INFO', identity)
+logger = log.logger("lax_provider.log", 'INFO', identity, loggerName=__name__)
 
 
 class ErrorCallingLaxException(Exception):
