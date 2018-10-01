@@ -47,6 +47,7 @@ class activity_PublishDigest(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # Wrap in an exception during testing phase
+        digest_id = None
         try:
             # Approve for ingestion
             self.statuses["approve"] = self.approve(article_id, status)
@@ -77,6 +78,9 @@ class activity_PublishDigest(Activity):
 
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
+
+        self.logger.info(
+            "%s for digest_id %s statuses: %s" % (self.name, str(digest_id), self.statuses))
 
         self.emit_end_message(article_id, version, run)
 

@@ -138,6 +138,9 @@ class activity_IngestDigestToEndpoint(Activity):
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
 
+        self.logger.info(
+            "%s for digest_id %s statuses: %s" % (self.name, str(digest_id), self.statuses))
+
         self.emit_end_message(article_id, version, run)
 
         return self.ACTIVITY_SUCCESS
@@ -180,7 +183,7 @@ class activity_IngestDigestToEndpoint(Activity):
         "emit the end message to the queue"
         return self.emit_message(
             article_id, version, run, "end",
-            "Finished ingest digest to endpoint for " + str(article_id))
+            "Finished ingest digest to endpoint for %s. Statuses %s" % (article_id, self.statuses))
 
     def emit_error_message(self, article_id, version, run, message):
         "emit an error message to the queue"
