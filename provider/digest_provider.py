@@ -199,6 +199,7 @@ def put_digest_to_endpoint(logger, digest_id, digest_content, settings):
         logger.exception(
             "Exception issuing PUT to the digest endpoint for digest_id %s. Details: %s" %
             (str(digest_id), str(exception)))
+        raise
 
 
 def approve_by_status(logger, article_id, status):
