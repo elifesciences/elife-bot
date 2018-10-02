@@ -186,7 +186,9 @@ def approve_sending(digest_content):
     if digest_content and not digest_content.doi:
         approve_status = False
         error_message += '\nDigest DOI is missing'
-    print(error_message)
+    if digest_content and not digest_content.text:
+        approve_status = False
+        error_message += '\nDigest text is missing'
     return approve_status, error_message
 
 
