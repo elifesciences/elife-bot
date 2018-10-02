@@ -82,6 +82,9 @@ class activity_PublishDigest(Activity):
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
 
+        self.logger.info(
+            "%s for article_id %s statuses: %s" % (self.name, str(article_id), self.statuses))
+
         self.emit_end_message(article_id, version, run)
 
         return self.ACTIVITY_SUCCESS
