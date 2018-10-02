@@ -157,6 +157,7 @@ class FakeResponse:
     def __init__(self, status_code, response_json):
         self.status_code = status_code
         self.response_json = response_json
+        self.content = None
 
     def json(self):
         return self.response_json

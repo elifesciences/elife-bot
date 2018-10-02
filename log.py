@@ -5,13 +5,13 @@ import random
 import sys
 import newrelic.agent
 
-def logger(logFile = None, setLevel = "INFO", identity = ""):
+def logger(logFile = None, setLevel = "INFO", identity = "", loggerName = 'elife-bot'):
     """
     Create a logger, by specifying a unique (or same) logFile,
     set the level of logging, and optional identity for what is
     sending logging message, to identify multiple workers
     """
-    logger = logging.getLogger('elife-bot')
+    logger = logging.getLogger(loggerName)
     if(logFile):
         hdlr = handlers.WatchedFileHandler(os.getcwd() + os.sep + logFile)
     else:

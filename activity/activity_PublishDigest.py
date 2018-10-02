@@ -72,9 +72,8 @@ class activity_PublishDigest(Activity):
                 self.logger.info("Set Digest stage value of %s to published" % article_id)
                 put_response = digest_provider.put_digest_to_endpoint(
                     self.logger, digest_id, self.digest_content, self.settings)
-                if put_response:
-                    self.statuses["put"] = True
-                    self.logger.info("Put Digest for %s to the endpoint" % article_id)
+                self.statuses["put"] = True
+                self.logger.info("Put Digest for %s to the endpoint: " % article_id, put_response)
 
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
@@ -115,13 +114,15 @@ class activity_PublishDigest(Activity):
         "emit the start message to the queue"
         return self.emit_message(
             article_id, version, run, "start",
-            "Starting ingest digest to endpoint for " + str(article_id))
+            "Starting ingest digest to endpoint for %s" % article_id)
 
     def emit_end_message(self, article_id, version, run):
         "emit the end message to the queue"
         return self.emit_message(
             article_id, version, run, "end",
-            "Finished ingest digest to endpoint for " + str(article_id))
+            "Finished ingest digest to endpoint for %s. Statuses: %s" % \
+                (article_id, self.statuses)
+        )
 
     def emit_error_message(self, article_id, version, run, message):
         "emit an error message to the queue"
