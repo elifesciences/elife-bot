@@ -74,6 +74,10 @@ class activity_PublishDigest(Activity):
                     self.logger, digest_id, self.digest_content, self.settings)
                 self.statuses["put"] = True
                 self.logger.info("Put Digest for %s to the endpoint: " % article_id, put_response)
+            else:
+                self.logger.info(
+                    "Digest is already published, did not put Digest for %s to the endpoint: " %
+                    article_id, put_response)
 
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))

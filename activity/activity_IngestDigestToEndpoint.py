@@ -127,7 +127,8 @@ class activity_IngestDigestToEndpoint(Activity):
                     str(digest_id))
             self.digest_content = sync_json(self.digest_content, existing_digest_json)
             # set the stage attribute if missing
-            digest_provider.set_stage(self.digest_content, "preview")
+            if self.digest_content.get("stage") != "published":
+                digest_provider.set_stage(self.digest_content, "preview")
             self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
             put_response = digest_provider.put_digest_to_endpoint(
