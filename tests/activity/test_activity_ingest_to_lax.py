@@ -68,7 +68,8 @@ class TestIngestToLax(unittest.TestCase):
                                     "expanded_folder": data['expanded_folder'],
                                     "requested_action": "",
                                     "message": "",
-                                    "update_date": data['update_date']
+                                    "update_date": data['update_date'],
+                                    "run_type": data.get('run_type')
                                 }
                             })
         self.assertEqual(queue, settings_mock.workflow_starter_queue)

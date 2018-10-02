@@ -42,6 +42,7 @@ class activity_IngestToLax(activity.activity):
         data['status'] = session.get_value('status')
         data['expanded_folder'] = session.get_value('expanded_folder')
         data['update_date'] = session.get_value('update_date')
+        data['run_type'] = session.get_value('run_type')
 
         queue_connection_settings = {"sqs_region": self.settings.sqs_region,
                                      "aws_access_key_id":self.settings.aws_access_key_id,
@@ -76,6 +77,7 @@ class activity_IngestToLax(activity.activity):
 
         try:
             expanded_folder = data['expanded_folder']
+            run_type = data.get('run_type')
 
             ##########
             if not consider_elife_20:
@@ -95,7 +97,8 @@ class activity_IngestToLax(activity.activity):
                                 "expanded_folder": expanded_folder,
                                 "requested_action": "",
                                 "message": "",
-                                "update_date": data['update_date']
+                                "update_date": data['update_date'],
+                                "run_type": run_type
                             }
                         }
 
@@ -117,8 +120,9 @@ class activity_IngestToLax(activity.activity):
 
             force = True if ("force" in data and data["force"] == True) else False
 
-            message = lax_provider.prepare_action_message(self.settings,
-                                                          article_id, run, expanded_folder, version, status, 'ingest', force)
+            message = lax_provider.prepare_action_message(
+                self.settings, article_id, run, expanded_folder,
+                version, status, 'ingest', force, run_type)
 
             return (message, self.settings.xml_info_queue, start_event, "end",
                     [self.settings, article_id, version, run, self.pretty_name, "end",
