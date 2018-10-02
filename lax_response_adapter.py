@@ -56,7 +56,8 @@ class LaxResponseAdapter:
                 "run": None,
                 "version": None,
                 "expanded_folder": None,
-                "status": None
+                "status": None,
+                "run_type": None
             }
 
     def parse_message(self, message):
@@ -82,6 +83,7 @@ class LaxResponseAdapter:
             expanded_folder = token['expanded_folder']
             status = token['status']
             force = token['force']
+            run_type = token.get('run_type')
 
             workflow_data = {
                 "run": run,
@@ -93,7 +95,8 @@ class LaxResponseAdapter:
                 "message": response_message,
                 "update_date": date_time,
                 "requested_action": operation,
-                "force": force
+                "force": force,
+                "run_type": run_type
             }
 
             if operation == "ingest":
