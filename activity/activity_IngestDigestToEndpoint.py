@@ -139,7 +139,7 @@ class activity_IngestDigestToEndpoint(Activity):
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
 
         self.logger.info(
-            "%s for digest_id %s statuses: %s" % (self.name, str(digest_id), self.statuses))
+            "%s for article_id %s statuses: %s" % (self.name, str(article_id), self.statuses))
 
         self.emit_end_message(article_id, version, run)
 
