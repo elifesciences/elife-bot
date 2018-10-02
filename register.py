@@ -106,6 +106,7 @@ def start(ENV="dev"):
     activity_names.append("CopyDigestToOutbox")
     activity_names.append("IngestDigestToEndpoint")
     activity_names.append("PublishDigest")
+    activity_names.append("CreateDigestMediumPost")
 
     for activity_name in activity_names:
         # Import the activity libraries
