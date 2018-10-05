@@ -129,10 +129,9 @@ class FakeStorageContext:
 
     def delete_resource(self, resource):
         # delete from the destination folder
-        bucket, s3_key = self.get_bucket_and_key(resource)
-        src = data.ExpandArticle_files_dest_folder + s3_key
-        if os.path.exists(src):
-            os.remove(src)
+        file_name = data.ExpandArticle_files_dest_folder + '/' + resource.split('/')[-1]
+        if os.path.exists(file_name):
+            os.remove(file_name)
 
     def get_resource_to_file_pointer(self, resource, file_path):
         return None
