@@ -173,7 +173,8 @@ class activity_PubmedArticleDeposit(activity.activity):
             # Convert the XML file to article objects
             article_list = generate.build_articles(
                 article_xmls=[xml_file],
-                build_parts=self.pubmed_config.get('build_parts'))
+                build_parts=self.pubmed_config.get('build_parts'),
+                remove_tags=self.pubmed_config.get('remove_tags'))
             # take the first article from the list
             if article_list:
                 article = article_list[0]
