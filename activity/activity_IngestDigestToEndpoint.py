@@ -182,18 +182,15 @@ class activity_IngestDigestToEndpoint(Activity):
 
     def digest_preview_link(self, article_id):
         "preview link for the digest using the preview base url"
-        return self.settings.journal_preview_base_url + "/digests/%s" % article_id
+        return "%s/digests/%s" % (self.settings.journal_preview_base_url, article_id)
 
     def activity_end_message(self, article_id, statuses):
         "different end message to emit based on the ingest status"
-        message = ''
         if statuses.get("ingest") is True:
-            message = "Finished ingest digest to endpoint for %s. Preview link %s" % (
-                article_id, self.digest_preview_link(article_id))
+            return "Finished ingest digest to endpoint for %s. Statuses %s Preview link %s" % (
+                article_id, statuses, self.digest_preview_link(article_id))
         else:
-            message = "No digest ingested for %s" % article_id
-        message += ". Statuses %s" % statuses
-        return message
+            return "No digest ingested for %s. Statuses %s" % (article_id, statuses)
 
     def emit_end_message(self, article_id, version, run):
         "emit the end message to the queue"

@@ -329,8 +329,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         "activity end message after a digest ingest"
         article_id = "00353"
         statuses = {"ingest": True}
-        expected = ("Finished ingest digest to endpoint for 00353. Preview link" +
-                    " https://preview/digests/00353. Statuses {'ingest': True}")
+        expected = ("Finished ingest digest to endpoint for 00353. Statuses {'ingest': True}" +
+                    " Preview link https://preview/digests/00353")
         message = self.activity.activity_end_message(article_id, statuses)
         self.assertEqual(message, expected)
 
