@@ -99,12 +99,6 @@ def start_workflow(workflow_name, workflow_data):
     s = eval(full_path)
     s.start(settings=settings, **workflow_data)
 
-def process_data_ingestarticlezip(workflow_name, workflow_data):
-    data = {'article_id': workflow_data['article_id'],
-            'run': workflow_data['run'], 'version_reason': workflow_data.get('version_reason'),
-            'scheduled_publication_date': workflow_data.get('scheduled_publication_date')}
-    return data
-
 def process_data_initialarticlezip(workflow_name, workflow_data):
     data = {'info': S3NotificationInfo.from_dict(workflow_data),
             'run': str(uuid.uuid4())}
@@ -126,7 +120,6 @@ def process_data_ingestdigest(workflow_name, workflow_data):
 
 
 workflow_data_processors = {
-    'IngestArticleZip': process_data_ingestarticlezip,
     'InitialArticleZip': process_data_initialarticlezip,
     'SilentCorrectionsIngest': process_data_initialarticlezip,
     'PostPerfectPublication': process_data_postperfectpublication,

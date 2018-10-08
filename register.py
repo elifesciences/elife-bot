@@ -24,7 +24,6 @@ def start(ENV="dev"):
     workflow_names.append("CopyGlencoeStillImages")
     workflow_names.append("SilentCorrectionsIngest")
     workflow_names.append("SilentCorrectionsProcess")
-    workflow_names.append("IngestArticleZip")
     workflow_names.append("InitialArticleZip")
     workflow_names.append("ProcessArticleZip")
     workflow_names.append("Ping")
