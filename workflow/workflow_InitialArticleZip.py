@@ -88,7 +88,95 @@ class workflow_InitialArticleZip(workflow.workflow):
                         "schedule_to_close_timeout": 60 * 15,
                         "schedule_to_start_timeout": 300,
                         "start_to_close_timeout": 60 * 15
-                    }
+                    },
+                    {
+                        "activity_type": "AcceptVersionReason",
+                        "activity_id": "AcceptVersionReason",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 10,
+                        "schedule_to_close_timeout": 60 * 10,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 10
+                    },
+                    {
+                        "activity_type": "ApplyVersionNumber",
+                        "activity_id": "ApplyVersionNumber",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 10,
+                        "schedule_to_close_timeout": 60 * 10,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 10
+                    },
+                    {
+                        "activity_type": "VerifyGlencoe",
+                        "activity_id": "VerifyGlencoe",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 15
+                    },
+                    {
+                        "activity_type": "ConvertImagesToJPG",
+                        "activity_id": "ConvertImagesToJPG",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 15
+                    },
+                    {
+                        "activity_type": "DepositIngestAssets",
+                        "activity_id": "DepositIngestAssets",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 15
+                    },
+                    {
+                        "activity_type": "CopyGlencoeStillImages",
+                        "activity_id": "CopyGlencoeStillImages",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 15
+                    },
+                    {
+                        "activity_type": "VerifyImageServer",
+                        "activity_id": "VerifyImageServer",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 15
+                    },
+                    {
+                        "activity_type": "IngestToLax",
+                        "activity_id": "IngestToLax",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 10,
+                        "schedule_to_close_timeout": 60 * 10,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 10
+                    },
                 ],
 
             "finish":
