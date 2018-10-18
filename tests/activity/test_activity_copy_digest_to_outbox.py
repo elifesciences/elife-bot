@@ -25,7 +25,7 @@ def populate_outbox(resources):
     "populate the bucket with outbox files to later be deleted"
     for resource in resources:
         file_name = resource.split('/')[-1]
-        file_path = os.path.join(testdata.ExpandArticle_files_dest_folder, file_name)
+        file_path = testdata.ExpandArticle_files_dest_folder + '/' + file_name
         with open(file_path, 'a'):
             os.utime(file_path, None)
 
