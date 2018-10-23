@@ -10,6 +10,7 @@ import provider.digest_provider as digest_provider
 from activity.activity_PublishDigest import activity_PublishDigest as activity_object
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeResponse
+import tests.test_data as shared_test_data
 
 
 ACTIVITY_DATA = {
@@ -33,6 +34,13 @@ DIGEST_DATA = OrderedDict([
             ])
         ])
     ])
+
+
+def digest_data_no_published():
+    "digest data with published removed"
+    data = copy.copy(DIGEST_DATA)
+    del(data["published"])
+    return data
 
 
 def digest_activity_data(data, status):
@@ -60,6 +68,7 @@ class TestPublishDigest(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
+    @patch('provider.lax_provider.article_versions')
     @patch.object(requests, 'put')
     @patch.object(digest_provider, 'get_digest_preview')
     @patch.object(activity_object, 'emit_monitor_event')
@@ -68,13 +77,14 @@ class TestPublishDigest(unittest.TestCase):
             "comment": "set a preview digest as published",
             "article_id": "99999",
             "status": "vor",
-            "existing_digest_json": DIGEST_DATA,
+            "existing_digest_json": digest_data_no_published(),
             "put_response": FakeResponse(204, None),
             "stage": "preview",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_stage": "published",
             "expected_approve_status": True,
-            "expected_put_status": True
+            "expected_put_status": True,
+            "expected_published_date": "2015-12-29T00:00:00Z"
         },
         {
             "comment": "fail to put a digest",
@@ -86,7 +96,8 @@ class TestPublishDigest(unittest.TestCase):
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_stage": "published",
             "expected_approve_status": True,
-            "expected_put_status": None
+            "expected_put_status": None,
+            "expected_published_date": "2016-06-16T00:00:00Z"
         },
         {
             "comment": "an already published digest",
@@ -95,7 +106,7 @@ class TestPublishDigest(unittest.TestCase):
             "stage": "published",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
-            "expected_put_status": None
+            "expected_put_status": None,
         },
         {
             "comment": "a poa article is not approved",
@@ -105,7 +116,7 @@ class TestPublishDigest(unittest.TestCase):
             "stage": "published",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": False,
-            "expected_put_status": None
+            "expected_put_status": None,
         },
         {
             "comment": "no digest to publish",
@@ -117,7 +128,8 @@ class TestPublishDigest(unittest.TestCase):
             "expected_put_status": None
         },
     )
-    def test_do_activity(self, test_data, fake_emit, fake_get_digest, fake_put_digest):
+    def test_do_activity(self, test_data, fake_emit, fake_get_digest,
+                         fake_put_digest, fake_article_versions):
         # copy files into the input directory using the storage context
         fake_emit.return_value = None
         fake_get_digest.return_value = digest_get_data(
@@ -129,6 +141,8 @@ class TestPublishDigest(unittest.TestCase):
             ACTIVITY_DATA,
             test_data.get("status")
             )
+        fake_article_versions.return_value = (
+            200, shared_test_data.lax_article_versions_response_data)
         # do the activity
         result = self.activity.do_activity(activity_data)
         # check assertions
@@ -144,6 +158,10 @@ class TestPublishDigest(unittest.TestCase):
         if test_data.get("expected_stage"):
             self.assertEqual(self.activity.digest_content.get("stage"),
                              test_data.get("expected_stage"))
+        # check published value in json_content
+        if test_data.get("expected_published_date"):
+            self.assertEqual(self.activity.digest_content.get("published"),
+                             test_data.get("expected_published_date"))
 
 
 if __name__ == '__main__':

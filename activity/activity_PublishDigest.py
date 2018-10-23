@@ -70,6 +70,10 @@ class activity_PublishDigest(Activity):
             if existing_digest_json.get("stage") != "published":
                 self.digest_content = digest_provider.set_stage(existing_digest_json, 'published')
                 self.logger.info("Set Digest stage value of %s to published" % article_id)
+                # set the published date
+                if not self.digest_content.get("published"):
+                    self.digest_content["published"] = digest_provider.published_date_from_lax(
+                        self.settings, digest_id)
                 put_response = digest_provider.put_digest_to_endpoint(
                     self.logger, digest_id, self.digest_content, self.settings)
                 self.statuses["put"] = True

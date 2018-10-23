@@ -9,7 +9,7 @@ lettuce==0.2.20
 requests==2.11.1
 lxml==4.1.1
 xlrd==0.9.3
-git+https://github.com/elifesciences/elife-tools.git@876835f6a537f82126ff534f13ba9f18b24e6fa1#egg=elifetools
+git+https://github.com/elifesciences/elife-tools.git@b3bf780c016724c80d23996335e60688866907c3#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@bb61d4c0e3742403503efe10852114aeb1e07269#egg=elifearticle
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@078ce423fb17186c5c92967c326119630846252b#egg=elifecrossref
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@32a9a831eca98a03b36b8c9a369c622a34d04a7a#egg=elifepubmed
@@ -18,7 +18,7 @@ git+https://github.com/elifesciences/jats-generator.git@ea0d4d90a28198eb2953cc98
 git+https://github.com/elifesciences/package-poa.git@2649777a020661e507de4087d447f50ca8c2fe57#egg=packagepoa
 PyYAML==3.11
 Wand==0.4.2
-paramiko==2.4.1
+paramiko==2.4.2
 mock==1.3.0
 redis==2.10.5
 testfixtures==4.9.1
@@ -27,7 +27,7 @@ ddt==1.1.0
 Pillow==3.2.0
 ndg-httpsclient==0.4.2
 pyasn1==0.1.9
-pyOpenSSL==16.2.0
+pyOpenSSL==18.0.0
 newrelic==2.72.0.52
 pylint==1.6.4
 pyGithub==1.27.1
@@ -35,5 +35,5 @@ six==1.10.0
 pyFunctional==1.0.0
 func_timeout==4.3.0
 python-docx==0.8.6
-git+https://github.com/elifesciences/digest-parser.git@88c712a4d4d9c4a45fefbb820859151de49d8cc9#egg=digestparser
+git+https://github.com/elifesciences/digest-parser.git@92e64a18c0ca5f7581ee6bd5540502bd3f5ee608#egg=digestparser
 psutil==5.4.6

@@ -318,6 +318,30 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         success = self.activity.emit_start_message("", "", "")
         self.assertEqual(success, None)
 
+    def test_digest_preview_link(self):
+        "digest preview url from settings value and article_id"
+        article_id = "00353"
+        expected = "https://preview/digests/" + article_id
+        preview_link = self.activity.digest_preview_link(article_id)
+        self.assertEqual(preview_link, expected)
+
+    def test_activity_end_message_ingest(self):
+        "activity end message after a digest ingest"
+        article_id = "00353"
+        statuses = {"ingest": True}
+        expected = ("Finished ingest digest to endpoint for 00353. Statuses {'ingest': True}" +
+                    " Preview link https://preview/digests/00353")
+        message = self.activity.activity_end_message(article_id, statuses)
+        self.assertEqual(message, expected)
+
+    def test_activity_end_message_no_ingest(self):
+        "activity end message after no digest ingested"
+        article_id = "00353"
+        statuses = {"ingest": None}
+        expected = "No digest ingested for 00353. Statuses {'ingest': None}"
+        message = self.activity.activity_end_message(article_id, statuses)
+        self.assertEqual(message, expected)
+
     @patch.object(activity_object, 'emit_monitor_event')
     def test_emit_error_message(self, fake_emit):
         "test a possible bad connection to the emit queue"
