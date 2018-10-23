@@ -253,6 +253,21 @@ def approve_by_first_vor(settings, logger, article_id, version, status, auth=Tru
     return approve_status
 
 
+def published_date_from_lax(settings, article_id):
+    "published date for a digest is the versionDate of the first VoR in Lax"
+    published = None
+    status_version_map = lax_provider.article_status_version_map(article_id, settings)
+    version = None
+    if status_version_map and status_version_map.get("vor"):
+        # lowest version from the vor version map
+        version = min(status_version_map.get("vor"))
+    if version:
+        snippet = lax_provider.article_snippet(article_id, version, settings)
+        if snippet:
+            published = snippet.get("versionDate")
+    return published
+
+
 def set_stage(json_content, stage="preview"):
     "set the stage attribute"
     json_content["stage"] = stage

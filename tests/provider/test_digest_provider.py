@@ -1,10 +1,12 @@
 import unittest
 import os
+import copy
 import tests.settings_mock as settings_mock
 from digestparser.objects import Digest, Image
 from mock import patch, MagicMock
 import provider.digest_provider as digest_provider
 from provider.digest_provider import ErrorCallingDigestException
+import tests.test_data as test_data
 
 
 class TestDigestProvider(unittest.TestCase):
@@ -136,3 +138,25 @@ class TestDigestProvider(unittest.TestCase):
         mock_requests_put.return_value = response
         self.assertRaises(ErrorCallingDigestException, digest_provider.put_digest,
                           digest_id, data, settings_mock)
+
+    @patch('provider.lax_provider.article_versions')
+    def test_published_date_from_lax(self, fake_article_versions):
+        fake_article_versions.return_value = 200, test_data.lax_article_versions_response_data
+        published = digest_provider.published_date_from_lax(settings_mock, '08411')
+        self.assertEqual(published, "2015-12-29T00:00:00Z")
+
+    @patch('provider.lax_provider.article_versions')
+    def test_published_date_from_lax_no_vor(self, fake_article_versions):
+        versions_data = copy.copy(test_data.lax_article_versions_response_data)
+        # delete the vor data
+        del(versions_data[2])
+        print(versions_data)
+        fake_article_versions.return_value = 200, versions_data
+        published = digest_provider.published_date_from_lax(settings_mock, '08411')
+        self.assertEqual(published, None)
+
+    @patch('provider.lax_provider.article_versions')
+    def test_published_date_from_lax_no_data(self, fake_article_versions):
+        fake_article_versions.return_value = 200, []
+        published = digest_provider.published_date_from_lax(settings_mock, '08411')
+        self.assertEqual(published, None)

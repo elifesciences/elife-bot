@@ -70,13 +70,24 @@ class activity_PublishDigest(Activity):
             if existing_digest_json.get("stage") != "published":
                 self.digest_content = digest_provider.set_stage(existing_digest_json, 'published')
                 self.logger.info("Set Digest stage value of %s to published" % article_id)
+                # set the published date
+                if not self.digest_content.get("published"):
+                    self.digest_content["published"] = digest_provider.published_date_from_lax(
+                        self.settings, digest_id)
                 put_response = digest_provider.put_digest_to_endpoint(
                     self.logger, digest_id, self.digest_content, self.settings)
                 self.statuses["put"] = True
                 self.logger.info("Put Digest for %s to the endpoint: " % article_id, put_response)
+            else:
+                self.logger.info(
+                    "Digest is already published, did not put Digest for %s to the endpoint: " %
+                    article_id, put_response)
 
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
+
+        self.logger.info(
+            "%s for article_id %s statuses: %s" % (self.name, str(article_id), self.statuses))
 
         self.emit_end_message(article_id, version, run)
 

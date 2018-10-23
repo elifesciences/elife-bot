@@ -78,8 +78,9 @@ class activity_CopyDigestToOutbox(Activity):
         storage = storage_context(self.settings)
         files_in_bucket = storage.list_resources(resource_path)
         for resource in files_in_bucket:
-            self.logger.info("Deleting %s from the outbox", resource)
-            storage.delete_resource(resource)
+            orig_resource = resource_path + "/" + resource
+            self.logger.info("Deleting %s from the outbox", orig_resource)
+            storage.delete_resource(orig_resource)
 
     def copy_files_to_outbox(self, digest, bucket_name, from_dir):
         "copy all the files from the from_dir to the bucket"

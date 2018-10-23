@@ -57,6 +57,8 @@ digest_error_recipient_email = "error@example.org"
 digest_endpoint = 'https://digests/{digest_id}'
 digest_auth_key = 'digest_auth_key'
 
+journal_preview_base_url = 'https://preview'
+
 features_publication_recipient_email = "features_team@example.org"
 email_video_recipient_email = "features_team@example.org"
 publication_authority = ""

@@ -115,6 +115,9 @@ class exp():
     digest_endpoint = 'https://digests/{digest_id}'
     digest_auth_key = 'digest_auth_key'
 
+    # journal preview
+    journal_preview_base_url = 'https://preview--journal.example.org'
+
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
 
@@ -366,6 +369,9 @@ class dev():
     digest_endpoint = 'https://digests/{digest_id}'
     digest_auth_key = 'digest_auth_key'
 
+    # journal preview
+    journal_preview_base_url = 'https://preview--journal.example.org'
+
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
 
@@ -610,6 +616,9 @@ class live():
     # digest endpoint
     digest_endpoint = 'https://digests/{digest_id}'
     digest_auth_key = 'digest_auth_key'
+
+    # journal preview
+    journal_preview_base_url = 'https://preview--journal.example.org'
 
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"

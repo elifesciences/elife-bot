@@ -27,11 +27,13 @@ def list_test_dir(dir_name, ignore=('.keepme')):
     return [file_name for file_name in file_names if file_name not in ignore]
 
 
-def create_digest(author=None, doi=None):
+def create_digest(author=None, doi=None, text=None):
     "for testing generate a Digest object an populate it"
     digest_content = Digest()
     digest_content.author = author
     digest_content.doi = doi
+    if text:
+        digest_content.text = text
     return digest_content
 
 
@@ -188,7 +190,7 @@ class TestEmailDigestApproveSending(unittest.TestCase):
 
     def test_approve_sending(self):
         "approving good Digest content"
-        digest_content = create_digest('Anonymous', '10.7554/eLife.99999')
+        digest_content = create_digest('Anonymous', '10.7554/eLife.99999', ['text'])
         expected_status = True
         expected_error_message = ''
         status, error_message = activity_module.approve_sending(digest_content)
@@ -208,14 +210,15 @@ class TestEmailDigestApproveSending(unittest.TestCase):
         "approving an empty Digest"
         digest_content = Digest()
         expected_status = False
-        expected_error_message = '\nDigest author is missing\nDigest DOI is missing'
+        expected_error_message = (
+            '\nDigest author is missing\nDigest DOI is missing\nDigest text is missing')
         status, error_message = activity_module.approve_sending(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_message, expected_error_message)
 
     def test_approve_sending_digest_no_author(self):
         "approving an empty Digest"
-        digest_content = create_digest(None, '10.7554/eLife.99999')
+        digest_content = create_digest(None, '10.7554/eLife.99999', ['text'])
         expected_status = False
         expected_error_message = '\nDigest author is missing'
         status, error_message = activity_module.approve_sending(digest_content)
@@ -224,9 +227,18 @@ class TestEmailDigestApproveSending(unittest.TestCase):
 
     def test_approve_sending_digest_no_doi(self):
         "approving an empty Digest"
-        digest_content = create_digest('Anonymous')
+        digest_content = create_digest('Anonymous', None, ['text'])
         expected_status = False
         expected_error_message = '\nDigest DOI is missing'
+        status, error_message = activity_module.approve_sending(digest_content)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(error_message, expected_error_message)
+
+    def test_approve_sending_digest_no_text(self):
+        "approving an empty Digest"
+        digest_content = create_digest('Anonymous', '10.7554/eLife.99999', None)
+        expected_status = False
+        expected_error_message = '\nDigest text is missing'
         status, error_message = activity_module.approve_sending(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_message, expected_error_message)
