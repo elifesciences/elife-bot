@@ -32,7 +32,7 @@ class starter_InitialArticleZip():
         input = S3NotificationInfo.to_dict(info)
         input['run'] = run
         input['version_lookup_function'] = "article_next_version"
-
+        input['run_type'] = "initial-article"
 
         workflow_id, \
         workflow_name, \

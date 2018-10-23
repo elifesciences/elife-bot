@@ -75,9 +75,10 @@ class activity_IngestToLax(activity.activity):
         article_id = data['article_id']
         status = data['status']
 
+        start_event = None
         try:
             expanded_folder = data['expanded_folder']
-            run_type = data.get('run_type')
+            run_type = data['run_type']
 
             ##########
             if not consider_elife_20:

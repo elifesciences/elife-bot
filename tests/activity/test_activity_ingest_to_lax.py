@@ -14,13 +14,14 @@ data_example = {
     "result": "ingested",
     "run": "bb2d37b8-e73c-43b3-a092-d555753316af",
     "status": "vor",
-    "version": "1"
+    "version": "1",
+    "run_type": "initial-article"
 }
 
 @ddt
 class TestIngestToLax(unittest.TestCase):
     def setUp(self):
-        self.ingesttolax = activity_IngestToLax(settings_mock, None, None, None, None)
+        self.ingesttolax = activity_IngestToLax(settings_mock, FakeLogger(), None, None, None)
 
     @data(data_example)
     @patch('provider.lax_provider.prepare_action_message')
@@ -43,7 +44,6 @@ class TestIngestToLax(unittest.TestCase):
     @patch("provider.lax_provider.prepare_action_message")
     def test_do_activity_error(self, data, fake_lax_provider):
         fake_lax_provider.side_effect = Exception("Access Denied")
-        self.ingesttolax = activity_IngestToLax(settings_mock, FakeLogger(), None, None, None)
         message, queue, start_event, end_event, end_event_details, exception = self.ingesttolax.get_message_queue(data)
         self.assertEqual(end_event, "error")
         self.assertEqual(exception, "Access Denied")
@@ -69,7 +69,7 @@ class TestIngestToLax(unittest.TestCase):
                                     "requested_action": "",
                                     "message": "",
                                     "update_date": data['update_date'],
-                                    "run_type": data.get('run_type')
+                                    "run_type": data['run_type']
                                 }
                             })
         self.assertEqual(queue, settings_mock.workflow_starter_queue)
