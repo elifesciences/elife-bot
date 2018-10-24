@@ -179,7 +179,7 @@ def file_parts(filename):
 
 
 def get_media_file_images(files):
-    return list(filter(lambda f: is_video_file(f) and has_extensions(f, ['jpg']), files))
+    return [f for f in files if is_video_file(f) and has_extensions(f, ['jpg'])]
 
 
 def is_video_file(filename):
