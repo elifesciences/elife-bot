@@ -59,7 +59,8 @@ class TestArticleStructure(unittest.TestCase):
 
     @unpack
     @data({'input': 'elife-07702-vor-r4.zip', 'expected': None},
-          {'input': 'elife-00013-vor-v1-20121015000000.zip', 'expected':'2012-10-15T00:00:00Z'})
+          {'input': 'elife-00013-vor-v1-20121015000000.zip', 'expected':'2012-10-15T00:00:00Z'},
+          {'input': 'elife-07702-vor-r4-2012bad_date.zip', 'expected': None})
     def test_get_update_date_from_zip_filename(self, input, expected):
         self.articleinfo = ArticleInfo(input)
         result = self.articleinfo.get_update_date_from_zip_filename()
@@ -110,6 +111,16 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666.xml', 'expected': 'ArticleXML'},
           )
     def test_get_file_type_from_zip_filename(self, input, expected):
+        self.articleinfo = ArticleInfo(input)
+        result = self.articleinfo.file_type
+        self.assertEqual(result, expected)
+
+    @unpack
+    @data(
+        {'input': 'Video_22.zip', 'expected': None}
+        )
+    def test_get_file_type_edge_case(self, input, expected):
+        "edge case in elife 04493 PoA"
         self.articleinfo = ArticleInfo(input)
         result = self.articleinfo.file_type
         self.assertEqual(result, expected)
