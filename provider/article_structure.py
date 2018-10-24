@@ -190,12 +190,9 @@ def is_video_file(filename):
          match False on elife-00005-media1-code1.wrl
     """
 
-    (file_prefix, file_extension) = file_parts(filename)
+    file_prefix, file_extension = file_parts(filename)
     file_type_plus_index = file_prefix.split('-')[-1]
-    if ("media" in file_type_plus_index) or ("video" in file_type_plus_index):
-        return True
-    else:
-        return False
+    return bool("media" in file_type_plus_index or "video" in file_type_plus_index)
 
 
 def pre_ingest_assets(files):
