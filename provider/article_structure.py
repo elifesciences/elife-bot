@@ -103,12 +103,12 @@ class ArticleInfo(object):
 
     def get_update_date_from_zip_filename(self):
         filename = self.full_filename
-        m = re.search(r'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
-        if m is None:
+        match = re.search(r'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
+        if match is None:
             return None
         else:
             try:
-                raw_update_date = m.group(1)
+                raw_update_date = match.group(1)
                 updated_date = datetime.datetime.strptime(raw_update_date, "%Y%m%d%H%M%S")
                 return updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
             except:
@@ -116,45 +116,45 @@ class ArticleInfo(object):
 
     def get_version_from_zip_filename(self):
         filename = self.full_filename
-        m = re.search(r'-v([0-9]+?)[\.|-]', filename)
-        if m is None:
+        match = re.search(r'-v([0-9]+?)[\.|-]', filename)
+        if match is None:
             return None
         else:
-            return m.group(1)
+            return match.group(1)
 
 
-def article_figure(file):
-    article_info = ArticleInfo(file)
+def article_figure(filename):
+    article_info = ArticleInfo(filename)
     return article_info.file_type == "Figure"
 
 
-def figure_pdf(file):
-    article_info = ArticleInfo(file)
+def figure_pdf(filename):
+    article_info = ArticleInfo(filename)
     return article_info.file_type == "FigurePDF"
 
 
-def inline_figure(file):
-    article_info = ArticleInfo(file)
+def inline_figure(filename):
+    article_info = ArticleInfo(filename)
     return article_info.file_type == "Inline"
 
 
-def has_extensions(file, extensions):
-    article_info = ArticleInfo(file)
+def has_extensions(filename, extensions):
+    article_info = ArticleInfo(filename)
     return article_info.extension in extensions
 
 
 def get_original_files(files):
     regex = re.compile(r'-v([0-9]+)[\.]')
-    fs = list(filter(regex.search, files))
-    return fs
+    file_list = list(filter(regex.search, files))
+    return file_list
 
 
 def get_figures_for_iiif(files):
     # should only be tif
     originals_figures_tif = [f for f in get_original_files(files)
                              if article_figure(f) and has_extensions(f, ['tif'])]
-    fs = originals_figures_tif + get_media_file_images(files)
-    return fs
+    file_list = originals_figures_tif + get_media_file_images(files)
+    return file_list
 
 
 def get_inline_figures_for_iiif(files):
@@ -222,8 +222,8 @@ def get_article_xml_key(bucket, expanded_folder_name):
 
 
 def main():
-    a = ArticleInfo("elife-00012-fig3-figsupp1-data2.csv")
-    print(a)
+    article = ArticleInfo("elife-00012-fig3-figsupp1-data2.csv")
+    print(article)
 
 
 if __name__ == '__main__':
