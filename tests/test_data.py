@@ -69,7 +69,8 @@ data_ingested_lax = {
             "requested_action": "ingest",
             "force": False,
             "message": None,
-            "update_date": "2012-12-13T00:00:00Z"
+            "update_date": "2012-12-13T00:00:00Z",
+            "run_type": None
         }
 
 data_published_website = {

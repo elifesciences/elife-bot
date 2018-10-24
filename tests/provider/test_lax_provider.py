@@ -183,7 +183,8 @@ class TestLaxProvider(unittest.TestCase):
                                                                   "version": "1",
                                                                   "expanded_folder": "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
                                                                   "status": "vor",
-                                                                  "force": False})
+                                                                  "force": False,
+                                                                  "run_type": None})
 
     @patch('provider.lax_provider.article_versions')
     def test_was_ever_poa_was_poa(self, mock_lax_provider_article_versions):
