@@ -75,7 +75,7 @@ class activity_EmailDigest(Activity):
             self.activity_status = True
 
         # Approve files for emailing
-        self.approve_status, error_message = approve_sending(self.digest)
+        self.approve_status, error_message = digest_provider.validate_digest(self.digest)
 
         if self.approve_status is True and self.generate_status is True:
             # Email file
@@ -170,26 +170,6 @@ class activity_EmailDigest(Activity):
                 os.mkdir(dir_name)
             except OSError:
                 pass
-
-
-def approve_sending(digest_content):
-    "validate the data for whether it is suitable to email"
-    approve_status = True
-    error_message = ''
-
-    if not digest_content:
-        approve_status = False
-        error_message += '\nDigest was empty'
-    if digest_content and not digest_content.author:
-        approve_status = False
-        error_message += '\nDigest author is missing'
-    if digest_content and not digest_content.doi:
-        approve_status = False
-        error_message += '\nDigest DOI is missing'
-    if digest_content and not digest_content.text:
-        approve_status = False
-        error_message += '\nDigest text is missing'
-    return approve_status, error_message
 
 
 def output_file_name(digest_content, digest_config=None):

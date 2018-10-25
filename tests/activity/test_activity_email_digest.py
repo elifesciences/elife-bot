@@ -10,6 +10,7 @@ import activity.activity_EmailDigest as activity_module
 from activity.activity_EmailDigest import activity_EmailDigest as activity_object
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
+from tests.activity.helpers import create_digest
 import tests.test_data as test_case_data
 from tests.classes_mock import FakeSMTPServer
 from tests.activity.classes_mock import FakeStorageContext
@@ -25,16 +26,6 @@ def list_test_dir(dir_name, ignore=('.keepme')):
     "list the contents of a directory ignoring the ignore files"
     file_names = os.listdir(dir_name)
     return [file_name for file_name in file_names if file_name not in ignore]
-
-
-def create_digest(author=None, doi=None, text=None):
-    "for testing generate a Digest object an populate it"
-    digest_content = Digest()
-    digest_content.author = author
-    digest_content.doi = doi
-    if text:
-        digest_content.text = text
-    return digest_content
 
 
 @ddt
@@ -184,64 +175,6 @@ class TestEmailDigest(unittest.TestCase):
                     self.assertTrue(test_data.get("expected_email_from") in first_email_content)
                 if test_data.get("expected_email_body"):
                     self.assertTrue(test_data.get("expected_email_body") in first_email_content)
-
-
-class TestEmailDigestApproveSending(unittest.TestCase):
-
-    def test_approve_sending(self):
-        "approving good Digest content"
-        digest_content = create_digest('Anonymous', '10.7554/eLife.99999', ['text'])
-        expected_status = True
-        expected_error_message = ''
-        status, error_message = activity_module.approve_sending(digest_content)
-        self.assertEqual(status, expected_status)
-        self.assertEqual(error_message, expected_error_message)
-
-    def test_approve_sending_no_digest(self):
-        "approving missing Digest"
-        digest_content = None
-        expected_status = False
-        expected_error_message = '\nDigest was empty'
-        status, error_message = activity_module.approve_sending(digest_content)
-        self.assertEqual(status, expected_status)
-        self.assertEqual(error_message, expected_error_message)
-
-    def test_approve_sending_empty_digest(self):
-        "approving an empty Digest"
-        digest_content = Digest()
-        expected_status = False
-        expected_error_message = (
-            '\nDigest author is missing\nDigest DOI is missing\nDigest text is missing')
-        status, error_message = activity_module.approve_sending(digest_content)
-        self.assertEqual(status, expected_status)
-        self.assertEqual(error_message, expected_error_message)
-
-    def test_approve_sending_digest_no_author(self):
-        "approving an empty Digest"
-        digest_content = create_digest(None, '10.7554/eLife.99999', ['text'])
-        expected_status = False
-        expected_error_message = '\nDigest author is missing'
-        status, error_message = activity_module.approve_sending(digest_content)
-        self.assertEqual(status, expected_status)
-        self.assertEqual(error_message, expected_error_message)
-
-    def test_approve_sending_digest_no_doi(self):
-        "approving an empty Digest"
-        digest_content = create_digest('Anonymous', None, ['text'])
-        expected_status = False
-        expected_error_message = '\nDigest DOI is missing'
-        status, error_message = activity_module.approve_sending(digest_content)
-        self.assertEqual(status, expected_status)
-        self.assertEqual(error_message, expected_error_message)
-
-    def test_approve_sending_digest_no_text(self):
-        "approving an empty Digest"
-        digest_content = create_digest('Anonymous', '10.7554/eLife.99999', None)
-        expected_status = False
-        expected_error_message = '\nDigest text is missing'
-        status, error_message = activity_module.approve_sending(digest_content)
-        self.assertEqual(status, expected_status)
-        self.assertEqual(error_message, expected_error_message)
 
 
 class TestEmailDigestFileName(unittest.TestCase):

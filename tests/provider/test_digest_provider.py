@@ -4,6 +4,7 @@ import copy
 import tests.settings_mock as settings_mock
 from digestparser.objects import Digest, Image
 from mock import patch, MagicMock
+from tests.activity.helpers import create_digest
 import provider.digest_provider as digest_provider
 from provider.digest_provider import ErrorCallingDigestException
 import tests.test_data as test_data
@@ -160,3 +161,61 @@ class TestDigestProvider(unittest.TestCase):
         fake_article_versions.return_value = 200, []
         published = digest_provider.published_date_from_lax(settings_mock, '08411')
         self.assertEqual(published, None)
+
+
+class TestValidateDigest(unittest.TestCase):
+
+    def test_validate_digest(self):
+        "approving good Digest content"
+        digest_content = create_digest('Anonymous', '10.7554/eLife.99999', ['text'])
+        expected_status = True
+        expected_error_message = ''
+        status, error_message = digest_provider.validate_digest(digest_content)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(error_message, expected_error_message)
+
+    def test_validate_digest_no_digest(self):
+        "approving missing Digest"
+        digest_content = None
+        expected_status = False
+        expected_error_message = '\nDigest was empty'
+        status, error_message = digest_provider.validate_digest(digest_content)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(error_message, expected_error_message)
+
+    def test_validate_digest_empty_digest(self):
+        "approving an empty Digest"
+        digest_content = Digest()
+        expected_status = False
+        expected_error_message = (
+            '\nDigest author is missing\nDigest DOI is missing\nDigest text is missing')
+        status, error_message = digest_provider.validate_digest(digest_content)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(error_message, expected_error_message)
+
+    def test_validate_digest_digest_no_author(self):
+        "approving an empty Digest"
+        digest_content = create_digest(None, '10.7554/eLife.99999', ['text'])
+        expected_status = False
+        expected_error_message = '\nDigest author is missing'
+        status, error_message = digest_provider.validate_digest(digest_content)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(error_message, expected_error_message)
+
+    def test_validate_digest_digest_no_doi(self):
+        "approving an empty Digest"
+        digest_content = create_digest('Anonymous', None, ['text'])
+        expected_status = False
+        expected_error_message = '\nDigest DOI is missing'
+        status, error_message = digest_provider.validate_digest(digest_content)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(error_message, expected_error_message)
+
+    def test_validate_digest_digest_no_text(self):
+        "approving an empty Digest"
+        digest_content = create_digest('Anonymous', '10.7554/eLife.99999', None)
+        expected_status = False
+        expected_error_message = '\nDigest text is missing'
+        status, error_message = digest_provider.validate_digest(digest_content)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(error_message, expected_error_message)
