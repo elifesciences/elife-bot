@@ -81,12 +81,8 @@ class TestEmailDigest(unittest.TestCase):
             "expected_build_status": False,
             "expected_generate_status": False,
             "expected_approve_status": False,
-            "expected_email_status": True,
-            "expected_output_dir_files": [],
-            "expected_email_count": 1,
-            "expected_email_subject": "Error processing digest file: ",
-            "expected_email_from": "From: sender@example.org",
-            "expected_email_body": "Digest was empty"
+            "expected_email_status": None,
+            "expected_output_dir_files": []
         },
         {
             "comment": 'bad digest docx file example',
@@ -96,12 +92,8 @@ class TestEmailDigest(unittest.TestCase):
             "expected_build_status": False,
             "expected_generate_status": False,
             "expected_approve_status": False,
-            "expected_email_status": True,
-            "expected_output_dir_files": [],
-            "expected_email_count": 1,
-            "expected_email_subject": "Error processing digest file: ",
-            "expected_email_from": "From: sender@example.org",
-            "expected_email_body": "Digest was empty"
+            "expected_email_status": None,
+            "expected_output_dir_files": []
         },
         {
             "comment": 'digest author name encoding file example',
@@ -240,13 +232,6 @@ class TestEmailSubject(unittest.TestCase):
         digest_content = None
         expected = None
         subject = activity_module.success_email_subject(digest_content)
-        self.assertEqual(subject, expected)
-
-    def test_error_email_subject(self):
-        "email subject for error emails with a unicode filename"
-        filename = u'DIGESTö 99999.zip'
-        expected = u'Error processing digest file: DIGESTö 99999.zip'
-        subject = activity_module.error_email_subject(filename)
         self.assertEqual(subject, expected)
 
 

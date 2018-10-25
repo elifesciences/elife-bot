@@ -1,7 +1,6 @@
 import os
 import json
 import time
-import boto.swf
 from elifetools.utils import unicode_value
 from digestparser import output
 import digestparser.utils as digest_utils
@@ -80,9 +79,6 @@ class activity_EmailDigest(Activity):
         if self.approve_status is True and self.generate_status is True:
             # Email file
             self.email_status = self.email_digest(self.digest, output_file)
-        else:
-            # Send error email
-            self.email_status = self.email_error_report(real_filename, error_message)
 
         # return a value based on the activity_status
         if self.activity_status is True:
@@ -140,27 +136,6 @@ class activity_EmailDigest(Activity):
                 success = False
         return success
 
-    def email_error_report(self, filename, error_message=None):
-        "send an email on error"
-        current_time = time.gmtime()
-        body = error_email_body(current_time, error_message)
-        subject = error_email_subject(filename)
-        sender_email = self.settings.digest_sender_email
-
-        recipient_email_list = email_provider.list_email_recipients(
-            self.settings.digest_error_recipient_email)
-
-        connection = email_provider.smtp_connect(self.settings, self.logger)
-        # send the emails
-        for recipient in recipient_email_list:
-            # create the email
-            email_message = email_provider.message(subject, sender_email, recipient)
-            email_provider.add_text(email_message, body)
-            # send the email
-            email_provider.smtp_send(connection, sender_email, recipient,
-                                     email_message, self.logger)
-        return True
-
     def create_activity_directories(self):
         """
         Create the directories in the activity tmp_dir
@@ -202,24 +177,6 @@ def success_email_body(current_time):
     date_format = '%Y-%m-%dT%H:%M:%S.000Z'
     datetime_string = time.strftime(date_format, current_time)
     body += "As at " + datetime_string + "\n"
-    body += "\n"
-    body += "\n\nSincerely\n\neLife bot"
-    return body
-
-
-def error_email_subject(filename):
-    "email subject for an error email"
-    return u'Error processing digest file: {filename}'.format(filename=filename)
-
-
-def error_email_body(current_time, error_message=None):
-    "body of an error email"
-    body = ""
-    if error_message:
-        body += str(error_message)
-    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-    datetime_string = time.strftime(date_format, current_time)
-    body += "\nAs at " + datetime_string + "\n"
     body += "\n"
     body += "\n\nSincerely\n\neLife bot"
     return body
