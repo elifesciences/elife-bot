@@ -1,5 +1,6 @@
 import os
 import shutil
+from digestparser.objects import Digest
 from provider.article import article
 
 
@@ -44,3 +45,13 @@ def instantiate_article(article_type, doi, is_poa=None, was_ever_poa=None):
     article_object.is_poa = is_poa
     article_object.was_ever_poa = was_ever_poa
     return article_object
+
+
+def create_digest(author=None, doi=None, text=None):
+    "for testing generate a Digest object an populate it"
+    digest_content = Digest()
+    digest_content.author = author
+    digest_content.doi = doi
+    if text:
+        digest_content.text = text
+    return digest_content
