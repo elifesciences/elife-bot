@@ -64,11 +64,11 @@ class activity_ValidateDigestInput(Activity):
             self.input_file, self.temp_dir, self.logger, self.digest_config)
 
         # Approve files for emailing
-        self.statuses["valid"], error_message = digest_provider.validate_digest(self.digest)
+        self.statuses["valid"], error_messages = digest_provider.validate_digest(self.digest)
 
         if self.statuses.get("build") is not True or self.statuses.get("valid") is not True:
             # Send error email
-            self.statuses["email"] = self.email_error_report(real_filename, error_message)
+            self.statuses["email"] = self.email_error_report(real_filename, error_messages)
             self.log_statuses(self.input_file)
             return self.ACTIVITY_PERMANENT_FAILURE
 
@@ -80,10 +80,10 @@ class activity_ValidateDigestInput(Activity):
         self.logger.info(
             "%s for input_file %s statuses: %s" % (self.name, str(input_file), self.statuses))
 
-    def email_error_report(self, filename, error_message=None):
+    def email_error_report(self, filename, error_messages):
         "send an email on error"
         current_time = time.gmtime()
-        body = error_email_body(current_time, error_message)
+        body = error_email_body(current_time, error_messages)
         subject = error_email_subject(filename)
         sender_email = self.settings.digest_sender_email
 
@@ -117,11 +117,11 @@ def error_email_subject(filename):
     return u'Error processing digest file: {filename}'.format(filename=filename)
 
 
-def error_email_body(current_time, error_message=None):
+def error_email_body(current_time, error_messages):
     "body of an error email"
     body = ""
-    if error_message:
-        body += str(error_message)
+    if error_messages:
+        body += str(error_messages)
     date_format = '%Y-%m-%dT%H:%M:%S.000Z'
     datetime_string = time.strftime(date_format, current_time)
     body += "\nAs at " + datetime_string + "\n"

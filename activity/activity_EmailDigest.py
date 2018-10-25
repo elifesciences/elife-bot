@@ -74,7 +74,7 @@ class activity_EmailDigest(Activity):
             self.activity_status = True
 
         # Approve files for emailing
-        self.approve_status, error_message = digest_provider.validate_digest(self.digest)
+        self.approve_status, error_messages = digest_provider.validate_digest(self.digest)
 
         if self.approve_status is True and self.generate_status is True:
             # Email file

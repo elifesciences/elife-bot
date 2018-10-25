@@ -276,18 +276,13 @@ def set_stage(json_content, stage="preview"):
 
 def validate_digest(digest_content):
     "validate the data for whether it is valid"
-    is_valid = True
-    error_message = ''
+    error_messages = []
     if not digest_content:
-        is_valid = False
-        error_message += '\nDigest was empty'
+        error_messages.append('Digest was empty')
     if digest_content and not digest_content.author:
-        is_valid = False
-        error_message += '\nDigest author is missing'
+        error_messages.append('Digest author is missing')
     if digest_content and not digest_content.doi:
-        is_valid = False
-        error_message += '\nDigest DOI is missing'
+        error_messages.append('Digest DOI is missing')
     if digest_content and not digest_content.text:
-        is_valid = False
-        error_message += '\nDigest text is missing'
-    return is_valid, error_message
+        error_messages.append('Digest text is missing')
+    return not bool(error_messages), error_messages
