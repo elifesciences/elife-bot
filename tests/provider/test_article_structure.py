@@ -80,7 +80,6 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00013-vor-v1-20121015000000.zip', 'expected': 'ArticleZip'},
         {'input': 'elife-00666-v1.pdf', 'expected': 'Other'},
         {'input': 'elife-00666-v1.xml', 'expected': 'ArticleXML'},
-        {'input': 'elife-00666-supp99.xml', 'expected': 'Other'},
         {'input': 'elife-00666-app1-fig1-v1.tif', 'expected': 'Figure'},
         {'input': 'elife-00666-app1-fig1-figsupp1-v1.tif', 'expected': 'Figure'},
         {'input': 'elife-00666-app2-video1.mp4', 'expected': 'Other'},
@@ -109,6 +108,8 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666-video1.mp4', 'expected': 'Other'},
         {'input': 'elife-00666-video1-data1-v1.xlsx', 'expected': 'Other'},
         {'input': 'elife-00666.xml', 'expected': 'ArticleXML'},
+        {'input': 'elife-00666-supp99.xml', 'expected': 'Other'},
+        {'input': 'elife-00666-supp99-v1.xml', 'expected': 'Other'},
           )
     def test_get_file_type_from_zip_filename(self, input, expected):
         self.articleinfo = ArticleInfo(input)
