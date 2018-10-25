@@ -66,7 +66,7 @@ class activity_ValidateDigestInput(Activity):
         # Approve files for emailing
         self.statuses["valid"], error_messages = digest_provider.validate_digest(self.digest)
 
-        if self.statuses.get("build") is not True or self.statuses.get("valid") is not True:
+        if not self.statuses.get("build") or not self.statuses.get("valid"):
             # Send error email
             self.statuses["email"] = self.email_error_report(real_filename, error_messages)
             self.log_statuses(self.input_file)
