@@ -59,7 +59,8 @@ class TestArticleStructure(unittest.TestCase):
 
     @unpack
     @data({'input': 'elife-07702-vor-r4.zip', 'expected': None},
-          {'input': 'elife-00013-vor-v1-20121015000000.zip', 'expected':'2012-10-15T00:00:00Z'})
+          {'input': 'elife-00013-vor-v1-20121015000000.zip', 'expected':'2012-10-15T00:00:00Z'},
+          {'input': 'elife-07702-vor-r4-2012bad_date.zip', 'expected': None})
     def test_get_update_date_from_zip_filename(self, input, expected):
         self.articleinfo = ArticleInfo(input)
         result = self.articleinfo.get_update_date_from_zip_filename()
@@ -107,8 +108,20 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666-video1.mp4', 'expected': 'Other'},
         {'input': 'elife-00666-video1-data1-v1.xlsx', 'expected': 'Other'},
         {'input': 'elife-00666.xml', 'expected': 'ArticleXML'},
+        {'input': 'elife-00666-supp99.xml', 'expected': 'Other'},
+        {'input': 'elife-00666-supp99-v1.xml', 'expected': 'Other'},
           )
     def test_get_file_type_from_zip_filename(self, input, expected):
+        self.articleinfo = ArticleInfo(input)
+        result = self.articleinfo.file_type
+        self.assertEqual(result, expected)
+
+    @unpack
+    @data(
+        {'input': 'Video_22.zip', 'expected': None}
+        )
+    def test_get_file_type_edge_case(self, input, expected):
+        "edge case in elife 04493 PoA"
         self.articleinfo = ArticleInfo(input)
         result = self.articleinfo.file_type
         self.assertEqual(result, expected)
@@ -269,7 +282,9 @@ class TestArticleStructure(unittest.TestCase):
 
     @patch.object(FakeBucket, 'list')
     @data(
-        (['test/elife-00666-video2.jpg', 'test/elife-00666-v1.xml'], 'test/elife-00666-v1.xml', 'elife-00666-v1.xml'),
+        (['test/elife-00666-video2.jpg', 'test/elife-00666-v1.xml',
+          'test/elife-00666-supp3-v1.xml'],
+            'test/elife-00666-v1.xml', 'elife-00666-v1.xml'),
         (['test/elife-00666-video2.jpg'], None, None),
     )
     @unpack
