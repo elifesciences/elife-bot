@@ -7,6 +7,8 @@ from mock import patch, MagicMock
 from tests.activity.helpers import create_digest
 import provider.digest_provider as digest_provider
 from provider.digest_provider import ErrorCallingDigestException
+from tests import read_fixture
+from tests.activity.classes_mock import FakeLogger
 import tests.test_data as test_data
 
 
@@ -161,6 +163,27 @@ class TestDigestProvider(unittest.TestCase):
         fake_article_versions.return_value = 200, []
         published = digest_provider.published_date_from_lax(settings_mock, '08411')
         self.assertEqual(published, None)
+
+
+class TestBuildJats(unittest.TestCase):
+
+    def setUp(self):
+        self.temp_dir = os.path.join('temp')
+        self.logger = FakeLogger()
+
+    def test_build_jats(self):
+        "convert digest docx file into JATS output, consisting of text paragraphs"
+        input_file = os.path.join('tests', 'files_source', 'DIGEST 99999.docx')
+        folder_name = "digests"
+        expected_output = read_fixture('jats_content_99999.py', folder_name)
+        jats_content = digest_provider.build_jats(input_file, self.temp_dir, self.logger)
+        self.assertEqual(jats_content, expected_output)
+
+    def test_build_jats_none(self):
+        "test building jats from a bad file input"
+        input_file = None
+        jats_content = digest_provider.build_jats(input_file, self.temp_dir, self.logger)
+        self.assertEqual(jats_content, None)
 
 
 class TestValidateDigest(unittest.TestCase):

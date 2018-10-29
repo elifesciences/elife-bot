@@ -5,7 +5,7 @@ import traceback
 import requests
 import log
 from docx.opc.exceptions import PackageNotFoundError
-from digestparser import build, conf
+from digestparser import jats, build, conf
 import provider.utils as utils
 from provider.storage_provider import storage_context
 import provider.lax_provider as lax_provider
@@ -37,6 +37,16 @@ def build_digest(input_file, temp_dir, logger=None, digest_config=None):
 def digest_config(config_section, config_file):
     "parse the config values from the digest config"
     return conf.parse_raw_config(conf.raw_config(config_section, config_file))
+
+
+def build_jats(input_file, temp_dir, logger=None, digest_config=None):
+    "build JATS output from a digest file"
+    try:
+        return jats.build_jats(input_file, temp_dir, digest_config)
+    except (AttributeError, PackageNotFoundError):
+        if logger:
+            logger.exception('exception in digest_provider build_jats: %s' %
+                             traceback.format_exc())
 
 
 def new_file_name(file_name, msid):
