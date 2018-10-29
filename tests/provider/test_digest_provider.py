@@ -5,9 +5,9 @@ import tests.settings_mock as settings_mock
 from digestparser.objects import Digest, Image
 from mock import patch, MagicMock
 from tests.activity.helpers import create_digest
+import tests.test_data as test_data
 import provider.digest_provider as digest_provider
 from provider.digest_provider import ErrorCallingDigestException
-import tests.test_data as test_data
 
 
 class TestDigestProvider(unittest.TestCase):
@@ -92,6 +92,7 @@ class TestDigestProvider(unittest.TestCase):
         request_named_arguments = mock_requests_get.call_args_list[0][1]
         headers = request_named_arguments['headers']
         self.assertIn('Authorization', headers)
+        self.assertEqual(data, expected_data)
 
     @patch('requests.put')
     def test_put_digest_204(self, mock_requests_put):
