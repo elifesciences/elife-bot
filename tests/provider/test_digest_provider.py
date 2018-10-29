@@ -219,3 +219,21 @@ class TestValidateDigest(unittest.TestCase):
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
+
+
+class TestSilentDigest(unittest.TestCase):
+
+    def test_silent_digest_not_silent_zip(self):
+        self.assertFalse(digest_provider.silent_digest('DIGEST 99999.zip'))
+
+    def test_silent_digest_not_silent_docx(self):
+        self.assertFalse(digest_provider.silent_digest('DIGEST 99999.docx'))
+
+    def test_silent_digest_is_silent_zip(self):
+        self.assertTrue(digest_provider.silent_digest('DIGEST 99999 SILENT.zip'))
+
+    def test_silent_digest_is_silent_docx(self):
+        self.assertTrue(digest_provider.silent_digest('DIGEST 99999 SILENT.docx'))
+
+    def test_silent_digest_none(self):
+        self.assertFalse(digest_provider.silent_digest(None))
