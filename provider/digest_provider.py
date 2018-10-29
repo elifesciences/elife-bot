@@ -286,3 +286,8 @@ def validate_digest(digest_content):
     if digest_content and not digest_content.text:
         error_messages.append('Digest text is missing')
     return not bool(error_messages), error_messages
+
+
+def silent_digest(filename):
+    "check if file name supplied to the bucket is a silent deposit"
+    return bool('silent' in str(filename).lower())
