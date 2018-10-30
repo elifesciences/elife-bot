@@ -20,12 +20,10 @@ class ArticleInfo(object):
         - Other: file is something else
         (more required!)
     journal: the name of the journal (e.g. elife)
-    article_id: referred to in the naming spec as the file id (f-id) of the
-        article the file is part of (e.g. 00012)
+    article_id: referred to in the naming spec as the file id (f-id) of the article the file is part of (e.g. 00012)
     versioned: boolean representing if the file has a version number
     version: the version of the file (or None if not versioned)
-    extra-info: the parts of the filename between the f-id (or status if present) and
-        the version (if present) or extension
+    extra-info: the parts of the filename between the f-id (or status if present) and the version (if present) or extension
     """
 
     def __init__(self, full_filename):
@@ -33,15 +31,13 @@ class ArticleInfo(object):
 
         # TODO : check full_filename matches basic validation regex for:
         # `elife-<f-id>-<status>(-<asset><a-id>)(-<sub-asset><sa-id>)(-<data><d-id>)(-<code><c-id>)
-        # (-<media><m-id>)(-<reporting standard><repstand-id>)
-        # (-<supplementary file><supp-id>)|(-v<version>).<ext>`
+        # (-<media><m-id>)(-<reporting standard><repstand-id>)(-<supplementary file><supp-id>)|(-v<version>).<ext>`
         # including minimum required info of f-id, status and ext.
 
         (self.filename, self.extension) = full_filename.rsplit('.', 1)
         parts = self.filename.split('-')
 
-        match = re.match(r'.*?-[a-zA-Z0-9]+?-(poa|vor)(-*?(v|r)[0-9]+?)?(-([0-9]+))?\.zip',
-                         self.full_filename, re.IGNORECASE)
+        match = re.match('.*?-[a-zA-Z0-9]+?-(poa|vor)(-*?(v|r)[0-9]+?)?(-([0-9]+))?\.zip', self.full_filename, re.IGNORECASE)
         first_other_index = 2
         if match is not None:
             self.status = match.group(1)
@@ -84,31 +80,27 @@ class ArticleInfo(object):
                    or self.extra_info[0].startswith('figsupp'))
               and not self.extra_info[0].startswith('figures')):
             self.file_type = "Figure"
-        elif (len(self.extra_info) > 1 and self.extra_info[0].startswith('resp')
-              and self.extra_info[1].startswith('fig')):
+        elif len(self.extra_info) > 1 and self.extra_info[0].startswith('resp') and self.extra_info[1].startswith('fig'):
             self.file_type = "Figure"
-        elif (len(self.extra_info) > 1 and self.extra_info[0].startswith('app')
-              and self.extra_info[1].startswith('fig')):
+        elif len(self.extra_info) > 1 and self.extra_info[0].startswith('app') and self.extra_info[1].startswith('fig'):
             self.file_type = "Figure"
-        elif (len(self.extra_info) > 1 and self.extra_info[0].startswith('box')
-              and self.extra_info[1].startswith('fig')):
+        elif len(self.extra_info) > 1 and self.extra_info[0].startswith('box') and self.extra_info[1].startswith('fig'):
             self.file_type = "Figure"
         elif len(self.extra_info) > 0 and self.extra_info[0].startswith('inf'):
             self.file_type = "Inline"
-        elif (len(parts) == 2 or (len(parts) == 3 and not self.extra_info)
-              and self.extension == 'xml'):
+        elif (len(parts) == 2 or len(parts) == 3) and self.extension == 'xml':
             self.file_type = 'ArticleXML'
         else:
             self.file_type = 'Other'
 
     def get_update_date_from_zip_filename(self):
         filename = self.full_filename
-        match = re.search(r'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
-        if match is None:
+        m = re.search(r'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
+        if m is None:
             return None
         else:
             try:
-                raw_update_date = match.group(1)
+                raw_update_date = m.group(1)
                 updated_date = datetime.datetime.strptime(raw_update_date, "%Y%m%d%H%M%S")
                 return updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
             except:
@@ -116,61 +108,50 @@ class ArticleInfo(object):
 
     def get_version_from_zip_filename(self):
         filename = self.full_filename
-        match = re.search(r'-v([0-9]+?)[\.|-]', filename)
-        if match is None:
+        m = re.search(r'-v([0-9]+?)[\.|-]', filename)
+        if m is None:
             return None
         else:
-            return match.group(1)
+            return m.group(1)
 
-
-def article_figure(filename):
-    article_info = ArticleInfo(filename)
+def article_figure(file):
+    article_info = ArticleInfo(file)
     return article_info.file_type == "Figure"
 
-
-def figure_pdf(filename):
-    article_info = ArticleInfo(filename)
+def figure_pdf(file):
+    article_info = ArticleInfo(file)
     return article_info.file_type == "FigurePDF"
 
-
-def inline_figure(filename):
-    article_info = ArticleInfo(filename)
+def inline_figure(file):
+    article_info = ArticleInfo(file)
     return article_info.file_type == "Inline"
 
-
-def has_extensions(filename, extensions):
-    article_info = ArticleInfo(filename)
+def has_extensions(file, extensions):
+    article_info = ArticleInfo(file)
     return article_info.extension in extensions
 
 
 def get_original_files(files):
     regex = re.compile(r'-v([0-9]+)[\.]')
-    file_list = list(filter(regex.search, files))
-    return file_list
-
+    fs = list(filter(regex.search, files))
+    return fs
 
 def get_figures_for_iiif(files):
     # should only be tif
-    originals_figures_tif = [f for f in get_original_files(files)
-                             if article_figure(f) and has_extensions(f, ['tif'])]
-    file_list = originals_figures_tif + get_media_file_images(files)
-    return file_list
-
+    originals_figures_tif = [f for f in get_original_files(files) if (article_figure(f) and has_extensions(f, ['tif']))]
+    fs = originals_figures_tif + get_media_file_images(files)
+    return fs
 
 def get_inline_figures_for_iiif(files):
     # should only be tif
     "return a list of all inline figure files"
-    return [f for f in get_original_files(files)
-            if inline_figure(f) and has_extensions(f, ['tif'])]
-
+    return [f for f in get_original_files(files) if (inline_figure(f) and has_extensions(f, ['tif']))]
 
 def get_figures_pdfs(files):
-    return [f for f in files if figure_pdf(f) and has_extensions(f, ['pdf'])]
-
+    return [f for f in files if (figure_pdf(f) and has_extensions(f, ['pdf']))]
 
 def get_videos(files):
-    return [f for f in files if is_video_file(f)]
-
+    return [f for f in files if (is_video_file(f))]
 
 def file_parts(filename):
     prefix = filename.split('.')[0]
@@ -179,7 +160,7 @@ def file_parts(filename):
 
 
 def get_media_file_images(files):
-    return [f for f in files if is_video_file(f) and has_extensions(f, ['jpg'])]
+    return list(filter(lambda f: is_video_file(f) and has_extensions(f, ['jpg']), files))
 
 
 def is_video_file(filename):
@@ -190,10 +171,12 @@ def is_video_file(filename):
          match False on elife-00005-media1-code1.wrl
     """
 
-    file_prefix, file_extension = file_parts(filename)
+    (file_prefix, file_extension) = file_parts(filename)
     file_type_plus_index = file_prefix.split('-')[-1]
-    return bool("media" in file_type_plus_index or "video" in file_type_plus_index)
-
+    if ("media" in file_type_plus_index) or ("video" in file_type_plus_index):
+        return True
+    else:
+        return False
 
 def pre_ingest_assets(files):
     original_figures = get_figures_for_iiif(files)
@@ -217,10 +200,9 @@ def get_article_xml_key(bucket, expanded_folder_name):
             return key, filename
     return None, None
 
-
 def main():
-    article = ArticleInfo("elife-00012-fig3-figsupp1-data2.csv")
-    print(article)
+    a = ArticleInfo("elife-00012-fig3-figsupp1-data2.csv")
+    print(a)
 
 
 if __name__ == '__main__':
