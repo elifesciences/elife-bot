@@ -6,7 +6,7 @@ PyPDF2==1.23
 arrow==0.4.4
 beautifulsoup4==4.6.0
 lettuce==0.2.20
-requests==2.11.1
+requests==2.20.0
 lxml==4.1.1
 xlrd==0.9.3
 git+https://github.com/elifesciences/elife-tools.git@b3bf780c016724c80d23996335e60688866907c3#egg=elifetools
