@@ -6,10 +6,10 @@ PyPDF2==1.23
 arrow==0.4.4
 beautifulsoup4==4.6.0
 lettuce==0.2.20
-requests==2.11.1
+requests==2.20.0
 lxml==4.1.1
 xlrd==0.9.3
-git+https://github.com/elifesciences/elife-tools.git@b3bf780c016724c80d23996335e60688866907c3#egg=elifetools
+git+https://github.com/elifesciences/elife-tools.git@3b5ed15319a351b360ca6a8a90a9076778dc6c80#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@bb61d4c0e3742403503efe10852114aeb1e07269#egg=elifearticle
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@078ce423fb17186c5c92967c326119630846252b#egg=elifecrossref
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@32a9a831eca98a03b36b8c9a369c622a34d04a7a#egg=elifepubmed
@@ -35,5 +35,5 @@ six==1.10.0
 pyFunctional==1.0.0
 func_timeout==4.3.0
 python-docx==0.8.6
-git+https://github.com/elifesciences/digest-parser.git@d09d418398e7badbecf4d4347b88eb419619f070#egg=digestparser
+git+https://github.com/elifesciences/digest-parser.git@243379ce29241f7227024dba34148987cff9b312#egg=digestparser
 psutil==5.4.6

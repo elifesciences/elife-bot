@@ -50,7 +50,6 @@ class ArticleInfo(object):
         else:
             self.status = None
             self.is_article_zip = False
-            # TODO : determine other useful file_type values from extra_info list if required
 
         # Files in PoA 04493 do not have hyphenated names so handle it now before continuing
         if len(parts) < 2:
@@ -70,36 +69,35 @@ class ArticleInfo(object):
             self.version = None
         self.extra_info = parts[first_other_index:last_part_index + 1]
 
+        self.file_type = 'Other'  # default type
         if self.is_article_zip:
             self.file_type = "ArticleZip"
-        elif (len(self.extra_info) > 0
-              and (self.extra_info[-1].startswith('video')
-                   or self.extra_info[-1].startswith('code'))):
-            self.file_type = 'Other'
-        elif (len(self.extra_info) > 0
-              and self.extra_info[0].startswith('figures')):
-            self.file_type = 'FigurePDF'
-        elif (len(self.extra_info) > 0
-              and (self.extra_info[0].startswith('fig')
-                   or self.extra_info[0].startswith('figsupp'))
-              and not self.extra_info[0].startswith('figures')):
-            self.file_type = "Figure"
-        elif (len(self.extra_info) > 1 and self.extra_info[0].startswith('resp')
-              and self.extra_info[1].startswith('fig')):
-            self.file_type = "Figure"
-        elif (len(self.extra_info) > 1 and self.extra_info[0].startswith('app')
-              and self.extra_info[1].startswith('fig')):
-            self.file_type = "Figure"
-        elif (len(self.extra_info) > 1 and self.extra_info[0].startswith('box')
-              and self.extra_info[1].startswith('fig')):
-            self.file_type = "Figure"
-        elif len(self.extra_info) > 0 and self.extra_info[0].startswith('inf'):
-            self.file_type = "Inline"
-        elif (len(parts) == 2 or (len(parts) == 3 and not self.extra_info)
+        elif ((len(parts) == 2 or (len(parts) == 3 and not self.extra_info))
               and self.extension == 'xml'):
             self.file_type = 'ArticleXML'
-        else:
-            self.file_type = 'Other'
+        elif self.extra_info:
+            # extra file parts
+            parent_name = self.extra_info[0]
+            child_name = ''
+            if len(self.extra_info) > 1:
+                child_name = self.extra_info[1]
+            final_name = self.extra_info[-1]
+            # determine the file_type based on the extra file parts
+            if parent_name.startswith('resp') and child_name.startswith('fig'):
+                self.file_type = "Figure"
+            elif parent_name.startswith('app') and child_name.startswith('fig'):
+                self.file_type = "Figure"
+            elif parent_name.startswith('box') and child_name.startswith('fig'):
+                self.file_type = "Figure"
+            elif final_name.startswith('video') or final_name.startswith('code'):
+                self.file_type = 'Other'
+            elif parent_name.startswith('figures'):
+                self.file_type = 'FigurePDF'
+            elif ((parent_name.startswith('fig') or parent_name.startswith('figsupp'))
+                  and not parent_name.startswith('figures')):
+                self.file_type = "Figure"
+            elif parent_name.startswith('inf'):
+                self.file_type = "Inline"
 
     def get_update_date_from_zip_filename(self):
         filename = self.full_filename
