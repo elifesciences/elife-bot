@@ -108,6 +108,7 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666-video1.mp4', 'expected': 'Other'},
         {'input': 'elife-00666-video1-data1-v1.xlsx', 'expected': 'Other'},
         {'input': 'elife-00666.xml', 'expected': 'ArticleXML'},
+        {'input': 'elife-00666.pdf', 'expected': 'Other'},
         {'input': 'elife-00666-supp99.xml', 'expected': 'Other'},
         {'input': 'elife-00666-supp99-v1.xml', 'expected': 'Other'},
           )
