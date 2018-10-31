@@ -47,14 +47,16 @@ class activity_PublishToLax(activity.activity):
 
         status = workflow_data['status']
         expanded_folder = workflow_data['expanded_folder']
+        run_type = workflow_data.get('run_type')
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Publish To Lax", "start",
                                 "Starting preparation of article for Lax " + article_id)
 
         try:
             force = True if ("force" in data and data["force"] == True) else False
-            message = lax_provider.prepare_action_message(self.settings,
-                                                          article_id, run, expanded_folder, version, status, 'publish', force)
+            message = lax_provider.prepare_action_message(
+                self.settings, article_id, run, expanded_folder, version,
+                status, 'publish', force, run_type)
             message_body = json.dumps(message)
             self.logger.info("Sending message to lax: %s", message_body)
             sqs_conn = boto.sqs.connect_to_region(

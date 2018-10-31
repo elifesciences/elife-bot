@@ -272,3 +272,17 @@ def set_stage(json_content, stage="preview"):
     "set the stage attribute"
     json_content["stage"] = stage
     return json_content
+
+
+def validate_digest(digest_content):
+    "validate the data for whether it is valid"
+    error_messages = []
+    if not digest_content:
+        error_messages.append('Digest was empty')
+    if digest_content and not digest_content.author:
+        error_messages.append('Digest author is missing')
+    if digest_content and not digest_content.doi:
+        error_messages.append('Digest DOI is missing')
+    if digest_content and not digest_content.text:
+        error_messages.append('Digest text is missing')
+    return not bool(error_messages), error_messages

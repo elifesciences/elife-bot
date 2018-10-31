@@ -198,7 +198,8 @@ def published_considering_poa_status(article_id, settings, is_poa, was_ever_poa)
     return False
 
 
-def prepare_action_message(settings, article_id, run, expanded_folder, version, status, action, force=False):
+def prepare_action_message(settings, article_id, run, expanded_folder, version,
+                           status, action, force=False, run_type=None):
         xml_bucket = settings.publishing_buckets_prefix + settings.expanded_bucket
         xml_file_name = get_xml_file_name(settings, expanded_folder, xml_bucket)
         xml_path = 'https://s3-external-1.amazonaws.com/' + xml_bucket + '/' + expanded_folder + '/' + xml_file_name
@@ -208,7 +209,7 @@ def prepare_action_message(settings, article_id, run, expanded_folder, version, 
             'id': article_id,
             'version': int(version),
             'force': force,
-            'token': lax_token(run, version, expanded_folder, status, force)
+            'token': lax_token(run, version, expanded_folder, status, force, run_type)
         }
         message = carry_over_data
         return message
@@ -220,13 +221,14 @@ def get_xml_file_name(settings, expanded_folder, xml_bucket, version=None):
     return xml_file_name
 
 
-def lax_token(run, version, expanded_folder, status, force=False):
+def lax_token(run, version, expanded_folder, status, force=False, run_type=None):
     token = {
         'run': run, 
         'version': version,
         'expanded_folder': expanded_folder,
         'status': status,
-        'force': force
+        'force': force,
+        'run_type': run_type
     }
     return base64.encodestring(json.dumps(token))
 
