@@ -156,6 +156,28 @@ class workflow_SilentCorrectionsIngest(workflow.workflow):
                         "start_to_close_timeout": 60 * 15
                     },
                     {
+                        "activity_type": "DepositAssets",
+                        "activity_id": "DepositAssets",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 5,
+                        "schedule_to_close_timeout": 60 * 5,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 5
+                    },
+                    {
+                        "activity_type": "InvalidateCdn",
+                        "activity_id": "InvalidateCdn",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 5,
+                        "schedule_to_close_timeout": 60 * 5,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 5
+                    },
+                    {
                         "activity_type": "VerifyImageServer",
                         "activity_id": "VerifyImageServer",
                         "version": "1",

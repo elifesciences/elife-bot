@@ -1,7 +1,8 @@
 import unittest
 from activity.activity_InvalidateCdn import activity_InvalidateCdn
 import settings_mock
-from classes_mock import FakeLogger
+from classes_mock import FakeLogger, FakeSession
+import test_activity_data as test_activity_data
 from mock import patch, call
 
 activity_data = {
@@ -16,15 +17,19 @@ class TestInvalidateCdn(unittest.TestCase):
         self.invalidatecdn = activity_InvalidateCdn(settings_mock, None, None, None, None)
         self.invalidatecdn.logger = FakeLogger()
 
+    @patch('activity.activity_InvalidateCdn.get_session')
     @patch('provider.fastly_provider.purge')
     @patch.object(activity_InvalidateCdn, 'emit_monitor_event')
-    def test_invalidation_success(self, fake_emit, purge_mock):
+    def test_invalidation_success(self, fake_emit, purge_mock, fake_session):
+        fake_session.return_value = FakeSession(test_activity_data.session_example)
         result = self.invalidatecdn.do_activity(activity_data)
         self.assertEqual(result, self.invalidatecdn.ACTIVITY_SUCCESS)
 
+    @patch('activity.activity_InvalidateCdn.get_session')
     @patch('provider.fastly_provider.purge')
     @patch.object(activity_InvalidateCdn, 'emit_monitor_event')
-    def test_invalidation_permanent_failure_fastly(self, fake_emit, purge_mock):
+    def test_invalidation_permanent_failure_fastly(self, fake_emit, purge_mock, fake_session):
+        fake_session.return_value = FakeSession(test_activity_data.session_example)
         purge_mock.side_effect = Exception("An error occurred calling the Fastly API")
         result = self.invalidatecdn.do_activity(activity_data)
         self.assertEqual(result, self.invalidatecdn.ACTIVITY_PERMANENT_FAILURE)

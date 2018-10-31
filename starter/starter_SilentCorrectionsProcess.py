@@ -19,7 +19,8 @@ class starter_SilentCorrectionsProcess():
     def __init__(self):
         self.const_name = "SilentCorrectionsProcess"
 
-    def start(self, settings, article_id, version, requested_action, force, result, expanded_folder, status, run, update_date, message=None):
+    def start(self, settings, article_id, version, requested_action, force, result,
+              expanded_folder, status, run, update_date, message=None, run_type=None):
 
         # Log
         logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
@@ -38,7 +39,8 @@ class starter_SilentCorrectionsProcess():
             "requested_action": requested_action,
             "message": message,
             "update_date": update_date,
-            "force": True
+            "force": True,
+            "run_type": run_type
         }
 
         workflow_id, \

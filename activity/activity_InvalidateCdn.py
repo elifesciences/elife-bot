@@ -1,4 +1,5 @@
 import activity
+from provider.execution_context import get_session
 from provider import fastly_provider
 
 """
@@ -21,9 +22,10 @@ class activity_InvalidateCdn(activity.activity):
 
     def do_activity(self, data):
         try:
-            article_id = data['article_id']
-            version = data['version']
             run = data['run']
+            session = get_session(self.settings, data, run)
+            article_id = session.get_value('article_id')
+            version = session.get_value('version')
         except Exception as e:
             self.logger.error("Error retrieving basic article data. Data: %s, Exception: %s" % (str(data), str(e)))
             return activity.activity.ACTIVITY_PERMANENT_FAILURE

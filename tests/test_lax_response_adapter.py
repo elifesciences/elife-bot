@@ -26,7 +26,8 @@ workflow_message_expected = {'workflow_data':
                                   'run': u'a8bb05df-2df9-4fce-8f9f-219aca0b0148',
                                   'status': u'vor',
                                   'update_date': '2013-03-26T00:00:00Z',
-                                  'version': u'1'},
+                                  'version': u'1',
+                                  'run_type': None},
                              'workflow_name': 'PostPerfectPublication'}
 
 fake_token_269 = json.dumps({u'status': u'vor',
@@ -51,7 +52,8 @@ workflow_message_expected_269 = {'workflow_data':
                                   'run': u'a8bb05df-2df9-4fce-8f9f-219aca0b0148',
                                   'status': u'vor',
                                   'update_date': '2013-03-26T00:00:00Z',
-                                  'version': u'1'},
+                                  'version': u'1',
+                                  'run_type': None},
                              'workflow_name': 'PostPerfectPublication'}
 
 class TestLaxResponseAdapter(unittest.TestCase):

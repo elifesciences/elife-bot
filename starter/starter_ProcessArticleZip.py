@@ -19,7 +19,8 @@ class starter_ProcessArticleZip():
     def __init__(self):
         self.const_name = "ProcessArticleZip"
 
-    def start(self, settings, article_id, version, requested_action, force, result, expanded_folder, status, run, update_date, message=None):
+    def start(self, settings, article_id, version, requested_action, force, result,
+              expanded_folder, status, run, update_date, message=None, run_type=None):
 
         logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
 
@@ -36,7 +37,8 @@ class starter_ProcessArticleZip():
             "requested_action": requested_action,
             "force": force,
             "message": message,
-            "update_date": update_date
+            "update_date": update_date,
+            "run_type": run_type
         }
 
         workflow_id, \
