@@ -65,9 +65,9 @@ class activity_PostDigestJATS(Activity):
         if self.jats_content:
             self.statuses["jats"] = True
 
-        # TODO!!! POST to API endpoint
+        # POST to API endpoint
         try:
-            self.statuses["post"] = True
+            self.statuses["post"] = self.post_jats(self.digest, self.jats_content)
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
 
@@ -87,6 +87,13 @@ class activity_PostDigestJATS(Activity):
             self.logger.exception(
                 "Exception generating digest jats for docx_file %s. Details: %s" %
                 (str(docx_file), str(exception)))
+
+    def post_jats(self, digest, jats_content):
+        "POST jats to API endpoint"
+        # TODO!!! format the body and/or parameters
+        # TODO!!! endpoint URI, authenticate, add headers
+        # TODO!!! issue the POST request
+        return True
 
     def create_activity_directories(self):
         """
