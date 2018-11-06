@@ -233,6 +233,9 @@ class TestSilentDigest(unittest.TestCase):
     def test_silent_digest_is_silent_zip(self):
         self.assertTrue(digest_provider.silent_digest('DIGEST 99999 SILENT.zip'))
 
+    def test_silent_digest_is_hyphen_silent_zip(self):
+        self.assertTrue(digest_provider.silent_digest('DIGEST 99999-Silent.zip'))
+
     def test_silent_digest_is_silent_docx(self):
         self.assertTrue(digest_provider.silent_digest('DIGEST 99999 SILENT.docx'))
 
