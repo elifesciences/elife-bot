@@ -4,6 +4,7 @@ import os
 import traceback
 import requests
 import log
+import re
 from docx.opc.exceptions import PackageNotFoundError
 from digestparser import build, conf
 import provider.utils as utils
@@ -286,3 +287,8 @@ def validate_digest(digest_content):
     if digest_content and not digest_content.text:
         error_messages.append('Digest text is missing')
     return not bool(error_messages), error_messages
+
+
+def silent_digest(filename):
+    "check if file name supplied to the bucket is a silent deposit"
+    return bool(re.match(".*[- ]silent.(zip|docx)", str(filename).lower()))
