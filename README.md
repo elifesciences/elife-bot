@@ -8,6 +8,16 @@ When we publish an article within eLife we want a number of processes to happen.
 
 [swf]: https://aws.amazon.com/swf/
 
+
+## Digest silent workflow
+
+Digest zip files copied to the digest input bucket (a bucket with a name matching `*-elife-bot-digests-input`) will normally transmit the digest output to a third-party by email or to an API endpoint when a `IngestDigest` workflow is executed.
+
+You can trigger a silent `IngestDigest` workflow, which still validates the input and replaces existing digest data in eLife buckets, but avoids sending a digest to the third-party, by altering the file name of the digest zip file.
+
+To start a silent digest workflow, make sure the zip file name ends with `-silent.zip` or ` silent.zip` (case insensitive, so it can be ` silent.zip` or ` SILENT.zip`), and copy that file to the digest input bucket.
+
+
 ## Installation and tests
 
 eLife bot is currently configured and deployed by eLife builder libraries.
