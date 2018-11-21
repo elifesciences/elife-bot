@@ -166,6 +166,16 @@ class TestPostPayload(unittest.TestCase):
         # make assertions
         self.assertEqual(payload, expected)
 
+    def test_post_payload_no_digest(self):
+        "POST payload for when there is no digest"
+        digest = None
+        jats_content = '<p>JATS content</p>'
+        api_key = 'api_key'
+        expected = None
+        # build the payload for the POST
+        payload = activity_module.post_payload(digest, jats_content, api_key)
+        # make assertions
+        self.assertEqual(payload, expected)
 
 if __name__ == '__main__':
     unittest.main()
