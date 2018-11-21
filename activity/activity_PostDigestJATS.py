@@ -109,8 +109,15 @@ class activity_PostDigestJATS(Activity):
 
 def post_payload(digest, jats_content, api_key):
     "compile the POST data payload"
-    # TODO!!
+    account_key = 1
+    content_type = "digest"
     payload = OrderedDict()
+    payload["apiKey"] = api_key
+    payload["accountKey"] = account_key
+    if digest:
+        payload["doi"] = digest.doi
+    payload["type"] = content_type
+    payload["content"] = jats_content
     return payload
 
 

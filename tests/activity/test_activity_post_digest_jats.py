@@ -1,14 +1,20 @@
 # coding=utf-8
 
+import os
 import unittest
+from collections import OrderedDict
 from mock import patch
 from ddt import ddt, data
+from digestparser.objects import Digest
 import activity.activity_PostDigestJATS as activity_module
 from activity.activity_PostDigestJATS import activity_PostDigestJATS as activity_object
+from tests import read_fixture
+import tests.activity.helpers as helpers
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeResponse
+from tests.activity.classes_mock import FakeLogger, FakeResponse, fake_get_tmp_dir
 import tests.test_data as test_case_data
 from tests.activity.classes_mock import FakeStorageContext
+import provider.digest_provider as digest_provider
 
 
 def input_data(file_name_to_change=''):
@@ -126,6 +132,39 @@ class TestPostDigestJats(unittest.TestCase):
         if self.activity.digest and test_data.get("expected_digest_doi"):
             self.assertEqual(self.activity.digest.doi, test_data.get("expected_digest_doi"),
                              'failed in {comment}'.format(comment=test_data.get("comment")))
+
+
+class TestPostPayload(unittest.TestCase):
+
+    def setUp(self):
+        self.temp_dir = fake_get_tmp_dir()
+
+    def tearDown(self):
+        # clean the temporary directory
+        helpers.delete_files_in_folder('tests/tmp', filter_out=['.keepme'])
+
+    def test_post_payload(self):
+        "POST payload for a digest"
+        doi = '10.7554/eLife.99999'
+        api_key = 'api_key'
+        filename = os.path.join('tests', 'files_source', 'DIGEST 99999.docx')
+        # JATS paragraphs are in an existing fixture file
+        content = read_fixture('jats_content_99999.py', 'digests')
+        expected = OrderedDict([
+            ('apiKey', api_key),
+            ('accountKey', 1),
+            ('doi', doi),
+            ('type', 'digest'),
+            ('content', content)
+            ])
+        digest = Digest()
+        digest.doi = doi
+        # build the jats_content from the filename
+        jats_content = digest_provider.build_jats(filename, self.temp_dir)
+        # build the payload for the POST
+        payload = activity_module.post_payload(digest, jats_content, api_key)
+        # make assertions
+        self.assertEqual(payload, expected)
 
 
 if __name__ == '__main__':
