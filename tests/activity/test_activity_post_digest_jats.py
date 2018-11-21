@@ -66,7 +66,7 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_activity_status": None,
             "expected_build_status": False,
             "expected_jats_status": None,
-            "expected_post_status": True
+            "expected_post_status": None
         },
         {
             "comment": 'bad digest docx file example',
@@ -76,7 +76,7 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_activity_status": None,
             "expected_build_status": False,
             "expected_jats_status": None,
-            "expected_post_status": True
+            "expected_post_status": None
         },
         {
             "comment": 'digest author name encoding file example',

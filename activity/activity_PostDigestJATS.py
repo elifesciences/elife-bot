@@ -86,7 +86,9 @@ class activity_PostDigestJATS(Activity):
         "prepare and POST jats to API endpoint"
         url = self.settings.typesetter_digest_endpoint
         payload = post_payload(digest, jats_content, self.settings.typesetter_digest_api_key)
-        return post_jats_to_endpoint(url, payload)
+        if payload:
+            return post_jats_to_endpoint(url, payload, self.logger)
+        return None
 
     def create_activity_directories(self):
         """
@@ -114,10 +116,14 @@ def post_payload(digest, jats_content, api_key):
     return payload
 
 
-def post_jats_to_endpoint(url, payload):
+def post_jats_to_endpoint(url, payload, logger):
     "issue the POST"
     resp = requests.post(url, data=payload)
     # Check for good HTTP status code
     if resp.status_code != 200:
+        logger.error(
+            ("Error posting digest JATS to endpoint %s: \npayload: %s \nstatus_code: %s" +
+             " \nresponse: %s") %
+            (url, payload, resp.status_code, resp.content))
         return False
     return True
