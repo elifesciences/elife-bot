@@ -5,7 +5,6 @@ import unittest
 from collections import OrderedDict
 from mock import patch
 from ddt import ddt, data
-from digestparser.objects import Digest
 import activity.activity_PostDigestJATS as activity_module
 from activity.activity_PostDigestJATS import activity_PostDigestJATS as activity_object
 from tests import read_fixture
@@ -138,6 +137,9 @@ class TestPostPayload(unittest.TestCase):
 
     def setUp(self):
         self.temp_dir = fake_get_tmp_dir()
+        self.digest_config = digest_provider.digest_config(
+            settings_mock.digest_config_section,
+            settings_mock.digest_config_file)
 
     def tearDown(self):
         # clean the temporary directory
@@ -145,7 +147,6 @@ class TestPostPayload(unittest.TestCase):
 
     def test_post_payload(self):
         "POST payload for a digest"
-        doi = '10.7554/eLife.99999'
         api_key = 'api_key'
         filename = os.path.join('tests', 'files_source', 'DIGEST 99999.docx')
         # JATS paragraphs are in an existing fixture file
@@ -153,14 +154,14 @@ class TestPostPayload(unittest.TestCase):
         expected = OrderedDict([
             ('apiKey', api_key),
             ('accountKey', 1),
-            ('doi', doi),
+            ('doi', '10.7554/eLife.99999'),
             ('type', 'digest'),
             ('content', content)
             ])
-        digest = Digest()
-        digest.doi = doi
+        build_status, digest = digest_provider.build_digest(
+            filename, self.temp_dir, None, self.digest_config)
         # build the jats_content from the filename
-        jats_content = digest_provider.build_jats(filename, self.temp_dir)
+        jats_content = digest_provider.digest_jats(digest)
         # build the payload for the POST
         payload = activity_module.post_payload(digest, jats_content, api_key)
         # make assertions

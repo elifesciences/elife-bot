@@ -40,13 +40,13 @@ def digest_config(config_section, config_file):
     return conf.parse_raw_config(conf.raw_config(config_section, config_file))
 
 
-def build_jats(input_file, temp_dir, logger=None, digest_config=None):
-    "build JATS output from a digest file"
+def digest_jats(digest_content, logger=None):
+    "extract JATS output from a digest object"
     try:
-        return jats.build_jats(input_file, temp_dir, digest_config)
-    except (AttributeError, PackageNotFoundError):
+        return jats.digest_jats(digest_content)
+    except AttributeError:
         if logger:
-            logger.exception('exception in digest_provider build_jats: %s' %
+            logger.exception('exception in digest_provider digest_jats: %s' %
                              traceback.format_exc())
 
 

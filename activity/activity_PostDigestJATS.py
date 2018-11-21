@@ -2,6 +2,7 @@ import os
 import json
 from collections import OrderedDict
 import requests
+from elifetools.utils import doi_uri_to_doi
 from S3utility.s3_notification_info import parse_activity_data
 import provider.digest_provider as digest_provider
 from .activity import Activity
@@ -62,7 +63,7 @@ class activity_PostDigestJATS(Activity):
             self.input_file, self.temp_dir, self.logger, self.digest_config)
 
         # Generate jats
-        self.jats_content = self.digest_jats(self.input_file)
+        self.jats_content = digest_provider.digest_jats(self.digest)
 
         if self.jats_content:
             self.statuses["jats"] = True
@@ -80,15 +81,6 @@ class activity_PostDigestJATS(Activity):
             return self.ACTIVITY_SUCCESS
 
         return self.ACTIVITY_PERMANENT_FAILURE
-
-    def digest_jats(self, docx_file):
-        "generate the digest JATS content from the docx file"
-        try:
-            return digest_provider.build_jats(docx_file, self.temp_dir, self.digest_config)
-        except Exception as exception:
-            self.logger.exception(
-                "Exception generating digest jats for docx_file %s. Details: %s" %
-                (str(docx_file), str(exception)))
 
     def post_jats(self, digest, jats_content):
         "prepare and POST jats to API endpoint"
@@ -116,7 +108,7 @@ def post_payload(digest, jats_content, api_key):
     payload = OrderedDict()
     payload["apiKey"] = api_key
     payload["accountKey"] = account_key
-    payload["doi"] = digest.doi
+    payload["doi"] = doi_uri_to_doi(digest.doi)
     payload["type"] = content_type
     payload["content"] = jats_content
     return payload
