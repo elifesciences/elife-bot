@@ -1,5 +1,7 @@
 import os
 import json
+from collections import OrderedDict
+import requests
 from S3utility.s3_notification_info import parse_activity_data
 import provider.digest_provider as digest_provider
 from .activity import Activity
@@ -89,11 +91,10 @@ class activity_PostDigestJATS(Activity):
                 (str(docx_file), str(exception)))
 
     def post_jats(self, digest, jats_content):
-        "POST jats to API endpoint"
-        # TODO!!! format the body and/or parameters
-        # TODO!!! endpoint URI, authenticate, add headers
-        # TODO!!! issue the POST request
-        return True
+        "prepare and POST jats to API endpoint"
+        url = self.settings.typesetter_digest_endpoint
+        payload = post_payload(digest, jats_content, self.settings.typesetter_digest_api_key)
+        return post_jats_to_endpoint(url, payload)
 
     def create_activity_directories(self):
         """
@@ -104,3 +105,19 @@ class activity_PostDigestJATS(Activity):
                 os.mkdir(dir_name)
             except OSError:
                 pass
+
+
+def post_payload(digest, jats_content, api_key):
+    "compile the POST data payload"
+    # TODO!!
+    payload = OrderedDict()
+    return payload
+
+
+def post_jats_to_endpoint(url, payload):
+    "issue the POST"
+    resp = requests.post(url, data=payload)
+    # Check for good HTTP status code
+    if resp.status_code != 200:
+        return False
+    return True
