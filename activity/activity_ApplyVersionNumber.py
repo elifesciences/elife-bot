@@ -72,12 +72,12 @@ class activity_ApplyVersionNumber(Activity):
                                     "Finished applying version number to article " + article_id +
                                     " for version " + version + " run " + str(run))
 
-        except Exception as e:
-            self.logger.exception(str(e))
+        except Exception as exception:
+            self.logger.exception(str(exception))
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error",
                                     "Error in applying version number to files for " + article_id +
-                                    " message:" + str(e.message))
+                                    " message:" + str(exception))
             return self.ACTIVITY_PERMANENT_FAILURE
 
         return self.ACTIVITY_SUCCESS
