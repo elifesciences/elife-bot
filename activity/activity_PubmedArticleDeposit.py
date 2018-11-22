@@ -9,8 +9,6 @@ import re
 import requests
 from collections import namedtuple
 
-import activity
-
 import provider.simpleDB as dblib
 import provider.article as articlelib
 from provider.ftp import FTP
@@ -18,15 +16,17 @@ import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
 from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
+from .activity import Activity
 
 """
 PubmedArticleDeposit activity
 """
 
-class activity_PubmedArticleDeposit(activity.activity):
+class activity_PubmedArticleDeposit(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_PubmedArticleDeposit, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "PubmedArticleDeposit"
         self.version = "1"
@@ -100,7 +100,7 @@ class activity_PubmedArticleDeposit(activity.activity):
 
         if self.ftp_status is True:
             # Clean up outbox
-            print "Moving files from outbox folder to published folder"
+            print("Moving files from outbox folder to published folder")
             self.clean_outbox()
             self.upload_pubmed_xml_to_s3()
             self.outbox_status = True
@@ -123,7 +123,7 @@ class activity_PubmedArticleDeposit(activity.activity):
         if self.activity_status is True:
             return True
         else:
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
     def set_datestamp(self):
         a = arrow.utcnow()

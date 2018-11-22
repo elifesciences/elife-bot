@@ -52,13 +52,13 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "expected_activity_status": True,
             "expected_file_count": 1,
             "expected_pubmed_xml_contains": [
-                ('<ArticleTitle>An evolutionary young defense metabolite influences the root' +
-                 ' growth of plants via the ancient TOR signaling pathway</ArticleTitle>'),
-                ('<PubDate PubStatus="aheadofprint"><Year>2017</Year>' +
-                 '<Month>December</Month><Day>12</Day></PubDate>'),
-                '<ELocationID EIdType="doi">10.7554/eLife.29353</ELocationID>',
-                ('<AbstractText Label="">To optimize fitness a plant should monitor its' +
-                 ' metabolism to appropriately control growth and defense.')
+                (b'<ArticleTitle>An evolutionary young defense metabolite influences the root' +
+                 b' growth of plants via the ancient TOR signaling pathway</ArticleTitle>'),
+                (b'<PubDate PubStatus="aheadofprint"><Year>2017</Year>' +
+                 b'<Month>December</Month><Day>12</Day></PubDate>'),
+                b'<ELocationID EIdType="doi">10.7554/eLife.29353</ELocationID>',
+                (b'<AbstractText Label="">To optimize fitness a plant should monitor its' +
+                 b' metabolism to appropriately control growth and defense.')
                 ]
         },
         {
@@ -74,12 +74,12 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "expected_activity_status": True,
             "expected_file_count": 1,
             "expected_pubmed_xml_contains": [
-                '<Replaces IdType="doi">10.7554/eLife.15747</Replaces>',
-                '<ArticleTitle>Community-level cohesion without cooperation</ArticleTitle>',
-                ('<PubDate PubStatus="epublish"><Year>2016</Year>' +
-                 '<Month>June</Month><Day>16</Day></PubDate>'),
-                '<ELocationID EIdType="doi">10.7554/eLife.15747</ELocationID>',
-                '<Identifier Source="ORCID">http://orcid.org/0000-0002-9558-1121</Identifier>'
+                b'<Replaces IdType="doi">10.7554/eLife.15747</Replaces>',
+                b'<ArticleTitle>Community-level cohesion without cooperation</ArticleTitle>',
+                (b'<PubDate PubStatus="epublish"><Year>2016</Year>' +
+                 b'<Month>June</Month><Day>16</Day></PubDate>'),
+                b'<ELocationID EIdType="doi">10.7554/eLife.15747</ELocationID>',
+                b'<Identifier Source="ORCID">http://orcid.org/0000-0002-9558-1121</Identifier>'
                 ]
         },
         {
@@ -121,7 +121,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "expected_activity_status": True,
             "expected_file_count": 1,
             "expected_pubmed_xml_contains": [
-                '<Replaces IdType="doi">10.7554/eLife.15747</Replaces>'
+                b'<Replaces IdType="doi">10.7554/eLife.15747</Replaces>'
                 ]
         },
     )
