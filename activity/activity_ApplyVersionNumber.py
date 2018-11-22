@@ -1,4 +1,3 @@
-import activity
 import json
 import os
 import re
@@ -11,15 +10,17 @@ from provider.article_structure import ArticleInfo
 import provider.article_structure as article_structure
 import provider.s3lib as s3lib
 from elifetools import xmlio
+from .activity import Activity
 
 """
 ApplyVersionNumber.py activity
 """
 
 
-class activity_ApplyVersionNumber(activity.activity):
+class activity_ApplyVersionNumber(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_ApplyVersionNumber, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "ApplyVersionNumber"
         self.pretty_name = "Apply Version Number"
@@ -48,7 +49,7 @@ class activity_ApplyVersionNumber(activity.activity):
                                     "Starting applying version number to files for " + article_id)
         except Exception as e:
             self.logger.exception(str(e))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         try:
 
@@ -60,7 +61,7 @@ class activity_ApplyVersionNumber(activity.activity):
                                         self.pretty_name, "error",
                                         "Error in applying version number to files for " + article_id +
                                         " message: No version available")
-                return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                return self.ACTIVITY_PERMANENT_FAILURE
 
             expanded_folder_name = session.get_value('expanded_folder')
             bucket_folder_name = expanded_folder_name.replace(os.sep, '/')
@@ -77,9 +78,9 @@ class activity_ApplyVersionNumber(activity.activity):
                                     self.pretty_name, "error",
                                     "Error in applying version number to files for " + article_id +
                                     " message:" + str(e.message))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
-        return activity.activity.ACTIVITY_SUCCESS
+        return self.ACTIVITY_SUCCESS
 
     def rename_article_s3_objects(self, bucket_folder_name, version):
         """
@@ -173,8 +174,8 @@ class activity_ApplyVersionNumber(activity.activity):
         return file_name_map
 
     def new_filename(self, old_filename, version):
-        if re.search(ur'-v([0-9])[\.]', old_filename): #is version already in file name?
-            new_filename = re.sub(ur'-v([0-9])[\.]', '-v' + str(version) + '.', old_filename)
+        if re.search(r'-v([0-9])[\.]', old_filename): #is version already in file name?
+            new_filename = re.sub(r'-v([0-9])[\.]', '-v' + str(version) + '.', old_filename)
         else:
             (file_prefix, file_extension) = article_structure.file_parts(old_filename)
             new_filename = file_prefix + '-v' + str(version) + '.' + file_extension
@@ -199,7 +200,7 @@ class activity_ApplyVersionNumber(activity.activity):
 
 
     def find_xml_filename_in_map(self, file_name_map):
-        for old_name, new_name in file_name_map.iteritems():
+        for old_name, new_name in file_name_map.items():
             info = ArticleInfo(new_name)
             if info.file_type == 'ArticleXML':
                 return new_name

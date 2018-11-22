@@ -1,12 +1,12 @@
 import unittest
-from ddt import ddt, data, unpack
-import settings_mock
-from activity.activity_ApplyVersionNumber import activity_ApplyVersionNumber
-from mock import mock, patch
-import test_activity_data as test_data
-from classes_mock import FakeSession
 import shutil
-import helpers
+from mock import patch
+from ddt import ddt, data, unpack
+from activity.activity_ApplyVersionNumber import activity_ApplyVersionNumber
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeSession
+import tests.activity.test_activity_data as test_data
+import tests.activity.helpers as helpers
 
 example_key_names = [u'15224.1/fec8dcd1-76df-4921-93de-4bf8b8ab70eb/elife-15224-fig1-figsupp1.tif',
                      u'15224.1/fec8dcd1-76df-4921-93de-4bf8b8ab70eb/elife-15224-fig1-figsupp2.tif',
