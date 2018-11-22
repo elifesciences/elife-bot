@@ -1,6 +1,6 @@
 import unittest
 from activity.activity_PubRouterDeposit import activity_PubRouterDeposit
-import settings_mock
+import tests.activity.settings_mock as settings_mock
 from ddt import ddt, data, unpack
 
 @ddt
