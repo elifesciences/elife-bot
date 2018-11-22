@@ -9,8 +9,8 @@ import boto.swf
 import json
 from argparse import ArgumentParser
 
-import starter_helper as helper
-from starter_helper import NullRequiredDataException
+import starter.starter_helper as helper
+from starter.starter_helper import NullRequiredDataException
 
 """
 Amazon SWF CopyGlencoeStillImages starter, for copying Glencoe still images to IIIF bucket.
