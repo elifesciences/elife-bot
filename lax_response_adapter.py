@@ -49,7 +49,7 @@ class LaxResponseAdapter:
 
     def parse_token(self, token):
         try:
-            token_parsed = base64.decodestring(token)
+            token_parsed = utils.base64_decode_string(token)
             return json.loads(token_parsed)
         except:
             return {
@@ -78,6 +78,7 @@ class LaxResponseAdapter:
                 response_message = message_data["message"]
 
             token = self.parse_token(message_data['token'])
+            print(token)
             run = token['run']
             version = token['version']
             expanded_folder = token['expanded_folder']

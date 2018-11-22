@@ -30,9 +30,9 @@ def monitor_interrupt(work):
     try:
         flag = Flag()
         def signal_handler(signum, _frame):
-            print "received signal %s" % signum
+            print("received signal %s" % signum)
             flag.stop_process()
         signal.signal(signal.SIGTERM, signal_handler)
         work(flag)
     except KeyboardInterrupt:
-        print "\ncaught KeyboardInterrupt, shutting down abruptly..."
+        print("\ncaught KeyboardInterrupt, shutting down abruptly...")
