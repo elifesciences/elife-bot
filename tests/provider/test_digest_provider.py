@@ -166,24 +166,31 @@ class TestDigestProvider(unittest.TestCase):
         self.assertEqual(published, None)
 
 
-class TestBuildJats(unittest.TestCase):
+class TestDigestJats(unittest.TestCase):
 
     def setUp(self):
         self.temp_dir = os.path.join('temp')
         self.logger = FakeLogger()
+        self.digest_config = digest_provider.digest_config(
+            settings_mock.digest_config_section,
+            settings_mock.digest_config_file)
 
-    def test_build_jats(self):
+    def test_digest_jats(self):
         "convert digest docx file into JATS output, consisting of text paragraphs"
         input_file = os.path.join('tests', 'files_source', 'DIGEST 99999.docx')
         folder_name = "digests"
         expected_output = read_fixture('jats_content_99999.py', folder_name)
-        jats_content = digest_provider.build_jats(input_file, self.temp_dir, self.logger)
+        build_status, digest = digest_provider.build_digest(
+            input_file, self.temp_dir, self.logger, self.digest_config)
+        jats_content = digest_provider.digest_jats(digest, self.logger)
         self.assertEqual(jats_content, expected_output)
 
-    def test_build_jats_none(self):
+    def test_digest_jats_none(self):
         "test building jats from a bad file input"
         input_file = None
-        jats_content = digest_provider.build_jats(input_file, self.temp_dir, self.logger)
+        build_status, digest = digest_provider.build_digest(
+            input_file, self.temp_dir, self.logger, self.digest_config)
+        jats_content = digest_provider.digest_jats(digest, self.logger)
         self.assertEqual(jats_content, None)
 
 
