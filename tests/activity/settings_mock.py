@@ -57,6 +57,9 @@ digest_error_recipient_email = "error@example.org"
 digest_endpoint = 'https://digests/{digest_id}'
 digest_auth_key = 'digest_auth_key'
 
+typesetter_digest_endpoint = 'https://typesetter/updateDigest'
+typesetter_digest_api_key = 'typesetter_api_key'
+
 journal_preview_base_url = 'https://preview'
 
 features_publication_recipient_email = "features_team@example.org"
