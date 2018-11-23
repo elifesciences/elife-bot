@@ -1,19 +1,20 @@
-import activity
 import json
 from provider.execution_context import get_session
 import boto.sqs
 from boto.sqs.message import RawMessage
 import provider.lax_provider as lax_provider
-import base64
+from provider.utils import base64_decode_string
+from .activity import Activity
 
 """
 activity_PublishToLax.py activity
 """
 
 
-class activity_PublishToLax(activity.activity):
+class activity_PublishToLax(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_PublishToLax, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "PublishToLax"
         self.version = "1"
@@ -70,11 +71,11 @@ class activity_PublishToLax(activity.activity):
 
             #########
 
-        except Exception as e:
+        except Exception as exception:
             self.logger.exception("Exception when Preparing Publish action for Lax")
             self.emit_monitor_event(self.settings, article_id, version, run, "Publish To Lax", "error",
                                     "Error preparing or sending message to lax" + article_id +
-                                    " message:" + str(e.message))
+                                    " message:" + str(exception))
             return False
 
         self.emit_monitor_event(self.settings, article_id, version, run, "Publish To Lax", "end",
@@ -83,7 +84,7 @@ class activity_PublishToLax(activity.activity):
 
     def get_workflow_data(self, data):
         if "publication_data" in data:
-            publication_data = json.loads(base64.decodestring(data['publication_data']))
+            publication_data = json.loads(base64_decode_string(data['publication_data']))
             workflow_data = publication_data['workflow_data']
             return workflow_data
 
