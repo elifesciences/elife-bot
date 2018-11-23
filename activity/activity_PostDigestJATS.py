@@ -51,6 +51,14 @@ class activity_PostDigestJATS(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        # first check if there is an endpoint in the settings specified
+        if not hasattr(self.settings, "typesetter_digest_endpoint"):
+            self.logger.info("No typesetter endpoint in settings, skipping %s.", self.name)
+            return self.ACTIVITY_SUCCESS
+        if not self.settings.typesetter_digest_endpoint:
+            self.logger.info("Typesetter endpoint in settings is blank, skipping %s.", self.name)
+            return self.ACTIVITY_SUCCESS
+
         # parse the data with the digest_provider
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)
 

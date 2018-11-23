@@ -132,6 +132,20 @@ class TestPostDigestJats(unittest.TestCase):
             self.assertEqual(self.activity.digest.doi, test_data.get("expected_digest_doi"),
                              'failed in {comment}'.format(comment=test_data.get("comment")))
 
+    def test_do_activity_no_endpoint(self):
+        "test returning True if the endpoint is not specified in the settings"
+        del(settings_mock.typesetter_digest_endpoint)
+        activity = activity_object(settings_mock, FakeLogger(), None, None, None)
+        result = activity.do_activity()
+        self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
+
+    def test_do_activity_blank_endpoint(self):
+        "test returning True if the endpoint is blank"
+        settings_mock.typesetter_digest_endpoint = ""
+        activity = activity_object(settings_mock, FakeLogger(), None, None, None)
+        result = activity.do_activity()
+        self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
+
 
 class TestPostPayload(unittest.TestCase):
 
