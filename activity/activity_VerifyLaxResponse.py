@@ -1,7 +1,7 @@
-import activity
 import json
 from provider.execution_context import get_session
 from uuid import UUID
+from .activity import Activity
 
 """
 activity_VerifyLaxResponse.py activity
@@ -11,9 +11,10 @@ activity_VerifyLaxResponse.py activity
 class ValidationException(RuntimeError):
     pass
 
-class activity_VerifyLaxResponse(activity.activity):
+class activity_VerifyLaxResponse(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_VerifyLaxResponse, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "VerifyLaxResponse"
         self.pretty_name = "Verify Lax Response"
@@ -34,7 +35,7 @@ class activity_VerifyLaxResponse(activity.activity):
 
         ########
         if not self.settings.consider_Lax_elife_2_0:
-            return activity.activity.ACTIVITY_SUCCESS
+            return self.ACTIVITY_SUCCESS
         #######
 
         article_id = data['article_id']
@@ -56,13 +57,13 @@ class activity_VerifyLaxResponse(activity.activity):
                                         " Finished Verification. Lax has responded with result: ingested."
                                         " Article: " + article_id)
 
-                return activity.activity.ACTIVITY_SUCCESS
+                return self.ACTIVITY_SUCCESS
 
             message = data['message'] if data['message'] is not None else "(empty message)"
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                     "Lax has not ingested article " + article_id +
                                     " result from lax:" + str(data['result']) + '; message from lax: ' + message)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         #########
 
@@ -71,6 +72,6 @@ class activity_VerifyLaxResponse(activity.activity):
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                     "Error when verifying lax response" + article_id +
                                     " message:" + str(e.message))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
 
