@@ -1,11 +1,11 @@
 from ssl import SSLError
-import activity
 from boto.s3.connection import S3Connection
 import tempfile
 from github import Github
 from github import GithubException
 import provider.lax_provider
 from provider.storage_provider import storage_context
+from .activity import Activity
 
 """
 activity_UpdateRepository.py activity
@@ -14,9 +14,10 @@ activity_UpdateRepository.py activity
 class RetryException(RuntimeError):
     pass
 
-class activity_UpdateRepository(activity.activity):
+class activity_UpdateRepository(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_UpdateRepository, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "UpdateRepository"
         self.pretty_name = "Update Repository"
@@ -42,7 +43,7 @@ class activity_UpdateRepository(activity.activity):
                     self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                             self.pretty_name, "error",
                                             "Error Updating repository for article. Github settings are unavailable.")
-                    return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                    return self.ACTIVITY_PERMANENT_FAILURE
 
                 self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                         self.pretty_name, "end",
@@ -53,10 +54,10 @@ class activity_UpdateRepository(activity.activity):
             try:
 
                 xml_file = provider.lax_provider.get_xml_file_name(self.settings,
-                                                          data['article_id'],
-                                                          self.settings.publishing_buckets_prefix +
-                                                          self.settings.ppp_cdn_bucket,
-                                                          data['version'])
+                                                            data['article_id'],
+                                                            self.settings.publishing_buckets_prefix +
+                                                            self.settings.ppp_cdn_bucket,
+                                                            data['version'])
                 s3_file_path = data['article_id'] + "/" + xml_file
 
                 storage = storage_context(self.settings)
@@ -66,7 +67,7 @@ class activity_UpdateRepository(activity.activity):
                 with tempfile.TemporaryFile(mode='r+') as tmp:
                     storage_provider = self.settings.storage_provider + "://"
                     published_path = storage_provider + self.settings.publishing_buckets_prefix + \
-                                       self.settings.ppp_cdn_bucket
+                                        self.settings.ppp_cdn_bucket
 
                     resource = published_path + "/" + s3_file_path
 
@@ -81,25 +82,27 @@ class activity_UpdateRepository(activity.activity):
                                     "Finished Updating repository for article. Details: " + message)
                     return True
 
-            except RetryException as e:
-                self.logger.info(e.message)
-                return activity.activity.ACTIVITY_TEMPORARY_FAILURE
+            except RetryException as exception:
+                self.logger.info(str(exception))
+                return self.ACTIVITY_TEMPORARY_FAILURE
 
-            except SSLError as e:
-                if e.message == 'The read operation timed out':
-                    self.logger.info(e.message)
-                    return activity.activity.ACTIVITY_TEMPORARY_FAILURE
+            except SSLError as exception:
+                # python 3 support for comparing exception message
+                strip_characters = "'(),"
+                exception_message = str(exception).lstrip(strip_characters).rstrip(strip_characters)
+                if exception_message == 'The read operation timed out':
+                    self.logger.info(str(exception))
+                    return self.ACTIVITY_TEMPORARY_FAILURE
                 else:
                     self.logger.exception("Exception in do_activity")
-                    return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                    return self.ACTIVITY_PERMANENT_FAILURE
 
             except Exception as e:
                 self.logger.exception("Exception in do_activity")
                 self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                         self.pretty_name, "error",
                                         "Error Updating repository for article. Details: " + str(e))
-                return activity.activity.ACTIVITY_PERMANENT_FAILURE
-
+                return self.ACTIVITY_PERMANENT_FAILURE
 
 
     def update_github(self, repo_file, content):

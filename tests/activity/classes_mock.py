@@ -110,7 +110,7 @@ class FakeStorageContext:
         bucket_name, s3_key = self.get_bucket_and_key(resource)
         src = self.dir + s3_key
         with open(src, 'rb') as fsrc:
-            filelike.write(fsrc.read())
+            filelike.write(fsrc.read().decode())
 
     def get_resource_as_string(self, origin):
         return '<mock><media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="wmv" mimetype="video" xlink:href="elife-00569-media1.wmv"></media></mock>'
