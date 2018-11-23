@@ -126,4 +126,8 @@ def post_jats_to_endpoint(url, payload, logger):
              " \nresponse: %s") %
             (url, payload, resp.status_code, resp.content))
         return False
+    logger.info(
+        ("Success posting digest JATS to endpoint %s: \npayload: %s \nstatus_code: %s" +
+            " \nresponse: %s") %
+        (url, payload, resp.status_code, resp.content))
     return True
