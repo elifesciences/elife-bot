@@ -9,16 +9,18 @@ import datetime
 import boto.sqs
 from boto.sqs.message import RawMessage
 import provider.lax_provider as lax_provider
+import requests
+from .activity import Activity
 
 """
 activity_IngestToLax.py activity
 """
-import requests
 
 
-class activity_IngestToLax(activity.activity):
+class activity_IngestToLax(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_IngestToLax, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "IngestToLax"
         self.pretty_name = "Ingest To Lax"
@@ -54,12 +56,12 @@ class activity_IngestToLax(activity.activity):
         self.emit_monitor_event(*start_event)
         if end_event == "error":
             self.logger.exception("Exception when Preparing Ingest for Lax. Details: %s", exception)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         self.write_message(queue_connection_settings, queue, message)
 
         self.emit_monitor_event(*end_event_details)
-        return activity.activity.ACTIVITY_SUCCESS
+        return self.ACTIVITY_SUCCESS
 
 
 
@@ -108,11 +110,11 @@ class activity_IngestToLax(activity.activity):
                                     "Lax is not being considered, this activity just triggered next "
                                     "workflow without influence from Lax."], None)
 
-                except Exception as e:
+                except Exception as exception:
                     return (None, None, start_event, "error",
                             [self.settings, article_id, version, run, self.pretty_name + " (Skipping)", "error",
-                             "An error has occurred. Details: %s", str(e.message)],
-                            str(e.message))
+                             "An error has occurred. Details: %s", str(exception)],
+                            str(exception))
 
             ##########
 
@@ -129,13 +131,13 @@ class activity_IngestToLax(activity.activity):
                     [self.settings, article_id, version, run, self.pretty_name, "end",
                      "Finished preparation of article for Lax. Ingest sent to Lax" + article_id], None)
 
-        except Exception as e:
+        except Exception as exception:
             self.logger.exception("Exception when Preparing Ingest for Lax")
             return (None, None, start_event, "error",
                     [self.settings, article_id, version, run, self.pretty_name, "error",
                      "Error preparing or sending message to lax" + article_id +
-                     " message: " + str(e.message)],
-                    str(e.message))
+                     " message: " + str(exception)],
+                    str(exception))
 
     def write_message(self, connexion_settings, queue, message_data):
         message_body = json.dumps(message_data)
