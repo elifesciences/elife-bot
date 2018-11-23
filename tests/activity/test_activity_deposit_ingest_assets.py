@@ -6,18 +6,6 @@ from tests.activity.classes_mock import FakeStorageContext, FakeSession, FakeLog
 import tests.activity.test_activity_data as test_activity_data
 
 
-ACTIVITY_DATA = {
-    "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-    "article_id": "00353",
-    "result": "ingested",
-    "status": "vor",
-    "version": "1",
-    "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-    "requested_action": "ingest",
-    "message": None,
-    "update_date": "2012-12-13T00:00:00Z"
-    }
-
 class TestDepositIngestAssets(unittest.TestCase):
     def setUp(self):
         self.activity = activity_DepositIngestAssets(settings_mock, FakeLogger(), None, None, None)
@@ -29,8 +17,9 @@ class TestDepositIngestAssets(unittest.TestCase):
 
         fake_storage_context.return_value = FakeStorageContext()
         fake_session.return_value = FakeSession(test_activity_data.session_example)
+        activity_data = test_activity_data.data_example_before_publish
 
-        result = self.activity.do_activity(ACTIVITY_DATA)
+        result = self.activity.do_activity(activity_data)
 
         self.assertEqual(self.activity.ACTIVITY_SUCCESS, result)
 
@@ -41,8 +30,9 @@ class TestDepositIngestAssets(unittest.TestCase):
 
         fake_storage_context.side_effect = Exception("An error occurred")
         fake_session.return_value = FakeSession(test_activity_data.session_example)
+        activity_data = test_activity_data.data_example_before_publish
 
-        result = self.activity.do_activity(ACTIVITY_DATA)
+        result = self.activity.do_activity(activity_data)
 
         self.assertEqual(self.activity.ACTIVITY_PERMANENT_FAILURE, result)
 
