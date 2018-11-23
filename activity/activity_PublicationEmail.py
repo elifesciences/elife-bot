@@ -4,9 +4,6 @@ import time
 import os
 import arrow
 import requests
-
-import activity
-
 import boto.s3
 from boto.s3.connection import S3Connection
 
@@ -17,15 +14,17 @@ import provider.article as articlelib
 import provider.s3lib as s3lib
 import provider.blacklist as blacklist
 import provider.lax_provider as lax_provider
+from .activity import Activity
 
 """
 PublicationEmail activity
 """
 
-class activity_PublicationEmail(activity.activity):
+class activity_PublicationEmail(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_PublicationEmail, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "PublicationEmail"
         self.version = "1"
