@@ -2,23 +2,21 @@ import boto.swf
 import json
 import os
 import codecs
-
-import activity
-
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
-
 import provider.templates as templatelib
 import provider.article as articlelib
+from .activity import Activity
 
 """
 LensArticle activity
 """
 
-class activity_LensArticle(activity.activity):
+class activity_LensArticle(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_LensArticle, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "LensArticle"
         self.version = "1"
