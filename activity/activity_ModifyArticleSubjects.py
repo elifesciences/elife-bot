@@ -1,4 +1,3 @@
-import activity
 import json
 import os
 import csv
@@ -8,14 +7,16 @@ from provider.storage_provider import storage_context
 from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 from elifetools import xmlio
+from .activity import Activity
 
 """
 ModifyArticleSubjects.py activity
 """
 
-class activity_ModifyArticleSubjects(activity.activity):
+class activity_ModifyArticleSubjects(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_ModifyArticleSubjects, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "ModifyArticleSubjects"
         self.pretty_name = "Modify Article Subjects"
@@ -45,7 +46,7 @@ class activity_ModifyArticleSubjects(activity.activity):
                                     "Starting modify article subjects to files for " + article_id)
         except Exception as e:
             self.logger.exception(str(e))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         try:
             expanded_folder_name = session.get_value('expanded_folder')
@@ -81,15 +82,15 @@ class activity_ModifyArticleSubjects(activity.activity):
                                     "Finished modify article subjects to article " + article_id +
                                     " for version " + version + " run " + str(run))
 
-        except Exception as e:
-            self.logger.exception(str(e))
+        except Exception as exception:
+            self.logger.exception(str(exception))
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error",
                                     "Error in modify article subjects to files for " + article_id +
-                                    " message:" + str(e.message))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                                    " message:" + str(exception))
+            return self.ACTIVITY_PERMANENT_FAILURE
 
-        return activity.activity.ACTIVITY_SUCCESS
+        return self.ACTIVITY_SUCCESS
 
 
     def load_subjects_data(self):
