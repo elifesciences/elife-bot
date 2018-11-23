@@ -1,15 +1,13 @@
 import unittest
-from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
 import json
 import shutil
 import glob
+import os
 from mock import mock, patch
-import settings_mock
-
 from types import MethodType
 import xml.etree.ElementTree as ET
-
-import os
+from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
+import tests.activity.settings_mock as settings_mock
 
 
 class TestPublishFinalPOA(unittest.TestCase):
@@ -202,7 +200,7 @@ class TestPublishFinalPOA(unittest.TestCase):
             ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
             root = ET.parse(xml_file)
         if root:
-            for (xpath, (attribute, value)) in xml_file_values[xml_file_name].iteritems():
+            for (xpath, (attribute, value)) in xml_file_values[xml_file_name].items():
                 matched_tags = root.findall(xpath)
                 if len(matched_tags) != 1:
                     return False
@@ -230,9 +228,9 @@ class TestPublishFinalPOA(unittest.TestCase):
     def fake_download_files_from_s3(self, file_list):
         for file in file_list:
             source_doc = "tests/test_data/poa/outbox/" + file
-            #print source_doc
+            # print(source_doc)
             dest_doc = self.poa.INPUT_DIR + os.sep + file
-            #print dest_doc
+            # print(dest_doc)
             shutil.copy(source_doc, dest_doc)
         self.poa.outbox_s3_key_names = file_list
 

@@ -10,8 +10,6 @@ import glob
 import shutil
 import re
 
-import activity
-
 from xml.etree.ElementTree import Element, SubElement
 
 from elifetools import parseJATS as parser
@@ -23,15 +21,17 @@ from boto.s3.connection import S3Connection
 import provider.s3lib as s3lib
 import provider.simpleDB as dblib
 import provider.lax_provider as lax_provider
+from .activity import Activity
 
 """
 PublishFinalPOA activity
 """
 
-class activity_PublishFinalPOA(activity.activity):
+class activity_PublishFinalPOA(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_PublishFinalPOA, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "PublishFinalPOA"
         self.version = "1"
@@ -99,7 +99,7 @@ class activity_PublishFinalPOA(activity.activity):
 
             article_filenames_map = self.profile_article_files()
 
-            for doi_id, filenames in article_filenames_map.iteritems():
+            for doi_id, filenames in article_filenames_map.items():
 
                 article_xml_file_name = self.article_xml_from_filename_map(filenames)
 
@@ -269,7 +269,7 @@ class activity_PublishFinalPOA(activity.activity):
         reparsed_string = xmlio.output(root, type=None, doctype_dict=doctype_dict)
 
         # Remove extra whitespace here for PoA articles to clean up and one VoR file too
-        reparsed_string = reparsed_string.replace("\n", '').replace("\t", '')
+        reparsed_string = reparsed_string.replace(b"\n", b'').replace(b"\t", b'')
 
         f = open(xml_file, 'wb')
         f.write(reparsed_string)
