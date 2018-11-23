@@ -112,7 +112,7 @@ class TestFTPArticle(unittest.TestCase):
         pmc_zip_output_dir = os.path.join(self.activity.get_tmp_dir(), self.activity.INPUT_DIR)
         expected_pmc_zip_file = os.path.join(pmc_zip_output_dir, 'elife-05-19405.zip')
         expected_article_xml_file = os.path.join(zip_renamed_files_dir, 'elife-19405.xml')
-        expected_article_xml_string = 'elife-19405.pdf'
+        expected_article_xml_string = b'elife-19405.pdf'
         expected_pmc_zip_file_contents = ['elife-19405.pdf', 'elife-19405.xml',
                                           'elife-19405-inf1.tif', 'elife-19405-fig1.tif']
         # create activity directories
