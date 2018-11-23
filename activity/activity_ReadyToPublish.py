@@ -1,12 +1,12 @@
-import activity
-import base64
 import json
-
 from provider.execution_context import get_session
+from provider.utils import base64_encode_string
+from .activity import Activity
 
-class activity_ReadyToPublish(activity.activity):
+class activity_ReadyToPublish(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_ReadyToPublish, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "ReadyToPublish"
         self.version = "1"
@@ -37,21 +37,21 @@ class activity_ReadyToPublish(activity.activity):
             article_path = self.preview_path(self.settings.article_path_pattern, article_id, version)
 
             self.prepare_ready_to_publish_message(article_id, version, run, expanded_folder_name, status,
-                                                  update_date, article_path)
+                                                    update_date, article_path)
 
-        except Exception as e:
+        except Exception as exception:
             self.logger.exception("Exception when sending Ready To Publish message")
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error",
                                     "Error sending Ready To Publish message for article " + article_id +
-                                    " message:" + e.message)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                                    " message:" + str(exception))
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                     "Sending Ready To Publish message. "
                                     "Article: " + article_id)
 
-        return activity.activity.ACTIVITY_SUCCESS
+        return self.ACTIVITY_SUCCESS
 
     def preview_path(self, article_path_pattern, article_id, version):
         return article_path_pattern.format(id=article_id, version=version)
@@ -72,7 +72,7 @@ class activity_ReadyToPublish(activity.activity):
             'workflow_data': workflow_data
         }
 
-        encoded_message = base64.encodestring(json.dumps(message))
+        encoded_message = base64_encode_string(json.dumps(message))
 
         self.set_monitor_property(self.settings, article_id, 'path',
                                   article_path, 'text', version=version)
