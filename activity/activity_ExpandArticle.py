@@ -1,8 +1,6 @@
 import json
 from zipfile import ZipFile
 import uuid
-
-import activity
 import re
 import os
 from os.path import isfile, join
@@ -15,14 +13,16 @@ import requests
 from provider.storage_provider import storage_context
 from provider.article_structure import ArticleInfo
 import provider.lax_provider as lax_provider
+from .activity import Activity
 
 """
 ExpandArticle.py activity
 """
 
-class activity_ExpandArticle(activity.activity):
+class activity_ExpandArticle(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_ExpandArticle, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "ExpandArticle"
         self.version = "1"
@@ -65,7 +65,7 @@ class activity_ExpandArticle(activity.activity):
         if status is None or (status != 'vor' and status != 'poa'):
             self.logger.error("Name '%s' did not match expected pattern for status" %
                               filename_last_element)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE  # status could not be determined, exit workflow.
+            return self.ACTIVITY_PERMANENT_FAILURE  # status could not be determined, exit workflow.
 
         article_version_id = article_id + '.' + version
         session.store_value('article_version_id', article_version_id)
@@ -111,12 +111,12 @@ class activity_ExpandArticle(activity.activity):
                                     "end", "Finished expansion of article " + article_id +
                                     " for version " + version + " run " + str(run) +
                                     " into " + bucket_folder_name)
-        except Exception as e:
+        except Exception as exception:
             self.logger.exception("Exception when expanding article")
             self.emit_monitor_event(self.settings, article_id, version, run, "Expand Article",
                                     "error", "Error expanding article " + article_id +
-                                    " message:" + e.message)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                                    " message:" + str(exception))
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         return True
 

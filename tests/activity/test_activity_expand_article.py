@@ -1,16 +1,13 @@
-import unittest
-from activity.activity_ExpandArticle import activity_ExpandArticle
-from activity.activity import activity
-import settings_mock
-from mock import mock, patch
-from testfixtures import tempdir, compare
 import os
-from classes_mock import FakeStorageContext
-from classes_mock import FakeSession
-import classes_mock
-import test_activity_data as testdata
+import unittest
+from mock import mock, patch
 from ddt import ddt, data
-import helpers
+from activity.activity_ExpandArticle import activity_ExpandArticle
+import tests.activity.settings_mock as settings_mock
+import tests.activity.classes_mock as classes_mock
+from tests.activity.classes_mock import FakeStorageContext, FakeSession
+import tests.activity.test_activity_data as testdata
+import tests.activity.helpers as helpers
 
 @ddt
 class TestExpandArticle(unittest.TestCase):
