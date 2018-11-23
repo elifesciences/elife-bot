@@ -1,5 +1,6 @@
 import json
 import base64
+from provider.utils import base64_encode_string
 
 lax_article_versions_response_data = [
                                         {
@@ -142,17 +143,17 @@ ingest_digest_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
 queue_worker_rules = {
     'ArticleZip': {
         'bucket_name_pattern': '.*elife-production-final$',
-        'file_name_pattern': '.*\.zip',
+        'file_name_pattern': r'.*\.zip',
         'starter_name': 'InitialArticleZip'
         },
     'SilentCorrectionsArticleZip': {
        'bucket_name_pattern': '.*elife-silent-corrections$',
-       'file_name_pattern': '.*\.zip',
+       'file_name_pattern': r'.*\.zip',
        'starter_name': 'SilentCorrectionsIngest'
        },
     'DigestInputFile': {
        'bucket_name_pattern': '.*elife-bot-digests-input$',
-       'file_name_pattern': '.*\.(docx|zip)',
+       'file_name_pattern': r'.*\.(docx|zip)',
        'starter_name': 'IngestDigest'
        },
     }
@@ -181,7 +182,7 @@ def ApprovePublication_data(update_date="2012-12-13T00:00:00Z"):
             "article_id": "00353",
             "version": "1",
             "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
-            "publication_data": base64.encodestring(json.dumps(ApprovePublication_publication_data(update_date)))
+            "publication_data": base64_encode_string(json.dumps(ApprovePublication_publication_data(update_date)))
             }
 
 def ApprovePublication_json_output_return_example(update_date):
