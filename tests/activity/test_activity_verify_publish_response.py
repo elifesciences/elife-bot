@@ -1,8 +1,8 @@
 import unittest
-from activity.activity_VerifyPublishResponse import activity_VerifyPublishResponse
 from ddt import ddt, data
 from mock import patch, MagicMock
-import settings_mock
+from activity.activity_VerifyPublishResponse import activity_VerifyPublishResponse
+import tests.activity.settings_mock as settings_mock
 
 data_published_lax = {
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
