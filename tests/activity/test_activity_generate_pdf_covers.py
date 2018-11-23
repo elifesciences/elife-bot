@@ -1,11 +1,11 @@
 import unittest
-from activity.activity_GeneratePDFCovers import activity_GeneratePDFCovers
-import settings_mock
-from classes_mock import FakeLogger
-from classes_mock import FakeResponse
+import json
 from mock import patch
 from provider.article import article
-import json
+from activity.activity_GeneratePDFCovers import activity_GeneratePDFCovers
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger, FakeResponse
+
 
 class TestGeneratePDFCovers(unittest.TestCase):
     def setUp(self):

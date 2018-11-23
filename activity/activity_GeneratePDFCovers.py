@@ -1,13 +1,14 @@
-import activity
 import provider.article as articlelib
+from .activity import Activity
 
 """
 activity_GeneratePDFCovers.py activity
 """
 
-class activity_GeneratePDFCovers(activity.activity):
+class activity_GeneratePDFCovers(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_GeneratePDFCovers, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "GeneratePDFCovers"
         self.pretty_name = "Generate PDF Covers"
@@ -26,7 +27,7 @@ class activity_GeneratePDFCovers(activity.activity):
             run = data['run']
         except Exception as e:
             self.logger.error("Error retrieving basic article data. Data: %s, Exception: %s" % (str(data), str(e)))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         try:
 
@@ -43,7 +44,7 @@ class activity_GeneratePDFCovers(activity.activity):
                                         self.pretty_name, "start", "pdf_cover_generator variable is missing from "
                                                           "settings file. PDF not generated but flag is set "
                                                           "for the activity to succeed.")
-                return activity.activity.ACTIVITY_SUCCESS
+                return self.ACTIVITY_SUCCESS
 
             pdf_cover = article.get_pdf_cover_link(self.settings.pdf_cover_generator, article_id, self.logger)
 
@@ -54,22 +55,18 @@ class activity_GeneratePDFCovers(activity.activity):
                                  "S3 url for letter %s.") % (pdf_cover["a4"], pdf_cover["letter"])
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "end", dashboard_message)
-            return activity.activity.ACTIVITY_SUCCESS
+            return self.ACTIVITY_SUCCESS
 
         except AssertionError as err:
             error_message = str(err)
             self.logger.error(error_message)
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error", error_message)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         except Exception as e:
             error_message = str(e)
             self.logger.error(error_message)
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error", error_message)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
-
-
-
-
+            return self.ACTIVITY_PERMANENT_FAILURE
