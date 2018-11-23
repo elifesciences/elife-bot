@@ -1,4 +1,3 @@
-import activity
 import json
 import re
 import time
@@ -9,16 +8,18 @@ from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 from provider.article_structure import get_article_xml_key
 from provider import utils
+from .activity import Activity
 
 """
 SendDashboardProperties.py activity
 """
 
 
-class activity_SendDashboardProperties(activity.activity):
+class activity_SendDashboardProperties(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_SendDashboardProperties, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "SendDashboardProperties"
         self.version = "1"
@@ -58,20 +59,20 @@ class activity_SendDashboardProperties(activity.activity):
             (xml_key, xml_filename) = get_article_xml_key(bucket, bucket_folder_name)
             if xml_key is None:
                 self.logger.error("Article XML path not found")
-                return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                return self.ACTIVITY_PERMANENT_FAILURE
 
             xml = xml_key.get_contents_as_string()
             soup = parser.parse_xml(xml)
 
             self.set_dashboard_properties(soup, article_id, version)
 
-        except Exception as e:
+        except Exception as exception:
             self.logger.exception("Exception emitting dashboard properties")
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     "Send dashboard properties", "error",
                                     "Error in send of article properties to dashboard for article  " + article_id +
-                                    " message:" + e.message)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                                    " message:" + str(exception))
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         # next emit the monitor event, return False if not able to emit the message
         try:
@@ -80,12 +81,12 @@ class activity_SendDashboardProperties(activity.activity):
                                     "Article properties sent to dashboard for article  " +
                                     article_id)
 
-        except Exception as e:
+        except Exception as exception:
             self.logger.exception("Exception emitting dashboard properties")
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     "Send dashboard properties", "error",
                                     "Error in send of article properties to dashboard for article  " + article_id +
-                                    " message:" + e.message)
+                                    " message:" + str(exception))
             return False
 
         return True
