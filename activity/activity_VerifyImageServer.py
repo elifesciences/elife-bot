@@ -1,10 +1,10 @@
-import activity
 import json
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 import provider.article_structure as article_structure
 import provider.iiif as iiif
 import requests
+from .activity import Activity
 
 """
 activity_VerifyImageServer.py activity
@@ -15,10 +15,11 @@ class ValidationException(RuntimeError):
     pass
 
 
-class activity_VerifyImageServer(activity.activity):
+class activity_VerifyImageServer(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_VerifyImageServer, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "VerifyImageServer"
         self.pretty_name = "Verify Image Server"
@@ -43,7 +44,7 @@ class activity_VerifyImageServer(activity.activity):
 
         except Exception as e:
             self.logger.exception(str(e))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         try:
             storage = storage_context(self.settings)
@@ -64,18 +65,18 @@ class activity_VerifyImageServer(activity.activity):
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                         "Some images are not available through the IIIF endpoint: " + str(bad_images))
 
-                return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                return self.ACTIVITY_PERMANENT_FAILURE
 
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
                                     "Finished Verification. All endpoints work. Article: " + article_id)
-            return activity.activity.ACTIVITY_SUCCESS
+            return self.ACTIVITY_SUCCESS
 
         except Exception as e:
             self.logger.exception(str(e))
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                     "An error occurred when checking IIIF endpoint. Article " +
                                     article_id + '; message: ' + str(e))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
     def retrieve_endpoints_check(self, original_figures, iiif_path_for_article):
         return list(map(lambda fig: iiif.try_endpoint(iiif.endpoint(self.settings, iiif_path_for_article, fig), self.logger),
