@@ -86,7 +86,7 @@ class EJP(object):
                 fp.write(content)
                 # success, set the document value to return
                 document = document_path
-        except TypeError, IOError:
+        except (TypeError, IOError):
             document = None
         return document
 
