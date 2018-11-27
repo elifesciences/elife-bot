@@ -1,18 +1,18 @@
-import activity
 import boto
 import json
 from boto.sqs.message import Message
 from provider.execution_context import get_session
-
+from activity.objects import Activity
 
 """
 VersionReasonDecider.py activity
 """
 
-class activity_VersionReasonDecider(activity.activity):
+class activity_VersionReasonDecider(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_VersionReasonDecider, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "VersionReasonDecider"
         self.version = "1"
@@ -63,7 +63,7 @@ class activity_VersionReasonDecider(activity.activity):
         self.emit_monitor_event(self.settings, article_id, version, run, "Decide version reason", "end",
                                 "Decided version reason for " + article_id)
 
-        return activity.activity.ACTIVITY_SUCCESS
+        return self.ACTIVITY_SUCCESS
 
     def get_queue(self, queue_name):
 

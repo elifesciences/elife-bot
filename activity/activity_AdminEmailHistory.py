@@ -2,7 +2,7 @@ import json
 import calendar
 import time
 
-import activity
+from activity.objects import Activity
 
 import provider.swfmeta as swfmetalib
 import provider.simpleDB as dblib
@@ -11,10 +11,11 @@ import provider.simpleDB as dblib
 AdminEmailHistory activity
 """
 
-class activity_AdminEmailHistory(activity.activity):
+class activity_AdminEmailHistory(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_AdminEmailHistory, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "AdminEmailHistory"
         self.version = "1"

@@ -1,4 +1,3 @@
-import activity
 import log
 import json
 import boto
@@ -9,15 +8,17 @@ import os
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 import settings as settings_lib
+from activity.objects import Activity
 
 """
 activity_ArchiveArticle.py activity
 """
 
 
-class activity_ArchiveArticle(activity.activity):
+class activity_ArchiveArticle(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_ArchiveArticle, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "ArchiveArticle"
         self.pretty_name = "Archive Article"
@@ -93,9 +94,9 @@ class activity_ArchiveArticle(activity.activity):
             self.emit_monitor_event(self.settings, data['article_id'], version, data["run"], self.pretty_name,
                                     "error", "Error expanding article " + data['article_id'] +
                                     " message:" + e.message)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         self.emit_monitor_event(self.settings, data['article_id'], version, data["run"], self.pretty_name,
                                 "end", "Finished archiving article " + data['article_id'] +
                                 " for version " + version + " run " + data["run"])
-        return activity.activity.ACTIVITY_SUCCESS
+        return self.ACTIVITY_SUCCESS
