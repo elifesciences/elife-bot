@@ -16,7 +16,7 @@ import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
 from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
-from .activity import Activity
+from activity.objects import Activity
 
 """
 PubmedArticleDeposit activity

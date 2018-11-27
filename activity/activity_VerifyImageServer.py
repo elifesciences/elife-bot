@@ -4,7 +4,7 @@ from provider.storage_provider import storage_context
 import provider.article_structure as article_structure
 import provider.iiif as iiif
 import requests
-from .activity import Activity
+from activity.objects import Activity
 
 """
 activity_VerifyImageServer.py activity

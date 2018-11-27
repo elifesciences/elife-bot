@@ -3,7 +3,6 @@ from ssl import SSLError
 from mock import patch, MagicMock
 from activity.activity_UpdateRepository import activity_UpdateRepository
 import tests.activity.settings_mock as settings_mock
-from activity.activity import activity
 from tests.activity.classes_mock import FakeStorageContext, FakeLogger, FakeLaxProvider
 
 

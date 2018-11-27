@@ -10,7 +10,7 @@ import boto.sqs
 from boto.sqs.message import RawMessage
 import provider.lax_provider as lax_provider
 import requests
-from .activity import Activity
+from activity.objects import Activity
 
 """
 activity_IngestToLax.py activity

@@ -21,7 +21,7 @@ from boto.s3.connection import S3Connection
 import provider.s3lib as s3lib
 import provider.simpleDB as dblib
 import provider.lax_provider as lax_provider
-from .activity import Activity
+from activity.objects import Activity
 
 """
 PublishFinalPOA activity

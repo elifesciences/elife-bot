@@ -8,7 +8,7 @@ from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 from provider.article_structure import get_article_xml_key
 from provider import utils
-from .activity import Activity
+from activity.objects import Activity
 
 """
 SendDashboardProperties.py activity

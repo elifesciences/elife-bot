@@ -4,7 +4,7 @@ from boto.s3.connection import S3Connection
 
 from provider.execution_context import get_session
 from provider.article_structure import get_article_xml_key
-from .activity import Activity
+from activity.objects import Activity
 
 """
 ScheduleCrossref.py activity

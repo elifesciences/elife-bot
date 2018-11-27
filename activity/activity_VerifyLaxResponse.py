@@ -1,7 +1,7 @@
 import json
 from provider.execution_context import get_session
 from uuid import UUID
-from .activity import Activity
+from activity.objects import Activity
 
 """
 activity_VerifyLaxResponse.py activity

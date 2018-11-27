@@ -4,7 +4,7 @@ import boto.sqs
 from boto.sqs.message import RawMessage
 import provider.lax_provider as lax_provider
 from provider.utils import base64_decode_string
-from .activity import Activity
+from activity.objects import Activity
 
 """
 activity_PublishToLax.py activity

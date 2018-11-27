@@ -12,7 +12,7 @@ import requests
 from provider.storage_provider import storage_context
 from provider.article_structure import ArticleInfo
 import provider.lax_provider as lax_provider
-from .activity import Activity
+from activity.objects import Activity
 
 
 class activity_VersionDateLookup(Activity):

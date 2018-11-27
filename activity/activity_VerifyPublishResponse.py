@@ -1,5 +1,5 @@
 import json
-from .activity import Activity
+from activity.objects import Activity
 
 """
 activity_VerifyPublishResponse.py activity

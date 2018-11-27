@@ -6,7 +6,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 import provider.templates as templatelib
 import provider.article as articlelib
-from .activity import Activity
+from activity.objects import Activity
 
 """
 LensArticle activity

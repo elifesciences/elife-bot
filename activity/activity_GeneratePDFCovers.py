@@ -1,5 +1,5 @@
 import provider.article as articlelib
-from .activity import Activity
+from activity.objects import Activity
 
 """
 activity_GeneratePDFCovers.py activity

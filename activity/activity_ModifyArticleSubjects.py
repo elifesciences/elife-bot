@@ -7,7 +7,7 @@ from provider.storage_provider import storage_context
 from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 from elifetools import xmlio
-from .activity import Activity
+from activity.objects import Activity
 
 """
 ModifyArticleSubjects.py activity

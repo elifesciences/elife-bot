@@ -3,7 +3,7 @@ from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from mimetypes import guess_type
 from provider import article_structure
-from .activity import Activity
+from activity.objects import Activity
 
 """
 DepositAssets.py activity

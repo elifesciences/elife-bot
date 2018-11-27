@@ -1,6 +1,6 @@
 from provider.execution_context import get_session
 from provider import fastly_provider
-from .activity import Activity
+from activity.objects import Activity
 
 """
 activity_InvalidateCdn.py activity

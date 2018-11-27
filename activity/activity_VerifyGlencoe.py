@@ -4,7 +4,7 @@ import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
 import time
 import provider.glencoe_check as glencoe_check
-from .activity import Activity
+from activity.objects import Activity
 
 """
 activity_VerifyGlencoe.py activity

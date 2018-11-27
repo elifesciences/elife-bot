@@ -14,7 +14,7 @@ import provider.sftp as sftplib
 import provider.article_processing as article_processing
 
 from elifetools import parseJATS as parser
-from .activity import Activity
+from activity.objects import Activity
 
 """
 FTPArticle activity

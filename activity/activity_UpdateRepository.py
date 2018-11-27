@@ -5,7 +5,7 @@ from github import Github
 from github import GithubException
 import provider.lax_provider
 from provider.storage_provider import storage_context
-from .activity import Activity
+from activity.objects import Activity
 
 """
 activity_UpdateRepository.py activity

@@ -1,7 +1,7 @@
 import json
 from provider.execution_context import get_session
 from provider.utils import base64_encode_string
-from .activity import Activity
+from activity.objects import Activity
 
 class activity_ReadyToPublish(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):

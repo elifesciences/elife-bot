@@ -14,7 +14,7 @@ import provider.blacklist as blacklist
 import provider.lax_provider as lax_provider
 
 import dateutil.parser
-from .activity import Activity
+from activity.objects import Activity
 
 """
 PubRouterDeposit activity

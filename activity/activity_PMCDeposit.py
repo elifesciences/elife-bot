@@ -19,7 +19,7 @@ import provider.simpleDB as dblib
 from provider.article_structure import ArticleInfo, file_parts
 from elifetools import parseJATS as parser
 from elifetools import xmlio
-from .activity import Activity
+from activity.objects import Activity
 
 """
 PMCDeposit activity

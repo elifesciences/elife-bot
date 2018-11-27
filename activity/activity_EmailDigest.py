@@ -7,7 +7,7 @@ import digestparser.utils as digest_utils
 from S3utility.s3_notification_info import parse_activity_data
 import provider.digest_provider as digest_provider
 import provider.email_provider as email_provider
-from .activity import Activity
+from activity.objects import Activity
 
 
 class activity_EmailDigest(Activity):

@@ -14,7 +14,7 @@ import provider.article as articlelib
 import provider.s3lib as s3lib
 import provider.blacklist as blacklist
 import provider.lax_provider as lax_provider
-from .activity import Activity
+from activity.objects import Activity
 
 """
 PublicationEmail activity

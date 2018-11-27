@@ -2,7 +2,7 @@ from boto.s3.connection import S3Connection
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import article_structure
-from .activity import Activity
+from activity.objects import Activity
 
 """
 DepositIngestAssets.py activity

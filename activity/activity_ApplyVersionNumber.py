@@ -10,7 +10,7 @@ from provider.article_structure import ArticleInfo
 import provider.article_structure as article_structure
 import provider.s3lib as s3lib
 from elifetools import xmlio
-from .activity import Activity
+from activity.objects import Activity
 
 """
 ApplyVersionNumber.py activity

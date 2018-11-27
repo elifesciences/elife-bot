@@ -1,5 +1,5 @@
 from provider.execution_context import get_session
-from .activity import Activity
+from activity.objects import Activity
 
 """
 AcceptVersionReason.py activity
