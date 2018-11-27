@@ -115,6 +115,10 @@ class exp():
     digest_endpoint = 'https://digests/{digest_id}'
     digest_auth_key = 'digest_auth_key'
 
+    # digest typesetter endpoint
+    typesetter_digest_endpoint = 'https://typesetter/updateDigest'
+    typesetter_digest_api_key = 'typesetter_api_key'
+
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
 
@@ -366,6 +370,10 @@ class dev():
     digest_endpoint = 'https://digests/{digest_id}'
     digest_auth_key = 'digest_auth_key'
 
+    # digest typesetter endpoint
+    typesetter_digest_endpoint = 'https://typesetter/updateDigest'
+    typesetter_digest_api_key = 'typesetter_api_key'
+
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
 
@@ -610,6 +618,10 @@ class live():
     # digest endpoint
     digest_endpoint = 'https://digests/{digest_id}'
     digest_auth_key = 'digest_auth_key'
+
+    # digest typesetter endpoint
+    typesetter_digest_endpoint = 'https://typesetter/updateDigest'
+    typesetter_digest_api_key = 'typesetter_api_key'
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
