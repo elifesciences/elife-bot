@@ -206,7 +206,7 @@ class TestPost(unittest.TestCase):
             ("type", "digest"),
             ("content", '<p>"98%"β</p>')
             ])
-        expected_url = 'http://localhost/?type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
+        expected_url = url + '?type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
         expected_body = None
         # populate the fake request
         resp = activity_module.post_as_params(url, payload)
@@ -222,7 +222,7 @@ class TestPost(unittest.TestCase):
             ("type", "digest"),
             ("content", '<p>"98%"β</p>')
             ])
-        expected_url = 'http://localhost/'
+        expected_url = url
         expected_body = 'type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
         # populate the fake request
         resp = activity_module.post_as_data(url, payload)
@@ -238,7 +238,7 @@ class TestPost(unittest.TestCase):
             ("type", "digest"),
             ("content", '<p>"98%"β</p>')
             ])
-        expected_url = 'http://localhost/'
+        expected_url = url
         expected_body = '{"type": "digest", "content": "<p>\\"98%\\"\\u03b2</p>"}'
         # populate the fake request
         resp = activity_module.post_as_json(url, payload)
