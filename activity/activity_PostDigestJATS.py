@@ -126,7 +126,7 @@ def post_payload(digest, jats_content, api_key):
 
 def post_jats_to_endpoint(url, payload, logger):
     "issue the POST"
-    resp = requests.post(url, data=payload)
+    resp = post_as_params(url, payload)
     # Check for good HTTP status code
     if resp.status_code != 200:
         logger.error(
@@ -139,3 +139,18 @@ def post_jats_to_endpoint(url, payload, logger):
             " \nresponse: %s") %
         (url, payload, resp.status_code, resp.content))
     return True
+
+
+def post_as_params(url, payload):
+    "post the payload as URL parameters"
+    return requests.post(url, params=payload)
+
+
+def post_as_data(url, payload):
+    "post the payload as form data"
+    return requests.post(url, data=payload)
+
+
+def post_as_json(url, payload):
+    "post the payload as JSON data"
+    return requests.post(url, json=payload)
