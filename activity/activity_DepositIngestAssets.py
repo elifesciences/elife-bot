@@ -1,17 +1,18 @@
-import activity
 from boto.s3.connection import S3Connection
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import article_structure
+from activity.objects import Activity
 
 """
 DepositIngestAssets.py activity
 """
 
 
-class activity_DepositIngestAssets(activity.activity):
+class activity_DepositIngestAssets(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_DepositIngestAssets, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "DepositIngestAssets"
         self.pretty_name = "Deposit Ingest Assets"
@@ -61,15 +62,15 @@ class activity_DepositIngestAssets(activity.activity):
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "end",
                                     "Deposited Ingest assets for article " + article_id)
-            return activity.activity.ACTIVITY_SUCCESS
+            return self.ACTIVITY_SUCCESS
 
-        except Exception as e:
+        except Exception as exception:
             self.logger.exception("Exception when Depositing Ingest assets")
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error",
                                     "Error depositing Ingest assets for article " + article_id +
-                                    " message:" + e.message)
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                                    " message:" + str(exception))
+            return self.ACTIVITY_PERMANENT_FAILURE
 
 
 

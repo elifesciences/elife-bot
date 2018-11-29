@@ -4,6 +4,8 @@ from operator import itemgetter
 import csv
 import re
 import os
+import sys
+import io
 
 import boto.s3
 from boto.s3.connection import S3Connection
@@ -86,7 +88,7 @@ class EJP(object):
                 fp.write(content)
                 # success, set the document value to return
                 document = document_path
-        except TypeError, IOError:
+        except (TypeError, IOError):
             document = None
         return document
 
@@ -107,8 +109,13 @@ class EJP(object):
         author_rows = []
 
         # open the file and parse it
-        with open(document, 'rb') as fp:
-            filereader = csv.reader(fp)
+        if sys.version_info[0] < 3:
+            handle = open(document, 'rb')
+        else:
+            # https://docs.python.org/3/library/functions.html#open
+            handle = io.open(document, 'r', newline='', encoding='utf-8', errors='surrogateescape')
+        with handle as csvfile:
+            filereader = csv.reader(csvfile)
             for row in filereader:
                 # For now throw out header rows
                 if filereader.line_num <= 3:
@@ -211,8 +218,14 @@ class EJP(object):
         column_headings = None
         editor_rows = []
 
-        with open(document, 'rb') as fp:
-            filereader = csv.reader(fp)
+        # open the file and parse it
+        if sys.version_info[0] < 3:
+            handle = open(document, 'rb')
+        else:
+            # https://docs.python.org/3/library/functions.html#open
+            handle = io.open(document, 'r', newline='', encoding='utf-8', errors='surrogateescape')
+        with handle as csvfile:
+            filereader = csv.reader(csvfile)
             for row in filereader:
                 # For now throw out header rows
                 if filereader.line_num <= 3:

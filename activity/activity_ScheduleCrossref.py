@@ -1,19 +1,19 @@
 import json
 
-import activity
-
 from boto.s3.connection import S3Connection
 
 from provider.execution_context import get_session
 from provider.article_structure import get_article_xml_key
+from activity.objects import Activity
 
 """
 ScheduleCrossref.py activity
 """
 
-class activity_ScheduleCrossref(activity.activity):
+class activity_ScheduleCrossref(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_ScheduleCrossref, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "ScheduleCrossref"
         self.version = "1"
@@ -72,11 +72,11 @@ class activity_ScheduleCrossref(activity.activity):
                                     "end", "Finished scheduling of crossref deposit " + article_id +
                                     " for version " + version + " run " + str(run))
 
-        except Exception as e:
+        except Exception as exception:
             self.logger.exception("Exception when scheduling crossref")
             self.emit_monitor_event(self.settings, article_id, version, run, "Schedule Crossref",
                                     "error", "Error scheduling crossref " + article_id +
-                                    " message:" + e.message)
+                                    " message:" + str(exception))
             return False
 
         return True

@@ -7,8 +7,6 @@ import shutil
 from ftplib import FTP
 import ftplib
 
-import activity
-
 from boto.s3.connection import S3Connection
 
 import provider.s3lib as s3lib
@@ -16,15 +14,17 @@ import provider.sftp as sftplib
 import provider.article_processing as article_processing
 
 from elifetools import parseJATS as parser
+from activity.objects import Activity
 
 """
 FTPArticle activity
 """
 
-class activity_FTPArticle(activity.activity):
+class activity_FTPArticle(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_FTPArticle, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "FTPArticle"
         self.version = "1"

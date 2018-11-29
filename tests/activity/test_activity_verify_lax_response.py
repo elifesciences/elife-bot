@@ -1,10 +1,9 @@
 import unittest
-from activity.activity_VerifyLaxResponse import activity_VerifyLaxResponse
-import activity
-import settings_mock
-from classes_mock import FakeSession
 from ddt import ddt, data
 from mock import patch
+from activity.activity_VerifyLaxResponse import activity_VerifyLaxResponse
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeSession
 
 
 def fake_emit_monitor_event(settings, item_identifier, version, run, event_type, status, message):

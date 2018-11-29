@@ -2,7 +2,7 @@ import unittest
 from lax_response_adapter import LaxResponseAdapter
 from mock import Mock
 import json
-import base64
+from provider.utils import base64_encode_string
 
 fake_token = json.dumps({u'status': u'vor',
                          u'expanded_folder': u'837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148',
@@ -13,7 +13,7 @@ fake_token = json.dumps({u'status': u'vor',
 fake_lax_message = json.dumps({"status": "published",
                                "requested-action": "publish",
                                "datetime": "2013-03-26T00:00:00+00:00",
-                               "token": base64.encodestring(fake_token),
+                               "token": base64_encode_string(fake_token),
                                "id": "837411455"})
 
 workflow_message_expected = {'workflow_data':
@@ -39,7 +39,7 @@ fake_token_269 = json.dumps({u'status': u'vor',
 fake_lax_message_269 = json.dumps({"status": "published",
                                "requested-action": "publish",
                                "datetime": "2013-03-26T00:00:00+00:00",
-                               "token": base64.encodestring(fake_token_269),
+                               "token": base64_encode_string(fake_token_269),
                                "id": "269"})
 
 workflow_message_expected_269 = {'workflow_data':

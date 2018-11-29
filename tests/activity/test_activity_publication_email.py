@@ -1,26 +1,20 @@
+import os
 import unittest
-from activity.activity_PublicationEmail import activity_PublicationEmail
-from activity.activity_PublicationEmail import Struct
-import shutil
-
-from mock import mock, patch
-import settings_mock
-from classes_mock import FakeLogger
-from ddt import ddt, data, unpack
 import time
-
+import shutil
+from testfixtures import TempDirectory
+from mock import mock, patch
+from ddt import ddt, data, unpack
 from provider.templates import Templates
 from provider.article import article
 from provider.ejp import EJP
 from provider.simpleDB import SimpleDB
-
-from classes_mock import FakeKey
-
-from testfixtures import TempDirectory
+from activity.activity_PublicationEmail import activity_PublicationEmail
+from activity.activity_PublicationEmail import Struct
 import tests.test_data as test_data
 from tests.activity.helpers import instantiate_article
-
-import os
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger, FakeKey
 
 
 @ddt

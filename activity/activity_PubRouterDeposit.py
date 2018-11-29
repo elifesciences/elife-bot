@@ -4,8 +4,6 @@ import json
 import time
 import arrow
 
-import activity
-
 import boto.s3
 from boto.s3.connection import S3Connection
 
@@ -16,14 +14,17 @@ import provider.blacklist as blacklist
 import provider.lax_provider as lax_provider
 
 import dateutil.parser
+from activity.objects import Activity
+
 """
 PubRouterDeposit activity
 """
 
-class activity_PubRouterDeposit(activity.activity):
+class activity_PubRouterDeposit(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_PubRouterDeposit, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "PubRouterDeposit"
         self.version = "1"
@@ -124,7 +125,7 @@ class activity_PubRouterDeposit(activity.activity):
                     self.logger.info(log_info)
 
         # Clean up outbox
-        print "Moving files from outbox folder to published folder"
+        print("Moving files from outbox folder to published folder")
         self.clean_outbox()
         self.outbox_status = True
 
@@ -224,7 +225,7 @@ class activity_PubRouterDeposit(activity.activity):
             # There is already a running workflow with that ID, cannot start another
             message = ('SWFWorkflowExecutionAlreadyStartedError: ' +
                        'There is already a running workflow with ID %s' % workflow_id)
-            print message
+            print(message)
             if self.logger:
                 self.logger.info(message)
             starter_status = False
@@ -317,7 +318,7 @@ class activity_PubRouterDeposit(activity.activity):
             # There is already a running workflow with that ID, cannot start another
             message = ('SWFWorkflowExecutionAlreadyStartedError: ' +
                        'There is already a running workflow with ID %s' % workflow_id)
-            print message
+            print(message)
             if self.logger:
                 self.logger.info(message)
             starter_status = False

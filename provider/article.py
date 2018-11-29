@@ -206,7 +206,11 @@ class article(object):
         """
         doi_url = self.get_doi_url(doi)
         f = {"text": doi_url + " @eLife"}
-        tweet_url = "http://twitter.com/intent/tweet?" + urllib.urlencode(f)
+        if hasattr(urllib, 'urlencode'):
+            tweet_url = "http://twitter.com/intent/tweet?" + urllib.urlencode(f)
+        else:
+            # python 3
+            tweet_url = "http://twitter.com/intent/tweet?" + urllib.parse.urlencode(f)
         return tweet_url
 
     def get_doi_url(self, doi):

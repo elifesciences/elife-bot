@@ -1,12 +1,10 @@
 import unittest
 from activity.activity_VerifyGlencoe import activity_VerifyGlencoe
-import settings_mock
+import tests.activity.settings_mock as settings_mock
 from mock import patch, MagicMock
-from classes_mock import FakeResponse
-from classes_mock import FakeSession
-from classes_mock import FakeStorageContext
-import test_activity_data as test_data
-from classes_mock import FakeLogger
+from tests.activity.classes_mock import FakeResponse, FakeSession, FakeStorageContext, FakeLogger
+import tests.activity.test_activity_data as test_data
+
 
 class TestVerifyGlencoe(unittest.TestCase):
 

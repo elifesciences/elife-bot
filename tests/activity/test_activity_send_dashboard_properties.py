@@ -1,11 +1,11 @@
 import unittest
 import os
-from activity.activity_SendDashboardProperties import activity_SendDashboardProperties
-import settings_mock
 from mock import patch, ANY
-from tests.activity.classes_mock import FakeSession, FakeS3Connection, FakeKey, FakeLogger
 from testfixtures import TempDirectory, tempdir
-import test_activity_data as test_data
+from activity.activity_SendDashboardProperties import activity_SendDashboardProperties
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeSession, FakeS3Connection, FakeKey, FakeLogger
+import tests.activity.test_activity_data as test_data
 
 
 class TestSendDashboardEvents(unittest.TestCase):
@@ -87,9 +87,12 @@ class TestSendDashboardEvents(unittest.TestCase):
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_s3_mock.return_value = FakeS3Connection()
         with open(os.path.join('tests', 'files_source', 'elife-00353-v1_bad_pub_date.xml')) as open_file:
-            fake_get_article_xml_key.return_value = (
-                FakeKey(self.directory, 'elife-00353-v1.xml', open_file.read()),
-                test_data.bucket_origin_file_name)
+            try:
+                fake_key = FakeKey(self.directory, 'elife-00353-v1.xml', open_file.read())
+            except TypeError:
+                # python 3
+                fake_key = FakeKey(self.directory, 'elife-00353-v1.xml', bytes(open_file.read(), 'utf-8'))
+            fake_get_article_xml_key.return_value = fake_key, test_data.bucket_origin_file_name
 
         result = self.send_dashboard_properties.do_activity(test_data.dashboard_data)
 

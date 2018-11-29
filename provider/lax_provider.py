@@ -1,11 +1,12 @@
 import requests
 import time
 from . import article
-import base64
 import json
 from dateutil.parser import parse
 import log
 import os
+from provider.utils import base64_encode_string
+
 
 identity = "process_%s" % os.getpid()
 logger = log.logger("lax_provider.log", 'INFO', identity, loggerName=__name__)
@@ -230,5 +231,5 @@ def lax_token(run, version, expanded_folder, status, force=False, run_type=None)
         'force': force,
         'run_type': run_type
     }
-    return base64.encodestring(json.dumps(token))
+    return base64_encode_string(json.dumps(token))
 

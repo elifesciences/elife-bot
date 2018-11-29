@@ -1,10 +1,9 @@
 import unittest
 from mock import patch, ANY
 
-import settings_mock
+import tests.activity.settings_mock as settings_mock
 from activity.activity_AcceptVersionReason import activity_AcceptVersionReason
-from classes_mock import FakeSession
-from classes_mock import FakeLogger
+from tests.activity.classes_mock import FakeSession, FakeLogger
 
 
 test_data = {

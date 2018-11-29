@@ -1,13 +1,14 @@
-import activity
+from activity.objects import Activity
 
 """
 PingWorker activity
 """
 
-class activity_PingWorker(activity.activity):
+class activity_PingWorker(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_PingWorker, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "PingWorker"
         self.version = "1"

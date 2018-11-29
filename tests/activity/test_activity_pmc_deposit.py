@@ -4,8 +4,8 @@ from collections import OrderedDict
 import shutil
 import zipfile
 from mock import mock, patch
-import settings_mock
-from classes_mock import FakeLogger
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger
 from ddt import ddt, data, unpack
 import time
 

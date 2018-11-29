@@ -1,15 +1,16 @@
 import json
 
-import activity
+from activity.objects import Activity
 
 """
 Sum activity
 """
 
-class activity_Sum(activity.activity):
+class activity_Sum(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_Sum, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "Sum"
         self.version = "1"

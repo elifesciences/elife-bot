@@ -1,10 +1,10 @@
 import unittest
 from ssl import SSLError
-from activity.activity_UpdateRepository import activity_UpdateRepository
-import settings_mock
 from mock import patch, MagicMock
-from activity.activity import activity
-from classes_mock import FakeStorageContext, FakeLogger, FakeLaxProvider
+from activity.activity_UpdateRepository import activity_UpdateRepository
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeStorageContext, FakeLogger, FakeLaxProvider
+
 
 @patch('activity.activity_UpdateRepository.provider')
 @patch('activity.activity_UpdateRepository.storage_context')

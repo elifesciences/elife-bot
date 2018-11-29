@@ -53,7 +53,7 @@ def rename_files_remove_version_number(files_dir, output_dir, logger=None):
             if logger:
                 logger.info('there is no renamed file for ' + filename)
 
-    for old_name, new_name in file_name_map.iteritems():
+    for old_name, new_name in file_name_map.items():
         if new_name is not None:
             shutil.move(files_dir + os.sep + old_name, output_dir + os.sep + new_name)
 
