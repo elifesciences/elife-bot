@@ -19,6 +19,5 @@ Feature: Workflow is configured at Amazon SWF
   Examples:
     | env					| workflow_name	
     | dev					| Ping
-    | dev					| Sum
     | live				| Ping
 
