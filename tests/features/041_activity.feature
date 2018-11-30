@@ -16,9 +16,7 @@ Feature: Activity class can be instantiated
   Examples:
     | env					| activity_name				
     | dev					| PingWorker					
-    | dev					| Sum									
     | live				| PingWorker
-    | live				| Sum		
 
 	Scenario: Check individual activity do_action results
 		Given I have the activity name <activity_name>
@@ -31,4 +29,3 @@ Feature: Activity class can be instantiated
   Examples:
     | activity_name				| document					                          | result
     | PingWorker					| test_data/activity.PingWorker.data.json			| True
-    | Sum									| test_data/activity.Sum.data.json            | 6
