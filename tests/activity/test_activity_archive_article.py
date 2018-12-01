@@ -44,7 +44,7 @@ class TestArchiveArticle(unittest.TestCase):
         zip_file_name = zip_file_path.split(os.sep)[-1]
         self.assertEqual(zip_file_name, expected_zip_file_name)
         with zipfile.ZipFile(zip_file_path) as open_zip:
-            self.assertEqual(open_zip.namelist(), expected_zip_files)
+            self.assertEqual(sorted(open_zip.namelist()), sorted(expected_zip_files))
 
 
 if __name__ == '__main__':
