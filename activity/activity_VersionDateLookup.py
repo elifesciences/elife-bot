@@ -1,8 +1,6 @@
 import json
 from zipfile import ZipFile
 import uuid
-
-import activity
 import re
 import os
 from os.path import isfile, join
@@ -14,11 +12,13 @@ import requests
 from provider.storage_provider import storage_context
 from provider.article_structure import ArticleInfo
 import provider.lax_provider as lax_provider
+from activity.objects import Activity
 
 
-class activity_VersionDateLookup(activity.activity):
+class activity_VersionDateLookup(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_VersionDateLookup, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "VersionDateLookup"
         self.pretty_name = "Version Date Lookup"
@@ -50,7 +50,7 @@ class activity_VersionDateLookup(activity.activity):
                                         self.pretty_name, "error",
                                         " ".join(("Error Looking up version article", article_structure.article_id,
                                                  "message:", error)))
-                return activity.activity.ACTIVITY_PERMANENT_FAILURE
+                return self.ACTIVITY_PERMANENT_FAILURE
 
             self.emit_monitor_event(self.settings, article_structure.article_id, version, data['run'],
                                     self.pretty_name, "end",
@@ -59,14 +59,14 @@ class activity_VersionDateLookup(activity.activity):
 
             session.store_value('update_date', version_date)
 
-            return activity.activity.ACTIVITY_SUCCESS
+            return self.ACTIVITY_SUCCESS
 
         except Exception as e:
             self.logger.exception("Exception when trying to Lookup next version")
             self.emit_monitor_event(self.settings, article_structure.article_id, version, data['run'], self.pretty_name,
                                     "error", " ".join(("Error looking up version for article",
                                                       article_structure.article_id, "message:", str(e))))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
     def get_version(self, settings, article_structure, article_id, version):
         try:

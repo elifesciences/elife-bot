@@ -11,8 +11,8 @@ import json
 import random
 from optparse import OptionParser
 
-import starter_helper as helper
-from starter_helper import NullRequiredDataException
+import starter.starter_helper as helper
+from starter.starter_helper import NullRequiredDataException
 
 """
 Amazon SWF PublishArticle starter, for API and Lens publishing etc.

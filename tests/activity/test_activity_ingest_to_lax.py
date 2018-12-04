@@ -1,9 +1,9 @@
 import unittest
-from activity.activity_IngestToLax import activity_IngestToLax
-import settings_mock
 from ddt import ddt, data
 from mock import patch
-from classes_mock import FakeLogger
+from activity.activity_IngestToLax import activity_IngestToLax
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger
 
 data_example = {
     "article_id": "00353",

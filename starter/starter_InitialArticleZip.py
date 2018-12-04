@@ -9,8 +9,8 @@ import json
 import random
 from optparse import OptionParser
 from S3utility.s3_notification_info import S3NotificationInfo
-import starter_helper as helper
-from starter_helper import NullRequiredDataException
+import starter.starter_helper as helper
+from starter.starter_helper import NullRequiredDataException
 
 """
 Amazon SWF InitialArticleZip starter

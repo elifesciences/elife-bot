@@ -82,7 +82,8 @@ class TestEmailDigest(unittest.TestCase):
             "expected_generate_status": False,
             "expected_approve_status": False,
             "expected_email_status": None,
-            "expected_output_dir_files": []
+            "expected_output_dir_files": [],
+            "expected_email_count": 0
         },
         {
             "comment": 'bad digest docx file example',
@@ -93,7 +94,8 @@ class TestEmailDigest(unittest.TestCase):
             "expected_generate_status": False,
             "expected_approve_status": False,
             "expected_email_status": None,
-            "expected_output_dir_files": []
+            "expected_output_dir_files": [],
+            "expected_email_count": 0
         },
         {
             "comment": 'digest author name encoding file example',
@@ -109,6 +111,20 @@ class TestEmailDigest(unittest.TestCase):
             "expected_email_count": 2,
             "expected_email_subject": "Subject: =?utf-8?q?Digest=3A_Gonz=C3=A1lez=5F99997?=",
             "expected_email_from": "From: sender@example.org"
+        },
+        {
+            "comment": 'digest silent deposit example',
+            "filename": 'DIGEST+99999+SILENT.zip',
+            "expected_result": True,
+            "expected_activity_status": True,
+            "expected_build_status": True,
+            "expected_generate_status": True,
+            "expected_approve_status": True,
+            "expected_email_status": None,
+            "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
+            "expected_digest_image_file": u'IMAGE 99999.jpeg',
+            "expected_output_dir_files": ['Anonymous_99999.docx'],
+            "expected_email_count": 0
         },
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_email_smtp_connect):
@@ -155,7 +171,9 @@ class TestEmailDigest(unittest.TestCase):
         email_files_filter = os.path.join(self.activity.temp_dir, "*.eml")
         email_files = glob.glob(email_files_filter)
         if "expected_email_count" in test_data:
+            # assert 0 or more emails sent
             self.assertEqual(len(email_files), test_data.get("expected_email_count"))
+        if test_data.get("expected_email_count"):
             # can look at the first email for the subject and sender
             first_email_content = None
             with open(email_files[0]) as open_file:

@@ -6,8 +6,8 @@ from collections import OrderedDict
 from ddt import ddt, data, unpack
 from activity.activity_ModifyArticleSubjects import activity_ModifyArticleSubjects
 from mock import patch
-import tests.activity.test_activity_data as test_data
 from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
+import tests.activity.test_activity_data as test_data
 import tests.activity.settings_mock as settings_mock
 import tests.activity.helpers as helpers
 
@@ -40,7 +40,8 @@ class TestModifyArticleSubjects(unittest.TestCase):
     def clean_directories(self):
         self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder('tests/tmp', filter_out=['.keepme'])
-        #helpers.delete_files_in_folder(test_data.ExpandArticle_files_dest_folder)
+        helpers.delete_files_in_folder(
+            test_data.ExpandArticle_files_dest_folder, filter_out=['.gitkeep'])
 
     def copy_test_file(self, file_name):
         "copy a file from the test files directory to the activity tmp dir"

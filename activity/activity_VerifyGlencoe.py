@@ -1,11 +1,10 @@
-import activity
 import json
 from provider.execution_context import get_session
 import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
 import time
 import provider.glencoe_check as glencoe_check
-
+from activity.objects import Activity
 
 """
 activity_VerifyGlencoe.py activity
@@ -15,9 +14,10 @@ activity_VerifyGlencoe.py activity
 class ValidationException(RuntimeError):
     pass
 
-class activity_VerifyGlencoe(activity.activity):
+class activity_VerifyGlencoe(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_VerifyGlencoe, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "VerifyGlencoe"
         self.pretty_name = "Verify Glencoe"
@@ -76,12 +76,12 @@ class activity_VerifyGlencoe(activity.activity):
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                     "Glencoe video is not available for article " + article_id + '; message: ' + str(err))
             time.sleep(60)
-            return activity.activity.ACTIVITY_TEMPORARY_FAILURE
+            return self.ACTIVITY_TEMPORARY_FAILURE
         except Exception as e:
             self.logger.exception(str(e))
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                     "An error occurred when checking for Glencoe video. Article " +
                                     article_id + '; message: ' + str(e))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
 

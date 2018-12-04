@@ -49,7 +49,7 @@ class LaxResponseAdapter:
 
     def parse_token(self, token):
         try:
-            token_parsed = base64.decodestring(token)
+            token_parsed = utils.base64_decode_string(token)
             return json.loads(token_parsed)
         except:
             return {

@@ -5,9 +5,11 @@ import tests.settings_mock as settings_mock
 from digestparser.objects import Digest, Image
 from mock import patch, MagicMock
 from tests.activity.helpers import create_digest
+import tests.test_data as test_data
 import provider.digest_provider as digest_provider
 from provider.digest_provider import ErrorCallingDigestException
-import tests.test_data as test_data
+from tests import read_fixture
+from tests.activity.classes_mock import FakeLogger
 
 
 class TestDigestProvider(unittest.TestCase):
@@ -92,6 +94,7 @@ class TestDigestProvider(unittest.TestCase):
         request_named_arguments = mock_requests_get.call_args_list[0][1]
         headers = request_named_arguments['headers']
         self.assertIn('Authorization', headers)
+        self.assertEqual(data, expected_data)
 
     @patch('requests.put')
     def test_put_digest_204(self, mock_requests_put):
@@ -163,6 +166,34 @@ class TestDigestProvider(unittest.TestCase):
         self.assertEqual(published, None)
 
 
+class TestDigestJats(unittest.TestCase):
+
+    def setUp(self):
+        self.temp_dir = os.path.join('temp')
+        self.logger = FakeLogger()
+        self.digest_config = digest_provider.digest_config(
+            settings_mock.digest_config_section,
+            settings_mock.digest_config_file)
+
+    def test_digest_jats(self):
+        "convert digest docx file into JATS output, consisting of text paragraphs"
+        input_file = os.path.join('tests', 'files_source', 'DIGEST 99999.docx')
+        folder_name = "digests"
+        expected_output = read_fixture('jats_content_99999.py', folder_name)
+        build_status, digest = digest_provider.build_digest(
+            input_file, self.temp_dir, self.logger, self.digest_config)
+        jats_content = digest_provider.digest_jats(digest, self.logger)
+        self.assertEqual(jats_content, expected_output)
+
+    def test_digest_jats_none(self):
+        "test building jats from a bad file input"
+        input_file = None
+        build_status, digest = digest_provider.build_digest(
+            input_file, self.temp_dir, self.logger, self.digest_config)
+        jats_content = digest_provider.digest_jats(digest, self.logger)
+        self.assertEqual(jats_content, None)
+
+
 class TestValidateDigest(unittest.TestCase):
 
     def test_validate_digest(self):
@@ -219,3 +250,24 @@ class TestValidateDigest(unittest.TestCase):
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
+
+
+class TestSilentDigest(unittest.TestCase):
+
+    def test_silent_digest_not_silent_zip(self):
+        self.assertFalse(digest_provider.silent_digest('DIGEST 99999.zip'))
+
+    def test_silent_digest_not_silent_docx(self):
+        self.assertFalse(digest_provider.silent_digest('DIGEST 99999.docx'))
+
+    def test_silent_digest_is_silent_zip(self):
+        self.assertTrue(digest_provider.silent_digest('DIGEST 99999 SILENT.zip'))
+
+    def test_silent_digest_is_hyphen_silent_zip(self):
+        self.assertTrue(digest_provider.silent_digest('DIGEST 99999-Silent.zip'))
+
+    def test_silent_digest_is_silent_docx(self):
+        self.assertTrue(digest_provider.silent_digest('DIGEST 99999 SILENT.docx'))
+
+    def test_silent_digest_none(self):
+        self.assertFalse(digest_provider.silent_digest(None))

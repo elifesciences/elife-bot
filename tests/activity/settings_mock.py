@@ -28,6 +28,7 @@ bot_bucket = 'bot_bucket'
 lens_bucket = 'dest_bucket'
 poa_packaging_bucket = 'poa_packaging_bucket'
 poa_bucket = 'poa_bucket'
+ses_sender_email = ""
 ses_poa_sender_email = ""
 ses_poa_recipient_email = ""
 ses_admin_email = ""
@@ -56,6 +57,9 @@ digest_error_recipient_email = "error@example.org"
 
 digest_endpoint = 'https://digests/{digest_id}'
 digest_auth_key = 'digest_auth_key'
+
+typesetter_digest_endpoint = 'https://typesetter/updateDigest'
+typesetter_digest_api_key = 'typesetter_api_key'
 
 journal_preview_base_url = 'https://preview'
 

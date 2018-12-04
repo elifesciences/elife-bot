@@ -4,23 +4,23 @@ import random
 import datetime
 import calendar
 import time
-
-import activity
-
 import boto.sdb
 import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.simpleDB as dblib
 
+from activity.objects import Activity
+
 """
 S3Monitor activity
 """
 
-class activity_S3Monitor(activity.activity):
+class activity_S3Monitor(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_S3Monitor, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "S3Monitor"
         self.version = "1.1"

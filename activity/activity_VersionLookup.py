@@ -3,7 +3,7 @@ from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 import provider.lax_provider
-from .activity import Activity
+from activity.objects import Activity
 
 
 lookup_functions = {"article_next_version": provider.lax_provider.article_next_version,

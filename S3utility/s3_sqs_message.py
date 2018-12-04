@@ -1,6 +1,6 @@
 from boto.sqs.message import Message
 import json
-from s3_notification_info import S3NotificationInfo
+from S3utility.s3_notification_info import S3NotificationInfo
 
 
 class S3SQSMessage(Message):

@@ -1,13 +1,11 @@
 import unittest
-from activity.activity_DepositAssets import activity_DepositAssets
-import settings_mock
 from ddt import ddt, data, unpack
 from mock import patch
-
-from classes_mock import FakeStorageContext
-from classes_mock import FakeSession
-import test_activity_data as test_activity_data
-from classes_mock import FakeLogger
+from activity.activity_DepositAssets import activity_DepositAssets
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeStorageContext, FakeSession, FakeLogger
+import tests.activity.test_activity_data as test_activity_data
+ 
 
 activity_data = {
                     "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
