@@ -31,6 +31,9 @@ lax_article_versions = 'https://test/eLife.{article_id}/version/'
 verify_ssl = False
 lax_auth_key = 'an_auth_key'
 
+digest_config_file = 'tests/activity/digest.cfg'
+digest_config_section = 'elife'
+
 digest_endpoint = 'https://digests/{digest_id}'
 digest_auth_key = 'digest_auth_key'
 

@@ -23,7 +23,7 @@ def set_workflow_information(name, workflow_version, child_policy, data, workflo
         workflow_version = workflow_version
         child_policy = child_policy
         execution_start_to_close_timeout = start_to_close_timeout
-        workflow_input = json.dumps(data, default=lambda ob: ob.__dict__)
+        workflow_input = json.dumps(data, default=lambda ob: None)
 
         return workflow_id, \
                workflow_name, \

@@ -11,8 +11,6 @@ import re
 from ftplib import FTP
 import ftplib
 
-import activity
-
 import boto.s3
 from boto.s3.connection import S3Connection
 
@@ -21,16 +19,17 @@ import provider.simpleDB as dblib
 from provider.article_structure import ArticleInfo, file_parts
 from elifetools import parseJATS as parser
 from elifetools import xmlio
-
+from activity.objects import Activity
 
 """
 PMCDeposit activity
 """
 
-class activity_PMCDeposit(activity.activity):
+class activity_PMCDeposit(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_PMCDeposit, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "PMCDeposit"
         self.version = "1"
@@ -97,7 +96,7 @@ class activity_PMCDeposit(activity.activity):
         verified = None
         # Check for an empty folder and respond true
         #  if we do not do this it will continue to attempt this activity
-        if len(self.file_list(self.INPUT_DIR)) <= 0:
+        if self.file_list(self.INPUT_DIR):
             if self.logger:
                 self.logger.info('folder was empty in PMCDeposit: ' + self.INPUT_DIR)
             verified = True
@@ -133,7 +132,7 @@ class activity_PMCDeposit(activity.activity):
         # TODO - may need to take into account the r1 r2 revision numbers when replacing an article
         revision = self.zip_revision_number(fid)
         self.zip_file_name = self.new_zip_filename(self.journal, volume, fid, revision)
-        print self.zip_file_name
+        print(self.zip_file_name)
         self.create_new_zip(self.zip_file_name)
 
         # Set FTP settings
@@ -175,14 +174,14 @@ class activity_PMCDeposit(activity.activity):
 
     def ftp_upload(self, ftp, file):
         ext = os.path.splitext(file)[1]
-        #print file
+        # print(file)
         uploadname = file.split(os.sep)[-1]
         if ext in (".txt", ".htm", ".html"):
             ftp.storlines("STOR " + file, open(file))
         else:
-            #print "uploading " + uploadname
+            # print("uploading " + uploadname)
             ftp.storbinary("STOR " + uploadname, open(file, "rb"), 1024)
-            #print "uploaded " + uploadname
+            # print("uploaded " + uploadname)
 
     def ftp_cwd_mkd(self, ftp, sub_dir):
         """
@@ -288,11 +287,11 @@ class activity_PMCDeposit(activity.activity):
 
     def folder_list(self, dir_name):
         dir_list = self.list_dir(dir_name)
-        return filter(lambda item: os.path.isdir(item), dir_list)
+        return list(filter(lambda item: os.path.isdir(item), dir_list))
 
     def file_list(self, dir_name):
         dir_list = self.list_dir(dir_name)
-        return filter(lambda item: os.path.isfile(item), dir_list)
+        return list(filter(lambda item: os.path.isfile(item), dir_list))
 
     def folder_name_from_name(self, input_dir, file_name):
         folder_name = file_name.split(input_dir)[1]
@@ -376,7 +375,7 @@ class activity_PMCDeposit(activity.activity):
 
         file_name_map = self.stripped_file_name_map(dirfiles)
 
-        for old_name, new_name in file_name_map.iteritems():
+        for old_name, new_name in file_name_map.items():
             if new_name is not None:
                 shutil.move(self.TMP_DIR + os.sep + old_name, self.OUTPUT_DIR + os.sep + new_name)
 
@@ -440,7 +439,7 @@ class activity_PMCDeposit(activity.activity):
 
         if s3_key_name:
             # Found an existing PMC zip file, look for a revision number
-            revision_match = re.match(ur'.*r(.*)\.zip$', s3_key_name)
+            revision_match = re.match(r'.*r(.*)\.zip$', s3_key_name)
             if revision_match is None:
                 # There is a zip but no revision number, use 1
                 revision = 1
@@ -505,7 +504,7 @@ class activity_PMCDeposit(activity.activity):
 
     def version_number(self, document):
         version = None
-        m = re.search(ur'-v([0-9]*?)[\.|-]', document)
+        m = re.search(r'-v([0-9]*?)[\.|-]', document)
         if m is not None:
             version = m.group(1)
         return version

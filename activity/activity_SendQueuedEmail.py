@@ -2,24 +2,21 @@ import boto.swf
 import json
 import calendar
 import time
-
-import activity
-
 import boto.ses
-
 import boto.s3
 from boto.s3.connection import S3Connection
-
 import provider.simpleDB as dblib
+from activity.objects import Activity
 
 """
 SendQueuedEmail activity
 """
 
-class activity_SendQueuedEmail(activity.activity):
+class activity_SendQueuedEmail(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_SendQueuedEmail, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "SendQueuedEmail"
         self.version = "1"

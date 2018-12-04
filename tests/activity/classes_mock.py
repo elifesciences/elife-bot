@@ -46,8 +46,11 @@ class FakeSQSMessage:
         self.dir = directory
 
     def set_body(self, body):
-        self.dir.write("fake_sqs_body", body)
-
+        try:
+            self.dir.write("fake_sqs_body", body)
+        except TypeError:
+            # python 3, write bytes
+            self.dir.write("fake_sqs_body", bytes(body, 'utf-8'))
 
 class FakeSQSConn:
     def __init__(self, directory):
@@ -107,7 +110,11 @@ class FakeStorageContext:
         bucket_name, s3_key = self.get_bucket_and_key(resource)
         src = self.dir + s3_key
         with open(src, 'rb') as fsrc:
-            filelike.write(fsrc.read())
+            try:
+                filelike.write(fsrc.read())
+            except TypeError:
+                # python 3
+                filelike.write(fsrc.read().decode())
 
     def get_resource_as_string(self, origin):
         return '<mock><media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="wmv" mimetype="video" xlink:href="elife-00569-media1.wmv"></media></mock>'
@@ -184,8 +191,9 @@ class FakeKey:
         self.d.write(self.destination, json_output)
 
     def set_contents_from_filename(self, filename, replace=None):
+        file_destination = str(self.destination) + filename.split('/')[-1]
         with open(filename, 'rb') as fp:
-            self.d.write(self.destination, fp.read())
+            self.d.write(file_destination, fp.read())
 
     def check_file_contents(self, directory, file):
         return directory.read(file)

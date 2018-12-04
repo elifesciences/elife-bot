@@ -11,7 +11,7 @@ Amazon SWF activity base class
 """
 
 
-class activity(object):
+class Activity(object):
 
     ACTIVITY_SUCCESS = "ActivitySuccess"
     ACTIVITY_TEMPORARY_FAILURE = "ActivityTemporaryFailure"
@@ -240,6 +240,3 @@ class activity(object):
         message = dashboard_queue.build_property_message(item_identifier, version,
                                                          name, value, property_type)
         dashboard_queue.send_message(message, settings)
-
-class Activity(activity):
-    pass

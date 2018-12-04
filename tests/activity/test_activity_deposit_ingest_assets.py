@@ -1,18 +1,14 @@
 import unittest
+from mock import patch
 from activity.activity_DepositIngestAssets import activity_DepositIngestAssets
-import settings_mock
-from mock import patch, MagicMock
-from classes_mock import FakeLogger
-from classes_mock import FakeStorageContext
-from classes_mock import FakeSession
-import test_activity_data as test_activity_data
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeStorageContext, FakeSession, FakeLogger
+import tests.activity.test_activity_data as test_activity_data
 
 
 class TestDepositIngestAssets(unittest.TestCase):
     def setUp(self):
-        self.depositingestassets = activity_DepositIngestAssets(settings_mock, None, None, None, None)
-        self.depositingestassets.logger = FakeLogger()
-
+        self.activity = activity_DepositIngestAssets(settings_mock, FakeLogger(), None, None, None)
 
     @patch('activity.activity_DepositIngestAssets.get_session')
     @patch('activity.activity_DepositIngestAssets.storage_context')
@@ -23,10 +19,9 @@ class TestDepositIngestAssets(unittest.TestCase):
         fake_session.return_value = FakeSession(test_activity_data.session_example)
         activity_data = test_activity_data.data_example_before_publish
 
-        result = self.depositingestassets.do_activity(activity_data)
+        result = self.activity.do_activity(activity_data)
 
-        self.assertEqual(self.depositingestassets.ACTIVITY_SUCCESS, result)
-
+        self.assertEqual(self.activity.ACTIVITY_SUCCESS, result)
 
     @patch('activity.activity_DepositIngestAssets.get_session')
     @patch('activity.activity_DepositIngestAssets.storage_context')
@@ -37,10 +32,9 @@ class TestDepositIngestAssets(unittest.TestCase):
         fake_session.return_value = FakeSession(test_activity_data.session_example)
         activity_data = test_activity_data.data_example_before_publish
 
-        result = self.depositingestassets.do_activity(activity_data)
+        result = self.activity.do_activity(activity_data)
 
-        self.assertEqual(self.depositingestassets.ACTIVITY_PERMANENT_FAILURE, result)
-
+        self.assertEqual(self.activity.ACTIVITY_PERMANENT_FAILURE, result)
 
 
 if __name__ == '__main__':

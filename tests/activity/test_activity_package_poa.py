@@ -204,7 +204,7 @@ class TestPackagePOA(unittest.TestCase):
         test_outbox_folder = activity_test_data.ExpandArticle_files_dest_folder
         bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list.json")
         with open(bucket_list_file, 'rb') as open_file:
-            fake_ejp_bucket_file_list.return_value = json.loads(open_file.read())
+            fake_ejp_bucket_file_list.return_value = json.loads(open_file.read().decode())
         fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
         if "pub_date" in test_data and test_data["pub_date"]:
             fake_article_publication_date.return_value = test_data["pub_date"]

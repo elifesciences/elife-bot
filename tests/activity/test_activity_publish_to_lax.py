@@ -1,9 +1,9 @@
 import unittest
 import copy
-import base64
 import json
 from ddt import ddt, data
 from mock import patch
+from provider.utils import base64_encode_string, base64_decode_string
 from activity.activity_PublishToLax import activity_PublishToLax as activity_object
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeSQSConn, FakeSQSQueue, FakeSQSMessage
@@ -50,7 +50,7 @@ def activity_data(data, force=None, workflow_data=None):
     if force:
         activity_data["force"] = force
     if workflow_data:
-        activity_data["publication_data"] = base64.encodestring(json.dumps(workflow_data))
+        activity_data["publication_data"] = base64_encode_string(json.dumps(workflow_data))
     return activity_data
 
 
@@ -108,13 +108,13 @@ class TestPublishToLax(unittest.TestCase):
         # make assertions
         self.assertEqual(result, True)
         # read in the message body from the TempDirectory()
-        message_body = json.loads(directory.read("fake_sqs_body"))
+        message_body = json.loads(directory.read("fake_sqs_body").decode())
         self.assertEqual(message_body.get("force"), test_data.get("expected_force"))
         self.assertEqual(message_body.get("action"), "publish")
         self.assertEqual(message_body.get("id"), activity_test_data.get("article_id"))
         self.assertIsNotNone(message_body.get("location"))
         # parse the token
-        token = json.loads(base64.decodestring(message_body.get("token")))
+        token = json.loads(base64_decode_string(message_body.get("token")))
         self.assertEqual(token.get("status"), activity_test_data.get("status"))
         self.assertEqual(token.get("run_type"), activity_test_data.get("run_type"))
         self.assertEqual(token.get("force"), test_data.get("expected_force"))

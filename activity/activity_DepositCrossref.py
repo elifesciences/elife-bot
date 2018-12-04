@@ -8,7 +8,7 @@ import requests
 import glob
 import re
 
-from .activity import Activity
+from activity.objects import Activity
 
 import boto.s3
 from boto.s3.connection import S3Connection

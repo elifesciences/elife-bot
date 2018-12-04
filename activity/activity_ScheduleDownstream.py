@@ -1,18 +1,16 @@
 import json
-
-import activity
-
 from boto.s3.connection import S3Connection
-
 from provider.article_structure import get_article_xml_key
+from activity.objects import Activity
 
 """
 ScheduleDownstream.py activity
 """
 
-class activity_ScheduleDownstream(activity.activity):
+class activity_ScheduleDownstream(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_ScheduleDownstream, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "ScheduleDownstream"
         self.version = "1"

@@ -1,10 +1,10 @@
 import unittest
-import settings_mock
+from mock import patch, MagicMock
 from ddt import ddt, data
+import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeSession
 from activity.activity_VerifyImageServer import activity_VerifyImageServer
 import tests.activity.test_activity_data as test_data
-from mock import patch, MagicMock
 
 
 class FakeStorageContext:

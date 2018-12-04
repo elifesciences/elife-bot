@@ -5,7 +5,7 @@ from provider.storage_provider import storage_context
 from provider.execution_context import get_session
 import provider.digest_provider as digest_provider
 import provider.lax_provider as lax_provider
-from .activity import Activity
+from activity.objects import Activity
 
 
 """

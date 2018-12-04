@@ -1,5 +1,6 @@
 import re
 import urllib
+import base64
 
 S3_DATE_FORMAT = '%Y%m%d%H%M%S'
 PUB_DATE_FORMAT = "%Y-%m-%d"
@@ -61,3 +62,19 @@ def unicode_decode(string):
     except (UnicodeEncodeError, AttributeError):
         pass
     return string
+
+
+def base64_encode_string(string):
+    "base64 endcode string for python 2 or 3"
+    if hasattr(base64, 'encodebytes'):
+        # python 3
+        return base64.encodebytes(bytes(string, 'utf8')).decode()
+    return base64.encodestring(string)
+
+
+def base64_decode_string(string):
+    "base64 decode string for python 2 or 3"
+    if hasattr(base64, 'decodebytes'):
+        # python 3
+        return base64.decodebytes(bytes(string, 'utf8')).decode()
+    return base64.decodestring(string)

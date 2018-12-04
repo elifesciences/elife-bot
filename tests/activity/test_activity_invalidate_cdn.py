@@ -1,9 +1,10 @@
 import unittest
-from activity.activity_InvalidateCdn import activity_InvalidateCdn
-import settings_mock
-from classes_mock import FakeLogger, FakeSession
-import test_activity_data as test_activity_data
 from mock import patch, call
+from activity.activity_InvalidateCdn import activity_InvalidateCdn
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger, FakeSession
+import tests.activity.test_activity_data as test_activity_data
+
 
 activity_data = {
                     "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",

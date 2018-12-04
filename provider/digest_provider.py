@@ -4,8 +4,9 @@ import os
 import traceback
 import requests
 import log
+import re
 from docx.opc.exceptions import PackageNotFoundError
-from digestparser import build, conf
+from digestparser import jats, build, conf
 import provider.utils as utils
 from provider.storage_provider import storage_context
 import provider.lax_provider as lax_provider
@@ -37,6 +38,16 @@ def build_digest(input_file, temp_dir, logger=None, digest_config=None):
 def digest_config(config_section, config_file):
     "parse the config values from the digest config"
     return conf.parse_raw_config(conf.raw_config(config_section, config_file))
+
+
+def digest_jats(digest_content, logger=None):
+    "extract JATS output from a digest object"
+    try:
+        return jats.digest_jats(digest_content)
+    except AttributeError:
+        if logger:
+            logger.exception('exception in digest_provider digest_jats: %s' %
+                             traceback.format_exc())
 
 
 def new_file_name(file_name, msid):
@@ -286,3 +297,8 @@ def validate_digest(digest_content):
     if digest_content and not digest_content.text:
         error_messages.append('Digest text is missing')
     return not bool(error_messages), error_messages
+
+
+def silent_digest(filename):
+    "check if file name supplied to the bucket is a silent deposit"
+    return bool(re.match(".*[- ]silent.(zip|docx)", str(filename).lower()))

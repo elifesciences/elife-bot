@@ -1,4 +1,4 @@
-from .activity import Activity
+from activity.objects import Activity
 import json
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context

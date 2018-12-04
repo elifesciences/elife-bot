@@ -1,15 +1,16 @@
-import activity
 import json
+from activity.objects import Activity
 
 """
 activity_VerifyPublishResponse.py activity
 """
 
 
-class activity_VerifyPublishResponse(activity.activity):
+class activity_VerifyPublishResponse(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_VerifyPublishResponse, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "VerifyPublishResponse"
         self.pretty_name = "Verify Publish Response"
@@ -84,7 +85,7 @@ class activity_VerifyPublishResponse(activity.activity):
                          "end", "Finished verification of Publish response " + data['article_id']]
 
             set_status_event = None
-            success = activity.activity.ACTIVITY_SUCCESS
+            success = self.ACTIVITY_SUCCESS
             return start_event, end_event, set_status_event, success
 
         elif pub_authority == 'elife-website' and checking_result_from == 'journal' and success:
@@ -99,7 +100,7 @@ class activity_VerifyPublishResponse(activity.activity):
                          " Article: " + data['article_id']]
 
             set_status_property = [self.settings, data['article_id'], "publication-status", "published", "text"]
-            success = activity.activity.ACTIVITY_EXIT_WORKFLOW
+            success = self.ACTIVITY_EXIT_WORKFLOW
             return start_event, end_event, set_status_property, success
 
         elif pub_authority == 'elife-website' and checking_result_from == 'journal' and success is False:
@@ -116,7 +117,7 @@ class activity_VerifyPublishResponse(activity.activity):
 
             set_status_property = [self.settings, data['article_id'], "publication-status", "publication issues",
                                 "text"]
-            success = activity.activity.ACTIVITY_PERMANENT_FAILURE
+            success = self.ACTIVITY_PERMANENT_FAILURE
             return start_event, end_event, set_status_property, success
 
         elif pub_authority == 'journal' and checking_result_from == 'journal' and success:
@@ -131,7 +132,7 @@ class activity_VerifyPublishResponse(activity.activity):
                          " Article: " + data['article_id']]
 
             set_status_property = [self.settings, data['article_id'], "publication-status", "published", "text"]
-            success = activity.activity.ACTIVITY_SUCCESS
+            success = self.ACTIVITY_SUCCESS
             return start_event, end_event, set_status_property, success
 
         elif pub_authority == 'journal' and checking_result_from == 'journal' and success is False:
@@ -148,7 +149,7 @@ class activity_VerifyPublishResponse(activity.activity):
 
             set_status_property = [self.settings, data['article_id'], "publication-status", "publication issues",
                                 "text"]
-            success = activity.activity.ACTIVITY_PERMANENT_FAILURE
+            success = self.ACTIVITY_PERMANENT_FAILURE
             return start_event, end_event, set_status_property, success
 
         elif pub_authority == 'journal' and checking_result_from == 'elife-website' and success:
@@ -162,7 +163,7 @@ class activity_VerifyPublishResponse(activity.activity):
                          "workflow " + data['article_id']]
 
             set_status_property = None
-            success = activity.activity.ACTIVITY_EXIT_WORKFLOW
+            success = self.ACTIVITY_EXIT_WORKFLOW
             return start_event, end_event, set_status_property, success
 
         else:

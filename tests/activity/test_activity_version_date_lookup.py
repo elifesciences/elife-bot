@@ -1,9 +1,10 @@
 import unittest
 from mock import patch, MagicMock
 from activity.activity_VersionDateLookup import activity_VersionDateLookup
-import settings_mock
-import test_activity_data as testdata
-from classes_mock import FakeSession
+from tests.activity.classes_mock import FakeSession
+import tests.activity.settings_mock as settings_mock
+import tests.activity.test_activity_data as testdata
+
 
 class TestVersionDateLookup(unittest.TestCase):
 

@@ -19,6 +19,5 @@ Feature: Activity type is configured at Amazon SWF
   Examples:
     | env					| activity_name				
     | dev					| PingWorker					
-    | dev					| Sum									
     | live				| PingWorker					
 

@@ -1,14 +1,15 @@
-import activity
 from provider.execution_context import get_session
+from activity.objects import Activity
 
 """
 AcceptVersionReason.py activity
 """
 
 
-class activity_AcceptVersionReason(activity.activity):
+class activity_AcceptVersionReason(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_AcceptVersionReason, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "AcceptVersionReason"
         self.pretty_name = "Accept version reason"
@@ -54,6 +55,6 @@ class activity_AcceptVersionReason(activity.activity):
 
         except Exception as e:
             self.logger.exception(str(e))
-            return activity.activity.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_PERMANENT_FAILURE
 
-        return activity.activity.ACTIVITY_SUCCESS
+        return self.ACTIVITY_SUCCESS

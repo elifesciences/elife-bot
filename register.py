@@ -28,7 +28,6 @@ def start(ENV="dev"):
     workflow_names.append("InitialArticleZip")
     workflow_names.append("ProcessArticleZip")
     workflow_names.append("Ping")
-    workflow_names.append("Sum")
     workflow_names.append("ApproveArticlePublication")
     workflow_names.append("S3Monitor")
     workflow_names.append("LensArticlePublish")
@@ -85,7 +84,6 @@ def start(ENV="dev"):
     activity_names.append("ApplyVersionNumber")
     activity_names.append("ArchiveArticle")
     activity_names.append("DepositAssets")
-    activity_names.append("Sum")
     activity_names.append("S3Monitor")
     activity_names.append("AdminEmailHistory")
     activity_names.append("SendQueuedEmail")
@@ -108,6 +106,7 @@ def start(ENV="dev"):
     activity_names.append("PublishDigest")
     activity_names.append("ValidateDigestInput")
     activity_names.append("EmailVideoArticlePublished")
+    activity_names.append("PostDigestJATS")
 
     for activity_name in activity_names:
         # Import the activity libraries

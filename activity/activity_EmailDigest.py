@@ -7,7 +7,7 @@ import digestparser.utils as digest_utils
 from S3utility.s3_notification_info import parse_activity_data
 import provider.digest_provider as digest_provider
 import provider.email_provider as email_provider
-from .activity import Activity
+from activity.objects import Activity
 
 
 class activity_EmailDigest(Activity):
@@ -76,9 +76,13 @@ class activity_EmailDigest(Activity):
         # Approve files for emailing
         self.approve_status, error_messages = digest_provider.validate_digest(self.digest)
 
-        if self.approve_status is True and self.generate_status is True:
+        silent = digest_provider.silent_digest(real_filename)
+
+        if not silent and self.approve_status is True and self.generate_status is True:
             # Email file
             self.email_status = self.email_digest(self.digest, output_file)
+        elif silent:
+            self.logger.info('EmailDigest silent deposit of real_filename: %s', real_filename)
 
         # return a value based on the activity_status
         if self.activity_status is True:

@@ -10,18 +10,19 @@ from jatsgenerator import conf as jats_conf
 from packagepoa import transform
 from packagepoa import conf as poa_conf
 from elifearticle.article import ArticleDate
-import activity
 import provider.ejp as ejplib
 import provider.simpleDB as dblib
 import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
 from provider import utils
+from activity.objects import Activity
 
 
-class activity_PackagePOA(activity.activity):
+class activity_PackagePOA(Activity):
     "PackagePOA activity"
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        activity.activity.__init__(self, settings, logger, conn, token, activity_task)
+        super(activity_PackagePOA, self).__init__(
+            settings, logger, conn, token, activity_task)
 
         self.name = "PackagePOA"
         self.version = "1"

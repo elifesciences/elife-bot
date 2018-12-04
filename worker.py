@@ -11,7 +11,7 @@ from provider import process
 from optparse import OptionParser
 
 import activity
-from activity.activity import activity as activitybase
+from activity.objects import Activity
 
 
 """
@@ -77,17 +77,17 @@ def work(ENV, flag):
 
                             # Complete the activity task if it was successful
                             if type(activity_result) == str:
-                                if activity_result == activitybase.ACTIVITY_SUCCESS:
+                                if activity_result == Activity.ACTIVITY_SUCCESS:
                                     message = activity_object.result
                                     respond_completed(conn, logger, token, message)
-                                elif activity_result == activitybase.ACTIVITY_TEMPORARY_FAILURE:
+                                elif activity_result == Activity.ACTIVITY_TEMPORARY_FAILURE:
                                     reason = ('error: activity failed with result '
                                               + str(activity_object.result))
                                     detail = ''
                                     respond_failed(conn, logger, token, detail, reason)
 
                                 else:
-                                    # (activitybase.ACTIVITY_PERMANENT_FAILURE or activitybase.ACTIVITY_EXIT_WORKFLOW)
+                                    # (Activity.ACTIVITY_PERMANENT_FAILURE or Activity.ACTIVITY_EXIT_WORKFLOW)
                                     signal_fail_workflow(conn, logger, settings.domain,
                                                          activity_task['workflowExecution']['workflowId'],
                                                          activity_task['workflowExecution']['runId'])
