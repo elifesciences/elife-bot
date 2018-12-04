@@ -15,6 +15,15 @@ def outbox_files(folder):
     return [file_name for file_name in os.listdir(folder) if not file_name.startswith('.')]
 
 
+def outbox_zip_file(folder_name):
+    "zip file path in the destination folder"
+    file_list = outbox_files(folder_name)
+    if not file_list:
+        return None
+    zip_file_path = os.path.join(folder_name, file_list[0])
+    return zip_file_path
+
+
 class TestArchiveArticle(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
@@ -22,6 +31,17 @@ class TestArchiveArticle(unittest.TestCase):
 
     def tearDown(self):
         helpers.delete_files_in_folder(activity_test_data.ExpandArticle_files_dest_folder)
+
+    def zip_assertions(self, zip_file_path, expected_zip_file_name, expected_zip_files):
+        zip_file_name = None
+        if zip_file_path:
+            zip_file_name = zip_file_path.split(os.sep)[-1]
+        self.assertEqual(zip_file_name, expected_zip_file_name)
+        if zip_file_path:
+            with zipfile.ZipFile(zip_file_path) as open_zip:
+                self.assertEqual(sorted(open_zip.namelist()), sorted(expected_zip_files))
+        else:
+            self.assertEqual(None, expected_zip_files)
 
     @patch.object(activity_module, 'storage_context')
     def test_do_activity(self, fake_storage_context):
@@ -39,12 +59,8 @@ class TestArchiveArticle(unittest.TestCase):
         self.assertEqual(success, self.activity.ACTIVITY_SUCCESS)
         self.assertEqual(len(outbox_files(test_destination_folder)), expected_outbox_count)
         # should be one zip file
-        zip_file_path = os.path.join(
-            test_destination_folder, outbox_files(test_destination_folder)[0])
-        zip_file_name = zip_file_path.split(os.sep)[-1]
-        self.assertEqual(zip_file_name, expected_zip_file_name)
-        with zipfile.ZipFile(zip_file_path) as open_zip:
-            self.assertEqual(sorted(open_zip.namelist()), sorted(expected_zip_files))
+        zip_file_path = outbox_zip_file(test_destination_folder)
+        self.zip_assertions(zip_file_path, expected_zip_file_name, expected_zip_files)
 
 
 if __name__ == '__main__':
