@@ -6,7 +6,7 @@ import provider.templates as templatelib
 import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
 import provider.glencoe_check as glencoe_check
-from .activity import Activity
+from activity.objects import Activity
 
 
 class activity_EmailVideoArticlePublished(Activity):
