@@ -62,6 +62,22 @@ class TestArchiveArticle(unittest.TestCase):
         zip_file_path = outbox_zip_file(test_destination_folder)
         self.zip_assertions(zip_file_path, expected_zip_file_name, expected_zip_files)
 
+    @patch.object(activity_object, 'download_files')
+    def test_do_activity_download_failure(self, fake_download_files):
+        "test failure downloading a file"
+        fake_download_files.return_value = None
+        self.activity.emit_monitor_event = mock.MagicMock()
+        success = self.activity.do_activity(activity_test_data.data_example_before_publish)
+        self.assertEqual(success, self.activity.ACTIVITY_PERMANENT_FAILURE)
+
+    @patch.object(activity_object, 'download_files')
+    def test_do_activity_major_failure(self, fake_download_files):
+        "test failure of something unknown raising an exception"
+        fake_download_files.side_effect = Exception("Something went wrong!")
+        self.activity.emit_monitor_event = mock.MagicMock()
+        success = self.activity.do_activity(activity_test_data.data_example_before_publish)
+        self.assertEqual(success, self.activity.ACTIVITY_PERMANENT_FAILURE)
+
 
 if __name__ == '__main__':
     unittest.main()
