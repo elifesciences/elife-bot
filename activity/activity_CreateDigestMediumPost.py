@@ -1,6 +1,6 @@
 import json
 import provider.digest_provider as digest_provider
-from .activity import Activity
+from activity.objects import Activity
 
 
 class activity_CreateDigestMediumPost(Activity):
