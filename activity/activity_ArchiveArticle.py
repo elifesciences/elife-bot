@@ -1,13 +1,8 @@
-import log
+import os
 import json
-import boto
-import random
 import zipfile
 from datetime import datetime
-import os
-from boto.s3.key import Key
-from boto.s3.connection import S3Connection
-import settings as settings_lib
+from provider.storage_provider import storage_context
 from activity.objects import Activity
 
 """
@@ -38,65 +33,116 @@ class activity_ArchiveArticle(Activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         try:
-            self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'], self.pretty_name,
+            self.emit_monitor_event(self.settings, data['article_id'], data['version'],
+                                    data['run'], self.pretty_name,
                                     "start", "Starting archiving article " + data['article_id'])
 
-            id = data['article_id']
+            article_id = data['article_id']
             version = data['version']
             expanded_folder = data['expanded_folder']
             update_date_string = data['update_date']
             updated_date = datetime.strptime(update_date_string, "%Y-%m-%dT%H:%M:%SZ")
             status = data['status'].lower()
 
-            # download expanded folder
-            conn = S3Connection(self.settings.aws_access_key_id,
-                                self.settings.aws_secret_access_key)
-            source_bucket = conn.get_bucket(self.settings.publishing_buckets_prefix +
-                                            self.settings.expanded_bucket)
-            tmp = self.get_tmp_dir()
-            name = ("elife-" + id + '-' + status + '-v' + version
-                    + '-' + updated_date.strftime('%Y%m%d%H%M%S'))
-            zip_dir = tmp + os.sep + name
-            os.makedirs(zip_dir)
-            folderlist = source_bucket.list(prefix=expanded_folder.replace(os.sep, '/'))
-            for key in folderlist:
-                save_path = zip_dir + os.sep + os.path.basename(key.name)
-                key.get_contents_to_filename(save_path)
+            zip_dir_name = zip_dir(article_id, status, version, updated_date)
+            zip_dir_path = create_zip_dir(self.get_tmp_dir(), zip_dir_name)
+            bucket_name = (
+                self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
 
-            # rename downloaded folder
-            zip_path = tmp + os.sep + name + '.zip'
-            # zip expanded folder
-            zf = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, allowZip64=True)
-            relroot = os.path.abspath(os.path.join(zip_dir, os.pardir))
-            for root, dirs, files in os.walk(zip_dir):
-                # add directory (needed for empty dirs)
-                zf.write(root, os.path.relpath(root, zip_dir))
-                for f in files:
-                    filename = os.path.join(root, f)
-                    if os.path.isfile(filename):
-                        # Archive file name, effectively make the
-                        # zip_dir the root directory by stripping it from the file name f
-                        arcname = root.rstrip(zip_dir) + f
-                        zf.write(filename, arcname)
-            zf.close()
+            downloaded = self.download_files(bucket_name, expanded_folder, zip_dir_path)
+            if not downloaded:
+                error_message = "Failed to download all files in ArchiveArticle"
+                self.logger.error(error_message)
+                self.emit_monitor_event(self.settings, data['article_id'], version,
+                                        data["run"], self.pretty_name,
+                                        "error", "Error archiving article " + data['article_id'] +
+                                        " message:" + error_message)
+                return self.ACTIVITY_PERMANENT_FAILURE
 
-            # upload zip to archive bucket
-            output_bucket = self.settings.publishing_buckets_prefix + self.settings.archive_bucket
-            destination = conn.get_bucket(output_bucket)
-            destination_key = Key(destination)
-            destination_key.key = name + '.zip'
-            destination_key.set_contents_from_filename(zip_path)
+            zip_path = self.zip_files(zip_dir_name, zip_dir_path)
+
+            output_bucket_name = (
+                self.settings.publishing_buckets_prefix + self.settings.archive_bucket)
+            self.upload_zip(output_bucket_name, zip_path)
 
             self.clean_tmp_dir()
 
-        except Exception as e:
-            self.logger.exception("Exception when archiving article. Message:" + e.message)
-            self.emit_monitor_event(self.settings, data['article_id'], version, data["run"], self.pretty_name,
-                                    "error", "Error expanding article " + data['article_id'] +
-                                    " message:" + e.message)
+        except Exception as exception:
+            self.logger.exception("Exception when archiving article. Message:" + str(exception))
+            self.emit_monitor_event(self.settings, data['article_id'], version,
+                                    data["run"], self.pretty_name,
+                                    "error", "Error archiving article " + data['article_id'] +
+                                    " message:" + str(exception))
+
             return self.ACTIVITY_PERMANENT_FAILURE
 
-        self.emit_monitor_event(self.settings, data['article_id'], version, data["run"], self.pretty_name,
+        self.emit_monitor_event(self.settings, data['article_id'], version,
+                                data["run"], self.pretty_name,
                                 "end", "Finished archiving article " + data['article_id'] +
                                 " for version " + version + " run " + data["run"])
+
         return self.ACTIVITY_SUCCESS
+
+    def download_files(self, bucket_name, expanded_folder, zip_dir_path):
+        "download files from the expanded folder"
+        # download expanded folder
+        bucket_name = self.settings.poa_bucket
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + bucket_name + "/" + expanded_folder
+        files_in_bucket = storage.list_resources(orig_resource)
+        try:
+            for key_name in files_in_bucket:
+                file_name = key_name.split('/')[-1]
+                file_path = os.path.join(zip_dir_path, file_name)
+                storage_resource_origin = orig_resource + '/' + file_name
+                with open(file_path, 'wb') as open_file:
+                    storage.get_resource_to_file(storage_resource_origin, open_file)
+        except IOError as exception:
+            self.logger.exception(
+                "Failed to download file %s. details: %s" % key_name, str(exception))
+            return None
+        return True
+
+    def zip_files(self, zip_dir_name, zip_dir_path):
+        "add the files to a zip"
+        # rename downloaded folder
+        zip_path = os.path.join(self.get_tmp_dir(), zip_dir_name) + '.zip'
+        # zip expanded folder
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, allowZip64=True) as open_zip:
+            for root, dirs, files in os.walk(zip_dir_path):
+                for dir_file in files:
+                    filename = os.path.join(root, dir_file)
+                    if os.path.isfile(filename):
+                        # Archive file name, effectively make the
+                        # zip_dir the root directory by stripping it from the file name f
+                        arcname = root.rstrip(zip_dir_path) + dir_file
+                        open_zip.write(filename, arcname)
+        return zip_path
+
+    def upload_zip(self, output_bucket_name, file_name_path):
+        "upload the zip to the archive bucket"
+        # Get the file name from the full file path
+        file_name = file_name_path.split(os.sep)[-1]
+
+        # Create S3 object and save
+        bucket_name = output_bucket_name
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        s3_folder_name = ""
+        resource_dest = storage_provider + bucket_name + "/" + s3_folder_name + file_name
+        storage.set_resource_from_filename(resource_dest, file_name_path)
+        self.logger.info("Copied %s to %s", file_name_path, resource_dest)
+
+
+def zip_dir(article_id, status, version, updated_date):
+    "zip directory name"
+    return ("elife-" + article_id + '-' + status + '-v' + version
+            + '-' + updated_date.strftime('%Y%m%d%H%M%S'))
+
+
+def create_zip_dir(parent_dir, zip_dir_name):
+    "create the directory on disk to copy files into"
+    zip_dir_path = os.path.join(parent_dir, zip_dir_name)
+    os.mkdir(zip_dir_path)
+    return zip_dir_path
