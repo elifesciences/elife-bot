@@ -10,9 +10,8 @@ class TestPingWorker(unittest.TestCase):
         self.activity = activity_PingWorker(settings_mock, fake_logger, None, None, None)
 
     def test_do_activity(self):
-        expected_result = True
         result = self.activity.do_activity()
-        self.assertEqual(result, expected_result)
+        self.assertTrue(result)
 
 
 if __name__ == '__main__':
