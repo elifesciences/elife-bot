@@ -2,7 +2,8 @@ import os
 import shutil
 import dateutil.parser
 from elifetools import xmlio
-from provider import utils
+from provider import utils, lax_provider
+from provider.storage_provider import storage_context
 
 """
 Functions for processing article zip and XML for reuse by different activities
@@ -135,6 +136,21 @@ def latest_archive_zip_revision(doi_id, s3_keys, journal, status):
                 highest = version_and_date
 
     return s3_key_name
+
+
+def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=None):
+    xml_file = lax_provider.get_xml_file_name(
+        settings, bucket_folder, bucket_name, version)
+    storage = storage_context(settings)
+    storage_provider = settings.storage_provider + "://"
+    orig_resource = storage_provider + bucket_name + "/" + bucket_folder
+    # download the file
+    article_xml_filename = xml_file.split("/")[-1]
+    filename_plus_path = os.path.join(to_dir, article_xml_filename)
+    with open(filename_plus_path, "wb") as open_file:
+        storage_resource_origin = orig_resource + "/" + article_xml_filename
+        storage.get_resource_to_file(storage_resource_origin, open_file)
+        return filename_plus_path
 
 
 if __name__ == '__main__':
