@@ -1,4 +1,5 @@
 import json
+from collections import OrderedDict
 from provider.storage_provider import storage_context
 from provider.lax_provider import get_xml_file_name
 from activity.objects import Activity
@@ -22,18 +23,6 @@ class activity_ScheduleDownstream(Activity):
         self.description = ("Queue the article for depositing to PMC, pub router, and " +
                             "other recipients after an article is published.")
         self.logger = logger
-
-        # Outbox folders on S3
-        self.pubmed_outbox_folder = "pubmed/outbox/"
-        self.pmc_outbox_folder = "pmc/outbox/"
-        self.publication_email_outbox_folder = "publication_email/outbox/"
-        self.pub_router_outbox_folder = "pub_router/outbox/"
-        self.cengage_outbox_folder = "cengage/outbox/"
-        self.gooa_outbox_folder = "gooa/outbox/"
-        self.wos_outbox_folder = "wos/outbox/"
-        self.scopus_outbox_folder = "scopus/outbox/"
-        self.cnpiec_outbox_folder = "cnpiec/outbox/"
-        self.cnki_outbox_folder = "cnki/outbox/"
 
     def do_activity(self, data=None):
 
@@ -61,7 +50,7 @@ class activity_ScheduleDownstream(Activity):
         try:
             xml_key_name = get_xml_file_name(
                 self.settings, expanded_folder_name, expanded_bucket_name, version)
-            outbox_list = self.choose_outboxes(status)
+            outbox_list = choose_outboxes(status, outbox_map())
 
             for outbox in outbox_list:
                 self.rename_and_copy_to_outbox(
@@ -80,28 +69,7 @@ class activity_ScheduleDownstream(Activity):
 
         return True
 
-    def choose_outboxes(self, status):
-        outbox_list = []
-
-        if status == "poa":
-            outbox_list.append(self.pubmed_outbox_folder)
-            outbox_list.append(self.publication_email_outbox_folder)
-
-        elif status == "vor":
-            outbox_list.append(self.pubmed_outbox_folder)
-            outbox_list.append(self.pmc_outbox_folder)
-            outbox_list.append(self.publication_email_outbox_folder)
-            outbox_list.append(self.pub_router_outbox_folder)
-            outbox_list.append(self.cengage_outbox_folder)
-            outbox_list.append(self.gooa_outbox_folder)
-            outbox_list.append(self.wos_outbox_folder)
-            outbox_list.append(self.scopus_outbox_folder)
-            outbox_list.append(self.cnpiec_outbox_folder)
-            outbox_list.append(self.cnki_outbox_folder)
-
-        return outbox_list
-
-    def rename_and_copy_to_outbox(self, source_bucket_name, dest_bucket_name, 
+    def rename_and_copy_to_outbox(self, source_bucket_name, dest_bucket_name,
                                   old_xml_key_name, article_id, prefix):
         """
         Invoke this for each outbox the XML is copied to
@@ -129,6 +97,44 @@ class activity_ScheduleDownstream(Activity):
         dest_resource = storage_provider + dest_bucket_name + "/" + new_key_name
         self.logger.info("ScheduleDownstream Copying %s to %s " % (orig_resource, dest_resource))
         storage.copy_resource(orig_resource, dest_resource)
+
+
+def outbox_map():
+    "map of outbox names to values"
+    outboxes = OrderedDict()
+    outboxes["pubmed"] = "pubmed/outbox/"
+    outboxes["pmc"] = "pmc/outbox/"
+    outboxes["publication_email"] = "publication_email/outbox/"
+    outboxes["pub_router"] = "pub_router/outbox/"
+    outboxes["cengage"] = "cengage/outbox/"
+    outboxes["gooa"] = "gooa/outbox/"
+    outboxes["wos"] = "wos/outbox/"
+    outboxes["scopus"] = "scopus/outbox/"
+    outboxes["cnpiec"] = "cnpiec/outbox/"
+    outboxes["cnki"] = "cnki/outbox/"
+    return outboxes
+
+
+def choose_outboxes(status, outbox_map):
+    outbox_list = []
+
+    if status == "poa":
+        outbox_list.append(outbox_map.get("pubmed"))
+        outbox_list.append(outbox_map.get("publication_email"))
+
+    elif status == "vor":
+        outbox_list.append(outbox_map.get("pubmed"))
+        outbox_list.append(outbox_map.get("pmc"))
+        outbox_list.append(outbox_map.get("publication_email"))
+        outbox_list.append(outbox_map.get("pub_router"))
+        outbox_list.append(outbox_map.get("cengage"))
+        outbox_list.append(outbox_map.get("gooa"))
+        outbox_list.append(outbox_map.get("wos"))
+        outbox_list.append(outbox_map.get("scopus"))
+        outbox_list.append(outbox_map.get("cnpiec"))
+        outbox_list.append(outbox_map.get("cnki"))
+
+    return outbox_list
 
 
 def new_outbox_xml_name(prefix, journal, article_id):
