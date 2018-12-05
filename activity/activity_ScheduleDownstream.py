@@ -23,9 +23,6 @@ class activity_ScheduleDownstream(Activity):
                             "other recipients after an article is published.")
         self.logger = logger
 
-        # Bucket for outgoing files
-        self.publish_bucket = settings.poa_packaging_bucket
-
         # Outbox folders on S3
         self.pubmed_outbox_folder = "pubmed/outbox/"
         self.pmc_outbox_folder = "pmc/outbox/"
@@ -49,6 +46,8 @@ class activity_ScheduleDownstream(Activity):
         expanded_bucket_name = (
             self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
 
+        publish_bucket_name = self.settings.poa_packaging_bucket
+
         article_id = data['article_id']
         version = data['version']
         run = data['run']
@@ -66,7 +65,7 @@ class activity_ScheduleDownstream(Activity):
 
             for outbox in outbox_list:
                 self.rename_and_copy_to_outbox(
-                    expanded_bucket_name, xml_key_name, article_id, outbox)
+                    expanded_bucket_name, publish_bucket_name, xml_key_name, article_id, outbox)
 
             self.emit_monitor_event(self.settings, article_id, version, run, "Schedule Downstream",
                                     "end", "Finished scheduling of downstream deposits " +
@@ -102,7 +101,8 @@ class activity_ScheduleDownstream(Activity):
 
         return outbox_list
 
-    def rename_and_copy_to_outbox(self, source_bucket_name, old_xml_key_name, article_id, prefix):
+    def rename_and_copy_to_outbox(self, source_bucket_name, dest_bucket_name, 
+                                  old_xml_key_name, article_id, prefix):
         """
         Invoke this for each outbox the XML is copied to
         Create a new XML file name and then copy from the old_xml_key_name to the new key name
@@ -115,7 +115,7 @@ class activity_ScheduleDownstream(Activity):
             article_id=str(article_id).zfill(5))
 
         self.copy_article_xml_to_outbox(
-            dest_bucket_name=self.publish_bucket,
+            dest_bucket_name=dest_bucket_name,
             new_key_name=new_key_name,
             source_bucket_name=source_bucket_name,
             old_key_name=old_xml_key_name)
