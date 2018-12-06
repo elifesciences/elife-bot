@@ -86,7 +86,6 @@ class activity_ArchiveArticle(Activity):
     def download_files(self, bucket_name, expanded_folder, zip_dir_path):
         "download files from the expanded folder"
         # download expanded folder
-        bucket_name = self.settings.poa_bucket
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
         orig_resource = storage_provider + bucket_name + "/" + expanded_folder
