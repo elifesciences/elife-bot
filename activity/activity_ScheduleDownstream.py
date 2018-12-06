@@ -48,8 +48,9 @@ class activity_ScheduleDownstream(Activity):
                                 "Starting scheduling of downstream deposits for " + article_id)
 
         try:
-            xml_key_name = get_xml_file_name(
+            xml_file_name = get_xml_file_name(
                 self.settings, expanded_folder_name, expanded_bucket_name, version)
+            xml_key_name = expanded_folder_name + "/" + xml_file_name
             outbox_list = choose_outboxes(status, outbox_map())
 
             for outbox in outbox_list:
