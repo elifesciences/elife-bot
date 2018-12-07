@@ -77,11 +77,13 @@ class activity_PublishDigest(Activity):
                 put_response = digest_provider.put_digest_to_endpoint(
                     self.logger, digest_id, self.digest_content, self.settings)
                 self.statuses["put"] = True
-                self.logger.info("Put Digest for %s to the endpoint: " % article_id, put_response)
+                self.logger.info(
+                    "Put Digest for %s to the endpoint, response: %s" %
+                    (article_id, put_response))
             else:
                 self.logger.info(
-                    "Digest is already published, did not put Digest for %s to the endpoint: " %
-                    article_id, put_response)
+                    "Digest is already published, did not put Digest for %s to the endpoint" %
+                    article_id)
 
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
