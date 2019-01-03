@@ -40,6 +40,9 @@ class FakeS3Connection:
     def get_bucket(self, mock_bucket_name):
         return self.buckets_dict[mock_bucket_name]
 
+    def lookup(self, mock_bucket_name):
+        return self.get_bucket(mock_bucket_name)
+
 
 class FakeSQSMessage:
     def __init__(self, directory):
@@ -210,7 +213,7 @@ class FakeBucket:
     def get_key(self, key): #key will be u'00353.1/7d5fa403-cba9-486c-8273-3078a98a0b98/elife-00353-fig1-v1.tif' for example
         return key
 
-    def list(self, prefix='', delimiter=''):
+    def list(self, prefix='', delimiter='', headers=''):
         "stub for mocking"
         pass
 
