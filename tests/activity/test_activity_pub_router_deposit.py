@@ -98,8 +98,11 @@ class TestPubRouterDeposit(unittest.TestCase):
         "CNPIEC",
         "CNKI"
     )
-    def test_get_friendly_email_recipients(self, workflow):
+    def test_workflow_specific_values(self, workflow):
+        "test functions that look at the workflow name"
         self.assertIsNotNone(self.pubrouterdeposit.get_friendly_email_recipients(workflow))
+        self.assertIsNotNone(self.pubrouterdeposit.get_outbox_folder(workflow))
+        self.assertIsNotNone(self.pubrouterdeposit.get_published_folder(workflow))
 
 
 if __name__ == '__main__':
