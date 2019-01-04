@@ -89,6 +89,18 @@ class TestPubRouterDeposit(unittest.TestCase):
         output = self.pubrouterdeposit.latest_archive_zip_revision("16747", s3_keys, "elife", "vor")
         self.assertEqual(output, expected)
 
+    @data(
+        "HEFCE",
+        "Cengage",
+        "GoOA",
+        "WoS",
+        "Scopus",
+        "CNPIEC",
+        "CNKI"
+    )
+    def test_get_friendly_email_recipients(self, workflow):
+        self.assertIsNotNone(self.pubrouterdeposit.get_friendly_email_recipients(workflow))
+
 
 if __name__ == '__main__':
     unittest.main()
