@@ -498,20 +498,6 @@ class activity_PubRouterDeposit(Activity):
 
         return approved_articles
 
-    def get_filename_from_path(self, f, extension):
-        """
-        Get a filename minus the supplied file extension
-        and without any folder or path
-        """
-        filename = f.split(extension)[0]
-        # Remove path if present
-        try:
-            filename = filename.split(os.sep)[-1]
-        except:
-            pass
-
-        return filename
-
     def get_to_folder_name(self):
         """
         From the date_stamp
