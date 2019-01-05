@@ -231,24 +231,3 @@ def i_get_editors_from_the_activity_object(step):
     world.editors = world.activity_object.get_editors(document = world.document)
     assert world.editors is not None, \
         "Got editors %s" % json.dumps(world.editors)
-    
-@step(u'I have the article type (\S+)')
-def i_have_the_article_type(step, article_type):
-    world.article_type = article_type
-    assert world.article_type is not None, \
-        "Got article_type %s" % world.article_type
-    
-@step(u'I choose the email type using the activity object')
-def i_choose_the_email_type_using_the_activity_object(step):
-    world.email_type = world.activity_object.choose_email_type(
-        world.article_type,
-        world.is_poa,
-        world.was_ever_poa,
-        world.feature_article)
-    assert world.email_type is not None, \
-        "Got email_type %s" % world.email_type
-    
-@step(u'I get the email type (\S+)')
-def i_get_the_email_type_email_type(step, email_type):
-    assert world.email_type == email_type, \
-        "Got email_type %s" % world.email_type

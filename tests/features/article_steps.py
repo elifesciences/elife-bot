@@ -156,30 +156,6 @@ def i_get_article_lookup_url_with_the_article_provider(step):
 def i_have_lookup_url_lookup_url(step, lookup_url):
   assert world.lookup_url == lookup_url, \
   "Got world.lookup_url %s" % world.lookup_url
-    
-@step(u'I have is poa (\S+)')
-def i_have_is_poa(step, is_poa):
-  if is_poa == "True":  world.is_poa = True
-  if is_poa == "False": world.is_poa = False
-  assert world.is_poa is not None, \
-    "Got is_poa %s" % world.is_poa
-    
-@step(u'I have was ever poa (\S+)')
-def i_have_was_ever_poa(step, was_ever_poa):
-  if was_ever_poa == "None":
-    world.was_ever_poa = None
-    assert world.was_ever_poa is None, \
-      "Got was_ever_poa %s" % world.was_ever_poa
-  else:
-    if was_ever_poa == "True":  world.was_ever_poa = True
-    if was_ever_poa == "False": world.was_ever_poa = False
-    assert world.was_ever_poa is not None, \
-      "Got was_ever_poa %s" % world.was_ever_poa
-    
-@step(u'I have the feature article (\S+)')
-def i_have_the_feature_article(step, feature_article):
-    if feature_article == "True":  world.feature_article = True
-    if feature_article == "False": world.feature_article = False
 
 @step(u'I have the article authors string (.*)')
 def i_have_the_article_authors_string_authors_string(step, authors_string):
