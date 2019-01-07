@@ -47,10 +47,8 @@ class article(object):
         self.was_ever_poa = None
         self.is_poa = None
 
-        # Store the list of DOI id that was ever PoA
-        self.was_poa_doi_ids = None
+        # Store the list of DOI id that was ever published
         self.doi_ids = None
-        self.article_bucket_published_dates = None
 
         # For checking published articles need a URL prefix for where to check
         self.lookup_url_prefix = "http://elifesciences.org/lookup/doi/10.7554/eLife."
@@ -281,87 +279,6 @@ class article(object):
         """
         self.related_insight_article = article
 
-    def get_article_bucket_published_dates(self, force=False, folder_names=None,
-                                           s3_key_names=None):
-        """
-        Connect to the S3 bucket, and from the files in the pubmed published folder,
-        get a list of .xml files, parse out the article id, the date of the folder
-        and the type of publication (POA or VOR)
-          folder_names and s3_key_names is only supplied for when running automated tests
-        """
-        # Return from cached values if not force
-        if force is False and self.article_bucket_published_dates is not None:
-            return self.article_bucket_published_dates
-
-        article_bucket_published_dates = {}
-        poa_published_folder = "pubmed/published/"
-
-        file_extensions = []
-        file_extensions.append(".xml")
-
-        bucket_name = self.settings.poa_packaging_bucket
-
-        if folder_names is None:
-            # Get the folder names from live s3 bucket if no test data supplied
-            folder_names = self.get_folder_names_from_bucket(
-                bucket_name=bucket_name,
-                prefix=poa_published_folder)
-
-        if s3_key_names is None:
-            # Get the s3 key names from live s3 bucket if no test data supplied
-            s3_key_names = []
-            for folder_name in folder_names:
-
-                key_names = self.get_s3_key_names_from_bucket(
-                    bucket_name=bucket_name,
-                    prefix=folder_name,
-                    file_extensions=file_extensions)
-
-                for key_name in key_names:
-                    s3_key_names.append(key_name)
-
-        # Extract just the doi_id portion
-        for s3_key_name in s3_key_names:
-            # Try to get DOI from a POA key name first
-            doi_id = self.get_doi_id_from_poa_s3_key_name(s3_key_name)
-            if doi_id is not None:
-                pub_date_type = "poa"
-            else:
-                doi_id = self.get_doi_id_from_s3_key_name(s3_key_name)
-                if doi_id is not None:
-                    pub_date_type = "vor"
-
-            if doi_id:
-
-                # Create the dict if it does not exist
-                try:
-                    article_bucket_published_dates[doi_id]
-                except KeyError:
-                    article_bucket_published_dates[doi_id] = {}
-
-                # Parse and save the date from the folder name
-                date_string = self.get_date_string_from_s3_key_name(
-                    s3_key_name, poa_published_folder)
-
-                date_obj = time.strptime(date_string, "%Y%m%d")
-
-                # Compare so we have the earliest date saved
-                current_date_obj = None
-                try:
-                    current_date_obj = article_bucket_published_dates[doi_id][pub_date_type]
-                except KeyError:
-                    current_date_obj = None
-
-                if current_date_obj is None or date_obj < current_date_obj:
-                    # No date yet or it is previous to the current date, use this date
-                    article_bucket_published_dates[doi_id][pub_date_type] = date_obj
-
-        # Cache it
-        self.article_bucket_published_dates = article_bucket_published_dates
-
-        # Return it
-        return article_bucket_published_dates
-
     def get_date_string_from_s3_key_name(self, s3_key_name, prefix):
         """
         Extract the folder name that is formatted like a date string
@@ -380,34 +297,6 @@ class article(object):
             date_string = None
 
         return date_string
-
-    def get_article_bucket_pub_date(self, doi, pub_event_type=None):
-        """
-        Given an article DOI, get its publication date
-        Primarily this is important for POA articles and gets their publication date
-          from S3 bucket data, because POA XML does not include a publication date
-        For VOR articles instead parse the VOR article XML to get the date
-        """
-
-        doi_id = self.get_doi_id(doi)
-
-        if self.article_bucket_published_dates is None:
-            self.get_article_bucket_published_dates()
-
-        try:
-            if pub_event_type is not None:
-                pub_dates = self.article_bucket_published_dates[int(doi_id)]
-                pub_date = pub_dates[pub_event_type.lower()]
-
-                #print time.strftime("%Y-%m-%dT%H:%M:%S.000Z", pub_date)
-                return pub_date
-            else:
-                # No pub date type specified, this is the default return value
-                return None
-
-        except KeyError:
-            # If the hash key does not exist then we just do not know
-            return None
 
     def was_ever_published(self, doi, workflow):
         """
@@ -462,35 +351,6 @@ class article(object):
 
         # Return it
         return doi_ids
-
-
-    def get_was_poa_doi_ids(self, force=False, folder_names=None, s3_key_names=None):
-        """
-        Connect to the S3 bucket, and from the files in the published folder,
-        get a list of .xml files, and then parse out the article id
-          folder_names and s3_key_names is only supplied for when running automated tests
-        """
-        # Return from cached values if not force
-        if force is False and self.was_poa_doi_ids is not None:
-            return self.was_poa_doi_ids
-
-        was_poa_doi_ids = []
-        published_folder = "published/"
-
-        file_extensions = []
-        file_extensions.append(".xml")
-
-        bucket_name = self.settings.poa_packaging_bucket
-
-        was_poa_doi_ids = self.doi_ids_from_published_folder(bucket_name, published_folder,
-                                                             file_extensions, folder_names,
-                                                             s3_key_names)
-
-        # Cache it
-        self.was_poa_doi_ids = was_poa_doi_ids
-
-        # Return it
-        return was_poa_doi_ids
 
     def doi_ids_from_published_folder(self, bucket_name, published_folder, file_extensions,
                                       folder_names=None, s3_key_names=None):
@@ -577,18 +437,6 @@ class article(object):
             file_extensions=file_extensions)
 
         return s3_key_names
-
-    def check_was_ever_poa(self, doi):
-        """
-        For each article XML downloaded from S3, check if it is published
-        """
-
-        doi_id = self.get_doi_id(doi)
-
-        if int(doi_id) in self.get_was_poa_doi_ids():
-            return True
-        else:
-            return False
 
     def get_doi_id_from_poa_s3_key_name(self, s3_key_name):
         """
