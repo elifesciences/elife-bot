@@ -8,12 +8,17 @@ from testfixtures import TempDirectory
 from mock import patch, MagicMock
 from ddt import ddt, data, unpack
 
+
 @ddt
 class TestProviderEJP(unittest.TestCase):
 
     def setUp(self):
         self.directory = TempDirectory()
         self.ejp = EJP(settings_mock, tmp_dir=self.directory.path)
+        self.author_column_headings = [
+            'ms_no', 'author_seq', 'first_nm', 'last_nm', 
+            'author_type_cde','dual_corr_author_ind', 'e_mail']
+        self.editor_column_headings = ['ms_no', 'first_nm', 'last_nm', 'e_mail']
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -37,6 +42,12 @@ class TestProviderEJP(unittest.TestCase):
             # check the exception
             self.assertRaises(exception_raised)
 
+    def test_parse_author_file(self):
+        author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
+        # call the function
+        (column_headings, authors) = self.ejp.parse_author_file(author_csv_file)
+        # assert results
+        self.assertEqual(column_headings, self.author_column_headings)
 
     @tempdir()
     @data(
@@ -48,34 +59,57 @@ class TestProviderEJP(unittest.TestCase):
         (3, True, [
             ['3', '3', 'Author', 'Three', 'Corresponding Author', ' ', 'author03@example.com']
         ]),
+        ("00003", True, [
+            ['3', '3', 'Author', 'Three', 'Corresponding Author', ' ', 'author03@example.com']
+        ]),
         (666, True, None),
+        (None, None, [
+            ['3', '1', 'Author', 'One', 'Contributing Author', ' ', 'author01@example.com'], 
+            ['3', '2', 'Author', 'Two', 'Contributing Author', ' ', 'author02@example.org'], 
+            ['3', '3', 'Author', 'Three', 'Corresponding Author', ' ', 'author03@example.com'], 
+            ['13', '1', 'Author', 'Uno', 'Contributing Author', ' ', 'author13-01@example.com'], 
+            ['13', '2', 'Author', 'Dos', 'Contributing Author', ' ', 'author13-02@example.com'], 
+            ['13', '3', 'Author\xe9', 'Tr\xe9s', 'Contributing Author', '1', 'author13-03@example.com'], 
+            ['13', '4', 'Author', 'Cuatro', 'Corresponding Author', ' ', 'author13-04@example.com']
+        ]),
     )
     @unpack
     def test_get_authors(self, doi_id, corresponding, expected_authors):
         author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
-        expected_column_headings = ['ms_no', 'author_seq', 'first_nm', 'last_nm', 'author_type_cde', 'dual_corr_author_ind', 'e_mail']
         # call the function
         (column_headings, authors) = self.ejp.get_authors(doi_id, corresponding, author_csv_file)
         # assert results
-        self.assertEqual(column_headings, expected_column_headings)
+        self.assertEqual(column_headings, self.author_column_headings)
         self.assertEqual(authors, expected_authors)
 
+    def test_parse_editor_file(self):
+        author_csv_file = os.path.join("tests", "test_data", "ejp_editor_file.csv")
+        # call the function
+        (column_headings, authors) = self.ejp.parse_editor_file(author_csv_file)
+        # assert results
+        self.assertEqual(column_headings, self.editor_column_headings)
 
     @tempdir()
     @data(
         (3, [
             ['3', 'Editor', 'One', 'ed_one@example.com']
         ]),
+        ("00003", [
+            ['3', 'Editor', 'One', 'ed_one@example.com']
+        ]),
         (666, None),
+        (None, [
+            ['3', 'Editor', 'One', 'ed_one@example.com'],
+            ['13', 'Editor', 'Uno', 'ed_uno@example.com']
+        ]),
     )
     @unpack
     def test_get_editors(self, doi_id, expected_editors):
         editor_csv_file = os.path.join("tests", "test_data", "ejp_editor_file.csv")
-        expected_column_headings = ['ms_no', 'first_nm', 'last_nm', 'e_mail']
         # call the function
         (column_headings, authors) = self.ejp.get_editors(doi_id, editor_csv_file)
         # assert results
-        self.assertEqual(column_headings, expected_column_headings)
+        self.assertEqual(column_headings, self.editor_column_headings)
         self.assertEqual(authors, expected_editors)
 
 
