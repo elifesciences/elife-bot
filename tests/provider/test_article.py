@@ -204,5 +204,40 @@ class TestProviderArticle(unittest.TestCase):
         parse_result = self.articleprovider.parse_article_file(filename)
         self.assertFalse(parse_result)
 
+    @data(
+        {
+            "s3_key_name": "pubmed/published/20140923/elife02104.xml",
+            "expected_doi_id": 2104
+        },
+        {
+            "s3_key_name": "pubmed/published/20141224/elife04034.xml",
+            "expected_doi_id": 4034
+        },
+    )
+    @unpack
+    def test_get_doi_id_from_s3_key_name(self, s3_key_name, expected_doi_id):
+        doi_id = self.articleprovider.get_doi_id_from_s3_key_name(s3_key_name)
+        self.assertEqual(doi_id, expected_doi_id)
+
+    @data(
+        {
+            "s3_key_name": "published/20140508/elife_poa_e02419.xml",
+            "expected_doi_id": 2419
+        },
+        {
+            "s3_key_name": "published/20140508/elife_poa_e02444v2.xml",
+            "expected_doi_id": 2444
+        },
+        {
+            "s3_key_name": "pubmed/published/20140917/elife_poa_e03970.xml",
+            "expected_doi_id": 3970
+        },
+    )
+    @unpack
+    def test_get_doi_id_from_poa_s3_key_name(self, s3_key_name, expected_doi_id):
+        doi_id = self.articleprovider.get_doi_id_from_poa_s3_key_name(s3_key_name)
+        self.assertEqual(doi_id, expected_doi_id)
+
+
 if __name__ == '__main__':
     unittest.main()
