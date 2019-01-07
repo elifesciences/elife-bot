@@ -2,13 +2,8 @@ import unittest
 from provider.article import article
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
-from mock import mock, patch
+from mock import patch
 from ddt import ddt, data, unpack
-
-
-class FakeBucket:
-    def get_key(self, key):
-        return key
 
 
 class ObjectView(object):
@@ -16,14 +11,14 @@ class ObjectView(object):
         self.__dict__ = d
 
 
-bucket_files_mock_version = ['elife-06498-fig1-v1.tif',
+BUCKET_FILES_MOCK_VERSION = ['elife-06498-fig1-v1.tif',
                              'elife-06498-resp-fig1-v3-80w.gif',
                              'elife-06498-v1.xml',
                              'elife-06498-v2.pdf',
                              'elife-06498-v2.xml',
                              'elife-06498-v3-download.xml']
 
-bucket_files_mock = ['elife-06498-fig1-v1.tif',
+BUCKET_FILES_MOCK = ['elife-06498-fig1-v1.tif',
                      'elife-06498-resp-fig1-v1-80w.gif',
                      'elife-06498-v1-download.xml',
                      'elife-06498-v1.xml',
@@ -33,34 +28,30 @@ bucket_files_mock = ['elife-06498-fig1-v1.tif',
 @ddt
 class TestProviderArticle(unittest.TestCase):
 
-    @patch('provider.simpleDB')
-    def setUp(self, mock_simpleDB):
-        mock_simpleDB.return_value = None
+    def setUp(self):
         self.articleprovider = article(settings_mock)
 
     @patch('provider.lax_provider.article_versions')
-    def test_download_article_xml_from_s3_error_article_version_500(self, mock_lax_provider_article_versions):
-        mock_lax_provider_article_versions.return_value = 500, test_data.lax_article_versions_response_data
+    def test_download_article_xml_from_s3_error_article_version_500(self, mock_article_versions):
+        mock_article_versions.return_value = 500, test_data.lax_article_versions_response_data
         result = self.articleprovider.download_article_xml_from_s3('08411')
         self.assertEqual(result, False)
 
     @patch('provider.lax_provider.article_versions')
-    def test_download_article_xml_from_s3_error_article_version_404(self, mock_lax_provider_article_versions):
-        mock_lax_provider_article_versions.return_value = 404, test_data.lax_article_versions_response_data
+    def test_download_article_xml_from_s3_error_article_version_404(self, mock_article_versions):
+        mock_article_versions.return_value = 404, test_data.lax_article_versions_response_data
         result = self.articleprovider.download_article_xml_from_s3('08411')
         self.assertEqual(result, False)
 
     @patch.object(article, '_get_bucket_files')
     def test_get_xml_file_name_by_version(self, mock_get_bucket_files):
-        fake_bucket = FakeBucket()
-        mock_get_bucket_files.return_value = bucket_files_mock_version
+        mock_get_bucket_files.return_value = BUCKET_FILES_MOCK_VERSION
         result = self.articleprovider.get_xml_file_name(None, None, None, version="2")
         self.assertEqual(result, "elife-06498-v2.xml")
 
     @patch.object(article, '_get_bucket_files')
     def test_get_xml_file_name_no_version(self, mock_get_bucket_files):
-        fake_bucket = FakeBucket()
-        mock_get_bucket_files.return_value = bucket_files_mock
+        mock_get_bucket_files.return_value = BUCKET_FILES_MOCK
         result = self.articleprovider.get_xml_file_name(None, None, None, version=None)
         self.assertEqual(result, "elife-06498-v1.xml")
 
@@ -68,7 +59,8 @@ class TestProviderArticle(unittest.TestCase):
         tweet_url = self.articleprovider.get_tweet_url("10.7554/eLife.08411")
         self.assertEqual(
             tweet_url,
-            "http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2FeLife.08411+%40eLife")
+            ("http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org" +
+             "%2F10.7554%2FeLife.08411+%40eLife"))
 
     def test_get_doi_url(self):
         doi_url = self.articleprovider.get_doi_url("10.7554/eLife.08411")
