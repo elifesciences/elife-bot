@@ -2,68 +2,6 @@ Feature: Use article provider
   In order to use the article provider
   As a worker
   I want to parse article XML and get useful data in return
-  
-  Scenario: Given a DOI, turn it into some values, without parsing XML
-    Given I have imported a settings module
-    And I have the settings environment <env>
-    And I get the settings
-    And I create an article provider
-    When I have a doi <doi>
-    Then I get a doi id from the article provider <doi_id>
-    And I get a DOI url from the article provider <doi_url>
-    And I get a lens url from the article provider <lens_url>
-    And I get a tweet url from the article provider <tweet_url>
-
-  Examples:
-    | env | doi                  | doi_id  | doi_url                             | lens_url                             | tweet_url      
-    | dev | 10.7554/eLife.00013  | 00013   | https://doi.org/10.7554/eLife.00013 | https://lens.elifesciences.org/00013 | http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2FeLife.00013+%40eLife
-
-  Scenario: Given an article DOI get the article lookup URL from the article provider
-    Given I have imported a settings module
-    And I have the settings environment <env>
-    And I get the settings
-    And I create an article provider
-    And I have a doi_id <doi_id>
-    When I get article lookup url with the article provider
-    Then I have lookup url <lookup_url>
-    
-  Examples:
-    | env | doi_id  | lookup_url                
-    | dev | 3       | http://elifesciences.org/lookup/doi/10.7554/eLife.00003
-
-
-  Scenario: Given an article XML, parse it and return some values
-    Given I have imported a settings module
-    And I have the settings environment <env>
-    And I get the settings
-    And I have a tmp_base_dir <tmp_base_dir>
-    And I have test name <test_name>
-    And I get the current datetime
-    And I get the tmp_dir from the world
-    And I create an article provider
-    And I have the document name <document_name>
-    When I parse the document with the article provider
-    Then I have the article doi <doi>
-    And I have the article doi_id <doi_id>
-    And I have the article doi_url <doi_url>
-    And I have the article lens_url <lens_url>
-    And I have the article tweet_url <tweet_url>
-    And I have the article pub_date_timestamp <pub_date_timestamp>
-    And I have the article article_type <article_type>
-    And I count the total related articles as <related_article_count>
-    And I have the article related article index 0 xlink_href <xlink_href>
-    And I have the article is poa <is_poa>
-    And I have the article related insight doi <insight_doi>
-    And I have the article is in display channel "Research article" <display_channel_one>
-    And I have the article is in display channel "Feature article" <display_channel_two>
-    And I have the article authors string <authors_string>
-
-  Examples:
-    | env | tmp_base_dir  | test_name        | document_name                  | doi                  | doi_id  | doi_url                               | lens_url                            | tweet_url                                                                            | pub_date_timestamp | article_type     | related_article_count | xlink_href          | is_poa  | insight_doi          | display_channel_one | display_channel_two | authors_string
-    | dev | tmp           | article_provider | test_data/elife00013.xml	      | 10.7554/eLife.00013  | 00013   | https://doi.org/10.7554/eLife.00013 | https://lens.elifesciences.org/00013 | http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2FeLife.00013+%40eLife | 1350259200           | research-article | 1                     | 10.7554/eLife.00242 | False   | 10.7554/eLife.00242  | True                | False               | Rosanna A Alegado, Laura W Brown, Shugeng Cao, Renee K Dermenjian, Richard Zuzow, Stephen R Fairclough, Jon Clardy, Nicole King
-    | dev | tmp           | article_provider | test_data/elife_poa_e03977.xml | 10.7554/eLife.03977  | 03977   | https://doi.org/10.7554/eLife.03977 | https://lens.elifesciences.org/03977 | http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2FeLife.03977+%40eLife | None                 | research-article | 0                     | None                | True    | None                 | True                | False               | Xili Liu, Xin Wang, Xiaojing Yang, Sen Liu, Lingli Jiang, Yimiao Qu, Lufeng Hu, Qi Ouyang, Chao Tang
-    | dev | tmp           | article_provider | test_data/elife04796.xml       | 10.7554/eLife.04796  | 04796   | https://doi.org/10.7554/eLife.04796 | https://lens.elifesciences.org/04796 | http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2FeLife.04796+%40eLife | 1437004800           | research-article | 0                     | None                | False   | None                 | False               | False               | Steven Fiering, Lay-Hong Ang, Judith Lacoste, Tim D Smith, Erin Griner, Reproducibility Project: Cancer Biology
-    | dev | tmp           | article_provider | test_data/elife09169.xml       | 10.7554/eLife.09169  | 09169   | https://doi.org/10.7554/eLife.09169 | https://lens.elifesciences.org/09169 | http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2FeLife.09169+%40eLife | 1433721600           | correction       | 1                     | 10.7554/eLife.06959 | False   | None                 | False               | False               | Irawati Kandela, James Chou, Kartoa Chow, Reproducibility Project: Cancer Biology
 
   Scenario: Given S3 bucket data, use the article provider to get a list of DOI id that were ever POA articles
     Given I have imported a settings module
