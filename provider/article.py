@@ -279,25 +279,6 @@ class article(object):
         """
         self.related_insight_article = article
 
-    def get_date_string_from_s3_key_name(self, s3_key_name, prefix):
-        """
-        Extract the folder name that is formatted like a date string
-        from published folders in the s3 bucket for when workflows were run
-        """
-        date_string = None
-        delimiter = '/'
-        try:
-            # Split on prefix
-            s3_key = s3_key_name.split(prefix)[-1]
-            # Split on delimiter
-            parts = s3_key.split(delimiter)
-            # First part is the date string
-            date_string = parts[0]
-        except:
-            date_string = None
-
-        return date_string
-
     def was_ever_published(self, doi, workflow):
         """
         For an article DOI and workflow name, check if it ever went through that workflow

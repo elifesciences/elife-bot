@@ -128,10 +128,3 @@ def i_get_doi_id_from_s3_key_name_using_the_article_provider(step):
 def i_get_doi_id_doi_id(step, doi_id):
   assert world.doi_id == int(doi_id), \
     "Got doi_id %s" % world.doi_id
-  
-@step(u'I get date string from s3 key name using the article provider')
-def i_get_date_string_from_s3_key_name_using_the_article_provider(step):
-  world.date_string = world.article.get_date_string_from_s3_key_name(world.s3_key_name, world.prefix)
-  assert world.date_string is not None, \
-    "Got date_string %s" % world.date_string
-    
