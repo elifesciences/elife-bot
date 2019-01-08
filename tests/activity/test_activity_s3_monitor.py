@@ -45,6 +45,32 @@ class TestS3Monitor(unittest.TestCase):
         result = self.activity.do_activity(TEST_DATA)
         self.assertTrue(result)
 
+    def test_get_log_item_name(self):
+        item_name = 'elife-articles/00003/elife00003.xml'
+        item_attrs = {'last_modified_timestamp': 1359244240}
+        expected = '1359244240_elife-articles/00003/elife00003.xml'
+        log_item_name = self.activity.get_log_item_name(item_name, item_attrs)
+        self.assertEqual(log_item_name, expected)
+
+    def test_get_log_item_name_no_timestamp(self):
+        item_name = 'elife-articles/00003/elife00003.xml'
+        item_attrs = {}
+        expected = '0_elife-articles/00003/elife00003.xml'
+        log_item_name = self.activity.get_log_item_name(item_name, item_attrs)
+        self.assertEqual(log_item_name, expected)
+
+    def test_get_expanded_date_attributes(self):
+        base_name = 'last_modified'
+        date_format = '%Y-%m-%dT%H:%M:%S.000Z'
+        timestamp = 1359244237
+        date_attrs = self.activity.get_expanded_date_attributes(base_name, date_format, timestamp)
+        self.assertEqual(date_attrs.get('last_modified_timestamp'), timestamp)
+        self.assertEqual(date_attrs.get('last_modified_date'), '2013-01-26T23:50:37.000Z')
+        self.assertEqual(date_attrs.get('last_modified_year'), '2013')
+        self.assertEqual(date_attrs.get('last_modified_month'), '01')
+        self.assertEqual(date_attrs.get('last_modified_day'), '26')
+        self.assertEqual(date_attrs.get('last_modified_time'), '23:50:37')
+
 
 if __name__ == '__main__':
     unittest.main()
