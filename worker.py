@@ -235,7 +235,7 @@ if __name__ == "__main__":
     if options.env:
         ENV = options.env
 
-    import settings as settingsLib
-    settings = settingsLib.get_settings(ENV)
+    settings_lib = __import__('settings')
+    settings = settings_lib.get_settings(ENV)
 
     process.monitor_interrupt(lambda flag: work(settings, flag))
