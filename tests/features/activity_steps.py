@@ -3,8 +3,14 @@ import activity
 import json
 
 
-@step('I have the date format (\S+)')
-def have_the_date_format(step, date_format):
-    world.date_format = date_format
-    assert world.date_format is not None, \
-        "Got date_format %s" % world.date_format
+@step('I have the timestamp (\S+)')
+def have_the_timestamp(step, timestamp):
+    if(timestamp == "None"):
+        world.timestamp = None
+        assert world.timestamp is None, \
+            "Got timestamp %s" % world.timestamp
+    else:
+        # Takes a float, apparently
+        world.timestamp = float(timestamp)
+        assert world.timestamp is not None, \
+            "Got timestamp %f" % world.timestamp
