@@ -1,5 +1,4 @@
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -16,10 +15,7 @@ import newrelic.agent
 Amazon SWF decider
 """
 
-def decide(ENV, flag):
-    # Specify run environment settings
-    settings = settingsLib.get_settings(ENV)
-
+def decide(settings, flag):
     # Decider event history length requested
     maximum_page_size = 100
 
@@ -220,4 +216,8 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
-    process.monitor_interrupt(lambda flag: decide(ENV, flag))
+
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
+    process.monitor_interrupt(lambda flag: decide(settings, flag))

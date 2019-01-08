@@ -1,5 +1,4 @@
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -18,10 +17,7 @@ from activity.objects import Activity
 Amazon SWF worker
 """
 
-def work(ENV, flag):
-    # Specify run environment settings
-    settings = settingsLib.get_settings(ENV)
-
+def work(settings, flag):
     # Log
     identity = "worker_%s" % os.getpid()
     logger = log.logger("worker.log", settings.setLevel, identity)
@@ -238,6 +234,8 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
-        
-    process.monitor_interrupt(lambda flag: work(ENV, flag))
 
+    import settings as settingsLib
+    settings = settingsLib.get_settings(ENV)
+
+    process.monitor_interrupt(lambda flag: work(settings, flag))
