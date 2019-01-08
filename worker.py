@@ -151,7 +151,7 @@ def get_activity_name(activityType):
     """
     return "activity_" + activityType
 
-def import_activity_class(activity_name):
+def import_activity_class(activity_name, reload=True):
     """
     Given an activity subclass name as activity_name,
     attempt to lazy load the class when needed
@@ -160,7 +160,8 @@ def import_activity_class(activity_name):
         module_name = "activity." + activity_name
         importlib.import_module(module_name)
         # Reload the module, in case it was imported before
-        reload_module(module_name)
+        if reload:
+            reload_module(module_name)
         return True
     except ImportError as e:
         return False

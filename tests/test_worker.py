@@ -50,7 +50,7 @@ class TestWorker(unittest.TestCase):
 
     def test_import_activity_class(self):
         activity_name = 'activity_PingWorker'
-        result = worker.import_activity_class(activity_name)
+        result = worker.import_activity_class(activity_name, reload=False)
         self.assertTrue(result)
 
     def test_import_activity_class_failure(self):
@@ -60,7 +60,7 @@ class TestWorker(unittest.TestCase):
 
     def test_get_activity_object(self):
         activity_name = 'activity_PingWorker'
-        worker.import_activity_class(activity_name)
+        worker.import_activity_class(activity_name, reload=False)
         activity_object = worker.get_activity_object(
             activity_name, settings_mock, None, None, None, None)
         self.assertEqual(activity_object.__class__.__name__, activity_name)
