@@ -33,35 +33,6 @@ def have_a_setting(step, identifier):
     assert ident is not None, \
         "Got setting %s" % ident
 
-@step('I have the workflow name (\S+)')
-def have_workflow_name(step, workflow_name):
-    if(workflow_name == "None"):
-        world.workflow_name = None
-        assert world.workflow_name is None, \
-            "Got workflow_name %s" % world.workflow_name
-    else:
-        world.workflow_name = workflow_name
-        assert world.workflow_name is not None, \
-            "Got workflow_name %s" % world.workflow_name
-    
-@step('I have a workflow object')
-def get_workflow_object(step):
-    # Import the workflow libraries
-    class_name = "workflow_" + world.workflow_name
-    module_name = "workflow." + class_name
-    importlib.import_module(module_name)
-    full_path = "workflow." + class_name + "." + class_name
-    # Create the workflow object
-    f = eval(full_path)
-    logger = None
-    try:
-        world.conn = world.conn
-    except AttributeError:
-        world.conn = None
-    world.workflow_object = f(world.settings, logger, world.conn)
-    assert world.workflow_object is not None, \
-        "Got workflow_object %s" % world.workflow_object
-
 @step('I have the activity name (\S+)')
 def have_activity_name(step, activity_name):
     world.activity_name = activity_name
