@@ -4,6 +4,7 @@ from mock import Mock, patch
 import tests.settings_mock as settings_mock
 from queue_worker import QueueWorker
 from S3utility.s3_notification_info import S3NotificationInfo
+from provider.utils import unicode_decode
 import tests.test_data as test_data
 from tests.classes_mock import FakeFlag, FakeS3Event
 from tests.activity.classes_mock import FakeSQSConn, FakeSQSMessage, FakeSQSQueue
@@ -59,7 +60,7 @@ class TestQueueWorker(unittest.TestCase):
         # invoke queue worker to work
         return_value = self.worker.work(flag)
         # assertions, should have a message in the out_queue
-        out_queue_message = json.loads(directory.read("fake_sqs_body"))
+        out_queue_message = json.loads(unicode_decode(directory.read("fake_sqs_body")))
         self.assertEqual(out_queue_message, test_data.queue_worker_starter_message)
         self.assertEqual(return_value, None)
 
