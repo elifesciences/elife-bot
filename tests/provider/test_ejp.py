@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import unittest
 import json
 import os
@@ -52,7 +54,7 @@ class TestProviderEJP(unittest.TestCase):
         (13, False, [
             ['13', '1', 'Author', 'Uno', 'Contributing Author', ' ', 'author13-01@example.com'],
             ['13', '2', 'Author', 'Dos', 'Contributing Author', ' ', 'author13-02@example.com'],
-            ['13', '3', 'Author&#x00E9;', 'Tr&#x00E9;s', 'Contributing Author', '1', 'author13-03@example.com'],
+            ['13', '3', u'Authoré', u'Trés', 'Contributing Author', '1', 'author13-03@example.com'],
             ['13', '4', 'Author', 'Cuatro', 'Corresponding Author', ' ', 'author13-04@example.com']
         ]),
         (666, True, None),

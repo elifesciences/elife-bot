@@ -7,6 +7,7 @@ import os
 import sys
 import io
 
+from ejpcsvparser.utils import entity_to_unicode
 import boto.s3
 from boto.s3.connection import S3Connection
 
@@ -156,17 +157,17 @@ class EJP(object):
         (column_headings, author_rows) = self.parse_author_file(document)
 
         if author_rows:
-            for a in author_rows:
+            for fields in author_rows:
                 add = True
                 # Check doi_id column value
                 if doi_id is not None:
-                    if int(doi_id) != int(a[0]):
+                    if int(doi_id) != int(fields[0]):
                         add = False
                 # Check corresponding column value
                 if corresponding and add is True:
 
-                    author_type_cde = a[4]
-                    dual_corr_author_ind = a[5]
+                    author_type_cde = fields[4]
+                    dual_corr_author_ind = fields[5]
                     is_corr = self.is_corresponding_author(author_type_cde, dual_corr_author_ind)
 
                     if corresponding is True:
@@ -177,10 +178,10 @@ class EJP(object):
                         # If is a corresponding author, drop it
                         if is_corr is True:
                             add = False
-
+                fields = [entity_to_unicode(field) for field in fields]
                 # Finish up, add the author if we should
                 if add is True:
-                    authors.append(a)
+                    authors.append(fields)
 
         if len(authors) <= 0:
             authors = None
@@ -406,22 +407,3 @@ class EJP(object):
             self.tmp_dir = self.tmp_dir_default
 
         return self.tmp_dir
-
-    def decode_cp1252(self, str):
-        """
-        CSV files look to be in CP-1252 encoding (Western Europe)
-        Decoding to ASCII is normally fine, except when it gets an O umlaut, for example
-        In this case, values must be decoded from cp1252 in order to be added as unicode
-        to the final XML output.
-        This function helps do that in selected places, like on author surnames
-        """
-        try:
-            # See if it is not safe to encode to ascii first
-            junk = str.encode('ascii')
-        except (UnicodeEncodeError, UnicodeDecodeError):
-            # Wrap the decode in another exception to make sure this never fails
-            try:
-                str = str.decode('cp1252')
-            except:
-                pass
-        return str
