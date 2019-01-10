@@ -96,7 +96,7 @@ class TestProviderEJP(unittest.TestCase):
                          fake_ejp_bucket_file_list):
         bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list.json")
         # mock things
-        with open(bucket_list_file, 'rb') as fp:
+        with open(bucket_list_file, 'r') as fp:
             fake_ejp_bucket_file_list.return_value = json.loads(fp.read())
         # call the function
         s3_key_name = self.ejp.find_latest_s3_file_name(file_type)
