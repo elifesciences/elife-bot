@@ -35,7 +35,8 @@ class TestProviderEJP(unittest.TestCase):
             self.assertEqual(document, expected_document)
         except:
             # check the exception
-            self.assertRaises(exception_raised)
+            if exception_raised:
+                self.assertRaises(exception_raised)
 
 
     @tempdir()
