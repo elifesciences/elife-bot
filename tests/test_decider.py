@@ -8,7 +8,7 @@ class TestDecider(unittest.TestCase):
 
     def setUp(self):
         self.decision_json = None
-        with open('tests/test_data/decision.json', 'rb') as open_file:
+        with open('tests/test_data/decision.json', 'r') as open_file:
             self.decision_json = json.loads(open_file.read())
 
     def test_get_task_token(self):

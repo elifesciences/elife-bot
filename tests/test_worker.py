@@ -8,7 +8,7 @@ class TestWorker(unittest.TestCase):
 
     def setUp(self):
         self.activity_json = None
-        with open('tests/test_data/activity.json', 'rb') as open_file:
+        with open('tests/test_data/activity.json', 'r') as open_file:
             self.activity_json = json.loads(open_file.read())
 
     def test_get_task_token(self):

@@ -154,7 +154,7 @@ class TestSimpleDB(unittest.TestCase):
     @unpack
     def test_elife_filter(self, filename, expected_count):
         file_data_types = ["xml", "pdf", "img", "suppl", "video", "svg"]
-        with open(filename, 'rb') as open_file:
+        with open(filename, 'r') as open_file:
             item_list = json.loads(open_file.read())
         filtered_item_list = self.provider.elife_filter_latest_article_S3_file_items(
             item_list, file_data_types)
@@ -163,7 +163,7 @@ class TestSimpleDB(unittest.TestCase):
     def test_elife_filter_detail_list_one(self):
         filename = "tests/test_data/provider.simpleDB.elife_articles.latest01.json"
         file_data_types = ["xml", "pdf", "img", "suppl", "video", "svg"]
-        with open(filename, 'rb') as open_file:
+        with open(filename, 'r') as open_file:
             item_list = json.loads(open_file.read())
         filtered_item_list = self.provider.elife_filter_latest_article_S3_file_items(
             item_list, file_data_types)
@@ -175,7 +175,7 @@ class TestSimpleDB(unittest.TestCase):
     def test_elife_filter_detail_list_two(self):
         filename = "tests/test_data/provider.simpleDB.elife_articles.latest02.json"
         file_data_types = ["xml", "pdf", "img", "suppl", "video", "svg"]
-        with open(filename, 'rb') as open_file:
+        with open(filename, 'r') as open_file:
             item_list = json.loads(open_file.read())
         filtered_item_list = self.provider.elife_filter_latest_article_S3_file_items(
             item_list, file_data_types)
