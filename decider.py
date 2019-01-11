@@ -176,21 +176,9 @@ def import_workflow_class(workflow_name):
     try:
         module_name = "workflow." + workflow_name
         importlib.import_module(module_name)
-        # Reload the module, in case it was imported before
-        reload_module(module_name)
         return True
     except ImportError:
         return False
-
-def reload_module(module_name):
-    """
-    Given an module name,
-    attempt to reload the module
-    """
-    try:
-        reload(eval(module_name))
-    except NameError:
-        pass
 
 def get_workflow_object(workflow_name, settings, logger, conn, token, decision, maximum_page_size):
     """

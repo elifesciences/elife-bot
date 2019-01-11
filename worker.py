@@ -159,22 +159,9 @@ def import_activity_class(activity_name, reload=True):
     try:
         module_name = "activity." + activity_name
         importlib.import_module(module_name)
-        # Reload the module, in case it was imported before
-        if reload:
-            reload_module(module_name)
         return True
     except ImportError as e:
         return False
-
-def reload_module(module_name):
-    """
-    Given an module name,
-    attempt to reload the module
-    """
-    try:
-        reload(eval(module_name))
-    except NameError:
-        pass
 
 def get_activity_object(activity_name, settings, logger, conn, token, activity_task):
     """
