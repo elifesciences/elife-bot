@@ -1,5 +1,4 @@
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -18,10 +17,7 @@ from activity.objects import Activity
 Amazon SWF worker
 """
 
-def work(ENV, flag):
-    # Specify run environment settings
-    settings = settingsLib.get_settings(ENV)
-
+def work(settings, flag):
     # Log
     identity = "worker_%s" % os.getpid()
     logger = log.logger("worker.log", settings.setLevel, identity)
@@ -155,7 +151,7 @@ def get_activity_name(activityType):
     """
     return "activity_" + activityType
 
-def import_activity_class(activity_name):
+def import_activity_class(activity_name, reload=True):
     """
     Given an activity subclass name as activity_name,
     attempt to lazy load the class when needed
@@ -163,21 +159,9 @@ def import_activity_class(activity_name):
     try:
         module_name = "activity." + activity_name
         importlib.import_module(module_name)
-        # Reload the module, in case it was imported before
-        reload_module(module_name)
         return True
     except ImportError as e:
         return False
-
-def reload_module(module_name):
-    """
-    Given an module name,
-    attempt to reload the module
-    """
-    try:
-        reload(eval(module_name))
-    except NameError:
-        pass
 
 def get_activity_object(activity_name, settings, logger, conn, token, activity_task):
     """
@@ -238,6 +222,8 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
-        
-    process.monitor_interrupt(lambda flag: work(ENV, flag))
 
+    settings_lib = __import__('settings')
+    settings = settings_lib.get_settings(ENV)
+
+    process.monitor_interrupt(lambda flag: work(settings, flag))

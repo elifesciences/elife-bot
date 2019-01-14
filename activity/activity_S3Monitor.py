@@ -211,7 +211,7 @@ class activity_S3Monitor(Activity):
         log_item_name = None
         try:
             log_item_name = str(item_attrs['last_modified_timestamp']) + '_' + item_name
-        except IndexError:
+        except (KeyError, IndexError):
             log_item_name = '0' + '_' + item_name
 
         return log_item_name
