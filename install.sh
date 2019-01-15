@@ -6,6 +6,12 @@ if [ ! -d venv ]; then
     virtualenv --python=`which python2` venv
 fi
 
+# remove any old compiled python files
+find provider/ -name '*.pyc' -delete
+find activity/ -name '*.pyc' -delete
+find workflow/ -name '*.pyc' -delete
+find starter/ -name '*.pyc' -delete
+
 source venv/bin/activate
 
 if pip list | grep elifetools; then
