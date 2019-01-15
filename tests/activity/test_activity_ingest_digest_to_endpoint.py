@@ -245,6 +245,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         named_fake_storage_context = FakeStorageContext()
         named_fake_storage_context.resource_exists = lambda return_true: True
         fake_storage_context.return_value = named_fake_storage_context
+        session_test_data = session_data({})
+        fake_session.return_value = FakeSession(session_test_data)
         activity_data = test_activity_data.data_example_before_publish
         expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
         result = self.activity.do_activity(activity_data)

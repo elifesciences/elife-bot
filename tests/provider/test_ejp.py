@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import unittest
 import json
 import os
@@ -40,7 +42,8 @@ class TestProviderEJP(unittest.TestCase):
             self.assertEqual(document, expected_document)
         except:
             # check the exception
-            self.assertRaises(exception_raised)
+            if exception_raised:
+                self.assertRaises(exception_raised)
 
     def test_parse_author_file(self):
         author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
@@ -59,6 +62,12 @@ class TestProviderEJP(unittest.TestCase):
         (3, True, [
             ['3', '3', 'Author', 'Three', 'Corresponding Author', ' ', 'author03@example.com']
         ]),
+        (13, False, [
+            ['13', '1', 'Author', 'Uno', 'Contributing Author', ' ', 'author13-01@example.com'],
+            ['13', '2', 'Author', 'Dos', 'Contributing Author', ' ', 'author13-02@example.com'],
+            ['13', '3', u'Authoré', u'Trés', 'Contributing Author', '1', 'author13-03@example.com'],
+            ['13', '4', 'Author', 'Cuatro', 'Corresponding Author', ' ', 'author13-04@example.com']
+        ]),
         ("00003", True, [
             ['3', '3', 'Author', 'Three', 'Corresponding Author', ' ', 'author03@example.com']
         ]),
@@ -69,7 +78,7 @@ class TestProviderEJP(unittest.TestCase):
             ['3', '3', 'Author', 'Three', 'Corresponding Author', ' ', 'author03@example.com'], 
             ['13', '1', 'Author', 'Uno', 'Contributing Author', ' ', 'author13-01@example.com'], 
             ['13', '2', 'Author', 'Dos', 'Contributing Author', ' ', 'author13-02@example.com'], 
-            ['13', '3', 'Author\xe9', 'Tr\xe9s', 'Contributing Author', '1', 'author13-03@example.com'], 
+            ['13', '3', u'Authoré', u'Trés', 'Contributing Author', '1', 'author13-03@example.com'], 
             ['13', '4', 'Author', 'Cuatro', 'Corresponding Author', ' ', 'author13-04@example.com']
         ]),
     )
@@ -130,7 +139,7 @@ class TestProviderEJP(unittest.TestCase):
                          fake_ejp_bucket_file_list):
         bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list.json")
         # mock things
-        with open(bucket_list_file, 'rb') as fp:
+        with open(bucket_list_file, 'r') as fp:
             fake_ejp_bucket_file_list.return_value = json.loads(fp.read())
         # call the function
         s3_key_name = self.ejp.find_latest_s3_file_name(file_type)

@@ -60,7 +60,7 @@ class TestArticleProcessing(unittest.TestCase):
             xml_file = xml_file_path,
             file_name_map = file_name_map)
 
-        with open(xml_file_path, 'rb') as fp:
+        with open(xml_file_path, 'r') as fp:
             xml_content = fp.read()
             self.assertTrue(expected_xml_contains in xml_content)
 

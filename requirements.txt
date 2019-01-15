@@ -1,5 +1,4 @@
 boto==2.48.0
-Fom==0.9.10
 GitPython==2.1.11
 Jinja2==2.7.3
 PyPDF2==1.23

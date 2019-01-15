@@ -338,7 +338,7 @@ class TestArticleStructure(unittest.TestCase):
                     'elife-13273-media1.mp4',
                     'elife-00666-figures-v1.pdf',
                     'elife-18425-figures-v2.pdf']
-        self.assertItemsEqual(article_structure.pre_ingest_assets(files), expected)
+        self.assertEqual(sorted(article_structure.pre_ingest_assets(files)), sorted(expected))
 
 
     @patch.object(FakeBucket, 'list')

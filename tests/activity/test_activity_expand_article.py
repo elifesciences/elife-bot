@@ -17,7 +17,8 @@ class TestExpandArticle(unittest.TestCase):
 
     def tearDown(self):
         helpers.delete_files_in_folder('tests/tmp', filter_out=['.keepme'])
-        helpers.delete_files_in_folder(testdata.ExpandArticle_files_dest_folder)
+        helpers.delete_files_in_folder(
+            testdata.ExpandArticle_files_dest_folder, filter_out=['.gitkeep'])
 
     @patch.object(activity_ExpandArticle, 'get_tmp_dir')
     @patch('activity.activity_ExpandArticle.get_session')
@@ -39,7 +40,8 @@ class TestExpandArticle(unittest.TestCase):
         # self.assertListEqual(testdata.ExpandArticle_files_dest_expected, files)
 
         index = 0
-        for file in files:
+        compare_files = [file_name for file_name in files if file_name != '.gitkeep']
+        for file in compare_files:
             self.assertEqual(testdata.ExpandArticle_files_dest_bytes_expected[index]['name'], file)
             statinfo = os.stat(testdata.ExpandArticle_files_dest_folder + '/' + file)
             self.assertEqual(testdata.ExpandArticle_files_dest_bytes_expected[index]['bytes'], statinfo.st_size)
