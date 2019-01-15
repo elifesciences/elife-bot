@@ -7,10 +7,12 @@ if [ ! -d venv ]; then
 fi
 
 # remove any old compiled python files
-find provider/ -name '*.pyc' -delete
-find activity/ -name '*.pyc' -delete
-find workflow/ -name '*.pyc' -delete
-find starter/ -name '*.pyc' -delete
+find ./ -maxdepth 1 -name '*.pyc' -delete
+find provider/ -maxdepth 1 -name '*.pyc' -delete
+find activity/ -maxdepth 1 -name '*.pyc' -delete
+find workflow/ -maxdepth 1 -name '*.pyc' -delete
+find starter/ -maxdepth 1 -name '*.pyc' -delete
+find S3utility/ -maxdepth 1 -name '*.pyc' -delete
 
 source venv/bin/activate
 
