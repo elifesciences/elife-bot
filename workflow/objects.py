@@ -8,7 +8,7 @@ import time
 Amazon SWF workflow base class
 """
 
-class workflow(object):
+class Workflow(object):
     # Base class for extending
     def __init__(self, settings, logger, conn=None, token=None, decision=None,
                  maximum_page_size=100, definition=None):

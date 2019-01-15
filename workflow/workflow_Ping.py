@@ -1,14 +1,14 @@
-import workflow
-
+from workflow.objects import Workflow
 """
 Ping workflow
 """
 
-class workflow_Ping(workflow.workflow):
+class workflow_Ping(Workflow):
 
     def __init__(self, settings, logger, conn=None, token=None, decision=None,
                  maximum_page_size=100):
-        workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
+        super(workflow_Ping, self).__init__(
+            settings, logger, conn, token, decision, maximum_page_size)
 
         # SWF Defaults
         self.name = "Ping"
