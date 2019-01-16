@@ -6,6 +6,10 @@ class FakeBotoConnection:
     def start_workflow_execution(self, *args):
         pass
 
+class FakeLayer1:
+    def respond_decision_task_completed(self, task_token, decisions=None, execution_context=None):
+        pass
+
 class FakeFlag():
     "a fake object to return process monitoring status"
     def __init__(self, timeout_seconds=1):
