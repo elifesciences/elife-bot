@@ -71,7 +71,7 @@ def start_workflow(settings, workflow_name, workflow_data):
     data_processor = workflow_data_processors.get(workflow_name)
     workflow_name = 'starter_' + workflow_name
     if data_processor is not None:
-        workflow_data = data_processor(workflow_name, workflow_data)
+        workflow_data = data_processor(workflow_data)
     module_name = "starter." + workflow_name
     importlib.import_module(module_name)
     full_path = "starter." + workflow_name + "." + workflow_name + "()"
@@ -79,30 +79,30 @@ def start_workflow(settings, workflow_name, workflow_data):
     starter_object.start(settings=settings, **workflow_data)
 
 
-def process_data_ingestarticlezip(workflow_name, workflow_data):
+def process_data_ingestarticlezip(workflow_data):
     data = {'article_id': workflow_data['article_id'],
             'run': workflow_data['run'], 'version_reason': workflow_data.get('version_reason'),
             'scheduled_publication_date': workflow_data.get('scheduled_publication_date')}
     return data
 
 
-def process_data_initialarticlezip(workflow_name, workflow_data):
+def process_data_initialarticlezip(workflow_data):
     data = {'info': S3NotificationInfo.from_dict(workflow_data),
             'run': str(uuid.uuid4())}
     return data
 
 
-def process_data_postperfectpublication(workflow_name, workflow_data):
+def process_data_postperfectpublication(workflow_data):
     data = {'info': workflow_data}
     return data
 
 
-def process_data_pubmedarticledeposit(workflow_name, workflow_data):
+def process_data_pubmedarticledeposit(workflow_data):
     data = {}
     return data
 
 
-def process_data_ingestdigest(workflow_name, workflow_data):
+def process_data_ingestdigest(workflow_data):
     data = {'info': S3NotificationInfo.from_dict(workflow_data),
             'run': str(uuid.uuid4())}
     return data
