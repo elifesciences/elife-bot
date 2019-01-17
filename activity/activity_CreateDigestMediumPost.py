@@ -1,4 +1,8 @@
+import os
 import json
+from digestparser import medium_post
+from provider.storage_provider import storage_context
+from provider.article_processing import download_article_xml
 import provider.digest_provider as digest_provider
 from activity.objects import Activity
 
@@ -17,7 +21,17 @@ class activity_CreateDigestMediumPost(Activity):
         self.default_task_start_to_close_timeout = 60 * 5
         self.description = ("Create a post on Medium for a digest.")
 
+        # Local directory settings
+        self.temp_dir = os.path.join(self.get_tmp_dir(), "tmp_dir")
+        self.input_dir = os.path.join(self.get_tmp_dir(), "input_dir")
+
+        # Create output directories
+        self.create_activity_directories()
+
         self.statuses = {}
+
+        # Digest JSON content
+        self.medium_content = None
 
         # Load the config
         self.digest_config = digest_provider.digest_config(
@@ -41,10 +55,21 @@ class activity_CreateDigestMediumPost(Activity):
 
         # Wrap in an exception during testing phase
         try:
-            # TODO
-            # check is the first VoR version and not a silent correction
+            # TODO !!! check is the first VoR version and not a silent correction
+
             # create the digest content from the docx and JATS file
-            # POST to the Medium API endpoint
+            # download jats file
+            docx_file = self.download_docx_from_s3(
+                article_id, self.settings.bot_bucket, self.input_dir)
+
+            jats_file = self.download_jats(expanded_folder)
+
+            # generate the digest content
+            self.medium_content = self.build_medium_content(docx_file, jats_file)
+            if self.medium_content:
+                self.statuses["generate"] = True
+
+            # TODO !!! POST to the Medium API endpoint
             pass
 
         except Exception as exception:
@@ -53,6 +78,16 @@ class activity_CreateDigestMediumPost(Activity):
         self.emit_end_message(article_id, version, run)
 
         return self.ACTIVITY_SUCCESS
+
+    def outbox_resource_path(self, article_id, bucket_name):
+        "storage resource path for the outbox"
+        return digest_provider.outbox_resource_path(
+            self.settings.storage_provider, article_id, bucket_name)
+
+    def docx_resource_origin(self, article_id, bucket_name):
+        "the resource_origin of the docx file in the storage context"
+        resource_path = self.outbox_resource_path(article_id, bucket_name)
+        return resource_path + "/" + digest_provider.docx_file_name(article_id)
 
     def parse_data(self, data):
         "extract individual values from the activity data"
@@ -75,6 +110,45 @@ class activity_CreateDigestMediumPost(Activity):
             self.logger.exception("Exception parsing the input data in %s." +
                                   " Details: %s" % self.pretty_name, str(exception))
         return success, run, article_id, version, status, expanded_folder, run_type
+
+    def download_docx_from_s3(self, article_id, bucket_name, to_dir):
+        "download the docx file from the S3 outbox"
+        docx_file = None
+        resource_origin = self.docx_resource_origin(article_id, bucket_name)
+        storage = storage_context(self.settings)
+        try:
+            docx_file = digest_provider.download_digest(
+                storage, digest_provider.docx_file_name(article_id), resource_origin, to_dir)
+        except Exception as exception:
+            self.logger.exception(
+                "Exception downloading docx for article %s. Details: %s" %
+                (str(article_id), str(exception)))
+        return docx_file
+
+    def download_jats(self, expanded_folder_name):
+        "download the jats file from the expanded folder on S3"
+        jats_file = None
+        expanded_bucket_name = (self.settings.publishing_buckets_prefix
+                                + self.settings.expanded_bucket)
+        try:
+            jats_file = download_article_xml(
+                self.settings, self.temp_dir, expanded_folder_name, expanded_bucket_name)
+        except Exception as exception:
+            self.logger.exception(
+                "Exception downloading jats from from expanded folder %s. Details: %s" %
+                (str(expanded_folder_name), str(exception)))
+        return jats_file
+
+    def build_medium_content(self, docx_file, jats_file=None):
+        """generate the medium content from the docx file and other data"""
+        json_content = None
+        try:
+            json_content = medium_post.build_medium_content(docx_file, self.digest_config, jats_file)
+        except Exception as exception:
+            self.logger.exception(
+                "Exception generating digest json for docx_file %s. Details: %s" %
+                (str(docx_file), str(exception)))
+        return json_content
 
     def emit_message(self, article_id, version, run, status, message):
         "emit message to the queue"
@@ -102,3 +176,13 @@ class activity_CreateDigestMediumPost(Activity):
         "emit an error message to the queue"
         return self.emit_message(
             article_id, version, run, "error", message)
+
+    def create_activity_directories(self):
+        """
+        Create the directories in the activity tmp_dir
+        """
+        for dir_name in [self.temp_dir, self.input_dir]:
+            try:
+                os.mkdir(dir_name)
+            except OSError:
+                pass
