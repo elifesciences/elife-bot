@@ -73,11 +73,6 @@ def start_workflow(settings, workflow_name, workflow_data):
         workflow_data = data_processor(workflow_name, workflow_data)
     module_name = "starter." + workflow_name
     module = importlib.import_module(module_name)
-    # TODO: deprecate reloading a module, this should not be needed as every deploy restarts all long-running processes?
-    try:
-        reload(eval(module))
-    except:
-        pass
     full_path = "starter." + workflow_name + "." + workflow_name + "()"
     s = eval(full_path)
     s.start(settings=settings, **workflow_data)
