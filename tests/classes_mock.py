@@ -10,6 +10,18 @@ class FakeLayer1:
     def respond_decision_task_completed(self, task_token, decisions=None, execution_context=None):
         pass
 
+    def start_workflow_execution(
+        self, domain, workflow_id, workflow_name, workflow_version, task_list=None, 
+        child_policy=None, execution_start_to_close_timeout=None, input=None, 
+        tag_list=None, task_start_to_close_timeout=None):
+        pass
+
+    def list_closed_workflow_executions(
+        self, domain, start_latest_date=None, start_oldest_date=None, close_latest_date=None, 
+        close_oldest_date=None, close_status=None, tag=None, workflow_id=None, workflow_name=None, 
+        workflow_version=None, maximum_page_size=None, next_page_token=None, reverse_order=None):
+        return {'executionInfos': []}
+
 class FakeFlag():
     "a fake object to return process monitoring status"
     def __init__(self, timeout_seconds=1):

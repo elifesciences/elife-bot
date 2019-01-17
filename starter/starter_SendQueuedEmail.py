@@ -32,7 +32,7 @@ class starter_SendQueuedEmail():
         execution_start_to_close_timeout = None
 
         if limit:
-            input = '{"data": {"limit": "' + limit + '"}}'
+            input = '{"data": {"limit": "' + str(limit) + '"}}'
         else:
             input = None
 
