@@ -47,6 +47,7 @@ def main(settings, flag):
 
     logger.info("graceful shutdown")
 
+
 def get_queue(settings):
     conn = boto.sqs.connect_to_region(settings.sqs_region,
                                       aws_access_key_id=settings.aws_access_key_id,
@@ -65,6 +66,7 @@ def process_message(settings, logger, message):
         logger.exception("Exception while processing %s", message.get_body())
     message.delete()
 
+
 @newrelic.agent.background_task(group='queue_workflow_starter.py')
 def start_workflow(settings, workflow_name, workflow_data):
     data_processor = workflow_data_processors.get(workflow_name)
@@ -72,10 +74,11 @@ def start_workflow(settings, workflow_name, workflow_data):
     if data_processor is not None:
         workflow_data = data_processor(workflow_name, workflow_data)
     module_name = "starter." + workflow_name
-    module = importlib.import_module(module_name)
+    importlib.import_module(module_name)
     full_path = "starter." + workflow_name + "." + workflow_name + "()"
-    s = eval(full_path)
-    s.start(settings=settings, **workflow_data)
+    starter_object = eval(full_path)
+    starter_object.start(settings=settings, **workflow_data)
+
 
 def process_data_ingestarticlezip(workflow_name, workflow_data):
     data = {'article_id': workflow_data['article_id'],
@@ -83,14 +86,17 @@ def process_data_ingestarticlezip(workflow_name, workflow_data):
             'scheduled_publication_date': workflow_data.get('scheduled_publication_date')}
     return data
 
+
 def process_data_initialarticlezip(workflow_name, workflow_data):
     data = {'info': S3NotificationInfo.from_dict(workflow_data),
             'run': str(uuid.uuid4())}
     return data
 
+
 def process_data_postperfectpublication(workflow_name, workflow_data):
     data = {'info': workflow_data}
     return data
+
 
 def process_data_pubmedarticledeposit(workflow_name, workflow_data):
     data = {}
