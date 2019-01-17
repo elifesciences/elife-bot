@@ -27,23 +27,13 @@ Example message:
 }
 """
 
-settings = None
-logger = None
 
-
-def main(settings_input, env_input, flag):
-    global settings
-    global env
-    settings = settings_input
-    env = env_input
-
+def main(settings, flag):
     log_file = "queue_workflow_starter.log"
-    global logger
     identity = "queue_workflow_starter_%s" % os.getpid()
     logger = log.logger(log_file, settings.setLevel, identity=identity)
-
     # Simple connect
-    queue = get_queue()
+    queue = get_queue(settings)
 
     while flag.green():
         messages = queue.get_messages(1, visibility_timeout=60,
@@ -51,13 +41,13 @@ def main(settings_input, env_input, flag):
         if messages:
             logger.info(str(len(messages)) + " message received")
             logger.info('message contents: %s', messages[0].get_body())
-            process_message(messages[0])
+            process_message(settings, logger, messages[0])
         else:
             logger.debug("No messages received")
 
     logger.info("graceful shutdown")
 
-def get_queue():
+def get_queue(settings):
     conn = boto.sqs.connect_to_region(settings.sqs_region,
                                       aws_access_key_id=settings.aws_access_key_id,
                                       aws_secret_access_key=settings.aws_secret_access_key)
@@ -65,18 +55,18 @@ def get_queue():
     return queue
 
 
-def process_message(message):
+def process_message(settings, logger, message):
     try:
         message_payload = json.loads(str(unicode_decode(message.get_body())))
         name = message_payload.get('workflow_name')
         data = message_payload.get('workflow_data')
-        start_workflow(name, data)
+        start_workflow(settings, name, data)
     except Exception:
         logger.exception("Exception while processing %s", message.get_body())
     message.delete()
 
 @newrelic.agent.background_task(group='queue_workflow_starter.py')
-def start_workflow(workflow_name, workflow_data):
+def start_workflow(settings, workflow_name, workflow_data):
     data_processor = workflow_data_processors.get(workflow_name)
     workflow_name = 'starter_' + workflow_name
     if data_processor is not None:
@@ -128,14 +118,13 @@ workflow_data_processors = {
 }
 
 
-def load_settings(env):
-    "get settings for the environment"
+def get_settings(env):
     import settings as settings_lib
     return settings_lib.get_settings(env)
 
 
 def console_start():
-    "capture options when running standalone"
+    """capture options when running standalone"""
     parser = OptionParser()
     parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
                       help="set the environment to run, either dev or live")
@@ -146,6 +135,6 @@ def console_start():
 
 
 if __name__ == "__main__":
-    ENV_INPUT = console_start()
-    SETTINGS_INPUT = load_settings(env)
-    process.monitor_interrupt(lambda flag: main(SETTINGS_INPUT, ENV_INPUT, flag))
+    ENV = console_start()
+    SETTINGS = get_settings(ENV)
+    process.monitor_interrupt(lambda flag: main(SETTINGS, flag))

@@ -5,7 +5,7 @@ from mock import patch
 from testfixtures import TempDirectory
 import tests.settings_mock as settings_mock
 from tests.classes_mock import FakeFlag, FakeBotoConnection
-from tests.activity.classes_mock import FakeSQSMessage, FakeSQSQueue
+from tests.activity.classes_mock import FakeSQSMessage, FakeSQSQueue, FakeLogger
 import queue_workflow_starter
 
 
@@ -33,7 +33,7 @@ class TestQueueWorkflowStarter(unittest.TestCase):
         fake_message = FakeSQSMessage(directory)
         fake_message.set_body(message_body)
         mock_queue_read.return_value = [fake_message]
-        queue_workflow_starter.main(settings_mock, 'dev', FakeFlag())
+        queue_workflow_starter.main(settings_mock, FakeFlag())
         self.assertEqual(mock_boto_connection.start_called, True)
 
     @patch.object(boto.swf.layer1, 'Layer1')
@@ -49,7 +49,7 @@ class TestQueueWorkflowStarter(unittest.TestCase):
         fake_boto_conn.return_value = mock_boto_connection
         fake_message = FakeSQSMessage(directory)
         fake_message.set_body(message_body)
-        queue_workflow_starter.process_message(fake_message)
+        queue_workflow_starter.process_message(settings_mock, FakeLogger(), fake_message)
         self.assertEqual(mock_boto_connection.start_called, True)
 
     @patch.object(boto.swf.layer1, 'Layer1')
@@ -65,7 +65,7 @@ class TestQueueWorkflowStarter(unittest.TestCase):
         fake_boto_conn.return_value = mock_boto_connection
         fake_message = FakeSQSMessage(directory)
         fake_message.set_body(message_body)
-        queue_workflow_starter.process_message(fake_message)
+        queue_workflow_starter.process_message(settings_mock, FakeLogger(), fake_message)
         self.assertEqual(mock_boto_connection.start_called, True)
 
     @patch.object(boto.swf.layer1, 'Layer1')
@@ -81,7 +81,7 @@ class TestQueueWorkflowStarter(unittest.TestCase):
         fake_boto_conn.return_value = mock_boto_connection
         fake_message = FakeSQSMessage(directory)
         fake_message.set_body(message_body)
-        queue_workflow_starter.process_message(fake_message)
+        queue_workflow_starter.process_message(settings_mock, FakeLogger(), fake_message)
         self.assertEqual(mock_boto_connection.start_called, None)
 
     def test_process_data_ingestarticlezip(self):
