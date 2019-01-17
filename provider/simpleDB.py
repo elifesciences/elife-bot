@@ -386,14 +386,19 @@ class SimpleDB(object):
             list_to_sort.append(elem)
 
         # Second, sort the list by multiple attributes
-        s = sorted(list_to_sort, key=itemgetter('timestamp'))
-        s = sorted(s, key=itemgetter('file_data_type'))
-        s = sorted(s, key=itemgetter('doi_id'))
+        sorted_list = sorted(list_to_sort, key=itemgetter('timestamp'))
+        # Below Python 3 is more strict about sorting None values so use blank string if not str
+        sorted_list = sorted(
+            sorted_list,
+            key=(lambda value: itemgetter('file_data_type')
+                 if isinstance(itemgetter('file_data_type'), str) else "")
+            )
+        sorted_list = sorted(sorted_list, key=itemgetter('doi_id'))
 
         # Third, loop through sorted array and get a list of items to remove
         prev_item = None
         items_to_remove = []
-        for item in s:
+        for item in sorted_list:
             if prev_item is None:
                 # Keep first item
                 prev_item = item

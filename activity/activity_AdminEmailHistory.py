@@ -83,7 +83,7 @@ class activity_AdminEmailHistory(Activity):
         history_text = ""
 
         # Concatenate the message
-        for key in sorted(workflow_count.iterkeys()):
+        for key in sorted(workflow_count):
             close_status = key
             run_count = workflow_count[key]
 
@@ -101,7 +101,7 @@ class activity_AdminEmailHistory(Activity):
         datetime_string = time.strftime(date_format, current_time)
 
         history_text = ""
-        for key in sorted(workflow_count.iterkeys()):
+        for key in sorted(workflow_count):
             close_status = key
             run_count = workflow_count[key]
             if close_status == "COMPLETED":

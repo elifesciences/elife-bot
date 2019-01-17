@@ -56,7 +56,7 @@ class TestProviderSWFMeta(unittest.TestCase):
 
     def test_is_workflow_open(self):
         "test whether a workflow is open on a test fixture JSON example open workflow executions"
-        with open('tests/test_data/open_workflow_executions.json', 'rb') as json_file:
+        with open('tests/test_data/open_workflow_executions.json', 'r') as json_file:
             infos = json.loads(json_file.read())
             is_open = self.swfmeta.is_workflow_open(infos=infos, workflow_name="S3Monitor")
             self.assertTrue(is_open)
@@ -69,7 +69,7 @@ class TestProviderSWFMeta(unittest.TestCase):
     def test_get_last_completed(self):
         "test last completed workflow with a test fixture of closed workflow executions"
         expected_timestamp = 1371047538.231
-        with open('tests/test_data/completed_workflow_executions.json', 'rb') as json_file:
+        with open('tests/test_data/completed_workflow_executions.json', 'r') as json_file:
             infos = json.loads(json_file.read())
             latest_timestamp = self.swfmeta.get_last_completed_workflow_execution_startTimestamp(
                 infos=infos, workflow_name="S3Monitor")
@@ -82,7 +82,7 @@ class TestProviderSWFMeta(unittest.TestCase):
         # prepare some test data first
         base_infos = None
         next_page_token_infos = None
-        with open('tests/test_data/open_workflow_executions.json', 'rb') as json_file:
+        with open('tests/test_data/open_workflow_executions.json', 'r') as json_file:
             infos_data = json_file.read()
             base_infos = json.loads(infos_data)
             # also create the example with a nextPageToken
@@ -111,7 +111,7 @@ class TestProviderSWFMeta(unittest.TestCase):
         # prepare some test data first
         base_infos = None
         next_page_token_infos = None
-        with open('tests/test_data/completed_workflow_executions.json', 'rb') as json_file:
+        with open('tests/test_data/completed_workflow_executions.json', 'r') as json_file:
             infos_data = json_file.read()
             base_infos = json.loads(infos_data)
             # also create the example with a nextPageToken

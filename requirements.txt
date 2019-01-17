@@ -1,11 +1,9 @@
 boto==2.48.0
-Fom==0.9.10
 GitPython==2.1.11
 Jinja2==2.7.3
 PyPDF2==1.23
 arrow==0.4.4
 beautifulsoup4==4.6.0
-lettuce==0.2.20
 requests==2.20.0
 lxml==4.1.1
 xlrd==0.9.3
@@ -16,7 +14,7 @@ git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@32a9a831eca
 git+https://github.com/elifesciences/ejp-csv-parser.git@9fdfa6a37c00b6134f8a2a46c784b0b11b19c654#egg=ejpcsvparser
 git+https://github.com/elifesciences/jats-generator.git@ea0d4d90a28198eb2953cc982da85392fbfee360#egg=jatsgenerator
 git+https://github.com/elifesciences/package-poa.git@2649777a020661e507de4087d447f50ca8c2fe57#egg=packagepoa
-PyYAML==3.11
+PyYAML==4.2b2
 Wand==0.4.2
 paramiko==2.4.2
 mock==1.3.0
@@ -35,5 +33,5 @@ six==1.10.0
 pyFunctional==1.0.0
 func_timeout==4.3.0
 python-docx==0.8.6
-git+https://github.com/elifesciences/digest-parser.git@9f36477693dcf7421d87153cfb1b91c063819d69#egg=digestparser
+git+https://github.com/elifesciences/digest-parser.git@edf1ab525dee5eb6196ffc057169e787c11da6d6#egg=digestparser
 psutil==5.4.6

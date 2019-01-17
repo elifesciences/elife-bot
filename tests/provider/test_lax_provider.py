@@ -1,4 +1,5 @@
 import unittest
+import provider.utils as utils
 import provider.lax_provider as lax_provider
 import tests.settings_mock as settings_mock
 import base64
@@ -179,12 +180,15 @@ class TestLaxProvider(unittest.TestCase):
                                        "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
                                        "vor")
 
-        self.assertEqual(json.loads(base64.decodestring(token)), {"run": "bb2d37b8-e73c-43b3-a092-d555753316af",
-                                                                  "version": "1",
-                                                                  "expanded_folder": "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
-                                                                  "status": "vor",
-                                                                  "force": False,
-                                                                  "run_type": None})
+        self.assertEqual(
+            json.loads(utils.base64_decode_string(token)), 
+            {
+                "run": "bb2d37b8-e73c-43b3-a092-d555753316af",
+                "version": "1",
+                "expanded_folder": "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
+                "status": "vor",
+                "force": False,
+                "run_type": None})
 
     @patch('provider.lax_provider.article_versions')
     def test_was_ever_poa_was_poa(self, mock_lax_provider_article_versions):

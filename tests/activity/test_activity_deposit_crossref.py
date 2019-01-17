@@ -43,7 +43,6 @@ class TestDepositCrossref(unittest.TestCase):
     @patch.object(activity_DepositCrossref, 'upload_crossref_xml_to_s3')
     @patch.object(activity_DepositCrossref, 'clean_outbox')
     @patch.object(activity_DepositCrossref, 'deposit_files_to_endpoint')
-    @patch.object(article, 'get_article_bucket_pub_date')
     @patch.object(activity_DepositCrossref, 'get_outbox_s3_key_names')
     @patch.object(activity_DepositCrossref, 'download_files_from_s3_outbox')
     @data(
@@ -94,7 +93,7 @@ class TestDepositCrossref(unittest.TestCase):
         },
     )
     def test_do_activity(self, test_data, fake_download_files_from_s3_outbox, fake_get_outbox_s3_key_names,
-                         fake_get_article_bucket_pub_date, fake_deposit_files_to_endpoint,
+                         fake_deposit_files_to_endpoint,
                          fake_clean_outbox, fake_upload_crossref_xml_to_s3,
                          fake_elife_add_email_to_email_queue):
         # copy XML files into the input directory
@@ -102,7 +101,6 @@ class TestDepositCrossref(unittest.TestCase):
             fake_download_files_from_s3_outbox = self.fake_download_files_from_s3_outbox(article_xml)
         # set some return values for the mocks
         fake_get_outbox_s3_key_names.return_value = test_data.get("article_xml_filenames")
-        fake_get_article_bucket_pub_date.return_value = None
         fake_deposit_files_to_endpoint.return_value = test_data.get("deposit_files_return_value")
         # do the activity
         result = self.activity.do_activity()

@@ -108,8 +108,8 @@ class QueueWorker:
 
     def load_rules(self):
         # load the rules from the YAML file
-        stream = file('newFileWorkflows.yaml', 'r')
-        return yaml.load(stream)
+        with open('newFileWorkflows.yaml', 'r') as open_file:
+            return yaml.load(open_file.read())
 
 
     def get_starter_name(self, rules, info):

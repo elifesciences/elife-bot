@@ -828,7 +828,7 @@ class activity_PublicationEmail(Activity):
             temp = {}
             for value in author:
                 heading = column_headings[i]
-                temp[heading] = self.ejp.decode_cp1252(value)
+                temp[heading] = value
                 i = i + 1
             # Special: convert the dict to an object for use in templates
             obj = Struct(**temp)
