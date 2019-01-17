@@ -3,8 +3,12 @@ import os
 from datetime import datetime
 
 class FakeBotoConnection:
+    def __init__(self):
+        self.start_called = None
+
     def start_workflow_execution(self, *args):
-        pass
+        self.start_called = True
+
 
 class FakeFlag():
     "a fake object to return process monitoring status"

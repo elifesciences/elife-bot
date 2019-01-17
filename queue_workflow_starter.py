@@ -2,11 +2,11 @@
 Process SQS message from queue and start required workflow
 """
 from S3utility.s3_notification_info import S3NotificationInfo
-import settings as settings_lib
 from optparse import OptionParser
 import log
 import boto.sqs
 from provider import process
+from provider.utils import unicode_decode
 import json
 import importlib
 import os
@@ -31,18 +31,11 @@ settings = None
 logger = None
 
 
-def main(flag):
+def main(settings_input, env_input, flag):
     global settings
     global env
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, either dev or live")
-    (options, args) = parser.parse_args()
-    if options.env:
-        env = options.env
-
-    settings = settings_lib.get_settings(env)
-    env = env
+    settings = settings_input
+    env = env_input
 
     log_file = "queue_workflow_starter.log"
     global logger
@@ -74,7 +67,7 @@ def get_queue():
 
 def process_message(message):
     try:
-        message_payload = json.loads(str(message.get_body()))
+        message_payload = json.loads(str(unicode_decode(message.get_body())))
         name = message_payload.get('workflow_name')
         data = message_payload.get('workflow_data')
         start_workflow(name, data)
@@ -134,5 +127,25 @@ workflow_data_processors = {
     'IngestDigest': process_data_ingestdigest
 }
 
+
+def load_settings(env):
+    "get settings for the environment"
+    import settings as settings_lib
+    return settings_lib.get_settings(env)
+
+
+def console_start():
+    "capture options when running standalone"
+    parser = OptionParser()
+    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
+                      help="set the environment to run, either dev or live")
+    (options, args) = parser.parse_args()
+    if options.env:
+        env = options.env
+        return env
+
+
 if __name__ == "__main__":
-    process.monitor_interrupt(main)
+    ENV_INPUT = console_start()
+    SETTINGS_INPUT = load_settings(env)
+    process.monitor_interrupt(lambda flag: main(SETTINGS_INPUT, ENV_INPUT, flag))
