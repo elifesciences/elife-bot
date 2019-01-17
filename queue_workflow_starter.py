@@ -1,18 +1,17 @@
 """
 Process SQS message from queue and start required workflow
 """
-from S3utility.s3_notification_info import S3NotificationInfo
+import os
+import uuid
+import json
+import importlib
 from optparse import OptionParser
 import log
 import boto.sqs
+import newrelic.agent
+from S3utility.s3_notification_info import S3NotificationInfo
 from provider import process
 from provider.utils import unicode_decode
-import json
-import importlib
-import os
-import uuid
-import newrelic.agent
-
 # this is not an unused import, it is used dynamically
 import starter
 
