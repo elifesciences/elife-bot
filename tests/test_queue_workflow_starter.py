@@ -85,18 +85,16 @@ class TestQueueWorkflowStarter(unittest.TestCase):
         self.assertEqual(mock_boto_connection.start_called, None)
 
     def test_process_data_ingestarticlezip(self):
-        workflow_name = ''
         workflow_data = {
             'article_id': '',
             'run': '',
             'version_reason': '',
             'scheduled_publication_date': '',
         }
-        data = queue_workflow_starter.process_data_ingestarticlezip(workflow_name, workflow_data)
+        data = queue_workflow_starter.process_data_ingestarticlezip(workflow_data)
         self.assertEqual(sorted(data), sorted(workflow_data))
 
     def test_process_data_initialarticlezip(self):
-        workflow_name = ''
         workflow_data = {
             'event_name': '',
             'event_time': '',
@@ -105,22 +103,19 @@ class TestQueueWorkflowStarter(unittest.TestCase):
             'file_etag': '',
             'file_size': '',
         }
-        data = queue_workflow_starter.process_data_initialarticlezip(workflow_name, workflow_data)
+        data = queue_workflow_starter.process_data_initialarticlezip(workflow_data)
         s3_notification_dict = data.get("info").to_dict()
         self.assertEqual(sorted(s3_notification_dict), sorted(workflow_data))
         self.assertIsNotNone(data.get('run'))
 
     def test_process_data_postperfectpublication(self):
-        workflow_name = ''
         workflow_data = {
             'some': 'data'
         }
-        data = queue_workflow_starter.process_data_postperfectpublication(
-            workflow_name, workflow_data)
+        data = queue_workflow_starter.process_data_postperfectpublication(workflow_data)
         self.assertEqual(sorted(data.get('info')), sorted(workflow_data))
 
     def test_process_data_ingestdigest(self):
-        workflow_name = ''
         workflow_data = {
             'event_name': '',
             'event_time': '',
@@ -129,7 +124,7 @@ class TestQueueWorkflowStarter(unittest.TestCase):
             'file_etag': '',
             'file_size': '',
         }
-        data = queue_workflow_starter.process_data_ingestdigest(workflow_name, workflow_data)
+        data = queue_workflow_starter.process_data_ingestdigest(workflow_data)
         s3_notification_dict = data.get("info").to_dict()
         self.assertEqual(sorted(s3_notification_dict), sorted(workflow_data))
         self.assertIsNotNone(data.get('run'))
