@@ -8,6 +8,7 @@ from ddt import ddt, data
 from activity.activity_CreateDigestMediumPost import (
     activity_CreateDigestMediumPost as activity_object)
 import provider.article as article
+import provider.digest_provider as digest_provider
 import provider.article_processing as article_processing
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
@@ -58,7 +59,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
 
     @patch.object(article_processing, 'storage_context')
     @patch.object(article, 'storage_context')
-    @patch('activity.activity_CreateDigestMediumPost.storage_context')
+    @patch.object(digest_provider, 'storage_context')
     @patch.object(activity_object, 'emit_monitor_event')
     @data(
         {

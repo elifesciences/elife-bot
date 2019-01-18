@@ -1,7 +1,6 @@
 import os
 import json
 from digestparser import medium_post
-from provider.storage_provider import storage_context
 from provider.article_processing import download_article_xml
 import provider.digest_provider as digest_provider
 from activity.objects import Activity
@@ -59,8 +58,8 @@ class activity_CreateDigestMediumPost(Activity):
 
             # create the digest content from the docx and JATS file
             # download jats file
-            docx_file = self.download_docx_from_s3(
-                article_id, self.settings.bot_bucket, self.input_dir)
+            docx_file = digest_provider.download_docx_from_s3(
+                self.settings, article_id, self.settings.bot_bucket, self.input_dir, self.logger)
 
             jats_file = self.download_jats(expanded_folder)
 
@@ -78,16 +77,6 @@ class activity_CreateDigestMediumPost(Activity):
         self.emit_end_message(article_id, version, run)
 
         return self.ACTIVITY_SUCCESS
-
-    def outbox_resource_path(self, article_id, bucket_name):
-        "storage resource path for the outbox"
-        return digest_provider.outbox_resource_path(
-            self.settings.storage_provider, article_id, bucket_name)
-
-    def docx_resource_origin(self, article_id, bucket_name):
-        "the resource_origin of the docx file in the storage context"
-        resource_path = self.outbox_resource_path(article_id, bucket_name)
-        return resource_path + "/" + digest_provider.docx_file_name(article_id)
 
     def parse_data(self, data):
         "extract individual values from the activity data"
@@ -111,19 +100,7 @@ class activity_CreateDigestMediumPost(Activity):
                                   " Details: %s" % self.pretty_name, str(exception))
         return success, run, article_id, version, status, expanded_folder, run_type
 
-    def download_docx_from_s3(self, article_id, bucket_name, to_dir):
-        "download the docx file from the S3 outbox"
-        docx_file = None
-        resource_origin = self.docx_resource_origin(article_id, bucket_name)
-        storage = storage_context(self.settings)
-        try:
-            docx_file = digest_provider.download_digest(
-                storage, digest_provider.docx_file_name(article_id), resource_origin, to_dir)
-        except Exception as exception:
-            self.logger.exception(
-                "Exception downloading docx for article %s. Details: %s" %
-                (str(article_id), str(exception)))
-        return docx_file
+
 
     def download_jats(self, expanded_folder_name):
         "download the jats file from the expanded folder on S3"

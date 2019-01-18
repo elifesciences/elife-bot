@@ -87,6 +87,28 @@ def outbox_dest_resource_path(storage_provider, digest, bucket_name):
     return outbox_resource_path(storage_provider, msid, bucket_name)
 
 
+def docx_resource_origin(storage_provider, article_id, bucket_name):
+    """the resource_origin of the docx file in the storage context"""
+    resource_path = outbox_resource_path(storage_provider, article_id, bucket_name)
+    return resource_path + "/" + docx_file_name(article_id)
+
+
+def download_docx_from_s3(settings, article_id, bucket_name, to_dir, logger):
+    """download the docx file from the S3 outbox"""
+    docx_file = None
+    resource_origin = docx_resource_origin(
+        settings.storage_provider, article_id, bucket_name)
+    storage = storage_context(settings)
+    try:
+        docx_file = download_digest(
+            storage, docx_file_name(article_id), resource_origin, to_dir)
+    except Exception as exception:
+        logger.exception(
+            "Exception downloading docx for article %s. Details: %s" %
+            (str(article_id), str(exception)))
+    return docx_file
+
+
 def outbox_file_dest_resource(storage_provider, digest, bucket_name, file_path):
     "concatenate the S3 bucket object path we copy the file to"
     resource_path = outbox_dest_resource_path(storage_provider, digest, bucket_name)
