@@ -227,6 +227,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         "test and error when checking if a docx exists"
         fake_first.return_value = True
         fake_highest_version.return_value = 1
+        session_test_data = session_data({})
+        fake_session.return_value = FakeSession(session_test_data)
         activity_data = test_activity_data.data_example_before_publish
         expected_result = activity_object.ACTIVITY_SUCCESS
         result = self.activity.do_activity(activity_data)
@@ -235,7 +237,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch.object(lax_provider, 'article_highest_version')
     @patch.object(lax_provider, 'article_first_by_status')
     @patch.object(activity_object, 'emit_monitor_event')
-    @patch('activity.activity_IngestDigestToEndpoint.storage_context')
+    @patch.object(digest_provider, 'storage_context')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
     def test_do_activity_bad_download(self, fake_session, fake_storage_context, fake_emit,
                                       fake_first, fake_highest_version):

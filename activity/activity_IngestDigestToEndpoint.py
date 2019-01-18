@@ -78,7 +78,8 @@ class activity_IngestDigestToEndpoint(Activity):
                 return self.ACTIVITY_SUCCESS
 
             # check if there is a digest docx in the bucket for this article
-            docx_file_exists = self.docx_exists_in_s3(article_id, self.settings.bot_bucket)
+            docx_file_exists = digest_provider.docx_exists_in_s3(
+                self.settings, article_id, self.settings.bot_bucket, self.logger)
             if docx_file_exists is not True:
                 self.logger.info(
                     "Digest docx file does not exist in S3 for article %s" % article_id)
@@ -92,7 +93,7 @@ class activity_IngestDigestToEndpoint(Activity):
                 self.statuses["download"] = True
             if self.statuses.get("download") is not True:
                 self.logger.info("Unable to download digest file %s for article %s" %
-                                 (docx_file, article_id))
+                                    (docx_file, article_id))
                 return self.ACTIVITY_PERMANENT_FAILURE
             # find the image file name
             image_file = self.image_file_name_from_s3(
@@ -109,7 +110,7 @@ class activity_IngestDigestToEndpoint(Activity):
             if self.statuses.get("generate") is not True:
                 self.logger.info(
                     ("Unable to generate Digest content for docx_file %s, " +
-                     "jats_file %s, image_file %s") %
+                        "jats_file %s, image_file %s") %
                     (docx_file, jats_file, image_file))
                 # for now return success to not impede the article ingest workflow
                 return self.ACTIVITY_SUCCESS
@@ -234,17 +235,6 @@ class activity_IngestDigestToEndpoint(Activity):
         "the resource_origin of the docx file in the storage context"
         resource_path = self.outbox_resource_path(article_id, bucket_name)
         return resource_path + "/" + digest_provider.docx_file_name(article_id)
-
-    def docx_exists_in_s3(self, article_id, bucket_name):
-        "check if a digest docx exists in the S3 outbox"
-        resource_origin = self.docx_resource_origin(article_id, bucket_name)
-        storage = storage_context(self.settings)
-        try:
-            return storage.resource_exists(resource_origin)
-        except Exception as exception:
-            self.logger.exception(
-                "Exception checking if digest docx exists for article %s. Details: %s" %
-                (str(article_id), str(exception)))
 
     def download_docx_from_s3(self, article_id, bucket_name, to_dir):
         "download the docx file from the S3 outbox"

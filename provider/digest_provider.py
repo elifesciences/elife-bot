@@ -93,6 +93,19 @@ def docx_resource_origin(storage_provider, article_id, bucket_name):
     return resource_path + "/" + docx_file_name(article_id)
 
 
+def docx_exists_in_s3(settings, article_id, bucket_name, logger):
+    """check if a digest docx exists in the S3 outbox"""
+    resource_origin = docx_resource_origin(
+        settings.storage_provider, article_id, bucket_name)
+    storage = storage_context(settings)
+    try:
+        return storage.resource_exists(resource_origin)
+    except Exception as exception:
+        logger.exception(
+            "Exception checking if digest docx exists for article %s. Details: %s" %
+            (str(article_id), str(exception)))
+
+
 def download_docx_from_s3(settings, article_id, bucket_name, to_dir, logger):
     """download the docx file from the S3 outbox"""
     docx_file = None
