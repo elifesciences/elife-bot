@@ -3,7 +3,7 @@ import json
 from digestparser import json_output
 from provider.storage_provider import storage_context
 from provider.execution_context import get_session
-from provider.article_processing import download_article_xml
+from provider.article_processing import download_jats
 import provider.digest_provider as digest_provider
 import provider.lax_provider as lax_provider
 from activity.objects import Activity
@@ -100,7 +100,8 @@ class activity_IngestDigestToEndpoint(Activity):
                 article_id, self.settings.bot_bucket)
 
             # download jats file
-            jats_file = self.download_jats(session.get_value("expanded_folder"))
+            jats_file = download_jats(
+                self.settings, session.get_value("expanded_folder"), self.temp_dir, self.logger)
             # related article data
             related = related_from_lax(article_id, version, self.settings, self.logger)
             # generate the digest content
@@ -247,20 +248,6 @@ class activity_IngestDigestToEndpoint(Activity):
                 if not name.endswith(".docx"):
                     image_file_name = name.split("/")[-1]
         return image_file_name
-
-    def download_jats(self, expanded_folder_name):
-        "download the jats file from the expanded folder on S3"
-        jats_file = None
-        expanded_bucket_name = (self.settings.publishing_buckets_prefix
-                                + self.settings.expanded_bucket)
-        try:
-            jats_file = download_article_xml(
-                self.settings, self.temp_dir, expanded_folder_name, expanded_bucket_name)
-        except Exception as exception:
-            self.logger.exception(
-                "Exception downloading jats from from expanded folder %s. Details: %s" %
-                (str(expanded_folder_name), str(exception)))
-        return jats_file
 
     def digest_json(self, docx_file, jats_file=None, image_file=None, related=None):
         "generate the digest json content from the docx file and other data"
