@@ -87,8 +87,8 @@ class activity_IngestDigestToEndpoint(Activity):
                 return self.ACTIVITY_SUCCESS
 
             # Download digest from the S3 outbox
-            docx_file = self.download_docx_from_s3(
-                article_id, self.settings.bot_bucket, self.input_dir)
+            docx_file = digest_provider.download_docx_from_s3(
+                self.settings, article_id, self.settings.bot_bucket, self.input_dir, self.logger)
             if docx_file:
                 self.statuses["download"] = True
             if self.statuses.get("download") is not True:
@@ -235,20 +235,6 @@ class activity_IngestDigestToEndpoint(Activity):
         "the resource_origin of the docx file in the storage context"
         resource_path = self.outbox_resource_path(article_id, bucket_name)
         return resource_path + "/" + digest_provider.docx_file_name(article_id)
-
-    def download_docx_from_s3(self, article_id, bucket_name, to_dir):
-        "download the docx file from the S3 outbox"
-        docx_file = None
-        resource_origin = self.docx_resource_origin(article_id, bucket_name)
-        storage = storage_context(self.settings)
-        try:
-            docx_file = digest_provider.download_digest(
-                storage, digest_provider.docx_file_name(article_id), resource_origin, to_dir)
-        except Exception as exception:
-            self.logger.exception(
-                "Exception downloading docx for article %s. Details: %s" %
-                (str(article_id), str(exception)))
-        return docx_file
 
     def image_file_name_from_s3(self, article_id, bucket_name):
         "image file in the outbox is the non .docx file"
