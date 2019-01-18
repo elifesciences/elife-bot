@@ -1,7 +1,7 @@
 import os
 import json
 from digestparser import medium_post
-from provider.article_processing import download_article_xml
+from provider.article_processing import download_jats
 import provider.digest_provider as digest_provider
 from activity.objects import Activity
 
@@ -61,7 +61,7 @@ class activity_CreateDigestMediumPost(Activity):
             docx_file = digest_provider.download_docx_from_s3(
                 self.settings, article_id, self.settings.bot_bucket, self.input_dir, self.logger)
 
-            jats_file = self.download_jats(expanded_folder)
+            jats_file = download_jats(self.settings, expanded_folder, self.temp_dir, self.logger)  
 
             # generate the digest content
             self.medium_content = self.build_medium_content(docx_file, jats_file)
@@ -99,22 +99,6 @@ class activity_CreateDigestMediumPost(Activity):
             self.logger.exception("Exception parsing the input data in %s." +
                                   " Details: %s" % self.pretty_name, str(exception))
         return success, run, article_id, version, status, expanded_folder, run_type
-
-
-
-    def download_jats(self, expanded_folder_name):
-        "download the jats file from the expanded folder on S3"
-        jats_file = None
-        expanded_bucket_name = (self.settings.publishing_buckets_prefix
-                                + self.settings.expanded_bucket)
-        try:
-            jats_file = download_article_xml(
-                self.settings, self.temp_dir, expanded_folder_name, expanded_bucket_name)
-        except Exception as exception:
-            self.logger.exception(
-                "Exception downloading jats from from expanded folder %s. Details: %s" %
-                (str(expanded_folder_name), str(exception)))
-        return jats_file
 
     def build_medium_content(self, docx_file, jats_file=None):
         """generate the medium content from the docx file and other data"""

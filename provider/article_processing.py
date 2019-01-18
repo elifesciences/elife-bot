@@ -153,5 +153,16 @@ def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=N
         return filename_plus_path
 
 
-if __name__ == '__main__':
-    main()
+def download_jats(settings, expanded_folder_name, to_dir, logger):
+    """download the jats file from the expanded folder on S3"""
+    jats_file = None
+    expanded_bucket_name = (
+        settings.publishing_buckets_prefix + settings.expanded_bucket)
+    try:
+        jats_file = download_article_xml(
+            settings, to_dir, expanded_folder_name, expanded_bucket_name)
+    except Exception as exception:
+        logger.exception(
+            "Exception downloading jats from from expanded folder %s. Details: %s" %
+            (str(expanded_folder_name), str(exception)))
+    return jats_file
