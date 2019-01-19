@@ -1,7 +1,6 @@
 import os
 import json
 from digestparser import json_output
-from provider.storage_provider import storage_context
 from provider.execution_context import get_session
 from provider.article_processing import download_jats
 import provider.digest_provider as digest_provider
@@ -93,11 +92,11 @@ class activity_IngestDigestToEndpoint(Activity):
                 self.statuses["download"] = True
             if self.statuses.get("download") is not True:
                 self.logger.info("Unable to download digest file %s for article %s" %
-                                    (docx_file, article_id))
+                                 (docx_file, article_id))
                 return self.ACTIVITY_PERMANENT_FAILURE
             # find the image file name
-            image_file = self.image_file_name_from_s3(
-                article_id, self.settings.bot_bucket)
+            image_file = digest_provider.image_file_name_from_s3(
+                self.settings, article_id, self.settings.bot_bucket)
 
             # download jats file
             jats_file = download_jats(
@@ -111,7 +110,7 @@ class activity_IngestDigestToEndpoint(Activity):
             if self.statuses.get("generate") is not True:
                 self.logger.info(
                     ("Unable to generate Digest content for docx_file %s, " +
-                        "jats_file %s, image_file %s") %
+                     "jats_file %s, image_file %s") %
                     (docx_file, jats_file, image_file))
                 # for now return success to not impede the article ingest workflow
                 return self.ACTIVITY_SUCCESS
@@ -224,30 +223,8 @@ class activity_IngestDigestToEndpoint(Activity):
         elif run_type_status is False:
             # otherwise depend on the silent correction run_type logic
             approve_status = False
- 
+
         return approve_status
-
-    def outbox_resource_path(self, article_id, bucket_name):
-        "storage resource path for the outbox"
-        return digest_provider.outbox_resource_path(
-            self.settings.storage_provider, article_id, bucket_name)
-
-    def docx_resource_origin(self, article_id, bucket_name):
-        "the resource_origin of the docx file in the storage context"
-        resource_path = self.outbox_resource_path(article_id, bucket_name)
-        return resource_path + "/" + digest_provider.docx_file_name(article_id)
-
-    def image_file_name_from_s3(self, article_id, bucket_name):
-        "image file in the outbox is the non .docx file"
-        image_file_name = None
-        resource_path = self.outbox_resource_path(article_id, bucket_name)
-        storage = storage_context(self.settings)
-        object_list = storage.list_resources(resource_path)
-        if object_list:
-            for name in object_list:
-                if not name.endswith(".docx"):
-                    image_file_name = name.split("/")[-1]
-        return image_file_name
 
     def digest_json(self, docx_file, jats_file=None, image_file=None, related=None):
         "generate the digest json content from the docx file and other data"

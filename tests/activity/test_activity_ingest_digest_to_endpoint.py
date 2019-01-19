@@ -65,7 +65,6 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch.object(digest_provider, 'put_digest')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
     @patch.object(activity_object, 'emit_monitor_event')
-    @patch('activity.activity_IngestDigestToEndpoint.storage_context')
     @data(
         {
             "comment": "article with no digest files",
@@ -154,7 +153,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "expected_download_status": None
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, fake_emit,
+    def test_do_activity(self, test_data, fake_emit,
                          fake_session, fake_put_digest, fake_get_digest,
                          fake_provider_storage_context,
                          fake_highest_version, fake_article_snippet,
@@ -167,7 +166,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         bot_storage_context = FakeStorageContext()
         if test_data.get('bot_bucket_resources'):
             bot_storage_context.resources = test_data.get('bot_bucket_resources')
-        fake_storage_context.return_value = bot_storage_context
+        fake_provider_storage_context.return_value = bot_storage_context
         fake_first.return_value = test_data.get("first_vor")
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
@@ -175,7 +174,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         fake_put_digest.return_value = FakeResponse(204, None)
         fake_highest_version.return_value = test_data.get('lax_highest_version')
         fake_article_snippet.return_value = 200, test_data.get('article_snippet')
-        fake_provider_storage_context.return_value = FakeStorageContext()
+
         fake_get.return_value = FakeResponse(200, IMAGE_JSON)
         activity_data = test_activity_data.data_example_before_publish
         # do the activity

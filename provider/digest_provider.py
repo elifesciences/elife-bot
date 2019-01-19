@@ -133,6 +133,19 @@ def outbox_file_dest_resource(storage_provider, digest, bucket_name, file_path):
     return dest_resource
 
 
+def image_file_name_from_s3(settings, article_id, bucket_name):
+    "image file in the outbox is the non .docx file"
+    image_file_name = None
+    resource_path = outbox_resource_path(settings.storage_provider, article_id, bucket_name)
+    storage = storage_context(settings)
+    object_list = storage.list_resources(resource_path)
+    if object_list:
+        for name in object_list:
+            if not name.endswith(".docx"):
+                image_file_name = name.split("/")[-1]
+    return image_file_name
+
+
 def download_digest(storage, filename, resource_origin, to_dir):
     "download the digest filename from a bucket or storage to the to_dir"
     if not resource_origin:
