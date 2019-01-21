@@ -8,7 +8,7 @@ import time
 Amazon SWF workflow base class
 """
 
-class workflow(object):
+class Workflow(object):
     # Base class for extending
     def __init__(self, settings, logger, conn=None, token=None, decision=None,
                  maximum_page_size=100, definition=None):
@@ -25,12 +25,12 @@ class workflow(object):
         # SWF Defaults, most are set in derived classes or at runtime
         try:
             self.domain = self.settings.domain
-        except KeyError:
+        except AttributeError:
             self.domain = None
 
         try:
             self.task_list = self.settings.default_task_list
-        except KeyError:
+        except AttributeError:
             self.task_list = None
 
         self.name = None
