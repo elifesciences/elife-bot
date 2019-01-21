@@ -3,8 +3,12 @@ import os
 from datetime import datetime
 
 class FakeBotoConnection:
+    def __init__(self):
+        self.start_called = None
+
     def start_workflow_execution(self, *args):
-        pass
+        self.start_called = True
+
 
 class FakeLayer1:
     def respond_decision_task_completed(self, task_token, decisions=None, execution_context=None):

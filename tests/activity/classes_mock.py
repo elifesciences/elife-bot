@@ -55,6 +55,13 @@ class FakeSQSMessage:
             # python 3, write bytes
             self.dir.write("fake_sqs_body", bytes(body, 'utf-8'))
 
+    def get_body(self):
+        return self.dir.read("fake_sqs_body")
+
+    def delete(self):
+        pass
+
+
 class FakeSQSConn:
     def __init__(self, directory):
         self.dir = directory
@@ -74,6 +81,10 @@ class FakeSQSQueue:
 
     def read(self, dir_name):
         return self.dir.read(dir_name)
+
+    def get_messages(self):
+        "for mocking return a list of messages"
+        return []
 
     def delete_message(self, message):
         pass
