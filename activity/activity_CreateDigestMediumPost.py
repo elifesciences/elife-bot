@@ -47,14 +47,20 @@ class activity_CreateDigestMediumPost(Activity):
             self.logger.error("Failed to parse data in %s" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
         # emit start message
-        success = self.emit_start_message(article_id, version, run)
-        if success is not True:
+        emit_success = self.emit_start_message(article_id, version, run)
+        if emit_success is not True:
             self.logger.error("Failed to emit a start message in %s" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # Wrap in an exception during testing phase
         try:
-            # TODO !!! check is the first VoR version and not a silent correction
+            # Approve for creating a Medium post
+            self.statuses["approve"] = self.approve(article_id, status, version, run_type)
+            if self.statuses.get("approve") is not True:
+                self.logger.info(
+                    "Digest for article %s not approved for creating a Medium post" % article_id)
+                self.emit_end_message(article_id, version, run)
+                return self.ACTIVITY_SUCCESS
 
             # create the digest content from the docx and JATS file
             # download jats file
@@ -137,6 +143,26 @@ class activity_CreateDigestMediumPost(Activity):
         "emit an error message to the queue"
         return self.emit_message(
             article_id, version, run, "error", message)
+
+    def approve(self, article_id, status, version, run_type):
+        """should it create a Medium post based on some basic attributes"""
+        approve_status = True
+
+        # check by status
+        return_status = digest_provider.approve_by_status(self.logger, article_id, status)
+        if return_status is False:
+            approve_status = False
+
+        # check silent correction
+        if run_type == "silent-correction":
+            approve_status = False
+        else:
+            first_vor_status = digest_provider.approve_by_first_vor(
+                self.settings, self.logger, article_id, version, status)
+            if first_vor_status is False:
+                approve_status = False
+
+        return approve_status
 
     def create_activity_directories(self):
         """

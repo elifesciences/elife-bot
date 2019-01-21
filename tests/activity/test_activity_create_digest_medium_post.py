@@ -8,6 +8,7 @@ from ddt import ddt, data
 from activity.activity_CreateDigestMediumPost import (
     activity_CreateDigestMediumPost as activity_object)
 import provider.article as article
+import provider.lax_provider as lax_provider
 import provider.digest_provider as digest_provider
 import provider.article_processing as article_processing
 import tests.activity.settings_mock as settings_mock
@@ -57,20 +58,37 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
+    @patch.object(lax_provider, 'article_first_by_status')
+    @patch.object(lax_provider, 'article_highest_version')
     @patch.object(article_processing, 'storage_context')
     @patch.object(article, 'storage_context')
     @patch.object(digest_provider, 'storage_context')
     @patch.object(activity_object, 'emit_monitor_event')
     @data(
         {
-            "comment": "",
+            "comment": "approved for medium post",
             "bucket_resources": ["elife-15747-v2.xml"],
             "bot_bucket_resources": ["digests/outbox/99999/digest-99999.docx",
                                      "digests/outbox/99999/digest-99999.jpg"],
+            "first_vor": True,
+            "lax_highest_version": '1',
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_medium_content": EXPECTED_MEDIUM_CONTENT
+        },
+        {
+            "comment": "not first vor",
+            "bucket_resources": ["elife-15747-v2.xml"],
+            "bot_bucket_resources": ["digests/outbox/99999/digest-99999.docx",
+                                     "digests/outbox/99999/digest-99999.jpg"],
+            "first_vor": False,
+            "lax_highest_version": '1',
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_medium_content": None
         },
     )
     def test_do_activity(self, test_data, fake_emit, fake_storage_context,
-                         fake_article_storage_context, fake_processing_storage_context):
+                         fake_article_storage_context, fake_processing_storage_context,
+                         fake_highest_version, fake_first):
         # copy files into the input directory using the storage context
         fake_emit.return_value = None
         activity_data = digest_activity_data(
@@ -85,11 +103,61 @@ class TestCreateDigestMediumPost(unittest.TestCase):
             bot_storage_context.resources = test_data.get('bot_bucket_resources')
         fake_storage_context.return_value = bot_storage_context
         fake_processing_storage_context.return_value = FakeStorageContext()
+        # lax mocking
+        fake_highest_version.return_value = test_data.get('lax_highest_version')
+        fake_first.return_value = test_data.get("first_vor")
         # do the activity
         result = self.activity.do_activity(activity_data)
         # check assertions
-        self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
-        self.assertEqual(self.activity.medium_content, EXPECTED_MEDIUM_CONTENT)
+        self.assertEqual(result, test_data.get("expected_result"))
+        self.assertEqual(self.activity.medium_content, test_data.get("expected_medium_content"))
+
+    @patch.object(lax_provider, 'article_first_by_status')
+    @patch.object(lax_provider, 'article_highest_version')
+    @data(
+        {
+            "comment": "a poa",
+            "article_id": '00000',
+            "status": "poa",
+            "version": 3,
+            "run_type": None,
+            "highest_version": '1',
+            "first_vor": False,
+            "expected": False
+        },
+        {
+            "comment": "silent correction",
+            "article_id": '00000',
+            "status": "vor",
+            "version": 3,
+            "run_type": "silent-correction",
+            "highest_version": '1',
+            "first_vor": False,
+            "expected": False
+        },
+        {
+            "comment": "non-first vor",
+            "article_id": '00000',
+            "status": "vor",
+            "version": 3,
+            "run_type": None,
+            "highest_version": '1',
+            "first_vor": False,
+            "expected": False
+        },
+    )
+    def test_approve(self, test_data, fake_highest_version, fake_first):
+        "test various scenarios for digest ingest approval"
+        fake_highest_version.return_value = test_data.get("highest_version")
+        fake_first.return_value = test_data.get("first_vor")
+        status = self.activity.approve(
+            test_data.get("article_id"),
+            test_data.get("status"),
+            test_data.get("version"),
+            test_data.get("run_type")
+        )
+        self.assertEqual(status, test_data.get("expected"),
+                         "failed in {comment}".format(comment=test_data.get("comment")))
 
 
 if __name__ == '__main__':
