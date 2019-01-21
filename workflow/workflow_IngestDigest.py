@@ -1,14 +1,15 @@
-import workflow
+from workflow.objects import Workflow
 
 """
 IngestDigest workflow
 """
 
 
-class workflow_IngestDigest(workflow.workflow):
+class workflow_IngestDigest(Workflow):
     def __init__(self, settings, logger, conn=None, token=None, decision=None,
                  maximum_page_size=100):
-        workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
+        super(workflow_IngestDigest, self).__init__(
+            settings, logger, conn, token, decision, maximum_page_size)
 
         # SWF Defaults
         self.name = "IngestDigest"
