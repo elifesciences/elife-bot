@@ -3,8 +3,6 @@ import time
 import importlib
 from optparse import OptionParser
 
-import settings as settingsLib
-
 import boto.swf
 import boto.s3
 from boto.s3.connection import S3Connection
@@ -188,7 +186,7 @@ def workflow_conditional_start(settings, starter_name, start_seconds, data=None,
 
     if last_startTimestamp is not None:
         diff_seconds = current_timestamp - start_seconds - last_startTimestamp
-        print diff_seconds
+        print(diff_seconds)
 
     if diff_seconds >= 0 or last_startTimestamp is None:
         # Start a new workflow
