@@ -2,6 +2,7 @@ import unittest
 import time
 from ddt import ddt, data
 from mock import patch
+from boto.s3.key import Key
 import tests.settings_mock as settings_mock
 from tests.classes_mock import FakeLayer1
 from tests.activity.classes_mock import FakeS3Connection, FakeBucket
@@ -77,6 +78,15 @@ class TestCron(unittest.TestCase):
         start_seconds = 0
         self.assertIsNone(cron.workflow_conditional_start(
             settings_mock, starter_name, start_seconds, workflow_id=workflow_id))
+
+    @patch.object(FakeBucket, 'list')
+    def test_get_s3_key_names_from_bucket(self, fake_list):
+        key_name = '00003/file.zip'
+        fake_bucket = FakeBucket()
+        fake_key = Key(fake_bucket, '00003/file.zip')
+        fake_list.return_value = [fake_key]
+        s3_key_names = cron.get_s3_key_names_from_bucket(fake_bucket)
+        self.assertEqual(s3_key_names, [key_name])
 
 
 if __name__ == '__main__':
