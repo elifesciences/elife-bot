@@ -21,10 +21,31 @@ class FakeLayer1:
         pass
 
     def list_closed_workflow_executions(
-        self, domain, start_latest_date=None, start_oldest_date=None, close_latest_date=None, 
-        close_oldest_date=None, close_status=None, tag=None, workflow_id=None, workflow_name=None, 
+        self, domain, start_latest_date=None, start_oldest_date=None, close_latest_date=None,
+        close_oldest_date=None, close_status=None, tag=None, workflow_id=None, workflow_name=None,
         workflow_version=None, maximum_page_size=None, next_page_token=None, reverse_order=None):
         return {'executionInfos': []}
+
+    def describe_workflow_type(self, domain, workflow_name, workflow_version):
+        pass
+
+    def register_workflow_type(
+        self, domain, name, version, task_list=None, default_child_policy=None,
+        default_execution_start_to_close_timeout=None, default_task_start_to_close_timeout=None,
+        description=None):
+        pass
+
+    def describe_activity_type(
+        self, domain, activity_name, activity_version):
+        pass
+
+    def register_activity_type(
+        self, domain, name, version, task_list=None, default_task_heartbeat_timeout=None,
+        default_task_schedule_to_close_timeout=None,
+        default_task_schedule_to_start_timeout=None, default_task_start_to_close_timeout=None,
+        description=None):
+        pass
+
 
 class FakeFlag():
     "a fake object to return process monitoring status"
