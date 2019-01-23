@@ -186,7 +186,6 @@ def workflow_conditional_start(settings, starter_name, start_seconds, data=None,
 
     if last_startTimestamp is not None:
         diff_seconds = current_timestamp - start_seconds - last_startTimestamp
-        print(diff_seconds)
 
     if diff_seconds >= 0 or last_startTimestamp is None:
         # Start a new workflow
