@@ -52,6 +52,21 @@ class activity_CreateDigestMediumPost(Activity):
             self.logger.error("Failed to emit a start message in %s" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
 
+        # check if required credentials are set first before continuing
+        required_credentials = [
+            'medium_application_client_id',
+            'medium_application_client_secret',
+            'medium_access_token']
+        missing_credentials = [
+            cred_name for cred_name in required_credentials
+            if not self.digest_config.get(cred_name)]
+        if missing_credentials:
+            self.logger.info(
+                "Missing credentials, %s, in create digest Medium post, article %s" %
+                (missing_credentials, article_id))
+            self.emit_end_message(article_id, version, run)
+            return self.ACTIVITY_SUCCESS
+
         # Wrap in an exception during testing phase
         try:
             # Approve for creating a Medium post

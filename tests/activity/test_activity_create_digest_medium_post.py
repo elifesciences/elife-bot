@@ -112,6 +112,19 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         self.assertEqual(result, test_data.get("expected_result"))
         self.assertEqual(self.activity.medium_content, test_data.get("expected_medium_content"))
 
+    @patch.object(activity_object, 'emit_monitor_event')
+    def test_do_activity_missing_credentials(self, fake_emit):
+        # copy files into the input directory using the storage context
+        fake_emit.return_value = None
+        activity_data = digest_activity_data(
+            ACTIVITY_DATA
+            )
+        self.activity.digest_config['medium_application_client_id'] = ''
+        # do the activity
+        result = self.activity.do_activity(activity_data)
+        # check assertions
+        self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
+
     @patch.object(lax_provider, 'article_first_by_status')
     @patch.object(lax_provider, 'article_highest_version')
     @data(
