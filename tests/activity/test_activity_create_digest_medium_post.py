@@ -5,6 +5,7 @@ import copy
 from collections import OrderedDict
 from mock import patch
 from ddt import ddt, data
+import activity.activity_CreateDigestMediumPost as activity_module
 from activity.activity_CreateDigestMediumPost import (
     activity_CreateDigestMediumPost as activity_object)
 import provider.article as article
@@ -58,6 +59,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
+    @patch('digestparser.medium_post.post_content')
     @patch.object(lax_provider, 'article_first_by_status')
     @patch.object(lax_provider, 'article_highest_version')
     @patch.object(article_processing, 'storage_context')
@@ -88,7 +90,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_emit, fake_storage_context,
                          fake_article_storage_context, fake_processing_storage_context,
-                         fake_highest_version, fake_first):
+                         fake_highest_version, fake_first, fake_post_content):
         # copy files into the input directory using the storage context
         fake_emit.return_value = None
         activity_data = digest_activity_data(
@@ -171,6 +173,16 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         )
         self.assertEqual(status, test_data.get("expected"),
                          "failed in {comment}".format(comment=test_data.get("comment")))
+
+    def test_create_medium_content_empty(self):
+        result = activity_module.post_medium_content(None, {}, FakeLogger())
+        self.assertIsNone(result)
+
+    @patch('digestparser.medium_post.post_content')
+    def test_create_medium_content_exception(self, fake_post_content):
+        fake_post_content.side_effect = Exception("Something went wrong!")
+        result = activity_module.post_medium_content('content', {}, FakeLogger())
+        self.assertFalse(result)
 
 
 if __name__ == '__main__':

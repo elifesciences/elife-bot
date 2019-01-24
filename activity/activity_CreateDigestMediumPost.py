@@ -89,8 +89,10 @@ class activity_CreateDigestMediumPost(Activity):
             if self.medium_content:
                 self.statuses["generate"] = True
 
-            # TODO !!! POST to the Medium API endpoint
-            pass
+            # POST to the Medium API endpoint
+            if self.medium_content:
+                self.statuses["post"] = post_medium_content(
+                    self.medium_content, self.digest_config, self.logger)
 
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
@@ -188,3 +190,14 @@ class activity_CreateDigestMediumPost(Activity):
                 os.mkdir(dir_name)
             except OSError:
                 pass
+
+
+def post_medium_content(medium_content, digest_config, logger):
+    if medium_content:
+        try:
+            post_return = medium_post.post_content(medium_content, digest_config)
+            logger.info('Medium post return: %s' % post_return)
+            return True
+        except Exception as exception:
+            logger.exception("Exception raised posting to Medium. Details: %s" % str(exception))
+        return False
