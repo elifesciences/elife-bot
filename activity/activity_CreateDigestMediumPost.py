@@ -84,8 +84,12 @@ class activity_CreateDigestMediumPost(Activity):
 
             jats_file = download_jats(self.settings, expanded_folder, self.temp_dir, self.logger)  
 
+            # find the image file name
+            image_file_name = digest_provider.image_file_name_from_s3(
+                self.settings, article_id, self.settings.bot_bucket)
+
             # generate the digest content
-            self.medium_content = self.build_medium_content(docx_file, jats_file)
+            self.medium_content = self.build_medium_content(docx_file, jats_file, image_file_name)
             if self.medium_content:
                 self.statuses["generate"] = True
 
@@ -123,11 +127,12 @@ class activity_CreateDigestMediumPost(Activity):
                                   " Details: %s" % self.pretty_name, str(exception))
         return success, run, article_id, version, status, expanded_folder, run_type
 
-    def build_medium_content(self, docx_file, jats_file=None):
+    def build_medium_content(self, docx_file, jats_file=None, image_file_name=None):
         """generate the medium content from the docx file and other data"""
         json_content = None
         try:
-            json_content = medium_post.build_medium_content(docx_file, self.digest_config, jats_file)
+            json_content = medium_post.build_medium_content(
+                docx_file, self.temp_dir, self.digest_config, jats_file, image_file_name)
         except Exception as exception:
             self.logger.exception(
                 "Exception generating digest json for docx_file %s. Details: %s" %
