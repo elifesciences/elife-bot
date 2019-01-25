@@ -6,6 +6,7 @@ storage_provider = 's3'
 expanded_bucket = 'origin_bucket'
 
 publishing_buckets_prefix = ""
+production_bucket = "production_bucket"
 
 bucket = ""
 
@@ -20,6 +21,8 @@ simpledb_region = ""
 simpledb_domain_postfix = "_test"
 ejp_bucket = 'ejp_bucket'
 templates_bucket = 'templates_bucket'
+ppp_cdn_bucket = 'ppd_cdn_bucket'
+archive_bucket = "archive_bucket"
 bot_bucket = 'bot_bucket'
 lens_bucket = 'dest_bucket'
 poa_packaging_bucket = 'poa_packaging_bucket'
@@ -49,3 +52,6 @@ pdf_cover_landing_page = "https://localhost.org/download-your-cover/"
 # Fastly CDNs
 fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
 fastly_api_key = 'fake_fastly_api_key'
+
+elifepubmed_config_file = 'tests/activity/pubmed.cfg'
+elifepubmed_config_section = 'elife'

@@ -4,7 +4,7 @@ import importlib
 from optparse import OptionParser
 
 import boto.swf
-import settings as settingsLib
+
 import workflow
 import activity
 
@@ -13,9 +13,7 @@ import activity
 Amazon SWF register workflow or activity utility
 """
 
-def start(ENV="dev"):
-    # Specify run environment settings
-    settings = settingsLib.get_settings(ENV)
+def start(settings):
 
     # Simple connect
     conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
@@ -58,7 +56,7 @@ def start(ENV="dev"):
         # Now register it
         response = workflow_object.register()
 
-        print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
+        print('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
 
     activity_names = []
     activity_names.append("ReadyToPublish")
@@ -122,7 +120,7 @@ def start(ENV="dev"):
         # Now register it
         response = activity_object.register()
 
-        print 'got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)
+        print('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
 
 if __name__ == "__main__":
 
@@ -134,4 +132,7 @@ if __name__ == "__main__":
     if options.env:
         ENV = options.env
 
-    start(ENV)
+    import settings as settings_lib
+    SETTINGS = settings_lib.get_settings(ENV)
+
+    start(SETTINGS)

@@ -2,6 +2,7 @@ import time
 import os
 from datetime import datetime
 
+
 class FakeBotoConnection:
     def __init__(self):
         self.start_called = None
@@ -15,16 +16,38 @@ class FakeLayer1:
         pass
 
     def start_workflow_execution(
-        self, domain, workflow_id, workflow_name, workflow_version, task_list=None, 
-        child_policy=None, execution_start_to_close_timeout=None, input=None, 
-        tag_list=None, task_start_to_close_timeout=None):
+            self, domain, workflow_id, workflow_name, workflow_version, task_list=None,
+            child_policy=None, execution_start_to_close_timeout=None, input=None,
+            tag_list=None, task_start_to_close_timeout=None):
         pass
 
     def list_closed_workflow_executions(
-        self, domain, start_latest_date=None, start_oldest_date=None, close_latest_date=None, 
-        close_oldest_date=None, close_status=None, tag=None, workflow_id=None, workflow_name=None, 
-        workflow_version=None, maximum_page_size=None, next_page_token=None, reverse_order=None):
+            self, domain, start_latest_date=None, start_oldest_date=None, close_latest_date=None,
+            close_oldest_date=None, close_status=None, tag=None, workflow_id=None,
+            workflow_name=None, workflow_version=None, maximum_page_size=None,
+            next_page_token=None, reverse_order=None):
         return {'executionInfos': []}
+
+    def describe_workflow_type(self, domain, workflow_name, workflow_version):
+        pass
+
+    def register_workflow_type(
+            self, domain, name, version, task_list=None, default_child_policy=None,
+            default_execution_start_to_close_timeout=None,
+            default_task_start_to_close_timeout=None, description=None):
+        pass
+
+    def describe_activity_type(
+            self, domain, activity_name, activity_version):
+        pass
+
+    def register_activity_type(
+            self, domain, name, version, task_list=None, default_task_heartbeat_timeout=None,
+            default_task_schedule_to_close_timeout=None,
+            default_task_schedule_to_start_timeout=None, default_task_start_to_close_timeout=None,
+            description=None):
+        pass
+
 
 class FakeFlag():
     "a fake object to return process monitoring status"
@@ -41,6 +64,7 @@ class FakeFlag():
             time.sleep(self.timeout_seconds)
         return return_value
 
+
 class FakeS3Event():
     "object to test an S3 notification event from an SQS queue"
     def __init__(self):
@@ -49,20 +73,26 @@ class FakeS3Event():
         # test data below
         self._event_name = u'ObjectCreated:Put'
         self._event_time = u'2016-07-28T16:14:27.809576Z'
-        self._bucket_name =  u'jen-elife-production-final'
-        self._file_name =  u'elife-00353-vor-r1.zip'
+        self._bucket_name = u'jen-elife-production-final'
+        self._file_name = u'elife-00353-vor-r1.zip'
         self._file_etag = u'e7f639f63171c097d4761e2d2efe8dc4'
         self._file_size = 1097506
+
     def event_name(self):
         return self._event_name
+
     def event_time(self):
         return self._event_time
+
     def bucket_name(self):
         return self._bucket_name
+
     def file_name(self):
         return self._file_name
+
     def file_etag(self):
         return self._file_etag
+
     def file_size(self):
         return self._file_size
 
