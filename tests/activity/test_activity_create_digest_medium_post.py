@@ -13,6 +13,7 @@ import provider.lax_provider as lax_provider
 import provider.digest_provider as digest_provider
 import provider.article_processing as article_processing
 from tests import read_fixture
+from tests.classes_mock import FakeSMTPServer
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 
@@ -47,6 +48,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
+    @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('digestparser.medium_post.post_content')
     @patch.object(lax_provider, 'article_first_by_status')
     @patch.object(lax_provider, 'article_highest_version')
@@ -87,7 +89,8 @@ class TestCreateDigestMediumPost(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_emit, fake_storage_context,
                          fake_article_storage_context, fake_processing_storage_context,
-                         fake_highest_version, fake_first, fake_post_content):
+                         fake_highest_version, fake_first, fake_post_content,
+                         fake_email_smtp_connect):
         # copy files into the input directory using the storage context
         fake_emit.return_value = None
         activity_data = digest_activity_data(
@@ -102,6 +105,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
             bot_storage_context.resources = test_data.get('bot_bucket_resources')
         fake_storage_context.return_value = bot_storage_context
         fake_processing_storage_context.return_value = FakeStorageContext()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
         # lax mocking
         fake_highest_version.return_value = test_data.get('lax_highest_version')
         fake_first.return_value = test_data.get("first_vor")

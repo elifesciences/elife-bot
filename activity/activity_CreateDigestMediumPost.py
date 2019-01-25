@@ -1,8 +1,10 @@
 import os
 import json
+import time
 from digestparser import medium_post
 from provider.article_processing import download_jats
 import provider.digest_provider as digest_provider
+import provider.email_provider as email_provider
 from activity.objects import Activity
 
 
@@ -98,6 +100,10 @@ class activity_CreateDigestMediumPost(Activity):
                 self.statuses["post"] = post_medium_content(
                     self.medium_content, self.digest_config, self.logger)
 
+            if self.statuses.get("post"):
+                # Email
+                self.statuses["email"] = self.email_notification(article_id)
+
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
 
@@ -186,6 +192,32 @@ class activity_CreateDigestMediumPost(Activity):
 
         return approve_status
 
+    def email_notification(self, article_id):
+        "email the success notification to the recipients"
+        success = True
+
+        current_time = time.gmtime()
+        body = success_email_body(current_time)
+        subject = success_email_subject(article_id)
+        sender_email = self.settings.digest_sender_email
+
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.digest_recipient_email)
+
+        connection = email_provider.smtp_connect(self.settings, self.logger)
+        # send the emails
+        for recipient in recipient_email_list:
+            # create the email
+            email_message = email_provider.message(subject, sender_email, recipient)
+            email_provider.add_text(email_message, body)
+            # send the email
+            email_success = email_provider.smtp_send(connection, sender_email, recipient,
+                                                     email_message, self.logger)
+            if not email_success:
+                # for now any failure in sending a mail return False
+                success = False
+        return success
+
     def create_activity_directories(self):
         """
         Create the directories in the activity tmp_dir
@@ -206,3 +238,21 @@ def post_medium_content(medium_content, digest_config, logger):
         except Exception as exception:
             logger.exception("Exception raised posting to Medium. Details: %s" % str(exception))
         return False
+
+
+def success_email_subject(article_id):
+    "the email subject"
+    return u'Medium post created for Digest: {msid:0>5}'.format(msid=str(article_id))
+
+
+def success_email_body(current_time):
+    """
+    Format the body of the email
+    """
+    body = ""
+    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
+    datetime_string = time.strftime(date_format, current_time)
+    body += "As at " + datetime_string + "\n"
+    body += "\n"
+    body += "\n\nSincerely\n\neLife bot"
+    return body
