@@ -309,7 +309,7 @@ def xml_has_video(xml_file):
     "check the XML for videos"
     has_videos = None
     xml_content = None
-    with open(xml_file, "rb") as open_file:
+    with open(xml_file, "r") as open_file:
         xml_content = open_file.read()
         has_videos = glencoe_check.has_videos(xml_content)
     return has_videos
