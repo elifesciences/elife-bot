@@ -86,17 +86,19 @@ class activity_ArchiveArticle(Activity):
     def download_files(self, bucket_name, expanded_folder, zip_dir_path):
         "download files from the expanded folder"
         # download expanded folder
-        bucket_name = self.settings.poa_bucket
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
         orig_resource = storage_provider + bucket_name + "/" + expanded_folder
+        self.logger.info("ArchiveArticle listing files from %s", orig_resource)
         files_in_bucket = storage.list_resources(orig_resource)
+        self.logger.info("files_in_bucket: %s", files_in_bucket)
         try:
             for key_name in files_in_bucket:
                 file_name = key_name.split('/')[-1]
                 file_path = os.path.join(zip_dir_path, file_name)
                 storage_resource_origin = orig_resource + '/' + file_name
                 with open(file_path, 'wb') as open_file:
+                    self.logger.info("Downloading %s to %s", (storage_resource_origin, file_path))
                     storage.get_resource_to_file(storage_resource_origin, open_file)
         except IOError as exception:
             self.logger.exception(
@@ -110,10 +112,12 @@ class activity_ArchiveArticle(Activity):
         zip_path = os.path.join(self.get_tmp_dir(), zip_dir_name) + '.zip'
         # zip expanded folder
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, allowZip64=True) as open_zip:
+            self.logger.info("Opened zip file %s", zip_path)
             for root, dirs, files in os.walk(zip_dir_path):
                 for dir_file in files:
                     filename = os.path.join(root, dir_file)
                     if os.path.isfile(filename):
+                        self.logger.info("Adding file %s to zip file %s", (filename, zip_path))
                         # Archive file name, effectively make the
                         # zip_dir the root directory by stripping it from the file name f
                         arcname = root.rstrip(zip_dir_path) + dir_file

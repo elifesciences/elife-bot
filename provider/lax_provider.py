@@ -62,7 +62,7 @@ def article_snippet(article_id, version, settings, auth=False):
     "snippet from the versions list for this version"
     status_code, data = article_versions(article_id, settings, auth)
     if status_code == 200:
-        snippet = (vd for vd in data if vd["version"] == int(version)).next()
+        snippet = next(vd for vd in data if vd["version"] == int(version))
         return snippet
     raise Exception("Error in article_snippet: Version not found. Status: " + str(status_code))
 
@@ -102,7 +102,7 @@ def article_highest_version(article_id, settings, auth=False):
 
 def article_next_version(article_id, settings):
     version = article_highest_version(article_id, settings)
-    if isinstance(version, (int,long)) and version >= 0:
+    if isinstance(version, int) and version >= 0:
         version = str(version + 1)
     if version is None:
         raise RuntimeError("Error looking up article next version. Version is Null. Check call to Lax.")
@@ -113,7 +113,7 @@ def article_version_date_by_version(article_id, version, settings):
     status_code, data = article_versions(article_id, settings)
     print(data)
     if status_code == 200:
-        version_data = (vd for vd in data if vd["version"] == int(version)).next()
+        version_data = next(vd for vd in data if vd["version"] == int(version))
         return parse(version_data["versionDate"]).strftime("%Y-%m-%dT%H:%M:%SZ")
     raise Exception("Error in article_publication_date_by_version: Version date not found. Status: " + str(status_code))
 

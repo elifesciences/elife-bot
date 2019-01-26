@@ -30,7 +30,8 @@ class TestArchiveArticle(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
-        helpers.delete_files_in_folder(activity_test_data.ExpandArticle_files_dest_folder)
+        helpers.delete_files_in_folder(
+            activity_test_data.ExpandArticle_files_dest_folder, filter_out=['.gitkeep'])
 
     def zip_assertions(self, zip_file_path, expected_zip_file_name, expected_zip_files):
         zip_file_name = None

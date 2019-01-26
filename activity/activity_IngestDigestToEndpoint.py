@@ -3,6 +3,7 @@ import json
 from digestparser import json_output
 from provider.storage_provider import storage_context
 from provider.execution_context import get_session
+from provider.article_processing import download_article_xml
 import provider.digest_provider as digest_provider
 import provider.lax_provider as lax_provider
 from activity.objects import Activity
@@ -306,21 +307,6 @@ class activity_IngestDigestToEndpoint(Activity):
                 os.mkdir(dir_name)
             except OSError:
                 pass
-
-
-def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=None):
-    xml_file = lax_provider.get_xml_file_name(
-        settings, bucket_folder, bucket_name, version)
-    storage = storage_context(settings)
-    storage_provider = settings.storage_provider + "://"
-    orig_resource = storage_provider + bucket_name + "/" + bucket_folder
-    # download the file
-    article_xml_filename = xml_file.split("/")[-1]
-    filename_plus_path = os.path.join(to_dir, article_xml_filename)
-    with open(filename_plus_path, "wb") as open_file:
-        storage_resource_origin = orig_resource + "/" + article_xml_filename
-        storage.get_resource_to_file(storage_resource_origin, open_file)
-        return filename_plus_path
 
 
 def related_from_lax(article_id, version, settings, logger=None, auth=True):

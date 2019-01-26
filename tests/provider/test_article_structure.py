@@ -47,6 +47,66 @@ class TestArticleStructure(unittest.TestCase):
                 ('file_type', 'ArticleZip')
             ])
         },
+        {
+            'full_filename': 'elife-00123-poa.zip',
+            'attrs': OrderedDict([
+                ('filename', 'elife-00123-poa'),
+                ('extension', 'zip'),
+                ('status', 'poa'),
+                ('is_article_zip', True),
+                ('journal', 'elife'),
+                ('article_id', '00123'),
+                ('versioned', False),
+                ('version', None),
+                ('extra_info', []),
+                ('file_type', 'ArticleZip')
+            ])
+        },
+        {
+            'full_filename': 'elife-00288-supp-v1.zip',
+            'attrs': OrderedDict([
+                ('filename', 'elife-00288-supp-v1'),
+                ('extension', 'zip'),
+                ('status', None),
+                ('is_article_zip', False),
+                ('journal', 'elife'),
+                ('article_id', '00288'),
+                ('versioned', True),
+                ('version', '1'),
+                ('extra_info', ['supp']),
+                ('file_type', 'Other')
+            ])
+        },
+        {
+            'full_filename': 'elife-00012-v1.xml',
+            'attrs': OrderedDict([
+                ('filename', 'elife-00012-v1'),
+                ('extension', 'xml'),
+                ('status', None),
+                ('is_article_zip', False),
+                ('journal', 'elife'),
+                ('article_id', '00012'),
+                ('versioned', True),
+                ('version', '1'),
+                ('extra_info', []),
+                ('file_type', 'ArticleXML')
+            ])
+        },
+        {
+            'full_filename': 'elife-00012-fig3-figsupp1.tiff',
+            'attrs': OrderedDict([
+                ('filename', 'elife-00012-fig3-figsupp1'),
+                ('extension', 'tiff'),
+                ('status', None),
+                ('is_article_zip', False),
+                ('journal', 'elife'),
+                ('article_id', '00012'),
+                ('versioned', False),
+                ('version', None),
+                ('extra_info', ['fig3', 'figsupp1']),
+                ('file_type', 'Figure')
+            ])
+        },
     )
     def test_article_info(self, full_filename, attrs):
         self.articleinfo = ArticleInfo(full_filename)
@@ -278,7 +338,7 @@ class TestArticleStructure(unittest.TestCase):
                     'elife-13273-media1.mp4',
                     'elife-00666-figures-v1.pdf',
                     'elife-18425-figures-v2.pdf']
-        self.assertItemsEqual(article_structure.pre_ingest_assets(files), expected)
+        self.assertEqual(sorted(article_structure.pre_ingest_assets(files)), sorted(expected))
 
 
     @patch.object(FakeBucket, 'list')

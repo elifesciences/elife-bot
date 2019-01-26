@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import os
 import unittest
 import time
@@ -292,7 +294,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         format = "html"
 
-        expected_headers = {'format': 'html', u'email_type': u'author_publication_email_VOR_no_POA', u'sender_email': u'press@elifesciences.org', u'subject': u'Author\xe9, Your eLife paper is now online'}
+        expected_headers = {'format': 'html', u'email_type': u'author_publication_email_VOR_no_POA', u'sender_email': u'press@elifesciences.org', u'subject': u'Authoré, Your eLife paper is now online'}
 
         body = self.activity.templates.get_email_headers(
             email_type=email_type,

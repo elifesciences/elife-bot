@@ -1,11 +1,13 @@
 import json
-from boto.s3.connection import S3Connection
-from provider.article_structure import get_article_xml_key
+from collections import OrderedDict
+from provider.storage_provider import storage_context
+from provider.lax_provider import get_xml_file_name
 from activity.objects import Activity
 
 """
 ScheduleDownstream.py activity
 """
+
 
 class activity_ScheduleDownstream(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
@@ -22,21 +24,6 @@ class activity_ScheduleDownstream(Activity):
                             "other recipients after an article is published.")
         self.logger = logger
 
-        # Bucket for outgoing files
-        self.publish_bucket = settings.poa_packaging_bucket
-
-        # Outbox folders on S3
-        self.pubmed_outbox_folder = "pubmed/outbox/"
-        self.pmc_outbox_folder = "pmc/outbox/"
-        self.publication_email_outbox_folder = "publication_email/outbox/"
-        self.pub_router_outbox_folder = "pub_router/outbox/"
-        self.cengage_outbox_folder = "cengage/outbox/"
-        self.gooa_outbox_folder = "gooa/outbox/"
-        self.wos_outbox_folder = "wos/outbox/"
-        self.scopus_outbox_folder = "scopus/outbox/"
-        self.cnpiec_outbox_folder = "cnpiec/outbox/"
-        self.cnki_outbox_folder = "cnki/outbox/"
-
     def do_activity(self, data=None):
 
         """
@@ -45,8 +32,10 @@ class activity_ScheduleDownstream(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
-        self.expanded_bucket_name = (self.settings.publishing_buckets_prefix
-                                     + self.settings.expanded_bucket)
+        expanded_bucket_name = (
+            self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
+
+        publish_bucket_name = self.settings.poa_packaging_bucket
 
         article_id = data['article_id']
         version = data['version']
@@ -54,25 +43,24 @@ class activity_ScheduleDownstream(Activity):
         expanded_folder_name = data['expanded_folder']
         status = data['status'].lower()
 
-        conn = S3Connection(self.settings.aws_access_key_id,
-                            self.settings.aws_secret_access_key)
-        bucket = conn.get_bucket(self.expanded_bucket_name)
-
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 "Schedule Downstream", "start",
                                 "Starting scheduling of downstream deposits for " + article_id)
 
         try:
-            (xml_key, xml_filename) = get_article_xml_key(bucket, expanded_folder_name)
-
-            outbox_list = self.choose_outboxes(status)
+            xml_file_name = get_xml_file_name(
+                self.settings, expanded_folder_name, expanded_bucket_name, version)
+            xml_key_name = expanded_folder_name + "/" + xml_file_name
+            outbox_list = choose_outboxes(status, outbox_map())
 
             for outbox in outbox_list:
-                self.rename_and_copy_to_outbox(xml_key, article_id, outbox)
+                self.rename_and_copy_to_outbox(
+                    expanded_bucket_name, publish_bucket_name, xml_key_name, article_id, outbox)
 
             self.emit_monitor_event(self.settings, article_id, version, run, "Schedule Downstream",
                                     "end", "Finished scheduling of downstream deposits " +
                                     article_id + " for version " + version + " run " + str(run))
+
         except Exception as e:
             self.logger.exception("Exception when scheduling downstream")
             self.emit_monitor_event(self.settings, article_id, version, run, "Schedule Downstream",
@@ -82,66 +70,77 @@ class activity_ScheduleDownstream(Activity):
 
         return True
 
-
-    def choose_outboxes(self, status):
-        outbox_list = []
-
-        if status == "poa":
-            outbox_list.append(self.pubmed_outbox_folder)
-            outbox_list.append(self.publication_email_outbox_folder)
-
-        elif status == "vor":
-            outbox_list.append(self.pubmed_outbox_folder)
-            outbox_list.append(self.pmc_outbox_folder)
-            outbox_list.append(self.publication_email_outbox_folder)
-            outbox_list.append(self.pub_router_outbox_folder)
-            outbox_list.append(self.cengage_outbox_folder)
-            outbox_list.append(self.gooa_outbox_folder)
-            outbox_list.append(self.wos_outbox_folder)
-            outbox_list.append(self.scopus_outbox_folder)
-            outbox_list.append(self.cnpiec_outbox_folder)
-            outbox_list.append(self.cnki_outbox_folder)
-
-        return outbox_list
-
-
-    def rename_and_copy_to_outbox(self, old_xml_key, article_id, prefix):
+    def rename_and_copy_to_outbox(self, source_bucket_name, dest_bucket_name,
+                                  old_xml_key_name, article_id, prefix):
         """
         Invoke this for each outbox the XML is copied to
-        Create a new XML file name and then copy from the old_xml_key to the new key name
+        Create a new XML file name and then copy from the old_xml_key_name to the new key name
         Prefix is an outbox path on S3 where the XML is copied to
         """
         # Rename the XML file to match what is used already
-        new_key_name = self.new_outbox_xml_name(
+        new_key_name = new_outbox_xml_name(
             prefix=prefix,
             journal='elife',
             article_id=str(article_id).zfill(5))
 
         self.copy_article_xml_to_outbox(
+            dest_bucket_name=dest_bucket_name,
             new_key_name=new_key_name,
-            source_bucket_name=self.expanded_bucket_name,
-            old_key_name=old_xml_key.name)
+            source_bucket_name=source_bucket_name,
+            old_key_name=old_xml_key_name)
+
+    def copy_article_xml_to_outbox(self, dest_bucket_name, new_key_name,
+                                   source_bucket_name, old_key_name):
+        "copy the XML file to an S3 outbox folder, for now"
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + source_bucket_name + "/" + old_key_name
+        dest_resource = storage_provider + dest_bucket_name + "/" + new_key_name
+        self.logger.info("ScheduleDownstream Copying %s to %s " % (orig_resource, dest_resource))
+        storage.copy_resource(orig_resource, dest_resource)
 
 
-    def new_outbox_xml_name(self, prefix, journal, article_id):
-        """
-        New name we want e.g.: elife99999.xml
-        """
-        try:
-            return prefix + journal + article_id + '.xml'
-        except TypeError:
-            return None
+def outbox_map():
+    "map of outbox names to values"
+    outboxes = OrderedDict()
+    outboxes["pubmed"] = "pubmed/outbox/"
+    outboxes["pmc"] = "pmc/outbox/"
+    outboxes["publication_email"] = "publication_email/outbox/"
+    outboxes["pub_router"] = "pub_router/outbox/"
+    outboxes["cengage"] = "cengage/outbox/"
+    outboxes["gooa"] = "gooa/outbox/"
+    outboxes["wos"] = "wos/outbox/"
+    outboxes["scopus"] = "scopus/outbox/"
+    outboxes["cnpiec"] = "cnpiec/outbox/"
+    outboxes["cnki"] = "cnki/outbox/"
+    return outboxes
 
 
-    def copy_article_xml_to_outbox(self, new_key_name, source_bucket_name, old_key_name):
-        """
-        Used for uploading to the crossref outbox, for now
-        """
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(self.publish_bucket)
+def choose_outboxes(status, outbox_map):
+    outbox_list = []
 
-        key = bucket.copy_key(new_key_name, source_bucket_name, old_key_name)
+    if status == "poa":
+        outbox_list.append(outbox_map.get("pubmed"))
+        outbox_list.append(outbox_map.get("publication_email"))
+
+    elif status == "vor":
+        outbox_list.append(outbox_map.get("pubmed"))
+        outbox_list.append(outbox_map.get("pmc"))
+        outbox_list.append(outbox_map.get("publication_email"))
+        outbox_list.append(outbox_map.get("pub_router"))
+        outbox_list.append(outbox_map.get("cengage"))
+        outbox_list.append(outbox_map.get("gooa"))
+        outbox_list.append(outbox_map.get("wos"))
+        outbox_list.append(outbox_map.get("scopus"))
+        outbox_list.append(outbox_map.get("cnpiec"))
+        outbox_list.append(outbox_map.get("cnki"))
+
+    return outbox_list
 
 
-
+def new_outbox_xml_name(prefix, journal, article_id):
+    "New name we want e.g.: elife99999.xml"
+    try:
+        return prefix + journal + article_id + '.xml'
+    except TypeError:
+        return None

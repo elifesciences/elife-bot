@@ -1,5 +1,4 @@
 import boto.swf
-import settings as settingsLib
 import log
 import json
 import random
@@ -16,10 +15,7 @@ import newrelic.agent
 Amazon SWF decider
 """
 
-def decide(ENV, flag):
-    # Specify run environment settings
-    settings = settingsLib.get_settings(ENV)
-
+def decide(settings, flag):
     # Decider event history length requested
     maximum_page_size = 100
 
@@ -180,21 +176,9 @@ def import_workflow_class(workflow_name):
     try:
         module_name = "workflow." + workflow_name
         importlib.import_module(module_name)
-        # Reload the module, in case it was imported before
-        reload_module(module_name)
         return True
     except ImportError:
         return False
-
-def reload_module(module_name):
-    """
-    Given an module name,
-    attempt to reload the module
-    """
-    try:
-        reload(eval(module_name))
-    except NameError:
-        pass
 
 def get_workflow_object(workflow_name, settings, logger, conn, token, decision, maximum_page_size):
     """
@@ -220,4 +204,8 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     if options.env:
         ENV = options.env
-    process.monitor_interrupt(lambda flag: decide(ENV, flag))
+
+    settings_lib = __import__('settings')
+    settings = settings_lib.get_settings(ENV)
+
+    process.monitor_interrupt(lambda flag: decide(settings, flag))

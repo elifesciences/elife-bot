@@ -1,14 +1,15 @@
-import workflow
+from workflow.objects import Workflow
 
 """
 PubmedArticleDeposit workflow
 """
 
-class workflow_PubmedArticleDeposit(workflow.workflow):
+class workflow_PubmedArticleDeposit(Workflow):
 
     def __init__(self, settings, logger, conn=None, token=None, decision=None,
                  maximum_page_size=100):
-        workflow.workflow.__init__(self, settings, logger, conn, token, decision, maximum_page_size)
+        super(workflow_PubmedArticleDeposit, self).__init__(
+            settings, logger, conn, token, decision, maximum_page_size)
 
         # SWF Defaults
         self.name = "PubmedArticleDeposit"

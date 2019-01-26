@@ -3,6 +3,8 @@ domain = ""
 default_task_list = ""
 
 bucket = "old_articles_bucket"
+prefix = "a_test_prefix"
+delimiter = "/"
 
 storage_provider = 's3'
 expanded_bucket = 'origin_bucket'
@@ -20,6 +22,10 @@ workflow_starter_queue = ""
 event_monitor_queue = ""
 sqs_region = ""
 
+redis_host = ""
+redis_port = 6379
+redis_db = 0
+redis_expire_key = 86400  # seconds
 
 simpledb_region = ""
 simpledb_domain_postfix = "_test"
@@ -93,13 +99,12 @@ HEFCE_FTP_URI = "hefce_ftp.localhost"
 HEFCE_FTP_USERNAME = ""
 HEFCE_FTP_PASSWORD = ""
 HEFCE_FTP_CWD = ""
-HEFCE_EMAIL = ""
+HEFCE_EMAIL = ["", ""]
 
 HEFCE_SFTP_URI = "hefce_sftp.localhost"
 HEFCE_SFTP_USERNAME = ""
 HEFCE_SFTP_PASSWORD = ""
 HEFCE_SFTP_CWD = ""
-HEFCE_EMAIL = ""
 
 CENGAGE_FTP_URI = "cengage.localhost"
 CENGAGE_FTP_USERNAME = ""
