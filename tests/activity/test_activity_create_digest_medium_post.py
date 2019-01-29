@@ -185,6 +185,14 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         result = activity_module.post_medium_content('content', {}, FakeLogger())
         self.assertFalse(result)
 
+    @patch.object(activity_module.email_provider, 'smtp_connect')
+    def test_email_notification(self, fake_email_smtp_connect):
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
+        return_value = self.activity.email_notification(99999)
+        self.assertTrue(return_value)
+        self.assertEqual(
+            self.activity.logger.loginfo, 
+            "Email sending details: OrderedDict([('error', 0), ('success', 2)])")
 
 if __name__ == '__main__':
     unittest.main()

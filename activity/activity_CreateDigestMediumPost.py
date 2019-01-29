@@ -204,18 +204,13 @@ class activity_CreateDigestMediumPost(Activity):
         recipient_email_list = email_provider.list_email_recipients(
             self.settings.digest_recipient_email)
 
-        connection = email_provider.smtp_connect(self.settings, self.logger)
-        # send the emails
-        for recipient in recipient_email_list:
-            # create the email
-            email_message = email_provider.message(subject, sender_email, recipient)
-            email_provider.add_text(email_message, body)
-            # send the email
-            email_success = email_provider.smtp_send(connection, sender_email, recipient,
-                                                     email_message, self.logger)
-            if not email_success:
-                # for now any failure in sending a mail return False
-                success = False
+        messages = email_provider.simple_messages(
+            sender_email, recipient_email_list, subject, body, None, self.logger)
+        self.logger.info('Formatted %d messages in %s' % (len(messages), self.name))
+
+        details = email_provider.smtp_connect_send_messages(self.settings, messages, self.logger)
+        self.logger.info('Email sending details: %s' % str(details))
+
         return success
 
     def create_activity_directories(self):

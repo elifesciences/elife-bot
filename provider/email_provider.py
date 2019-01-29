@@ -2,6 +2,7 @@
 import os
 import smtplib
 import traceback
+from collections import OrderedDict
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -98,6 +99,48 @@ def smtp_send(connection, sender, recipient, message, logger=None):
             logger.error('error in smtp_send: %s ', traceback.format_exc())
         return False
     return True
+
+
+def smtp_send_message(connection, email_message, logger=None):
+    """send the email message using the connection"""
+    sender = email_message.get('From')
+    recipient = email_message.get('To')
+    return smtp_send(connection, sender, recipient, email_message, logger)
+
+
+def smtp_send_messages(connection, messages, logger=None):
+    """send a list of messages on the connection"""
+    details = OrderedDict([("error", 0), ("success", 0)])
+    for email_message in messages:
+        result = smtp_send_message(connection, email_message, logger)
+        if result:
+            details["success"] += 1
+        else:
+            details["error"] += 1
+    return details
+
+
+def smtp_connect_send_messages(settings, messages, logger=None):
+    """connect then send a list of messages"""
+    connection = smtp_connect(settings, logger)
+    return smtp_send_messages(connection, messages, logger)
+
+
+def simple_message(sender, recipient, subject, body, attachment=None, logger=None):
+    """set values of a message"""
+    email_message = message(subject, sender, recipient)
+    add_text(email_message, body)
+    if attachment:
+        add_attachment(email_message, attachment)
+    return email_message
+
+
+def simple_messages(sender, recipient_list, subject, body, attachment=None, logger=None):
+    """list of simple messages for a list of recipients"""
+    messages = []
+    for recipient in recipient_list:
+        messages.append(simple_message(sender, recipient, subject, body, attachment, logger))
+    return messages
 
 
 def list_email_recipients(email_list):
