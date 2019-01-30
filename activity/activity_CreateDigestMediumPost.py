@@ -105,7 +105,9 @@ class activity_CreateDigestMediumPost(Activity):
                 self.statuses["email"] = self.email_notification(article_id)
 
         except Exception as exception:
-            self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
+            self.logger.exception(
+                ("Exception raised in do_activity of %s, article_id %s, version %s. Details: %s" %
+                 (self.name, article_id, version, str(exception))))
 
         self.emit_end_message(article_id, version, run)
 
