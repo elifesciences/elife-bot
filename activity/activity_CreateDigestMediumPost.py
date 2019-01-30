@@ -210,7 +210,7 @@ class activity_CreateDigestMediumPost(Activity):
             sender_email, recipient_email_list, subject, body, logger=self.logger)
         self.logger.info('Formatted %d messages in %s' % (len(messages), self.name))
 
-        details = email_provider.smtp_connect_send_messages(self.settings, messages, self.logger)
+        details = email_provider.smtp_send_messages(self.settings, messages, self.logger)
         self.logger.info('Email sending details: %s' % str(details))
 
         return success

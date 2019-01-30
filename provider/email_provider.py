@@ -108,8 +108,9 @@ def smtp_send_message(connection, email_message, logger=None):
     return smtp_send(connection, sender, recipient, email_message, logger)
 
 
-def smtp_send_messages(connection, messages, logger=None):
+def smtp_send_messages(settings, messages, logger=None):
     """send a list of messages on the connection"""
+    connection = smtp_connect(settings, logger)
     details = OrderedDict([("error", 0), ("success", 0)])
     for email_message in messages:
         result = smtp_send_message(connection, email_message, logger)
@@ -118,12 +119,6 @@ def smtp_send_messages(connection, messages, logger=None):
         else:
             details["error"] += 1
     return details
-
-
-def smtp_connect_send_messages(settings, messages, logger=None):
-    """connect then send a list of messages"""
-    connection = smtp_connect(settings, logger)
-    return smtp_send_messages(connection, messages, logger)
 
 
 def simple_message(sender, recipient, subject, body, attachment=None, logger=None):
