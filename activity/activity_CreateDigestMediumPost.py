@@ -84,7 +84,7 @@ class activity_CreateDigestMediumPost(Activity):
             docx_file = digest_provider.download_docx_from_s3(
                 self.settings, article_id, self.settings.bot_bucket, self.input_dir, self.logger)
 
-            jats_file = download_jats(self.settings, expanded_folder, self.temp_dir, self.logger)  
+            jats_file = download_jats(self.settings, expanded_folder, self.temp_dir, self.logger)
 
             # find the image file name
             image_file_name = digest_provider.image_file_name_from_s3(
