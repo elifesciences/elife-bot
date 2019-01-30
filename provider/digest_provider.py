@@ -104,6 +104,7 @@ def docx_exists_in_s3(settings, article_id, bucket_name, logger):
         logger.exception(
             "Exception checking if digest docx exists for article %s. Details: %s" %
             (str(article_id), str(exception)))
+        raise
 
 
 def download_docx_from_s3(settings, article_id, bucket_name, to_dir, logger):
@@ -119,6 +120,7 @@ def download_docx_from_s3(settings, article_id, bucket_name, to_dir, logger):
         logger.exception(
             "Exception downloading docx for article %s. Details: %s" %
             (str(article_id), str(exception)))
+        raise
     return docx_file
 
 
