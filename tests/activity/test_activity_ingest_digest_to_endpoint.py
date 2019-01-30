@@ -236,16 +236,18 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch.object(lax_provider, 'article_highest_version')
     @patch.object(lax_provider, 'article_first_by_status')
     @patch.object(activity_object, 'emit_monitor_event')
+    @patch.object(digest_provider, 'download_docx_from_s3')
     @patch.object(digest_provider, 'storage_context')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
-    def test_do_activity_bad_download(self, fake_session, fake_storage_context, fake_emit,
-                                      fake_first, fake_highest_version):
+    def test_do_activity_bad_download(self, fake_session, fake_storage_context, fake_download, 
+                                      fake_emit, fake_first, fake_highest_version):
         "test unable to download a digest docx file"
         fake_first.return_value = True
         fake_highest_version.return_value = 1
         named_fake_storage_context = FakeStorageContext()
         named_fake_storage_context.resource_exists = lambda return_true: True
         fake_storage_context.return_value = named_fake_storage_context
+        fake_download.return_value = None
         session_test_data = session_data({})
         fake_session.return_value = FakeSession(session_test_data)
         activity_data = test_activity_data.data_example_before_publish
