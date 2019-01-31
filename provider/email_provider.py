@@ -2,6 +2,7 @@
 import os
 import smtplib
 import traceback
+from collections import OrderedDict
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -98,6 +99,62 @@ def smtp_send(connection, sender, recipient, message, logger=None):
             logger.error('error in smtp_send: %s ', traceback.format_exc())
         return False
     return True
+
+
+def smtp_send_message(connection, email_message, logger=None):
+    """send the email message using the connection"""
+    sender = email_message.get('From')
+    recipient = email_message.get('To')
+    return smtp_send(connection, sender, recipient, email_message, logger)
+
+
+def smtp_send_messages(settings, messages, logger=None):
+    """send a list of messages on the connection"""
+    connection = smtp_connect(settings, logger)
+    details = OrderedDict([("error", 0), ("success", 0)])
+    for email_message in messages:
+        result = smtp_send_message(connection, email_message, logger)
+        if result:
+            details["success"] += 1
+        else:
+            details["error"] += 1
+    return details
+
+
+def simple_message(sender, recipient, subject, body, attachments=None, logger=None):
+    """set values of a message
+
+    :param sender: email address of the sender
+    :param recipient: email address of the recipient
+    :param subject: email subject
+    :param body: email body
+    :param attachments: optional list of email attachments, each a file system path to the file
+    :param logger: optional log.logger object
+    :returns: MIMEMultipart email message object
+    """
+    email_message = message(subject, sender, recipient)
+    add_text(email_message, body)
+    if attachments:
+        for attachment in attachments:
+            add_attachment(email_message, attachment)
+    return email_message
+
+
+def simple_messages(sender, recipients, subject, body, attachments=None, logger=None):
+    """list of simple messages for a list of recipients
+
+    :param sender: email address of the sender
+    :param recipients: list of recipient email addresses
+    :param subject: email subject
+    :param body: email body
+    :param attachments: optional list of email attachments, each a file system path to the file
+    :param logger: optional log.logger object
+    :returns: list of MIMEMultipart email message objects
+    """
+    messages = []
+    for recipient in recipients:
+        messages.append(simple_message(sender, recipient, subject, body, attachments, logger))
+    return messages
 
 
 def list_email_recipients(email_list):

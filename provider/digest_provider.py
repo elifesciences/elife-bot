@@ -87,6 +87,43 @@ def outbox_dest_resource_path(storage_provider, digest, bucket_name):
     return outbox_resource_path(storage_provider, msid, bucket_name)
 
 
+def docx_resource_origin(storage_provider, article_id, bucket_name):
+    """the resource_origin of the docx file in the storage context"""
+    resource_path = outbox_resource_path(storage_provider, article_id, bucket_name)
+    return resource_path + "/" + docx_file_name(article_id)
+
+
+def docx_exists_in_s3(settings, article_id, bucket_name, logger):
+    """check if a digest docx exists in the S3 outbox"""
+    resource_origin = docx_resource_origin(
+        settings.storage_provider, article_id, bucket_name)
+    storage = storage_context(settings)
+    try:
+        return storage.resource_exists(resource_origin)
+    except Exception as exception:
+        logger.exception(
+            "Exception checking if digest docx exists for article %s. Details: %s" %
+            (str(article_id), str(exception)))
+        raise
+
+
+def download_docx_from_s3(settings, article_id, bucket_name, to_dir, logger):
+    """download the docx file from the S3 outbox"""
+    docx_file = None
+    resource_origin = docx_resource_origin(
+        settings.storage_provider, article_id, bucket_name)
+    storage = storage_context(settings)
+    try:
+        docx_file = download_digest(
+            storage, docx_file_name(article_id), resource_origin, to_dir)
+    except Exception as exception:
+        logger.exception(
+            "Exception downloading docx for article %s. Details: %s" %
+            (str(article_id), str(exception)))
+        raise
+    return docx_file
+
+
 def outbox_file_dest_resource(storage_provider, digest, bucket_name, file_path):
     "concatenate the S3 bucket object path we copy the file to"
     resource_path = outbox_dest_resource_path(storage_provider, digest, bucket_name)
@@ -96,6 +133,19 @@ def outbox_file_dest_resource(storage_provider, digest, bucket_name, file_path):
         file_name=file_name)
     dest_resource = resource_path + "/" + dest_file_name
     return dest_resource
+
+
+def image_file_name_from_s3(settings, article_id, bucket_name):
+    "image file in the outbox is the non .docx file"
+    image_file_name = None
+    resource_path = outbox_resource_path(settings.storage_provider, article_id, bucket_name)
+    storage = storage_context(settings)
+    object_list = storage.list_resources(resource_path)
+    if object_list:
+        for name in object_list:
+            if not name.endswith(".docx"):
+                image_file_name = name.split("/")[-1]
+    return image_file_name
 
 
 def download_digest(storage, filename, resource_origin, to_dir):

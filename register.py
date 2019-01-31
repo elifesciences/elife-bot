@@ -104,6 +104,7 @@ def start(settings):
     activity_names.append("PublishDigest")
     activity_names.append("ValidateDigestInput")
     activity_names.append("EmailVideoArticlePublished")
+    activity_names.append("CreateDigestMediumPost")
     activity_names.append("PostDigestJATS")
 
     for activity_name in activity_names:
