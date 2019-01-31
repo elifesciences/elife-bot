@@ -40,7 +40,7 @@ class activity_EmailVideoArticlePublished(Activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         # get input data
-        (success, run, article_id, version, 
+        (success, run, article_id, version,
          status, expanded_folder, run_type) = self.parse_data(data)
 
         # emit start message
@@ -59,8 +59,8 @@ class activity_EmailVideoArticlePublished(Activity):
         # do not send if silent-correction
         if run_type == "silent-correction":
             self.logger.info(
-                ("Silent correction of article %s " + 
-                "no email to send in Email Video Article Published ") % article_id)
+                ("Silent correction of article %s " +
+                 "no email to send in Email Video Article Published ") % article_id)
             self.emit_activity_end_message(article_id, version, run)
             return self.ACTIVITY_SUCCESS
 
@@ -68,7 +68,7 @@ class activity_EmailVideoArticlePublished(Activity):
         first_vor = lax_provider.article_first_by_status(article_id, version, status, self.settings)
         if not first_vor:
             self.logger.info(
-                ("Not first VoR version of article %s " + 
+                ("Not first VoR version of article %s " +
                  "no email to send in Email Video Article Published ") % article_id)
             self.emit_activity_end_message(article_id, version, run)
             return self.ACTIVITY_SUCCESS
