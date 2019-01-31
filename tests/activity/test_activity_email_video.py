@@ -2,13 +2,14 @@ import os
 import unittest
 import shutil
 import copy
-from mock import mock, patch
+from mock import patch
+from tests.classes_mock import FakeSMTPServer
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 from ddt import ddt, data
 from provider.templates import Templates
 from provider.article import article
-from provider.simpleDB import SimpleDB
+import activity.activity_EmailVideoArticlePublished as activity_module
 from activity.activity_EmailVideoArticlePublished import (
     activity_EmailVideoArticlePublished as activity_object)
 
@@ -20,6 +21,7 @@ BASE_ACTIVITY_DATA = {
     "status": "vor",
     "expanded_folder": "email_video"
     }
+
 
 def activity_data(data, article_id, status, run_type):
     "customise the input data for test scenarios"
@@ -48,8 +50,8 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
             shutil.copy(source_doc, dest_doc)
         self.activity.templates.email_templates_warmed = templates_warmed
 
+    @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch.object(Templates, 'download_video_email_templates_from_s3')
-    @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch('provider.lax_provider.article_first_by_status')
     @patch('provider.lax_provider.get_xml_file_name')
     @patch('activity.activity_EmailVideoArticlePublished.storage_context')
@@ -100,15 +102,16 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_emit, fake_storage_context,
                          fake_get_xml_file_name, fake_first,
-                         fake_elife_add_email, fake_download_email_templates):
+                         fake_download_email_templates,
+                         fake_email_smtp_connect):
         # mock objects
         fake_emit.return_value = None
         fake_get_xml_file_name.return_value = test_data.get("xml_file")
         fake_first.return_value = test_data.get("first_vor")
         fake_storage_context.return_value = FakeStorageContext()
-        fake_elife_add_email.return_value = mock.MagicMock()
         fake_download_email_templates.return_value = self.fake_download_video_email_templates(
             self.activity.get_tmp_dir(), test_data.get("templates_warmed"))
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         # do the activity
         success = self.activity.do_activity(test_data.get("input_data"))
         # check assertions
@@ -163,7 +166,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
             'Header\n<p>Dear Features, article 00353 contains a video. ' +
             'You can <a href="https://doi.org/10.7554/eLife.00353">' +
             'read it</a> online.</p>\nFooter')
- 
+
         body = self.activity.templates.get_email_body(
             email_type=email_type,
             author=recipient,

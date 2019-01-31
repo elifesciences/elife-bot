@@ -1,7 +1,7 @@
 import os
 import json
-import provider.simpleDB as dblib
 import provider.article as articlelib
+import provider.email_provider as email_provider
 import provider.templates as templatelib
 import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
@@ -24,9 +24,6 @@ class activity_EmailVideoArticlePublished(Activity):
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
         self.description = "Send email when an article containing a video is published."
-
-        # Data provider
-        self.database = dblib.SimpleDB(settings)
 
         # Templates provider
         self.templates = templatelib.Templates(settings, self.get_tmp_dir())
@@ -99,11 +96,8 @@ class activity_EmailVideoArticlePublished(Activity):
                 "Could not download email templates sending %s in Email Video Article Published " %
                 article_id)
             return self.ACTIVITY_PERMANENT_FAILURE
-        # Good, we can add emails to the queue
-        # Connect to DB
-        self.database.connect()
+        # Good, we can send emails
         for recipient in recipients:
-            send = True
             send_status = self.send_email(
                 email_type, article_object.doi_id, recipient, article_object)
             if not send_status:
@@ -201,7 +195,7 @@ class activity_EmailVideoArticlePublished(Activity):
             return True
 
     def send_email(self, email_type, article_id, recipient, article, authors=None):
-        "given the email type and recipient, format the email and add it to the queue"
+        """given the email type and recipient, format the email and send it"""
 
         if recipient is None:
             return False
@@ -227,56 +221,42 @@ class activity_EmailVideoArticlePublished(Activity):
             self.logger.exception(str(exception))
             return False
 
-        # Get the article published date timestamp
-        date_scheduled_timestamp = 0
-
         try:
-            # Queue the email
-            if self.logger:
-                log_info = ("Sending " + email_type + " type email" +
-                            " for article " + str(article_id) +
-                            " to recipient_email " + str(recipient.get("e_mail")))
-                self.logger.info(log_info)
-
-            self.queue_email(
+            body = self.templates.get_email_body(
                 email_type=email_type,
-                recipient=recipient,
-                headers=headers,
+                author=recipient,
                 article=article,
                 authors=authors,
-                doi_id=article_id,
-                date_scheduled_timestamp=date_scheduled_timestamp,
-                email_format="html")
-            return True
+                format=headers["format"])
 
-        except Exception:
-            if self.logger:
-                self.logger.exception("An error has occurred on send_email method")
-                pass
+            # create the message
+            message = email_provider.simple_message(
+                headers["sender_email"], recipient.get("e_mail"),
+                headers["subject"], body, logger=self.logger)
+        except Exception as exception:
+            self.logger.exception(
+                "Failed to build the email message in send_email: %s" % str(exception))
 
-    def queue_email(self, email_type, recipient, headers, article, authors, doi_id,
-                    date_scheduled_timestamp, email_format="html"):
-        """
-        Format the email body and add it to the live queue
-        Only call this to send actual emails!
-        """
-        body = self.templates.get_email_body(
-            email_type=email_type,
-            author=recipient,
-            article=article,
-            authors=authors,
-            format=email_format)
+        try:
+            # send the email message
+            log_info = ("Sending " + email_type + " type email" +
+                        " for article " + str(article_id) +
+                        " to recipient_email " + str(recipient.get("e_mail")))
+            self.logger.info(log_info)
 
-        # Add the email to the email queue
-        self.database.elife_add_email_to_email_queue(
-            recipient_email=recipient.get("e_mail"),
-            sender_email=headers["sender_email"],
-            email_type=headers["email_type"],
-            format=headers["format"],
-            subject=headers["subject"],
-            body=body,
-            doi_id=doi_id,
-            date_scheduled_timestamp=date_scheduled_timestamp)
+            details = email_provider.smtp_send_messages(
+                self.settings, messages=[message], logger=self.logger)
+
+            if details.get("error") and int(details.get("error")) > 0:
+                self.logger.info(
+                    "Failed to send email %s for article %s to %s, details: %s " %
+                    (email_type, article_id, recipient.get("e_mail"), str(details)))
+                return False
+
+        except Exception as exception:
+            self.logger.exception("An exception occurred in send_email: %s" % str(exception))
+
+        return True
 
 
 def xml_has_video(xml_file):
