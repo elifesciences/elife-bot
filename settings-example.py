@@ -110,6 +110,7 @@ class exp():
     digest_sender_email = "sender@example.org"
     digest_recipient_email = ["e@example.org", "life@example.org"]
     digest_error_recipient_email = "error@example.org"
+    digest_medium_recipient_email = ["e@example.org", "life@example.org"]
 
     # digest endpoint
     digest_endpoint = 'https://digests/{digest_id}'
@@ -365,6 +366,7 @@ class dev():
     digest_sender_email = "sender@example.org"
     digest_recipient_email = ["e@example.org", "life@example.org"]
     digest_error_recipient_email = "error@example.org"
+    digest_medium_recipient_email = ["e@example.org", "life@example.org"]
 
     # digest endpoint
     digest_endpoint = 'https://digests/{digest_id}'
@@ -614,6 +616,7 @@ class live():
     digest_sender_email = "sender@example.org"
     digest_recipient_email = ["e@example.org", "life@example.org"]
     digest_error_recipient_email = "error@example.org"
+    digest_medium_recipient_email = ["e@example.org", "life@example.org"]
 
     # digest endpoint
     digest_endpoint = 'https://digests/{digest_id}'
