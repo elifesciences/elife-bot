@@ -64,6 +64,15 @@ class activity_EmailVideoArticlePublished(Activity):
             self.emit_activity_end_message(article_id, version, run)
             return self.ACTIVITY_SUCCESS
 
+        # do not continue unless it is the first vor version
+        first_vor = lax_provider.article_first_by_status(article_id, version, status, self.settings)
+        if not first_vor:
+            self.logger.info(
+                ("Not first VoR version of article %s " + 
+                 "no email to send in Email Video Article Published ") % article_id)
+            self.emit_activity_end_message(article_id, version, run)
+            return self.ACTIVITY_SUCCESS
+
         # download JATS XML from the expanded bucket
         # check if video exists (from article structure)
         expanded_bucket = self.settings.publishing_buckets_prefix + self.settings.expanded_bucket

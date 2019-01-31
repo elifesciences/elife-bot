@@ -51,6 +51,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
     @patch.object(Templates, 'download_video_email_templates_from_s3')
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch.object(SimpleDB, 'elife_get_email_queue_items')
+    @patch('provider.lax_provider.article_first_by_status')
     @patch('provider.lax_provider.get_xml_file_name')
     @patch('activity.activity_EmailVideoArticlePublished.storage_context')
     @patch.object(activity_object, 'emit_monitor_event')
@@ -61,6 +62,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
             "templates_warmed": True,
             "email_queue_items": [],
             "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor", None),
+            "first_vor": True,
             "activity_success": activity_object.ACTIVITY_SUCCESS
         },
         {
@@ -79,6 +81,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
             "templates_warmed": None,
             "email_queue_items": [],
             "input_data": activity_data(BASE_ACTIVITY_DATA, "00353", "vor", None),
+            "first_vor": True,
             "activity_success": activity_object.ACTIVITY_SUCCESS
         },
         {
@@ -95,15 +98,17 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
             "templates_warmed": False,
             "email_queue_items": ["duplicate"],
             "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor", None),
+            "first_vor": True,
             "activity_success": activity_object.ACTIVITY_PERMANENT_FAILURE
         }
     )
     def test_do_activity(self, test_data, fake_emit, fake_storage_context,
-                         fake_get_xml_file_name, fake_email_queue_items, fake_elife_add_email,
-                         fake_download_email_templates):
+                         fake_get_xml_file_name, fake_first, fake_email_queue_items, 
+                         fake_elife_add_email, fake_download_email_templates):
         # mock objects
         fake_emit.return_value = None
         fake_get_xml_file_name.return_value = test_data.get("xml_file")
+        fake_first.return_value = test_data.get("first_vor")
         fake_email_queue_items.return_value = test_data.get("email_queue_items")
         fake_storage_context.return_value = FakeStorageContext()
         fake_elife_add_email.return_value = mock.MagicMock()
