@@ -37,8 +37,12 @@ class activity_EmailVideoArticlePublished(Activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         # get input data
-        (success, run, article_id, version,
-         status, expanded_folder, run_type) = self.parse_data(data)
+        run = data.get("run")
+        article_id = data.get("article_id")
+        version = data.get("version")
+        status = data.get("status")
+        expanded_folder = data.get("expanded_folder")
+        run_type = data.get("run_type")
 
         # emit start message
         success = self.emit_activity_start_message(article_id, version, run)
@@ -106,28 +110,6 @@ class activity_EmailVideoArticlePublished(Activity):
                     (article_id, recipient.get("e_mail")))
 
         return self.ACTIVITY_SUCCESS
-
-    def parse_data(self, data):
-        "extract individual values from the activity data"
-        run = None
-        article_id = None
-        version = None
-        status = None
-        expanded_folder = None
-        run_type = None
-        success = None
-        try:
-            run = data.get("run")
-            article_id = data.get("article_id")
-            version = data.get("version")
-            status = data.get("status")
-            expanded_folder = data.get("expanded_folder")
-            run_type = data.get("run_type")
-            success = True
-        except (TypeError, KeyError) as exception:
-            self.logger.exception("Exception when getting the session for Starting ingest " +
-                                  " digest to endpoint. Details: %s" % str(exception))
-        return success, run, article_id, version, status, expanded_folder, run_type
 
     def download_xml(self, expanded_bucket, expanded_folder, version, to_dir):
         "download JATS XML from the expanded bucket"
