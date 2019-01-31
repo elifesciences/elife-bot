@@ -21,11 +21,12 @@ BASE_ACTIVITY_DATA = {
     "expanded_folder": "email_video"
     }
 
-def activity_data(data, article_id, status):
+def activity_data(data, article_id, status, run_type):
     "customise the input data for test scenarios"
     new_data = copy.copy(data)
     new_data["article_id"] = article_id
     new_data["status"] = status
+    new_data["run_type"] = run_type
     return new_data
 
 
@@ -59,12 +60,17 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
             "xml_file": "elife-00007-v1.xml",
             "templates_warmed": True,
             "email_queue_items": [],
-            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor"),
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor", None),
             "activity_success": activity_object.ACTIVITY_SUCCESS
         },
         {
             "comment": "poa article does not send an email",
-            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "poa"),
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "poa", None),
+            "activity_success": activity_object.ACTIVITY_SUCCESS
+        },
+        {
+            "comment": "silent correction article does not send an email",
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor", "silent-correction"),
             "activity_success": activity_object.ACTIVITY_SUCCESS
         },
         {
@@ -72,7 +78,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
             "xml_file": "elife-00353-v1.xml",
             "templates_warmed": None,
             "email_queue_items": [],
-            "input_data": activity_data(BASE_ACTIVITY_DATA, "00353", "vor"),
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "00353", "vor", None),
             "activity_success": activity_object.ACTIVITY_SUCCESS
         },
         {
@@ -80,7 +86,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
             "xml_file": "elife-00007-v1.xml",
             "templates_warmed": True,
             "email_queue_items": ["duplicate"],
-            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor"),
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor", None),
             "activity_success": activity_object.ACTIVITY_SUCCESS
         },
         {
@@ -88,7 +94,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
             "xml_file": "elife-00007-v1.xml",
             "templates_warmed": False,
             "email_queue_items": ["duplicate"],
-            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor"),
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor", None),
             "activity_success": activity_object.ACTIVITY_PERMANENT_FAILURE
         }
     )

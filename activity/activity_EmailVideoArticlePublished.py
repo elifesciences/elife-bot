@@ -40,7 +40,8 @@ class activity_EmailVideoArticlePublished(Activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         # get input data
-        success, run, article_id, version, status, expanded_folder = self.parse_data(data)
+        (success, run, article_id, version, 
+         status, expanded_folder, run_type) = self.parse_data(data)
 
         # emit start message
         success = self.emit_activity_start_message(article_id, version, run)
@@ -52,6 +53,14 @@ class activity_EmailVideoArticlePublished(Activity):
         if status == "poa":
             self.logger.info(
                 "PoA article %s no email to send in Email Video Article Published " % article_id)
+            self.emit_activity_end_message(article_id, version, run)
+            return self.ACTIVITY_SUCCESS
+
+        # do not send if silent-correction
+        if run_type == "silent-correction":
+            self.logger.info(
+                ("Silent correction of article %s " + 
+                "no email to send in Email Video Article Published ") % article_id)
             self.emit_activity_end_message(article_id, version, run)
             return self.ACTIVITY_SUCCESS
 
@@ -110,6 +119,7 @@ class activity_EmailVideoArticlePublished(Activity):
         version = None
         status = None
         expanded_folder = None
+        run_type = None
         success = None
         try:
             run = data.get("run")
@@ -117,11 +127,12 @@ class activity_EmailVideoArticlePublished(Activity):
             version = data.get("version")
             status = data.get("status")
             expanded_folder = data.get("expanded_folder")
+            run_type = data.get("run_type")
             success = True
         except (TypeError, KeyError) as exception:
             self.logger.exception("Exception when getting the session for Starting ingest " +
                                   " digest to endpoint. Details: %s" % str(exception))
-        return success, run, article_id, version, status, expanded_folder
+        return success, run, article_id, version, status, expanded_folder, run_type
 
     def download_xml(self, expanded_bucket, expanded_folder, version, to_dir):
         "download JATS XML from the expanded bucket"
