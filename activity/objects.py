@@ -39,6 +39,7 @@ class Activity(object):
             self.task_list = None
 
         self.name = None
+        self.pretty_name = None
         self.version = None
         self.default_task_heartbeat_timeout = 30
         self.default_task_schedule_to_close_timeout = 60 * 10
@@ -197,6 +198,34 @@ class Activity(object):
         tmp_dir = self.get_tmp_dir()
         shutil.rmtree(tmp_dir)
         self.tmp_dir = None
+
+    def emit_activity_message(self, article_id, version, run, status, message):
+        "emit message to the queue"
+        try:
+            self.emit_monitor_event(self.settings, article_id, version, run,
+                                    self.pretty_name, status, message)
+            return True
+        except Exception as exception:
+            self.logger.exception("Exception emitting %s message. Details: %s" %
+                                  (str(status), str(exception)))
+
+    def message_activity_name(self):
+        "the name for the activity to use in emit messages"
+        if self.pretty_name:
+            return str(self.pretty_name)
+        return str(self.name)
+
+    def emit_activity_start_message(self, article_id, version, run):
+        "emit the start message to the queue"
+        return self.emit_activity_message(
+            article_id, version, run, "start",
+            "Starting " + self.message_activity_name() + " for " + str(article_id))
+
+    def emit_activity_end_message(self, article_id, version, run):
+        "emit the end message to the queue"
+        return self.emit_activity_message(
+            article_id, version, run, "end",
+            "Finished " + self.message_activity_name() + " for " + str(article_id))
 
     @staticmethod
     def emit_monitor_event(settings, item_identifier, version, run, event_type, status, message):

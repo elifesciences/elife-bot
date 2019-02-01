@@ -71,6 +71,7 @@ typesetter_digest_api_key = 'typesetter_api_key'
 journal_preview_base_url = 'https://preview'
 
 features_publication_recipient_email = "features_team@example.org"
+email_video_recipient_email = "features_team@example.org"
 publication_authority = ""
 consider_Lax_elife_2_0 = True
 

@@ -167,3 +167,49 @@ def list_email_recipients(email_list):
     else:
         recipient_email_list.append(email_list)
     return recipient_email_list
+
+
+def valid_recipient(recipient):
+    """Check the recipient has a good email address
+
+    :param recipient: dict or object for the recipient
+    :returns: boolean True if valid
+    """
+    if isinstance(recipient, dict):
+        return valid_recipient_dict(recipient)
+    # if not a dict check as an object
+    return valid_recipient_object(recipient)
+
+
+def valid_recipient_dict(recipient):
+    """Check the recipient dict has a good email address
+
+    :param recipient: dict type with a key of e_mail in it
+    :returns: boolean True if valid
+    """
+    if recipient is None:
+        return False
+    if "e_mail" not in recipient:
+        return False
+    if recipient.get("e_mail") is None:
+        return False
+    if recipient.get("e_mail") is not None and str(recipient.get("e_mail")).strip() == "":
+        return False
+    return True
+
+
+def valid_recipient_object(recipient):
+    """Check the recipient object has a good email address
+
+    :param recipient: object with a property named e_mail
+    :returns: boolean True if valid
+    """
+    if recipient is None:
+        return False
+    if not hasattr(recipient, 'e_mail'):
+        return False
+    if recipient.e_mail is None:
+        return False
+    if recipient.e_mail is not None and str(recipient.e_mail).strip() == "":
+        return False
+    return True

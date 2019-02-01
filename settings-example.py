@@ -126,6 +126,9 @@ class exp():
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
 
+    # Email video article published settings
+    email_video_recipient_email = "features_team@example.org"
+
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
@@ -382,6 +385,9 @@ class dev():
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
 
+    # Email video article published settings
+    email_video_recipient_email = "features_team@example.org"
+
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
@@ -631,6 +637,9 @@ class live():
 
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
+
+    # Email video article published settings
+    email_video_recipient_email = "features_team@example.org"
 
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp'
