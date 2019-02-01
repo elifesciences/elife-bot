@@ -323,3 +323,31 @@ class Templates(object):
             return content
         else:
             return None
+
+
+def email_headers(templates_object, email_type, recipient, 
+                  article, email_format="html", logger=None):
+    """Email headers for the template customised with data provided
+
+    :param templates_object: Templates object
+    :param email_type: the type of email template to render
+    :param recipient: recipient of the email, a dict or object with values
+    :param article: article object
+    :param email_format: format of the email, html or text
+    :param logger: log.logger object
+    :returns: dict of email headers from the rendered template
+    """
+    try:
+        headers = templates_object.get_email_headers(
+            email_type=email_type,
+            author=recipient,
+            article=article,
+            format=email_format)
+    except Exception as exception:
+        log_info = (
+            'Failed to load email headers for: article: %s email_type: %s recipient: %s' %
+            (str(article), str(email_type), str(recipient)))
+        if logger:
+            logger.info(log_info)
+            logger.exception(str(exception))
+    return headers

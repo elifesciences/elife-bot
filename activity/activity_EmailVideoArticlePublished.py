@@ -101,8 +101,7 @@ class activity_EmailVideoArticlePublished(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
         # Good, we can send emails
         for recipient in recipients:
-            send_status = self.send_email(
-                email_type, article_object.doi_id, recipient, article_object)
+            send_status = self.send_email(email_type, recipient, article_object)
             if not send_status:
                 self.logger.info(
                     "Failed to send email for article %s to %s in Email Video Article Published " %
@@ -154,25 +153,16 @@ class activity_EmailVideoArticlePublished(Activity):
                 self.logger.info(log_info)
             return True
 
-    def send_email(self, email_type, article_id, recipient, article, authors=None):
+    def send_email(self, email_type, recipient, article, authors=None):
         """given the email type and recipient, format the email and send it"""
 
         if not email_provider.valid_recipient(recipient):
             return False
 
         # First process the headers
-        try:
-            headers = self.templates.get_email_headers(
-                email_type=email_type,
-                author=recipient,
-                article=article,
-                format="html")
-        except Exception as exception:
-            log_info = (
-                'Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s' %
-                (str(article_id), str(email_type), str(recipient.get("e_mail"))))
-            self.logger.info(log_info)
-            self.logger.exception(str(exception))
+        headers = templatelib.email_headers(
+            self.templates, email_type, recipient, article, email_format="html", logger=self.logger)
+        if not headers:
             return False
 
         try:
@@ -194,7 +184,7 @@ class activity_EmailVideoArticlePublished(Activity):
         try:
             # send the email message
             log_info = ("Sending " + email_type + " type email" +
-                        " for article " + str(article_id) +
+                        " for article " + str(article.doi_id) +
                         " to recipient_email " + str(recipient.get("e_mail")))
             self.logger.info(log_info)
 
@@ -204,7 +194,7 @@ class activity_EmailVideoArticlePublished(Activity):
             if details.get("error") and int(details.get("error")) > 0:
                 self.logger.info(
                     "Failed to send email %s for article %s to %s, details: %s " %
-                    (email_type, article_id, recipient.get("e_mail"), str(details)))
+                    (email_type, article.doi_id, recipient.get("e_mail"), str(details)))
                 return False
 
         except Exception as exception:
