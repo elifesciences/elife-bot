@@ -115,13 +115,9 @@ class activity_EmailVideoArticlePublished(Activity):
         "recipients of the email from the settings"
         recipients = []
 
-        recipient_email_list = []
         # Handle multiple recipients, if specified
-        if isinstance(self.settings.email_video_recipient_email, list):
-            for email in self.settings.email_video_recipient_email:
-                recipient_email_list.append(email)
-        else:
-            recipient_email_list.append(self.settings.email_video_recipient_email)
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.email_video_recipient_email)
 
         for recipient_email in recipient_email_list:
             feature_author = {}
