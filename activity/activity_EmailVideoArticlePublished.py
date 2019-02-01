@@ -77,7 +77,6 @@ class activity_EmailVideoArticlePublished(Activity):
 
         # download JATS XML from the expanded bucket
         # check if video exists (from article structure)
-        expanded_bucket = self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
         has_video = None
         xml_file = download_jats(self.settings, expanded_folder, self.get_tmp_dir(), self.logger)
         if xml_file:
