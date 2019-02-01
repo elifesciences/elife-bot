@@ -158,13 +158,7 @@ class activity_EmailVideoArticlePublished(Activity):
     def send_email(self, email_type, article_id, recipient, article, authors=None):
         """given the email type and recipient, format the email and send it"""
 
-        if recipient is None:
-            return False
-        if "e_mail" not in recipient:
-            return False
-        if recipient.get("e_mail") is None:
-            return False
-        if recipient.get("e_mail") is not None and str(recipient.get("e_mail")).strip() == "":
+        if not email_provider.valid_recipient(recipient):
             return False
 
         # First process the headers
