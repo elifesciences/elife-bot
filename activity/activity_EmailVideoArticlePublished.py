@@ -153,7 +153,7 @@ class activity_EmailVideoArticlePublished(Activity):
                 self.logger.info(log_info)
             return True
 
-    def send_email(self, email_type, recipient, article, authors=None):
+    def send_email(self, email_type, recipient, article):
         """given the email type and recipient, format the email and send it"""
 
         if not email_provider.valid_recipient(recipient):
@@ -165,14 +165,12 @@ class activity_EmailVideoArticlePublished(Activity):
         if not headers:
             return False
 
-        try:
-            body = self.templates.get_email_body(
-                email_type=email_type,
-                author=recipient,
-                article=article,
-                authors=authors,
-                format=headers["format"])
+        # build the email body
+        body = templatelib.email_body(
+            self.templates, email_type, recipient, article, 
+            email_format=headers.get("format"), logger=self.logger)
 
+        try:
             # create the message
             message = email_provider.simple_message(
                 headers["sender_email"], recipient.get("e_mail"),

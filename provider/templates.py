@@ -351,3 +351,32 @@ def email_headers(templates_object, email_type, recipient,
             logger.info(log_info)
             logger.exception(str(exception))
     return headers
+
+
+def email_body(templates_object, email_type, recipient, 
+                  article, authors=None, email_format="html", logger=None):
+    """Email body for the template customised with data provided
+
+    :param templates_object: Templates object
+    :param email_type: the type of email template to render
+    :param recipient: recipient of the email, a dict or object with values
+    :param article: article object
+    :param email_format: format of the email, html or text
+    :param logger: log.logger object
+    :returns: string body from the rendered template
+    """
+    try:
+        body = templates_object.get_email_body(
+            email_type=email_type,
+            author=recipient,
+            article=article,
+            authors=authors,
+            format=email_format)
+    except Exception as exception:
+        log_info = (
+            'Failed to load email body for: article: %s email_type: %s recipient: %s' %
+            (str(article), str(email_type), str(recipient)))
+        if logger:
+            logger.info(log_info)
+            logger.exception(str(exception))
+    return body
