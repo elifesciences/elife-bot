@@ -58,7 +58,6 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
     @patch('provider.lax_provider.article_first_by_status')
     @patch('provider.lax_provider.get_xml_file_name')
     @patch.object(article_processing, 'storage_context')
-    @patch('activity.activity_EmailVideoArticlePublished.storage_context')
     @patch.object(activity_object, 'emit_monitor_event')
     @data(
         {
@@ -104,7 +103,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
             "activity_success": activity_object.ACTIVITY_PERMANENT_FAILURE
         }
     )
-    def test_do_activity(self, test_data, fake_emit, fake_storage_context,
+    def test_do_activity(self, test_data, fake_emit,
                          fake_processing_storage_context, fake_get_xml_file_name, fake_first,
                          fake_download_email_templates,
                          fake_email_smtp_connect):
@@ -113,7 +112,6 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
         fake_processing_storage_context.return_value = FakeStorageContext()
         fake_get_xml_file_name.return_value = test_data.get("xml_file")
         fake_first.return_value = test_data.get("first_vor")
-        fake_storage_context.return_value = FakeStorageContext()
         fake_download_email_templates.return_value = self.fake_download_video_email_templates(
             self.activity.get_tmp_dir(), test_data.get("templates_warmed"))
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
@@ -121,7 +119,6 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
         success = self.activity.do_activity(test_data.get("input_data"))
         # check assertions
         self.assertEqual(success, test_data.get("activity_success"))
-
 
     @patch.object(email_provider, 'smtp_send_messages')
     @patch.object(Templates, 'download_video_email_templates_from_s3')
@@ -144,7 +141,6 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
         fake_download_email_templates.return_value = self.fake_download_video_email_templates(
             self.activity.get_tmp_dir(), True)
         fake_smtp_send_messages.return_value = OrderedDict([("error", 1), ("success", 1)])
-        expected = False
         # call the method
         return_value = self.activity.send_email(
             test_data.get("email_type"), test_data.get("recipient"), article_object)

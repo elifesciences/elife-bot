@@ -1,11 +1,9 @@
-import os
 import json
 import provider.article as articlelib
 from provider.article_processing import download_jats
 import provider.email_provider as email_provider
 import provider.templates as templatelib
 import provider.lax_provider as lax_provider
-from provider.storage_provider import storage_context
 import provider.glencoe_check as glencoe_check
 from activity.objects import Activity
 
@@ -167,7 +165,7 @@ class activity_EmailVideoArticlePublished(Activity):
 
         # build the email body
         body = templatelib.email_body(
-            self.templates, email_type, recipient, article, 
+            self.templates, email_type, recipient, article,
             email_format=headers.get("format"), logger=self.logger)
 
         try:
