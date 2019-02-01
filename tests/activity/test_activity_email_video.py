@@ -2,6 +2,7 @@ import os
 import unittest
 import shutil
 import copy
+from collections import OrderedDict
 from mock import patch
 from tests.classes_mock import FakeSMTPServer
 import tests.activity.settings_mock as settings_mock
@@ -10,6 +11,7 @@ from ddt import ddt, data
 from provider.templates import Templates
 from provider.article import article
 import provider.article_processing as article_processing
+import provider.email_provider as email_provider
 import activity.activity_EmailVideoArticlePublished as activity_module
 from activity.activity_EmailVideoArticlePublished import (
     activity_EmailVideoArticlePublished as activity_object)
@@ -119,6 +121,54 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
         success = self.activity.do_activity(test_data.get("input_data"))
         # check assertions
         self.assertEqual(success, test_data.get("activity_success"))
+
+
+    @patch.object(email_provider, 'smtp_send_messages')
+    @patch.object(Templates, 'download_video_email_templates_from_s3')
+    @data(
+        {
+            "recipient": {},
+            "email_type": "",
+            "expected": False
+        },
+        {
+            "recipient": {"e_mail": "elife@example.org"},
+            "email_type": "video_article_publication",
+            "expected": False
+        },
+    )
+    def test_send_email(self, test_data, fake_download_email_templates, fake_smtp_send_messages):
+        """test cases for exceptions in send_email"""
+        article_object = article()
+        article_object.doi_id = 666
+        fake_download_email_templates.return_value = self.fake_download_video_email_templates(
+            self.activity.get_tmp_dir(), True)
+        fake_smtp_send_messages.return_value = OrderedDict([("error", 1), ("success", 1)])
+        expected = False
+        # call the method
+        return_value = self.activity.send_email(
+            test_data.get("email_type"), test_data.get("recipient"), article_object)
+        # check assertions
+        self.assertEqual(return_value, test_data.get("expected"))
+
+    @patch('provider.templates.email_headers')
+    @data(
+        {
+            "recipient": {"e_mail": "elife@example.org"},
+            "email_type": "",
+            "expected": False
+        },
+    )
+    def test_send_email_header_failure(self, test_data, fake_email_headers):
+        """test cases for exception loading header template"""
+        article_object = article()
+        article_object.doi_id = 666
+        fake_email_headers.return_value = None
+        # call the method
+        return_value = self.activity.send_email(
+            test_data.get("email_type"), test_data.get("recipient"), article_object)
+        # check assertions
+        self.assertEqual(return_value, test_data.get("expected"))
 
     @patch.object(Templates, 'download_video_email_templates_from_s3')
     def test_template_get_email_headers_00013(self, fake_download_email_templates):
