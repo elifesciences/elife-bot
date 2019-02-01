@@ -1,6 +1,7 @@
 import os
 import json
 import provider.article as articlelib
+from provider.article_processing import download_jats
 import provider.email_provider as email_provider
 import provider.templates as templatelib
 import provider.lax_provider as lax_provider
@@ -78,8 +79,7 @@ class activity_EmailVideoArticlePublished(Activity):
         # check if video exists (from article structure)
         expanded_bucket = self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
         has_video = None
-        xml_file = self.download_xml(
-            expanded_bucket, expanded_folder, version, self.get_tmp_dir())
+        xml_file = download_jats(self.settings, expanded_folder, self.get_tmp_dir(), self.logger)
         if xml_file:
             has_video = xml_has_video(xml_file)
         if not has_video:
@@ -110,23 +110,6 @@ class activity_EmailVideoArticlePublished(Activity):
                     (article_id, recipient.get("e_mail")))
 
         return self.ACTIVITY_SUCCESS
-
-    def download_xml(self, expanded_bucket, expanded_folder, version, to_dir):
-        "download JATS XML from the expanded bucket"
-        xml_file = None
-        self.logger.info("expanded_bucket: " + expanded_bucket)
-        xml_filename = lax_provider.get_xml_file_name(
-            self.settings, expanded_folder, expanded_bucket, version)
-        if xml_filename is None:
-            raise RuntimeError("No xml_filename found.")
-        xml_origin = "".join((self.settings.storage_provider, "://", expanded_bucket, "/",
-                              expanded_folder, "/", xml_filename))
-        storage = storage_context(self.settings)
-        filename_plus_path = os.path.join(to_dir, xml_filename)
-        with open(filename_plus_path, "wb") as open_file:
-            storage.get_resource_to_file(xml_origin, open_file)
-            xml_file = filename_plus_path
-        return xml_file
 
     def choose_recipients(self):
         "recipients of the email from the settings"

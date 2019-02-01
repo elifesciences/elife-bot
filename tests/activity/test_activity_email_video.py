@@ -9,6 +9,7 @@ from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 from ddt import ddt, data
 from provider.templates import Templates
 from provider.article import article
+import provider.article_processing as article_processing
 import activity.activity_EmailVideoArticlePublished as activity_module
 from activity.activity_EmailVideoArticlePublished import (
     activity_EmailVideoArticlePublished as activity_object)
@@ -54,6 +55,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
     @patch.object(Templates, 'download_video_email_templates_from_s3')
     @patch('provider.lax_provider.article_first_by_status')
     @patch('provider.lax_provider.get_xml_file_name')
+    @patch.object(article_processing, 'storage_context')
     @patch('activity.activity_EmailVideoArticlePublished.storage_context')
     @patch.object(activity_object, 'emit_monitor_event')
     @data(
@@ -101,11 +103,12 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
         }
     )
     def test_do_activity(self, test_data, fake_emit, fake_storage_context,
-                         fake_get_xml_file_name, fake_first,
+                         fake_processing_storage_context, fake_get_xml_file_name, fake_first,
                          fake_download_email_templates,
                          fake_email_smtp_connect):
         # mock objects
         fake_emit.return_value = None
+        fake_processing_storage_context.return_value = FakeStorageContext()
         fake_get_xml_file_name.return_value = test_data.get("xml_file")
         fake_first.return_value = test_data.get("first_vor")
         fake_storage_context.return_value = FakeStorageContext()
