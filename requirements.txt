@@ -7,7 +7,7 @@ beautifulsoup4==4.6.0
 requests==2.20.0
 lxml==4.1.1
 xlrd==0.9.3
-git+https://github.com/elifesciences/elife-tools.git@9fc6b0fe1210ea9812d0f339dee389dec9d9c550#egg=elifetools
+git+https://github.com/elifesciences/elife-tools.git@c35dee6d21164c87bd7c9fcdfbb0fb82ba814748#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@bb61d4c0e3742403503efe10852114aeb1e07269#egg=elifearticle
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@078ce423fb17186c5c92967c326119630846252b#egg=elifecrossref
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@32a9a831eca98a03b36b8c9a369c622a34d04a7a#egg=elifepubmed
