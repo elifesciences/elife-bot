@@ -1,5 +1,6 @@
 import unittest
 from ddt import ddt, data, unpack
+from provider.utils import base64_encode_string
 import provider.email_provider as email_provider
 
 
@@ -58,3 +59,32 @@ class TestListEmailRecipients(unittest.TestCase):
         recipient = Recipient()
         setattr(recipient, "e_mail", e_mail)
         self.assertEqual(email_provider.valid_recipient_object(recipient), expected)
+
+    @data(
+        ('plain', 'Content-Type: text/plain; charset="utf-8"'),
+        ('html', 'Content-Type: text/html; charset="utf-8"'),
+    )
+    @unpack
+    def test_simple_message(self, subtype, expected_content_type):
+        sender = 'sender@example.org'
+        recipient = 'recipient@example.org'
+        subject = 'Email subject'
+        body = '<p>Email body</p>'
+        expected_fragments = []
+        # note: boundary value is not constant so cannot compare with a fixture easily
+        expected_fragments.append('Content-Type: multipart/mixed; boundary=')
+        expected_fragments.append('Subject: %s' % subject)
+        expected_fragments.append('From: %s' % sender)
+        expected_fragments.append('To: %s' % recipient)
+        expected_fragments.append(expected_content_type)
+        expected_fragments.append('MIME-Version: 1.0')
+        expected_fragments.append('Content-Transfer-Encoding: base64')
+        # body is base64 encoded
+        expected_fragments.append(base64_encode_string(body))
+        # create the message
+        email_message = email_provider.simple_message(
+            sender, recipient, subject, body, subtype=subtype)
+        for expected in expected_fragments:
+            self.assertTrue(
+                expected in str(email_message),
+                'Fragment %s not found in email %s' % (expected, str(email_message)))

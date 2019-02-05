@@ -172,7 +172,7 @@ class activity_EmailVideoArticlePublished(Activity):
             # create the message
             message = email_provider.simple_message(
                 headers["sender_email"], recipient.get("e_mail"),
-                headers["subject"], body, logger=self.logger)
+                headers["subject"], body, subtype=headers.get("format"), logger=self.logger)
         except Exception as exception:
             self.logger.exception(
                 "Failed to build the email message in send_email: %s" % str(exception))

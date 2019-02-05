@@ -71,9 +71,9 @@ def add_attachment(message, file_name,
     message.attach(email_attachment)
 
 
-def add_text(message, text):
+def add_text(message, text, subtype, charset):
     "add text to the message"
-    message.attach(MIMEText(text))
+    message.attach(MIMEText(text, subtype, charset))
 
 
 def message(subject, sender, recipient):
@@ -121,19 +121,21 @@ def smtp_send_messages(settings, messages, logger=None):
     return details
 
 
-def simple_message(sender, recipient, subject, body, attachments=None, logger=None):
+def simple_message(sender, recipient, subject, body, subtype='plain',
+                   attachments=None, logger=None):
     """set values of a message
 
     :param sender: email address of the sender
     :param recipient: email address of the recipient
     :param subject: email subject
     :param body: email body
+    :param subtype: body text subtype, typically plain or html
     :param attachments: optional list of email attachments, each a file system path to the file
     :param logger: optional log.logger object
     :returns: MIMEMultipart email message object
     """
     email_message = message(subject, sender, recipient)
-    add_text(email_message, body)
+    add_text(email_message, body, subtype, 'utf-8')
     if attachments:
         for attachment in attachments:
             add_attachment(email_message, attachment)
