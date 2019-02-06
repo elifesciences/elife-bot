@@ -2,9 +2,11 @@
 
 import os
 import glob
+import email
 import unittest
 from mock import patch
 from ddt import ddt, data
+from elifetools.utils import unicode_value
 import activity.activity_ValidateDigestInput as activity_module
 from activity.activity_ValidateDigestInput import activity_ValidateDigestInput as activity_object
 import tests.activity.settings_mock as settings_mock
@@ -18,6 +20,16 @@ def input_data(file_name_to_change=''):
     activity_data = test_case_data.ingest_digest_data
     activity_data["file_name"] = file_name_to_change
     return activity_data
+
+
+def body_from_multipart_email_string(email_string):
+    """Given a multipart email string, convert to Message and return decoded body"""
+    body = None
+    email_message = email.message_from_string(email_string)
+    if email_message.is_multipart():
+        for payload in email_message.get_payload():
+            body = payload.get_payload(decode=True)
+    return body
 
 
 @ddt
@@ -138,7 +150,8 @@ class TestValidateDigestInput(unittest.TestCase):
                 if test_data.get("expected_email_from"):
                     self.assertTrue(test_data.get("expected_email_from") in first_email_content)
                 if test_data.get("expected_email_body"):
-                    self.assertTrue(test_data.get("expected_email_body") in first_email_content)
+                    body = body_from_multipart_email_string(first_email_content)
+                    self.assertTrue(test_data.get("expected_email_body") in unicode_value(body))
 
 
 class TestEmailSubject(unittest.TestCase):
