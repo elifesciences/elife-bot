@@ -71,7 +71,7 @@ def add_attachment(message, file_name,
     message.attach(email_attachment)
 
 
-def add_text(message, text, subtype='plain', charset=None):
+def add_text(message, text, subtype='plain', charset='utf-8'):
     "add text to the message"
     message.attach(MIMEText(text, subtype, charset))
 
