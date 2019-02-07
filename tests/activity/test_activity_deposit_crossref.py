@@ -58,7 +58,8 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_crossref_xml_contains": [
                 '<doi>10.7554/eLife.15747</doi>',
                 '<publication_date media_type="online"><month>06</month><day>16</day><year>2016</year></publication_date>',
-                '<item_number item_number_type="article_number">e15747</item_number>'
+                '<item_number item_number_type="article_number">e15747</item_number>',
+                '<citation key="bib13"><journal_title>BMC Biology</journal_title><author>Gilbert</author><volume>12</volume><cYear>2014</cYear><article_title>The Earth Microbiome project: successes and aspirations</article_title><doi>10.1186/s12915-014-0069-1</doi><elocation_id>69</elocation_id></citation>'
                 ]
         },
         {
