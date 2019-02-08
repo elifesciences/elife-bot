@@ -15,30 +15,8 @@ find starter/ -maxdepth 1 -name '*.pyc' -delete
 find S3utility/ -maxdepth 1 -name '*.pyc' -delete
 
 source venv/bin/activate
-
-if pip list | grep elifetools; then
-    pip uninstall -y elifetools
-fi
-if pip list | grep elifearticle; then
-    pip uninstall -y elifearticle
-fi
-if pip list | grep elifecrossref; then
-    pip uninstall -y elifecrossref
-fi
-if pip list | grep elifepubmed; then
-    pip uninstall -y elifepubmed
-fi
-if pip list | grep ejpcsvparser; then
-    pip uninstall -y ejpcsvparser
-fi
-if pip list | grep jatsgenerator; then
-    pip uninstall -y jatsgenerator
-fi
-if pip list | grep packagepoa; then
-    pip uninstall -y packagepoa
-fi
-if pip list | grep digestparser; then
-    pip uninstall -y digestparser
-fi
+grep "git+" requirements.txt > source-requirements.txt
+pip uninstall -r source-requirements.txt -y
 pip install -r requirements.txt
-
+# pip install -r source-requirements.txt --no-cache-dir # only if old revisions are still 'sticking'
+rm source-requirements.txt
