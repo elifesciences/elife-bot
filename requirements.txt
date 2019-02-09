@@ -1,12 +1,7 @@
 boto==2.48.0
-GitPython==2.1.11
 Jinja2==2.7.3
-PyPDF2==1.23
 arrow==0.4.4
-beautifulsoup4==4.6.0
 requests==2.20.0
-lxml==4.1.1
-xlrd==0.9.3
 git+https://github.com/elifesciences/elife-tools.git@6c4f822ab8d1bed99c20da057a7907a6ad9a78ce#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@bb61d4c0e3742403503efe10852114aeb1e07269#egg=elifearticle
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@dc9dd335a8d6a3ad58d65c126b884bdca1abed3e#egg=elifecrossref
@@ -22,14 +17,12 @@ redis==2.10.5
 testfixtures==4.9.1
 pytest==2.9.1
 ddt==1.1.0
-Pillow==3.2.0
 ndg-httpsclient==0.4.2
 pyasn1==0.1.9
 pyOpenSSL==18.0.0
 newrelic==2.72.0.52
 pylint==1.6.4
 pyGithub==1.27.1
-six==1.10.0
 pyFunctional==1.0.0
 func_timeout==4.3.0
 python-docx==0.8.6
