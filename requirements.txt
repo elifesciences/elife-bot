@@ -2,7 +2,7 @@ boto==2.48.0
 Jinja2==2.7.3
 arrow==0.4.4
 requests==2.20.0
-git+https://github.com/elifesciences/elife-tools.git@6c4f822ab8d1bed99c20da057a7907a6ad9a78ce#egg=elifetools
+git+https://github.com/elifesciences/elife-tools.git@991bd2eed2af68192f5ae36f3c0c00ed8afb07c3#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@bb61d4c0e3742403503efe10852114aeb1e07269#egg=elifearticle
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@dc9dd335a8d6a3ad58d65c126b884bdca1abed3e#egg=elifecrossref
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@32a9a831eca98a03b36b8c9a369c622a34d04a7a#egg=elifepubmed
