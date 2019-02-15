@@ -98,6 +98,15 @@ class TestValidateDigestInput(unittest.TestCase):
             "expected_email_status": None,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99997',
         },
+        {
+            "comment": 'docx file with unicode characters example',
+            "filename": 'DIGEST_35774.zip',
+            "expected_result": True,
+            "expected_build_status": True,
+            "expected_valid_status": True,
+            "expected_email_status": None,
+            "expected_digest_doi": u'https://doi.org/10.7554/eLife.35774',
+        },
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_email_smtp_connect):
         # copy XML files into the input directory using the storage context

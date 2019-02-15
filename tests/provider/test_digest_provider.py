@@ -1,3 +1,5 @@
+# coding=utf-8
+ 
 import unittest
 import os
 import copy
@@ -164,6 +166,22 @@ class TestDigestProvider(unittest.TestCase):
         fake_article_versions.return_value = 200, []
         published = digest_provider.published_date_from_lax(settings_mock, '08411')
         self.assertEqual(published, None)
+
+
+class TestBuildDigest(unittest.TestCase):
+
+    def setUp(self):
+        self.temp_dir = os.path.join('tests/tmp')
+
+    def test_digest_unicode(self):
+        """test a digest zip with a unicode docx file name"""
+        input_file = os.path.join('tests', 'files_source', 'DIGEST_35774.zip')
+        expected_status = True
+        expected_author = u'Bayés'
+        build_status, digest = digest_provider.build_digest(
+            input_file, self.temp_dir)
+        self.assertEqual(build_status, expected_status)
+        self.assertEqual(digest.author, expected_author)
 
 
 class TestDigestJats(unittest.TestCase):
