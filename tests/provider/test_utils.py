@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import unittest
 import time
 from ddt import ddt, data, unpack
@@ -88,6 +90,15 @@ class TestUtils(unittest.TestCase):
         )
     def test_unquote_plus(self, value, expected):
         self.assertEqual(utils.unquote_plus(value), expected)
+
+    @unpack
+    @data(
+        (None, None),
+        (u"tmp/foldér", u"tmp/foldér"),
+        (b"tmp/folde\xcc\x81r", u"tmp/foldér")
+        )
+    def test_unicode_encode(self, value, expected):
+        self.assertEqual(utils.unicode_encode(value), expected)
 
 
 if __name__ == '__main__':

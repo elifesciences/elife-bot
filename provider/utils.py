@@ -78,3 +78,14 @@ def base64_decode_string(string):
         # python 3
         return base64.decodebytes(bytes(string, 'utf8')).decode()
     return base64.decodestring(string)
+
+
+def unicode_encode(string):
+    """safely encode string as utf8 by catching exceptions"""
+    if not string:
+        return string
+    try:
+        string = string.encode('utf8')
+    except (UnicodeDecodeError, TypeError, AttributeError):
+        pass
+    return unicode_decode(string)
