@@ -3,6 +3,7 @@ import json
 import glob
 from S3utility.s3_notification_info import parse_activity_data
 from provider.storage_provider import storage_context
+from provider.utils import unicode_encode
 import provider.digest_provider as digest_provider
 from activity.objects import Activity
 
@@ -84,7 +85,9 @@ class activity_CopyDigestToOutbox(Activity):
 
     def copy_files_to_outbox(self, digest, bucket_name, from_dir):
         "copy all the files from the from_dir to the bucket"
-        file_list = glob.glob(from_dir + "/*")
+        folder_path = unicode_encode(from_dir) + "/*"
+        self.logger.info('Checking folder for digest files: %s' % folder_path)
+        file_list = glob.glob(folder_path)
         storage = storage_context(self.settings)
         for file_path in file_list:
             resource_dest = digest_provider.outbox_file_dest_resource(
