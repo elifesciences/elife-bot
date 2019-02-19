@@ -82,10 +82,10 @@ def base64_decode_string(string):
 
 def unicode_encode(string):
     """safely encode string as utf8 by catching exceptions"""
-    if not string:
+    if string is None or isinstance(string, str):
         return string
     try:
         string = string.encode('utf8')
     except (UnicodeDecodeError, TypeError, AttributeError):
-        pass
-    return unicode_decode(string)
+        string = unicode_decode(string)
+    return string

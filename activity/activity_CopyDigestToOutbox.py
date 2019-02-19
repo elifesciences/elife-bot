@@ -1,6 +1,5 @@
 import os
 import json
-import glob
 from S3utility.s3_notification_info import parse_activity_data
 from provider.storage_provider import storage_context
 from provider.utils import unicode_encode
@@ -85,11 +84,17 @@ class activity_CopyDigestToOutbox(Activity):
 
     def copy_files_to_outbox(self, digest, bucket_name, from_dir):
         "copy all the files from the from_dir to the bucket"
-        folder_path = unicode_encode(from_dir) + "/*"
-        self.logger.info('Checking folder for digest files: %s' % folder_path)
-        file_list = glob.glob(folder_path)
         storage = storage_context(self.settings)
-        for file_path in file_list:
+        self.logger.info('from_dir type: %s' % type(from_dir))
+        encoded_from_dir = unicode_encode(from_dir)
+        self.logger.info('encoded_from_dir type: %s' % type(encoded_from_dir))
+        file_list = os.listdir(from_dir)
+        for file_name in file_list:
+            self.logger.info('file_name type: %s' % type(file_name))
+            encoded_file_name = unicode_encode(file_name)
+            self.logger.info('encoded_file_name type: %s' % type(encoded_file_name))
+            file_path = os.path.join(encoded_from_dir, encoded_file_name)
+            self.logger.info('file_path: %s' % file_path)
             resource_dest = digest_provider.outbox_file_dest_resource(
                 self.settings.storage_provider, digest, bucket_name, file_path)
             self.logger.info("Copying %s to %s", file_path, resource_dest)

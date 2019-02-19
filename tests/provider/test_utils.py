@@ -93,12 +93,15 @@ class TestUtils(unittest.TestCase):
 
     @unpack
     @data(
-        (None, None),
-        (u"tmp/foldér", u"tmp/foldér"),
-        (b"tmp/folde\xcc\x81r", u"tmp/foldér")
+        (None, None, type(None)),
+        (u'', '',  str),
+        (u"tmp/foldér", "tmp/foldér", str),
+        (b"tmp/folde\xcc\x81r", "tmp/foldér", str)
         )
-    def test_unicode_encode(self, value, expected):
-        self.assertEqual(utils.unicode_encode(value), expected)
+    def test_unicode_encode(self, value, expected, expected_type):
+        encoded_value = utils.unicode_encode(value)
+        self.assertEqual(encoded_value, expected)
+        self.assertEqual(type(encoded_value), expected_type)
 
 
 if __name__ == '__main__':
