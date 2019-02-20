@@ -207,7 +207,7 @@ class activity_CreateDigestMediumPost(Activity):
             self.settings.digest_medium_recipient_email)
 
         messages = email_provider.simple_messages(
-            sender_email, recipient_email_list, subject, body, charset=None, logger=self.logger)
+            sender_email, recipient_email_list, subject, body, logger=self.logger)
         self.logger.info('Formatted %d messages in %s' % (len(messages), self.name))
 
         details = email_provider.smtp_send_messages(self.settings, messages, self.logger)
