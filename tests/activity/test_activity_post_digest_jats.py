@@ -34,7 +34,7 @@ class TestPostDigestJats(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
-    @patch('requests.post')
+    @patch('requests.get')
     @patch.object(activity_module.digest_provider, 'storage_context')
     @data(
         {
@@ -102,11 +102,11 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999'
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, post_mock):
+    def test_do_activity(self, test_data, fake_storage_context, requests_method_mock):
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
         # POST response
-        post_mock.return_value = FakeResponse(test_data.get("post_status_code"), None)
+        requests_method_mock.return_value = FakeResponse(test_data.get("post_status_code"), None)
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         filename_used = input_data(test_data.get("filename")).get("file_name")
