@@ -115,6 +115,19 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         self.assertEqual(result, test_data.get("expected_result"))
         self.assertEqual(self.activity.medium_content, test_data.get("expected_medium_content"))
 
+    @patch.object(digest_provider, 'docx_exists_in_s3')
+    @patch.object(activity_object, 'emit_monitor_event')
+    def test_do_activity_docx_does_not_exist(self, fake_emit, fake_docx_exists):
+        fake_emit.return_value = None
+        fake_docx_exists.return_value = None
+        activity_data = digest_activity_data(
+            ACTIVITY_DATA
+            )
+        # do the activity
+        result = self.activity.do_activity(activity_data)
+        # check assertions
+        self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
+
     @patch.object(activity_object, 'emit_monitor_event')
     def test_do_activity_missing_credentials(self, fake_emit):
         # copy files into the input directory using the storage context
