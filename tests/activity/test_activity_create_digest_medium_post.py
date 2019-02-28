@@ -2,7 +2,6 @@
 
 import unittest
 import copy
-from collections import OrderedDict
 from mock import patch
 from ddt import ddt, data
 import activity.activity_CreateDigestMediumPost as activity_module
@@ -105,6 +104,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
             bot_storage_context.resources = test_data.get('bot_bucket_resources')
         fake_storage_context.return_value = bot_storage_context
         fake_processing_storage_context.return_value = FakeStorageContext()
+        fake_post_content.return_value = None
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
         # lax mocking
         fake_highest_version.return_value = test_data.get('lax_highest_version')
@@ -114,6 +114,19 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"))
         self.assertEqual(self.activity.medium_content, test_data.get("expected_medium_content"))
+
+    @patch.object(digest_provider, 'docx_exists_in_s3')
+    @patch.object(activity_object, 'emit_monitor_event')
+    def test_do_activity_docx_does_not_exist(self, fake_emit, fake_docx_exists):
+        fake_emit.return_value = None
+        fake_docx_exists.return_value = None
+        activity_data = digest_activity_data(
+            ACTIVITY_DATA
+            )
+        # do the activity
+        result = self.activity.do_activity(activity_data)
+        # check assertions
+        self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
 
     @patch.object(activity_object, 'emit_monitor_event')
     def test_do_activity_missing_credentials(self, fake_emit):
@@ -191,8 +204,9 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         return_value = self.activity.email_notification(99999)
         self.assertTrue(return_value)
         self.assertEqual(
-            self.activity.logger.loginfo, 
+            self.activity.logger.loginfo,
             "Email sending details: OrderedDict([('error', 0), ('success', 2)])")
+
 
 if __name__ == '__main__':
     unittest.main()

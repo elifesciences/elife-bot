@@ -71,6 +71,15 @@ class activity_CreateDigestMediumPost(Activity):
 
         # Wrap in an exception during testing phase
         try:
+            # check if there is a digest docx in the bucket for this article
+            docx_file_exists = digest_provider.docx_exists_in_s3(
+                self.settings, article_id, self.settings.bot_bucket, self.logger)
+            if docx_file_exists is not True:
+                self.logger.info(
+                    "Digest docx file does not exist in S3 for article %s" % article_id)
+                self.emit_end_message(article_id, version, run)
+                return self.ACTIVITY_SUCCESS
+
             # Approve for creating a Medium post
             self.statuses["approve"] = self.approve(article_id, status, version, run_type)
             if self.statuses.get("approve") is not True:
