@@ -2,7 +2,6 @@
 
 import unittest
 import copy
-from collections import OrderedDict
 from mock import patch
 from ddt import ddt, data
 import activity.activity_CreateDigestMediumPost as activity_module
@@ -105,6 +104,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
             bot_storage_context.resources = test_data.get('bot_bucket_resources')
         fake_storage_context.return_value = bot_storage_context
         fake_processing_storage_context.return_value = FakeStorageContext()
+        fake_post_content.return_value = None
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
         # lax mocking
         fake_highest_version.return_value = test_data.get('lax_highest_version')
@@ -204,8 +204,9 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         return_value = self.activity.email_notification(99999)
         self.assertTrue(return_value)
         self.assertEqual(
-            self.activity.logger.loginfo, 
+            self.activity.logger.loginfo,
             "Email sending details: OrderedDict([('error', 0), ('success', 2)])")
+
 
 if __name__ == '__main__':
     unittest.main()
