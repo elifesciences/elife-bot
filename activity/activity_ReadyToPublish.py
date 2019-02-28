@@ -33,11 +33,12 @@ class activity_ReadyToPublish(Activity):
             expanded_folder_name = session.get_value('expanded_folder')
             status = session.get_value('status')
             update_date = session.get_value('update_date')
+            run_type = session.get_value('run_type')
 
             article_path = self.preview_path(self.settings.article_path_pattern, article_id, version)
 
             self.prepare_ready_to_publish_message(article_id, version, run, expanded_folder_name, status,
-                                                    update_date, article_path)
+                                                    update_date, article_path, run_type)
 
         except Exception as exception:
             self.logger.exception("Exception when sending Ready To Publish message")
@@ -57,14 +58,15 @@ class activity_ReadyToPublish(Activity):
         return article_path_pattern.format(id=article_id, version=version)
 
     def prepare_ready_to_publish_message(self, article_id, version, run, expanded_folder, status, update_date,
-                                         article_path):
+                                         article_path, run_type):
         workflow_data = {
                 'article_id': article_id,
                 'version': version,
                 'run': run,
                 'expanded_folder': expanded_folder,
                 'status': status,
-                'update_date': update_date
+                'update_date': update_date,
+                'run_type': run_type
             }
 
         message = {
