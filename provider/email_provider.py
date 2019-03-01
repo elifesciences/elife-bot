@@ -49,7 +49,22 @@ def smtp_connect(settings, logger=None):
 
 
 def encode_filename(file_name):
-    """consistently encode a file name in unicode"""
+    """consistently encode a file name in unicode
+
+    Discovered trying to get a consistent file name from the file system on
+    multiple operating systems, if test pass on MacOS they will not necessarily
+    pass on Linux, for example. Using unicodedata normalize here in this function
+    it will return a consistent unicode file name. Note: this is being used for
+    setting the file name of an email attachment, whereas the original file name
+    from the local file system is still used to open the file from disk.
+
+    Inspired by the answer
+    https://stackoverflow.com/a/9758019
+    with some adaptations using the encoding and decoding utility functions in this project
+
+    See also
+    https://docs.python.org/3/library/unicodedata.html?highlight=unicodedata
+    """
     if file_name is None:
         return file_name
     return unicode_encode(unicode_decode(
