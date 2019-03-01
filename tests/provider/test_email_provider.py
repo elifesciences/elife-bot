@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import os
+import glob
 import unittest
 from ddt import ddt, data, unpack
 from provider.utils import base64_encode_string, unicode_encode
@@ -100,8 +101,10 @@ class TestListEmailRecipients(unittest.TestCase):
         subject = 'Digest: Bayés_35774'
         body = '<p>Email body</p>'
         expected_fragments = []
-        attachment_file = unicode_encode(os.path.join(
-            u'tests', u'fixtures', u'digests', u'Bayés_35774.docx'))
+        # workaround with file system name encoding, get the docx file name from disk
+        for name in glob.glob('tests/fixtures/digests/*.docx'):
+            if name.endswith("35774.docx"):
+                attachment_file = name
         attachments = [attachment_file]
         # compare two fragments because in Python 2 it wraps with extra quotation marks
         expected_fragments.append("Content-Disposition: attachment; filename*=")
