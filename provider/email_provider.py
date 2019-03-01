@@ -50,6 +50,8 @@ def smtp_connect(settings, logger=None):
 
 def encode_filename(file_name):
     """consistently encode a file name in unicode"""
+    if file_name is None:
+        return file_name
     return unicode_encode(unicode_decode(
         unicodedata.ucd_3_2_0.normalize('NFC', unicode_decode(file_name))))
 

@@ -3,7 +3,7 @@
 import glob
 import unittest
 from ddt import ddt, data, unpack
-from provider.utils import base64_encode_string
+from provider.utils import base64_encode_string, unicode_decode
 import provider.email_provider as email_provider
 
 
@@ -62,6 +62,20 @@ class TestListEmailRecipients(unittest.TestCase):
         recipient = Recipient()
         setattr(recipient, "e_mail", e_mail)
         self.assertEqual(email_provider.valid_recipient_object(recipient), expected)
+
+    def test_encode_filename_none(self):
+        self.assertIsNone(email_provider.encode_filename(None))
+
+    @data(
+        'Bayés_35774.docx',
+        u'Bayés_35774.docx',
+        unicode_decode(b'Bay\xc3\xa9s_35774.docx'),
+        unicode_decode(b'Baye\xcc\x81s_35774.docx')
+    )
+    def test_encode_filename(self, filename):
+        """the encoded name for the examples will always be the same"""
+        expected = 'Bayés_35774.docx'
+        self.assertEqual(email_provider.encode_filename(filename), expected)
 
     @data(
         ('plain', 'Content-Type: text/plain; charset="utf-8"'),
