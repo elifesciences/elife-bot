@@ -7,7 +7,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import boto.ses
-from provider.utils import unicode_decode
+from provider.utils import unicode_decode, unicode_encode
 
 
 def ses_connect(settings):
@@ -54,7 +54,7 @@ def attachment(file_name,
     content_type_header = '{media_type}; charset={charset}'.format(
         media_type=media_type, charset=charset)
     attachment_name = os.path.split(file_name)[-1]
-    with open(file_name, 'rb') as open_file:
+    with open(unicode_encode(file_name), 'rb') as open_file:
         email_attachment = MIMEApplication(open_file.read())
     email_attachment.add_header(
         'Content-Disposition', 'attachment',
