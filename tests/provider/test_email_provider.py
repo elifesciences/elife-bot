@@ -2,7 +2,7 @@
 
 import unittest
 from ddt import ddt, data, unpack
-from provider.utils import base64_encode_string
+from provider.utils import base64_encode_string, unicode_encode
 import provider.email_provider as email_provider
 from tests import fixture_file
 
@@ -100,7 +100,7 @@ class TestListEmailRecipients(unittest.TestCase):
         subject = 'Digest: Bayés_35774'
         body = '<p>Email body</p>'
         expected_fragments = []
-        attachment_file = fixture_file('Bayés_35774.docx', 'digests')
+        attachment_file = fixture_file(unicode_encode('Bayés_35774.docx'), 'digests')
         attachments = [attachment_file]
         # compare two fragments because in Python 2 it wraps with extra quotation marks
         expected_fragments.append("Content-Disposition: attachment; filename*=")
