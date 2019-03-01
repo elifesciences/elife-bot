@@ -1,10 +1,9 @@
 # coding=utf-8
 
-import os
 import glob
 import unittest
 from ddt import ddt, data, unpack
-from provider.utils import base64_encode_string, unicode_encode
+from provider.utils import base64_encode_string
 import provider.email_provider as email_provider
 
 
@@ -108,7 +107,7 @@ class TestListEmailRecipients(unittest.TestCase):
         attachments = [attachment_file]
         # compare two fragments because in Python 2 it wraps with extra quotation marks
         expected_fragments.append("Content-Disposition: attachment; filename*=")
-        expected_fragments.append("utf-8''Baye%CC%81s_35774.docx")
+        expected_fragments.append("utf-8''Bay%C3%A9s_35774.docx")
         # create the message
         email_message = email_provider.simple_message(
             sender, recipient, subject, body, subtype=subtype, attachments=attachments)

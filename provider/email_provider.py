@@ -1,6 +1,7 @@
 "provider for sending email"
 import os
 import smtplib
+import unicodedata
 import traceback
 from collections import OrderedDict
 from email.mime.application import MIMEApplication
@@ -47,18 +48,24 @@ def smtp_connect(settings, logger=None):
     return connection
 
 
+def encode_filename(file_name):
+    """consistently encode a file name in unicode"""
+    return unicode_encode(unicode_decode(
+        unicodedata.ucd_3_2_0.normalize('NFC', unicode_decode(file_name))))
+
+
 def attachment(file_name,
                media_type='vnd.openxmlformats-officedocument.wordprocessingml.document',
                charset='UTF-8'):
     "create an attachment from the file"
     content_type_header = '{media_type}; charset={charset}'.format(
         media_type=media_type, charset=charset)
-    attachment_name = os.path.split(file_name)[-1]
+    attachment_name = encode_filename(os.path.split(file_name)[-1])
     with open(file_name, 'rb') as open_file:
         email_attachment = MIMEApplication(open_file.read())
     email_attachment.add_header(
         'Content-Disposition', 'attachment',
-        filename=('utf-8', '', unicode_encode(attachment_name)))
+        filename=('utf-8', '', attachment_name))
     email_attachment.add_header('Content-Type', content_type_header)
     return email_attachment
 
