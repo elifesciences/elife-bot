@@ -57,8 +57,9 @@ def attachment(file_name,
     with open(file_name, 'rb') as open_file:
         email_attachment = MIMEApplication(open_file.read())
     # note: attachment_name is not currently Python 3 compatible due to encoding issues
-    email_attachment.add_header('Content-Disposition', 'attachment',
-                                filename=unicode_decode(attachment_name))
+    email_attachment.add_header(
+        'Content-Disposition', 'attachment',
+        filename=('utf-8', '', attachment_name))
     email_attachment.add_header('Content-Type', content_type_header)
     return email_attachment
 

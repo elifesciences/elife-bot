@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import unittest
 from ddt import ddt, data, unpack
 from provider.utils import base64_encode_string
@@ -84,6 +86,26 @@ class TestListEmailRecipients(unittest.TestCase):
         # create the message
         email_message = email_provider.simple_message(
             sender, recipient, subject, body, subtype=subtype)
+        for expected in expected_fragments:
+            self.assertTrue(
+                expected in str(email_message),
+                'Fragment %s not found in email %s' % (expected, str(email_message)))
+
+    def test_simple_message_attachments(self):
+        """test adding an email attachment to a message"""
+        subtype = 'html'
+        sender = 'sender@example.org'
+        recipient = 'recipient@example.org'
+        subject = 'Digest: Bayés_35774'
+        body = '<p>Email body</p>'
+        expected_fragments = []
+        attachments = ['tests/fixtures/digests/Bayés_35774.docx']
+        # compare two fragments because in Python 2 it wraps with extra quotation marks
+        expected_fragments.append("Content-Disposition: attachment; filename*=")
+        expected_fragments.append("utf-8''Baye%CC%81s_35774.docx")
+        # create the message
+        email_message = email_provider.simple_message(
+            sender, recipient, subject, body, subtype=subtype, attachments=attachments)
         for expected in expected_fragments:
             self.assertTrue(
                 expected in str(email_message),
