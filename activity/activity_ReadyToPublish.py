@@ -36,7 +36,7 @@ class activity_ReadyToPublish(Activity):
             update_date = session.get_value('update_date')
             run_type = session.get_value('run_type')
 
-            article_path = self.preview_path(self.settings.article_path_pattern, article_id, version)
+            article_path = preview_path(self.settings.article_path_pattern, article_id, version)
 
             publication_data_message = starter_message(
                 article_id=article_id,
@@ -65,9 +65,6 @@ class activity_ReadyToPublish(Activity):
 
         return self.ACTIVITY_SUCCESS
 
-    def preview_path(self, article_path_pattern, article_id, version):
-        return article_path_pattern.format(id=article_id, version=version)
-
     def prepare_ready_to_publish_message(self, article_id, version, article_path, publication_data_message):
 
         encoded_message = base64_encode_string(json.dumps(publication_data_message))
@@ -80,3 +77,7 @@ class activity_ReadyToPublish(Activity):
                                   encoded_message, "text", version=version)
         self.set_monitor_property(self.settings, article_id, "publication-status",
                                   "ready to publish", "text", version=version)
+
+
+def preview_path(article_path_pattern, article_id, version):
+    return article_path_pattern.format(id=article_id, version=version)
