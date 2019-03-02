@@ -4,6 +4,7 @@ from provider.utils import base64_encode_string
 from provider.token import starter_message
 from activity.objects import Activity
 
+
 class activity_ReadyToPublish(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_ReadyToPublish, self).__init__(
@@ -55,17 +56,17 @@ class activity_ReadyToPublish(Activity):
             self.logger.exception("Exception when sending Ready To Publish message")
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error",
-                                    "Error sending Ready To Publish message for article " + article_id +
-                                    " message:" + str(exception))
+                                    "Error sending Ready To Publish message for article " +
+                                    article_id + " message:" + str(exception))
             return self.ACTIVITY_PERMANENT_FAILURE
 
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
-                                    "Sending Ready To Publish message. "
-                                    "Article: " + article_id)
+                                "Sending Ready To Publish message. " + "Article: " + article_id)
 
         return self.ACTIVITY_SUCCESS
 
-    def prepare_ready_to_publish_message(self, article_id, version, article_path, publication_data_message):
+    def prepare_ready_to_publish_message(self, article_id, version, article_path,
+                                         publication_data_message):
 
         encoded_message = base64_encode_string(json.dumps(publication_data_message))
 

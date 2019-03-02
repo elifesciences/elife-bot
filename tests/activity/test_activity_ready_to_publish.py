@@ -1,6 +1,7 @@
 import unittest
 from mock import patch
 import tests.activity.settings_mock as settings_mock
+import activity.activity_ReadyToPublish as activity_module
 from activity.activity_ReadyToPublish import activity_ReadyToPublish
 from tests.activity.classes_mock import FakeSession, FakeLogger
 
@@ -36,7 +37,7 @@ class TestReadyToPublish(unittest.TestCase):
         self.assertEqual(result, self.readytopublish.ACTIVITY_PERMANENT_FAILURE)
 
     def test_preview_path(self):
-        result = self.readytopublish.preview_path(settings_mock.article_path_pattern, "34427", "1")
+        result = activity_module.preview_path(settings_mock.article_path_pattern, "34427", "1")
         self.assertEqual(result, "/articles/34427v1")
 
 
