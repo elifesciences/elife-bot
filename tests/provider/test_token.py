@@ -31,15 +31,15 @@ class TestTokenProvider(unittest.TestCase):
     def test_build_workflow_data(self):
         """test building workflow data"""
         expected = self.expected_workflow_data()
-        workflow_data = OrderedDict([
-            ('article_id', self.article_id),
-            ('version', self.version),
-            ('run', self.run),
-            ('expanded_folder', self.expanded_folder),
-            ('status', self.status),
-            ('update_date', self.update_date),
-            ('run_type', self.run_type),
-        ])
+        workflow_data = token.build_workflow_data(
+            article_id=self.article_id,
+            version=self.version,
+            run=self.run,
+            expanded_folder=self.expanded_folder,
+            status=self.status,
+            update_date=self.update_date,
+            run_type=self.run_type
+        )
         self.assertEqual(workflow_data, expected)
 
     def test_starter_message(self):
