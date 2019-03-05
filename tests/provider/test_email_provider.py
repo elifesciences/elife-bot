@@ -1,6 +1,9 @@
+# coding=utf-8
+
+import glob
 import unittest
 from ddt import ddt, data, unpack
-from provider.utils import base64_encode_string
+from provider.utils import base64_encode_string, unicode_decode, unicode_encode
 import provider.email_provider as email_provider
 
 
@@ -60,6 +63,23 @@ class TestListEmailRecipients(unittest.TestCase):
         setattr(recipient, "e_mail", e_mail)
         self.assertEqual(email_provider.valid_recipient_object(recipient), expected)
 
+    def test_encode_filename_none(self):
+        self.assertIsNone(email_provider.encode_filename(None))
+
+    @data(
+        'Bayés_35774.docx',
+        u'Bayés_35774.docx',
+        unicode_decode(b'Bay\xc3\xa9s_35774.docx'),
+        unicode_decode(b'Baye\xcc\x81s_35774.docx')
+    )
+    def test_encode_filename(self, filename):
+        """the encoded name for the examples will always be the same"""
+        expected = 'Bayés_35774.docx'
+        self.assertEqual(email_provider.encode_filename(filename), expected)
+        # an alternate way to illustrate the string comparison
+        expected_also = unicode_encode(u'Bay\u00e9s_35774.docx')
+        self.assertEqual(email_provider.encode_filename(filename), expected_also)
+
     @data(
         ('plain', 'Content-Type: text/plain; charset="utf-8"'),
         ('html', 'Content-Type: text/html; charset="utf-8"'),
@@ -84,6 +104,30 @@ class TestListEmailRecipients(unittest.TestCase):
         # create the message
         email_message = email_provider.simple_message(
             sender, recipient, subject, body, subtype=subtype)
+        for expected in expected_fragments:
+            self.assertTrue(
+                expected in str(email_message),
+                'Fragment %s not found in email %s' % (expected, str(email_message)))
+
+    def test_simple_message_attachments(self):
+        """test adding an email attachment to a message"""
+        subtype = 'html'
+        sender = 'sender@example.org'
+        recipient = 'recipient@example.org'
+        subject = 'Digest: Bayés_35774'
+        body = '<p>Email body</p>'
+        expected_fragments = []
+        # workaround with file system name encoding, get the docx file name from disk
+        for name in glob.glob('tests/fixtures/digests/*.docx'):
+            if name.endswith("35774.docx"):
+                attachment_file = name
+        attachments = [attachment_file]
+        # compare two fragments because in Python 2 it wraps with extra quotation marks
+        expected_fragments.append("Content-Disposition: attachment; filename*=")
+        expected_fragments.append("utf-8''Bay%C3%A9s_35774.docx")
+        # create the message
+        email_message = email_provider.simple_message(
+            sender, recipient, subject, body, subtype=subtype, attachments=attachments)
         for expected in expected_fragments:
             self.assertTrue(
                 expected in str(email_message),

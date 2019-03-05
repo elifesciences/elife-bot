@@ -1,13 +1,14 @@
 "provider for sending email"
 import os
 import smtplib
+import unicodedata
 import traceback
 from collections import OrderedDict
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import boto.ses
-from provider.utils import unicode_decode
+from provider.utils import unicode_decode, unicode_encode
 
 
 def ses_connect(settings):
@@ -47,18 +48,41 @@ def smtp_connect(settings, logger=None):
     return connection
 
 
+def encode_filename(file_name):
+    """consistently encode a file name in unicode
+
+    Discovered trying to get a consistent file name from the file system on
+    multiple operating systems, if test pass on MacOS they will not necessarily
+    pass on Linux, for example. Using unicodedata normalize here in this function
+    it will return a consistent unicode file name. Note: this is being used for
+    setting the file name of an email attachment, whereas the original file name
+    from the local file system is still used to open the file from disk.
+
+    Inspired by the answer
+    https://stackoverflow.com/a/9758019
+    with some adaptations using the encoding and decoding utility functions in this project
+
+    See also
+    https://docs.python.org/3/library/unicodedata.html?highlight=unicodedata
+    """
+    if file_name is None:
+        return file_name
+    return unicode_encode(unicode_decode(
+        unicodedata.ucd_3_2_0.normalize('NFC', unicode_decode(file_name))))
+
+
 def attachment(file_name,
                media_type='vnd.openxmlformats-officedocument.wordprocessingml.document',
                charset='UTF-8'):
     "create an attachment from the file"
     content_type_header = '{media_type}; charset={charset}'.format(
         media_type=media_type, charset=charset)
-    attachment_name = os.path.split(file_name)[-1]
+    attachment_name = encode_filename(os.path.split(file_name)[-1])
     with open(file_name, 'rb') as open_file:
         email_attachment = MIMEApplication(open_file.read())
-    # note: attachment_name is not currently Python 3 compatible due to encoding issues
-    email_attachment.add_header('Content-Disposition', 'attachment',
-                                filename=unicode_decode(attachment_name))
+    email_attachment.add_header(
+        'Content-Disposition', 'attachment',
+        filename=('utf-8', '', attachment_name))
     email_attachment.add_header('Content-Type', content_type_header)
     return email_attachment
 
