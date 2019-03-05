@@ -2,7 +2,7 @@
 
 import unittest
 from collections import OrderedDict
-import provider.token as token
+from provider import token
 
 
 class TestTokenProvider(unittest.TestCase):
