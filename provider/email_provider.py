@@ -73,23 +73,20 @@ def encode_filename(file_name):
 
 def attachment(file_name,
                media_type='vnd.openxmlformats-officedocument.wordprocessingml.document',
-               charset='UTF-8'):
+               charset='utf-8'):
     "create an attachment from the file"
-    content_type_header = '{media_type}; charset={charset}'.format(
-        media_type=media_type, charset=charset)
     attachment_name = encode_filename(os.path.split(file_name)[-1])
     with open(file_name, 'rb') as open_file:
-        email_attachment = MIMEApplication(open_file.read())
+        email_attachment = MIMEApplication(open_file.read(), media_type)
     email_attachment.add_header(
         'Content-Disposition', 'attachment',
-        filename=('utf-8', '', attachment_name))
-    email_attachment.add_header('Content-Type', content_type_header)
+        filename=(charset, '', attachment_name))
     return email_attachment
 
 
 def add_attachment(message, file_name,
                    media_type='vnd.openxmlformats-officedocument.wordprocessingml.document',
-                   charset='UTF-8'):
+                   charset='utf-8'):
     "add an attachment to the message"
     email_attachment = attachment(file_name, media_type, charset)
     message.attach(email_attachment)
