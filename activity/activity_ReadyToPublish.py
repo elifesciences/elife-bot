@@ -1,7 +1,9 @@
 import json
 from provider.execution_context import get_session
 from provider.utils import base64_encode_string
+from provider.token import starter_message
 from activity.objects import Activity
+
 
 class activity_ReadyToPublish(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
@@ -35,46 +37,38 @@ class activity_ReadyToPublish(Activity):
             update_date = session.get_value('update_date')
             run_type = session.get_value('run_type')
 
-            article_path = self.preview_path(self.settings.article_path_pattern, article_id, version)
+            article_path = preview_path(self.settings.article_path_pattern, article_id, version)
 
-            self.prepare_ready_to_publish_message(article_id, version, run, expanded_folder_name, status,
-                                                    update_date, article_path, run_type)
+            publication_data_message = starter_message(
+                article_id=article_id,
+                version=version,
+                run=run,
+                expanded_folder=expanded_folder_name,
+                status=status,
+                update_date=update_date,
+                run_type=run_type,
+                workflow_name='PostPerfectPublication')
+
+            self.prepare_ready_to_publish_message(article_id, version, article_path,
+                                                  publication_data_message)
 
         except Exception as exception:
             self.logger.exception("Exception when sending Ready To Publish message")
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error",
-                                    "Error sending Ready To Publish message for article " + article_id +
-                                    " message:" + str(exception))
+                                    "Error sending Ready To Publish message for article " +
+                                    article_id + " message:" + str(exception))
             return self.ACTIVITY_PERMANENT_FAILURE
 
         self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
-                                    "Sending Ready To Publish message. "
-                                    "Article: " + article_id)
+                                "Sending Ready To Publish message. " + "Article: " + article_id)
 
         return self.ACTIVITY_SUCCESS
 
-    def preview_path(self, article_path_pattern, article_id, version):
-        return article_path_pattern.format(id=article_id, version=version)
+    def prepare_ready_to_publish_message(self, article_id, version, article_path,
+                                         publication_data_message):
 
-    def prepare_ready_to_publish_message(self, article_id, version, run, expanded_folder, status, update_date,
-                                         article_path, run_type):
-        workflow_data = {
-                'article_id': article_id,
-                'version': version,
-                'run': run,
-                'expanded_folder': expanded_folder,
-                'status': status,
-                'update_date': update_date,
-                'run_type': run_type
-            }
-
-        message = {
-            'workflow_name': 'PostPerfectPublication',
-            'workflow_data': workflow_data
-        }
-
-        encoded_message = base64_encode_string(json.dumps(message))
+        encoded_message = base64_encode_string(json.dumps(publication_data_message))
 
         self.set_monitor_property(self.settings, article_id, 'path',
                                   article_path, 'text', version=version)
@@ -84,3 +78,7 @@ class activity_ReadyToPublish(Activity):
                                   encoded_message, "text", version=version)
         self.set_monitor_property(self.settings, article_id, "publication-status",
                                   "ready to publish", "text", version=version)
+
+
+def preview_path(article_path_pattern, article_id, version):
+    return article_path_pattern.format(id=article_id, version=version)
