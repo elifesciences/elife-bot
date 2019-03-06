@@ -25,7 +25,7 @@ class TestIngestToLax(unittest.TestCase):
 
     @data(data_example)
     @patch('provider.lax_provider.prepare_action_message')
-    def test_do_activity_success(self, data, fake_action_message):
+    def test_get_message_queue_success(self, data, fake_action_message):
         fake_action_message.return_value = {"example_message": True}
 
         message, queue, start_event, end_event, end_event_details, exception = self.ingesttolax.get_message_queue(data)
@@ -42,7 +42,7 @@ class TestIngestToLax(unittest.TestCase):
 
     @data(data_example)
     @patch("provider.lax_provider.prepare_action_message")
-    def test_do_activity_error(self, data, fake_lax_provider):
+    def test_get_message_queue_error(self, data, fake_lax_provider):
         fake_lax_provider.side_effect = Exception("Access Denied")
         message, queue, start_event, end_event, end_event_details, exception = self.ingesttolax.get_message_queue(data)
         self.assertEqual(end_event, "error")
@@ -54,7 +54,7 @@ class TestIngestToLax(unittest.TestCase):
 
 
     @data(data_example)
-    def test_do_activity_not_consider_lax(self, data):
+    def test_get_message_queue_not_consider_lax(self, data):
 
         message, queue, start_event, end_event, end_event_details, exception = self.ingesttolax.get_message_queue(data, False)
         self.assertDictEqual(message, {
