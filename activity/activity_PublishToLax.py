@@ -32,14 +32,6 @@ class activity_PublishToLax(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
-        ###########
-        if not self.settings.consider_Lax_elife_2_0:
-            if self.logger:
-                self.logger.info('PublishToLax. Lax is not being considered. Skipping activity.')
-            return True
-
-        ###########
-
         article_id = data['article_id']
         version = data['version']
         run = data['run']
