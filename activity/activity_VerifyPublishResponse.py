@@ -19,7 +19,8 @@ class activity_VerifyPublishResponse(Activity):
         self.default_task_schedule_to_close_timeout = 60 * 5
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
-        self.description = "Verifies data response from Lax in order to decide if we can carry on with workflow"
+        self.description = ("Verifies data response from Lax in order to decide if we can " +
+                            "carry on with workflow")
         self.logger = logger
 
     def do_activity(self, data=None):
@@ -37,13 +38,9 @@ class activity_VerifyPublishResponse(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
-        article_id = data['article_id']
-
         try:
-            run = data['run']
-            version = data['version']
-            return self.publication_verification_results(data,
-                                                         success=data['result'] == "published")
+            return self.publication_verification_results(
+                data, success=data['result'] == "published")
 
         except Exception:
             self.logger.exception("Exception when Verifying Publish Response")
@@ -62,7 +59,8 @@ class activity_VerifyPublishResponse(Activity):
                          " Finished Verification. Lax has responded with result: published."
                          " Article: " + data['article_id']]
 
-            set_status_property = [self.settings, data['article_id'], "publication-status", "published", "text"]
+            set_status_property = [
+                self.settings, data['article_id'], "publication-status", "published", "text"]
             success = self.ACTIVITY_SUCCESS
             return start_event, end_event, set_status_property, success
 
@@ -76,10 +74,12 @@ class activity_VerifyPublishResponse(Activity):
                          self.pretty_name + ": journal", "error",
                          " Lax has not published article " + data['article_id'] +
                          " result from lax:" + str(data['result']) + '; message from lax: ' +
-                         data['message'] if ("message" in data) and (data['message'] is not None) else "(empty message)"]
+                         data['message'] if ("message" in data) and
+                         (data['message'] is not None) else "(empty message)"]
 
-            set_status_property = [self.settings, data['article_id'], "publication-status", "publication issues",
-                                "text"]
+            set_status_property = [
+                self.settings, data['article_id'], "publication-status",
+                "publication issues", "text"]
             success = self.ACTIVITY_PERMANENT_FAILURE
             return start_event, end_event, set_status_property, success
 
