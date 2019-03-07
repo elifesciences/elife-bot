@@ -1,9 +1,14 @@
 import unittest
 from ddt import ddt, data
 from mock import patch
+import activity.activity_IngestToLax as activity_module
 from activity.activity_IngestToLax import activity_IngestToLax
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger
+from tests.activity.classes_mock import (
+    FakeLogger, FakeSession, FakeSQSConn, FakeSQSQueue, FakeSQSMessage)
+from tests.activity import test_activity_data
+from testfixtures import TempDirectory
+
 
 data_example = {
     "article_id": "00353",
@@ -22,6 +27,27 @@ data_example = {
 class TestIngestToLax(unittest.TestCase):
     def setUp(self):
         self.ingesttolax = activity_IngestToLax(settings_mock, FakeLogger(), None, None, None)
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @data(data_example)
+    @patch('boto.sqs.connect_to_region')
+    @patch('boto.sqs.connection.SQSConnection.get_queue')
+    @patch.object(activity_module, 'RawMessage')
+    @patch('provider.lax_provider.prepare_action_message')
+    @patch.object(activity_module, 'get_session')
+    @patch.object(activity_IngestToLax, 'emit_monitor_event')
+    def test_do_activity_success(self, data, fake_emit_monitor, fake_session, fake_action_message,
+                                 fake_sqs_message, fake_sqs_queue, fake_sqs_conn):
+        directory = TempDirectory()
+        fake_action_message.return_value = {"example_message": True}
+        fake_session.return_value = FakeSession(test_activity_data.data_example_before_publish)
+        fake_sqs_conn.return_value = FakeSQSConn(directory)
+        fake_sqs_queue.return_value = FakeSQSQueue(directory)
+        fake_sqs_message.return_value = FakeSQSMessage(directory)
+        return_value = self.ingesttolax.do_activity(data)
+        self.assertEqual(return_value, activity_IngestToLax.ACTIVITY_SUCCESS)
 
     @data(data_example)
     @patch('provider.lax_provider.prepare_action_message')
