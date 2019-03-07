@@ -23,14 +23,14 @@ class activity_VerifyPublishResponse(Activity):
         self.logger = logger
 
     def do_activity(self, data=None):
-        (start_msg, end_msg, set_status, result) = self.get_events(data, self.publication_authority(self.settings))
+        (start_msg, end_msg, set_status, result) = self.get_events(data)
         self.emit_monitor_event(*start_msg)
         self.emit_monitor_event(*end_msg)
         if set_status is not None:
             self.set_monitor_property(*set_status, version=data['version'])
         return result
 
-    def get_events(self, data, pub_authority):
+    def get_events(self, data):
         """
         Do the work
         """
@@ -42,19 +42,16 @@ class activity_VerifyPublishResponse(Activity):
         try:
             run = data['run']
             version = data['version']
-            return self.publication_verification_results(data, 'journal', 'journal',
+            return self.publication_verification_results(data,
                                                          success=data['result'] == "published")
 
         except Exception:
             self.logger.exception("Exception when Verifying Publish Response")
             raise
 
-    def publication_authority(self, settings):
-        return settings.publication_authority
+    def publication_verification_results(self, data, success):
 
-    def publication_verification_results(self, data, pub_authority, checking_result_from, success):
-
-        if pub_authority == 'journal' and checking_result_from == 'journal' and success:
+        if success:
 
             start_event = [self.settings, data['article_id'], data['version'], data['run'],
                            self.pretty_name + ": journal", "start",
@@ -69,7 +66,7 @@ class activity_VerifyPublishResponse(Activity):
             success = self.ACTIVITY_SUCCESS
             return start_event, end_event, set_status_property, success
 
-        elif pub_authority == 'journal' and checking_result_from == 'journal' and success is False:
+        elif success is False:
 
             start_event = [self.settings, data['article_id'], data['version'], data['run'],
                            self.pretty_name + ": journal", "start",

@@ -36,7 +36,7 @@ class TestVerifyPublishResponse(unittest.TestCase):
 
     @data(data_published_lax)
     def test_get_events_data_published_lax(self, data):
-        (exp_start_msg, exp_end_msg, exp_status, exp_result) = self.verifypublishresponse.get_events(data, "journal")
+        (exp_start_msg, exp_end_msg, exp_status, exp_result) = self.verifypublishresponse.get_events(data)
         self.assertEqual(exp_start_msg, [settings_mock, data["article_id"], data["version"],
                                          data["run"], self.verifypublishresponse.pretty_name + ": journal", "start",
                                          "Starting verification of Publish response " + data["article_id"]])
@@ -48,11 +48,9 @@ class TestVerifyPublishResponse(unittest.TestCase):
         self.assertEqual(exp_result, self.verifypublishresponse.ACTIVITY_SUCCESS)
 
     @data(data_published_lax)
-    @patch.object(activity_VerifyPublishResponse, 'publication_authority')
     @patch.object(activity_VerifyPublishResponse, 'set_monitor_property')
     @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
-    def test_do_activity_data_published_lax(self, data, fake_emit_monitor, fake_set_monitor_property, fake_publication_authority):
-        fake_publication_authority.return_value = "journal"
+    def test_do_activity_data_published_lax(self, data, fake_emit_monitor, fake_set_monitor_property):
         result = self.verifypublishresponse.do_activity(data)
         fake_emit_monitor.assert_called_with(settings_mock,
                                              data["article_id"],
@@ -68,11 +66,9 @@ class TestVerifyPublishResponse(unittest.TestCase):
         self.assertEqual(result, self.verifypublishresponse.ACTIVITY_SUCCESS)
 
     @data(data_error_lax)
-    @patch.object(activity_VerifyPublishResponse, 'publication_authority')
     @patch.object(activity_VerifyPublishResponse, 'set_monitor_property')
     @patch.object(activity_VerifyPublishResponse, 'emit_monitor_event')
-    def test_do_activity_data_error_lax(self, data, fake_emit_monitor, fake_set_monitor_property, fake_publication_authority):
-        fake_publication_authority.return_value = "journal"
+    def test_do_activity_data_error_lax(self, data, fake_emit_monitor, fake_set_monitor_property):
         result = self.verifypublishresponse.do_activity(data)
         fake_emit_monitor.assert_called_with(settings_mock,
                                              data["article_id"],
