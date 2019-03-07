@@ -48,36 +48,40 @@ class activity_VerifyPublishResponse(Activity):
 
     def publication_verification_results(self, data, success):
 
+        article_id = data['article_id']
+        version = data['version']
+        run = data['run']
+
         if success:
 
-            start_event = [self.settings, data['article_id'], data['version'], data['run'],
+            start_event = [self.settings, article_id, version, run,
                            self.pretty_name + ": journal", "start",
-                           "Starting verification of Publish response " + data['article_id']]
+                           "Starting verification of Publish response " + article_id]
 
-            end_event = [self.settings, data['article_id'], data['version'], data['run'],
+            end_event = [self.settings, article_id, version, run,
                          self.pretty_name + ": journal", "end",
                          " Finished Verification. Lax has responded with result: published."
-                         " Article: " + data['article_id']]
+                         " Article: " + article_id]
 
             set_status_property = [
-                self.settings, data['article_id'], "publication-status", "published", "text"]
+                self.settings, article_id, "publication-status", "published", "text"]
             success = self.ACTIVITY_SUCCESS
             return start_event, end_event, set_status_property, success
 
         elif success is False:
 
-            start_event = [self.settings, data['article_id'], data['version'], data['run'],
+            start_event = [self.settings, article_id, version, run,
                            self.pretty_name + ": journal", "start",
-                           "Starting verification of Publish response " + data['article_id']]
+                           "Starting verification of Publish response " + article_id]
 
-            end_event = [self.settings, data['article_id'], data['version'], data['run'],
+            end_event = [self.settings, article_id, version, run,
                          self.pretty_name + ": journal", "error",
-                         " Lax has not published article " + data['article_id'] +
+                         " Lax has not published article " + article_id +
                          " result from lax:" + str(data['result']) + '; message from lax: ' +
                          message_from_lax(data)]
 
             set_status_property = [
-                self.settings, data['article_id'], "publication-status",
+                self.settings, article_id, "publication-status",
                 "publication issues", "text"]
             success = self.ACTIVITY_PERMANENT_FAILURE
             return start_event, end_event, set_status_property, success
