@@ -51,7 +51,7 @@ class activity_IngestToLax(Activity):
                                      "aws_secret_access_key": self.settings.aws_secret_access_key}
 
         (message, queue, start_event,
-         end_event, end_event_details, exception) = self.get_message_queue(data, self.settings.consider_Lax_elife_2_0)
+         end_event, end_event_details, exception) = self.get_message_queue(data)
 
         self.emit_monitor_event(*start_event)
         if end_event == "error":
@@ -65,7 +65,7 @@ class activity_IngestToLax(Activity):
 
 
 
-    def get_message_queue(self, data=None, consider_elife_20=True):
+    def get_message_queue(self, data=None):
         """
         Do the work
         """
@@ -81,42 +81,6 @@ class activity_IngestToLax(Activity):
         try:
             expanded_folder = data['expanded_folder']
             run_type = data['run_type']
-
-            ##########
-            if not consider_elife_20:
-
-                start_event = [self.settings, article_id, version, run, self.pretty_name + " (Skipping)", "start",
-                               "Starting preparation of article " + article_id]
-
-                try:
-                    workflow_starter_message = {
-                            "workflow_name": "ProcessArticleZip",
-                            "workflow_data": {
-                                "run":run ,
-                                "article_id": article_id,
-                                "result": "",
-                                "status": status,
-                                "version": version,
-                                "expanded_folder": expanded_folder,
-                                "requested_action": "",
-                                "message": "",
-                                "update_date": data['update_date'],
-                                "run_type": run_type
-                            }
-                        }
-
-                    return (workflow_starter_message, self.settings.workflow_starter_queue,start_event,
-                            "end", [self.settings, article_id, version, run, self.pretty_name + " (Skipping)", "end",
-                                    "Lax is not being considered, this activity just triggered next "
-                                    "workflow without influence from Lax."], None)
-
-                except Exception as exception:
-                    return (None, None, start_event, "error",
-                            [self.settings, article_id, version, run, self.pretty_name + " (Skipping)", "error",
-                             "An error has occurred. Details: %s", str(exception)],
-                            str(exception))
-
-            ##########
 
             start_event = [self.settings, article_id, version, run, self.pretty_name, "start",
                            "Starting preparation of article for Lax " + article_id]

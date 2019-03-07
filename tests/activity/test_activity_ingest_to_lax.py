@@ -79,35 +79,5 @@ class TestIngestToLax(unittest.TestCase):
                                                  " message: Access Denied"])
 
 
-    @data(data_example)
-    def test_get_message_queue_not_consider_lax(self, data):
-
-        message, queue, start_event, end_event, end_event_details, exception = self.ingesttolax.get_message_queue(data, False)
-        self.assertDictEqual(message, {
-                                "workflow_name": "ProcessArticleZip",
-                                "workflow_data": {
-                                    "run":data['run'] ,
-                                    "article_id": data['article_id'],
-                                    "result": "",
-                                    "status": data['status'],
-                                    "version": data['version'],
-                                    "expanded_folder": data['expanded_folder'],
-                                    "requested_action": "",
-                                    "message": "",
-                                    "update_date": data['update_date'],
-                                    "run_type": data['run_type']
-                                }
-                            })
-        self.assertEqual(queue, settings_mock.workflow_starter_queue)
-        self.assertEqual(start_event, [settings_mock, data['article_id'], data['version'], data['run'],
-                                       self.ingesttolax.pretty_name + " (Skipping)", "start",
-                                       "Starting preparation of article " + data['article_id']])
-        self.assertEqual(end_event, "end")
-        self.assertEqual(end_event_details, [settings_mock, data['article_id'], data['version'], data['run'],
-                                             self.ingesttolax.pretty_name + " (Skipping)", "end",
-                                             "Lax is not being considered, this activity just triggered next "
-                                             "workflow without influence from Lax."])
-
-
 if __name__ == '__main__':
     unittest.main()
