@@ -49,6 +49,18 @@ class TestIngestToLax(unittest.TestCase):
         return_value = self.ingesttolax.do_activity(data)
         self.assertEqual(return_value, activity_IngestToLax.ACTIVITY_SUCCESS)
 
+    @patch.object(activity_IngestToLax, 'get_message_queue')
+    @patch.object(activity_module, 'get_session')
+    @patch.object(activity_IngestToLax, 'emit_monitor_event')
+    def test_do_activity_error(self, fake_emit_monitor, fake_session, fake_message_queue):
+        """test for when the end_event is error"""
+        fake_data = {'run': ''}
+        start_event = []
+        end_event = "error"
+        fake_message_queue.return_value = None, None, start_event, end_event, None, None
+        return_value = self.ingesttolax.do_activity(fake_data)
+        self.assertEqual(return_value, activity_IngestToLax.ACTIVITY_PERMANENT_FAILURE)
+
     @data(data_example)
     @patch('provider.lax_provider.prepare_action_message')
     def test_get_message_queue_success(self, data, fake_action_message):
