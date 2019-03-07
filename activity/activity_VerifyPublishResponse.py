@@ -74,8 +74,7 @@ class activity_VerifyPublishResponse(Activity):
                          self.pretty_name + ": journal", "error",
                          " Lax has not published article " + data['article_id'] +
                          " result from lax:" + str(data['result']) + '; message from lax: ' +
-                         data['message'] if ("message" in data) and
-                         (data['message'] is not None) else "(empty message)"]
+                         message_from_lax(data)]
 
             set_status_property = [
                 self.settings, data['article_id'], "publication-status",
@@ -85,3 +84,8 @@ class activity_VerifyPublishResponse(Activity):
 
         else:
             raise RuntimeError("The publication result isn't a valid one.")
+
+def message_from_lax(data):
+    """format a message from a Lax response"""
+    return data['message'] if (
+        "message" in data and data['message'] is not None) else "(empty message)"
