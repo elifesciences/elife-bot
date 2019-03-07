@@ -251,7 +251,6 @@ class exp():
     lax_response_queue = "bot-lax-exp-out"
     # eLife 2.0 transition settings
     publication_authority = "journal"
-    consider_Lax_elife_2_0 = True
 
     # videos
     video_url = "https://video.url.here/"
@@ -759,7 +758,6 @@ class live():
     lax_response_queue = "bot-lax-prod-out"
     # eLife 2.0 transition settings
     publication_authority = "journal"
-    consider_Lax_elife_2_0 = True
 
     # videos
     video_url = "https://video.url.here/"
