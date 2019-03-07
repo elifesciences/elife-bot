@@ -54,52 +54,7 @@ class activity_VerifyPublishResponse(Activity):
 
     def publication_verification_results(self, data, pub_authority, checking_result_from, success):
 
-        if pub_authority == 'elife-website' and checking_result_from == 'elife-website' and success:
-            start_event = [self.settings, data['article_id'], data['version'], data['run'],
-                           self.pretty_name + ": elife-website", "start",
-                           "Starting verification of Publish response " + data['article_id']]
-
-            end_event = [self.settings, data['article_id'], data['version'], data['run'],
-                         self.pretty_name + ": elife-website",
-                         "end", "Finished verification of Publish response " + data['article_id']]
-
-            set_status_event = None
-            success = self.ACTIVITY_SUCCESS
-            return start_event, end_event, set_status_event, success
-
-        elif pub_authority == 'elife-website' and checking_result_from == 'journal' and success:
-            start_event = [self.settings, data['article_id'], data['version'], data['run'],
-                           self.pretty_name + ": journal", "start",
-                           "Starting verification of Publish response " + data['article_id']]
-
-            end_event = [self.settings, data['article_id'], data['version'], data['run'],
-                         self.pretty_name + ": journal", "end",
-                         " Finished Verification. Lax has responded with result: published."
-                         " Authority: elife-website. Exiting."
-                         " Article: " + data['article_id']]
-
-            set_status_property = [self.settings, data['article_id'], "publication-status", "published", "text"]
-            success = self.ACTIVITY_EXIT_WORKFLOW
-            return start_event, end_event, set_status_property, success
-
-        elif pub_authority == 'elife-website' and checking_result_from == 'journal' and success is False:
-
-            start_event = [self.settings, data['article_id'], data['version'], data['run'],
-                           self.pretty_name + ": journal", "start",
-                           "Starting verification of Publish response " + data['article_id']]
-            end_event = [self.settings, data['article_id'], data['version'], data['run'],
-                         self.pretty_name + ": journal", "error",
-                         " Lax has not published article " + data['article_id'] +
-                         " We will exit this workflow as the publication authority is elife-website."
-                         " result from lax:" + str(data['result']) + '; message from lax: ' +
-                         data['message'] if ("message" in data) and (data['message'] is not None) else "(empty message)"]
-
-            set_status_property = [self.settings, data['article_id'], "publication-status", "publication issues",
-                                "text"]
-            success = self.ACTIVITY_PERMANENT_FAILURE
-            return start_event, end_event, set_status_property, success
-
-        elif pub_authority == 'journal' and checking_result_from == 'journal' and success:
+        if pub_authority == 'journal' and checking_result_from == 'journal' and success:
 
             start_event = [self.settings, data['article_id'], data['version'], data['run'],
                            self.pretty_name + ": journal", "start",
@@ -129,20 +84,6 @@ class activity_VerifyPublishResponse(Activity):
             set_status_property = [self.settings, data['article_id'], "publication-status", "publication issues",
                                 "text"]
             success = self.ACTIVITY_PERMANENT_FAILURE
-            return start_event, end_event, set_status_property, success
-
-        elif pub_authority == 'journal' and checking_result_from == 'elife-website' and success:
-
-            start_event = [self.settings, data['article_id'], data['version'], data['run'],
-                           self.pretty_name + ": elife-website", "start",
-                           "Starting verification of Publish response " + data['article_id']]
-            end_event = [self.settings, data['article_id'], data['version'], data['run'],
-                         self.pretty_name + ": elife-website", "end",
-                         "Finish verification of Publish response. Authority: journal. Exiting this "
-                         "workflow " + data['article_id']]
-
-            set_status_property = None
-            success = self.ACTIVITY_EXIT_WORKFLOW
             return start_event, end_event, set_status_property, success
 
         else:
