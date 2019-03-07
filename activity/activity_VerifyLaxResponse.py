@@ -1,5 +1,6 @@
 import json
 from provider.execution_context import get_session
+from provider.lax_provider import message_from_lax
 from uuid import UUID
 from activity.objects import Activity
 
@@ -59,7 +60,7 @@ class activity_VerifyLaxResponse(Activity):
 
                 return self.ACTIVITY_SUCCESS
 
-            message = data['message'] if data['message'] is not None else "(empty message)"
+            message = message_from_lax(data)
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                     "Lax has not ingested article " + article_id +
                                     " result from lax:" + str(data['result']) + '; message from lax: ' + message)

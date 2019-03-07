@@ -1,4 +1,5 @@
 import json
+from provider.lax_provider import message_from_lax
 from activity.objects import Activity
 
 """
@@ -88,8 +89,3 @@ class activity_VerifyPublishResponse(Activity):
 
         else:
             raise RuntimeError("The publication result isn't a valid one.")
-
-def message_from_lax(data):
-    """format a message from a Lax response"""
-    return data['message'] if (
-        "message" in data and data['message'] is not None) else "(empty message)"

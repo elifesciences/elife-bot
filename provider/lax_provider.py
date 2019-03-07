@@ -233,3 +233,10 @@ def lax_token(run, version, expanded_folder, status, force=False, run_type=None)
     }
     return base64_encode_string(json.dumps(token))
 
+
+def message_from_lax(data):
+    """
+    format a message from a Lax response data
+    """
+    return data['message'] if (
+        "message" in data and data['message'] is not None) else "(empty message)"
