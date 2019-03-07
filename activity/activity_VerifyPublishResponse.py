@@ -42,29 +42,8 @@ class activity_VerifyPublishResponse(Activity):
         try:
             run = data['run']
             version = data['version']
-
-            # Verifies authority
-            if pub_authority == 'elife-website':
-
-                if 'requested_action' in data:
-                    # Publication authority is the old site but this call is from new lax.
-                    # Before terminating Workflow gracefully, emit the result of publication to lax on the dashboard
-                    # Terminate Workflow gracefully, log
-                    return self.publication_verification_results(data, pub_authority, 'journal',
-                                                                 success=data['result'] == "published")
-
-                return self.publication_verification_results(data, pub_authority, pub_authority, success=True)
-
-            # Default new site: 2.0
-            if 'requested_action' not in data:
-                # Terminate Workflow gracefully, log - this message didn't come from lax. it was from the old
-                # pipeline, so Ignore it since the new site is the authority
-                return self.publication_verification_results(data, 'journal', 'elife-website', success=True)
-
             return self.publication_verification_results(data, 'journal', 'journal',
                                                          success=data['result'] == "published")
-
-            #########
 
         except Exception:
             self.logger.exception("Exception when Verifying Publish Response")
