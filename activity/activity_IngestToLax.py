@@ -67,7 +67,8 @@ class activity_IngestToLax(Activity):
 
     def get_message_queue(self, data=None):
         """
-        Do the work
+        Given data from an article workflow, return a message to add to the Lax queue,
+        and also return values to be sent to the dashboard
         """
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
