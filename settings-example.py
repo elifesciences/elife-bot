@@ -249,7 +249,6 @@ class exp():
     # eLife 2.0 bot lax communication settings
     xml_info_queue = "bot-lax-exp-inc"
     lax_response_queue = "bot-lax-exp-out"
-    consider_Lax_elife_2_0 = True
 
     # videos
     video_url = "https://video.url.here/"
@@ -755,7 +754,6 @@ class live():
     # eLife 2.0 bot lax communication settings
     xml_info_queue = "bot-lax-prod-inc"
     lax_response_queue = "bot-lax-prod-out"
-    consider_Lax_elife_2_0 = True
 
     # videos
     video_url = "https://video.url.here/"

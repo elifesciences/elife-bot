@@ -34,11 +34,6 @@ class activity_VerifyLaxResponse(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
-        ########
-        if not self.settings.consider_Lax_elife_2_0:
-            return self.ACTIVITY_SUCCESS
-        #######
-
         article_id = data['article_id']
         run = data['run']
         version = data['version']
@@ -65,8 +60,6 @@ class activity_VerifyLaxResponse(Activity):
                                     "Lax has not ingested article " + article_id +
                                     " result from lax:" + str(data['result']) + '; message from lax: ' + message)
             return self.ACTIVITY_PERMANENT_FAILURE
-
-        #########
 
         except Exception as e:
             self.logger.exception("Exception when Verifying Lax Response")
