@@ -238,4 +238,4 @@ def message_from_lax(data):
     """
     format a message from a Lax response data
     """
-    return data.get('message', '(empty message)')
+    return data.get('message') if data.get('message') else '(empty message)'
