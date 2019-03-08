@@ -25,7 +25,7 @@ class activity_VerifyPublishResponse(Activity):
         self.logger = logger
 
     def do_activity(self, data=None):
-        (start_msg, end_msg, set_status, result) = self.get_events(data)
+        start_msg, end_msg, set_status, result = self.get_events(data)
         self.emit_monitor_event(*start_msg)
         self.emit_monitor_event(*end_msg)
         if set_status is not None:
