@@ -33,7 +33,9 @@ class activity_VerifyPublishResponse(Activity):
 
     def get_events(self, data):
         """
-        Do the work
+        Given the data for this activity from Lax and the activity starter,
+        return start and end messages to send to the dashboard queue,
+        also return the status return from Lax, and the return value for this workflow activity
         """
         self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
