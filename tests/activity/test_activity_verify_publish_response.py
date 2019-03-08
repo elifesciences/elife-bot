@@ -2,6 +2,7 @@ import unittest
 from ddt import ddt, data
 from mock import patch, MagicMock
 from activity.activity_VerifyPublishResponse import activity_VerifyPublishResponse
+from tests.activity.classes_mock import FakeLogger
 import tests.activity.settings_mock as settings_mock
 
 
@@ -35,7 +36,7 @@ DATA_ERROR_LAX = {
 class TestVerifyPublishResponse(unittest.TestCase):
     def setUp(self):
         self.verifypublishresponse = activity_VerifyPublishResponse(
-            settings_mock, None, None, None, None)
+            settings_mock, FakeLogger(), None, None, None)
 
     @data(DATA_PUBLISHED_LAX)
     def test_get_events_data_published_lax(self, data):

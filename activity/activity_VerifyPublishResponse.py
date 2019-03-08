@@ -22,7 +22,6 @@ class activity_VerifyPublishResponse(Activity):
         self.default_task_start_to_close_timeout = 60 * 5
         self.description = ("Verifies data response from Lax in order to decide if we can " +
                             "carry on with workflow")
-        self.logger = logger
 
     def do_activity(self, data=None):
         start_msg, end_msg, set_status, result = self.get_events(data)
@@ -36,8 +35,7 @@ class activity_VerifyPublishResponse(Activity):
         """
         Do the work
         """
-        if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         try:
             return self.publication_verification_results(
