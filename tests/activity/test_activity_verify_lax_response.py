@@ -3,7 +3,7 @@ from ddt import ddt, data
 from mock import patch
 from activity.activity_VerifyLaxResponse import activity_VerifyLaxResponse
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeSession
+from tests.activity.classes_mock import FakeSession, FakeLogger
 
 
 def fake_emit_monitor_event(settings, item_identifier, version, run, event_type, status, message):
@@ -12,7 +12,8 @@ def fake_emit_monitor_event(settings, item_identifier, version, run, event_type,
 @ddt
 class TestVerifyLaxResponse(unittest.TestCase):
     def setUp(self):
-        self.verifylaxresponse = activity_VerifyLaxResponse(settings_mock, None, None, None, None)
+        self.verifylaxresponse = activity_VerifyLaxResponse(settings_mock, FakeLogger(),
+                                                            None, None, None)
 
     @data({
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
