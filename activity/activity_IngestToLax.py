@@ -34,8 +34,7 @@ class activity_IngestToLax(Activity):
 
     def do_activity(self, data=None):
 
-        if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         run = data["run"]
         session = get_session(self.settings, data, run)
@@ -70,8 +69,6 @@ class activity_IngestToLax(Activity):
         Given data from an article workflow, return a message to add to the Lax queue,
         and also return values to be sent to the dashboard
         """
-        if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         run = data['run']
         version = data['version']
