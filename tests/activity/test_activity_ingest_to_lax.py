@@ -1,9 +1,14 @@
 import unittest
 from ddt import ddt, data
 from mock import patch
+import activity.activity_IngestToLax as activity_module
 from activity.activity_IngestToLax import activity_IngestToLax
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger
+from tests.activity.classes_mock import (
+    FakeLogger, FakeSession, FakeSQSConn, FakeSQSQueue, FakeSQSMessage)
+from tests.activity import test_activity_data
+from testfixtures import TempDirectory
+
 
 data_example = {
     "article_id": "00353",
@@ -23,9 +28,42 @@ class TestIngestToLax(unittest.TestCase):
     def setUp(self):
         self.ingesttolax = activity_IngestToLax(settings_mock, FakeLogger(), None, None, None)
 
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @data(data_example)
+    @patch('boto.sqs.connect_to_region')
+    @patch('boto.sqs.connection.SQSConnection.get_queue')
+    @patch.object(activity_module, 'RawMessage')
+    @patch('provider.lax_provider.prepare_action_message')
+    @patch.object(activity_module, 'get_session')
+    @patch.object(activity_IngestToLax, 'emit_monitor_event')
+    def test_do_activity_success(self, data, fake_emit_monitor, fake_session, fake_action_message,
+                                 fake_sqs_message, fake_sqs_queue, fake_sqs_conn):
+        directory = TempDirectory()
+        fake_action_message.return_value = {"example_message": True}
+        fake_session.return_value = FakeSession(test_activity_data.data_example_before_publish)
+        fake_sqs_conn.return_value = FakeSQSConn(directory)
+        fake_sqs_queue.return_value = FakeSQSQueue(directory)
+        fake_sqs_message.return_value = FakeSQSMessage(directory)
+        return_value = self.ingesttolax.do_activity(data)
+        self.assertEqual(return_value, activity_IngestToLax.ACTIVITY_SUCCESS)
+
+    @patch.object(activity_IngestToLax, 'get_message_queue')
+    @patch.object(activity_module, 'get_session')
+    @patch.object(activity_IngestToLax, 'emit_monitor_event')
+    def test_do_activity_error(self, fake_emit_monitor, fake_session, fake_message_queue):
+        """test for when the end_event is error"""
+        fake_data = {'run': ''}
+        start_event = []
+        end_event = "error"
+        fake_message_queue.return_value = None, None, start_event, end_event, None, None
+        return_value = self.ingesttolax.do_activity(fake_data)
+        self.assertEqual(return_value, activity_IngestToLax.ACTIVITY_PERMANENT_FAILURE)
+
     @data(data_example)
     @patch('provider.lax_provider.prepare_action_message')
-    def test_do_activity_success(self, data, fake_action_message):
+    def test_get_message_queue_success(self, data, fake_action_message):
         fake_action_message.return_value = {"example_message": True}
 
         message, queue, start_event, end_event, end_event_details, exception = self.ingesttolax.get_message_queue(data)
@@ -42,7 +80,7 @@ class TestIngestToLax(unittest.TestCase):
 
     @data(data_example)
     @patch("provider.lax_provider.prepare_action_message")
-    def test_do_activity_error(self, data, fake_lax_provider):
+    def test_get_message_queue_error(self, data, fake_lax_provider):
         fake_lax_provider.side_effect = Exception("Access Denied")
         message, queue, start_event, end_event, end_event_details, exception = self.ingesttolax.get_message_queue(data)
         self.assertEqual(end_event, "error")
@@ -51,36 +89,6 @@ class TestIngestToLax(unittest.TestCase):
                                                  self.ingesttolax.pretty_name, "error",
                                                  "Error preparing or sending message to lax" + data['article_id'] +
                                                  " message: Access Denied"])
-
-
-    @data(data_example)
-    def test_do_activity_not_consider_lax(self, data):
-
-        message, queue, start_event, end_event, end_event_details, exception = self.ingesttolax.get_message_queue(data, False)
-        self.assertDictEqual(message, {
-                                "workflow_name": "ProcessArticleZip",
-                                "workflow_data": {
-                                    "run":data['run'] ,
-                                    "article_id": data['article_id'],
-                                    "result": "",
-                                    "status": data['status'],
-                                    "version": data['version'],
-                                    "expanded_folder": data['expanded_folder'],
-                                    "requested_action": "",
-                                    "message": "",
-                                    "update_date": data['update_date'],
-                                    "run_type": data['run_type']
-                                }
-                            })
-        self.assertEqual(queue, settings_mock.workflow_starter_queue)
-        self.assertEqual(start_event, [settings_mock, data['article_id'], data['version'], data['run'],
-                                       self.ingesttolax.pretty_name + " (Skipping)", "start",
-                                       "Starting preparation of article " + data['article_id']])
-        self.assertEqual(end_event, "end")
-        self.assertEqual(end_event_details, [settings_mock, data['article_id'], data['version'], data['run'],
-                                             self.ingesttolax.pretty_name + " (Skipping)", "end",
-                                             "Lax is not being considered, this activity just triggered next "
-                                             "workflow without influence from Lax."])
 
 
 if __name__ == '__main__':
