@@ -77,7 +77,8 @@ def attachment(file_name,
     "create an attachment from the file"
     attachment_name = encode_filename(os.path.split(file_name)[-1])
     with open(file_name, 'rb') as open_file:
-        email_attachment = MIMEApplication(open_file.read(), media_type)
+        email_attachment = MIMEApplication(
+            open_file.read(), media_type, name=(charset, '', attachment_name))
     email_attachment.add_header(
         'Content-Disposition', 'attachment',
         filename=(charset, '', attachment_name))
