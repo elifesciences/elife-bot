@@ -3,7 +3,8 @@ import os
 import shutil
 from mock import patch
 from ddt import ddt, data, unpack
-import provider.s3lib as s3lib
+from provider import s3lib
+from provider.article import article
 from activity.activity_PubRouterDeposit import activity_PubRouterDeposit
 import tests.test_data as test_case_data
 import tests.activity.settings_mock as settings_mock
@@ -30,17 +31,22 @@ class TestPubRouterDeposit(unittest.TestCase):
             settings_mock, FakeLogger(), None, None, None)
 
     @patch('provider.lax_provider.article_versions')
+    @patch.object(activity_PubRouterDeposit, 'clean_outbox')
     @patch.object(activity_PubRouterDeposit, 'start_ftp_article_workflow')
     @patch.object(activity_PubRouterDeposit, 'does_source_zip_exist_from_s3')
     @patch.object(activity_PubRouterDeposit, 'download_files_from_s3_outbox')
+    @patch.object(article, 'was_ever_published')
     @patch.object(s3lib, 'get_s3_keys_from_bucket')
-    def test_do_activity(self, fake_get_s3_keys, fake_download, fake_zip_exists,
-                         fake_start, fake_article_versions):
+    def test_do_activity(self, fake_get_s3_keys, fake_was_ever_published, 
+                         fake_download, fake_zip_exists,
+                         fake_start, fake_clean_outbox, fake_article_versions):
         activity_data = {
             "data": {
                 "workflow": "HEFCE"
             }
         }
+        fake_clean_outbox.return_value = None
+        fake_was_ever_published.return_value = None
         fake_download.return_value = download_files(
             ["elife00013.xml", "elife09169.xml"], self.pubrouterdeposit.get_tmp_dir())
         fake_zip_exists.return_value = True
