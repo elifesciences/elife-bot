@@ -1,6 +1,5 @@
 # coding=utf-8
 
-import os
 import json
 import copy
 import unittest
@@ -218,7 +217,6 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         result = self.activity.do_activity(activity_data)
         self.assertEqual(result, expected_result)
 
-
     @patch.object(digest_provider, 'docx_exists_in_s3')
     @patch.object(lax_provider, 'article_highest_version')
     @patch.object(lax_provider, 'article_first_by_status')
@@ -377,7 +375,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "version": 2,
             "run_type": None,
             "highest_version": "2",
-            "version_map": {"poa": [1], "poa": [2]},
+            "version_map": {"poa": [1]},
             "expected": False
         },
         {
@@ -423,6 +421,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         )
         self.assertEqual(status, test_data.get("expected"),
                          "failed in {comment}".format(comment=test_data.get("comment")))
+
 
 if __name__ == '__main__':
     unittest.main()
