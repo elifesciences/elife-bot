@@ -62,6 +62,11 @@ class activity_PostDigestJATS(Activity):
         # parse the data with the digest_provider
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)
 
+        # check if it is a silent run
+        if digest_provider.silent_digest(real_filename):
+            self.logger.info('PostDigestJATS silent deposit of real_filename: %s', real_filename)
+            return self.ACTIVITY_SUCCESS
+
         # Download from S3
         self.input_file = digest_provider.download_digest_from_s3(
             self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
