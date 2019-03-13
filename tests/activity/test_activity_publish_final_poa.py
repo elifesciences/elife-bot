@@ -164,64 +164,6 @@ class TestPublishFinalPOA(unittest.TestCase):
     def tearDown(self):
         self.poa.clean_tmp_dir()
 
-    def count_files_in_dir(self, dir_name):
-        """
-        After do_activity, check the directory contains a zip with ds_zip file name
-        """
-        file_names = glob.glob(dir_name + os.sep + "*")
-        return len(file_names)
-
-    def compare_files_in_dir(self, dir_name, file_list):
-        """
-        Compare the file names in the directroy to the file_list provided
-        """
-        file_names = glob.glob(dir_name + os.sep + "*")
-        # First check the count is the same
-        if len(file_list) != len(file_names):
-            return False
-        # Then can compare file name by file name
-        for file in file_names:
-            file_name = file.split(os.sep)[-1]
-            if file_name not in file_list:
-                return False
-        return True
-
-    def check_xml_contents(self, xml_file, xml_file_values):
-        """
-        Function to compare XML tag value as located by an xpath
-        Can compare one tag only at a time
-        """
-        root = None
-        xml_file_name = xml_file.split(os.sep)[-1]
-        if xml_file_name in xml_file_values:
-            ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
-            root = ET.parse(xml_file)
-        if root:
-            for (xpath, (attribute, value)) in xml_file_values[xml_file_name].items():
-                matched_tags = root.findall(xpath)
-                if len(matched_tags) != 1:
-                    return False
-                for matched_tag in matched_tags:
-                    if attribute:
-                        if matched_tag.get(attribute) != value:
-                            return False
-                    else:
-                        if matched_tag.text != value:
-                            return False
-
-        return True
-
-    def ds_zip_in_list_of_files(self, xml_file, file_list):
-        """
-        Given an XML file and a list of files
-        check the list of files contains a ds zip file that matches the xml file
-        """
-        doi_id = xml_file.split('-')[-1].split('.')[0]
-        for file in file_list:
-            if str(doi_id) in file and file.endswith('ds.zip'):
-                return True
-        return False
-
     def fake_download_files_from_s3(self, file_list):
         for file in file_list:
             source_doc = "tests/test_data/poa/outbox/" + file
@@ -267,11 +209,11 @@ class TestPublishFinalPOA(unittest.TestCase):
 
             self.assertEqual(self.poa.approve_status, test_data["approve_status"])
             self.assertEqual(self.poa.publish_status, test_data["publish_status"])
-            self.assertEqual(self.count_files_in_dir(self.poa.DONE_DIR),
+            self.assertEqual(count_files_in_dir(self.poa.DONE_DIR),
                              test_data["done_dir_file_count"])
             self.assertEqual(self.poa.activity_status, test_data["activity_status"])
-            self.assertTrue(self.compare_files_in_dir(self.poa.OUTPUT_DIR,
-                                                      test_data["output_dir_files"]))
+            self.assertTrue(compare_files_in_dir(self.poa.OUTPUT_DIR,
+                                                 test_data["output_dir_files"]))
             self.assertEqual(sorted(self.poa.done_xml_files),
                              sorted(test_data["done_xml_files"]))
             self.assertEqual(sorted(self.poa.clean_from_outbox_files),
@@ -287,11 +229,11 @@ class TestPublishFinalPOA(unittest.TestCase):
             if test_data["done_dir_file_count"] > 0:
                 xml_files = glob.glob(self.poa.DONE_DIR + "/*.xml")
                 for xml_file in xml_files:
-                    self.assertTrue(self.check_xml_contents(xml_file, self.xml_file_values))
+                    self.assertTrue(check_xml_contents(xml_file, self.xml_file_values))
 
                     # If a ds zip file for the article, check more XML elements
-                    if self.ds_zip_in_list_of_files(xml_file, self.poa.clean_from_outbox_files):
-                        self.assertTrue(self.check_xml_contents(
+                    if ds_zip_in_list_of_files(xml_file, self.poa.clean_from_outbox_files):
+                        self.assertTrue(check_xml_contents(
                             xml_file, self.xml_file_values_when_ds_zip))
 
             self.assertEqual(True, success)
@@ -306,6 +248,68 @@ class TestPublishFinalPOA(unittest.TestCase):
             self.poa.malformed_ds_file_names = []
             self.poa.empty_ds_file_names = []
             self.poa.unmatched_ds_file_names = []
+
+
+def count_files_in_dir(dir_name):
+    """
+    After do_activity, check the directory contains a zip with ds_zip file name
+    """
+    file_names = glob.glob(dir_name + os.sep + "*")
+    return len(file_names)
+
+
+def compare_files_in_dir(dir_name, file_list):
+    """
+    Compare the file names in the directroy to the file_list provided
+    """
+    file_names = glob.glob(dir_name + os.sep + "*")
+    # First check the count is the same
+    if len(file_list) != len(file_names):
+        return False
+    # Then can compare file name by file name
+    for file in file_names:
+        file_name = file.split(os.sep)[-1]
+        if file_name not in file_list:
+            return False
+    return True
+
+
+def check_xml_contents(xml_file, xml_file_values):
+    """
+    Function to compare XML tag value as located by an xpath
+    Can compare one tag only at a time
+    """
+    root = None
+    xml_file_name = xml_file.split(os.sep)[-1]
+    if xml_file_name in xml_file_values:
+        ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
+        root = ET.parse(xml_file)
+    if root:
+        for (xpath, (attribute, value)) in xml_file_values[xml_file_name].items():
+            matched_tags = root.findall(xpath)
+            if len(matched_tags) != 1:
+                return False
+            for matched_tag in matched_tags:
+                if attribute:
+                    if matched_tag.get(attribute) != value:
+                        return False
+                else:
+                    if matched_tag.text != value:
+                        return False
+
+    return True
+
+
+def ds_zip_in_list_of_files(xml_file, file_list):
+    """
+    Given an XML file and a list of files
+    check the list of files contains a ds zip file that matches the xml file
+    """
+    doi_id = xml_file.split('-')[-1].split('.')[0]
+    for file in file_list:
+        if str(doi_id) in file and file.endswith('ds.zip'):
+            return True
+    return False
 
 
 if __name__ == '__main__':
