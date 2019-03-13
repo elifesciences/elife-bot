@@ -1,11 +1,9 @@
 import unittest
-import json
 import shutil
 import glob
 import os
-from mock import mock, patch
-from types import MethodType
 import xml.etree.ElementTree as ET
+from mock import patch
 from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
 import tests.activity.settings_mock as settings_mock
 
@@ -163,7 +161,6 @@ class TestPublishFinalPOA(unittest.TestCase):
                 ("{http://www.w3.org/1999/xlink}href", "elife-15082-supp.zip"),
         }
 
-
     def tearDown(self):
         self.poa.clean_tmp_dir()
 
@@ -234,14 +231,6 @@ class TestPublishFinalPOA(unittest.TestCase):
             shutil.copy(source_doc, dest_doc)
         self.poa.outbox_s3_key_names = file_list
 
-    def fake_clean_tmp_dir(self):
-        """
-        Disable the default clean_tmp_dir() when do_activity runs
-        so tests can introspect the files first
-        Then can run clean_tmp_dir() in the tearDown later
-        """
-        pass
-
     def remove_files_from_tmp_dir_subfolders(self):
         """
         Run between each test pass, delete the subfolders in tmp_dir
@@ -251,7 +240,6 @@ class TestPublishFinalPOA(unittest.TestCase):
             if os.path.isdir(directory_full_path):
                 for file in glob.glob(directory_full_path + "/*"):
                     os.remove(file)
-
 
     @patch.object(activity_PublishFinalPOA, 'clean_outbox')
     @patch.object(activity_PublishFinalPOA, 'get_pub_date_str_from_lax')
@@ -263,7 +251,7 @@ class TestPublishFinalPOA(unittest.TestCase):
                          fake_next_revision_number, fake_upload_files_to_s3,
                          fake_get_pub_date_str_from_lax, fake_clean_outbox):
 
-        fake_clean_tmp_dir = self.fake_clean_tmp_dir()
+        fake_clean_tmp_dir.return_value = None
         fake_clean_outbox.return_value = None
         fake_next_revision_number.return_value = 1
         fake_upload_files_to_s3.return_value = True
@@ -271,7 +259,7 @@ class TestPublishFinalPOA(unittest.TestCase):
 
         for test_data in self.do_activity_passes:
 
-            fake_download_files_from_s3 = self.fake_download_files_from_s3(
+            fake_download_files_from_s3.return_value = self.fake_download_files_from_s3(
                 test_data["outbox_file_list"])
 
             param_data = None
@@ -284,7 +272,7 @@ class TestPublishFinalPOA(unittest.TestCase):
             self.assertEqual(self.poa.activity_status, test_data["activity_status"])
             self.assertTrue(self.compare_files_in_dir(self.poa.OUTPUT_DIR,
                                                       test_data["output_dir_files"]))
-            self.assertEqual(sorted(self.poa.done_xml_files), 
+            self.assertEqual(sorted(self.poa.done_xml_files),
                              sorted(test_data["done_xml_files"]))
             self.assertEqual(sorted(self.poa.clean_from_outbox_files),
                              sorted(test_data["clean_from_outbox_files"]))
