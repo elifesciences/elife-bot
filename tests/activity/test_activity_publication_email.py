@@ -179,7 +179,9 @@ class TestPublicationEmail(unittest.TestCase):
     @patch.object(EJP, 'find_latest_s3_file_name')
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch.object(activity_PublicationEmail, 'clean_tmp_dir')
-    def test_do_activity(self, fake_clean_tmp_dir, fake_elife_add_email_to_email_queue,
+    @patch.object(activity_PublicationEmail, 'clean_outbox')
+    def test_do_activity(self, fake_clean_outbox, fake_clean_tmp_dir,
+                         fake_elife_add_email_to_email_queue,
                          fake_find_latest_s3_file_name,
                          fake_ejp_get_s3key,
                          fake_article_get_folder_names_from_bucket,
@@ -189,6 +191,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         directory = TempDirectory()
         fake_clean_tmp_dir = self.fake_clean_tmp_dir()
+        fake_clean_outbox.return_value = None
 
         # Prime the related article property for when needed
         related_article = article()
