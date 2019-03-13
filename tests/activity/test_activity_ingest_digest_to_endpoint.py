@@ -1,14 +1,11 @@
 # coding=utf-8
 
-import os
 import json
 import copy
 import unittest
 from mock import patch
 from ddt import ddt, data
-import provider.digest_provider as digest_provider
-import provider.article as article
-import provider.lax_provider as lax_provider
+from provider import article, article_processing, digest_provider, lax_provider
 from activity.activity_IngestDigestToEndpoint import (
     activity_IngestDigestToEndpoint as activity_object)
 from tests import read_fixture
@@ -57,6 +54,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
 
     @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
     @patch.object(article, 'storage_context')
+    @patch.object(article_processing, 'storage_context')
     @patch.object(lax_provider, 'article_first_by_status')
     @patch.object(lax_provider, 'article_snippet')
     @patch.object(lax_provider, 'article_highest_version')
@@ -157,7 +155,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                          fake_session, fake_put_digest, fake_get_digest,
                          fake_provider_storage_context,
                          fake_highest_version, fake_article_snippet,
-                         fake_first, fake_article_storage_context, fake_get):
+                         fake_first, fake_processing_storage_context,
+                         fake_article_storage_context, fake_get):
         # copy files into the input directory using the storage context
         named_storage_context = FakeStorageContext()
         if test_data.get('bucket_resources'):
@@ -167,6 +166,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         if test_data.get('bot_bucket_resources'):
             bot_storage_context.resources = test_data.get('bot_bucket_resources')
         fake_provider_storage_context.return_value = bot_storage_context
+        fake_processing_storage_context.return_value = FakeStorageContext()
         fake_first.return_value = test_data.get("first_vor")
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
@@ -217,17 +217,19 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         result = self.activity.do_activity(activity_data)
         self.assertEqual(result, expected_result)
 
+    @patch.object(digest_provider, 'docx_exists_in_s3')
     @patch.object(lax_provider, 'article_highest_version')
     @patch.object(lax_provider, 'article_first_by_status')
     @patch.object(activity_object, 'emit_monitor_event')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
     def test_do_activity_docx_exists_exception(self, fake_session, fake_emit, fake_first,
-                                               fake_highest_version):
+                                               fake_highest_version, fake_docx_exists):
         "test and error when checking if a docx exists"
         fake_first.return_value = True
         fake_highest_version.return_value = 1
         session_test_data = session_data({})
         fake_session.return_value = FakeSession(session_test_data)
+        fake_docx_exists.return_value = False
         activity_data = test_activity_data.data_example_before_publish
         expected_result = activity_object.ACTIVITY_SUCCESS
         result = self.activity.do_activity(activity_data)
@@ -239,7 +241,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch.object(digest_provider, 'download_docx_from_s3')
     @patch.object(digest_provider, 'storage_context')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
-    def test_do_activity_bad_download(self, fake_session, fake_storage_context, fake_download, 
+    def test_do_activity_bad_download(self, fake_session, fake_storage_context, fake_download,
                                       fake_emit, fake_first, fake_highest_version):
         "test unable to download a digest docx file"
         fake_first.return_value = True
@@ -373,7 +375,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "version": 2,
             "run_type": None,
             "highest_version": "2",
-            "version_map": {"poa": [1], "poa": [2]},
+            "version_map": {"poa": [1]},
             "expected": False
         },
         {
@@ -419,6 +421,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         )
         self.assertEqual(status, test_data.get("expected"),
                          "failed in {comment}".format(comment=test_data.get("comment")))
+
 
 if __name__ == '__main__':
     unittest.main()
