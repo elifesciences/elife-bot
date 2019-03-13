@@ -252,6 +252,8 @@ class TestPublishFinalPOA(unittest.TestCase):
                 for file in glob.glob(directory_full_path + "/*"):
                     os.remove(file)
 
+
+    @patch.object(activity_PublishFinalPOA, 'clean_outbox')
     @patch.object(activity_PublishFinalPOA, 'get_pub_date_str_from_lax')
     @patch.object(activity_PublishFinalPOA, 'upload_files_to_s3')
     @patch.object(activity_PublishFinalPOA, 'next_revision_number')
@@ -259,9 +261,10 @@ class TestPublishFinalPOA(unittest.TestCase):
     @patch.object(activity_PublishFinalPOA, 'clean_tmp_dir')
     def test_do_activity(self, fake_clean_tmp_dir, fake_download_files_from_s3,
                          fake_next_revision_number, fake_upload_files_to_s3,
-                         fake_get_pub_date_str_from_lax):
+                         fake_get_pub_date_str_from_lax, fake_clean_outbox):
 
         fake_clean_tmp_dir = self.fake_clean_tmp_dir()
+        fake_clean_outbox.return_value = None
         fake_next_revision_number.return_value = 1
         fake_upload_files_to_s3.return_value = True
         fake_get_pub_date_str_from_lax.return_value = "20160704000000"
@@ -281,7 +284,8 @@ class TestPublishFinalPOA(unittest.TestCase):
             self.assertEqual(self.poa.activity_status, test_data["activity_status"])
             self.assertTrue(self.compare_files_in_dir(self.poa.OUTPUT_DIR,
                                                       test_data["output_dir_files"]))
-            self.assertEqual(self.poa.done_xml_files, test_data["done_xml_files"])
+            self.assertEqual(sorted(self.poa.done_xml_files), 
+                             sorted(test_data["done_xml_files"]))
             self.assertEqual(sorted(self.poa.clean_from_outbox_files),
                              sorted(test_data["clean_from_outbox_files"]))
             self.assertEqual(sorted(self.poa.malformed_ds_file_names),
