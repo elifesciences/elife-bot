@@ -110,6 +110,16 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_email_status": None,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999'
         },
+        {
+            "comment": 'digest silent deposit example',
+            "filename": 'DIGEST+99999+SILENT.zip',
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_activity_status": None,
+            "expected_build_status": None,
+            "expected_jats_status": None,
+            "expected_post_status": None,
+            "expected_email_status": None
+        },
     )
     def test_do_activity(self, test_data, fake_storage_context, requests_method_mock,
                          fake_email_smtp_connect):
