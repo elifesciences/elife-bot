@@ -1,10 +1,12 @@
 import os
 import json
+import time
 from collections import OrderedDict
 import requests
+import digestparser.utils as digest_utils
 from elifetools.utils import doi_uri_to_doi
 from S3utility.s3_notification_info import parse_activity_data
-import provider.digest_provider as digest_provider
+from provider import digest_provider, email_provider
 from activity.objects import Activity
 
 
@@ -84,6 +86,9 @@ class activity_PostDigestJATS(Activity):
         # POST to API endpoint
         try:
             self.statuses["post"] = self.post_jats(self.digest, self.jats_content)
+            # send email
+            if self.statuses.get("post"):
+                self.statuses["email"] = self.send_email(self.digest, self.jats_content)
         except Exception as exception:
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
 
@@ -102,6 +107,32 @@ class activity_PostDigestJATS(Activity):
         if payload:
             return post_jats_to_endpoint(url, payload, self.logger)
         return None
+
+    def send_email(self, digest_content, jats_content):
+        """send an email after digest JATS is posted to endpoint"""
+        success = True
+
+        current_time = time.gmtime()
+        body = success_email_body(current_time, digest_content, jats_content)
+        subject = success_email_subject(digest_content)
+        sender_email = self.settings.digest_sender_email
+
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.digest_recipient_email)
+
+        connection = email_provider.smtp_connect(self.settings, self.logger)
+        # send the emails
+        for recipient in recipient_email_list:
+            # create the email
+            email_message = email_provider.message(subject, sender_email, recipient)
+            email_provider.add_text(email_message, body)
+            # send the email
+            email_success = email_provider.smtp_send(connection, sender_email, recipient,
+                                                     email_message, self.logger)
+            if not email_success:
+                # for now any failure in sending a mail return False
+                success = False
+        return success
 
     def create_activity_directories(self):
         """
@@ -164,3 +195,30 @@ def post_as_data(url, payload):
 def post_as_json(url, payload):
     "post the payload as JSON data"
     return requests.post(url, json=payload)
+
+
+def success_email_subject(digest_content):
+    "the email subject"
+    if not digest_content:
+        return u''
+    try:
+        doi = getattr(digest_content, 'doi')
+        msid = doi.split(".")[-1]
+    except AttributeError:
+        msid = None
+    return u'Digest JATS posted for article {msid:0>5}, author {author}'.format(
+        msid=str(msid), author=digest_utils.unicode_decode(digest_content.author))
+
+
+def success_email_body(current_time, digest_content, jats_content):
+    """
+    Format the body of the email
+    """
+    body = "JATS content for article %s:\n\n%s\n\n" % (
+        str(digest_content.doi), str(jats_content))
+    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
+    datetime_string = time.strftime(date_format, current_time)
+    body += "As at " + datetime_string + "\n"
+    body += "\n"
+    body += "\n\nSincerely\n\neLife bot"
+    return body

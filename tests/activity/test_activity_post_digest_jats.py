@@ -2,9 +2,11 @@
 
 import os
 import unittest
+import time
 from collections import OrderedDict
 from mock import patch
 from ddt import ddt, data
+from digestparser.objects import Digest
 import activity.activity_PostDigestJATS as activity_module
 from activity.activity_PostDigestJATS import activity_PostDigestJATS as activity_object
 from tests import read_fixture
@@ -13,6 +15,7 @@ import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeResponse, fake_get_tmp_dir
 import tests.test_data as test_case_data
 from tests.activity.classes_mock import FakeStorageContext
+from tests.classes_mock import FakeSMTPServer
 import provider.digest_provider as digest_provider
 from provider.utils import unicode_decode
 
@@ -34,6 +37,7 @@ class TestPostDigestJats(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
+    @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('requests.get')
     @patch.object(activity_module.digest_provider, 'storage_context')
     @data(
@@ -46,6 +50,7 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_build_status": True,
             "expected_jats_status": True,
             "expected_post_status": True,
+            "expected_email_status": True,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999'
         },
         {
@@ -57,6 +62,7 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_build_status": True,
             "expected_jats_status": True,
             "expected_post_status": True,
+            "expected_email_status": True,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999'
         },
         {
@@ -77,7 +83,8 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_activity_status": None,
             "expected_build_status": False,
             "expected_jats_status": None,
-            "expected_post_status": None
+            "expected_post_status": None,
+            "expected_email_status": None
         },
         {
             "comment": 'digest author name encoding file example',
@@ -88,6 +95,7 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_build_status": True,
             "expected_jats_status": True,
             "expected_post_status": True,
+            "expected_email_status": True,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99997',
         },
         {
@@ -99,12 +107,15 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_build_status": True,
             "expected_jats_status": True,
             "expected_post_status": False,
+            "expected_email_status": None,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999'
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, requests_method_mock):
+    def test_do_activity(self, test_data, fake_storage_context, requests_method_mock,
+                         fake_email_smtp_connect):
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
         # POST response
         requests_method_mock.return_value = FakeResponse(test_data.get("post_status_code"), None)
         # do the activity
@@ -127,6 +138,9 @@ class TestPostDigestJats(unittest.TestCase):
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         self.assertEqual(self.activity.statuses.get("post"),
                          test_data.get("expected_post_status"),
+                         'failed in {comment}'.format(comment=test_data.get("comment")))
+        self.assertEqual(self.activity.statuses.get("email"),
+                         test_data.get("expected_email_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         # check digest values
         if self.activity.digest and test_data.get("expected_digest_doi"):
@@ -246,6 +260,55 @@ class TestPost(unittest.TestCase):
         # make assertions
         self.assertEqual(resp.request.url, expected_url)
         self.assertEqual(unicode_decode(resp.request.body), expected_body)
+
+
+class TestEmailSubject(unittest.TestCase):
+
+    def test_success_email_subject(self):
+        """email subject line with correct, unicode data"""
+        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
+        expected = u'Digest JATS posted for article 99999, author Nö'
+        subject = activity_module.success_email_subject(digest_content)
+        self.assertEqual(subject, expected)
+
+    def test_success_email_subject_no_doi(self):
+        """email subject line when no doi attribute"""
+        digest_content = Digest()
+        expected = u'Digest JATS posted for article 0None, author None'
+        file_name = activity_module.success_email_subject(digest_content)
+        self.assertEqual(file_name, expected)
+
+    def test_success_email_subject_bad_object(self):
+        """email subject line when digest is None"""
+        digest_content = None
+        expected = u''
+        subject = activity_module.success_email_subject(digest_content)
+        self.assertEqual(subject, expected)
+
+
+class TestEmailBody(unittest.TestCase):
+
+    def test_success_email_body(self):
+        """email body line with correct, unicode data"""
+        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
+        digest_content.text = ['<i>First</i> paragraph.', '<b>First</b> > second, nö?.']
+        jats_content = digest_provider.digest_jats(digest_content)
+        current_time = time.gmtime(1)
+
+        expected = u'''JATS content for article 10.7554/eLife.99999:
+
+<p><italic>First</italic> paragraph.</p><p><bold>First</bold> &gt; second, nö?.</p>
+
+As at 1970-01-01T00:00:01.000Z
+
+
+
+Sincerely
+
+eLife bot'''
+        body = activity_module.success_email_body(current_time, digest_content, jats_content)
+        print(body)
+        self.assertEqual(body, expected)
 
 
 if __name__ == '__main__':
