@@ -101,7 +101,7 @@ class activity_PostDigestJATS(Activity):
         return self.ACTIVITY_PERMANENT_FAILURE
 
     def post_jats(self, digest, jats_content):
-        "prepare and POST jats to API endpoint"
+        """prepare and POST jats to API endpoint"""
         url = self.settings.typesetter_digest_endpoint
         payload = post_payload(digest, jats_content, self.settings.typesetter_digest_api_key)
         if payload:
@@ -146,7 +146,7 @@ class activity_PostDigestJATS(Activity):
 
 
 def post_payload(digest, jats_content, api_key):
-    "compile the POST data payload"
+    """compile the POST data payload"""
     if not digest:
         return None
     account_key = 1
@@ -161,7 +161,7 @@ def post_payload(digest, jats_content, api_key):
 
 
 def post_jats_to_endpoint(url, payload, logger):
-    "issue the POST"
+    """issue the POST"""
     resp = get_as_params(url, payload)
     # Check for good HTTP status code
     if resp.status_code != 200:
@@ -172,7 +172,7 @@ def post_jats_to_endpoint(url, payload, logger):
         return False
     logger.info(
         ("Success posting digest JATS to endpoint %s: \npayload: %s \nstatus_code: %s" +
-            " \nresponse: %s") %
+         " \nresponse: %s") %
         (url, payload, resp.status_code, resp.content))
     return True
 
@@ -183,22 +183,22 @@ def get_as_params(url, payload):
 
 
 def post_as_params(url, payload):
-    "post the payload as URL parameters"
+    """post the payload as URL parameters"""
     return requests.post(url, params=payload)
 
 
 def post_as_data(url, payload):
-    "post the payload as form data"
+    """post the payload as form data"""
     return requests.post(url, data=payload)
 
 
 def post_as_json(url, payload):
-    "post the payload as JSON data"
+    """post the payload as JSON data"""
     return requests.post(url, json=payload)
 
 
 def success_email_subject(digest_content):
-    "the email subject"
+    """the email subject"""
     if not digest_content:
         return u''
     try:

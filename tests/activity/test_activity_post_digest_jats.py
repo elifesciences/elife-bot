@@ -158,14 +158,14 @@ class TestPostDigestJats(unittest.TestCase):
                              'failed in {comment}'.format(comment=test_data.get("comment")))
 
     def test_do_activity_no_endpoint(self):
-        "test returning True if the endpoint is not specified in the settings"
-        del(settings_mock.typesetter_digest_endpoint)
+        """test returning True if the endpoint is not specified in the settings"""
+        del settings_mock.typesetter_digest_endpoint
         activity = activity_object(settings_mock, FakeLogger(), None, None, None)
         result = activity.do_activity()
         self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
 
     def test_do_activity_blank_endpoint(self):
-        "test returning True if the endpoint is blank"
+        """test returning True if the endpoint is blank"""
         settings_mock.typesetter_digest_endpoint = ""
         activity = activity_object(settings_mock, FakeLogger(), None, None, None)
         result = activity.do_activity()
@@ -185,7 +185,7 @@ class TestPostPayload(unittest.TestCase):
         helpers.delete_files_in_folder('tests/tmp', filter_out=['.keepme'])
 
     def test_post_payload(self):
-        "POST payload for a digest"
+        """POST payload for a digest"""
         api_key = 'api_key'
         filename = os.path.join('tests', 'files_source', 'DIGEST 99999.docx')
         # JATS paragraphs are in an existing fixture file
@@ -207,7 +207,7 @@ class TestPostPayload(unittest.TestCase):
         self.assertEqual(payload, expected)
 
     def test_post_payload_no_digest(self):
-        "POST payload for when there is no digest"
+        """POST payload for when there is no digest"""
         digest = None
         jats_content = '<p>JATS content</p>'
         api_key = 'api_key'
@@ -225,7 +225,7 @@ class TestPost(unittest.TestCase):
 
     @patch('requests.adapters.HTTPAdapter.get_connection')
     def test_post_as_params(self, fake_connection):
-        "test posting data as params only"
+        """"test posting data as params only"""
         url = 'http://localhost/'
         payload = OrderedDict([
             ("type", "digest"),
@@ -241,7 +241,7 @@ class TestPost(unittest.TestCase):
 
     @patch('requests.adapters.HTTPAdapter.get_connection')
     def test_post_as_data(self, fake_connection):
-        "test posting data as data only"
+        """"test posting data as data only"""
         url = 'http://localhost/'
         payload = OrderedDict([
             ("type", "digest"),
@@ -257,7 +257,7 @@ class TestPost(unittest.TestCase):
 
     @patch('requests.adapters.HTTPAdapter.get_connection')
     def test_post_as_json(self, fake_connection):
-        "test posting data as data only"
+        """test posting data as data only"""
         url = 'http://localhost/'
         payload = OrderedDict([
             ("type", "digest"),
@@ -317,7 +317,6 @@ Sincerely
 
 eLife bot'''
         body = activity_module.success_email_body(current_time, digest_content, jats_content)
-        print(body)
         self.assertEqual(body, expected)
 
 
