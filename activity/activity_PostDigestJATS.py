@@ -214,8 +214,7 @@ def success_email_body(current_time, digest_content, jats_content):
     """
     Format the body of the email
     """
-    body = "JATS content for article %s:\n\n%s\n\n" % (
-        str(digest_content.doi), str(jats_content))
+    body = "JATS content for article %s:\n\n%s\n\n" % (digest_content.doi, jats_content)
     date_format = '%Y-%m-%dT%H:%M:%S.000Z'
     datetime_string = time.strftime(date_format, current_time)
     body += "As at " + datetime_string + "\n"

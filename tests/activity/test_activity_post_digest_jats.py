@@ -301,7 +301,7 @@ class TestEmailBody(unittest.TestCase):
     def test_success_email_body(self):
         """email body line with correct, unicode data"""
         digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
-        digest_content.text = ['<i>First</i> paragraph.', '<b>First</b> > second, nö?.']
+        digest_content.text = [u'<i>First</i> paragraph.', u'<b>First</b> > second, nö?.']
         jats_content = digest_provider.digest_jats(digest_content)
         current_time = time.gmtime(1)
 
