@@ -37,6 +37,8 @@ def resize(format, filep, info, logger):
 
             image_buffer = BytesIO()
             image.save(file=image_buffer)
+            # destroy the image after saving output to release memory
+            image.destroy()
 
     except Exception as e:
         message = "error resizing image %s" % info.filename
