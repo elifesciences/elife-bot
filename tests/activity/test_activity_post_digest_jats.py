@@ -69,7 +69,7 @@ class TestPostDigestJats(unittest.TestCase):
             "comment": 'digest file does not exist example',
             "filename": '',
             "post_status_code": 200,
-            "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_activity_status": None,
             "expected_build_status": False,
             "expected_jats_status": None,
@@ -79,7 +79,7 @@ class TestPostDigestJats(unittest.TestCase):
             "comment": 'bad digest docx file example',
             "filename": 'DIGEST+99998.docx',
             "post_status_code": 200,
-            "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_activity_status": None,
             "expected_build_status": False,
             "expected_jats_status": None,
@@ -157,17 +157,46 @@ class TestPostDigestJats(unittest.TestCase):
             self.assertEqual(self.activity.digest.doi, test_data.get("expected_digest_doi"),
                              'failed in {comment}'.format(comment=test_data.get("comment")))
 
+    @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch.object(activity_module.digest_provider, 'storage_context')
+    @patch.object(digest_provider, 'digest_jats')
+    def test_do_activity_jats_failure(self, fake_digest_jats, fake_storage_context,
+                                      fake_email_smtp_connect):
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
+        activity_data = input_data("DIGEST+99999.zip")
+        fake_digest_jats.return_value = None
+        result = self.activity.do_activity(activity_data)
+        self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
+
+    @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch.object(activity_module.digest_provider, 'storage_context')
+    @patch.object(activity_module, 'post_payload')
+    def test_do_activity_post_failure(self, fake_post_jats, fake_storage_context,
+                                      fake_email_smtp_connect):
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
+        activity_data = input_data("DIGEST+99999.zip")
+        fake_post_jats.side_effect = Exception("Something went wrong!")
+        result = self.activity.do_activity(activity_data)
+        self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
+
+
+class TestPostDigestJatsNoEndpoint(unittest.TestCase):
+
     def test_do_activity_no_endpoint(self):
         """test returning True if the endpoint is not specified in the settings"""
-        del settings_mock.typesetter_digest_endpoint
         activity = activity_object(settings_mock, FakeLogger(), None, None, None)
+        # now can safely alter the settings
+        del activity.settings.typesetter_digest_endpoint
         result = activity.do_activity()
         self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
 
     def test_do_activity_blank_endpoint(self):
         """test returning True if the endpoint is blank"""
-        settings_mock.typesetter_digest_endpoint = ""
         activity = activity_object(settings_mock, FakeLogger(), None, None, None)
+        # now can safely alter the settings
+        activity.settings.typesetter_digest_endpoint = ""
         result = activity.do_activity()
         self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
 
@@ -272,6 +301,29 @@ class TestPost(unittest.TestCase):
         self.assertEqual(unicode_decode(resp.request.body), expected_body)
 
 
+class TestEmailErrorReport(unittest.TestCase):
+
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_object(settings_mock, fake_logger, None, None, None)
+
+    def tearDown(self):
+        # clean the temporary directory
+        self.activity.clean_tmp_dir()
+
+    @patch.object(activity_module.email_provider, 'smtp_connect')
+    def test_email_error_report(self, fake_email_smtp_connect):
+        """test sending an email error"""
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
+        digest_content = Digest()
+        digest_content.doi = '10.7554/eLife.99999'
+        jats_content = {}
+        error_messages = ['An error']
+        settings_mock.typesetter_digest_endpoint = ""
+        result = self.activity.email_error_report(digest_content, jats_content, error_messages)
+        self.assertEqual(result, True)
+
+
 class TestEmailSubject(unittest.TestCase):
 
     def test_success_email_subject(self):
@@ -293,6 +345,20 @@ class TestEmailSubject(unittest.TestCase):
         digest_content = None
         expected = u''
         subject = activity_module.success_email_subject(digest_content)
+        self.assertEqual(subject, expected)
+
+    def test_error_email_subject(self):
+        """error email subject"""
+        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
+        expected = u'Error in digest JATS post for article 99999, author Nö'
+        subject = activity_module.error_email_subject(digest_content)
+        self.assertEqual(subject, expected)
+
+    def test_error_email_subject_bad_object(self):
+        """error email subject line when digest is None"""
+        digest_content = None
+        expected = u''
+        subject = activity_module.error_email_subject(digest_content)
         self.assertEqual(subject, expected)
 
 
@@ -318,6 +384,32 @@ Sincerely
 eLife bot'''
         body = activity_module.success_email_body(current_time, digest_content, jats_content)
         self.assertEqual(body, expected)
+
+    def test_error_email_body(self):
+        """email error body"""
+        error_message = "Exception blah blah blah"
+        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
+        digest_content.text = [u'<i>First</i> paragraph.', u'<b>First</b> > second, nö?.']
+        jats_content = digest_provider.digest_jats(digest_content)
+        current_time = time.gmtime(1)
+
+        expected = u'''Exception blah blah blah
+
+Article DOI: 10.7554/eLife.99999
+
+JATS content: <p><italic>First</italic> paragraph.</p><p><bold>First</bold> &gt; second, nö?.</p>
+
+
+As at 1970-01-01T00:00:01.000Z
+
+
+
+Sincerely
+
+eLife bot'''
+        body = activity_module.error_email_body(current_time, digest_content, jats_content, error_message)
+        self.assertEqual(body, expected)
+
 
 
 if __name__ == '__main__':
