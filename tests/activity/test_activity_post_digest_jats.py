@@ -407,9 +407,9 @@ As at 1970-01-01T00:00:01.000Z
 Sincerely
 
 eLife bot'''
-        body = activity_module.error_email_body(current_time, digest_content, jats_content, error_message)
+        body = activity_module.error_email_body(
+            current_time, digest_content, jats_content, error_message)
         self.assertEqual(body, expected)
-
 
 
 if __name__ == '__main__':
