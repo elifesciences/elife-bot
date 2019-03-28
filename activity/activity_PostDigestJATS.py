@@ -129,8 +129,6 @@ class activity_PostDigestJATS(Activity):
 
     def send_email(self, digest_content, jats_content):
         """send an email after digest JATS is posted to endpoint"""
-        success = True
-
         current_time = time.gmtime()
         body = success_email_body(current_time, digest_content, jats_content)
         subject = success_email_subject(digest_content)
@@ -139,19 +137,14 @@ class activity_PostDigestJATS(Activity):
         recipient_email_list = email_provider.list_email_recipients(
             self.settings.digest_recipient_email)
 
-        connection = email_provider.smtp_connect(self.settings, self.logger)
-        # send the emails
-        for recipient in recipient_email_list:
-            # create the email
-            email_message = email_provider.message(subject, sender_email, recipient)
-            email_provider.add_text(email_message, body)
-            # send the email
-            email_success = email_provider.smtp_send(connection, sender_email, recipient,
-                                                     email_message, self.logger)
-            if not email_success:
-                # for now any failure in sending a mail return False
-                success = False
-        return success
+        messages = email_provider.simple_messages(
+            sender_email, recipient_email_list, subject, body, logger=self.logger)
+        self.logger.info('Formatted %d email messages in %s' % (len(messages), self.name))
+
+        details = email_provider.smtp_send_messages(self.settings, messages, self.logger)
+        self.logger.info('Email sending details: %s' % str(details))
+
+        return True
 
     def email_error_report(self, digest_content, jats_content, error_messages):
         """send an email on error"""
@@ -163,15 +156,13 @@ class activity_PostDigestJATS(Activity):
         recipient_email_list = email_provider.list_email_recipients(
             self.settings.digest_error_recipient_email)
 
-        connection = email_provider.smtp_connect(self.settings, self.logger)
-        # send the emails
-        for recipient in recipient_email_list:
-            # create the email
-            email_message = email_provider.message(subject, sender_email, recipient)
-            email_provider.add_text(email_message, body)
-            # send the email
-            email_provider.smtp_send(connection, sender_email, recipient,
-                                     email_message, self.logger)
+        messages = email_provider.simple_messages(
+            sender_email, recipient_email_list, subject, body, logger=self.logger)
+        self.logger.info('Formatted %d error email messages in %s' % (len(messages), self.name))
+
+        details = email_provider.smtp_send_messages(self.settings, messages, self.logger)
+        self.logger.info('Email sending details: %s' % str(details))
+
         return True
 
     def create_activity_directories(self):
