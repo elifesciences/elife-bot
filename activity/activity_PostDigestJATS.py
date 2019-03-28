@@ -66,7 +66,9 @@ class activity_PostDigestJATS(Activity):
 
         # check if it is a silent run
         if digest_provider.silent_digest(real_filename):
-            self.logger.info('PostDigestJATS silent deposit of real_filename: %s', real_filename)
+            self.logger.info(
+                'PostDigestJATS is not posting JATS because it is a silent workflow, ' +
+                'real_filename: %s', real_filename)
             return self.ACTIVITY_SUCCESS
 
         # Download from S3
