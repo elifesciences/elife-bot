@@ -352,3 +352,13 @@ def validate_digest(digest_content):
 def silent_digest(filename):
     "check if file name supplied to the bucket is a silent deposit"
     return bool(re.match(".*[- ]silent.(zip|docx)", str(filename).lower()))
+
+
+def get_digest_msid(digest_object):
+    """given a digest object try to get the msid from the doi"""
+    try:
+        doi = getattr(digest_object, 'doi')
+        return doi.split(".")[-1]
+    except AttributeError:
+        return None
+    return None
