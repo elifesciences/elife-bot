@@ -17,7 +17,9 @@ class TestCron(unittest.TestCase):
     @patch.object(time, 'gmtime')
     @patch.object(cron, 'workflow_conditional_start')
     @data(
+        "1970-01-01 10:45:00",
         "1970-01-01 11:45:00",
+        "1970-01-01 16:45:00",
         "1970-01-01 17:45:00",
         "1970-01-01 12:30:00",
         "1970-01-01 20:30:00",
