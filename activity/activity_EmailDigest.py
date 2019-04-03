@@ -123,7 +123,7 @@ class activity_EmailDigest(Activity):
         sender_email = self.settings.digest_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.digest_recipient_email)
+            self.settings.digest_docx_recipient_email)
 
         connection = email_provider.smtp_connect(self.settings, self.logger)
         # send the emails
