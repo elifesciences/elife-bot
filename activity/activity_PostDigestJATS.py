@@ -135,7 +135,7 @@ class activity_PostDigestJATS(Activity):
         sender_email = self.settings.digest_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.digest_recipient_email)
+            self.settings.digest_jats_recipient_email)
 
         messages = email_provider.simple_messages(
             sender_email, recipient_email_list, subject, body, logger=self.logger)
@@ -154,7 +154,7 @@ class activity_PostDigestJATS(Activity):
         sender_email = self.settings.digest_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.digest_error_recipient_email)
+            self.settings.digest_jats_error_recipient_email)
 
         messages = email_provider.simple_messages(
             sender_email, recipient_email_list, subject, body, logger=self.logger)

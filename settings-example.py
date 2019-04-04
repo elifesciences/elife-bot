@@ -108,8 +108,14 @@ class exp():
     digest_config_file = 'digest.cfg'
     digest_config_section = 'elife'
     digest_sender_email = "sender@example.org"
-    digest_recipient_email = ["e@example.org", "life@example.org"]
-    digest_error_recipient_email = "error@example.org"
+    # recipients of digest validation error emails
+    digest_validate_error_recipient_email = "error@example.org"
+    # recipients of digest docx email attachment
+    digest_docx_recipient_email = ["e@example.org", "life@example.org"]
+    # recipients of post digest to endpoint emails and error emails
+    digest_jats_recipient_email = ["e@example.org", "life@example.org"]
+    digest_jats_error_recipient_email = "error@example.org"
+    # recipients of digest medium post created emails
     digest_medium_recipient_email = ["e@example.org", "life@example.org"]
 
     # digest endpoint
@@ -364,8 +370,14 @@ class dev():
     digest_config_file = 'digest.cfg'
     digest_config_section = 'elife'
     digest_sender_email = "sender@example.org"
-    digest_recipient_email = ["e@example.org", "life@example.org"]
-    digest_error_recipient_email = "error@example.org"
+    # recipients of digest validation error emails
+    digest_validate_error_recipient_email = "error@example.org"
+    # recipients of digest docx email attachment
+    digest_docx_recipient_email = ["e@example.org", "life@example.org"]
+    # recipients of post digest to endpoint emails and error emails
+    digest_jats_recipient_email = ["e@example.org", "life@example.org"]
+    digest_jats_error_recipient_email = "error@example.org"
+    # recipients of digest medium post created emails
     digest_medium_recipient_email = ["e@example.org", "life@example.org"]
 
     # digest endpoint
@@ -617,8 +629,14 @@ class live():
     digest_config_file = 'digest.cfg'
     digest_config_section = 'elife'
     digest_sender_email = "sender@example.org"
-    digest_recipient_email = ["e@example.org", "life@example.org"]
-    digest_error_recipient_email = "error@example.org"
+    # recipients of digest validation error emails
+    digest_validate_error_recipient_email = "error@example.org"
+    # recipients of digest docx email attachment
+    digest_docx_recipient_email = ["e@example.org", "life@example.org"]
+    # recipients of post digest to endpoint emails and error emails
+    digest_jats_recipient_email = ["e@example.org", "life@example.org"]
+    digest_jats_error_recipient_email = "error@example.org"
+    # recipients of digest medium post created emails
     digest_medium_recipient_email = ["e@example.org", "life@example.org"]
 
     # digest endpoint
