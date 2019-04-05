@@ -1,9 +1,6 @@
 import os
-import boto.swf
 import json
 from collections import OrderedDict
-import datetime
-import time
 import zipfile
 import shutil
 import re
@@ -11,6 +8,7 @@ import re
 from ftplib import FTP
 import ftplib
 
+import boto.swf
 import boto.s3
 from boto.s3.connection import S3Connection
 
@@ -20,9 +18,6 @@ from elifetools import parseJATS as parser
 from elifetools import xmlio
 from activity.objects import Activity
 
-"""
-PMCDeposit activity
-"""
 
 class activity_PMCDeposit(Activity):
 
