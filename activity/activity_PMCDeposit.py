@@ -97,16 +97,13 @@ class activity_PMCDeposit(Activity):
                 self.logger.info('folder was empty in PMCDeposit: ' + self.INPUT_DIR)
             verified = True
 
-
         folder = self.INPUT_DIR
         if self.logger:
             self.logger.info('processing files in folder ' + folder)
 
         self.unzip_article_files(self.file_list(folder))
 
-
         (fid, status, version, volume) = self.profile_article(self.document)
-
 
         # Rename the files
         file_name_map = self.rename_files_remove_version_number()
@@ -125,7 +122,7 @@ class activity_PMCDeposit(Activity):
                          file_name_map=file_name_map)
 
         # Get the new zip file name
-        # TODO - may need to take into account the r1 r2 revision numbers when replacing an article
+        # take into account the r1 r2 revision numbers when replacing an article
         revision = self.zip_revision_number(fid)
         self.zip_file_name = self.new_zip_filename(self.journal, volume, fid, revision)
         print(self.zip_file_name)
@@ -151,7 +148,6 @@ class activity_PMCDeposit(Activity):
         self.clean_tmp_dir()
 
         return result
-
 
     def set_ftp_settings(self, doi_id):
         """
@@ -215,7 +211,6 @@ class activity_PMCDeposit(Activity):
                 return True
         except:
             return False
-
 
     def download_files_from_s3(self, document):
 
@@ -321,10 +316,8 @@ class activity_PMCDeposit(Activity):
                 self.logger.info("going to move and not unzip " + file_name + " to " + to_dir)
             shutil.copyfile(file_name, to_dir + os.sep + self.file_name_from_name(file_name))
 
-
     def approve_file(self, file_name):
         return True
-
 
     def unzip_article_files(self, file_list):
 
@@ -333,7 +326,6 @@ class activity_PMCDeposit(Activity):
                 if self.logger:
                     self.logger.info("unzipping or moving file " + file_name)
                 self.unzip_or_move_file(file_name, self.TMP_DIR)
-
 
     def stripped_file_name_map(self, file_names):
         "from a list of file names, build a map of old to new file name with the version removed"
@@ -351,7 +343,6 @@ class activity_PMCDeposit(Activity):
             renamed_filename = '.'.join([part_without_version, extension])
             file_name_map[filename] = renamed_filename
         return file_name_map
-
 
     def rename_files_remove_version_number(self):
         """
@@ -462,7 +453,6 @@ class activity_PMCDeposit(Activity):
             new_zipfile.write(df, filename)
 
         new_zipfile.close()
-
 
     def profile_article(self, document):
         """
