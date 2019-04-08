@@ -1,9 +1,6 @@
 import os
-import boto.swf
 import json
 from collections import OrderedDict
-import datetime
-import time
 import zipfile
 import shutil
 import re
@@ -11,19 +8,16 @@ import re
 from ftplib import FTP
 import ftplib
 
+import boto.swf
 import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.s3lib as s3lib
-import provider.simpleDB as dblib
 from provider.article_structure import ArticleInfo, file_parts
 from elifetools import parseJATS as parser
 from elifetools import xmlio
 from activity.objects import Activity
 
-"""
-PMCDeposit activity
-"""
 
 class activity_PMCDeposit(Activity):
 
@@ -48,9 +42,6 @@ class activity_PMCDeposit(Activity):
         self.EPS_DIR = self.get_tmp_dir() + os.sep + "eps_dir"
         self.TIF_DIR = self.get_tmp_dir() + os.sep + "tif_dir"
         self.OUTPUT_DIR = self.get_tmp_dir() + os.sep + "output_dir"
-
-        # Data provider where email body is saved
-        self.db = dblib.SimpleDB(settings)
 
         # Bucket settings
         self.input_bucket = None
@@ -101,16 +92,13 @@ class activity_PMCDeposit(Activity):
                 self.logger.info('folder was empty in PMCDeposit: ' + self.INPUT_DIR)
             verified = True
 
-
         folder = self.INPUT_DIR
         if self.logger:
             self.logger.info('processing files in folder ' + folder)
 
         self.unzip_article_files(self.file_list(folder))
 
-
         (fid, status, version, volume) = self.profile_article(self.document)
-
 
         # Rename the files
         file_name_map = self.rename_files_remove_version_number()
@@ -129,7 +117,7 @@ class activity_PMCDeposit(Activity):
                          file_name_map=file_name_map)
 
         # Get the new zip file name
-        # TODO - may need to take into account the r1 r2 revision numbers when replacing an article
+        # take into account the r1 r2 revision numbers when replacing an article
         revision = self.zip_revision_number(fid)
         self.zip_file_name = self.new_zip_filename(self.journal, volume, fid, revision)
         print(self.zip_file_name)
@@ -145,10 +133,6 @@ class activity_PMCDeposit(Activity):
             if ftp_status is True:
                 self.upload_article_zip_to_s3()
 
-                # Send email
-                file_size = self.file_size(os.path.join(self.ZIP_DIR, self.zip_file_name))
-                self.add_email_to_queue(self.journal, volume, fid, revision, self.zip_file_name, file_size)
-
         # Return the activity result, True or False
         if verified is True and ftp_status is True:
             result = True
@@ -159,7 +143,6 @@ class activity_PMCDeposit(Activity):
         self.clean_tmp_dir()
 
         return result
-
 
     def set_ftp_settings(self, doi_id):
         """
@@ -223,7 +206,6 @@ class activity_PMCDeposit(Activity):
                 return True
         except:
             return False
-
 
     def download_files_from_s3(self, document):
 
@@ -311,10 +293,6 @@ class activity_PMCDeposit(Activity):
                 return None
         return None
 
-    def file_size(self, file_name):
-        return os.path.getsize(file_name)
-
-
     def unzip_or_move_file(self, file_name, to_dir, do_unzip=True):
         """
         If file extension is zip, then unzip contents
@@ -333,10 +311,8 @@ class activity_PMCDeposit(Activity):
                 self.logger.info("going to move and not unzip " + file_name + " to " + to_dir)
             shutil.copyfile(file_name, to_dir + os.sep + self.file_name_from_name(file_name))
 
-
     def approve_file(self, file_name):
         return True
-
 
     def unzip_article_files(self, file_list):
 
@@ -345,7 +321,6 @@ class activity_PMCDeposit(Activity):
                 if self.logger:
                     self.logger.info("unzipping or moving file " + file_name)
                 self.unzip_or_move_file(file_name, self.TMP_DIR)
-
 
     def stripped_file_name_map(self, file_names):
         "from a list of file names, build a map of old to new file name with the version removed"
@@ -363,7 +338,6 @@ class activity_PMCDeposit(Activity):
             renamed_filename = '.'.join([part_without_version, extension])
             file_name_map[filename] = renamed_filename
         return file_name_map
-
 
     def rename_files_remove_version_number(self):
         """
@@ -475,7 +449,6 @@ class activity_PMCDeposit(Activity):
 
         new_zipfile.close()
 
-
     def profile_article(self, document):
         """
         Temporary, profile the article by folder names in test data set
@@ -527,132 +500,6 @@ class activity_PMCDeposit(Activity):
 
     def article_soup(self, xml_filename):
         return parser.parse_document(xml_filename)
-
-    def add_email_to_queue(self, journal, volume, fid, revision, file_name, file_size):
-        """
-        After do_activity is finished, send emails to recipients
-        on the status
-        """
-        # Connect to DB
-        db_conn = self.db.connect()
-
-        current_time = time.gmtime()
-
-        body = self.get_email_body(current_time, journal, volume, fid, revision,
-                                   file_name, file_size)
-
-        if revision:
-            subject = self.get_revision_email_subject(fid)
-        else:
-            subject = self.get_email_subject(current_time, journal, volume, fid, revision,
-                                             file_name, file_size)
-
-        sender_email = self.settings.ses_pmc_sender_email
-
-        recipient_email_list = self.email_recipients(revision)
-
-        for email in recipient_email_list:
-            # Add the email to the email queue
-            self.db.elife_add_email_to_email_queue(
-                recipient_email=email,
-                sender_email=sender_email,
-                email_type="PMCDeposit",
-                format="text",
-                subject=subject,
-                body=body)
-
-
-        return True
-
-    def email_recipients(self, revision):
-        """
-        Get a list of email recipients depending on the revision number
-        because for PMC we will redirect a revision email to different recipients
-        """
-        recipient_email_list = []
-
-        if revision:
-            settings_email_recipient = self.settings.ses_pmc_revision_recipient_email
-        else:
-            settings_email_recipient = self.settings.ses_pmc_recipient_email
-
-        # Handle multiple recipients, if specified
-        if type(settings_email_recipient) == list:
-            for email in settings_email_recipient:
-                recipient_email_list.append(email)
-        else:
-            recipient_email_list.append(settings_email_recipient)
-
-        return recipient_email_list
-
-    def get_revision_email_subject(self, fid):
-        """
-        Email subject line for notifying production about a PMC revision
-        """
-        subject = "You need to email PMC: article " + str(fid).zfill(5) + "!!!"
-        return subject
-
-    def get_email_subject(self, current_time, journal, volume, fid, revision,
-                          file_name, file_size):
-        date_format = '%Y-%m-%d %H:%M'
-        datetime_string = time.strftime(date_format, current_time)
-
-        subject = (journal + " PMC deposit " + datetime_string + ", article " + str(fid).zfill(5))
-        if revision:
-            subject += ", revision " + str(revision)
-
-        return subject
-
-    def email_body_revision_header(self, revision):
-        header = None
-        if revision:
-            header = "Production please forward this to PMC with details of what changed"
-        return header
-
-    def get_email_body(self, current_time, journal, volume, fid, revision,
-                       file_name, file_size):
-
-        body = ""
-
-        date_format = '%Y-%m-%dT%H:%M'
-        datetime_string = time.strftime(date_format, current_time)
-
-        # Header
-        if self.email_body_revision_header(revision):
-            body += self.email_body_revision_header(revision)
-            body += "\n\n"
-            # Include the subject line to be used
-            revision_email_subject = self.get_email_subject(current_time, journal, volume, fid,
-                                                            revision, file_name, file_size)
-            body += str(revision_email_subject)
-            body += "\n\n"
-
-        # Bulk of body
-        body += "PMCDeposit activity" + "\n"
-        body += "\n"
-
-        body += journal + " deposit date: " + datetime_string + "\n"
-        body += "\n"
-        body += "Journal title: " + journal + "\n"
-        body += "Volume: " + str(volume).zfill(2) + "\n"
-        body += "Article: " + str(fid).zfill(2) + "\n"
-
-        if revision:
-            revision_text = str(revision)
-        else:
-            revision_text = "n/a"
-        body += "Revision: " + revision_text + "\n"
-        body += "\n"
-        body += "Zip filename: " + file_name + "\n"
-        body += "File size (bytes): " + str(file_size) + "\n"
-
-        body += "\n"
-
-        body += "\n\nSincerely\n\neLife bot"
-
-        return body
-
-
 
     def create_activity_directories(self):
         """
