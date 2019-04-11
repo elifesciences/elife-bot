@@ -99,11 +99,6 @@ class exp():
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
 
-    # PMC email settings
-    ses_pmc_sender_email = "sender@example.com"
-    ses_pmc_recipient_email = "admin@example.com"
-    ses_pmc_revision_recipient_email = "sender@example.com"
-
     # Digest email settings
     digest_config_file = 'digest.cfg'
     digest_config_section = 'elife'
@@ -361,11 +356,6 @@ class dev():
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
 
-    # PMC email settings
-    ses_pmc_sender_email = "sender@example.com"
-    ses_pmc_recipient_email = "admin@example.com"
-    ses_pmc_revision_recipient_email = "sender@example.com"
-
     # Digest email settings
     digest_config_file = 'digest.cfg'
     digest_config_section = 'elife'
@@ -619,11 +609,6 @@ class live():
     # POA email settings
     ses_poa_sender_email = "sender@example.com"
     ses_poa_recipient_email = "admin@example.com"
-
-    # PMC email settings
-    ses_pmc_sender_email = "sender@example.com"
-    ses_pmc_recipient_email = "admin@example.com"
-    ses_pmc_revision_recipient_email = "sender@example.com"
 
     # Digest email settings
     digest_config_file = 'digest.cfg'
