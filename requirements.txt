@@ -1,5 +1,5 @@
 boto==2.48.0
-Jinja2==2.7.3
+Jinja2==2.10.1
 arrow==0.4.4
 requests==2.20.0
 git+https://github.com/elifesciences/elife-tools.git@5369493925bbcc01d85a32111d428e52708c1f3c#egg=elifetools
