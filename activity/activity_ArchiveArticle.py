@@ -100,9 +100,8 @@ class activity_ArchiveArticle(Activity):
                 with open(file_path, 'wb') as open_file:
                     self.logger.info("Downloading %s to %s", (storage_resource_origin, file_path))
                     storage.get_resource_to_file(storage_resource_origin, open_file)
-        except IOError as exception:
-            self.logger.exception(
-                "Failed to download file %s. details: %s" % (key_name, str(exception)))
+        except IOError:
+            self.logger.exception("Failed to download file %s.", key_name)
             return None
         return True
 
