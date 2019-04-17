@@ -51,10 +51,6 @@ PMC_FTP_USERNAME = ""
 PMC_FTP_PASSWORD = ""
 PMC_FTP_CWD = ""
 
-ses_pmc_sender_email = ""
-ses_pmc_recipient_email = ""
-ses_pmc_revision_recipient_email = ["e@example.org", "life@example.org"]
-
 digest_config_file = 'tests/activity/digest.cfg'
 digest_config_section = 'elife'
 digest_sender_email = "sender@example.org"
