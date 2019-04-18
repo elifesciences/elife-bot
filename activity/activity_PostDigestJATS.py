@@ -99,13 +99,19 @@ class activity_PostDigestJATS(Activity):
 
         # POST to API endpoint
         try:
-            self.statuses["post"] = self.post_jats(self.digest, self.jats_content)
+            post_jats_return_value = self.post_jats(self.digest, self.jats_content)
+            if post_jats_return_value is True:
+                self.statuses["post"] = True
+                post_jats_error_message = ""
+            else:
+                self.statuses["post"] = False
+                post_jats_error_message = post_jats_return_value
             # send email
             if self.statuses.get("post"):
                 self.statuses["email"] = self.send_email(self.digest, self.jats_content)
             else:
                 # post was not a success, send error email
-                error_message = "POST was not successful, check log for more details"
+                error_message = "POST was not successful, details: %s" % post_jats_error_message
                 self.statuses["error_email"] = self.email_error_report(
                     self.digest, self.jats_content, error_message)
         except Exception as exception:
@@ -196,11 +202,12 @@ def post_jats_to_endpoint(url, payload, logger):
     resp = get_as_params(url, payload)
     # Check for good HTTP status code
     if resp.status_code != 200:
-        logger.error(
+        error_message = (
             ("Error posting digest JATS to endpoint %s: \npayload: %s \nstatus_code: %s" +
              " \nresponse: %s") %
             (url, payload, resp.status_code, resp.content))
-        return False
+        logger.error(error_message)
+        return error_message
     logger.info(
         ("Success posting digest JATS to endpoint %s: \npayload: %s \nstatus_code: %s" +
          " \nresponse: %s") %
