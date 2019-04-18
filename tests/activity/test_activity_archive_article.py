@@ -79,6 +79,18 @@ class TestArchiveArticle(unittest.TestCase):
         success = self.activity.do_activity(activity_test_data.data_example_before_publish)
         self.assertEqual(success, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
+    @patch.object(FakeStorageContext, 'get_resource_to_file')
+    @patch.object(FakeStorageContext, 'list_resources')
+    @patch.object(activity_module, 'storage_context')
+    def test_download_files_failure(
+            self, fake_storage_context, fake_list_resources, fake_get_resource_to_file):
+        """test exception in download_files for test coverage"""
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = ['fake_bucket_file.zip']
+        fake_get_resource_to_file.side_effect = Exception("Something went wrong!")
+        success = self.activity.download_files("bucket_name", "expanded_folder", "zip_dir_path")
+        self.assertIsNone(success)
+
 
 if __name__ == '__main__':
     unittest.main()
