@@ -395,6 +395,8 @@ eLife bot'''
 
         expected = u'''Exception blah blah blah
 
+More details about the error may be found in the log file
+
 Article DOI: 10.7554/eLife.99999
 
 JATS content: <p><italic>First</italic> paragraph.</p><p><bold>First</bold> &gt; second, nö?.</p>

@@ -202,16 +202,18 @@ def post_jats_to_endpoint(url, payload, logger):
     resp = get_as_params(url, payload)
     # Check for good HTTP status code
     if resp.status_code != 200:
-        error_message = (
-            ("Error posting digest JATS to endpoint %s: \npayload: %s \nstatus_code: %s" +
-             " \nresponse: %s") %
-            (url, payload, resp.status_code, resp.content))
-        logger.error(error_message)
-        return error_message
+        response_error_message = (
+            "Error posting digest JATS to endpoint %s: status_code: %s\nresponse: %s" %
+            (url, resp.status_code, resp.content))
+        full_error_message = (
+            "%s\npayload: %s" %
+            (response_error_message, payload))
+        logger.error(full_error_message)
+        return response_error_message
     logger.info(
-        ("Success posting digest JATS to endpoint %s: \npayload: %s \nstatus_code: %s" +
-         " \nresponse: %s") %
-        (url, payload, resp.status_code, resp.content))
+        ("Success posting digest JATS to endpoint %s: status_code: %s\nresponse: %s" +
+         " \npayload: %s") %
+        (url, resp.status_code, resp.content, payload))
     return True
 
 
@@ -270,7 +272,8 @@ def error_email_body(current_time, digest_content, jats_content, error_messages)
     """body of an error email"""
     body = ""
     if error_messages:
-        body += str(error_messages) + "\n\n"
+        body += str(error_messages)
+        body += "\n\nMore details about the error may be found in the log file\n\n"
     if hasattr(digest_content, "doi"):
         body += "Article DOI: %s\n\n" % digest_content.doi
     body += "JATS content: %s\n\n" % jats_content
