@@ -395,7 +395,7 @@ eLife bot'''
 
         expected = u'''Exception blah blah blah
 
-More details about the error may be found in the log file
+More details about the error may be found in the worker.log file
 
 Article DOI: 10.7554/eLife.99999
 

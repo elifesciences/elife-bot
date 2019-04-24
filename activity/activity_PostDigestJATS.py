@@ -273,7 +273,7 @@ def error_email_body(current_time, digest_content, jats_content, error_messages)
     body = ""
     if error_messages:
         body += str(error_messages)
-        body += "\n\nMore details about the error may be found in the log file\n\n"
+        body += "\n\nMore details about the error may be found in the worker.log file\n\n"
     if hasattr(digest_content, "doi"):
         body += "Article DOI: %s\n\n" % digest_content.doi
     body += "JATS content: %s\n\n" % jats_content
