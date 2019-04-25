@@ -30,7 +30,7 @@ class starter_SilentCorrectionsIngest():
         input = S3NotificationInfo.to_dict(info)
         input['run'] = run
         input['version_lookup_function'] = "article_highest_version"
-        input['run_type'] = "silent-correction"
+        input['run_type'] = get_run_type(info)
         input['force'] = True
 
         workflow_id, \
@@ -59,6 +59,13 @@ class starter_SilentCorrectionsIngest():
             # There is already a running workflow with that ID, cannot start another
             message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
             logger.info(message)
+
+
+def get_run_type(info):
+    """get the run_type by looking at the S3 notification info"""
+    if hasattr(info, 'file_name') and info.file_name.startswith('pmc-resupply/'):
+        return "silent-correction-pmc-resupply"
+    return "silent-correction"
 
 
 if __name__ == "__main__":
