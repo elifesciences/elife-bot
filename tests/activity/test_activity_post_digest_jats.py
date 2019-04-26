@@ -38,7 +38,7 @@ class TestPostDigestJats(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module.email_provider, 'smtp_connect')
-    @patch('requests.get')
+    @patch('requests.post')
     @patch.object(activity_module.digest_provider, 'storage_context')
     @data(
         {
@@ -251,6 +251,22 @@ class TestPost(unittest.TestCase):
 
     def setUp(self):
         self.fake_logger = FakeLogger()
+
+    @patch('requests.adapters.HTTPAdapter.get_connection')
+    def test_get_as_params(self, fake_connection):
+        """"test get data as params only"""
+        url = 'http://localhost/'
+        payload = OrderedDict([
+            ("type", "digest"),
+            ("content", '<p>"98%"β</p>')
+            ])
+        expected_url = url + '?type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
+        expected_body = None
+        # populate the fake request
+        resp = activity_module.get_as_params(url, payload)
+        # make assertions
+        self.assertEqual(resp.request.url, expected_url)
+        self.assertEqual(resp.request.body, expected_body)
 
     @patch('requests.adapters.HTTPAdapter.get_connection')
     def test_post_as_params(self, fake_connection):
