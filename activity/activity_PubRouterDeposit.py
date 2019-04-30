@@ -105,9 +105,12 @@ class activity_PubRouterDeposit(Activity):
 
         for article in self.articles_approved:
             # Start a workflow for each article this is approved to publish
-            if self.workflow == 'PMC':
+            if self.workflow in ["PMC", "PMC_Resupply"]:
+                folder = ""
+                if self.workflow == "PMC_Resupply":
+                    folder = "resupplies"
                 zip_file_name = self.archive_zip_file_name(article)
-                starter_status = self.start_pmc_deposit_workflow(article, zip_file_name)
+                starter_status = self.start_pmc_deposit_workflow(article, zip_file_name, folder)
             else:
                 starter_status = self.start_ftp_article_workflow(article)
 
@@ -157,6 +160,8 @@ class activity_PubRouterDeposit(Activity):
             return "scopus/outbox/"
         elif workflow == "PMC":
             return "pmc/outbox/"
+        elif workflow == "PMC_Resupply":
+            return "pmc_resupply/outbox/"
         elif workflow == "CNPIEC":
             return "cnpiec/outbox/"
         elif workflow == "CNKI":
@@ -180,6 +185,8 @@ class activity_PubRouterDeposit(Activity):
             return "scopus/published/"
         elif workflow == "PMC":
             return "pmc/published/"
+        elif workflow == "PMC_Resupply":
+            return "pmc_resupply/published/"
         elif workflow == "CNPIEC":
             return "cnpiec/published/"
         elif workflow == "CNKI":
@@ -280,7 +287,7 @@ class activity_PubRouterDeposit(Activity):
         return s3_key_name
 
 
-    def start_pmc_deposit_workflow(self, article, zip_file_name):
+    def start_pmc_deposit_workflow(self, article, zip_file_name, folder=""):
         """
         Start a PMCDeposit workflow for the article object, by looking up
         the archive zip file for the article DOI
@@ -298,6 +305,7 @@ class activity_PubRouterDeposit(Activity):
         # Input data
         data = {}
         data['document'] = zip_file_name
+        data['folder'] = folder
         input_json = {}
         input_json['data'] = data
         input = json.dumps(input_json)
