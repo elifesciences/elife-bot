@@ -42,6 +42,7 @@ class activity_ScheduleDownstream(Activity):
         run = data['run']
         expanded_folder_name = data['expanded_folder']
         status = data['status'].lower()
+        run_type = data.get("run_type")
 
         self.emit_monitor_event(self.settings, article_id, version, run,
                                 "Schedule Downstream", "start",
@@ -51,7 +52,7 @@ class activity_ScheduleDownstream(Activity):
             xml_file_name = get_xml_file_name(
                 self.settings, expanded_folder_name, expanded_bucket_name, version)
             xml_key_name = expanded_folder_name + "/" + xml_file_name
-            outbox_list = choose_outboxes(status, outbox_map())
+            outbox_list = choose_outboxes(status, outbox_map(), run_type)
 
             for outbox in outbox_list:
                 self.rename_and_copy_to_outbox(
@@ -105,6 +106,7 @@ def outbox_map():
     outboxes = OrderedDict()
     outboxes["pubmed"] = "pubmed/outbox/"
     outboxes["pmc"] = "pmc/outbox/"
+    outboxes["pmc_resupply"] = "pmc_resupply/outbox/"
     outboxes["publication_email"] = "publication_email/outbox/"
     outboxes["pub_router"] = "pub_router/outbox/"
     outboxes["cengage"] = "cengage/outbox/"
@@ -116,7 +118,7 @@ def outbox_map():
     return outboxes
 
 
-def choose_outboxes(status, outbox_map):
+def choose_outboxes(status, outbox_map, run_type=None):
     outbox_list = []
 
     if status == "poa":
@@ -125,7 +127,10 @@ def choose_outboxes(status, outbox_map):
 
     elif status == "vor":
         outbox_list.append(outbox_map.get("pubmed"))
-        outbox_list.append(outbox_map.get("pmc"))
+        if run_type == "silent-correction-pmc-resupply":
+            outbox_list.append(outbox_map.get("pmc_resupply"))
+        else:
+            outbox_list.append(outbox_map.get("pmc"))
         outbox_list.append(outbox_map.get("publication_email"))
         outbox_list.append(outbox_map.get("pub_router"))
         outbox_list.append(outbox_map.get("cengage"))
