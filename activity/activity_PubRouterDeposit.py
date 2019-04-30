@@ -105,9 +105,9 @@ class activity_PubRouterDeposit(Activity):
 
         for article in self.articles_approved:
             # Start a workflow for each article this is approved to publish
-            if self.workflow in ["PMC", "PMC_Resupply"]:
+            if self.workflow in ["PMC", "PMC-Resupply"]:
                 folder = ""
-                if self.workflow == "PMC_Resupply":
+                if self.workflow == "PMC-Resupply":
                     folder = "resupplies"
                 zip_file_name = self.archive_zip_file_name(article)
                 starter_status = self.start_pmc_deposit_workflow(article, zip_file_name, folder)
@@ -160,7 +160,7 @@ class activity_PubRouterDeposit(Activity):
             return "scopus/outbox/"
         elif workflow == "PMC":
             return "pmc/outbox/"
-        elif workflow == "PMC_Resupply":
+        elif workflow == "PMC-Resupply":
             return "pmc_resupply/outbox/"
         elif workflow == "CNPIEC":
             return "cnpiec/outbox/"
@@ -185,7 +185,7 @@ class activity_PubRouterDeposit(Activity):
             return "scopus/published/"
         elif workflow == "PMC":
             return "pmc/published/"
-        elif workflow == "PMC_Resupply":
+        elif workflow == "PMC-Resupply":
             return "pmc_resupply/published/"
         elif workflow == "CNPIEC":
             return "cnpiec/published/"
