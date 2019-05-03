@@ -55,6 +55,36 @@ class TestPubRouterDeposit(unittest.TestCase):
         result = self.pubrouterdeposit.do_activity(activity_data)
         self.assertTrue(result)
 
+    @patch('provider.lax_provider.was_ever_poa')
+    @patch('provider.lax_provider.article_versions')
+    @patch.object(activity_PubRouterDeposit, 'clean_outbox')
+    @patch.object(activity_PubRouterDeposit, 'start_pmc_deposit_workflow')
+    @patch.object(activity_PubRouterDeposit, 'archive_zip_file_name')
+    @patch.object(activity_PubRouterDeposit, 'download_files_from_s3_outbox')
+    @patch.object(s3lib, 'get_s3_keys_from_bucket')
+    @data(
+        "PMC-Resupply",
+        "PMC"
+    )
+    def test_do_activity_pmc(self, workflow_name, fake_get_s3_keys, fake_download,
+                             fake_archive_zip_file_name, fake_start, fake_clean_outbox, 
+                             fake_article_versions, fake_was_ever_poa):
+        """test for PMC runs which start a different workflow"""
+        activity_data = {
+            "data": {
+                "workflow": workflow_name
+            }
+        }
+        fake_clean_outbox.return_value = None
+        fake_download.return_value = download_files(
+            ["elife00013.xml"], self.pubrouterdeposit.get_tmp_dir())
+        fake_archive_zip_file_name.return_value = "elife-01-00013.zip"
+        fake_was_ever_poa.return_value = False
+        fake_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
+        fake_start.return_value = True
+        result = self.pubrouterdeposit.do_activity(activity_data)
+        self.assertTrue(result)
+
     # input: s3 archive zip file name (name) and date last modified
     # expected output: file name - highest version file (displayed on -v[number]-)
     # then latest last modified date/time
