@@ -26,6 +26,27 @@ class TestScheduleDownstream(unittest.TestCase):
         # check assertions
         self.assertEqual(result, expected_result)
 
+    def test_choose_outboxes_poa(self):
+        outbox_list = activity_module.choose_outboxes("poa", activity_module.outbox_map())
+        self.assertTrue("pubmed/outbox/" in outbox_list)
+        self.assertFalse("pmc/outbox/" in outbox_list)
+
+    def test_choose_outboxes_vor(self):
+        outbox_list = activity_module.choose_outboxes("vor", activity_module.outbox_map())
+        self.assertTrue("pmc/outbox/" in outbox_list)
+        self.assertTrue("pub_router/outbox/" in outbox_list)
+
+    def test_choose_outboxes_vor_silent(self):
+        outbox_list = activity_module.choose_outboxes(
+            "vor", activity_module.outbox_map(), "silent-correction")
+        self.assertTrue("pmc/outbox/" in outbox_list)
+        self.assertFalse("pmc_resupply/outbox/" in outbox_list)
+
+    def test_choose_outboxes_vor_silent_pmc_resupply(self):
+        outbox_list = activity_module.choose_outboxes(
+            "vor", activity_module.outbox_map(), "silent-correction-pmc-resupply")
+        self.assertFalse("pmc/outbox/" in outbox_list)
+        self.assertTrue("pmc_resupply/outbox/" in outbox_list)
 
 if __name__ == '__main__':
     unittest.main()

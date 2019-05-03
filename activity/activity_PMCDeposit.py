@@ -72,6 +72,10 @@ class activity_PMCDeposit(Activity):
         # Data passed to this activity
         self.document = data["data"]["document"]
 
+        # set the FTP folder for resupplies
+        if "folder" in data["data"]:
+            self.FTP_SUBDIR = [data["data"]["folder"]]
+
         # Custom bucket, if specified
         if "bucket" in data["data"]:
             self.input_bucket = data["data"]["bucket"]

@@ -57,7 +57,7 @@ class activity_EmailVideoArticlePublished(Activity):
             return self.ACTIVITY_SUCCESS
 
         # do not send if silent-correction
-        if run_type == "silent-correction":
+        if run_type in ["silent-correction", "silent-correction-pmc-resupply"]:
             self.logger.info(
                 ("Silent correction of article %s " +
                  "no email to send in Email Video Article Published ") % article_id)
