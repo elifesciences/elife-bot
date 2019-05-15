@@ -302,8 +302,8 @@ class EJP(object):
         fn_fragment["poa_title"] = "ejp_query_tool_query_id_191_POA_Title"
         fn_fragment["poa_keywords"] = "ejp_query_tool_query_id_226_POA_Keywords"
         fn_fragment["poa_group_authors"] = "ejp_query_tool_query_id_242_POA_Group_Authors"
-        fn_fragment["poa_datasets"] = "ejp_query_tool_query_id_199_POA_Datasets"
-        fn_fragment["poa_funding"] = "ejp_query_tool_query_id_345_POA_Funding"
+        fn_fragment["poa_datasets"] = "ejp_query_tool_query_id_1061_POA_Datasets"
+        fn_fragment["poa_funding"] = "ejp_query_tool_query_id_1062_POA_Funding"
         fn_fragment["poa_ethics"] = "ejp_query_tool_query_id_198_POA_Ethics"
 
         if file_list is None:
