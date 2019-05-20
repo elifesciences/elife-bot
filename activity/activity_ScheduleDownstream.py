@@ -131,14 +131,14 @@ def choose_outboxes(status, outbox_map, run_type=None):
             outbox_list.append(outbox_map.get("pmc_resupply"))
         else:
             outbox_list.append(outbox_map.get("pmc"))
-        outbox_list.append(outbox_map.get("publication_email"))
-        outbox_list.append(outbox_map.get("pub_router"))
-        outbox_list.append(outbox_map.get("cengage"))
-        outbox_list.append(outbox_map.get("gooa"))
-        outbox_list.append(outbox_map.get("wos"))
-        outbox_list.append(outbox_map.get("scopus"))
-        outbox_list.append(outbox_map.get("cnpiec"))
-        outbox_list.append(outbox_map.get("cnki"))
+            outbox_list.append(outbox_map.get("publication_email"))
+            outbox_list.append(outbox_map.get("pub_router"))
+            outbox_list.append(outbox_map.get("cengage"))
+            outbox_list.append(outbox_map.get("gooa"))
+            outbox_list.append(outbox_map.get("wos"))
+            outbox_list.append(outbox_map.get("scopus"))
+            outbox_list.append(outbox_map.get("cnpiec"))
+            outbox_list.append(outbox_map.get("cnki"))
 
     return outbox_list
 
