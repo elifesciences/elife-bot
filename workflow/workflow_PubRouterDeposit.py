@@ -15,7 +15,7 @@ class workflow_PubRouterDeposit(Workflow):
         self.name = "PubRouterDeposit"
         self.version = "1"
         self.description = "Send a set of articles data to pub router repository"
-        self.default_execution_start_to_close_timeout = 60 * 20
+        self.default_execution_start_to_close_timeout = 60 * 25
         self.default_task_start_to_close_timeout = 30
 
         # Get the input from the JSON decision response
@@ -52,10 +52,10 @@ class workflow_PubRouterDeposit(Workflow):
                     "version": "1",
                     "input": data,
                     "control": None,
-                    "heartbeat_timeout": 60 * 15,
-                    "schedule_to_close_timeout": 60 * 15,
+                    "heartbeat_timeout": 60 * 25,
+                    "schedule_to_close_timeout": 60 * 25,
                     "schedule_to_start_timeout": 300,
-                    "start_to_close_timeout": 60 * 15
+                    "start_to_close_timeout": 60 * 25
                 }
             ],
 
