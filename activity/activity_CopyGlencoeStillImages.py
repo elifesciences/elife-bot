@@ -1,7 +1,9 @@
 from activity.objects import Activity
 import json
+import time
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
+from provider.article_processing import download_jats
 import provider.glencoe_check as glencoe_check
 import os
 import requests
@@ -47,10 +49,17 @@ class activity_CopyGlencoeStillImages(Activity):
             article_id = session.get_value('article_id')
             version = session.get_value('version')
             file_name = session.get_value('file_name')
+            expanded_folder = session.get_value('expanded_folder')
             poa = False
             if "poa" in file_name:
                 poa = True
-            (start_msg, end_msg, success) = self.get_events(article_id, poa, version, run)
+            # check XML for if it has videos
+            jats_file = download_jats(
+                self.settings, expanded_folder, self.get_tmp_dir(), self.logger)
+            with open(jats_file, 'r') as open_file:
+                has_videos = glencoe_check.has_videos(open_file.read())
+            # start the image download events
+            (start_msg, end_msg, success) = self.get_events(article_id, poa, version, run, has_videos)
             self.emit_monitor_event(*start_msg)
             self.emit_monitor_event(*end_msg)
             return success
@@ -58,7 +67,7 @@ class activity_CopyGlencoeStillImages(Activity):
             self.logger.exception("Error starting Copy Glencoe Still Images activity")
             return self.ACTIVITY_PERMANENT_FAILURE
 
-    def get_events(self, article_id, poa, version=None, run=None):
+    def get_events(self, article_id, poa, version=None, run=None, has_videos=None):
 
         start_event = [self.settings, article_id, version, run, self.pretty_name, "start",
                        "Starting check/copy of Glencoe video still images " + article_id]
@@ -93,10 +102,19 @@ class activity_CopyGlencoeStillImages(Activity):
             self.logger.info(str(e))
             first_chars_error = str(e)[:21]
             if first_chars_error == "article has no videos":
-                self.logger.info("Glencoe returned 404, therefore article %s does not have videos", article_id)
-                end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
-                             "Glencoe returned 404, therefore article has no videos"]
-                return start_event, end_event, self.ACTIVITY_SUCCESS
+                if has_videos:
+                    # article has videos but Glencoe 404, wait and then retry again
+                    self.logger.info(e)
+                    end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
+                                "Glencoe video is not available for article " + article_id + 
+                                '; message: ' + str(e)]
+                    time.sleep(60)
+                    return start_event, end_event, self.ACTIVITY_TEMPORARY_FAILURE
+                else:
+                    self.logger.info("Glencoe returned 404, therefore article %s does not have videos", article_id)
+                    end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
+                                "Glencoe returned 404, therefore article has no videos"]
+                    return start_event, end_event, self.ACTIVITY_SUCCESS
 
             self.logger.exception("Error when checking/copying Glencoe still images.")
             end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
