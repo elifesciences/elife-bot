@@ -58,21 +58,22 @@ class activity_CopyGlencoeStillImages(Activity):
         session = get_session(self.settings, data, run)
         article_id = session.get_value('article_id')
         version = session.get_value('version')
-        file_name = session.get_value('file_name')
-        expanded_folder = session.get_value('expanded_folder')
-        poa = False
-        if "poa" in file_name:
-            poa = True
-        # check XML for if it has videos
-        jats_file = download_jats(
-            self.settings, expanded_folder, self.get_tmp_dir(), self.logger)
-        with open(jats_file, 'r') as open_file:
-            has_videos = glencoe_check.has_videos(open_file.read())
+        poa = bool("poa" in session.get_value('file_name'))
+        has_videos = self.get_has_videos(session.get_value('expanded_folder'))
         # start the image download events
         (start_msg, end_msg, success) = self.get_events(article_id, poa, version, run, has_videos)
         self.emit_monitor_event(*start_msg)
         self.emit_monitor_event(*end_msg)
         return success
+
+    def get_has_videos(self, expanded_folder):
+        """download the session JATS XML file and see if it has videos inside"""
+        has_videos = None
+        jats_file = download_jats(
+            self.settings, expanded_folder, self.get_tmp_dir(), self.logger)
+        with open(jats_file, 'r') as open_file:
+            has_videos = glencoe_check.has_videos(open_file.read())
+        return has_videos
 
     def get_events(self, article_id, poa, version=None, run=None, has_videos=None):
 
