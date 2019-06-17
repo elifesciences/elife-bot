@@ -290,21 +290,21 @@ class EJP(object):
         # For each file_type, specify a unique file name fragment to filter on
         #  with regular expression search
         fn_fragment = {}
-        fn_fragment["author"] = "ejp_query_tool_query_id_152_15a"
-        fn_fragment["editor"] = "ejp_query_tool_query_id_158_15b"
-        fn_fragment["poa_manuscript"] = "ejp_query_tool_query_id_176_POA_Manuscript"
-        fn_fragment["poa_author"] = "ejp_query_tool_query_id_177_POA_Author"
-        fn_fragment["poa_license"] = "ejp_query_tool_query_id_178_POA_License"
-        fn_fragment["poa_subject_area"] = "ejp_query_tool_query_id_179_POA_Subject_Area"
-        fn_fragment["poa_received"] = "ejp_query_tool_query_id_180_POA_Received"
-        fn_fragment["poa_research_organism"] = "ejp_query_tool_query_id_182_POA_Research_Organism"
-        fn_fragment["poa_abstract"] = "ejp_query_tool_query_id_196_POA_Abstract"
-        fn_fragment["poa_title"] = "ejp_query_tool_query_id_191_POA_Title"
-        fn_fragment["poa_keywords"] = "ejp_query_tool_query_id_226_POA_Keywords"
-        fn_fragment["poa_group_authors"] = "ejp_query_tool_query_id_242_POA_Group_Authors"
-        fn_fragment["poa_datasets"] = "ejp_query_tool_query_id_1061_POA_Datasets"
-        fn_fragment["poa_funding"] = "ejp_query_tool_query_id_1062_POA_Funding"
-        fn_fragment["poa_ethics"] = "ejp_query_tool_query_id_198_POA_Ethics"
+        fn_fragment["author"] = "_15a\)_Accepted_Paper_Details"
+        fn_fragment["editor"] = "_15b\)_Accepted_Paper_Details"
+        fn_fragment["poa_manuscript"] = "_POA_Manuscript"
+        fn_fragment["poa_author"] = "_POA_Author"
+        fn_fragment["poa_license"] = "_POA_License"
+        fn_fragment["poa_subject_area"] = "_POA_Subject_Area"
+        fn_fragment["poa_received"] = "_POA_Received"
+        fn_fragment["poa_research_organism"] = "_POA_Research_Organism"
+        fn_fragment["poa_abstract"] = "_POA_Abstract"
+        fn_fragment["poa_title"] = "_POA_Title"
+        fn_fragment["poa_keywords"] = "_POA_Keywords"
+        fn_fragment["poa_group_authors"] = "_POA_Group_Authors"
+        fn_fragment["poa_datasets"] = "_POA_Datasets"
+        fn_fragment["poa_funding"] = "_POA_Funding"
+        fn_fragment["poa_ethics"] = "_POA_Ethics"
 
         if file_list is None:
             file_list = self.ejp_bucket_file_list()
