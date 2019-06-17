@@ -38,34 +38,41 @@ class activity_CopyGlencoeStillImages(Activity):
 
         try:
             if 'standalone' in data and data['standalone']:
-                article_id = data['article_id']
-                poa = data['standalone_is_poa']
-                (start_msg, end_msg, result) = self.get_events(article_id, poa, version=None, run=None)
-                self.logger.info(end_msg[6])
-                return result
-
-            run = data['run']
-            session = get_session(self.settings, data, run)
-            article_id = session.get_value('article_id')
-            version = session.get_value('version')
-            file_name = session.get_value('file_name')
-            expanded_folder = session.get_value('expanded_folder')
-            poa = False
-            if "poa" in file_name:
-                poa = True
-            # check XML for if it has videos
-            jats_file = download_jats(
-                self.settings, expanded_folder, self.get_tmp_dir(), self.logger)
-            with open(jats_file, 'r') as open_file:
-                has_videos = glencoe_check.has_videos(open_file.read())
-            # start the image download events
-            (start_msg, end_msg, success) = self.get_events(article_id, poa, version, run, has_videos)
-            self.emit_monitor_event(*start_msg)
-            self.emit_monitor_event(*end_msg)
-            return success
+                return self.do_as_standalone(data)
+            return self.do_as_session(data)
         except Exception as e:
             self.logger.exception("Error starting Copy Glencoe Still Images activity")
             return self.ACTIVITY_PERMANENT_FAILURE
+
+    def do_as_standalone(self, data):
+        """run as part of a standalone workflow not part of a publishing session workflow"""
+        article_id = data['article_id']
+        poa = data['standalone_is_poa']
+        (start_msg, end_msg, result) = self.get_events(article_id, poa, version=None, run=None)
+        self.logger.info(end_msg[6])
+        return result
+
+    def do_as_session(self, data):
+        """run as part of a publishing workflow that has session context"""
+        run = data['run']
+        session = get_session(self.settings, data, run)
+        article_id = session.get_value('article_id')
+        version = session.get_value('version')
+        file_name = session.get_value('file_name')
+        expanded_folder = session.get_value('expanded_folder')
+        poa = False
+        if "poa" in file_name:
+            poa = True
+        # check XML for if it has videos
+        jats_file = download_jats(
+            self.settings, expanded_folder, self.get_tmp_dir(), self.logger)
+        with open(jats_file, 'r') as open_file:
+            has_videos = glencoe_check.has_videos(open_file.read())
+        # start the image download events
+        (start_msg, end_msg, success) = self.get_events(article_id, poa, version, run, has_videos)
+        self.emit_monitor_event(*start_msg)
+        self.emit_monitor_event(*end_msg)
+        return success
 
     def get_events(self, article_id, poa, version=None, run=None, has_videos=None):
 
