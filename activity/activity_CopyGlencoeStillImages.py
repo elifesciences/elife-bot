@@ -48,7 +48,7 @@ class activity_CopyGlencoeStillImages(Activity):
         """run as part of a standalone workflow not part of a publishing session workflow"""
         article_id = data['article_id']
         poa = data['standalone_is_poa']
-        (start_msg, end_msg, result) = self.get_events(article_id, poa, version=None, run=None)
+        end_msg, result = self.get_events(article_id, poa, version=None, run=None)
         self.logger.info(end_msg[6])
         return result
 
@@ -61,8 +61,10 @@ class activity_CopyGlencoeStillImages(Activity):
         poa = bool("poa" in session.get_value('file_name'))
         has_videos = self.get_has_videos(session.get_value('expanded_folder'))
         # start the image download events
-        (start_msg, end_msg, success) = self.get_events(article_id, poa, version, run, has_videos)
-        self.emit_monitor_event(*start_msg)
+        self.emit_monitor_event(
+            self.settings, article_id, version, run, self.pretty_name, "start",
+            "Starting check/copy of Glencoe video still images " + article_id)
+        end_msg, success = self.get_events(article_id, poa, version, run, has_videos)
         self.emit_monitor_event(*end_msg)
         return success
 
@@ -76,16 +78,20 @@ class activity_CopyGlencoeStillImages(Activity):
         return has_videos
 
     def get_events(self, article_id, poa, version=None, run=None, has_videos=None):
+        """process based on poa or vor and return events after processing"""
+        if poa:
+            return self.process_poa(article_id, poa, version, run)
+        return self.process_vor(article_id, poa, version, run, has_videos)
 
-        start_event = [self.settings, article_id, version, run, self.pretty_name, "start",
-                       "Starting check/copy of Glencoe video still images " + article_id]
+    def process_poa(self, article_id, poa, version=None, run=None):
+        """poa are simple, they do not have videos"""
+        end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
+                        "Article is POA, no need for video check yet. " + article_id]
+        return end_event, self.ACTIVITY_SUCCESS
+
+    def process_vor(self, article_id, poa, version=None, run=None, has_videos=None):
+        """process a vor article, may have videos"""
         try:
-            if poa:
-
-                end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
-                             "Article is POA, no need for video check yet. " + article_id]
-
-                return start_event, end_event, self.ACTIVITY_SUCCESS
             glencoe_article_id = glencoe_check.check_msid(article_id)
             metadata = glencoe_check.metadata(glencoe_article_id, self.settings)
             glencoe_jpgs = glencoe_check.jpg_href_values(metadata)
@@ -105,7 +111,7 @@ class activity_CopyGlencoeStillImages(Activity):
 
             end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
                          dashboard_message]
-            return start_event, end_event, self.ACTIVITY_SUCCESS
+            return end_event, self.ACTIVITY_SUCCESS
         except AssertionError as e:
             self.logger.info(str(e))
             first_chars_error = str(e)[:21]
@@ -117,25 +123,25 @@ class activity_CopyGlencoeStillImages(Activity):
                                 "Glencoe video is not available for article " + article_id + 
                                 '; message: ' + str(e)]
                     time.sleep(60)
-                    return start_event, end_event, self.ACTIVITY_TEMPORARY_FAILURE
+                    return end_event, self.ACTIVITY_TEMPORARY_FAILURE
                 else:
                     self.logger.info("Glencoe returned 404, therefore article %s does not have videos", article_id)
                     end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
                                 "Glencoe returned 404, therefore article has no videos"]
-                    return start_event, end_event, self.ACTIVITY_SUCCESS
+                    return end_event, self.ACTIVITY_SUCCESS
 
             self.logger.exception("Error when checking/copying Glencoe still images.")
             end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
                          "An error occurred when checking/copying Glencoe still images. Article " +
                          article_id + '; message: ' + str(e)]
-            return start_event, end_event, self.ACTIVITY_PERMANENT_FAILURE
+            return end_event, self.ACTIVITY_PERMANENT_FAILURE
 
         except Exception as e:
             self.logger.exception("Error when checking/copying Glencoe still images.")
             end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
                          "An error occurred when checking/copying Glencoe still images. Article " +
                          article_id + '; message: ' + str(e)]
-            return start_event, end_event, self.ACTIVITY_PERMANENT_FAILURE
+            return end_event, self.ACTIVITY_PERMANENT_FAILURE
 
 
     def store_jpgs(self, glencoe_jpgs, article_id):
