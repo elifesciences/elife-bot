@@ -55,7 +55,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         # Given
         activity_data = test_activity_data.data_example_before_publish
         activity_data['standalone'] = True
-        activity_data['standalone_is_poa'] = False
+        activity_data['standalone_is_poa'] = True
         fake_storage_context.return_value = FakeStorageContext()
         fake_session.return_value = FakeSession(test_activity_data.session_example)
         fake_processing_storage_context.return_value = FakeStorageContext()
@@ -222,8 +222,8 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         cdn_still_jpgs = test_activity_data.cdn_folder_jpgs_article_07398
 
         # When
-        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(cdn_all_files, cdn_still_jpgs,
-                                                                                 "07398")
+        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(
+            cdn_all_files, cdn_still_jpgs)
 
         # Then
         self.assertEqual(0, len(result_bad_files))
@@ -236,8 +236,8 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         cdn_still_jpgs = ["elife-1234500230-media1-v1.jpg", "elife-1234500230-media2-v1.jpg"]
 
         # When
-        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(cdn_all_files, cdn_still_jpgs,
-                                                                                 "00230")
+        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(
+            cdn_all_files, cdn_still_jpgs)
 
         # Then
         self.assertEqual(0, len(result_bad_files))
@@ -252,8 +252,8 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
                              "elife-1234500230-media3-v1.jpg"]
 
         # When
-        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(cdn_all_files, cdn_still_jpgs,
-                                                                                 "00230")
+        result_bad_files = self.copyglencoestillimages.validate_jpgs_against_cdn(
+            cdn_all_files, cdn_still_jpgs)
 
         # Then
         self.assertEqual(1, len(result_bad_files))
