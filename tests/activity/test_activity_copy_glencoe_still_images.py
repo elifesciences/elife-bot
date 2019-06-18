@@ -40,6 +40,13 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         # Then
         self.assertEqual(self.copyglencoestillimages.ACTIVITY_SUCCESS, result)
 
+    @patch.object(activity_CopyGlencoeStillImages, 'do_as_session')
+    def test_do_activity_exception(self, fake_do_as_session):
+        """test do_activity exception for coverage"""
+        fake_do_as_session.side_effect = Exception("An error occurred")
+        result = self.copyglencoestillimages.do_activity()
+        self.assertEqual(self.copyglencoestillimages.ACTIVITY_PERMANENT_FAILURE, result)
+
     @patch('provider.article_processing.storage_context')
     @patch('provider.lax_provider.get_xml_file_name')
     @patch.object(activity_CopyGlencoeStillImages, 'list_files_from_cdn')
