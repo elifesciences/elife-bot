@@ -80,38 +80,35 @@ class activity_CopyGlencoeStillImages(Activity):
     def get_events(self, article_id, poa, version=None, run=None, has_videos=None):
         """process based on poa or vor and return events after processing"""
         if poa:
-            return self.process_poa(article_id, poa, version, run)
-        return self.process_vor(article_id, poa, version, run, has_videos)
+            return self.process_poa(article_id, version, run)
+        return self.process_vor(article_id, version, run, has_videos)
 
-    def process_poa(self, article_id, poa, version=None, run=None):
+    def process_poa(self, article_id, version=None, run=None):
         """poa are simple, they do not have videos"""
         end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
                         "Article is POA, no need for video check yet. " + article_id]
         return end_event, self.ACTIVITY_SUCCESS
 
-    def process_vor(self, article_id, poa, version=None, run=None, has_videos=None):
+    def process_vor(self, article_id, version=None, run=None, has_videos=None):
         """process a vor article, may have videos"""
+        # check Glencoe API and for assertions and exceptions first
+        metadata, end_event, result = self.get_glencoe_metadata(
+            article_id, version, run, has_videos)
+        # continue if metadata was available
+        if metadata:
+            end_event, result = self.process_glencoe_metadata(
+                metadata, article_id, version, run)
+        return end_event, result
+
+    def get_glencoe_metadata(self, article_id, version, run, has_videos):
+        """get the Glencoe metadata, if available"""
+        metadata = None
         try:
             glencoe_article_id = glencoe_check.check_msid(article_id)
             metadata = glencoe_check.metadata(glencoe_article_id, self.settings)
-            glencoe_jpgs = glencoe_check.jpg_href_values(metadata)
-            self.logger.info("glencoe_jpgs from glencoe metadata " + str(glencoe_jpgs))
-            bad_files = []
-            if len(glencoe_jpgs) > 0:
-                cdn_still_jpgs = self.store_jpgs(glencoe_jpgs, article_id)
-
-                bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id),
-                                                           cdn_still_jpgs,
-                                                           article_id)
-
-            dashboard_message = ("Finished Copying Glencoe still images to CDN: %s" + \
-                                "Article: %s") % \
-                                (cdn_still_jpgs, article_id)
-            self.logger.info(dashboard_message)
-
-            end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
-                         dashboard_message]
-            return end_event, self.ACTIVITY_SUCCESS
+            # return a blank end event, it will be created in subsequent function calls
+            end_event = []
+            return metadata, end_event, self.ACTIVITY_SUCCESS
         except AssertionError as e:
             self.logger.info(str(e))
             first_chars_error = str(e)[:21]
@@ -123,26 +120,54 @@ class activity_CopyGlencoeStillImages(Activity):
                                 "Glencoe video is not available for article " + article_id + 
                                 '; message: ' + str(e)]
                     time.sleep(60)
-                    return end_event, self.ACTIVITY_TEMPORARY_FAILURE
+                    return metadata, end_event, self.ACTIVITY_TEMPORARY_FAILURE
                 else:
                     self.logger.info("Glencoe returned 404, therefore article %s does not have videos", article_id)
                     end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
                                 "Glencoe returned 404, therefore article has no videos"]
-                    return end_event, self.ACTIVITY_SUCCESS
+                    return metadata, end_event, self.ACTIVITY_SUCCESS
 
             self.logger.exception("Error when checking/copying Glencoe still images.")
             end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
-                         "An error occurred when checking/copying Glencoe still images. Article " +
-                         article_id + '; message: ' + str(e)]
-            return end_event, self.ACTIVITY_PERMANENT_FAILURE
+                            "An error occurred when checking/copying Glencoe still images. Article " +
+                            article_id + '; message: ' + str(e)]
+            return metadata, end_event, self.ACTIVITY_PERMANENT_FAILURE
 
         except Exception as e:
             self.logger.exception("Error when checking/copying Glencoe still images.")
             end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
                          "An error occurred when checking/copying Glencoe still images. Article " +
                          article_id + '; message: ' + str(e)]
-            return end_event, self.ACTIVITY_PERMANENT_FAILURE
+            return metadata, end_event, self.ACTIVITY_PERMANENT_FAILURE
 
+    def process_glencoe_metadata(self, metadata, article_id, version, run):
+        """process glencoe metadata by copying image files"""
+        try:
+            glencoe_jpgs = glencoe_check.jpg_href_values(metadata)
+            self.logger.info("glencoe_jpgs from glencoe metadata " + str(glencoe_jpgs))
+            bad_files = []
+            if len(glencoe_jpgs) > 0:
+                cdn_still_jpgs = self.store_jpgs(glencoe_jpgs, article_id)
+
+                bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id),
+                                                            cdn_still_jpgs,
+                                                            article_id)
+
+            dashboard_message = ("Finished Copying Glencoe still images to CDN: %s" + \
+                                "Article: %s") % \
+                                (cdn_still_jpgs, article_id)
+            self.logger.info(dashboard_message)
+
+            end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
+                            dashboard_message]
+            return end_event, self.ACTIVITY_SUCCESS
+
+        except Exception as e:
+            self.logger.exception("Error when copying Glencoe still images.")
+            end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
+                         "An error occurred when checking/copying Glencoe still images. Article " +
+                         article_id + '; message: ' + str(e)]
+            return end_event, self.ACTIVITY_PERMANENT_FAILURE
 
     def store_jpgs(self, glencoe_jpgs, article_id):
         cdn_still_jpgs = []
