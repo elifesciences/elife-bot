@@ -100,6 +100,30 @@ class activity_CopyGlencoeStillImages(Activity):
                 metadata, article_id, version, run)
         return end_event, result
 
+    def end_event_glencoe_retry(self, exception, article_id, version, run):
+        self.logger.info(exception)
+        return [self.settings, article_id, version, run, self.pretty_name, "error",
+                "Glencoe video is not available for article " + article_id + 
+                '; message: ' + str(exception)]
+
+    def end_event_glencoe_404(self, article_id, version, run):
+        self.logger.info(
+            "Glencoe returned 404, therefore article %s does not have videos", article_id)
+        return [self.settings, article_id, version, run, self.pretty_name, "end",
+                "Glencoe returned 404, therefore article has no videos"]
+
+    def end_event_checking_error(self, exception, article_id, version, run):
+        self.logger.exception("Error when checking/copying Glencoe still images.")
+        return [self.settings, article_id, version, run, self.pretty_name, "error",
+                "An error occurred when checking/copying Glencoe still images. Article " +
+                article_id + '; message: ' + str(exception)]
+
+    def end_event_copying_error(self, exception, article_id, version, run):
+        self.logger.exception("Error when copying Glencoe still images.")
+        return [self.settings, article_id, version, run, self.pretty_name, "error",
+                "An error occurred when checking/copying Glencoe still images. Article " +
+                article_id + '; message: ' + str(exception)]
+
     def get_glencoe_metadata(self, article_id, version, run, has_videos):
         """get the Glencoe metadata, if available"""
         metadata = None
@@ -109,36 +133,29 @@ class activity_CopyGlencoeStillImages(Activity):
             # return a blank end event, it will be created in subsequent function calls
             end_event = []
             return metadata, end_event, self.ACTIVITY_SUCCESS
-        except AssertionError as e:
-            self.logger.info(str(e))
-            first_chars_error = str(e)[:21]
-            if first_chars_error == "article has no videos":
-                if has_videos:
-                    # article has videos but Glencoe 404, wait and then retry again
-                    self.logger.info(e)
-                    end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
-                                "Glencoe video is not available for article " + article_id + 
-                                '; message: ' + str(e)]
-                    time.sleep(60)
-                    return metadata, end_event, self.ACTIVITY_TEMPORARY_FAILURE
-                else:
-                    self.logger.info("Glencoe returned 404, therefore article %s does not have videos", article_id)
-                    end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
-                                "Glencoe returned 404, therefore article has no videos"]
-                    return metadata, end_event, self.ACTIVITY_SUCCESS
-
-            self.logger.exception("Error when checking/copying Glencoe still images.")
-            end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
-                            "An error occurred when checking/copying Glencoe still images. Article " +
-                            article_id + '; message: ' + str(e)]
-            return metadata, end_event, self.ACTIVITY_PERMANENT_FAILURE
-
+        except AssertionError as exception:
+            end_event, result = self.handle_glencoe_metadata_assertion(
+                exception, article_id, version, run, has_videos)
+            return metadata, end_event, result
         except Exception as e:
-            self.logger.exception("Error when checking/copying Glencoe still images.")
-            end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
-                         "An error occurred when checking/copying Glencoe still images. Article " +
-                         article_id + '; message: ' + str(e)]
+            end_event = self.end_event_checking_error(e, article_id, version, run)
             return metadata, end_event, self.ACTIVITY_PERMANENT_FAILURE
+
+    def handle_glencoe_metadata_assertion(self, exception, article_id, version, run, has_videos):
+        """logic for if a glencoe_check.metadata assertion is raised"""
+        self.logger.info(str(exception))
+        first_chars_error = str(exception)[:21]
+        if first_chars_error == "article has no videos":
+            if has_videos:
+                # article has videos but Glencoe 404, wait and then retry again
+                end_event = self.end_event_glencoe_retry(exception, article_id, version, run)
+                time.sleep(60)
+                return end_event, self.ACTIVITY_TEMPORARY_FAILURE
+            else:
+                end_event = self.end_event_glencoe_404(article_id, version, run)
+                return end_event, self.ACTIVITY_SUCCESS
+        end_event = self.end_event_checking_error(e, article_id, version, run)
+        return end_event, self.ACTIVITY_PERMANENT_FAILURE
 
     def process_glencoe_metadata(self, metadata, article_id, version, run):
         """process glencoe metadata by copying image files"""
@@ -164,9 +181,7 @@ class activity_CopyGlencoeStillImages(Activity):
 
         except Exception as e:
             self.logger.exception("Error when copying Glencoe still images.")
-            end_event = [self.settings, article_id, version, run, self.pretty_name, "error",
-                         "An error occurred when checking/copying Glencoe still images. Article " +
-                         article_id + '; message: ' + str(e)]
+            end_event = self.end_event_copying_error(e, article_id, version, run)
             return end_event, self.ACTIVITY_PERMANENT_FAILURE
 
     def store_jpgs(self, glencoe_jpgs, article_id):
