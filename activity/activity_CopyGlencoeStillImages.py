@@ -1,12 +1,12 @@
-from activity.objects import Activity
 import json
 import time
+import os
+import requests
+from activity.objects import Activity
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider.article_processing import download_jats
 import provider.glencoe_check as glencoe_check
-import os
-import requests
 
 
 """
@@ -40,7 +40,7 @@ class activity_CopyGlencoeStillImages(Activity):
             if 'standalone' in data and data['standalone']:
                 return self.do_as_standalone(data)
             return self.do_as_session(data)
-        except Exception as e:
+        except:
             self.logger.exception("Error starting Copy Glencoe Still Images activity")
             return self.ACTIVITY_PERMANENT_FAILURE
 
@@ -86,7 +86,7 @@ class activity_CopyGlencoeStillImages(Activity):
     def process_poa(self, article_id, version=None, run=None):
         """poa are simple, they do not have videos"""
         end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
-                        "Article is POA, no need for video check yet. " + article_id]
+                     "Article is POA, no need for video check yet. " + article_id]
         return end_event, self.ACTIVITY_SUCCESS
 
     def process_vor(self, article_id, version=None, run=None, has_videos=None):
@@ -103,7 +103,7 @@ class activity_CopyGlencoeStillImages(Activity):
     def end_event_glencoe_retry(self, exception, article_id, version, run):
         self.logger.info(exception)
         return [self.settings, article_id, version, run, self.pretty_name, "error",
-                "Glencoe video is not available for article " + article_id + 
+                "Glencoe video is not available for article " + article_id +
                 '; message: ' + str(exception)]
 
     def end_event_glencoe_404(self, article_id, version, run):
@@ -137,8 +137,8 @@ class activity_CopyGlencoeStillImages(Activity):
             end_event, result = self.handle_glencoe_metadata_assertion(
                 exception, article_id, version, run, has_videos)
             return metadata, end_event, result
-        except Exception as e:
-            end_event = self.end_event_checking_error(e, article_id, version, run)
+        except Exception as exception:
+            end_event = self.end_event_checking_error(exception, article_id, version, run)
             return metadata, end_event, self.ACTIVITY_PERMANENT_FAILURE
 
     def handle_glencoe_metadata_assertion(self, exception, article_id, version, run, has_videos):
@@ -154,7 +154,7 @@ class activity_CopyGlencoeStillImages(Activity):
             else:
                 end_event = self.end_event_glencoe_404(article_id, version, run)
                 return end_event, self.ACTIVITY_SUCCESS
-        end_event = self.end_event_checking_error(e, article_id, version, run)
+        end_event = self.end_event_checking_error(exception, article_id, version, run)
         return end_event, self.ACTIVITY_PERMANENT_FAILURE
 
     def process_glencoe_metadata(self, metadata, article_id, version, run):
@@ -162,13 +162,11 @@ class activity_CopyGlencoeStillImages(Activity):
         try:
             glencoe_jpgs = glencoe_check.jpg_href_values(metadata)
             self.logger.info("glencoe_jpgs from glencoe metadata " + str(glencoe_jpgs))
-            bad_files = []
             if len(glencoe_jpgs) > 0:
                 cdn_still_jpgs = self.store_jpgs(glencoe_jpgs, article_id)
 
-                bad_files = self.validate_jpgs_against_cdn(self.list_files_from_cdn(article_id),
-                                                            cdn_still_jpgs,
-                                                            article_id)
+                self.validate_jpgs_against_cdn(
+                    self.list_files_from_cdn(article_id), cdn_still_jpgs)
 
             dashboard_message = ("Finished Copying Glencoe still images to CDN: %s" + \
                                 "Article: %s") % \
@@ -176,12 +174,12 @@ class activity_CopyGlencoeStillImages(Activity):
             self.logger.info(dashboard_message)
 
             end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
-                            dashboard_message]
+                         dashboard_message]
             return end_event, self.ACTIVITY_SUCCESS
 
-        except Exception as e:
+        except Exception as exception:
             self.logger.exception("Error when copying Glencoe still images.")
-            end_event = self.end_event_copying_error(e, article_id, version, run)
+            end_event = self.end_event_copying_error(exception, article_id, version, run)
             return end_event, self.ACTIVITY_PERMANENT_FAILURE
 
     def store_jpgs(self, glencoe_jpgs, article_id):
@@ -201,43 +199,45 @@ class activity_CopyGlencoeStillImages(Activity):
 
     def store_file(self, path, article_id):
         storage = storage_context(self.settings)
-        r = requests.get(path)
-        if r.status_code == 200:
+        request = requests.get(path)
+        if request.status_code == 200:
             resource = self.s3_resources(path, article_id)
             self.logger.info("S3 resource: " + resource)
             jpg_filename = os.path.split(resource)[-1]
             storage.set_resource_from_string(
                 resource,
-                r.content,
-                content_type=r.headers['content-type']
+                request.content,
+                content_type=request.headers['content-type']
             )
             return jpg_filename
         else:
-            raise RuntimeError("Glencoe returned a %s status code for %s" % (r.status_code, path))
+            raise RuntimeError("Glencoe returned a %s status code for %s" % (request.status_code, path))
 
 
     def list_files_from_cdn(self, article_id):
         storage = storage_context(self.settings)
-        article_path_in_cdn = self.settings.storage_provider + "://" + \
-                              self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket + "/" + \
-                              article_id
+        article_path_in_cdn = (
+            self.settings.storage_provider + "://" + self.settings.publishing_buckets_prefix +
+            self.settings.ppp_cdn_bucket + "/" + article_id)
         return storage.list_resources(article_path_in_cdn)
 
-    def validate_jpgs_against_cdn(self, cdn_all_files, cdn_still_jpgs, article_id):
+    def validate_jpgs_against_cdn(self, cdn_all_files, cdn_still_jpgs):
         """checks that for each element of cdn_still_jpgs there are two files in the CDN.
 
         They are supposed to be a video and its still image"""
-        cdn_still_jpgs_no_extension = self._remove_extension(cdn_still_jpgs)
+        cdn_still_jpgs_no_extension = remove_extension(cdn_still_jpgs)
         self.logger.info("cdn_still_jpgs_no_extension " + str(cdn_still_jpgs_no_extension))
-        cdn_all_files_no_extension = self._remove_extension(cdn_all_files)
+        cdn_all_files_no_extension = remove_extension(cdn_all_files)
         self.logger.info("files_in_cdn_no_extention " + str(cdn_all_files_no_extension))
         cdn_still_jpgs_without_video = []
         for still in cdn_still_jpgs_no_extension:
-            if len(list(filter(lambda filename: filename == still, cdn_all_files_no_extension))) != 2:
+            if (len(list(filter(
+                    lambda filename: filename == still, cdn_all_files_no_extension))) != 2):
                 cdn_still_jpgs_without_video.append(still)
 
         self.logger.info("cdn_still_jpgs_without_video " + str(cdn_still_jpgs_without_video))
         return cdn_still_jpgs_without_video
 
-    def _remove_extension(self, filenames):
-        return list(map(lambda filename: os.path.splitext(filename)[0], filenames))
+
+def remove_extension(filenames):
+    return list(map(lambda filename: os.path.splitext(filename)[0], filenames))
