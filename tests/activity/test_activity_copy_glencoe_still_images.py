@@ -161,6 +161,20 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         self.assertEqual(self.copyglencoestillimages.ACTIVITY_TEMPORARY_FAILURE, result)
 
     @patch('provider.glencoe_check.metadata')
+    def test_get_glencoe_metadata_unhandled_assertion(self, fake_glencoe_metadata):
+        # Given
+        fake_glencoe_metadata.side_effect = AssertionError("")
+        # When
+        has_videos = False
+        metadata, end_event, result = self.copyglencoestillimages.get_glencoe_metadata(
+            test_activity_data.data_example_before_publish.get('article_id'), 
+            test_activity_data.data_example_before_publish.get('version'), 
+            test_activity_data.data_example_before_publish.get('run'), 
+            has_videos)
+        # Then
+        self.assertEqual(self.copyglencoestillimages.ACTIVITY_PERMANENT_FAILURE, result)
+
+    @patch('provider.glencoe_check.metadata')
     def test_get_glencoe_metadata_exception(self, fake_glencoe_metadata):
         # Given
         fake_glencoe_metadata.side_effect = Exception("An error occurred")
