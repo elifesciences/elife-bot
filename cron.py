@@ -128,14 +128,6 @@ def run_cron(settings):
                 workflow_id="PublicationEmail",
                 start_seconds=60 * 31)
 
-        # PMC resupply deposits once per day 20:45 UTC
-        if current_time.tm_hour == 20:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="starter_PubRouterDeposit",
-                workflow_id="PubRouterDeposit_PMC-Resupply",
-                start_seconds=60 * 31)
-
         # Pub router deposits once per day 23:45 UTC
         if current_time.tm_hour == 23:
             workflow_conditional_start(
