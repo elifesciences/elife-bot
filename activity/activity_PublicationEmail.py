@@ -257,7 +257,6 @@ class activity_PublicationEmail(Activity):
                     # We also do not want to leave it in the outbox, add it to the removal list
                     self.insight_articles_to_remove_from_outbox.append(article)
 
-
                     # We do want to set the related article for its match
                     for research_article in articles:
                         if research_article.doi == related_article_doi:
@@ -823,7 +822,6 @@ class activity_PublicationEmail(Activity):
                 format="text",
                 subject=subject,
                 body=body)
-
 
         return True
 
