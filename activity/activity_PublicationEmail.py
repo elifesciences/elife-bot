@@ -550,21 +550,6 @@ class activity_PublicationEmail(Activity):
             pass
 
         try:
-            # Duplicate email check, can bypass with allow_duplicates = True
-            if self.allow_duplicates is True:
-                duplicate = False
-            else:
-                duplicate = self.is_duplicate_email(
-                    doi_id=elife_id,
-                    email_type=headers["email_type"],
-                    recipient_email=author.e_mail)
-
-            if duplicate is True:
-                log_info = ('Duplicate email: doi_id: %s email_type: %s recipient_email: %s' %
-                            (str(elife_id), str(email_type), str(author.e_mail)))
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
-
             # Secondly, check if article is on the do not send list
             if duplicate is False and self.allow_duplicates is not True:
                 duplicate = self.is_article_do_not_send(elife_id)
@@ -622,44 +607,6 @@ class activity_PublicationEmail(Activity):
             body=body,
             doi_id=doi_id,
             date_scheduled_timestamp=date_scheduled_timestamp)
-
-    def is_duplicate_email(self, doi_id, email_type, recipient_email):
-        """
-        Use the SimpleDB provider to count the number of emails
-        in the queue for the particular combination of variables
-        to determine whether we should not send an email twice
-        Default: return None
-          No matching emails: return False
-          Is a matching email in the queue: return True
-        """
-        duplicate = None
-        try:
-            count = 0
-
-            # Count all emails of all sent statuses
-            for sent_status in True, False, None:
-                result_list = self.db.elife_get_email_queue_items(
-                    query_type="count",
-                    doi_id=doi_id,
-                    email_type=email_type,
-                    recipient_email=recipient_email,
-                    sent_status=sent_status
-                )
-
-                count_result = result_list[0]
-                count += int(count_result["Count"])
-
-            # Now make a decision on how many emails counted
-            if count > 0:
-                duplicate = True
-            elif count == 0:
-                duplicate = False
-
-        except:
-            # Do nothing, we will return the default
-            pass
-
-        return duplicate
 
     def get_to_folder_name(self):
         """
