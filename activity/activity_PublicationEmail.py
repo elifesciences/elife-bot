@@ -88,11 +88,6 @@ class activity_PublicationEmail(Activity):
         # Connect to DB
         db_conn = self.db.connect()
 
-        # Check for whether the workflow execution was told to allow duplicate emails
-        #  default is False
-        if data and data.get('data') and data.get('data').get('allow_duplicates'):
-            self.allow_duplicates = data.get('data').get('allow_duplicates')
-
         try:
             # Download templates
             templates_downloaded = self.download_templates()
