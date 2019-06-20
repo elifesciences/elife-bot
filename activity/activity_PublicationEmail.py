@@ -157,10 +157,6 @@ class activity_PublicationEmail(Activity):
                         if result is False:
                             self.log_cannot_find_authors(article.doi)
 
-
-              # Temporary for testing, send a test run - LATER FOR TESTING TEMPLATES
-              #self.send_email_testrun(self.email_types, article.doi_id, authors, article)
-
             # Clean the outbox
             self.clean_outbox()
 
@@ -499,42 +495,6 @@ class activity_PublicationEmail(Activity):
                 approved_articles.append(article)
 
         return approved_articles
-
-    def send_email_testrun(self, email_types, elife_id, authors, article):
-        """
-        For testing the workflow and the templates
-        Given an article (and its elife_id), list of email types and
-        list of authors, it will send lots of emails
-        and also bypass the default allow_duplicates value
-        Should only be run on the dev environment which should not have live email addresses on it
-        """
-
-        # Failsafe check, do not continue if we think we are not on the dev environment
-        # Expecting    self.settings.bucket = 'elife-articles-dev'  look for the dev at the end
-        if self.settings.bucket.split('-')[-1] != 'dev':
-            return
-
-        # Allow duplicates, will send
-        self.allow_duplicates = True
-
-        # Send an email to each author
-        for author in authors:
-            # Test sending each type of template
-            for email_type in self.email_types:
-                result = self.send_email(email_type, elife_id, author, article, authors)
-
-            # For testing set the article as its own related article then send again
-
-            # Look for a related article, if not found, set the article to be related to itself
-            related_article_doi = article.get_article_related_insight_doi()
-            if related_article_doi is None:
-                related_article_doi = article.doi_url
-
-            related_article = self.get_related_article(related_article_doi)
-            article.set_related_insight_article(related_article)
-            for email_type in ['author_publication_email_VOR_no_POA',
-                               'author_publication_email_VOR_after_POA']:
-                result = self.send_email(email_type, elife_id, author, article, authors)
 
     def choose_recipient_authors(self, authors, article_type, feature_article,
                                  related_insight_article):
