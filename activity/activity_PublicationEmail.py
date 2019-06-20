@@ -165,7 +165,6 @@ class activity_PublicationEmail(Activity):
             return True
         except Exception:
             self.logger.exception("An error occured on do_activity method.")
-            pass
 
     def log_cannot_find_authors(self, doi):
         log_info = ("Leaving article in the outbox because we cannot " +
@@ -607,7 +606,6 @@ class activity_PublicationEmail(Activity):
             return True
         except Exception:
             self.logger.exception("An error has occurred on send_email method")
-            pass
 
     def queue_author_email(self, email_type, author, headers, article, authors, doi_id,
                            date_scheduled_timestamp, format="html"):
