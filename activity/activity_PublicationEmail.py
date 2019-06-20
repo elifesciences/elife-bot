@@ -1,9 +1,8 @@
-import boto.swf
 import json
 import time
 import os
 import arrow
-import requests
+import boto.swf
 import boto.s3
 from boto.s3.connection import S3Connection
 
