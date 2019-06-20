@@ -38,16 +38,7 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_prepared_len": 1})
 
         self.do_activity_passes.append({
-            "input_data": {"data": {"allow_duplicates": True}},
-            "templates_warmed": True,
-            "article_xml_filenames": ["elife00013.xml"],
-            "article_id": "00013",
-            "activity_success": True,
-            "articles_approved_len": 1,
-            "articles_approved_prepared_len": 1})
-
-        self.do_activity_passes.append({
-            "input_data": {"data": {"allow_duplicates": False}},
+            "input_data": None,
             "templates_warmed": True,
             "article_xml_filenames": ["elife03385.xml"],
             "article_id": "03385",
@@ -56,7 +47,7 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_prepared_len": 1})
 
         self.do_activity_passes.append({
-            "input_data": {"data": {"allow_duplicates": False}},
+            "input_data": None,
             "templates_warmed": True,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
             "article_id": "03977",
@@ -66,7 +57,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         # Cannot build article
         self.do_activity_passes.append({
-            "input_data": {"data": {"allow_duplicates": True}},
+            "input_data": None,
             "templates_warmed": True,
             "article_xml_filenames": ["does_not_exist.xml"],
             "article_id": None,
@@ -76,7 +67,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         # Not warmed templates
         self.do_activity_passes.append({
-            "input_data": {"data": {"allow_duplicates": True}},
+            "input_data": None,
             "templates_warmed": False,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
             "article_id": None,
