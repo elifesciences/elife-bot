@@ -154,13 +154,11 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         self.assertIsNone(metadata)
         self.assertEqual(len(end_event), 7)
 
-    @patch('time.sleep')
     @patch('provider.glencoe_check.metadata')
-    def test_get_glencoe_metadata_retry(self, fake_glencoe_metadata, fake_sleep):
+    def test_get_glencoe_metadata_retry(self, fake_glencoe_metadata):
         # Given
         fake_glencoe_metadata.side_effect = AssertionError(
             "article has no videos - url requested: ...")
-        fake_sleep.return_value = None
         # When
         has_videos = True
         metadata, end_event, result = self.copyglencoestillimages.get_glencoe_metadata(

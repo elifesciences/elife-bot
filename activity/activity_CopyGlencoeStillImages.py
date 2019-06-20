@@ -1,5 +1,4 @@
 import json
-import time
 import os
 import requests
 from activity.objects import Activity
@@ -147,9 +146,8 @@ class activity_CopyGlencoeStillImages(Activity):
         first_chars_error = str(exception)[:21]
         if first_chars_error == "article has no videos":
             if has_videos:
-                # article has videos but Glencoe 404, wait and then retry again
+                # article has videos but Glencoe 404, retry this activity again
                 end_event = self.end_event_glencoe_retry(exception, article_id, version, run)
-                time.sleep(60)
                 return end_event, self.ACTIVITY_TEMPORARY_FAILURE
             else:
                 end_event = self.end_event_glencoe_404(article_id, version, run)
