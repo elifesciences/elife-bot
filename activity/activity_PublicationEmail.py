@@ -82,8 +82,8 @@ class activity_PublicationEmail(Activity):
         """
         PublicationEmail activity, do the work
         """
-        if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+
+        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         # Connect to DB
         db_conn = self.db.connect()
@@ -109,13 +109,12 @@ class activity_PublicationEmail(Activity):
 
                 self.articles_approved_prepared = self.prepare_articles(self.articles_approved)
 
-                if self.logger:
-                    log_info = "Total parsed articles: " + str(len(self.articles))
-                    log_info += "\n" + "Total approved articles " + str(len(self.articles_approved))
-                    log_info += ("\n" + "Total prepared articles " +
-                                 str(len(self.articles_approved_prepared)))
-                    self.admin_email_content += "\n" + log_info
-                    self.logger.info(log_info)
+                log_info = "Total parsed articles: " + str(len(self.articles))
+                log_info += "\n" + "Total approved articles " + str(len(self.articles_approved))
+                log_info += ("\n" + "Total prepared articles " +
+                             str(len(self.articles_approved_prepared)))
+                self.admin_email_content += "\n" + log_info
+                self.logger.info(log_info)
 
             # For the set of articles now select the template, authors and queue the emails
             for article in self.articles_approved_prepared:
@@ -165,16 +164,14 @@ class activity_PublicationEmail(Activity):
 
             return True
         except Exception:
-            if self.logger:
-                self.logger.exception("An error occured on do_activity method.")
-                pass
+            self.logger.exception("An error occured on do_activity method.")
+            pass
 
     def log_cannot_find_authors(self, doi):
-        if self.logger:
-            log_info = ("Leaving article in the outbox because we cannot " +
-                        "find its authors: " + doi)
-            self.admin_email_content += "\n" + log_info
-            self.logger.info(log_info)
+        log_info = ("Leaving article in the outbox because we cannot " +
+                    "find its authors: " + doi)
+        self.admin_email_content += "\n" + log_info
+        self.logger.info(log_info)
         # Make a note of this and we will not remove from the outbox, save for a later day
         self.articles_do_not_remove_from_outbox.append(doi)
 
@@ -264,11 +261,10 @@ class activity_PublicationEmail(Activity):
                     # We do want to set the related article for its match
                     for research_article in articles:
                         if research_article.doi == related_article_doi:
-                            if self.logger:
-                                log_info = ("Setting match on " + related_article_doi +
-                                            " to " + article.doi)
-                                self.admin_email_content += "\n" + log_info
-                                self.logger.info(log_info)
+                            log_info = ("Setting match on " + related_article_doi +
+                                        " to " + article.doi)
+                            self.admin_email_content += "\n" + log_info
+                            self.logger.info(log_info)
                             research_article.set_related_insight_article(article)
 
                 else:
@@ -283,11 +279,10 @@ class activity_PublicationEmail(Activity):
                             article.set_related_insight_article(related_article)
                         else:
                             # Could not find the related article
-                            if self.logger:
-                                log_info = ("Could not build the article related to insight " +
-                                            article.doi)
-                                self.admin_email_content += "\n" + log_info
-                                self.logger.info(log_info)
+                            log_info = ("Could not build the article related to insight " +
+                                        article.doi)
+                            self.admin_email_content += "\n" + log_info
+                            self.logger.info(log_info)
                             remove_article_doi.append(article.doi)
 
         # Can remove articles now if required
@@ -352,10 +347,9 @@ class activity_PublicationEmail(Activity):
             article.parse_article_file(article_xml_filename)
             article.pdf_cover_link = article.get_pdf_cover_page(
                 article.doi_id, self.settings, self.logger)
-            if self.logger:
-                log_info = "Parsed " + article.doi_url
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
+            log_info = "Parsed " + article.doi_url
+            self.admin_email_content += "\n" + log_info
+            self.logger.info(log_info)
             # Add article object to the object list
             articles.append(article)
 
@@ -372,17 +366,15 @@ class activity_PublicationEmail(Activity):
         # Prepare email templates
         self.templates.download_email_templates_from_s3()
         if self.templates.email_templates_warmed is not True:
-            if self.logger:
-                log_info = 'PublicationEmail email templates did not warm successfully'
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
+            log_info = 'PublicationEmail email templates did not warm successfully'
+            self.admin_email_content += "\n" + log_info
+            self.logger.info(log_info)
             # Stop now! Return False if we do not have the necessary files
             return False
         else:
-            if self.logger:
-                log_info = 'PublicationEmail email templates warmed'
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
+            log_info = 'PublicationEmail email templates warmed'
+            self.admin_email_content += "\n" + log_info
+            self.logger.info(log_info)
             return True
 
     def create_article(self, doi_id=None):
@@ -420,10 +412,9 @@ class activity_PublicationEmail(Activity):
         for article in self.related_articles:
             if article.doi == doi:
                 # Return an existing article object
-                if self.logger:
-                    log_info = "Hit the article cache on " + doi
-                    self.admin_email_content += "\n" + log_info
-                    self.logger.info(log_info)
+                log_info = "Hit the article cache on " + doi
+                self.admin_email_content += "\n" + log_info
+                self.logger.info(log_info)
                 return article
 
         # Article for this DOI does not exist, populate it
@@ -431,18 +422,16 @@ class activity_PublicationEmail(Activity):
         article = self.create_article(doi_id)
 
         if not article:
-            if self.logger:
-                log_info = "Could not build the related article " + doi
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
+            log_info = "Could not build the related article " + doi
+            self.admin_email_content += "\n" + log_info
+            self.logger.info(log_info)
             return article
 
         self.related_articles.append(article)
 
-        if self.logger:
-            log_info = "Building article for " + doi
-            self.admin_email_content += "\n" + log_info
-            self.logger.info(log_info)
+        log_info = "Building article for " + doi
+        self.admin_email_content += "\n" + log_info
+        self.logger.info(log_info)
 
         return article
 
@@ -465,10 +454,9 @@ class activity_PublicationEmail(Activity):
         # Remove based on article type
         for article in articles:
             if article.article_type in self.article_types_do_not_send:
-                if self.logger:
-                    log_info = "Removing based on article type " + article.doi
-                    self.admin_email_content += "\n" + log_info
-                    self.logger.info(log_info)
+                log_info = "Removing based on article type " + article.doi
+                self.admin_email_content += "\n" + log_info
+                self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
 
         for article in articles:
@@ -482,10 +470,9 @@ class activity_PublicationEmail(Activity):
                 is_poa=article.is_poa,
                 was_ever_poa=article.was_ever_poa)
             if is_published is not True:
-                if self.logger:
-                    log_info = "Removing because it is not published " + article.doi
-                    self.admin_email_content += "\n" + log_info
-                    self.logger.info(log_info)
+                log_info = "Removing because it is not published " + article.doi
+                self.admin_email_content += "\n" + log_info
+                self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
 
         # Can remove the articles now without affecting the loops using del
@@ -557,8 +544,9 @@ class activity_PublicationEmail(Activity):
             headers = None
 
         if not headers:
-            log_info = ('Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s' %
-                        (str(elife_id), str(email_type), str(author.e_mail)))
+            log_info = (
+                'Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s' %
+                (str(elife_id), str(email_type), str(author.e_mail)))
             self.admin_email_content += "\n" + log_info
             return False
 
@@ -582,33 +570,30 @@ class activity_PublicationEmail(Activity):
                     recipient_email=author.e_mail)
 
             if duplicate is True:
-                if self.logger:
-                    log_info = ('Duplicate email: doi_id: %s email_type: %s recipient_email: %s' %
-                                (str(elife_id), str(email_type), str(author.e_mail)))
-                    self.admin_email_content += "\n" + log_info
-                    self.logger.info(log_info)
+                log_info = ('Duplicate email: doi_id: %s email_type: %s recipient_email: %s' %
+                            (str(elife_id), str(email_type), str(author.e_mail)))
+                self.admin_email_content += "\n" + log_info
+                self.logger.info(log_info)
 
             # Secondly, check if article is on the do not send list
             if duplicate is False and self.allow_duplicates is not True:
                 duplicate = self.is_article_do_not_send(elife_id)
 
                 if duplicate is True:
-                    if self.logger:
-                        log_info = (('Article on do not send list for DOI: doi_id: %s ' +
-                                     'email_type: %s recipient_email: %s') %
-                                    (str(elife_id), str(email_type), str(author.e_mail)))
-                        self.admin_email_content += "\n" + log_info
-                        self.logger.info(log_info)
+                    log_info = (('Article on do not send list for DOI: doi_id: %s ' +
+                                 'email_type: %s recipient_email: %s') %
+                                (str(elife_id), str(email_type), str(author.e_mail)))
+                    self.admin_email_content += "\n" + log_info
+                    self.logger.info(log_info)
 
             # Now we can actually queue the email to be sent
             if duplicate is False:
                 # Queue the email
-                if self.logger:
-                    log_info = ("Sending " + email_type + " type email" +
-                                " for article " + str(elife_id) +
-                                " to recipient_email " + str(author.e_mail))
-                    self.admin_email_content += "\n" + log_info
-                    self.logger.info(log_info)
+                log_info = ("Sending " + email_type + " type email" +
+                            " for article " + str(elife_id) +
+                            " to recipient_email " + str(author.e_mail))
+                self.admin_email_content += "\n" + log_info
+                self.logger.info(log_info)
 
                 self.queue_author_email(
                     email_type=email_type,
@@ -622,9 +607,8 @@ class activity_PublicationEmail(Activity):
 
             return True
         except Exception:
-            if self.logger:
-                self.logger.exception("An error has occurred on send_email method")
-                pass
+            self.logger.exception("An error has occurred on send_email method")
+            pass
 
     def queue_author_email(self, email_type, author, headers, article, authors, doi_id,
                            date_scheduled_timestamp, format="html"):
@@ -769,10 +753,9 @@ class activity_PublicationEmail(Activity):
 
         # Authors will be none if there is not data
         if authors is None:
-            if self.logger:
-                log_info = "No authors found for article doi id " + str(doi_id)
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
+            log_info = "No authors found for article doi id " + str(doi_id)
+            self.admin_email_content += "\n" + log_info
+            self.logger.info(log_info)
             return None
 
         for author in authors:
