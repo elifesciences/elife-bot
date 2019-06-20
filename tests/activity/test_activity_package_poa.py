@@ -202,7 +202,7 @@ class TestPackagePOA(unittest.TestCase):
                          fake_storage_context):
         # mock things
         test_outbox_folder = activity_test_data.ExpandArticle_files_dest_folder
-        bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list.json")
+        bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list_new.json")
         with open(bucket_list_file, 'rb') as open_file:
             fake_ejp_bucket_file_list.return_value = json.loads(open_file.read().decode())
         fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
