@@ -11,7 +11,6 @@ import provider.templates as templatelib
 import provider.ejp as ejplib
 import provider.article as articlelib
 import provider.s3lib as s3lib
-import provider.blacklist as blacklist
 import provider.lax_provider as lax_provider
 from activity.objects import Activity
 
@@ -550,17 +549,6 @@ class activity_PublicationEmail(Activity):
             pass
 
         try:
-            # Secondly, check if article is on the do not send list
-            if duplicate is False and self.allow_duplicates is not True:
-                duplicate = self.is_article_do_not_send(elife_id)
-
-                if duplicate is True:
-                    log_info = (('Article on do not send list for DOI: doi_id: %s ' +
-                                 'email_type: %s recipient_email: %s') %
-                                (str(elife_id), str(email_type), str(author.e_mail)))
-                    self.admin_email_content += "\n" + log_info
-                    self.logger.info(log_info)
-
             # Now we can actually queue the email to be sent
             if duplicate is False:
                 # Queue the email
@@ -706,24 +694,6 @@ class activity_PublicationEmail(Activity):
             author_list.append(obj)
 
         return author_list
-
-    def is_article_do_not_send(self, doi_id):
-        """
-        Check if article is on the do not send email list
-        This is used to not send a publication email when an article is correct
-        For articles published prior to the launch of this publication email feature
-          we cannot check the log of all emails sent to check if a duplicate
-          email exists already
-        """
-
-        # Convert to string for matching
-        if type(doi_id) == int:
-            doi_id = str(doi_id).zfill(5)
-
-        if doi_id in blacklist.publication_email_article_do_not_send_list():
-            return True
-        else:
-            return False
 
     def send_admin_email(self):
         """
