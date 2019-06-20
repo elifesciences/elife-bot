@@ -56,9 +56,6 @@ class activity_PublicationEmail(Activity):
         self.insight_articles_to_remove_from_outbox = []
         self.articles_do_not_remove_from_outbox = []
 
-        # Default is do not send duplicate emails
-        self.allow_duplicates = False
-
         # Article types for which not to send emails
         self.article_types_do_not_send = []
         self.article_types_do_not_send.append('editorial')
@@ -509,8 +506,7 @@ class activity_PublicationEmail(Activity):
     def send_email(self, email_type, elife_id, author, article, authors):
         """
         Given the email type and author,
-        decide whether to send the email (after checking for duplicates)
-        and queue the email
+        send the email
         """
 
         if author is None:
@@ -550,23 +546,23 @@ class activity_PublicationEmail(Activity):
 
         try:
             # Now we can actually queue the email to be sent
-            if duplicate is False:
-                # Queue the email
-                log_info = ("Sending " + email_type + " type email" +
-                            " for article " + str(elife_id) +
-                            " to recipient_email " + str(author.e_mail))
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
 
-                self.queue_author_email(
-                    email_type=email_type,
-                    author=author,
-                    headers=headers,
-                    article=article,
-                    authors=authors,
-                    doi_id=elife_id,
-                    date_scheduled_timestamp=date_scheduled_timestamp,
-                    format="html")
+            # Queue the email
+            log_info = ("Sending " + email_type + " type email" +
+                        " for article " + str(elife_id) +
+                        " to recipient_email " + str(author.e_mail))
+            self.admin_email_content += "\n" + log_info
+            self.logger.info(log_info)
+
+            self.queue_author_email(
+                email_type=email_type,
+                author=author,
+                headers=headers,
+                article=article,
+                authors=authors,
+                doi_id=elife_id,
+                date_scheduled_timestamp=date_scheduled_timestamp,
+                format="html")
 
             return True
         except Exception:
