@@ -16,6 +16,7 @@ activity_CopyGlencoeStillImages.py activity
 class ValidationException(RuntimeError):
     pass
 
+
 class activity_CopyGlencoeStillImages(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_CopyGlencoeStillImages, self).__init__(
@@ -166,9 +167,8 @@ class activity_CopyGlencoeStillImages(Activity):
                 self.validate_jpgs_against_cdn(
                     self.list_files_from_cdn(article_id), cdn_still_jpgs)
 
-            dashboard_message = ("Finished Copying Glencoe still images to CDN: %s" + \
-                                "Article: %s") % \
-                                (cdn_still_jpgs, article_id)
+            dashboard_message = ("Finished Copying Glencoe still images to CDN: %sArticle: %s" %
+                                 (cdn_still_jpgs, article_id))
             self.logger.info(dashboard_message)
 
             end_event = [self.settings, article_id, version, run, self.pretty_name, "end",
@@ -190,9 +190,9 @@ class activity_CopyGlencoeStillImages(Activity):
     def s3_resources(self, path, article_id):
         filename = os.path.split(path)[1]
         filename = glencoe_check.force_article_id(filename, article_id)
-        cdn = self.settings.storage_provider + "://" + \
-               self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket + "/" + \
-               article_id + "/" + filename
+        cdn = (self.settings.storage_provider + "://" +
+               self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket + "/" +
+               article_id + "/" + filename)
         return cdn
 
     def store_file(self, path, article_id):
@@ -209,8 +209,8 @@ class activity_CopyGlencoeStillImages(Activity):
             )
             return jpg_filename
         else:
-            raise RuntimeError("Glencoe returned a %s status code for %s" % (request.status_code, path))
-
+            raise RuntimeError("Glencoe returned a %s status code for %s" %
+                               (request.status_code, path))
 
     def list_files_from_cdn(self, article_id):
         storage = storage_context(self.settings)
