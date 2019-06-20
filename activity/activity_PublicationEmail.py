@@ -90,11 +90,8 @@ class activity_PublicationEmail(Activity):
 
         # Check for whether the workflow execution was told to allow duplicate emails
         #  default is False
-        try:
-            self.allow_duplicates = data["data"]["allow_duplicates"]
-        except KeyError:
-            # Not specified? Ok, just use the default
-            pass
+        if data and data.get('data') and data.get('data').get('allow_duplicates'):
+            self.allow_duplicates = data.get('data').get('allow_duplicates')
 
         try:
             # Download templates
