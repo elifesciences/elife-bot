@@ -16,9 +16,6 @@ import provider.blacklist as blacklist
 import provider.lax_provider as lax_provider
 from activity.objects import Activity
 
-"""
-PublicationEmail activity
-"""
 
 class activity_PublicationEmail(Activity):
 
@@ -155,7 +152,8 @@ class activity_PublicationEmail(Activity):
                 else:
                     # Good, we can send emails
                     for recipient_author in recipient_authors:
-                        result = self.send_email(email_type, article.doi_id, recipient_author, article, authors)
+                        result = self.send_email(email_type, article.doi_id, recipient_author,
+                                                 article, authors)
                         if result is False:
                             self.log_cannot_find_authors(article.doi)
 
@@ -304,7 +302,6 @@ class activity_PublicationEmail(Activity):
 
         return prepared_articles
 
-
     def download_files_from_s3_outbox(self):
         """
         Connect to the S3 bucket, and from the outbox folder,
@@ -358,7 +355,8 @@ class activity_PublicationEmail(Activity):
 
             article = self.create_article()
             article.parse_article_file(article_xml_filename)
-            article.pdf_cover_link = article.get_pdf_cover_page(article.doi_id, self.settings, self.logger)
+            article.pdf_cover_link = article.get_pdf_cover_page(
+                article.doi_id, self.settings, self.logger)
             if self.logger:
                 log_info = "Parsed " + article.doi_url
                 self.admin_email_content += "\n" + log_info
@@ -370,7 +368,6 @@ class activity_PublicationEmail(Activity):
             self.xml_file_to_doi_map[article.doi] = article_xml_filename
 
         return articles
-
 
     def download_templates(self):
         """
@@ -416,7 +413,6 @@ class activity_PublicationEmail(Activity):
 
         return article
 
-
     def get_related_article(self, doi):
         """
         When populating related articles, given a DOI,
@@ -457,7 +453,7 @@ class activity_PublicationEmail(Activity):
 
     def is_feature_article(self, article):
         if (article.is_in_display_channel("Feature article") is True or
-            article.is_in_display_channel("Feature Article") is True):
+                article.is_in_display_channel("Feature Article") is True):
             return True
         return False
 
@@ -504,7 +500,6 @@ class activity_PublicationEmail(Activity):
 
         return approved_articles
 
-
     def send_email_testrun(self, email_types, elife_id, authors, article):
         """
         For testing the workflow and the templates
@@ -549,8 +544,8 @@ class activity_PublicationEmail(Activity):
         """
         recipient_authors = []
         if (feature_article is True
-            or article_type == "article-commentary"
-            or related_insight_article is not None):
+                or article_type == "article-commentary"
+                or related_insight_article is not None):
             # feature article recipients
 
             recipient_email_list = []
@@ -575,7 +570,6 @@ class activity_PublicationEmail(Activity):
             recipient_authors = authors
 
         return recipient_authors
-
 
     def send_email(self, email_type, elife_id, author, article, authors):
         """
@@ -642,7 +636,7 @@ class activity_PublicationEmail(Activity):
                 if duplicate is True:
                     if self.logger:
                         log_info = (('Article on do not send list for DOI: doi_id: %s ' +
-                                    'email_type: %s recipient_email: %s') %
+                                     'email_type: %s recipient_email: %s') %
                                     (str(elife_id), str(email_type), str(author.e_mail)))
                         self.admin_email_content += "\n" + log_info
                         self.logger.info(log_info)
@@ -803,7 +797,6 @@ class activity_PublicationEmail(Activity):
                     old_s3_key = bucket.get_key(name)
                     old_s3_key.delete()
 
-
     def get_authors(self, doi_id=None, corresponding=None, local_document=None):
         """
         Using the EJP data provider, get the column headings
@@ -853,7 +846,6 @@ class activity_PublicationEmail(Activity):
             return True
         else:
             return False
-
 
     def send_admin_email(self):
         """
@@ -957,8 +949,6 @@ class activity_PublicationEmail(Activity):
         return body
 
 
-
 class Struct(object):
     def __init__(self, **entries):
         self.__dict__.update(entries)
-
