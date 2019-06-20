@@ -26,6 +26,6 @@ pyGithub==1.27.1
 pyFunctional==1.2.0
 func_timeout==4.3.0
 python-docx==0.8.6
-git+https://github.com/elifesciences/digest-parser.git@31f440692062fde2a2a4c5629b2333da640abf16#egg=digestparser
+git+https://github.com/elifesciences/digest-parser.git@cd3a47af45db64a1731cc5ae9d0647ec3511a120#egg=digestparser
 git+https://github.com/Medium/medium-sdk-python.git@bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6#egg=medium
 psutil==5.4.6
