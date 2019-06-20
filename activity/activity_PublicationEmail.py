@@ -70,7 +70,7 @@ class activity_PublicationEmail(Activity):
         self.email_types.append('author_publication_email_Insight_to_VOR')
         self.email_types.append('author_publication_email_Feature')
 
-        self.date_stamp = self.set_datestamp()
+        self.date_stamp = set_datestamp()
 
         self.admin_email_content = ''
 
@@ -108,12 +108,12 @@ class activity_PublicationEmail(Activity):
             for article in self.articles_approved_prepared:
 
                 # Determine which email type or template to send
-                email_type = self.choose_email_type(
+                email_type = choose_email_type(
                     article_type=article.article_type,
                     is_poa=article.is_poa,
                     was_ever_poa=article.was_ever_poa,
-                    feature_article=self.is_feature_article(article)
-                )
+                    feature_article=is_feature_article(article)
+                    )
 
                 # Get the authors depending on the article type
                 if article.article_type == "article-commentary":
@@ -130,7 +130,7 @@ class activity_PublicationEmail(Activity):
                 recipient_authors = self.choose_recipient_authors(
                     authors=authors,
                     article_type=article.article_type,
-                    feature_article=self.is_feature_article(article),
+                    feature_article=is_feature_article(article),
                     related_insight_article=article.related_insight_article)
 
                 if recipient_authors is None:
@@ -161,43 +161,6 @@ class activity_PublicationEmail(Activity):
         self.logger.info(log_info)
         # Make a note of this and we will not remove from the outbox, save for a later day
         self.articles_do_not_remove_from_outbox.append(doi)
-
-    def set_datestamp(self):
-        a = arrow.utcnow()
-        date_stamp = (str(a.datetime.year) + str(a.datetime.month).zfill(2) +
-                      str(a.datetime.day).zfill(2))
-        return date_stamp
-
-    def choose_email_type(self, article_type, is_poa, was_ever_poa, feature_article):
-        """
-        Given some article details, we can choose the
-        appropriate email template
-        """
-        email_type = None
-
-        if article_type == "article-commentary":
-            # Insight
-            email_type = "author_publication_email_Insight_to_VOR"
-
-        elif article_type == "discussion" and feature_article is True:
-            # Feature article
-            email_type = "author_publication_email_Feature"
-
-        elif article_type == "research-article":
-            if is_poa is True:
-                # POA article
-                email_type = "author_publication_email_POA"
-
-            elif is_poa is False:
-                # VOR article, decide based on if it was ever POA
-                if was_ever_poa is True:
-                    email_type = "author_publication_email_VOR_after_POA"
-
-                else:
-                    # False or None is allowed here
-                    email_type = "author_publication_email_VOR_no_POA"
-
-        return email_type
 
     def prepare_articles(self, articles):
         """
@@ -420,12 +383,6 @@ class activity_PublicationEmail(Activity):
         self.logger.info(log_info)
 
         return article
-
-    def is_feature_article(self, article):
-        if (article.is_in_display_channel("Feature article") is True or
-                article.is_in_display_channel("Feature Article") is True):
-            return True
-        return False
 
     def approve_articles(self, articles):
         """
@@ -728,18 +685,6 @@ class activity_PublicationEmail(Activity):
 
         return True
 
-    def get_activity_status_text(self, activity_status):
-        """
-        Given the activity status boolean, return a human
-        readable text version
-        """
-        if activity_status is True:
-            activity_status_text = "Success!"
-        else:
-            activity_status_text = "FAILED."
-
-        return activity_status_text
-
     def get_admin_email_subject(self, current_time):
         """
         Assemble the email subject
@@ -747,7 +692,7 @@ class activity_PublicationEmail(Activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = get_activity_status_text(self.activity_status)
 
         subject = (self.name + " " + activity_status_text +
                    ", " + datetime_string +
@@ -765,7 +710,7 @@ class activity_PublicationEmail(Activity):
         date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = get_activity_status_text(self.activity_status)
 
         # Bulk of body
         body += self.name + " status:" + "\n"
@@ -795,3 +740,62 @@ class activity_PublicationEmail(Activity):
 class Struct(object):
     def __init__(self, **entries):
         self.__dict__.update(entries)
+
+
+def set_datestamp():
+    a = arrow.utcnow()
+    date_stamp = (
+        str(a.datetime.year) + str(a.datetime.month).zfill(2) + str(a.datetime.day).zfill(2))
+    return date_stamp
+
+
+def is_feature_article(article):
+    if (article.is_in_display_channel("Feature article") is True or
+            article.is_in_display_channel("Feature Article") is True):
+        return True
+    return False
+
+
+def choose_email_type(article_type, is_poa, was_ever_poa, feature_article):
+    """
+    Given some article details, we can choose the
+    appropriate email template
+    """
+    email_type = None
+
+    if article_type == "article-commentary":
+        # Insight
+        email_type = "author_publication_email_Insight_to_VOR"
+
+    elif article_type == "discussion" and feature_article is True:
+        # Feature article
+        email_type = "author_publication_email_Feature"
+
+    elif article_type == "research-article":
+        if is_poa is True:
+            # POA article
+            email_type = "author_publication_email_POA"
+
+        elif is_poa is False:
+            # VOR article, decide based on if it was ever POA
+            if was_ever_poa is True:
+                email_type = "author_publication_email_VOR_after_POA"
+
+            else:
+                # False or None is allowed here
+                email_type = "author_publication_email_VOR_no_POA"
+
+    return email_type
+
+
+def get_activity_status_text(activity_status):
+    """
+    Given the activity status boolean, return a human
+    readable text version
+    """
+    if activity_status is True:
+        activity_status_text = "Success!"
+    else:
+        activity_status_text = "FAILED."
+
+    return activity_status_text
