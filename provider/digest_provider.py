@@ -280,7 +280,7 @@ def approve_by_run_type(settings, logger, article_id, run_type, version):
     "determine ingest approval based on the run_type and version"
     approve_status = None
     # VoR and is a silent correction, consult Lax for if it is not the highest version
-    if run_type in ["silent-correction", "silent-correction-pmc-resupply"]:
+    if run_type == "silent-correction":
         highest_version = lax_provider.article_highest_version(article_id, settings)
         try:
             if int(version) < int(highest_version):

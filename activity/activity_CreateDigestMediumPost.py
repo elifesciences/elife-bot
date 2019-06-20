@@ -193,7 +193,7 @@ class activity_CreateDigestMediumPost(Activity):
             approve_status = False
 
         # check silent correction
-        if run_type in ["silent-correction", "silent-correction-pmc-resupply"]:
+        if run_type == "silent-correction":
             approve_status = False
         else:
             first_vor_status = digest_provider.approve_by_first_vor(

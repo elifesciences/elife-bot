@@ -218,7 +218,7 @@ class activity_IngestDigestToEndpoint(Activity):
             self.settings, self.logger, article_id, run_type, version)
         first_vor_status = digest_provider.approve_by_first_vor(self.settings, self.logger, article_id, version, status)
         if (first_vor_status is False and
-                run_type not in ["silent-correction", "silent-correction-pmc-resupply"]):
+                run_type != "silent-correction"):
             # not the first vor and not a silent correction, do not approve
             approve_status = False
         elif run_type_status is False:
