@@ -236,14 +236,14 @@ class activity_PublicationEmail(Activity):
             else:
                 article_non_insight_doi_list.append(article.doi)
 
-        #print "Non-insight " + json.dumps(article_non_insight_doi_list)
-        #print "Insight " + json.dumps(article_insight_doi_list)
+        self.logger.info("Non-insight " + json.dumps(article_non_insight_doi_list))
+        self.logger.info("Insight " + json.dumps(article_insight_doi_list))
 
         remove_article_doi = []
 
         # Process or delete articles as required
         for article in articles:
-            #print article.doi + " is type " + article.article_type
+            self.logger.info(article.doi + " is type " + article.article_type)
             if article.article_type == "article-commentary":
                 # Insight
 
@@ -253,7 +253,7 @@ class activity_PublicationEmail(Activity):
                 related_article_doi = article.get_article_related_insight_doi()
                 if related_article_doi in article_non_insight_doi_list:
 
-                    #print "Article match on " + article.doi
+                    self.logger.info("Article match on " + article.doi)
 
                     # We do not want to send for this insight
                     remove_article_doi.append(article.doi)
@@ -274,7 +274,7 @@ class activity_PublicationEmail(Activity):
                 else:
                     # Set this insights related article
 
-                    #print "No article match on " + article.doi
+                    self.logger.info("No article match on " + article.doi)
 
                     related_article_doi = article.get_article_related_insight_doi()
                     if related_article_doi:
@@ -815,7 +815,7 @@ class activity_PublicationEmail(Activity):
         db_conn = self.db.connect()
 
         # Note: Create a verified sender email address, only done once
-        #conn.verify_email_address(self.settings.ses_sender_email)
+        # conn.verify_email_address(self.settings.ses_sender_email)
 
         current_time = time.gmtime()
 
