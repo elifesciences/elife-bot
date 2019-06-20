@@ -836,36 +836,6 @@ class activity_PublicationEmail(Activity):
 
         return author_list
 
-    def get_editors(self, doi_id=None, local_document=None):
-        """
-        Using the EJP data provider, get the column headings
-        and editor data, and reassemble into a list of editors
-        document is only provided when running tests, otherwise just specify the doi_id
-        """
-        editor_list = []
-        (column_headings, editors) = self.ejp.get_editors(doi_id=doi_id, local_document=local_document)
-
-        # Editors will be none if there is not data
-        if editors is None:
-            if self.logger:
-                log_info = "No editors found for article doi id " + str(doi_id)
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
-            return None
-
-        for editor in editors:
-            i = 0
-            temp = {}
-            for value in editor:
-                heading = column_headings[i]
-                temp[heading] = value
-                i = i + 1
-            # Special: convert the dict to an object for use in templates
-            obj = Struct(**temp)
-            editor_list.append(obj)
-
-        return editor_list
-
     def is_article_do_not_send(self, doi_id):
         """
         Check if article is on the do not send email list

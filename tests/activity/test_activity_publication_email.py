@@ -222,23 +222,6 @@ class TestPublicationEmail(unittest.TestCase):
             self.assertEqual(len(self.activity.articles_approved), pass_test_data["articles_approved_len"])
             self.assertEqual(len(self.activity.articles_approved_prepared), pass_test_data["articles_approved_prepared_len"])
 
-
-    @data(
-        (3, "tests/test_data/ejp_editor_file.csv", 1, "One"),
-        ("00013", "tests/test_data/ejp_editor_file.csv", 1, "Uno"),
-        (666, "tests/test_data/ejp_editor_file.csv", 0, None)
-    )
-    @unpack
-    def test_get_editors(self, doi_id, local_document, expected_editor_list_len, expected_0_last_nm):
-        editor_list = self.activity.get_editors(doi_id, local_document)
-        if editor_list:
-            self.assertEqual(len(editor_list), expected_editor_list_len)
-        else:
-            self.assertEqual(editor_list, None)
-
-        if expected_0_last_nm:
-            self.assertEqual(editor_list[0].last_nm, expected_0_last_nm)
-
     @data(
         ("article-commentary", None, None, False, "author_publication_email_Insight_to_VOR"),
         ("discussion", None, None, True, "author_publication_email_Feature"),
