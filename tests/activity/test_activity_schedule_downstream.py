@@ -29,17 +29,20 @@ class TestScheduleDownstream(unittest.TestCase):
     def test_choose_outboxes_poa(self):
         outbox_list = activity_module.choose_outboxes("poa", activity_module.outbox_map())
         self.assertTrue("pubmed/outbox/" in outbox_list)
+        self.assertTrue("publication_email/outbox/" in outbox_list)
         self.assertFalse("pmc/outbox/" in outbox_list)
 
     def test_choose_outboxes_vor(self):
         outbox_list = activity_module.choose_outboxes("vor", activity_module.outbox_map())
         self.assertTrue("pmc/outbox/" in outbox_list)
+        self.assertTrue("publication_email/outbox/" in outbox_list)
         self.assertTrue("pub_router/outbox/" in outbox_list)
 
     def test_choose_outboxes_vor_silent(self):
         outbox_list = activity_module.choose_outboxes(
             "vor", activity_module.outbox_map(), "silent-correction")
         self.assertTrue("pmc/outbox/" in outbox_list)
+        self.assertFalse("publication_email/outbox/" in outbox_list)
 
 
 if __name__ == '__main__':
