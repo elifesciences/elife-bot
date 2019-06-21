@@ -20,3 +20,4 @@ build/
 crossref.cfg
 pubmed.cfg
 publication_types.yaml
+source-requirements.txt
