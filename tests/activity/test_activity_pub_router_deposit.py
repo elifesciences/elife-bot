@@ -62,10 +62,7 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch.object(activity_PubRouterDeposit, 'archive_zip_file_name')
     @patch.object(activity_PubRouterDeposit, 'download_files_from_s3_outbox')
     @patch.object(s3lib, 'get_s3_keys_from_bucket')
-    @data(
-        "PMC-Resupply",
-        "PMC"
-    )
+    @data("PMC")
     def test_do_activity_pmc(self, workflow_name, fake_get_s3_keys, fake_download,
                              fake_archive_zip_file_name, fake_start, fake_clean_outbox, 
                              fake_article_versions, fake_was_ever_poa):

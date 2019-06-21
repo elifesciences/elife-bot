@@ -30,23 +30,3 @@ class TestStarterSilentCorrectionsIngest(unittest.TestCase):
         self.starter_silent_corrections_ingest.start(
             settings=settings_mock, run=RUN_EXAMPLE,
             info=S3NotificationInfo.from_dict(test_data.silent_ingest_article_zip_data))
-
-    @data(
-        {
-            'file_name': '',
-            'expected': 'silent-correction'
-        },
-        {
-            'file_name': 'elife-00353-vor-r1.zip',
-            'expected': 'silent-correction'
-        },
-        {
-            'file_name': 'pmc-resupply/elife-00353-vor-r1.zip',
-            'expected': 'silent-correction-pmc-resupply'
-        }
-    )
-    def test_get_run_type(self, scenario_test_data):
-        info = S3NotificationInfo.from_dict(test_data.silent_ingest_article_zip_data)
-        info.file_name = scenario_test_data.get('file_name')
-        return_value = starter_module.get_run_type(info)
-        self.assertEqual(return_value, scenario_test_data.get('expected'))
