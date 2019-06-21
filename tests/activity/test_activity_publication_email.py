@@ -11,6 +11,7 @@ from provider.templates import Templates
 from provider.article import article
 from provider.ejp import EJP
 from provider.simpleDB import SimpleDB
+import activity.activity_PublicationEmail as activity_module
 from activity.activity_PublicationEmail import activity_PublicationEmail
 from activity.activity_PublicationEmail import Struct
 import tests.test_data as test_data
@@ -224,8 +225,8 @@ class TestPublicationEmail(unittest.TestCase):
     @unpack
     def test_choose_email_type(self, article_type, is_poa, was_ever_poa,
                                feature_article, expected_email_type):
-        email_type = self.activity.choose_email_type(article_type, is_poa,
-                                                     was_ever_poa, feature_article)
+        email_type = activity_module.choose_email_type(
+            article_type, is_poa, was_ever_poa, feature_article)
         self.assertEqual(email_type, expected_email_type)
 
     def fake_authors(self, article_id=3):
