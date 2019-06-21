@@ -40,13 +40,7 @@ class TestScheduleDownstream(unittest.TestCase):
         outbox_list = activity_module.choose_outboxes(
             "vor", activity_module.outbox_map(), "silent-correction")
         self.assertTrue("pmc/outbox/" in outbox_list)
-        self.assertFalse("pmc_resupply/outbox/" in outbox_list)
 
-    def test_choose_outboxes_vor_silent_pmc_resupply(self):
-        outbox_list = activity_module.choose_outboxes(
-            "vor", activity_module.outbox_map(), "silent-correction-pmc-resupply")
-        self.assertFalse("pmc/outbox/" in outbox_list)
-        self.assertTrue("pmc_resupply/outbox/" in outbox_list)
 
 if __name__ == '__main__':
     unittest.main()

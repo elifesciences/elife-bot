@@ -106,7 +106,6 @@ def outbox_map():
     outboxes = OrderedDict()
     outboxes["pubmed"] = "pubmed/outbox/"
     outboxes["pmc"] = "pmc/outbox/"
-    outboxes["pmc_resupply"] = "pmc_resupply/outbox/"
     outboxes["publication_email"] = "publication_email/outbox/"
     outboxes["pub_router"] = "pub_router/outbox/"
     outboxes["cengage"] = "cengage/outbox/"
@@ -127,18 +126,15 @@ def choose_outboxes(status, outbox_map, run_type=None):
 
     elif status == "vor":
         outbox_list.append(outbox_map.get("pubmed"))
-        if run_type == "silent-correction-pmc-resupply":
-            outbox_list.append(outbox_map.get("pmc_resupply"))
-        else:
-            outbox_list.append(outbox_map.get("pmc"))
-            outbox_list.append(outbox_map.get("publication_email"))
-            outbox_list.append(outbox_map.get("pub_router"))
-            outbox_list.append(outbox_map.get("cengage"))
-            outbox_list.append(outbox_map.get("gooa"))
-            outbox_list.append(outbox_map.get("wos"))
-            outbox_list.append(outbox_map.get("scopus"))
-            outbox_list.append(outbox_map.get("cnpiec"))
-            outbox_list.append(outbox_map.get("cnki"))
+        outbox_list.append(outbox_map.get("pmc"))
+        outbox_list.append(outbox_map.get("publication_email"))
+        outbox_list.append(outbox_map.get("pub_router"))
+        outbox_list.append(outbox_map.get("cengage"))
+        outbox_list.append(outbox_map.get("gooa"))
+        outbox_list.append(outbox_map.get("wos"))
+        outbox_list.append(outbox_map.get("scopus"))
+        outbox_list.append(outbox_map.get("cnpiec"))
+        outbox_list.append(outbox_map.get("cnki"))
 
     return outbox_list
 
