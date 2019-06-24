@@ -20,6 +20,20 @@ import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeKey
 
 
+LAX_ARTICLE_VERSIONS_RESPONSE_DATA_1 = test_data.lax_article_versions_response_data[:1]
+LAX_ARTICLE_VERSIONS_RESPONSE_DATA_2 = test_data.lax_article_versions_response_data[:2]
+LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3 = test_data.lax_article_versions_response_data[:3]
+LAX_ARTICLE_VERSIONS_RESPONSE_DATA_4 = (
+    test_data.lax_article_versions_response_data[:3] + [
+        {
+            "status": "vor",
+            "version": 4,
+            "published": "2015-11-26T00:00:00Z",
+            "versionDate": "2015-12-30T00:00:00Z"
+        }
+    ])
+
+
 @ddt
 class TestPublicationEmail(unittest.TestCase):
 
@@ -30,6 +44,8 @@ class TestPublicationEmail(unittest.TestCase):
         self.do_activity_passes = []
 
         self.do_activity_passes.append({
+            "comment": "normal article with dict input_data",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
             "templates_warmed": True,
             "article_xml_filenames": ["elife00013.xml"],
@@ -39,6 +55,8 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_prepared_len": 1})
 
         self.do_activity_passes.append({
+            "comment": "normal article with input_data None",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": None,
             "templates_warmed": True,
             "article_xml_filenames": ["elife03385.xml"],
@@ -48,6 +66,8 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_prepared_len": 1})
 
         self.do_activity_passes.append({
+            "comment": "basic PoA article",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_1,
             "input_data": None,
             "templates_warmed": True,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
@@ -56,8 +76,31 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_len": 1,
             "articles_approved_prepared_len": 1})
 
-        # Cannot build article
         self.do_activity_passes.append({
+            "comment": "not first version of PoA article",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_2,
+            "input_data": None,
+            "templates_warmed": True,
+            "article_xml_filenames": ["elife_poa_e03977.xml"],
+            "article_id": "03977",
+            "activity_success": True,
+            "articles_approved_len": 0,
+            "articles_approved_prepared_len": 0})
+
+        self.do_activity_passes.append({
+            "comment": "not first version of VoR article",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_4,
+            "input_data": None,
+            "templates_warmed": True,
+            "article_xml_filenames": ["elife03385.xml"],
+            "article_id": "03385",
+            "activity_success": True,
+            "articles_approved_len": 0,
+            "articles_approved_prepared_len": 0})
+
+        self.do_activity_passes.append({
+            "comment": "Cannot build article",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": None,
             "templates_warmed": True,
             "article_xml_filenames": ["does_not_exist.xml"],
@@ -66,8 +109,9 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_len": 0,
             "articles_approved_prepared_len": 0})
 
-        # Not warmed templates
         self.do_activity_passes.append({
+            "comment": "Not warmed templates",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": None,
             "templates_warmed": False,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
@@ -76,8 +120,9 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_len": 0,
             "articles_approved_prepared_len": 0})
 
-        # article-commentary
         self.do_activity_passes.append({
+            "comment": "article-commentary",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
             "templates_warmed": True,
             "article_xml_filenames": ["elife-18753-v1.xml"],
@@ -86,8 +131,9 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_len": 1,
             "articles_approved_prepared_len": 1})
 
-        # article-commentary plus its matching insight
         self.do_activity_passes.append({
+            "comment": "article-commentary plus its matching insight",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
             "templates_warmed": True,
             "article_xml_filenames": ["elife-18753-v1.xml", "elife-15747-v2.xml"],
@@ -96,8 +142,9 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_len": 2,
             "articles_approved_prepared_len": 1})
 
-        # feature article
         self.do_activity_passes.append({
+            "comment": "feature article",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
             "templates_warmed": True,
             "article_xml_filenames": ["elife-00353-v1.xml"],
@@ -106,8 +153,9 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_len": 1,
             "articles_approved_prepared_len": 1})
 
-        # article-commentary with no related-article tag
         self.do_activity_passes.append({
+            "comment": "article-commentary with no related-article tag",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
             "templates_warmed": True,
             "article_xml_filenames": ["elife-23065-v1.xml"],
@@ -115,8 +163,6 @@ class TestPublicationEmail(unittest.TestCase):
             "activity_success": True,
             "articles_approved_len": 1,
             "articles_approved_prepared_len": 1})
-
-
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -196,10 +242,13 @@ class TestPublicationEmail(unittest.TestCase):
             directory, self.activity.get_tmp_dir(), "authors.csv", "tests/test_data/ejp_author_file.csv")
         fake_find_latest_s3_file_name.return_value = mock.MagicMock()
         fake_elife_add_email_to_email_queue.return_value = mock.MagicMock()
-        mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
 
         # do_activity
         for pass_test_data in self.do_activity_passes:
+
+            mock_lax_provider_article_versions.return_value = (
+                200, pass_test_data.get("lax_article_versions_response_data"))
+            print(pass_test_data.get("lax_article_versions_response_data"))
 
             fake_download_email_templates_from_s3 = self.fake_download_email_templates_from_s3(
                 self.activity.get_tmp_dir(), pass_test_data["templates_warmed"])
@@ -210,9 +259,12 @@ class TestPublicationEmail(unittest.TestCase):
 
             success = self.activity.do_activity(pass_test_data["input_data"])
 
-            self.assertEqual(success, pass_test_data["activity_success"])
-            self.assertEqual(len(self.activity.articles_approved), pass_test_data["articles_approved_len"])
-            self.assertEqual(len(self.activity.articles_approved_prepared), pass_test_data["articles_approved_prepared_len"])
+            self.assertEqual(success, pass_test_data["activity_success"], 
+                'failed success check in {comment}'.format(comment=pass_test_data.get("comment")))
+            self.assertEqual(len(self.activity.articles_approved), pass_test_data["articles_approved_len"], 
+                'failed articles_approved_len check in {comment}'.format(comment=pass_test_data.get("comment")))
+            self.assertEqual(len(self.activity.articles_approved_prepared), pass_test_data["articles_approved_prepared_len"], 
+                'failed articles_approved_prepared_len check in {comment}'.format(comment=pass_test_data.get("comment")))
 
     @data(
         ("article-commentary", None, None, False, "author_publication_email_Insight_to_VOR"),
@@ -351,7 +403,7 @@ class TestPublicationEmail(unittest.TestCase):
         editorial_article = instantiate_article('editorial', '10.7554/eLife.99999')
         correction_article = instantiate_article('correction', '10.7554/eLife.99998')
         retraction_article = instantiate_article('retraction', '10.7554/eLife.99997')
-        research_article = instantiate_article('research-article', research_article_doi, True, True)
+        research_article = instantiate_article('research-article', research_article_doi, False, True)
         articles = [editorial_article, correction_article, retraction_article, research_article]
         approved_articles = self.activity.approve_articles(articles)
         # one article will remain, the research-article

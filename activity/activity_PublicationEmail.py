@@ -418,6 +418,16 @@ class activity_PublicationEmail(Activity):
                 self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
 
+            # Check whether it is the first version of poa or vor
+            version = lax_provider.article_highest_version(article.doi_id, self.settings)
+            status = 'poa' if article.is_poa else 'vor'
+            is_first = lax_provider.article_first_by_status(article.doi_id, version, status, self.settings)
+            if is_first is not True:
+                log_info = "Removing because it is status %s, version %s and is not the first version %s" % (status, version, article.doi)
+                self.admin_email_content += "\n" + log_info
+                self.logger.info(log_info)
+                remove_article_doi.append(article.doi)
+
         # Can remove the articles now without affecting the loops using del
         for article in articles:
             if article.doi not in remove_article_doi:
