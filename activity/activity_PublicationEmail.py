@@ -12,6 +12,7 @@ import provider.ejp as ejplib
 import provider.article as articlelib
 import provider.s3lib as s3lib
 import provider.lax_provider as lax_provider
+import provider.email_provider as email_provider
 from activity.objects import Activity
 
 
@@ -548,16 +549,16 @@ class activity_PublicationEmail(Activity):
             authors=authors,
             format=format)
 
-        # Add the email to the email queue
-        self.db.elife_add_email_to_email_queue(
-            recipient_email=author.e_mail,
-            sender_email=headers["sender_email"],
-            email_type=headers["email_type"],
-            format=headers["format"],
-            subject=headers["subject"],
-            body=body,
-            doi_id=doi_id,
-            date_scheduled_timestamp=date_scheduled_timestamp)
+        message = email_provider.simple_message(
+            headers["sender_email"], author.e_mail, headers["subject"], body,
+            subtype=headers["format"], logger=self.logger)
+
+        email_provider.smtp_send_messages(
+            self.settings, messages=[message], logger=self.logger)
+        self.logger.info('Email sending details: article %s, email %s, to %s' %
+                         (doi_id, headers["email_type"], author.e_mail))
+
+        return True
 
     def get_to_folder_name(self):
         """

@@ -15,6 +15,7 @@ import activity.activity_PublicationEmail as activity_module
 from activity.activity_PublicationEmail import activity_PublicationEmail
 from activity.activity_PublicationEmail import Struct
 import tests.test_data as test_data
+from tests.classes_mock import FakeSMTPServer
 from tests.activity.helpers import instantiate_article
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeKey
@@ -209,6 +210,7 @@ class TestPublicationEmail(unittest.TestCase):
         """
         pass
 
+    @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('provider.lax_provider.article_versions')
     @patch.object(activity_PublicationEmail, 'download_files_from_s3_outbox')
     @patch.object(Templates, 'download_email_templates_from_s3')
@@ -225,7 +227,8 @@ class TestPublicationEmail(unittest.TestCase):
                          fake_article_get_folder_names_from_bucket,
                          fake_download_email_templates_from_s3,
                          fake_download_files_from_s3_outbox,
-                         mock_lax_provider_article_versions):
+                         mock_lax_provider_article_versions,
+                         fake_email_smtp_connect):
 
         directory = TempDirectory()
         fake_clean_tmp_dir = self.fake_clean_tmp_dir()
@@ -242,6 +245,7 @@ class TestPublicationEmail(unittest.TestCase):
             directory, self.activity.get_tmp_dir(), "authors.csv", "tests/test_data/ejp_author_file.csv")
         fake_find_latest_s3_file_name.return_value = mock.MagicMock()
         fake_elife_add_email_to_email_queue.return_value = mock.MagicMock()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
 
         # do_activity
         for pass_test_data in self.do_activity_passes:
