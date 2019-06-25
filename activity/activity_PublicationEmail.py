@@ -415,9 +415,12 @@ class activity_PublicationEmail(Activity):
             # Check whether it is the first version of poa or vor
             version = lax_provider.article_highest_version(article.doi_id, self.settings)
             status = 'poa' if article.is_poa else 'vor'
-            is_first = lax_provider.article_first_by_status(article.doi_id, version, status, self.settings)
+            is_first = lax_provider.article_first_by_status(
+                article.doi_id, version, status, self.settings)
             if is_first is not True:
-                log_info = "Removing because it is status %s, version %s and is not the first version %s" % (status, version, article.doi)
+                log_info = (
+                    "Removing because it is status %s, version %s and is not the first version %s"
+                    % (status, version, article.doi))
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
@@ -592,9 +595,9 @@ class activity_PublicationEmail(Activity):
         for article in self.insight_articles_to_remove_from_outbox:
             remove_doi_list.append(article.doi)
 
-        for k, v in self.xml_file_to_doi_map.items():
-            if k in remove_doi_list:
-                processed_file_names.append(v)
+        for key, value in self.xml_file_to_doi_map.items():
+            if key in remove_doi_list:
+                processed_file_names.append(value)
 
         for name in processed_file_names:
             filename = name.split(os.sep)[-1]
@@ -745,9 +748,10 @@ class Struct(object):
 
 
 def set_datestamp():
-    a = arrow.utcnow()
+    arrow_date = arrow.utcnow()
     date_stamp = (
-        str(a.datetime.year) + str(a.datetime.month).zfill(2) + str(a.datetime.day).zfill(2))
+        str(arrow_date.datetime.year) + str(arrow_date.datetime.month).zfill(2) + 
+        str(arrow_date.datetime.day).zfill(2))
     return date_stamp
 
 
