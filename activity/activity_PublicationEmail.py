@@ -6,7 +6,6 @@ import boto.swf
 import boto.s3
 from boto.s3.connection import S3Connection
 
-import provider.simpleDB as dblib
 import provider.templates as templatelib
 import provider.ejp as ejplib
 import provider.article as articlelib
@@ -29,9 +28,6 @@ class activity_PublicationEmail(Activity):
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
         self.description = "Queue emails to notify of a new article publication."
-
-        # Data provider
-        self.db = dblib.SimpleDB(settings)
 
         # Templates provider
         self.templates = templatelib.Templates(settings, self.get_tmp_dir())
@@ -81,9 +77,6 @@ class activity_PublicationEmail(Activity):
         """
 
         self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
-
-        # Connect to DB
-        db_conn = self.db.connect()
 
         try:
             # Download templates
@@ -664,8 +657,6 @@ class activity_PublicationEmail(Activity):
         After do_activity is finished, send emails to recipients
         on the status of the activity
         """
-        # Connect to DB
-        db_conn = self.db.connect()
 
         # Note: Create a verified sender email address, only done once
         # conn.verify_email_address(self.settings.ses_sender_email)
@@ -686,13 +677,13 @@ class activity_PublicationEmail(Activity):
 
         for email in recipient_email_list:
             # Add the email to the email queue
-            self.db.elife_add_email_to_email_queue(
-                recipient_email=email,
-                sender_email=sender_email,
-                email_type="PublicationEmail",
-                format="text",
-                subject=subject,
-                body=body)
+            message = email_provider.simple_message(
+                sender_email, email, subject, body, logger=self.logger)
+
+            email_provider.smtp_send_messages(
+                self.settings, messages=[message], logger=self.logger)
+            self.logger.info('Email sending details: admin email, email %s, to %s' %
+                             ("PublicationEmail", email))
 
         return True
 

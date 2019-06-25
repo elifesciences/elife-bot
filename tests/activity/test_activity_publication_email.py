@@ -10,7 +10,6 @@ from ddt import ddt, data, unpack
 from provider.templates import Templates
 from provider.article import article
 from provider.ejp import EJP
-from provider.simpleDB import SimpleDB
 import activity.activity_PublicationEmail as activity_module
 from activity.activity_PublicationEmail import activity_PublicationEmail
 from activity.activity_PublicationEmail import Struct
@@ -217,11 +216,9 @@ class TestPublicationEmail(unittest.TestCase):
     @patch.object(article, 'get_folder_names_from_bucket')
     @patch.object(EJP, 'get_s3key')
     @patch.object(EJP, 'find_latest_s3_file_name')
-    @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch.object(activity_PublicationEmail, 'clean_tmp_dir')
     @patch.object(activity_PublicationEmail, 'clean_outbox')
     def test_do_activity(self, fake_clean_outbox, fake_clean_tmp_dir,
-                         fake_elife_add_email_to_email_queue,
                          fake_find_latest_s3_file_name,
                          fake_ejp_get_s3key,
                          fake_article_get_folder_names_from_bucket,
@@ -244,7 +241,6 @@ class TestPublicationEmail(unittest.TestCase):
         fake_ejp_get_s3key.return_value = self.fake_ejp_get_s3key(
             directory, self.activity.get_tmp_dir(), "authors.csv", "tests/test_data/ejp_author_file.csv")
         fake_find_latest_s3_file_name.return_value = mock.MagicMock()
-        fake_elife_add_email_to_email_queue.return_value = mock.MagicMock()
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
 
         # do_activity
