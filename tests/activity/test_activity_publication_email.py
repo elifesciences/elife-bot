@@ -378,8 +378,8 @@ class TestPublicationEmail(unittest.TestCase):
         self.assertEqual(article_object.pdf_cover_link, "https://localhost.org/download-your-cover/00353")
 
 
-    @patch.object(activity_PublicationEmail, 'queue_author_email')
-    def test_send_email_bad_authors(self, fake_queue_author_email):
+    @patch.object(activity_PublicationEmail, 'send_author_email')
+    def test_send_email_bad_authors(self, fake_send_author_email):
 
         failed_authors = []
         # None

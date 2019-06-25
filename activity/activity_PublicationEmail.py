@@ -499,15 +499,6 @@ class activity_PublicationEmail(Activity):
             self.admin_email_content += "\n" + log_info
             return False
 
-        # Get the article published date timestamp
-        pub_date_timestamp = None
-        date_scheduled_timestamp = 0
-        try:
-            pub_date_timestamp = article.pub_date_timestamp
-            date_scheduled_timestamp = pub_date_timestamp
-        except:
-            pass
-
         try:
             # Now we can actually queue the email to be sent
 
@@ -518,24 +509,23 @@ class activity_PublicationEmail(Activity):
             self.admin_email_content += "\n" + log_info
             self.logger.info(log_info)
 
-            self.queue_author_email(
+            self.send_author_email(
                 email_type=email_type,
                 author=author,
                 headers=headers,
                 article=article,
                 authors=authors,
                 doi_id=elife_id,
-                date_scheduled_timestamp=date_scheduled_timestamp,
                 format="html")
 
             return True
         except Exception:
             self.logger.exception("An error has occurred on send_email method")
 
-    def queue_author_email(self, email_type, author, headers, article, authors, doi_id,
-                           date_scheduled_timestamp, format="html"):
+    def send_author_email(self, email_type, author, headers, article, authors, doi_id,
+                          format="html"):
         """
-        Format the email body and add it to the live queue
+        Format the email body and send the email by SMTP
         Only call this to send actual emails!
         """
         body = self.templates.get_email_body(
@@ -750,7 +740,7 @@ class Struct(object):
 def set_datestamp():
     arrow_date = arrow.utcnow()
     date_stamp = (
-        str(arrow_date.datetime.year) + str(arrow_date.datetime.month).zfill(2) + 
+        str(arrow_date.datetime.year) + str(arrow_date.datetime.month).zfill(2) +
         str(arrow_date.datetime.day).zfill(2))
     return date_stamp
 
