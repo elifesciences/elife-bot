@@ -516,14 +516,14 @@ class activity_PublicationEmail(Activity):
                 article=article,
                 authors=authors,
                 doi_id=elife_id,
-                format="html")
+                subtype="html")
 
             return True
         except Exception:
             self.logger.exception("An error has occurred on send_email method")
 
     def send_author_email(self, email_type, author, headers, article, authors, doi_id,
-                          format="html"):
+                          subtype="html"):
         """
         Format the email body and send the email by SMTP
         Only call this to send actual emails!
@@ -533,7 +533,7 @@ class activity_PublicationEmail(Activity):
             author=author,
             article=article,
             authors=authors,
-            format=format)
+            format=subtype)
 
         message = email_provider.simple_message(
             headers["sender_email"], author.e_mail, headers["subject"], body,
