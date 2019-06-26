@@ -2,7 +2,6 @@
 
 import os
 import unittest
-import time
 import shutil
 from testfixtures import TempDirectory
 from mock import mock, patch
@@ -176,9 +175,6 @@ class TestPublicationEmail(unittest.TestCase):
             shutil.copy(source_doc, dest_doc)
         self.activity.templates.email_templates_warmed = templates_warmed
 
-    def fake_article_get_folder_names_from_bucket(self):
-        return []
-
     def fake_ejp_get_s3key(self, directory, to_dir, document, source_doc):
         """
         EJP data do two things, copy the CSV file to where it should be
@@ -186,8 +182,8 @@ class TestPublicationEmail(unittest.TestCase):
         """
         dest_doc = os.path.join(to_dir, document)
         shutil.copy(source_doc, dest_doc)
-        with open(source_doc, "rb") as fp:
-            return FakeKey(directory, document, fp.read())
+        with open(source_doc, "rb") as open_file:
+            return FakeKey(directory, document, open_file.read())
 
     def fake_clean_tmp_dir(self):
         """
@@ -224,9 +220,10 @@ class TestPublicationEmail(unittest.TestCase):
         self.activity.related_articles = [related_article]
 
         # Basic fake data for all activity passes
-        fake_article_get_folder_names_from_bucket.return_value = self.fake_article_get_folder_names_from_bucket()
+        fake_article_get_folder_names_from_bucket.return_value = []
         fake_ejp_get_s3key.return_value = self.fake_ejp_get_s3key(
-            directory, self.activity.get_tmp_dir(), "authors.csv", "tests/test_data/ejp_author_file.csv")
+            directory, self.activity.get_tmp_dir(), "authors.csv",
+            "tests/test_data/ejp_author_file.csv")
         fake_find_latest_s3_file_name.return_value = mock.MagicMock()
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
 
@@ -244,12 +241,20 @@ class TestPublicationEmail(unittest.TestCase):
 
             success = self.activity.do_activity(pass_test_data["input_data"])
 
-            self.assertEqual(success, pass_test_data["activity_success"], 
-                'failed success check in {comment}'.format(comment=pass_test_data.get("comment")))
-            self.assertEqual(len(self.activity.articles_approved), pass_test_data["articles_approved_len"], 
-                'failed articles_approved_len check in {comment}'.format(comment=pass_test_data.get("comment")))
-            self.assertEqual(len(self.activity.articles_approved_prepared), pass_test_data["articles_approved_prepared_len"], 
-                'failed articles_approved_prepared_len check in {comment}'.format(comment=pass_test_data.get("comment")))
+            self.assertEqual(
+                success, pass_test_data["activity_success"],
+                'failed success check in {comment}'.format(
+                    comment=pass_test_data.get("comment")))
+            self.assertEqual(
+                len(self.activity.articles_approved),
+                pass_test_data["articles_approved_len"],
+                'failed articles_approved_len check in {comment}'.format(
+                    comment=pass_test_data.get("comment")))
+            self.assertEqual(
+                len(self.activity.articles_approved_prepared),
+                pass_test_data["articles_approved_prepared_len"],
+                'failed articles_approved_prepared_len check in {comment}'.format(
+                    comment=pass_test_data.get("comment")))
 
     @data(
         ("article-commentary", None, None, False, "author_publication_email_Insight_to_VOR"),
@@ -269,7 +274,6 @@ class TestPublicationEmail(unittest.TestCase):
     def fake_authors(self, article_id=3):
         return self.activity.get_authors(article_id, None, "tests/test_data/ejp_author_file.csv")
 
-
     @data(
         (None, None, None, "Author", "author01@example.com"),
         (None, True, None, "Features", "features_team@example.org"),
@@ -280,12 +284,11 @@ class TestPublicationEmail(unittest.TestCase):
     def test_choose_recipient_authors(self, article_type, feature_article, related_insight_article,
                                       expected_0_first_nm, expected_0_e_mail):
         authors = self.fake_authors()
-        recipient_authors = self.activity.choose_recipient_authors(authors, article_type,
-                                                                   feature_article, related_insight_article)
+        recipient_authors = self.activity.choose_recipient_authors(
+            authors, article_type, feature_article, related_insight_article)
         if recipient_authors:
             self.assertEqual(recipient_authors[0].first_nm, expected_0_first_nm)
             self.assertEqual(recipient_authors[0].e_mail, expected_0_e_mail)
-
 
     @patch.object(Templates, 'download_email_templates_from_s3')
     def test_template_get_email_headers_00013(self, fake_download_email_templates_from_s3):
@@ -303,13 +306,18 @@ class TestPublicationEmail(unittest.TestCase):
         feature_article = False
         related_insight_article = None
 
-        recipient_authors = self.activity.choose_recipient_authors(authors, article_type,
-                                                                   feature_article, related_insight_article)
+        recipient_authors = self.activity.choose_recipient_authors(
+            authors, article_type, feature_article, related_insight_article)
         author = recipient_authors[2]
 
         format = "html"
 
-        expected_headers = {'format': 'html', u'email_type': u'author_publication_email_VOR_no_POA', u'sender_email': u'press@elifesciences.org', u'subject': u'Authoré, Your eLife paper is now online'}
+        expected_headers = {
+            'format': 'html',
+            u'email_type': u'author_publication_email_VOR_no_POA',
+            u'sender_email': u'press@elifesciences.org',
+            u'subject': u'Authoré, Your eLife paper is now online'
+            }
 
         body = self.activity.templates.get_email_headers(
             email_type=email_type,
@@ -318,8 +326,6 @@ class TestPublicationEmail(unittest.TestCase):
             format=format)
 
         self.assertEqual(body, expected_headers)
-
-
 
     @patch.object(Templates, 'download_email_templates_from_s3')
     def test_template_get_email_body_00353(self, fake_download_email_templates_from_s3):
@@ -338,13 +344,20 @@ class TestPublicationEmail(unittest.TestCase):
         feature_article = True
         related_insight_article = None
 
-        recipient_authors = self.activity.choose_recipient_authors(authors, article_type,
-                                                                   feature_article, related_insight_article)
+        recipient_authors = self.activity.choose_recipient_authors(
+            authors, article_type, feature_article, related_insight_article)
         author = recipient_authors[0]
 
         format = "html"
 
-        expected_body = 'Header\n<p>Dear Features</p>\n"A good life"\n<a href="https://doi.org/10.7554/eLife.00353">read it</a>\n<a href="http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2FeLife.00353+%40eLife">social media</a>\n<a href="https://lens.elifesciences.org/00353">online viewer</a>\n<a href="https://localhost.org/download-your-cover/00353">pdf cover</a>\n\nauthor01@example.com\n\nauthor02@example.org\n\nauthor03@example.com\n'
+        expected_body = (
+            'Header\n<p>Dear Features</p>\n"A good life"\n' +
+            '<a href="https://doi.org/10.7554/eLife.00353">read it</a>\n' +
+            '<a href="http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org%2F10.7554%2F' +
+            'eLife.00353+%40eLife">social media</a>\n' +
+            '<a href="https://lens.elifesciences.org/00353">online viewer</a>\n' +
+            '<a href="https://localhost.org/download-your-cover/00353">pdf cover</a>\n\n' +
+            'author01@example.com\n\nauthor02@example.org\n\nauthor03@example.com\n')
 
         body = self.activity.templates.get_email_body(
             email_type=email_type,
@@ -359,9 +372,10 @@ class TestPublicationEmail(unittest.TestCase):
 
         article_object = article()
         article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
-        article_object.pdf_cover_link = article_object.get_pdf_cover_page(article_object.doi_id, self.activity.settings, self.activity.logger)
-        self.assertEqual(article_object.pdf_cover_link, "https://localhost.org/download-your-cover/00353")
-
+        article_object.pdf_cover_link = article_object.get_pdf_cover_page(
+            article_object.doi_id, self.activity.settings, self.activity.logger)
+        self.assertEqual(article_object.pdf_cover_link,
+                         "https://localhost.org/download-your-cover/00353")
 
     @patch.object(activity_PublicationEmail, 'send_author_email')
     def test_send_email_bad_authors(self, fake_send_author_email):
@@ -383,12 +397,14 @@ class TestPublicationEmail(unittest.TestCase):
     @patch('provider.lax_provider.article_versions')
     def test_removes_articles_based_on_article_type(self, mock_lax_provider_article_versions):
         "test removing articles based on article type"
-        mock_lax_provider_article_versions.return_value = 200, test_data.lax_article_versions_response_data
+        mock_lax_provider_article_versions.return_value = (
+            200, test_data.lax_article_versions_response_data)
         research_article_doi = '10.7554/eLife.99996'
         editorial_article = instantiate_article('editorial', '10.7554/eLife.99999')
         correction_article = instantiate_article('correction', '10.7554/eLife.99998')
         retraction_article = instantiate_article('retraction', '10.7554/eLife.99997')
-        research_article = instantiate_article('research-article', research_article_doi, False, True)
+        research_article = instantiate_article(
+            'research-article', research_article_doi, False, True)
         articles = [editorial_article, correction_article, retraction_article, research_article]
         approved_articles = self.activity.approve_articles(articles)
         # one article will remain, the research-article
