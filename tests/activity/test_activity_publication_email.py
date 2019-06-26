@@ -120,15 +120,28 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_prepared_len": 0})
 
         self.do_activity_passes.append({
-            "comment": "article-commentary",
+            "comment": "article-commentary with a related article",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
             "templates_warmed": True,
             "article_xml_filenames": ["elife-18753-v1.xml"],
+            "related_article": "tests/test_data/elife-15747-v2.xml",
             "article_id": "18753",
             "activity_success": True,
             "articles_approved_len": 1,
             "articles_approved_prepared_len": 1})
+
+        self.do_activity_passes.append({
+            "comment": "article-commentary, related article cannot be found",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+            "input_data": {},
+            "templates_warmed": True,
+            "article_xml_filenames": ["elife-18753-v1.xml"],
+            "related_article": None,
+            "article_id": "18753",
+            "activity_success": True,
+            "articles_approved_len": 1,
+            "articles_approved_prepared_len": 0})
 
         self.do_activity_passes.append({
             "comment": "article-commentary plus its matching insight",
@@ -196,11 +209,6 @@ class TestPublicationEmail(unittest.TestCase):
         fake_clean_tmp_dir.return_value = None
         fake_storage_context.return_value = FakeStorageContext()
 
-        # Prime the related article property for when needed
-        related_article = article()
-        related_article.parse_article_file("tests/test_data/elife-15747-v2.xml")
-        self.activity.related_articles = [related_article]
-
         # Basic fake data for all activity passes
         fake_article_get_folder_names.return_value = []
         fake_ejp_get_s3key.return_value = fake_ejp_get_s3key(
@@ -211,6 +219,12 @@ class TestPublicationEmail(unittest.TestCase):
 
         # do_activity
         for pass_test_data in self.do_activity_passes:
+
+            # Prime the related article property for when needed
+            if pass_test_data.get("related_article"):
+                related_article = article()
+                related_article.parse_article_file(pass_test_data.get("related_article"))
+                self.activity.related_articles = [related_article]
 
             fake_article_versions.return_value = (
                 200, pass_test_data.get("lax_article_versions_response_data"))
@@ -237,6 +251,9 @@ class TestPublicationEmail(unittest.TestCase):
                 pass_test_data["articles_approved_prepared_len"],
                 'failed articles_approved_prepared_len check in {comment}'.format(
                     comment=pass_test_data.get("comment")))
+
+            # reset related_articles
+            self.activity.related_articles = []
 
     @data(
         ("article-commentary", None, None, False, "author_publication_email_Insight_to_VOR"),
