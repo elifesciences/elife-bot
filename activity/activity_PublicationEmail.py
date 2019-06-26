@@ -124,7 +124,7 @@ class activity_PublicationEmail(Activity):
                     feature_article=is_feature_article(article),
                     related_insight_article=article.related_insight_article)
 
-                if recipient_authors is None:
+                if not recipient_authors:
                     self.log_cannot_find_authors(article.doi)
                 else:
                     # Good, we can send emails
