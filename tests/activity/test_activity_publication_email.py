@@ -17,7 +17,7 @@ import tests.test_data as test_data
 from tests.classes_mock import FakeSMTPServer
 from tests.activity.helpers import instantiate_article
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeKey
+from tests.activity.classes_mock import FakeLogger, FakeKey, FakeStorageContext
 
 
 LAX_ARTICLE_VERSIONS_RESPONSE_DATA_1 = test_data.lax_article_versions_response_data[:1]
@@ -176,18 +176,6 @@ class TestPublicationEmail(unittest.TestCase):
             shutil.copy(source_doc, dest_doc)
         self.activity.templates.email_templates_warmed = templates_warmed
 
-    def fake_download_files_from_s3_outbox(self, xml_filenames, to_dir):
-        xml_filename_paths = []
-        for filename in xml_filenames:
-            source_doc = "tests/test_data/" + filename
-            dest_doc = os.path.join(to_dir, filename)
-            try:
-                shutil.copy(source_doc, dest_doc)
-                xml_filename_paths.append(dest_doc)
-            except IOError:
-                pass
-        return xml_filename_paths
-
     def fake_article_get_folder_names_from_bucket(self):
         return []
 
@@ -211,25 +199,24 @@ class TestPublicationEmail(unittest.TestCase):
 
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('provider.lax_provider.article_versions')
-    @patch.object(activity_PublicationEmail, 'download_files_from_s3_outbox')
     @patch.object(Templates, 'download_email_templates_from_s3')
     @patch.object(article, 'get_folder_names_from_bucket')
     @patch.object(EJP, 'get_s3key')
     @patch.object(EJP, 'find_latest_s3_file_name')
     @patch.object(activity_PublicationEmail, 'clean_tmp_dir')
-    @patch.object(activity_PublicationEmail, 'clean_outbox')
-    def test_do_activity(self, fake_clean_outbox, fake_clean_tmp_dir,
+    @patch.object(FakeStorageContext, 'list_resources')
+    @patch('activity.activity_PublicationEmail.storage_context')
+    def test_do_activity(self, fake_storage_context, fake_list_resources, fake_clean_tmp_dir,
                          fake_find_latest_s3_file_name,
                          fake_ejp_get_s3key,
                          fake_article_get_folder_names_from_bucket,
                          fake_download_email_templates_from_s3,
-                         fake_download_files_from_s3_outbox,
                          mock_lax_provider_article_versions,
                          fake_email_smtp_connect):
 
         directory = TempDirectory()
         fake_clean_tmp_dir = self.fake_clean_tmp_dir()
-        fake_clean_outbox.return_value = None
+        fake_storage_context.return_value = FakeStorageContext()
 
         # Prime the related article property for when needed
         related_article = article()
@@ -253,9 +240,7 @@ class TestPublicationEmail(unittest.TestCase):
             fake_download_email_templates_from_s3 = self.fake_download_email_templates_from_s3(
                 self.activity.get_tmp_dir(), pass_test_data["templates_warmed"])
 
-            fake_download_files_from_s3_outbox.return_value = self.fake_download_files_from_s3_outbox(
-                pass_test_data["article_xml_filenames"], self.activity.get_tmp_dir())
-
+            fake_list_resources.return_value = pass_test_data["article_xml_filenames"]
 
             success = self.activity.do_activity(pass_test_data["input_data"])
 

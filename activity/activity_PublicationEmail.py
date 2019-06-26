@@ -1,15 +1,12 @@
 import json
 import time
 import os
+import re
 import arrow
-import boto.swf
-import boto.s3
-from boto.s3.connection import S3Connection
-
 import provider.templates as templatelib
 import provider.ejp as ejplib
 import provider.article as articlelib
-import provider.s3lib as s3lib
+from provider.storage_provider import storage_context
 import provider.lax_provider as lax_provider
 import provider.email_provider as email_provider
 from activity.objects import Activity
@@ -143,10 +140,10 @@ class activity_PublicationEmail(Activity):
             # Send email to admins with the status
             self.activity_status = True
             self.send_admin_email()
-
-            return True
         except Exception:
             self.logger.exception("An error occured on do_activity method.")
+
+        return True
 
     def log_cannot_find_authors(self, doi):
         log_info = ("Leaving article in the outbox because we cannot " +
@@ -237,43 +234,30 @@ class activity_PublicationEmail(Activity):
 
     def download_files_from_s3_outbox(self):
         """
-        Connect to the S3 bucket, and from the outbox folder,
+        From the outbox folder in the S3 bucket,
         download the .xml to be processed
         """
         filenames = []
-
-        file_extensions = []
-        file_extensions.append(".xml")
-
         bucket_name = self.publish_bucket
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + bucket_name + "/" + self.outbox_folder
+        files_in_bucket = storage.list_resources(orig_resource)
 
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=self.outbox_folder,
-            file_extensions=file_extensions)
-
-        for name in s3_key_names:
+        for name in files_in_bucket:
             # Download objects from S3 and save to disk
-            s3_key = bucket.get_key(name)
-
+            # Only need to copy .xml files
+            if not re.search(".*\\.xml$", name):
+                continue
             filename = name.split("/")[-1]
-
-            # Download to the activity temp directory
             dirname = self.get_tmp_dir()
-
-            filename_plus_path = dirname + os.sep + filename
-
-            mode = "wb"
-            f = open(filename_plus_path, mode)
-            s3_key.get_contents_to_file(f)
-            f.close()
-
-            filenames.append(filename_plus_path)
-
+            if dirname:
+                filename_plus_path = dirname + os.sep + filename
+                with open(filename_plus_path, 'wb') as open_file:
+                    storage_resource_origin = orig_resource + name
+                    storage.get_resource_to_file(storage_resource_origin, open_file)
+                filenames.append(filename_plus_path)
         return filenames
 
     def parse_article_xml(self, article_xml_filenames):
@@ -568,14 +552,8 @@ class activity_PublicationEmail(Activity):
         # Move only the published files from the S3 outbox to the published folder
         bucket_name = self.publish_bucket
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-
-        # Concatenate the expected S3 outbox file names
-        s3_key_names = []
-
         # Compile a list of the published file names
+        s3_key_names = []
         remove_doi_list = []
         processed_file_names = []
         for article in self.articles_approved_prepared:
@@ -594,25 +572,24 @@ class activity_PublicationEmail(Activity):
             s3_key_name = self.outbox_folder + filename
             s3_key_names.append(s3_key_name)
 
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+
         for name in s3_key_names:
-            # Download objects from S3 and save to disk
-
             # Do not delete the from_folder itself, if it is in the list
-            if name != self.outbox_folder:
-                filename = name.split("/")[-1]
-                new_s3_key_name = to_folder + filename
+            if name == self.outbox_folder:
+                continue
+            filename = name.split("/")[-1]
+            new_s3_key_name = to_folder + filename
 
-                # First copy
-                new_s3_key = None
-                try:
-                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
-                except:
-                    pass
+            orig_resource = storage_provider + bucket_name + "/" + s3_key_name
+            dest_resource = storage_provider + bucket_name + "/" + new_s3_key_name
 
-                # Then delete the old key if successful
-                if isinstance(new_s3_key, boto.s3.key.Key):
-                    old_s3_key = bucket.get_key(name)
-                    old_s3_key.delete()
+            # First copy
+            storage.copy_resource(orig_resource, dest_resource)
+
+            # Then delete the old key if successful
+            storage.delete_resource(orig_resource)
 
     def get_authors(self, doi_id=None, corresponding=None, local_document=None):
         """
