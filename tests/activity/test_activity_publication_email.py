@@ -175,24 +175,6 @@ class TestPublicationEmail(unittest.TestCase):
             shutil.copy(source_doc, dest_doc)
         self.activity.templates.email_templates_warmed = templates_warmed
 
-    def fake_ejp_get_s3key(self, directory, to_dir, document, source_doc):
-        """
-        EJP data do two things, copy the CSV file to where it should be
-        and also set the fake S3 key object
-        """
-        dest_doc = os.path.join(to_dir, document)
-        shutil.copy(source_doc, dest_doc)
-        with open(source_doc, "rb") as open_file:
-            return FakeKey(directory, document, open_file.read())
-
-    def fake_clean_tmp_dir(self):
-        """
-        Disable the default clean_tmp_dir() when do_activity runs
-        so tests can introspect the files first
-        Then can run clean_tmp_dir() in the tearDown later
-        """
-        pass
-
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('provider.lax_provider.article_versions')
     @patch.object(Templates, 'download_email_templates_from_s3')
@@ -205,13 +187,13 @@ class TestPublicationEmail(unittest.TestCase):
     def test_do_activity(self, fake_storage_context, fake_list_resources, fake_clean_tmp_dir,
                          fake_find_latest_s3_file_name,
                          fake_ejp_get_s3key,
-                         fake_article_get_folder_names_from_bucket,
-                         fake_download_email_templates_from_s3,
-                         mock_lax_provider_article_versions,
+                         fake_article_get_folder_names,
+                         fake_download_email_templates,
+                         fake_article_versions,
                          fake_email_smtp_connect):
 
         directory = TempDirectory()
-        fake_clean_tmp_dir = self.fake_clean_tmp_dir()
+        fake_clean_tmp_dir.return_value = None
         fake_storage_context.return_value = FakeStorageContext()
 
         # Prime the related article property for when needed
@@ -220,8 +202,8 @@ class TestPublicationEmail(unittest.TestCase):
         self.activity.related_articles = [related_article]
 
         # Basic fake data for all activity passes
-        fake_article_get_folder_names_from_bucket.return_value = []
-        fake_ejp_get_s3key.return_value = self.fake_ejp_get_s3key(
+        fake_article_get_folder_names.return_value = []
+        fake_ejp_get_s3key.return_value = fake_ejp_get_s3key(
             directory, self.activity.get_tmp_dir(), "authors.csv",
             "tests/test_data/ejp_author_file.csv")
         fake_find_latest_s3_file_name.return_value = mock.MagicMock()
@@ -230,12 +212,12 @@ class TestPublicationEmail(unittest.TestCase):
         # do_activity
         for pass_test_data in self.do_activity_passes:
 
-            mock_lax_provider_article_versions.return_value = (
+            fake_article_versions.return_value = (
                 200, pass_test_data.get("lax_article_versions_response_data"))
-            print(pass_test_data.get("lax_article_versions_response_data"))
 
-            fake_download_email_templates_from_s3 = self.fake_download_email_templates_from_s3(
-                self.activity.get_tmp_dir(), pass_test_data["templates_warmed"])
+            fake_download_email_templates.return_value = (
+                self.fake_download_email_templates_from_s3(
+                    self.activity.get_tmp_dir(), pass_test_data["templates_warmed"]))
 
             fake_list_resources.return_value = pass_test_data["article_xml_filenames"]
 
@@ -291,9 +273,9 @@ class TestPublicationEmail(unittest.TestCase):
             self.assertEqual(recipient_authors[0].e_mail, expected_0_e_mail)
 
     @patch.object(Templates, 'download_email_templates_from_s3')
-    def test_template_get_email_headers_00013(self, fake_download_email_templates_from_s3):
+    def test_template_get_email_headers_00013(self, fake_download_email_templates):
 
-        fake_download_email_templates_from_s3 = self.fake_download_email_templates_from_s3(
+        fake_download_email_templates.return_value = self.fake_download_email_templates_from_s3(
             self.activity.get_tmp_dir(), True)
 
         email_type = "author_publication_email_VOR_no_POA"
@@ -310,7 +292,7 @@ class TestPublicationEmail(unittest.TestCase):
             authors, article_type, feature_article, related_insight_article)
         author = recipient_authors[2]
 
-        format = "html"
+        email_format = "html"
 
         expected_headers = {
             'format': 'html',
@@ -323,14 +305,14 @@ class TestPublicationEmail(unittest.TestCase):
             email_type=email_type,
             author=author,
             article=article_object,
-            format=format)
+            format=email_format)
 
         self.assertEqual(body, expected_headers)
 
     @patch.object(Templates, 'download_email_templates_from_s3')
-    def test_template_get_email_body_00353(self, fake_download_email_templates_from_s3):
+    def test_template_get_email_body_00353(self, fake_download_email_templates):
 
-        fake_download_email_templates_from_s3 = self.fake_download_email_templates_from_s3(
+        fake_download_email_templates.return_value = self.fake_download_email_templates_from_s3(
             self.activity.get_tmp_dir(), True)
 
         email_type = "author_publication_email_Feature"
@@ -348,7 +330,7 @@ class TestPublicationEmail(unittest.TestCase):
             authors, article_type, feature_article, related_insight_article)
         author = recipient_authors[0]
 
-        format = "html"
+        email_format = "html"
 
         expected_body = (
             'Header\n<p>Dear Features</p>\n"A good life"\n' +
@@ -364,7 +346,7 @@ class TestPublicationEmail(unittest.TestCase):
             author=author,
             article=article_object,
             authors=authors,
-            format=format)
+            format=email_format)
 
         self.assertEqual(body, expected_body)
 
@@ -379,7 +361,7 @@ class TestPublicationEmail(unittest.TestCase):
 
     @patch.object(activity_PublicationEmail, 'send_author_email')
     def test_send_email_bad_authors(self, fake_send_author_email):
-
+        fake_send_author_email.return_value = None
         failed_authors = []
         # None
         failed_authors.append(None)
@@ -395,10 +377,9 @@ class TestPublicationEmail(unittest.TestCase):
             self.assertEqual(result, False)
 
     @patch('provider.lax_provider.article_versions')
-    def test_removes_articles_based_on_article_type(self, mock_lax_provider_article_versions):
+    def test_removes_articles_based_on_article_type(self, fake_article_versions):
         "test removing articles based on article type"
-        mock_lax_provider_article_versions.return_value = (
-            200, test_data.lax_article_versions_response_data)
+        fake_article_versions.return_value = 200, test_data.lax_article_versions_response_data
         research_article_doi = '10.7554/eLife.99996'
         editorial_article = instantiate_article('editorial', '10.7554/eLife.99999')
         correction_article = instantiate_article('correction', '10.7554/eLife.99998')
@@ -410,6 +391,17 @@ class TestPublicationEmail(unittest.TestCase):
         # one article will remain, the research-article
         self.assertEqual(len(approved_articles), 1)
         self.assertEqual(approved_articles[0].doi, research_article_doi)
+
+
+def fake_ejp_get_s3key(directory, to_dir, document, source_doc):
+    """
+    EJP data do two things, copy the CSV file to where it should be
+    and also set the fake S3 key object
+    """
+    dest_doc = os.path.join(to_dir, document)
+    shutil.copy(source_doc, dest_doc)
+    with open(source_doc, "rb") as open_file:
+        return FakeKey(directory, document, open_file.read())
 
 
 if __name__ == '__main__':
