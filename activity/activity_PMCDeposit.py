@@ -14,6 +14,7 @@ from boto.s3.connection import S3Connection
 
 import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo, file_parts
+from provider.article_processing import list_dir, file_list
 from elifetools import parseJATS as parser
 from elifetools import xmlio
 from activity.objects import Activity
@@ -91,7 +92,7 @@ class activity_PMCDeposit(Activity):
         verified = None
         # Check for an empty folder and respond true
         #  if we do not do this it will continue to attempt this activity
-        if self.file_list(self.INPUT_DIR):
+        if file_list(self.INPUT_DIR):
             if self.logger:
                 self.logger.info('folder was empty in PMCDeposit: ' + self.INPUT_DIR)
             verified = True
@@ -100,7 +101,7 @@ class activity_PMCDeposit(Activity):
         if self.logger:
             self.logger.info('processing files in folder ' + folder)
 
-        self.unzip_article_files(self.file_list(folder))
+        self.unzip_article_files(file_list(folder))
 
         (fid, status, version, volume) = self.profile_article(self.document)
 
@@ -132,7 +133,7 @@ class activity_PMCDeposit(Activity):
 
         ftp_status = None
         if verified and self.zip_file_name:
-            ftp_status = self.ftp_to_endpoint(self.file_list(self.ZIP_DIR), self.FTP_SUBDIR, passive=True)
+            ftp_status = self.ftp_to_endpoint(file_list(self.ZIP_DIR), self.FTP_SUBDIR, passive=True)
 
             if ftp_status is True:
                 self.upload_article_zip_to_s3()
@@ -260,24 +261,15 @@ class activity_PMCDeposit(Activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
 
-        for file_name in self.file_list(self.ZIP_DIR):
+        for file_name in file_list(self.ZIP_DIR):
             s3_key_name = self.published_zip_folder + '/' + self.file_name_from_name(file_name)
             s3_key = boto.s3.key.Key(bucket)
             s3_key.key = s3_key_name
             s3_key.set_contents_from_filename(file_name, replace=True)
 
-    def list_dir(self, dir_name):
-        dir_list = os.listdir(dir_name)
-        dir_list = map(lambda item: dir_name + os.sep + item, dir_list)
-        return dir_list
-
     def folder_list(self, dir_name):
-        dir_list = self.list_dir(dir_name)
+        dir_list = list_dir(dir_name)
         return list(filter(lambda item: os.path.isdir(item), dir_list))
-
-    def file_list(self, dir_name):
-        dir_list = self.list_dir(dir_name)
-        return list(filter(lambda item: os.path.isfile(item), dir_list))
 
     def folder_name_from_name(self, input_dir, file_name):
         folder_name = file_name.split(input_dir)[1]
@@ -318,9 +310,9 @@ class activity_PMCDeposit(Activity):
     def approve_file(self, file_name):
         return True
 
-    def unzip_article_files(self, file_list):
+    def unzip_article_files(self, article_file_list):
 
-        for file_name in file_list:
+        for file_name in article_file_list:
             if self.approve_file(file_name):
                 if self.logger:
                     self.logger.info("unzipping or moving file " + file_name)
@@ -349,7 +341,7 @@ class activity_PMCDeposit(Activity):
         Pre-PPP files will not have a version number, for before PPP is launched
         """
         # Get a list of all files
-        dirfiles = self.file_list(self.TMP_DIR)
+        dirfiles = file_list(self.TMP_DIR)
 
         file_name_map = self.stripped_file_name_map(dirfiles)
 
@@ -445,7 +437,7 @@ class activity_PMCDeposit(Activity):
         new_zipfile = zipfile.ZipFile(self.ZIP_DIR + os.sep + zip_file_name,
                                       'w', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-        dirfiles = self.file_list(self.OUTPUT_DIR)
+        dirfiles = file_list(self.OUTPUT_DIR)
 
         for df in dirfiles:
             filename = df.split(os.sep)[-1]
@@ -492,11 +484,11 @@ class activity_PMCDeposit(Activity):
         """
         file_name = None
 
-        for file_name in self.file_list(self.TMP_DIR):
+        for file_name in file_list(self.TMP_DIR):
             if file_name.endswith('.xml'):
                 return file_name
         if not file_name:
-            for file_name in self.file_list(self.OUTPUT_DIR):
+            for file_name in file_list(self.OUTPUT_DIR):
                 if file_name.endswith('.xml'):
                     return file_name
 
