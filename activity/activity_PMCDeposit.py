@@ -485,11 +485,13 @@ class activity_PMCDeposit(Activity):
         file_name = None
 
         for file_name in file_list(self.TMP_DIR):
-            if file_name.endswith('.xml'):
+            info = ArticleInfo(self.file_name_from_name(file_name))
+            if info.file_type == 'ArticleXML':
                 return file_name
         if not file_name:
             for file_name in file_list(self.OUTPUT_DIR):
-                if file_name.endswith('.xml'):
+                info = ArticleInfo(self.file_name_from_name(file_name))
+                if info.file_type == 'ArticleXML':
                     return file_name
 
         return file_name
