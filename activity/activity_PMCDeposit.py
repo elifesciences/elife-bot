@@ -136,10 +136,7 @@ class activity_PMCDeposit(Activity):
                 self.upload_article_zip_to_s3()
 
         # Return the activity result, True or False
-        if verified is True and ftp_status is True:
-            result = True
-        else:
-            result = False
+        result = bool(verified and ftp_status)
 
         # Clean up disk
         self.clean_tmp_dir()
