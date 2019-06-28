@@ -19,6 +19,7 @@ class TestPMCDeposit(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
         self.activity = activity_PMCDeposit(settings_mock, fake_logger, None, None, None)
+        self.activity.make_activity_directories()
 
         self.do_activity_passes = []
 
@@ -50,14 +51,14 @@ class TestPMCDeposit(unittest.TestCase):
     def fake_download_files_from_s3(self, document):
         source_doc = "tests/test_data/pmc/" + document
         #print source_doc
-        dest_doc = self.activity.INPUT_DIR + os.sep + document
+        dest_doc = self.activity.directories.get("INPUT_DIR") + os.sep + document
         #print dest_doc
         shutil.copy(source_doc, dest_doc)
 
 
     def zip_file_list(self, zip_file_name):
         file_list = None
-        zip_file_path = self.activity.ZIP_DIR + os.sep + zip_file_name
+        zip_file_path = self.activity.directories.get("ZIP_DIR") + os.sep + zip_file_name
         with zipfile.ZipFile(zip_file_path, 'r') as open_zip_file:
             file_list = open_zip_file.namelist()
         return file_list
@@ -71,8 +72,6 @@ class TestPMCDeposit(unittest.TestCase):
     def test_do_activity(self, fake_download_files_from_s3, fake_ftp_to_endpoint,
                          fake_upload_article_zip_to_s3, fake_s3_mock, fake_s3_key_names,
                          fake_clean_tmp_dir):
-
-        self.activity.create_activity_directories()
 
         for test_data in self.do_activity_passes:
 
@@ -96,8 +95,6 @@ class TestPMCDeposit(unittest.TestCase):
     @patch.object(activity_PMCDeposit, 'download_files_from_s3')
     def test_do_activity_failed_ftp_to_endpoint(self, fake_download_files_from_s3, fake_ftp_to_endpoint,
                          fake_upload_article_zip_to_s3, fake_s3_mock, fake_s3_key_names):
-
-        self.activity.create_activity_directories()
 
         test_data = self.do_activity_passes[0]
 
@@ -145,7 +142,6 @@ class TestPMCDeposit(unittest.TestCase):
     @unpack
     def test_article_xml_file(self, list_of_files, expected, fake_file_list):
         fake_file_list.return_value = list_of_files
-        self.activity.create_activity_directories()
         self.assertEqual(self.activity.article_xml_file(), expected)
 
 

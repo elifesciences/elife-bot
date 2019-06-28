@@ -179,6 +179,18 @@ class Activity(object):
 
         return self.tmp_dir
 
+    def make_activity_directories(self, dir_names=None):
+        """
+        Create the directories in the activity tmp_dir
+        """
+        if not dir_names:
+            dir_names = self.directories.values()
+        for dir_name in dir_names:
+            try:
+                os.mkdir(dir_name)
+            except OSError:
+                pass
+
     def open_file_from_tmp_dir(self, filename, mode='r'):
         """
         Read the file from the tmp_dir

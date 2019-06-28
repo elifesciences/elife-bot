@@ -36,13 +36,12 @@ class activity_PMCDeposit(Activity):
                             "send to PMC and notify them.")
 
         # Local directory settings
-        self.TMP_DIR = self.get_tmp_dir() + os.sep + "tmp_dir"
-        self.INPUT_DIR = self.get_tmp_dir() + os.sep + "input_dir"
-        self.JUNK_DIR = self.get_tmp_dir() + os.sep + "junk_dir"
-        self.ZIP_DIR = self.get_tmp_dir() + os.sep + "zip_dir"
-        self.EPS_DIR = self.get_tmp_dir() + os.sep + "eps_dir"
-        self.TIF_DIR = self.get_tmp_dir() + os.sep + "tif_dir"
-        self.OUTPUT_DIR = self.get_tmp_dir() + os.sep + "output_dir"
+        self.directories = {
+            "TMP_DIR": self.get_tmp_dir() + os.sep + "tmp_dir",
+            "INPUT_DIR": self.get_tmp_dir() + os.sep + "input_dir",
+            "ZIP_DIR": self.get_tmp_dir() + os.sep + "zip_dir",
+            "OUTPUT_DIR": self.get_tmp_dir() + os.sep + "output_dir"
+        }
 
         # Bucket settings
         self.input_bucket = None
@@ -84,7 +83,7 @@ class activity_PMCDeposit(Activity):
             self.input_bucket = self.input_bucket_default
 
         # Create output directories
-        self.create_activity_directories()
+        self.make_activity_directories(self.directories.values())
 
         # Download the S3 objects
         self.download_files_from_s3(self.document)
@@ -92,12 +91,12 @@ class activity_PMCDeposit(Activity):
         verified = None
         # Check for an empty folder and respond true
         #  if we do not do this it will continue to attempt this activity
-        if file_list(self.INPUT_DIR):
+        if file_list(self.directories.get("INPUT_DIR")):
             if self.logger:
-                self.logger.info('folder was empty in PMCDeposit: ' + self.INPUT_DIR)
+                self.logger.info('folder was empty in PMCDeposit: ' + self.directories.get("INPUT_DIR"))
             verified = True
 
-        folder = self.INPUT_DIR
+        folder = self.directories.get("INPUT_DIR")
         if self.logger:
             self.logger.info('processing files in folder ' + folder)
 
@@ -133,7 +132,7 @@ class activity_PMCDeposit(Activity):
 
         ftp_status = None
         if verified and self.zip_file_name:
-            ftp_status = self.ftp_to_endpoint(file_list(self.ZIP_DIR), self.FTP_SUBDIR, passive=True)
+            ftp_status = self.ftp_to_endpoint(file_list(self.directories.get("ZIP_DIR")), self.FTP_SUBDIR, passive=True)
 
             if ftp_status is True:
                 self.upload_article_zip_to_s3()
@@ -239,11 +238,11 @@ class activity_PMCDeposit(Activity):
 
             # Make the subfolder if it does not exist yet
             try:
-                os.mkdir(self.INPUT_DIR + os.sep + subfolder_name)
+                os.mkdir(self.directories.get("INPUT_DIR") + os.sep + subfolder_name)
             except:
                 pass
 
-            filename_plus_path = (self.INPUT_DIR
+            filename_plus_path = (self.directories.get("INPUT_DIR")
                                   + os.sep + subfolder_name
                                   + os.sep + filename)
             mode = "wb"
@@ -261,7 +260,7 @@ class activity_PMCDeposit(Activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
 
-        for file_name in file_list(self.ZIP_DIR):
+        for file_name in file_list(self.directories.get("ZIP_DIR")):
             s3_key_name = self.published_zip_folder + '/' + self.file_name_from_name(file_name)
             s3_key = boto.s3.key.Key(bucket)
             s3_key.key = s3_key_name
@@ -316,7 +315,7 @@ class activity_PMCDeposit(Activity):
             if self.approve_file(file_name):
                 if self.logger:
                     self.logger.info("unzipping or moving file " + file_name)
-                self.unzip_or_move_file(file_name, self.TMP_DIR)
+                self.unzip_or_move_file(file_name, self.directories.get("TMP_DIR"))
 
     def stripped_file_name_map(self, file_names):
         "from a list of file names, build a map of old to new file name with the version removed"
@@ -341,13 +340,13 @@ class activity_PMCDeposit(Activity):
         Pre-PPP files will not have a version number, for before PPP is launched
         """
         # Get a list of all files
-        dirfiles = file_list(self.TMP_DIR)
+        dirfiles = file_list(self.directories.get("TMP_DIR"))
 
         file_name_map = self.stripped_file_name_map(dirfiles)
 
         for old_name, new_name in file_name_map.items():
             if new_name is not None:
-                shutil.move(self.TMP_DIR + os.sep + old_name, self.OUTPUT_DIR + os.sep + new_name)
+                shutil.move(self.directories.get("TMP_DIR") + os.sep + old_name, self.directories.get("OUTPUT_DIR") + os.sep + new_name)
 
         return file_name_map
 
@@ -434,10 +433,10 @@ class activity_PMCDeposit(Activity):
         if self.logger:
             self.logger.info("creating new PMC zip file named " + zip_file_name)
 
-        new_zipfile = zipfile.ZipFile(self.ZIP_DIR + os.sep + zip_file_name,
+        new_zipfile = zipfile.ZipFile(self.directories.get("ZIP_DIR") + os.sep + zip_file_name,
                                       'w', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-        dirfiles = file_list(self.OUTPUT_DIR)
+        dirfiles = file_list(self.directories.get("OUTPUT_DIR"))
 
         for df in dirfiles:
             filename = df.split(os.sep)[-1]
@@ -484,12 +483,12 @@ class activity_PMCDeposit(Activity):
         """
         file_name = None
 
-        for file_name in file_list(self.TMP_DIR):
+        for file_name in file_list(self.directories.get("TMP_DIR")):
             info = ArticleInfo(self.file_name_from_name(file_name))
             if info.file_type == 'ArticleXML':
                 return file_name
         if not file_name:
-            for file_name in file_list(self.OUTPUT_DIR):
+            for file_name in file_list(self.directories.get("OUTPUT_DIR")):
                 info = ArticleInfo(self.file_name_from_name(file_name))
                 if info.file_type == 'ArticleXML':
                     return file_name
@@ -498,19 +497,3 @@ class activity_PMCDeposit(Activity):
 
     def article_soup(self, xml_filename):
         return parser.parse_document(xml_filename)
-
-    def create_activity_directories(self):
-        """
-        Create the directories in the activity tmp_dir
-        """
-        try:
-            os.mkdir(self.TMP_DIR)
-            os.mkdir(self.INPUT_DIR)
-            os.mkdir(self.JUNK_DIR)
-            os.mkdir(self.ZIP_DIR)
-            os.mkdir(self.EPS_DIR)
-            os.mkdir(self.TIF_DIR)
-            os.mkdir(self.OUTPUT_DIR)
-
-        except OSError:
-            pass
