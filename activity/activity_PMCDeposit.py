@@ -375,7 +375,6 @@ class activity_PMCDeposit(Activity):
 
         # Convert xlink href values
         total = xmlio.convert_xlink_href(root, file_name_map)
-        # TODO - compare whether all file names were converted
 
         # Start the file output
         reparsed_string = xmlio.output(root, type=None, doctype_dict=doctype_dict)
