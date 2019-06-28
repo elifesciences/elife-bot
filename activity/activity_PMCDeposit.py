@@ -4,6 +4,7 @@ from collections import OrderedDict
 import zipfile
 import shutil
 import re
+import glob
 
 from ftplib import FTP
 import ftplib
@@ -15,6 +16,7 @@ from boto.s3.connection import S3Connection
 import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo, file_parts
 from provider.article_processing import list_dir, file_list
+from provider.ftp import FTP
 from elifetools import parseJATS as parser
 from elifetools import xmlio
 from activity.objects import Activity
@@ -124,13 +126,9 @@ class activity_PMCDeposit(Activity):
         print(self.zip_file_name)
         self.create_new_zip(self.zip_file_name)
 
-        # Set FTP settings
-        self.set_ftp_settings(fid)
-
         ftp_status = None
         if verified and self.zip_file_name:
-            ftp_status = self.ftp_to_endpoint(
-                file_list(self.directories.get("ZIP_DIR")), self.FTP_SUBDIR, passive=True)
+            ftp_status = self.ftp_to_endpoint(self.directories.get("ZIP_DIR"))
 
             if ftp_status is True:
                 self.upload_article_zip_to_s3()
@@ -143,68 +141,33 @@ class activity_PMCDeposit(Activity):
 
         return result
 
-    def set_ftp_settings(self, doi_id):
+    def ftp_to_endpoint(self, from_dir, file_type="/*.zip", passive=True):
         """
-        Set the outgoing FTP server settings based on the
-        workflow type specified
+        FTP files to endpoint
+        as specified by the file_type to use in the glob
+        e.g. "/*.zip"
         """
-
-        self.FTP_URI = self.settings.PMC_FTP_URI
-        self.FTP_USERNAME = self.settings.PMC_FTP_USERNAME
-        self.FTP_PASSWORD = self.settings.PMC_FTP_PASSWORD
-        self.FTP_CWD = self.settings.PMC_FTP_CWD
-
-    def ftp_upload(self, ftp, file):
-        ext = os.path.splitext(file)[1]
-        # print(file)
-        uploadname = file.split(os.sep)[-1]
-        if ext in (".txt", ".htm", ".html"):
-            ftp.storlines("STOR " + file, open(file))
-        else:
-            # print("uploading " + uploadname)
-            ftp.storbinary("STOR " + uploadname, open(file, "rb"), 1024)
-            # print("uploaded " + uploadname)
-
-    def ftp_cwd_mkd(self, ftp, sub_dir):
-        """
-        Given an FTP connection and a sub_dir name
-        try to cwd to the directory. If the directory
-        does not exist, create it, then cwd again
-        """
-        cwd_success = None
         try:
-            ftp.cwd(sub_dir)
-            cwd_success = True
-        except ftplib.error_perm:
-            # Directory probably does not exist, create it
-            ftp.mkd(sub_dir)
-            cwd_success = False
-        if cwd_success is not True:
-            ftp.cwd(sub_dir)
-
-        return cwd_success
-
-    def ftp_to_endpoint(self, uploadfiles, sub_dir_list=None, passive=True):
-        try:
-            for uploadfile in uploadfiles:
-                ftp = FTP()
-                if passive is False:
-                    ftp.set_pasv(False)
-                ftp.connect(self.FTP_URI)
-                ftp.login(self.FTP_USERNAME, self.FTP_PASSWORD)
-
-                self.ftp_cwd_mkd(ftp, "/")
-                if self.FTP_CWD != "":
-                    self.ftp_cwd_mkd(ftp, self.FTP_CWD)
-                if sub_dir_list is not None:
-                    for sub_dir in sub_dir_list:
-                        self.ftp_cwd_mkd(ftp, sub_dir)
-
-                self.ftp_upload(ftp, uploadfile)
-                ftp.quit()
-                return True
+            ftp_provider = FTP()
+            ftp_instance = ftp_provider.ftp_connect(
+                uri=self.settings.PMC_FTP_URI,
+                username=self.settings.PMC_FTP_USERNAME,
+                password=self.settings.PMC_FTP_PASSWORD,
+                passive=passive
+            )
+            # collect the list of files
+            zipfiles = glob.glob(from_dir + file_type)
+            # transfer them by FTP to the endpoint
+            ftp_provider.ftp_to_endpoint(
+                ftp_instance=ftp_instance,
+                uploadfiles=zipfiles,
+                sub_dir_list=[self.settings.PMC_FTP_CWD])
+            # disconnect the FTP connection
+            ftp_provider.ftp_disconnect(ftp_instance)
+            ftp_status = True
         except:
-            return False
+            ftp_status = False
+        return ftp_status
 
     def download_files_from_s3(self, document):
 
