@@ -100,7 +100,7 @@ class activity_PMCDeposit(Activity):
 
         self.unzip_article_files(file_list(folder))
 
-        (fid, status, version, volume) = self.profile_article(self.document)
+        fid, volume = self.profile_article(self.document)
 
         # Rename the files
         file_name_map = self.rename_files_remove_version_number()
@@ -447,26 +447,15 @@ class activity_PMCDeposit(Activity):
         Temporary, profile the article by folder names in test data set
         In real code we still want this to return the same values
         """
-        # Temporary setting of version values from directory names
-
         soup = self.article_soup(self.article_xml_file())
 
         # elife id / doi id / manuscript id
         fid = parser.doi(soup).split('.')[-1]
 
-        # article status
-        if parser.is_poa(soup) is True:
-            status = 'poa'
-        else:
-            status = 'vor'
-
-        # version
-        version = self.version_number(document)
-
         # volume
         volume = parser.volume(soup)
 
-        return (fid, status, version, volume)
+        return fid, volume
 
     def version_number(self, document):
         version = None
