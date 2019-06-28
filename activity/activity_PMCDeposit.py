@@ -66,8 +66,7 @@ class activity_PMCDeposit(Activity):
         """
         Activity, do the work
         """
-        if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         # Data passed to this activity
         self.document = data["data"]["document"]
@@ -92,13 +91,12 @@ class activity_PMCDeposit(Activity):
         # Check for an empty folder and respond true
         #  if we do not do this it will continue to attempt this activity
         if file_list(self.directories.get("INPUT_DIR")):
-            if self.logger:
-                self.logger.info('folder was empty in PMCDeposit: ' + self.directories.get("INPUT_DIR"))
+            self.logger.info(('folder was empty in PMCDeposit: ' +
+                              self.directories.get("INPUT_DIR")))
             verified = True
 
         folder = self.directories.get("INPUT_DIR")
-        if self.logger:
-            self.logger.info('processing files in folder ' + folder)
+        self.logger.info('processing files in folder ' + folder)
 
         self.unzip_article_files(file_list(folder))
 
@@ -108,13 +106,12 @@ class activity_PMCDeposit(Activity):
         file_name_map = self.rename_files_remove_version_number()
 
         (verified, renamed_list, not_renamed_list) = self.verify_rename_files(file_name_map)
-        if self.logger:
-            self.logger.info("verified " + folder + ": " + str(verified))
-            self.logger.info(file_name_map)
+
+        self.logger.info("verified " + folder + ": " + str(verified))
+        self.logger.info(file_name_map)
 
         if len(not_renamed_list) > 0:
-            if self.logger:
-                self.logger.info("not renamed " + str(not_renamed_list))
+            self.logger.info("not renamed " + str(not_renamed_list))
 
         # Convert the XML
         self.convert_xml(xml_file=self.article_xml_file(),
@@ -132,7 +129,8 @@ class activity_PMCDeposit(Activity):
 
         ftp_status = None
         if verified and self.zip_file_name:
-            ftp_status = self.ftp_to_endpoint(file_list(self.directories.get("ZIP_DIR")), self.FTP_SUBDIR, passive=True)
+            ftp_status = self.ftp_to_endpoint(
+                file_list(self.directories.get("ZIP_DIR")), self.FTP_SUBDIR, passive=True)
 
             if ftp_status is True:
                 self.upload_article_zip_to_s3()
@@ -213,13 +211,13 @@ class activity_PMCDeposit(Activity):
 
     def download_files_from_s3(self, document):
 
-        if self.logger:
-            self.logger.info('downloading VoR file ' + document)
+        self.logger.info('downloading VoR file ' + document)
 
         subfolder_name = ""
 
         # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(self.input_bucket)
 
         s3_key_name = document
@@ -257,7 +255,8 @@ class activity_PMCDeposit(Activity):
         bucket_name = self.publish_bucket
 
         # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
 
         for file_name in file_list(self.directories.get("ZIP_DIR")):
@@ -295,15 +294,13 @@ class activity_PMCDeposit(Activity):
         """
         if self.file_extension(file_name) == 'zip' and do_unzip is True:
             # Unzip
-            if self.logger:
-                self.logger.info("going to unzip " + file_name + " to " + to_dir)
+            self.logger.info("going to unzip " + file_name + " to " + to_dir)
             myzip = zipfile.ZipFile(file_name, 'r')
             myzip.extractall(to_dir)
 
         elif self.file_extension(file_name):
             # Copy
-            if self.logger:
-                self.logger.info("going to move and not unzip " + file_name + " to " + to_dir)
+            self.logger.info("going to move and not unzip " + file_name + " to " + to_dir)
             shutil.copyfile(file_name, to_dir + os.sep + self.file_name_from_name(file_name))
 
     def approve_file(self, file_name):
@@ -313,8 +310,7 @@ class activity_PMCDeposit(Activity):
 
         for file_name in article_file_list:
             if self.approve_file(file_name):
-                if self.logger:
-                    self.logger.info("unzipping or moving file " + file_name)
+                self.logger.info("unzipping or moving file " + file_name)
                 self.unzip_or_move_file(file_name, self.directories.get("TMP_DIR"))
 
     def stripped_file_name_map(self, file_names):
@@ -346,7 +342,9 @@ class activity_PMCDeposit(Activity):
 
         for old_name, new_name in file_name_map.items():
             if new_name is not None:
-                shutil.move(self.directories.get("TMP_DIR") + os.sep + old_name, self.directories.get("OUTPUT_DIR") + os.sep + new_name)
+                shutil.move(
+                    self.directories.get("TMP_DIR") + os.sep + old_name,
+                    self.directories.get("OUTPUT_DIR") + os.sep + new_name)
 
         return file_name_map
 
@@ -397,7 +395,8 @@ class activity_PMCDeposit(Activity):
         prefix = self.published_zip_folder + '/'
 
         # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
 
         s3_key_names = s3lib.get_s3_key_names_from_bucket(
@@ -430,8 +429,7 @@ class activity_PMCDeposit(Activity):
 
     def create_new_zip(self, zip_file_name):
 
-        if self.logger:
-            self.logger.info("creating new PMC zip file named " + zip_file_name)
+        self.logger.info("creating new PMC zip file named " + zip_file_name)
 
         new_zipfile = zipfile.ZipFile(self.directories.get("ZIP_DIR") + os.sep + zip_file_name,
                                       'w', zipfile.ZIP_DEFLATED, allowZip64=True)
