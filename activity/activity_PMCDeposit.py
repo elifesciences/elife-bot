@@ -5,10 +5,6 @@ import zipfile
 import shutil
 import re
 import glob
-
-from ftplib import FTP
-import ftplib
-
 import boto.swf
 import boto.s3
 from boto.s3.connection import S3Connection
@@ -57,13 +53,6 @@ class activity_PMCDeposit(Activity):
         # journal
         self.journal = 'elife'
 
-        # Outgoing FTP settings are set later
-        self.FTP_URI = None
-        self.FTP_USERNAME = None
-        self.FTP_PASSWORD = None
-        self.FTP_CWD = None
-        self.FTP_SUBDIR = []
-
     def do_activity(self, data=None):
         """
         Activity, do the work
@@ -72,10 +61,6 @@ class activity_PMCDeposit(Activity):
 
         # Data passed to this activity
         self.document = data["data"]["document"]
-
-        # set the FTP folder for resupplies
-        if "folder" in data["data"]:
-            self.FTP_SUBDIR = [data["data"]["folder"]]
 
         # Custom bucket, if specified
         if "bucket" in data["data"]:
