@@ -1,6 +1,5 @@
 import os
 import json
-from collections import OrderedDict
 import zipfile
 import shutil
 import re
@@ -8,13 +7,11 @@ import glob
 import boto.swf
 import boto.s3
 from boto.s3.connection import S3Connection
-
 import provider.s3lib as s3lib
-from provider.article_structure import ArticleInfo, file_parts
+from provider.article_structure import ArticleInfo
 from provider import article_processing
 from provider.ftp import FTP
 from elifetools import parseJATS as parser
-from elifetools import xmlio
 from activity.objects import Activity
 
 
