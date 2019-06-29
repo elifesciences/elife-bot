@@ -107,26 +107,6 @@ class TestPMCDeposit(unittest.TestCase):
 
         self.assertEqual(False, success)
 
-    @data(
-        (
-            ['elife-99999.xml',
-             'elife-99999-fig1-v1.tif',
-             'elife-99999-video1.mp4',
-             'elife-99999-video2.mp4',
-             ],
-            OrderedDict([
-                ('elife-99999.xml', 'elife-99999.xml'),
-                ('elife-99999-fig1-v1.tif', 'elife-99999-fig1.tif'),
-                ('elife-99999-video1.mp4', 'elife-99999-video1.mp4'),
-                ('elife-99999-video2.mp4', 'elife-99999-video2.mp4')
-                ])
-            ),
-    )
-    @unpack
-    def test_stripped_file_name_map(self, file_names, expected_file_name_map):
-        file_name_map = self.activity.stripped_file_name_map(file_names)
-        self.assertEqual(file_name_map, expected_file_name_map)
-
     @patch('provider.article_processing.file_list')
     @data(
         (

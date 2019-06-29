@@ -90,7 +90,8 @@ class activity_PMCDeposit(Activity):
         fid, volume = self.profile_article(self.document)
 
         # Rename the files
-        file_name_map = self.rename_files_remove_version_number()
+        file_name_map = article_processing.rename_files_remove_version_number(
+            self.directories.get("TMP_DIR"), self.directories.get("OUTPUT_DIR"), self.logger)
 
         (verified, renamed_list, not_renamed_list) = self.verify_rename_files(file_name_map)
 
@@ -231,41 +232,6 @@ class activity_PMCDeposit(Activity):
         for file_name in article_file_list:
             self.logger.info("unzipping or moving file " + file_name)
             self.unzip_or_move_file(file_name, self.directories.get("TMP_DIR"))
-
-    def stripped_file_name_map(self, file_names):
-        "from a list of file names, build a map of old to new file name with the version removed"
-        file_name_map = OrderedDict()
-        for df in file_names:
-            filename = df.split(os.sep)[-1]
-            info = ArticleInfo(filename)
-            prefix, extension = file_parts(filename)
-            if info.versioned is True and info.version is not None:
-                # Use part before the -v number
-                part_without_version = prefix.split('-v')[0]
-            else:
-                # Not a versioned file, use the whole file prefix
-                part_without_version = prefix
-            renamed_filename = '.'.join([part_without_version, extension])
-            file_name_map[filename] = renamed_filename
-        return file_name_map
-
-    def rename_files_remove_version_number(self):
-        """
-        Rename files to not include the version number, if present
-        Pre-PPP files will not have a version number, for before PPP is launched
-        """
-        # Get a list of all files
-        dirfiles = article_processing.file_list(self.directories.get("TMP_DIR"))
-
-        file_name_map = self.stripped_file_name_map(dirfiles)
-
-        for old_name, new_name in file_name_map.items():
-            if new_name is not None:
-                shutil.move(
-                    self.directories.get("TMP_DIR") + os.sep + old_name,
-                    self.directories.get("OUTPUT_DIR") + os.sep + new_name)
-
-        return file_name_map
 
     def verify_rename_files(self, file_name_map):
         """
