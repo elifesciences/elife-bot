@@ -101,8 +101,7 @@ class activity_PMCDeposit(Activity):
             self.logger.info("not renamed " + str(not_renamed_list))
 
         # Convert the XML
-        self.convert_xml(xml_file=self.article_xml_file(),
-                         file_name_map=file_name_map)
+        article_processing.convert_xml(self.article_xml_file(), file_name_map)
 
         # Get the new zip file name
         # take into account the r1 r2 revision numbers when replacing an article
@@ -285,23 +284,6 @@ class activity_PMCDeposit(Activity):
                 renamed_list.append(k)
 
         return (verified, renamed_list, not_renamed_list)
-
-    def convert_xml(self, xml_file, file_name_map):
-
-        # Register namespaces
-        xmlio.register_xmlns()
-
-        root, doctype_dict = xmlio.parse(xml_file, return_doctype_dict=True)
-
-        # Convert xlink href values
-        total = xmlio.convert_xlink_href(root, file_name_map)
-
-        # Start the file output
-        reparsed_string = xmlio.output(root, type=None, doctype_dict=doctype_dict)
-
-        f = open(xml_file, 'wb')
-        f.write(reparsed_string)
-        f.close()
 
     def zip_revision_number(self, fid):
         """
