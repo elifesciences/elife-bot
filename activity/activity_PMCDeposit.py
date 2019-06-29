@@ -93,7 +93,8 @@ class activity_PMCDeposit(Activity):
         file_name_map = article_processing.rename_files_remove_version_number(
             self.directories.get("TMP_DIR"), self.directories.get("OUTPUT_DIR"), self.logger)
 
-        (verified, renamed_list, not_renamed_list) = self.verify_rename_files(file_name_map)
+        (verified, renamed_list, not_renamed_list) = article_processing.verify_rename_files(
+            file_name_map)
 
         self.logger.info("verified " + folder + ": " + str(verified))
         self.logger.info(file_name_map)
@@ -232,24 +233,6 @@ class activity_PMCDeposit(Activity):
         for file_name in article_file_list:
             self.logger.info("unzipping or moving file " + file_name)
             self.unzip_or_move_file(file_name, self.directories.get("TMP_DIR"))
-
-    def verify_rename_files(self, file_name_map):
-        """
-        Each file name as key should have a non None value as its value
-        otherwise the file did not get renamed to something new and the
-        rename file process was not complete
-        """
-        verified = True
-        renamed_list = []
-        not_renamed_list = []
-        for k, v in file_name_map.items():
-            if v is None:
-                verified = False
-                not_renamed_list.append(k)
-            else:
-                renamed_list.append(k)
-
-        return (verified, renamed_list, not_renamed_list)
 
     def zip_revision_number(self, fid):
         """
