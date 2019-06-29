@@ -1,6 +1,7 @@
 import unittest
 import os
 import zipfile
+from collections import OrderedDict
 from ddt import ddt, data, unpack
 from testfixtures import tempdir
 from testfixtures import TempDirectory
@@ -64,7 +65,6 @@ class TestArticleProcessing(unittest.TestCase):
             xml_content = fp.read()
             self.assertTrue(expected_xml_contains in xml_content)
 
-
     def test_verify_rename_files(self):
         verified, renamed_list, not_renamed_list = article_processing.verify_rename_files(
             self.file_name_map_19405)
@@ -80,6 +80,25 @@ class TestArticleProcessing(unittest.TestCase):
         self.assertEqual(len(renamed_list), 0)
         self.assertEqual(len(not_renamed_list), 1)
 
+    @data(
+        (
+            ['elife-99999.xml',
+             'elife-99999-fig1-v1.tif',
+             'elife-99999-video1.mp4',
+             'elife-99999-video2.mp4',
+             ],
+            OrderedDict([
+                ('elife-99999.xml', 'elife-99999.xml'),
+                ('elife-99999-fig1-v1.tif', 'elife-99999-fig1.tif'),
+                ('elife-99999-video1.mp4', 'elife-99999-video1.mp4'),
+                ('elife-99999-video2.mp4', 'elife-99999-video2.mp4')
+                ])
+            ),
+    )
+    @unpack
+    def test_stripped_file_name_map(self, file_names, expected_file_name_map):
+        file_name_map = article_processing.stripped_file_name_map(file_names)
+        self.assertEqual(file_name_map, expected_file_name_map)
 
     def test_rename_files_remove_version_number(self):
         zip_file = 'elife-19405-vor-v1-20160802113816.zip'

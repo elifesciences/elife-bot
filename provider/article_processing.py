@@ -1,9 +1,11 @@
 import os
 import shutil
 import dateutil.parser
+from collections import OrderedDict
 from elifetools import xmlio
 from provider import utils, lax_provider
 from provider.storage_provider import storage_context
+from provider.article_structure import ArticleInfo, file_parts
 
 """
 Functions for processing article zip and XML for reuse by different activities
@@ -34,39 +36,38 @@ def file_extension(file_name):
     return None
 
 
+def stripped_file_name_map(file_names, logger=None):
+    "from a list of file names, build a map of old to new file name with the version removed"
+    file_name_map = OrderedDict()
+    for df in file_names:
+        filename = df.split(os.sep)[-1]
+        info = ArticleInfo(filename)
+        prefix, extension = file_parts(filename)
+        if info.versioned is True and info.version is not None:
+            # Use part before the -v number
+            part_without_version = prefix.split('-v')[0]
+        else:
+            # Not a versioned file, use the whole file prefix
+            part_without_version = prefix
+        renamed_filename = '.'.join([part_without_version, extension])
+        if renamed_filename:
+            file_name_map[filename] = renamed_filename
+        else:
+            if logger:
+                logger.info('there is no renamed file for ' + filename)
+    return file_name_map
+
+
 def rename_files_remove_version_number(files_dir, output_dir, logger=None):
     """
     Rename files to not include the version number, if present
     Pre-PPP files will not have a version number, for before PPP is launched
     """
 
-    file_name_map = {}
-
     # Get a list of all files
     dirfiles = file_list(files_dir)
 
-    for df in dirfiles:
-        filename = df.split(os.sep)[-1]
-
-        # Get the new file name
-        file_name_map[filename] = None
-
-        # TODO strip the -v1 from it
-        file_extension = filename.split('.')[-1]
-        if '-v' in filename:
-            # Use part before the -v number
-            part_without_version = filename.split('-v')[0]
-        else:
-            # No -v found, use the file name minus the extension
-            part_without_version = ''.join(filename.split('.')[0:-1])
-
-        renamed_filename = part_without_version + '.' + file_extension
-
-        if renamed_filename:
-            file_name_map[filename] = renamed_filename
-        else:
-            if logger:
-                logger.info('there is no renamed file for ' + filename)
+    file_name_map = stripped_file_name_map(dirfiles, logger)
 
     for old_name, new_name in file_name_map.items():
         if new_name is not None:
