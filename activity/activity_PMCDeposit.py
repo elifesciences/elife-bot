@@ -87,7 +87,7 @@ class activity_PMCDeposit(Activity):
 
         self.unzip_article_files(article_processing.file_list(folder))
 
-        fid, volume = self.profile_article(self.document)
+        fid, volume = profile_article(self.article_xml_file())
 
         # Rename the files
         file_name_map = article_processing.rename_files_remove_version_number(
@@ -292,28 +292,6 @@ class activity_PMCDeposit(Activity):
 
         new_zipfile.close()
 
-    def profile_article(self, document):
-        """
-        Temporary, profile the article by folder names in test data set
-        In real code we still want this to return the same values
-        """
-        soup = self.article_soup(self.article_xml_file())
-
-        # elife id / doi id / manuscript id
-        fid = parser.doi(soup).split('.')[-1]
-
-        # volume
-        volume = parser.volume(soup)
-
-        return fid, volume
-
-    def version_number(self, document):
-        version = None
-        m = re.search(r'-v([0-9]*?)[\.|-]', document)
-        if m is not None:
-            version = m.group(1)
-        return version
-
     def article_xml_file(self):
         """
         Two directories the XML file might be in depending on the step
@@ -332,5 +310,18 @@ class activity_PMCDeposit(Activity):
 
         return file_name
 
-    def article_soup(self, xml_filename):
-        return parser.parse_document(xml_filename)
+
+def profile_article(document):
+    """
+    Temporary, profile the article by folder names in test data set
+    In real code we still want this to return the same values
+    """
+    soup = parser.parse_document(document)
+
+    # elife id / doi id / manuscript id
+    fid = parser.doi(soup).split('.')[-1]
+
+    # volume
+    volume = parser.volume(soup)
+
+    return fid, volume
