@@ -1,5 +1,4 @@
 import unittest
-import activity.activity_PMCDeposit as activity_module
 from activity.activity_PMCDeposit import activity_PMCDeposit
 from collections import OrderedDict
 import shutil
@@ -128,7 +127,7 @@ class TestPMCDeposit(unittest.TestCase):
         file_name_map = self.activity.stripped_file_name_map(file_names)
         self.assertEqual(file_name_map, expected_file_name_map)
 
-    @patch.object(activity_module, 'file_list')
+    @patch('provider.article_processing.file_list')
     @data(
         (
             ['folder_name/elife-36842-v2.xml'],

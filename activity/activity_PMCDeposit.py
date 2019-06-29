@@ -15,7 +15,7 @@ from boto.s3.connection import S3Connection
 
 import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo, file_parts
-from provider.article_processing import list_dir, file_list
+from provider import article_processing
 from provider.ftp import FTP
 from elifetools import parseJATS as parser
 from elifetools import xmlio
@@ -92,7 +92,7 @@ class activity_PMCDeposit(Activity):
         verified = None
         # Check for an empty folder and respond true
         #  if we do not do this it will continue to attempt this activity
-        if file_list(self.directories.get("INPUT_DIR")):
+        if article_processing.file_list(self.directories.get("INPUT_DIR")):
             self.logger.info(('folder was empty in PMCDeposit: ' +
                               self.directories.get("INPUT_DIR")))
             verified = True
@@ -100,7 +100,7 @@ class activity_PMCDeposit(Activity):
         folder = self.directories.get("INPUT_DIR")
         self.logger.info('processing files in folder ' + folder)
 
-        self.unzip_article_files(file_list(folder))
+        self.unzip_article_files(article_processing.file_list(folder))
 
         fid, volume = self.profile_article(self.document)
 
@@ -219,49 +219,29 @@ class activity_PMCDeposit(Activity):
             self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
 
-        for file_name in file_list(self.directories.get("ZIP_DIR")):
-            s3_key_name = self.published_zip_folder + '/' + self.file_name_from_name(file_name)
+        for file_name in article_processing.file_list(self.directories.get("ZIP_DIR")):
+            s3_key_name = (self.published_zip_folder + '/' +
+                           article_processing.file_name_from_name(file_name))
             s3_key = boto.s3.key.Key(bucket)
             s3_key.key = s3_key_name
             s3_key.set_contents_from_filename(file_name, replace=True)
-
-    def folder_list(self, dir_name):
-        dir_list = list_dir(dir_name)
-        return list(filter(lambda item: os.path.isdir(item), dir_list))
-
-    def folder_name_from_name(self, input_dir, file_name):
-        folder_name = file_name.split(input_dir)[1]
-        folder_name = folder_name.split(os.sep)[1]
-        return folder_name
-
-    def file_name_from_name(self, file_name):
-        name = file_name.split(os.sep)[-1]
-        return name
-
-    def file_extension(self, file_name):
-        name = self.file_name_from_name(file_name)
-        if name:
-            if len(name.split('.')) > 1:
-                return name.split('.')[-1]
-            else:
-                return None
-        return None
 
     def unzip_or_move_file(self, file_name, to_dir, do_unzip=True):
         """
         If file extension is zip, then unzip contents
         If file the extension
         """
-        if self.file_extension(file_name) == 'zip' and do_unzip is True:
+        if article_processing.file_extension(file_name) == 'zip' and do_unzip is True:
             # Unzip
             self.logger.info("going to unzip " + file_name + " to " + to_dir)
             myzip = zipfile.ZipFile(file_name, 'r')
             myzip.extractall(to_dir)
 
-        elif self.file_extension(file_name):
+        elif article_processing.file_extension(file_name):
             # Copy
             self.logger.info("going to move and not unzip " + file_name + " to " + to_dir)
-            shutil.copyfile(file_name, to_dir + os.sep + self.file_name_from_name(file_name))
+            shutil.copyfile(file_name, to_dir + os.sep +
+                            article_processing.file_name_from_name(file_name))
 
     def approve_file(self, file_name):
         return True
@@ -296,7 +276,7 @@ class activity_PMCDeposit(Activity):
         Pre-PPP files will not have a version number, for before PPP is launched
         """
         # Get a list of all files
-        dirfiles = file_list(self.directories.get("TMP_DIR"))
+        dirfiles = article_processing.file_list(self.directories.get("TMP_DIR"))
 
         file_name_map = self.stripped_file_name_map(dirfiles)
 
@@ -393,7 +373,7 @@ class activity_PMCDeposit(Activity):
         new_zipfile = zipfile.ZipFile(self.directories.get("ZIP_DIR") + os.sep + zip_file_name,
                                       'w', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-        dirfiles = file_list(self.directories.get("OUTPUT_DIR"))
+        dirfiles = article_processing.file_list(self.directories.get("OUTPUT_DIR"))
 
         for df in dirfiles:
             filename = df.split(os.sep)[-1]
@@ -429,13 +409,13 @@ class activity_PMCDeposit(Activity):
         """
         file_name = None
 
-        for file_name in file_list(self.directories.get("TMP_DIR")):
-            info = ArticleInfo(self.file_name_from_name(file_name))
+        for file_name in article_processing.file_list(self.directories.get("TMP_DIR")):
+            info = ArticleInfo(article_processing.file_name_from_name(file_name))
             if info.file_type == 'ArticleXML':
                 return file_name
         if not file_name:
-            for file_name in file_list(self.directories.get("OUTPUT_DIR")):
-                info = ArticleInfo(self.file_name_from_name(file_name))
+            for file_name in article_processing.file_list(self.directories.get("OUTPUT_DIR")):
+                info = ArticleInfo(article_processing.file_name_from_name(file_name))
                 if info.file_type == 'ArticleXML':
                     return file_name
 

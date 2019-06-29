@@ -15,9 +15,23 @@ def list_dir(dir_name):
     dir_list = map(lambda item: dir_name + os.sep + item, dir_list)
     return dir_list
 
+
 def file_list(dir_name):
     dir_list = list_dir(dir_name)
     return filter(lambda item: os.path.isfile(item), dir_list)
+
+
+def file_name_from_name(file_name):
+    name = file_name.split(os.sep)[-1]
+    return name
+
+
+def file_extension(file_name):
+    name = file_name_from_name(file_name)
+    if name:
+        if len(name.split('.')) > 1:
+            return name.split('.')[-1]
+    return None
 
 
 def rename_files_remove_version_number(files_dir, output_dir, logger=None):
