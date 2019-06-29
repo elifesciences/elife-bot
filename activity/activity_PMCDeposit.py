@@ -228,15 +228,10 @@ class activity_PMCDeposit(Activity):
             shutil.copyfile(file_name, to_dir + os.sep +
                             article_processing.file_name_from_name(file_name))
 
-    def approve_file(self, file_name):
-        return True
-
     def unzip_article_files(self, article_file_list):
-
         for file_name in article_file_list:
-            if self.approve_file(file_name):
-                self.logger.info("unzipping or moving file " + file_name)
-                self.unzip_or_move_file(file_name, self.directories.get("TMP_DIR"))
+            self.logger.info("unzipping or moving file " + file_name)
+            self.unzip_or_move_file(file_name, self.directories.get("TMP_DIR"))
 
     def stripped_file_name_map(self, file_names):
         "from a list of file names, build a map of old to new file name with the version removed"
