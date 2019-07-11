@@ -9,6 +9,7 @@ import boto.s3
 from boto.s3.connection import S3Connection
 import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo
+from provider.storage_provider import storage_context
 from provider import article_processing
 from provider.ftp import FTP
 from elifetools import parseJATS as parser
@@ -155,41 +156,23 @@ class activity_PMCDeposit(Activity):
     def download_files_from_s3(self, document):
 
         self.logger.info('downloading VoR file ' + document)
+        bucket_name = self.input_bucket
 
-        subfolder_name = ""
+        "download files from the expanded folder"
+        # download expanded folder
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + bucket_name
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(self.input_bucket)
-
-        s3_key_name = document
-        s3_key_names = [s3_key_name]
-
-        self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
-
-    def download_s3_key_names_to_subfolder(self, bucket, s3_key_names, subfolder_name):
-
-        for s3_key_name in s3_key_names:
-            # Download objects from S3 and save to disk
-
-            s3_key = bucket.get_key(s3_key_name)
-
-            filename = s3_key_name.split("/")[-1]
-
-            # Make the subfolder if it does not exist yet
-            try:
-                os.mkdir(self.directories.get("INPUT_DIR") + os.sep + subfolder_name)
-            except:
-                pass
-
-            filename_plus_path = (self.directories.get("INPUT_DIR")
-                                  + os.sep + subfolder_name
-                                  + os.sep + filename)
-            mode = "wb"
-            f = open(filename_plus_path, mode)
-            s3_key.get_contents_to_file(f)
-            f.close()
+        file_name = document.split('/')[-1]
+        file_path = os.path.join(self.directories.get("INPUT_DIR"), file_name)
+        storage_resource_origin = orig_resource + '/' + document
+        try:
+            with open(file_path, 'wb') as open_file:
+                self.logger.info("Downloading %s to %s", (storage_resource_origin, file_path))
+                storage.get_resource_to_file(storage_resource_origin, open_file)
+        except IOError:
+            self.logger.exception("Failed to download file %s.", document)
 
     def upload_article_zip_to_s3(self):
         """

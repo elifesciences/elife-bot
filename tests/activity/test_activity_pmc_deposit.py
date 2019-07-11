@@ -1,15 +1,11 @@
-import unittest
-from activity.activity_PMCDeposit import activity_PMCDeposit
-from collections import OrderedDict
-import shutil
-import zipfile
-from mock import mock, patch
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger
-from ddt import ddt, data, unpack
-import time
-
 import os
+import unittest
+import zipfile
+from mock import patch
+from ddt import ddt, data, unpack
+from activity.activity_PMCDeposit import activity_PMCDeposit
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 
 
 @ddt
@@ -19,6 +15,7 @@ class TestPMCDeposit(unittest.TestCase):
         fake_logger = FakeLogger()
         self.activity = activity_PMCDeposit(settings_mock, fake_logger, None, None, None)
         self.activity.make_activity_directories()
+        self.test_data_dir = "tests/test_data/pmc/"
 
         self.do_activity_passes = []
 
@@ -46,15 +43,6 @@ class TestPMCDeposit(unittest.TestCase):
     def tearDown(self):
         self.activity.clean_tmp_dir()
 
-
-    def fake_download_files_from_s3(self, document):
-        source_doc = "tests/test_data/pmc/" + document
-        #print source_doc
-        dest_doc = self.activity.directories.get("INPUT_DIR") + os.sep + document
-        #print dest_doc
-        shutil.copy(source_doc, dest_doc)
-
-
     def zip_file_list(self, zip_file_name):
         file_list = None
         zip_file_path = self.activity.directories.get("ZIP_DIR") + os.sep + zip_file_name
@@ -67,16 +55,14 @@ class TestPMCDeposit(unittest.TestCase):
     @patch('activity.activity_PMCDeposit.S3Connection')
     @patch.object(activity_PMCDeposit, 'upload_article_zip_to_s3')
     @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
-    @patch.object(activity_PMCDeposit, 'download_files_from_s3')
-    def test_do_activity(self, fake_download_files_from_s3, fake_ftp_to_endpoint,
+    @patch('activity.activity_PMCDeposit.storage_context')
+    def test_do_activity(self, fake_storage_context, fake_ftp_to_endpoint,
                          fake_upload_article_zip_to_s3, fake_s3_mock, fake_s3_key_names,
                          fake_clean_tmp_dir):
 
         for test_data in self.do_activity_passes:
 
-            document = test_data["input_data"]["data"]["document"]
-
-            fake_download_files_from_s3 = self.fake_download_files_from_s3(document)
+            fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
             fake_s3_key_names.return_value = test_data["pmc_zip_key_names"]
             fake_ftp_to_endpoint.return_value = True
 
@@ -91,15 +77,14 @@ class TestPMCDeposit(unittest.TestCase):
     @patch('activity.activity_PMCDeposit.S3Connection')
     @patch.object(activity_PMCDeposit, 'upload_article_zip_to_s3')
     @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
-    @patch.object(activity_PMCDeposit, 'download_files_from_s3')
-    def test_do_activity_failed_ftp_to_endpoint(self, fake_download_files_from_s3, fake_ftp_to_endpoint,
-                         fake_upload_article_zip_to_s3, fake_s3_mock, fake_s3_key_names):
+    @patch('activity.activity_PMCDeposit.storage_context')
+    def test_do_activity_failed_ftp_to_endpoint(self, fake_storage_context, fake_ftp_to_endpoint,
+                                                fake_upload_article_zip_to_s3, fake_s3_mock,
+                                                fake_s3_key_names):
 
         test_data = self.do_activity_passes[0]
 
-        document = test_data["input_data"]["data"]["document"]
-
-        fake_download_files_from_s3 = self.fake_download_files_from_s3(document)
+        fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
         fake_s3_key_names.return_value = test_data["pmc_zip_key_names"]
         fake_ftp_to_endpoint.return_value = False
 
