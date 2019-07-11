@@ -139,6 +139,9 @@ class activity_PubRouterDeposit(Activity):
         # Return the activity result, True or False
         result = True
 
+        # Clean up disk
+        self.clean_tmp_dir()
+
         return result
 
     def get_outbox_folder(self, workflow):

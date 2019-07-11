@@ -119,6 +119,9 @@ class activity_PubmedArticleDeposit(Activity):
         if len(self.article_published_file_names) > 0:
             self.add_email_to_queue()
 
+        # Clean up disk
+        self.clean_tmp_dir()
+
         # return a value based on the activity_status
         if self.activity_status is True:
             return True
