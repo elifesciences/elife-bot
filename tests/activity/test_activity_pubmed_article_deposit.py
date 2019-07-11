@@ -33,6 +33,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         "return the tmp dir name for the activity"
         return os.path.join(self.activity.get_tmp_dir(), self.activity.TMP_DIR)
 
+    @patch.object(activity_PubmedArticleDeposit, 'clean_tmp_dir')
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch.object(lax_provider, 'article_versions')
     @patch.object(activity_PubmedArticleDeposit, 'ftp_files_to_endpoint')
@@ -127,7 +128,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_list_resources, fake_storage_context,
                          fake_ftp_files_to_endpoint, fake_article_versions,
-                         fake_email_queue):
+                         fake_email_queue, fake_clean_tmp_dir):
+        fake_clean_tmp_dir.return_value = None
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
         fake_list_resources.return_value = test_data.get("outbox_filenames")
