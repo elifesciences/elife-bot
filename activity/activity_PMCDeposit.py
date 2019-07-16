@@ -221,17 +221,11 @@ class activity_PMCDeposit(Activity):
         """
         revision = None
 
-        bucket_name = self.publish_bucket
-        prefix = self.published_zip_folder + '/'
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + self.publish_bucket + "/" + self.published_zip_folder
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=prefix)
+        s3_key_names = storage.list_resources(orig_resource)
 
         s3_key_name = s3lib.latest_pmc_zip_revision(fid, s3_key_names)
 
