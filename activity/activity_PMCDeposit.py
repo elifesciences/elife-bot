@@ -79,9 +79,11 @@ class activity_PMCDeposit(Activity):
             # Retry activity again
             return self.ACTIVITY_TEMPORARY_FAILURE
 
+        # Unzip the input zip file contents
         input_zip_file_name = os.path.join(self.directories.get("INPUT_DIR"), self.document)
         unzip_article_files(input_zip_file_name, self.directories.get("TMP_DIR"), self.logger)
 
+        # Profile the article
         xml_search_folders = [
             self.directories.get("TMP_DIR"),
             self.directories.get("OUTPUT_DIR")]
@@ -112,6 +114,7 @@ class activity_PMCDeposit(Activity):
         zip_file_path = self.directories.get("ZIP_DIR") + os.sep + self.zip_file_name
         create_new_zip(zip_file_path, self.directories.get("OUTPUT_DIR"), self.logger)
 
+        # FTP the zip
         ftp_status = None
         if verified and self.zip_file_name:
             ftp_status = self.ftp_to_endpoint(self.directories.get("ZIP_DIR"))
