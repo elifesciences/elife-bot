@@ -5,7 +5,7 @@ from mock import patch
 from ddt import ddt, data, unpack
 from activity.activity_PMCDeposit import activity_PMCDeposit
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext, FakeFTP
 
 
 @ddt
@@ -51,13 +51,13 @@ class TestPMCDeposit(unittest.TestCase):
         return file_list
 
     @patch.object(activity_PMCDeposit, 'clean_tmp_dir')
-    @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
+    @patch('activity.activity_PMCDeposit.FTP')
     @patch.object(FakeStorageContext, 'list_resources')
     @patch('activity.activity_PMCDeposit.storage_context')
-    def test_do_activity(self, fake_storage_context, fake_list_resources, fake_ftp_to_endpoint,
+    def test_do_activity(self, fake_storage_context, fake_list_resources, fake_ftp,
                          fake_clean_tmp_dir):
 
-        fake_ftp_to_endpoint.return_value = True
+        fake_ftp.return_value = FakeFTP()
         fake_clean_tmp_dir.return_value = None
 
         for test_data in self.do_activity_passes:
