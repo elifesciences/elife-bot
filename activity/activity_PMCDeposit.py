@@ -103,7 +103,7 @@ class activity_PMCDeposit(Activity):
         # Get the new zip file name
         # take into account the r1 r2 revision numbers when replacing an article
         revision = self.zip_revision_number(fid)
-        self.zip_file_name = self.new_zip_filename(self.journal, volume, fid, revision)
+        self.zip_file_name = new_zip_filename(self.journal, volume, fid, revision)
         print(self.zip_file_name)
         self.create_new_zip(self.zip_file_name)
 
@@ -235,16 +235,6 @@ class activity_PMCDeposit(Activity):
 
         return revision
 
-    def new_zip_filename(self, journal, volume, fid, revision=None):
-
-        filename = journal
-        filename = filename + '-' + str(volume).zfill(2)
-        filename = filename + '-' + str(fid).zfill(5)
-        if revision:
-            filename = filename + '.r' + str(revision)
-        filename += '.zip'
-        return filename
-
     def create_new_zip(self, zip_file_name):
 
         self.logger.info("creating new PMC zip file named " + zip_file_name)
@@ -277,6 +267,17 @@ class activity_PMCDeposit(Activity):
                     return file_name
 
         return file_name
+
+
+def new_zip_filename(journal, volume, fid, revision=None):
+
+    filename = journal
+    filename = filename + '-' + str(volume).zfill(2)
+    filename = filename + '-' + str(fid).zfill(5)
+    if revision:
+        filename = filename + '.r' + str(revision)
+    filename += '.zip'
+    return filename
 
 
 def profile_article(document):
