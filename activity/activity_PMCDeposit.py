@@ -1,7 +1,6 @@
 import os
 import json
 import zipfile
-import shutil
 import re
 import glob
 import provider.s3lib as s3lib
