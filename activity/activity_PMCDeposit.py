@@ -44,9 +44,6 @@ class activity_PMCDeposit(Activity):
         self.published_folder = "pmc/published"
         self.published_zip_folder = "pmc/zip"
 
-        # journal
-        self.journal = 'elife'
-
         self.document = None
         self.input_bucket = None
         self.zip_file_name = None
@@ -84,6 +81,7 @@ class activity_PMCDeposit(Activity):
         unzip_article_files(input_zip_file_name, self.directories.get("TMP_DIR"), self.logger)
 
         # Profile the article
+        journal = get_journal(self.document)
         xml_search_folders = [
             self.directories.get("TMP_DIR"),
             self.directories.get("OUTPUT_DIR")]
@@ -109,7 +107,7 @@ class activity_PMCDeposit(Activity):
         # Get the new zip file name
         # take into account the r1 r2 revision numbers when replacing an article
         revision = self.zip_revision_number(fid)
-        self.zip_file_name = new_zip_filename(self.journal, volume, fid, revision)
+        self.zip_file_name = new_zip_filename(journal, volume, fid, revision)
         self.logger.info("new PMC zip file name: " + str(self.zip_file_name))
         zip_file_path = self.directories.get("ZIP_DIR") + os.sep + self.zip_file_name
         create_new_zip(zip_file_path, self.directories.get("OUTPUT_DIR"), self.logger)
@@ -242,6 +240,13 @@ def create_new_zip(zip_file_name, files_dir, logger):
         for article_file_name in dirfiles:
             filename = article_file_name.split(os.sep)[-1]
             new_zipfile.write(article_file_name, filename)
+
+
+def get_journal(document):
+    """ get the journal name from the input zip file """
+    if document:
+        info = ArticleInfo(article_processing.file_name_from_name(document))
+        return info.journal
 
 
 def article_xml_file(folders):
