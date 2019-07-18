@@ -82,7 +82,11 @@ class activity_PMCDeposit(Activity):
 
         self.unzip_article_files(article_processing.file_list(folder))
 
-        fid, volume = profile_article(self.article_xml_file())
+        xml_search_folders = [
+            self.directories.get("TMP_DIR"),
+            self.directories.get("OUTPUT_DIR")]
+
+        fid, volume = profile_article(article_xml_file(xml_search_folders))
 
         # Rename the files
         file_name_map = article_processing.rename_files_remove_version_number(
@@ -98,13 +102,13 @@ class activity_PMCDeposit(Activity):
             self.logger.info("not renamed " + str(not_renamed_list))
 
         # Convert the XML
-        article_processing.convert_xml(self.article_xml_file(), file_name_map)
+        article_processing.convert_xml(article_xml_file(xml_search_folders), file_name_map)
 
         # Get the new zip file name
         # take into account the r1 r2 revision numbers when replacing an article
         revision = self.zip_revision_number(fid)
         self.zip_file_name = new_zip_filename(self.journal, volume, fid, revision)
-        print(self.zip_file_name)
+        self.logger.info("new PMC zip file name: " + str(self.zip_file_name))
         self.create_new_zip(self.zip_file_name)
 
         ftp_status = None
@@ -250,23 +254,17 @@ class activity_PMCDeposit(Activity):
 
         new_zipfile.close()
 
-    def article_xml_file(self):
-        """
-        Two directories the XML file might be in depending on the step
-        """
-        file_name = None
 
-        for file_name in article_processing.file_list(self.directories.get("TMP_DIR")):
+def article_xml_file(folders):
+    """
+    Directories the XML file might be in depending on the step
+    """
+    for folder_name in folders:
+        for file_name in article_processing.file_list(folder_name):
             info = ArticleInfo(article_processing.file_name_from_name(file_name))
             if info.file_type == 'ArticleXML':
                 return file_name
-        if not file_name:
-            for file_name in article_processing.file_list(self.directories.get("OUTPUT_DIR")):
-                info = ArticleInfo(article_processing.file_name_from_name(file_name))
-                if info.file_type == 'ArticleXML':
-                    return file_name
-
-        return file_name
+    return None
 
 
 def new_zip_filename(journal, volume, fid, revision=None):

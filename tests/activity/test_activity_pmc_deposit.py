@@ -3,6 +3,7 @@ import unittest
 import zipfile
 from mock import patch
 from ddt import ddt, data, unpack
+import activity.activity_PMCDeposit as activity_module
 from activity.activity_PMCDeposit import activity_PMCDeposit
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext, FakeFTP
@@ -87,6 +88,9 @@ class TestPMCDeposit(unittest.TestCase):
 
         self.assertEqual(False, success)
 
+
+@ddt
+class TestArticleXMLFile(unittest.TestCase):
     @patch('provider.article_processing.file_list')
     @data(
         (
@@ -97,11 +101,16 @@ class TestPMCDeposit(unittest.TestCase):
             ['folder_name/elife-36842-supp9-v2.xml', 'folder_name/elife-36842-v2.xml'],
             'folder_name/elife-36842-v2.xml'
         ),
+        (
+            ['folder_name/not-an-xml-file.txt'],
+            None
+        ),
     )
     @unpack
     def test_article_xml_file(self, list_of_files, expected, fake_file_list):
         fake_file_list.return_value = list_of_files
-        self.assertEqual(self.activity.article_xml_file(), expected)
+        xml_search_folders = ["folder_name"]
+        self.assertEqual(activity_module.article_xml_file(xml_search_folders), expected)
 
 
 if __name__ == '__main__':
