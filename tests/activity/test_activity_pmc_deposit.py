@@ -91,11 +91,11 @@ class TestPMCDeposit(unittest.TestCase):
     @data(
         (
             ['folder_name/elife-36842-v2.xml'],
-             'folder_name/elife-36842-v2.xml'
+            'folder_name/elife-36842-v2.xml'
         ),
         (
             ['folder_name/elife-36842-supp9-v2.xml', 'folder_name/elife-36842-v2.xml'],
-             'folder_name/elife-36842-v2.xml'
+            'folder_name/elife-36842-v2.xml'
         ),
     )
     @unpack
