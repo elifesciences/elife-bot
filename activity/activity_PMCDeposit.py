@@ -4,9 +4,6 @@ import zipfile
 import shutil
 import re
 import glob
-import boto.swf
-import boto.s3
-from boto.s3.connection import S3Connection
 import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo
 from provider.storage_provider import storage_context
@@ -180,17 +177,14 @@ class activity_PMCDeposit(Activity):
         """
         bucket_name = self.publish_bucket
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
 
         for file_name in article_processing.file_list(self.directories.get("ZIP_DIR")):
-            s3_key_name = (self.published_zip_folder + '/' +
-                           article_processing.file_name_from_name(file_name))
-            s3_key = boto.s3.key.Key(bucket)
-            s3_key.key = s3_key_name
-            s3_key.set_contents_from_filename(file_name, replace=True)
+            resource_dest = (
+                storage_provider + bucket_name + "/" + self.published_zip_folder + "/" +
+                article_processing.file_name_from_name(file_name))
+            storage.set_resource_from_filename(resource_dest, file_name)
 
     def unzip_or_move_file(self, file_name, to_dir, do_unzip=True):
         """

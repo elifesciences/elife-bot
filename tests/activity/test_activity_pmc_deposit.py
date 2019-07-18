@@ -51,22 +51,19 @@ class TestPMCDeposit(unittest.TestCase):
         return file_list
 
     @patch.object(activity_PMCDeposit, 'clean_tmp_dir')
-    @patch.object(activity_PMCDeposit, 'upload_article_zip_to_s3')
     @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
     @patch.object(FakeStorageContext, 'list_resources')
     @patch('activity.activity_PMCDeposit.storage_context')
     def test_do_activity(self, fake_storage_context, fake_list_resources, fake_ftp_to_endpoint,
-                         fake_upload_article_zip_to_s3, fake_clean_tmp_dir):
+                         fake_clean_tmp_dir):
 
-        fake_upload_article_zip_to_s3.return_value = None
-        fake_ftp_to_endpoint.return_value = None
         fake_ftp_to_endpoint.return_value = True
+        fake_clean_tmp_dir.return_value = None
 
         for test_data in self.do_activity_passes:
 
             fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
             fake_list_resources.return_value = test_data["pmc_zip_key_names"]
-            
             success = self.activity.do_activity(test_data["input_data"])
 
             self.assertEqual(True, success)
@@ -74,19 +71,16 @@ class TestPMCDeposit(unittest.TestCase):
             self.assertEqual(sorted(self.zip_file_list(self.activity.zip_file_name)),
                              sorted(test_data["zip_file_names"]))
 
-    @patch('activity.activity_PMCDeposit.s3lib.get_s3_key_names_from_bucket')
-    @patch('activity.activity_PMCDeposit.S3Connection')
-    @patch.object(activity_PMCDeposit, 'upload_article_zip_to_s3')
+    @patch.object(FakeStorageContext, 'list_resources')
     @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
     @patch('activity.activity_PMCDeposit.storage_context')
     def test_do_activity_failed_ftp_to_endpoint(self, fake_storage_context, fake_ftp_to_endpoint,
-                                                fake_upload_article_zip_to_s3, fake_s3_mock,
-                                                fake_s3_key_names):
+                                                fake_list_resources):
 
         test_data = self.do_activity_passes[0]
 
         fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
-        fake_s3_key_names.return_value = test_data["pmc_zip_key_names"]
+        fake_list_resources.return_value = test_data["pmc_zip_key_names"]
         fake_ftp_to_endpoint.return_value = False
 
         success = self.activity.do_activity(test_data["input_data"])
