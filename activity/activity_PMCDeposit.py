@@ -197,27 +197,30 @@ class activity_PMCDeposit(Activity):
         Look at previously supplied files and determine the
         next revision number
         """
-        revision = None
-
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
         orig_resource = storage_provider + self.publish_bucket + "/" + self.published_zip_folder
 
         s3_key_names = storage.list_resources(orig_resource)
 
-        s3_key_name = s3lib.latest_pmc_zip_revision(fid, s3_key_names)
+        return next_revision_number(fid, s3_key_names)
 
-        if s3_key_name:
-            # Found an existing PMC zip file, look for a revision number
-            revision_match = re.match(r'.*r(.*)\.zip$', s3_key_name)
-            if revision_match is None:
-                # There is a zip but no revision number, use 1
-                revision = 1
-            else:
-                # Use the latest revision plus 1
-                revision = int(revision_match.group(1)) + 1
 
-        return revision
+def next_revision_number(fid, s3_key_names):
+    """Given article id and existing zip file names return the next revision number"""
+    revision = None
+    s3_key_name = s3lib.latest_pmc_zip_revision(fid, s3_key_names)
+
+    if s3_key_name:
+        # Found an existing PMC zip file, look for a revision number
+        revision_match = re.match(r'.*r(.*)\.zip$', s3_key_name)
+        if revision_match is None:
+            # There is a zip but no revision number, use 1
+            revision = 1
+        else:
+            # Use the latest revision plus 1
+            revision = int(revision_match.group(1)) + 1
+    return revision
 
 
 def unzip_article_files(zip_file_name, to_dir, logger):
