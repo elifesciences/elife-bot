@@ -109,7 +109,8 @@ class activity_PMCDeposit(Activity):
         revision = self.zip_revision_number(fid)
         self.zip_file_name = new_zip_filename(self.journal, volume, fid, revision)
         self.logger.info("new PMC zip file name: " + str(self.zip_file_name))
-        self.create_new_zip(self.zip_file_name)
+        zip_file_path = self.directories.get("ZIP_DIR") + os.sep + self.zip_file_name
+        create_new_zip(zip_file_path, self.directories.get("OUTPUT_DIR"), self.logger)
 
         ftp_status = None
         if verified and self.zip_file_name:
@@ -239,20 +240,16 @@ class activity_PMCDeposit(Activity):
 
         return revision
 
-    def create_new_zip(self, zip_file_name):
 
-        self.logger.info("creating new PMC zip file named " + zip_file_name)
+def create_new_zip(zip_file_name, files_dir, logger):
 
-        new_zipfile = zipfile.ZipFile(self.directories.get("ZIP_DIR") + os.sep + zip_file_name,
-                                      'w', zipfile.ZIP_DEFLATED, allowZip64=True)
+    logger.info("creating new PMC zip file named " + zip_file_name)
 
-        dirfiles = article_processing.file_list(self.directories.get("OUTPUT_DIR"))
-
-        for df in dirfiles:
-            filename = df.split(os.sep)[-1]
-            new_zipfile.write(df, filename)
-
-        new_zipfile.close()
+    with zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED, allowZip64=True) as new_zipfile:
+        dirfiles = article_processing.file_list(files_dir)
+        for article_file_name in dirfiles:
+            filename = article_file_name.split(os.sep)[-1]
+            new_zipfile.write(article_file_name, filename)
 
 
 def article_xml_file(folders):
