@@ -77,10 +77,8 @@ class activity_PMCDeposit(Activity):
                               self.directories.get("INPUT_DIR")))
             verified = True
 
-        folder = self.directories.get("INPUT_DIR")
-        self.logger.info('processing files in folder ' + folder)
-
-        self.unzip_article_files(article_processing.file_list(folder))
+        input_zip_file_name = os.path.join(self.directories.get("INPUT_DIR"), self.document)
+        unzip_article_files(input_zip_file_name, self.directories.get("TMP_DIR"), self.logger)
 
         xml_search_folders = [
             self.directories.get("TMP_DIR"),
@@ -95,7 +93,7 @@ class activity_PMCDeposit(Activity):
         (verified, renamed_list, not_renamed_list) = article_processing.verify_rename_files(
             file_name_map)
 
-        self.logger.info("verified " + folder + ": " + str(verified))
+        self.logger.info("verified " + self.directories.get("INPUT_DIR") + ": " + str(verified))
         self.logger.info(file_name_map)
 
         if len(not_renamed_list) > 0:
@@ -191,28 +189,6 @@ class activity_PMCDeposit(Activity):
                 article_processing.file_name_from_name(file_name))
             storage.set_resource_from_filename(resource_dest, file_name)
 
-    def unzip_or_move_file(self, file_name, to_dir, do_unzip=True):
-        """
-        If file extension is zip, then unzip contents
-        If file the extension
-        """
-        if article_processing.file_extension(file_name) == 'zip' and do_unzip is True:
-            # Unzip
-            self.logger.info("going to unzip " + file_name + " to " + to_dir)
-            myzip = zipfile.ZipFile(file_name, 'r')
-            myzip.extractall(to_dir)
-
-        elif article_processing.file_extension(file_name):
-            # Copy
-            self.logger.info("going to move and not unzip " + file_name + " to " + to_dir)
-            shutil.copyfile(file_name, to_dir + os.sep +
-                            article_processing.file_name_from_name(file_name))
-
-    def unzip_article_files(self, article_file_list):
-        for file_name in article_file_list:
-            self.logger.info("unzipping or moving file " + file_name)
-            self.unzip_or_move_file(file_name, self.directories.get("TMP_DIR"))
-
     def zip_revision_number(self, fid):
         """
         Look at previously supplied files and determine the
@@ -239,6 +215,15 @@ class activity_PMCDeposit(Activity):
                 revision = int(revision_match.group(1)) + 1
 
         return revision
+
+
+def unzip_article_files(zip_file_name, to_dir, logger):
+    """ If file extension is zip, then unzip contents """
+    if article_processing.file_extension(zip_file_name) == 'zip':
+        # Unzip
+        logger.info("going to unzip " + zip_file_name + " to " + to_dir)
+        with zipfile.ZipFile(zip_file_name, 'r') as open_file:
+            open_file.extractall(to_dir)
 
 
 def create_new_zip(zip_file_name, files_dir, logger):
