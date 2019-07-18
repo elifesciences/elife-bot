@@ -157,12 +157,10 @@ class activity_PMCDeposit(Activity):
         return ftp_status
 
     def download_files_from_s3(self, document):
-
+        """download input zip document from the bucket"""
         self.logger.info('downloading VoR file ' + document)
         bucket_name = self.input_bucket
 
-        "download files from the expanded folder"
-        # download expanded folder
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
         orig_resource = storage_provider + bucket_name
