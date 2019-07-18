@@ -47,6 +47,10 @@ class activity_PMCDeposit(Activity):
         # journal
         self.journal = 'elife'
 
+        self.document = None
+        self.input_bucket = None
+        self.zip_file_name = None
+
     def do_activity(self, data=None):
         """
         Activity, do the work
@@ -66,15 +70,14 @@ class activity_PMCDeposit(Activity):
         self.make_activity_directories(self.directories.values())
 
         # Download the S3 objects
-        self.download_files_from_s3(self.document)
+        download_status = self.download_files_from_s3(self.document)
 
-        verified = None
-        # Check for an empty folder and respond true
-        #  if we do not do this it will continue to attempt this activity
-        if article_processing.file_list(self.directories.get("INPUT_DIR")):
-            self.logger.info(('folder was empty in PMCDeposit: ' +
-                              self.directories.get("INPUT_DIR")))
-            verified = True
+        if not download_status:
+            self.logger.info('failed to download zip in PMCDeposit: ' + str(self.document))
+            # Clean up disk
+            self.clean_tmp_dir()
+            # Retry activity again
+            return self.ACTIVITY_TEMPORARY_FAILURE
 
         input_zip_file_name = os.path.join(self.directories.get("INPUT_DIR"), self.document)
         unzip_article_files(input_zip_file_name, self.directories.get("TMP_DIR"), self.logger)
@@ -172,6 +175,8 @@ class activity_PMCDeposit(Activity):
                 storage.get_resource_to_file(storage_resource_origin, open_file)
         except IOError:
             self.logger.exception("Failed to download file %s.", document)
+            return False
+        return True
 
     def upload_article_zip_to_s3(self):
         """

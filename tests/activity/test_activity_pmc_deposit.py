@@ -21,23 +21,37 @@ class TestPMCDeposit(unittest.TestCase):
         self.do_activity_passes = []
 
         self.do_activity_passes.append({
+            "scenario": "zip file was not downloaded",
+            "input_data": {"data": {"document": "does_not_exist.zip"}},
+            "pmc_zip_key_names": [],
+            "expected_zip_filename": None,
+            "expected_result": self.activity.ACTIVITY_TEMPORARY_FAILURE,
+            "zip_file_names": None})
+
+        self.do_activity_passes.append({
+            "scenario": "no previous PMC zip file",
             "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
             "pmc_zip_key_names": [],
             "expected_zip_filename": "elife-05-19405.zip",
+            "expected_result": True,
             "zip_file_names": ['elife-19405-fig1.tif', 'elife-19405-inf1.tif',
                                'elife-19405.pdf', 'elife-19405.xml']})
 
         self.do_activity_passes.append({
+            "scenario": "one previous PMC zip file",
             "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
             "pmc_zip_key_names": ["pmc/zip/elife-05-19405.zip"],
             "expected_zip_filename": "elife-05-19405.r1.zip",
+            "expected_result": True,
             "zip_file_names": ['elife-19405-fig1.tif', 'elife-19405-inf1.tif',
                                'elife-19405.pdf', 'elife-19405.xml']})
 
         self.do_activity_passes.append({
+            "scenario": "two previous PMC zip file revisions present",
             "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
             "pmc_zip_key_names": ["pmc/zip/elife-05-19405.zip", "pmc/zip/elife-05-19405.r1.zip"],
             "expected_zip_filename": "elife-05-19405.r2.zip",
+            "expected_result": True,
             "zip_file_names": ['elife-19405-fig1.tif', 'elife-19405-inf1.tif',
                                'elife-19405.pdf', 'elife-19405.xml']})
 
@@ -67,10 +81,15 @@ class TestPMCDeposit(unittest.TestCase):
             fake_list_resources.return_value = test_data["pmc_zip_key_names"]
             success = self.activity.do_activity(test_data["input_data"])
 
-            self.assertEqual(True, success)
+            self.assertEqual(success, test_data["expected_result"],
+                             "{value} does not equal {expected}, scenario: {scenario}".format(
+                                 value=success,
+                                 expected=test_data["expected_result"],
+                                 scenario=test_data["scenario"]))
             self.assertEqual(self.activity.zip_file_name, test_data["expected_zip_filename"])
-            self.assertEqual(sorted(self.zip_file_list(self.activity.zip_file_name)),
-                             sorted(test_data["zip_file_names"]))
+            if test_data["zip_file_names"]:
+                self.assertEqual(sorted(self.zip_file_list(self.activity.zip_file_name)),
+                                 sorted(test_data["zip_file_names"]))
 
     @patch.object(FakeStorageContext, 'list_resources')
     @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
@@ -78,7 +97,7 @@ class TestPMCDeposit(unittest.TestCase):
     def test_do_activity_failed_ftp_to_endpoint(self, fake_storage_context, fake_ftp_to_endpoint,
                                                 fake_list_resources):
 
-        test_data = self.do_activity_passes[0]
+        test_data = self.do_activity_passes[1]
 
         fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
         fake_list_resources.return_value = test_data["pmc_zip_key_names"]
