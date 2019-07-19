@@ -3,12 +3,9 @@ import time
 import os
 import re
 import arrow
-import provider.templates as templatelib
-from provider import ejp
+from provider import ejp, email_provider, lax_provider, templates
 import provider.article as articlelib
 from provider.storage_provider import storage_context
-import provider.lax_provider as lax_provider
-import provider.email_provider as email_provider
 from activity.objects import Activity
 
 
@@ -27,7 +24,7 @@ class activity_PublicationEmail(Activity):
         self.description = "Queue emails to notify of a new article publication."
 
         # Templates provider
-        self.templates = templatelib.Templates(settings, self.get_tmp_dir())
+        self.templates = templates.Templates(settings, self.get_tmp_dir())
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
