@@ -595,9 +595,8 @@ class activity_PublicationEmail(Activity):
         # EJP data provider
         ejp_object = ejp.EJP(self.settings, self.get_tmp_dir())
 
-        (column_headings, authors) = ejp_object.get_authors(doi_id=doi_id,
-                                                          corresponding=corresponding,
-                                                          local_document=local_document)
+        (column_headings, authors) = ejp_object.get_authors(
+            doi_id=doi_id, corresponding=corresponding, local_document=local_document)
 
         # Authors will be none if there is not data
         if authors is None:
