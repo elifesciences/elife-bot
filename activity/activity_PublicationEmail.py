@@ -4,7 +4,7 @@ import os
 import re
 import arrow
 import provider.templates as templatelib
-import provider.ejp as ejplib
+from provider import ejp
 import provider.article as articlelib
 from provider.storage_provider import storage_context
 import provider.lax_provider as lax_provider
@@ -28,9 +28,6 @@ class activity_PublicationEmail(Activity):
 
         # Templates provider
         self.templates = templatelib.Templates(settings, self.get_tmp_dir())
-
-        # EJP data provider
-        self.ejp = ejplib.EJP(settings, self.get_tmp_dir())
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
@@ -598,7 +595,10 @@ class activity_PublicationEmail(Activity):
         document is only provided when running tests, otherwise just specify the doi_id
         """
         author_list = []
-        (column_headings, authors) = self.ejp.get_authors(doi_id=doi_id,
+        # EJP data provider
+        ejp_object = ejp.EJP(self.settings, self.get_tmp_dir())
+
+        (column_headings, authors) = ejp_object.get_authors(doi_id=doi_id,
                                                           corresponding=corresponding,
                                                           local_document=local_document)
 
