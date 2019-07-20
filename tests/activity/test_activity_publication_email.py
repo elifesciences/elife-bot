@@ -11,7 +11,6 @@ from provider.article import article
 from provider.ejp import EJP
 import activity.activity_PublicationEmail as activity_module
 from activity.activity_PublicationEmail import activity_PublicationEmail
-from activity.activity_PublicationEmail import Struct
 import tests.test_data as test_data
 from tests.classes_mock import FakeSMTPServer
 from tests.activity.helpers import instantiate_article
@@ -371,11 +370,11 @@ class TestPublicationEmail(unittest.TestCase):
         # None
         failed_authors.append(None)
         # Object with no e_mail
-        failed_authors.append(Struct())
+        failed_authors.append({})
         # Object with e_mail as a blank string
-        failed_authors.append(Struct(**{"e_mail": " "}))
+        failed_authors.append({"e_mail": " "})
         # Object with e_mail as None
-        failed_authors.append(Struct(**{"e_mail": None}))
+        failed_authors.append({"e_mail": None})
 
         for failed_author in failed_authors:
             result = self.activity.send_email(None, None, failed_author, None, None)
@@ -424,8 +423,8 @@ class TestChooseRecipientAuthors(unittest.TestCase):
         recipient_authors = activity_module.choose_recipient_authors(
             authors, article_type, feature_article, related_insight_article, features_email)
         if recipient_authors:
-            self.assertEqual(recipient_authors[0].first_nm, expected_0_first_nm)
-            self.assertEqual(recipient_authors[0].e_mail, expected_0_e_mail)
+            self.assertEqual(recipient_authors[0]["first_nm"], expected_0_first_nm)
+            self.assertEqual(recipient_authors[0]["e_mail"], expected_0_e_mail)
 
 
 def fake_ejp_get_s3key(directory, to_dir, document, source_doc):

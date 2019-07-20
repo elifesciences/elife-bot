@@ -85,7 +85,7 @@ class activity_PublicationEmail(Activity):
                 log_info = "Total parsed articles: " + str(len(self.articles))
                 log_info += "\n" + "Total approved articles " + str(len(self.articles_approved))
                 log_info += ("\n" + "Total prepared articles " +
-                             str(len(self.articles_approved_prepared)))
+                                str(len(self.articles_approved_prepared)))
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
 
@@ -125,7 +125,7 @@ class activity_PublicationEmail(Activity):
                     # Good, we can send emails
                     for recipient_author in recipient_authors:
                         result = self.send_email(email_type, article.doi_id, recipient_author,
-                                                 article, authors)
+                                                    article, authors)
                         if result is False:
                             self.log_cannot_find_authors(article.doi)
 
@@ -419,11 +419,7 @@ class activity_PublicationEmail(Activity):
 
         if author is None:
             return False
-        if not hasattr(author, 'e_mail'):
-            return False
-        if author.e_mail is not None and str(author.e_mail).strip() == "":
-            return False
-        if author.e_mail is None:
+        if not author.get('e_mail') or str(author.get('e_mail')).strip() == "":
             return False
 
         # First process the headers
@@ -573,14 +569,13 @@ class activity_PublicationEmail(Activity):
 
         for author in authors:
             i = 0
-            temp = {}
+            recipient_author = {}
             for value in author:
                 heading = column_headings[i]
-                temp[heading] = value
+                recipient_author[heading] = value
                 i = i + 1
             # Special: convert the dict to an object for use in templates
-            obj = Struct(**temp)
-            author_list.append(obj)
+            author_list.append(recipient_author)
 
         return author_list
 
@@ -695,9 +690,7 @@ def choose_recipient_authors(authors, article_type, feature_article,
             feature_author = {}
             feature_author["first_nm"] = "Features"
             feature_author["e_mail"] = recipient_email
-            # Special: convert the dict to an object for use in templates
-            obj = Struct(**feature_author)
-            recipient_authors.append(obj)
+            recipient_authors.append(feature_author)
 
     if authors and len(recipient_authors) > 0:
         recipient_authors = recipient_authors + authors
@@ -705,11 +698,6 @@ def choose_recipient_authors(authors, article_type, feature_article,
         recipient_authors = authors
 
     return recipient_authors
-
-
-class Struct(object):
-    def __init__(self, **entries):
-        self.__dict__.update(entries)
 
 
 def set_datestamp():
