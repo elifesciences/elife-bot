@@ -311,7 +311,7 @@ class activity_PublicationEmail(Activity):
         if doi_id:
             # Get and parse the article XML for data
             # Convert the doi_id to 5 digit string in case it was an integer
-            if type(doi_id) == int:
+            if isinstance(doi_id, int):
                 doi_id = str(doi_id).zfill(5)
             article_xml_filename = article.download_article_xml_from_s3(doi_id)
             try:
@@ -596,7 +596,7 @@ class activity_PublicationEmail(Activity):
 
         recipient_email_list = []
         # Handle multiple recipients, if specified
-        if type(self.settings.ses_admin_email) == list:
+        if isinstance(self.settings.ses_admin_email, list):
             for email in self.settings.ses_admin_email:
                 recipient_email_list.append(email)
         else:
