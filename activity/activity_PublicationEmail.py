@@ -112,11 +112,12 @@ class activity_PublicationEmail(Activity):
                     authors = self.get_authors(article.doi_id)
 
                 # Send an email to each author
-                recipient_authors = self.choose_recipient_authors(
+                recipient_authors = choose_recipient_authors(
                     authors=authors,
                     article_type=article.article_type,
                     feature_article=is_feature_article(article),
-                    related_insight_article=article.related_insight_article)
+                    related_insight_article=article.related_insight_article,
+                    features_email=self.settings.features_publication_recipient_email)
 
                 if not recipient_authors:
                     self.log_cannot_find_authors(article.doi)
@@ -410,41 +411,6 @@ class activity_PublicationEmail(Activity):
 
         return approved_articles
 
-    def choose_recipient_authors(self, authors, article_type, feature_article,
-                                 related_insight_article):
-        """
-        The recipients of the email will change depending on if it is a
-        feature article
-        """
-        recipient_authors = []
-        if (feature_article is True
-                or article_type == "article-commentary"
-                or related_insight_article is not None):
-            # feature article recipients
-
-            recipient_email_list = []
-            # Handle multiple recipients, if specified
-            if type(self.settings.features_publication_recipient_email) == list:
-                for email in self.settings.features_publication_recipient_email:
-                    recipient_email_list.append(email)
-            else:
-                recipient_email_list.append(self.settings.features_publication_recipient_email)
-
-            for recipient_email in recipient_email_list:
-                feature_author = {}
-                feature_author["first_nm"] = "Features"
-                feature_author["e_mail"] = recipient_email
-                # Special: convert the dict to an object for use in templates
-                obj = Struct(**feature_author)
-                recipient_authors.append(obj)
-
-        if authors and len(recipient_authors) > 0:
-            recipient_authors = recipient_authors + authors
-        elif authors:
-            recipient_authors = authors
-
-        return recipient_authors
-
     def send_email(self, email_type, elife_id, author, article, authors):
         """
         Given the email type and author,
@@ -703,6 +669,42 @@ class activity_PublicationEmail(Activity):
         body += "\n\nSincerely\n\neLife bot"
 
         return body
+
+
+def choose_recipient_authors(authors, article_type, feature_article,
+                             related_insight_article, features_email):
+    """
+    The recipients of the email will change depending on if it is a
+    feature article
+    """
+    recipient_authors = []
+    if (feature_article is True
+            or article_type == "article-commentary"
+            or related_insight_article is not None):
+        # feature article recipients
+
+        recipient_email_list = []
+        # Handle multiple recipients, if specified
+        if isinstance(features_email, list):
+            for email in features_email:
+                recipient_email_list.append(email)
+        else:
+            recipient_email_list.append(features_email)
+
+        for recipient_email in recipient_email_list:
+            feature_author = {}
+            feature_author["first_nm"] = "Features"
+            feature_author["e_mail"] = recipient_email
+            # Special: convert the dict to an object for use in templates
+            obj = Struct(**feature_author)
+            recipient_authors.append(obj)
+
+    if authors and len(recipient_authors) > 0:
+        recipient_authors = recipient_authors + authors
+    elif authors:
+        recipient_authors = authors
+
+    return recipient_authors
 
 
 class Struct(object):

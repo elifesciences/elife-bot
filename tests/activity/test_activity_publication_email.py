@@ -33,6 +33,10 @@ LAX_ARTICLE_VERSIONS_RESPONSE_DATA_4 = (
     ])
 
 
+def fake_authors(activity_object, article_id=3):
+    return activity_object.get_authors(article_id, None, "tests/test_data/ejp_author_file.csv")
+
+
 @ddt
 class TestPublicationEmail(unittest.TestCase):
 
@@ -270,24 +274,6 @@ class TestPublicationEmail(unittest.TestCase):
             article_type, is_poa, was_ever_poa, feature_article)
         self.assertEqual(email_type, expected_email_type)
 
-    def fake_authors(self, article_id=3):
-        return self.activity.get_authors(article_id, None, "tests/test_data/ejp_author_file.csv")
-
-    @data(
-        (None, None, None, "Author", "author01@example.com"),
-        (None, True, None, "Features", "features_team@example.org"),
-        (None, None, "not_none", "Features", "features_team@example.org"),
-        ("article-commentary", False, None, "Features", "features_team@example.org")
-    )
-    @unpack
-    def test_choose_recipient_authors(self, article_type, feature_article, related_insight_article,
-                                      expected_0_first_nm, expected_0_e_mail):
-        authors = self.fake_authors()
-        recipient_authors = self.activity.choose_recipient_authors(
-            authors, article_type, feature_article, related_insight_article)
-        if recipient_authors:
-            self.assertEqual(recipient_authors[0].first_nm, expected_0_first_nm)
-            self.assertEqual(recipient_authors[0].e_mail, expected_0_e_mail)
 
     @patch.object(Templates, 'download_email_templates_from_s3')
     def test_template_get_email_headers_00013(self, fake_download_email_templates):
@@ -297,16 +283,17 @@ class TestPublicationEmail(unittest.TestCase):
 
         email_type = "author_publication_email_VOR_no_POA"
 
-        authors = self.fake_authors(13)
+        authors = fake_authors(self.activity, 13)
 
         article_object = article()
         article_object.parse_article_file("tests/test_data/elife00013.xml")
         article_type = article_object.article_type
         feature_article = False
         related_insight_article = None
+        features_email = "features_team@example.org"
 
-        recipient_authors = self.activity.choose_recipient_authors(
-            authors, article_type, feature_article, related_insight_article)
+        recipient_authors = activity_module.choose_recipient_authors(
+            authors, article_type, feature_article, related_insight_article, features_email)
         author = recipient_authors[2]
 
         email_format = "html"
@@ -334,7 +321,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         email_type = "author_publication_email_Feature"
 
-        authors = self.fake_authors()
+        authors = fake_authors(self.activity)
 
         article_object = article()
         article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
@@ -342,9 +329,10 @@ class TestPublicationEmail(unittest.TestCase):
         article_type = article_object.article_type
         feature_article = True
         related_insight_article = None
+        features_email = "features_team@example.org"
 
-        recipient_authors = self.activity.choose_recipient_authors(
-            authors, article_type, feature_article, related_insight_article)
+        recipient_authors = activity_module.choose_recipient_authors(
+            authors, article_type, feature_article, related_insight_article, features_email)
         author = recipient_authors[0]
 
         email_format = "html"
@@ -408,6 +396,36 @@ class TestPublicationEmail(unittest.TestCase):
         # one article will remain, the research-article
         self.assertEqual(len(approved_articles), 1)
         self.assertEqual(approved_articles[0].doi, research_article_doi)
+
+
+@ddt
+class TestChooseRecipientAuthors(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(settings_mock, fake_logger, None, None, None)
+
+    @data(
+        (None, None, None, "features_team@example.org",
+         "Author", "author01@example.com"),
+        (None, True, None, "features_team@example.org",
+         "Features", "features_team@example.org"),
+        (None, None, "not_none", "features_team@example.org",
+         "Features", "features_team@example.org"),
+        ("article-commentary", False, None, "features_team@example.org",
+         "Features", "features_team@example.org"),
+        ("article-commentary", False, None, ["features_team@example.org"],
+         "Features", "features_team@example.org")
+    )
+    @unpack
+    def test_choose_recipient_authors(self, article_type, feature_article, related_insight_article,
+                                      features_email,
+                                      expected_0_first_nm, expected_0_e_mail):
+        authors = fake_authors(self.activity)
+        recipient_authors = activity_module.choose_recipient_authors(
+            authors, article_type, feature_article, related_insight_article, features_email)
+        if recipient_authors:
+            self.assertEqual(recipient_authors[0].first_nm, expected_0_first_nm)
+            self.assertEqual(recipient_authors[0].e_mail, expected_0_e_mail)
 
 
 def fake_ejp_get_s3key(directory, to_dir, document, source_doc):
