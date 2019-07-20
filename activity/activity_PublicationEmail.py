@@ -486,24 +486,12 @@ class activity_PublicationEmail(Activity):
 
         return True
 
-    def get_to_folder_name(self):
-        """
-        From the date_stamp
-        return the S3 folder name to save published files into
-        """
-        to_folder = None
-
-        date_folder_name = self.date_stamp
-        to_folder = self.published_folder + date_folder_name + "/"
-
-        return to_folder
-
     def clean_outbox(self):
         """
         Clean out the S3 outbox folder
         """
 
-        to_folder = self.get_to_folder_name()
+        to_folder = get_to_folder_name(self.published_folder)
 
         # Move only the published files from the S3 outbox to the published folder
         bucket_name = self.publish_bucket
@@ -664,6 +652,19 @@ class activity_PublicationEmail(Activity):
         body += "\n\nSincerely\n\neLife bot"
 
         return body
+
+
+def get_to_folder_name(published_folder):
+    """
+    From the date_stamp
+    return the S3 folder name to save published files into
+    """
+    to_folder = None
+
+    date_folder_name = set_datestamp()
+    to_folder = published_folder + date_folder_name + "/"
+
+    return to_folder
 
 
 def choose_recipient_authors(authors, article_type, feature_article,
