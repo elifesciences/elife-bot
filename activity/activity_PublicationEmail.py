@@ -84,8 +84,8 @@ class activity_PublicationEmail(Activity):
 
                 log_info = "Total parsed articles: " + str(len(self.articles))
                 log_info += "\n" + "Total approved articles " + str(len(self.articles_approved))
-                log_info += ("\n" + "Total prepared articles " +
-                                str(len(self.articles_approved_prepared)))
+                log_info += (
+                    "\n" + "Total prepared articles " + str(len(self.articles_approved_prepared)))
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
 
@@ -124,8 +124,8 @@ class activity_PublicationEmail(Activity):
                 else:
                     # Good, we can send emails
                     for recipient_author in recipient_authors:
-                        result = self.send_email(email_type, article.doi_id, recipient_author,
-                                                    article, authors)
+                        result = self.send_email(
+                            email_type, article.doi_id, recipient_author, article, authors)
                         if result is False:
                             self.log_cannot_find_authors(article.doi)
 
