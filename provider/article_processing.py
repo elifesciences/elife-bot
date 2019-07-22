@@ -59,10 +59,7 @@ def stripped_file_name_map(file_names, logger=None):
 
 
 def rename_files_remove_version_number(files_dir, output_dir, logger=None):
-    """
-    Rename files to not include the version number, if present
-    Pre-PPP files will not have a version number, for before PPP is launched
-    """
+    """Rename files to not include the version number, if present"""
 
     # Get a list of all files
     dirfiles = file_list(files_dir)
