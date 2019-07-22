@@ -49,6 +49,7 @@ class Activity(object):
 
         self.tmp_base_dir = "tmp"
         self.tmp_dir = None
+        self.directories = None
 
     def describe(self):
         """
@@ -183,13 +184,22 @@ class Activity(object):
         """
         Create the directories in the activity tmp_dir
         """
-        if not dir_names:
+        if not dir_names and self.directories and hasattr(self.directories, "values"):
             dir_names = self.directories.values()
+        if not dir_names:
+            self.logger.info("No dir_names to create in make_activity_directories()")
+            return None
+        # Now try to find or make directories
         for dir_name in dir_names:
+            if os.path.isdir(dir_name):
+                # directory exists, continue
+                continue
             try:
                 os.mkdir(dir_name)
-            except OSError:
-                pass
+            except OSError as exception:
+                self.logger.exception(str(exception))
+                raise
+        return True
 
     def open_file_from_tmp_dir(self, filename, mode='r'):
         """
