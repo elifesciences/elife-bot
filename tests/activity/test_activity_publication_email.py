@@ -52,9 +52,7 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife00013.xml"],
             "article_id": "00013",
-            "activity_success": True,
-            "articles_approved_len": 1,
-            "articles_approved_prepared_len": 1})
+            "activity_success": True})
 
         self.do_activity_passes.append({
             "comment": "normal article with input_data None",
@@ -63,9 +61,7 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife03385.xml"],
             "article_id": "03385",
-            "activity_success": True,
-            "articles_approved_len": 1,
-            "articles_approved_prepared_len": 1})
+            "activity_success": True})
 
         self.do_activity_passes.append({
             "comment": "basic PoA article",
@@ -74,9 +70,7 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
             "article_id": "03977",
-            "activity_success": True,
-            "articles_approved_len": 1,
-            "articles_approved_prepared_len": 1})
+            "activity_success": True})
 
         self.do_activity_passes.append({
             "comment": "Cannot build article",
@@ -85,9 +79,7 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["does_not_exist.xml"],
             "article_id": None,
-            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE,
-            "articles_approved_len": 0,
-            "articles_approved_prepared_len": 0})
+            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE})
 
         self.do_activity_passes.append({
             "comment": "Not warmed templates",
@@ -96,9 +88,7 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": False,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
             "article_id": None,
-            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE,
-            "articles_approved_len": 0,
-            "articles_approved_prepared_len": 0})
+            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE})
 
         self.do_activity_passes.append({
             "comment": "article-commentary with a related article",
@@ -108,9 +98,7 @@ class TestPublicationEmail(unittest.TestCase):
             "article_xml_filenames": ["elife-18753-v1.xml"],
             "related_article": "tests/test_data/elife-15747-v2.xml",
             "article_id": "18753",
-            "activity_success": True,
-            "articles_approved_len": 1,
-            "articles_approved_prepared_len": 1})
+            "activity_success": True})
 
         self.do_activity_passes.append({
             "comment": "article-commentary, related article cannot be found",
@@ -120,9 +108,7 @@ class TestPublicationEmail(unittest.TestCase):
             "article_xml_filenames": ["elife-18753-v1.xml"],
             "related_article": None,
             "article_id": "18753",
-            "activity_success": True,
-            "articles_approved_len": 1,
-            "articles_approved_prepared_len": 0})
+            "activity_success": True})
 
         self.do_activity_passes.append({
             "comment": "article-commentary plus its matching insight",
@@ -131,9 +117,7 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife-18753-v1.xml", "elife-15747-v2.xml"],
             "article_id": "18753",
-            "activity_success": True,
-            "articles_approved_len": 2,
-            "articles_approved_prepared_len": 1})
+            "activity_success": True})
 
         self.do_activity_passes.append({
             "comment": "feature article",
@@ -142,9 +126,7 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife-00353-v1.xml"],
             "article_id": "00353",
-            "activity_success": True,
-            "articles_approved_len": 1,
-            "articles_approved_prepared_len": 1})
+            "activity_success": True})
 
         self.do_activity_passes.append({
             "comment": "article-commentary with no related-article tag",
@@ -153,9 +135,7 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife-23065-v1.xml"],
             "article_id": "23065",
-            "activity_success": True,
-            "articles_approved_len": 1,
-            "articles_approved_prepared_len": 1})
+            "activity_success": True})
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -172,26 +152,21 @@ class TestPublicationEmail(unittest.TestCase):
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('provider.lax_provider.article_versions')
     @patch.object(Templates, 'download_email_templates_from_s3')
-    @patch.object(article, 'get_folder_names_from_bucket')
     @patch.object(EJP, 'get_s3key')
     @patch.object(EJP, 'find_latest_s3_file_name')
-    @patch.object(activity_PublicationEmail, 'clean_tmp_dir')
     @patch.object(FakeStorageContext, 'list_resources')
     @patch('activity.activity_PublicationEmail.storage_context')
-    def test_do_activity(self, fake_storage_context, fake_list_resources, fake_clean_tmp_dir,
+    def test_do_activity(self, fake_storage_context, fake_list_resources,
                          fake_find_latest_s3_file_name,
                          fake_ejp_get_s3key,
-                         fake_article_get_folder_names,
                          fake_download_email_templates,
                          fake_article_versions,
                          fake_email_smtp_connect):
 
         directory = TempDirectory()
-        fake_clean_tmp_dir.return_value = None
         fake_storage_context.return_value = FakeStorageContext()
 
         # Basic fake data for all activity passes
-        fake_article_get_folder_names.return_value = []
         fake_ejp_get_s3key.return_value = fake_ejp_get_s3key(
             directory, self.activity.get_tmp_dir(), "authors.csv",
             "tests/test_data/ejp_author_file.csv")
@@ -222,20 +197,8 @@ class TestPublicationEmail(unittest.TestCase):
                 success, pass_test_data["activity_success"],
                 'failed success check in {comment}'.format(
                     comment=pass_test_data.get("comment")))
-            self.assertEqual(
-                len(self.activity.articles_approved),
-                pass_test_data["articles_approved_len"],
-                'failed articles_approved_len check in {comment}'.format(
-                    comment=pass_test_data.get("comment")))
-            self.assertEqual(
-                len(self.activity.articles_approved_prepared),
-                pass_test_data["articles_approved_prepared_len"],
-                'failed articles_approved_prepared_len check in {comment}'.format(
-                    comment=pass_test_data.get("comment")))
 
             # reset object values
-            self.activity.articles_approved = []
-            self.activity.articles_approved_prepared = []
             self.activity.related_articles = []
 
     @patch('provider.lax_provider.article_versions')

@@ -35,12 +35,8 @@ class activity_PublicationEmail(Activity):
         self.activity_status = None
 
         # Track XML files selected for publication
-        self.article_xml_filenames = []
         self.xml_file_to_doi_map = {}
-        self.articles = []
         self.related_articles = []
-        self.articles_approved = []
-        self.articles_approved_prepared = []
         self.insight_articles_to_remove_from_outbox = []
         self.articles_do_not_remove_from_outbox = []
 
@@ -80,29 +76,28 @@ class activity_PublicationEmail(Activity):
 
         try:
             # Download the article XML from S3 and parse them
-            self.article_xml_filenames = self.download_files_from_s3_outbox()
+            article_xml_filenames = self.download_files_from_s3_outbox()
         except Exception:
             self.logger.exception("Failed to download files from the S3 outbox")
             return self.ACTIVITY_PERMANENT_FAILURE
 
         try:
-            self.articles_approved, self.articles_approved_prepared = self.process_articles(
-                self.article_xml_filenames)
+            approved, prepared = self.process_articles(article_xml_filenames)
         except Exception:
             self.logger.exception("Failed to parse, approve, and prepare all the articles")
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # return now if no articles are approved
-        if not self.articles_approved:
+        if not approved:
             self.logger.info("No articles were approved for sending")
             self.send_admin_email()
             return True
 
         try:
-            self.send_emails_for_articles(self.articles_approved_prepared)
+            self.send_emails_for_articles(prepared)
 
             # Clean the outbox
-            self.clean_outbox()
+            self.clean_outbox(prepared)
 
             # Send email to admins with the status
             self.activity_status = True
@@ -433,7 +428,7 @@ class activity_PublicationEmail(Activity):
 
         return True
 
-    def clean_outbox(self):
+    def clean_outbox(self, prepared):
         """
         Clean out the S3 outbox folder
         """
@@ -447,7 +442,7 @@ class activity_PublicationEmail(Activity):
         s3_key_names = []
         remove_doi_list = []
         processed_file_names = []
-        for article in self.articles_approved_prepared:
+        for article in prepared:
             if article.doi not in self.articles_do_not_remove_from_outbox:
                 remove_doi_list.append(article.doi)
 
