@@ -9,6 +9,10 @@ from provider.storage_provider import storage_context
 from activity.objects import Activity
 
 
+# Article types for which not to send emails
+ARTICLE_TYPES_DO_NOT_SEND = ['editorial', 'correction', 'retraction']
+
+
 class activity_PublicationEmail(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
@@ -39,22 +43,6 @@ class activity_PublicationEmail(Activity):
         self.related_articles = []
         self.insight_articles_to_remove_from_outbox = []
         self.articles_do_not_remove_from_outbox = []
-
-        # Article types for which not to send emails
-        self.article_types_do_not_send = []
-        self.article_types_do_not_send.append('editorial')
-        self.article_types_do_not_send.append('correction')
-        self.article_types_do_not_send.append('retraction')
-
-        # Email types, for sending previews of each template
-        self.email_types = []
-        self.email_types.append('author_publication_email_POA')
-        self.email_types.append('author_publication_email_VOR_after_POA')
-        self.email_types.append('author_publication_email_VOR_no_POA')
-        self.email_types.append('author_publication_email_Insight_to_VOR')
-        self.email_types.append('author_publication_email_Feature')
-
-        self.date_stamp = set_datestamp()
 
         self.admin_email_content = ''
 
@@ -297,7 +285,7 @@ class activity_PublicationEmail(Activity):
 
         for article in articles:
             # Remove based on article type
-            if article.article_type in self.article_types_do_not_send:
+            if article.article_type in ARTICLE_TYPES_DO_NOT_SEND:
                 log_info = "Removing based on article type " + article.doi
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
