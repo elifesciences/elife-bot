@@ -406,6 +406,36 @@ class TestChooseRecipientAuthors(unittest.TestCase):
             self.assertEqual(recipient_authors[0]["e_mail"], expected_0_e_mail)
 
 
+class TestGetRelatedArticle(unittest.TestCase):
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_get_related_article_from_cache(self):
+        """get related article from existing list of related articles"""
+        doi = "10.7554/eLife.15747"
+        expected_doi = doi
+        related_article = article()
+        related_article.parse_article_file("tests/test_data/elife-15747-v2.xml")
+        return_value = activity_module.get_related_article(
+            settings_mock, TempDirectory(), doi, [related_article], FakeLogger(), "")
+        self.assertEqual(return_value.doi, expected_doi)
+
+    @patch("provider.article.create_article")
+    def test_get_related_article_create_article(self, fake_create_article):
+        """get related article from creating a new article for the doi"""
+        doi = "10.7554/eLife.15747"
+        expected_doi = doi
+        article_object = article()
+        article_object.parse_article_file("tests/test_data/elife-15747-v2.xml")
+        fake_create_article.return_value = article_object
+        related_articles = []
+        return_value = activity_module.get_related_article(
+            settings_mock, TempDirectory(), doi, related_articles, FakeLogger(), "")
+        self.assertEqual(return_value.doi, expected_doi)
+        self.assertEqual(len(related_articles), 1)
+
+
 def fake_ejp_get_s3key(directory, to_dir, document, source_doc):
     """
     EJP data do two things, copy the CSV file to where it should be

@@ -3,7 +3,7 @@ import time
 import os
 import re
 import arrow
-from provider import ejp, email_provider, lax_provider, templates
+from provider import ejp, email_provider, lax_provider, templates, utils
 import provider.article as articlelib
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -602,7 +602,7 @@ def get_related_article(settings, tmp_dir, doi, related_articles, logger, admin_
             return article
 
     # Article for this DOI does not exist, populate it
-    doi_id = int(doi.split(".")[-1])
+    doi_id = utils.msid_from_doi(doi)
     article = articlelib.create_article(settings, tmp_dir, doi_id)
 
     if not article:
@@ -611,7 +611,7 @@ def get_related_article(settings, tmp_dir, doi, related_articles, logger, admin_
         logger.info(log_info)
         return article
 
-    self.related_articles.append(article)
+    related_articles.append(article)
 
     log_info = "Building article for " + doi
     admin_email_content += "\n" + log_info
