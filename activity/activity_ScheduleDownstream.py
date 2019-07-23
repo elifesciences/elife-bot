@@ -1,7 +1,7 @@
 import json
 from collections import OrderedDict
 from provider.storage_provider import storage_context
-from provider.lax_provider import get_xml_file_name
+import provider.lax_provider as lax_provider
 from activity.objects import Activity
 
 """
@@ -48,11 +48,14 @@ class activity_ScheduleDownstream(Activity):
                                 "Schedule Downstream", "start",
                                 "Starting scheduling of downstream deposits for " + article_id)
 
+        first_by_status = lax_provider.article_first_by_status(
+            article_id, version, status, self.settings)
+
         try:
-            xml_file_name = get_xml_file_name(
+            xml_file_name = lax_provider.get_xml_file_name(
                 self.settings, expanded_folder_name, expanded_bucket_name, version)
             xml_key_name = expanded_folder_name + "/" + xml_file_name
-            outbox_list = choose_outboxes(status, outbox_map(), run_type)
+            outbox_list = choose_outboxes(status, outbox_map(), first_by_status, run_type)
 
             for outbox in outbox_list:
                 self.rename_and_copy_to_outbox(
@@ -117,11 +120,12 @@ def outbox_map():
     return outboxes
 
 
-def choose_outboxes(status, outbox_map, run_type=None):
+def choose_outboxes(status, outbox_map, first_by_status, run_type=None):
     outbox_list = []
 
     if run_type != "silent-correction":
-        outbox_list.append(outbox_map.get("publication_email"))
+        if first_by_status:
+            outbox_list.append(outbox_map.get("publication_email"))
 
     if status == "poa":
         outbox_list.append(outbox_map.get("pubmed"))
