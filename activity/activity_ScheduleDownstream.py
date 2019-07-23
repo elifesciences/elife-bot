@@ -65,11 +65,11 @@ class activity_ScheduleDownstream(Activity):
                                     "end", "Finished scheduling of downstream deposits " +
                                     article_id + " for version " + version + " run " + str(run))
 
-        except Exception as e:
+        except Exception as exception:
             self.logger.exception("Exception when scheduling downstream")
             self.emit_monitor_event(self.settings, article_id, version, run, "Schedule Downstream",
                                     "error", "Error scheduling downstream " + article_id +
-                                    " message:" + e.message)
+                                    " message:" + str(exception))
             return False
 
         return True
