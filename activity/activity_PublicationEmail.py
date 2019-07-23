@@ -86,61 +86,20 @@ class activity_PublicationEmail(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
         try:
-            self.articles = self.parse_article_xml(self.article_xml_filenames)
-            self.articles_approved = self.approve_articles(self.articles)
+            self.articles_approved, self.articles_approved_prepared = self.process_articles(
+                self.article_xml_filenames)
+        except Exception:
+            self.logger.exception("Failed to parse, approve, and prepare all the articles")
+            return self.ACTIVITY_PERMANENT_FAILURE
 
-            self.articles_approved_prepared = self.prepare_articles(self.articles_approved)
+        # return now if no articles are approved
+        if not self.articles_approved:
+            self.logger.info("No articles were approved for sending")
+            self.send_admin_email()
+            return True
 
-            log_info = "Total parsed articles: " + str(len(self.articles))
-            log_info += "\n" + "Total approved articles " + str(len(self.articles_approved))
-            log_info += (
-                "\n" + "Total prepared articles " + str(len(self.articles_approved_prepared)))
-            self.admin_email_content += "\n" + log_info
-            self.logger.info(log_info)
-
-            # return now if no articles are approved
-            if not self.articles_approved:
-                return self.ACTIVITY_PERMANENT_FAILURE
-
-            # For the set of articles now select the template, authors and queue the emails
-            for article in self.articles_approved_prepared:
-
-                # Determine which email type or template to send
-                email_type = choose_email_type(
-                    article_type=article.article_type,
-                    is_poa=article.is_poa,
-                    was_ever_poa=article.was_ever_poa,
-                    feature_article=is_feature_article(article)
-                    )
-
-                # Get the authors depending on the article type
-                if article.article_type == "article-commentary":
-                    # Check if the related article object was instantiated properly
-                    if hasattr(article.related_insight_article, "doi_id"):
-                        authors = self.get_authors(article.related_insight_article.doi_id)
-                    else:
-                        authors = None
-                        self.log_cannot_find_authors(article.doi)
-                else:
-                    authors = self.get_authors(article.doi_id)
-
-                # Send an email to each author
-                recipient_authors = choose_recipient_authors(
-                    authors=authors,
-                    article_type=article.article_type,
-                    feature_article=is_feature_article(article),
-                    related_insight_article=article.related_insight_article,
-                    features_email=self.settings.features_publication_recipient_email)
-
-                if not recipient_authors:
-                    self.log_cannot_find_authors(article.doi)
-                else:
-                    # Good, we can send emails
-                    for recipient_author in recipient_authors:
-                        result = self.send_email(
-                            email_type, article.doi_id, recipient_author, article, authors)
-                        if result is False:
-                            self.log_cannot_find_authors(article.doi)
+        try:
+            self.send_emails_for_articles(self.articles_approved_prepared)
 
             # Clean the outbox
             self.clean_outbox()
@@ -160,6 +119,24 @@ class activity_PublicationEmail(Activity):
         self.logger.info(log_info)
         # Make a note of this and we will not remove from the outbox, save for a later day
         self.articles_do_not_remove_from_outbox.append(doi)
+
+    def process_articles(self, article_xml_filenames):
+        """multi-step parsing, approving, and preparing of article files"""
+        approved = []
+        prepared = []
+
+        articles = self.parse_article_xml(self.article_xml_filenames)
+        approved = self.approve_articles(articles)
+        prepared = self.prepare_articles(approved)
+
+        log_info = "Total parsed articles: " + str(len(articles))
+        log_info += "\n" + "Total approved articles " + str(len(approved))
+        log_info += (
+            "\n" + "Total prepared articles " + str(len(prepared)))
+        self.admin_email_content += "\n" + log_info
+        self.logger.info(log_info)
+
+        return approved, prepared
 
     def prepare_articles(self, articles):
         """
@@ -340,6 +317,47 @@ class activity_PublicationEmail(Activity):
                 approved_articles.append(article)
 
         return approved_articles
+
+    def send_emails_for_articles(self, articles):
+        """given a list of articles, choose template, recipients, and send the email"""
+        for article in articles:
+
+            # Determine which email type or template to send
+            email_type = choose_email_type(
+                article_type=article.article_type,
+                is_poa=article.is_poa,
+                was_ever_poa=article.was_ever_poa,
+                feature_article=is_feature_article(article)
+                )
+
+            # Get the authors depending on the article type
+            if article.article_type == "article-commentary":
+                # Check if the related article object was instantiated properly
+                if hasattr(article.related_insight_article, "doi_id"):
+                    authors = self.get_authors(article.related_insight_article.doi_id)
+                else:
+                    authors = None
+                    self.log_cannot_find_authors(article.doi)
+            else:
+                authors = self.get_authors(article.doi_id)
+
+            # Send an email to each author
+            recipient_authors = choose_recipient_authors(
+                authors=authors,
+                article_type=article.article_type,
+                feature_article=is_feature_article(article),
+                related_insight_article=article.related_insight_article,
+                features_email=self.settings.features_publication_recipient_email)
+
+            if not recipient_authors:
+                self.log_cannot_find_authors(article.doi)
+            else:
+                # Good, we can send emails
+                for recipient_author in recipient_authors:
+                    result = self.send_email(
+                        email_type, article.doi_id, recipient_author, article, authors)
+                    if result is False:
+                        self.log_cannot_find_authors(article.doi)
 
     def send_email(self, email_type, elife_id, author, article, authors):
         """
