@@ -79,35 +79,13 @@ class TestPublicationEmail(unittest.TestCase):
             "articles_approved_prepared_len": 1})
 
         self.do_activity_passes.append({
-            "comment": "not first version of PoA article",
-            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_2,
-            "input_data": None,
-            "templates_warmed": True,
-            "article_xml_filenames": ["elife_poa_e03977.xml"],
-            "article_id": "03977",
-            "activity_success": True,
-            "articles_approved_len": 0,
-            "articles_approved_prepared_len": 0})
-
-        self.do_activity_passes.append({
-            "comment": "not first version of VoR article",
-            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_4,
-            "input_data": None,
-            "templates_warmed": True,
-            "article_xml_filenames": ["elife03385.xml"],
-            "article_id": "03385",
-            "activity_success": True,
-            "articles_approved_len": 0,
-            "articles_approved_prepared_len": 0})
-
-        self.do_activity_passes.append({
             "comment": "Cannot build article",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": None,
             "templates_warmed": True,
             "article_xml_filenames": ["does_not_exist.xml"],
             "article_id": None,
-            "activity_success": True,
+            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE,
             "articles_approved_len": 0,
             "articles_approved_prepared_len": 0})
 
@@ -118,7 +96,7 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": False,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
             "article_id": None,
-            "activity_success": True,
+            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE,
             "articles_approved_len": 0,
             "articles_approved_prepared_len": 0})
 
@@ -255,7 +233,9 @@ class TestPublicationEmail(unittest.TestCase):
                 'failed articles_approved_prepared_len check in {comment}'.format(
                     comment=pass_test_data.get("comment")))
 
-            # reset related_articles
+            # reset object values
+            self.activity.articles_approved = []
+            self.activity.articles_approved_prepared = []
             self.activity.related_articles = []
 
     @data(
@@ -272,7 +252,6 @@ class TestPublicationEmail(unittest.TestCase):
         email_type = activity_module.choose_email_type(
             article_type, is_poa, was_ever_poa, feature_article)
         self.assertEqual(email_type, expected_email_type)
-
 
     @patch.object(Templates, 'download_email_templates_from_s3')
     def test_template_get_email_headers_00013(self, fake_download_email_templates):

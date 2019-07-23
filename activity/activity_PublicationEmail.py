@@ -72,22 +72,35 @@ class activity_PublicationEmail(Activity):
         try:
             # Download templates
             templates_downloaded = self.download_templates()
-            if templates_downloaded is True:
+        except Exception:
+            self.logger.exception("Failed to download templates")
+            return self.ACTIVITY_PERMANENT_FAILURE
+        if not templates_downloaded:
+            return self.ACTIVITY_PERMANENT_FAILURE
 
-                # Download the article XML from S3 and parse them
-                self.article_xml_filenames = self.download_files_from_s3_outbox()
-                self.articles = self.parse_article_xml(self.article_xml_filenames)
+        try:
+            # Download the article XML from S3 and parse them
+            self.article_xml_filenames = self.download_files_from_s3_outbox()
+        except Exception:
+            self.logger.exception("Failed to download files from the S3 outbox")
+            return self.ACTIVITY_PERMANENT_FAILURE
 
-                self.articles_approved = self.approve_articles(self.articles)
+        try:
+            self.articles = self.parse_article_xml(self.article_xml_filenames)
+            self.articles_approved = self.approve_articles(self.articles)
 
-                self.articles_approved_prepared = self.prepare_articles(self.articles_approved)
+            self.articles_approved_prepared = self.prepare_articles(self.articles_approved)
 
-                log_info = "Total parsed articles: " + str(len(self.articles))
-                log_info += "\n" + "Total approved articles " + str(len(self.articles_approved))
-                log_info += (
-                    "\n" + "Total prepared articles " + str(len(self.articles_approved_prepared)))
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
+            log_info = "Total parsed articles: " + str(len(self.articles))
+            log_info += "\n" + "Total approved articles " + str(len(self.articles_approved))
+            log_info += (
+                "\n" + "Total prepared articles " + str(len(self.articles_approved_prepared)))
+            self.admin_email_content += "\n" + log_info
+            self.logger.info(log_info)
+
+            # return now if no articles are approved
+            if not self.articles_approved:
+                return self.ACTIVITY_PERMANENT_FAILURE
 
             # For the set of articles now select the template, authors and queue the emails
             for article in self.articles_approved_prepared:
@@ -367,39 +380,10 @@ class activity_PublicationEmail(Activity):
         # Keep track of which articles to remove at the end
         remove_article_doi = []
 
-        # Remove based on article type
         for article in articles:
+            # Remove based on article type
             if article.article_type in self.article_types_do_not_send:
                 log_info = "Removing based on article type " + article.doi
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
-                remove_article_doi.append(article.doi)
-
-        for article in articles:
-            # Check whether the DOI was ever POA
-            article.was_ever_poa = lax_provider.was_ever_poa(article.doi_id, self.settings)
-
-            # Now can check if published
-            is_published = lax_provider.published_considering_poa_status(
-                article_id=article.doi_id,
-                settings=self.settings,
-                is_poa=article.is_poa,
-                was_ever_poa=article.was_ever_poa)
-            if is_published is not True:
-                log_info = "Removing because it is not published " + article.doi
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
-                remove_article_doi.append(article.doi)
-
-            # Check whether it is the first version of poa or vor
-            version = lax_provider.article_highest_version(article.doi_id, self.settings)
-            status = 'poa' if article.is_poa else 'vor'
-            is_first = lax_provider.article_first_by_status(
-                article.doi_id, version, status, self.settings)
-            if is_first is not True:
-                log_info = (
-                    "Removing because it is status %s, version %s and is not the first version %s"
-                    % (status, version, article.doi))
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
@@ -407,6 +391,8 @@ class activity_PublicationEmail(Activity):
         # Can remove the articles now without affecting the loops using del
         for article in articles:
             if article.doi not in remove_article_doi:
+                # Set whether the DOI was ever POA
+                article.was_ever_poa = lax_provider.was_ever_poa(article.doi_id, self.settings)
                 approved_articles.append(article)
 
         return approved_articles
