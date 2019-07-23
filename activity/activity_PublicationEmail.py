@@ -222,7 +222,9 @@ class activity_PublicationEmail(Activity):
 
                     related_article_doi = article.get_article_related_insight_doi()
                     if related_article_doi:
-                        related_article = self.get_related_article(related_article_doi)
+                        related_article = get_related_article(
+                            self.settings, self.get_tmp_dir(), related_article_doi,
+                            self.related_articles, self.logger, self.admin_email_content)
                         if related_article:
                             article.set_related_insight_article(related_article)
                         else:
@@ -278,7 +280,7 @@ class activity_PublicationEmail(Activity):
 
         for article_xml_filename in article_xml_filenames:
 
-            article = self.create_article()
+            article = articlelib.create_article(self.settings, self.get_tmp_dir)
             article.parse_article_file(article_xml_filename)
             article.pdf_cover_link = article.get_pdf_cover_page(
                 article.doi_id, self.settings, self.logger)
@@ -311,64 +313,6 @@ class activity_PublicationEmail(Activity):
             self.admin_email_content += "\n" + log_info
             self.logger.info(log_info)
             return True
-
-    def create_article(self, doi_id=None):
-        """
-        Instantiate an article object and optionally populate it with
-        data for the doi_id (int) supplied
-        """
-
-        # Instantiate a new article object
-        article = articlelib.article(self.settings, self.get_tmp_dir())
-
-        if doi_id:
-            # Get and parse the article XML for data
-            # Convert the doi_id to 5 digit string in case it was an integer
-            if isinstance(doi_id, int):
-                doi_id = str(doi_id).zfill(5)
-            article_xml_filename = article.download_article_xml_from_s3(doi_id)
-            try:
-                article.parse_article_file(self.get_tmp_dir() + os.sep + article_xml_filename)
-            except:
-                # Article XML for this DOI was not parsed so return None
-                return None
-
-        return article
-
-    def get_related_article(self, doi):
-        """
-        When populating related articles, given a DOI,
-        download the article XML and parse it,
-        return a previously parsed article object if it exists
-        """
-
-        article = None
-
-        for article in self.related_articles:
-            if article.doi == doi:
-                # Return an existing article object
-                log_info = "Hit the article cache on " + doi
-                self.admin_email_content += "\n" + log_info
-                self.logger.info(log_info)
-                return article
-
-        # Article for this DOI does not exist, populate it
-        doi_id = int(doi.split(".")[-1])
-        article = self.create_article(doi_id)
-
-        if not article:
-            log_info = "Could not build the related article " + doi
-            self.admin_email_content += "\n" + log_info
-            self.logger.info(log_info)
-            return article
-
-        self.related_articles.append(article)
-
-        log_info = "Building article for " + doi
-        self.admin_email_content += "\n" + log_info
-        self.logger.info(log_info)
-
-        return article
 
     def approve_articles(self, articles):
         """
@@ -638,6 +582,42 @@ class activity_PublicationEmail(Activity):
         body += "\n\nSincerely\n\neLife bot"
 
         return body
+
+
+def get_related_article(settings, tmp_dir, doi, related_articles, logger, admin_email_content):
+    """
+    When populating related articles, given a DOI,
+    download the article XML and parse it,
+    return a previously parsed article object if it exists
+    """
+
+    article = None
+
+    for article in related_articles:
+        if article.doi == doi:
+            # Return an existing article object
+            log_info = "Hit the article cache on " + doi
+            admin_email_content += "\n" + log_info
+            logger.info(log_info)
+            return article
+
+    # Article for this DOI does not exist, populate it
+    doi_id = int(doi.split(".")[-1])
+    article = articlelib.create_article(settings, tmp_dir, doi_id)
+
+    if not article:
+        log_info = "Could not build the related article " + doi
+        admin_email_content += "\n" + log_info
+        logger.info(log_info)
+        return article
+
+    self.related_articles.append(article)
+
+    log_info = "Building article for " + doi
+    admin_email_content += "\n" + log_info
+    logger.info(log_info)
+
+    return article
 
 
 def get_to_folder_name(published_folder):
