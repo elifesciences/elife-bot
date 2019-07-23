@@ -238,6 +238,28 @@ class TestPublicationEmail(unittest.TestCase):
             self.activity.articles_approved_prepared = []
             self.activity.related_articles = []
 
+    @patch('provider.lax_provider.article_versions')
+    @data(
+        (
+            "article-commentary, related article cannot be found",
+            ["tests/test_data/elife-18753-v1.xml"],
+            1, 0),
+        (
+            "article-commentary plus its matching insight",
+            ["tests/test_data/elife-18753-v1.xml", "tests/test_data/elife-15747-v2.xml"],
+            2, 1)
+    )
+    @unpack
+    def test_process_articles(self, comment, xml_filenames, expected_approved, expected_prepared,
+                              fake_article_versions):
+        """edge cases for process articles where the approved and prepared count differ"""
+        fake_article_versions.return_value = (200, LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3)
+        approved, prepared = self.activity.process_articles(xml_filenames)
+        self.assertEqual(len(approved), expected_approved,
+            'failed expected_approved check in {comment}'.format(comment=comment))
+        self.assertEqual(len(prepared), expected_prepared,
+            'failed expected_prepared check in {comment}'.format(comment=comment))
+
     @data(
         ("article-commentary", None, None, False, "author_publication_email_Insight_to_VOR"),
         ("discussion", None, None, True, "author_publication_email_Feature"),

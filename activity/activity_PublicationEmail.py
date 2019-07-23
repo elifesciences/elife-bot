@@ -124,8 +124,7 @@ class activity_PublicationEmail(Activity):
         """multi-step parsing, approving, and preparing of article files"""
         approved = []
         prepared = []
-
-        articles = self.parse_article_xml(self.article_xml_filenames)
+        articles = self.parse_article_xml(article_xml_filenames)
         approved = self.approve_articles(articles)
         prepared = self.prepare_articles(approved)
 
