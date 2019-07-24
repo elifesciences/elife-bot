@@ -1,15 +1,14 @@
-import unittest
-from activity.activity_PMCDeposit import activity_PMCDeposit
-from collections import OrderedDict
-import shutil
-import zipfile
-from mock import mock, patch
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger
-from ddt import ddt, data, unpack
-import time
-
 import os
+import unittest
+import zipfile
+from mock import patch
+from ddt import ddt, data, unpack
+import activity.activity_PMCDeposit as activity_module
+from activity.activity_PMCDeposit import activity_PMCDeposit
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext, FakeFTP
+import tests.activity.test_activity_data as activity_test_data
+import tests.activity.helpers as helpers
 
 
 @ddt
@@ -18,117 +17,123 @@ class TestPMCDeposit(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
         self.activity = activity_PMCDeposit(settings_mock, fake_logger, None, None, None)
+        self.activity.make_activity_directories()
+        self.test_data_dir = "tests/test_data/pmc/"
 
         self.do_activity_passes = []
 
         self.do_activity_passes.append({
+            "scenario": "zip file was not downloaded",
+            "input_data": {"data": {"document": "does_not_exist.zip"}},
+            "pmc_zip_key_names": [],
+            "expected_zip_filename": None,
+            "expected_result": self.activity.ACTIVITY_TEMPORARY_FAILURE,
+            "zip_file_names": None})
+
+        self.do_activity_passes.append({
+            "scenario": "no previous PMC zip file",
             "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
             "pmc_zip_key_names": [],
             "expected_zip_filename": "elife-05-19405.zip",
+            "expected_result": True,
             "zip_file_names": ['elife-19405-fig1.tif', 'elife-19405-inf1.tif',
                                'elife-19405.pdf', 'elife-19405.xml']})
 
         self.do_activity_passes.append({
+            "scenario": "one previous PMC zip file",
             "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
             "pmc_zip_key_names": ["pmc/zip/elife-05-19405.zip"],
             "expected_zip_filename": "elife-05-19405.r1.zip",
+            "expected_result": True,
             "zip_file_names": ['elife-19405-fig1.tif', 'elife-19405-inf1.tif',
                                'elife-19405.pdf', 'elife-19405.xml']})
 
         self.do_activity_passes.append({
+            "scenario": "two previous PMC zip file revisions present",
             "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
             "pmc_zip_key_names": ["pmc/zip/elife-05-19405.zip", "pmc/zip/elife-05-19405.r1.zip"],
             "expected_zip_filename": "elife-05-19405.r2.zip",
+            "expected_result": True,
             "zip_file_names": ['elife-19405-fig1.tif', 'elife-19405-inf1.tif',
                                'elife-19405.pdf', 'elife-19405.xml']})
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
-
-
-    def fake_download_files_from_s3(self, document):
-        source_doc = "tests/test_data/pmc/" + document
-        #print source_doc
-        dest_doc = self.activity.INPUT_DIR + os.sep + document
-        #print dest_doc
-        shutil.copy(source_doc, dest_doc)
-
+        helpers.delete_files_in_folder(
+            activity_test_data.ExpandArticle_files_dest_folder, filter_out=['.gitkeep'])
 
     def zip_file_list(self, zip_file_name):
         file_list = None
-        zip_file_path = self.activity.ZIP_DIR + os.sep + zip_file_name
+        zip_file_path = self.activity.directories.get("ZIP_DIR") + os.sep + zip_file_name
         with zipfile.ZipFile(zip_file_path, 'r') as open_zip_file:
             file_list = open_zip_file.namelist()
         return file_list
 
     @patch.object(activity_PMCDeposit, 'clean_tmp_dir')
-    @patch('activity.activity_PMCDeposit.s3lib.get_s3_key_names_from_bucket')
-    @patch('activity.activity_PMCDeposit.S3Connection')
-    @patch.object(activity_PMCDeposit, 'upload_article_zip_to_s3')
-    @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
-    @patch.object(activity_PMCDeposit, 'download_files_from_s3')
-    def test_do_activity(self, fake_download_files_from_s3, fake_ftp_to_endpoint,
-                         fake_upload_article_zip_to_s3, fake_s3_mock, fake_s3_key_names,
+    @patch('activity.activity_PMCDeposit.FTP')
+    @patch.object(FakeStorageContext, 'list_resources')
+    @patch('activity.activity_PMCDeposit.storage_context')
+    def test_do_activity(self, fake_storage_context, fake_list_resources, fake_ftp,
                          fake_clean_tmp_dir):
 
-        self.activity.create_activity_directories()
+        fake_ftp.return_value = FakeFTP()
+        fake_clean_tmp_dir.return_value = None
 
         for test_data in self.do_activity_passes:
 
-            document = test_data["input_data"]["data"]["document"]
-
-            fake_download_files_from_s3 = self.fake_download_files_from_s3(document)
-            fake_s3_key_names.return_value = test_data["pmc_zip_key_names"]
-            fake_ftp_to_endpoint.return_value = True
-
+            fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
+            fake_list_resources.return_value = test_data["pmc_zip_key_names"]
             success = self.activity.do_activity(test_data["input_data"])
 
-            self.assertEqual(True, success)
+            self.assertEqual(success, test_data["expected_result"],
+                             "{value} does not equal {expected}, scenario: {scenario}".format(
+                                 value=success,
+                                 expected=test_data["expected_result"],
+                                 scenario=test_data["scenario"]))
             self.assertEqual(self.activity.zip_file_name, test_data["expected_zip_filename"])
-            self.assertEqual(sorted(self.zip_file_list(self.activity.zip_file_name)),
-                             sorted(test_data["zip_file_names"]))
+            if test_data["zip_file_names"]:
+                self.assertEqual(sorted(self.zip_file_list(self.activity.zip_file_name)),
+                                 sorted(test_data["zip_file_names"]))
 
-    @patch('activity.activity_PMCDeposit.s3lib.get_s3_key_names_from_bucket')
-    @patch('activity.activity_PMCDeposit.S3Connection')
-    @patch.object(activity_PMCDeposit, 'upload_article_zip_to_s3')
+    @patch.object(FakeStorageContext, 'list_resources')
     @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
-    @patch.object(activity_PMCDeposit, 'download_files_from_s3')
-    def test_do_activity_failed_ftp_to_endpoint(self, fake_download_files_from_s3, fake_ftp_to_endpoint,
-                         fake_upload_article_zip_to_s3, fake_s3_mock, fake_s3_key_names):
+    @patch('activity.activity_PMCDeposit.storage_context')
+    def test_do_activity_failed_ftp_to_endpoint(self, fake_storage_context, fake_ftp_to_endpoint,
+                                                fake_list_resources):
 
-        self.activity.create_activity_directories()
+        test_data = self.do_activity_passes[1]
 
-        test_data = self.do_activity_passes[0]
-
-        document = test_data["input_data"]["data"]["document"]
-
-        fake_download_files_from_s3 = self.fake_download_files_from_s3(document)
-        fake_s3_key_names.return_value = test_data["pmc_zip_key_names"]
+        fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
+        fake_list_resources.return_value = test_data["pmc_zip_key_names"]
         fake_ftp_to_endpoint.return_value = False
 
         success = self.activity.do_activity(test_data["input_data"])
 
         self.assertEqual(False, success)
 
+
+@ddt
+class TestArticleXMLFile(unittest.TestCase):
+    @patch('provider.article_processing.file_list')
     @data(
         (
-            ['elife-99999.xml',
-             'elife-99999-fig1-v1.tif',
-             'elife-99999-video1.mp4',
-             'elife-99999-video2.mp4',
-             ],
-            OrderedDict([
-                ('elife-99999.xml', 'elife-99999.xml'),
-                ('elife-99999-fig1-v1.tif', 'elife-99999-fig1.tif'),
-                ('elife-99999-video1.mp4', 'elife-99999-video1.mp4'),
-                ('elife-99999-video2.mp4', 'elife-99999-video2.mp4')
-                ])
-            ),
+            ['folder_name/elife-36842-v2.xml'],
+            'folder_name/elife-36842-v2.xml'
+        ),
+        (
+            ['folder_name/elife-36842-supp9-v2.xml', 'folder_name/elife-36842-v2.xml'],
+            'folder_name/elife-36842-v2.xml'
+        ),
+        (
+            ['folder_name/not-an-xml-file.txt'],
+            None
+        ),
     )
     @unpack
-    def test_stripped_file_name_map(self, file_names, expected_file_name_map):
-        file_name_map = self.activity.stripped_file_name_map(file_names)
-        self.assertEqual(file_name_map, expected_file_name_map)
+    def test_article_xml_file(self, list_of_files, expected, fake_file_list):
+        fake_file_list.return_value = list_of_files
+        xml_search_folders = ["folder_name"]
+        self.assertEqual(activity_module.article_xml_file(xml_search_folders), expected)
 
 
 if __name__ == '__main__':

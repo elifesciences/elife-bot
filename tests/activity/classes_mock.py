@@ -89,6 +89,21 @@ class FakeSQSQueue:
     def delete_message(self, message):
         pass
 
+
+class FakeFTP:
+    def __init__(self, ftp_instance=None):
+        self.ftp_instance = ftp_instance
+
+    def ftp_connect(self, **kwargs):
+        return self.ftp_instance
+
+    def ftp_to_endpoint(self, **kwargs):
+        pass
+
+    def ftp_disconnect(self, ftp_instance=None):
+        pass
+
+
 class FakeStorageProviderConnection:
     def get_connection(self, aws_access_key_id, aws_secret_access_key):
         return None
