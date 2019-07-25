@@ -168,7 +168,7 @@ class TestPublicationEmail(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext()
 
         # Basic fake data for all activity passes
-        fake_ejp_get_s3key.return_value = fake_ejp_get_s3key(
+        fake_ejp_get_s3key.return_value = fake_get_s3key(
             directory, self.activity.get_tmp_dir(), "authors.csv",
             "tests/test_data/ejp_author_file.csv")
         fake_find_latest_s3_file_name.return_value = mock.MagicMock()
@@ -518,7 +518,7 @@ class TestS3KeyNamesToClean(unittest.TestCase):
             'failed check in {comment}'.format(comment=test_data.get("comment")))
 
 
-def fake_ejp_get_s3key(directory, to_dir, document, source_doc):
+def fake_get_s3key(directory, to_dir, document, source_doc):
     """
     EJP data do two things, copy the CSV file to where it should be
     and also set the fake S3 key object
