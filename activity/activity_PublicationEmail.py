@@ -132,7 +132,7 @@ class activity_PublicationEmail(Activity):
         # Process or delete articles as required
         for article in articles:
             self.logger.info(article.doi + " is type " + article.article_type)
-            if article.article_type == "article-commentary":
+            if is_insight_article(article):
                 # Insight
 
                 # Set the related article only if its related article is
@@ -297,7 +297,7 @@ class activity_PublicationEmail(Activity):
                 )
 
             # Get the authors depending on the article type
-            if article.article_type == "article-commentary":
+            if is_insight_article(article):
                 # Check if the related article object was instantiated properly
                 if hasattr(article.related_insight_article, "doi_id"):
                     authors = self.get_authors(article.related_insight_article.doi_id)
@@ -510,13 +510,20 @@ class activity_PublicationEmail(Activity):
         return True
 
 
+def is_insight_article(article):
+    """is an article object an insight article"""
+    if hasattr(article, "article_type") and article.article_type == "article-commentary":
+        return True
+    return False
+
+
 def get_non_insight_doi_list(articles, logger):
     """get a list of non-insight articles"""
     # Get a list of article DOIs for comparison later
     article_non_insight_doi_list = []
     article_insight_doi_list = []
     for article in articles:
-        if article.article_type == "article-commentary":
+        if is_insight_article(article):
             article_insight_doi_list.append(article.doi)
         else:
             article_non_insight_doi_list.append(article.doi)
