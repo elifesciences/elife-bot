@@ -503,10 +503,11 @@ class activity_PublicationEmail(Activity):
         current_time = time.gmtime()
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
+        activity_status_text = get_activity_status_text(activity_status)
 
-        body = self.get_admin_email_body(datetime_string, activity_status)
+        body = self.get_admin_email_body(datetime_string, activity_status_text)
         subject = get_admin_email_subject(
-            datetime_string, activity_status, self.name, self.settings.domain)
+            datetime_string, activity_status_text, self.name, self.settings.domain)
         sender_email = self.settings.ses_poa_sender_email
 
         recipient_email_list = []
@@ -529,14 +530,12 @@ class activity_PublicationEmail(Activity):
 
         return True
 
-    def get_admin_email_body(self, datetime_string, activity_status):
+    def get_admin_email_body(self, datetime_string, activity_status_text):
         """
         Format the body of the email
         """
 
         body = ""
-
-        activity_status_text = get_activity_status_text(activity_status)
 
         # Bulk of body
         body += self.name + " status:" + "\n"
@@ -563,19 +562,11 @@ class activity_PublicationEmail(Activity):
         return body
 
 
-def get_admin_email_subject(datetime_string, activity_status, name, domain):
-    """
-    Assemble the email subject
-    """
-
-
-    activity_status_text = get_activity_status_text(activity_status)
-
-    subject = (name + " " + activity_status_text +
-                ", " + datetime_string +
-                ", eLife SWF domain: " + domain)
-
-    return subject
+def get_admin_email_subject(datetime_string, activity_status_text, name, domain):
+    """Assemble the email subject"""
+    return (
+        name + " " + activity_status_text + ", " + datetime_string +
+        ", eLife SWF domain: " + domain)
 
 
 def get_related_article(settings, tmp_dir, doi, related_articles, logger, admin_email_content):
