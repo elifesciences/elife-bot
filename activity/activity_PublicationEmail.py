@@ -29,6 +29,7 @@ class activity_PublicationEmail(Activity):
 
         # Templates provider
         self.templates = templates.Templates(settings, self.get_tmp_dir())
+        print(self.get_tmp_dir())
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
@@ -128,54 +129,14 @@ class activity_PublicationEmail(Activity):
         article_non_insight_doi_list = get_non_insight_doi_list(articles, self.logger)
 
         remove_article_doi = []
-
+        related_articles = []
         # Process or delete articles as required
         for article in articles:
             self.logger.info(article.doi + " is type " + article.article_type)
             if is_insight_article(article):
-                # Insight
-
-                # Set the related article only if its related article is
-                #  NOT in the list of articles DOIs
-                # This means it is an insight for a VOR that was published previously
-                related_article_doi = article.get_article_related_insight_doi()
-                if related_article_doi in article_non_insight_doi_list:
-
-                    self.logger.info("Article match on " + article.doi)
-
-                    # We do not want to send for this insight
-                    remove_article_doi.append(article.doi)
-                    # We also do not want to leave it in the outbox, add it to the removal list
-                    self.insight_articles_to_remove_from_outbox.append(article)
-
-                    # We do want to set the related article for its match
-                    for research_article in articles:
-                        if research_article.doi == related_article_doi:
-                            log_info = ("Setting match on " + related_article_doi +
-                                        " to " + article.doi)
-                            self.admin_email_content += "\n" + log_info
-                            self.logger.info(log_info)
-                            research_article.set_related_insight_article(article)
-
-                else:
-                    # Set this insights related article
-
-                    self.logger.info("No article match on " + article.doi)
-
-                    related_article_doi = article.get_article_related_insight_doi()
-                    if related_article_doi:
-                        related_article = get_related_article(
-                            self.settings, self.get_tmp_dir(), related_article_doi,
-                            self.related_articles, self.logger, self.admin_email_content)
-                        if related_article:
-                            article.set_related_insight_article(related_article)
-                        else:
-                            # Could not find the related article
-                            log_info = ("Could not build the article related to insight " +
-                                        article.doi)
-                            self.admin_email_content += "\n" + log_info
-                            self.logger.info(log_info)
-                            remove_article_doi.append(article.doi)
+                self.set_related_article(
+                    article, articles, related_articles, article_non_insight_doi_list,
+                    remove_article_doi)
 
         # Can remove articles now if required
         for article in articles:
@@ -183,6 +144,29 @@ class activity_PublicationEmail(Activity):
                 prepared_articles.append(article)
 
         return prepared_articles
+
+    def set_related_article(self, article, articles, related_articles, 
+                            article_non_insight_doi_list, remove_article_doi):
+        """set the related article on an insight article"""
+        set_related_article_internal(
+            article, articles, article_non_insight_doi_list, self.logger,
+            self.admin_email_content, self.insight_articles_to_remove_from_outbox)
+        if article.related_insight_article:
+            # remove this insight from the list to send
+            remove_article_doi.append(article.doi)
+        else:
+            # If related article not set from internal sources, set from external source
+            self.logger.info("No internal article match on " + article.doi)
+            set_related_article_external(
+                self.settings, self.get_tmp_dir(), article, related_articles,
+                self.logger, self.admin_email_content)
+        # finally if we count not set the value
+        if not article.related_insight_article:
+            log_info = ("Could not build the article related to insight " +
+                        article.doi)
+            self.admin_email_content += "\n" + log_info
+            self.logger.info(log_info)
+            remove_article_doi.append(article.doi)
 
     def download_files_from_s3_outbox(self):
         """
@@ -349,7 +333,7 @@ class activity_PublicationEmail(Activity):
         if not headers:
             log_info = (
                 'Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s' %
-                (str(elife_id), str(email_type), str(author.e_mail)))
+                (str(elife_id), str(email_type), str(author.get('e_mail'))))
             self.admin_email_content += "\n" + log_info
             return False
 
@@ -359,7 +343,7 @@ class activity_PublicationEmail(Activity):
             # Queue the email
             log_info = ("Sending " + email_type + " type email" +
                         " for article " + str(elife_id) +
-                        " to recipient_email " + str(author.e_mail))
+                        " to recipient_email " + str(author.get('e_mail')))
             self.admin_email_content += "\n" + log_info
             self.logger.info(log_info)
 
@@ -390,13 +374,13 @@ class activity_PublicationEmail(Activity):
             format=subtype)
 
         message = email_provider.simple_message(
-            headers["sender_email"], author.e_mail, headers["subject"], body,
+            headers["sender_email"], str(author.get('e_mail')), headers["subject"], body,
             subtype=headers["format"], logger=self.logger)
 
         email_provider.smtp_send_messages(
             self.settings, messages=[message], logger=self.logger)
         self.logger.info('Email sending details: article %s, email %s, to %s' %
-                         (doi_id, headers["email_type"], author.e_mail))
+                         (doi_id, headers["email_type"], str(author.get('e_mail'))))
 
         return True
 
@@ -532,6 +516,42 @@ def get_non_insight_doi_list(articles, logger):
     logger.info("Insight " + json.dumps(article_insight_doi_list))
 
     return article_non_insight_doi_list
+
+
+def set_related_article_internal(article, articles, non_insight_doi_list, logger, 
+                                 admin_email_content, insight_articles_to_remove_from_outbox):
+    """for insight article, set the related_article property from an article in the outbox"""
+    # Insight
+
+    # Set the related article only if its related article is
+    #  NOT in the list of articles DOIs
+    # This means it is an insight for a VOR that was published previously
+    related_article_doi = article.get_article_related_insight_doi()
+    if related_article_doi in non_insight_doi_list:
+
+        logger.info("Article match on " + article.doi)
+
+        # We also do not want to leave it in the outbox, add it to the removal list
+        insight_articles_to_remove_from_outbox.append(article)
+
+        # We do want to set the related article for its match
+        for i, research_article in enumerate(articles):
+            if research_article.doi == related_article_doi:
+                log_info = ("Setting match on " + related_article_doi +
+                            " to " + article.doi)
+                admin_email_content += "\n" + log_info
+                logger.info(log_info)
+                articles[i].set_related_insight_article(article)
+
+def set_related_article_external(settings, tmp_dir, article, related_articles, logger, admin_email_content):
+    """for insight article, set the related_article property getting it from the big bucket"""
+    related_article_doi = article.get_article_related_insight_doi()
+    if related_article_doi:
+        related_article = get_related_article(
+            settings, tmp_dir, related_article_doi,
+            related_articles, logger, admin_email_content)
+        if related_article:
+            article.set_related_insight_article(related_article)
 
 
 def s3_key_names_to_clean(outbox_folder, prepared, xml_file_to_doi_map, do_not_remove, do_remove):
