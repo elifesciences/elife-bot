@@ -35,9 +35,6 @@ class activity_PublicationEmail(Activity):
         self.outbox_folder = "publication_email/outbox/"
         self.published_folder = "publication_email/published/"
 
-        # Track the success of some steps
-        self.activity_status = None
-
         # Track XML files selected for publication
         self.related_articles = []
         self.insight_articles_to_remove_from_outbox = []
@@ -77,7 +74,7 @@ class activity_PublicationEmail(Activity):
         # return now if no articles are approved and prepared
         if not prepared:
             self.logger.info("No articles were approved and prepared for sending")
-            self.send_admin_email()
+            self.send_admin_email(True)
             return True
 
         try:
@@ -87,8 +84,7 @@ class activity_PublicationEmail(Activity):
             self.clean_outbox(prepared, xml_file_to_doi_map)
 
             # Send email to admins with the status
-            self.activity_status = True
-            self.send_admin_email()
+            self.send_admin_email(True)
         except Exception:
             self.logger.exception("An error occured on do_activity method.")
 
@@ -495,7 +491,7 @@ class activity_PublicationEmail(Activity):
 
         return author_list
 
-    def send_admin_email(self):
+    def send_admin_email(self, activity_status):
         """
         After do_activity is finished, send emails to recipients
         on the status of the activity
@@ -506,8 +502,8 @@ class activity_PublicationEmail(Activity):
 
         current_time = time.gmtime()
 
-        body = self.get_admin_email_body(current_time)
-        subject = self.get_admin_email_subject(current_time)
+        body = self.get_admin_email_body(current_time, activity_status)
+        subject = self.get_admin_email_subject(current_time, activity_status)
         sender_email = self.settings.ses_poa_sender_email
 
         recipient_email_list = []
@@ -530,14 +526,14 @@ class activity_PublicationEmail(Activity):
 
         return True
 
-    def get_admin_email_subject(self, current_time):
+    def get_admin_email_subject(self, current_time, activity_status):
         """
         Assemble the email subject
         """
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = get_activity_status_text(self.activity_status)
+        activity_status_text = get_activity_status_text(activity_status)
 
         subject = (self.name + " " + activity_status_text +
                    ", " + datetime_string +
@@ -545,7 +541,7 @@ class activity_PublicationEmail(Activity):
 
         return subject
 
-    def get_admin_email_body(self, current_time):
+    def get_admin_email_body(self, current_time, activity_status):
         """
         Format the body of the email
         """
@@ -555,7 +551,7 @@ class activity_PublicationEmail(Activity):
         date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = get_activity_status_text(self.activity_status)
+        activity_status_text = get_activity_status_text(activity_status)
 
         # Bulk of body
         body += self.name + " status:" + "\n"
