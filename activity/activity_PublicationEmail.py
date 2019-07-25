@@ -535,13 +535,13 @@ def set_related_article_internal(article, articles, non_insight_doi_list, logger
         insight_articles_to_remove_from_outbox.append(article)
 
         # We do want to set the related article for its match
-        for i, research_article in enumerate(articles):
+        for research_article in articles:
             if research_article.doi == related_article_doi:
                 log_info = ("Setting match on " + related_article_doi +
                             " to " + article.doi)
                 admin_email_content += "\n" + log_info
                 logger.info(log_info)
-                articles[i].set_related_insight_article(article)
+                research_article.set_related_insight_article(article)
 
 def set_related_article_external(settings, tmp_dir, article, related_articles, logger, admin_email_content):
     """for insight article, set the related_article property getting it from the big bucket"""
