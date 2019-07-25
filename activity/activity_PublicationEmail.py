@@ -39,7 +39,6 @@ class activity_PublicationEmail(Activity):
         self.activity_status = None
 
         # Track XML files selected for publication
-        self.xml_file_to_doi_map = {}
         self.related_articles = []
         self.insight_articles_to_remove_from_outbox = []
         self.articles_do_not_remove_from_outbox = []
@@ -70,14 +69,14 @@ class activity_PublicationEmail(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
         try:
-            approved, prepared = self.process_articles(article_xml_filenames)
+            approved, prepared, xml_file_to_doi_map = self.process_articles(article_xml_filenames)
         except Exception:
             self.logger.exception("Failed to parse, approve, and prepare all the articles")
             return self.ACTIVITY_PERMANENT_FAILURE
 
-        # return now if no articles are approved
-        if not approved:
-            self.logger.info("No articles were approved for sending")
+        # return now if no articles are approved and prepared
+        if not prepared:
+            self.logger.info("No articles were approved and prepared for sending")
             self.send_admin_email()
             return True
 
@@ -85,7 +84,7 @@ class activity_PublicationEmail(Activity):
             self.send_emails_for_articles(prepared)
 
             # Clean the outbox
-            self.clean_outbox(prepared)
+            self.clean_outbox(prepared, xml_file_to_doi_map)
 
             # Send email to admins with the status
             self.activity_status = True
@@ -105,7 +104,7 @@ class activity_PublicationEmail(Activity):
 
     def process_articles(self, article_xml_filenames):
         """multi-step parsing, approving, and preparing of article files"""
-        articles = self.parse_article_xml(article_xml_filenames)
+        articles, xml_file_to_doi_map = self.parse_article_xml(article_xml_filenames)
         approved = self.approve_articles(articles)
         prepared = self.prepare_articles(approved)
 
@@ -116,7 +115,7 @@ class activity_PublicationEmail(Activity):
         self.admin_email_content += "\n" + log_info
         self.logger.info(log_info)
 
-        return approved, prepared
+        return approved, prepared, xml_file_to_doi_map
 
     def prepare_articles(self, articles):
         """
@@ -234,6 +233,7 @@ class activity_PublicationEmail(Activity):
         """
 
         articles = []
+        xml_file_to_doi_map = {}
 
         for article_xml_filename in article_xml_filenames:
 
@@ -248,9 +248,9 @@ class activity_PublicationEmail(Activity):
             articles.append(article)
 
             # Add article to the DOI to file name map
-            self.xml_file_to_doi_map[article.doi] = article_xml_filename
+            xml_file_to_doi_map[article.doi] = article_xml_filename
 
-        return articles
+        return articles, xml_file_to_doi_map
 
     def download_templates(self):
         """
@@ -414,7 +414,7 @@ class activity_PublicationEmail(Activity):
 
         return True
 
-    def clean_outbox(self, prepared):
+    def clean_outbox(self, prepared, xml_file_to_doi_map):
         """
         Clean out the S3 outbox folder
         """
@@ -435,7 +435,7 @@ class activity_PublicationEmail(Activity):
         for article in self.insight_articles_to_remove_from_outbox:
             remove_doi_list.append(article.doi)
 
-        for key, value in self.xml_file_to_doi_map.items():
+        for key, value in xml_file_to_doi_map.items():
             if key in remove_doi_list:
                 processed_file_names.append(value)
 

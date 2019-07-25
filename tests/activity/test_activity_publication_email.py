@@ -206,22 +206,34 @@ class TestPublicationEmail(unittest.TestCase):
         (
             "article-commentary, related article cannot be found",
             ["tests/test_data/elife-18753-v1.xml"],
-            1, 0),
+            1, 0,
+            {
+                '10.7554/eLife.18753': 'tests/test_data/elife-18753-v1.xml'
+            }),
         (
             "article-commentary plus its matching insight",
             ["tests/test_data/elife-18753-v1.xml", "tests/test_data/elife-15747-v2.xml"],
-            2, 1)
+            2, 1,
+            {
+                '10.7554/eLife.15747': 'tests/test_data/elife-15747-v2.xml',
+                '10.7554/eLife.18753': 'tests/test_data/elife-18753-v1.xml'
+            })
     )
     @unpack
     def test_process_articles(self, comment, xml_filenames, expected_approved, expected_prepared,
-                              fake_article_versions):
+                              expected_map, fake_article_versions):
         """edge cases for process articles where the approved and prepared count differ"""
         fake_article_versions.return_value = (200, LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3)
-        approved, prepared = self.activity.process_articles(xml_filenames)
-        self.assertEqual(len(approved), expected_approved,
+        approved, prepared, xml_file_to_doi_map = self.activity.process_articles(xml_filenames)
+        self.assertEqual(
+            len(approved), expected_approved,
             'failed expected_approved check in {comment}'.format(comment=comment))
-        self.assertEqual(len(prepared), expected_prepared,
+        self.assertEqual(
+            len(prepared), expected_prepared,
             'failed expected_prepared check in {comment}'.format(comment=comment))
+        self.assertEqual(
+            xml_file_to_doi_map, expected_map,
+            'failed expected_map check in {comment}'.format(comment=comment))
 
     @data(
         ("article-commentary", None, None, False, "author_publication_email_Insight_to_VOR"),
