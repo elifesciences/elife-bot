@@ -3,6 +3,7 @@
 import os
 import unittest
 import shutil
+from collections import OrderedDict
 from testfixtures import TempDirectory
 from mock import mock, patch
 from ddt import ddt, data, unpack
@@ -433,7 +434,7 @@ class TestGetRelatedArticle(unittest.TestCase):
         self.assertEqual(len(related_articles), 1)
 
 
-class Fake(object):
+class FakeArticle(object):
     def __init__(self, doi):
         self.doi = doi
 
@@ -454,12 +455,12 @@ class TestS3KeyNamesToClean(unittest.TestCase):
             "comment": "normal clean one article",
             "prepared":
             [
-                Fake('1')
+                FakeArticle('1')
             ],
             "xml_file_to_doi_map":
-            {
-                '1': '1.xml'
-            },
+            OrderedDict([
+                ('1', '1.xml')
+            ]),
             "do_not_remove": [],
             "do_remove": [],
             "expected":
@@ -471,12 +472,12 @@ class TestS3KeyNamesToClean(unittest.TestCase):
             "comment": "one article and do not clean it, by doi value",
             "prepared":
             [
-                Fake('1')
+                FakeArticle('1')
             ],
             "xml_file_to_doi_map":
-            {
-                '1': '1.xml'
-            },
+            OrderedDict([
+                ('1', '1.xml')
+            ]),
             "do_not_remove":
             [
                 '1'
@@ -488,17 +489,17 @@ class TestS3KeyNamesToClean(unittest.TestCase):
             "comment": "one article prepared, one insight, clean both",
             "prepared":
             [
-                Fake('1')
+                FakeArticle('1')
             ],
             "xml_file_to_doi_map":
-            {
-                '1': '1.xml',
-                '2': '2.xml'
-            },
+            OrderedDict([
+                ('1', '1.xml'),
+                ('2', '2.xml')
+            ]),
             "do_not_remove": [],
             "do_remove":
             [
-                Fake('2')
+                FakeArticle('2')
             ],
             "expected":
             [
