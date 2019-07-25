@@ -433,6 +433,90 @@ class TestGetRelatedArticle(unittest.TestCase):
         self.assertEqual(len(related_articles), 1)
 
 
+class Fake(object):
+    def __init__(self, doi):
+        self.doi = doi
+
+
+@ddt
+class TestS3KeyNamesToClean(unittest.TestCase):
+
+    @data(
+        {
+            "comment": "blank inputs",
+            "prepared": [],
+            "xml_file_to_doi_map": {},
+            "do_not_remove": [],
+            "do_remove": [],
+            "expected": []
+        },
+        {
+            "comment": "normal clean one article",
+            "prepared":
+            [
+                Fake('1')
+            ],
+            "xml_file_to_doi_map":
+            {
+                '1': '1.xml'
+            },
+            "do_not_remove": [],
+            "do_remove": [],
+            "expected":
+            [
+                'outbox/1.xml'
+            ]
+        },
+        {
+            "comment": "one article and do not clean it, by doi value",
+            "prepared":
+            [
+                Fake('1')
+            ],
+            "xml_file_to_doi_map":
+            {
+                '1': '1.xml'
+            },
+            "do_not_remove":
+            [
+                '1'
+            ],
+            "do_remove": [],
+            "expected": []
+        },
+        {
+            "comment": "one article prepared, one insight, clean both",
+            "prepared":
+            [
+                Fake('1')
+            ],
+            "xml_file_to_doi_map":
+            {
+                '1': '1.xml',
+                '2': '2.xml'
+            },
+            "do_not_remove": [],
+            "do_remove":
+            [
+                Fake('2')
+            ],
+            "expected":
+            [
+                'outbox/1.xml',
+                'outbox/2.xml'
+            ]
+        },
+    )
+    def test_s3_key_names_to_clean(self, test_data):
+        """get related article from existing list of related articles"""
+        s3_key_names = activity_module.s3_key_names_to_clean(
+            "outbox/", test_data.get("prepared"), test_data.get("xml_file_to_doi_map"),
+            test_data.get("do_not_remove"), test_data.get("do_remove"))
+        self.assertEqual(
+            s3_key_names, test_data.get("expected"),
+            'failed check in {comment}'.format(comment=test_data.get("comment")))
+
+
 def fake_ejp_get_s3key(directory, to_dir, document, source_doc):
     """
     EJP data do two things, copy the CSV file to where it should be

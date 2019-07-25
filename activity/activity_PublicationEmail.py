@@ -420,25 +420,12 @@ class activity_PublicationEmail(Activity):
         # Move only the published files from the S3 outbox to the published folder
         bucket_name = self.publish_bucket
 
-        # Compile a list of the published file names
-        s3_key_names = []
-        remove_doi_list = []
-        processed_file_names = []
-        for article in prepared:
-            if article.doi not in self.articles_do_not_remove_from_outbox:
-                remove_doi_list.append(article.doi)
-
-        for article in self.insight_articles_to_remove_from_outbox:
-            remove_doi_list.append(article.doi)
-
-        for key, value in xml_file_to_doi_map.items():
-            if key in remove_doi_list:
-                processed_file_names.append(value)
-
-        for name in processed_file_names:
-            filename = name.split(os.sep)[-1]
-            s3_key_name = self.outbox_folder + filename
-            s3_key_names.append(s3_key_name)
+        s3_key_names = s3_key_names_to_clean(
+            self.outbox_folder,
+            prepared,
+            xml_file_to_doi_map,
+            self.articles_do_not_remove_from_outbox,
+            self.insight_articles_to_remove_from_outbox)
 
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
@@ -450,7 +437,7 @@ class activity_PublicationEmail(Activity):
             filename = name.split("/")[-1]
             new_s3_key_name = to_folder + filename
 
-            orig_resource = storage_provider + bucket_name + "/" + s3_key_name
+            orig_resource = storage_provider + bucket_name + "/" + name
             dest_resource = storage_provider + bucket_name + "/" + new_s3_key_name
 
             # First copy
@@ -531,6 +518,32 @@ class activity_PublicationEmail(Activity):
                              ("PublicationEmail", email))
 
         return True
+
+
+def s3_key_names_to_clean(outbox_folder, prepared, xml_file_to_doi_map, do_not_remove, do_remove):
+    """compile a list of S3 key names to clean from the outbox folder"""
+
+    # Compile a list of the published file names
+    s3_key_names = []
+    remove_doi_list = []
+    processed_file_names = []
+    for article in prepared:
+        if article.doi not in do_not_remove:
+            remove_doi_list.append(article.doi)
+
+    for article in do_remove:
+        remove_doi_list.append(article.doi)
+
+    for key, value in xml_file_to_doi_map.items():
+        if key in remove_doi_list:
+            processed_file_names.append(value)
+
+    for name in processed_file_names:
+        filename = name.split(os.sep)[-1]
+        s3_key_name = outbox_folder + filename
+        s3_key_names.append(s3_key_name)
+
+    return s3_key_names
 
 
 def get_admin_email_body_head(name, activity_status_text, details):
