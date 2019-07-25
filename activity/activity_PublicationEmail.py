@@ -501,9 +501,12 @@ class activity_PublicationEmail(Activity):
         # conn.verify_email_address(self.settings.ses_sender_email)
 
         current_time = time.gmtime()
+        date_format = '%Y-%m-%d %H:%M'
+        datetime_string = time.strftime(date_format, current_time)
 
-        body = self.get_admin_email_body(current_time, activity_status)
-        subject = self.get_admin_email_subject(current_time, activity_status)
+        body = self.get_admin_email_body(datetime_string, activity_status)
+        subject = get_admin_email_subject(
+            datetime_string, activity_status, self.name, self.settings.domain)
         sender_email = self.settings.ses_poa_sender_email
 
         recipient_email_list = []
@@ -526,30 +529,12 @@ class activity_PublicationEmail(Activity):
 
         return True
 
-    def get_admin_email_subject(self, current_time, activity_status):
-        """
-        Assemble the email subject
-        """
-        date_format = '%Y-%m-%d %H:%M'
-        datetime_string = time.strftime(date_format, current_time)
-
-        activity_status_text = get_activity_status_text(activity_status)
-
-        subject = (self.name + " " + activity_status_text +
-                   ", " + datetime_string +
-                   ", eLife SWF domain: " + self.settings.domain)
-
-        return subject
-
-    def get_admin_email_body(self, current_time, activity_status):
+    def get_admin_email_body(self, datetime_string, activity_status):
         """
         Format the body of the email
         """
 
         body = ""
-
-        date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-        datetime_string = time.strftime(date_format, current_time)
 
         activity_status_text = get_activity_status_text(activity_status)
 
@@ -576,6 +561,21 @@ class activity_PublicationEmail(Activity):
         body += "\n\nSincerely\n\neLife bot"
 
         return body
+
+
+def get_admin_email_subject(datetime_string, activity_status, name, domain):
+    """
+    Assemble the email subject
+    """
+
+
+    activity_status_text = get_activity_status_text(activity_status)
+
+    subject = (name + " " + activity_status_text +
+                ", " + datetime_string +
+                ", eLife SWF domain: " + domain)
+
+    return subject
 
 
 def get_related_article(settings, tmp_dir, doi, related_articles, logger, admin_email_content):
