@@ -125,17 +125,7 @@ class activity_PublicationEmail(Activity):
 
         prepared_articles = []
 
-        # Get a list of article DOIs for comparison later
-        article_non_insight_doi_list = []
-        article_insight_doi_list = []
-        for article in articles:
-            if article.article_type == "article-commentary":
-                article_insight_doi_list.append(article.doi)
-            else:
-                article_non_insight_doi_list.append(article.doi)
-
-        self.logger.info("Non-insight " + json.dumps(article_non_insight_doi_list))
-        self.logger.info("Insight " + json.dumps(article_insight_doi_list))
+        article_non_insight_doi_list = get_non_insight_doi_list(articles, self.logger)
 
         remove_article_doi = []
 
@@ -518,6 +508,23 @@ class activity_PublicationEmail(Activity):
                              ("PublicationEmail", email))
 
         return True
+
+
+def get_non_insight_doi_list(articles, logger):
+    """get a list of non-insight articles"""
+    # Get a list of article DOIs for comparison later
+    article_non_insight_doi_list = []
+    article_insight_doi_list = []
+    for article in articles:
+        if article.article_type == "article-commentary":
+            article_insight_doi_list.append(article.doi)
+        else:
+            article_non_insight_doi_list.append(article.doi)
+
+    logger.info("Non-insight " + json.dumps(article_non_insight_doi_list))
+    logger.info("Insight " + json.dumps(article_insight_doi_list))
+
+    return article_non_insight_doi_list
 
 
 def s3_key_names_to_clean(outbox_folder, prepared, xml_file_to_doi_map, do_not_remove, do_remove):
