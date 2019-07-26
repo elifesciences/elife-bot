@@ -37,6 +37,6 @@ class S3SQSMessage(Message):
         """
         if body is not None and len(body) > 0:
             self.payload = json.loads(body)
-        if body and 'Records' in self.payload.keys():
+        if body and 'Records' in list(self.payload.keys()):
             self.notification_type = 'S3Event'
         super(Message, self).set_body(body)
