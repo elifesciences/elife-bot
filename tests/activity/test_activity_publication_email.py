@@ -202,6 +202,37 @@ class TestPublicationEmail(unittest.TestCase):
             # reset object values
             self.activity.related_articles = []
 
+    @patch.object(activity_PublicationEmail, "download_templates")
+    def test_do_activity_download_failure(self, fake_download_templates):
+        fake_download_templates.side_effect = Exception("Something went wrong!")
+        result = self.activity.do_activity()
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+
+    @patch.object(activity_PublicationEmail, "process_articles")
+    @patch.object(activity_PublicationEmail, "download_files_from_s3_outbox")
+    @patch.object(activity_PublicationEmail, "download_templates")
+    def test_do_activity_process_articles_failure(
+            self, fake_download_templates, fake_download_files, fake_process_articles):
+        fake_download_templates.return_value = True
+        fake_download_files.return_value = True
+        fake_process_articles.side_effect = Exception("Something went wrong!")
+        result = self.activity.do_activity()
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+
+    @patch.object(activity_PublicationEmail, "send_emails_for_articles")
+    @patch.object(activity_PublicationEmail, "process_articles")
+    @patch.object(activity_PublicationEmail, "download_files_from_s3_outbox")
+    @patch.object(activity_PublicationEmail, "download_templates")
+    def test_do_activity_process_send_emails_failure(
+            self, fake_download_templates, fake_download_files,
+            fake_process_articles, fake_send_emails):
+        fake_download_templates.return_value = True
+        fake_download_files.return_value = True
+        fake_process_articles.return_value = None, [0], None
+        fake_send_emails.return_value = Exception("Something went wrong!")
+        result = self.activity.do_activity()
+        self.assertEqual(result, True)
+
     @patch('provider.lax_provider.article_versions')
     @data(
         (
