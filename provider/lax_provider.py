@@ -94,7 +94,7 @@ def article_first_by_status(article_id, version, status, settings, auth=False):
 def article_highest_version(article_id, settings, auth=False):
     status_code, data = article_versions(article_id, settings, auth)
     if status_code == 200:
-        high_version = 0 if len(data) < 1 else max(map(lambda x: int(x["version"]), data))
+        high_version = 0 if len(data) < 1 else max([int(x["version"]) for x in data])
         return high_version
     elif status_code == 404:
         return "1"
