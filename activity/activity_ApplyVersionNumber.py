@@ -183,7 +183,7 @@ class activity_ApplyVersionNumber(Activity):
 
     def rename_s3_objects(self, bucket, bucket_name, bucket_folder_name, file_name_map):
         # Rename S3 bucket objects directly
-        for old_name, new_name in file_name_map.iteritems():
+        for old_name, new_name in list(file_name_map.items()):
             # Do not need to rename if the old and new name are the same
             if old_name == new_name:
                 continue
@@ -200,7 +200,7 @@ class activity_ApplyVersionNumber(Activity):
 
 
     def find_xml_filename_in_map(self, file_name_map):
-        for old_name, new_name in file_name_map.items():
+        for old_name, new_name in list(file_name_map.items()):
             info = ArticleInfo(new_name)
             if info.file_type == 'ArticleXML':
                 return new_name
