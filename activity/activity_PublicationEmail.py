@@ -145,7 +145,7 @@ class activity_PublicationEmail(Activity):
 
         return prepared_articles
 
-    def set_related_article(self, article, articles, related_articles, 
+    def set_related_article(self, article, articles, related_articles,
                             article_non_insight_doi_list, remove_article_doi):
         """set the related article on an insight article"""
         set_related_article_internal(
@@ -518,7 +518,7 @@ def get_non_insight_doi_list(articles, logger):
     return article_non_insight_doi_list
 
 
-def set_related_article_internal(article, articles, non_insight_doi_list, logger, 
+def set_related_article_internal(article, articles, non_insight_doi_list, logger,
                                  admin_email_content, insight_articles_to_remove_from_outbox):
     """for insight article, set the related_article property from an article in the outbox"""
     # Insight
@@ -543,7 +543,9 @@ def set_related_article_internal(article, articles, non_insight_doi_list, logger
                 logger.info(log_info)
                 research_article.set_related_insight_article(article)
 
-def set_related_article_external(settings, tmp_dir, article, related_articles, logger, admin_email_content):
+
+def set_related_article_external(settings, tmp_dir, article, related_articles,
+                                 logger, admin_email_content):
     """for insight article, set the related_article property getting it from the big bucket"""
     related_article_doi = article.get_article_related_insight_doi()
     if related_article_doi:
