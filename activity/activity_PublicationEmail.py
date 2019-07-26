@@ -159,13 +159,12 @@ class activity_PublicationEmail(Activity):
         else:
             # If related article not set from internal sources, set from external source
             self.logger.info("No internal article match on " + article.doi)
-            set_related_article_external(
+            was_set = set_related_article_external(
                 self.settings, self.get_tmp_dir(), article, related_articles,
                 self.logger, self.admin_email_content)
         # finally if we count not set the value
-        if not article.related_insight_article:
-            log_info = ("Could not build the article related to insight " +
-                        article.doi)
+        if not was_set:
+            log_info = "Could not build the article related to insight " + article.doi
             self.admin_email_content += "\n" + log_info
             self.logger.info(log_info)
             remove_article_doi.append(article.doi)
@@ -553,6 +552,8 @@ def set_related_article_external(settings, tmp_dir, article, related_articles,
             related_articles, logger, admin_email_content)
         if related_article:
             article.set_related_insight_article(related_article)
+            return True
+    return None
 
 
 def s3_key_names_to_clean(outbox_folder, prepared, xml_file_to_doi_map, do_not_remove, do_remove):
