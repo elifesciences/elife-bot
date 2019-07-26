@@ -520,7 +520,7 @@ def get_non_insight_doi_list(articles, logger):
     return article_non_insight_doi_list
 
 
-def set_related_article_internal(article, articles, non_insight_doi_list, 
+def set_related_article_internal(article, articles, non_insight_doi_list,
                                  logger, admin_email_content):
     """for insight article, set the related_article property from an article in the outbox"""
     # Set the related article of an insight article only if its related research article is
