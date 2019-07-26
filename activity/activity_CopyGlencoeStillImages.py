@@ -229,8 +229,8 @@ class activity_CopyGlencoeStillImages(Activity):
         self.logger.info("files_in_cdn_no_extention " + str(cdn_all_files_no_extension))
         cdn_still_jpgs_without_video = []
         for still in cdn_still_jpgs_no_extension:
-            if (len(list(filter(
-                    lambda filename: filename == still, cdn_all_files_no_extension))) != 2):
+            if (len(list([
+                    fname for fname in cdn_all_files_no_extension if fname == still])) != 2):
                 cdn_still_jpgs_without_video.append(still)
 
         self.logger.info("cdn_still_jpgs_without_video " + str(cdn_still_jpgs_without_video))
@@ -238,4 +238,4 @@ class activity_CopyGlencoeStillImages(Activity):
 
 
 def remove_extension(filenames):
-    return list(map(lambda filename: os.path.splitext(filename)[0], filenames))
+    return list([os.path.splitext(filename)[0] for filename in filenames])
