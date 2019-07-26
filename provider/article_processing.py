@@ -14,13 +14,13 @@ Originally refactoring them from the PMCDeposit activity for reuse into FTPArtic
 
 def list_dir(dir_name):
     dir_list = os.listdir(dir_name)
-    dir_list = map(lambda item: dir_name + os.sep + item, dir_list)
+    dir_list = [dir_name + os.sep + item for item in dir_list]
     return dir_list
 
 
 def file_list(dir_name):
     dir_list = list_dir(dir_name)
-    return filter(lambda item: os.path.isfile(item), dir_list)
+    return [item for item in dir_list if os.path.isfile(item)]
 
 
 def file_name_from_name(file_name):
@@ -66,7 +66,7 @@ def rename_files_remove_version_number(files_dir, output_dir, logger=None):
 
     file_name_map = stripped_file_name_map(dirfiles, logger)
 
-    for old_name, new_name in file_name_map.items():
+    for old_name, new_name in list(file_name_map.items()):
         if new_name is not None:
             shutil.move(files_dir + os.sep + old_name, output_dir + os.sep + new_name)
 
@@ -101,7 +101,7 @@ def verify_rename_files(file_name_map):
     verified = True
     renamed_list = []
     not_renamed_list = []
-    for k, v in file_name_map.items():
+    for k, v in list(file_name_map.items()):
         if v is None:
             verified = False
             not_renamed_list.append(k)
