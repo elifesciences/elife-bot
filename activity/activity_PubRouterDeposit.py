@@ -538,7 +538,7 @@ class activity_PubRouterDeposit(Activity):
         for article in self.articles_approved:
             remove_doi_list.append(article.doi)
 
-        for k, v in self.xml_file_to_doi_map.items():
+        for k, v in list(self.xml_file_to_doi_map.items()):
             if k in remove_doi_list:
                 processed_file_names.append(v)
 
