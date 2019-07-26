@@ -64,7 +64,7 @@ class activity_PMCDeposit(Activity):
             self.input_bucket = self.input_bucket_default
 
         # Create output directories
-        self.make_activity_directories(self.directories.values())
+        self.make_activity_directories(list(self.directories.values()))
 
         # Download the S3 objects
         download_status = self.download_files_from_s3(self.document)
