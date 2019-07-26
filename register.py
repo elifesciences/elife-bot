@@ -56,7 +56,7 @@ def start(settings):
         # Now register it
         response = workflow_object.register()
 
-        print('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+        print(('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)))
 
     activity_names = []
     activity_names.append("ReadyToPublish")
@@ -121,7 +121,7 @@ def start(settings):
         # Now register it
         response = activity_object.register()
 
-        print('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+        print(('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)))
 
 if __name__ == "__main__":
 
