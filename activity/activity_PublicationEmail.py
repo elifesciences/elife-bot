@@ -570,7 +570,7 @@ def s3_key_names_to_clean(outbox_folder, prepared, xml_file_to_doi_map, do_not_r
     for article in do_remove:
         remove_doi_list.append(article.doi)
 
-    for key, value in xml_file_to_doi_map.items():
+    for key, value in list(xml_file_to_doi_map.items()):
         if key in remove_doi_list:
             processed_file_names.append(value)
 
