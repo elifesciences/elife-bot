@@ -91,7 +91,7 @@ class activity_S3Monitor(Activity):
             date_attrs = self.get_expanded_date_attributes(
                 base_name='_runtime', date_format="%Y-%m-%dT%H:%M:%S.000Z",
                 timestamp=_runtime_timestamp, date_string=None)
-            for k, v in date_attrs.items():
+            for k, v in list(date_attrs.items()):
                 base_item_attrs[k] = v
 
         for folder in folders:
@@ -109,7 +109,7 @@ class activity_S3Monitor(Activity):
                 self.db.put_attributes("S3File", item_name, item_attrs)
             else:
                 # Update the item attributes by replacing values if present
-                for k, v in item_attrs.items():
+                for k, v in list(item_attrs.items()):
                     if item.has_key(k):
                         # Overwrite value
                         item[k] = v
@@ -151,7 +151,7 @@ class activity_S3Monitor(Activity):
                 date_attrs = self.get_expanded_date_attributes(
                     base_name='last_modified', date_format="%Y-%m-%dT%H:%M:%S.000Z",
                     timestamp=None, date_string=item_attrs['last_modified'])
-                for k, v in date_attrs.items():
+                for k, v in list(date_attrs.items()):
                     item_attrs[k] = v
 
             if item is None:
@@ -165,7 +165,7 @@ class activity_S3Monitor(Activity):
                     self.log_item_modified(item_name, item_attrs)
 
                 # Update the item attributes by replacing values if present
-                for k, v in item_attrs.items():
+                for k, v in list(item_attrs.items()):
                     if item.has_key(k):
                         # Overwrite value
                         item[k] = v
