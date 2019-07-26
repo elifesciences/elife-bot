@@ -58,8 +58,8 @@ class activity_VerifyImageServer(Activity):
 
             results = self.retrieve_endpoints_check(original_figures, iiif_path_for_article)
 
-            bad_images = list(filter(lambda x: x[0] == False, results))
-
+            bad_images = list([x for x in results if x[0] == False])
+ 
             if len(bad_images) > 0:
                 # print endpoints that did not work
                 self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
@@ -79,5 +79,5 @@ class activity_VerifyImageServer(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
     def retrieve_endpoints_check(self, original_figures, iiif_path_for_article):
-        return list(map(lambda fig: iiif.try_endpoint(iiif.endpoint(self.settings, iiif_path_for_article, fig), self.logger),
-                        original_figures))
+        return list([iiif.try_endpoint(iiif.endpoint(
+            self.settings, iiif_path_for_article, fig), self.logger) for fig in original_figures])
