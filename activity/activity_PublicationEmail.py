@@ -147,13 +147,15 @@ class activity_PublicationEmail(Activity):
 
     def set_related_article(self, article, articles, related_articles,
                             article_non_insight_doi_list, remove_article_doi):
-        """set the related article on an insight article"""
-        set_related_article_internal(
+        """set the related article for an insight article"""
+        was_set = set_related_article_internal(
             article, articles, article_non_insight_doi_list, self.logger,
-            self.admin_email_content, self.insight_articles_to_remove_from_outbox)
-        if article.related_insight_article:
+            self.admin_email_content)
+        if was_set:
             # remove this insight from the list to send
             remove_article_doi.append(article.doi)
+            # We also do not want to leave it in the outbox, add it to the removal list
+            self.insight_articles_to_remove_from_outbox.append(article)
         else:
             # If related article not set from internal sources, set from external source
             self.logger.info("No internal article match on " + article.doi)
@@ -518,23 +520,17 @@ def get_non_insight_doi_list(articles, logger):
     return article_non_insight_doi_list
 
 
-def set_related_article_internal(article, articles, non_insight_doi_list, logger,
-                                 admin_email_content, insight_articles_to_remove_from_outbox):
+def set_related_article_internal(article, articles, non_insight_doi_list, 
+                                 logger, admin_email_content):
     """for insight article, set the related_article property from an article in the outbox"""
-    # Insight
-
-    # Set the related article only if its related article is
-    #  NOT in the list of articles DOIs
-    # This means it is an insight for a VOR that was published previously
+    # Set the related article of an insight article only if its related research article is
+    #  in the list of non_insight_doi_list (from the outbox)
     related_article_doi = article.get_article_related_insight_doi()
     if related_article_doi in non_insight_doi_list:
 
         logger.info("Article match on " + article.doi)
 
-        # We also do not want to leave it in the outbox, add it to the removal list
-        insight_articles_to_remove_from_outbox.append(article)
-
-        # We do want to set the related article for its match
+        # Set the relation on the research article to its insight article
         for research_article in articles:
             if research_article.doi == related_article_doi:
                 log_info = ("Setting match on " + related_article_doi +
@@ -542,6 +538,9 @@ def set_related_article_internal(article, articles, non_insight_doi_list, logger
                 admin_email_content += "\n" + log_info
                 logger.info(log_info)
                 research_article.set_related_insight_article(article)
+                # return True so we can ignore this insight article from sending
+                return True
+    return None
 
 
 def set_related_article_external(settings, tmp_dir, article, related_articles,
