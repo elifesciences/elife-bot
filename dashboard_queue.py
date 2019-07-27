@@ -3,6 +3,7 @@ import boto.sns
 from boto.sqs.message import Message
 import json
 import uuid
+from provider.utils import unicode_encode
 
 
 def send_message(message, settings):
