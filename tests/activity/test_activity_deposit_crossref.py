@@ -11,33 +11,30 @@ import tests.test_data as test_case_data
 import os
 from ddt import ddt, data
 
+
 @ddt
 class TestDepositCrossref(unittest.TestCase):
 
     def setUp(self):
         fake_logger = FakeLogger()
         self.activity = activity_DepositCrossref(settings_mock, fake_logger, None, None, None)
-
+        self.activity.make_activity_directories()
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
 
-
     def input_dir(self):
         "return the staging dir name for the activity"
-        return os.path.join(self.activity.get_tmp_dir(), self.activity.INPUT_DIR)
-
+        return self.activity.directories.get("INPUT_DIR")
 
     def tmp_dir(self):
         "return the tmp dir name for the activity"
-        return os.path.join(self.activity.get_tmp_dir(), self.activity.TMP_DIR)
-
+        return self.activity.directories.get("TMP_DIR")
 
     def fake_download_files_from_s3_outbox(self, document):
         source_doc = "tests/test_data/crossref/" + document
         dest_doc = self.input_dir() + os.sep + document
         shutil.copy(source_doc, dest_doc)
-
 
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
     @patch.object(activity_DepositCrossref, 'upload_crossref_xml_to_s3')
@@ -123,7 +120,6 @@ class TestDepositCrossref(unittest.TestCase):
                     self.assertTrue(
                         expected in crossref_xml, '{expected} not found in crossref_xml {path}'.format(
                             expected=expected, path=crossref_xml_filename_path))
-
 
     @patch('provider.lax_provider.article_versions')
     def test_parse_article_xml(self, mock_lax_provider_article_versions):

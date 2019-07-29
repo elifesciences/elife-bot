@@ -42,11 +42,11 @@ class activity_DepositCrossref(Activity):
                             "generate crossref XML, and deposit with crossref.")
 
         # Local directory settings
-        self.TMP_DIR = "tmp_dir"
-        self.INPUT_DIR = "input_dir"
+        self.directories = {
+            "TMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
+        }
 
-        # Create output directories
-        self.create_activity_directories()
         self.date_stamp = self.set_datestamp()
 
         # Data provider where email body is saved
@@ -84,6 +84,9 @@ class activity_DepositCrossref(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        # Create output directories
+        self.make_activity_directories()
+
         # Download the S3 objects
         self.download_files_from_s3_outbox()
 
@@ -98,7 +101,7 @@ class activity_DepositCrossref(Activity):
                 # Publish files
                 self.publish_status = self.deposit_files_to_endpoint(
                     file_type="/*.xml",
-                    sub_dir=os.path.join(self.get_tmp_dir(), self.TMP_DIR))
+                    sub_dir=self.directories.get("TMP_DIR"))
             except:
                 self.publish_status = False
 
@@ -158,7 +161,7 @@ class activity_DepositCrossref(Activity):
 
             # Save .xml and .pdf to different folders
             if re.search(".*\\.xml$", name):
-                dirname = os.path.join(self.get_tmp_dir(), self.INPUT_DIR)
+                dirname = self.directories.get("INPUT_DIR")
 
             filename_plus_path = dirname + os.sep + filename
             mode = "wb"
@@ -198,7 +201,7 @@ class activity_DepositCrossref(Activity):
             article_xml_list = [article_xml]
             try:
                 # Convert the XML files to article objects
-                generate.TMP_DIR = os.path.join(self.get_tmp_dir(), self.TMP_DIR)
+                generate.TMP_DIR = self.directories.get("TMP_DIR")
                 article_list = generate.build_articles(article_xml_list)
                 article = article_list[0]
             except:
@@ -230,7 +233,7 @@ class activity_DepositCrossref(Activity):
         """
         Using the POA generateCrossrefXml module
         """
-        article_xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.INPUT_DIR) + "/*.xml")
+        article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
 
         for xml_file in article_xml_files:
             generate_status = True
@@ -295,7 +298,7 @@ class activity_DepositCrossref(Activity):
         status = None
 
         # Check for empty directory
-        article_xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.INPUT_DIR) + "/*.xml")
+        article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
         if len(article_xml_files) <= 0:
             status = False
         else:
@@ -428,7 +431,7 @@ class activity_DepositCrossref(Activity):
         """
         Upload a copy of the crossref XML to S3 for reference
         """
-        xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.TMP_DIR) + "/*.xml")
+        xml_files = glob.glob(self.directories.get("TMP_DIR") + "/*.xml")
 
         bucket_name = self.publish_bucket
 
@@ -587,15 +590,3 @@ class activity_DepositCrossref(Activity):
         body += "\n\nSincerely\n\neLife bot"
 
         return body
-
-
-    def create_activity_directories(self):
-        """
-        Create the directories in the activity tmp_dir
-        """
-
-        try:
-            os.mkdir(os.path.join(self.get_tmp_dir(), self.TMP_DIR))
-            os.mkdir(os.path.join(self.get_tmp_dir(), self.INPUT_DIR))
-        except:
-            pass
