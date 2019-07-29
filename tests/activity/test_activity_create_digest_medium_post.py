@@ -105,7 +105,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         fake_storage_context.return_value = bot_storage_context
         fake_processing_storage_context.return_value = FakeStorageContext()
         fake_post_content.return_value = None
-        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         # lax mocking
         fake_highest_version.return_value = test_data.get('lax_highest_version')
         fake_first.return_value = test_data.get("first_vor")
@@ -200,7 +200,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
 
     @patch.object(activity_module.email_provider, 'smtp_connect')
     def test_email_notification(self, fake_email_smtp_connect):
-        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         return_value = self.activity.email_notification(99999)
         self.assertTrue(return_value)
         self.assertEqual(

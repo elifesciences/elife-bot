@@ -23,11 +23,10 @@ class activity_CreateDigestMediumPost(Activity):
         self.description = ("Create a post on Medium for a digest.")
 
         # Local directory settings
-        self.temp_dir = os.path.join(self.get_tmp_dir(), "tmp_dir")
-        self.input_dir = os.path.join(self.get_tmp_dir(), "input_dir")
-
-        # Create output directories
-        self.create_activity_directories()
+        self.directories = {
+            "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
+        }
 
         self.statuses = {}
 
@@ -41,6 +40,8 @@ class activity_CreateDigestMediumPost(Activity):
 
     def do_activity(self, data=None):
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
+
+        self.make_activity_directories()
 
         # get data
         (success, run, article_id, version,
@@ -91,9 +92,11 @@ class activity_CreateDigestMediumPost(Activity):
             # create the digest content from the docx and JATS file
             # download jats file
             docx_file = digest_provider.download_docx_from_s3(
-                self.settings, article_id, self.settings.bot_bucket, self.input_dir, self.logger)
+                self.settings, article_id, self.settings.bot_bucket,
+                self.directories.get("INPUT_DIR"), self.logger)
 
-            jats_file = download_jats(self.settings, expanded_folder, self.temp_dir, self.logger)
+            jats_file = download_jats(
+                self.settings, expanded_folder, self.directories.get("TEMP_DIR"), self.logger)
 
             # find the image file name
             image_file_name = digest_provider.image_file_name_from_s3(
@@ -149,7 +152,8 @@ class activity_CreateDigestMediumPost(Activity):
         json_content = None
         try:
             json_content = medium_post.build_medium_content(
-                docx_file, self.temp_dir, self.digest_config, jats_file, image_file_name)
+                docx_file, self.directories.get("TEMP_DIR"),
+                self.digest_config, jats_file, image_file_name)
         except Exception as exception:
             self.logger.exception(
                 "Exception generating digest json for docx_file %s. Details: %s" %
@@ -223,16 +227,6 @@ class activity_CreateDigestMediumPost(Activity):
         self.logger.info('Email sending details: %s' % str(details))
 
         return success
-
-    def create_activity_directories(self):
-        """
-        Create the directories in the activity tmp_dir
-        """
-        for dir_name in [self.temp_dir, self.input_dir]:
-            try:
-                os.mkdir(dir_name)
-            except OSError:
-                pass
 
 
 def post_medium_content(medium_content, digest_config, logger):
