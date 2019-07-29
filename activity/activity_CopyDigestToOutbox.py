@@ -28,26 +28,29 @@ class activity_CopyDigestToOutbox(Activity):
                             " in article ingestion")
 
         # Local directory settings
-        self.temp_dir = os.path.join(self.get_tmp_dir(), "tmp_dir")
-        self.input_dir = os.path.join(self.get_tmp_dir(), "input_dir")
-
-        # Create output directories
-        self.create_activity_directories()
+        self.directories = {
+            "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
+        }
 
     def do_activity(self, data=None):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+
+        self.make_activity_directories()
+
         # parse the data with the digest_provider
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)
         # Download from S3
         input_file = digest_provider.download_digest_from_s3(
-            self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
+            self.settings, real_filename, bucket_name, bucket_folder,
+            self.directories.get("INPUT_DIR"))
         # Parse input and build digest
         digest_config = digest_provider.digest_config(
             self.settings.digest_config_section,
             self.settings.digest_config_file)
         build_status, digest = digest_provider.build_digest(
-            input_file, self.temp_dir, self.logger, digest_config)
+            input_file, self.directories.get("TEMP_DIR"), self.logger, digest_config)
 
         if not build_status:
             self.logger.info("Failed to build the Digest in Copy Digest To Outbox for %s",
@@ -64,9 +67,9 @@ class activity_CopyDigestToOutbox(Activity):
 
         # copy the files to S3
         # if it is zip file take the files from the temp_dir, otherwise from the input_dir
-        from_dir = self.input_dir
+        from_dir = self.directories.get("INPUT_DIR")
         if input_file.endswith('.zip'):
-            from_dir = self.temp_dir
+            from_dir = self.directories.get("TEMP_DIR")
         self.copy_files_to_outbox(digest, bucket_name, from_dir)
 
         return self.ACTIVITY_SUCCESS
@@ -99,13 +102,3 @@ class activity_CopyDigestToOutbox(Activity):
                 self.settings.storage_provider, digest, bucket_name, file_path)
             self.logger.info("Copying %s to %s", file_path, resource_dest)
             storage.set_resource_from_filename(resource_dest, file_path)
-
-    def create_activity_directories(self):
-        """
-        Create the directories in the activity tmp_dir
-        """
-        for dir_name in [self.temp_dir, self.input_dir]:
-            try:
-                os.mkdir(dir_name)
-            except OSError:
-                pass
