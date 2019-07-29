@@ -91,15 +91,15 @@ class TestFTPArticle(unittest.TestCase):
     def test_move_or_repackage_pmc_zip(self, input_zip_file_path, doi_id, workflow,
                                        expected_zip_file, expected_zip_file_contents):
         # create activity directories
-        self.activity.create_activity_directories()
+        self.activity.make_activity_directories()
         # copy in some sample data
         dest_input_zip_file_path = os.path.join(
-            self.activity.get_tmp_dir(), self.activity.INPUT_DIR, input_zip_file_path.split('/')[-1])
+            self.activity.directories.get("INPUT_DIR"), input_zip_file_path.split('/')[-1])
         shutil.copy(input_zip_file_path, dest_input_zip_file_path)
         # call the activity function
         self.activity.move_or_repackage_pmc_zip(doi_id, workflow)
         # confirm the output
-        ftp_outbox_dir = os.path.join(self.activity.get_tmp_dir(), self.activity.FTP_TO_SOMEWHERE_DIR)
+        ftp_outbox_dir = self.activity.directories.get("FTP_TO_SOMEWHERE_DIR")
         self.assertTrue(expected_zip_file in os.listdir(ftp_outbox_dir))
         with zipfile.ZipFile(os.path.join(ftp_outbox_dir, expected_zip_file)) as zip_file:
             self.assertEqual(sorted(zip_file.namelist()), sorted(expected_zip_file_contents))
@@ -108,18 +108,18 @@ class TestFTPArticle(unittest.TestCase):
     def test_repackage_archive_zip_to_pmc_zip(self):
         input_zip_file_path = 'tests/test_data/pmc/elife-19405-vor-v1-20160802113816.zip'
         doi_id = 19405
-        zip_renamed_files_dir = os.path.join(self.activity.get_tmp_dir(), self.activity.RENAME_DIR)
-        pmc_zip_output_dir = os.path.join(self.activity.get_tmp_dir(), self.activity.INPUT_DIR)
+        # create activity directories
+        self.activity.make_activity_directories()
+        zip_renamed_files_dir = self.activity.directories.get("RENAME_DIR")
+        pmc_zip_output_dir = self.activity.directories.get("INPUT_DIR")
         expected_pmc_zip_file = os.path.join(pmc_zip_output_dir, 'elife-05-19405.zip')
         expected_article_xml_file = os.path.join(zip_renamed_files_dir, 'elife-19405.xml')
         expected_article_xml_string = b'elife-19405.pdf'
         expected_pmc_zip_file_contents = ['elife-19405.pdf', 'elife-19405.xml',
                                           'elife-19405-inf1.tif', 'elife-19405-fig1.tif']
-        # create activity directories
-        self.activity.create_activity_directories()
         # copy in some sample data
         dest_input_zip_file_path = os.path.join(
-            self.activity.get_tmp_dir(), self.activity.TMP_DIR, input_zip_file_path.split('/')[-1])
+            self.activity.directories.get("TMP_DIR"), input_zip_file_path.split('/')[-1])
         shutil.copy(input_zip_file_path, dest_input_zip_file_path)
         self.activity.repackage_archive_zip_to_pmc_zip(doi_id)
         # now can check the results

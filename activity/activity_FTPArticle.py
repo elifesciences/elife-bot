@@ -42,12 +42,14 @@ class activity_FTPArticle(Activity):
                                    + self.settings.archive_bucket)
 
         # Local directory settings
-        self.TMP_DIR = "tmp_dir"
-        self.INPUT_DIR = "input_dir"
-        self.ZIP_DIR = "zip_dir"
-        self.FTP_TO_SOMEWHERE_DIR = "ftp_outbox"
-        self.RENAME_DIR = "renamed_files"
-        self.JUNK_DIR = "junk_dir"
+        self.directories = {
+            "TMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
+            "ZIP_DIR": os.path.join(self.get_tmp_dir(), "zip_dir"),
+            "FTP_TO_SOMEWHERE_DIR": os.path.join(self.get_tmp_dir(), "ftp_outbox"),
+            "RENAME_DIR": os.path.join(self.get_tmp_dir(), "renamed_files"),
+            "JUNK_DIR": os.path.join(self.get_tmp_dir(), "junk_dir"),
+        }
 
         # Outgoing FTP settings are set later
         self.FTP_URI = None
@@ -84,7 +86,7 @@ class activity_FTPArticle(Activity):
         self.doi_id = elife_id
 
         # Create output directories
-        self.create_activity_directories()
+        self.make_activity_directories()
 
         # Download the S3 objects
         self.download_files_from_s3(elife_id, workflow)
@@ -94,9 +96,7 @@ class activity_FTPArticle(Activity):
 
         # FTP to endpoint
         try:
-            file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep +
-                                 self.FTP_TO_SOMEWHERE_DIR + file_type)
+            zipfiles = glob.glob(self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.zip")
             if self.logger:
                 self.logger.info("FTPArticle running %s workflow for article %s, attempting to send files: %s"
                                  % (self.workflow, self.doi_id, zipfiles))
@@ -238,7 +238,7 @@ class activity_FTPArticle(Activity):
             # download it to disk
             s3_key = bucket.get_key(s3_key_name)
             filename = s3_key_name.split("/")[-1]
-            filename_plus_path = os.path.join(self.get_tmp_dir(), self.TMP_DIR, filename)
+            filename_plus_path = os.path.join(self.directories.get("TMP_DIR"), filename)
             mode = "wb"
             with open(filename_plus_path, mode) as fp:
                 s3_key.get_contents_to_file(fp)
@@ -256,10 +256,10 @@ class activity_FTPArticle(Activity):
     def repackage_archive_zip_to_pmc_zip(self, doi_id):
         "repackage the zip file in the TMP_DIR to a PMC zip format"
         # unzip contents
-        zip_input_dir = os.path.join(self.get_tmp_dir(), self.TMP_DIR)
-        zip_extracted_dir = os.path.join(self.get_tmp_dir(), self.JUNK_DIR)
-        zip_renamed_files_dir = os.path.join(self.get_tmp_dir(), self.RENAME_DIR)
-        pmc_zip_output_dir = os.path.join(self.get_tmp_dir(), self.INPUT_DIR)
+        zip_input_dir = self.directories.get("TMP_DIR")
+        zip_extracted_dir = self.directories.get("JUNK_DIR")
+        zip_renamed_files_dir = self.directories.get("RENAME_DIR")
+        pmc_zip_output_dir = self.directories.get("INPUT_DIR")
         archive_zip_name = glob.glob(zip_input_dir + "/*.zip")[0]
         with zipfile.ZipFile(archive_zip_name, 'r') as myzip:
             myzip.extractall(zip_extracted_dir)
@@ -314,8 +314,8 @@ class activity_FTPArticle(Activity):
 
             filename = s3_key_name.split("/")[-1]
 
-            filename_plus_path = (self.get_tmp_dir() + os.sep +
-                                  self.INPUT_DIR + os.sep + filename)
+            filename_plus_path = os.path.join(self.directories.get("INPUT_DIR"), filename)
+
             mode = "wb"
             f = open(filename_plus_path, mode)
             s3_key.get_contents_to_file(f)
@@ -341,16 +341,15 @@ class activity_FTPArticle(Activity):
         # Repackage or move the zip depending on the workflow type
         if workflow == 'Cengage' or workflow == 'Scopus' or workflow == 'WoS':
             # Extract the zip and build a new zip
-            file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.INPUT_DIR + file_type)
-            to_dir = self.get_tmp_dir() + os.sep + self.TMP_DIR
+            zipfiles = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")
+            to_dir = self.directories.get("TMP_DIR")
             for filename in zipfiles:
                 myzip = zipfile.ZipFile(filename, 'r')
                 myzip.extractall(to_dir)
 
             # Create the new zip
             zip_file_name = 'elife-' + str(doi_id).zfill(5) + '-xml-pdf.zip'
-            zip_dir = self.get_tmp_dir() + os.sep + self.ZIP_DIR
+            zip_dir = self.directories.get("ZIP_DIR")
             new_zipfile = zipfile.ZipFile(zip_dir + os.sep + zip_file_name, 'w',
                                           zipfile.ZIP_DEFLATED, allowZip64=True)
             # Add files
@@ -370,16 +369,15 @@ class activity_FTPArticle(Activity):
             new_zipfile.close()
 
             # Move the zip
-            shutil.move(zip_dir + os.sep + zip_file_name, self.get_tmp_dir() + os.sep +
-                        self.FTP_TO_SOMEWHERE_DIR + os.sep)
+            shutil.move(
+                zip_dir + os.sep + zip_file_name,
+                self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep)
 
         else:
             # Default, move all the zip files from TMP_DIR to FTP_OUTBOX
-            file_type = "/*.zip"
-            zipfiles = glob.glob(self.get_tmp_dir() + os.sep + self.INPUT_DIR + file_type)
+            zipfiles = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")
             for filename in zipfiles:
-                shutil.move(filename, self.get_tmp_dir() + os.sep +
-                            self.FTP_TO_SOMEWHERE_DIR + os.sep)
+                shutil.move(filename, self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep)
 
     def ftp_upload(self, ftp, file):
         ext = os.path.splitext(file)[1]
@@ -438,17 +436,3 @@ class activity_FTPArticle(Activity):
 
         if sftp_client is not None:
             sftp.sftp_to_endpoint(sftp_client, uploadfiles, self.SFTP_CWD, sub_dir)
-
-    def create_activity_directories(self):
-        """
-        Create the directories in the activity tmp_dir
-        """
-        try:
-            os.mkdir(self.get_tmp_dir() + os.sep + self.TMP_DIR)
-            os.mkdir(self.get_tmp_dir() + os.sep + self.INPUT_DIR)
-            os.mkdir(self.get_tmp_dir() + os.sep + self.ZIP_DIR)
-            os.mkdir(self.get_tmp_dir() + os.sep + self.FTP_TO_SOMEWHERE_DIR)
-            os.mkdir(self.get_tmp_dir() + os.sep + self.RENAME_DIR)
-            os.mkdir(self.get_tmp_dir() + os.sep + self.JUNK_DIR)
-        except OSError:
-            pass
