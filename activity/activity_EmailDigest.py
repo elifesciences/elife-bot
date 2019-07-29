@@ -30,7 +30,6 @@ class activity_EmailDigest(Activity):
         self.digest = None
 
         # Local directory settings
-        # Local directory settings
         self.directories = {
             "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
             "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
