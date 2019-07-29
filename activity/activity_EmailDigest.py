@@ -30,12 +30,12 @@ class activity_EmailDigest(Activity):
         self.digest = None
 
         # Local directory settings
-        self.temp_dir = os.path.join(self.get_tmp_dir(), "tmp_dir")
-        self.input_dir = os.path.join(self.get_tmp_dir(), "input_dir")
-        self.output_dir = os.path.join(self.get_tmp_dir(), "output_dir")
-
-        # Create output directories
-        self.create_activity_directories()
+        # Local directory settings
+        self.directories = {
+            "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
+            "OUTPUT_DIR": os.path.join(self.get_tmp_dir(), "output_dir"),
+        }
 
         # Track the success of some steps
         self.activity_status = None
@@ -56,16 +56,19 @@ class activity_EmailDigest(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        self.make_activity_directories()
+
         # parse the data with the digest_provider
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)
 
         # Download from S3
         self.input_file = digest_provider.download_digest_from_s3(
-            self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
+            self.settings, real_filename, bucket_name, bucket_folder,
+            self.directories.get("INPUT_DIR"))
 
         # Parse input and build digest
         self.build_status, self.digest = digest_provider.build_digest(
-            self.input_file, self.temp_dir, self.logger, self.digest_config)
+            self.input_file, self.directories.get("TEMP_DIR"), self.logger, self.digest_config)
 
         # Generate output
         self.generate_status, output_file = self.generate_output(self.digest)
@@ -103,7 +106,8 @@ class activity_EmailDigest(Activity):
             return False, None
         file_name = output_file_name(digest_content, self.digest_config)
         self.logger.info('EmailDigest output file_name: %s', file_name)
-        full_file_name = self.output_path(self.output_dir, unicode_value(file_name))
+        full_file_name = self.output_path(
+            self.directories.get("OUTPUT_DIR"), unicode_value(file_name))
         self.logger.info('EmailDigest output full_file_name: %s', full_file_name)
         try:
             output_file = output.digest_docx(digest_content, full_file_name)
@@ -139,16 +143,6 @@ class activity_EmailDigest(Activity):
                 # for now any failure in sending a mail return False
                 success = False
         return success
-
-    def create_activity_directories(self):
-        """
-        Create the directories in the activity tmp_dir
-        """
-        for dir_name in [self.temp_dir, self.input_dir, self.output_dir]:
-            try:
-                os.mkdir(dir_name)
-            except OSError:
-                pass
 
 
 def output_file_name(digest_content, digest_config=None):
