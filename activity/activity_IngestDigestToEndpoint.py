@@ -30,8 +30,8 @@ class activity_IngestDigestToEndpoint(Activity):
 
         # Local directory settings
         self.directories = {
-            "TEMP_DIR": self.get_tmp_dir() + os.sep + "tmp_dir",
-            "INPUT_DIR": self.get_tmp_dir() + os.sep + "input_dir"
+            "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
         }
 
         # Track the success of some steps
