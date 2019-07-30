@@ -29,11 +29,10 @@ class activity_IngestDigestToEndpoint(Activity):
                             " to be run when a research article is ingested")
 
         # Local directory settings
-        self.temp_dir = os.path.join(self.get_tmp_dir(), "tmp_dir")
-        self.input_dir = os.path.join(self.get_tmp_dir(), "input_dir")
-
-        # Create output directories
-        self.create_activity_directories()
+        self.directories = {
+            "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
+        }
 
         # Track the success of some steps
         self.statuses = {
@@ -54,6 +53,8 @@ class activity_IngestDigestToEndpoint(Activity):
     def do_activity(self, data=None):
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
         success, run, session, article_id, version = self.session_data(data)
+
+        self.make_activity_directories()
 
         # get session data
         if success is not True:
@@ -87,12 +88,13 @@ class activity_IngestDigestToEndpoint(Activity):
 
             # Download digest from the S3 outbox
             docx_file = digest_provider.download_docx_from_s3(
-                self.settings, article_id, self.settings.bot_bucket, self.input_dir, self.logger)
+                self.settings, article_id, self.settings.bot_bucket,
+                self.directories.get("INPUT_DIR"), self.logger)
             if docx_file:
                 self.statuses["download"] = True
             if self.statuses.get("download") is not True:
                 self.logger.info("Unable to download digest file %s for article %s" %
-                                 (docx_file, article_id))
+                                    (docx_file, article_id))
                 return self.ACTIVITY_PERMANENT_FAILURE
             # find the image file name
             image_file = digest_provider.image_file_name_from_s3(
@@ -100,7 +102,8 @@ class activity_IngestDigestToEndpoint(Activity):
 
             # download jats file
             jats_file = download_jats(
-                self.settings, session.get_value("expanded_folder"), self.temp_dir, self.logger)
+                self.settings, session.get_value("expanded_folder"),
+                self.directories.get("TEMP_DIR"), self.logger)
             # related article data
             related = related_from_lax(article_id, version, self.settings, self.logger)
             # generate the digest content
@@ -231,23 +234,14 @@ class activity_IngestDigestToEndpoint(Activity):
         "generate the digest json content from the docx file and other data"
         json_content = None
         try:
-            json_content = json_output.build_json(docx_file, self.temp_dir, self.digest_config,
-                                                  jats_file, image_file, related)
+            json_content = json_output.build_json(
+                docx_file, self.directories.get("TEMP_DIR"), self.digest_config,
+                jats_file, image_file, related)
         except Exception as exception:
             self.logger.exception(
                 "Exception generating digest json for docx_file %s. Details: %s" %
                 (str(docx_file), str(exception)))
         return json_content
-
-    def create_activity_directories(self):
-        """
-        Create the directories in the activity tmp_dir
-        """
-        for dir_name in [self.temp_dir, self.input_dir]:
-            try:
-                os.mkdir(dir_name)
-            except OSError:
-                pass
 
 
 def related_from_lax(article_id, version, settings, logger=None, auth=True):

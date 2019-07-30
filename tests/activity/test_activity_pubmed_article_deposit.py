@@ -25,13 +25,9 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         helpers.delete_files_in_folder(activity_test_data.ExpandArticle_files_dest_folder,
                                        filter_out=['.gitkeep'])
 
-    def input_dir(self):
-        "return the staging dir name for the activity"
-        return os.path.join(self.activity.get_tmp_dir(), self.activity.INPUT_DIR)
-
     def tmp_dir(self):
         "return the tmp dir name for the activity"
-        return os.path.join(self.activity.get_tmp_dir(), self.activity.TMP_DIR)
+        return self.activity.directories.get("TMP_DIR")
 
     @patch.object(activity_PubmedArticleDeposit, 'clean_tmp_dir')
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')

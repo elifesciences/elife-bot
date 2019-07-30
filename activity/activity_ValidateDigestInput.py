@@ -27,11 +27,10 @@ class activity_ValidateDigestInput(Activity):
         self.digest = None
 
         # Local directory settings
-        self.temp_dir = os.path.join(self.get_tmp_dir(), "tmp_dir")
-        self.input_dir = os.path.join(self.get_tmp_dir(), "input_dir")
-
-        # Create output directories
-        self.create_activity_directories()
+        self.directories = {
+            "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
+        }
 
         # Track the success of some steps
         self.statuses = {
@@ -52,16 +51,19 @@ class activity_ValidateDigestInput(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        self.make_activity_directories()
+
         # parse the data with the digest_provider
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)
 
         # Download from S3
         self.input_file = digest_provider.download_digest_from_s3(
-            self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
+            self.settings, real_filename, bucket_name, bucket_folder,
+            self.directories.get("INPUT_DIR"))
 
         # Parse input and build digest
         self.statuses["build"], self.digest = digest_provider.build_digest(
-            self.input_file, self.temp_dir, self.logger, self.digest_config)
+            self.input_file, self.directories.get("TEMP_DIR"), self.logger, self.digest_config)
 
         # Approve files for emailing
         self.statuses["valid"], error_messages = digest_provider.validate_digest(self.digest)
@@ -100,16 +102,6 @@ class activity_ValidateDigestInput(Activity):
             email_provider.smtp_send(connection, sender_email, recipient,
                                      email_message, self.logger)
         return True
-
-    def create_activity_directories(self):
-        """
-        Create the directories in the activity tmp_dir
-        """
-        for dir_name in [self.temp_dir, self.input_dir]:
-            try:
-                os.mkdir(dir_name)
-            except OSError:
-                pass
 
 
 def error_email_subject(filename):

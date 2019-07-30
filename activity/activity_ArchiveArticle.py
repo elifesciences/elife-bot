@@ -25,6 +25,11 @@ class activity_ArchiveArticle(Activity):
         self.description = "Archive an article post-publication"
         self.logger = logger
 
+        # Local directory settings
+        self.directories = {
+            "ZIP_DIR": None  # will be created dynamically later
+        }
+
     def do_activity(self, data=None):
         """
         Do the work
@@ -44,12 +49,16 @@ class activity_ArchiveArticle(Activity):
             updated_date = datetime.strptime(update_date_string, "%Y-%m-%dT%H:%M:%SZ")
             status = data['status'].lower()
 
+            # set ZIP_DIR folder name from run time data and create the folder
             zip_dir_name = zip_dir(article_id, status, version, updated_date)
-            zip_dir_path = create_zip_dir(self.get_tmp_dir(), zip_dir_name)
+            self.directories["ZIP_DIR"] = os.path.join(self.get_tmp_dir(), zip_dir_name)
+            self.make_activity_directories()
+
             bucket_name = (
                 self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
 
-            downloaded = self.download_files(bucket_name, expanded_folder, zip_dir_path)
+            downloaded = self.download_files(
+                bucket_name, expanded_folder, self.directories["ZIP_DIR"])
             if not downloaded:
                 error_message = "Failed to download all files in ArchiveArticle"
                 self.logger.error(error_message)
@@ -59,7 +68,7 @@ class activity_ArchiveArticle(Activity):
                                         " message:" + error_message)
                 return self.ACTIVITY_PERMANENT_FAILURE
 
-            zip_path = self.zip_files(zip_dir_name, zip_dir_path)
+            zip_path = self.zip_files(zip_dir_name, self.directories["ZIP_DIR"])
 
             output_bucket_name = (
                 self.settings.publishing_buckets_prefix + self.settings.archive_bucket)
@@ -142,10 +151,3 @@ def zip_dir(article_id, status, version, updated_date):
     "zip directory name"
     return ("elife-" + article_id + '-' + status + '-v' + version
             + '-' + updated_date.strftime('%Y%m%d%H%M%S'))
-
-
-def create_zip_dir(parent_dir, zip_dir_name):
-    "create the directory on disk to copy files into"
-    zip_dir_path = os.path.join(parent_dir, zip_dir_name)
-    os.mkdir(zip_dir_path)
-    return zip_dir_path

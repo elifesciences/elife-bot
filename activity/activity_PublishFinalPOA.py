@@ -43,11 +43,13 @@ class activity_PublishFinalPOA(Activity):
                             + "and upload to final bucket.")
 
         # Local directory settings
-        self.TMP_DIR = self.get_tmp_dir() + os.sep + "tmp_dir"
-        self.INPUT_DIR = self.get_tmp_dir() + os.sep + "input_dir"
-        self.OUTPUT_DIR = self.get_tmp_dir() + os.sep + "output_dir"
-        self.JUNK_DIR = self.get_tmp_dir() + os.sep + "junk_dir"
-        self.DONE_DIR = self.get_tmp_dir() + os.sep + "done_dir"
+        self.directories = {
+            "TMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
+            "OUTPUT_DIR": os.path.join(self.get_tmp_dir(), "output_dir"),
+            "JUNK_DIR": os.path.join(self.get_tmp_dir(), "junk_dir"),
+            "DONE_DIR": os.path.join(self.get_tmp_dir(), "done_dir")
+        }
 
         # Bucket for outgoing files
         self.input_bucket = settings.poa_packaging_bucket
@@ -79,7 +81,7 @@ class activity_PublishFinalPOA(Activity):
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         # Create output directories
-        self.create_activity_directories()
+        self.make_activity_directories()
 
         # Set the published folder name as todays date
         self.published_folder_name = (self.published_folder_prefix
@@ -106,7 +108,8 @@ class activity_PublishFinalPOA(Activity):
                 new_filenames = self.new_filenames(doi_id, filenames)
 
                 if article_xml_file_name:
-                    xml_file = self.INPUT_DIR + os.sep + article_xml_file_name
+                    xml_file = os.path.join(
+                        self.directories.get("INPUT_DIR"), article_xml_file_name)
 
                     try:
                         self.convert_xml(doi_id, xml_file, filenames, new_filenames)
@@ -176,7 +179,7 @@ class activity_PublishFinalPOA(Activity):
         """
         article_filenames_map = {}
 
-        for file in glob.glob(self.INPUT_DIR + '/*'):
+        for file in glob.glob(self.directories.get("INPUT_DIR") + '/*'):
             filename = file.split(os.sep)[-1]
             doi_id = self.doi_id_from_filename(filename)
             if doi_id:
@@ -476,8 +479,9 @@ class activity_PublishFinalPOA(Activity):
         for filename in filenames:
             new_filename = self.new_filename_from_old(filename, new_filenames)
             if new_filename:
-                old_filename_plus_path = self.INPUT_DIR + os.sep + filename
-                new_filename_plus_path = self.TMP_DIR + os.sep + new_filename
+                old_filename_plus_path = os.path.join(self.directories.get("INPUT_DIR"), filename)
+                new_filename_plus_path = os.path.join(
+                    self.directories.get("TMP_DIR"), new_filename)
                 if self.logger:
                     self.logger.info('moving poa file from %s to %s'
                                      % (old_filename_plus_path, new_filename_plus_path))
@@ -488,20 +492,20 @@ class activity_PublishFinalPOA(Activity):
         self.repackage_poa_ds_zip()
 
         # Create the zip
-        zip_filename_plus_path = self.OUTPUT_DIR + os.sep + zip_filename
+        zip_filename_plus_path = os.path.join(self.directories.get("OUTPUT_DIR"), zip_filename)
         new_zipfile = zipfile.ZipFile(zip_filename_plus_path,
                                       'w', zipfile.ZIP_DEFLATED, allowZip64=True)
 
         # Add the files
-        for file in glob.glob(self.TMP_DIR + '/*'):
+        for file in glob.glob(self.directories.get("TMP_DIR") + '/*'):
             filename = file.split(os.sep)[-1]
             new_zipfile.write(file, filename)
         new_zipfile.close()
 
         # Clean out the tmp_dir
-        for file in glob.glob(self.TMP_DIR + '/*'):
+        for file in glob.glob(self.directories.get("TMP_DIR") + '/*'):
             filename = file.split(os.sep)[-1]
-            new_filename_plus_path = self.DONE_DIR + os.sep + filename
+            new_filename_plus_path = os.path.join(self.directories.get("DONE_DIR"), filename)
             shutil.move(file, new_filename_plus_path)
 
     def repackage_poa_ds_zip(self):
@@ -509,7 +513,7 @@ class activity_PublishFinalPOA(Activity):
         If there is a ds zip file for this article files in the tmp_dir
         then repackage it
         """
-        zipfiles = glob.glob(self.TMP_DIR + '/*.zip')
+        zipfiles = glob.glob(self.directories.get("TMP_DIR") + '/*.zip')
         if len(zipfiles) == 1:
             zipfile_file = zipfiles[0]
             zipfile_filename = zipfile_file.split(os.sep)[-1]
@@ -520,32 +524,34 @@ class activity_PublishFinalPOA(Activity):
                 return
 
             # Extract the zip
-            myzip.extractall(self.TMP_DIR)
+            myzip.extractall(self.directories.get("TMP_DIR"))
             myzip.close()
 
             # Remove the manifest.xml file
             try:
-                shutil.move(self.TMP_DIR + os.sep + 'manifest.xml',
-                            self.JUNK_DIR + os.sep + 'manifest.xml')
+                shutil.move(os.path.join(self.directories.get("TMP_DIR"), 'manifest.xml'),
+                            os.path.join(self.directories.get("JUNK_DIR"), 'manifest.xml'))
                 if self.logger:
                     self.logger.info("moving PoA zip manifest.xml to the junk folder")
             except IOError:
                 pass
 
             # Move the old zip file
-            zipfiles_now = glob.glob(self.TMP_DIR + '/*.zip')
+            zipfiles_now = glob.glob(self.directories.get("TMP_DIR") + '/*.zip')
             for new_zipfile in zipfiles_now:
                 if not new_zipfile.endswith('_Supplemental_files.zip'):
                     # Old zip file, move it to junk
                     new_zipfile_filename = new_zipfile.split(os.sep)[-1]
-                    shutil.move(new_zipfile, self.JUNK_DIR + os.sep + new_zipfile_filename)
+                    shutil.move(new_zipfile, os.path.join(
+                        self.directories.get("JUNK_DIR"), new_zipfile_filename))
 
             # Then can rename the new zip file
-            zipfiles_now = glob.glob(self.TMP_DIR + '/*.zip')
+            zipfiles_now = glob.glob(self.directories.get("TMP_DIR") + '/*.zip')
             for new_zipfile in zipfiles_now:
                 if new_zipfile.endswith('_Supplemental_files.zip'):
                     # Rename the zip as the old zip
-                    shutil.move(new_zipfile, self.TMP_DIR + os.sep + zipfile_filename)
+                    shutil.move(new_zipfile, os.path.join(
+                        self.directories.get("TMP_DIR"), zipfile_filename))
 
 
     def new_filename_from_old(self, old_filename, new_filenames):
@@ -579,7 +585,7 @@ class activity_PublishFinalPOA(Activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
 
-        for file in glob.glob(self.OUTPUT_DIR + '/*.zip'):
+        for file in glob.glob(self.directories.get("OUTPUT_DIR") + '/*.zip'):
             s3_key_name = file.split(os.sep)[-1]
             s3key = boto.s3.key.Key(bucket)
             s3key.key = s3_key_name
@@ -616,7 +622,7 @@ class activity_PublishFinalPOA(Activity):
 
             filename = name.split("/")[-1]
 
-            filename_plus_path = self.INPUT_DIR + os.sep + filename
+            filename_plus_path = os.path.join(self.directories.get("INPUT_DIR"), filename)
 
             if self.logger:
                 self.logger.info('PublishFinalPOA downloading: %s' % filename_plus_path)
@@ -638,14 +644,14 @@ class activity_PublishFinalPOA(Activity):
         status = None
 
         # Check for empty directory
-        if len(glob.glob(self.INPUT_DIR + "/*")) <= 1:
+        if len(glob.glob(self.directories.get("INPUT_DIR") + "/*")) <= 1:
             status = False
         else:
             status = True
 
         # For each data supplements file, move invalid ones to not publish by FTP
         file_type = "/*_ds.zip"
-        zipfiles = glob.glob(self.INPUT_DIR + file_type)
+        zipfiles = glob.glob(self.directories.get("INPUT_DIR") + file_type)
         for input_zipfile in zipfiles:
             badfile = None
             filename = input_zipfile.split(os.sep)[-1]
@@ -673,13 +679,15 @@ class activity_PublishFinalPOA(Activity):
 
             if badfile:
                 # File is not good, move it somewhere
-                shutil.move(self.INPUT_DIR + os.sep + filename, self.JUNK_DIR + "/")
+                shutil.move(
+                    os.path.join(self.directories.get("INPUT_DIR"), filename),
+                    self.directories.get("JUNK_DIR") + "/")
 
         # For each xml or pdf file, check there is a matching pair
         xml_file_type = "/*.xml"
         pdf_file_type = "/*.pdf"
-        xml_files = glob.glob(self.INPUT_DIR + xml_file_type)
-        pdf_files = glob.glob(self.INPUT_DIR + pdf_file_type)
+        xml_files = glob.glob(self.directories.get("INPUT_DIR") + xml_file_type)
+        pdf_files = glob.glob(self.directories.get("INPUT_DIR") + pdf_file_type)
 
         for filename in xml_files:
             matching_filename = self.get_filename_from_path(filename, ".xml")
@@ -687,14 +695,14 @@ class activity_PublishFinalPOA(Activity):
             pdf_filenames = [fname.replace('decap_', '') for fname in pdf_filenames]
 
             if matching_filename not in pdf_filenames:
-                shutil.move(filename, self.JUNK_DIR + "/")
+                shutil.move(filename, self.directories.get("JUNK_DIR") + "/")
 
         for filename in pdf_files:
             matching_filename = self.get_filename_from_path(filename, ".pdf")
             matching_filename = matching_filename.replace('decap_', '')
             xml_filenames = [self.get_filename_from_path(fname, ".xml") for fname in xml_files]
             if matching_filename not in xml_filenames:
-                shutil.move(filename, self.JUNK_DIR + "/")
+                shutil.move(filename, self.directories.get("JUNK_DIR") + "/")
 
         return status
 
@@ -758,7 +766,7 @@ class activity_PublishFinalPOA(Activity):
         zip_file_article_number = self.get_filename_from_path(zip_filename, "_ds.zip")
 
         file_type = "/*.xml"
-        xml_files = glob.glob(self.INPUT_DIR + file_type)
+        xml_files = glob.glob(self.directories.get("INPUT_DIR") + file_type)
         xml_file_articles_numbers = []
         for f in xml_files:
             xml_file_articles_numbers.append(self.get_filename_from_path(f, ".xml"))
@@ -778,7 +786,7 @@ class activity_PublishFinalPOA(Activity):
         zip_file_article_number = self.get_filename_from_path(zip_filename, "_ds.zip")
 
         file_type = "/*.pdf"
-        pdf_files = glob.glob(self.INPUT_DIR + file_type)
+        pdf_files = glob.glob(self.directories.get("INPUT_DIR") + file_type)
         pdf_file_articles_numbers = []
         for f in pdf_files:
             pdf_file_name = self.get_filename_from_path(f, ".pdf")
@@ -977,18 +985,3 @@ class activity_PublishFinalPOA(Activity):
         body += "\n\nSincerely\n\neLife bot"
 
         return body
-
-
-    def create_activity_directories(self):
-        """
-        Create the directories in the activity tmp_dir
-        """
-        try:
-            os.mkdir(self.TMP_DIR)
-            os.mkdir(self.INPUT_DIR)
-            os.mkdir(self.OUTPUT_DIR)
-            os.mkdir(self.JUNK_DIR)
-            os.mkdir(self.DONE_DIR)
-
-        except OSError:
-            pass

@@ -36,12 +36,12 @@ class TestPackagePOA(unittest.TestCase):
         csv_files = glob.glob(self.test_data_dir + "/*.csv")
         for file_name_path in csv_files:
             file_name = file_name_path.split(os.sep)[-1]
-            shutil.copy(file_name_path, self.poa.csv_dir + os.sep + file_name)
+            shutil.copy(file_name_path, os.path.join(self.poa.directories.get("CSV"), file_name))
 
     def fake_download_poa_zip(self, document):
         if document:
             source_doc = self.test_data_dir + "/" + document
-            dest_doc = self.poa.ejp_input_dir + os.sep + document
+            dest_doc = os.path.join(self.poa.directories.get("EJP_INPUT"), document)
             try:
                 shutil.copy(source_doc, dest_doc)
             except IOError:
@@ -52,7 +52,7 @@ class TestPackagePOA(unittest.TestCase):
     def fake_copy_pdf_to_hw_staging_dir(self, decap_pdf):
         if decap_pdf:
             source_doc = self.test_data_dir + "/" + decap_pdf
-            dest_doc = self.poa.decapitate_pdf_dir + os.sep + decap_pdf
+            dest_doc = os.path.join(self.poa.directories.get("DECAPITATE_PDF"), decap_pdf)
             try:
                 shutil.copy(source_doc, dest_doc)
             except IOError:
@@ -70,7 +70,7 @@ class TestPackagePOA(unittest.TestCase):
         """
         After do_activity, check the directory contains a zip with ds_zip file name
         """
-        file_names = glob.glob(self.poa.output_dir + os.sep + "*")
+        file_names = glob.glob(self.poa.directories.get("OUTPUT") + os.sep + "*")
         for file_name_path in file_names:
             if file_name_path.split(os.sep)[-1] == ds_zip:
                 return True
@@ -119,9 +119,11 @@ class TestPackagePOA(unittest.TestCase):
         )
     def test_process_poa_zipfile(self, test_data, fake_copy_pdf_to_output_dir):
         "test processing the zip file directly"
-        fake_copy_pdf_to_output_dir = self.fake_copy_pdf_to_hw_staging_dir(
+        self.poa.make_activity_directories()
+        fake_copy_pdf_to_output_dir.return_value = self.fake_copy_pdf_to_hw_staging_dir(
             test_data.get('poa_decap_pdf'))
         file_path = self.fake_download_poa_zip(test_data.get('filename'))
+        print(file_path)
         self.assertEqual(self.poa.process_poa_zipfile(file_path), test_data.get('expected'))
 
     @patch('activity.activity_PackagePOA.storage_context')
@@ -200,6 +202,8 @@ class TestPackagePOA(unittest.TestCase):
     def test_do_activity(self, test_data, fake_copy_pdf_to_output_dir, fake_clean_tmp_dir,
                          fake_article_publication_date, fake_ejp_bucket_file_list,
                          fake_storage_context):
+        # make directories first
+        self.poa.make_activity_directories()
         # mock things
         test_outbox_folder = activity_test_data.ExpandArticle_files_dest_folder
         bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list_new.json")
@@ -210,10 +214,10 @@ class TestPackagePOA(unittest.TestCase):
             fake_article_publication_date.return_value = test_data["pub_date"]
         else:
             fake_article_publication_date.return_value = None
-        fake_clean_tmp_dir = self.fake_clean_tmp_dir()
+        fake_clean_tmp_dir.return_value = self.fake_clean_tmp_dir()
 
         # For now mock the PDF decapitator during tests
-        fake_copy_pdf_to_output_dir = self.fake_copy_pdf_to_hw_staging_dir(
+        fake_copy_pdf_to_output_dir.return_value = self.fake_copy_pdf_to_hw_staging_dir(
             test_data.get('poa_decap_pdf'))
 
         param_data = json.loads('{"data": {"document": "' +

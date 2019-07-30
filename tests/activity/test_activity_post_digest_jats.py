@@ -125,7 +125,7 @@ class TestPostDigestJats(unittest.TestCase):
                          fake_email_smtp_connect):
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         # POST response
         requests_method_mock.return_value = FakeResponse(test_data.get("post_status_code"), None)
         # do the activity
@@ -163,7 +163,7 @@ class TestPostDigestJats(unittest.TestCase):
     def test_do_activity_jats_failure(self, fake_digest_jats, fake_storage_context,
                                       fake_email_smtp_connect):
         fake_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         activity_data = input_data("DIGEST+99999.zip")
         fake_digest_jats.return_value = None
         result = self.activity.do_activity(activity_data)
@@ -175,7 +175,7 @@ class TestPostDigestJats(unittest.TestCase):
     def test_do_activity_post_failure(self, fake_post_jats, fake_storage_context,
                                       fake_email_smtp_connect):
         fake_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         activity_data = input_data("DIGEST+99999.zip")
         fake_post_jats.side_effect = Exception("Something went wrong!")
         result = self.activity.do_activity(activity_data)
@@ -330,7 +330,7 @@ class TestEmailErrorReport(unittest.TestCase):
     @patch.object(activity_module.email_provider, 'smtp_connect')
     def test_email_error_report(self, fake_email_smtp_connect):
         """test sending an email error"""
-        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.temp_dir)
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         digest_content = Digest()
         digest_content.doi = '10.7554/eLife.99999'
         jats_content = {}
