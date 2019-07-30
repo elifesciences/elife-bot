@@ -38,11 +38,11 @@ class activity_PubmedArticleDeposit(Activity):
                             "article XML, and deposit with pubmed.")
 
         # Local directory settings
-        self.TMP_DIR = "tmp_dir"
-        self.INPUT_DIR = "input_dir"
+        self.directories = {
+            "TMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
+        }
 
-        # Create output directories
-        self.create_activity_directories()
         self.date_stamp = self.set_datestamp()
 
         # Data provider where email body is saved
@@ -80,6 +80,8 @@ class activity_PubmedArticleDeposit(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        self.make_activity_directories()
+
         # Get a list of outbox file names always
         self.outbox_s3_key_names = self.get_outbox_s3_key_names()
 
@@ -95,7 +97,7 @@ class activity_PubmedArticleDeposit(Activity):
         if self.approve_status is True:
             # Publish files
             self.ftp_status = self.ftp_files_to_endpoint(
-                from_dir=os.path.join(self.get_tmp_dir(), self.TMP_DIR),
+                from_dir=self.directories.get("TMP_DIR"),
                 file_type="/*.xml")
 
         if self.ftp_status is True:
@@ -152,7 +154,7 @@ class activity_PubmedArticleDeposit(Activity):
             if not re.search(".*\\.xml$", name):
                 continue
             filename = name.split("/")[-1]
-            dirname = os.path.join(self.get_tmp_dir(), self.INPUT_DIR)
+            dirname = self.directories.get("INPUT_DIR")
             if dirname:
                 filename_plus_path = dirname + os.sep + filename
                 with open(filename_plus_path, 'wb') as open_file:
@@ -171,7 +173,7 @@ class activity_PubmedArticleDeposit(Activity):
         Given an article XML files, parse it into an article object
         """
         article = None
-        generate.TMP_DIR = os.path.join(self.get_tmp_dir(), self.TMP_DIR)
+        generate.TMP_DIR = self.directories.get("TMP_DIR")
         try:
             # Convert the XML file to article objects
             article_list = generate.build_articles(
@@ -182,7 +184,7 @@ class activity_PubmedArticleDeposit(Activity):
             if article_list:
                 article = article_list[0]
         except:
-            article = None 
+            article = None
 
         return article
 
@@ -217,7 +219,7 @@ class activity_PubmedArticleDeposit(Activity):
         Using the POA generatePubMedXml module
         """
         generate_status = None
-        article_xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.INPUT_DIR) + "/*.xml")
+        article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
 
         for xml_file in article_xml_files:
             generate_status = True
@@ -256,7 +258,7 @@ class activity_PubmedArticleDeposit(Activity):
         status = None
 
         # Check for empty directory
-        xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.TMP_DIR) + "/*.xml")
+        xml_files = glob.glob(self.directories.get("TMP_DIR") + "/*.xml")
         if len(xml_files) <= 0:
             status = False
         else:
@@ -376,7 +378,7 @@ class activity_PubmedArticleDeposit(Activity):
         """
         Upload a copy of the pubmed XML to S3 for reference
         """
-        xml_files = glob.glob(os.path.join(self.get_tmp_dir(), self.TMP_DIR) + "/*.xml")
+        xml_files = glob.glob(self.directories.get("TMP_DIR") + "/*.xml")
 
         bucket_name = self.publish_bucket
 
@@ -528,14 +530,3 @@ class activity_PubmedArticleDeposit(Activity):
         body += "\n\nSincerely\n\neLife bot"
 
         return body
-
-    def create_activity_directories(self):
-        """
-        Create the directories in the activity tmp_dir
-        """
-
-        try:
-            os.mkdir(os.path.join(self.get_tmp_dir(), self.TMP_DIR))
-            os.mkdir(os.path.join(self.get_tmp_dir(), self.INPUT_DIR))
-        except OSError:
-            pass

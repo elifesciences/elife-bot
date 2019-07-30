@@ -31,7 +31,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
 
     def tmp_dir(self):
         "return the tmp dir name for the activity"
-        return os.path.join(self.activity.get_tmp_dir(), self.activity.TMP_DIR)
+        return self.activity.directories.get("TMP_DIR")
 
     @patch.object(activity_PubmedArticleDeposit, 'clean_tmp_dir')
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
