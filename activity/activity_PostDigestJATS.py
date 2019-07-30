@@ -107,7 +107,7 @@ class activity_PostDigestJATS(Activity):
                 post_jats_error_message = ""
             else:
                 self.statuses["post"] = False
-                post_jats_error_message = post_jats_return_value
+                post_jats_error_message = str(post_jats_return_value)
             # send email
             if self.statuses.get("post"):
                 self.statuses["email"] = self.send_email(self.digest, self.jats_content)
