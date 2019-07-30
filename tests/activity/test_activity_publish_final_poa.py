@@ -168,7 +168,7 @@ class TestPublishFinalPOA(unittest.TestCase):
         for file in file_list:
             source_doc = "tests/test_data/poa/outbox/" + file
             # print(source_doc)
-            dest_doc = self.poa.INPUT_DIR + os.sep + file
+            dest_doc = os.path.join(self.poa.directories.get("INPUT_DIR"), file)
             # print(dest_doc)
             shutil.copy(source_doc, dest_doc)
         self.poa.outbox_s3_key_names = file_list
@@ -209,10 +209,10 @@ class TestPublishFinalPOA(unittest.TestCase):
 
             self.assertEqual(self.poa.approve_status, test_data["approve_status"])
             self.assertEqual(self.poa.publish_status, test_data["publish_status"])
-            self.assertEqual(count_files_in_dir(self.poa.DONE_DIR),
+            self.assertEqual(count_files_in_dir(self.poa.directories.get("DONE_DIR")),
                              test_data["done_dir_file_count"])
             self.assertEqual(self.poa.activity_status, test_data["activity_status"])
-            self.assertTrue(compare_files_in_dir(self.poa.OUTPUT_DIR,
+            self.assertTrue(compare_files_in_dir(self.poa.directories.get("OUTPUT_DIR"),
                                                  test_data["output_dir_files"]))
             self.assertEqual(sorted(self.poa.done_xml_files),
                              sorted(test_data["done_xml_files"]))
@@ -227,7 +227,7 @@ class TestPublishFinalPOA(unittest.TestCase):
 
             # Check XML values if XML was approved
             if test_data["done_dir_file_count"] > 0:
-                xml_files = glob.glob(self.poa.DONE_DIR + "/*.xml")
+                xml_files = glob.glob(self.poa.directories.get("DONE_DIR") + "/*.xml")
                 for xml_file in xml_files:
                     self.assertTrue(check_xml_contents(xml_file, self.xml_file_values))
 
