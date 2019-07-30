@@ -120,7 +120,7 @@ class TestPackagePOA(unittest.TestCase):
     def test_process_poa_zipfile(self, test_data, fake_copy_pdf_to_output_dir):
         "test processing the zip file directly"
         self.poa.make_activity_directories()
-        fake_copy_pdf_to_output_dir = self.fake_copy_pdf_to_hw_staging_dir(
+        fake_copy_pdf_to_output_dir.return_value = self.fake_copy_pdf_to_hw_staging_dir(
             test_data.get('poa_decap_pdf'))
         file_path = self.fake_download_poa_zip(test_data.get('filename'))
         print(file_path)
@@ -214,10 +214,10 @@ class TestPackagePOA(unittest.TestCase):
             fake_article_publication_date.return_value = test_data["pub_date"]
         else:
             fake_article_publication_date.return_value = None
-        fake_clean_tmp_dir = self.fake_clean_tmp_dir()
+        fake_clean_tmp_dir.return_value = self.fake_clean_tmp_dir()
 
         # For now mock the PDF decapitator during tests
-        fake_copy_pdf_to_output_dir = self.fake_copy_pdf_to_hw_staging_dir(
+        fake_copy_pdf_to_output_dir.return_value = self.fake_copy_pdf_to_hw_staging_dir(
             test_data.get('poa_decap_pdf'))
 
         param_data = json.loads('{"data": {"document": "' +

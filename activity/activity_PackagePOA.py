@@ -5,7 +5,6 @@ import zipfile
 import glob
 import shutil
 from collections import OrderedDict
-import boto.swf
 from jatsgenerator import generate
 from jatsgenerator import conf as jats_conf
 from packagepoa import transform
@@ -262,7 +261,7 @@ class activity_PackagePOA(Activity):
         # override the CSV directory in the ejp-csv-parser library
         jats_config = self.jatsgenerator_config(self.settings.jatsgenerator_config_section)
         generate.parse.data.CSV_PATH = self.directories.get("CSV") + os.sep
-        generate.parse.data.TMP_DIR =  self.directories.get("CSV_TMP")
+        generate.parse.data.TMP_DIR = self.directories.get("CSV_TMP")
         article = generate.build_article_from_csv(article_id, jats_config)
 
         if article:
