@@ -185,7 +185,7 @@ class Activity(object):
         Create the directories in the activity tmp_dir
         """
         if not dir_names and self.directories and hasattr(self.directories, "values"):
-            dir_names = self.directories.values()
+            dir_names = list(self.directories.values())
         if not dir_names:
             self.logger.info("No dir_names to create in make_activity_directories()")
             return None

@@ -99,7 +99,7 @@ class activity_PublishFinalPOA(Activity):
 
             article_filenames_map = self.profile_article_files()
 
-            for doi_id, filenames in article_filenames_map.items():
+            for doi_id, filenames in list(article_filenames_map.items()):
 
                 article_xml_file_name = self.article_xml_from_filename_map(filenames)
 
@@ -683,15 +683,16 @@ class activity_PublishFinalPOA(Activity):
 
         for filename in xml_files:
             matching_filename = self.get_filename_from_path(filename, ".xml")
-            pdf_filenames = map(lambda f: self.get_filename_from_path(f, ".pdf"), pdf_files)
-            pdf_filenames = map(lambda f: f.replace('decap_', ''), pdf_filenames)
+            pdf_filenames = [self.get_filename_from_path(f, ".pdf") for f in pdf_files]
+            pdf_filenames = [fname.replace('decap_', '') for fname in pdf_filenames]
+
             if matching_filename not in pdf_filenames:
                 shutil.move(filename, self.JUNK_DIR + "/")
 
         for filename in pdf_files:
             matching_filename = self.get_filename_from_path(filename, ".pdf")
             matching_filename = matching_filename.replace('decap_', '')
-            xml_filenames = map(lambda f: self.get_filename_from_path(f, ".xml"), xml_files)
+            xml_filenames = [self.get_filename_from_path(fname, ".xml") for fname in xml_files]
             if matching_filename not in xml_filenames:
                 shutil.move(filename, self.JUNK_DIR + "/")
 

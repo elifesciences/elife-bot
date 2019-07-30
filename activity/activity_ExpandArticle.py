@@ -122,7 +122,7 @@ class activity_ExpandArticle(Activity):
 
     def get_next_version(self, article_id):
         version = lax_provider.article_highest_version(article_id, self.settings)
-        if isinstance(version, (int,long)) and version >= 1:
+        if isinstance(version, int) and version >= 1:
             version = str(version + 1)
         if version is None:
             return "-1"

@@ -40,7 +40,7 @@ class activity_VersionReasonDecider(Activity):
                                 "Starting decision of version reason decision for " + article_id)
 
         # workflow_data = data.copy()
-        for key in data.keys():
+        for key in list(data.keys()):
             session.store_value(key, data[key])
 
         workflow_data = {'article_id': article_id, 'version': version, 'run': run}

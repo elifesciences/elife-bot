@@ -53,7 +53,7 @@ class activity_DepositAssets(Activity):
             # filter figures that have already been copied (see DepositIngestAssets activity)
             pre_ingest_assets = article_structure.pre_ingest_assets(files_in_bucket)
 
-            other_assets = filter(lambda asset: asset not in pre_ingest_assets, files_in_bucket)
+            other_assets = [asset for asset in files_in_bucket if asset not in pre_ingest_assets]
 
             # assets bucket
             cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket

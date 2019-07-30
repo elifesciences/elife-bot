@@ -38,11 +38,11 @@ def validate_sources(gc_data):
         'webm': 'video/webm; codecs="vp8.0, vorbis"',
         'ogv': 'video/ogg; codecs="theora, vorbis"',
     }
-    known_sources = sources.keys()
+    known_sources = list(sources.keys())
 
-    for v_id, v_data in gc_data.items():
+    for v_id, v_data in list(gc_data.items()):
         # we can't guarantee all of the sources will always be present
-        available_sources = filter(lambda mtype: mtype + "_href" in v_data, known_sources)
+        available_sources = [mtype for mtype in known_sources if mtype + "_href" in v_data]
 
         # fail if we have partial data
         msg = "number of available sources (%r) less than known sources for %r. missing: %s" % \
@@ -66,7 +66,7 @@ def metadata(msid, settings):
 
 def jpg_href_values(metadata):
 
-    return list((seq(metadata.items())
+    return list((seq(list(metadata.items()))
                 .filter(lambda key_value: 'jpg_href' in key_value[1])
                 .map(lambda k_v: k_v[1]['jpg_href'])))
 

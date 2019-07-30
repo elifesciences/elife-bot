@@ -245,7 +245,7 @@ class activity_ModifyArticleSubjects(Activity):
         total = None
         #filename_plus_path = self.get_tmp_dir() + os.sep + xml_filename
         # download XML, rewrite it and upload it
-        for subject_group_type, subjects in subjects_map.items():
+        for subject_group_type, subjects in list(subjects_map.items()):
             total = self.rewrite_xml_file(article_xml_file, subject_group_type, subjects)
         return total
 

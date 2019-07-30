@@ -3,6 +3,7 @@ import boto.sns
 from boto.sqs.message import Message
 import json
 import uuid
+from provider.utils import unicode_encode
 
 
 def send_message(message, settings):
@@ -10,7 +11,7 @@ def send_message(message, settings):
     conn = boto.sns.connect_to_region(settings.sqs_region,
                                       aws_access_key_id=settings.aws_access_key_id,
                                       aws_secret_access_key=settings.aws_secret_access_key)
-    payload = unicode(json.dumps(message), "utf-8")
+    payload = unicode_encode(json.dumps(message))
     conn.publish(topic=settings.event_monitor_topic, message=payload)
 
 

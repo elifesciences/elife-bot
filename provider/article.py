@@ -156,9 +156,9 @@ class article(object):
         # Get the highest published version from lax
         try:
             # hack: work around circular dependency between lax_provider.py and article.py
-            from lax_provider import article_highest_version
+            from provider.lax_provider import article_highest_version
             version = article_highest_version(article_id, self.settings)
-            if not isinstance(version, (int,long)):
+            if not isinstance(version, int):
                 return False
         except:
             return False

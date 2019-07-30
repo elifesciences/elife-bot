@@ -223,7 +223,7 @@ class activity_PackagePOA(Activity):
             "poa_ethics": "poa_ethics.csv"
         }
 
-        for file_type, filename in file_types.items():
+        for file_type, filename in list(file_types.items()):
             # Download
             s3_key_name = self.ejp.find_latest_s3_file_name(file_type)
             bucket_name = self.settings.ejp_bucket
