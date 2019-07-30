@@ -26,11 +26,10 @@ class activity_PostDigestJATS(Activity):
                             " to be run when a digest package is first ingested")
 
         # Local directory settings
-        self.temp_dir = os.path.join(self.get_tmp_dir(), "tmp_dir")
-        self.input_dir = os.path.join(self.get_tmp_dir(), "input_dir")
-
-        # Create output directories
-        self.create_activity_directories()
+        self.directories = {
+            "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
+        }
 
         # Track the success of some steps
         self.statuses = {
@@ -53,6 +52,8 @@ class activity_PostDigestJATS(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        self.make_activity_directories()
+
         # first check if there is an endpoint in the settings specified
         if not hasattr(self.settings, "typesetter_digest_endpoint"):
             self.logger.info("No typesetter endpoint in settings, skipping %s.", self.name)
@@ -73,11 +74,12 @@ class activity_PostDigestJATS(Activity):
 
         # Download from S3
         self.input_file = digest_provider.download_digest_from_s3(
-            self.settings, real_filename, bucket_name, bucket_folder, self.input_dir)
+            self.settings, real_filename, bucket_name, bucket_folder,
+            self.directories.get("INPUT_DIR"))
 
         # Parse input and build digest
         self.statuses["build"], self.digest = digest_provider.build_digest(
-            self.input_file, self.temp_dir, self.logger, self.digest_config)
+            self.input_file, self.directories.get("TEMP_DIR"), self.logger, self.digest_config)
         if not self.statuses.get("build"):
             error_message = "Failed to build digest from file %s" % self.input_file
             self.logger.info(error_message)
@@ -170,16 +172,6 @@ class activity_PostDigestJATS(Activity):
         self.logger.info('Email sending details: %s' % str(details))
 
         return True
-
-    def create_activity_directories(self):
-        """
-        Create the directories in the activity tmp_dir
-        """
-        for dir_name in [self.temp_dir, self.input_dir]:
-            try:
-                os.mkdir(dir_name)
-            except OSError:
-                pass
 
 
 def post_payload(digest, jats_content, api_key):
