@@ -29,7 +29,6 @@ class activity_PublicationEmail(Activity):
 
         # Templates provider
         self.templates = templates.Templates(settings, self.get_tmp_dir())
-        print(self.get_tmp_dir())
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
@@ -180,7 +179,7 @@ class activity_PublicationEmail(Activity):
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
         orig_resource = storage_provider + bucket_name + "/" + self.outbox_folder
-        files_in_bucket = storage.list_resources(orig_resource)
+        files_in_bucket = storage.list_resources(orig_resource.rstrip("/"))
 
         for name in files_in_bucket:
             # Download objects from S3 and save to disk
