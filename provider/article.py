@@ -13,11 +13,36 @@ import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
 from provider.article_structure import ArticleInfo
 from provider.storage_provider import storage_context
+from provider.utils import pad_msid
 
 """
 Article data provider
 From article XML, get some data for use in workflows and templates
 """
+
+
+def create_article(settings, tmp_dir, doi_id=None):
+    """
+    Instantiate an article object and optionally populate it with
+    data for the doi_id (int) supplied
+    """
+
+    # Instantiate a new article object
+    article_object = article(settings, tmp_dir)
+
+    if doi_id:
+        # Get and parse the article XML for data
+        # Convert the doi_id to 5 digit string in case it was an integer
+        doi_id = pad_msid(doi_id)
+        article_xml_filename = article_object.download_article_xml_from_s3(doi_id)
+        try:
+            article_object.parse_article_file(os.path.join(tmp_dir, article_xml_filename))
+        except:
+            # Article XML for this DOI was not parsed so return None
+            return None
+
+    return article_object
+
 
 class article(object):
 
