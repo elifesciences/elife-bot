@@ -29,7 +29,6 @@ class activity_PublicationEmail(Activity):
 
         # Templates provider
         self.templates = templates.Templates(settings, self.get_tmp_dir())
-        print(self.get_tmp_dir())
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
