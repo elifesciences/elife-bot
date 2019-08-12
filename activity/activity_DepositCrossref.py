@@ -71,8 +71,6 @@ class activity_DepositCrossref(Activity):
         self.http_request_status_code = []
         self.http_request_status_text = []
 
-        self.outbox_s3_key_names = None
-
         # Track XML files selected for pubmed XML
         self.article_published_file_names = []
         self.article_not_published_file_names = []
@@ -110,7 +108,7 @@ class activity_DepositCrossref(Activity):
             if self.publish_status is True:
                 # Clean up outbox
                 print("Moving files from outbox folder to published folder")
-                self.clean_outbox()
+                self.clean_outbox(outbox_s3_key_names)
                 self.upload_crossref_xml_to_s3()
                 self.outbox_status = True
 
@@ -123,7 +121,7 @@ class activity_DepositCrossref(Activity):
         # Send email
         # Only if there were files approved for publishing
         if len(self.article_published_file_names) > 0:
-            self.add_email_to_queue()
+            self.add_email_to_queue(outbox_s3_key_names)
 
         # Return the activity result, True or False
         result = True
@@ -363,13 +361,10 @@ class activity_DepositCrossref(Activity):
 
         return to_folder
 
-    def clean_outbox(self):
+    def clean_outbox(self, outbox_s3_key_names):
         """
         Clean out the S3 outbox folder
         """
-        # Save the list of outbox contents to report on later
-        outbox_s3_key_names = self.get_outbox_s3_key_names()
-
         to_folder = self.get_to_folder_name()
 
         # Move only the published files from the S3 outbox to the published folder
@@ -428,7 +423,7 @@ class activity_DepositCrossref(Activity):
             s3key.key = s3_folder_name + xml_file.split(os.sep)[-1]
             s3key.set_contents_from_filename(xml_file, replace=True)
 
-    def add_email_to_queue(self):
+    def add_email_to_queue(self, outbox_s3_key_names):
         """
         After do_activity is finished, send emails to recipients
         on the status
@@ -441,8 +436,8 @@ class activity_DepositCrossref(Activity):
 
         current_time = time.gmtime()
 
-        body = self.get_email_body(current_time)
-        subject = self.get_email_subject(current_time)
+        body = self.get_email_body(current_time, outbox_s3_key_names)
+        subject = self.get_email_subject(current_time, outbox_s3_key_names)
         sender_email = self.settings.ses_poa_sender_email
 
         recipient_email_list = []
@@ -477,7 +472,7 @@ class activity_DepositCrossref(Activity):
 
         return activity_status_text
 
-    def get_email_subject(self, current_time):
+    def get_email_subject(self, current_time, outbox_s3_key_names):
         """
         Assemble the email subject
         """
@@ -488,7 +483,6 @@ class activity_DepositCrossref(Activity):
 
         # Count the files moved from the outbox, the files that were processed
         files_count = 0
-        outbox_s3_key_names = self.get_outbox_s3_key_names()
         if outbox_s3_key_names:
             files_count = len(outbox_s3_key_names)
 
@@ -499,7 +493,7 @@ class activity_DepositCrossref(Activity):
 
         return subject
 
-    def get_email_body(self, current_time):
+    def get_email_body(self, current_time, outbox_s3_key_names):
         """
         Format the body of the email
         """
@@ -526,7 +520,6 @@ class activity_DepositCrossref(Activity):
         body += "\n"
         body += "Outbox files: " + "\n"
 
-        outbox_s3_key_names = self.get_outbox_s3_key_names()
         files_count = 0
         if outbox_s3_key_names:
             files_count = len(outbox_s3_key_names)
