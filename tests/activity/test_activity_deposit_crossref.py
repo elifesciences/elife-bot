@@ -50,6 +50,7 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_approve_status": True,
             "expected_generate_status": True,
             "expected_publish_status": True,
+            "expected_outbox_status": True,
             "expected_activity_status": True,
             "expected_file_count": 1,
             "expected_crossref_xml_contains": [
@@ -72,6 +73,7 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_approve_status": True,
             "expected_generate_status": True,
             "expected_publish_status": True,
+            "expected_outbox_status": True,
             "expected_activity_status": True,
             "expected_file_count": 2,
         },
@@ -82,6 +84,7 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_approve_status": False,
             "expected_generate_status": True,
             "expected_publish_status": None,
+            "expected_outbox_status": None,
             "expected_activity_status": True,
             "expected_file_count": 0,
         },
@@ -92,6 +95,7 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_approve_status": True,
             "expected_generate_status": True,
             "expected_publish_status": False,
+            "expected_outbox_status": None,
             "expected_activity_status": False,
             "expected_file_count": 1,
         },
@@ -108,10 +112,16 @@ class TestDepositCrossref(unittest.TestCase):
         result = self.activity.do_activity()
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"))
-        self.assertEqual(self.activity.approve_status, test_data.get("expected_approve_status"))
-        self.assertEqual(self.activity.generate_status, test_data.get("expected_generate_status"))
-        self.assertEqual(self.activity.publish_status, test_data.get("expected_publish_status"))
-        self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"))
+        self.assertEqual(
+            self.activity.statuses.get("approve"), test_data.get("expected_approve_status"))
+        self.assertEqual(
+            self.activity.statuses.get("generate"), test_data.get("expected_generate_status"))
+        self.assertEqual(
+            self.activity.statuses.get("publish"), test_data.get("expected_publish_status"))
+        self.assertEqual(
+            self.activity.statuses.get("outbox"), test_data.get("expected_outbox_status"))
+        self.assertEqual(
+            self.activity.statuses.get("activity"), test_data.get("expected_activity_status"))
         # Count crossref XML file in the tmp directory
         file_count = len(os.listdir(self.tmp_dir()))
         self.assertEqual(file_count, test_data.get("expected_file_count"))

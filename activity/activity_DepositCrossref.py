@@ -50,10 +50,7 @@ class activity_DepositCrossref(Activity):
         self.published_folder = "crossref/published/"
 
         # Track the success of some steps
-        self.activity_status = None
-        self.generate_status = None
-        self.approve_status = None
-        self.outbox_status = None
+        self.statuses = {}
         self.publish_status = None
 
         # HTTP requests status
@@ -82,30 +79,31 @@ class activity_DepositCrossref(Activity):
         self.download_files_from_s3_outbox(outbox_s3_key_names)
 
         # Generate crossref XML
-        self.generate_status = self.generate_crossref_xml()
+        self.statuses["generate"] = self.generate_crossref_xml()
 
         # Approve files for publishing
-        self.approve_status = self.approve_for_publishing()
+        self.statuses["approve"] = self.approve_for_publishing()
 
-        if self.approve_status is True:
+        if self.statuses.get("approve") is True:
             try:
                 # Publish files
-                self.publish_status = self.deposit_files_to_endpoint(
+                self.statuses["publish"] = self.deposit_files_to_endpoint(
                     file_type="/*.xml",
                     sub_dir=self.directories.get("TMP_DIR"))
             except:
-                self.publish_status = False
+                self.statuses["publish"] = False
 
-            if self.publish_status is True:
+            if self.statuses.get("publish") is True:
                 # Clean up outbox
                 self.logger.info("Moving files from outbox folder to published folder")
                 self.clean_outbox(self.article_published_file_names, date_stamp)
                 self.upload_crossref_xml_to_s3(date_stamp)
-                self.outbox_status = True
+                self.statuses["outbox"] = True
 
         # Set the activity status of this activity based on successes
-        self.activity_status = bool(
-            self.publish_status is not False and self.generate_status is not False)
+        self.statuses["activity"] = bool(
+            self.statuses.get("publish") is not False and
+            self.statuses.get("generate") is not False)
 
         # Send email
         # Only if there were files approved for publishing
@@ -415,7 +413,7 @@ class activity_DepositCrossref(Activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = utils.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.statuses.get("activity"))
 
         # Count the files moved from the outbox, the files that were processed
         files_count = 0
@@ -439,7 +437,7 @@ class activity_DepositCrossref(Activity):
         date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = utils.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.statuses.get("activity"))
 
         # Bulk of body
         body += self.name + " status:" + "\n"
@@ -447,11 +445,11 @@ class activity_DepositCrossref(Activity):
         body += activity_status_text + "\n"
         body += "\n"
 
-        body += "activity_status: " + str(self.activity_status) + "\n"
-        body += "generate_status: " + str(self.generate_status) + "\n"
-        body += "approve_status: " + str(self.approve_status) + "\n"
-        body += "publish_status: " + str(self.publish_status) + "\n"
-        body += "outbox_status: " + str(self.outbox_status) + "\n"
+        body += "activity_status: " + str(self.statuses.get("activity")) + "\n"
+        body += "generate_status: " + str(self.statuses.get("generate")) + "\n"
+        body += "approve_status: " + str(self.statuses.get("approve")) + "\n"
+        body += "publish_status: " + str(self.statuses.get("publish")) + "\n"
+        body += "outbox_status: " + str(self.statuses.get("outbox")) + "\n"
 
         body += "\n"
         body += "Outbox files: " + "\n"
