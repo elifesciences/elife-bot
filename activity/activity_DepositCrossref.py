@@ -88,7 +88,7 @@ class activity_DepositCrossref(Activity):
         outbox_s3_key_names = self.get_outbox_s3_key_names()
 
         # Download the S3 objects
-        self.download_files_from_s3_outbox()
+        self.download_files_from_s3_outbox(outbox_s3_key_names)
 
         # Generate crossref XML
         self.generate_status = self.generate_crossref_xml()
@@ -134,40 +134,25 @@ class activity_DepositCrossref(Activity):
                       str(a.datetime.day).zfill(2))
         return date_stamp
 
-    def download_files_from_s3_outbox(self):
-        """
-        Connect to the S3 bucket, and from the outbox folder,
-        download the .xml and .pdf files to be bundled.
-        """
-        file_extensions = []
-        file_extensions.append(".xml")
+    def download_files_from_s3_outbox(self, outbox_s3_key_names):
+        """from the s3 outbox folder,  download the .xml files"""
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + self.publish_bucket + "/"
 
-        bucket_name = self.publish_bucket
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=self.outbox_folder,
-            file_extensions=file_extensions)
-
-        for name in s3_key_names:
+        for name in outbox_s3_key_names:
             # Download objects from S3 and save to disk
-            s3_key = bucket.get_key(name)
-
-            filename = name.split("/")[-1]
-
-            # Save .xml and .pdf to different folders
-            if re.search(".*\\.xml$", name):
-                dirname = self.directories.get("INPUT_DIR")
-
-            filename_plus_path = dirname + os.sep + filename
-            mode = "wb"
-            f = open(filename_plus_path, mode)
-            s3_key.get_contents_to_file(f)
-            f.close()
+            file_name = name.split('/')[-1]
+            file_path = os.path.join(self.directories.get("INPUT_DIR"), file_name)
+            storage_resource_origin = orig_resource + '/' + name
+            try:
+                with open(file_path, 'wb') as open_file:
+                    self.logger.info("Downloading %s to %s", (storage_resource_origin, file_path))
+                    storage.get_resource_to_file(storage_resource_origin, open_file)
+            except IOError:
+                self.logger.exception("Failed to download file %s.", name)
+                return False
+        return True
 
     def elifecrossref_config(self, config_section):
         "parse the config values from the elifecrossref config"

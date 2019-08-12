@@ -40,8 +40,8 @@ class TestDepositCrossref(unittest.TestCase):
     @patch.object(activity_DepositCrossref, 'upload_crossref_xml_to_s3')
     @patch.object(activity_DepositCrossref, 'clean_outbox')
     @patch.object(activity_DepositCrossref, 'deposit_files_to_endpoint')
-    @patch.object(activity_DepositCrossref, 'get_outbox_s3_key_names')
-    @patch.object(activity_DepositCrossref, 'download_files_from_s3_outbox')
+    @patch.object(FakeStorageContext, 'list_resources')
+    @patch('activity.activity_DepositCrossref.storage_context')
     @data(
         {
             "article_xml_filenames": ['elife-15747-v2.xml'],
@@ -90,15 +90,13 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_file_count": 1,
         },
     )
-    def test_do_activity(self, test_data, fake_download_files_from_s3_outbox, fake_get_outbox_s3_key_names,
+    def test_do_activity(self, test_data, fake_storage_context, fake_list_resources,
                          fake_deposit_files_to_endpoint,
                          fake_clean_outbox, fake_upload_crossref_xml_to_s3,
                          fake_elife_add_email_to_email_queue):
+        fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
         # copy XML files into the input directory
-        for article_xml in test_data.get("article_xml_filenames"):
-            fake_download_files_from_s3_outbox = self.fake_download_files_from_s3_outbox(article_xml)
-        # set some return values for the mocks
-        fake_get_outbox_s3_key_names.return_value = test_data.get("article_xml_filenames")
+        fake_list_resources.return_value = test_data["article_xml_filenames"]
         fake_deposit_files_to_endpoint.return_value = test_data.get("deposit_files_return_value")
         # do the activity
         result = self.activity.do_activity()
