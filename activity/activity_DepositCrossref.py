@@ -23,6 +23,7 @@ from elifearticle.article import ArticleDate
 DepositCrossref activity
 """
 
+
 class activity_DepositCrossref(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
@@ -193,16 +194,20 @@ class activity_DepositCrossref(Activity):
             article_pub_date = self.article_first_pub_date(article)
             # if no date was found then look for one on Lax
             if not article_pub_date:
-                lax_pub_date = lax_provider.article_publication_date(article.manuscript, self.settings, self.logger)
+                lax_pub_date = lax_provider.article_publication_date(
+                    article.manuscript, self.settings, self.logger)
                 if lax_pub_date:
                     date_struct = time.strptime(lax_pub_date, utils.S3_DATE_FORMAT)
-                    crossref_config = self.elifecrossref_config(self.settings.elifecrossref_config_section)
-                    pub_date_object = ArticleDate(crossref_config.get('pub_date_types')[0], date_struct)
+                    crossref_config = self.elifecrossref_config(
+                        self.settings.elifecrossref_config_section)
+                    pub_date_object = ArticleDate(
+                        crossref_config.get('pub_date_types')[0], date_struct)
                     article.add_date(pub_date_object)
 
             # Check for a version number
             if not article.version:
-                lax_version = lax_provider.article_highest_version(article.manuscript, self.settings)
+                lax_version = lax_provider.article_highest_version(
+                    article.manuscript, self.settings)
                 if lax_version:
                     article.version = lax_version
 
@@ -272,7 +277,6 @@ class activity_DepositCrossref(Activity):
 
         return approved
 
-
     def approve_for_publishing(self):
         """
         Final checks before publishing files to the endpoint
@@ -314,7 +318,7 @@ class activity_DepositCrossref(Activity):
             # Check for good HTTP status code
             if r.status_code != 200:
                 status = False
-            #print r.text
+            # print r.text
             self.http_request_status_text.append("XML file: " + xml_file)
             self.http_request_status_text.append("HTTP status: " + str(r.status_code))
             self.http_request_status_text.append("HTTP response: " + r.text)
@@ -381,7 +385,7 @@ class activity_DepositCrossref(Activity):
 
         for file_name in glob.glob(self.directories.get("TMP_DIR") + "/*.xml"):
             resource_dest = (
-                storage_provider + s3_folder_name + 
+                storage_provider + s3_folder_name +
                 article_processing.file_name_from_name(file_name))
             storage.set_resource_from_filename(resource_dest, file_name)
 
@@ -394,7 +398,7 @@ class activity_DepositCrossref(Activity):
         db_conn = self.db.connect()
 
         # Note: Create a verified sender email address, only done once
-        #conn.verify_email_address(self.settings.ses_sender_email)
+        # conn.verify_email_address(self.settings.ses_sender_email)
 
         current_time = time.gmtime()
 
