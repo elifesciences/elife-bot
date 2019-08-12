@@ -312,7 +312,7 @@ class activity_DepositCrossref(Activity):
 
         return status
 
-    def get_outbox_s3_key_names(self, force=None):
+    def get_outbox_s3_key_names(self):
         """get a list of .xml S3 key names from the outbox"""
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
@@ -372,7 +372,7 @@ class activity_DepositCrossref(Activity):
 
         for file_name in glob.glob(self.directories.get("TMP_DIR") + "/*.xml"):
             resource_dest = (
-                storage_provider + s3_folder_name +
+                storage_provider + bucket_name + "/" + s3_folder_name +
                 article_processing.file_name_from_name(file_name))
             storage.set_resource_from_filename(resource_dest, file_name)
 
