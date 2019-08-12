@@ -1,19 +1,13 @@
 import os
-import boto.swf
 import json
 import time
-import arrow
-from collections import namedtuple
-import requests
 import glob
-import re
-
+import requests
+import arrow
 from activity.objects import Activity
-
 from provider.storage_provider import storage_context
 import provider.simpleDB as dblib
 import provider.article as articlelib
-import provider.s3lib as s3lib
 from provider import article_processing, lax_provider, utils
 from elifecrossref import generate
 from elifecrossref.conf import raw_config, parse_raw_config
