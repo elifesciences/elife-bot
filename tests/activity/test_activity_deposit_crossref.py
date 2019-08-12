@@ -1,17 +1,15 @@
+import os
 import unittest
-from activity.activity_DepositCrossref import activity_DepositCrossref
 import shutil
 from mock import patch
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
-from provider.article import article
+from ddt import ddt, data
 from provider.simpleDB import SimpleDB
-from provider import lax_provider
+from activity.activity_DepositCrossref import activity_DepositCrossref
+from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
+import tests.activity.settings_mock as settings_mock
 import tests.activity.test_activity_data as activity_test_data
 import tests.activity.helpers as helpers
 import tests.test_data as test_case_data
-import os
-from ddt import ddt, data
 
 
 @ddt
