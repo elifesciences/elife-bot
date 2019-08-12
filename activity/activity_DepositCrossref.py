@@ -98,7 +98,7 @@ class activity_DepositCrossref(Activity):
 
             if self.publish_status is True:
                 # Clean up outbox
-                print("Moving files from outbox folder to published folder")
+                self.logger.info("Moving files from outbox folder to published folder")
                 self.clean_outbox(self.article_published_file_names, date_stamp)
                 self.upload_crossref_xml_to_s3(date_stamp)
                 self.outbox_status = True
