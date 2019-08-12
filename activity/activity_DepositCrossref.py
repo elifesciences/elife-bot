@@ -395,7 +395,7 @@ class activity_DepositCrossref(Activity):
 
         recipient_email_list = []
         # Handle multiple recipients, if specified
-        if type(self.settings.ses_admin_email) == list:
+        if isinstance(self.settings.ses_admin_email, list):
             for email in self.settings.ses_admin_email:
                 recipient_email_list.append(email)
         else:
