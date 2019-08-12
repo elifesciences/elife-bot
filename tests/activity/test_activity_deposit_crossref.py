@@ -3,7 +3,7 @@ from activity.activity_DepositCrossref import activity_DepositCrossref
 import shutil
 from mock import patch
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 from provider.article import article
 from provider.simpleDB import SimpleDB
 from provider import lax_provider
@@ -129,6 +129,14 @@ class TestDepositCrossref(unittest.TestCase):
         article = articles[0]
         self.assertIsNotNone(article.get_date('pub'), 'date of type pub not found in article get_date()')
         self.assertIsNotNone(article.version, 'version is None in article')
+
+
+    @patch('activity.activity_DepositCrossref.storage_context')
+    def test_get_outbox_s3_key_names(self, fake_storage_context):
+        fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
+        key_names = self.activity.get_outbox_s3_key_names()
+        # returns the default file name from FakeStorageContext in the test scenario
+        self.assertEqual(key_names, ['elife-00353-v1.xml'])
 
 
 if __name__ == '__main__':

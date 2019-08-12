@@ -12,7 +12,7 @@ from activity.objects import Activity
 
 import boto.s3
 from boto.s3.connection import S3Connection
-
+from provider.storage_provider import storage_context
 import provider.simpleDB as dblib
 import provider.article as articlelib
 import provider.s3lib as s3lib
@@ -86,6 +86,8 @@ class activity_DepositCrossref(Activity):
 
         # Create output directories
         self.make_activity_directories()
+
+        outbox_s3_key_names = self.get_outbox_s3_key_names()
 
         # Download the S3 objects
         self.download_files_from_s3_outbox()
@@ -340,35 +342,14 @@ class activity_DepositCrossref(Activity):
         return status
 
     def get_outbox_s3_key_names(self, force=None):
-        """
-        Separately get a list of S3 key names form the outbox
-        for reporting purposes, excluding the outbox folder itself
-        """
-
-        # Return cached values if available
-        if self.outbox_s3_key_names and not force:
-            return self.outbox_s3_key_names
-
-        bucket_name = self.publish_bucket
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=self.outbox_folder)
-
-        # Remove the outbox_folder from the list, if present
-        try:
-            s3_key_names.remove(self.outbox_folder)
-        except:
-            pass
-
-        self.outbox_s3_key_names = s3_key_names
-
-        return self.outbox_s3_key_names
+        """get a list of .xml S3 key names from the outbox"""
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = (
+            storage_provider + self.publish_bucket + "/" + self.outbox_folder.rstrip('/'))
+        s3_key_names = storage.list_resources(orig_resource)
+        # return only the .xml files
+        return [key_name for key_name in s3_key_names if key_name.endswith('.xml')]
 
     def get_to_folder_name(self):
         """
