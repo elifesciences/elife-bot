@@ -79,6 +79,10 @@ xml_info_queue = 'test-elife-xml-info'
 
 video_url = ""
 
+crossref_url = ""
+crossref_login_id = ""
+crossref_login_passwd = ""
+
 # PDF cover
 pdf_cover_generator = "url_here"
 

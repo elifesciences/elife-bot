@@ -3,7 +3,7 @@ from activity.activity_DepositCrossref import activity_DepositCrossref
 import shutil
 from mock import patch
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
 from provider.article import article
 from provider.simpleDB import SimpleDB
 from provider import lax_provider
@@ -37,13 +37,13 @@ class TestDepositCrossref(unittest.TestCase):
         shutil.copy(source_doc, dest_doc)
 
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
-    @patch.object(activity_DepositCrossref, 'deposit_files_to_endpoint')
+    @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
     @patch('activity.activity_DepositCrossref.storage_context')
     @data(
         {
             "article_xml_filenames": ['elife-15747-v2.xml'],
-            "deposit_files_return_value": True,
+            "post_status_code": 200,
             "expected_result": True,
             "expected_approve_status": True,
             "expected_generate_status": True,
@@ -59,7 +59,7 @@ class TestDepositCrossref(unittest.TestCase):
         },
         {
             "article_xml_filenames": ['elife-18753-v1.xml', 'elife-23065-v1.xml', 'fake-00000-v1.xml'],
-            "deposit_files_return_value": True,
+            "post_status_code": 200,
             "expected_result": True,
             "expected_approve_status": True,
             "expected_generate_status": True,
@@ -69,7 +69,7 @@ class TestDepositCrossref(unittest.TestCase):
         },
         {
             "article_xml_filenames": [],
-            "deposit_files_return_value": True,
+            "post_status_code": 200,
             "expected_result": True,
             "expected_approve_status": False,
             "expected_generate_status": True,
@@ -79,7 +79,7 @@ class TestDepositCrossref(unittest.TestCase):
         },
         {
             "article_xml_filenames": ['elife-18753-v1.xml'],
-            "deposit_files_return_value": False,
+            "post_status_code": 404,
             "expected_result": True,
             "expected_approve_status": True,
             "expected_generate_status": True,
@@ -88,13 +88,13 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_file_count": 1,
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, fake_list_resources,
-                         fake_deposit_files_to_endpoint,
+    def test_do_activity(self, test_data, fake_storage_context, fake_list_resources, fake_request,
                          fake_elife_add_email_to_email_queue):
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
         # copy XML files into the input directory
         fake_list_resources.return_value = test_data["article_xml_filenames"]
-        fake_deposit_files_to_endpoint.return_value = test_data.get("deposit_files_return_value")
+        # mock the POST to endpoint
+        fake_request.return_value = FakeResponse(test_data.get("post_status_code"))
         # do the activity
         result = self.activity.do_activity()
         # check assertions
