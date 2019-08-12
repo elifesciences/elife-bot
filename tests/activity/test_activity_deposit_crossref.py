@@ -97,7 +97,8 @@ class TestDepositCrossref(unittest.TestCase):
         },
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_list_resources, fake_request,
-                         fake_elife_add_email_to_email_queue):
+                         fake_add_email):
+        fake_add_email.return_value = None
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
         # copy XML files into the input directory
         fake_list_resources.return_value = test_data["article_xml_filenames"]
@@ -117,8 +118,8 @@ class TestDepositCrossref(unittest.TestCase):
         if file_count > 0 and test_data.get("expected_crossref_xml_contains"):
             # Open the first crossref XML and check some of its contents
             crossref_xml_filename_path = os.path.join(self.tmp_dir(), os.listdir(self.tmp_dir())[0])
-            with open(crossref_xml_filename_path, 'rb') as fp:
-                crossref_xml = fp.read().decode('utf8')
+            with open(crossref_xml_filename_path, 'rb') as open_file:
+                crossref_xml = open_file.read().decode('utf8')
                 for expected in test_data.get("expected_crossref_xml_contains"):
                     self.assertTrue(
                         expected in crossref_xml,
@@ -126,10 +127,9 @@ class TestDepositCrossref(unittest.TestCase):
                             expected=expected, path=crossref_xml_filename_path))
 
     @patch('provider.lax_provider.article_versions')
-    def test_parse_article_xml(self, mock_lax_provider_article_versions):
+    def test_parse_article_xml(self, mock_article_versions):
         "example where there is not pub date and no version for an article"
-        mock_lax_provider_article_versions.return_value = (
-            200, test_case_data.lax_article_versions_response_data)
+        mock_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
         articles = self.activity.parse_article_xml(
             ['tests/test_data/crossref/elife_poa_e03977.xml'])
         article = articles[0]
