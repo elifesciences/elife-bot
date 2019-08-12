@@ -26,7 +26,7 @@ class TestDepositCrossref(unittest.TestCase):
         self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder(
             activity_test_data.ExpandArticle_files_dest_folder, filter_out=['.gitkeep'])
-    
+
     def input_dir(self):
         "return the staging dir name for the activity"
         return self.activity.directories.get("INPUT_DIR")
@@ -56,13 +56,19 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_file_count": 1,
             "expected_crossref_xml_contains": [
                 '<doi>10.7554/eLife.15747</doi>',
-                '<publication_date media_type="online"><month>06</month><day>16</day><year>2016</year></publication_date>',
+                ('<publication_date media_type="online"><month>06</month><day>16</day>' +
+                 '<year>2016</year></publication_date>'),
                 '<item_number item_number_type="article_number">e15747</item_number>',
-                '<citation key="bib13"><journal_title>BMC Biology</journal_title><author>Gilbert</author><volume>12</volume><cYear>2014</cYear><article_title>The Earth Microbiome project: successes and aspirations</article_title><doi>10.1186/s12915-014-0069-1</doi><elocation_id>69</elocation_id></citation>'
+                ('<citation key="bib13"><journal_title>BMC Biology</journal_title>' +
+                 '<author>Gilbert</author><volume>12</volume><cYear>2014</cYear>' +
+                 '<article_title>The Earth Microbiome project: successes and aspirations' +
+                 '</article_title><doi>10.1186/s12915-014-0069-1</doi>' +
+                 '<elocation_id>69</elocation_id></citation>')
                 ]
         },
         {
-            "article_xml_filenames": ['elife-18753-v1.xml', 'elife-23065-v1.xml', 'fake-00000-v1.xml'],
+            "article_xml_filenames": [
+                'elife-18753-v1.xml', 'elife-23065-v1.xml', 'fake-00000-v1.xml'],
             "post_status_code": 200,
             "expected_result": True,
             "expected_approve_status": True,
@@ -117,18 +123,21 @@ class TestDepositCrossref(unittest.TestCase):
                 crossref_xml = fp.read().decode('utf8')
                 for expected in test_data.get("expected_crossref_xml_contains"):
                     self.assertTrue(
-                        expected in crossref_xml, '{expected} not found in crossref_xml {path}'.format(
+                        expected in crossref_xml,
+                        '{expected} not found in crossref_xml {path}'.format(
                             expected=expected, path=crossref_xml_filename_path))
 
     @patch('provider.lax_provider.article_versions')
     def test_parse_article_xml(self, mock_lax_provider_article_versions):
         "example where there is not pub date and no version for an article"
-        mock_lax_provider_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
-        articles = self.activity.parse_article_xml(['tests/test_data/crossref/elife_poa_e03977.xml'])
+        mock_lax_provider_article_versions.return_value = (
+            200, test_case_data.lax_article_versions_response_data)
+        articles = self.activity.parse_article_xml(
+            ['tests/test_data/crossref/elife_poa_e03977.xml'])
         article = articles[0]
-        self.assertIsNotNone(article.get_date('pub'), 'date of type pub not found in article get_date()')
+        self.assertIsNotNone(
+            article.get_date('pub'), 'date of type pub not found in article get_date()')
         self.assertIsNotNone(article.version, 'version is None in article')
-
 
     @patch('activity.activity_DepositCrossref.storage_context')
     def test_get_outbox_s3_key_names(self, fake_storage_context):
