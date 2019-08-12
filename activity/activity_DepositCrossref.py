@@ -10,8 +10,6 @@ import re
 
 from activity.objects import Activity
 
-import boto.s3
-from boto.s3.connection import S3Connection
 from provider.storage_provider import storage_context
 import provider.simpleDB as dblib
 import provider.article as articlelib
@@ -107,7 +105,7 @@ class activity_DepositCrossref(Activity):
             if self.publish_status is True:
                 # Clean up outbox
                 print("Moving files from outbox folder to published folder")
-                self.clean_outbox(outbox_s3_key_names, date_stamp)
+                self.clean_outbox(self.article_published_file_names, date_stamp)
                 self.upload_crossref_xml_to_s3(date_stamp)
                 self.outbox_status = True
 
@@ -340,47 +338,37 @@ class activity_DepositCrossref(Activity):
         """
         return self.published_folder + date_stamp + "/"
 
+    def clean_outbox(self, published_file_names, date_stamp):
+        """Clean out the S3 outbox folder"""
 
-    def clean_outbox(self, outbox_s3_key_names, date_stamp):
-        """
-        Clean out the S3 outbox folder
-        """
-        to_folder = self.get_to_folder_name(date_stamp)
-
-        # Move only the published files from the S3 outbox to the published folder
         bucket_name = self.publish_bucket
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
+        to_folder = self.get_to_folder_name(date_stamp)
 
         # Concatenate the expected S3 outbox file names
         s3_key_names = []
-        for name in self.article_published_file_names:
+        for name in published_file_names:
             filename = name.split(os.sep)[-1]
             s3_key_name = self.outbox_folder + filename
             s3_key_names.append(s3_key_name)
 
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+
         for name in s3_key_names:
-            # Download objects from S3 and save to disk
-
             # Do not delete the from_folder itself, if it is in the list
-            if name != self.outbox_folder:
-                filename = name.split("/")[-1]
-                new_s3_key_name = to_folder + filename
+            if name == self.outbox_folder:
+                continue
+            filename = name.split("/")[-1]
+            new_s3_key_name = to_folder + filename
 
-                # First copy
-                new_s3_key = None
-                try:
-                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
-                except:
-                    pass
+            orig_resource = storage_provider + bucket_name + "/" + name
+            dest_resource = storage_provider + bucket_name + "/" + new_s3_key_name
 
-                # Then delete the old key if successful
-                if isinstance(new_s3_key, boto.s3.key.Key):
-                    old_s3_key = bucket.get_key(name)
-                    old_s3_key.delete()
+            # First copy
+            storage.copy_resource(orig_resource, dest_resource)
+
+            # Then delete the old key if successful
+            storage.delete_resource(orig_resource)
 
     def upload_crossref_xml_to_s3(self, date_stamp):
         """

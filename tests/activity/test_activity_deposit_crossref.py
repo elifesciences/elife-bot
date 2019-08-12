@@ -37,7 +37,6 @@ class TestDepositCrossref(unittest.TestCase):
         shutil.copy(source_doc, dest_doc)
 
     @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
-    @patch.object(activity_DepositCrossref, 'clean_outbox')
     @patch.object(activity_DepositCrossref, 'deposit_files_to_endpoint')
     @patch.object(FakeStorageContext, 'list_resources')
     @patch('activity.activity_DepositCrossref.storage_context')
@@ -91,7 +90,6 @@ class TestDepositCrossref(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_list_resources,
                          fake_deposit_files_to_endpoint,
-                         fake_clean_outbox,
                          fake_elife_add_email_to_email_queue):
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
         # copy XML files into the input directory
