@@ -3,7 +3,6 @@ import json
 import time
 import glob
 import requests
-import arrow
 from activity.objects import Activity
 from provider.storage_provider import storage_context
 import provider.simpleDB as dblib
@@ -75,7 +74,7 @@ class activity_DepositCrossref(Activity):
         # Create output directories
         self.make_activity_directories()
 
-        date_stamp = self.set_datestamp()
+        date_stamp = utils.set_datestamp()
 
         outbox_s3_key_names = self.get_outbox_s3_key_names()
 
@@ -119,12 +118,6 @@ class activity_DepositCrossref(Activity):
         result = True
 
         return result
-
-    def set_datestamp(self):
-        a = arrow.utcnow()
-        date_stamp = (str(a.datetime.year) + str(a.datetime.month).zfill(2) +
-                      str(a.datetime.day).zfill(2))
-        return date_stamp
 
     def download_files_from_s3_outbox(self, outbox_s3_key_names):
         """from the s3 outbox folder,  download the .xml files"""
@@ -420,18 +413,6 @@ class activity_DepositCrossref(Activity):
 
         return True
 
-    def get_activity_status_text(self, activity_status):
-        """
-        Given the activity status boolean, return a human
-        readable text version
-        """
-        if activity_status is True:
-            activity_status_text = "Success!"
-        else:
-            activity_status_text = "FAILED."
-
-        return activity_status_text
-
     def get_email_subject(self, current_time, outbox_s3_key_names):
         """
         Assemble the email subject
@@ -439,7 +420,7 @@ class activity_DepositCrossref(Activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         # Count the files moved from the outbox, the files that were processed
         files_count = 0
@@ -463,7 +444,7 @@ class activity_DepositCrossref(Activity):
         date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         # Bulk of body
         body += self.name + " status:" + "\n"

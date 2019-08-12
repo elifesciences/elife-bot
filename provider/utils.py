@@ -1,6 +1,7 @@
 import re
 import urllib
 import base64
+import arrow
 
 S3_DATE_FORMAT = '%Y%m%d%H%M%S'
 PUB_DATE_FORMAT = "%Y-%m-%d"
@@ -89,3 +90,23 @@ def unicode_encode(string):
     except (UnicodeDecodeError, TypeError, AttributeError):
         string = unicode_decode(string)
     return string
+
+
+def set_datestamp():
+    a = arrow.utcnow()
+    date_stamp = (str(a.datetime.year) + str(a.datetime.month).zfill(2) +
+                  str(a.datetime.day).zfill(2))
+    return date_stamp
+
+
+def get_activity_status_text(activity_status):
+    """
+    Given the activity status boolean, return a human
+    readable text version
+    """
+    if activity_status is True:
+        activity_status_text = "Success!"
+    else:
+        activity_status_text = "FAILED."
+
+    return activity_status_text
