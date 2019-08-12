@@ -5,9 +5,8 @@ import glob
 import requests
 from activity.objects import Activity
 from provider.storage_provider import storage_context
-import provider.simpleDB as dblib
 import provider.article as articlelib
-from provider import article_processing, lax_provider, utils
+from provider import article_processing, email_provider, lax_provider, utils
 from elifecrossref import generate
 from elifecrossref.conf import raw_config, parse_raw_config
 from elifearticle.article import ArticleDate
@@ -37,9 +36,6 @@ class activity_DepositCrossref(Activity):
             "TMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
             "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
         }
-
-        # Data provider where email body is saved
-        self.db = dblib.SimpleDB(settings)
 
         # Instantiate a new article object to provide some helper functions
         self.article = articlelib.article(self.settings, self.get_tmp_dir())
@@ -108,7 +104,7 @@ class activity_DepositCrossref(Activity):
         # Send email
         # Only if there were files approved for publishing
         if len(self.article_published_file_names) > 0:
-            self.add_email_to_queue(outbox_s3_key_names)
+            self.send_admin_email(outbox_s3_key_names)
 
         # Return the activity result, True or False
         result = True
@@ -369,40 +365,29 @@ class activity_DepositCrossref(Activity):
                 article_processing.file_name_from_name(file_name))
             storage.set_resource_from_filename(resource_dest, file_name)
 
-    def add_email_to_queue(self, outbox_s3_key_names):
+    def send_admin_email(self, outbox_s3_key_names):
         """
         After do_activity is finished, send emails to recipients
         on the status
         """
-        # Connect to DB
-        db_conn = self.db.connect()
-
-        # Note: Create a verified sender email address, only done once
-        # conn.verify_email_address(self.settings.ses_sender_email)
 
         current_time = time.gmtime()
-
         body = self.get_email_body(current_time, outbox_s3_key_names)
         subject = self.get_email_subject(current_time, outbox_s3_key_names)
         sender_email = self.settings.ses_poa_sender_email
 
-        recipient_email_list = []
-        # Handle multiple recipients, if specified
-        if isinstance(self.settings.ses_admin_email, list):
-            for email in self.settings.ses_admin_email:
-                recipient_email_list.append(email)
-        else:
-            recipient_email_list.append(self.settings.ses_admin_email)
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.ses_admin_email)
 
         for email in recipient_email_list:
             # Add the email to the email queue
-            self.db.elife_add_email_to_email_queue(
-                recipient_email=email,
-                sender_email=sender_email,
-                email_type="DepositCrossref",
-                format="text",
-                subject=subject,
-                body=body)
+            message = email_provider.simple_message(
+                sender_email, email, subject, body, logger=self.logger)
+
+            email_provider.smtp_send_messages(
+                self.settings, messages=[message], logger=self.logger)
+            self.logger.info('Email sending details: admin email, email %s, to %s' %
+                             ("DepositCrossref", email))
 
         return True
 

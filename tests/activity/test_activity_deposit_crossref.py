@@ -3,8 +3,9 @@ import unittest
 import shutil
 from mock import patch
 from ddt import ddt, data
-from provider.simpleDB import SimpleDB
+import activity.activity_DepositCrossref as activity_module
 from activity.activity_DepositCrossref import activity_DepositCrossref
+from tests.classes_mock import FakeSMTPServer
 from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
 import tests.activity.settings_mock as settings_mock
 import tests.activity.test_activity_data as activity_test_data
@@ -38,10 +39,10 @@ class TestDepositCrossref(unittest.TestCase):
         dest_doc = self.input_dir() + os.sep + document
         shutil.copy(source_doc, dest_doc)
 
-    @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
+    @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
-    @patch('activity.activity_DepositCrossref.storage_context')
+    @patch.object(activity_module, 'storage_context')
     @data(
         {
             "article_xml_filenames": ['elife-15747-v2.xml'],
@@ -101,8 +102,8 @@ class TestDepositCrossref(unittest.TestCase):
         },
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_list_resources, fake_request,
-                         fake_add_email):
-        fake_add_email.return_value = None
+                         fake_email_smtp_connect):
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
         # copy XML files into the input directory
         fake_list_resources.return_value = test_data["article_xml_filenames"]
@@ -147,7 +148,7 @@ class TestDepositCrossref(unittest.TestCase):
             article.get_date('pub'), 'date of type pub not found in article get_date()')
         self.assertIsNotNone(article.version, 'version is None in article')
 
-    @patch('activity.activity_DepositCrossref.storage_context')
+    @patch.object(activity_module, 'storage_context')
     def test_get_outbox_s3_key_names(self, fake_storage_context):
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
         key_names = self.activity.get_outbox_s3_key_names()
