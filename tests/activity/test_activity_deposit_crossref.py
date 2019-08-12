@@ -7,6 +7,8 @@ from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageCon
 from provider.article import article
 from provider.simpleDB import SimpleDB
 from provider import lax_provider
+import tests.activity.test_activity_data as activity_test_data
+import tests.activity.helpers as helpers
 import tests.test_data as test_case_data
 import os
 from ddt import ddt, data
@@ -22,7 +24,9 @@ class TestDepositCrossref(unittest.TestCase):
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
-
+        helpers.delete_files_in_folder(
+            activity_test_data.ExpandArticle_files_dest_folder, filter_out=['.gitkeep'])
+    
     def input_dir(self):
         "return the staging dir name for the activity"
         return self.activity.directories.get("INPUT_DIR")
