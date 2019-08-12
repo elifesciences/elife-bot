@@ -295,15 +295,15 @@ class activity_DepositCrossref(Activity):
         for xml_file in xml_files:
             files = {'file': open(xml_file, 'rb')}
 
-            r = requests.post(url, data=payload, files=files)
+            response = requests.post(url, data=payload, files=files)
 
             # Check for good HTTP status code
-            if r.status_code != 200:
+            if response.status_code != 200:
                 status = False
-            # print r.text
+            # print response.text
             self.http_request_status_text.append("XML file: " + xml_file)
-            self.http_request_status_text.append("HTTP status: " + str(r.status_code))
-            self.http_request_status_text.append("HTTP response: " + r.text)
+            self.http_request_status_text.append("HTTP status: " + str(response.status_code))
+            self.http_request_status_text.append("HTTP response: " + response.text)
 
         return status
 
