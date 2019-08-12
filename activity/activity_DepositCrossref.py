@@ -104,10 +104,8 @@ class activity_DepositCrossref(Activity):
                 self.outbox_status = True
 
         # Set the activity status of this activity based on successes
-        if self.publish_status is not False and self.generate_status is not False:
-            self.activity_status = True
-        else:
-            self.activity_status = False
+        self.activity_status = bool(
+            self.publish_status is not False and self.generate_status is not False)
 
         # Send email
         # Only if there were files approved for publishing
@@ -253,11 +251,8 @@ class activity_DepositCrossref(Activity):
         article_pub_date = self.article_first_pub_date(article)
         if article_pub_date:
             now_date = time.gmtime()
-            if article_pub_date.date < now_date:
-                approved = True
-            else:
-                # Pub date is later than now, do not approve
-                approved = False
+            # if Pub date is later than now, do not approve
+            approved = bool(article_pub_date.date < now_date)
         else:
             # No pub date, then we approve it
             approved = True
