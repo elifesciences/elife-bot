@@ -16,8 +16,7 @@ from provider.storage_provider import storage_context
 import provider.simpleDB as dblib
 import provider.article as articlelib
 import provider.s3lib as s3lib
-from provider import lax_provider
-from provider import utils
+from provider import article_processing, lax_provider, utils
 from elifecrossref import generate
 from elifecrossref.conf import raw_config, parse_raw_config
 from elifearticle.article import ArticleDate
@@ -46,8 +45,6 @@ class activity_DepositCrossref(Activity):
             "TMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
             "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
         }
-
-        self.date_stamp = self.set_datestamp()
 
         # Data provider where email body is saved
         self.db = dblib.SimpleDB(settings)
@@ -85,6 +82,8 @@ class activity_DepositCrossref(Activity):
         # Create output directories
         self.make_activity_directories()
 
+        date_stamp = self.set_datestamp()
+
         outbox_s3_key_names = self.get_outbox_s3_key_names()
 
         # Download the S3 objects
@@ -108,8 +107,8 @@ class activity_DepositCrossref(Activity):
             if self.publish_status is True:
                 # Clean up outbox
                 print("Moving files from outbox folder to published folder")
-                self.clean_outbox(outbox_s3_key_names)
-                self.upload_crossref_xml_to_s3()
+                self.clean_outbox(outbox_s3_key_names, date_stamp)
+                self.upload_crossref_xml_to_s3(date_stamp)
                 self.outbox_status = True
 
         # Set the activity status of this activity based on successes
@@ -334,23 +333,19 @@ class activity_DepositCrossref(Activity):
         # return only the .xml files
         return [key_name for key_name in s3_key_names if key_name.endswith('.xml')]
 
-    def get_to_folder_name(self):
+    def get_to_folder_name(self, date_stamp):
         """
         From the date_stamp
         return the S3 folder name to save published files into
         """
-        to_folder = None
+        return self.published_folder + date_stamp + "/"
 
-        date_folder_name = self.date_stamp
-        to_folder = self.published_folder + date_folder_name + "/"
 
-        return to_folder
-
-    def clean_outbox(self, outbox_s3_key_names):
+    def clean_outbox(self, outbox_s3_key_names, date_stamp):
         """
         Clean out the S3 outbox folder
         """
-        to_folder = self.get_to_folder_name()
+        to_folder = self.get_to_folder_name(date_stamp)
 
         # Move only the published files from the S3 outbox to the published folder
         bucket_name = self.publish_bucket
@@ -387,26 +382,20 @@ class activity_DepositCrossref(Activity):
                     old_s3_key = bucket.get_key(name)
                     old_s3_key.delete()
 
-
-    def upload_crossref_xml_to_s3(self):
+    def upload_crossref_xml_to_s3(self, date_stamp):
         """
         Upload a copy of the crossref XML to S3 for reference
         """
-        xml_files = glob.glob(self.directories.get("TMP_DIR") + "/*.xml")
-
         bucket_name = self.publish_bucket
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        s3_folder_name = self.published_folder + date_stamp + "/" + "batch/"
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-
-        date_folder_name = self.date_stamp
-        s3_folder_name = self.published_folder + date_folder_name + "/" + "batch/"
-
-        for xml_file in xml_files:
-            s3key = boto.s3.key.Key(bucket)
-            s3key.key = s3_folder_name + xml_file.split(os.sep)[-1]
-            s3key.set_contents_from_filename(xml_file, replace=True)
+        for file_name in glob.glob(self.directories.get("TMP_DIR") + "/*.xml"):
+            resource_dest = (
+                storage_provider + s3_folder_name + 
+                article_processing.file_name_from_name(file_name))
+            storage.set_resource_from_filename(resource_dest, file_name)
 
     def add_email_to_queue(self, outbox_s3_key_names):
         """
