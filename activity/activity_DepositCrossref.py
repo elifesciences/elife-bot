@@ -5,7 +5,6 @@ import glob
 import requests
 from activity.objects import Activity
 from provider.storage_provider import storage_context
-import provider.article as articlelib
 from provider import article_processing, email_provider, lax_provider, utils
 from elifecrossref import generate
 from elifecrossref.conf import raw_config, parse_raw_config
@@ -37,9 +36,6 @@ class activity_DepositCrossref(Activity):
             "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
         }
 
-        # Instantiate a new article object to provide some helper functions
-        self.article = articlelib.article(self.settings, self.get_tmp_dir())
-
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
         self.outbox_folder = "crossref/outbox/"
@@ -47,11 +43,6 @@ class activity_DepositCrossref(Activity):
 
         # Track the success of some steps
         self.statuses = {}
-        self.publish_status = None
-
-        # HTTP requests status
-        self.http_request_status_code = []
-        self.http_request_status_text = []
 
         # Track XML files selected for pubmed XML
         self.article_published_file_names = []
@@ -80,11 +71,11 @@ class activity_DepositCrossref(Activity):
         # Approve files for publishing
         self.statuses["approve"] = self.approve_for_publishing()
 
+        http_detail_list = []
         if self.statuses.get("approve") is True:
             try:
                 # Publish files
-                self.statuses["publish"] = self.deposit_files_to_endpoint(
-                    file_type="/*.xml",
+                self.statuses["publish"], http_detail_list = self.deposit_files_to_endpoint(
                     sub_dir=self.directories.get("TMP_DIR"))
             except:
                 self.statuses["publish"] = False
@@ -104,7 +95,7 @@ class activity_DepositCrossref(Activity):
         # Send email
         # Only if there were files approved for publishing
         if len(self.article_published_file_names) > 0:
-            self.send_admin_email(outbox_s3_key_names)
+            self.send_admin_email(outbox_s3_key_names, http_detail_list)
 
         # Return the activity result, True or False
         result = True
@@ -269,13 +260,14 @@ class activity_DepositCrossref(Activity):
 
         return status
 
-    def deposit_files_to_endpoint(self, file_type, sub_dir=None):
+    def deposit_files_to_endpoint(self, file_type="/*.xml", sub_dir=None):
         """
         Using an HTTP POST, deposit the file to the endpoint
         """
 
         # Default return status
         status = True
+        http_detail_list = []
 
         url = self.settings.crossref_url
         payload = {'operation': 'doMDUpload',
@@ -283,7 +275,7 @@ class activity_DepositCrossref(Activity):
                    'login_passwd': self.settings.crossref_login_passwd
                   }
 
-        # Crossref XML, should be only one but check for multiple
+        # Crossref XML, can be multiple files to deposit
         xml_files = glob.glob(sub_dir + file_type)
 
         for xml_file in xml_files:
@@ -295,11 +287,11 @@ class activity_DepositCrossref(Activity):
             if response.status_code != 200:
                 status = False
             # print response.text
-            self.http_request_status_text.append("XML file: " + xml_file)
-            self.http_request_status_text.append("HTTP status: " + str(response.status_code))
-            self.http_request_status_text.append("HTTP response: " + response.text)
+            http_detail_list.append("XML file: " + xml_file)
+            http_detail_list.append("HTTP status: " + str(response.status_code))
+            http_detail_list.append("HTTP response: " + response.text)
 
-        return status
+        return status, http_detail_list
 
     def get_outbox_s3_key_names(self):
         """get a list of .xml S3 key names from the outbox"""
@@ -365,14 +357,14 @@ class activity_DepositCrossref(Activity):
                 article_processing.file_name_from_name(file_name))
             storage.set_resource_from_filename(resource_dest, file_name)
 
-    def send_admin_email(self, outbox_s3_key_names):
+    def send_admin_email(self, outbox_s3_key_names, http_detail_list):
         """
         After do_activity is finished, send emails to recipients
         on the status
         """
 
         current_time = time.gmtime()
-        body = self.get_email_body(current_time, outbox_s3_key_names)
+        body = self.get_email_body(current_time, outbox_s3_key_names, http_detail_list)
         subject = self.get_email_subject(current_time, outbox_s3_key_names)
         sender_email = self.settings.ses_poa_sender_email
 
@@ -412,7 +404,7 @@ class activity_DepositCrossref(Activity):
 
         return subject
 
-    def get_email_body(self, current_time, outbox_s3_key_names):
+    def get_email_body(self, current_time, outbox_s3_key_names, http_detail_list):
         """
         Format the body of the email
         """
@@ -465,9 +457,7 @@ class activity_DepositCrossref(Activity):
         body += "\n"
         body += "-------------------------------\n"
         body += "HTTP deposit details: " + "\n"
-        for code in self.http_request_status_code:
-            body += "Status code: " + str(code) + "\n"
-        for text in self.http_request_status_text:
+        for text in http_detail_list:
             body += str(text) + "\n"
 
         body += "\n"
