@@ -151,6 +151,7 @@ class activity_DepositCrossref(Activity):
         Using the POA generateCrossrefXml module
         """
         article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
+        crossref_config = crossref.elifecrossref_config(self.settings)
 
         for xml_file in article_xml_files:
             generate_status = True
@@ -165,10 +166,9 @@ class activity_DepositCrossref(Activity):
             else:
                 article = article_list[0]
 
-            if self.approve_to_generate(article) is not True:
+            if crossref.approve_to_generate(crossref_config, article) is not True:
                 generate_status = False
             else:
-                crossref_config = crossref.elifecrossref_config(self.settings)
                 try:
                     # Will write the XML to the TMP_DIR
                     generate.crossref_xml_to_disk(article_list, crossref_config)
@@ -184,25 +184,6 @@ class activity_DepositCrossref(Activity):
 
         # Any files generated is a sucess, even if one failed
         return True
-
-    def approve_to_generate(self, article):
-        """
-        Given an article object, decide if crossref deposit should be
-        generated from it
-        """
-        approved = None
-        # Embargo if the pub date is in the future
-        crossref_config = crossref.elifecrossref_config(self.settings)
-        article_pub_date = crossref.article_first_pub_date(crossref_config, article)
-        if article_pub_date:
-            now_date = time.gmtime()
-            # if Pub date is later than now, do not approve
-            approved = bool(article_pub_date.date < now_date)
-        else:
-            # No pub date, then we approve it
-            approved = True
-
-        return approved
 
     def approve_for_publishing(self):
         """
