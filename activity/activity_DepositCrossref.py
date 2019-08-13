@@ -7,7 +7,6 @@ from activity.objects import Activity
 from provider.storage_provider import storage_context
 from provider import article_processing, crossref, email_provider, lax_provider, utils
 from elifecrossref import generate
-from elifearticle.article import ArticleDate
 
 """
 DepositCrossref activity
@@ -124,18 +123,8 @@ class activity_DepositCrossref(Activity):
         articles = crossref.parse_article_xml(article_xml_files, self.directories.get("TMP_DIR"))
         crossref_config = crossref.elifecrossref_config(self.settings)
         for article in articles:
-            # Check for a pub date
-            article_pub_date = crossref.article_first_pub_date(crossref_config, article)
-            # if no date was found then look for one on Lax
-            if not article_pub_date:
-                lax_pub_date = lax_provider.article_publication_date(
-                    article.manuscript, self.settings, self.logger)
-                if lax_pub_date:
-                    date_struct = time.strptime(lax_pub_date, utils.S3_DATE_FORMAT)
-                    crossref_config = crossref.elifecrossref_config(self.settings)
-                    pub_date_object = ArticleDate(
-                        crossref_config.get('pub_date_types')[0], date_struct)
-                    article.add_date(pub_date_object)
+            # Check for a pub date otherwise set one
+            crossref.set_article_pub_date(article, crossref_config, self.settings, self.logger)
 
             # Check for a version number
             if not article.version:

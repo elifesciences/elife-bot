@@ -1,6 +1,8 @@
 import time
+from elifearticle.article import ArticleDate
 from elifecrossref import generate
 from elifecrossref.conf import raw_config, parse_raw_config
+from provider import lax_provider, utils
 
 
 def elifecrossref_config(settings):
@@ -25,6 +27,21 @@ def parse_article_xml(article_xml_files, tmp_dir):
         if article_list:
             articles.append(article_list[0])
     return articles
+
+
+def set_article_pub_date(article, crossref_config, settings, logger):
+    """if there is no pub date then set it from lax data"""
+    # Check for a pub date
+    article_pub_date = article_first_pub_date(crossref_config, article)
+    # if no date was found then look for one on Lax
+    if not article_pub_date:
+        lax_pub_date = lax_provider.article_publication_date(
+            article.manuscript, settings, logger)
+        if lax_pub_date:
+            date_struct = time.strptime(lax_pub_date, utils.S3_DATE_FORMAT)
+            pub_date_object = ArticleDate(
+                crossref_config.get('pub_date_types')[0], date_struct)
+            article.add_date(pub_date_object)
 
 
 def article_first_pub_date(crossref_config, article):
