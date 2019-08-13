@@ -24,3 +24,15 @@ def parse_article_xml(article_xml_files, tmp_dir):
         if article_list:
             articles.append(article_list[0])
     return articles
+
+
+def article_first_pub_date(crossref_config, article):
+    "find the first article pub date from the list of crossref config pub_date_types"
+    pub_date = None
+    if crossref_config.get('pub_date_types'):
+        # check for any useable pub date
+        for pub_date_type in crossref_config.get('pub_date_types'):
+            if article.get_date(pub_date_type):
+                pub_date = article.get_date(pub_date_type)
+                break
+    return pub_date
