@@ -5,7 +5,7 @@ import glob
 import requests
 from activity.objects import Activity
 from provider.storage_provider import storage_context
-from provider import article_processing, email_provider, lax_provider, utils
+from provider import article_processing, crossref, email_provider, lax_provider, utils
 from elifecrossref import generate
 from elifecrossref.conf import raw_config, parse_raw_config
 from elifearticle.article import ArticleDate
@@ -139,26 +139,9 @@ class activity_DepositCrossref(Activity):
                     break
         return pub_date
 
-    def parse_article_xml(self, article_xml_files):
-        """
-        Given a list of article XML files, parse them into objects
-        and save the file name for later use
-        """
-
-        # For each article XML file, parse it and save the filename for later
-        articles = []
-        for article_xml in article_xml_files:
-            article = None
-            article_list = None
-            article_xml_list = [article_xml]
-            try:
-                # Convert the XML files to article objects
-                generate.TMP_DIR = self.directories.get("TMP_DIR")
-                article_list = generate.build_articles(article_xml_list)
-                article = article_list[0]
-            except:
-                continue
-
+    def get_article_list(self, article_xml_files):
+        articles = crossref.parse_article_xml(article_xml_files, self.directories.get("TMP_DIR"))
+        for article in articles:
             # Check for a pub date
             article_pub_date = self.article_first_pub_date(article)
             # if no date was found then look for one on Lax
@@ -180,9 +163,6 @@ class activity_DepositCrossref(Activity):
                 if lax_version:
                     article.version = lax_version
 
-            if article:
-                articles.append(article)
-
         return articles
 
     def generate_crossref_xml(self):
@@ -196,7 +176,7 @@ class activity_DepositCrossref(Activity):
 
             # Convert the single value to a list for processing
             xml_files = [xml_file]
-            article_list = self.parse_article_xml(xml_files)
+            article_list = self.get_article_list(xml_files)
 
             if len(article_list) == 0:
                 self.article_not_published_file_names.append(xml_file)

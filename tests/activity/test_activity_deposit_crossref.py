@@ -145,10 +145,10 @@ class TestDepositCrossref(unittest.TestCase):
                             expected=expected, path=crossref_xml_filename_path))
 
     @patch('provider.lax_provider.article_versions')
-    def test_parse_article_xml(self, mock_article_versions):
+    def test_get_article_list(self, mock_article_versions):
         "example where there is not pub date and no version for an article"
         mock_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
-        articles = self.activity.parse_article_xml(
+        articles = self.activity.get_article_list(
             ['tests/test_data/crossref/elife_poa_e03977.xml'])
         article = articles[0]
         self.assertIsNotNone(
