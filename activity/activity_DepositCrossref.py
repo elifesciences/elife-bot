@@ -96,10 +96,7 @@ class activity_DepositCrossref(Activity):
         if len(self.article_published_file_names) > 0:
             self.send_admin_email(outbox_s3_key_names, http_detail_list)
 
-        # Return the activity result, True or False
-        result = True
-
-        return result
+        return True
 
     def download_files_from_s3_outbox(self, outbox_s3_key_names):
         """from the s3 outbox folder,  download the .xml files"""
