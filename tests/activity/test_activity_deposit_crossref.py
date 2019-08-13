@@ -52,6 +52,7 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_generate_status": True,
             "expected_publish_status": True,
             "expected_outbox_status": True,
+            "expected_email_status": True,
             "expected_activity_status": True,
             "expected_file_count": 1,
             "expected_crossref_xml_contains": [
@@ -75,6 +76,7 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_generate_status": True,
             "expected_publish_status": True,
             "expected_outbox_status": True,
+            "expected_email_status": True,
             "expected_activity_status": True,
             "expected_file_count": 2,
         },
@@ -86,6 +88,7 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_generate_status": True,
             "expected_publish_status": None,
             "expected_outbox_status": None,
+            "expected_email_status": None,
             "expected_activity_status": True,
             "expected_file_count": 0,
         },
@@ -97,6 +100,7 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_generate_status": True,
             "expected_publish_status": False,
             "expected_outbox_status": None,
+            "expected_email_status": True,
             "expected_activity_status": False,
             "expected_file_count": 1,
         },
@@ -121,6 +125,8 @@ class TestDepositCrossref(unittest.TestCase):
             self.activity.statuses.get("publish"), test_data.get("expected_publish_status"))
         self.assertEqual(
             self.activity.statuses.get("outbox"), test_data.get("expected_outbox_status"))
+        self.assertEqual(
+            self.activity.statuses.get("email"), test_data.get("expected_email_status"))
         self.assertEqual(
             self.activity.statuses.get("activity"), test_data.get("expected_activity_status"))
         # Count crossref XML file in the tmp directory

@@ -94,7 +94,10 @@ class activity_DepositCrossref(Activity):
         # Send email
         # Only if there were files approved for publishing
         if len(self.article_published_file_names) > 0:
-            self.send_admin_email(outbox_s3_key_names, http_detail_list)
+            self.statuses["email"] = self.send_admin_email(outbox_s3_key_names, http_detail_list)
+
+        self.logger.info(
+            "%s statuses: %s" % (self.name, self.statuses))
 
         return True
 
