@@ -44,6 +44,15 @@ def set_article_pub_date(article, crossref_config, settings, logger):
             article.add_date(pub_date_object)
 
 
+def set_article_version(article, settings):
+    """if there is no version then set it from lax data"""
+    if not article.version:
+        lax_version = lax_provider.article_highest_version(
+            article.manuscript, settings)
+        if lax_version:
+            article.version = lax_version
+
+
 def article_first_pub_date(crossref_config, article):
     "find the first article pub date from the list of crossref config pub_date_types"
     pub_date = None

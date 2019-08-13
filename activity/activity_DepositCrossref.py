@@ -120,19 +120,14 @@ class activity_DepositCrossref(Activity):
         return True
 
     def get_article_list(self, article_xml_files):
+        """turn XML into article objects and populate their data"""
         articles = crossref.parse_article_xml(article_xml_files, self.directories.get("TMP_DIR"))
         crossref_config = crossref.elifecrossref_config(self.settings)
         for article in articles:
             # Check for a pub date otherwise set one
             crossref.set_article_pub_date(article, crossref_config, self.settings, self.logger)
-
             # Check for a version number
-            if not article.version:
-                lax_version = lax_provider.article_highest_version(
-                    article.manuscript, self.settings)
-                if lax_version:
-                    article.version = lax_version
-
+            crossref.set_article_version(article, self.settings)
         return articles
 
     def generate_crossref_xml(self):
