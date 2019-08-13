@@ -45,6 +45,7 @@ class TestDepositCrossref(unittest.TestCase):
     @patch.object(activity_module, 'storage_context')
     @data(
         {
+            "comment": "Article 15747",
             "article_xml_filenames": ['elife-15747-v2.xml'],
             "post_status_code": 200,
             "expected_result": True,
@@ -68,6 +69,7 @@ class TestDepositCrossref(unittest.TestCase):
                 ]
         },
         {
+            "comment": "Multiple files to deposit",
             "article_xml_filenames": [
                 'elife-18753-v1.xml', 'elife-23065-v1.xml', 'fake-00000-v1.xml'],
             "post_status_code": 200,
@@ -81,6 +83,7 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_file_count": 2,
         },
         {
+            "comment": "No files to deposit",
             "article_xml_filenames": [],
             "post_status_code": 200,
             "expected_result": True,
@@ -93,6 +96,7 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_file_count": 0,
         },
         {
+            "comment": "API endpoint 404",
             "article_xml_filenames": ['elife-18753-v1.xml'],
             "post_status_code": 404,
             "expected_result": True,
@@ -117,18 +121,15 @@ class TestDepositCrossref(unittest.TestCase):
         result = self.activity.do_activity()
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"))
-        self.assertEqual(
-            self.activity.statuses.get("approve"), test_data.get("expected_approve_status"))
-        self.assertEqual(
-            self.activity.statuses.get("generate"), test_data.get("expected_generate_status"))
-        self.assertEqual(
-            self.activity.statuses.get("publish"), test_data.get("expected_publish_status"))
-        self.assertEqual(
-            self.activity.statuses.get("outbox"), test_data.get("expected_outbox_status"))
-        self.assertEqual(
-            self.activity.statuses.get("email"), test_data.get("expected_email_status"))
-        self.assertEqual(
-            self.activity.statuses.get("activity"), test_data.get("expected_activity_status"))
+        # check statuses assertions
+        for status_name in ['approve', 'generate', 'publish', 'outbox', 'email', 'activity']:
+            status_value = self.activity.statuses.get(status_name)
+            expected = test_data.get("expected_" + status_name + "_status")
+            self.assertEqual(
+                status_value, expected,
+                '{expected} {status_name} status not equal to {status_value} in {comment}'.format(
+                    expected=expected, status_name=status_name, status_value=status_value,
+                    comment=test_data.get("comment")))
         # Count crossref XML file in the tmp directory
         file_count = len(os.listdir(self.tmp_dir()))
         self.assertEqual(file_count, test_data.get("expected_file_count"))
