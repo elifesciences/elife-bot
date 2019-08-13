@@ -7,7 +7,6 @@ from activity.objects import Activity
 from provider.storage_provider import storage_context
 from provider import article_processing, crossref, email_provider, lax_provider, utils
 from elifecrossref import generate
-from elifecrossref.conf import raw_config, parse_raw_config
 from elifearticle.article import ArticleDate
 
 """
@@ -121,16 +120,10 @@ class activity_DepositCrossref(Activity):
                 return False
         return True
 
-    def elifecrossref_config(self, config_section):
-        "parse the config values from the elifecrossref config"
-        return parse_raw_config(raw_config(
-            config_section,
-            self.settings.elifecrossref_config_file))
-
     def article_first_pub_date(self, article):
         "find the first article pub date from the list of crossref config pub_date_types"
         pub_date = None
-        crossref_config = self.elifecrossref_config(self.settings.elifecrossref_config_section)
+        crossref_config = crossref.elifecrossref_config(self.settings)
         if crossref_config.get('pub_date_types'):
             # check for any useable pub date
             for pub_date_type in crossref_config.get('pub_date_types'):
@@ -150,8 +143,7 @@ class activity_DepositCrossref(Activity):
                     article.manuscript, self.settings, self.logger)
                 if lax_pub_date:
                     date_struct = time.strptime(lax_pub_date, utils.S3_DATE_FORMAT)
-                    crossref_config = self.elifecrossref_config(
-                        self.settings.elifecrossref_config_section)
+                    crossref_config = crossref.elifecrossref_config(self.settings)
                     pub_date_object = ArticleDate(
                         crossref_config.get('pub_date_types')[0], date_struct)
                     article.add_date(pub_date_object)
@@ -187,8 +179,7 @@ class activity_DepositCrossref(Activity):
             if self.approve_to_generate(article) is not True:
                 generate_status = False
             else:
-                crossref_config = self.elifecrossref_config(
-                    self.settings.elifecrossref_config_section)
+                crossref_config = crossref.elifecrossref_config(self.settings)
                 try:
                     # Will write the XML to the TMP_DIR
                     generate.crossref_xml_to_disk(article_list, crossref_config)

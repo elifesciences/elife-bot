@@ -1,4 +1,12 @@
 from elifecrossref import generate
+from elifecrossref.conf import raw_config, parse_raw_config
+
+
+def elifecrossref_config(settings):
+    "parse the config values from the elifecrossref config"
+    return parse_raw_config(raw_config(
+        settings.elifecrossref_config_section,
+        settings.elifecrossref_config_file))
 
 
 def parse_article_xml(article_xml_files, tmp_dir):
