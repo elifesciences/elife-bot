@@ -243,3 +243,18 @@ def valid_recipient_object(recipient):
     if recipient.e_mail is not None and str(recipient.e_mail).strip() == "":
         return False
     return True
+
+
+def get_admin_email_body_foot(activity_id, workflow_id, datetime_string, domain):
+    """Format the footer of the body of the email"""
+    body_foot = ""
+    body_foot += "\n"
+    body_foot += "-------------------------------\n"
+    body_foot += "SWF workflow details: " + "\n"
+    body_foot += "activityId: " + str(activity_id) + "\n"
+    body_foot += "As part of workflowId: " + str(workflow_id) + "\n"
+    body_foot += "As at " + datetime_string + "\n"
+    body_foot += "Domain: " + domain + "\n"
+    body_foot += "\n"
+    body_foot += "\n\nSincerely\n\neLife bot"
+    return body_foot
