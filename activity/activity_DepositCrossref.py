@@ -88,12 +88,12 @@ class activity_DepositCrossref(Activity):
             except:
                 self.statuses["publish"] = False
 
-            if self.statuses.get("publish") is True:
-                # Clean up outbox
-                self.logger.info("Moving files from outbox folder to published folder")
-                self.clean_outbox(self.good_xml_files, date_stamp)
-                self.upload_crossref_xml_to_s3(date_stamp)
-                self.statuses["outbox"] = True
+        if self.statuses.get("publish") is True:
+            # Clean up outbox
+            self.logger.info("Moving files from outbox folder to published folder")
+            self.clean_outbox(self.good_xml_files, date_stamp)
+            self.upload_crossref_xml_to_s3(date_stamp)
+            self.statuses["outbox"] = True
 
         # Set the activity status of this activity based on successes
         self.statuses["activity"] = bool(
