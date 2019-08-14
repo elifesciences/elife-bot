@@ -1,4 +1,5 @@
 import time
+import requests
 from elifearticle.article import ArticleDate
 from elifecrossref import generate
 from elifecrossref.conf import raw_config, parse_raw_config
@@ -82,3 +83,35 @@ def approve_to_generate(crossref_config, article):
         approved = True
 
     return approved
+
+
+def crossref_data_payload(crossref_login_id, crossref_login_passwd, operation='doMDUpload'):
+    """assemble a requests data payload for Crossref endpoint"""
+    return {
+        'operation': operation,
+        'login_id': crossref_login_id,
+        'login_passwd': crossref_login_passwd
+    }
+
+
+def upload_files_to_endpoint(url, payload, xml_files):
+    """Using an HTTP POST, deposit the file to the Crossref endpoint"""
+
+    # Default return status
+    status = True
+    http_detail_list = []
+
+    for xml_file in xml_files:
+        files = {'file': open(xml_file, 'rb')}
+
+        response = requests.post(url, data=payload, files=files)
+
+        # Check for good HTTP status code
+        if response.status_code != 200:
+            status = False
+        # print response.text
+        http_detail_list.append("XML file: " + xml_file)
+        http_detail_list.append("HTTP status: " + str(response.status_code))
+        http_detail_list.append("HTTP response: " + response.text)
+
+    return status, http_detail_list

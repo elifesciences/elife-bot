@@ -42,6 +42,10 @@ digest_auth_key = 'digest_auth_key'
 
 no_download_extensions = 'tif'
 
+crossref_url = ""
+crossref_login_id = ""
+crossref_login_passwd = ""
+
 # Logging
 setLevel = "INFO"
 

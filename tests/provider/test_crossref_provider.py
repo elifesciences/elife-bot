@@ -5,7 +5,15 @@ from testfixtures import TempDirectory
 import provider.crossref as crossref
 import tests.settings_mock as settings_mock
 import tests.test_data as test_case_data
-from tests.activity.classes_mock import FakeLogger
+from tests.activity.classes_mock import FakeLogger, FakeResponse
+
+
+def expected_http_detail(file_name, status_code):
+    return [
+        'XML file: ' + file_name,
+        'HTTP status: ' + str(status_code),
+        'HTTP response: '
+    ]
 
 
 class TestCrossrefProvider(unittest.TestCase):
@@ -109,3 +117,41 @@ class TestCrossrefProvider(unittest.TestCase):
         article.dates = {}
         approved = crossref.approve_to_generate(crossref_config, article)
         self.assertTrue(approved)
+
+    def test_crossref_data_payload(self):
+        expected = {
+            'operation': 'doMDUpload',
+            'login_id': settings_mock.crossref_login_id,
+            'login_passwd': settings_mock.crossref_login_passwd
+        }
+        payload = crossref.crossref_data_payload(
+            settings_mock.crossref_login_id, settings_mock.crossref_login_passwd)
+        self.assertEqual(payload, expected)
+
+    @patch('requests.post')
+    def test_upload_files_to_endpoint(self, fake_request):
+        status_code = 200
+        xml_files = [self.good_xml_file]
+
+        fake_request.return_value = FakeResponse(status_code)
+
+        expected_status = True
+        expected_detail = expected_http_detail(self.good_xml_file, status_code)
+
+        status, http_detail_list = crossref.upload_files_to_endpoint('', '', xml_files)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(http_detail_list, expected_detail)
+
+    @patch('requests.post')
+    def test_upload_files_to_endpoint_failure(self, fake_request):
+        status_code = 500
+        xml_files = [self.good_xml_file]
+
+        fake_request.return_value = FakeResponse(status_code)
+
+        expected_status = False
+        expected_detail = expected_http_detail(self.good_xml_file, status_code)
+
+        status, http_detail_list = crossref.upload_files_to_endpoint('', '', xml_files)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(http_detail_list, expected_detail)
