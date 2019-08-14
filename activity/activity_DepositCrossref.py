@@ -2,7 +2,6 @@ import os
 import json
 import time
 import glob
-from collections import OrderedDict
 from activity.objects import Activity
 from provider.storage_provider import storage_context
 from provider import article_processing, crossref, email_provider, utils
@@ -69,8 +68,8 @@ class activity_DepositCrossref(Activity):
         crossref_config = crossref.elifecrossref_config(self.settings)
 
         article_object_map = self.get_article_objects(article_xml_files, crossref_config)
-        generate_article_object_map = self.approved_to_generate_list(
-            article_object_map, crossref_config)
+        generate_article_object_map = crossref.approve_to_generate_list(
+            article_object_map, crossref_config, self.bad_xml_files)
 
         # Generate crossref XML
         self.statuses["generate"] = crossref.generate_crossref_xml_to_disk(
@@ -133,30 +132,16 @@ class activity_DepositCrossref(Activity):
 
     def get_article_objects(self, article_xml_files, crossref_config):
         """turn XML into article objects and populate their data"""
-        article_object_map = OrderedDict()
-        # parse one at a time to check which parse and which do not
-        for xml_file in article_xml_files:
-            articles = crossref.parse_article_xml([xml_file], self.directories.get("TMP_DIR"))
-            if articles:
-                article_object_map[xml_file] = articles[0]
-            else:
-                self.bad_xml_files.append(xml_file)
+        # parse XML files into the basic article object map to start with
+        article_object_map = crossref.article_xml_list_parse(
+            article_xml_files, self.bad_xml_files, self.directories.get("TMP_DIR"))
+        # continue with setting more article data
         for article in list(article_object_map.values()):
             # Check for a pub date otherwise set one
             crossref.set_article_pub_date(article, crossref_config, self.settings, self.logger)
             # Check for a version number
             crossref.set_article_version(article, self.settings)
         return article_object_map
-
-    def approved_to_generate_list(self, article_object_map, crossref_config):
-        """decide which article objects are suitable to generate Crossref deposits"""
-        generate_article_object_map = OrderedDict()
-        for xml_file, article in list(article_object_map.items()):
-            if crossref.approve_to_generate(crossref_config, article):
-                generate_article_object_map[xml_file] = article
-            else:
-                self.bad_xml_files.append(xml_file)
-        return generate_article_object_map
 
     def approve_for_publishing(self):
         """

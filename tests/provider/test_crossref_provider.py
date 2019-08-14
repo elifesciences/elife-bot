@@ -3,6 +3,7 @@ import unittest
 from collections import OrderedDict
 from mock import patch
 from testfixtures import TempDirectory
+from elifearticle.article import ArticleDate
 import provider.crossref as crossref
 import tests.settings_mock as settings_mock
 import tests.test_data as test_case_data
@@ -39,6 +40,15 @@ class TestCrossrefProvider(unittest.TestCase):
     def test_parse_article_xml_exception(self):
         articles = crossref.parse_article_xml([self.bad_xml_file], self.directory.path)
         self.assertEqual(len(articles), 0)
+
+    def test_article_xml_list_parse(self):
+        article_xml_files = [self.good_xml_file, self.bad_xml_file]
+        bad_xml_files = []
+        article_object_map = crossref.article_xml_list_parse(
+            article_xml_files, bad_xml_files, self.directory.path)
+        # one good article in the map, one bad xml file in the bad_xml_files list
+        self.assertEqual(len(article_object_map), 1)
+        self.assertEqual(len(bad_xml_files), 1)
 
     @patch('provider.lax_provider.article_versions')
     def test_set_article_pub_date(self, mock_article_versions):
@@ -118,6 +128,27 @@ class TestCrossrefProvider(unittest.TestCase):
         article.dates = {}
         approved = crossref.approve_to_generate(crossref_config, article)
         self.assertTrue(approved)
+
+    def test_approve_to_generate_list(self):
+        """test approving a list of files based on the pub date"""
+        crossref_config = crossref.elifecrossref_config(settings_mock)
+        # build an article
+        article = crossref.parse_article_xml([self.good_xml_file], self.directory.path)[0]
+        # make a fake article with a future pub date
+        future_article = crossref.parse_article_xml([self.good_xml_file], self.directory.path)[0]
+        future_date = ArticleDate('pub', time.strptime("2999-07-15 UTC", "%Y-%m-%d %Z"))
+        future_article.dates = {}
+        future_article.add_date(future_date)
+        # assemble the map of article objects
+        article_object_map = OrderedDict([
+            (self.good_xml_file, article),
+            ('future_article.xml', future_article)
+        ])
+        bad_xml_files = []
+        approved = crossref.approve_to_generate_list(
+            article_object_map, crossref_config, bad_xml_files)
+        self.assertEqual(len(approved), 1)
+        self.assertEqual(len(bad_xml_files), 1)
 
     def test_crossref_data_payload(self):
         expected = {

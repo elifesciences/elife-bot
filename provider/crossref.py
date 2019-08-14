@@ -1,4 +1,5 @@
 import time
+from collections import OrderedDict
 import requests
 from elifearticle.article import ArticleDate
 from elifecrossref import generate
@@ -34,6 +35,19 @@ def parse_article_xml(article_xml_files, tmp_dir=None):
         if article_list:
             articles.append(article_list[0])
     return articles
+
+
+def article_xml_list_parse(article_xml_files, bad_xml_files, tmp_dir=None):
+    """given a list of article XML file names parse to an article object map"""
+    article_object_map = OrderedDict()
+    # parse one at a time to check which parse and which are bad
+    for xml_file in article_xml_files:
+        articles = parse_article_xml([xml_file], tmp_dir)
+        if articles:
+            article_object_map[xml_file] = articles[0]
+        else:
+            bad_xml_files.append(xml_file)
+    return article_object_map
 
 
 def set_article_pub_date(article, crossref_config, settings, logger):
@@ -89,6 +103,17 @@ def approve_to_generate(crossref_config, article):
         approved = True
 
     return approved
+
+
+def approve_to_generate_list(article_object_map, crossref_config, bad_xml_files):
+    """decide which article objects are suitable to generate Crossref deposits"""
+    generate_article_object_map = OrderedDict()
+    for xml_file, article in list(article_object_map.items()):
+        if approve_to_generate(crossref_config, article):
+            generate_article_object_map[xml_file] = article
+        else:
+            bad_xml_files.append(xml_file)
+    return generate_article_object_map
 
 
 def crossref_data_payload(crossref_login_id, crossref_login_passwd, operation='doMDUpload'):
