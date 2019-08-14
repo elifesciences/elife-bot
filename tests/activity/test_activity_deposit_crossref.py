@@ -3,6 +3,7 @@ import unittest
 import shutil
 from mock import patch
 from ddt import ddt, data
+from provider import crossref
 import activity.activity_DepositCrossref as activity_module
 from activity.activity_DepositCrossref import activity_DepositCrossref
 from tests.classes_mock import FakeSMTPServer
@@ -145,12 +146,13 @@ class TestDepositCrossref(unittest.TestCase):
                             expected=expected, path=crossref_xml_filename_path))
 
     @patch('provider.lax_provider.article_versions')
-    def test_get_article_list(self, mock_article_versions):
+    def test_get_article_objects(self, mock_article_versions):
         "example where there is not pub date and no version for an article"
         mock_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
-        articles = self.activity.get_article_list(
-            ['tests/test_data/crossref/elife_poa_e03977.xml'])
-        article = articles[0]
+        crossref_config = crossref.elifecrossref_config(settings_mock)
+        xml_file = 'tests/test_data/crossref/elife_poa_e03977.xml'
+        articles = self.activity.get_article_objects([xml_file], crossref_config)
+        article = articles[xml_file]
         self.assertIsNotNone(
             article.get_date('pub'), 'date of type pub not found in article get_date()')
         self.assertIsNotNone(article.version, 'version is None in article')

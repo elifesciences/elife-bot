@@ -2,6 +2,7 @@ import os
 import json
 import time
 import glob
+from collections import OrderedDict
 from activity.objects import Activity
 from provider.storage_provider import storage_context
 from provider import article_processing, crossref, email_provider, utils
@@ -54,6 +55,9 @@ class activity_DepositCrossref(Activity):
         # Create output directories
         self.make_activity_directories()
 
+        # override the crossref.generate TMP_DIR first
+        crossref.override_tmp_dir(self.directories.get("TMP_DIR"))
+
         date_stamp = utils.set_datestamp()
 
         outbox_s3_key_names = self.get_outbox_s3_key_names()
@@ -61,8 +65,17 @@ class activity_DepositCrossref(Activity):
         # Download the S3 objects
         self.download_files_from_s3_outbox(outbox_s3_key_names)
 
+        article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
+
+        crossref_config = crossref.elifecrossref_config(self.settings)
+
+        article_object_map = self.get_article_objects(article_xml_files, crossref_config)
+        generate_article_object_map = self.approved_to_generate_list(
+            article_object_map, crossref_config)
+
         # Generate crossref XML
-        self.statuses["generate"] = self.generate_crossref_xml()
+        self.statuses["generate"] = self.generate_crossref_xml(
+            generate_article_object_map, crossref_config)
 
         # Approve files for publishing
         self.statuses["approve"] = self.approve_for_publishing()
@@ -118,53 +131,44 @@ class activity_DepositCrossref(Activity):
                 return False
         return True
 
-    def get_article_list(self, article_xml_files):
+    def get_article_objects(self, article_xml_files, crossref_config):
         """turn XML into article objects and populate their data"""
-        articles = crossref.parse_article_xml(article_xml_files, self.directories.get("TMP_DIR"))
-        crossref_config = crossref.elifecrossref_config(self.settings)
-        for article in articles:
+        article_object_map = OrderedDict()
+        # parse one at a time to check which parse and which do not
+        for xml_file in article_xml_files:
+            articles = crossref.parse_article_xml([xml_file], self.directories.get("TMP_DIR"))
+            if articles:
+                article_object_map[xml_file] = articles[0]
+            else:
+                self.article_not_published_file_names.append(xml_file)
+        for article in list(article_object_map.values()):
             # Check for a pub date otherwise set one
             crossref.set_article_pub_date(article, crossref_config, self.settings, self.logger)
             # Check for a version number
             crossref.set_article_version(article, self.settings)
-        return articles
+        return article_object_map
 
-    def generate_crossref_xml(self):
-        """
-        Using the POA generateCrossrefXml module
-        """
-        article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
-        crossref_config = crossref.elifecrossref_config(self.settings)
-
-        for xml_file in article_xml_files:
-            generate_status = True
-
-            # Convert the single value to a list for processing
-            xml_files = [xml_file]
-            article_list = self.get_article_list(xml_files)
-
-            if len(article_list) == 0:
+    def approved_to_generate_list(self, article_object_map, crossref_config):
+        """decide which article objects are suitable to generate Crossref deposits"""
+        generate_article_object_map = OrderedDict()
+        for xml_file, article in list(article_object_map.items()):
+            if crossref.approve_to_generate(crossref_config, article):
+                generate_article_object_map[xml_file] = article
+            else:
                 self.article_not_published_file_names.append(xml_file)
-                continue
-            else:
-                article = article_list[0]
+        return generate_article_object_map
 
-            if crossref.approve_to_generate(crossref_config, article) is not True:
-                generate_status = False
-            else:
-                try:
-                    # Will write the XML to the TMP_DIR
-                    generate.crossref_xml_to_disk(article_list, crossref_config)
-                except:
-                    generate_status = False
-
-            if generate_status is True:
+    def generate_crossref_xml(self, article_object_map, crossref_config):
+        """from the article object generate crossref deposit XML"""
+        for xml_file, article in list(article_object_map.items()):
+            try:
+                # Will write the XML to the TMP_DIR
+                generate.crossref_xml_to_disk([article], crossref_config)
                 # Add filename to the list of published files
                 self.article_published_file_names.append(xml_file)
-            else:
+            except:
                 # Add the file to the list of not published articles, may be used later
                 self.article_not_published_file_names.append(xml_file)
-
         # Any files generated is a sucess, even if one failed
         return True
 

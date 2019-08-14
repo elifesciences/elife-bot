@@ -6,6 +6,12 @@ from elifecrossref.conf import raw_config, parse_raw_config
 from provider import lax_provider, utils
 
 
+def override_tmp_dir(tmp_dir):
+    """explicit override of TMP_DIR in the generate module"""
+    if tmp_dir:
+        generate.TMP_DIR = tmp_dir
+
+
 def elifecrossref_config(settings):
     "parse the config values from the elifecrossref config"
     return parse_raw_config(raw_config(
@@ -13,10 +19,10 @@ def elifecrossref_config(settings):
         settings.elifecrossref_config_file))
 
 
-def parse_article_xml(article_xml_files, tmp_dir):
+def parse_article_xml(article_xml_files, tmp_dir=None):
     """Given a list of article XML files, parse into objects"""
+    override_tmp_dir(tmp_dir)
     articles = []
-    generate.TMP_DIR = tmp_dir
     # convert one file at a time
     for article_xml in article_xml_files:
         article_list = None
