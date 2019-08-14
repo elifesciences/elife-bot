@@ -121,3 +121,20 @@ def upload_files_to_endpoint(url, payload, xml_files):
         http_detail_list.append("HTTP response: " + response.text)
 
     return status, http_detail_list
+
+
+def generate_crossref_xml_to_disk(article_object_map, crossref_config, good_xml_files,
+                                  bad_xml_files, submission_type="journal"):
+    """from the article object generate crossref deposit XML"""
+    for xml_file, article in list(article_object_map.items()):
+        try:
+            # Will write the XML to the TMP_DIR
+            generate.crossref_xml_to_disk(
+                [article], crossref_config, submission_type=submission_type)
+            # Add filename to the list of good files
+            good_xml_files.append(xml_file)
+        except:
+            # Add the file to the list of bad files
+            bad_xml_files.append(xml_file)
+    # Any files generated is a sucess, even if one failed
+    return True

@@ -1,5 +1,6 @@
 import time
 import unittest
+from collections import OrderedDict
 from mock import patch
 from testfixtures import TempDirectory
 import provider.crossref as crossref
@@ -32,11 +33,11 @@ class TestCrossrefProvider(unittest.TestCase):
         self.assertIsNotNone(crossref_config)
 
     def test_parse_article_xml(self):
-        articles = crossref.parse_article_xml([self.good_xml_file], self.directory)
+        articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
         self.assertEqual(len(articles), 1)
 
     def test_parse_article_xml_exception(self):
-        articles = crossref.parse_article_xml([self.bad_xml_file], self.directory)
+        articles = crossref.parse_article_xml([self.bad_xml_file], self.directory.path)
         self.assertEqual(len(articles), 0)
 
     @patch('provider.lax_provider.article_versions')
@@ -45,7 +46,7 @@ class TestCrossrefProvider(unittest.TestCase):
         mock_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
         crossref_config = crossref.elifecrossref_config(settings_mock)
         # build an article
-        articles = crossref.parse_article_xml([self.good_xml_file], self.directory)
+        articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
         article = articles[0]
         # reset the dates
         article.dates = {}
@@ -56,7 +57,7 @@ class TestCrossrefProvider(unittest.TestCase):
     def test_set_article_version(self):
         """test version when it is already present"""
         # build an article
-        articles = crossref.parse_article_xml([self.good_xml_file], self.directory)
+        articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
         article = articles[0]
         # set the version but it is already set
         crossref.set_article_version(article, settings_mock)
@@ -67,7 +68,7 @@ class TestCrossrefProvider(unittest.TestCase):
         """test setting version when missing"""
         mock_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
         # build an article
-        articles = crossref.parse_article_xml([self.good_xml_file], self.directory)
+        articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
         article = articles[0]
         # reset the version
         article.version = None
@@ -79,7 +80,7 @@ class TestCrossrefProvider(unittest.TestCase):
         """test finding a pub date in the article dates"""
         crossref_config = crossref.elifecrossref_config(settings_mock)
         # build an article
-        articles = crossref.parse_article_xml([self.good_xml_file], self.directory)
+        articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
         article = articles[0]
         # get the pub date
         pub_date_object = crossref.article_first_pub_date(crossref_config, article)
@@ -91,7 +92,7 @@ class TestCrossrefProvider(unittest.TestCase):
         """test approving based on the pub date"""
         crossref_config = crossref.elifecrossref_config(settings_mock)
         # build an article
-        articles = crossref.parse_article_xml([self.good_xml_file], self.directory)
+        articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
         article = articles[0]
         approved = crossref.approve_to_generate(crossref_config, article)
         self.assertTrue(approved)
@@ -102,7 +103,7 @@ class TestCrossrefProvider(unittest.TestCase):
         mock_gmtime.return_value = (1, 1, 1, 1, 1, 1, 1, 1, 0)
         crossref_config = crossref.elifecrossref_config(settings_mock)
         # build an article
-        articles = crossref.parse_article_xml([self.good_xml_file], self.directory)
+        articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
         article = articles[0]
         approved = crossref.approve_to_generate(crossref_config, article)
         self.assertFalse(approved)
@@ -111,7 +112,7 @@ class TestCrossrefProvider(unittest.TestCase):
         """test approving when there is no pub date"""
         crossref_config = crossref.elifecrossref_config(settings_mock)
         # build an article
-        articles = crossref.parse_article_xml([self.good_xml_file], self.directory)
+        articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
         article = articles[0]
         # reset the dates
         article.dates = {}
@@ -155,3 +156,18 @@ class TestCrossrefProvider(unittest.TestCase):
         status, http_detail_list = crossref.upload_files_to_endpoint('', '', xml_files)
         self.assertEqual(status, expected_status)
         self.assertEqual(http_detail_list, expected_detail)
+
+    def test_generate_crossref_xml_to_disk(self):
+        articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
+        article_object_map = OrderedDict([
+            (self.good_xml_file, articles[0]),
+            ('fake_file_will_raise_exception.xml', None)
+        ])
+        good_xml_files = []
+        bad_xml_files = []
+        crossref_config = crossref.elifecrossref_config(settings_mock)
+        result = crossref.generate_crossref_xml_to_disk(
+            article_object_map, crossref_config, good_xml_files, bad_xml_files)
+        self.assertTrue(result)
+        self.assertEqual(len(good_xml_files), 1)
+        self.assertEqual(len(bad_xml_files), 1)

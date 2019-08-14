@@ -6,7 +6,6 @@ from collections import OrderedDict
 from activity.objects import Activity
 from provider.storage_provider import storage_context
 from provider import article_processing, crossref, email_provider, utils
-from elifecrossref import generate
 
 """
 DepositCrossref activity
@@ -43,8 +42,8 @@ class activity_DepositCrossref(Activity):
         self.statuses = {}
 
         # Track XML files selected for pubmed XML
-        self.article_published_file_names = []
-        self.article_not_published_file_names = []
+        self.good_xml_files = []
+        self.bad_xml_files = []
 
     def do_activity(self, data=None):
         """
@@ -74,8 +73,9 @@ class activity_DepositCrossref(Activity):
             article_object_map, crossref_config)
 
         # Generate crossref XML
-        self.statuses["generate"] = self.generate_crossref_xml(
-            generate_article_object_map, crossref_config)
+        self.statuses["generate"] = crossref.generate_crossref_xml_to_disk(
+            generate_article_object_map, crossref_config, self.good_xml_files,
+            self.bad_xml_files, submission_type="journal")
 
         # Approve files for publishing
         self.statuses["approve"] = self.approve_for_publishing()
@@ -92,7 +92,7 @@ class activity_DepositCrossref(Activity):
             if self.statuses.get("publish") is True:
                 # Clean up outbox
                 self.logger.info("Moving files from outbox folder to published folder")
-                self.clean_outbox(self.article_published_file_names, date_stamp)
+                self.clean_outbox(self.good_xml_files, date_stamp)
                 self.upload_crossref_xml_to_s3(date_stamp)
                 self.statuses["outbox"] = True
 
@@ -103,7 +103,7 @@ class activity_DepositCrossref(Activity):
 
         # Send email
         # Only if there were files approved for publishing
-        if len(self.article_published_file_names) > 0:
+        if len(self.good_xml_files) > 0:
             self.statuses["email"] = self.send_admin_email(outbox_s3_key_names, http_detail_list)
 
         self.logger.info(
@@ -140,7 +140,7 @@ class activity_DepositCrossref(Activity):
             if articles:
                 article_object_map[xml_file] = articles[0]
             else:
-                self.article_not_published_file_names.append(xml_file)
+                self.bad_xml_files.append(xml_file)
         for article in list(article_object_map.values()):
             # Check for a pub date otherwise set one
             crossref.set_article_pub_date(article, crossref_config, self.settings, self.logger)
@@ -155,22 +155,8 @@ class activity_DepositCrossref(Activity):
             if crossref.approve_to_generate(crossref_config, article):
                 generate_article_object_map[xml_file] = article
             else:
-                self.article_not_published_file_names.append(xml_file)
+                self.bad_xml_files.append(xml_file)
         return generate_article_object_map
-
-    def generate_crossref_xml(self, article_object_map, crossref_config):
-        """from the article object generate crossref deposit XML"""
-        for xml_file, article in list(article_object_map.items()):
-            try:
-                # Will write the XML to the TMP_DIR
-                generate.crossref_xml_to_disk([article], crossref_config)
-                # Add filename to the list of published files
-                self.article_published_file_names.append(xml_file)
-            except:
-                # Add the file to the list of not published articles, may be used later
-                self.article_not_published_file_names.append(xml_file)
-        # Any files generated is a sucess, even if one failed
-        return True
 
     def approve_for_publishing(self):
         """
@@ -270,8 +256,8 @@ class activity_DepositCrossref(Activity):
 
         body = get_email_body_head(self.name, activity_status_text, self.statuses)
         body += get_email_body_middle(
-            outbox_s3_key_names, self.article_published_file_names,
-            self.article_not_published_file_names, http_detail_list)
+            outbox_s3_key_names, self.good_xml_files,
+            self.bad_xml_files, http_detail_list)
         body += email_provider.get_admin_email_body_foot(
             self.get_activityId(), self.get_workflowId(), datetime_string, self.settings.domain)
 
