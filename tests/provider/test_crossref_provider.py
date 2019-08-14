@@ -2,7 +2,7 @@ import time
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
-from provider import crossref
+import provider.crossref as crossref
 import tests.settings_mock as settings_mock
 import tests.test_data as test_case_data
 from tests.activity.classes_mock import FakeLogger
