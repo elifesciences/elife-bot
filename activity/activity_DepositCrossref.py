@@ -144,20 +144,8 @@ class activity_DepositCrossref(Activity):
         return article_object_map
 
     def approve_for_publishing(self):
-        """
-        Final checks before publishing files to the endpoint
-        """
-        status = None
-
-        # Check for empty directory
-        article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
-        if len(article_xml_files) <= 0:
-            status = False
-        else:
-            # Default until full sets of files checker is built
-            status = True
-
-        return status
+        """check if any files were generated before publishing files to the endpoint"""
+        return bool(glob.glob(self.directories.get("INPUT_DIR") + "/*.xml"))
 
     def deposit_files_to_endpoint(self, file_type="/*.xml", sub_dir=None):
         """Using an HTTP POST, deposit the file to the endpoint"""
