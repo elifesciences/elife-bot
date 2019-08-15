@@ -1,3 +1,5 @@
+import os
+import shutil
 import time
 import unittest
 from collections import OrderedDict
@@ -7,7 +9,7 @@ from elifearticle.article import ArticleDate
 import provider.crossref as crossref
 import tests.settings_mock as settings_mock
 import tests.test_data as test_case_data
-from tests.activity.classes_mock import FakeLogger, FakeResponse
+from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
 
 
 def expected_http_detail(file_name, status_code):
@@ -23,7 +25,7 @@ class TestCrossrefProvider(unittest.TestCase):
     def setUp(self):
         self.directory = TempDirectory()
         self.good_xml_file = "tests/test_data/crossref/elife-18753-v1.xml"
-        self.bad_xml_file = "tests/files_source/elife-00353-v1_bad_pub_date"
+        self.bad_xml_file = "tests/test_data/activity.json"
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -202,3 +204,26 @@ class TestCrossrefProvider(unittest.TestCase):
         self.assertTrue(result)
         self.assertEqual(len(good_xml_files), 1)
         self.assertEqual(len(bad_xml_files), 1)
+
+    def test_get_to_folder_name(self):
+        folder_name = ''
+        date_stamp = ''
+        expected = folder_name + date_stamp + '/'
+        self.assertEqual(crossref.get_to_folder_name(folder_name, date_stamp), expected)
+
+    @patch('provider.crossref.storage_context')
+    def test_clean_outbox(self, fake_storage_context):
+        fake_storage_context.return_value = FakeStorageContext(self.directory)
+        # copy two files in for cleaning
+        shutil.copy(self.good_xml_file, self.directory.path)
+        shutil.copy(self.bad_xml_file, self.directory.path)
+        # add outbox_folder name and one file to the list of published file names
+        bucket_name = 'bucket'
+        outbox_folder = 'crossref/outbox/'
+        to_folder = 'crossref/published/'
+        published_file_names = [outbox_folder, self.good_xml_file]
+        # clean outbox
+        crossref.clean_outbox(
+            settings_mock, bucket_name, outbox_folder, to_folder, published_file_names)
+        # TempDirectory should have one file remaining
+        self.assertTrue(len(os.listdir(self.directory.path)), 1)

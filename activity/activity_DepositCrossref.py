@@ -91,7 +91,8 @@ class activity_DepositCrossref(Activity):
         if self.statuses.get("publish") is True:
             # Clean up outbox
             self.logger.info("Moving files from outbox folder to published folder")
-            self.clean_outbox(self.good_xml_files, date_stamp)
+            to_folder = crossref.get_to_folder_name(self.published_folder, date_stamp)
+            crossref.clean_outbox(self.settings, self.publish_bucket, self.outbox_folder, to_folder, self.good_xml_files)
             self.upload_crossref_xml_to_s3(date_stamp)
             self.statuses["outbox"] = True
 
@@ -164,45 +165,6 @@ class activity_DepositCrossref(Activity):
         s3_key_names = storage.list_resources(orig_resource)
         # return only the .xml files
         return [key_name for key_name in s3_key_names if key_name.endswith('.xml')]
-
-    def get_to_folder_name(self, date_stamp):
-        """
-        From the date_stamp
-        return the S3 folder name to save published files into
-        """
-        return self.published_folder + date_stamp + "/"
-
-    def clean_outbox(self, published_file_names, date_stamp):
-        """Clean out the S3 outbox folder"""
-
-        bucket_name = self.publish_bucket
-        to_folder = self.get_to_folder_name(date_stamp)
-
-        # Concatenate the expected S3 outbox file names
-        s3_key_names = []
-        for name in published_file_names:
-            filename = name.split(os.sep)[-1]
-            s3_key_name = self.outbox_folder + filename
-            s3_key_names.append(s3_key_name)
-
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-
-        for name in s3_key_names:
-            # Do not delete the from_folder itself, if it is in the list
-            if name == self.outbox_folder:
-                continue
-            filename = name.split("/")[-1]
-            new_s3_key_name = to_folder + filename
-
-            orig_resource = storage_provider + bucket_name + "/" + name
-            dest_resource = storage_provider + bucket_name + "/" + new_s3_key_name
-
-            # First copy
-            storage.copy_resource(orig_resource, dest_resource)
-
-            # Then delete the old key if successful
-            storage.delete_resource(orig_resource)
 
     def upload_crossref_xml_to_s3(self, date_stamp):
         """

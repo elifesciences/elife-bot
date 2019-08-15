@@ -4,6 +4,7 @@ import shutil
 from mock import patch
 from ddt import ddt, data
 from provider import crossref
+from provider.storage_provider import storage_context
 import activity.activity_DepositCrossref as activity_module
 from activity.activity_DepositCrossref import activity_DepositCrossref
 from tests.classes_mock import FakeSMTPServer
@@ -43,6 +44,7 @@ class TestDepositCrossref(unittest.TestCase):
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
+    @patch('provider.crossref.clean_outbox')
     @patch.object(activity_module, 'storage_context')
     @data(
         {
@@ -110,10 +112,11 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_file_count": 1,
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, fake_list_resources, fake_request,
-                         fake_email_smtp_connect):
+    def test_do_activity(self, test_data, fake_storage_context, fake_clean_outbox,
+                         fake_list_resources, fake_request, fake_email_smtp_connect):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
+        fake_clean_outbox.return_value = True
         # copy XML files into the input directory
         fake_list_resources.return_value = test_data["article_xml_filenames"]
         # mock the POST to endpoint

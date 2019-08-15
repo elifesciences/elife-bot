@@ -1,3 +1,4 @@
+import os
 import time
 from collections import OrderedDict
 import requests
@@ -5,6 +6,7 @@ from elifearticle.article import ArticleDate
 from elifecrossref import generate
 from elifecrossref.conf import raw_config, parse_raw_config
 from provider import lax_provider, utils
+from provider.storage_provider import storage_context
 
 
 def override_tmp_dir(tmp_dir):
@@ -163,3 +165,41 @@ def generate_crossref_xml_to_disk(article_object_map, crossref_config, good_xml_
             bad_xml_files.append(xml_file)
     # Any files generated is a sucess, even if one failed
     return True
+
+
+def get_to_folder_name(folder_name, date_stamp):
+    """
+    From the date_stamp
+    return the S3 folder name to save published files into
+    """
+    return folder_name + date_stamp + "/"
+
+
+def clean_outbox(settings, bucket_name, outbox_folder, to_folder, published_file_names):
+    """Clean out the S3 outbox folder"""
+
+    # Concatenate the expected S3 outbox file names
+    s3_key_names = []
+    for name in published_file_names:
+        filename = name.split(os.sep)[-1]
+        s3_key_name = outbox_folder + filename
+        s3_key_names.append(s3_key_name)
+
+    storage = storage_context(settings)
+    storage_provider = settings.storage_provider + "://"
+
+    for name in s3_key_names:
+        # Do not delete the from_folder itself, if it is in the list
+        if name == outbox_folder:
+            continue
+        filename = name.split("/")[-1]
+        new_s3_key_name = to_folder + filename
+
+        orig_resource = storage_provider + bucket_name + "/" + name
+        dest_resource = storage_provider + bucket_name + "/" + new_s3_key_name
+
+        # First copy
+        storage.copy_resource(orig_resource, dest_resource)
+
+        # Then delete the old key if successful
+        storage.delete_resource(orig_resource)
