@@ -232,6 +232,19 @@ class TestCrossrefProvider(unittest.TestCase):
             settings_mock, bucket_name, key_names, self.directory.path, FakeLogger())
         self.assertTrue(result)
 
+    @patch.object(FakeStorageContext, 'get_resource_to_file')
+    @patch('provider.crossref.storage_context')
+    def test_download_files_from_s3_outbox_failure(self, fake_storage_context, fake_get_resource):
+        """test IOError exception for coverage"""
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_get_resource.side_effect = IOError
+        bucket_name = ''
+        outbox_folder = ''
+        key_names = crossref.get_outbox_s3_key_names(settings_mock, bucket_name, outbox_folder)
+        result = crossref.download_files_from_s3_outbox(
+            settings_mock, bucket_name, key_names, self.directory.path, FakeLogger())
+        self.assertFalse(result)
+
     @patch('provider.crossref.storage_context')
     def test_clean_outbox(self, fake_storage_context):
         fake_storage_context.return_value = FakeStorageContext(self.directory)
