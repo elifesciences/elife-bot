@@ -186,6 +186,27 @@ def get_outbox_s3_key_names(settings, bucket_name, outbox_folder):
     return [key_name for key_name in s3_key_names if key_name.endswith('.xml')]
 
 
+def download_files_from_s3_outbox(settings, bucket_name, outbox_s3_key_names, to_dir, logger):
+    """from the s3 outbox folder,  download the .xml files"""
+    storage = storage_context(settings)
+    storage_provider = settings.storage_provider + "://"
+    orig_resource = storage_provider + bucket_name + "/"
+
+    for name in outbox_s3_key_names:
+        # Download objects from S3 and save to disk
+        file_name = name.split('/')[-1]
+        file_path = os.path.join(to_dir, file_name)
+        storage_resource_origin = orig_resource + '/' + name
+        try:
+            with open(file_path, 'wb') as open_file:
+                logger.info("Downloading %s to %s", (storage_resource_origin, file_path))
+                storage.get_resource_to_file(storage_resource_origin, open_file)
+        except IOError:
+            logger.exception("Failed to download file %s.", name)
+            return False
+    return True
+
+
 def clean_outbox(settings, bucket_name, outbox_folder, to_folder, published_file_names):
     """Clean out the S3 outbox folder"""
 

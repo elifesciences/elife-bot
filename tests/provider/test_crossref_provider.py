@@ -219,6 +219,16 @@ class TestCrossrefProvider(unittest.TestCase):
         self.assertEqual(key_names, ['elife-00353-v1.xml'])
 
     @patch('provider.crossref.storage_context')
+    def test_download_files_from_s3_outbox(self, fake_storage_context):
+        fake_storage_context.return_value = FakeStorageContext()
+        bucket_name = ''
+        outbox_folder = ''
+        key_names = crossref.get_outbox_s3_key_names(settings_mock, bucket_name, outbox_folder)
+        result = crossref.download_files_from_s3_outbox(
+            settings_mock, bucket_name, key_names, self.directory.path, FakeLogger())
+        self.assertTrue(result)
+
+    @patch('provider.crossref.storage_context')
     def test_clean_outbox(self, fake_storage_context):
         fake_storage_context.return_value = FakeStorageContext(self.directory)
         # copy two files in for cleaning

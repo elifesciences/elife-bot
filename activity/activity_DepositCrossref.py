@@ -62,7 +62,9 @@ class activity_DepositCrossref(Activity):
             self.settings, self.publish_bucket, self.outbox_folder)
 
         # Download the S3 objects
-        self.download_files_from_s3_outbox(outbox_s3_key_names)
+        self.statuses["download"] = crossref.download_files_from_s3_outbox(
+            self.settings, self.publish_bucket, outbox_s3_key_names,
+            self.directories.get("INPUT_DIR"), self.logger)
 
         article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
 
@@ -110,26 +112,6 @@ class activity_DepositCrossref(Activity):
         self.logger.info(
             "%s statuses: %s" % (self.name, self.statuses))
 
-        return True
-
-    def download_files_from_s3_outbox(self, outbox_s3_key_names):
-        """from the s3 outbox folder,  download the .xml files"""
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-        orig_resource = storage_provider + self.publish_bucket + "/"
-
-        for name in outbox_s3_key_names:
-            # Download objects from S3 and save to disk
-            file_name = name.split('/')[-1]
-            file_path = os.path.join(self.directories.get("INPUT_DIR"), file_name)
-            storage_resource_origin = orig_resource + '/' + name
-            try:
-                with open(file_path, 'wb') as open_file:
-                    self.logger.info("Downloading %s to %s", (storage_resource_origin, file_path))
-                    storage.get_resource_to_file(storage_resource_origin, open_file)
-            except IOError:
-                self.logger.exception("Failed to download file %s.", name)
-                return False
         return True
 
     def get_article_objects(self, article_xml_files, crossref_config):
