@@ -44,7 +44,7 @@ class TestDepositCrossref(unittest.TestCase):
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
-    @patch('provider.crossref.clean_outbox')
+    @patch('provider.crossref.storage_context')
     @patch.object(activity_module, 'storage_context')
     @data(
         {
@@ -112,11 +112,11 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_file_count": 1,
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, fake_clean_outbox,
+    def test_do_activity(self, test_data, fake_storage_context, fake_provider_storage_context,
                          fake_list_resources, fake_request, fake_email_smtp_connect):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
-        fake_clean_outbox.return_value = True
+        fake_provider_storage_context.return_value = FakeStorageContext()
         # copy XML files into the input directory
         fake_list_resources.return_value = test_data["article_xml_filenames"]
         # mock the POST to endpoint
@@ -159,13 +159,6 @@ class TestDepositCrossref(unittest.TestCase):
         self.assertIsNotNone(
             article.get_date('pub'), 'date of type pub not found in article get_date()')
         self.assertIsNotNone(article.version, 'version is None in article')
-
-    @patch.object(activity_module, 'storage_context')
-    def test_get_outbox_s3_key_names(self, fake_storage_context):
-        fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
-        key_names = self.activity.get_outbox_s3_key_names()
-        # returns the default file name from FakeStorageContext in the test scenario
-        self.assertEqual(key_names, ['elife-00353-v1.xml'])
 
 
 if __name__ == '__main__':

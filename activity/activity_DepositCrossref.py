@@ -58,7 +58,8 @@ class activity_DepositCrossref(Activity):
 
         date_stamp = utils.set_datestamp()
 
-        outbox_s3_key_names = self.get_outbox_s3_key_names()
+        outbox_s3_key_names = crossref.get_outbox_s3_key_names(
+            self.settings, self.publish_bucket, self.outbox_folder)
 
         # Download the S3 objects
         self.download_files_from_s3_outbox(outbox_s3_key_names)
@@ -155,16 +156,6 @@ class activity_DepositCrossref(Activity):
             self.settings.crossref_login_id, self.settings.crossref_login_passwd)
         return crossref.upload_files_to_endpoint(
             self.settings.crossref_url, payload, xml_files)
-
-    def get_outbox_s3_key_names(self):
-        """get a list of .xml S3 key names from the outbox"""
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-        orig_resource = (
-            storage_provider + self.publish_bucket + "/" + self.outbox_folder.rstrip('/'))
-        s3_key_names = storage.list_resources(orig_resource)
-        # return only the .xml files
-        return [key_name for key_name in s3_key_names if key_name.endswith('.xml')]
 
     def upload_crossref_xml_to_s3(self, date_stamp):
         """

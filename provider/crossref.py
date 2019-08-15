@@ -175,6 +175,17 @@ def get_to_folder_name(folder_name, date_stamp):
     return folder_name + date_stamp + "/"
 
 
+def get_outbox_s3_key_names(settings, bucket_name, outbox_folder):
+    """get a list of .xml S3 key names from the outbox"""
+    storage = storage_context(settings)
+    storage_provider = settings.storage_provider + "://"
+    orig_resource = (
+        storage_provider + bucket_name + "/" + outbox_folder.rstrip('/'))
+    s3_key_names = storage.list_resources(orig_resource)
+    # return only the .xml files
+    return [key_name for key_name in s3_key_names if key_name.endswith('.xml')]
+
+
 def clean_outbox(settings, bucket_name, outbox_folder, to_folder, published_file_names):
     """Clean out the S3 outbox folder"""
 
