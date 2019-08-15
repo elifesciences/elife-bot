@@ -3,8 +3,7 @@ import json
 import time
 import glob
 from activity.objects import Activity
-from provider.storage_provider import storage_context
-from provider import article_processing, crossref, email_provider, utils
+from provider import crossref, email_provider, utils
 
 """
 DepositCrossref activity
@@ -97,7 +96,11 @@ class activity_DepositCrossref(Activity):
             to_folder = crossref.get_to_folder_name(self.published_folder, date_stamp)
             crossref.clean_outbox(self.settings, self.publish_bucket, self.outbox_folder,
                                   to_folder, self.good_xml_files)
-            self.upload_crossref_xml_to_s3(date_stamp)
+            # copy the Crossref deposit XML files to the batch folder
+            batch_file_names = glob.glob(self.directories.get("TMP_DIR") + "/*.xml")
+            batch_file_to_folder = to_folder + "batch/"
+            crossref.upload_crossref_xml_to_s3(
+                self.settings, self.publish_bucket, batch_file_to_folder, batch_file_names)
             self.statuses["outbox"] = True
 
         # Set the activity status of this activity based on successes
@@ -139,21 +142,6 @@ class activity_DepositCrossref(Activity):
             self.settings.crossref_login_id, self.settings.crossref_login_passwd)
         return crossref.upload_files_to_endpoint(
             self.settings.crossref_url, payload, xml_files)
-
-    def upload_crossref_xml_to_s3(self, date_stamp):
-        """
-        Upload a copy of the crossref XML to S3 for reference
-        """
-        bucket_name = self.publish_bucket
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-        s3_folder_name = self.published_folder + date_stamp + "/" + "batch/"
-
-        for file_name in glob.glob(self.directories.get("TMP_DIR") + "/*.xml"):
-            resource_dest = (
-                storage_provider + bucket_name + "/" + s3_folder_name +
-                article_processing.file_name_from_name(file_name))
-            storage.set_resource_from_filename(resource_dest, file_name)
 
     def send_admin_email(self, outbox_s3_key_names, http_detail_list):
         """

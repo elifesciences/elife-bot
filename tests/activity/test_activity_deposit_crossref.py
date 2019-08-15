@@ -44,7 +44,6 @@ class TestDepositCrossref(unittest.TestCase):
     @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
     @patch('provider.crossref.storage_context')
-    @patch.object(activity_module, 'storage_context')
     @data(
         {
             "comment": "Article 15747",
@@ -111,11 +110,10 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_file_count": 1,
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, fake_provider_storage_context,
-                         fake_list_resources, fake_request, fake_email_smtp_connect):
+    def test_do_activity(self, test_data, fake_storage_context, fake_list_resources,
+                         fake_request, fake_email_smtp_connect):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
-        fake_storage_context.return_value = FakeStorageContext()
-        fake_provider_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
+        fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
         # copy XML files into the input directory
         fake_list_resources.return_value = test_data["article_xml_filenames"]
         # mock the POST to endpoint

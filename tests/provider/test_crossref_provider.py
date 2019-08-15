@@ -10,6 +10,8 @@ import provider.crossref as crossref
 import tests.settings_mock as settings_mock
 import tests.test_data as test_case_data
 from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
+import tests.activity.helpers as helpers
+import tests.activity.test_activity_data as activity_test_data
 
 
 def expected_http_detail(file_name, status_code):
@@ -29,6 +31,8 @@ class TestCrossrefProvider(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
+        helpers.delete_files_in_folder(
+            activity_test_data.ExpandArticle_files_dest_folder, filter_out=['.gitkeep'])
 
     def test_elifecrossref_config(self):
         """test reading the crossref config file"""
@@ -244,3 +248,16 @@ class TestCrossrefProvider(unittest.TestCase):
             settings_mock, bucket_name, outbox_folder, to_folder, published_file_names)
         # TempDirectory should have one file remaining
         self.assertTrue(len(os.listdir(self.directory.path)), 1)
+
+    @patch('provider.crossref.storage_context')
+    def test_upload_crossref_xml_to_s3(self, fake_storage_context):
+        fake_storage_context.return_value = FakeStorageContext()
+        file_names = [self.good_xml_file]
+        expected = [file_name.split(os.sep)[-1] for file_name in file_names]
+        crossref.upload_crossref_xml_to_s3(settings_mock, 'bucket', 'to_folder/', file_names)
+        # filter out the .gitkeep file before comparing
+        uploaded_files = [
+            file_name for file_name in
+            os.listdir(activity_test_data.ExpandArticle_files_dest_folder)
+            if file_name.endswith('.xml')]
+        self.assertEqual(uploaded_files, expected)

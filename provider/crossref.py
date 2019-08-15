@@ -5,7 +5,7 @@ import requests
 from elifearticle.article import ArticleDate
 from elifecrossref import generate
 from elifecrossref.conf import raw_config, parse_raw_config
-from provider import lax_provider, utils
+from provider import article_processing, lax_provider, utils
 from provider.storage_provider import storage_context
 
 
@@ -235,3 +235,17 @@ def clean_outbox(settings, bucket_name, outbox_folder, to_folder, published_file
 
         # Then delete the old key if successful
         storage.delete_resource(orig_resource)
+
+
+def upload_crossref_xml_to_s3(settings, bucket_name, to_folder, file_names):
+    """
+    Upload a copy of the crossref XML to S3 for reference
+    """
+    storage = storage_context(settings)
+    storage_provider = settings.storage_provider + "://"
+
+    for file_name in file_names:
+        resource_dest = (
+            storage_provider + bucket_name + "/" + to_folder +
+            article_processing.file_name_from_name(file_name))
+        storage.set_resource_from_filename(resource_dest, file_name)
