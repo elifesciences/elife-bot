@@ -258,18 +258,25 @@ def get_s3_key_names_from_bucket(bucket, prefix=None, delimiter='/', headers=Non
 
     return s3_key_names
 
-if __name__ == "__main__":
-    # Add options
+
+def get_settings(env):
+    import settings as settings_lib
+    return settings_lib.get_settings(env)
+
+
+def console_start():
+    """capture options when running standalone"""
     parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string",
-                      dest="env", help="set the environment to run, either dev or live")
+    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
+                      help="set the environment to run, either dev or live")
     (options, args) = parser.parse_args()
     if options.env:
-        ENV = options.env
+        return options.env
 
-    import settings as settingsLib
-    settings = settingsLib.get_settings(ENV)
 
+if __name__ == "__main__":
+    ENV = console_start()
+    SETTINGS = get_settings(ENV)
     application = newrelic.agent.register_application(timeout=10.0)
     with newrelic.agent.BackgroundTask(application, name='run_cron', group='cron.py'):
-        run_cron(settings=settings)
+        run_cron(settings=SETTINGS)
