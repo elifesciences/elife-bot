@@ -1,4 +1,5 @@
 import unittest
+import sys
 import time
 from ddt import ddt, data
 from mock import patch
@@ -13,6 +14,19 @@ import cron
 class TestCron(unittest.TestCase):
     def setUp(self):
         pass
+
+    def test_console_start(self):
+        env = 'foo'
+        expected = env
+        testargs = ['cron.py', '-e', env]
+        with patch.object(sys, 'argv', testargs):
+            self.assertEqual(cron.console_start(), expected)
+
+    def test_console_start_blank(self):
+        expected = 'dev'
+        testargs = ['cron.py']
+        with patch.object(sys, 'argv', testargs):
+            self.assertEqual(cron.console_start(), expected)
 
     @patch.object(time, 'gmtime')
     @patch.object(cron, 'workflow_conditional_start')

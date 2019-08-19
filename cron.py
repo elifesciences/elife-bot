@@ -1,7 +1,7 @@
 import calendar
 import time
 import importlib
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 import boto.swf
 import boto.s3
@@ -266,12 +266,12 @@ def get_settings(env):
 
 def console_start():
     """capture options when running standalone"""
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, either dev or live")
-    (options, args) = parser.parse_args()
-    if options.env:
-        return options.env
+    parser = ArgumentParser()
+    parser.add_argument("-e", "--env", default="dev", action="store", type=str, dest="env",
+                        help="set the environment to run, either dev or live")
+    args = parser.parse_args()
+    if args.env:
+        return args.env
 
 
 if __name__ == "__main__":
