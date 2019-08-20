@@ -49,12 +49,6 @@ def conditional_starts(current_time):
         # Jobs to start at the top of the hour
         #print "Top of the hour"
 
-        #workflow_conditional_start(
-        #  settings           = settings,
-        #  starter_name  = "starter_S3Monitor",
-        #  workflow_id   = "S3Monitor",
-        #  start_seconds = 60*31)
-
         conditional_start_list.append(OrderedDict([
             ("starter_name", "starter_DepositCrossref"),
             ("workflow_id", "DepositCrossref"),
