@@ -1,8 +1,11 @@
 import calendar
 import time
+import datetime
 import importlib
 from collections import OrderedDict
 from argparse import ArgumentParser
+
+from pytz import timezone
 
 import boto.swf
 import boto.s3
@@ -17,11 +20,14 @@ import newrelic.agent
 SWF cron
 """
 
+TIMEZONE = timezone("Europe/London")
+
+
 def run_cron(settings):
 
-    current_time = time.gmtime()
+    current_datetime = get_current_datetime()
 
-    for conditional_start in conditional_starts(current_time):
+    for conditional_start in conditional_starts(current_datetime):
         workflow_conditional_start(
             settings=settings,
             starter_name=conditional_start.get("starter_name"),
@@ -30,9 +36,32 @@ def run_cron(settings):
         )
 
 
-def conditional_starts(current_time):
+def get_current_datetime():
+    """for easier mocking in tests wrap this call"""
+    return datetime.datetime.utcnow()
+
+
+def get_local_datetime(current_datetime, timezone):
+    """apply the timezone delta to the datetime and remove the tzinfo"""
+    new_current_datetime = current_datetime
+
+    localized_current_datetime = timezone.localize(current_datetime, is_dst=False)
+    if localized_current_datetime.utcoffset():
+        new_current_datetime = current_datetime + localized_current_datetime.utcoffset()
+        new_current_datetime = new_current_datetime.replace(tzinfo=None)
+
+    return new_current_datetime
+
+
+def conditional_starts(current_datetime):
     """given the current time in UTC, return a list of workflows for conditional start"""
     conditional_start_list = []
+
+    current_time = current_datetime.utctimetuple()
+
+    # localised time
+    local_current_datetime = get_local_datetime(current_datetime, TIMEZONE)
+    local_current_time = local_current_datetime.utctimetuple()
 
     # Based on the minutes of the current time, run certain starters
     if current_time.tm_min >= 0 and current_time.tm_min <= 59:
@@ -67,9 +96,9 @@ def conditional_starts(current_time):
         # Jobs to start at the half past to quarter to the hour
         #print "half past to quarter to the hour"
 
-        # POA Publish once per day 12:30 UTC
-        #  Set to 11:30 UTC during British Summer Time for 12:30 local UK time
-        if current_time.tm_hour == 11:
+        # POA Publish once per day 12:30 local time
+        #  (used to be set to 11:30 UTC during British Summer Time for 12:30 local UK time)
+        if local_current_time.tm_hour == 12:
             conditional_start_list.append(OrderedDict([
                 ("starter_name", "starter_PublishPOA"),
                 ("workflow_id", "PublishPOA"),
@@ -118,18 +147,18 @@ def conditional_starts(current_time):
     if current_time.tm_min >= 45 and current_time.tm_min <= 59:
         # Bottom quarter of the hour
 
-        # POA Package once per day 11:45 UTC
-        # Set to 10:45 UTC during British Summer Time for 11:45 local UK time
-        if current_time.tm_hour == 10:
+        # POA Package once per day 11:45 local time
+        # (used to be set to 10:45 UTC during British Summer Time for 11:45 local UK time)
+        if local_current_time.tm_hour == 11:
             conditional_start_list.append(OrderedDict([
                 ("starter_name", "cron_NewS3POA"),
                 ("workflow_id", "cron_NewS3POA"),
                 ("start_seconds", 60 * 31)
             ]))
 
-        # Author emails once per day 17:45 UTC
-        # Set to 16:45 UTC during British Summer Time for 17:45 local UK time
-        if current_time.tm_hour == 16:
+        # Author emails once per day 17:45 local time
+        # (used to be set to 16:45 UTC during British Summer Time for 17:45 local UK time)
+        if current_time.tm_hour == 17:
             conditional_start_list.append(OrderedDict([
                 ("starter_name", "starter_PublicationEmail"),
                 ("workflow_id", "PublicationEmail"),

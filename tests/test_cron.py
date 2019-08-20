@@ -1,6 +1,7 @@
 import unittest
 import sys
-import time
+import datetime
+from pytz import timezone
 from ddt import ddt, data
 from mock import patch
 from boto.s3.key import Key
@@ -28,7 +29,10 @@ class TestCron(unittest.TestCase):
         with patch.object(sys, 'argv', testargs):
             self.assertEqual(cron.console_start(), expected)
 
-    @patch.object(time, 'gmtime')
+    def test_get_current_datetime(self):
+        self.assertIsNotNone(cron.get_current_datetime())
+
+    @patch.object(cron, 'get_current_datetime')
     @patch.object(cron, 'workflow_conditional_start')
     @data(
         "1970-01-01 10:45:00",
@@ -45,8 +49,8 @@ class TestCron(unittest.TestCase):
         "1970-01-01 23:30:00",
         "1970-01-01 23:45:00",
     )
-    def test_run_cron(self, date_time, fake_workflow_start, fake_gmtime):
-        fake_gmtime.return_value = time.strptime(date_time, '%Y-%m-%d %H:%M:%S')
+    def test_run_cron(self, date_time, fake_workflow_start, fake_get_current_datetime):
+        fake_get_current_datetime.return_value = datetime.datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S')
         self.assertIsNone(cron.run_cron(settings_mock))
 
     @patch.object(cron, 'get_s3_key_names_from_bucket')
@@ -106,12 +110,40 @@ class TestCron(unittest.TestCase):
 
 
 @ddt
+class TestGetLocalDatetime(unittest.TestCase):
+
+    @data(
+        {
+            "comment": "BST Summer August 2019",
+            "date_time": "2019-08-19 10:00:00 UTC",
+            "timezone": "Europe/London",
+            "expected_date_time": "2019-08-19 11:00:00"
+        },
+        {
+            "comment": "Changes to GMT October 27 2019",
+            "date_time": "2019-10-27 10:00:00 UTC",
+            "timezone": "Europe/London",
+            "expected_date_time": "2019-10-27 10:00:00"
+        }
+    )
+    def test_get_local_datetime(self, test_data):
+        pytz_timezone = timezone(test_data.get("timezone"))
+        datetime_object = datetime.datetime.strptime(
+            test_data.get("date_time"), '%Y-%m-%d %H:%M:%S %Z')
+        expected_datetime = datetime.datetime.strptime(
+            test_data.get("expected_date_time"), '%Y-%m-%d %H:%M:%S')
+        new_datetime = cron.get_local_datetime(datetime_object, pytz_timezone)
+        self.assertEqual(new_datetime, expected_datetime)
+
+
+@ddt
 class TestConditionalStarts(unittest.TestCase):
 
     def conditional_start_test_run(self, test_data):
         """logic for calling conditional_starts() for reuse in test scenarios"""
-        current_time = time.strptime(test_data.get("date_time"), '%Y-%m-%d %H:%M:%S %Z')
-        conditional_start_list = cron.conditional_starts(current_time)
+        current_datetime = datetime.datetime.strptime(
+            test_data.get("date_time"), '%Y-%m-%d %H:%M:%S %Z')
+        conditional_start_list = cron.conditional_starts(current_datetime)
         starter_names = [value.get("starter_name") for value in conditional_start_list]
         workflow_ids = [value.get("workflow_id") for value in conditional_start_list]
         self.assertEqual(
@@ -178,8 +210,8 @@ class TestConditionalStarts(unittest.TestCase):
 
     @data(
         {
-            "comment": "11:30 UTC",
-            "date_time": "1970-01-01 11:30:00 UTC",
+            "comment": "2019-08-19 11:30 UTC",
+            "date_time": "2019-08-19 11:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_PublishPOA",
@@ -192,13 +224,32 @@ class TestConditionalStarts(unittest.TestCase):
             ]
         },
     )
-    def test_conditional_starts_11_30_utc(self, test_data):
+    def test_conditional_starts_11_30_utc_august(self, test_data):
         self.conditional_start_test_run(test_data)
 
     @data(
         {
-            "comment": "16:45 UTC",
-            "date_time": "1970-01-01 16:45:00 UTC",
+            "comment": "2019-10-27 12:30 UTC",
+            "date_time": "2019-10-27 12:30:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_PublishPOA",
+                "starter_S3Monitor"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "PublishPOA",
+                "S3Monitor_POA"
+            ]
+        },
+    )
+    def test_conditional_starts_12_30_utc_october_27_2019(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "17:45 UTC",
+            "date_time": "1970-01-01 17:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_PublicationEmail",
@@ -213,7 +264,7 @@ class TestConditionalStarts(unittest.TestCase):
             ]
         },
     )
-    def test_conditional_starts_16_45_utc(self, test_data):
+    def test_conditional_starts_17_45_utc(self, test_data):
         self.conditional_start_test_run(test_data)
 
     @data(
