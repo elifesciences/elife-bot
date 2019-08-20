@@ -1,6 +1,7 @@
 import calendar
 import time
 import importlib
+from collections import OrderedDict
 from argparse import ArgumentParser
 
 import boto.swf
@@ -20,15 +21,28 @@ def run_cron(settings):
 
     current_time = time.gmtime()
 
+    for conditional_start in conditional_starts(current_time):
+        workflow_conditional_start(
+            settings=settings,
+            starter_name=conditional_start.get("starter_name"),
+            workflow_id=conditional_start.get("workflow_id"),
+            start_seconds=conditional_start.get("start_seconds")
+        )
+
+
+def conditional_starts(current_time):
+    """given the current time in UTC, return a list of workflows for conditional start"""
+    conditional_start_list = []
+
     # Based on the minutes of the current time, run certain starters
     if current_time.tm_min >= 0 and current_time.tm_min <= 59:
         # Jobs to start at any time during the hour
 
-        workflow_conditional_start(
-            settings=settings,
-            starter_name="cron_FiveMinute",
-            workflow_id="cron_FiveMinute",
-            start_seconds=60 * 3)
+        conditional_start_list.append(OrderedDict([
+            ("starter_name", "cron_FiveMinute"),
+            ("workflow_id", "cron_FiveMinute"),
+            ("start_seconds", 60 * 3)
+        ]))
 
     # Based on the minutes of the current time, run certain starters
     if current_time.tm_min >= 0 and current_time.tm_min <= 29:
@@ -41,19 +55,19 @@ def run_cron(settings):
         #  workflow_id   = "S3Monitor",
         #  start_seconds = 60*31)
 
-        workflow_conditional_start(
-            settings=settings,
-            starter_name="starter_DepositCrossref",
-            workflow_id="DepositCrossref",
-            start_seconds=60 * 31)
+        conditional_start_list.append(OrderedDict([
+            ("starter_name", "starter_DepositCrossref"),
+            ("workflow_id", "DepositCrossref"),
+            ("start_seconds", 60 * 31)
+        ]))
 
         # CNKI deposits once per day 23:00 UTC
         if current_time.tm_hour == 23:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="starter_PubRouterDeposit",
-                workflow_id="PubRouterDeposit_CNKI",
-                start_seconds=60 * 31)
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "starter_PubRouterDeposit"),
+                ("workflow_id", "PubRouterDeposit_CNKI"),
+                ("start_seconds", 60 * 31)
+            ]))
 
     elif current_time.tm_min >= 30 and current_time.tm_min <= 59:
         # Jobs to start at the bottom of the hour
@@ -62,50 +76,50 @@ def run_cron(settings):
         # POA Publish once per day 12:30 UTC
         #  Set to 11:30 UTC during British Summer Time for 12:30 local UK time
         if current_time.tm_hour == 11:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="starter_PublishPOA",
-                workflow_id="PublishPOA",
-                start_seconds=60 * 31)
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "starter_PublishPOA"),
+                ("workflow_id", "PublishPOA"),
+                ("start_seconds", 60 * 31)
+            ]))
 
         # POA bucket polling
-        workflow_conditional_start(
-            settings=settings,
-            starter_name="starter_S3Monitor",
-            workflow_id="S3Monitor_POA",
-            start_seconds=60 * 31)
+        conditional_start_list.append(OrderedDict([
+            ("starter_name", "starter_S3Monitor"),
+            ("workflow_id", "S3Monitor_POA"),
+            ("start_seconds", 60 * 31)
+        ]))
 
         # PMC deposits once per day 20:30 UTC
         if current_time.tm_hour == 20:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="starter_PubRouterDeposit",
-                workflow_id="PubRouterDeposit_PMC",
-                start_seconds=60 * 31)
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "starter_PubRouterDeposit"),
+                ("workflow_id", "PubRouterDeposit_PMC"),
+                ("start_seconds", 60 * 31)
+            ]))
 
         # Web of Science deposits once per day 21:30 UTC
         if current_time.tm_hour == 21:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="starter_PubRouterDeposit",
-                workflow_id="PubRouterDeposit_WoS",
-                start_seconds=60 * 31)
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "starter_PubRouterDeposit"),
+                ("workflow_id", "PubRouterDeposit_WoS"),
+                ("start_seconds", 60 * 31)
+            ]))
 
         # Scopus deposits once per day 22:30 UTC
         if current_time.tm_hour == 22:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="starter_PubRouterDeposit",
-                workflow_id="PubRouterDeposit_Scopus",
-                start_seconds=60 * 31)
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "starter_PubRouterDeposit"),
+                ("workflow_id", "PubRouterDeposit_Scopus"),
+                ("start_seconds", 60 * 31)
+            ]))
 
         # CNPIEC deposits once per day 23:30 UTC
         if current_time.tm_hour == 23:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="starter_PubRouterDeposit",
-                workflow_id="PubRouterDeposit_CNPIEC",
-                start_seconds=60 * 31)
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "starter_PubRouterDeposit"),
+                ("workflow_id", "PubRouterDeposit_CNPIEC"),
+                ("start_seconds", 60 * 31)
+            ]))
 
     if current_time.tm_min >= 45 and current_time.tm_min <= 59:
         # Bottom quarter of the hour
@@ -113,56 +127,59 @@ def run_cron(settings):
         # POA Package once per day 11:45 UTC
         # Set to 10:45 UTC during British Summer Time for 11:45 local UK time
         if current_time.tm_hour == 10:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="cron_NewS3POA",
-                workflow_id="cron_NewS3POA",
-                start_seconds=60 * 31)
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "cron_NewS3POA"),
+                ("workflow_id", "cron_NewS3POA"),
+                ("start_seconds", 60 * 31)
+            ]))
 
         # Author emails once per day 17:45 UTC
         # Set to 16:45 UTC during British Summer Time for 17:45 local UK time
         if current_time.tm_hour == 16:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="starter_PublicationEmail",
-                workflow_id="PublicationEmail",
-                start_seconds=60 * 31)
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "starter_PublicationEmail"),
+                ("workflow_id", "PublicationEmail"),
+                ("start_seconds", 60 * 31)
+            ]))
 
         # Pub router deposits once per day 23:45 UTC
         if current_time.tm_hour == 23:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="starter_PubRouterDeposit",
-                workflow_id="PubRouterDeposit_HEFCE",
-                start_seconds=60 * 31)
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "starter_PubRouterDeposit"),
+                ("workflow_id", "PubRouterDeposit_HEFCE"),
+                ("start_seconds", 60 * 31)
+            ]))
 
         # Cengage deposits once per day 22:45 UTC
         if current_time.tm_hour == 22:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="starter_PubRouterDeposit",
-                workflow_id="PubRouterDeposit_Cengage",
-                start_seconds=60 * 31)
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "starter_PubRouterDeposit"),
+                ("workflow_id", "PubRouterDeposit_Cengage"),
+                ("start_seconds", 60 * 31)
+            ]))
 
         # GoOA / CAS deposits once per day 21:45 UTC
         if current_time.tm_hour == 21:
-            workflow_conditional_start(
-                settings=settings,
-                starter_name="starter_PubRouterDeposit",
-                workflow_id="PubRouterDeposit_GoOA",
-                start_seconds=60 * 31)
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "starter_PubRouterDeposit"),
+                ("workflow_id", "PubRouterDeposit_GoOA"),
+                ("start_seconds", 60 * 31)
+            ]))
 
-        workflow_conditional_start(
-            settings=settings,
-            starter_name="starter_PubmedArticleDeposit",
-            workflow_id="PubmedArticleDeposit",
-            start_seconds=60 * 31)
+        conditional_start_list.append(OrderedDict([
+            ("starter_name", "starter_PubmedArticleDeposit"),
+            ("workflow_id", "PubmedArticleDeposit"),
+            ("start_seconds", 60 * 31)
+        ]))
 
-        workflow_conditional_start(
-            settings=settings,
-            starter_name="starter_AdminEmail",
-            workflow_id="AdminEmail",
-            start_seconds=(60*60*4)-(14*60))
+        conditional_start_list.append(OrderedDict([
+            ("starter_name", "starter_AdminEmail"),
+            ("workflow_id", "AdminEmail"),
+            ("start_seconds", (60*60*4)-(14*60))
+        ]))
+
+    return conditional_start_list
+
 
 def workflow_conditional_start(settings, starter_name, start_seconds, data=None,
                                workflow_id=None, workflow_name=None, workflow_version=None):

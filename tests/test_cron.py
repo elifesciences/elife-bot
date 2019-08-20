@@ -105,5 +105,291 @@ class TestCron(unittest.TestCase):
         self.assertEqual(s3_key_names, [key_name])
 
 
+@ddt
+class TestConditionalStarts(unittest.TestCase):
+
+    def conditional_start_test_run(self, test_data):
+        """logic for calling conditional_starts() for reuse in test scenarios"""
+        current_time = time.strptime(test_data.get("date_time"), '%Y-%m-%d %H:%M:%S %Z')
+        conditional_start_list = cron.conditional_starts(current_time)
+        starter_names = [value.get("starter_name") for value in conditional_start_list]
+        workflow_ids = [value.get("workflow_id") for value in conditional_start_list]
+        self.assertEqual(
+            starter_names, test_data.get("expected_starter_names"),
+            'failed in scenario {comment}'.format(comment=test_data.get("comment")))
+        self.assertEqual(
+            workflow_ids, test_data.get("expected_workflow_ids"),
+            'failed in scenario {comment}'.format(comment=test_data.get("comment")))
+
+    @data(
+        {
+            "comment": "zero hour",
+            "date_time": "1970-01-01 00:00:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_DepositCrossref"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "DepositCrossref"
+            ]
+        }
+    )
+    def test_conditional_starts_00_00(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "half past midnight",
+            "date_time": "1970-01-01 00:30:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_S3Monitor"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "S3Monitor_POA"
+            ]
+        }
+    )
+    def test_conditional_starts_00_30(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "10:45 UTC",
+            "date_time": "1970-01-01 10:45:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_S3Monitor",
+                "cron_NewS3POA",
+                "starter_PubmedArticleDeposit",
+                "starter_AdminEmail"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "S3Monitor_POA",
+                "cron_NewS3POA",
+                "PubmedArticleDeposit",
+                "AdminEmail"
+            ]
+        },
+    )
+    def test_conditional_starts_10_45_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "11:30 UTC",
+            "date_time": "1970-01-01 11:30:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_PublishPOA",
+                "starter_S3Monitor"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "PublishPOA",
+                "S3Monitor_POA"
+            ]
+        },
+    )
+    def test_conditional_starts_11_30_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "16:45 UTC",
+            "date_time": "1970-01-01 16:45:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_S3Monitor",
+                "starter_PublicationEmail",
+                "starter_PubmedArticleDeposit",
+                "starter_AdminEmail"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "S3Monitor_POA",
+                "PublicationEmail",
+                "PubmedArticleDeposit",
+                "AdminEmail"
+            ]
+        },
+    )
+    def test_conditional_starts_16_45_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "20:30 UTC",
+            "date_time": "1970-01-01 20:30:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_S3Monitor",
+                "starter_PubRouterDeposit"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "S3Monitor_POA",
+                "PubRouterDeposit_PMC"
+            ]
+        },
+    )
+    def test_conditional_starts_20_30_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "21:30 UTC",
+            "date_time": "1970-01-01 21:30:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_S3Monitor",
+                "starter_PubRouterDeposit"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "S3Monitor_POA",
+                "PubRouterDeposit_WoS"
+            ]
+        },
+    )
+    def test_conditional_starts_21_30_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "21:45 UTC",
+            "date_time": "1970-01-01 21:45:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_S3Monitor",
+                "starter_PubRouterDeposit",
+                "starter_PubRouterDeposit",
+                "starter_PubmedArticleDeposit",
+                "starter_AdminEmail"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "S3Monitor_POA",
+                "PubRouterDeposit_WoS",
+                "PubRouterDeposit_GoOA",
+                "PubmedArticleDeposit",
+                "AdminEmail"
+            ]
+        },
+    )
+    def test_conditional_starts_21_45_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "22:30 UTC",
+            "date_time": "1970-01-01 22:30:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_S3Monitor",
+                "starter_PubRouterDeposit"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "S3Monitor_POA",
+                "PubRouterDeposit_Scopus"
+            ]
+        },
+    )
+    def test_conditional_starts_22_30_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "22:45 UTC",
+            "date_time": "1970-01-01 22:45:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_S3Monitor",
+                "starter_PubRouterDeposit",
+                "starter_PubRouterDeposit",
+                "starter_PubmedArticleDeposit",
+                "starter_AdminEmail"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "S3Monitor_POA",
+                "PubRouterDeposit_Scopus",
+                "PubRouterDeposit_Cengage",
+                "PubmedArticleDeposit",
+                "AdminEmail"
+            ]
+        },
+    )
+    def test_conditional_starts_22_45_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "23:00 UTC",
+            "date_time": "1970-01-01 23:00:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_DepositCrossref",
+                "starter_PubRouterDeposit"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "DepositCrossref",
+                "PubRouterDeposit_CNKI"
+            ]
+        },
+    )
+    def test_conditional_starts_23_00_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "23:30 UTC",
+            "date_time": "1970-01-01 23:30:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_S3Monitor",
+                "starter_PubRouterDeposit"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "S3Monitor_POA",
+                "PubRouterDeposit_CNPIEC"
+            ]
+        },
+    )
+    def test_conditional_starts_23_30_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "23:45 UTC",
+            "date_time": "1970-01-01 23:45:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_S3Monitor",
+                "starter_PubRouterDeposit",
+                "starter_PubRouterDeposit",
+                "starter_PubmedArticleDeposit",
+                "starter_AdminEmail"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "S3Monitor_POA",
+                "PubRouterDeposit_CNPIEC",
+                "PubRouterDeposit_HEFCE",
+                "PubmedArticleDeposit",
+                "AdminEmail"
+            ]
+        },
+    )
+    def test_conditional_starts_23_45_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+
 if __name__ == '__main__':
     unittest.main()
