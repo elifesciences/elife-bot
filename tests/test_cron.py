@@ -161,14 +161,12 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 10:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_S3Monitor",
                 "cron_NewS3POA",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "S3Monitor_POA",
                 "cron_NewS3POA",
                 "PubmedArticleDeposit",
                 "AdminEmail"
@@ -203,14 +201,12 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 16:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_S3Monitor",
                 "starter_PublicationEmail",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "S3Monitor_POA",
                 "PublicationEmail",
                 "PubmedArticleDeposit",
                 "AdminEmail"
@@ -264,16 +260,12 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 21:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_S3Monitor",
-                "starter_PubRouterDeposit",
                 "starter_PubRouterDeposit",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "S3Monitor_POA",
-                "PubRouterDeposit_WoS",
                 "PubRouterDeposit_GoOA",
                 "PubmedArticleDeposit",
                 "AdminEmail"
@@ -308,16 +300,12 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 22:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_S3Monitor",
-                "starter_PubRouterDeposit",
                 "starter_PubRouterDeposit",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "S3Monitor_POA",
-                "PubRouterDeposit_Scopus",
                 "PubRouterDeposit_Cengage",
                 "PubmedArticleDeposit",
                 "AdminEmail"
@@ -371,16 +359,12 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 23:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_S3Monitor",
-                "starter_PubRouterDeposit",
                 "starter_PubRouterDeposit",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "S3Monitor_POA",
-                "PubRouterDeposit_CNPIEC",
                 "PubRouterDeposit_HEFCE",
                 "PubmedArticleDeposit",
                 "AdminEmail"
