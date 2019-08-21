@@ -1,0 +1,12 @@
+
+-------------------------------
+SWF workflow details:
+activityId: $activity_id
+As part of workflowId: $workflow_id
+As at $datetime_string
+Domain: $domain
+
+
+Sincerely
+
+eLife bot

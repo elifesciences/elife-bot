@@ -132,3 +132,17 @@ class TestListEmailRecipients(unittest.TestCase):
             self.assertTrue(
                 expected in str(email_message),
                 'Fragment %s not found in email %s' % (expected, str(email_message)))
+
+    def test_get_admin_email_body_foot(self):
+        """test simple string Template rendering"""
+        activity_id = 'DepositCrossref'
+        workflow_id = 'DepositCrossref'
+        datetime_string = '2019-08-21T16:00:13.000Z'
+        domain = 'Publish'
+        email_body_foot = email_provider.get_admin_email_body_foot(
+            activity_id, workflow_id, datetime_string, domain)
+        self.assertTrue('SWF workflow details:' in email_body_foot)
+        self.assertTrue(('activityId: %s' % activity_id) in email_body_foot)
+        self.assertTrue(('As part of workflowId: %s' % workflow_id) in email_body_foot)
+        self.assertTrue(('As at %s' % datetime_string) in email_body_foot)
+        self.assertTrue(('Domain: %s' % domain) in email_body_foot)
