@@ -467,7 +467,7 @@ class activity_PublicationEmail(Activity):
         activity_status_text = get_activity_status_text(activity_status)
 
         body = get_admin_email_body_head(self.name, activity_status_text, self.admin_email_content)
-        body += get_admin_email_body_foot(
+        body += email_provider.get_admin_email_body_foot(
             self.get_activityId(), self.get_workflowId(), datetime_string, self.settings.domain)
         subject = get_admin_email_subject(
             datetime_string, activity_status_text, self.name, self.settings.domain)
@@ -594,21 +594,6 @@ def get_admin_email_body_head(name, activity_status_text, details):
     body_head += details + "\n"
     body_head += "\n"
     return body_head
-
-
-def get_admin_email_body_foot(activity_id, workflow_id, datetime_string, domain):
-    """Format the footer of the body of the email"""
-    body_foot = ""
-    body_foot += "\n"
-    body_foot += "-------------------------------\n"
-    body_foot += "SWF workflow details: " + "\n"
-    body_foot += "activityId: " + str(activity_id) + "\n"
-    body_foot += "As part of workflowId: " + str(workflow_id) + "\n"
-    body_foot += "As at " + datetime_string + "\n"
-    body_foot += "Domain: " + domain + "\n"
-    body_foot += "\n"
-    body_foot += "\n\nSincerely\n\neLife bot"
-    return body_foot
 
 
 def get_admin_email_subject(datetime_string, activity_status_text, name, domain):

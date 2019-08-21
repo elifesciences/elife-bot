@@ -4,6 +4,7 @@ import smtplib
 import unicodedata
 import traceback
 from collections import OrderedDict
+from string import Template
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -243,3 +244,15 @@ def valid_recipient_object(recipient):
     if recipient.e_mail is not None and str(recipient.e_mail).strip() == "":
         return False
     return True
+
+
+def get_admin_email_body_foot(activity_id, workflow_id, datetime_string, domain):
+    """Format the footer of the body of the email"""
+    string_template = None
+    with open('template/admin_email_body_foot.txt', 'r') as open_file:
+        string_template = Template(open_file.read())
+    if string_template:
+        return string_template.safe_substitute(
+            activity_id=activity_id, workflow_id=workflow_id, datetime_string=datetime_string,
+            domain=domain)
+    return ''

@@ -42,6 +42,10 @@ digest_auth_key = 'digest_auth_key'
 
 no_download_extensions = 'tif'
 
+crossref_url = ""
+crossref_login_id = ""
+crossref_login_passwd = ""
+
 # Logging
 setLevel = "INFO"
 
@@ -55,3 +59,6 @@ fastly_api_key = 'fake_fastly_api_key'
 
 elifepubmed_config_file = 'tests/activity/pubmed.cfg'
 elifepubmed_config_section = 'elife'
+
+elifecrossref_config_file = 'tests/activity/crossref.cfg'
+elifecrossref_config_section = 'elife'
