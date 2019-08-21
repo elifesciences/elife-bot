@@ -28,12 +28,17 @@ def run_cron(settings):
     current_datetime = get_current_datetime()
 
     for conditional_start in conditional_starts(current_datetime):
-        workflow_conditional_start(
+        do_start = workflow_conditional_start(
             settings=settings,
-            starter_name=conditional_start.get("starter_name"),
             workflow_id=conditional_start.get("workflow_id"),
             start_seconds=conditional_start.get("start_seconds")
         )
+        if do_start:
+            start_workflow(
+                settings=settings,
+                starter_name=conditional_start.get("starter_name"),
+                workflow_id=conditional_start.get("workflow_id")
+            )
 
 
 def get_current_datetime():
@@ -204,7 +209,7 @@ def conditional_starts(current_datetime):
     return conditional_start_list
 
 
-def workflow_conditional_start(settings, starter_name, start_seconds, data=None,
+def workflow_conditional_start(settings, start_seconds, data=None,
                                workflow_id=None, workflow_name=None, workflow_version=None):
     """
     Given workflow criteria, check the workflow completion history for the last time run
@@ -228,51 +233,58 @@ def workflow_conditional_start(settings, starter_name, start_seconds, data=None,
         diff_seconds = current_timestamp - start_seconds - last_startTimestamp
 
     if diff_seconds >= 0 or last_startTimestamp is None:
-        # Start a new workflow
-        # Load the starter module
-        module_name = "starter." + starter_name
-        importlib.import_module(module_name)
-        full_path = "starter." + starter_name + "." + starter_name + "()"
-        s = eval(full_path)
+        return True
 
-        # Customised start functions
-        if starter_name == "starter_S3Monitor":
 
-            if workflow_id == "S3Monitor":
-                s.start(settings=settings, workflow="S3Monitor")
-            if workflow_id == "S3Monitor_POA":
-                s.start(settings=settings, workflow="S3Monitor_POA")
+def start_workflow(settings, starter_name, workflow_id=None):
+    """start the workflow using the starter"""
+    # Start a new workflow
+    # Load the starter module
+    module_name = "starter." + starter_name
+    importlib.import_module(module_name)
+    full_path = "starter." + starter_name + "." + starter_name + "()"
+    s = eval(full_path)
 
-        elif starter_name == "starter_AdminEmail":
-            s.start(settings=settings, workflow="AdminEmail")
+    # Customised start functions
+    if starter_name == "starter_S3Monitor":
 
-        elif starter_name == "starter_PubmedArticleDeposit":
-            # Special for pubmed, only start a workflow if the outbox is not empty
-            bucket_name = settings.poa_packaging_bucket
-            outbox_folder = "pubmed/outbox/"
+        if workflow_id == "S3Monitor":
+            s.start(settings=settings, workflow="S3Monitor")
+        if workflow_id == "S3Monitor_POA":
+            s.start(settings=settings, workflow="S3Monitor_POA")
 
-            # Connect to S3 and bucket
-            s3_conn = S3Connection(settings.aws_access_key_id, settings.aws_secret_access_key)
-            bucket = s3_conn.lookup(bucket_name)
+    elif starter_name == "starter_AdminEmail":
+        s.start(settings=settings, workflow="AdminEmail")
 
-            s3_key_names = get_s3_key_names_from_bucket(
-                bucket=bucket,
-                prefix=outbox_folder
-                )
-            if len(s3_key_names) > 0:
-                s.start(settings=settings)
+    elif starter_name == "starter_PubmedArticleDeposit":
+        # Special for pubmed, only start a workflow if the outbox is not empty
+        bucket_name = settings.poa_packaging_bucket
+        outbox_folder = "pubmed/outbox/"
 
-        elif starter_name == "starter_PubRouterDeposit":
-            # PubRouterDeposit has different variants specified by the workflow variable
-            workflow = workflow_id.split("_")[-1]
-            s.start(settings=settings, workflow=workflow)
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(settings.aws_access_key_id, settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
 
-        elif (starter_name == "cron_FiveMinute"
-              or starter_name == "starter_PublishPOA"
-              or starter_name == "cron_NewS3POA"
-              or starter_name == "starter_PublicationEmail"
-              or starter_name == "starter_DepositCrossref"):
+        s3_key_names = get_s3_key_names_from_bucket(
+            bucket=bucket,
+            prefix=outbox_folder
+            )
+        if len(s3_key_names) > 0:
             s.start(settings=settings)
+
+    elif starter_name == "starter_PubRouterDeposit":
+        # PubRouterDeposit has different variants specified by the workflow variable
+        workflow = workflow_id.split("_")[-1]
+        s.start(settings=settings, workflow=workflow)
+
+    elif (
+            starter_name == "cron_FiveMinute"
+            or starter_name == "starter_PublishPOA"
+            or starter_name == "cron_NewS3POA"
+            or starter_name == "starter_PublicationEmail"
+            or starter_name == "starter_DepositCrossref"):
+        s.start(settings=settings)
+
 
 def get_s3_key_names_from_bucket(bucket, prefix=None, delimiter='/', headers=None):
     """

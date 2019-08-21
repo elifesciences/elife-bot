@@ -32,6 +32,7 @@ class TestCron(unittest.TestCase):
     def test_get_current_datetime(self):
         self.assertIsNotNone(cron.get_current_datetime())
 
+    @patch.object(cron, 'start_workflow')
     @patch.object(cron, 'get_current_datetime')
     @patch.object(cron, 'workflow_conditional_start')
     @data(
@@ -49,16 +50,47 @@ class TestCron(unittest.TestCase):
         "1970-01-01 23:30:00",
         "1970-01-01 23:45:00",
     )
-    def test_run_cron(self, date_time, fake_workflow_start, fake_get_current_datetime):
-        fake_get_current_datetime.return_value = datetime.datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S')
+    def test_run_cron(self, date_time, fake_workflow_start, fake_get_current_datetime,
+                      fake_start_workflow):
+        fake_workflow_start.return_value = True
+        fake_start_workflow.return_value = None
+        fake_get_current_datetime.return_value = datetime.datetime.strptime(
+            date_time, '%Y-%m-%d %H:%M:%S')
         self.assertIsNone(cron.run_cron(settings_mock))
+
+    @patch("provider.swfmeta.SWFMeta.get_last_completed_workflow_execution_startTimestamp")
+    @data(
+        {
+            "workflow_id": None
+        },
+        {
+            "workflow_id": "S3Monitor"
+        },
+        {
+            "workflow_id": "S3Monitor_POA"
+        },
+        {
+            "workflow_id": None
+        },
+        {
+            "workflow_id": "PubRouterDeposit_HEFCE"
+        },
+        {
+            "workflow_id": None
+        },
+    )
+    def test_workflow_conditional_start(self, test_data, fake_timestamp):
+        fake_timestamp.return_value = 0
+        workflow_id = test_data.get("workflow_id")
+        start_seconds = 0
+        self.assertTrue(cron.workflow_conditional_start(
+            settings_mock, start_seconds, workflow_id=workflow_id))
 
     @patch.object(cron, 'get_s3_key_names_from_bucket')
     @patch.object(FakeS3Connection, 'lookup')
     @patch.object(cron, 'S3Connection')
     @patch.object(FakeLayer1, 'start_workflow_execution')
     @patch('boto.swf.layer1.Layer1')
-    @patch("provider.swfmeta.SWFMeta.get_last_completed_workflow_execution_startTimestamp")
     @data(
         {
             "starter_name": "starter_AdminEmail",
@@ -85,9 +117,8 @@ class TestCron(unittest.TestCase):
             "workflow_id": None
         },
     )
-    def test_workflow_conditional_start(self, test_data, fake_timestamp, fake_conn, fake_start,
-                                        fake_s3_mock, fake_lookup, fake_s3_key_names):
-        fake_timestamp.return_value = 0
+    def test_start_workflow(self, test_data, fake_conn, fake_start,
+                            fake_s3_mock, fake_lookup, fake_s3_key_names):
         fake_conn.return_value = FakeLayer1()
         fake_start.return_value = {}
         fake_s3_mock.return_value = FakeS3Connection()
@@ -96,8 +127,7 @@ class TestCron(unittest.TestCase):
         starter_name = test_data.get("starter_name")
         workflow_id = test_data.get("workflow_id")
         start_seconds = 0
-        self.assertIsNone(cron.workflow_conditional_start(
-            settings_mock, starter_name, start_seconds, workflow_id=workflow_id))
+        self.assertIsNone(cron.start_workflow(settings_mock, starter_name, workflow_id))
 
     @patch.object(FakeBucket, 'list')
     def test_get_s3_key_names_from_bucket(self, fake_list):
