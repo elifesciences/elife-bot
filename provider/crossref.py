@@ -182,8 +182,10 @@ def get_outbox_s3_key_names(settings, bucket_name, outbox_folder):
     orig_resource = (
         storage_provider + bucket_name + "/" + outbox_folder.rstrip('/'))
     s3_key_names = storage.list_resources(orig_resource)
+    # add back the outbox_folder to the key names
+    full_s3_key_names = [(outbox_folder.rstrip('/') + '/' + key_name) for key_name in s3_key_names]
     # return only the .xml files
-    return [key_name for key_name in s3_key_names if key_name.endswith('.xml')]
+    return [key_name for key_name in full_s3_key_names if key_name.endswith('.xml')]
 
 
 def download_files_from_s3_outbox(settings, bucket_name, outbox_s3_key_names, to_dir, logger):

@@ -113,7 +113,7 @@ class TestDepositCrossref(unittest.TestCase):
     def test_do_activity(self, test_data, fake_storage_context, fake_list_resources,
                          fake_request, fake_email_smtp_connect):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
-        fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
+        fake_storage_context.return_value = FakeStorageContext('tests/test_data/')
         # copy XML files into the input directory
         fake_list_resources.return_value = test_data["article_xml_filenames"]
         # mock the POST to endpoint
@@ -150,7 +150,7 @@ class TestDepositCrossref(unittest.TestCase):
         "example where there is not pub date and no version for an article"
         mock_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
         crossref_config = crossref.elifecrossref_config(settings_mock)
-        xml_file = 'tests/test_data/crossref/elife_poa_e03977.xml'
+        xml_file = 'tests/test_data/crossref/outbox/elife_poa_e03977.xml'
         articles = self.activity.get_article_objects([xml_file], crossref_config)
         article = articles[xml_file]
         self.assertIsNotNone(
