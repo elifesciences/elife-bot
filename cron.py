@@ -8,11 +8,8 @@ from argparse import ArgumentParser
 from pytz import timezone
 
 import boto.swf
-import boto.s3
-from boto.s3.connection import S3Connection
 
 import provider.swfmeta as swfmetalib
-import starter
 
 import newrelic.agent
 
@@ -241,74 +238,34 @@ def start_workflow(settings, starter_name, workflow_id=None):
     # Start a new workflow
     # Load the starter module
     module_name = "starter." + starter_name
-    importlib.import_module(module_name)
-    full_path = "starter." + starter_name + "." + starter_name + "()"
-    s = eval(full_path)
+    module_object = importlib.import_module(module_name)
+    starter_class = getattr(module_object, starter_name)
+    starter_object = starter_class()
 
     # Customised start functions
     if starter_name == "starter_S3Monitor":
 
         if workflow_id == "S3Monitor":
-            s.start(settings=settings, workflow="S3Monitor")
+            starter_object.start(settings=settings, workflow="S3Monitor")
         if workflow_id == "S3Monitor_POA":
-            s.start(settings=settings, workflow="S3Monitor_POA")
+            starter_object.start(settings=settings, workflow="S3Monitor_POA")
 
     elif starter_name == "starter_AdminEmail":
-        s.start(settings=settings, workflow="AdminEmail")
-
-    elif starter_name == "starter_PubmedArticleDeposit":
-        # Special for pubmed, only start a workflow if the outbox is not empty
-        bucket_name = settings.poa_packaging_bucket
-        outbox_folder = "pubmed/outbox/"
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(settings.aws_access_key_id, settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-
-        s3_key_names = get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=outbox_folder
-            )
-        if len(s3_key_names) > 0:
-            s.start(settings=settings)
+        starter_object.start(settings=settings, workflow="AdminEmail")
 
     elif starter_name == "starter_PubRouterDeposit":
         # PubRouterDeposit has different variants specified by the workflow variable
         workflow = workflow_id.split("_")[-1]
-        s.start(settings=settings, workflow=workflow)
+        starter_object.start(settings=settings, workflow=workflow)
 
-    elif (
-            starter_name == "cron_FiveMinute"
-            or starter_name == "starter_PublishPOA"
-            or starter_name == "cron_NewS3POA"
-            or starter_name == "starter_PublicationEmail"
-            or starter_name == "starter_DepositCrossref"):
-        s.start(settings=settings)
-
-
-def get_s3_key_names_from_bucket(bucket, prefix=None, delimiter='/', headers=None):
-    """
-    Given a connected boto bucket object, and optional parameters,
-    from the prefix (folder name), get the s3 key names for
-    non-folder objects, optionally that match a particular
-    list of file extensions
-    """
-    s3_keys = []
-    s3_key_names = []
-
-    # Get a list of S3 objects
-    bucketList = bucket.list(prefix=prefix, delimiter=delimiter, headers=headers)
-
-    for item in bucketList:
-        if isinstance(item, boto.s3.key.Key):
-            # Can loop through each prefix and search for objects
-            s3_keys.append(item)
-
-    # Convert to key names instead of objects to make it testable later
-    for key in s3_keys:
-        s3_key_names.append(key.name)
-
-    return s3_key_names
+    elif (starter_name in [
+            "cron_FiveMinute",
+            "starter_PublishPOA",
+            "cron_NewS3POA",
+            "starter_PublicationEmail",
+            "starter_DepositCrossref",
+            "starter_PubmedArticleDeposit"]):
+        starter_object.start(settings=settings)
 
 
 def get_settings(env):

@@ -4,10 +4,8 @@ import datetime
 from pytz import timezone
 from ddt import ddt, data
 from mock import patch
-from boto.s3.key import Key
 import tests.settings_mock as settings_mock
 from tests.classes_mock import FakeLayer1
-from tests.activity.classes_mock import FakeS3Connection, FakeBucket
 import cron
 
 
@@ -92,9 +90,6 @@ class TestCron(unittest.TestCase):
             settings_mock, start_seconds, workflow_id=workflow_id)
         self.assertEqual(return_value, test_data.get("expected"))
 
-    @patch.object(cron, 'get_s3_key_names_from_bucket')
-    @patch.object(FakeS3Connection, 'lookup')
-    @patch.object(cron, 'S3Connection')
     @patch.object(FakeLayer1, 'start_workflow_execution')
     @patch('boto.swf.layer1.Layer1')
     @data(
@@ -123,25 +118,12 @@ class TestCron(unittest.TestCase):
             "workflow_id": "PublishPOA"
         },
     )
-    def test_start_workflow(self, test_data, fake_conn, fake_start,
-                            fake_s3_mock, fake_lookup, fake_s3_key_names):
+    def test_start_workflow(self, test_data, fake_conn, fake_start):
         fake_conn.return_value = FakeLayer1()
         fake_start.return_value = {}
-        fake_s3_mock.return_value = FakeS3Connection()
-        fake_lookup.return_value = FakeBucket()
-        fake_s3_key_names.return_value = ['foo']
         starter_name = test_data.get("starter_name")
         workflow_id = test_data.get("workflow_id")
         self.assertIsNone(cron.start_workflow(settings_mock, starter_name, workflow_id))
-
-    @patch.object(FakeBucket, 'list')
-    def test_get_s3_key_names_from_bucket(self, fake_list):
-        key_name = '00003/file.zip'
-        fake_bucket = FakeBucket()
-        fake_key = Key(fake_bucket, '00003/file.zip')
-        fake_list.return_value = [fake_key]
-        s3_key_names = cron.get_s3_key_names_from_bucket(fake_bucket)
-        self.assertEqual(s3_key_names, [key_name])
 
 
 @ddt
