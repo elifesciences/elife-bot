@@ -150,7 +150,7 @@ class TestDepositCrossref(unittest.TestCase):
         "example where there is not pub date and no version for an article"
         mock_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
         crossref_config = crossref.elifecrossref_config(settings_mock)
-        xml_file = 'tests/test_data/crossref/elife_poa_e03977.xml'
+        xml_file = 'tests/test_data/crossref/outbox/elife_poa_e03977.xml'
         articles = self.activity.get_article_objects([xml_file], crossref_config)
         article = articles[xml_file]
         self.assertIsNotNone(
