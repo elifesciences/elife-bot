@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 
 from pytz import timezone
 
+import log
 import provider.swfmeta as swfmetalib
 
 import newrelic.agent
@@ -18,9 +19,14 @@ SWF cron
 TIMEZONE = timezone("Europe/London")
 
 
+IDENTITY = log.identity('cron')
+LOGGER = log.logger('cron.log', 'INFO', IDENTITY)
+
+
 def run_cron(settings):
 
     current_datetime = get_current_datetime()
+    LOGGER.info("current_datetime: %s" % current_datetime)
 
     for conditional_start in conditional_starts(current_datetime):
         do_start = workflow_conditional_start(
@@ -29,6 +35,8 @@ def run_cron(settings):
             start_seconds=conditional_start.get("start_seconds")
         )
         if do_start:
+            LOGGER.info("starting %s, workflow_id %s" % (
+                conditional_start.get("starter_name"), conditional_start.get("workflow_id")))
             start_workflow(
                 settings=settings,
                 starter_name=conditional_start.get("starter_name"),
@@ -229,6 +237,9 @@ def workflow_conditional_start(settings, start_seconds,
 
     if diff_seconds >= 0 or last_startTimestamp is None:
         return True
+    LOGGER.info(
+        "workflow name %s, id %s, ran previously at %s, %s seconds short to start again" % (
+            workflow_name, workflow_id, last_startTimestamp, diff_seconds))
 
 
 def start_workflow(settings, starter_name, workflow_id=None):
