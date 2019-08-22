@@ -7,8 +7,6 @@ from argparse import ArgumentParser
 
 from pytz import timezone
 
-import boto.swf
-
 import provider.swfmeta as swfmetalib
 
 import newrelic.agent
