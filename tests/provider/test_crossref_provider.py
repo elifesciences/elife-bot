@@ -26,7 +26,7 @@ class TestCrossrefProvider(unittest.TestCase):
 
     def setUp(self):
         self.directory = TempDirectory()
-        self.good_xml_file = "tests/test_data/crossref/elife-18753-v1.xml"
+        self.good_xml_file = "tests/test_data/crossref/outbox/elife-18753-v1.xml"
         self.bad_xml_file = "tests/test_data/activity.json"
 
     def tearDown(self):
@@ -217,10 +217,12 @@ class TestCrossrefProvider(unittest.TestCase):
 
     @patch('provider.crossref.storage_context')
     def test_get_outbox_s3_key_names(self, fake_storage_context):
-        fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
-        key_names = crossref.get_outbox_s3_key_names(settings_mock, '', '')
+        fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref/outbox/')
+        outbox_folder = 'crossref/outbox/'
+        expected = [outbox_folder.rstrip('/') + '/' + 'elife-00353-v1.xml']
+        key_names = crossref.get_outbox_s3_key_names(settings_mock, '', outbox_folder)
         # returns the default file name from FakeStorageContext in the test scenario
-        self.assertEqual(key_names, ['elife-00353-v1.xml'])
+        self.assertEqual(key_names, expected)
 
     @patch('provider.crossref.storage_context')
     def test_download_files_from_s3_outbox(self, fake_storage_context):
