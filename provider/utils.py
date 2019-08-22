@@ -93,9 +93,9 @@ def unicode_encode(string):
 
 
 def set_datestamp():
-    a = arrow.utcnow()
-    date_stamp = (str(a.datetime.year) + str(a.datetime.month).zfill(2) +
-                  str(a.datetime.day).zfill(2))
+    arrow_date = arrow.utcnow()
+    date_stamp = (str(arrow_date.datetime.year) + str(arrow_date.datetime.month).zfill(2) +
+                  str(arrow_date.datetime.day).zfill(2))
     return date_stamp
 
 
