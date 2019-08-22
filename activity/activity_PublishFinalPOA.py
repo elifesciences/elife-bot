@@ -18,6 +18,7 @@ from elifetools import xmlio
 import boto.s3
 from boto.s3.connection import S3Connection
 
+from provider import utils
 import provider.s3lib as s3lib
 import provider.simpleDB as dblib
 import provider.lax_provider as lax_provider
@@ -880,18 +881,6 @@ class activity_PublishFinalPOA(Activity):
 
         return True
 
-    def get_activity_status_text(self, activity_status):
-        """
-        Given the activity status boolean, return a human
-        readable text version
-        """
-        if activity_status is True:
-            activity_status_text = "Success!"
-        else:
-            activity_status_text = "FAILED."
-
-        return activity_status_text
-
     def get_email_subject(self, current_time):
         """
         Assemble the email subject
@@ -899,7 +888,7 @@ class activity_PublishFinalPOA(Activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         # Count the files moved from the outbox, the files that were processed
         files_count = 0
@@ -923,7 +912,7 @@ class activity_PublishFinalPOA(Activity):
         date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         # Bulk of body
         body += self.name + " status:" + "\n"

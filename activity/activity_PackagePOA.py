@@ -368,7 +368,7 @@ class activity_PackagePOA(Activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         subject = (
             self.name + " " + activity_status_text + " doi: " + str(self.doi) + ", " +
@@ -387,7 +387,7 @@ class activity_PackagePOA(Activity):
         date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         # Bulk of body
         body += self.name + " status:" + "\n"
@@ -446,15 +446,3 @@ def approve_for_packaging(doi_id):
     if doi_id is None:
         return False
     return True
-
-
-def get_activity_status_text(activity_status):
-    """
-    Given the activity status boolean, return a human
-    readable text version
-    """
-    if activity_status is True:
-        activity_status_text = "Success!"
-    else:
-        activity_status_text = "FAILED."
-    return activity_status_text
