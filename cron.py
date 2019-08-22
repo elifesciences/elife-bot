@@ -206,7 +206,7 @@ def conditional_starts(current_datetime):
     return conditional_start_list
 
 
-def workflow_conditional_start(settings, start_seconds, data=None,
+def workflow_conditional_start(settings, start_seconds,
                                workflow_id=None, workflow_name=None, workflow_version=None):
     """
     Given workflow criteria, check the workflow completion history for the last time run
