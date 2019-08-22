@@ -113,7 +113,7 @@ class TestDepositCrossref(unittest.TestCase):
     def test_do_activity(self, test_data, fake_storage_context, fake_list_resources,
                          fake_request, fake_email_smtp_connect):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
-        fake_storage_context.return_value = FakeStorageContext('tests/test_data/crossref')
+        fake_storage_context.return_value = FakeStorageContext('tests/test_data/')
         # copy XML files into the input directory
         fake_list_resources.return_value = test_data["article_xml_filenames"]
         # mock the POST to endpoint
