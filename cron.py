@@ -245,8 +245,6 @@ def start_workflow(settings, starter_name, workflow_id=None):
     # Customised start functions
     if starter_name == "starter_S3Monitor":
 
-        if workflow_id == "S3Monitor":
-            starter_object.start(settings=settings, workflow="S3Monitor")
         if workflow_id == "S3Monitor_POA":
             starter_object.start(settings=settings, workflow="S3Monitor_POA")
 
