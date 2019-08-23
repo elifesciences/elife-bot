@@ -84,7 +84,7 @@ def conditional_starts(current_datetime):
     # Based on the minutes of the current time, run certain starters
     if current_time.tm_min >= 0 and current_time.tm_min <= 29:
         # Jobs to start at the top of the hour
-        #print "Top of the hour"
+        LOGGER.info("Top of the hour")
 
         conditional_start_list.append(OrderedDict([
             ("starter_name", "starter_DepositCrossref"),
@@ -102,7 +102,7 @@ def conditional_starts(current_datetime):
 
     elif current_time.tm_min >= 30 and current_time.tm_min <= 44:
         # Jobs to start at the half past to quarter to the hour
-        #print "half past to quarter to the hour"
+        LOGGER.info("half past to quarter to the hour")
 
         # POA Publish once per day 12:30 local time
         #  (used to be set to 11:30 UTC during British Summer Time for 12:30 local UK time)
