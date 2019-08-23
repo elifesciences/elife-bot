@@ -99,10 +99,6 @@ class TestCron(unittest.TestCase):
         },
         {
             "starter_name": "starter_S3Monitor",
-            "workflow_id": "S3Monitor"
-        },
-        {
-            "starter_name": "starter_S3Monitor",
             "workflow_id": "S3Monitor_POA"
         },
         {
