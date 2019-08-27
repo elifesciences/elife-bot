@@ -11,7 +11,7 @@ from collections import namedtuple
 
 import provider.article as articlelib
 from provider.ftp import FTP
-from provider import email_provider, lax_provider
+from provider import email_provider, lax_provider, utils
 from provider.storage_provider import storage_context
 from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
@@ -42,7 +42,7 @@ class activity_PubmedArticleDeposit(Activity):
             "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
         }
 
-        self.date_stamp = self.set_datestamp()
+        self.date_stamp = utils.set_datestamp()
 
         # Instantiate a new article object to provide some helper functions
         self.article = articlelib.article(self.settings, self.get_tmp_dir())
@@ -125,12 +125,6 @@ class activity_PubmedArticleDeposit(Activity):
             return True
         else:
             return self.ACTIVITY_PERMANENT_FAILURE
-
-    def set_datestamp(self):
-        a = arrow.utcnow()
-        date_stamp = (str(a.datetime.year) + str(a.datetime.month).zfill(2) +
-                      str(a.datetime.day).zfill(2))
-        return date_stamp
 
     def download_files_from_s3_outbox(self):
         """
@@ -416,18 +410,6 @@ class activity_PubmedArticleDeposit(Activity):
 
         return True
 
-    def get_activity_status_text(self, activity_status):
-        """
-        Given the activity status boolean, return a human
-        readable text version
-        """
-        if activity_status is True:
-            activity_status_text = "Success!"
-        else:
-            activity_status_text = "FAILED."
-
-        return activity_status_text
-
     def get_email_subject(self, current_time):
         """
         Assemble the email subject
@@ -435,7 +417,7 @@ class activity_PubmedArticleDeposit(Activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         # Count the files moved from the outbox, the files that were processed
         files_count = 0
@@ -460,7 +442,7 @@ class activity_PubmedArticleDeposit(Activity):
         date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         # Bulk of body
         body += self.name + " status:" + "\n"

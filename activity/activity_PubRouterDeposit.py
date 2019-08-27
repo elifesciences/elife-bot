@@ -8,7 +8,7 @@ import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.article as articlelib
-from provider import blacklist, email_provider, lax_provider, s3lib
+from provider import blacklist, email_provider, lax_provider, s3lib, utils
 
 import dateutil.parser
 from activity.objects import Activity
@@ -32,8 +32,8 @@ class activity_PubRouterDeposit(Activity):
         self.description = ("Download article XML from pub_router outbox, \
                             approve each for publication, and deposit files via FTP to pub router.")
 
-        # Create output directories
-        self.date_stamp = self.set_datestamp()
+        # Set date_stamp
+        self.date_stamp = utils.set_datestamp()
 
         # Instantiate a new article object to provide some helper functions
         self.article = articlelib.article(self.settings, self.get_tmp_dir())
@@ -322,12 +322,6 @@ class activity_PubRouterDeposit(Activity):
             starter_status = False
 
         return starter_status
-
-    def set_datestamp(self):
-        a = arrow.utcnow()
-        date_stamp = (str(a.datetime.year) + str(a.datetime.month).zfill(2) +
-                      str(a.datetime.day).zfill(2))
-        return date_stamp
 
     def download_files_from_s3_outbox(self):
         """
@@ -690,18 +684,6 @@ class activity_PubRouterDeposit(Activity):
 
         return recipient_email_list
 
-    def get_activity_status_text(self, activity_status):
-        """
-        Given the activity status boolean, return a human
-        readable text version
-        """
-        if activity_status is True:
-            activity_status_text = "Success!"
-        else:
-            activity_status_text = "FAILED."
-
-        return activity_status_text
-
     def get_admin_email_subject(self, current_time):
         """
         Assemble the email subject
@@ -709,7 +691,7 @@ class activity_PubRouterDeposit(Activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         subject = (self.name + " " + str(self.workflow) + " " + activity_status_text +
                    ", " + datetime_string +
@@ -727,7 +709,7 @@ class activity_PubRouterDeposit(Activity):
         date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = self.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         # Bulk of body
         body += "Workflow type:" + str(self.workflow)

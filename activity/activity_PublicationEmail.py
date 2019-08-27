@@ -464,7 +464,7 @@ class activity_PublicationEmail(Activity):
         current_time = time.gmtime()
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
-        activity_status_text = get_activity_status_text(activity_status)
+        activity_status_text = utils.get_activity_status_text(activity_status)
 
         body = get_admin_email_body_head(self.name, activity_status_text, self.admin_email_content)
         body += email_provider.get_admin_email_body_foot(
@@ -646,7 +646,7 @@ def get_to_folder_name(published_folder):
     """
     to_folder = None
 
-    date_folder_name = set_datestamp()
+    date_folder_name = utils.set_datestamp()
     to_folder = published_folder + date_folder_name + "/"
 
     return to_folder
@@ -686,14 +686,6 @@ def choose_recipient_authors(authors, article_type, feature_article,
     return recipient_authors
 
 
-def set_datestamp():
-    arrow_date = arrow.utcnow()
-    date_stamp = (
-        str(arrow_date.datetime.year) + str(arrow_date.datetime.month).zfill(2) +
-        str(arrow_date.datetime.day).zfill(2))
-    return date_stamp
-
-
 def is_feature_article(article):
     if (article.is_in_display_channel("Feature article") is True or
             article.is_in_display_channel("Feature Article") is True):
@@ -731,16 +723,3 @@ def choose_email_type(article_type, is_poa, was_ever_poa, feature_article):
                 email_type = "author_publication_email_VOR_no_POA"
 
     return email_type
-
-
-def get_activity_status_text(activity_status):
-    """
-    Given the activity status boolean, return a human
-    readable text version
-    """
-    if activity_status is True:
-        activity_status_text = "Success!"
-    else:
-        activity_status_text = "FAILED."
-
-    return activity_status_text
