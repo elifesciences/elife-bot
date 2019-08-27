@@ -23,7 +23,6 @@ class TestSimpleDB(unittest.TestCase):
     def test_get_domain_name(self):
         self.assertEqual(self.provider.get_domain_name('S3File'), 'S3File_test')
         self.assertEqual(self.provider.get_domain_name('S3FileLog'), 'S3FileLog_test')
-        self.assertEqual(self.provider.get_domain_name('EmailQueue'), 'EmailQueue_test')
 
     @data(
         {
@@ -183,76 +182,6 @@ class TestSimpleDB(unittest.TestCase):
         self.assertEqual(filtered_item_list[3]["name"], "00048/elife_2012_00048.xml.r6.zip")
         self.assertEqual(filtered_item_list[1]["name"], "00005/elife00005.xml")
         self.assertEqual(filtered_item_list[1]["last_modified_timestamp"], "1359244983")
-
-    @data(
-        {
-            "sort_by": None,
-            "query_type": None,
-            "limit": None,
-            "sent_status": None,
-            "email_type": None,
-            "doi_id": None,
-            "date_scheduled_before": None,
-            "date_sent_before": None,
-            "recipient_email": None,
-            "expected_query": "select * from EmailQueue_dev where sent_status is null"
-        },
-        {
-            "sort_by": "date_added_timestamp",
-            "query_type": "items",
-            "limit": None,
-            "sent_status": None,
-            "email_type": None,
-            "doi_id": None,
-            "date_scheduled_before": None,
-            "date_sent_before": None,
-            "recipient_email": None,
-            "expected_query": (
-                "select * from EmailQueue_dev where sent_status is null" +
-                " and date_added_timestamp is not null order by date_added_timestamp asc")
-        },
-        {
-            "sort_by": None,
-            "query_type": "count",
-            "limit": None,
-            "sent_status": None,
-            "email_type": None,
-            "doi_id": None,
-            "date_scheduled_before": None,
-            "date_sent_before": None,
-            "recipient_email": None,
-            "expected_query": "select count(*) from EmailQueue_dev where sent_status is null"
-        },
-        {
-            "sort_by": None,
-            "query_type": "count",
-            "limit": None,
-            "sent_status": None,
-            "email_type": None,
-            "doi_id": None,
-            "date_scheduled_before": "1970-01-01T00:00:01.000Z",
-            "date_sent_before": None,
-            "recipient_email": None,
-            "expected_query": (
-                "select count(*) from EmailQueue_dev where sent_status is null" +
-                " and date_scheduled_timestamp < '1'")
-        },
-    )
-    def test_elife_get_email_queue_query(self, test_data):
-        query = self.provider.elife_get_email_queue_query(
-            date_format="%Y-%m-%dT%H:%M:%S.000Z",
-            domain_name="EmailQueue_dev",
-            query_type=test_data.get("query_type"),
-            sort_by=test_data.get("sort_by"),
-            limit=test_data.get("limit"),
-            sent_status=test_data.get("sent_status"),
-            email_type=test_data.get("email_type"),
-            doi_id=test_data.get("doi_id"),
-            date_scheduled_before=test_data.get("date_scheduled_before"),
-            date_sent_before=test_data.get("date_sent_before"),
-            recipient_email=test_data.get("recipient_email"),
-        )
-        self.assertEqual(query, test_data.get("expected_query"))
 
     @data(
         {
