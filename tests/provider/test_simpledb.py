@@ -256,48 +256,6 @@ class TestSimpleDB(unittest.TestCase):
 
     @data(
         {
-            "timestamp": 1,
-            "doi_id": None,
-            "email_type": None,
-            "recipient_email": None,
-            "expected_unique_item_name": "1",
-        },
-        {
-            "timestamp": 1,
-            "doi_id": "00003",
-            "email_type": "example",
-            "recipient_email": "elife@example.org",
-            "expected_unique_item_name": "1__00003__example__elife@example.org",
-        },
-    )
-    def test_elife_get_unique_email_queue_item_name(self, test_data):
-        unique_item_name = self.provider.elife_get_unique_email_queue_item_name(
-            domain_name="EmailQueue_dev",
-            check_is_unique=None,
-            timestamp=test_data.get("timestamp"),
-            doi_id=test_data.get("doi_id"),
-            email_type=test_data.get("email_type"),
-            recipient_email=test_data.get("recipient_email"),
-        )
-        self.assertEqual(unique_item_name, test_data.get("expected_unique_item_name"))
-
-    def test_elife_add_email_to_email_queue(self):
-        email_type = "test"
-        recipient_email = "test@example.org"
-        sender_email = "test@example.org"
-        result = self.provider.elife_add_email_to_email_queue(
-            recipient_email=recipient_email,
-            sender_email=sender_email,
-            email_type=email_type,
-            date_scheduled_timestamp=0,
-            add=False)
-        self.assertIsNotNone(result)
-        self.assertEqual(result.get("email_type"), email_type)
-        self.assertEqual(result.get("recipient_email"), recipient_email)
-        self.assertEqual(result.get("sender_email"), sender_email)
-
-    @data(
-        {
             "domain_name": "S3FileLog_dev",
             "bucket_name": "elife-ejp-poa-delivery-dev",
             "last_updated_since": None,
