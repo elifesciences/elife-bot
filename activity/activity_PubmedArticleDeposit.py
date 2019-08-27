@@ -9,10 +9,9 @@ import re
 import requests
 from collections import namedtuple
 
-import provider.simpleDB as dblib
 import provider.article as articlelib
 from provider.ftp import FTP
-import provider.lax_provider as lax_provider
+from provider import email_provider, lax_provider
 from provider.storage_provider import storage_context
 from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
@@ -44,9 +43,6 @@ class activity_PubmedArticleDeposit(Activity):
         }
 
         self.date_stamp = self.set_datestamp()
-
-        # Data provider where email body is saved
-        self.db = dblib.SimpleDB(settings)
 
         # Instantiate a new article object to provide some helper functions
         self.article = articlelib.article(self.settings, self.get_tmp_dir())
@@ -119,7 +115,7 @@ class activity_PubmedArticleDeposit(Activity):
         # Send email
         # Only if there were files approved for publishing
         if len(self.article_published_file_names) > 0:
-            self.add_email_to_queue()
+            self.send_email()
 
         # Clean up disk
         self.clean_tmp_dir()
@@ -394,40 +390,29 @@ class activity_PubmedArticleDeposit(Activity):
                              self.get_filename_from_path(xml_file, '.xml') + '.xml')
             storage.set_resource_from_filename(resource_dest, xml_file)
 
-    def add_email_to_queue(self):
+    def send_email(self):
         """
         After do_activity is finished, send emails to recipients
         on the status
         """
-        # Connect to DB
-        db_conn = self.db.connect()
-
-        # Note: Create a verified sender email address, only done once
-        #conn.verify_email_address(self.settings.ses_sender_email)
-
         current_time = time.gmtime()
 
         body = self.get_email_body(current_time)
         subject = self.get_email_subject(current_time)
         sender_email = self.settings.ses_poa_sender_email
 
-        recipient_email_list = []
-        # Handle multiple recipients, if specified
-        if type(self.settings.ses_admin_email) == list:
-            for email in self.settings.ses_admin_email:
-                recipient_email_list.append(email)
-        else:
-            recipient_email_list.append(self.settings.ses_admin_email)
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.ses_admin_email)
 
         for email in recipient_email_list:
-            # Add the email to the email queue
-            self.db.elife_add_email_to_email_queue(
-                recipient_email=email,
-                sender_email=sender_email,
-                email_type="PubmedArticleDeposit",
-                format="text",
-                subject=subject,
-                body=body)
+            # send the email by SMTP
+            message = email_provider.simple_message(
+                sender_email, email, subject, body, logger=self.logger)
+
+            email_provider.smtp_send_messages(
+                self.settings, messages=[message], logger=self.logger)
+            self.logger.info('Email sending details: admin email, email %s, to %s' %
+                             ("PubmedArticleDeposit", email))
 
         return True
 

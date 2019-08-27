@@ -2,9 +2,10 @@ import unittest
 import os
 from ddt import ddt, data
 from mock import patch
+import activity.activity_PubmedArticleDeposit as activity_module
 from activity.activity_PubmedArticleDeposit import activity_PubmedArticleDeposit
-from provider.simpleDB import SimpleDB
 from provider import lax_provider
+from tests.classes_mock import FakeSMTPServer
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 from tests.activity.classes_mock import FakeStorageContext
@@ -30,7 +31,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         return self.activity.directories.get("TMP_DIR")
 
     @patch.object(activity_PubmedArticleDeposit, 'clean_tmp_dir')
-    @patch.object(SimpleDB, 'elife_add_email_to_email_queue')
+    @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch.object(lax_provider, 'article_versions')
     @patch.object(activity_PubmedArticleDeposit, 'ftp_files_to_endpoint')
     @patch('activity.activity_PubmedArticleDeposit.storage_context')
@@ -124,7 +125,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_list_resources, fake_storage_context,
                          fake_ftp_files_to_endpoint, fake_article_versions,
-                         fake_email_queue, fake_clean_tmp_dir):
+                         fake_email_smtp_connect, fake_clean_tmp_dir):
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_clean_tmp_dir.return_value = None
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
