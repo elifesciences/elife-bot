@@ -6,6 +6,7 @@ from activity.objects import Activity
 
 import provider.swfmeta as swfmetalib
 import provider.simpleDB as dblib
+from provider import email_provider
 
 """
 AdminEmailHistory activity
@@ -53,13 +54,8 @@ class activity_AdminEmailHistory(Activity):
         subject = self.get_email_subject(current_time, workflow_count)
         sender_email = self.settings.ses_sender_email
 
-        recipient_email_list = []
-        # Handle multiple recipients, if specified
-        if type(self.settings.ses_admin_email) == list:
-            for email in self.settings.ses_admin_email:
-                recipient_email_list.append(email)
-        else:
-            recipient_email_list.append(self.settings.ses_admin_email)
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.ses_admin_email)
 
         for email in recipient_email_list:
             # Add the email to the email queue
