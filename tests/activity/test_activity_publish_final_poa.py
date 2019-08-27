@@ -4,14 +4,17 @@ import glob
 import os
 import xml.etree.ElementTree as ET
 from mock import patch
+from tests.classes_mock import FakeSMTPServer
+import activity.activity_PublishFinalPOA as activity_module
 from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
 import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger
 
 
 class TestPublishFinalPOA(unittest.TestCase):
 
     def setUp(self):
-        self.poa = activity_PublishFinalPOA(settings_mock, None, None, None, None)
+        self.poa = activity_PublishFinalPOA(settings_mock, FakeLogger(), None, None, None)
 
         self.do_activity_passes = []
 
@@ -183,6 +186,7 @@ class TestPublishFinalPOA(unittest.TestCase):
                 for file in glob.glob(directory_full_path + "/*"):
                     os.remove(file)
 
+    @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch.object(activity_PublishFinalPOA, 'clean_outbox')
     @patch.object(activity_PublishFinalPOA, 'get_pub_date_str_from_lax')
     @patch.object(activity_PublishFinalPOA, 'upload_files_to_s3')
@@ -191,8 +195,10 @@ class TestPublishFinalPOA(unittest.TestCase):
     @patch.object(activity_PublishFinalPOA, 'clean_tmp_dir')
     def test_do_activity(self, fake_clean_tmp_dir, fake_download_files_from_s3,
                          fake_next_revision_number, fake_upload_files_to_s3,
-                         fake_get_pub_date_str_from_lax, fake_clean_outbox):
+                         fake_get_pub_date_str_from_lax, fake_clean_outbox,
+                         fake_email_smtp_connect):
 
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
         fake_clean_tmp_dir.return_value = None
         fake_clean_outbox.return_value = None
         fake_next_revision_number.return_value = 1

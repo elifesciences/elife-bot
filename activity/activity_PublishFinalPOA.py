@@ -18,9 +18,7 @@ from elifetools import xmlio
 import boto.s3
 from boto.s3.connection import S3Connection
 
-import provider.s3lib as s3lib
-import provider.simpleDB as dblib
-import provider.lax_provider as lax_provider
+from provider import email_provider, lax_provider, s3lib
 from activity.objects import Activity
 
 """
@@ -69,9 +67,6 @@ class activity_PublishFinalPOA(Activity):
         self.malformed_ds_file_names = []
         self.empty_ds_file_names = []
         self.unmatched_ds_file_names = []
-
-        # Data provider where email body is saved
-        self.db = dblib.SimpleDB(settings)
 
     def do_activity(self, data=None):
         """
@@ -143,7 +138,7 @@ class activity_PublishFinalPOA(Activity):
             self.activity_status = False
 
         # Send email
-        self.add_email_to_queue()
+        self.send_email()
 
         # Return the activity result, True or False
         result = True
@@ -843,40 +838,29 @@ class activity_PublishFinalPOA(Activity):
         return filename
 
 
-    def add_email_to_queue(self):
+    def send_email(self):
         """
         After do_activity is finished, send emails to recipients
         on the status
         """
-        # Connect to DB
-        db_conn = self.db.connect()
-
-        # Note: Create a verified sender email address, only done once
-        #conn.verify_email_address(self.settings.ses_sender_email)
-
         current_time = time.gmtime()
 
         body = self.get_email_body(current_time)
         subject = self.get_email_subject(current_time)
         sender_email = self.settings.ses_poa_sender_email
 
-        recipient_email_list = []
-        # Handle multiple recipients, if specified
-        if type(self.settings.ses_poa_recipient_email) == list:
-            for email in self.settings.ses_poa_recipient_email:
-                recipient_email_list.append(email)
-        else:
-            recipient_email_list.append(self.settings.ses_poa_recipient_email)
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.ses_poa_recipient_email)
 
         for email in recipient_email_list:
-            # Add the email to the email queue
-            self.db.elife_add_email_to_email_queue(
-                recipient_email=email,
-                sender_email=sender_email,
-                email_type="PublishFinalPOA",
-                format="text",
-                subject=subject,
-                body=body)
+            # send the email by SMTP
+            message = email_provider.simple_message(
+                sender_email, email, subject, body, logger=self.logger)
+
+            email_provider.smtp_send_messages(
+                self.settings, messages=[message], logger=self.logger)
+            self.logger.info('Email sending details: admin email, email %s, to %s' %
+                             ("PublishFinalPOA", email))
 
         return True
 
