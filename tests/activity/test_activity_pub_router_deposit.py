@@ -5,7 +5,9 @@ from mock import patch
 from ddt import ddt, data, unpack
 from provider import s3lib
 from provider.article import article
+import activity.activity_PubRouterDeposit as activity_module
 from activity.activity_PubRouterDeposit import activity_PubRouterDeposit
+from tests.classes_mock import FakeSMTPServer
 import tests.test_data as test_case_data
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
@@ -30,6 +32,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         self.pubrouterdeposit = activity_PubRouterDeposit(
             settings_mock, FakeLogger(), None, None, None)
 
+    @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('provider.lax_provider.article_versions')
     @patch.object(activity_PubRouterDeposit, 'clean_outbox')
     @patch.object(activity_PubRouterDeposit, 'start_ftp_article_workflow')
@@ -39,7 +42,9 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch.object(s3lib, 'get_s3_keys_from_bucket')
     def test_do_activity(self, fake_get_s3_keys, fake_was_ever_published, 
                          fake_download, fake_zip_exists,
-                         fake_start, fake_clean_outbox, fake_article_versions):
+                         fake_start, fake_clean_outbox, fake_article_versions,
+                         fake_email_smtp_connect):
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.pubrouterdeposit.get_tmp_dir())
         activity_data = {
             "data": {
                 "workflow": "HEFCE"
@@ -55,6 +60,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         result = self.pubrouterdeposit.do_activity(activity_data)
         self.assertTrue(result)
 
+    @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('provider.lax_provider.was_ever_poa')
     @patch('provider.lax_provider.article_versions')
     @patch.object(activity_PubRouterDeposit, 'clean_outbox')
@@ -65,8 +71,10 @@ class TestPubRouterDeposit(unittest.TestCase):
     @data("PMC")
     def test_do_activity_pmc(self, workflow_name, fake_get_s3_keys, fake_download,
                              fake_archive_zip_file_name, fake_start, fake_clean_outbox, 
-                             fake_article_versions, fake_was_ever_poa):
+                             fake_article_versions, fake_was_ever_poa,
+                             fake_email_smtp_connect):
         """test for PMC runs which start a different workflow"""
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.pubrouterdeposit.get_tmp_dir())
         activity_data = {
             "data": {
                 "workflow": workflow_name
