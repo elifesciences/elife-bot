@@ -11,10 +11,9 @@ from packagepoa import transform
 from packagepoa import conf as poa_conf
 from elifearticle.article import ArticleDate
 import provider.ejp as ejplib
-import provider.simpleDB as dblib
 import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
-from provider import utils
+from provider import email_provider, utils
 from activity.objects import Activity
 
 
@@ -46,9 +45,6 @@ class activity_PackagePOA(Activity):
         # Create an EJP provider to access S3 bucket holding CSV files
         self.ejp = ejplib.EJP(settings, self.get_tmp_dir())
         self.ejp_bucket = self.settings.ejp_bucket
-
-        # Data provider where email body is saved
-        self.db_object = dblib.SimpleDB(settings)
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
@@ -123,7 +119,7 @@ class activity_PackagePOA(Activity):
                                         self.generate_xml_status is True)
 
         # Send email
-        self.add_email_to_queue()
+        self.send_email()
 
         # Return the activity result, True or False
         result = True
@@ -324,40 +320,29 @@ class activity_PackagePOA(Activity):
         storage.set_resource_from_filename(resource_dest, file_name_path)
         self.logger.info("Copied %s to %s", file_name_path, resource_dest)
 
-    def add_email_to_queue(self):
+    def send_email(self):
         """
         After do_activity is finished, send emails to recipients
         on the status
         """
-        # Connect to DB
-        self.db_object.connect()
-
-        # Note: Create a verified sender email address, only done once
-        # conn.verify_email_address(self.settings.ses_sender_email)
-
         current_time = time.gmtime()
 
         body = self.get_email_body(current_time)
         subject = self.get_email_subject(current_time)
         sender_email = self.settings.ses_poa_sender_email
 
-        recipient_email_list = []
-        # Handle multiple recipients, if specified
-        if isinstance(self.settings.ses_poa_recipient_email, list):
-            for email in self.settings.ses_poa_recipient_email:
-                recipient_email_list.append(email)
-        else:
-            recipient_email_list.append(self.settings.ses_poa_recipient_email)
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.ses_poa_recipient_email)
 
         for email in recipient_email_list:
-            # Add the email to the email queue
-            self.db_object.elife_add_email_to_email_queue(
-                recipient_email=email,
-                sender_email=sender_email,
-                email_type="PackagePOA",
-                format="text",
-                subject=subject,
-                body=body)
+            # send the email by SMTP
+            message = email_provider.simple_message(
+                sender_email, email, subject, body, logger=self.logger)
+
+            email_provider.smtp_send_messages(
+                self.settings, messages=[message], logger=self.logger)
+            self.logger.info('Email sending details: admin email, email %s, to %s' %
+                             ("PackagePOA", email))
 
         return True
 

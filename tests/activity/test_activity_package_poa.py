@@ -11,6 +11,8 @@ import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 import tests.activity.test_activity_data as activity_test_data
 import tests.activity.helpers as helpers
+from tests.classes_mock import FakeSMTPServer
+import activity.activity_PackagePOA as activity_module
 from activity.activity_PackagePOA import activity_PackagePOA
 from activity.activity_PackagePOA import get_doi_from_zip_file, approve_for_packaging
 
@@ -126,6 +128,7 @@ class TestPackagePOA(unittest.TestCase):
         print(file_path)
         self.assertEqual(self.poa.process_poa_zipfile(file_path), test_data.get('expected'))
 
+    @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('activity.activity_PackagePOA.storage_context')
     @patch('provider.ejp.EJP.ejp_bucket_file_list')
     @patch.object(lax_provider, 'article_publication_date')
@@ -201,10 +204,11 @@ class TestPackagePOA(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_copy_pdf_to_output_dir, fake_clean_tmp_dir,
                          fake_article_publication_date, fake_ejp_bucket_file_list,
-                         fake_storage_context):
+                         fake_storage_context, fake_email_smtp_connect):
         # make directories first
         self.poa.make_activity_directories()
         # mock things
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
         test_outbox_folder = activity_test_data.ExpandArticle_files_dest_folder
         bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list_new.json")
         with open(bucket_list_file, 'rb') as open_file:
