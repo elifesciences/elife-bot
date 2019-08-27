@@ -11,6 +11,7 @@ from provider import email_provider
 AdminEmailHistory activity
 """
 
+
 class activity_AdminEmailHistory(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
@@ -26,7 +27,7 @@ class activity_AdminEmailHistory(Activity):
         self.description = "Email administrators a workflow history status message."
 
         # Default time period, in seconds
-        self.time_period = 60 * 60* 4
+        self.time_period = 60 * 60 * 4
 
     def do_activity(self, data=None):
         """
@@ -39,7 +40,7 @@ class activity_AdminEmailHistory(Activity):
         current_timestamp = calendar.timegm(current_time)
 
         workflow_count = self.get_workflow_count_by_closestatus(self.time_period, current_timestamp)
-        history_text = self.get_history_text(workflow_count)
+        history_text = get_history_text(workflow_count)
         body = self.get_email_body(self.time_period, history_text, current_time)
         subject = self.get_email_subject(current_time, workflow_count)
         sender_email = self.settings.ses_sender_email
@@ -58,26 +59,6 @@ class activity_AdminEmailHistory(Activity):
                              ("AdminEmailHistory", email))
 
         return True
-
-    def get_history_text(self, workflow_count):
-        """
-        Given a dictionary of closed workflow executions and their count,
-        get the workflow history text to include in the email body
-        If no workflow_count is supplied, get it from the object time_period in seconds
-        """
-
-        history_text = ""
-
-        # Concatenate the message
-        for key in sorted(workflow_count):
-            close_status = key
-            run_count = workflow_count[key]
-
-            history_text = history_text + "\n" + close_status + ": " + str(run_count)
-
-        if history_text == "":
-            history_text = None
-        return history_text
 
     def get_email_subject(self, current_time, workflow_count):
         """
@@ -163,3 +144,24 @@ class activity_AdminEmailHistory(Activity):
                 workflow_count[close_status] = 0
 
         return workflow_count
+
+
+def get_history_text(workflow_count):
+    """
+    Given a dictionary of closed workflow executions and their count,
+    get the workflow history text to include in the email body
+    If no workflow_count is supplied, get it from the object time_period in seconds
+    """
+
+    history_text = ""
+
+    # Concatenate the message
+    for key in sorted(workflow_count):
+        close_status = key
+        run_count = workflow_count[key]
+
+        history_text = history_text + "\n" + close_status + ": " + str(run_count)
+
+    if history_text == "":
+        history_text = None
+    return history_text
