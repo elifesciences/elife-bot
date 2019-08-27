@@ -166,7 +166,7 @@ def conditional_starts(current_datetime):
 
         # Author emails once per day 17:45 local time
         # (used to be set to 16:45 UTC during British Summer Time for 17:45 local UK time)
-        if current_time.tm_hour == 17:
+        if local_current_time.tm_hour == 17:
             conditional_start_list.append(OrderedDict([
                 ("starter_name", "starter_PublicationEmail"),
                 ("workflow_id", "PublicationEmail"),
