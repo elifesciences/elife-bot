@@ -5,7 +5,6 @@ import time
 from activity.objects import Activity
 
 import provider.swfmeta as swfmetalib
-import provider.simpleDB as dblib
 from provider import email_provider
 
 """
@@ -26,9 +25,6 @@ class activity_AdminEmailHistory(Activity):
         self.default_task_start_to_close_timeout = 60 * 5
         self.description = "Email administrators a workflow history status message."
 
-        # Data provider
-        self.db = dblib.SimpleDB(settings)
-
         # Default time period, in seconds
         self.time_period = 60 * 60* 4
 
@@ -38,12 +34,6 @@ class activity_AdminEmailHistory(Activity):
         """
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
-
-        # Connect to DB
-        db_conn = self.db.connect()
-
-        # Note: Create a verified sender email address, only done once
-        #conn.verify_email_address(self.settings.ses_sender_email)
 
         current_time = time.gmtime()
         current_timestamp = calendar.timegm(current_time)
@@ -58,14 +48,14 @@ class activity_AdminEmailHistory(Activity):
             self.settings.ses_admin_email)
 
         for email in recipient_email_list:
-            # Add the email to the email queue
-            self.db.elife_add_email_to_email_queue(
-                recipient_email=email,
-                sender_email=sender_email,
-                email_type="AdminEmailHistory",
-                format="text",
-                subject=subject,
-                body=body)
+            # send the email by SMTP
+            message = email_provider.simple_message(
+                sender_email, email, subject, body, logger=self.logger)
+
+            email_provider.smtp_send_messages(
+                self.settings, messages=[message], logger=self.logger)
+            self.logger.info('Email sending details: admin email, email %s, to %s' %
+                             ("AdminEmailHistory", email))
 
         return True
 
