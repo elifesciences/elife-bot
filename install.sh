@@ -1,9 +1,23 @@
 #!/bin/bash
 set -e
 
+python=''
+pybinlist=("python3.6" "python3.5" "python3.4")
+
+for pybin in ${pybinlist[*]}; do
+    which "$pybin" &> /dev/null || continue
+    python=$pybin
+    break
+done
+
+if [ -z "$python" ]; then
+    echo "no usable python found, exiting"
+    exit 1
+fi
+
 if [ ! -d venv ]; then
     # build venv if one doesn't exist
-    virtualenv --python=`which python2` venv
+    $python -m venv venv
 fi
 
 # remove any old compiled python files
