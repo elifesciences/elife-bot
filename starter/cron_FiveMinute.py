@@ -9,7 +9,6 @@ import time
 import importlib
 from optparse import OptionParser
 
-import provider.simpleDB as dblib
 import provider.swfmeta as swfmetalib
 import starter
 
@@ -26,10 +25,6 @@ class cron_FiveMinute(object):
         # Log
         logFile = "starter.log"
         logger = log.logger(logFile, settings.setLevel, ping_marker_id)
-
-        # Data provider
-        db = dblib.SimpleDB(settings)
-        db.connect()
 
         # SWF meta data provider
         swfmeta = swfmetalib.SWFMeta(settings)
@@ -49,27 +44,6 @@ class cron_FiveMinute(object):
         last_startDate = time.strftime(date_format, time_tuple)
 
         logger.info('last run %s %s' % (ping_marker_id, last_startDate))
-
-        # A conditional start for SendQueuedEmail
-        #  Only start a workflow if there are emails in the queue ready to send
-        item_list = db.elife_get_email_queue_items(
-            query_type="count",
-            date_scheduled_before=last_startDate)
-
-        try:
-            if int(item_list[0]["Count"]) > 0:
-                # More than one email in the queue, start a workflow
-                try:
-                    starter_name = "starter_SendQueuedEmail"
-                    self.import_starter_module(starter_name, logger)
-                    s = self.get_starter_module(starter_name, logger)
-                    s.start(settings=settings)
-                except:
-                    logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
-                    logger.exception('')
-        except:
-            # Some error
-            logger.info('Exception encountered starting %s: %s' % (ping_marker_id, last_startDate))
 
     def start_ping_marker(self, workflow_id, settings):
         """

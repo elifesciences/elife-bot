@@ -5,11 +5,12 @@ import time
 from activity.objects import Activity
 
 import provider.swfmeta as swfmetalib
-import provider.simpleDB as dblib
+from provider import email_provider
 
 """
 AdminEmailHistory activity
 """
+
 
 class activity_AdminEmailHistory(Activity):
 
@@ -25,11 +26,8 @@ class activity_AdminEmailHistory(Activity):
         self.default_task_start_to_close_timeout = 60 * 5
         self.description = "Email administrators a workflow history status message."
 
-        # Data provider
-        self.db = dblib.SimpleDB(settings)
-
         # Default time period, in seconds
-        self.time_period = 60 * 60* 4
+        self.time_period = 60 * 60 * 4
 
     def do_activity(self, data=None):
         """
@@ -38,60 +36,29 @@ class activity_AdminEmailHistory(Activity):
         if self.logger:
             self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
-        # Connect to DB
-        db_conn = self.db.connect()
-
-        # Note: Create a verified sender email address, only done once
-        #conn.verify_email_address(self.settings.ses_sender_email)
-
         current_time = time.gmtime()
         current_timestamp = calendar.timegm(current_time)
 
         workflow_count = self.get_workflow_count_by_closestatus(self.time_period, current_timestamp)
-        history_text = self.get_history_text(workflow_count)
+        history_text = get_history_text(workflow_count)
         body = self.get_email_body(self.time_period, history_text, current_time)
         subject = self.get_email_subject(current_time, workflow_count)
         sender_email = self.settings.ses_sender_email
 
-        recipient_email_list = []
-        # Handle multiple recipients, if specified
-        if type(self.settings.ses_admin_email) == list:
-            for email in self.settings.ses_admin_email:
-                recipient_email_list.append(email)
-        else:
-            recipient_email_list.append(self.settings.ses_admin_email)
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.ses_admin_email)
 
         for email in recipient_email_list:
-            # Add the email to the email queue
-            self.db.elife_add_email_to_email_queue(
-                recipient_email=email,
-                sender_email=sender_email,
-                email_type="AdminEmailHistory",
-                format="text",
-                subject=subject,
-                body=body)
+            # send the email by SMTP
+            message = email_provider.simple_message(
+                sender_email, email, subject, body, logger=self.logger)
+
+            email_provider.smtp_send_messages(
+                self.settings, messages=[message], logger=self.logger)
+            self.logger.info('Email sending details: admin email, email %s, to %s' %
+                             ("AdminEmailHistory", email))
 
         return True
-
-    def get_history_text(self, workflow_count):
-        """
-        Given a dictionary of closed workflow executions and their count,
-        get the workflow history text to include in the email body
-        If no workflow_count is supplied, get it from the object time_period in seconds
-        """
-
-        history_text = ""
-
-        # Concatenate the message
-        for key in sorted(workflow_count):
-            close_status = key
-            run_count = workflow_count[key]
-
-            history_text = history_text + "\n" + close_status + ": " + str(run_count)
-
-        if history_text == "":
-            history_text = None
-        return history_text
 
     def get_email_subject(self, current_time, workflow_count):
         """
@@ -177,3 +144,24 @@ class activity_AdminEmailHistory(Activity):
                 workflow_count[close_status] = 0
 
         return workflow_count
+
+
+def get_history_text(workflow_count):
+    """
+    Given a dictionary of closed workflow executions and their count,
+    get the workflow history text to include in the email body
+    If no workflow_count is supplied, get it from the object time_period in seconds
+    """
+
+    history_text = ""
+
+    # Concatenate the message
+    for key in sorted(workflow_count):
+        close_status = key
+        run_count = workflow_count[key]
+
+        history_text = history_text + "\n" + close_status + ": " + str(run_count)
+
+    if history_text == "":
+        history_text = None
+    return history_text
