@@ -1,7 +1,7 @@
 import json
 
 from boto.s3.connection import S3Connection
-
+from provider import lax_provider
 from provider.execution_context import get_session
 from provider.article_structure import get_article_xml_key
 from activity.objects import Activity
@@ -46,6 +46,16 @@ class activity_ScheduleCrossref(Activity):
         article_id = session.get_value('article_id')
         expanded_folder_name = session.get_value('expanded_folder')
 
+        # if is a silent-correction workflow, only deposit for the most recent article version
+        run_type = session.get_value("run_type")
+        if run_type == "silent-correction":
+            highest_version = lax_provider.article_highest_version(article_id, self.settings)
+            if str(version) != str(highest_version):
+                self.logger.info(
+                    'ScheduleCrossref will not deposit article %s' +
+                    ' ingested by silent-correction, its version of %s does not equal the' +
+                    ' highest version is %s', (article_id, version, highest_version))
+                return True
 
         conn = S3Connection(self.settings.aws_access_key_id,
                             self.settings.aws_secret_access_key)
