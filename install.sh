@@ -28,8 +28,6 @@ fi
 
 echo "Virtualenv Python: $(venv/bin/python --version)"
 
-pip install --upgrade pip
-
 # remove any old compiled python files
 find ./ -maxdepth 1 -name '*.pyc' -delete
 find provider/ -maxdepth 1 -name '*.pyc' -delete
@@ -39,6 +37,7 @@ find starter/ -maxdepth 1 -name '*.pyc' -delete
 find S3utility/ -maxdepth 1 -name '*.pyc' -delete
 
 source venv/bin/activate
+pip install --upgrade pip
 grep "git+" requirements.txt > source-requirements.txt
 #pip uninstall -r source-requirements.txt -y
 pip install --ignore-installed -r source-requirements.txt
