@@ -17,6 +17,10 @@ fi
 
 echo "Found Python: $($python --version)"
 
+if [ "$ENVIRONMENT_NAME" == "ci" ]; then
+    rm -rf venv/
+fi
+
 if [ ! -d venv ]; then
     # build venv if one doesn't exist
     $python -m venv venv
