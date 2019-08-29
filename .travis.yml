@@ -7,7 +7,7 @@ python:
   #- "3.2"
   #- "3.3"
   #- "3.4"
-  #- "3.5"
+  - "3.5" # Ubuntu 16.04
   - "3.6"
   #- "3.5-dev" # 3.5 development branch
   #- "nightly" # currently points to 3.6-dev
