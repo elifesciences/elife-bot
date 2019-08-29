@@ -28,6 +28,8 @@ fi
 
 echo "Virtualenv Python: $(venv/bin/python --version)"
 
+pip install --upgrade pip
+
 # remove any old compiled python files
 find ./ -maxdepth 1 -name '*.pyc' -delete
 find provider/ -maxdepth 1 -name '*.pyc' -delete
