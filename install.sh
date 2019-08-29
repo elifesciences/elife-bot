@@ -38,7 +38,8 @@ find S3utility/ -maxdepth 1 -name '*.pyc' -delete
 
 source venv/bin/activate
 grep "git+" requirements.txt > source-requirements.txt
-pip uninstall -r source-requirements.txt -y
+#pip uninstall -r source-requirements.txt -y
+pip install --ignore-installed -r source-requirements.txt
 pip install -r requirements.txt
 # pip install -r source-requirements.txt --no-cache-dir # only if old revisions are still 'sticking'
 rm source-requirements.txt
