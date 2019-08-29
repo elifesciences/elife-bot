@@ -22,7 +22,7 @@ if [ ! -d venv ]; then
     $python -m venv venv
 fi
 
-echo "Virtualenv Python: $(venv/bin/$python --version)"
+echo "Virtualenv Python: $(venv/bin/python --version)"
 
 # remove any old compiled python files
 find ./ -maxdepth 1 -name '*.pyc' -delete
