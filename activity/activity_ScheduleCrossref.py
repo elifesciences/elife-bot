@@ -54,7 +54,7 @@ class activity_ScheduleCrossref(Activity):
                 self.logger.info(
                     'ScheduleCrossref will not deposit article %s' +
                     ' ingested by silent-correction, its version of %s does not equal the' +
-                    ' highest version is %s', (article_id, version, highest_version))
+                    ' highest version which is %s', (article_id, version, highest_version))
                 return True
 
         conn = S3Connection(self.settings.aws_access_key_id,
