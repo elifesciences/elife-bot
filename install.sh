@@ -15,10 +15,14 @@ if [ -z "$python" ]; then
     exit 1
 fi
 
+echo "Found Python: $($python --version)"
+
 if [ ! -d venv ]; then
     # build venv if one doesn't exist
     $python -m venv venv
 fi
+
+echo "Virtualenv Python: $(venv/bin/$python --version)"
 
 # remove any old compiled python files
 find ./ -maxdepth 1 -name '*.pyc' -delete
