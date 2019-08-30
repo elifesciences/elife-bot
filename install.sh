@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+if [ "$ENVIRONMENT_NAME" == "ci" ]; then
+    rm -rf venv/
+fi
+
 . mkvenv.sh
 
 echo "Virtualenv Python: $(venv/bin/python --version)"
@@ -14,6 +18,13 @@ find starter/ -maxdepth 1 -name '*.pyc' -delete
 find S3utility/ -maxdepth 1 -name '*.pyc' -delete
 
 source venv/bin/activate
+
+# fixes issues installing wheel packages, hides deprecation warnings
+pip install "pip~=19.2" --upgrade
+
+# fixes python-docx issue #594 
+# https://github.com/python-openxml/python-docx/issues/594
+pip install -U setuptools
 
 grep "git+" requirements.txt > source-requirements.txt
 #pip uninstall -r source-requirements.txt -y

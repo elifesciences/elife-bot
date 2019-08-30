@@ -26,7 +26,7 @@ pyGithub==1.27.1
 pyFunctional==1.2.0
 func_timeout==4.3.0
 # versions of python-docx>=0.8.9 have issues installing on python 3.5.2 (xenial default)
-python-docx==0.8.8
+python-docx==0.8.10
 git+https://github.com/elifesciences/digest-parser.git@cd3a47af45db64a1731cc5ae9d0647ec3511a120#egg=digestparser
 git+https://github.com/Medium/medium-sdk-python.git@bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6#egg=medium
 psutil==5.4.6
