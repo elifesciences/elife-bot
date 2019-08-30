@@ -112,7 +112,7 @@ class activity_EmailDigest(Activity):
             output_file = output.digest_docx(digest_content, full_file_name)
         except UnicodeEncodeError as exception:
             self.logger.exception("EmailDigest generate_output exception. Message: %s",
-                                  exception.message)
+                                  exception)
             return False, None
         return True, output_file
 
