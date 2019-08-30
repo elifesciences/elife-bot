@@ -24,7 +24,7 @@ pip install "pip~=19.2" --upgrade
 
 # fixes python-docx issue #594 
 # https://github.com/python-openxml/python-docx/issues/594
-pip install -U setuptools
+pip install "setuptools>=40.6" --upgrade
 
 grep "git+" requirements.txt > source-requirements.txt
 #pip uninstall -r source-requirements.txt -y
