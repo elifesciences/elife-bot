@@ -6,7 +6,6 @@ from github import GithubException
 import provider.lax_provider
 from provider.storage_provider import storage_context
 from activity.objects import Activity
-import settings as settingsLib
 
 """
 activity_UpdateRepository.py activity
