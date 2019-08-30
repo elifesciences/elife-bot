@@ -3,7 +3,7 @@ dist: xenial # Ubuntu 16.04, elife runtime, travis default
 
 python:
   #- "2.6"
-  - "2.7" # Deprecated, EOL
+  #- "2.7" # EOL, no longer supported
   #- "3.2"
   #- "3.3"
   #- "3.4"
