@@ -1,14 +1,14 @@
 language: python
-dist: trusty
+dist: xenial # Ubuntu 16.04, elife runtime, travis default
 
 python:
   #- "2.6"
-  - "2.7"
+  - "2.7" # Deprecated, EOL
   #- "3.2"
   #- "3.3"
   #- "3.4"
   - "3.5" # Ubuntu 16.04
-  - "3.6"
+  - "3.6" # Ubuntu 18.04
   #- "3.5-dev" # 3.5 development branch
   #- "nightly" # currently points to 3.6-dev
 # command to install dependencies
