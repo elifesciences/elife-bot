@@ -113,17 +113,17 @@ class activity_UpdateRepository(Activity):
 
         try:
             xml_file = article_xml_repo.get_contents(repo_file)
-        except GithubException as e:
-            self.logger.info("GithubException - description: " + e.message)
+        except GithubException as exception:
+            self.logger.info("GithubException - description: " + str(exception))
             self.logger.info("GithubException: file " + repo_file + " may not exist in github yet. We will try to add it in the repo.")
             try:
                 response = article_xml_repo.create_file(repo_file, "Creates XML", content)
-            except GithubException as e:
-                self._retry_or_cancel(e)
+            except GithubException as exception:
+                self._retry_or_cancel(exception)
             return "File " + repo_file + " successfully added. Commit: " + str(response)
 
-        except Exception as e:
-            self.logger.info("Exception: file " + repo_file + ". Error: " + e.message)
+        except Exception as exception:
+            self.logger.info("Exception: file " + repo_file + ". Error: " + str(exception))
             raise
 
         try:
@@ -134,18 +134,18 @@ class activity_UpdateRepository(Activity):
             #there are changes
             try:
                 response = article_xml_repo.update_file(repo_file , "Updates xml", content, xml_file.sha)
-            except GithubException as e:
-                self._retry_or_cancel(e)
+            except GithubException as exception:
+                self._retry_or_cancel(exception)
             return "File " + repo_file + " successfully updated. Commit: " + str(response)
 
-        except Exception as e:
-            self.logger.info("Exception: file " + repo_file + ". Error: " + e.message)
+        except Exception as exception:
+            self.logger.info("Exception: file " + repo_file + ". Error: " + str(exception))
             raise
 
-    def _retry_or_cancel(self, e):
-        if e.status == 409:
-            self.logger.warning("Retrying because of exception: %s", e)
-            raise RetryException(e.message)
+    def _retry_or_cancel(self, exception):
+        if exception.status == 409:
+            self.logger.warning("Retrying because of exception: %s", str(exception))
+            raise RetryException(str(exception))
         else:
-            raise e
+            raise exception
 

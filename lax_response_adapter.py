@@ -121,8 +121,8 @@ class LaxResponseAdapter:
                 self.logger.info("calling workflow PostPerfectPublication")
 
             return workflow_starter_message
-        except Exception as e:
-            self.logger.error("Error parsing Lax message. Message: " + e.message)
+        except Exception as exception:
+            self.logger.error("Error parsing Lax message. Message: " + str(exception))
             raise
 
     @newrelic.agent.background_task(group='lax_response_adapter.py')

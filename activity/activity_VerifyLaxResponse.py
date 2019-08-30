@@ -61,11 +61,11 @@ class activity_VerifyLaxResponse(Activity):
                                     " result from lax:" + str(data['result']) + '; message from lax: ' + message)
             return self.ACTIVITY_PERMANENT_FAILURE
 
-        except Exception as e:
+        except Exception as exception:
             self.logger.exception("Exception when Verifying Lax Response")
             self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
                                     "Error when verifying lax response" + article_id +
-                                    " message:" + str(e.message))
+                                    " message:" + str(exception))
             return self.ACTIVITY_PERMANENT_FAILURE
 
 
