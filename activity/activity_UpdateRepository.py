@@ -64,7 +64,7 @@ class activity_UpdateRepository(Activity):
                 bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
 
                 #download xml
-                with tempfile.TemporaryFile(mode='r+') as tmp:
+                with tempfile.TemporaryFile(mode='w+b') as tmp:
                     storage_provider = self.settings.storage_provider + "://"
                     published_path = storage_provider + self.settings.publishing_buckets_prefix + \
                                         self.settings.ppp_cdn_bucket
