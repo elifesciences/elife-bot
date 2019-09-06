@@ -3,6 +3,7 @@ from boto.s3.connection import S3Connection
 import tempfile
 from github import Github
 from github import GithubException
+from provider.utils import unicode_encode
 import provider.lax_provider
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -75,7 +76,8 @@ class activity_UpdateRepository(Activity):
 
                     file_content = storage.get_resource_as_string(resource)
 
-                    message = self.update_github(self.settings.git_repo_path + xml_file, file_content)
+                    message = self.update_github(
+                        self.settings.git_repo_path + xml_file, unicode_encode(file_content))
                     self.logger.info(message)
                     self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                     self.pretty_name, "end",
