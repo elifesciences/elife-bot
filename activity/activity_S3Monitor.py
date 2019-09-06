@@ -110,7 +110,7 @@ class activity_S3Monitor(Activity):
             else:
                 # Update the item attributes by replacing values if present
                 for k, v in list(item_attrs.items()):
-                    if item.has_key(k):
+                    if k in item:
                         # Overwrite value
                         item[k] = v
                     else:
@@ -166,7 +166,7 @@ class activity_S3Monitor(Activity):
 
                 # Update the item attributes by replacing values if present
                 for k, v in list(item_attrs.items()):
-                    if item.has_key(k):
+                    if k in item:
                         # Overwrite value
                         item[k] = v
                     else:
