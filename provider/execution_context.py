@@ -4,6 +4,7 @@ from boto.s3.key import Key
 from boto.exception import S3ResponseError
 from pydoc import locate
 import json
+from provider.utils import unicode_encode
 
 
 def get_session(settings, input_data, session_key):
@@ -96,7 +97,7 @@ class S3Session(object):
         value = None
         try:
             value = s3_key.get_contents_as_string()
-            value = json.loads(value)
+            value = json.loads(unicode_encode(value))
         except S3ResponseError:
             if self.input_data is not None and key in self.input_data:
                 value = self.input_data[key]
