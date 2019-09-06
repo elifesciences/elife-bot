@@ -1,6 +1,7 @@
 import unittest
 from activity.activity_ScheduleCrossref import activity_ScheduleCrossref
 from mock import mock, patch
+from provider import lax_provider
 from tests.activity.classes_mock import FakeSession
 from tests.activity.classes_mock import FakeS3Connection
 from tests.activity.classes_mock import FakeLogger
@@ -47,6 +48,18 @@ class TestScheduleCrossref(unittest.TestCase):
             fake_key = None
         fake_get_article_xml_key.return_value = (fake_key, xml_filename)
 
+        result = self.activity.do_activity(testdata.ExpandArticle_data)
+        self.assertEqual(result, expected_result)
+
+
+    @patch.object(lax_provider, 'article_highest_version')
+    @patch('activity.activity_ScheduleCrossref.get_session')
+    def test_do_activity_silent_correction(self, fake_session_mock, fake_highest_version):
+        expected_result = True
+        session_dict = testdata.session_example
+        session_dict['run_type'] = 'silent-correction'
+        fake_session_mock.return_value = FakeSession(session_dict)
+        fake_highest_version.return_value = 2
         result = self.activity.do_activity(testdata.ExpandArticle_data)
         self.assertEqual(result, expected_result)
 
