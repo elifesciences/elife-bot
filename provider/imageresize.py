@@ -43,7 +43,7 @@ def resize(format, filep, info, logger):
     except Exception as e:
         message = "error resizing image %s" % info.filename
         logger.error(message, exc_info=True)
-        raise RuntimeError("%s (%s)" % (message, e.message))
+        raise RuntimeError("%s (%s)" % (message, str(e)))
 
     filename = info.filename
     if format.get('prefix') is not None:

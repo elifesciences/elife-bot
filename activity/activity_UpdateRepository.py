@@ -114,7 +114,7 @@ class activity_UpdateRepository(Activity):
         try:
             xml_file = article_xml_repo.get_contents(repo_file)
         except GithubException as e:
-            self.logger.info("GithubException - description: " + e.message)
+            self.logger.info("GithubException - description: " + str(e))
             self.logger.info("GithubException: file " + repo_file + " may not exist in github yet. We will try to add it in the repo.")
             try:
                 response = article_xml_repo.create_file(repo_file, "Creates XML", content)
@@ -123,7 +123,7 @@ class activity_UpdateRepository(Activity):
             return "File " + repo_file + " successfully added. Commit: " + str(response)
 
         except Exception as e:
-            self.logger.info("Exception: file " + repo_file + ". Error: " + e.message)
+            self.logger.info("Exception: file " + repo_file + ". Error: " + str(e))
             raise
 
         try:
@@ -139,13 +139,13 @@ class activity_UpdateRepository(Activity):
             return "File " + repo_file + " successfully updated. Commit: " + str(response)
 
         except Exception as e:
-            self.logger.info("Exception: file " + repo_file + ". Error: " + e.message)
+            self.logger.info("Exception: file " + repo_file + ". Error: " + str(e))
             raise
 
     def _retry_or_cancel(self, e):
         if e.status == 409:
             self.logger.warning("Retrying because of exception: %s", e)
-            raise RetryException(e.message)
+            raise RetryException(str(e))
         else:
             raise e
 

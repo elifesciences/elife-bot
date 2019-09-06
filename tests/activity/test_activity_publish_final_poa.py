@@ -207,8 +207,7 @@ class TestPublishFinalPOA(unittest.TestCase):
 
         for test_data in self.do_activity_passes:
 
-            fake_download_files_from_s3.return_value = self.fake_download_files_from_s3(
-                test_data["outbox_file_list"])
+            self.fake_download_files_from_s3(test_data["outbox_file_list"])
 
             param_data = None
             success = self.poa.do_activity(param_data)
