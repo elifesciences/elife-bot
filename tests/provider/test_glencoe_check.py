@@ -52,7 +52,8 @@ class TestGlencoeCheck(unittest.TestCase):
             ('<media mimetype="video" mime-subtype="mp4" id="fig3video1" xlink:href="elife-00666-fig3-video1.mp4"></media>', True),
             ('<media mimetype="video" mime-subtype="gif" id="video2" xlink:href="elife-00666-video2.gif"></media>', True),
             ('<media mimetype="application" mime-subtype="xlsx" xlink:href="elife-00666-video1-data1.xlsx"/><media mimetype="video" mime-subtype="gif" id="video2" xlink:href="elife-00666-video2.gif"></media>', True),
-            ('<media mimetype="application" mime-subtype="xlsx" xlink:href="elife-00666-video1-data1.xlsx"/>', False)
+            ('<media mimetype="application" mime-subtype="xlsx" xlink:href="elife-00666-video1-data1.xlsx"/>', False),
+            (b'<media mimetype="video" mime-subtype="gif" id="video2" xlink:href="elife-00666-video2.gif"></media>', True),
         ]
         for xml_str, expected in cases:
             self.assertEqual(glencoe_check.has_videos(xml_str), expected)
