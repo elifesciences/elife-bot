@@ -112,7 +112,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
         fake_processing_storage_context.return_value = FakeStorageContext()
         fake_get_xml_file_name.return_value = test_data.get("xml_file")
         fake_first.return_value = test_data.get("first_vor")
-        fake_download_email_templates.return_value = self.fake_download_video_email_templates(
+        self.fake_download_video_email_templates(
             self.activity.get_tmp_dir(), test_data.get("templates_warmed"))
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         # do the activity
@@ -138,8 +138,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
         """test cases for exceptions in send_email"""
         article_object = article()
         article_object.doi_id = 666
-        fake_download_email_templates.return_value = self.fake_download_video_email_templates(
-            self.activity.get_tmp_dir(), True)
+        self.fake_download_video_email_templates(self.activity.get_tmp_dir(), True)
         fake_smtp_send_messages.return_value = OrderedDict([("error", 1), ("success", 1)])
         # call the method
         return_value = self.activity.send_email(
@@ -169,8 +168,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
     @patch.object(Templates, 'download_video_email_templates_from_s3')
     def test_template_get_email_headers_00013(self, fake_download_email_templates):
 
-        fake_download_email_templates.return_value = self.fake_download_video_email_templates(
-            self.activity.get_tmp_dir(), True)
+        self.fake_download_video_email_templates(self.activity.get_tmp_dir(), True)
 
         email_type = "video_article_publication"
 
@@ -198,8 +196,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
     @patch.object(Templates, 'download_video_email_templates_from_s3')
     def test_template_get_email_body_00353(self, fake_download_email_templates):
 
-        fake_download_email_templates.return_value = self.fake_download_video_email_templates(
-            self.activity.get_tmp_dir(), True)
+        self.fake_download_video_email_templates(self.activity.get_tmp_dir(), True)
 
         email_type = "video_article_publication"
 

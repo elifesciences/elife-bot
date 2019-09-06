@@ -2,6 +2,8 @@ import sys, json
 import requests
 import re
 from functional import seq
+from provider.utils import unicode_encode
+
 
 '''
 glencoe_resp = {
@@ -72,7 +74,7 @@ def jpg_href_values(metadata):
 
 
 def has_videos(xml_str):
-    if re.search(r'<media[^>]*mimetype="video".*?>', xml_str):
+    if re.search(r'<media[^>]*mimetype="video".*?>', unicode_encode(xml_str)):
         return True
     return False
 

@@ -3,6 +3,7 @@ from boto.s3.connection import S3Connection
 import tempfile
 from github import Github
 from github import GithubException
+from provider.utils import unicode_encode
 import provider.lax_provider
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -64,7 +65,7 @@ class activity_UpdateRepository(Activity):
                 bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
 
                 #download xml
-                with tempfile.TemporaryFile(mode='r+') as tmp:
+                with tempfile.TemporaryFile(mode='w+b') as tmp:
                     storage_provider = self.settings.storage_provider + "://"
                     published_path = storage_provider + self.settings.publishing_buckets_prefix + \
                                         self.settings.ppp_cdn_bucket
@@ -75,7 +76,8 @@ class activity_UpdateRepository(Activity):
 
                     file_content = storage.get_resource_as_string(resource)
 
-                    message = self.update_github(self.settings.git_repo_path + xml_file, file_content)
+                    message = self.update_github(
+                        self.settings.git_repo_path + xml_file, unicode_encode(file_content))
                     self.logger.info(message)
                     self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
                                     self.pretty_name, "end",
@@ -114,7 +116,7 @@ class activity_UpdateRepository(Activity):
         try:
             xml_file = article_xml_repo.get_contents(repo_file)
         except GithubException as e:
-            self.logger.info("GithubException - description: " + e.message)
+            self.logger.info("GithubException - description: " + str(e))
             self.logger.info("GithubException: file " + repo_file + " may not exist in github yet. We will try to add it in the repo.")
             try:
                 response = article_xml_repo.create_file(repo_file, "Creates XML", content)
@@ -123,7 +125,7 @@ class activity_UpdateRepository(Activity):
             return "File " + repo_file + " successfully added. Commit: " + str(response)
 
         except Exception as e:
-            self.logger.info("Exception: file " + repo_file + ". Error: " + e.message)
+            self.logger.info("Exception: file " + repo_file + ". Error: " + str(e))
             raise
 
         try:
@@ -139,13 +141,13 @@ class activity_UpdateRepository(Activity):
             return "File " + repo_file + " successfully updated. Commit: " + str(response)
 
         except Exception as e:
-            self.logger.info("Exception: file " + repo_file + ". Error: " + e.message)
+            self.logger.info("Exception: file " + repo_file + ". Error: " + str(e))
             raise
 
     def _retry_or_cancel(self, e):
         if e.status == 409:
             self.logger.warning("Retrying because of exception: %s", e)
-            raise RetryException(e.message)
+            raise RetryException(str(e))
         else:
             raise e
 

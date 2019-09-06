@@ -186,9 +186,8 @@ class TestPublicationEmail(unittest.TestCase):
             fake_article_versions.return_value = (
                 200, pass_test_data.get("lax_article_versions_response_data"))
 
-            fake_download_email_templates.return_value = (
-                self.fake_download_email_templates_from_s3(
-                    self.activity.get_tmp_dir(), pass_test_data["templates_warmed"]))
+            self.fake_download_email_templates_from_s3(
+                self.activity.get_tmp_dir(), pass_test_data["templates_warmed"])
 
             fake_list_resources.return_value = pass_test_data["article_xml_filenames"]
 
@@ -285,8 +284,7 @@ class TestPublicationEmail(unittest.TestCase):
     @patch.object(Templates, 'download_email_templates_from_s3')
     def test_template_get_email_headers_00013(self, fake_download_email_templates):
 
-        fake_download_email_templates.return_value = self.fake_download_email_templates_from_s3(
-            self.activity.get_tmp_dir(), True)
+        self.fake_download_email_templates_from_s3(self.activity.get_tmp_dir(), True)
 
         email_type = "author_publication_email_VOR_no_POA"
 
@@ -323,8 +321,7 @@ class TestPublicationEmail(unittest.TestCase):
     @patch.object(Templates, 'download_email_templates_from_s3')
     def test_template_get_email_body_00353(self, fake_download_email_templates):
 
-        fake_download_email_templates.return_value = self.fake_download_email_templates_from_s3(
-            self.activity.get_tmp_dir(), True)
+        self.fake_download_email_templates_from_s3(self.activity.get_tmp_dir(), True)
 
         email_type = "author_publication_email_Feature"
 
