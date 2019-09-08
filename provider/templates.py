@@ -209,7 +209,7 @@ class Templates(object):
         loaded content in the case of running tests
         """
         if contents is not None:
-            with open(os.path.join(self.get_tmp_dir(), template_name), 'w') as fp:
+            with open(os.path.join(self.get_tmp_dir(), template_name), 'wb') as fp:
                 fp.write(contents)
             return True
 
