@@ -5,6 +5,9 @@ from jinja2 import Environment, FileSystemLoader
 
 from boto.s3.connection import S3Connection
 
+from provider.utils import unicode_encode
+
+
 """
 Templates provider
 Connects to S3, discovers, downloads, and parses templates using jinja2
@@ -209,8 +212,8 @@ class Templates(object):
         loaded content in the case of running tests
         """
         if contents is not None:
-            with open(os.path.join(self.get_tmp_dir(), template_name), 'wb') as fp:
-                fp.write(contents)
+            with open(os.path.join(self.get_tmp_dir(), template_name), 'w') as fp:
+                fp.write(unicode_encode(contents))
             return True
 
         # Default
