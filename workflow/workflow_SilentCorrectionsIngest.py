@@ -190,6 +190,17 @@ class workflow_SilentCorrectionsIngest(Workflow):
                         "start_to_close_timeout": 60 * 15
                     },
                     {
+                        "activity_type": "VerifyGlencoe",
+                        "activity_id": "VerifyGlencoe",
+                        "version": "1",
+                        "input": data,
+                        "control": None,
+                        "heartbeat_timeout": 60 * 15,
+                        "schedule_to_close_timeout": 60 * 15,
+                        "schedule_to_start_timeout": 300,
+                        "start_to_close_timeout": 60 * 15
+                    },
+                    {
                         "activity_type": "IngestToLax",
                         "activity_id": "IngestToLax",
                         "version": "1",
