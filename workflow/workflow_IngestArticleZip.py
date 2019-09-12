@@ -147,7 +147,7 @@ class workflow_IngestArticleZip(Workflow):
                     },
                     {
                         "activity_type": "VerifyGlencoe",
-                        "activity_id": "VerifyGlencoe",
+                        "activity_id": "VerifyGlencoeAgain",
                         "version": "1",
                         "input": data,
                         "control": None,
