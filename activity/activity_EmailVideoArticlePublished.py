@@ -105,6 +105,7 @@ class activity_EmailVideoArticlePublished(Activity):
                     "Failed to send email for article %s to %s in Email Video Article Published " %
                     (article_id, recipient.get("e_mail")))
 
+        self.emit_activity_end_message(article_id, version, run)
         return self.ACTIVITY_SUCCESS
 
     def choose_recipients(self):
