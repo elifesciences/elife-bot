@@ -346,6 +346,8 @@ def validate_digest(digest_content):
         error_messages.append('Digest DOI is missing')
     if digest_content and not digest_content.text:
         error_messages.append('Digest text is missing')
+    if digest_content and not digest_content.title:
+        error_messages.append('Digest title is missing')
     return not bool(error_messages), error_messages
 
 
