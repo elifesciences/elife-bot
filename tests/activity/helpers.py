@@ -47,11 +47,13 @@ def instantiate_article(article_type, doi, is_poa=None, was_ever_poa=None):
     return article_object
 
 
-def create_digest(author=None, doi=None, text=None):
+def create_digest(author=None, doi=None, text=None, title=None):
     "for testing generate a Digest object an populate it"
     digest_content = Digest()
     digest_content.author = author
     digest_content.doi = doi
     if text:
         digest_content.text = text
+    if title:
+        digest_content.title = title
     return digest_content

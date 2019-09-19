@@ -216,7 +216,7 @@ class TestValidateDigest(unittest.TestCase):
 
     def test_validate_digest(self):
         "approving good Digest content"
-        digest_content = create_digest('Anonymous', '10.7554/eLife.99999', ['text'])
+        digest_content = create_digest('Anonymous', '10.7554/eLife.99999', ['text'], 'Title')
         expected_status = True
         expected_error_messages = []
         status, error_messages = digest_provider.validate_digest(digest_content)
@@ -237,14 +237,14 @@ class TestValidateDigest(unittest.TestCase):
         digest_content = Digest()
         expected_status = False
         expected_error_messages = ['Digest author is missing', 'Digest DOI is missing',
-                                   'Digest text is missing']
+                                   'Digest text is missing', 'Digest title is missing']
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
 
     def test_validate_digest_digest_no_author(self):
         "approving an empty Digest"
-        digest_content = create_digest(None, '10.7554/eLife.99999', ['text'])
+        digest_content = create_digest(None, '10.7554/eLife.99999', ['text'], 'Title')
         expected_status = False
         expected_error_messages = ['Digest author is missing']
         status, error_messages = digest_provider.validate_digest(digest_content)
@@ -253,7 +253,7 @@ class TestValidateDigest(unittest.TestCase):
 
     def test_validate_digest_digest_no_doi(self):
         "approving an empty Digest"
-        digest_content = create_digest('Anonymous', None, ['text'])
+        digest_content = create_digest('Anonymous', None, ['text'], 'Title')
         expected_status = False
         expected_error_messages = ['Digest DOI is missing']
         status, error_messages = digest_provider.validate_digest(digest_content)
@@ -262,9 +262,18 @@ class TestValidateDigest(unittest.TestCase):
 
     def test_validate_digest_digest_no_text(self):
         "approving an empty Digest"
-        digest_content = create_digest('Anonymous', '10.7554/eLife.99999', None)
+        digest_content = create_digest('Anonymous', '10.7554/eLife.99999', None, 'Title')
         expected_status = False
         expected_error_messages = ['Digest text is missing']
+        status, error_messages = digest_provider.validate_digest(digest_content)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(error_messages, expected_error_messages)
+
+    def test_validate_digest_digest_no_title(self):
+        "approving an invalid Digest"
+        digest_content = create_digest('Anonymous', '10.7554/eLife.99999', ['text'], None)
+        expected_status = False
+        expected_error_messages = ['Digest title is missing']
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
