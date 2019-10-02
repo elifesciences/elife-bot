@@ -1,6 +1,6 @@
 import os
 import shutil
-from digestparser.objects import Digest
+from digestparser.objects import Digest, Image
 from provider.article import article
 
 
@@ -47,7 +47,7 @@ def instantiate_article(article_type, doi, is_poa=None, was_ever_poa=None):
     return article_object
 
 
-def create_digest(author=None, doi=None, text=None, title=None):
+def create_digest(author=None, doi=None, text=None, title=None, image=None):
     "for testing generate a Digest object an populate it"
     digest_content = Digest()
     digest_content.author = author
@@ -56,4 +56,16 @@ def create_digest(author=None, doi=None, text=None, title=None):
         digest_content.text = text
     if title:
         digest_content.title = title
+    if image:
+        digest_content.image = image
     return digest_content
+
+
+def create_digest_image(caption=None, file_name=None):
+    "for testing generate a Digest Image object an populate it"
+    digest_image = Image()
+    if caption:
+        digest_image.caption = caption
+    if file_name:
+        digest_image.file = file_name
+    return digest_image

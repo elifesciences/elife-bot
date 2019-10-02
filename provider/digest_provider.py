@@ -348,6 +348,10 @@ def validate_digest(digest_content):
         error_messages.append('Digest text is missing')
     if digest_content and not digest_content.title:
         error_messages.append('Digest title is missing')
+    if digest_content and not digest_content.image:
+        error_messages.append('Digest image is missing')
+    elif digest_content and not digest_content.image.caption:
+        error_messages.append('Digest image caption is missing')
     return not bool(error_messages), error_messages
 
 
