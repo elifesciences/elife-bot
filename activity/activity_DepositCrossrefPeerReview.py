@@ -131,7 +131,11 @@ class activity_DepositCrossrefPeerReview(Activity):
                     date_struct = time.strptime(review_date, utils.PUB_DATE_FORMAT)
                     review_date_object = ArticleDate("review_date", date_struct)
                     sub_article.add_date(review_date_object)
-                # todo!!! set author response author contrib values
+                # set author response author contrib values
+                if sub_article.article_type == "reply" and not sub_article.contributors:
+                    sub_article.contributors = [
+                        contrib for contrib in article.contributors
+                        if contrib.contrib_type == 'author']
 
         return article_object_map
 
