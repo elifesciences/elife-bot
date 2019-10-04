@@ -33,6 +33,7 @@ def start(settings):
     workflow_names.append("PackagePOA")
     workflow_names.append("PublishPOA")
     workflow_names.append("DepositCrossref")
+    workflow_names.append("DepositCrossrefPeerReview")
     workflow_names.append("PubmedArticleDeposit")
     workflow_names.append("PublicationEmail")
     workflow_names.append("FTPArticle")
