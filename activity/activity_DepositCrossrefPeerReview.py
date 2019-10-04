@@ -2,6 +2,7 @@ import os
 import json
 import time
 import glob
+from collections import OrderedDict
 from elifearticle.article import ArticleDate
 from activity.objects import Activity
 from provider import bigquery, crossref, email_provider, utils
@@ -190,10 +191,12 @@ class activity_DepositCrossrefPeerReview(Activity):
 def prune_article_object_map(article_object_map, logger):
     """remove any articles from the map that should not be deposited as peer reviews"""
     # prune any articles with no review_articles
+    good_article_object_map = OrderedDict()
     for file_name, article in article_object_map.items():
-        if not article.review_articles:
+        if article.review_articles:
+            good_article_object_map[file_name] = article
+        else:
             logger.info(
                 'Pruning article %s from Crossref peer review deposit, it has no peer reviews',
                 article.doi)
-            del article_object_map[file_name]
-    return article_object_map
+    return good_article_object_map
