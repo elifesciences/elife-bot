@@ -3,7 +3,7 @@ Jinja2==2.10.1
 arrow==0.4.4
 requests==2.20.0
 git+https://github.com/elifesciences/elife-tools.git@5b57b1798788cc1c56077601df9a66e8de6a0239#egg=elifetools
-git+https://github.com/elifesciences/elife-article.git@99710c213cd81fe6fd1e5c150d6e20efe2d1e33b#egg=elifearticle
+git+https://github.com/elifesciences/elife-article.git@e91120d6681399f5208eb9fd6512b80bcad548f5#egg=elifearticle
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@1fcc330d6b817757d9e1624552306f9eb8ce1b02#egg=elifecrossref
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@814bcf15dacfbbb0000ba592f7c3b1b047ee99bf#egg=elifepubmed
 git+https://github.com/elifesciences/ejp-csv-parser.git@9fdfa6a37c00b6134f8a2a46c784b0b11b19c654#egg=ejpcsvparser
