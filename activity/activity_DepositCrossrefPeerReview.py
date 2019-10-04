@@ -68,8 +68,8 @@ class activity_DepositCrossrefPeerReview(Activity):
         crossref_config = crossref.elifecrossref_config(self.settings)
 
         article_object_map = self.get_article_objects(article_xml_files)
-        generate_article_object_map = crossref.approve_to_generate_list(
-            article_object_map, crossref_config, self.bad_xml_files)
+
+        generate_article_object_map = prune_article_object_map(article_object_map, self.logger)
 
         # Generate crossref XML
         self.statuses["generate"] = crossref.generate_crossref_xml_to_disk(
@@ -185,3 +185,15 @@ class activity_DepositCrossrefPeerReview(Activity):
                              ("DepositCrossrefPeerReview", email))
 
         return True
+
+
+def prune_article_object_map(article_object_map, logger):
+    """remove any articles from the map that should not be deposited as peer reviews"""
+    # prune any articles with no review_articles
+    for file_name, article in article_object_map.items():
+        if not article.review_articles:
+            logger.info(
+                'Pruning article %s from Crossref peer review deposit, it has no peer reviews',
+                article.doi)
+            del article_object_map[file_name]
+    return article_object_map

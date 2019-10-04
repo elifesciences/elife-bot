@@ -48,7 +48,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
     @data(
         {
             "comment": "Article 15747",
-            "article_xml_filenames": ['elife-15747-v2.xml'],
+            "article_xml_filenames": ['elife-15747-v2.xml', 'elife_poa_e03977.xml'],
             "post_status_code": 200,
             "expected_result": True,
             "expected_approve_status": True,
