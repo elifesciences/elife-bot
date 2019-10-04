@@ -85,6 +85,8 @@ class ArticleInfo(object):
             # determine the file_type based on the extra file parts
             if parent_name.startswith('resp') and child_name.startswith('fig'):
                 self.file_type = "Figure"
+            elif parent_name.startswith('sa') and child_name.startswith('fig'):
+                self.file_type = "Figure"
             elif parent_name.startswith('app') and child_name.startswith('fig'):
                 self.file_type = "Figure"
             elif parent_name.startswith('box') and child_name.startswith('fig'):
