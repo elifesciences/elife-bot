@@ -87,6 +87,7 @@ def start(settings):
     activity_names.append("PackagePOA")
     activity_names.append("PublishFinalPOA")
     activity_names.append("DepositCrossref")
+    activity_names.append("DepositCrossrefPeerReview")
     activity_names.append("PubmedArticleDeposit")
     activity_names.append("PublicationEmail")
     activity_names.append("FTPArticle")
@@ -103,7 +104,7 @@ def start(settings):
     activity_names.append("ValidateDigestInput")
     activity_names.append("EmailVideoArticlePublished")
     activity_names.append("CreateDigestMediumPost")
-    activity_names.append("PostDigestJATS")
+    activity_names.append("PostDigestJATS")    
 
     for activity_name in activity_names:
         # Import the activity libraries
