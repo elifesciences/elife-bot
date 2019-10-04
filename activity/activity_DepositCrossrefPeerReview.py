@@ -2,8 +2,9 @@ import os
 import json
 import time
 import glob
+from elifearticle.article import ArticleDate
 from activity.objects import Activity
-from provider import crossref, email_provider, utils
+from provider import bigquery, crossref, email_provider, utils
 
 
 class activity_DepositCrossrefPeerReview(Activity):
@@ -123,9 +124,15 @@ class activity_DepositCrossrefPeerReview(Activity):
             article_xml_files, self.bad_xml_files, self.directories.get("TMP_DIR"))
         # continue with setting more article data
         for article in list(article_object_map.values()):
-            # todo!!! add review_date
-            # todo!!! set author response author contrib values
-            pass
+            for sub_article in article.review_articles:
+                # add review_date
+                review_date = bigquery.get_review_date(article.doi, sub_article.article_type)
+                if review_date:
+                    date_struct = time.strptime(review_date, utils.PUB_DATE_FORMAT)
+                    review_date_object = ArticleDate("review_date", date_struct)
+                    sub_article.add_date(review_date_object)
+                # todo!!! set author response author contrib values
+
         return article_object_map
 
     def approve_for_publishing(self):
