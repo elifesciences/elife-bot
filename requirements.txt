@@ -31,3 +31,4 @@ git+https://github.com/elifesciences/digest-parser.git@cd3a47af45db64a1731cc5ae9
 git+https://github.com/Medium/medium-sdk-python.git@bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6#egg=medium
 psutil==5.4.6
 pytz==2019.2
+google-cloud-bigquery==1.21.0
