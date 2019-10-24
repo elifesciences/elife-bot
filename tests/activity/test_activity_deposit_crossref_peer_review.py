@@ -6,7 +6,8 @@ from ddt import ddt, data
 from provider import bigquery
 import activity.activity_DepositCrossrefPeerReview as activity_module
 from activity.activity_DepositCrossrefPeerReview import activity_DepositCrossrefPeerReview
-from tests.classes_mock import FakeSMTPServer
+from tests import bigquery_test_data
+from tests.classes_mock import FakeSMTPServer, FakeBigQueryClient, FakeBigQueryRowIterator
 from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
 import tests.activity.settings_mock as settings_mock
 import tests.activity.test_activity_data as activity_test_data
@@ -40,7 +41,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         dest_doc = self.input_dir() + os.sep + document
         shutil.copy(source_doc, dest_doc)
 
-    @patch.object(bigquery, 'get_review_date')
+    @patch.object(bigquery, 'get_client')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
@@ -62,7 +63,8 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 '<peer_review stage="pre-publication" type="editor-report">',
                 '<title>Decision letter: Community-level cohesion without cooperation</title>',
                 '<review_date>',
-                '<month>10</month>',
+                '<month>05</month>',
+                '<month>06</month>',
                 '<ai:license_ref>http://creativecommons.org/licenses/by/4.0/</ai:license_ref>',
                 '<person_name contributor_role="editor" sequence="first">',
                 '<surname>Bergstrom</surname>',
@@ -79,10 +81,12 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         }
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_list_resources,
-                         fake_request, fake_email_smtp_connect, get_review_date):
+                         fake_request, fake_email_smtp_connect, fake_get_client):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/')
-        get_review_date.return_value = "2019-10-04"
+        rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
+        client = FakeBigQueryClient(rows)
+        fake_get_client.return_value = client
         # copy XML files into the input directory
         fake_list_resources.return_value = test_data["article_xml_filenames"]
         # mock the POST to endpoint

@@ -50,7 +50,15 @@ class TestBigQueryProvider(unittest.TestCase):
             self.assertEqual(names, expected_name_list)
 
     def test_get_review_date(self):
-        self.assertEqual(bigquery.get_review_date(None, None, None), None)
+        manuscript = bigquery.Manuscript()
+        manuscript.qc_complete_datetime = datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=_UTC())
+        manuscript.decision_sent_datetime = datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=_UTC())
+        self.assertEqual(bigquery.get_review_date(manuscript, 'article-commentary'), '2016-05-31')
+        self.assertEqual(bigquery.get_review_date(manuscript, 'decision-letter'), '2016-05-31')
+        self.assertEqual(bigquery.get_review_date(manuscript, 'reply'), '2016-06-10')
+
+    def test_get_review_date_none_manuscript(self):
+        self.assertEqual(bigquery.get_review_date(None, None), None)
 
 
 class TestManuscript(unittest.TestCase):

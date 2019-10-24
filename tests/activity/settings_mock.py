@@ -178,3 +178,6 @@ smtp_starttls = False
 smtp_ssl = False
 smtp_username = None
 smtp_password = None
+
+big_query_credentials_file = 'tests/test_data/fake_google_service_account.json'
+big_query_project_id = ''

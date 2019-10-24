@@ -125,9 +125,11 @@ class activity_DepositCrossrefPeerReview(Activity):
             article_xml_files, self.bad_xml_files, self.directories.get("TMP_DIR"))
         # continue with setting more article data
         for article in list(article_object_map.values()):
+            # populate Manuscript object
+            manuscript_object = self.get_manuscript_object(article.doi)
             for sub_article in article.review_articles:
                 # add review_date
-                review_date = bigquery.get_review_date(article.doi, sub_article.article_type)
+                review_date = bigquery.get_review_date(manuscript_object, sub_article.article_type)
                 if review_date:
                     date_struct = time.strptime(review_date, utils.PUB_DATE_FORMAT)
                     review_date_object = ArticleDate("review_date", date_struct)
@@ -139,6 +141,16 @@ class activity_DepositCrossrefPeerReview(Activity):
                         if contrib.contrib_type == 'author']
 
         return article_object_map
+
+    def get_manuscript_object(self, doi):
+        """get data from BigQuery and populate a Manuscript object"""
+        bigquery_client = bigquery.get_client(self.settings)
+        rows = bigquery.article_data(bigquery_client, doi)
+        if not rows:
+            self.logger.info('No data from BigQuery for DOI %s' % doi)
+        # use the first row returned
+        first_row = [row for row in rows][0]
+        return bigquery.Manuscript(first_row)
 
     def approve_for_publishing(self):
         """check if any files were generated before publishing files to the endpoint"""
