@@ -112,3 +112,49 @@ class TestBigQueryProvider(unittest.TestCase):
 
     def test_get_review_date(self):
         self.assertEqual(bigquery.get_review_date(None, None), "1970-01-02")
+
+
+class TestManuscript(unittest.TestCase):
+
+    def test_manuscript_init(self):
+        """"instantiate a Manuscript object from row data"""
+        manuscript = bigquery.Manuscript(ARTICLE_RESULT_15747)
+        self.assertEqual(manuscript.manuscript_id, '15747')
+        self.assertEqual(manuscript.doi, '10.7554/eLife.15747')
+        # check qc_complete_datetime
+        self.assertEqual(
+            manuscript.qc_complete_datetime,
+            datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=_UTC()))
+        self.assertEqual('2016-05-31', bigquery.date_to_string(manuscript.qc_complete_datetime))
+        # check decision_sent_datetime
+        self.assertEqual(
+            manuscript.decision_sent_datetime,
+            datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=_UTC()))
+        self.assertEqual('2016-06-10', bigquery.date_to_string(manuscript.decision_sent_datetime))
+        # check reviwers
+        self.assertEqual(len(manuscript.reviewers), 2)
+        # reviewer 1
+        self.assertEqual(manuscript.reviewers[0].name, 'Ian Baldwin')
+        self.assertEqual(manuscript.reviewers[0].orcid, None)
+        self.assertEqual(manuscript.reviewers[0].title, 'Dr.')
+        self.assertEqual(manuscript.reviewers[0].person_id, '1013')
+        self.assertEqual(manuscript.reviewers[0].roles, ['Senior Editor'])
+        # reviewer 2
+        self.assertEqual(manuscript.reviewers[1].name, 'Carl Bergstrom')
+        self.assertEqual(manuscript.reviewers[1].orcid, None)
+        self.assertEqual(manuscript.reviewers[1].title, '')
+        self.assertEqual(manuscript.reviewers[1].person_id, '1046')
+        self.assertEqual(manuscript.reviewers[1].roles, ['Reviewing Editor'])
+
+    def test_manuscript_populate_from_row_none(self):
+        """"empty row data"""
+        manuscript = bigquery.Manuscript()
+        self.assertIsNone(manuscript.populate_from_row(None))
+
+
+class TestReviewer(unittest.TestCase):
+
+    def test_reviewer_populate_from_dict_none(self):
+        """"empty row data"""
+        reviewer = bigquery.Reviewer()
+        self.assertIsNone(reviewer.populate_from_dict(None))
