@@ -3,71 +3,10 @@ import datetime
 from mock import patch
 from google.oauth2.service_account import Credentials
 from google.cloud.bigquery import Client
-from google.cloud.bigquery.table import Row
 from google.cloud._helpers import _UTC
 from provider import bigquery
-import tests.settings_mock as settings_mock
-
-
-ARTICLE_RESULT_15747 = Row(
-    (
-        (
-            '15747', '10.7554/eLife.15747',
-            datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=_UTC()),
-            datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=_UTC()),
-            [
-                {
-                    'Name': 'Ian Baldwin',
-                    'ORCID': None,
-                    'Title': 'Dr.',
-                    'Person_ID': '1013',
-                    'Roles': ['Senior Editor']
-                },
-                {
-                    'Name': 'Carl Bergstrom',
-                    'ORCID': None,
-                    'Title': '',
-                    'Person_ID': '1046',
-                    'Roles': ['Reviewing Editor']
-                }]
-            )
-        ),
-    {
-        'Manuscript_ID': 0,
-        'DOI': 1,
-        'QC_Complete_Timestamp': 2,
-        'Decision_Sent_Timestamp': 3,
-        'Reviewers_And_Editors': 4
-        }
-    )
-
-
-class FakeBigQueryClient():
-
-    def __init__(self, result):
-        self.result = result
-
-    def query(self, query):
-        return FakeQueryJob(self.result)
-
-
-class FakeQueryJob():
-
-    def __init__(self, result_return):
-        self.result_return = result_return
-
-    def result(self):
-        return self.result_return
-
-
-class FakeRowIterator():
-
-    def __init__(self, rows):
-        self.rows = rows
-
-    def __iter__(self):
-        for row in self.rows:
-            yield row
+from tests.classes_mock import FakeBigQueryClient, FakeBigQueryRowIterator
+from tests import bigquery_test_data, settings_mock
 
 
 class TestBigQueryProvider(unittest.TestCase):
@@ -93,7 +32,7 @@ class TestBigQueryProvider(unittest.TestCase):
         self.assertEqual(query, expected)
 
     def test_article_data(self):
-        rows = FakeRowIterator([ARTICLE_RESULT_15747])
+        rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
         client = FakeBigQueryClient(rows)
         doi = '10.7554/eLife.15747'
         expected_doi = doi
@@ -111,14 +50,14 @@ class TestBigQueryProvider(unittest.TestCase):
             self.assertEqual(names, expected_name_list)
 
     def test_get_review_date(self):
-        self.assertEqual(bigquery.get_review_date(None, None), "1970-01-02")
+        self.assertEqual(bigquery.get_review_date(None, None, None), None)
 
 
 class TestManuscript(unittest.TestCase):
 
     def test_manuscript_init(self):
         """"instantiate a Manuscript object from row data"""
-        manuscript = bigquery.Manuscript(ARTICLE_RESULT_15747)
+        manuscript = bigquery.Manuscript(bigquery_test_data.ARTICLE_RESULT_15747)
         self.assertEqual(manuscript.manuscript_id, '15747')
         self.assertEqual(manuscript.doi, '10.7554/eLife.15747')
         # check qc_complete_datetime
