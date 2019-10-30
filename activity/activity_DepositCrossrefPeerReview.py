@@ -128,6 +128,14 @@ class activity_DepositCrossrefPeerReview(Activity):
             # populate Manuscript object
             manuscript_object = self.get_manuscript_object(article.doi)
             for sub_article in article.review_articles:
+                # add editor / reviewer / senior_editor records from the parent article if missing
+                if sub_article.article_type != "reply":
+                    for contrib in article.editors:
+                        # compare three matching parts: contrib_type, surname, and given_name
+                        if ((contrib.contrib_type, contrib.surname, contrib.given_name) not in [
+                                (obj.contrib_type, obj.surname, obj.given_name) 
+                                for obj in sub_article.contributors]):
+                            sub_article.contributors.append(contrib)
                 # add review_date
                 review_date = bigquery.get_review_date(manuscript_object, sub_article.article_type)
                 if review_date:
