@@ -135,6 +135,10 @@ class activity_DepositCrossrefPeerReview(Activity):
                         if ((contrib.contrib_type, contrib.surname, contrib.given_name) not in [
                                 (obj.contrib_type, obj.surname, obj.given_name) 
                                 for obj in sub_article.contributors]):
+                            # change senior_editor to editor, if present
+                            if contrib.contrib_type == "senior_editor":
+                                contrib.contrib_type = "editor"
+                            # append it
                             sub_article.contributors.append(contrib)
                 # add review_date
                 review_date = bigquery.get_review_date(manuscript_object, sub_article.article_type)
