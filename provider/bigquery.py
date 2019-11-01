@@ -16,13 +16,13 @@ class Manuscript():
         self.attr_name_map = {
             'Manuscript_ID': 'manuscript_id',
             'DOI': 'doi',
-            'QC_Complete_Timestamp': 'qc_complete_datetime',
-            'Decision_Sent_Timestamp': 'decision_sent_datetime'
+            'Review_Comment_UTC_Timestamp': 'decision_letter_datetime',
+            'Author_Response_UTC_Timestamp': 'author_response_datetime'
         }
         self.manuscript_id = None
         self.doi = None
-        self.qc_complete_datetime = None
-        self.decision_sent_datetime = None
+        self.decision_letter_datetime = None
+        self.author_response_datetime = None
         self.reviewers = []
         # populate values from the row data
         self.populate_from_row(row)
@@ -103,9 +103,11 @@ def date_to_string(datetime_date):
 def get_review_date(manuscript_object, article_type):
     """get date for a peer review sub article"""
     if article_type in ['article-commentary', 'decision-letter']:
-        if manuscript_object.qc_complete_datetime:
-            return date_to_string(manuscript_object.qc_complete_datetime)
+        if manuscript_object.decision_letter_datetime:
+            return date_to_string(manuscript_object.decision_letter_datetime)
     elif article_type == 'reply':
-        if manuscript_object.decision_sent_datetime:
-            return date_to_string(manuscript_object.decision_sent_datetime)
+        if manuscript_object.author_response_datetime:
+            return date_to_string(manuscript_object.author_response_datetime)
+        elif manuscript_object.decision_letter_datetime:
+            return date_to_string(manuscript_object.decision_letter_datetime)
     return None

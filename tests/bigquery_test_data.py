@@ -29,8 +29,8 @@ ARTICLE_RESULT_15747 = Row(
     {
         'Manuscript_ID': 0,
         'DOI': 1,
-        'QC_Complete_Timestamp': 2,
-        'Decision_Sent_Timestamp': 3,
+        'Review_Comment_UTC_Timestamp': 2,
+        'Author_Response_UTC_Timestamp': 3,
         'Reviewers_And_Editors': 4
         }
     )

@@ -36,14 +36,15 @@ class TestBigQueryProvider(unittest.TestCase):
         client = FakeBigQueryClient(rows)
         doi = '10.7554/eLife.15747'
         expected_doi = doi
-        expected_qc_complete_timestamp_str = '2016-05-31 11:31:01+00:00'
+        expected_decision_letter_timestamp_str = '2016-05-31 11:31:01+00:00'
         expected_name_list = ['Ian Baldwin', 'Carl Bergstrom']
         # run the query
         result = bigquery.article_data(client, doi)
         # check the result
         for row in result:
             self.assertEqual(row.DOI, expected_doi)
-            self.assertEqual(str(row.QC_Complete_Timestamp), expected_qc_complete_timestamp_str)
+            self.assertEqual(
+                str(row.Review_Comment_UTC_Timestamp), expected_decision_letter_timestamp_str)
             names = []
             for editor in row.Reviewers_And_Editors:
                 names.append(editor.get('Name'))
@@ -51,11 +52,19 @@ class TestBigQueryProvider(unittest.TestCase):
 
     def test_get_review_date(self):
         manuscript = bigquery.Manuscript()
-        manuscript.qc_complete_datetime = datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=_UTC())
-        manuscript.decision_sent_datetime = datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=_UTC())
+        manuscript.decision_letter_datetime = datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=_UTC())
+        manuscript.author_response_datetime = datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=_UTC())
         self.assertEqual(bigquery.get_review_date(manuscript, 'article-commentary'), '2016-05-31')
         self.assertEqual(bigquery.get_review_date(manuscript, 'decision-letter'), '2016-05-31')
         self.assertEqual(bigquery.get_review_date(manuscript, 'reply'), '2016-06-10')
+
+    def test_get_review_date_no_author_response_datetime(self):
+        manuscript = bigquery.Manuscript()
+        manuscript.decision_letter_datetime = datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=_UTC())
+        manuscript.author_response_datetime = None
+        self.assertEqual(bigquery.get_review_date(manuscript, 'article-commentary'), '2016-05-31')
+        self.assertEqual(bigquery.get_review_date(manuscript, 'decision-letter'), '2016-05-31')
+        self.assertEqual(bigquery.get_review_date(manuscript, 'reply'), '2016-05-31')
 
     def test_get_review_date_none_manuscript(self):
         self.assertEqual(bigquery.get_review_date(None, None), None)
@@ -68,16 +77,16 @@ class TestManuscript(unittest.TestCase):
         manuscript = bigquery.Manuscript(bigquery_test_data.ARTICLE_RESULT_15747)
         self.assertEqual(manuscript.manuscript_id, '15747')
         self.assertEqual(manuscript.doi, '10.7554/eLife.15747')
-        # check qc_complete_datetime
+        # check decision_letter_datetime
         self.assertEqual(
-            manuscript.qc_complete_datetime,
+            manuscript.decision_letter_datetime,
             datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=_UTC()))
-        self.assertEqual('2016-05-31', bigquery.date_to_string(manuscript.qc_complete_datetime))
-        # check decision_sent_datetime
+        self.assertEqual('2016-05-31', bigquery.date_to_string(manuscript.decision_letter_datetime))
+        # check author_response_datetime
         self.assertEqual(
-            manuscript.decision_sent_datetime,
+            manuscript.author_response_datetime,
             datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=_UTC()))
-        self.assertEqual('2016-06-10', bigquery.date_to_string(manuscript.decision_sent_datetime))
+        self.assertEqual('2016-06-10', bigquery.date_to_string(manuscript.author_response_datetime))
         # check reviwers
         self.assertEqual(len(manuscript.reviewers), 2)
         # reviewer 1
