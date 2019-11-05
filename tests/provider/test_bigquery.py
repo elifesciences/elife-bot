@@ -52,15 +52,18 @@ class TestBigQueryProvider(unittest.TestCase):
 
     def test_get_review_date(self):
         manuscript = bigquery.Manuscript()
-        manuscript.decision_letter_datetime = datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=_UTC())
-        manuscript.author_response_datetime = datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=_UTC())
+        manuscript.decision_letter_datetime = datetime.datetime(
+            2016, 5, 31, 11, 31, 1, tzinfo=_UTC())
+        manuscript.author_response_datetime = datetime.datetime(
+            2016, 6, 10, 6, 28, 43, tzinfo=_UTC())
         self.assertEqual(bigquery.get_review_date(manuscript, 'article-commentary'), '2016-05-31')
         self.assertEqual(bigquery.get_review_date(manuscript, 'decision-letter'), '2016-05-31')
         self.assertEqual(bigquery.get_review_date(manuscript, 'reply'), '2016-06-10')
 
     def test_get_review_date_no_author_response_datetime(self):
         manuscript = bigquery.Manuscript()
-        manuscript.decision_letter_datetime = datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=_UTC())
+        manuscript.decision_letter_datetime = datetime.datetime(
+            2016, 5, 31, 11, 31, 1, tzinfo=_UTC())
         manuscript.author_response_datetime = None
         self.assertEqual(bigquery.get_review_date(manuscript, 'article-commentary'), '2016-05-31')
         self.assertEqual(bigquery.get_review_date(manuscript, 'decision-letter'), '2016-05-31')
