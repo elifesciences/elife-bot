@@ -4,7 +4,9 @@ from mock import patch
 from google.oauth2.service_account import Credentials
 from google.cloud.bigquery import Client
 from google.cloud._helpers import _UTC
+from google.auth.exceptions import DefaultCredentialsError
 from provider import bigquery
+from tests.activity.classes_mock import FakeLogger
 from tests.classes_mock import FakeBigQueryClient, FakeBigQueryRowIterator
 from tests import bigquery_test_data, settings_mock
 
@@ -12,17 +14,20 @@ from tests import bigquery_test_data, settings_mock
 class TestBigQueryProvider(unittest.TestCase):
 
     @patch('google.auth.crypt.RSASigner.from_service_account_info')
-    def test_get_credentials(self, fake_account_info):
-        fake_account_info.return_value = None
-        creds = bigquery.get_credentials(settings_mock)
-        self.assertTrue(isinstance(creds, Credentials))
-
-    @patch('google.auth.crypt.RSASigner.from_service_account_info')
     def test_get_client(self, fake_account_info):
         """mocked client for test coverage"""
         fake_account_info.return_value = None
-        client = bigquery.get_client(settings_mock)
+        client = bigquery.get_client(settings_mock, FakeLogger())
         self.assertTrue(isinstance(client, Client))
+
+    @patch('google.cloud.bigquery.Client.__init__')
+    @patch('google.auth.crypt.RSASigner.from_service_account_info')
+    def test_get_client_exception(self, fake_account_info, fake_init):
+        """test coverage for credentials error exception"""
+        fake_init.side_effect = DefaultCredentialsError()
+        fake_account_info.return_value = None
+        with self.assertRaises(DefaultCredentialsError):
+            bigquery.get_client(settings_mock, FakeLogger())
 
     def test_article_query(self):
         expected = (

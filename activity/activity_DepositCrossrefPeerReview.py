@@ -156,7 +156,7 @@ class activity_DepositCrossrefPeerReview(Activity):
 
     def get_manuscript_object(self, doi):
         """get data from BigQuery and populate a Manuscript object"""
-        bigquery_client = bigquery.get_client(self.settings)
+        bigquery_client = bigquery.get_client(self.settings, self.logger)
         rows = bigquery.article_data(bigquery_client, doi)
         if not rows:
             self.logger.info('No data from BigQuery for DOI %s' % doi)

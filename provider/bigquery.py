@@ -1,11 +1,7 @@
 from google.oauth2 import service_account
 from google.cloud.bigquery import Client
+from google.auth.exceptions import DefaultCredentialsError
 
-
-CREDENTIALS_SCOPE = [
-    'https://www.googleapis.com/auth/cloud-platform',
-    'https://www.googleapis.com/auth/bigquery'
-]
 
 BIG_QUERY_VIEW_NAME = 'elife-data-pipeline.prod.mv_Production_Manuscript_Crossref_Deposit'
 
@@ -71,17 +67,13 @@ class Reviewer():
             setattr(self, attr_name, row_dict.get(row_key, None))
 
 
-def get_credentials(settings):
-    credentials = service_account.Credentials.from_service_account_file(
-        settings.big_query_credentials_file)
-    return credentials.with_scopes(CREDENTIALS_SCOPE)
-
-
-def get_client(settings):
-    scoped_credentials = get_credentials(settings)
-    return Client(
-        credentials=scoped_credentials,
-        project=settings.big_query_project_id)
+def get_client(settings, logger):
+    """path to credentials file in env var GOOGLE_APPLICATION_CREDENTIALS"""
+    try:
+        return Client(project=settings.big_query_project_id)
+    except DefaultCredentialsError:
+        logger.info("Failed to instantiate a bigquery Client")
+        raise
 
 
 def article_query(doi):

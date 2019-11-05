@@ -65,5 +65,4 @@ elifepubmed_config_section = 'elife'
 elifecrossref_config_file = 'tests/activity/crossref.cfg'
 elifecrossref_config_section = 'elife'
 
-big_query_credentials_file = 'tests/test_data/fake_google_service_account.json'
 big_query_project_id = ''
