@@ -11,18 +11,22 @@ ARTICLE_RESULT_15747 = Row(
             datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=_UTC()),
             [
                 {
-                    'Name': 'Ian Baldwin',
-                    'ORCID': None,
                     'Title': 'Dr.',
-                    'Person_ID': '1013',
-                    'Roles': ['Senior Editor']
+                    'Last_Name': 'Baldwin',
+                    'Middle_Name': None,
+                    'Role': 'Senior Editor',
+                    'ORCID': None,
+                    'First_Name': 'Ian',
+                    'Person_ID': '1013'
                 },
                 {
-                    'Name': 'Carl Bergstrom',
-                    'ORCID': None,
                     'Title': '',
-                    'Person_ID': '1046',
-                    'Roles': ['Reviewing Editor']
+                    'Last_Name': 'Bergstrom',
+                    'Middle_Name': None,
+                    'Role': 'Reviewing Editor',
+                    'ORCID': None,
+                    'First_Name': 'Carl',
+                    'Person_ID': '1046'
                 }]
             )
         ),

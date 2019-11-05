@@ -44,16 +44,22 @@ class Reviewer():
 
     def __init__(self, row_dict=None):
         self.attr_name_map = {
-            'Name': 'name',
-            'ORCID': 'orcid',
             'Title': 'title',
+            'Last_Name': 'last_name',
+            'Middle_Name': 'middle_name',
+            'Role': 'role',
+            'ORCID': 'orcid',
+            'First_Name': 'first_name',
             'Person_ID': 'person_id'
         }
-        self.name = None
-        self.orcid = None
         self.title = None
+        self.last_name = None
+        self.middle_name = None
+        self.role = None
+        self.orcid = None
+        self.first_name = None
         self.person_id = None
-        self.roles = []
+
         # populate from the row dict
         self.populate_from_dict(row_dict)
 
@@ -63,8 +69,6 @@ class Reviewer():
         # populate the primary values
         for row_key, attr_name in list(self.attr_name_map.items()):
             setattr(self, attr_name, row_dict.get(row_key, None))
-        # populate the roles
-        self.roles = row_dict.get('Roles', [])
 
 
 def get_credentials(settings):

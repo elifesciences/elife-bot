@@ -37,7 +37,7 @@ class TestBigQueryProvider(unittest.TestCase):
         doi = '10.7554/eLife.15747'
         expected_doi = doi
         expected_decision_letter_timestamp_str = '2016-05-31 11:31:01+00:00'
-        expected_name_list = ['Ian Baldwin', 'Carl Bergstrom']
+        expected_last_name_list = ['Baldwin', 'Bergstrom']
         # run the query
         result = bigquery.article_data(client, doi)
         # check the result
@@ -47,8 +47,8 @@ class TestBigQueryProvider(unittest.TestCase):
                 str(row.Review_Comment_UTC_Timestamp), expected_decision_letter_timestamp_str)
             names = []
             for editor in row.Reviewers_And_Editors:
-                names.append(editor.get('Name'))
-            self.assertEqual(names, expected_name_list)
+                names.append(editor.get('Last_Name'))
+            self.assertEqual(names, expected_last_name_list)
 
     def test_get_review_date(self):
         manuscript = bigquery.Manuscript()
@@ -90,17 +90,21 @@ class TestManuscript(unittest.TestCase):
         # check reviwers
         self.assertEqual(len(manuscript.reviewers), 2)
         # reviewer 1
-        self.assertEqual(manuscript.reviewers[0].name, 'Ian Baldwin')
-        self.assertEqual(manuscript.reviewers[0].orcid, None)
         self.assertEqual(manuscript.reviewers[0].title, 'Dr.')
+        self.assertEqual(manuscript.reviewers[0].last_name, 'Baldwin')
+        self.assertEqual(manuscript.reviewers[0].middle_name, None)
+        self.assertEqual(manuscript.reviewers[0].role, 'Senior Editor')
+        self.assertEqual(manuscript.reviewers[0].orcid, None)
+        self.assertEqual(manuscript.reviewers[0].first_name, 'Ian')
         self.assertEqual(manuscript.reviewers[0].person_id, '1013')
-        self.assertEqual(manuscript.reviewers[0].roles, ['Senior Editor'])
         # reviewer 2
-        self.assertEqual(manuscript.reviewers[1].name, 'Carl Bergstrom')
-        self.assertEqual(manuscript.reviewers[1].orcid, None)
         self.assertEqual(manuscript.reviewers[1].title, '')
+        self.assertEqual(manuscript.reviewers[1].last_name, 'Bergstrom')
+        self.assertEqual(manuscript.reviewers[1].middle_name, None)
+        self.assertEqual(manuscript.reviewers[1].role, 'Reviewing Editor')
+        self.assertEqual(manuscript.reviewers[1].orcid, None)
+        self.assertEqual(manuscript.reviewers[1].first_name, 'Carl')
         self.assertEqual(manuscript.reviewers[1].person_id, '1046')
-        self.assertEqual(manuscript.reviewers[1].roles, ['Reviewing Editor'])
 
     def test_manuscript_populate_from_row_none(self):
         """"empty row data"""
