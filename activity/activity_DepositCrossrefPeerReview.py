@@ -158,10 +158,12 @@ class activity_DepositCrossrefPeerReview(Activity):
         """get data from BigQuery and populate a Manuscript object"""
         bigquery_client = bigquery.get_client(self.settings, self.logger)
         rows = bigquery.article_data(bigquery_client, doi)
-        if not rows:
-            self.logger.info('No data from BigQuery for DOI %s' % doi)
         # use the first row returned
-        first_row = [row for row in rows][0]
+        try:
+            first_row = [row for row in rows][0]
+        except IndexError:
+            first_row = None
+            self.logger.info('No data from BigQuery for DOI %s' % doi)
         return bigquery.Manuscript(first_row)
 
     def approve_for_publishing(self):
