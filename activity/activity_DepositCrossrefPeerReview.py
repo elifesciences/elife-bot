@@ -118,6 +118,10 @@ class activity_DepositCrossrefPeerReview(Activity):
         # Only if there were files approved for publishing
         if self.good_xml_files:
             self.statuses["email"] = self.send_admin_email(outbox_s3_key_names, http_detail_list)
+        else:
+            self.logger.info(
+                "No Crossref deposit files generated in %s. bad_xml_files: %s" %
+                (self.name, self.bad_xml_files))
 
         self.logger.info(
             "%s statuses: %s" % (self.name, self.statuses))

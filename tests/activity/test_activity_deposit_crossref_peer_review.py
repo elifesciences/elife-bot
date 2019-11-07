@@ -139,6 +139,26 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         result = self.activity.do_activity()
         self.assertTrue(result)
 
+    @patch.object(bigquery, 'get_client')
+    @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch('requests.post')
+    @patch.object(FakeStorageContext, 'list_resources')
+    @patch('provider.crossref.storage_context')
+    def test_do_activity_no_good_one_bad(self, fake_storage_context, fake_list_resources,
+                                         fake_request, fake_email_smtp_connect,
+                                         fake_get_client):
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
+        fake_storage_context.return_value = FakeStorageContext('tests/test_data/')
+        rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
+        client = FakeBigQueryClient(rows)
+        fake_get_client.return_value = client
+        # copy XML files into the input directory
+        fake_list_resources.return_value = ['bad.xml']
+
+        result = self.activity.do_activity()
+        self.assertTrue(result)
+        self.assertTrue('No Crossref deposit files generated', self.activity.logger.loginfo)
+
 
 if __name__ == '__main__':
     unittest.main()
