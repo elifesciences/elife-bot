@@ -83,11 +83,15 @@ class activity_DepositCrossrefPeerReview(Activity):
 
         http_detail_list = []
         if self.statuses.get("approve") is True:
+            file_type = "/*.xml"
+            sub_dir = self.directories.get("TMP_DIR")
             try:
                 # Publish files
                 self.statuses["publish"], http_detail_list = self.deposit_files_to_endpoint(
-                    sub_dir=self.directories.get("TMP_DIR"))
+                    file_type, sub_dir)
             except:
+                self.logger.info("Exception publishing files to Crossref: %s" %
+                                 glob.glob(sub_dir + file_type))
                 self.statuses["publish"] = False
 
         if self.statuses.get("publish") is True:
@@ -102,6 +106,8 @@ class activity_DepositCrossrefPeerReview(Activity):
             crossref.upload_crossref_xml_to_s3(
                 self.settings, self.publish_bucket, batch_file_to_folder, batch_file_names)
             self.statuses["outbox"] = True
+        else:
+            self.logger.info("Failed to publish all peer review deposits to Crossref")
 
         # Set the activity status of this activity based on successes
         self.statuses["activity"] = bool(
