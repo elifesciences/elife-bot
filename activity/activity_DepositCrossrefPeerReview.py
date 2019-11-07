@@ -143,6 +143,10 @@ class activity_DepositCrossrefPeerReview(Activity):
                 if sub_article.article_type != "reply":
                     self.add_editors(article, sub_article)
 
+                # set missing ORCID values for editors
+                if sub_article.article_type != "reply":
+                    self.set_editor_orcid(sub_article, manuscript_object)
+
                 # add review_date
                 review_date = bigquery.get_review_date(manuscript_object, sub_article.article_type)
                 if review_date:
@@ -184,6 +188,19 @@ class activity_DepositCrossrefPeerReview(Activity):
                 self.logger.info(
                     "Added %s %s from parent article to decision letter" %
                     (contrib.contrib_type, contrib.surname))
+
+    def set_editor_orcid(self, sub_article, manuscript_object):
+        for contrib in sub_article.contributors:
+            if not contrib.orcid:
+                for reviewer in manuscript_object.reviewers:
+                    # match on surname and first initial
+                    if (contrib.surname == reviewer.last_name and
+                            contrib.given_name and reviewer.first_name
+                            and contrib.given_name[0] == reviewer.first_name[0]):
+                        contrib.orcid = reviewer.orcid
+                        self.logger.info(
+                            "Set ORCID for %s to %s" %
+                            (contrib.surname, reviewer.orcid))
 
     def approve_for_publishing(self):
         """check if any files were generated before publishing files to the endpoint"""
