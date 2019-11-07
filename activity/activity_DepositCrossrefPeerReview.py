@@ -137,19 +137,12 @@ class activity_DepositCrossrefPeerReview(Activity):
         for article in list(article_object_map.values()):
             # populate Manuscript object
             manuscript_object = self.get_manuscript_object(article.doi)
+
             for sub_article in article.review_articles:
                 # add editor / reviewer / senior_editor records from the parent article if missing
                 if sub_article.article_type != "reply":
-                    for contrib in article.editors:
-                        # compare three matching parts: contrib_type, surname, and given_name
-                        if ((contrib.contrib_type, contrib.surname, contrib.given_name) not in [
-                                (obj.contrib_type, obj.surname, obj.given_name) 
-                                for obj in sub_article.contributors]):
-                            # change senior_editor to editor, if present
-                            if contrib.contrib_type == "senior_editor":
-                                contrib.contrib_type = "editor"
-                            # append it
-                            sub_article.contributors.append(contrib)
+                    self.add_editors(article, sub_article)
+
                 # add review_date
                 review_date = bigquery.get_review_date(manuscript_object, sub_article.article_type)
                 if review_date:
@@ -175,6 +168,22 @@ class activity_DepositCrossrefPeerReview(Activity):
             first_row = None
             self.logger.info('No data from BigQuery for DOI %s' % doi)
         return bigquery.Manuscript(first_row)
+
+    def add_editors(self, article, sub_article):
+        """add editors from article to sub_article if they are not already present"""
+        for contrib in article.editors:
+            # compare three matching parts: contrib_type, surname, and given_name
+            if ((contrib.contrib_type, contrib.surname, contrib.given_name) not in [
+                    (obj.contrib_type, obj.surname, obj.given_name)
+                    for obj in sub_article.contributors]):
+                # change senior_editor to editor, if present
+                if contrib.contrib_type == "senior_editor":
+                    contrib.contrib_type = "editor"
+                # append it
+                sub_article.contributors.append(contrib)
+                self.logger.info(
+                    "Added %s %s from parent article to decision letter" %
+                    (contrib.contrib_type, contrib.surname))
 
     def approve_for_publishing(self):
         """check if any files were generated before publishing files to the endpoint"""

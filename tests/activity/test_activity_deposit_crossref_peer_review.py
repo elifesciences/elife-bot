@@ -3,6 +3,7 @@ import unittest
 import shutil
 from mock import patch
 from ddt import ddt, data
+from elifearticle.article import Article, Contributor
 from provider import bigquery
 import activity.activity_DepositCrossrefPeerReview as activity_module
 from activity.activity_DepositCrossrefPeerReview import activity_DepositCrossrefPeerReview
@@ -158,6 +159,14 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         result = self.activity.do_activity()
         self.assertTrue(result)
         self.assertTrue('No Crossref deposit files generated', self.activity.logger.loginfo)
+
+    def test_add_editors(self):
+        article = Article()
+        editor = Contributor('senior_editor', 'Aardvark', 'Aaron')
+        article.editors = [editor]
+        sub_article = Article()
+        self.activity.add_editors(article, sub_article)
+        self.assertEqual(sub_article.contributors[0].surname, 'Aardvark')
 
 
 if __name__ == '__main__':
