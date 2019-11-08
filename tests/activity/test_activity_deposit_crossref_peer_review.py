@@ -170,13 +170,14 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
 
     def test_set_editor_orcid(self):
         orcid = '0000-0000-0000-000X'
+        expected = 'https://orcid.org/' + orcid
         sub_article = Article()
         sub_article.contributors = [Contributor('senior_editor', 'Baldwin', 'Ian')]
         # start with manuscript data then set an ORCID value
         manuscript_object = bigquery.Manuscript(bigquery_test_data.ARTICLE_RESULT_15747)
         manuscript_object.reviewers[0].orcid = orcid
         self.activity.set_editor_orcid(sub_article, manuscript_object)
-        self.assertEqual(sub_article.contributors[0].orcid, orcid)
+        self.assertEqual(sub_article.contributors[0].orcid, expected)
 
 
 if __name__ == '__main__':

@@ -194,13 +194,14 @@ class activity_DepositCrossrefPeerReview(Activity):
             if not contrib.orcid:
                 for reviewer in manuscript_object.reviewers:
                     # match on surname and first initial
-                    if (contrib.surname == reviewer.last_name and
+                    if (reviewer.orcid and contrib.surname == reviewer.last_name and
                             contrib.given_name and reviewer.first_name
                             and contrib.given_name[0] == reviewer.first_name[0]):
-                        contrib.orcid = reviewer.orcid
+                        orcid_uri = 'https://orcid.org/' + reviewer.orcid
+                        contrib.orcid = orcid_uri
                         self.logger.info(
-                            "Set ORCID for %s to %s" %
-                            (contrib.surname, reviewer.orcid))
+                            "Set ORCID for %s to %s in %s" %
+                            (contrib.surname, orcid_uri, sub_article.doi))
 
     def approve_for_publishing(self):
         """check if any files were generated before publishing files to the endpoint"""
