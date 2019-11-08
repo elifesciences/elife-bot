@@ -178,3 +178,5 @@ smtp_starttls = False
 smtp_ssl = False
 smtp_username = None
 smtp_password = None
+
+big_query_project_id = ''

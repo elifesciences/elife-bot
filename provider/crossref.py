@@ -151,13 +151,15 @@ def upload_files_to_endpoint(url, payload, xml_files):
 
 
 def generate_crossref_xml_to_disk(article_object_map, crossref_config, good_xml_files,
-                                  bad_xml_files, submission_type="journal"):
+                                  bad_xml_files, submission_type="journal",
+                                  pretty=False, indent=""):
     """from the article object generate crossref deposit XML"""
     for xml_file, article in list(article_object_map.items()):
         try:
             # Will write the XML to the TMP_DIR
             generate.crossref_xml_to_disk(
-                [article], crossref_config, submission_type=submission_type)
+                [article], crossref_config, submission_type=submission_type,
+                pretty=pretty, indent=indent)
             # Add filename to the list of good files
             good_xml_files.append(xml_file)
         except:
