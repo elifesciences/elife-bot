@@ -13,10 +13,10 @@ from tests import bigquery_test_data, settings_mock
 
 class TestBigQueryProvider(unittest.TestCase):
 
-    @patch('google.auth.crypt.RSASigner.from_service_account_info')
+    @patch('google.auth.default')
     def test_get_client(self, fake_account_info):
         """mocked client for test coverage"""
-        fake_account_info.return_value = None
+        fake_account_info.return_value = None, None
         client = bigquery.get_client(settings_mock, FakeLogger())
         self.assertTrue(isinstance(client, Client))
 
