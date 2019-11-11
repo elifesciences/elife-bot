@@ -10,7 +10,7 @@ class TestLetterParserProvider(unittest.TestCase):
         """test calling pandoc via Docker"""
         file_name = 'tests/fixtures/letterparser/sections.docx'
         # fake config for specifying Docker image
-        config = {'docker_image': 'knsit/pandoc:v2.5'}
+        config = {'docker_image': 'pandoc/core:2.6'}
         expected = (
             '<p><bold>Preamble<break /></bold></p>\n'
             '<p>Preamble ....</p>\n'
