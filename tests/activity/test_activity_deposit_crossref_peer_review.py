@@ -158,7 +158,6 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
 
         result = self.activity.do_activity()
         self.assertTrue(result)
-        self.assertTrue('No Crossref deposit files generated', self.activity.logger.loginfo)
 
     @patch.object(activity_DepositCrossrefPeerReview, 'get_manuscript_object')
     def test_get_article_objects(self, fake_manuscript_object):
