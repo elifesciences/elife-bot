@@ -160,6 +160,8 @@ class activity_DepositCrossrefPeerReview(Activity):
                         if contrib.contrib_type == 'author']
                 # fix editor roles
                 change_editor_roles(sub_article)
+                # dedupe contributors
+                dedupe_contributors(sub_article)
 
         return article_object_map
 
@@ -270,3 +272,16 @@ def change_editor_roles(article):
         # change senior_editor to editor, if present
         if contrib.contrib_type == "senior_editor":
             contrib.contrib_type = "editor"
+
+
+def dedupe_contributors(article):
+    """add each contributor only once if there are duplicates"""
+    contributors = []
+    contrib_seen = []
+    for contrib in article.contributors:
+        contrib_match = '%s,%s,%s' % (contrib.surname, contrib.given_name, contrib.contrib_type)
+        if contrib_match not in contrib_seen:
+            contributors.append(contrib)
+            contrib_seen.append(contrib_match)
+    # reset the article contributors to the deduped list
+    article.contributors = contributors
