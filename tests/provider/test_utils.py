@@ -103,6 +103,10 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(encoded_value, expected)
         self.assertEqual(type(encoded_value), expected_type)
 
+    def test_get_doi_url(self):
+        doi_url = utils.get_doi_url("10.7554/eLife.08411")
+        self.assertEqual(doi_url, "https://doi.org/10.7554/eLife.08411")
+
 
 if __name__ == '__main__':
     unittest.main()

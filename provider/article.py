@@ -13,7 +13,7 @@ import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
 from provider.article_structure import ArticleInfo
 from provider.storage_provider import storage_context
-from provider.utils import pad_msid
+from provider.utils import pad_msid, get_doi_url
 
 """
 Article data provider
@@ -138,7 +138,7 @@ class article(object):
             self.doi = parser.doi(soup)
             if self.doi:
                 self.doi_id = self.get_doi_id(self.doi)
-                self.doi_url = self.get_doi_url(self.doi)
+                self.doi_url = get_doi_url(self.doi)
                 self.lens_url = self.get_lens_url(self.doi)
                 self.tweet_url = self.get_tweet_url(self.doi)
 
@@ -227,7 +227,7 @@ class article(object):
         """
         Given a DOI, return a tweet URL
         """
-        doi_url = self.get_doi_url(doi)
+        doi_url = get_doi_url(doi)
         f = {"text": doi_url + " @eLife"}
         if hasattr(urllib, 'urlencode'):
             tweet_url = "http://twitter.com/intent/tweet?" + urllib.urlencode(f)
@@ -235,13 +235,6 @@ class article(object):
             # python 3
             tweet_url = "http://twitter.com/intent/tweet?" + urllib.parse.urlencode(f)
         return tweet_url
-
-    def get_doi_url(self, doi):
-        """
-        Given a DOI, get the URL for the DOI
-        """
-        doi_url = "https://doi.org/" + doi
-        return doi_url
 
     def get_lens_url(self, doi):
         """

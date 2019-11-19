@@ -336,3 +336,15 @@ def get_email_body_middle(outbox_s3_key_names, published_file_names,
         body += str(text) + "\n"
 
     return body
+
+
+def doi_exists(doi, logger):
+    """given a DOI check if it exists in Crossref"""
+    exists = False
+    doi_url = utils.get_doi_url(doi)
+    response = requests.head(doi_url)
+    if 300 <= response.status_code < 400:
+        exists = True
+    elif response.status_code < 300 or response.status_code >= 500:
+        logger.info('Status code for %s was %s' % (doi, response.status_code))
+    return exists

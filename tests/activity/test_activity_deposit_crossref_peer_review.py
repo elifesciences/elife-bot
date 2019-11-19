@@ -4,7 +4,7 @@ import shutil
 from mock import patch
 from ddt import ddt, data
 from elifearticle.article import Article, Contributor
-from provider import bigquery
+from provider import bigquery, crossref
 import activity.activity_DepositCrossrefPeerReview as activity_module
 from activity.activity_DepositCrossrefPeerReview import activity_DepositCrossrefPeerReview
 from tests import bigquery_test_data
@@ -44,6 +44,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
 
     @patch.object(bigquery, 'get_client')
     @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch('requests.head')
     @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
     @patch('provider.crossref.storage_context')
@@ -82,7 +83,8 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         }
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_list_resources,
-                         fake_request, fake_email_smtp_connect, fake_get_client):
+                         fake_post_request, fake_head_request,
+                         fake_email_smtp_connect, fake_get_client):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/')
         rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
@@ -91,7 +93,8 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         # copy XML files into the input directory
         fake_list_resources.return_value = test_data["article_xml_filenames"]
         # mock the POST to endpoint
-        fake_request.return_value = FakeResponse(test_data.get("post_status_code"))
+        fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))
+        fake_head_request.return_value = FakeResponse(302)
         # do the activity
         result = self.activity.do_activity()
         # check assertions
@@ -121,11 +124,13 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
 
     @patch.object(bigquery, 'get_client')
     @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch('requests.head')
     @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
     @patch('provider.crossref.storage_context')
     def test_do_activity_crossref_exception(self, fake_storage_context, fake_list_resources,
-                                            fake_request, fake_email_smtp_connect,
+                                            fake_post_request, fake_head_request,
+                                            fake_email_smtp_connect,
                                             fake_get_client):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/')
@@ -136,7 +141,8 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         fake_list_resources.return_value = ['elife-15747-v2.xml', 'elife_poa_e03977.xml']
 
         # raise an exception on a post
-        fake_request.side_effect = Exception('')
+        fake_post_request.side_effect = Exception('')
+        fake_head_request.return_value = FakeResponse(302)
         result = self.activity.do_activity()
         self.assertTrue(result)
 
@@ -207,6 +213,36 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         manuscript_object.reviewers[0].orcid = orcid
         self.activity.set_editor_orcid(sub_article, manuscript_object)
         self.assertEqual(sub_article.contributors[0].orcid, expected)
+
+
+class TestPrune(unittest.TestCase):
+
+    def setUp(self):
+        article_xml_list = [
+            'tests/test_data/crossref_peer_review/outbox/elife-15747-v2.xml',
+            'tests/test_data/crossref_peer_review/outbox/elife_poa_e03977.xml',
+        ]
+        self.article_object_map = crossref.article_xml_list_parse(
+            article_xml_list, [], activity_test_data.ExpandArticle_files_dest_folder)
+        self.logger = FakeLogger()
+
+    def tearDown(self):
+        helpers.delete_files_in_folder(
+            activity_test_data.ExpandArticle_files_dest_folder, filter_out=['.gitkeep'])
+
+    @patch('provider.crossref.doi_exists')
+    def test_prune_article_object_map(self, fake_doi_exists):
+        fake_doi_exists.return_value = True
+        good_article_map = activity_module.prune_article_object_map(
+            self.article_object_map, self.logger)
+        self.assertEqual(len(good_article_map), 1)
+
+    @patch('provider.crossref.doi_exists')
+    def test_prune_article_object_map_doi_not_exists(self, fake_doi_exists):
+        fake_doi_exists.return_value = False
+        good_article_map = activity_module.prune_article_object_map(
+            self.article_object_map, self.logger)
+        self.assertEqual(len(good_article_map), 0)
 
 
 if __name__ == '__main__':
