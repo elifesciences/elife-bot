@@ -14,7 +14,7 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
         fake_logger = FakeLogger()
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
-    @patch('provider.lax_provider.article_first_by_status')
+    @patch('provider.lax_provider.article_highest_version')
     @patch('provider.article.storage_context')
     @patch.object(activity_module, 'storage_context')
     @patch.object(activity_module, 'get_session')
@@ -23,14 +23,14 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
     @patch.object(activity_object, 'set_monitor_property')
     def test_do_activity(self, fake_set_property, fake_emit_monitor,
                          fake_sub_article_exists, fake_session_mock,
-                         fake_storage_context, fake_article_storage_context, fake_first):
+                         fake_storage_context, fake_article_storage_context, fake_highest_version):
         expected_result = True
         fake_session_mock.return_value = FakeSession(activity_test_data.session_example)
         fake_set_property.return_value = True
         fake_emit_monitor.return_value = True
         fake_storage_context.return_value = FakeStorageContext()
         fake_article_storage_context.return_value = FakeStorageContext()
-        fake_first.return_value = True
+        fake_highest_version.return_value = 1
         fake_sub_article_exists.return_value = True
         self.activity.emit_monitor_event = mock.MagicMock()
         # do the activity
