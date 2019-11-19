@@ -5,7 +5,7 @@ import glob
 from collections import OrderedDict
 from elifearticle.article import ArticleDate
 from activity.objects import Activity
-from provider import bigquery, crossref, email_provider, utils
+from provider import bigquery, crossref, email_provider, lax_provider, utils
 
 
 class activity_DepositCrossrefPeerReview(Activity):
@@ -70,7 +70,8 @@ class activity_DepositCrossrefPeerReview(Activity):
 
         article_object_map = self.get_article_objects(article_xml_files)
 
-        generate_article_object_map = prune_article_object_map(article_object_map, self.logger)
+        generate_article_object_map = prune_article_object_map(
+            article_object_map, self.settings, self.logger)
 
         # Generate crossref XML
         self.statuses["generate"] = crossref.generate_crossref_xml_to_disk(
@@ -252,7 +253,7 @@ class activity_DepositCrossrefPeerReview(Activity):
         return True
 
 
-def prune_article_object_map(article_object_map, logger):
+def prune_article_object_map(article_object_map, settings, logger):
     """remove any articles from the map that should not be deposited as peer reviews"""
     # prune any articles with no review_articles
     good_article_object_map = OrderedDict()
@@ -263,6 +264,9 @@ def prune_article_object_map(article_object_map, logger):
         # check DOI exists
         if good:
             good = check_doi_exists(article, logger)
+        # check VoR is published
+        if good:
+            good = check_vor_is_published(article, settings, logger)
 
         # finally if still good, add it to the map of good articles
         if good:
@@ -286,6 +290,16 @@ def check_doi_exists(article, logger):
     logger.info(
         'Pruning article %s from Crossref peer review deposit, DOI does not exist' %
         article.doi)
+    return False
+
+
+def check_vor_is_published(article, settings, logger):
+    status_version_map = lax_provider.article_status_version_map(article.id, settings)
+    if 'vor' in status_version_map:
+        return True
+    logger.info(
+        'Pruning article %s from Crossref peer review deposit, VoR is not published'
+        ', version map: %s' % (article.doi, status_version_map))
     return False
 
 
