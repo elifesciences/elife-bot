@@ -38,6 +38,22 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
         # check assertions
         self.assertEqual(result, expected_result)
 
+    @patch('provider.lax_provider.article_highest_version')
+    @patch.object(activity_module, 'get_session')
+    @patch.object(activity_object, 'emit_monitor_event')
+    @patch.object(activity_object, 'set_monitor_property')
+    def test_do_activity_silent_correction(self, fake_set_property, fake_emit_monitor,
+                                           fake_session_mock, fake_highest_version):
+        expected_result = True
+        fake_set_property.return_value = True
+        fake_emit_monitor.return_value = True
+        session_dict = activity_test_data.session_example
+        session_dict['run_type'] = 'silent-correction'
+        fake_session_mock.return_value = FakeSession(session_dict)
+        fake_highest_version.return_value = 2
+        result = self.activity.do_activity(activity_test_data.ExpandArticle_data)
+        self.assertEqual(result, expected_result)
+
 
 if __name__ == '__main__':
     unittest.main()
