@@ -4,7 +4,7 @@ import shutil
 from mock import patch
 from ddt import ddt, data
 from elifearticle.article import Article, Contributor
-from provider import bigquery, crossref
+from provider import bigquery, crossref, lax_provider
 import activity.activity_DepositCrossrefPeerReview as activity_module
 from activity.activity_DepositCrossrefPeerReview import activity_DepositCrossrefPeerReview
 from tests import bigquery_test_data
@@ -43,6 +43,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         shutil.copy(source_doc, dest_doc)
 
     @patch.object(bigquery, 'get_client')
+    @patch.object(activity_module, 'check_vor_is_published')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('requests.head')
     @patch('requests.post')
@@ -84,8 +85,9 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_list_resources,
                          fake_post_request, fake_head_request,
-                         fake_email_smtp_connect, fake_get_client):
+                         fake_email_smtp_connect, fake_check_vor, fake_get_client):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
+        fake_get_client.return_value = True
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/')
         rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
         client = FakeBigQueryClient(rows)
@@ -123,6 +125,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                             expected=expected, path=crossref_xml_filename_path))
 
     @patch.object(bigquery, 'get_client')
+    @patch.object(activity_module, 'check_vor_is_published')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('requests.head')
     @patch('requests.post')
@@ -130,9 +133,10 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
     @patch('provider.crossref.storage_context')
     def test_do_activity_crossref_exception(self, fake_storage_context, fake_list_resources,
                                             fake_post_request, fake_head_request,
-                                            fake_email_smtp_connect,
+                                            fake_email_smtp_connect, fake_check_vor,
                                             fake_get_client):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
+        fake_check_vor.return_value = True
         fake_storage_context.return_value = FakeStorageContext('tests/test_data/')
         rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
         client = FakeBigQueryClient(rows)
@@ -230,19 +234,39 @@ class TestPrune(unittest.TestCase):
         helpers.delete_files_in_folder(
             activity_test_data.ExpandArticle_files_dest_folder, filter_out=['.gitkeep'])
 
+    @patch.object(activity_module, 'check_vor_is_published')
     @patch('provider.crossref.doi_exists')
-    def test_prune_article_object_map(self, fake_doi_exists):
+    def test_prune_article_object_map(self, fake_doi_exists, fake_check_vor):
         fake_doi_exists.return_value = True
+        fake_check_vor.return_value = True
         good_article_map = activity_module.prune_article_object_map(
-            self.article_object_map, self.logger)
+            self.article_object_map, settings_mock, self.logger)
         self.assertEqual(len(good_article_map), 1)
 
+    @patch.object(activity_module, 'check_vor_is_published')
     @patch('provider.crossref.doi_exists')
-    def test_prune_article_object_map_doi_not_exists(self, fake_doi_exists):
+    def test_prune_article_object_map_doi_not_exists(self, fake_doi_exists, fake_check_vor):
         fake_doi_exists.return_value = False
+        fake_check_vor.return_value = True
         good_article_map = activity_module.prune_article_object_map(
-            self.article_object_map, self.logger)
+            self.article_object_map, settings_mock, self.logger)
         self.assertEqual(len(good_article_map), 0)
+
+    @patch.object(lax_provider, 'article_status_version_map')
+    def test_check_vor_is_published_vor(self, fake_version_map):
+        article = Article()
+        article.id = 666
+        fake_version_map.return_value = {'poa': [1], 'vor': [2]}
+        self.assertTrue(activity_module.check_vor_is_published(
+            article, settings_mock, self.logger))
+
+    @patch.object(lax_provider, 'article_status_version_map')
+    def test_check_vor_is_published_poa(self, fake_version_map):
+        article = Article()
+        article.id = 666
+        fake_version_map.return_value = {'poa': [1]}
+        self.assertFalse(activity_module.check_vor_is_published(
+            article, settings_mock, self.logger))
 
 
 if __name__ == '__main__':
