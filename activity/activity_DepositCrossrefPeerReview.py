@@ -255,24 +255,38 @@ class activity_DepositCrossrefPeerReview(Activity):
 def prune_article_object_map(article_object_map, logger):
     """remove any articles from the map that should not be deposited as peer reviews"""
     # prune any articles with no review_articles
-    peer_review_article_object_map = OrderedDict()
-    for file_name, article in article_object_map.items():
-        if article.review_articles:
-            peer_review_article_object_map[file_name] = article
-        else:
-            logger.info(
-                'Pruning article %s from Crossref peer review deposit, it has no peer reviews' %
-                article.doi)
     good_article_object_map = OrderedDict()
-    for file_name, article in peer_review_article_object_map.items():
+    for file_name, article in article_object_map.items():
+        good = True
+        # check it has review articles
+        good = has_review_articles(article, logger)
         # check DOI exists
-        if crossref.doi_exists(article.doi, logger):
+        if good:
+            good = check_doi_exists(article, logger)
+
+        # finally if still good, add it to the map of good articles
+        if good:
             good_article_object_map[file_name] = article
-        else:
-            logger.info(
-                'Pruning article %s from Crossref peer review deposit, DOI does not exist' %
-                article.doi)
+
     return good_article_object_map
+
+
+def has_review_articles(article, logger):
+    if article.review_articles:
+        return True
+    logger.info(
+        'Pruning article %s from Crossref peer review deposit, it has no peer reviews' %
+        article.doi)
+    return False
+
+
+def check_doi_exists(article, logger):
+    if crossref.doi_exists(article.doi, logger):
+        return True
+    logger.info(
+        'Pruning article %s from Crossref peer review deposit, DOI does not exist' %
+        article.doi)
+    return False
 
 
 def change_editor_roles(article):
