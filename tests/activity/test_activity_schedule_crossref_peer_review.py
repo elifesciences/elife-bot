@@ -9,6 +9,10 @@ from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageCont
 import tests.activity.test_activity_data as activity_test_data
 
 
+def mock_xml_sub_article_exists(folder_name):
+    return False
+
+
 class TestScheduleCrossrefPeerReview(unittest.TestCase):
 
     def setUp(self):
@@ -54,13 +58,12 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
 
     @patch('provider.lax_provider.article_highest_version')
     @patch.object(activity_module, 'get_session')
-    @patch.object(activity_object, 'xml_sub_article_exists')
     @patch.object(activity_object, 'emit_monitor_event')
-    def test_do_activity_no_sub_article(self, fake_emit_monitor,
-                                        fake_sub_article_exists, fake_session_mock,
+    def test_do_activity_no_sub_article(self, fake_emit_monitor, fake_session_mock,
                                         fake_highest_version):
         expected_result = True
-        fake_sub_article_exists.return_value = False
+        # mock this function with a replacement function instead of MagicMock patch would give
+        self.activity.xml_sub_article_exists = mock_xml_sub_article_exists
         fake_session_mock.return_value = FakeSession(activity_test_data.session_example)
         fake_highest_version.return_value = 1
         result = self.activity.do_activity(activity_test_data.data_example_before_publish)
