@@ -69,17 +69,17 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
             'ScheduleCrossrefPeerReview finds version 1 of 00353 has no sub-article'
             ' for peer review depositing'))
 
-    @patch.object(activity_object, 'copy_article_xml_to_outbox')
+    @patch('provider.lax_provider.get_xml_file_name')
     @patch('provider.lax_provider.article_highest_version')
     @patch.object(activity_module, 'get_session')
     @patch.object(activity_object, 'xml_sub_article_exists')
     @patch.object(activity_object, 'emit_monitor_event')
     def test_do_activity_exception(self, fake_emit_monitor,
                                    fake_sub_article_exists, fake_session_mock,
-                                   fake_highest_version, fake_copy_article):
+                                   fake_highest_version, fake_get_xml_file_name):
         expected_result = False
         fake_sub_article_exists.return_value = True
-        fake_copy_article.side_effect = Exception("Something went wrong!")
+        fake_get_xml_file_name.side_effect = Exception("Something went wrong!")
         fake_session_mock.return_value = FakeSession(activity_test_data.session_example)
         fake_highest_version.return_value = 1
         # do the activity
