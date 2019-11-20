@@ -104,6 +104,12 @@ def conditional_starts(current_datetime):
         # Jobs to start at the half past to quarter to the hour
         LOGGER.info("half past to quarter to the hour")
 
+        conditional_start_list.append(OrderedDict([
+            ("starter_name", "starter_DepositCrossrefPeerReview"),
+            ("workflow_id", "DepositCrossrefPeerReview"),
+            ("start_seconds", 60 * 31)
+        ]))
+
         # POA Publish once per day 12:30 local time
         #  (used to be set to 11:30 UTC during British Summer Time for 12:30 local UK time)
         if local_current_time.tm_hour == 12:
@@ -271,6 +277,7 @@ def start_workflow(settings, starter_name, workflow_id=None):
             "cron_NewS3POA",
             "starter_PublicationEmail",
             "starter_DepositCrossref",
+            "starter_DepositCrossrefPeerReview",
             "starter_PubmedArticleDeposit"]):
         starter_object.start(settings=settings)
 
