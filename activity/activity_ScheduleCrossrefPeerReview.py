@@ -1,6 +1,6 @@
 import json
 
-from provider import lax_provider
+from provider import crossref, lax_provider
 from provider.article_processing import download_jats
 from provider.storage_provider import storage_context
 from provider.execution_context import get_session
@@ -102,10 +102,9 @@ class activity_ScheduleCrossrefPeerReview(Activity):
     def xml_sub_article_exists(self, expanded_folder_name):
         jats_file = download_jats(
             self.settings, expanded_folder_name, self.get_tmp_dir(), self.logger)
-        with open(jats_file, 'r') as open_file:
-            article_xml = open_file.read()
-            if '<sub-article' in article_xml:
-                return True
+        article_objects = crossref.parse_article_xml([jats_file], self.get_tmp_dir())
+        if article_objects and article_objects[0].review_articles:
+            return True
         return False
 
     def copy_article_xml_to_outbox(self, dest_bucket_name, new_key_name,
