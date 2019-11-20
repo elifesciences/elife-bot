@@ -59,16 +59,16 @@ class activity_ScheduleCrossrefPeerReview(Activity):
                 self.emit_monitor_event(
                     self.settings, article_id, version, run, self.pretty_name, "end", log_message)
                 return True
-        else:
-            # check article XML has <sub-article> tag before queuing it
-            if self.xml_sub_article_exists(expanded_folder_name) is False:
-                log_message = (
-                    '%s finds version %s of %s has no sub-article for peer review depositing' %
-                    (self.name, version, article_id))
-                self.logger.info(log_message)
-                self.emit_monitor_event(
-                    self.settings, article_id, version, run, self.pretty_name, "end", log_message)
-                return True
+
+        # check article XML has <sub-article> tag before queuing it
+        if self.xml_sub_article_exists(expanded_folder_name) is False:
+            log_message = (
+                '%s finds version %s of %s has no sub-article for peer review depositing' %
+                (self.name, version, article_id))
+            self.logger.info(log_message)
+            self.emit_monitor_event(
+                self.settings, article_id, version, run, self.pretty_name, "end", log_message)
+            return True
 
         try:
             xml_file_name = lax_provider.get_xml_file_name(
