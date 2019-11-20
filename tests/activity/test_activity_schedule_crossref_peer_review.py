@@ -52,7 +52,7 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
         session_dict['run_type'] = 'silent-correction'
         fake_session_mock.return_value = FakeSession(session_dict)
         fake_highest_version.return_value = 2
-        result = self.activity.do_activity(activity_test_data.ExpandArticle_data)
+        result = self.activity.do_activity(activity_test_data.data_example_before_publish)
         self.assertEqual(result, expected_result)
         self.assertEqual(self.activity.logger.loginfo, (
             'ScheduleCrossrefPeerReview will not deposit article 00353 ingested by'
@@ -72,7 +72,7 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
         fake_emit_monitor.return_value = True
         fake_session_mock.return_value = FakeSession(activity_test_data.session_example)
         fake_highest_version.return_value = 1
-        result = self.activity.do_activity(activity_test_data.ExpandArticle_data)
+        result = self.activity.do_activity(activity_test_data.data_example_before_publish)
         self.assertEqual(result, expected_result)
         self.assertEqual(self.activity.logger.loginfo, (
             'ScheduleCrossrefPeerReview finds version 1 of 00353 has no sub-article'
@@ -95,7 +95,7 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
         fake_session_mock.return_value = FakeSession(activity_test_data.session_example)
         fake_highest_version.return_value = 1
         # do the activity
-        result = self.activity.do_activity(activity_test_data.ExpandArticle_data)
+        result = self.activity.do_activity(activity_test_data.data_example_before_publish)
         self.assertEqual(result, expected_result)
 
 
