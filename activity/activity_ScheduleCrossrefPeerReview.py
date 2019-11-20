@@ -52,8 +52,8 @@ class activity_ScheduleCrossrefPeerReview(Activity):
             if str(version) != str(highest_version):
                 log_message = (
                     ('%s will not deposit article %s' +
-                    ' ingested by silent-correction, its version of %s does not equal the' +
-                    ' highest version which is %s') %
+                     ' ingested by silent-correction, its version of %s does not equal the' +
+                     ' highest version which is %s') %
                     (self.name, article_id, version, highest_version))
                 self.logger.info(log_message)
                 self.emit_monitor_event(
