@@ -59,17 +59,22 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
             ' silent-correction, its version of 1 does not equal the highest version which is 2'))
 
     @patch('provider.lax_provider.article_highest_version')
+    @patch('provider.article.storage_context')
+    @patch.object(activity_module, 'storage_context')
     @patch.object(activity_module, 'get_session')
     @patch.object(activity_object, 'xml_sub_article_exists')
     @patch.object(activity_object, 'emit_monitor_event')
     @patch.object(activity_object, 'set_monitor_property')
     def test_do_activity_no_sub_article(self, fake_set_property, fake_emit_monitor,
-                                        fake_sub_article_exists,
-                                        fake_session_mock, fake_highest_version):
+                                        fake_sub_article_exists, fake_session_mock,
+                                        fake_storage_context, fake_article_storage_context,
+                                        fake_highest_version):
         expected_result = True
         fake_sub_article_exists.return_value = False
         fake_set_property.return_value = True
         fake_emit_monitor.return_value = True
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_article_storage_context.return_value = FakeStorageContext()
         fake_session_mock.return_value = FakeSession(activity_test_data.session_example)
         fake_highest_version.return_value = 1
         result = self.activity.do_activity(activity_test_data.data_example_before_publish)
