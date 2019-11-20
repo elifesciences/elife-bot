@@ -61,7 +61,7 @@ class activity_ScheduleCrossrefPeerReview(Activity):
                 return True
         else:
             # check article XML has <sub-article> tag before queuing it
-            if not self.xml_sub_article_exists(expanded_folder_name):
+            if self.xml_sub_article_exists(expanded_folder_name) is False:
                 log_message = (
                     '%s finds version %s of %s has no sub-article for peer review depositing' %
                     (self.name, version, article_id))
