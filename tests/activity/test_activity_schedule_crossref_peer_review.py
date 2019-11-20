@@ -1,5 +1,7 @@
 import unittest
+import os
 import copy
+import shutil
 from mock import mock, patch
 import activity.activity_ScheduleCrossrefPeerReview as activity_module
 from activity.activity_ScheduleCrossrefPeerReview import (
@@ -84,6 +86,24 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
         # do the activity
         result = self.activity.do_activity(activity_test_data.data_example_before_publish)
         self.assertEqual(result, expected_result)
+
+    @patch.object(activity_module, 'download_jats')
+    def test_xml_sub_article_exists(self, fake_download_jats):
+        file_name = 'elife-15747-v2.xml'
+        source_file = 'tests/test_data/crossref_peer_review/outbox/' + file_name
+        dest_file = os.path.join(self.activity.get_tmp_dir(), file_name)
+        shutil.copy(source_file, dest_file)
+        fake_download_jats.return_value = dest_file
+        self.assertTrue(self.activity.xml_sub_article_exists(''))
+
+    @patch.object(activity_module, 'download_jats')
+    def test_xml_sub_article_exists_not(self, fake_download_jats):
+        file_name = 'elife-00353-v1.xml'
+        source_file = 'tests/files_source/' + file_name
+        dest_file = os.path.join(self.activity.get_tmp_dir(), file_name)
+        shutil.copy(source_file, dest_file)
+        fake_download_jats.return_value = dest_file
+        self.assertFalse(self.activity.xml_sub_article_exists(''))
 
 
 if __name__ == '__main__':
