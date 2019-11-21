@@ -189,10 +189,12 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 00:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
+                "starter_DepositCrossrefPeerReview",
                 "starter_S3Monitor"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
+                "DepositCrossrefPeerReview",
                 "S3Monitor_POA"
             ]
         }
@@ -227,11 +229,13 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "2019-08-19 11:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
+                "starter_DepositCrossrefPeerReview",
                 "starter_PublishPOA",
                 "starter_S3Monitor"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
+                "DepositCrossrefPeerReview",
                 "PublishPOA",
                 "S3Monitor_POA"
             ]
@@ -246,11 +250,13 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "2019-10-27 12:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
+                "starter_DepositCrossrefPeerReview",
                 "starter_PublishPOA",
                 "starter_S3Monitor"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
+                "DepositCrossrefPeerReview",
                 "PublishPOA",
                 "S3Monitor_POA"
             ]
@@ -286,11 +292,13 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 20:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
+                "starter_DepositCrossrefPeerReview",
                 "starter_S3Monitor",
                 "starter_PubRouterDeposit"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
+                "DepositCrossrefPeerReview",
                 "S3Monitor_POA",
                 "PubRouterDeposit_PMC"
             ]
@@ -305,11 +313,13 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 21:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
+                "starter_DepositCrossrefPeerReview",
                 "starter_S3Monitor",
                 "starter_PubRouterDeposit"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
+                "DepositCrossrefPeerReview",
                 "S3Monitor_POA",
                 "PubRouterDeposit_WoS"
             ]
@@ -345,11 +355,13 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 22:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
+                "starter_DepositCrossrefPeerReview",
                 "starter_S3Monitor",
                 "starter_PubRouterDeposit"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
+                "DepositCrossrefPeerReview",
                 "S3Monitor_POA",
                 "PubRouterDeposit_Scopus"
             ]
@@ -404,11 +416,13 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 23:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
+                "starter_DepositCrossrefPeerReview",
                 "starter_S3Monitor",
                 "starter_PubRouterDeposit"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
+                "DepositCrossrefPeerReview",
                 "S3Monitor_POA",
                 "PubRouterDeposit_CNPIEC"
             ]

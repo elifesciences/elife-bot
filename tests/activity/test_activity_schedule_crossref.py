@@ -1,4 +1,5 @@
 import unittest
+import copy
 from activity.activity_ScheduleCrossref import activity_ScheduleCrossref
 from mock import mock, patch
 from provider import lax_provider
@@ -56,7 +57,7 @@ class TestScheduleCrossref(unittest.TestCase):
     @patch('activity.activity_ScheduleCrossref.get_session')
     def test_do_activity_silent_correction(self, fake_session_mock, fake_highest_version):
         expected_result = True
-        session_dict = testdata.session_example
+        session_dict = copy.copy(testdata.session_example)
         session_dict['run_type'] = 'silent-correction'
         fake_session_mock.return_value = FakeSession(session_dict)
         fake_highest_version.return_value = 2
