@@ -294,7 +294,7 @@ def check_doi_exists(article, logger):
 
 
 def check_vor_is_published(article, settings, logger):
-    status_version_map = lax_provider.article_status_version_map(article.id, settings)
+    status_version_map = lax_provider.article_status_version_map(article.manuscript, settings)
     if 'vor' in status_version_map:
         return True
     logger.info(
