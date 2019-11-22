@@ -150,6 +150,7 @@ class TestPublicationEmail(unittest.TestCase):
             shutil.copy(source_doc, dest_doc)
         self.activity.templates.email_templates_warmed = templates_warmed
 
+    @patch('provider.article.article.download_article_xml_from_s3')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('provider.lax_provider.article_versions')
     @patch.object(Templates, 'download_email_templates_from_s3')
@@ -162,10 +163,12 @@ class TestPublicationEmail(unittest.TestCase):
                          fake_ejp_get_s3key,
                          fake_download_email_templates,
                          fake_article_versions,
-                         fake_email_smtp_connect):
+                         fake_email_smtp_connect,
+                         fake_download_xml):
 
         directory = TempDirectory()
         fake_storage_context.return_value = FakeStorageContext()
+        fake_download_xml.return_value = False
 
         # Basic fake data for all activity passes
         fake_ejp_get_s3key.return_value = fake_get_s3key(
@@ -232,6 +235,7 @@ class TestPublicationEmail(unittest.TestCase):
         result = self.activity.do_activity()
         self.assertEqual(result, True)
 
+    @patch('provider.article.article.download_article_xml_from_s3')
     @patch('provider.lax_provider.article_versions')
     @data(
         (
@@ -252,9 +256,10 @@ class TestPublicationEmail(unittest.TestCase):
     )
     @unpack
     def test_process_articles(self, comment, xml_filenames, expected_approved, expected_prepared,
-                              expected_map, fake_article_versions):
+                              expected_map, fake_article_versions, fake_download_xml):
         """edge cases for process articles where the approved and prepared count differ"""
         fake_article_versions.return_value = (200, LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3)
+        fake_download_xml.return_value = False
         approved, prepared, xml_file_to_doi_map = self.activity.process_articles(xml_filenames)
         self.assertEqual(
             len(approved), expected_approved,
