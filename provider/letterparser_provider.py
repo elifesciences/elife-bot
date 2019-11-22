@@ -14,3 +14,4 @@ def parse_file(file_name, config):
         return parse.parse_file(file_name, config)
     except docker.errors.APIError:
         LOGGER.info('Error connecting to docker')
+        raise
