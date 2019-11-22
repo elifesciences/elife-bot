@@ -9,8 +9,8 @@ IDENTITY = "process_%s" % os.getpid()
 LOGGER = log.logger("letterparser_provider.log", 'INFO', IDENTITY, loggerName=__name__)
 
 
-def docker_pandoc_output(file_name, config):
+def parse_file(file_name, config):
     try:
-        return parse.docker_pandoc_output(file_name, config)
+        return parse.parse_file(file_name, config)
     except docker.errors.APIError:
         LOGGER.info('Error connecting to docker')

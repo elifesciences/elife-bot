@@ -10,7 +10,7 @@ git+https://github.com/elifesciences/ejp-csv-parser.git@9fdfa6a37c00b6134f8a2a46
 git+https://github.com/elifesciences/jats-generator.git@ea0d4d90a28198eb2953cc982da85392fbfee360#egg=jatsgenerator
 git+https://github.com/elifesciences/package-poa.git@2649777a020661e507de4087d447f50ca8c2fe57#egg=packagepoa
 docker==4.0.2
-git+https://github.com/elifesciences/decision-letter-parser.git@0f4c7cc08246a94a226e12cba1e70cae11990aaa#egg=letterparser
+git+https://github.com/elifesciences/decision-letter-parser.git@a70ed001a2148675c1c8a60d95ec5196c4f806cc#egg=letterparser
 PyYAML==4.2b2
 Wand==0.5.1
 paramiko==2.4.2

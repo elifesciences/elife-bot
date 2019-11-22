@@ -6,11 +6,11 @@ import provider.letterparser_provider as letterparser_provider
 
 class TestLetterParserProvider(unittest.TestCase):
 
-    def test_docker_pandoc_output(self):
-        """test calling pandoc via Docker"""
+    def test_parse_file(self):
+        """test parsing docx file with pandoc which may be called via Docker"""
         file_name = 'tests/fixtures/letterparser/sections.docx'
-        # fake config for specifying Docker image
-        config = {'docker_image': 'pandoc/core:2.6'}
+        # blank config will use pandoc executable if present, otherwise via Docker image default
+        config = {}
         expected = (
             '<p><bold>Preamble<break /></bold></p>\n'
             '<p>Preamble ....</p>\n'
@@ -19,5 +19,5 @@ class TestLetterParserProvider(unittest.TestCase):
             '<p><bold>Author response</bold></p>\n'
             '<p>Author response ....</p>\n')
 
-        output = letterparser_provider.docker_pandoc_output(file_name, config)
+        output = letterparser_provider.parse_file(file_name, config)
         self.assertEqual(output, expected, 'Docker pandoc output not equal, is Docker running?')
