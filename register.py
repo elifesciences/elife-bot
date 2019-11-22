@@ -33,6 +33,7 @@ def start(settings):
     workflow_names.append("PackagePOA")
     workflow_names.append("PublishPOA")
     workflow_names.append("DepositCrossref")
+    workflow_names.append("DepositCrossrefPeerReview")
     workflow_names.append("PubmedArticleDeposit")
     workflow_names.append("PublicationEmail")
     workflow_names.append("FTPArticle")
@@ -87,12 +88,14 @@ def start(settings):
     activity_names.append("PackagePOA")
     activity_names.append("PublishFinalPOA")
     activity_names.append("DepositCrossref")
+    activity_names.append("DepositCrossrefPeerReview")
     activity_names.append("PubmedArticleDeposit")
     activity_names.append("PublicationEmail")
     activity_names.append("FTPArticle")
     activity_names.append("PubRouterDeposit")
     activity_names.append("PMCDeposit")
     activity_names.append("ScheduleCrossref")
+    activity_names.append("ScheduleCrossrefPeerReview")
     activity_names.append("ScheduleDownstream")
     activity_names.append("ModifyArticleSubjects")
     activity_names.append("EmailDigest")
@@ -103,7 +106,7 @@ def start(settings):
     activity_names.append("ValidateDigestInput")
     activity_names.append("EmailVideoArticlePublished")
     activity_names.append("CreateDigestMediumPost")
-    activity_names.append("PostDigestJATS")
+    activity_names.append("PostDigestJATS")    
 
     for activity_name in activity_names:
         # Import the activity libraries

@@ -151,13 +151,15 @@ def upload_files_to_endpoint(url, payload, xml_files):
 
 
 def generate_crossref_xml_to_disk(article_object_map, crossref_config, good_xml_files,
-                                  bad_xml_files, submission_type="journal"):
+                                  bad_xml_files, submission_type="journal",
+                                  pretty=False, indent=""):
     """from the article object generate crossref deposit XML"""
     for xml_file, article in list(article_object_map.items()):
         try:
             # Will write the XML to the TMP_DIR
             generate.crossref_xml_to_disk(
-                [article], crossref_config, submission_type=submission_type)
+                [article], crossref_config, submission_type=submission_type,
+                pretty=pretty, indent=indent)
             # Add filename to the list of good files
             good_xml_files.append(xml_file)
         except:
@@ -334,3 +336,15 @@ def get_email_body_middle(outbox_s3_key_names, published_file_names,
         body += str(text) + "\n"
 
     return body
+
+
+def doi_exists(doi, logger):
+    """given a DOI check if it exists in Crossref"""
+    exists = False
+    doi_url = utils.get_doi_url(doi)
+    response = requests.head(doi_url)
+    if 300 <= response.status_code < 400:
+        exists = True
+    elif response.status_code < 300 or response.status_code >= 500:
+        logger.info('Status code for %s was %s' % (doi, response.status_code))
+    return exists

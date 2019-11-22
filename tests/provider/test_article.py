@@ -62,10 +62,6 @@ class TestProviderArticle(unittest.TestCase):
             ("http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org" +
              "%2F10.7554%2FeLife.08411+%40eLife"))
 
-    def test_get_doi_url(self):
-        doi_url = self.articleprovider.get_doi_url("10.7554/eLife.08411")
-        self.assertEqual(doi_url, "https://doi.org/10.7554/eLife.08411")
-
     def test_get_lens_url(self):
         lens_url = self.articleprovider.get_lens_url("10.7554/eLife.08411")
         self.assertEqual(lens_url, "https://lens.elifesciences.org/08411")

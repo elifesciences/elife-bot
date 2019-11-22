@@ -268,6 +268,9 @@ class exp():
 
     article_path_pattern = "/articles/{id}v{version}"
 
+    # BigQuery settings
+    big_query_project_id = ''
+
 
 class dev():
     # AWS settings
@@ -520,6 +523,9 @@ class dev():
     fastly_api_key = 'fake_fastly_api_key'
 
     article_path_pattern = "/articles/{id}v{version}"
+
+    # BigQuery settings
+    big_query_project_id = ''
 
 
 class live():
@@ -774,6 +780,9 @@ class live():
     fastly_api_key = 'fake_fastly_api_key'
 
     article_path_pattern = "/articles/{id}v{version}"
+
+    # BigQuery settings
+    big_query_project_id = ''
 
 
 def get_settings(ENV="dev"):

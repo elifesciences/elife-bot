@@ -113,3 +113,31 @@ class FakeSMTPServer():
         with open(filename, 'w') as open_file:
             open_file.write(data)
         self.number += 1
+
+
+class FakeBigQueryClient():
+
+    def __init__(self, result):
+        self.result = result
+
+    def query(self, query):
+        return FakeBigQueryJob(self.result)
+
+
+class FakeBigQueryJob():
+
+    def __init__(self, result_return):
+        self.result_return = result_return
+
+    def result(self):
+        return self.result_return
+
+
+class FakeBigQueryRowIterator():
+
+    def __init__(self, rows):
+        self.rows = rows
+
+    def __iter__(self):
+        for row in self.rows:
+            yield row

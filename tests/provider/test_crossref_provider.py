@@ -276,3 +276,26 @@ class TestCrossrefProvider(unittest.TestCase):
             os.listdir(activity_test_data.ExpandArticle_files_dest_folder)
             if file_name.endswith('.xml')]
         self.assertEqual(uploaded_files, expected)
+
+
+class TestDoiExists(unittest.TestCase):
+
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.doi = '10.7554/eLife.99999'
+
+    @patch('requests.head')
+    def test_doi_exists_302(self, fake_request):
+        fake_request.return_value = FakeResponse(302)
+        self.assertTrue(crossref.doi_exists(self.doi, self.logger))
+
+    @patch('requests.head')
+    def test_doi_exists_404(self, fake_request):
+        fake_request.return_value = FakeResponse(404)
+        self.assertFalse(crossref.doi_exists(self.doi, self.logger))
+
+    @patch('requests.head')
+    def test_doi_exists_200(self, fake_request):
+        fake_request.return_value = FakeResponse(200)
+        self.assertFalse(crossref.doi_exists(self.doi, self.logger))
+        self.assertEqual(self.logger.loginfo, 'Status code for 10.7554/eLife.99999 was 200')

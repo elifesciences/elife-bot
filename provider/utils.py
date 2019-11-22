@@ -110,3 +110,10 @@ def get_activity_status_text(activity_status):
         activity_status_text = "FAILED."
 
     return activity_status_text
+
+
+def get_doi_url(doi):
+    """
+    Given a DOI, get the URL for the DOI
+    """
+    return "https://doi.org/%s" % doi
