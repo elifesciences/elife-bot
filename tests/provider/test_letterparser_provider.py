@@ -3,6 +3,7 @@
 import unittest
 import docker
 from mock import patch
+import tests.settings_mock as settings_mock
 import provider.letterparser_provider as letterparser_provider
 
 
@@ -11,6 +12,11 @@ class TestLetterParserProvider(unittest.TestCase):
     def setUp(self):
         self.file_name = 'tests/fixtures/letterparser/sections.docx'
         self.blank_config = {}
+
+    def test_letterparser_config(self):
+        """test reading the letterparser config file"""
+        config = letterparser_provider.letterparser_config(settings_mock)
+        self.assertEqual(config.get("docker_image"), "elifesciences/pandoc:2.7")
 
     def test_parse_file(self):
         """test parsing docx file with pandoc which may be called via Docker"""
