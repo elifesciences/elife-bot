@@ -66,3 +66,6 @@ elifecrossref_config_file = 'tests/activity/crossref.cfg'
 elifecrossref_config_section = 'elife'
 
 big_query_project_id = ''
+
+letterparser_config_file = 'tests/activity/letterparser.cfg'
+letterparser_config_section = 'elife'
