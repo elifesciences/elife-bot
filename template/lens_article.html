@@ -34,6 +34,7 @@
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
     <script src='../dist/lens.js'></script>
+    <script src="../dist/elife_api.js"></script>
 
     <script>
 
@@ -59,6 +60,7 @@
             query_string[pair[0]].push(pair[1]);
           }
         }
+        elifeApiCall();
         return query_string;
       } ();
 
