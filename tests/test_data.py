@@ -140,6 +140,15 @@ ingest_digest_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
                       u'bucket_name': u'exp-elife-bot-digests-input',
                       u'file_size': 14086}
 
+ingest_decision_letter_data = {
+  u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
+  u'event_time': u'2019-12-13T16:14:27.809576Z',
+  u'event_name': u'ObjectCreated:Put',
+  u'file_name': u'elife-12345.zip',
+  u'file_etag': u'e7f639f63171c097d4761e2d2efe8dc4',
+  u'bucket_name': u'continuumtest-elife-bot-decision-letter-input',
+  u'file_size': 14086}
+
 queue_worker_rules = {
     'ArticleZip': {
         'bucket_name_pattern': '.*elife-production-final$',
