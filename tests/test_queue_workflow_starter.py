@@ -129,6 +129,20 @@ class TestQueueWorkflowStarter(unittest.TestCase):
         self.assertEqual(sorted(s3_notification_dict), sorted(workflow_data))
         self.assertIsNotNone(data.get('run'))
 
+    def test_process_data_ingestdecisionletter(self):
+        workflow_data = {
+            'event_name': '',
+            'event_time': '',
+            'bucket_name': '',
+            'file_name': '',
+            'file_etag': '',
+            'file_size': '',
+        }
+        data = queue_workflow_starter.process_data_ingestdecisionletter(workflow_data)
+        s3_notification_dict = data.get("info").to_dict()
+        self.assertEqual(sorted(s3_notification_dict), sorted(workflow_data))
+        self.assertIsNotNone(data.get('run'))
+
 
 if __name__ == '__main__':
     unittest.main()

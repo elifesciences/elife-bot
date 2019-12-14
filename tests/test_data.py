@@ -165,6 +165,11 @@ queue_worker_rules = {
        'file_name_pattern': r'.*\.(docx|zip)',
        'starter_name': 'IngestDigest'
        },
+    'DecisionLetterInputFile': {
+       'bucket_name_pattern': '.*elife-bot-decision-letter-input$',
+       'file_name_pattern': r'.*\.(docx|zip)',
+       'starter_name': 'IngestDecisionLetter'
+       },
     }
 
 queue_worker_article_zip_data = {u'event_time': u'2016-07-28T16:14:27.809576Z',
