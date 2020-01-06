@@ -12,3 +12,8 @@ DigestInputFile:
   bucket_name_pattern: '.*elife-bot-digests-input$'
   file_name_pattern: '.*\.(docx|zip)'
   starter_name: 'IngestDigest'
+
+DecisionLetterInputFile:
+  bucket_name_pattern: '.*elife-bot-decision-letter-input$'
+  file_name_pattern: '.*\.(docx|zip)'
+  starter_name: 'IngestDecisionLetter'

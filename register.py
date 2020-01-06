@@ -41,6 +41,7 @@ def start(settings):
     workflow_names.append("PMCDeposit")
     workflow_names.append("PostPerfectPublication")
     workflow_names.append("IngestDigest")
+    workflow_names.append("IngestDecisionLetter")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries

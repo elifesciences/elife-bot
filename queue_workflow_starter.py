@@ -86,10 +86,15 @@ def process_data_ingestarticlezip(workflow_data):
     return data
 
 
-def process_data_initialarticlezip(workflow_data):
+def process_data_s3_notification_default(workflow_data):
+    """definition for default data in response to an S3 notification"""
     data = {'info': S3NotificationInfo.from_dict(workflow_data),
             'run': str(uuid.uuid4())}
     return data
+
+
+def process_data_initialarticlezip(workflow_data):
+    return process_data_s3_notification_default(workflow_data)
 
 
 def process_data_postperfectpublication(workflow_data):
@@ -103,9 +108,11 @@ def process_data_pubmedarticledeposit(workflow_data):
 
 
 def process_data_ingestdigest(workflow_data):
-    data = {'info': S3NotificationInfo.from_dict(workflow_data),
-            'run': str(uuid.uuid4())}
-    return data
+    return process_data_s3_notification_default(workflow_data)
+
+
+def process_data_ingestdecisionletter(workflow_data):
+    return process_data_s3_notification_default(workflow_data)
 
 
 workflow_data_processors = {
@@ -114,7 +121,8 @@ workflow_data_processors = {
     'SilentCorrectionsIngest': process_data_initialarticlezip,
     'PostPerfectPublication': process_data_postperfectpublication,
     'PubmedArticleDeposit': process_data_pubmedarticledeposit,
-    'IngestDigest': process_data_ingestdigest
+    'IngestDigest': process_data_ingestdigest,
+    'IngestDecisionLetter': process_data_ingestdecisionletter
 }
 
 
