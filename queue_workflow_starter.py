@@ -122,7 +122,7 @@ workflow_data_processors = {
     'PostPerfectPublication': process_data_postperfectpublication,
     'PubmedArticleDeposit': process_data_pubmedarticledeposit,
     'IngestDigest': process_data_ingestdigest,
-    'IngestDecisionLetter': process_data_ingestdecisionletter
+    'IngestDecisionLetter': process_data_ingestdecisionletter,
 }
 
 
