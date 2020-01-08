@@ -1,8 +1,6 @@
 from workflow.objects import Workflow
-
-"""
-IngestArticleZip workflow
-"""
+from workflow.helper import (
+    define_workflow_step, define_workflow_step_short, define_workflow_step_medium)
 
 
 class workflow_IngestArticleZip(Workflow):
@@ -35,139 +33,20 @@ class workflow_IngestArticleZip(Workflow):
 
             "steps":
                 [
-                    {
-                        "activity_type": "PingWorker",
-                        "activity_id": "PingWorker",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
-                    {
-                        "activity_type": "AcceptVersionReason",
-                        "activity_id": "AcceptVersionReason",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 10,
-                        "schedule_to_close_timeout": 60 * 10,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 10
-                    },
-                    {
-                        "activity_type": "ApplyVersionNumber",
-                        "activity_id": "ApplyVersionNumber",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 10,
-                        "schedule_to_close_timeout": 60 * 10,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 10
-                    },
-                    {
-                        "activity_type": "VerifyGlencoe",
-                        "activity_id": "VerifyGlencoe",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    },
-                    {
-                        "activity_type": "ConvertImagesToJPG",
-                        "activity_id": "ConvertImagesToJPG",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    },
-                    {
-                        "activity_type": "DepositIngestAssets",
-                        "activity_id": "DepositIngestAssets",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    },
-                    {
-                        "activity_type": "CopyGlencoeStillImages",
-                        "activity_id": "CopyGlencoeStillImages",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    },
-                    {
-                        "activity_type": "DepositAssets",
-                        "activity_id": "DepositAssets",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
-                    {
-                        "activity_type": "InvalidateCdn",
-                        "activity_id": "InvalidateCdn",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
-                    {
-                        "activity_type": "VerifyImageServer",
-                        "activity_id": "VerifyImageServer",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    },
-                    {
-                        "activity_type": "VerifyGlencoe",
-                        "activity_id": "VerifyGlencoeAgain",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    },
-                    {
-                        "activity_type": "IngestToLax",
-                        "activity_id": "IngestToLax",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 10,
-                        "schedule_to_close_timeout": 60 * 10,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 10
-                    },
-
+                    define_workflow_step("PingWorker", data),
+                    define_workflow_step_short("AcceptVersionReason", data),
+                    define_workflow_step_short("ApplyVersionNumber", data),
+                    define_workflow_step_medium("VerifyGlencoe", data),
+                    define_workflow_step_medium("ConvertImagesToJPG", data),
+                    define_workflow_step_medium("DepositIngestAssets", data),
+                    define_workflow_step_medium("CopyGlencoeStillImages", data),
+                    define_workflow_step("DepositAssets", data),
+                    define_workflow_step("InvalidateCdn", data),
+                    define_workflow_step_medium("VerifyImageServer", data),
+                    define_workflow_step_medium(
+                        "VerifyGlencoe", data,
+                        activity_id="VerifyGlencoeAgain"),
+                    define_workflow_step_short("IngestToLax", data),
                 ],
 
             "finish":

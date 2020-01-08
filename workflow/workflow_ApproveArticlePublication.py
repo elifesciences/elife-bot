@@ -1,8 +1,5 @@
 from workflow.objects import Workflow
-
-"""
-ApproveArticlePublication workflow
-"""
+from workflow.helper import define_workflow_step
 
 
 class workflow_ApproveArticlePublication(Workflow):
@@ -35,28 +32,8 @@ class workflow_ApproveArticlePublication(Workflow):
 
             "steps":
                 [
-                    {
-                        "activity_type": "PingWorker",
-                        "activity_id": "PingWorker",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
-                    {
-                        "activity_type": "PublishToLax",
-                        "activity_id": "PublishToLax",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
+                    define_workflow_step("PingWorker", data),
+                    define_workflow_step("PublishToLax", data),
                 ],
 
             "finish":

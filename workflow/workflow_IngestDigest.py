@@ -1,8 +1,5 @@
 from workflow.objects import Workflow
-
-"""
-IngestDigest workflow
-"""
+from workflow.helper import define_workflow_step
 
 
 class workflow_IngestDigest(Workflow):
@@ -35,72 +32,12 @@ class workflow_IngestDigest(Workflow):
 
             "steps":
                 [
-                    {
-                        "activity_type": "PingWorker",
-                        "activity_id": "PingWorker",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
-                    {
-                        "activity_type": "ValidateDigestInput",
-                        "activity_id": "ValidateDigestInput",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
-                    {
-                        "activity_type": "EmailDigest",
-                        "activity_id": "EmailDigest",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
-                    {
-                        "activity_type": "DepositDigestIngestAssets",
-                        "activity_id": "DepositDigestIngestAssets",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
-                    {
-                        "activity_type": "CopyDigestToOutbox",
-                        "activity_id": "CopyDigestToOutbox",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
-                    {
-                        "activity_type": "PostDigestJATS",
-                        "activity_id": "PostDigestJATS",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
+                    define_workflow_step("PingWorker", data),
+                    define_workflow_step("ValidateDigestInput", data),
+                    define_workflow_step("EmailDigest", data),
+                    define_workflow_step("DepositDigestIngestAssets", data),
+                    define_workflow_step("CopyDigestToOutbox", data),
+                    define_workflow_step("PostDigestJATS", data),
                 ],
 
             "finish":

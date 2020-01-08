@@ -1,8 +1,5 @@
 from workflow.objects import Workflow
-
-"""
-ProcessArticleZip workflow
-"""
+from workflow.helper import define_workflow_step, define_workflow_step_short
 
 
 class workflow_ProcessArticleZip(Workflow):
@@ -35,72 +32,12 @@ class workflow_ProcessArticleZip(Workflow):
 
             "steps":
                 [
-                    {
-                        "activity_type": "PingWorker",
-                        "activity_id": "PingWorker",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
-                    {
-                        "activity_type": "VerifyLaxResponse",
-                        "activity_id": "VerifyLaxResponse",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 10,
-                        "schedule_to_close_timeout": 60 * 10,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 10
-                    },
-                    {
-                        "activity_type": "ScheduleCrossref",
-                        "activity_id": "ScheduleCrossref",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
-                    {
-                        "activity_type": "ScheduleCrossrefPeerReview",
-                        "activity_id": "ScheduleCrossrefPeerReview",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
-                    {
-                        "activity_type": "IngestDigestToEndpoint",
-                        "activity_id": "IngestDigestToEndpoint",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
-                    {
-                        "activity_type": "ReadyToPublish",
-                        "activity_id": "ReadyToPublish",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    }
+                    define_workflow_step("PingWorker", data),
+                    define_workflow_step_short("VerifyLaxResponse", data),
+                    define_workflow_step("ScheduleCrossref", data),
+                    define_workflow_step("ScheduleCrossrefPeerReview", data),
+                    define_workflow_step("IngestDigestToEndpoint", data),
+                    define_workflow_step("ReadyToPublish", data),
                 ],
 
             "finish":

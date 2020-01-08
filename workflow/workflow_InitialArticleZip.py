@@ -1,8 +1,5 @@
 from workflow.objects import Workflow
-
-"""
-InitialArticleZip workflow
-"""
+from workflow.helper import define_workflow_step, define_workflow_step_medium
 
 
 class workflow_InitialArticleZip(Workflow):
@@ -35,61 +32,11 @@ class workflow_InitialArticleZip(Workflow):
 
             "steps":
                 [
-                    {
-                        "activity_type": "PingWorker",
-                        "activity_id": "PingWorker",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
-                    {
-                        "activity_type": "VersionLookup",
-                        "activity_id": "VersionLookup",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    },
-                    {
-                        "activity_type": "ExpandArticle",
-                        "activity_id": "ExpandArticle",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    },
-                    {
-                        "activity_type": "SendDashboardProperties",
-                        "activity_id": "SendDashboardProperties",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    },
-                    {
-                        "activity_type": "VersionReasonDecider",
-                        "activity_id": "VersionReasonDecider",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    }
+                    define_workflow_step("PingWorker", data),
+                    define_workflow_step_medium("VersionLookup", data),
+                    define_workflow_step_medium("ExpandArticle", data),
+                    define_workflow_step_medium("SendDashboardProperties", data),
+                    define_workflow_step_medium("VersionReasonDecider", data),
                 ],
 
             "finish":

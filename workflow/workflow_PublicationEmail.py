@@ -1,8 +1,6 @@
 from workflow.objects import Workflow
+from workflow.helper import define_workflow_step, define_workflow_step_short
 
-"""
-PublicationEmail workflow
-"""
 
 class workflow_PublicationEmail(Workflow):
 
@@ -29,41 +27,20 @@ class workflow_PublicationEmail(Workflow):
             "input": data,
 
             "start":
-            {
-                "requirements": None
-            },
+                {
+                    "requirements": None
+                },
 
             "steps":
-            [
-                {
-                    "activity_type": "PingWorker",
-                    "activity_id": "PingWorker",
-                    "version": "1",
-                    "input": data,
-                    "control": None,
-                    "heartbeat_timeout": 300,
-                    "schedule_to_close_timeout": 300,
-                    "schedule_to_start_timeout": 300,
-                    "start_to_close_timeout": 300
-                },
-                {
-                    "activity_type": "PublicationEmail",
-                    "activity_id": "PublicationEmail",
-                    "version": "1",
-                    "input": data,
-                    "control": None,
-                    "heartbeat_timeout": 60 * 10,
-                    "schedule_to_close_timeout": 60 * 10,
-                    "schedule_to_start_timeout": 300,
-                    "start_to_close_timeout": 60 * 10
-                }
-            ],
+                [
+                    define_workflow_step("PingWorker", data),
+                    define_workflow_step_short("PublicationEmail", data),
+                ],
 
             "finish":
-            {
-                "requirements": None
-            }
+                {
+                    "requirements": None
+                }
         }
 
         self.load_definition(workflow_definition)
-

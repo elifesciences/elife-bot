@@ -1,8 +1,6 @@
 from workflow.objects import Workflow
+from workflow.helper import define_workflow_step
 
-"""
-AdminEmail workflow
-"""
 
 class workflow_AdminEmail(Workflow):
 
@@ -29,40 +27,20 @@ class workflow_AdminEmail(Workflow):
             "input": data,
 
             "start":
-            {
-                "requirements": None
-            },
+                {
+                    "requirements": None
+                },
 
             "steps":
-            [
-                {
-                    "activity_type": "PingWorker",
-                    "activity_id": "PingWorker",
-                    "version": "1",
-                    "input": data,
-                    "control": None,
-                    "heartbeat_timeout": 300,
-                    "schedule_to_close_timeout": 300,
-                    "schedule_to_start_timeout": 300,
-                    "start_to_close_timeout": 300
-                },
-                {
-                    "activity_type": "AdminEmailHistory",
-                    "activity_id": "AdminEmailHistory",
-                    "version": "1",
-                    "input": data,
-                    "control": None,
-                    "heartbeat_timeout": 60 * 5,
-                    "schedule_to_close_timeout": 60 * 5,
-                    "schedule_to_start_timeout": 300,
-                    "start_to_close_timeout": 60 * 5
-                }
-            ],
+                [
+                    define_workflow_step("PingWorker", data),
+                    define_workflow_step("AdminEmailHistory", data),
+                ],
 
             "finish":
-            {
-                "requirements": None
-            }
+                {
+                    "requirements": None
+                }
         }
 
         self.load_definition(workflow_definition)

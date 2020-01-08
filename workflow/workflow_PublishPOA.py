@@ -1,8 +1,6 @@
 from workflow.objects import Workflow
+from workflow.helper import define_workflow_step
 
-"""
-PublishPOA workflow
-"""
 
 class workflow_PublishPOA(Workflow):
 
@@ -29,41 +27,26 @@ class workflow_PublishPOA(Workflow):
             "input": data,
 
             "start":
-            {
-                "requirements": None
-            },
+                {
+                    "requirements": None
+                },
 
             "steps":
-            [
-                {
-                    "activity_type": "PingWorker",
-                    "activity_id": "PingWorker",
-                    "version": "1",
-                    "input": data,
-                    "control": None,
-                    "heartbeat_timeout": 300,
-                    "schedule_to_close_timeout": 300,
-                    "schedule_to_start_timeout": 300,
-                    "start_to_close_timeout": 300
-                },
-                {
-                    "activity_type": "PublishFinalPOA",
-                    "activity_id": "PublishFinalPOA",
-                    "version": "1",
-                    "input": data,
-                    "control": None,
-                    "heartbeat_timeout": 60 * 30,
-                    "schedule_to_close_timeout": 60 * 30,
-                    "schedule_to_start_timeout": 300,
-                    "start_to_close_timeout": 60 * 30
-                }
-            ],
+                [
+                    define_workflow_step("PingWorker", data),
+                    define_workflow_step(
+                        "PublishFinalPOA", data,
+                        heartbeat_timeout=60 * 30,
+                        schedule_to_close_timeout=60 * 30,
+                        schedule_to_start_timeout=60 * 5,
+                        start_to_close_timeout=60 * 30,
+                    ),
+                ],
 
             "finish":
-            {
-                "requirements": None
-            }
+                {
+                    "requirements": None
+                }
         }
 
         self.load_definition(workflow_definition)
-
