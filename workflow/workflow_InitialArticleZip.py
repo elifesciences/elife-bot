@@ -1,5 +1,5 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step
+from workflow.helper import define_workflow_step, define_workflow_step_15
 
 
 class workflow_InitialArticleZip(Workflow):
@@ -33,34 +33,10 @@ class workflow_InitialArticleZip(Workflow):
             "steps":
                 [
                     define_workflow_step("PingWorker", data),
-                    define_workflow_step(
-                        "VersionLookup", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "ExpandArticle", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "SendDashboardProperties", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "VersionReasonDecider", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
+                    define_workflow_step_15("VersionLookup", data),
+                    define_workflow_step_15("ExpandArticle", data),
+                    define_workflow_step_15("SendDashboardProperties", data),
+                    define_workflow_step_15("VersionReasonDecider", data),
                 ],
 
             "finish":

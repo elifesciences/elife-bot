@@ -1,5 +1,5 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step
+from workflow.helper import define_workflow_step, define_workflow_step_10, define_workflow_step_15
 
 
 class workflow_IngestArticleZip(Workflow):
@@ -33,72 +33,19 @@ class workflow_IngestArticleZip(Workflow):
             "steps":
                 [
                     define_workflow_step("PingWorker", data),
-                    define_workflow_step(
-                        "AcceptVersionReason", data,
-                        heartbeat_timeout=60 * 10,
-                        schedule_to_close_timeout=60 * 10,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 10,
-                    ),
-                    define_workflow_step(
-                        "ApplyVersionNumber", data,
-                        heartbeat_timeout=60 * 10,
-                        schedule_to_close_timeout=60 * 10,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 10,
-                    ),
-                    define_workflow_step(
-                        "VerifyGlencoe", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "ConvertImagesToJPG", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "DepositIngestAssets", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "CopyGlencoeStillImages", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
+                    define_workflow_step_10("AcceptVersionReason", data),
+                    define_workflow_step_10("ApplyVersionNumber", data),
+                    define_workflow_step_15("VerifyGlencoe", data),
+                    define_workflow_step_15("ConvertImagesToJPG", data),
+                    define_workflow_step_15("DepositIngestAssets", data),
+                    define_workflow_step_15("CopyGlencoeStillImages", data),
                     define_workflow_step("DepositAssets", data),
                     define_workflow_step("InvalidateCdn", data),
-                    define_workflow_step(
-                        "VerifyImageServer", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
+                    define_workflow_step_15("VerifyImageServer", data),
+                    define_workflow_step_15(
                         "VerifyGlencoe", data,
-                        activity_id="VerifyGlencoeAgain",
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "IngestToLax", data,
-                        heartbeat_timeout=60 * 10,
-                        schedule_to_close_timeout=60 * 10,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 10,
-                    ),
+                        activity_id="VerifyGlencoeAgain"),
+                    define_workflow_step_10("IngestToLax", data),
                 ],
 
             "finish":

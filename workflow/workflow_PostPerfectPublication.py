@@ -1,5 +1,5 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step
+from workflow.helper import define_workflow_step, define_workflow_step_15
 
 
 class workflow_PostPerfectPublication(Workflow):
@@ -33,13 +33,7 @@ class workflow_PostPerfectPublication(Workflow):
                 [
                     define_workflow_step("PingWorker", data),
                     define_workflow_step("VerifyPublishResponse", data),
-                    define_workflow_step(
-                        "ArchiveArticle", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
+                    define_workflow_step_15("ArchiveArticle", data),
                     define_workflow_step("LensArticle", data),
                     define_workflow_step("ScheduleDownstream", data),
                     define_workflow_step("UpdateRepository", data),
