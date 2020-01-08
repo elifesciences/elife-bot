@@ -1,7 +1,6 @@
 from workflow.objects import Workflow
-"""
-Ping workflow
-"""
+from workflow.helper import define_workflow_step
+
 
 class workflow_Ping(Workflow):
 
@@ -28,29 +27,19 @@ class workflow_Ping(Workflow):
             "input": data,
 
             "start":
-            {
-                "requirements": None
-            },
+                {
+                    "requirements": None
+                },
 
             "steps":
-            [
-                {
-                    "activity_type": "PingWorker",
-                    "activity_id": "PingWorker",
-                    "version": "1",
-                    "input": data,
-                    "control": None,
-                    "heartbeat_timeout": 300,
-                    "schedule_to_close_timeout": 300,
-                    "schedule_to_start_timeout": 300,
-                    "start_to_close_timeout": 300
-                }
-            ],
+                [
+                    define_workflow_step("PingWorker", data),
+                ],
 
             "finish":
-            {
-                "requirements": None
-            }
+                {
+                    "requirements": None
+                }
         }
 
         self.load_definition(workflow_definition)

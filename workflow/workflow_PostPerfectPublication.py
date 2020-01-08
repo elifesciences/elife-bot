@@ -1,8 +1,5 @@
 from workflow.objects import Workflow
-
-"""
-PostPerfectPublication workflow
-"""
+from workflow.helper import define_workflow_step
 
 
 class workflow_PostPerfectPublication(Workflow):
@@ -34,116 +31,22 @@ class workflow_PostPerfectPublication(Workflow):
 
             "steps":
                 [
-                    {
-                        "activity_type": "PingWorker",
-                        "activity_id": "PingWorker",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 300,
-                        "schedule_to_close_timeout": 300,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 300
-                    },
-                    {
-                        "activity_type": "VerifyPublishResponse",
-                        "activity_id": "VerifyPublishResponse",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
-                    {
-                        "activity_type": "ArchiveArticle",
-                        "activity_id": "ArchiveArticle",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 15,
-                        "schedule_to_close_timeout": 60 * 15,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 15
-                    },
-                    {
-                        "activity_type": "LensArticle",
-                        "activity_id": "LensArticle",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60*5,
-                        "schedule_to_close_timeout": 60*5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60*5
-                    },
-                    {
-                        "activity_type": "ScheduleDownstream",
-                        "activity_id": "ScheduleDownstream",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
-                    {
-                        "activity_type": "UpdateRepository",
-                        "activity_id": "UpdateRepository",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
-                    {
-                        "activity_type": "EmailVideoArticlePublished",
-                        "activity_id": "EmailVideoArticlePublished",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
-                    {
-                        "activity_type": "PublishDigest",
-                        "activity_id": "PublishDigest",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
-                    {
-                        "activity_type": "CreateDigestMediumPost",
-                        "activity_id": "CreateDigestMediumPost",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    },
-                    {
-                        "activity_type": "GeneratePDFCovers",
-                        "activity_id": "GeneratePDFCovers",
-                        "version": "1",
-                        "input": data,
-                        "control": None,
-                        "heartbeat_timeout": 60 * 5,
-                        "schedule_to_close_timeout": 60 * 5,
-                        "schedule_to_start_timeout": 300,
-                        "start_to_close_timeout": 60 * 5
-                    }
+                    define_workflow_step("PingWorker", data),
+                    define_workflow_step("VerifyPublishResponse", data),
+                    define_workflow_step(
+                        "ArchiveArticle", data,
+                        heartbeat_timeout=60 * 15,
+                        schedule_to_close_timeout=60 * 15,
+                        schedule_to_start_timeout=60 * 5,
+                        start_to_close_timeout=60 * 15,
+                    ),
+                    define_workflow_step("LensArticle", data),
+                    define_workflow_step("ScheduleDownstream", data),
+                    define_workflow_step("UpdateRepository", data),
+                    define_workflow_step("EmailVideoArticlePublished", data),
+                    define_workflow_step("PublishDigest", data),
+                    define_workflow_step("CreateDigestMediumPost", data),
+                    define_workflow_step("GeneratePDFCovers", data),
                 ],
 
             "finish":

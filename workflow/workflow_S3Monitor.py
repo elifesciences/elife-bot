@@ -1,8 +1,6 @@
 from workflow.objects import Workflow
+from workflow.helper import define_workflow_step
 
-"""
-S3Monitor workflow
-"""
 
 class workflow_S3Monitor(Workflow):
 
@@ -29,40 +27,26 @@ class workflow_S3Monitor(Workflow):
             "input": data,
 
             "start":
-            {
-                "requirements": None
-            },
+                {
+                    "requirements": None
+                },
 
             "steps":
-            [
-                {
-                    "activity_type": "PingWorker",
-                    "activity_id": "PingWorker",
-                    "version": "1",
-                    "input": data,
-                    "control": None,
-                    "heartbeat_timeout": 300,
-                    "schedule_to_close_timeout": 300,
-                    "schedule_to_start_timeout": 300,
-                    "start_to_close_timeout": 300
-                },
-                {
-                    "activity_type": "S3Monitor",
-                    "activity_id": "S3Monitor",
-                    "version": "1.1",
-                    "input": data,
-                    "control": None,
-                    "heartbeat_timeout": 60 * 25,
-                    "schedule_to_close_timeout": 60 * 25,
-                    "schedule_to_start_timeout": 300,
-                    "start_to_close_timeout": 60 * 25
-                }
-            ],
+                [
+                    define_workflow_step("PingWorker", data),
+                    define_workflow_step(
+                        "S3Monitor", data,
+                        heartbeat_timeout=60 * 25,
+                        schedule_to_close_timeout=60 * 25,
+                        schedule_to_start_timeout=60 * 5,
+                        start_to_close_timeout=60 * 25,
+                    ),
+                ],
 
             "finish":
-            {
-                "requirements": None
-            }
+                {
+                    "requirements": None
+                }
         }
 
         self.load_definition(workflow_definition)
