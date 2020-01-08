@@ -1,5 +1,5 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step, define_workflow_step_15
+from workflow.helper import define_workflow_step, define_workflow_step_medium
 
 
 class workflow_DepositCrossrefPeerReview(Workflow):
@@ -34,7 +34,7 @@ class workflow_DepositCrossrefPeerReview(Workflow):
             "steps":
                 [
                     define_workflow_step("PingWorker", data),
-                    define_workflow_step_15("DepositCrossrefPeerReview", data),
+                    define_workflow_step_medium("DepositCrossrefPeerReview", data),
                 ],
 
             "finish":

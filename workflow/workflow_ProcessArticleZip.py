@@ -1,5 +1,5 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step, define_workflow_step_10
+from workflow.helper import define_workflow_step, define_workflow_step_short
 
 
 class workflow_ProcessArticleZip(Workflow):
@@ -33,7 +33,7 @@ class workflow_ProcessArticleZip(Workflow):
             "steps":
                 [
                     define_workflow_step("PingWorker", data),
-                    define_workflow_step_10("VerifyLaxResponse", data),
+                    define_workflow_step_short("VerifyLaxResponse", data),
                     define_workflow_step("ScheduleCrossref", data),
                     define_workflow_step("ScheduleCrossrefPeerReview", data),
                     define_workflow_step("IngestDigestToEndpoint", data),

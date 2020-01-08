@@ -1,5 +1,6 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step
+from workflow.helper import (
+    define_workflow_step, define_workflow_step_short, define_workflow_step_medium)
 
 
 class workflow_SilentCorrectionsIngest(Workflow):
@@ -33,74 +34,21 @@ class workflow_SilentCorrectionsIngest(Workflow):
             "steps":
                 [
                     define_workflow_step("PingWorker", data),
-                    define_workflow_step(
-                        "VersionLookup", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "VersionDateLookup", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "ExpandArticle", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
+                    define_workflow_step_medium("VersionLookup", data),
+                    define_workflow_step_medium("VersionDateLookup", data),
+                    define_workflow_step_medium("ExpandArticle", data),
                     define_workflow_step("SendDashboardProperties", data),
-                    define_workflow_step(
-                        "ApplyVersionNumber", data,
-                        heartbeat_timeout=60 * 10,
-                        schedule_to_close_timeout=60 * 10,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 10,
-                    ),
+                    define_workflow_step_short("ApplyVersionNumber", data),
                     define_workflow_step("ModifyArticleSubjects", data),
-                    define_workflow_step(
-                        "VerifyGlencoe", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "ConvertImagesToJPG", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "DepositIngestAssets", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
-                    define_workflow_step(
-                        "CopyGlencoeStillImages", data,
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
+                    define_workflow_step_medium("VerifyGlencoe", data),
+                    define_workflow_step_medium("ConvertImagesToJPG", data),
+                    define_workflow_step_medium("DepositIngestAssets", data),
+                    define_workflow_step_medium("CopyGlencoeStillImages", data),
                     define_workflow_step("DepositAssets", data),
                     define_workflow_step("InvalidateCdn", data),
-                    define_workflow_step(
+                    define_workflow_step_medium(
                         "VerifyGlencoe", data,
-                        activity_id="VerifyGlencoeAgain",
-                        heartbeat_timeout=60 * 15,
-                        schedule_to_close_timeout=60 * 15,
-                        schedule_to_start_timeout=60 * 5,
-                        start_to_close_timeout=60 * 15,
-                    ),
+                        activity_id="VerifyGlencoeAgain"),
                     define_workflow_step("IngestToLax", data),
                 ],
 

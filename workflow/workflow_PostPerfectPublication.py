@@ -1,5 +1,5 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step, define_workflow_step_15
+from workflow.helper import define_workflow_step, define_workflow_step_medium
 
 
 class workflow_PostPerfectPublication(Workflow):
@@ -33,7 +33,7 @@ class workflow_PostPerfectPublication(Workflow):
                 [
                     define_workflow_step("PingWorker", data),
                     define_workflow_step("VerifyPublishResponse", data),
-                    define_workflow_step_15("ArchiveArticle", data),
+                    define_workflow_step_medium("ArchiveArticle", data),
                     define_workflow_step("LensArticle", data),
                     define_workflow_step("ScheduleDownstream", data),
                     define_workflow_step("UpdateRepository", data),

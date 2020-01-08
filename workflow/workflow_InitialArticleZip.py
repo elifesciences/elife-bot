@@ -1,5 +1,5 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step, define_workflow_step_15
+from workflow.helper import define_workflow_step, define_workflow_step_medium
 
 
 class workflow_InitialArticleZip(Workflow):
@@ -33,10 +33,10 @@ class workflow_InitialArticleZip(Workflow):
             "steps":
                 [
                     define_workflow_step("PingWorker", data),
-                    define_workflow_step_15("VersionLookup", data),
-                    define_workflow_step_15("ExpandArticle", data),
-                    define_workflow_step_15("SendDashboardProperties", data),
-                    define_workflow_step_15("VersionReasonDecider", data),
+                    define_workflow_step_medium("VersionLookup", data),
+                    define_workflow_step_medium("ExpandArticle", data),
+                    define_workflow_step_medium("SendDashboardProperties", data),
+                    define_workflow_step_medium("VersionReasonDecider", data),
                 ],
 
             "finish":

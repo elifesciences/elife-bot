@@ -1,5 +1,6 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step, define_workflow_step_10, define_workflow_step_15
+from workflow.helper import (
+    define_workflow_step, define_workflow_step_short, define_workflow_step_medium)
 
 
 class workflow_IngestArticleZip(Workflow):
@@ -33,19 +34,19 @@ class workflow_IngestArticleZip(Workflow):
             "steps":
                 [
                     define_workflow_step("PingWorker", data),
-                    define_workflow_step_10("AcceptVersionReason", data),
-                    define_workflow_step_10("ApplyVersionNumber", data),
-                    define_workflow_step_15("VerifyGlencoe", data),
-                    define_workflow_step_15("ConvertImagesToJPG", data),
-                    define_workflow_step_15("DepositIngestAssets", data),
-                    define_workflow_step_15("CopyGlencoeStillImages", data),
+                    define_workflow_step_short("AcceptVersionReason", data),
+                    define_workflow_step_short("ApplyVersionNumber", data),
+                    define_workflow_step_medium("VerifyGlencoe", data),
+                    define_workflow_step_medium("ConvertImagesToJPG", data),
+                    define_workflow_step_medium("DepositIngestAssets", data),
+                    define_workflow_step_medium("CopyGlencoeStillImages", data),
                     define_workflow_step("DepositAssets", data),
                     define_workflow_step("InvalidateCdn", data),
-                    define_workflow_step_15("VerifyImageServer", data),
-                    define_workflow_step_15(
+                    define_workflow_step_medium("VerifyImageServer", data),
+                    define_workflow_step_medium(
                         "VerifyGlencoe", data,
                         activity_id="VerifyGlencoeAgain"),
-                    define_workflow_step_10("IngestToLax", data),
+                    define_workflow_step_short("IngestToLax", data),
                 ],
 
             "finish":

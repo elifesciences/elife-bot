@@ -1,5 +1,5 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step, define_workflow_step_15
+from workflow.helper import define_workflow_step, define_workflow_step_medium
 
 
 class workflow_PubmedArticleDeposit(Workflow):
@@ -34,7 +34,7 @@ class workflow_PubmedArticleDeposit(Workflow):
             "steps":
                 [
                     define_workflow_step("PingWorker", data),
-                    define_workflow_step_15("PubmedArticleDeposit", data),
+                    define_workflow_step_medium("PubmedArticleDeposit", data),
                 ],
 
             "finish":
