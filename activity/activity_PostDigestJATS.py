@@ -235,7 +235,7 @@ def success_email_subject(digest_content):
         return u''
     return u'Digest JATS posted for article {msid:0>5}, author {author}'.format(
         msid=str(digest_provider.get_digest_msid(digest_content)),
-        author=digest_utils.unicode_decode(digest_content.author))
+        author=digest_content.author)
 
 
 def success_email_body(current_time, digest_content, jats_content):
@@ -257,7 +257,7 @@ def error_email_subject(digest_content):
         return u''
     return u'Error in digest JATS post for article {msid:0>5}, author {author}'.format(
         msid=str(digest_provider.get_digest_msid(digest_content)),
-        author=digest_utils.unicode_decode(digest_content.author))
+        author=digest_content.author)
 
 
 def error_email_body(current_time, digest_content, jats_content, error_messages):
