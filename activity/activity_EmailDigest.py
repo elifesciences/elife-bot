@@ -1,7 +1,6 @@
 import os
 import json
 import time
-from elifetools.utils import unicode_value
 from digestparser import output
 import digestparser.utils as digest_utils
 from S3utility.s3_notification_info import parse_activity_data
@@ -95,9 +94,9 @@ class activity_EmailDigest(Activity):
     def output_path(self, output_dir, file_name):
         "for python 2 and 3 support, only encode sometimes"
         try:
-            return os.path.join(output_dir, unicode_value(file_name)).encode('utf8')
+            return os.path.join(output_dir, str(file_name)).encode('utf8')
         except AttributeError:
-            return os.path.join(output_dir, unicode_value(file_name))
+            return os.path.join(output_dir, str(file_name))
 
     def generate_output(self, digest_content):
         "From the parsed digest content generate the output"
@@ -106,7 +105,7 @@ class activity_EmailDigest(Activity):
         file_name = output_file_name(digest_content, self.digest_config)
         self.logger.info('EmailDigest output file_name: %s', file_name)
         full_file_name = self.output_path(
-            self.directories.get("OUTPUT_DIR"), unicode_value(file_name))
+            self.directories.get("OUTPUT_DIR"), str(file_name))
         self.logger.info('EmailDigest output full_file_name: %s', full_file_name)
         try:
             output_file = output.digest_docx(digest_content, full_file_name)
@@ -163,7 +162,7 @@ def success_email_subject(digest_content):
     except AttributeError:
         msid = None
     return u'Digest: {author}_{msid:0>5}'.format(
-        author=digest_utils.unicode_decode(digest_content.author), msid=str(msid))
+        author=digest_content.author, msid=str(msid))
 
 
 def success_email_body(current_time):

@@ -6,7 +6,6 @@ import email
 import unittest
 from mock import patch
 from ddt import ddt, data
-from elifetools.utils import unicode_value
 import activity.activity_ValidateDigestInput as activity_module
 from activity.activity_ValidateDigestInput import activity_ValidateDigestInput as activity_object
 import tests.activity.settings_mock as settings_mock
@@ -160,7 +159,7 @@ class TestValidateDigestInput(unittest.TestCase):
                     self.assertTrue(test_data.get("expected_email_from") in first_email_content)
                 if test_data.get("expected_email_body"):
                     body = body_from_multipart_email_string(first_email_content)
-                    self.assertTrue(test_data.get("expected_email_body") in unicode_value(body))
+                    self.assertTrue(test_data.get("expected_email_body") in str(body))
 
 
 class TestEmailSubject(unittest.TestCase):
