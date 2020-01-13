@@ -36,6 +36,7 @@ class workflow_S3Monitor(Workflow):
                     define_workflow_step("PingWorker", data),
                     define_workflow_step(
                         "S3Monitor", data,
+                        version='1.1',
                         heartbeat_timeout=60 * 25,
                         schedule_to_close_timeout=60 * 25,
                         schedule_to_start_timeout=60 * 5,
