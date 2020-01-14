@@ -4,7 +4,7 @@ import os
 import unittest
 from mock import patch
 from ddt import ddt, data
-import provider.digest_provider as digest_provider
+from provider import digest_provider, download_helper
 from activity.activity_DepositDigestIngestAssets import (
     activity_DepositDigestIngestAssets as activity_object)
 import tests.activity.settings_mock as settings_mock
@@ -36,6 +36,7 @@ class TestDepositDigestIngestAssets(unittest.TestCase):
         helpers.delete_files_in_folder(testdata.ExpandArticle_files_dest_folder,
                                        filter_out=['.gitkeep'])
 
+    @patch.object(download_helper, 'storage_context')
     @patch.object(digest_provider, 'storage_context')
     @patch('activity.activity_DepositDigestIngestAssets.storage_context')
     @data(
@@ -76,10 +77,12 @@ class TestDepositDigestIngestAssets(unittest.TestCase):
             "expected_file_list": []
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, fake_provider_storage_context):
+    def test_do_activity(self, test_data, fake_storage_context, fake_provider_storage_context,
+                         fake_download_storage_context):
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
         fake_provider_storage_context.return_value = FakeStorageContext()
+        fake_download_storage_context.return_value = FakeStorageContext()
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
 

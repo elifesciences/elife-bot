@@ -2,8 +2,7 @@ import os
 import json
 import time
 from S3utility.s3_notification_info import parse_activity_data
-import provider.digest_provider as digest_provider
-import provider.email_provider as email_provider
+from provider import digest_provider, download_helper, email_provider
 from activity.objects import Activity
 
 
@@ -57,7 +56,7 @@ class activity_ValidateDigestInput(Activity):
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)
 
         # Download from S3
-        self.input_file = digest_provider.download_digest_from_s3(
+        self.input_file = download_helper.download_file_from_s3(
             self.settings, real_filename, bucket_name, bucket_folder,
             self.directories.get("INPUT_DIR"))
 

@@ -40,6 +40,7 @@ class TestEmailDigest(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch.object(activity_module.download_helper, 'storage_context')
     @patch.object(activity_module.digest_provider, 'storage_context')
     @data(
         {
@@ -127,9 +128,11 @@ class TestEmailDigest(unittest.TestCase):
             "expected_email_count": 0
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, fake_email_smtp_connect):
+    def test_do_activity(self, test_data, fake_storage_context, fake_download_storage_context,
+                         fake_email_smtp_connect):
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
+        fake_download_storage_context.return_value = FakeStorageContext()
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))

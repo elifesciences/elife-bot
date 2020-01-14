@@ -6,7 +6,7 @@ import requests
 import digestparser.utils as digest_utils
 from elifetools.utils import doi_uri_to_doi
 from S3utility.s3_notification_info import parse_activity_data
-from provider import digest_provider, email_provider
+from provider import digest_provider, download_helper, email_provider
 from activity.objects import Activity
 
 
@@ -73,7 +73,7 @@ class activity_PostDigestJATS(Activity):
             return self.ACTIVITY_SUCCESS
 
         # Download from S3
-        self.input_file = digest_provider.download_digest_from_s3(
+        self.input_file = download_helper.download_file_from_s3(
             self.settings, real_filename, bucket_name, bucket_folder,
             self.directories.get("INPUT_DIR"))
 
