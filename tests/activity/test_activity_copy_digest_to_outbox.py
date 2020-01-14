@@ -5,7 +5,7 @@ import unittest
 from mock import patch
 from ddt import ddt, data
 from digestparser.objects import Digest
-import provider.digest_provider as digest_provider
+from provider import digest_provider, download_helper
 from activity.activity_CopyDigestToOutbox import activity_CopyDigestToOutbox as activity_object
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
@@ -44,6 +44,7 @@ class TestCopyDigestToOutbox(unittest.TestCase):
         helpers.delete_files_in_folder(testdata.ExpandArticle_files_dest_folder,
                                        filter_out=['.gitkeep'])
 
+    @patch.object(download_helper, 'storage_context')
     @patch.object(digest_provider, 'storage_context')
     @patch('activity.activity_CopyDigestToOutbox.storage_context')
     @data(
@@ -77,12 +78,14 @@ class TestCopyDigestToOutbox(unittest.TestCase):
             "expected_file_list": []
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, fake_provider_storage_context):
+    def test_do_activity(self, test_data, fake_storage_context, fake_provider_storage_context,
+                         fake_download_storage_context):
         # copy files into the input directory using the storage context
         named_fake_storage_context = FakeStorageContext()
         named_fake_storage_context.resources = test_data.get('bucket_resources')
         fake_storage_context.return_value = named_fake_storage_context
         fake_provider_storage_context.return_value = FakeStorageContext()
+        fake_download_storage_context.return_value = FakeStorageContext()
         # populate the fake resources
         populate_outbox(test_data.get('bucket_resources'))
         # do the activity

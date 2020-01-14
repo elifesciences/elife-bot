@@ -39,6 +39,7 @@ class TestPostDigestJats(unittest.TestCase):
 
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('requests.post')
+    @patch.object(activity_module.download_helper, 'storage_context')
     @patch.object(activity_module.digest_provider, 'storage_context')
     @data(
         {
@@ -121,10 +122,11 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_email_status": None
         },
     )
-    def test_do_activity(self, test_data, fake_storage_context, requests_method_mock,
-                         fake_email_smtp_connect):
+    def test_do_activity(self, test_data, fake_storage_context, fake_download_storage_context,
+                         requests_method_mock, fake_email_smtp_connect):
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
+        fake_download_storage_context.return_value = FakeStorageContext()
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         # POST response
         requests_method_mock.return_value = FakeResponse(test_data.get("post_status_code"), None)
@@ -158,11 +160,13 @@ class TestPostDigestJats(unittest.TestCase):
                              'failed in {comment}'.format(comment=test_data.get("comment")))
 
     @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch.object(activity_module.download_helper, 'storage_context')
     @patch.object(activity_module.digest_provider, 'storage_context')
     @patch.object(digest_provider, 'digest_jats')
     def test_do_activity_jats_failure(self, fake_digest_jats, fake_storage_context,
-                                      fake_email_smtp_connect):
+                                      fake_download_storage_context, fake_email_smtp_connect):
         fake_storage_context.return_value = FakeStorageContext()
+        fake_download_storage_context.return_value = FakeStorageContext()
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         activity_data = input_data("DIGEST+99999.zip")
         fake_digest_jats.return_value = None
@@ -170,11 +174,13 @@ class TestPostDigestJats(unittest.TestCase):
         self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
 
     @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch.object(activity_module.download_helper, 'storage_context')
     @patch.object(activity_module.digest_provider, 'storage_context')
     @patch.object(activity_module, 'post_payload')
     def test_do_activity_post_failure(self, fake_post_jats, fake_storage_context,
-                                      fake_email_smtp_connect):
+                                      fake_download_storage_context, fake_email_smtp_connect):
         fake_storage_context.return_value = FakeStorageContext()
+        fake_download_storage_context.return_value = FakeStorageContext()
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         activity_data = input_data("DIGEST+99999.zip")
         fake_post_jats.side_effect = Exception("Something went wrong!")

@@ -9,6 +9,7 @@ from docx.opc.exceptions import PackageNotFoundError
 from digestparser import jats, build, conf
 import provider.utils as utils
 from provider.storage_provider import storage_context
+from provider.download_helper import download_file
 import provider.lax_provider as lax_provider
 
 
@@ -65,15 +66,6 @@ def docx_file_name(article_id):
     return new_file_name(".docx", article_id)
 
 
-def digest_resource_origin(storage_provider, filename, bucket_name, bucket_folder):
-    "concatenate the origin of a digest file for the storage provider"
-    if not filename or not bucket_name or bucket_folder is None:
-        return None
-    storage_provider_prefix = storage_provider + "://"
-    orig_resource = storage_provider_prefix + bucket_name + "/" + bucket_folder
-    return orig_resource + '/' + filename
-
-
 def outbox_resource_path(storage_provider, msid, bucket_name):
     "the digest outbox bucket folder as a resource"
     article_id = utils.pad_msid(msid)
@@ -114,7 +106,7 @@ def download_docx_from_s3(settings, article_id, bucket_name, to_dir, logger):
         settings.storage_provider, article_id, bucket_name)
     storage = storage_context(settings)
     try:
-        docx_file = download_digest(
+        docx_file = download_file(
             storage, docx_file_name(article_id), resource_origin, to_dir)
     except Exception as exception:
         logger.exception(
@@ -146,32 +138,6 @@ def image_file_name_from_s3(settings, article_id, bucket_name):
             if not name.endswith(".docx"):
                 image_file_name = name.split("/")[-1]
     return image_file_name
-
-
-def download_digest(storage, filename, resource_origin, to_dir):
-    "download the digest filename from a bucket or storage to the to_dir"
-    if not resource_origin:
-        return None
-    filename_plus_path = to_dir + os.sep + filename
-    with open(filename_plus_path, 'wb') as open_file:
-        storage.get_resource_to_file(resource_origin, open_file)
-    return filename_plus_path
-
-
-def download_digest_from_s3(settings, filename, bucket_name, bucket_folder, to_dir):
-    "Connect to the S3 bucket and download the input"
-    resource_origin = digest_resource_origin(
-        storage_provider=settings.storage_provider,
-        filename=filename,
-        bucket_name=bucket_name,
-        bucket_folder=bucket_folder
-        )
-    return download_digest(
-        storage=storage_context(settings),
-        filename=filename,
-        resource_origin=resource_origin,
-        to_dir=to_dir,
-        )
 
 
 def has_image(digest_content):

@@ -2,7 +2,7 @@ import os
 import json
 from S3utility.s3_notification_info import parse_activity_data
 from provider.storage_provider import storage_context
-import provider.digest_provider as digest_provider
+from provider import digest_provider, download_helper
 import provider.utils as utils
 from activity.objects import Activity
 
@@ -50,7 +50,7 @@ class activity_DepositDigestIngestAssets(Activity):
         # parse the data with the digest_provider
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)
         # Download from S3
-        self.input_file = digest_provider.download_digest_from_s3(
+        self.input_file = download_helper.download_file_from_s3(
             self.settings, real_filename, bucket_name, bucket_folder,
             self.directories.get("INPUT_DIR"))
         # Parse input and build digest
