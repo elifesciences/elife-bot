@@ -97,10 +97,10 @@ def decide(settings, flag, debug=False):
 
 
 def trimmed_decision(decision, debug=False):
-    """trim events from a copy of decision prior to logging if not debug"""
+    """trim data from a copy of decision prior to logging if not debug"""
     decision_trimmed = copy.copy(decision)
     if not debug:
-        # set events value to a blank list to reduce logging
+        # removed to limit verbosity
         decision_trimmed['events'] = []
     return decision_trimmed
 
