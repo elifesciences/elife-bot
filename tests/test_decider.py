@@ -66,5 +66,25 @@ class TestDecider(unittest.TestCase):
         self.assertEqual(workflow_object.__class__.__name__, workflow_name)
 
 
+class TestTrimmedDecision(unittest.TestCase):
+
+    def setUp(self):
+        self.decision_json = None
+        with open('tests/test_data/decision.json', 'r') as open_file:
+            self.decision_json = json.loads(open_file.read())
+
+    def test_trimmed_decision(self):
+        decision_trimmed = decider.trimmed_decision(self.decision_json)
+        self.assertEqual(decision_trimmed.get('events'), [])
+        # original is unchanged
+        self.assertEqual(len(self.decision_json.get('events')), 22)
+
+    def test_trimmed_decision_debug(self):
+        decision_trimmed = decider.trimmed_decision(self.decision_json, True)
+        self.assertEqual(len(decision_trimmed.get('events')), 22)
+        # original is unchanged
+        self.assertEqual(len(self.decision_json.get('events')), 22)
+
+
 if __name__ == '__main__':
     unittest.main()

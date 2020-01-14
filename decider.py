@@ -1,4 +1,5 @@
 import boto.swf
+import copy
 import log
 import json
 import random
@@ -15,7 +16,7 @@ import newrelic.agent
 Amazon SWF decider
 """
 
-def decide(settings, flag):
+def decide(settings, flag, debug=False):
     # Decider event history length requested
     maximum_page_size = 100
 
@@ -48,10 +49,12 @@ def decide(settings, flag):
             token = get_taskToken(decision)
             logger.info('got token: %s', token)
 
+            decision_to_log = trimmed_decision(decision, debug)
+
             if isinstance(decision, dict) and "startedEventId" in decision and decision["startedEventId"] == 0:
-                logger.debug('got decision: \n%s' % json.dumps(decision, sort_keys=True, indent=4))
+                logger.debug('got decision: \n%s' % json.dumps(decision_to_log, sort_keys=True, indent=4))
             else:
-                logger.info('got decision: \n%s' % json.dumps(decision, sort_keys=True, indent=4))
+                logger.info('got decision: \n%s' % json.dumps(decision_to_log, sort_keys=True, indent=4))
 
             if token is not None:
                 # Get the workflowType and attempt to do the work
@@ -91,6 +94,16 @@ def decide(settings, flag):
         token = None
 
     logger.info("graceful shutdown")
+
+
+def trimmed_decision(decision, debug=False):
+    """trim events from a copy of decision prior to logging if not debug"""
+    decision_trimmed = copy.copy(decision)
+    if not debug:
+        # set events value to a blank list to reduce logging
+        decision_trimmed['events'] = []
+    return decision_trimmed
+
 
 def get_all_paged_events(decision, conn, domain, task_list, identity, maximum_page_size):
     """
