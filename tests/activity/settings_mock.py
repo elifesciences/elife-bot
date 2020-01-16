@@ -180,3 +180,8 @@ smtp_username = None
 smtp_password = None
 
 big_query_project_id = ''
+
+letterparser_config_file = 'tests/activity/letterparser.cfg'
+letterparser_config_section = 'elife'
+decision_letter_sender_email = 'sender@example.org'
+decision_letter_validate_error_recipient_email = 'error@example.org'
