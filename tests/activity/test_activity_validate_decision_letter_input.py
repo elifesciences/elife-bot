@@ -142,7 +142,3 @@ class TestEmailSubject(unittest.TestCase):
         expected = 'Error processing decision letter file: elife-99999.zip'
         subject = activity_module.error_email_subject(filename)
         self.assertEqual(subject, expected)
-
-
-if __name__ == '__main__':
-    unittest.main()
