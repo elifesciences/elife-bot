@@ -11,6 +11,9 @@ IDENTITY = "process_%s" % os.getpid()
 LOGGER = log.logger("letterparser_provider.log", 'INFO', IDENTITY, loggerName=__name__)
 
 
+ARTICLES_MIN_COUNT = 2
+
+
 def letterparser_config(settings):
     """parse the config values from letterparser.cfg"""
     return parse_raw_config(raw_config(
@@ -56,11 +59,10 @@ def validate_articles(articles, logger=LOGGER):
         logger.info(error_message)
 
     # check for two article objects
-    min_count = 2
-    if articles and len(articles) < min_count:
+    if articles and len(articles) < ARTICLES_MIN_COUNT:
         valid = False
         error_message = 'Only {count} articles, expected at least {min}'.format(
-            count=len(articles), min=min_count)
+            count=len(articles), min=ARTICLES_MIN_COUNT)
         error_messages.append(error_message)
         logger.info(error_message)
 
