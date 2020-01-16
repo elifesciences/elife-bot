@@ -48,6 +48,22 @@ class TestLetterParserProvider(unittest.TestCase):
 
 class TestValidateArticles(unittest.TestCase):
 
+    def test_validate_articles_valid(self):
+        """test two articles that are completely valid"""
+        articles = [
+            Article(
+                '10.7554/eLife.99999.sa1',
+                'Decision letter: Test',
+                ),
+            Article(
+                '10.7554/eLife.99999.sa2',
+                'Author response: Test',
+                ),
+            ]
+        valid, error_messages = letterparser_provider.validate_articles(articles)
+        self.assertTrue(valid)
+        self.assertTrue(len(error_messages) == 0)
+
     def test_validate_articles_empty(self):
         """test empty article list"""
         articles = []
@@ -65,6 +81,13 @@ class TestValidateArticles(unittest.TestCase):
     def test_validate_articles_doi(self):
         """test article missing a DOI"""
         articles = [Article(), Article()]
+        valid, error_messages = letterparser_provider.validate_articles(articles)
+        self.assertFalse(valid)
+        self.assertTrue(len(error_messages) > 0)
+
+    def test_validate_articles_no_titles(self):
+        """test two articles without titles"""
+        articles = [Article('10.7554/eLife.99999.sa1'), Article('10.7554/eLife.99999.sa2')]
         valid, error_messages = letterparser_provider.validate_articles(articles)
         self.assertFalse(valid)
         self.assertTrue(len(error_messages) > 0)

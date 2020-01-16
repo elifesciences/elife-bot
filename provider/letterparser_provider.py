@@ -1,6 +1,7 @@
 "functions shared by letterparser related activities"
 
 import os
+from collections import OrderedDict
 import docker
 from letterparser import generate, parse, zip_lib
 from letterparser.conf import raw_config, parse_raw_config
@@ -12,6 +13,17 @@ LOGGER = log.logger("letterparser_provider.log", 'INFO', IDENTITY, loggerName=__
 
 
 ARTICLES_MIN_COUNT = 2
+
+ARTICLE_TITLE_MAP = [
+    OrderedDict([
+        ('snippet', 'decision letter'),
+        ('min_count', 1)
+    ]),
+    OrderedDict([
+        ('snippet', 'author response'),
+        ('min_count', 1)
+    ])
+]
 
 
 def letterparser_config(settings):
@@ -65,6 +77,20 @@ def validate_articles(articles, logger=LOGGER):
             count=len(articles), min=ARTICLES_MIN_COUNT)
         error_messages.append(error_message)
         logger.info(error_message)
+
+    # check for article titles
+    for article_title_match in ARTICLE_TITLE_MAP:
+        matched_articles = [
+            article for article in articles
+            if article.title and article_title_match.get('snippet') in article.title.lower()]
+        if len(matched_articles) < article_title_match.get('min_count'):
+            valid = False
+            error_message = 'Only {count} {snippet} articles, expected at least {min}'.format(
+                count=len(matched_articles),
+                snippet=article_title_match.get('snippet'),
+                min=ARTICLES_MIN_COUNT)
+            error_messages.append(error_message)
+            logger.info(error_message)
 
     # check each article has a DOI
     if articles:
