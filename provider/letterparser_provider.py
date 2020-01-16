@@ -51,21 +51,27 @@ def validate_articles(articles, logger=LOGGER):
     # check for any articles at all
     if not articles:
         valid = False
+        error_message = 'No articles to check'
         error_messages.append('No articles to check')
+        logger.info(error_message)
 
     # check for two article objects
     min_count = 2
     if articles and len(articles) < min_count:
         valid = False
-        error_messages.append('Only {count} articles, expected at least {min}'.format(
-            count=len(articles), min=min_count
-        ))
+        error_message = 'Only {count} articles, expected at least {min}'.format(
+            count=len(articles), min=min_count)
+        error_messages.append(error_message)
+        logger.info(error_message)
+
     # check each article has a DOI
     if articles:
         for i, article in enumerate(articles):
             if not article.doi:
                 valid = False
-                error_messages.append('Article {i} is missing a DOI'.format(i=i))
+                error_message = 'Article {i} is missing a DOI'.format(i=i)
+                error_messages.append(error_message)
+                logger.info(error_message)
 
     return valid, error_messages
 
