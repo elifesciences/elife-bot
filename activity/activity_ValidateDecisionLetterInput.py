@@ -103,8 +103,8 @@ class activity_ValidateDecisionLetterInput(Activity):
 
     def email_error_report(self, filename, error_messages):
         "send an email on error"
-        current_time = time.gmtime()
-        body = error_email_body(current_time, error_messages)
+        datetime_string = time.strftime('%Y-%m-%d %H:%M', time.gmtime())
+        body = email_provider.error_email_body(datetime_string, error_messages)
         subject = error_email_subject(filename)
         sender_email = self.settings.decision_letter_sender_email
 
@@ -126,16 +126,3 @@ class activity_ValidateDecisionLetterInput(Activity):
 def error_email_subject(filename):
     "email subject for an error email"
     return u'Error processing decision letter file: {filename}'.format(filename=filename)
-
-
-def error_email_body(current_time, error_messages):
-    "body of an error email"
-    body = ""
-    if error_messages:
-        body += str(error_messages)
-    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-    datetime_string = time.strftime(date_format, current_time)
-    body += "\nAs at " + datetime_string + "\n"
-    body += "\n"
-    body += "\n\nSincerely\n\neLife bot"
-    return body

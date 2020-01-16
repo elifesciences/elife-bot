@@ -1,0 +1,7 @@
+$error_messages
+
+As at $datetime_string
+
+Sincerely
+
+eLife bot
