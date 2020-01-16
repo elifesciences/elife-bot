@@ -79,18 +79,19 @@ def validate_articles(articles, logger=LOGGER):
         logger.info(error_message)
 
     # check for article titles
-    for article_title_match in ARTICLE_TITLE_MAP:
-        matched_articles = [
-            article for article in articles
-            if article.title and article_title_match.get('snippet') in article.title.lower()]
-        if len(matched_articles) < article_title_match.get('min_count'):
-            valid = False
-            error_message = 'Only {count} {snippet} articles, expected at least {min}'.format(
-                count=len(matched_articles),
-                snippet=article_title_match.get('snippet'),
-                min=ARTICLES_MIN_COUNT)
-            error_messages.append(error_message)
-            logger.info(error_message)
+    if articles:
+        for article_title_match in ARTICLE_TITLE_MAP:
+            matched_articles = [
+                article for article in articles
+                if article.title and article_title_match.get('snippet') in article.title.lower()]
+            if len(matched_articles) < article_title_match.get('min_count'):
+                valid = False
+                error_message = 'Only {count} {snippet} articles, expected at least {min}'.format(
+                    count=len(matched_articles),
+                    snippet=article_title_match.get('snippet'),
+                    min=ARTICLES_MIN_COUNT)
+                error_messages.append(error_message)
+                logger.info(error_message)
 
     # check each article has a DOI
     if articles:
