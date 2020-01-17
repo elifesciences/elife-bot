@@ -123,16 +123,15 @@ class TestListEmailRecipients(unittest.TestCase):
             if name.endswith("35774.docx"):
                 attachment_file = name
         attachments = [attachment_file]
-        # compare two fragments because in Python 2 it wraps with extra quotation marks
-        expected_fragments.append("Content-Disposition: attachment; filename*=")
-        expected_fragments.append("utf-8''Bay%C3%A9s_35774.docx")
-        # create the message
+        # compare attachment in body
+        expected_fragments.append("Content-Disposition: attachment; filename*=utf-8''Bay%C3%A9s_35774.docx")
         email_message = email_provider.simple_message(
             sender, recipient, subject, body, subtype=subtype, attachments=attachments)
         for expected in expected_fragments:
             self.assertTrue(
                 expected in str(email_message),
                 'Fragment %s not found in email %s' % (expected, str(email_message)))
+
 
     def test_get_admin_email_body_foot(self):
         """test simple string Template rendering"""
