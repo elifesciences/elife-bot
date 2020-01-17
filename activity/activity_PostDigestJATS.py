@@ -156,8 +156,9 @@ class activity_PostDigestJATS(Activity):
 
     def email_error_report(self, digest_content, jats_content, error_messages):
         """send an email on error"""
-        current_time = time.gmtime()
-        body = error_email_body(current_time, digest_content, jats_content, error_messages)
+        datetime_string = time.strftime('%Y-%m-%d %H:%M', time.gmtime())
+        body_content = error_email_body_content(digest_content, jats_content, error_messages)
+        body = email_provider.simple_email_body(datetime_string, body_content)
         subject = error_email_subject(digest_content)
         sender_email = self.settings.digest_sender_email
 
@@ -260,18 +261,13 @@ def error_email_subject(digest_content):
         author=digest_content.author)
 
 
-def error_email_body(current_time, digest_content, jats_content, error_messages):
-    """body of an error email"""
-    body = ""
+def error_email_body_content(digest_content, jats_content, error_messages):
+    """body content of an error email"""
+    content = ""
     if error_messages:
-        body += str(error_messages)
-        body += "\n\nMore details about the error may be found in the worker.log file\n\n"
+        content += str(error_messages)
+        content += "\n\nMore details about the error may be found in the worker.log file\n\n"
     if hasattr(digest_content, "doi"):
-        body += "Article DOI: %s\n\n" % digest_content.doi
-    body += "JATS content: %s\n\n" % jats_content
-    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-    datetime_string = time.strftime(date_format, current_time)
-    body += "\nAs at " + datetime_string + "\n"
-    body += "\n"
-    body += "\n\nSincerely\n\neLife bot"
-    return body
+        content += "Article DOI: %s\n\n" % digest_content.doi
+    content += "JATS content: %s\n\n" % jats_content
+    return content
