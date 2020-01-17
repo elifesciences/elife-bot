@@ -104,7 +104,7 @@ class activity_ValidateDecisionLetterInput(Activity):
     def email_error_report(self, filename, error_messages):
         "send an email on error"
         datetime_string = time.strftime('%Y-%m-%d %H:%M', time.gmtime())
-        body = email_provider.error_email_body(datetime_string, error_messages)
+        body = email_provider.simple_email_body(datetime_string, error_messages)
         subject = error_email_subject(filename)
         sender_email = self.settings.decision_letter_sender_email
 
