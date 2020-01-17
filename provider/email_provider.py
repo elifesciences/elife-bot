@@ -9,7 +9,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import boto.ses
-from provider.utils import unicode_decode, unicode_encode
+from provider.utils import bytes_decode, unicode_encode
 
 
 def ses_connect(settings):
@@ -68,8 +68,8 @@ def encode_filename(file_name):
     """
     if file_name is None:
         return file_name
-    return unicode_encode(unicode_decode(
-        unicodedata.ucd_3_2_0.normalize('NFC', unicode_decode(file_name))))
+    return unicode_encode(bytes_decode(
+        unicodedata.ucd_3_2_0.normalize('NFC', bytes_decode(file_name))))
 
 
 def attachment(file_name,

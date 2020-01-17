@@ -54,13 +54,13 @@ def unquote_plus(string):
     return urllib.parse.unquote_plus(string)
 
 
-def unicode_decode(string):
-    "try to decode from utf8"
+def bytes_decode(bytes_string):
+    "try to decode to utf8"
     try:
-        string = string.decode('utf8')
+        bytes_string = bytes_string.decode('utf8')
     except (UnicodeEncodeError, AttributeError):
         pass
-    return string
+    return bytes_string
 
 
 def base64_encode_string(string):
@@ -77,11 +77,8 @@ def unicode_encode(string):
     """safely encode string as utf8 by catching exceptions"""
     if string is None or isinstance(string, str):
         return string
-    try:
-        string = string.encode('utf8')
-    except (UnicodeDecodeError, TypeError, AttributeError):
-        string = unicode_decode(string)
-    return string
+    # decode bytes to string
+    return bytes_decode(string)
 
 
 def set_datestamp():

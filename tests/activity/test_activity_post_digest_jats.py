@@ -17,7 +17,7 @@ import tests.test_data as test_case_data
 from tests.activity.classes_mock import FakeStorageContext
 from tests.classes_mock import FakeSMTPServer
 import provider.digest_provider as digest_provider
-from provider.utils import unicode_decode
+from provider.utils import bytes_decode
 
 
 def input_data(file_name_to_change=''):
@@ -320,7 +320,7 @@ class TestPost(unittest.TestCase):
         resp = activity_module.post_as_json(url, payload)
         # make assertions
         self.assertEqual(resp.request.url, expected_url)
-        self.assertEqual(unicode_decode(resp.request.body), expected_body)
+        self.assertEqual(bytes_decode(resp.request.body), expected_body)
 
 
 class TestEmailErrorReport(unittest.TestCase):
