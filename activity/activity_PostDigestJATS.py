@@ -137,7 +137,7 @@ class activity_PostDigestJATS(Activity):
 
     def send_email(self, digest_content, jats_content):
         """send an email after digest JATS is posted to endpoint"""
-        datetime_string = time.strftime('%Y-%m-%d %H:%M', time.gmtime())
+        datetime_string = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())
         body_content = success_email_body_content(digest_content, jats_content)
         body = email_provider.simple_email_body(datetime_string, body_content)
         subject = success_email_subject(digest_content)
@@ -157,7 +157,7 @@ class activity_PostDigestJATS(Activity):
 
     def email_error_report(self, digest_content, jats_content, error_messages):
         """send an email on error"""
-        datetime_string = time.strftime('%Y-%m-%d %H:%M', time.gmtime())
+        datetime_string = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())
         body_content = error_email_body_content(digest_content, jats_content, error_messages)
         body = email_provider.simple_email_body(datetime_string, body_content)
         subject = error_email_subject(digest_content)

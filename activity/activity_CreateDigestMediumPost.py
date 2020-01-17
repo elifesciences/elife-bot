@@ -211,7 +211,7 @@ class activity_CreateDigestMediumPost(Activity):
         "email the success notification to the recipients"
         success = True
 
-        datetime_string = time.strftime('%Y-%m-%d %H:%M', time.gmtime())
+        datetime_string = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())
         body = email_provider.simple_email_body(datetime_string)
         subject = success_email_subject(article_id)
         sender_email = self.settings.digest_sender_email
