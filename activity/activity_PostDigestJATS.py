@@ -137,8 +137,9 @@ class activity_PostDigestJATS(Activity):
 
     def send_email(self, digest_content, jats_content):
         """send an email after digest JATS is posted to endpoint"""
-        current_time = time.gmtime()
-        body = success_email_body(current_time, digest_content, jats_content)
+        datetime_string = time.strftime('%Y-%m-%d %H:%M', time.gmtime())
+        body_content = success_email_body_content(digest_content, jats_content)
+        body = email_provider.simple_email_body(datetime_string, body_content)
         subject = success_email_subject(digest_content)
         sender_email = self.settings.digest_sender_email
 
@@ -239,17 +240,11 @@ def success_email_subject(digest_content):
         author=digest_content.author)
 
 
-def success_email_body(current_time, digest_content, jats_content):
+def success_email_body_content(digest_content, jats_content):
     """
-    Format the body of the email
+    Format the body content of the email
     """
-    body = "JATS content for article %s:\n\n%s\n\n" % (digest_content.doi, jats_content)
-    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-    datetime_string = time.strftime(date_format, current_time)
-    body += "As at " + datetime_string + "\n"
-    body += "\n"
-    body += "\n\nSincerely\n\neLife bot"
-    return body
+    return "JATS content for article %s:\n\n%s\n\n" % (digest_content.doi, jats_content)
 
 
 def error_email_subject(digest_content):

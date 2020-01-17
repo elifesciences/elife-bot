@@ -258,7 +258,7 @@ def get_admin_email_body_foot(activity_id, workflow_id, datetime_string, domain)
     return ''
 
 
-def simple_email_body(datetime_string, body_content):
+def simple_email_body(datetime_string, body_content=''):
     """body of a simple success or error email"""
     string_template = None
     with open('template/simple_email_body.txt', 'r') as open_file:
