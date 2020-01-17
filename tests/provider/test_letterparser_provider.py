@@ -3,6 +3,7 @@
 import unittest
 import docker
 from mock import patch
+from elifearticle.article import Article
 import tests.settings_mock as settings_mock
 import provider.letterparser_provider as letterparser_provider
 
@@ -43,3 +44,50 @@ class TestLetterParserProvider(unittest.TestCase):
         fake_letterparser_parse.side_effect = Exception('Other fake exception')
         with self.assertRaises(Exception):
             letterparser_provider.parse_file(self.file_name, self.blank_config)
+
+
+class TestValidateArticles(unittest.TestCase):
+
+    def test_validate_articles_valid(self):
+        """test two articles that are completely valid"""
+        articles = [
+            Article(
+                '10.7554/eLife.99999.sa1',
+                'Decision letter: Test',
+                ),
+            Article(
+                '10.7554/eLife.99999.sa2',
+                'Author response: Test',
+                ),
+            ]
+        valid, error_messages = letterparser_provider.validate_articles(articles)
+        self.assertTrue(valid)
+        self.assertTrue(len(error_messages) == 0)
+
+    def test_validate_articles_empty(self):
+        """test empty article list"""
+        articles = []
+        valid, error_messages = letterparser_provider.validate_articles(articles)
+        self.assertFalse(valid)
+        self.assertTrue(len(error_messages) > 0)
+
+    def test_validate_articles_count(self):
+        """test one article which is not enough"""
+        articles = [Article()]
+        valid, error_messages = letterparser_provider.validate_articles(articles)
+        self.assertFalse(valid)
+        self.assertTrue(len(error_messages) > 0)
+
+    def test_validate_articles_doi(self):
+        """test article missing a DOI"""
+        articles = [Article(), Article()]
+        valid, error_messages = letterparser_provider.validate_articles(articles)
+        self.assertFalse(valid)
+        self.assertTrue(len(error_messages) > 0)
+
+    def test_validate_articles_no_titles(self):
+        """test two articles without titles"""
+        articles = [Article('10.7554/eLife.99999.sa1'), Article('10.7554/eLife.99999.sa2')]
+        valid, error_messages = letterparser_provider.validate_articles(articles)
+        self.assertFalse(valid)
+        self.assertTrue(len(error_messages) > 0)

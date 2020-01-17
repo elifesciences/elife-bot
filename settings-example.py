@@ -121,6 +121,10 @@ class exp():
     typesetter_digest_endpoint = 'https://typesetter/updateDigest'
     typesetter_digest_api_key = 'typesetter_api_key'
 
+    # decision letter
+    decision_letter_sender_email = 'sender@example.org'
+    decision_letter_validate_error_recipient_email = 'error@example.org'
+
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
 
@@ -385,6 +389,10 @@ class dev():
     typesetter_digest_endpoint = 'https://typesetter/updateDigest'
     typesetter_digest_api_key = 'typesetter_api_key'
 
+    # decision letter
+    decision_letter_sender_email = 'sender@example.org'
+    decision_letter_validate_error_recipient_email = 'error@example.org'
+
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
 
@@ -645,6 +653,10 @@ class live():
     # digest typesetter endpoint
     typesetter_digest_endpoint = 'https://typesetter/updateDigest'
     typesetter_digest_api_key = 'typesetter_api_key'
+
+    # decision letter
+    decision_letter_sender_email = 'sender@example.org'
+    decision_letter_validate_error_recipient_email = 'error@example.org'
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'

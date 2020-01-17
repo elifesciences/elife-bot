@@ -256,3 +256,15 @@ def get_admin_email_body_foot(activity_id, workflow_id, datetime_string, domain)
             activity_id=activity_id, workflow_id=workflow_id, datetime_string=datetime_string,
             domain=domain)
     return ''
+
+
+def error_email_body(datetime_string, error_messages):
+    """body of an error email"""
+    string_template = None
+    with open('template/error_email_body.txt', 'r') as open_file:
+        string_template = Template(open_file.read())
+    if string_template:
+        return string_template.safe_substitute(
+            error_messages=error_messages,
+            datetime_string=datetime_string)
+    return ''
