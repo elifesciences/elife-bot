@@ -47,13 +47,11 @@ def volume_from_pub_date(pub_date, start_year=2011):
 
 
 def unquote_plus(string):
-    "unescape plus sign url with python 2 or 3 method"
+    "unescape plus sign url in python 3"
     if not string:
         return string
-    if hasattr(urllib, 'parse'):
-        # python 3
-        return urllib.parse.unquote_plus(string)
-    return urllib.unquote_plus(string)
+    # python 3
+    return urllib.parse.unquote_plus(string)
 
 
 def unicode_decode(string):
