@@ -64,19 +64,13 @@ def unicode_decode(string):
 
 
 def base64_encode_string(string):
-    "base64 endcode string for python 2 or 3"
-    if hasattr(base64, 'encodebytes'):
-        # python 3
-        return base64.encodebytes(bytes(string, 'utf8')).decode()
-    return base64.encodestring(string)
+    "base64 endcode string for python 3"
+    return base64.encodebytes(bytes(string, 'utf8')).decode()
 
 
 def base64_decode_string(string):
-    "base64 decode string for python 2 or 3"
-    if hasattr(base64, 'decodebytes'):
-        # python 3
-        return base64.decodebytes(bytes(string, 'utf8')).decode()
-    return base64.decodestring(string)
+    "base64 decode string for python 3"
+    return base64.decodebytes(bytes(string, 'utf8')).decode()
 
 
 def unicode_encode(string):
