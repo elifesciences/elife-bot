@@ -91,7 +91,7 @@ class activity_EmailDigest(Activity):
         return self.ACTIVITY_PERMANENT_FAILURE
 
     def output_path(self, output_dir, file_name):
-        """for python 3 should always return bytes which is what we want"""
+        """for python 3 cast file_name to str so it can be joined with the path value"""
         return os.path.join(output_dir, str(file_name))
 
     def generate_output(self, digest_content):
