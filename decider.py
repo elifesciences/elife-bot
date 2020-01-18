@@ -1,16 +1,13 @@
-import boto.swf
-import copy
-import log
-import json
-import random
-import importlib
 import os
-import time
+import copy
+import json
+import importlib
 from optparse import OptionParser
-from provider import process
-
-import workflow
+import boto.swf
 import newrelic.agent
+from provider import process
+import log
+import workflow
 
 
 def decide(settings, flag, debug=False):
