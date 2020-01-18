@@ -54,11 +54,8 @@ class starter_S3Monitor():
 
         input = None
 
-        if workflow == "S3Monitor":
-            # Standard article bucket monitor
-            bucket = settings.bucket
-            workflow_id = "S3Monitor"
-        elif workflow == "S3Monitor_POA":
+        bucket = None
+        if workflow == "S3Monitor_POA":
             # POA delivery bucket monitor
             bucket = settings.poa_bucket
             workflow_id = "S3Monitor_POA"
