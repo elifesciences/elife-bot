@@ -203,10 +203,11 @@ def get_workflow_object(workflow_name, settings, logger, conn, token, decision, 
     Given a workflow_name, and if the module class is already
     imported, create an object an return it
     """
-    full_path = "workflow." + workflow_name + "." + workflow_name
-    f = eval(full_path)
+    module_name = "workflow." + workflow_name
+    module_object = importlib.import_module(module_name)
+    workflow_class = getattr(module_object, workflow_name)
     # Create the object
-    workflow_object = f(settings, logger, conn, token, decision, maximum_page_size)
+    workflow_object = workflow_class(settings, logger, conn, token, decision, maximum_page_size)
     return workflow_object
 
 
