@@ -220,19 +220,6 @@ class article(object):
             logger.error(str(err))
             return ""
 
-    def get_pub_date_timestamp(self, pub_date):
-        """
-        Given a time struct for a publish date
-        parse and return a timestamp for it
-        """
-        timestamp = None
-        try:
-            timestamp = calendar.timegm(pub_date)
-        except TypeError:
-            # Date did not convert
-            pass
-        return timestamp
-
     def set_related_insight_article(self, article):
         """
         If this article is type insight, then set the article
