@@ -8,7 +8,6 @@ import urllib
 
 from boto.s3.connection import S3Connection
 
-import provider.simpleDB as dblib
 import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
 from provider.article_structure import ArticleInfo
@@ -52,12 +51,6 @@ class article(object):
 
         # Default tmp_dir if not specified
         self.tmp_dir_default = "article_provider"
-
-        # SimpleDB connection for looking up S3 keys
-        self.db = None
-        if self.settings is not None:
-            # Data provider
-            self.db = dblib.SimpleDB(settings)
 
         # Some defaults
         self.related_insight_article = None
