@@ -12,9 +12,6 @@ from provider import process
 import workflow
 import newrelic.agent
 
-"""
-Amazon SWF decider
-"""
 
 def decide(settings, flag, debug=False):
     # Decider event history length requested
@@ -51,15 +48,19 @@ def decide(settings, flag, debug=False):
 
             decision_to_log = trimmed_decision(decision, debug)
 
-            if isinstance(decision, dict) and "startedEventId" in decision and decision["startedEventId"] == 0:
-                logger.debug('got decision: \n%s' % json.dumps(decision_to_log, sort_keys=True, indent=4))
+            if (isinstance(decision, dict) and "startedEventId" in decision
+                    and decision["startedEventId"] == 0):
+                logger.debug('got decision: \n%s' % json.dumps(
+                    decision_to_log, sort_keys=True, indent=4))
             else:
-                logger.info('got decision: \n%s' % json.dumps(decision_to_log, sort_keys=True, indent=4))
+                logger.info('got decision: \n%s' % json.dumps(
+                    decision_to_log, sort_keys=True, indent=4))
 
             if token is not None:
                 # Get the workflowType and attempt to do the work
                 workflowType = get_workflowType(decision)
-                with newrelic.agent.BackgroundTask(application, name=workflowType, group='decider.py'):
+                with newrelic.agent.BackgroundTask(
+                        application, name=workflowType, group='decider.py'):
                     if workflowType is not None:
 
                         logger.info('workflowType: %s' % workflowType)
@@ -141,16 +142,19 @@ def get_all_paged_events(decision, conn, domain, task_list, identity, maximum_pa
 
     return decision
 
+
 def get_input(decision):
     """
     From the decision response, which is JSON data form SWF, get the
     input data that started the workflow
     """
     try:
-        input = json.loads(decision["events"][0]["workflowExecutionStartedEventAttributes"]["input"])
+        input = json.loads(
+            decision["events"][0]["workflowExecutionStartedEventAttributes"]["input"])
     except KeyError:
         input = None
     return input
+
 
 def get_taskToken(decision):
     """
@@ -163,6 +167,7 @@ def get_taskToken(decision):
         # No taskToken returned
         return None
 
+
 def get_workflowType(decision):
     """
     Given a polling for decision response from SWF via boto,
@@ -174,12 +179,14 @@ def get_workflowType(decision):
         # No workflowType found
         return None
 
+
 def get_workflow_name(workflowType):
     """
     Given a workflowType, return the name of a
     corresponding workflow class to load
     """
     return "workflow_" + workflowType
+
 
 def import_workflow_class(workflow_name):
     """
@@ -192,6 +199,7 @@ def import_workflow_class(workflow_name):
         return True
     except ImportError:
         return False
+
 
 def get_workflow_object(workflow_name, settings, logger, conn, token, decision, maximum_page_size):
     """
