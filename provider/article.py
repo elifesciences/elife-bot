@@ -59,14 +59,6 @@ class article(object):
             # Data provider
             self.db = dblib.SimpleDB(settings)
 
-        # S3 connection
-        self.s3_conn = None
-
-        # Default S3 bucket name
-        self.bucket_name = None
-        if self.settings is not None:
-            self.bucket_name = self.settings.bucket
-
         # Some defaults
         self.related_insight_article = None
         self.was_ever_poa = None
@@ -77,45 +69,6 @@ class article(object):
 
         # For checking published articles need a URL prefix for where to check
         self.lookup_url_prefix = "http://elifesciences.org/lookup/doi/10.7554/eLife."
-
-    def connect(self):
-        """
-        Connect to S3 using the settings
-        """
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        self.s3_conn = s3_conn
-        return self.s3_conn
-
-    def get_bucket(self, bucket_name=None):
-        """
-        Using the S3 connection, lookup the bucket
-        """
-        if self.s3_conn is None:
-            s3_conn = self.connect()
-        else:
-            s3_conn = self.s3_conn
-
-        if bucket_name is None:
-            # Use the object bucket_name if not provided
-            bucket_name = self.bucket_name
-
-        # Lookup the bucket
-        bucket = s3_conn.lookup(bucket_name)
-
-        return bucket
-
-    def get_s3key(self, s3_key_name, bucket=None):
-        """
-        Get the S3 key from the bucket
-        If the bucket is not provided, use the object bucket
-        """
-        if bucket is None:
-            bucket = self.get_bucket()
-
-        s3key = bucket.get_key(s3_key_name)
-
-        return s3key
 
     def parse_article_file(self, filename):
         """
