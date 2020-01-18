@@ -60,9 +60,6 @@ class article(object):
         # Store the list of DOI id that was ever published
         self.doi_ids = None
 
-        # For checking published articles need a URL prefix for where to check
-        self.lookup_url_prefix = "http://elifesciences.org/lookup/doi/10.7554/eLife."
-
     def parse_article_file(self, filename):
         """
         Given a filename to an article XML
@@ -463,30 +460,6 @@ class article(object):
 
         # Default
         return None
-
-    def get_article_canonical_url(self, doi_id):
-        """
-        Given the doi_id, and using the lookup URL prefix,
-        make an HTTP head request and return the URL after
-        all redirects are followed
-        """
-        # Construct the lookup URL on the HW site
-        lookup_url = self.get_article_lookup_url(doi_id)
-        #print lookup_url
-
-        r = requests.head(lookup_url, allow_redirects=True)
-        if r.status_code == 200:
-            return r.url
-        else:
-            return None
-        return None
-
-    def get_article_lookup_url(self, doi_id):
-        """
-        Given the doi_id, create the lookup URL
-        """
-        lookup_url = self.lookup_url_prefix + str(doi_id).zfill(5)
-        return lookup_url
 
     def get_authors_string(self, authors):
         """
