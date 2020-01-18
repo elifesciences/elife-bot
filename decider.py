@@ -47,10 +47,10 @@ def decide(settings, flag, debug=False):
 
             if (isinstance(decision, dict) and "startedEventId" in decision
                     and decision["startedEventId"] == 0):
-                logger.debug('got decision: \n%s' % json.dumps(
+                logger.debug('got decision: \n%s', json.dumps(
                     decision_to_log, sort_keys=True, indent=4))
             else:
-                logger.info('got decision: \n%s' % json.dumps(
+                logger.info('got decision: \n%s', json.dumps(
                     decision_to_log, sort_keys=True, indent=4))
 
             if token is not None:
@@ -60,7 +60,7 @@ def decide(settings, flag, debug=False):
                         application, name=workflowType, group='decider.py'):
                     if workflowType is not None:
 
-                        logger.info('workflowType: %s' % workflowType)
+                        logger.info('workflowType: %s', workflowType)
 
                         # Instantiate and object for the workflow using eval
                         # Build a string for the object name
@@ -78,15 +78,15 @@ def decide(settings, flag, debug=False):
                                 success = workflow_object.do_workflow()
                             except Exception as e:
                                 success = None
-                                logger.error('error processing workflow %s' %
+                                logger.error('error processing workflow %s',
                                              workflow_name, exc_info=True)
 
                             # Print the result to the log
                             if success:
-                                logger.info('%s success %s' % (workflow_name, success))
+                                logger.info('%s success %s', (workflow_name, success))
 
                         else:
-                            logger.info('error: could not load object %s\n' % workflow_name)
+                            logger.info('error: could not load object %s\n', workflow_name)
 
         # Reset and loop
         token = None
