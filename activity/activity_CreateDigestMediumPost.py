@@ -3,8 +3,7 @@ import json
 import time
 from digestparser import medium_post
 from provider.article_processing import download_jats
-import provider.digest_provider as digest_provider
-import provider.email_provider as email_provider
+from provider import digest_provider, email_provider, utils
 from activity.objects import Activity
 
 
@@ -211,8 +210,8 @@ class activity_CreateDigestMediumPost(Activity):
         "email the success notification to the recipients"
         success = True
 
-        current_time = time.gmtime()
-        body = success_email_body(current_time)
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
+        body = email_provider.simple_email_body(datetime_string)
         subject = success_email_subject(article_id)
         sender_email = self.settings.digest_sender_email
 
@@ -243,16 +242,3 @@ def post_medium_content(medium_content, digest_config, logger):
 def success_email_subject(article_id):
     "the email subject"
     return u'Medium post created for Digest: {msid:0>5}'.format(msid=str(article_id))
-
-
-def success_email_body(current_time):
-    """
-    Format the body of the email
-    """
-    body = ""
-    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-    datetime_string = time.strftime(date_format, current_time)
-    body += "As at " + datetime_string + "\n"
-    body += "\n"
-    body += "\n\nSincerely\n\neLife bot"
-    return body

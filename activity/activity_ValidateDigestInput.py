@@ -2,7 +2,7 @@ import os
 import json
 import time
 from S3utility.s3_notification_info import parse_activity_data
-from provider import digest_provider, download_helper, email_provider
+from provider import digest_provider, download_helper, email_provider, utils
 from activity.objects import Activity
 
 
@@ -83,8 +83,8 @@ class activity_ValidateDigestInput(Activity):
 
     def email_error_report(self, filename, error_messages):
         "send an email on error"
-        current_time = time.gmtime()
-        body = error_email_body(current_time, error_messages)
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
+        body = email_provider.simple_email_body(datetime_string, error_messages)
         subject = error_email_subject(filename)
         sender_email = self.settings.digest_sender_email
 
@@ -106,16 +106,3 @@ class activity_ValidateDigestInput(Activity):
 def error_email_subject(filename):
     "email subject for an error email"
     return u'Error processing digest file: {filename}'.format(filename=filename)
-
-
-def error_email_body(current_time, error_messages):
-    "body of an error email"
-    body = ""
-    if error_messages:
-        body += str(error_messages)
-    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-    datetime_string = time.strftime(date_format, current_time)
-    body += "\nAs at " + datetime_string + "\n"
-    body += "\n"
-    body += "\n\nSincerely\n\neLife bot"
-    return body

@@ -386,34 +386,26 @@ class TestEmailSubject(unittest.TestCase):
 
 class TestEmailBody(unittest.TestCase):
 
-    def test_success_email_body(self):
+    def test_success_email_body_content(self):
         """email body line with correct, unicode data"""
         digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
         digest_content.text = [u'<i>First</i> paragraph.', u'<b>First</b> > second, nö?.']
         jats_content = digest_provider.digest_jats(digest_content)
-        current_time = time.gmtime(1)
 
         expected = u'''JATS content for article 10.7554/eLife.99999:
 
 <p><italic>First</italic> paragraph.</p><p><bold>First</bold> &gt; second, nö?.</p>
 
-As at 1970-01-01T00:00:01.000Z
-
-
-
-Sincerely
-
-eLife bot'''
-        body = activity_module.success_email_body(current_time, digest_content, jats_content)
+'''
+        body = activity_module.success_email_body_content(digest_content, jats_content)
         self.assertEqual(body, expected)
 
-    def test_error_email_body(self):
+    def test_error_email_body_content(self):
         """email error body"""
         error_message = "Exception blah blah blah"
         digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
         digest_content.text = [u'<i>First</i> paragraph.', u'<b>First</b> > second, nö?.']
         jats_content = digest_provider.digest_jats(digest_content)
-        current_time = time.gmtime(1)
 
         expected = u'''Exception blah blah blah
 
@@ -423,16 +415,9 @@ Article DOI: 10.7554/eLife.99999
 
 JATS content: <p><italic>First</italic> paragraph.</p><p><bold>First</bold> &gt; second, nö?.</p>
 
-
-As at 1970-01-01T00:00:01.000Z
-
-
-
-Sincerely
-
-eLife bot'''
-        body = activity_module.error_email_body(
-            current_time, digest_content, jats_content, error_message)
+'''
+        body = activity_module.error_email_body_content(
+            digest_content, jats_content, error_message)
         self.assertEqual(body, expected)
 
 
