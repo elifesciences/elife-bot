@@ -4,7 +4,7 @@ import time
 from digestparser import output
 import digestparser.utils as digest_utils
 from S3utility.s3_notification_info import parse_activity_data
-from provider import digest_provider, download_helper, email_provider
+from provider import digest_provider, download_helper, email_provider, utils
 from activity.objects import Activity
 
 
@@ -118,7 +118,7 @@ class activity_EmailDigest(Activity):
         "email the digest as an attachment to the recipients"
         success = True
 
-        datetime_string = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
         body = email_provider.simple_email_body(datetime_string)
         subject = success_email_subject(digest_content)
         sender_email = self.settings.digest_sender_email

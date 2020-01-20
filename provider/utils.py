@@ -3,8 +3,11 @@ import urllib
 import base64
 import arrow
 
+
 S3_DATE_FORMAT = '%Y%m%d%H%M%S'
 PUB_DATE_FORMAT = "%Y-%m-%d"
+DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.000Z"
+
 
 def pad_msid(msid):
     return '{:05d}'.format(int(msid))

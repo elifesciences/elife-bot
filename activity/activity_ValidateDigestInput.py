@@ -2,7 +2,7 @@ import os
 import json
 import time
 from S3utility.s3_notification_info import parse_activity_data
-from provider import digest_provider, download_helper, email_provider
+from provider import digest_provider, download_helper, email_provider, utils
 from activity.objects import Activity
 
 
@@ -83,7 +83,7 @@ class activity_ValidateDigestInput(Activity):
 
     def email_error_report(self, filename, error_messages):
         "send an email on error"
-        datetime_string = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
         body = email_provider.simple_email_body(datetime_string, error_messages)
         subject = error_email_subject(filename)
         sender_email = self.settings.digest_sender_email

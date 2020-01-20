@@ -6,7 +6,7 @@ import requests
 import digestparser.utils as digest_utils
 from elifetools.utils import doi_uri_to_doi
 from S3utility.s3_notification_info import parse_activity_data
-from provider import digest_provider, download_helper, email_provider
+from provider import digest_provider, download_helper, email_provider, utils
 from activity.objects import Activity
 
 
@@ -137,7 +137,7 @@ class activity_PostDigestJATS(Activity):
 
     def send_email(self, digest_content, jats_content):
         """send an email after digest JATS is posted to endpoint"""
-        datetime_string = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
         body_content = success_email_body_content(digest_content, jats_content)
         body = email_provider.simple_email_body(datetime_string, body_content)
         subject = success_email_subject(digest_content)
@@ -157,7 +157,7 @@ class activity_PostDigestJATS(Activity):
 
     def email_error_report(self, digest_content, jats_content, error_messages):
         """send an email on error"""
-        datetime_string = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
         body_content = error_email_body_content(digest_content, jats_content, error_messages)
         body = email_provider.simple_email_body(datetime_string, body_content)
         subject = error_email_subject(digest_content)

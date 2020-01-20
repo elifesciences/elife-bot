@@ -3,8 +3,7 @@ import json
 import time
 from digestparser import medium_post
 from provider.article_processing import download_jats
-import provider.digest_provider as digest_provider
-import provider.email_provider as email_provider
+from provider import digest_provider, email_provider, utils
 from activity.objects import Activity
 
 
@@ -211,7 +210,7 @@ class activity_CreateDigestMediumPost(Activity):
         "email the success notification to the recipients"
         success = True
 
-        datetime_string = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
         body = email_provider.simple_email_body(datetime_string)
         subject = success_email_subject(article_id)
         sender_email = self.settings.digest_sender_email
