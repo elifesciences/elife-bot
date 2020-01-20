@@ -50,7 +50,6 @@ class exp():
     # end PPP settings
 
     # S3 settings
-    bucket = 'elife-articles'
     prefix = ''
     delimiter = '/'
 
@@ -318,7 +317,6 @@ class dev():
     # end PPP settings
 
     # S3 settings
-    bucket = 'elife-articles'
     prefix = ''
     delimiter = '/'
 
@@ -583,7 +581,6 @@ class live():
     # end PPP settings
 
     # S3 settings
-    bucket = 'elife-articles'
     prefix = ''
     delimiter = '/'
 
