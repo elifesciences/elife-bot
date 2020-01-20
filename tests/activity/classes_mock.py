@@ -49,11 +49,8 @@ class FakeSQSMessage:
         self.dir = directory
 
     def set_body(self, body):
-        try:
-            self.dir.write("fake_sqs_body", body)
-        except TypeError:
-            # python 3, write bytes
-            self.dir.write("fake_sqs_body", bytes(body, 'utf-8'))
+        # write bytes
+        self.dir.write("fake_sqs_body", bytes(body, 'utf-8'))
 
     def get_body(self):
         return self.dir.read("fake_sqs_body")
@@ -139,11 +136,7 @@ class FakeStorageContext:
         bucket_name, s3_key = self.get_bucket_and_key(resource)
         src = self.dir + s3_key
         with open(src, 'rb') as fsrc:
-            try:
-                filelike.write(fsrc.read())
-            except TypeError:
-                # python 3
-                filelike.write(fsrc.read().decode())
+            filelike.write(fsrc.read())
 
     def get_resource_as_string(self, origin):
         return '<mock><media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="wmv" mimetype="video" xlink:href="elife-00569-media1.wmv"></media></mock>'

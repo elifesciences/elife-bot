@@ -229,12 +229,7 @@ class article(object):
         """
         doi_url = get_doi_url(doi)
         f = {"text": doi_url + " @eLife"}
-        if hasattr(urllib, 'urlencode'):
-            tweet_url = "http://twitter.com/intent/tweet?" + urllib.urlencode(f)
-        else:
-            # python 3
-            tweet_url = "http://twitter.com/intent/tweet?" + urllib.parse.urlencode(f)
-        return tweet_url
+        return "http://twitter.com/intent/tweet?" + urllib.parse.urlencode(f)
 
     def get_lens_url(self, doi):
         """

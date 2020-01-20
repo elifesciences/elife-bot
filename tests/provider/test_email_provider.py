@@ -3,7 +3,7 @@
 import glob
 import unittest
 from ddt import ddt, data, unpack
-from provider.utils import base64_encode_string, unicode_decode, unicode_encode
+from provider.utils import base64_encode_string, bytes_decode, unicode_encode
 import provider.email_provider as email_provider
 
 
@@ -69,8 +69,9 @@ class TestListEmailRecipients(unittest.TestCase):
     @data(
         'Bayés_35774.docx',
         u'Bayés_35774.docx',
-        unicode_decode(b'Bay\xc3\xa9s_35774.docx'),
-        unicode_decode(b'Baye\xcc\x81s_35774.docx')
+        b'Bay\xc3\xa9s_35774.docx',
+        bytes_decode(b'Bay\xc3\xa9s_35774.docx'),
+        bytes_decode(b'Baye\xcc\x81s_35774.docx')
     )
     def test_encode_filename(self, filename):
         """the encoded name for the examples will always be the same"""
@@ -122,16 +123,15 @@ class TestListEmailRecipients(unittest.TestCase):
             if name.endswith("35774.docx"):
                 attachment_file = name
         attachments = [attachment_file]
-        # compare two fragments because in Python 2 it wraps with extra quotation marks
-        expected_fragments.append("Content-Disposition: attachment; filename*=")
-        expected_fragments.append("utf-8''Bay%C3%A9s_35774.docx")
-        # create the message
+        # compare attachment in body
+        expected_fragments.append("Content-Disposition: attachment; filename*=utf-8''Bay%C3%A9s_35774.docx")
         email_message = email_provider.simple_message(
             sender, recipient, subject, body, subtype=subtype, attachments=attachments)
         for expected in expected_fragments:
             self.assertTrue(
                 expected in str(email_message),
                 'Fragment %s not found in email %s' % (expected, str(email_message)))
+
 
     def test_get_admin_email_body_foot(self):
         """test simple string Template rendering"""
