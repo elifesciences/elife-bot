@@ -5,7 +5,7 @@ import time
 from activity.objects import Activity
 
 import provider.swfmeta as swfmetalib
-from provider import email_provider
+from provider import email_provider, utils
 
 """
 AdminEmailHistory activity
@@ -96,8 +96,7 @@ class activity_AdminEmailHistory(Activity):
 
         body = ""
 
-        date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-        datetime_string = time.strftime(date_format, current_time)
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, current_time)
 
         body = "A short history of workflow executions\n"
         body += "As at " + datetime_string + "\n"

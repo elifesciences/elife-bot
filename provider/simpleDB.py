@@ -6,6 +6,7 @@ import boto.sdb
 
 import boto.s3
 from boto.s3.connection import S3Connection
+from provider import utils
 
 """
 SimpleDB S3 data provider
@@ -183,14 +184,12 @@ class SimpleDB(object):
             last_updated_since:       only return items updated since the date provided
         """
 
-        date_format = "%Y-%m-%dT%H:%M:%S.000Z"
-
         domain_name = "S3FileLog"
 
         item_list = []
 
         domain_name_env = self.get_domain_name(domain_name)
-        query = self.elife_get_generic_delivery_S3_query(date_format, domain_name_env,
+        query = self.elife_get_generic_delivery_S3_query(utils.DATE_TIME_FORMAT, domain_name_env,
                                                          bucket_name, last_updated_since)
 
         dom = self.get_domain(domain_name)

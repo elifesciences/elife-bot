@@ -1,6 +1,7 @@
 import unittest
 import json
 from provider.simpleDB import SimpleDB
+from provider import utils
 import tests.settings_mock as settings_mock
 from ddt import ddt, data, unpack
 
@@ -81,7 +82,7 @@ class TestSimpleDB(unittest.TestCase):
     def test_elife_get_generic_delivery_s3_query(self, domain_name, bucket_name,
                                                  last_updated_since, expected_query):
         query = self.provider.elife_get_generic_delivery_S3_query(
-            date_format="%Y-%m-%dT%H:%M:%S.000Z",
+            date_format=utils.DATE_TIME_FORMAT,
             domain_name=domain_name,
             bucket_name=bucket_name,
             last_updated_since=last_updated_since)

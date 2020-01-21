@@ -10,6 +10,7 @@ import io
 from ejpcsvparser.utils import entity_to_unicode
 import boto.s3
 from boto.s3.connection import S3Connection
+from provider import utils
 
 """
 EJP data provider
@@ -355,7 +356,7 @@ class EJP(object):
                 try:
                     if item_attrs['last_modified']:
                         # Parse last_modified into a timestamp for easy computations
-                        date_format = "%Y-%m-%dT%H:%M:%S.000Z"
+                        date_format = utils.DATE_TIME_FORMAT
                         date_str = time.strptime(item_attrs['last_modified'], date_format)
                         timestamp = calendar.timegm(date_str)
                         item_attrs['last_modified_timestamp'] = timestamp
