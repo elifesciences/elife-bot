@@ -203,9 +203,9 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         return_value = self.activity.email_notification(99999)
         self.assertTrue(return_value)
-        self.assertEqual(
-            self.activity.logger.loginfo,
-            "Email sending details: OrderedDict([('error', 0), ('success', 2)])")
+        self.assertTrue(
+            self.activity.logger.loginfo.endswith(
+                "Email sending details: OrderedDict([('error', 0), ('success', 2)])"))
 
 
 if __name__ == '__main__':

@@ -50,9 +50,9 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
         fake_highest_version.return_value = 2
         result = self.activity.do_activity(activity_test_data.data_example_before_publish)
         self.assertEqual(result, expected_result)
-        self.assertEqual(self.activity.logger.loginfo, (
+        self.assertTrue(self.activity.logger.loginfo.endswith((
             'ScheduleCrossrefPeerReview will not deposit article 00353 ingested by'
-            ' silent-correction, its version of 1 does not equal the highest version which is 2'))
+            ' silent-correction, its version of 1 does not equal the highest version which is 2')))
 
     @patch('provider.lax_provider.article_highest_version')
     @patch.object(activity_module, 'get_session')
@@ -66,9 +66,9 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
         fake_highest_version.return_value = 1
         result = self.activity.do_activity(activity_test_data.data_example_before_publish)
         self.assertEqual(result, expected_result)
-        self.assertEqual(self.activity.logger.loginfo, (
+        self.assertTrue(self.activity.logger.loginfo.endswith((
             'ScheduleCrossrefPeerReview finds version 1 of 00353 has no sub-article'
-            ' for peer review depositing'))
+            ' for peer review depositing')))
 
     @patch('provider.lax_provider.get_xml_file_name')
     @patch('provider.lax_provider.article_highest_version')

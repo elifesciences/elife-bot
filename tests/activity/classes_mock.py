@@ -244,22 +244,34 @@ class FakeBucket:
         "stub for mocking"
         pass
 
+
 class FakeLogger:
     def __init__(self):
         self.logdebug = "First logger debug"
         self.loginfo = "First logger info"
         self.logexception = "First logger exception"
         self.logerror = "First logger error"
+
     def debug(self, msg, *args, **kwargs):
-        self.logdebug =  msg
+        self.logdebug = msg
+
     def info(self, msg, *args, **kwargs):
-        self.loginfo = msg
+        self.loginfo = '\n'.join([self.loginfo, str(msg)])
+
     def warning(self, msg, *args, **kwargs):
         self.logwarning = msg
+
     def exception(self, msg, *args, **kwargs):
         self.logexception = msg
+
     def error(self, msg, *args, **kwargs):
         self.logerror = msg
+
+    def addHandler(self, handler):
+        pass
+
+    def setLevel(self, level):
+        pass
 
 
 FakeLaxProvider = MagicMock()

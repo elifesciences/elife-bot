@@ -41,8 +41,9 @@ class TestActivity(unittest.TestCase):
         """test bad directories object property"""
         self.activity.directories = ["list_not_supported_here"]
         self.assertIsNone(self.activity.make_activity_directories())
-        self.assertEqual(
-            self.activity.logger.loginfo, "No dir_names to create in make_activity_directories()")
+        self.assertTrue(
+            self.activity.logger.loginfo.endswith(
+                "No dir_names to create in make_activity_directories()"))
 
     def test_make_activity_directories_exists(self):
         """test creating a new activity directory passed as an argument"""
