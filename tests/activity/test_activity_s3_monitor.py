@@ -1,6 +1,7 @@
 import unittest
 from mock import patch
 from provider.simpleDB import SimpleDB
+from provider import utils
 import activity.activity_S3Monitor as activity_module
 from activity.activity_S3Monitor import activity_S3Monitor as activity_object
 import tests.activity.settings_mock as settings_mock
@@ -61,9 +62,9 @@ class TestS3Monitor(unittest.TestCase):
 
     def test_get_expanded_date_attributes(self):
         base_name = 'last_modified'
-        date_format = '%Y-%m-%dT%H:%M:%S.000Z'
         timestamp = 1359244237
-        date_attrs = self.activity.get_expanded_date_attributes(base_name, date_format, timestamp)
+        date_attrs = self.activity.get_expanded_date_attributes(
+            base_name, utils.DATE_TIME_FORMAT, timestamp)
         self.assertEqual(date_attrs.get('last_modified_timestamp'), timestamp)
         self.assertEqual(date_attrs.get('last_modified_date'), '2013-01-26T23:50:37.000Z')
         self.assertEqual(date_attrs.get('last_modified_year'), '2013')
