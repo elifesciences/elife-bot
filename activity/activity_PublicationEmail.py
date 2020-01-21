@@ -708,7 +708,7 @@ def choose_email_type(article_type, is_poa, was_ever_poa, feature_article):
         # Feature article
         email_type = "author_publication_email_Feature"
 
-    elif article_type == "research-article":
+    elif article_type in ["research-article", "review-article"]:
         if is_poa is True:
             # POA article
             email_type = "author_publication_email_POA"

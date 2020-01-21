@@ -277,7 +277,8 @@ class TestPublicationEmail(unittest.TestCase):
         ("research-article", True, None, False, "author_publication_email_POA"),
         ("research-article", False, None, False, "author_publication_email_VOR_no_POA"),
         ("research-article", False, False, False, "author_publication_email_VOR_no_POA"),
-        ("research-article", False, True, False, "author_publication_email_VOR_after_POA")
+        ("research-article", False, True, False, "author_publication_email_VOR_after_POA"),
+        ("review-article", False, False, False, "author_publication_email_VOR_no_POA"),
     )
     @unpack
     def test_choose_email_type(self, article_type, is_poa, was_ever_poa,
