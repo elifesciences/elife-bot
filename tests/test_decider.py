@@ -1,6 +1,8 @@
 import unittest
 import json
+from mock import patch
 from tests import settings_mock
+from tests.classes_mock import FakeLayer1
 import decider
 
 
@@ -32,6 +34,17 @@ class TestDecider(unittest.TestCase):
     def test_get_workflow_type_failure(self):
         workflow_type = decider.get_workflowType({})
         self.assertIsNone(workflow_type)
+
+    @patch.object(FakeLayer1, 'poll_for_decision_task')
+    def test_get_all_paged_events(self, fake_poll):
+        with open('tests/test_data/decision_nextPageToken.json', 'r') as open_file:
+            decision_json = json.loads(open_file.read())
+        polled_decision_json = {'events': ['something']}
+        fake_conn = FakeLayer1()
+        fake_poll.return_value = polled_decision_json
+        decision = decider.get_all_paged_events(
+            decision_json, fake_conn, None, None, None, None)
+        self.assertEqual(decision.get('events'), polled_decision_json.get('events'))
 
     def test_get_input(self):
         expected = {'data': [1, 3, 7, 11]}

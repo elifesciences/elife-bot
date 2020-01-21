@@ -48,6 +48,10 @@ class FakeLayer1:
             description=None):
         pass
 
+    def poll_for_decision_task(
+            domain, task_list, identity, maximum_page_size, next_page_token):
+        pass
+
 
 class FakeFlag():
     "a fake object to return process monitoring status"
