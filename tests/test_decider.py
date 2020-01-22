@@ -15,72 +15,6 @@ class TestDecider(unittest.TestCase):
         with open('tests/test_data/decision.json', 'r') as open_file:
             self.decision_json = json.loads(open_file.read())
 
-    @patch('logging.getLogger')
-    @patch.object(FakeLayer1, 'poll_for_decision_task')
-    @patch('boto.swf.layer1.Layer1')
-    def test_decide(self, fake_conn, fake_poll, fake_get_logger):
-        """test will not be able to find workflow_Sum, which no longer exists"""
-        flag = FakeFlag(0.25)
-        fake_logger = FakeLogger()
-        fake_get_logger.return_value = fake_logger
-        fake_conn.return_value = FakeLayer1()
-        fake_poll.return_value = self.decision_json
-        decider.decide(settings_mock, flag)
-        # make some assertions on log values
-        self.assertTrue('error: could not load object workflow_Sum' in fake_logger.loginfo)
-        self.assertTrue(fake_logger.loginfo.endswith('graceful shutdown'))
-
-    @patch('logging.getLogger')
-    @patch.object(FakeLayer1, 'poll_for_decision_task')
-    @patch('boto.swf.layer1.Layer1')
-    def test_decide_started_event_id(self, fake_conn, fake_poll, fake_get_logger):
-        """test for coverage of when startedEventId is 0"""
-        decision_json = {'startedEventId': 0}
-        flag = FakeFlag(0.25)
-        fake_logger = FakeLogger()
-        fake_get_logger.return_value = fake_logger
-        fake_conn.return_value = FakeLayer1()
-        fake_poll.return_value = decision_json
-        decider.decide(settings_mock, flag)
-        # make some assertions on debug log
-        self.assertTrue('got decision:' in fake_logger.logdebug)
-
-    @patch('logging.getLogger')
-    @patch.object(FakeLayer1, 'poll_for_decision_task')
-    @patch('boto.swf.layer1.Layer1')
-    def test_decide_ping(self, fake_conn, fake_poll, fake_get_logger):
-        """test based on cron_FiveMinute workflow with just a Ping activity"""
-        with open('tests/test_data/decision_ping.json', 'r') as open_file:
-            decision_json = json.loads(open_file.read())
-        flag = FakeFlag(0.25)
-        fake_logger = FakeLogger()
-        fake_get_logger.return_value = fake_logger
-        fake_conn.return_value = FakeLayer1()
-        fake_poll.return_value = decision_json
-        decider.decide(settings_mock, flag)
-        # make some assertions on log values
-        self.assertTrue('scheduling task: PingWorker' in fake_logger.loginfo)
-        self.assertTrue('workflow_Ping success True' in fake_logger.loginfo)
-
-    @patch.object(workflow_object, 'do_workflow')
-    @patch('logging.getLogger')
-    @patch.object(FakeLayer1, 'poll_for_decision_task')
-    @patch('boto.swf.layer1.Layer1')
-    def test_decide_ping_workflow_exception(self, fake_conn, fake_poll, fake_get_logger,
-                                            fake_do_workflow):
-        """test cron_FiveMinute workflow raising an exception"""
-        with open('tests/test_data/decision_ping.json', 'r') as open_file:
-            decision_json = json.loads(open_file.read())
-        fake_do_workflow.side_effect = Exception('An exception')
-        flag = FakeFlag(0.25)
-        fake_logger = FakeLogger()
-        fake_get_logger.return_value = fake_logger
-        fake_conn.return_value = FakeLayer1()
-        fake_poll.return_value = decision_json
-        decider.decide(settings_mock, flag)
-        # make assertions on error log
-        self.assertTrue('error processing workflow' in fake_logger.logerror)
-
     def test_get_task_token(self):
         expected = (
             'AAAAKgAAAAEAAAAAAAAAAjaHv5Lk1csWNpSpgCC0bOKbWQv8HfmDMCyp6HvCbcrjeH2ao+M+Jz76e+wNuk' +
@@ -145,6 +79,77 @@ class TestDecider(unittest.TestCase):
         workflow_object = decider.get_workflow_object(
             workflow_name, settings_mock, None, None, None, None, None)
         self.assertEqual(workflow_object.__class__.__name__, workflow_name)
+
+
+class TestDeciderDecide(unittest.TestCase):
+
+    def setUp(self):
+        self.flag = FakeFlag(0.25)
+        self.logger = FakeLogger()
+
+    @patch('logging.getLogger')
+    @patch.object(FakeLayer1, 'poll_for_decision_task')
+    @patch('boto.swf.layer1.Layer1')
+    def test_decide(self, fake_conn, fake_poll, fake_get_logger):
+        """test will not be able to find workflow_Sum, which no longer exists"""
+        with open('tests/test_data/decision.json', 'r') as open_file:
+            decision_json = json.loads(open_file.read())
+        fake_get_logger.return_value = self.logger
+        fake_conn.return_value = FakeLayer1()
+        fake_poll.return_value = decision_json
+        # invoke decide
+        decider.decide(settings_mock, self.flag)
+        # make some assertions on log values
+        self.assertTrue('error: could not load object workflow_Sum' in self.logger.loginfo)
+        self.assertTrue(self.logger.loginfo.endswith('graceful shutdown'))
+
+    @patch('logging.getLogger')
+    @patch.object(FakeLayer1, 'poll_for_decision_task')
+    @patch('boto.swf.layer1.Layer1')
+    def test_decide_started_event_id(self, fake_conn, fake_poll, fake_get_logger):
+        """test for coverage of when startedEventId is 0"""
+        decision_json = {'startedEventId': 0}
+        fake_get_logger.return_value = self.logger
+        fake_conn.return_value = FakeLayer1()
+        fake_poll.return_value = decision_json
+        # invoke decide
+        decider.decide(settings_mock, self.flag)
+        # make some assertions on debug log
+        self.assertTrue('got decision:' in self.logger.logdebug)
+
+    @patch('logging.getLogger')
+    @patch.object(FakeLayer1, 'poll_for_decision_task')
+    @patch('boto.swf.layer1.Layer1')
+    def test_decide_ping(self, fake_conn, fake_poll, fake_get_logger):
+        """test based on cron_FiveMinute workflow with just a Ping activity"""
+        with open('tests/test_data/decision_ping.json', 'r') as open_file:
+            decision_json = json.loads(open_file.read())
+        fake_get_logger.return_value = self.logger
+        fake_conn.return_value = FakeLayer1()
+        fake_poll.return_value = decision_json
+        # invoke decide
+        decider.decide(settings_mock, self.flag)
+        # make some assertions on log values
+        self.assertTrue('scheduling task: PingWorker' in self.logger.loginfo)
+        self.assertTrue('workflow_Ping success True' in self.logger.loginfo)
+
+    @patch.object(workflow_object, 'do_workflow')
+    @patch('logging.getLogger')
+    @patch.object(FakeLayer1, 'poll_for_decision_task')
+    @patch('boto.swf.layer1.Layer1')
+    def test_decide_ping_workflow_exception(self, fake_conn, fake_poll, fake_get_logger,
+                                            fake_do_workflow):
+        """test cron_FiveMinute workflow raising an exception"""
+        with open('tests/test_data/decision_ping.json', 'r') as open_file:
+            decision_json = json.loads(open_file.read())
+        fake_do_workflow.side_effect = Exception('An exception')
+        fake_get_logger.return_value = self.logger
+        fake_conn.return_value = FakeLayer1()
+        fake_poll.return_value = decision_json
+        # invoke decide
+        decider.decide(settings_mock, self.flag)
+        # make assertions on error log
+        self.assertTrue('error processing workflow' in self.logger.logerror)
 
 
 class TestTrimmedDecision(unittest.TestCase):
