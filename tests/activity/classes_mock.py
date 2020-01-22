@@ -256,7 +256,17 @@ class FakeLogger:
         self.logdebug = msg
 
     def info(self, msg, *args, **kwargs):
-        self.loginfo = '\n'.join([self.loginfo, str(msg)])
+        # perform string replace on the message
+        if args:
+            try:
+                rendered_msg = msg % args
+            except TypeError:
+                # if args were supplied as a tuple
+                rendered_msg = msg % args[0]
+        else:
+            rendered_msg = str(msg)
+        # append message to the log
+        self.loginfo = '\n'.join([self.loginfo, rendered_msg])
 
     def warning(self, msg, *args, **kwargs):
         self.logwarning = msg
