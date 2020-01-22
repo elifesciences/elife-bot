@@ -217,21 +217,8 @@ def get_workflow_object(workflow_name, settings, logger, conn, token, decision, 
     return workflow_object
 
 
-def console_start():
-    """capture options when running standalone"""
-    parser = ArgumentParser()
-    parser.add_argument("-e", "--env", default="dev", action="store", type=str, dest="env",
-                        help="set the environment to run, either dev or live")
-    args = parser.parse_args()
-    if args.env:
-        return args.env
-    return None
-
-
 if __name__ == "__main__":
 
     ENV = utils.console_start_env()
-    SETTINGS_LIB = __import__('settings')
-    SETTINGS = SETTINGS_LIB.get_settings(ENV)
-
+    SETTINGS = utils.get_settings(ENV)
     process.monitor_interrupt(lambda flag: decide(SETTINGS, flag))

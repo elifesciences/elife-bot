@@ -119,3 +119,9 @@ def console_start_env():
                         help="set the environment to run, either dev or live")
     args = parser.parse_args()
     return args.env
+
+
+def get_settings(env):
+    """for runtime importing of settings module"""
+    import settings as settings_lib
+    return settings_lib.get_settings(env)
