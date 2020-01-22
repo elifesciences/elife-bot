@@ -1,4 +1,3 @@
-from optparse import OptionParser
 import boto.sqs
 import log
 import json
@@ -135,16 +134,7 @@ class LaxResponseAdapter:
         output_queue.write(m)
 
 if __name__ == "__main__":
-
-    ENV = None
-
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, either dev or live")
-
-    (options, args) = parser.parse_args()
-    ENV = options.env
-    settings_lib = __import__('settings')
-    settings = settings_lib.get_settings(ENV)
-    lax_response_adapter = LaxResponseAdapter(settings, logger)
+    ENV = utils.console_start_env()
+    SETTINGS = utils.get_settings(ENV)
+    lax_response_adapter = LaxResponseAdapter(SETTINGS, logger)
     process.monitor_interrupt(lambda flag: lax_response_adapter.listen(flag))

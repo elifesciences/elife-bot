@@ -1,7 +1,6 @@
 import time
 import json
-from provider import process
-from optparse import OptionParser
+from provider import process, utils
 from S3utility.s3_notification_info import S3NotificationInfo
 from S3utility.s3_sqs_message import S3SQSMessage
 import boto.sqs
@@ -121,13 +120,7 @@ class QueueWorker:
 
 
 if __name__ == "__main__":
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, either dev or live")
-    (options, args) = parser.parse_args()
-    if options.env:
-        ENV = options.env
-    settings_lib = __import__('settings')
-    settings = settings_lib.get_settings(ENV)
-    queue_worker = QueueWorker(settings)
+    ENV = utils.console_start_env()
+    SETTINGS = utils.get_settings(ENV)
+    queue_worker = QueueWorker(SETTINGS)
     process.monitor_interrupt(lambda flag: queue_worker.work(flag))
