@@ -54,44 +54,52 @@ def decide(settings, flag, debug=False):
                     decision_to_log, sort_keys=True, indent=4))
 
             if token is not None:
-                # Get the workflowType and attempt to do the work
-                workflowType = get_workflowType(decision)
-                with newrelic.agent.BackgroundTask(
-                        application, name=workflowType, group='decider.py'):
-                    if workflowType is not None:
-
-                        logger.info('workflowType: %s', workflowType)
-
-                        # Instantiate and object for the workflow using eval
-                        # Build a string for the object name
-                        workflow_name = get_workflow_name(workflowType)
-
-                        # Attempt to import the module for the workflow
-                        if import_workflow_class(workflow_name):
-                            # Instantiate the workflow object
-                            workflow_object = get_workflow_object(workflow_name, settings,
-                                                                  logger, conn, token, decision,
-                                                                  maximum_page_size)
-
-                            # Process the workflow
-                            try:
-                                success = workflow_object.do_workflow()
-                            except Exception as e:
-                                success = None
-                                logger.error('error processing workflow %s',
-                                             workflow_name, exc_info=True)
-
-                            # Print the result to the log
-                            if success:
-                                logger.info('%s success %s', (workflow_name, success))
-
-                        else:
-                            logger.info('error: could not load object %s\n', workflow_name)
+                process_workflow(
+                    application, decision, settings, logger, conn, token, maximum_page_size)
 
         # Reset and loop
         token = None
 
     logger.info("graceful shutdown")
+
+
+def process_workflow(application, decision, settings, logger, conn, token, maximum_page_size):
+    """for each decision token load the workflow and run it"""
+    # Get the workflowType and attempt to do the work
+    workflowType = get_workflowType(decision)
+    with newrelic.agent.BackgroundTask(
+            application, name=workflowType, group='decider.py'):
+        if workflowType is not None:
+
+            logger.info('workflowType: %s', workflowType)
+
+            # Instantiate and object for the workflow using eval
+            # Build a string for the object name
+            workflow_name = get_workflow_name(workflowType)
+
+            # Attempt to import the module for the workflow
+            if import_workflow_class(workflow_name):
+                # Instantiate the workflow object
+                workflow_object = get_workflow_object(
+                    workflow_name, settings, logger, conn, token, decision, maximum_page_size)
+                # Process the workflow
+                invoke_do_workflow(workflow_name, workflow_object, logger)
+            else:
+                logger.info('error: could not load object %s\n', workflow_name)
+
+
+def invoke_do_workflow(workflow_name, workflow_object, logger):
+    """given workflow name and object process it by calling do_workflow()"""
+    try:
+        success = workflow_object.do_workflow()
+    except Exception as e:
+        success = None
+        logger.error(
+            'error processing workflow %s', workflow_name, exc_info=True)
+
+    # Print the result to the log
+    if success:
+        logger.info('%s success %s', (workflow_name, success))
 
 
 def trimmed_decision(decision, debug=False):
