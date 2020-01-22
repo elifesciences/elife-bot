@@ -100,8 +100,8 @@ class TestDeciderDecide(unittest.TestCase):
         # invoke decide
         decider.decide(settings_mock, self.flag)
         # make some assertions on log values
-        self.assertTrue('error: could not load object workflow_Sum' in self.logger.loginfo)
-        self.assertTrue(self.logger.loginfo.endswith('graceful shutdown'))
+        self.assertTrue('error: could not load object workflow_Sum' in str(self.logger.loginfo))
+        self.assertEqual(self.logger.loginfo[-1], 'graceful shutdown')
 
     @patch('logging.getLogger')
     @patch.object(FakeLayer1, 'poll_for_decision_task')

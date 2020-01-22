@@ -241,7 +241,7 @@ class FakeBucket:
 class FakeLogger:
     def __init__(self):
         self.logdebug = "First logger debug"
-        self.loginfo = "First logger info"
+        self.loginfo = ["First logger info"]
         self.logexception = "First logger exception"
         self.logerror = "First logger error"
 
@@ -259,7 +259,7 @@ class FakeLogger:
         else:
             rendered_msg = str(msg)
         # append message to the log
-        self.loginfo = '\n'.join([self.loginfo, rendered_msg])
+        self.loginfo.append(rendered_msg)
 
     def warning(self, msg, *args, **kwargs):
         self.logwarning = msg
