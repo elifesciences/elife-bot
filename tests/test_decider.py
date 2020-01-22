@@ -29,6 +29,21 @@ class TestDecider(unittest.TestCase):
         self.assertTrue('error: could not load object workflow_Sum' in fake_logger.loginfo)
         self.assertTrue(fake_logger.loginfo.endswith('graceful shutdown'))
 
+    @patch('logging.getLogger')
+    @patch.object(FakeLayer1, 'poll_for_decision_task')
+    @patch('boto.swf.layer1.Layer1')
+    def test_decide_started_event_id(self, fake_conn, fake_poll, fake_get_logger):
+        """test for coverage of when startedEventId is 0"""
+        decision_json = {'startedEventId': 0}
+        flag = FakeFlag()
+        fake_logger = FakeLogger()
+        fake_get_logger.return_value = fake_logger
+        fake_conn.return_value = FakeLayer1()
+        fake_poll.return_value = decision_json
+        decider.decide(settings_mock, flag)
+        # make some assertions on log values
+        self.assertTrue('got decision:' in fake_logger.logdebug)
+
     def test_get_task_token(self):
         expected = (
             'AAAAKgAAAAEAAAAAAAAAAjaHv5Lk1csWNpSpgCC0bOKbWQv8HfmDMCyp6HvCbcrjeH2ao+M+Jz76e+wNuk' +
