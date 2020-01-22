@@ -5,12 +5,11 @@ import os
 import uuid
 import json
 import importlib
-from optparse import OptionParser
 import log
 import boto.sqs
 import newrelic.agent
 from S3utility.s3_notification_info import S3NotificationInfo
-from provider import process
+from provider import process, utils
 from provider.utils import bytes_decode
 # this is not an unused import, it is used dynamically
 import starter
@@ -126,23 +125,7 @@ workflow_data_processors = {
 }
 
 
-def get_settings(env):
-    import settings as settings_lib
-    return settings_lib.get_settings(env)
-
-
-def console_start():
-    """capture options when running standalone"""
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, either dev or live")
-    (options, args) = parser.parse_args()
-    if options.env:
-        env = options.env
-        return env
-
-
 if __name__ == "__main__":
-    ENV = console_start()
-    SETTINGS = get_settings(ENV)
+    ENV = utils.console_start_env()
+    SETTINGS = utils.get_settings(ENV)
     process.monitor_interrupt(lambda flag: main(SETTINGS, flag))
