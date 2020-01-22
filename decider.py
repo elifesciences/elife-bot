@@ -16,9 +16,8 @@ def decide(settings, flag, debug=False):
 
     # Log
     identity = "decider_%s" % os.getpid()
-    logFile = "decider.log"
-    #logFile = None
-    logger = log.logger(logFile, settings.setLevel, identity)
+    log_file = "decider.log"
+    logger = log.logger(log_file, settings.setLevel, identity)
 
     # Simple connect
     conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
@@ -40,7 +39,7 @@ def decide(settings, flag, debug=False):
                                             settings.default_task_list,
                                             identity, maximum_page_size)
 
-            token = get_taskToken(decision)
+            token = get_task_token(decision)
             logger.info('got token: %s', token)
 
             decision_to_log = trimmed_decision(decision, debug)
@@ -66,16 +65,16 @@ def decide(settings, flag, debug=False):
 def process_workflow(application, decision, settings, logger, conn, token, maximum_page_size):
     """for each decision token load the workflow and run it"""
     # Get the workflowType and attempt to do the work
-    workflowType = get_workflowType(decision)
+    workflow_type = get_workflow_type(decision)
     with newrelic.agent.BackgroundTask(
-            application, name=workflowType, group='decider.py'):
-        if workflowType is not None:
+            application, name=workflow_type, group='decider.py'):
+        if workflow_type is not None:
 
-            logger.info('workflowType: %s', workflowType)
+            logger.info('workflowType: %s', workflow_type)
 
             # Instantiate and object for the workflow using eval
             # Build a string for the object name
-            workflow_name = get_workflow_name(workflowType)
+            workflow_name = get_workflow_name(workflow_type)
 
             # Attempt to import the module for the workflow
             if import_workflow_class(workflow_name):
@@ -92,7 +91,7 @@ def invoke_do_workflow(workflow_name, workflow_object, logger):
     """given workflow name and object process it by calling do_workflow()"""
     try:
         success = workflow_object.do_workflow()
-    except Exception as e:
+    except Exception:
         success = None
         logger.error(
             'error processing workflow %s', workflow_name, exc_info=True)
@@ -154,14 +153,14 @@ def get_input(decision):
     input data that started the workflow
     """
     try:
-        input = json.loads(
+        workflow_input = json.loads(
             decision["events"][0]["workflowExecutionStartedEventAttributes"]["input"])
     except KeyError:
-        input = None
-    return input
+        workflow_input = None
+    return workflow_input
 
 
-def get_taskToken(decision):
+def get_task_token(decision):
     """
     Given a response from polling for decision from SWF via boto,
     extract the taskToken from the json data, if present
@@ -173,7 +172,7 @@ def get_taskToken(decision):
         return None
 
 
-def get_workflowType(decision):
+def get_workflow_type(decision):
     """
     Given a polling for decision response from SWF via boto,
     extract the workflowType from the json data
@@ -185,12 +184,12 @@ def get_workflowType(decision):
         return None
 
 
-def get_workflow_name(workflowType):
+def get_workflow_name(workflow_type):
     """
-    Given a workflowType, return the name of a
+    Given a workflowType workflow_type, return the name of a
     corresponding workflow class to load
     """
-    return "workflow_" + workflowType
+    return "workflow_" + workflow_type
 
 
 def import_workflow_class(workflow_name):

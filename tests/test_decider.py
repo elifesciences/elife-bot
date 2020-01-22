@@ -21,20 +21,20 @@ class TestDecider(unittest.TestCase):
             'EX6cyLCf+LEBQmUy83b6Abd1HhduEQ/imaw2YftjNt20QtS75QXgPzOIFQ6rh43MKDwBCcnUpttjUzqiev' +
             'a2Y1eEisq4Ax7pZ+ydKmYBFodCvt48BPFD48L7qtmh14rpF2ic8AuNakilIhG3IL5s/UX1gMLre39Rd03U' +
             'gK+0KuozCIfXwSU+wILRuSOaNB7cHDhiBFg12FSrUFXRHZVZr/qFhGXCEmLNjf/rOpNC1UoZwV')
-        task_token = decider.get_taskToken(self.decision_json)
+        task_token = decider.get_task_token(self.decision_json)
         self.assertEqual(task_token, expected)
 
     def test_get_task_token_failure(self):
-        task_token = decider.get_taskToken({})
+        task_token = decider.get_task_token({})
         self.assertIsNone(task_token)
 
     def test_get_workflow_type(self):
         expected = 'Sum'
-        workflow_type = decider.get_workflowType(self.decision_json)
+        workflow_type = decider.get_workflow_type(self.decision_json)
         self.assertEqual(workflow_type, expected)
 
     def test_get_workflow_type_failure(self):
-        workflow_type = decider.get_workflowType({})
+        workflow_type = decider.get_workflow_type({})
         self.assertIsNone(workflow_type)
 
     @patch.object(FakeLayer1, 'poll_for_decision_task')
