@@ -2,6 +2,8 @@
 
 import unittest
 import time
+import sys
+from mock import patch
 from ddt import ddt, data, unpack
 import provider.utils as utils
 
@@ -106,6 +108,23 @@ class TestUtils(unittest.TestCase):
     def test_get_doi_url(self):
         doi_url = utils.get_doi_url("10.7554/eLife.08411")
         self.assertEqual(doi_url, "https://doi.org/10.7554/eLife.08411")
+
+
+class TestConsoleStart(unittest.TestCase):
+
+    def test_console_start(self):
+        env = 'foo'
+        expected = env
+        testargs = ['cron.py', '-e', env]
+        with patch.object(sys, 'argv', testargs):
+            self.assertEqual(utils.console_start_env(), expected)
+
+    def test_console_start_blank(self):
+        expected = 'dev'
+        testargs = ['cron.py']
+        with patch.object(sys, 'argv', testargs):
+            self.assertEqual(utils.console_start_env(), expected)
+
 
 
 if __name__ == '__main__':

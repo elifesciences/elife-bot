@@ -204,7 +204,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         return_value = self.activity.email_notification(99999)
         self.assertTrue(return_value)
         self.assertEqual(
-            self.activity.logger.loginfo,
+            self.activity.logger.loginfo[-1],
             "Email sending details: OrderedDict([('error', 0), ('success', 2)])")
 
 

@@ -50,7 +50,7 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
         fake_highest_version.return_value = 2
         result = self.activity.do_activity(activity_test_data.data_example_before_publish)
         self.assertEqual(result, expected_result)
-        self.assertEqual(self.activity.logger.loginfo, (
+        self.assertEqual(self.activity.logger.loginfo[-1], (
             'ScheduleCrossrefPeerReview will not deposit article 00353 ingested by'
             ' silent-correction, its version of 1 does not equal the highest version which is 2'))
 
@@ -66,7 +66,7 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
         fake_highest_version.return_value = 1
         result = self.activity.do_activity(activity_test_data.data_example_before_publish)
         self.assertEqual(result, expected_result)
-        self.assertEqual(self.activity.logger.loginfo, (
+        self.assertEqual(self.activity.logger.loginfo[-1], (
             'ScheduleCrossrefPeerReview finds version 1 of 00353 has no sub-article'
             ' for peer review depositing'))
 
