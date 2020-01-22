@@ -2,10 +2,9 @@ import os
 import copy
 import json
 import importlib
-from optparse import OptionParser
 import boto.swf
 import newrelic.agent
-from provider import process
+from provider import process, utils
 import log
 import workflow
 
@@ -218,20 +217,21 @@ def get_workflow_object(workflow_name, settings, logger, conn, token, decision, 
     return workflow_object
 
 
+def console_start():
+    """capture options when running standalone"""
+    parser = ArgumentParser()
+    parser.add_argument("-e", "--env", default="dev", action="store", type=str, dest="env",
+                        help="set the environment to run, either dev or live")
+    args = parser.parse_args()
+    if args.env:
+        return args.env
+    return None
+
+
 if __name__ == "__main__":
 
-    ENV = None
-    forks = None
+    ENV = utils.console_start_env()
+    SETTINGS_LIB = __import__('settings')
+    SETTINGS = SETTINGS_LIB.get_settings(ENV)
 
-    # Add options
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string",
-                      dest="env", help="set the environment to run, either dev or live")
-    (options, args) = parser.parse_args()
-    if options.env:
-        ENV = options.env
-
-    settings_lib = __import__('settings')
-    settings = settings_lib.get_settings(ENV)
-
-    process.monitor_interrupt(lambda flag: decide(settings, flag))
+    process.monitor_interrupt(lambda flag: decide(SETTINGS, flag))

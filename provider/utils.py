@@ -2,6 +2,7 @@ import re
 import urllib
 import base64
 import arrow
+from argparse import ArgumentParser
 
 
 S3_DATE_FORMAT = '%Y%m%d%H%M%S'
@@ -109,3 +110,12 @@ def get_doi_url(doi):
     Given a DOI, get the URL for the DOI
     """
     return "https://doi.org/%s" % doi
+
+
+def console_start_env():
+    """capture ENV from arguments when running standalone"""
+    parser = ArgumentParser()
+    parser.add_argument("-e", "--env", default="dev", action="store", type=str, dest="env",
+                        help="set the environment to run, either dev or live")
+    args = parser.parse_args()
+    return args.env
