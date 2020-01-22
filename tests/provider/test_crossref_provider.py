@@ -298,5 +298,4 @@ class TestDoiExists(unittest.TestCase):
     def test_doi_exists_200(self, fake_request):
         fake_request.return_value = FakeResponse(200)
         self.assertFalse(crossref.doi_exists(self.doi, self.logger))
-        self.assertTrue(
-            self.logger.loginfo.endswith('Status code for 10.7554/eLife.99999 was 200'))
+        self.assertEqual(self.logger.loginfo[-1], 'Status code for 10.7554/eLife.99999 was 200')
