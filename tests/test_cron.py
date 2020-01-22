@@ -1,5 +1,4 @@
 import unittest
-import sys
 import datetime
 from pytz import timezone
 from ddt import ddt, data
@@ -13,19 +12,6 @@ import cron
 class TestCron(unittest.TestCase):
     def setUp(self):
         pass
-
-    def test_console_start(self):
-        env = 'foo'
-        expected = env
-        testargs = ['cron.py', '-e', env]
-        with patch.object(sys, 'argv', testargs):
-            self.assertEqual(cron.console_start(), expected)
-
-    def test_console_start_blank(self):
-        expected = 'dev'
-        testargs = ['cron.py']
-        with patch.object(sys, 'argv', testargs):
-            self.assertEqual(cron.console_start(), expected)
 
     def test_get_current_datetime(self):
         self.assertIsNotNone(cron.get_current_datetime())
