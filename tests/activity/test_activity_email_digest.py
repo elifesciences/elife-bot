@@ -108,7 +108,7 @@ class TestEmailDigest(unittest.TestCase):
             "expected_approve_status": True,
             "expected_email_status": True,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99997',
-            # do not compare output file names due to difference in python 2, 3 and cross plaform
+            "expected_output_dir_files": ['González_99997.docx'],
             "expected_email_count": 2,
             "expected_email_subject": "Subject: =?utf-8?q?Digest=3A_Gonz=C3=A1lez=5F99997?=",
             "expected_email_from": "From: sender@example.org"

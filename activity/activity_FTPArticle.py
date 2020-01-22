@@ -35,7 +35,6 @@ class activity_FTPArticle(Activity):
         self.description = "Download VOR files and publish by FTP to some particular place."
 
         # Bucket settings
-        self.article_bucket = settings.bucket
         self.pmc_zip_bucket = settings.poa_packaging_bucket
         self.pmc_zip_folder = "pmc/zip/"
         self.archive_zip_bucket = (self.settings.publishing_buckets_prefix

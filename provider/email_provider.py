@@ -9,7 +9,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import boto.ses
-from provider.utils import unicode_decode, unicode_encode
+from provider.utils import bytes_decode, unicode_encode
 
 
 def ses_connect(settings):
@@ -68,8 +68,8 @@ def encode_filename(file_name):
     """
     if file_name is None:
         return file_name
-    return unicode_encode(unicode_decode(
-        unicodedata.ucd_3_2_0.normalize('NFC', unicode_decode(file_name))))
+    return unicode_encode(bytes_decode(
+        unicodedata.ucd_3_2_0.normalize('NFC', bytes_decode(file_name))))
 
 
 def attachment(file_name,
@@ -258,13 +258,13 @@ def get_admin_email_body_foot(activity_id, workflow_id, datetime_string, domain)
     return ''
 
 
-def error_email_body(datetime_string, error_messages):
-    """body of an error email"""
+def simple_email_body(datetime_string, body_content=''):
+    """body of a simple success or error email"""
     string_template = None
-    with open('template/error_email_body.txt', 'r') as open_file:
+    with open('template/simple_email_body.txt', 'r') as open_file:
         string_template = Template(open_file.read())
     if string_template:
         return string_template.safe_substitute(
-            error_messages=error_messages,
+            body_content=body_content,
             datetime_string=datetime_string)
     return ''

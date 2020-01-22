@@ -1,4 +1,4 @@
-$error_messages
+$body_content
 
 As at $datetime_string
 

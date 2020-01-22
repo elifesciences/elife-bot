@@ -10,6 +10,7 @@ import importlib
 from optparse import OptionParser
 
 import provider.swfmeta as swfmetalib
+from provider import utils
 import starter
 
 """
@@ -37,11 +38,9 @@ class cron_FiveMinute(object):
         self.start_ping_marker(ping_marker_id, settings)
 
         # Check for S3 XML files that were updated since the last run
-        date_format = "%Y-%m-%dT%H:%M:%S.000Z"
-
         # Date conversion
         time_tuple = time.gmtime(last_startTimestamp)
-        last_startDate = time.strftime(date_format, time_tuple)
+        last_startDate = time.strftime(utils.DATE_TIME_FORMAT, time_tuple)
 
         logger.info('last run %s %s' % (ping_marker_id, last_startDate))
 

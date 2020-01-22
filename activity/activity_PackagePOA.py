@@ -369,8 +369,7 @@ class activity_PackagePOA(Activity):
 
         body = ""
 
-        date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-        datetime_string = time.strftime(date_format, current_time)
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, current_time)
 
         activity_status_text = utils.get_activity_status_text(self.activity_status)
 

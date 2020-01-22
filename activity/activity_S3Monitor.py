@@ -9,6 +9,7 @@ import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.simpleDB as dblib
+from provider import utils
 
 from activity.objects import Activity
 
@@ -89,7 +90,7 @@ class activity_S3Monitor(Activity):
         # Get extended _runtime values
         if _runtime_timestamp:
             date_attrs = self.get_expanded_date_attributes(
-                base_name='_runtime', date_format="%Y-%m-%dT%H:%M:%S.000Z",
+                base_name='_runtime', date_format=utils.DATE_TIME_FORMAT,
                 timestamp=_runtime_timestamp, date_string=None)
             for k, v in list(date_attrs.items()):
                 base_item_attrs[k] = v
@@ -149,7 +150,7 @@ class activity_S3Monitor(Activity):
             # Example format: 2013-01-26T23:48:28.000Z
             if item_attrs['last_modified']:
                 date_attrs = self.get_expanded_date_attributes(
-                    base_name='last_modified', date_format="%Y-%m-%dT%H:%M:%S.000Z",
+                    base_name='last_modified', date_format=utils.DATE_TIME_FORMAT,
                     timestamp=None, date_string=item_attrs['last_modified'])
                 for k, v in list(date_attrs.items()):
                     item_attrs[k] = v
@@ -174,7 +175,7 @@ class activity_S3Monitor(Activity):
                         item.add_value(k, v)
                 item.save()
 
-    def get_expanded_date_attributes(self, base_name='', date_format="%Y-%m-%dT%H:%M:%S.000Z",
+    def get_expanded_date_attributes(self, base_name='', date_format=utils.DATE_TIME_FORMAT,
                                      timestamp=None, date_string=None):
         """
         Given a base_name as an identifier string, and either a timestamp or a

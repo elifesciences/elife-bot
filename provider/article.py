@@ -8,7 +8,6 @@ import urllib
 
 from boto.s3.connection import S3Connection
 
-import provider.simpleDB as dblib
 import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
 from provider.article_structure import ArticleInfo
@@ -53,20 +52,6 @@ class article(object):
         # Default tmp_dir if not specified
         self.tmp_dir_default = "article_provider"
 
-        # SimpleDB connection for looking up S3 keys
-        self.db = None
-        if self.settings is not None:
-            # Data provider
-            self.db = dblib.SimpleDB(settings)
-
-        # S3 connection
-        self.s3_conn = None
-
-        # Default S3 bucket name
-        self.bucket_name = None
-        if self.settings is not None:
-            self.bucket_name = self.settings.bucket
-
         # Some defaults
         self.related_insight_article = None
         self.was_ever_poa = None
@@ -74,48 +59,6 @@ class article(object):
 
         # Store the list of DOI id that was ever published
         self.doi_ids = None
-
-        # For checking published articles need a URL prefix for where to check
-        self.lookup_url_prefix = "http://elifesciences.org/lookup/doi/10.7554/eLife."
-
-    def connect(self):
-        """
-        Connect to S3 using the settings
-        """
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        self.s3_conn = s3_conn
-        return self.s3_conn
-
-    def get_bucket(self, bucket_name=None):
-        """
-        Using the S3 connection, lookup the bucket
-        """
-        if self.s3_conn is None:
-            s3_conn = self.connect()
-        else:
-            s3_conn = self.s3_conn
-
-        if bucket_name is None:
-            # Use the object bucket_name if not provided
-            bucket_name = self.bucket_name
-
-        # Lookup the bucket
-        bucket = s3_conn.lookup(bucket_name)
-
-        return bucket
-
-    def get_s3key(self, s3_key_name, bucket=None):
-        """
-        Get the S3 key from the bucket
-        If the bucket is not provided, use the object bucket
-        """
-        if bucket is None:
-            bucket = self.get_bucket()
-
-        s3key = bucket.get_key(s3_key_name)
-
-        return s3key
 
     def parse_article_file(self, filename):
         """
@@ -229,12 +172,7 @@ class article(object):
         """
         doi_url = get_doi_url(doi)
         f = {"text": doi_url + " @eLife"}
-        if hasattr(urllib, 'urlencode'):
-            tweet_url = "http://twitter.com/intent/tweet?" + urllib.urlencode(f)
-        else:
-            # python 3
-            tweet_url = "http://twitter.com/intent/tweet?" + urllib.parse.urlencode(f)
-        return tweet_url
+        return "http://twitter.com/intent/tweet?" + urllib.parse.urlencode(f)
 
     def get_lens_url(self, doi):
         """
@@ -276,19 +214,6 @@ class article(object):
         except AssertionError as err:
             logger.error(str(err))
             return ""
-
-    def get_pub_date_timestamp(self, pub_date):
-        """
-        Given a time struct for a publish date
-        parse and return a timestamp for it
-        """
-        timestamp = None
-        try:
-            timestamp = calendar.timegm(pub_date)
-        except TypeError:
-            # Date did not convert
-            pass
-        return timestamp
 
     def set_related_insight_article(self, article):
         """
@@ -517,30 +442,6 @@ class article(object):
 
         # Default
         return None
-
-    def get_article_canonical_url(self, doi_id):
-        """
-        Given the doi_id, and using the lookup URL prefix,
-        make an HTTP head request and return the URL after
-        all redirects are followed
-        """
-        # Construct the lookup URL on the HW site
-        lookup_url = self.get_article_lookup_url(doi_id)
-        #print lookup_url
-
-        r = requests.head(lookup_url, allow_redirects=True)
-        if r.status_code == 200:
-            return r.url
-        else:
-            return None
-        return None
-
-    def get_article_lookup_url(self, doi_id):
-        """
-        Given the doi_id, create the lookup URL
-        """
-        lookup_url = self.lookup_url_prefix + str(doi_id).zfill(5)
-        return lookup_url
 
     def get_authors_string(self, authors):
         """

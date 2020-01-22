@@ -4,7 +4,7 @@ import time
 from digestparser import output
 import digestparser.utils as digest_utils
 from S3utility.s3_notification_info import parse_activity_data
-from provider import digest_provider, download_helper, email_provider
+from provider import digest_provider, download_helper, email_provider, utils
 from activity.objects import Activity
 
 
@@ -91,11 +91,8 @@ class activity_EmailDigest(Activity):
         return self.ACTIVITY_PERMANENT_FAILURE
 
     def output_path(self, output_dir, file_name):
-        "for python 2 and 3 support, only encode sometimes"
-        try:
-            return os.path.join(output_dir, str(file_name)).encode('utf8')
-        except AttributeError:
-            return os.path.join(output_dir, str(file_name))
+        """for python 3 cast file_name to str so it can be joined with the path value"""
+        return os.path.join(output_dir, str(file_name))
 
     def generate_output(self, digest_content):
         "From the parsed digest content generate the output"
@@ -118,8 +115,8 @@ class activity_EmailDigest(Activity):
         "email the digest as an attachment to the recipients"
         success = True
 
-        current_time = time.gmtime()
-        body = success_email_body(current_time)
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
+        body = email_provider.simple_email_body(datetime_string)
         subject = success_email_subject(digest_content)
         sender_email = self.settings.digest_sender_email
 
@@ -162,16 +159,3 @@ def success_email_subject(digest_content):
         msid = None
     return u'Digest: {author}_{msid:0>5}'.format(
         author=digest_content.author, msid=str(msid))
-
-
-def success_email_body(current_time):
-    """
-    Format the body of the email
-    """
-    body = ""
-    date_format = '%Y-%m-%dT%H:%M:%S.000Z'
-    datetime_string = time.strftime(date_format, current_time)
-    body += "As at " + datetime_string + "\n"
-    body += "\n"
-    body += "\n\nSincerely\n\neLife bot"
-    return body

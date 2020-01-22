@@ -70,10 +70,6 @@ class TestProviderArticle(unittest.TestCase):
         doi_id = self.articleprovider.get_doi_id("10.7554/eLife.08411")
         self.assertEqual(doi_id, "08411")
 
-    def test_get_article_lookup_url(self):
-        url = self.articleprovider.get_article_lookup_url(3)
-        self.assertEqual(url, "http://elifesciences.org/lookup/doi/10.7554/eLife.00003")
-
     @data(
         {
             "filename": "tests/test_data/elife00013.xml",

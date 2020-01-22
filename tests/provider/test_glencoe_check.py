@@ -5,14 +5,6 @@ from tests.test_data import glencoe_metadata
 
 class TestGlencoeCheck(unittest.TestCase):
 
-    def items_equal_assertion(self, result, expected):
-        """
-        comparing lists, instead of using assertItemsEqual in python 2, and
-        assertCountEqual in python 3, just rewrite it as as assertEqual
-        as described in the documentation of what it actually does
-        """
-        return self.assertEqual(sorted(result), sorted(expected))
-
     def test_check_msid_long_id(self):
         result = glencoe_check.check_msid("7777777701234")
         self.assertEqual('01234', result)
@@ -27,7 +19,7 @@ class TestGlencoeCheck(unittest.TestCase):
 
     def test_jpg_href_values(self):
         result = glencoe_check.jpg_href_values(glencoe_metadata)
-        self.items_equal_assertion([
+        self.assertCountEqual([
             "http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.jpg",
             "http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.jpg"],
             result)
@@ -38,7 +30,7 @@ class TestGlencoeCheck(unittest.TestCase):
                             "media_start3": {"no_jpg_href": "value3"},
                             "anything_else": {"jpg_href": "value4"}}
         results = glencoe_check.jpg_href_values(glencoe_metadata)
-        self.items_equal_assertion(["value1", "value2", "value4"], results)
+        self.assertCountEqual(["value1", "value2", "value4"], results)
 
     def test_extend_article_for_end2end(self):
         filename = "elife-01234-media1-v1.jpg"

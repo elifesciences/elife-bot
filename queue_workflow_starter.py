@@ -11,7 +11,7 @@ import boto.sqs
 import newrelic.agent
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider import process
-from provider.utils import unicode_decode
+from provider.utils import bytes_decode
 # this is not an unused import, it is used dynamically
 import starter
 
@@ -57,7 +57,7 @@ def get_queue(settings):
 
 def process_message(settings, logger, message):
     try:
-        message_payload = json.loads(str(unicode_decode(message.get_body())))
+        message_payload = json.loads(str(bytes_decode(message.get_body())))
         name = message_payload.get('workflow_name')
         data = message_payload.get('workflow_data')
         start_workflow(settings, name, data)
