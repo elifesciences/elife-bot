@@ -49,7 +49,7 @@ class FakeLayer1:
         pass
 
     def poll_for_decision_task(
-            domain, task_list, identity, maximum_page_size, next_page_token):
+            domain, task_list, identity, maximum_page_size, next_page_token=None):
         pass
 
 

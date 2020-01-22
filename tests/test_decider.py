@@ -2,7 +2,8 @@ import unittest
 import json
 from mock import patch
 from tests import settings_mock
-from tests.classes_mock import FakeLayer1
+from tests.classes_mock import FakeFlag, FakeLayer1
+from tests.activity.classes_mock import FakeLogger
 import decider
 
 
@@ -12,6 +13,21 @@ class TestDecider(unittest.TestCase):
         self.decision_json = None
         with open('tests/test_data/decision.json', 'r') as open_file:
             self.decision_json = json.loads(open_file.read())
+
+    @patch('logging.getLogger')
+    @patch.object(FakeLayer1, 'poll_for_decision_task')
+    @patch('boto.swf.layer1.Layer1')
+    def test_decide(self, fake_conn, fake_poll, fake_get_logger):
+        """test will not be able to find workflow_Sum, which no longer exists"""
+        flag = FakeFlag()
+        fake_logger = FakeLogger()
+        fake_get_logger.return_value = fake_logger
+        fake_conn.return_value = FakeLayer1()
+        fake_poll.return_value = self.decision_json
+        decider.decide(settings_mock, flag)
+        # make some assertions on log values
+        self.assertTrue('error: could not load object workflow_Sum' in fake_logger.loginfo)
+        self.assertTrue(fake_logger.loginfo.endswith('graceful shutdown'))
 
     def test_get_task_token(self):
         expected = (
