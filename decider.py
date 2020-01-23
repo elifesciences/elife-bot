@@ -97,7 +97,7 @@ def invoke_do_workflow(workflow_name, workflow_object, logger):
 
     # Print the result to the log
     if success:
-        logger.info('%s success %s', (workflow_name, success))
+        logger.info('%s success %s' % (workflow_name, success))
 
 
 def trimmed_decision(decision, debug=False):
