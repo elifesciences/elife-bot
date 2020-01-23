@@ -125,6 +125,12 @@ class TestConsoleStart(unittest.TestCase):
         with patch.object(sys, 'argv', testargs):
             self.assertEqual(utils.console_start_env(), expected)
 
+    def test_console_unrecognized_arguments(self):
+        env = 'foo'
+        expected = env
+        testargs = ['cron.py', '-e', env, '0']
+        with patch.object(sys, 'argv', testargs):
+            self.assertEqual(utils.console_start_env(), expected)
 
 
 if __name__ == '__main__':
