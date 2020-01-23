@@ -7,7 +7,7 @@ import boto.swf
 import log
 import json
 import random
-from optparse import OptionParser
+from provider import utils
 
 """
 Amazon SWF Admin Email starter
@@ -70,17 +70,9 @@ class starter_AdminEmail():
 
 if __name__ == "__main__":
 
-    # Add options
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, either dev or live")
-    (options, args) = parser.parse_args()
-    if options.env:
-        ENV = options.env
-
-    import settings as settingsLib
-    settings = settingsLib.get_settings(ENV)
+    ENV = utils.console_start_env()
+    SETTINGS = utils.get_settings(ENV)
 
     o = starter_AdminEmail()
 
-    o.start(settings=settings)
+    o.start(settings=SETTINGS)
