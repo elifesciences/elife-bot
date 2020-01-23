@@ -6,8 +6,7 @@ import os
 import importlib
 import time
 import newrelic.agent
-from provider import process
-from optparse import OptionParser
+from provider import process, utils
 
 import activity
 from activity.objects import Activity
@@ -216,14 +215,7 @@ def signal_fail_workflow(conn, logger, domain, workflow_id, run_id):
 
 if __name__ == "__main__":
 
-    ENV = None
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env", help="set the environment to run, either dev or live")
-    (options, args) = parser.parse_args()
-    if options.env:
-        ENV = options.env
+    ENV = utils.console_start_env()
+    SETTINGS = utils.get_settings(ENV)
 
-    settings_lib = __import__('settings')
-    settings = settings_lib.get_settings(ENV)
-
-    process.monitor_interrupt(lambda flag: work(settings, flag))
+    process.monitor_interrupt(lambda flag: work(SETTINGS, flag))
