@@ -117,7 +117,7 @@ def console_start_env():
     parser = ArgumentParser()
     parser.add_argument("-e", "--env", default="dev", action="store", type=str, dest="env",
                         help="set the environment to run, either dev or live")
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
     return args.env
 
 
