@@ -1,13 +1,12 @@
 import json
 import os
 import importlib
-from optparse import OptionParser
 
 import boto.swf
 
 import workflow
 import activity
-
+from provider import utils
 
 """
 Amazon SWF register workflow or activity utility
@@ -128,15 +127,7 @@ def start(settings):
 
 if __name__ == "__main__":
 
-    # Add options
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string",
-                      dest="env", help="set the environment to run, either dev or live")
-    (options, args) = parser.parse_args()
-    if options.env:
-        ENV = options.env
-
-    import settings as settings_lib
-    SETTINGS = settings_lib.get_settings(ENV)
+    ENV = utils.console_start_env()
+    SETTINGS = utils.get_settings(ENV)
 
     start(SETTINGS)

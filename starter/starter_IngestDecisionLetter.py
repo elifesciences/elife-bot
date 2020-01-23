@@ -5,7 +5,7 @@ os.sys.path.insert(0, parentdir)
 
 import boto.swf
 import json
-from optparse import OptionParser
+from provider import utils
 from S3utility.s3_notification_info import S3NotificationInfo
 import starter.starter_helper as helper
 from starter.starter_helper import NullRequiredDataException
@@ -58,17 +58,8 @@ class starter_IngestDecisionLetter():
 
 if __name__ == "__main__":
 
-    # Add options
-    PARSER = OptionParser()
-    PARSER.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, either dev or live")
-
-    (OPTIONS, ARGS) = PARSER.parse_args()
-    if OPTIONS.env:
-        ENV = OPTIONS.env
-
-    import settings as settingsLib
-    SETTINGS = settingsLib.get_settings(ENV)
+    ENV = utils.console_start_env()
+    SETTINGS = utils.get_settings(ENV)
 
     STARTER_OBJECT = starter_IngestIngestDecisionLetter()
 

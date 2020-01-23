@@ -3,13 +3,12 @@ import time
 import datetime
 import importlib
 from collections import OrderedDict
-from argparse import ArgumentParser
 
 from pytz import timezone
 
 import log
 import provider.swfmeta as swfmetalib
-
+from provider import utils
 import newrelic.agent
 
 """
@@ -282,24 +281,9 @@ def start_workflow(settings, starter_name, workflow_id=None):
         starter_object.start(settings=settings)
 
 
-def get_settings(env):
-    import settings as settings_lib
-    return settings_lib.get_settings(env)
-
-
-def console_start():
-    """capture options when running standalone"""
-    parser = ArgumentParser()
-    parser.add_argument("-e", "--env", default="dev", action="store", type=str, dest="env",
-                        help="set the environment to run, either dev or live")
-    args = parser.parse_args()
-    if args.env:
-        return args.env
-
-
 if __name__ == "__main__":
-    ENV = console_start()
-    SETTINGS = get_settings(ENV)
+    ENV = utils.console_start_env()
+    SETTINGS = utils.get_settings(ENV)
     application = newrelic.agent.register_application(timeout=10.0)
     with newrelic.agent.BackgroundTask(application, name='run_cron', group='cron.py'):
         run_cron(settings=SETTINGS)
