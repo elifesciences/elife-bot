@@ -52,8 +52,11 @@ def decide(settings, flag, debug=False):
                     decision_to_log, sort_keys=True, indent=4))
 
             if token is not None:
-                process_workflow(
-                    application, decision, settings, logger, conn, token, maximum_page_size)
+                workflow_type = get_workflow_type(decision)
+                with newrelic.agent.BackgroundTask(
+                        application, name=workflow_type, group='decider.py'):
+                    process_workflow(
+                        workflow_type, decision, settings, logger, conn, token, maximum_page_size)
 
         # Reset and loop
         token = None
@@ -61,29 +64,26 @@ def decide(settings, flag, debug=False):
     logger.info("graceful shutdown")
 
 
-def process_workflow(application, decision, settings, logger, conn, token, maximum_page_size):
+def process_workflow(workflow_type, decision, settings, logger, conn, token, maximum_page_size):
     """for each decision token load the workflow and run it"""
-    # Get the workflowType and attempt to do the work
-    workflow_type = get_workflow_type(decision)
-    with newrelic.agent.BackgroundTask(
-            application, name=workflow_type, group='decider.py'):
-        if workflow_type is not None:
+    # for the workflowType attempt to do the work
+    if workflow_type is not None:
 
-            logger.info('workflowType: %s', workflow_type)
+        logger.info('workflowType: %s', workflow_type)
 
-            # Instantiate and object for the workflow using eval
-            # Build a string for the object name
-            workflow_name = get_workflow_name(workflow_type)
+        # Instantiate and object for the workflow using eval
+        # Build a string for the object name
+        workflow_name = get_workflow_name(workflow_type)
 
-            # Attempt to import the module for the workflow
-            if import_workflow_class(workflow_name):
-                # Instantiate the workflow object
-                workflow_object = get_workflow_object(
-                    workflow_name, settings, logger, conn, token, decision, maximum_page_size)
-                # Process the workflow
-                invoke_do_workflow(workflow_name, workflow_object, logger)
-            else:
-                logger.info('error: could not load object %s\n', workflow_name)
+        # Attempt to import the module for the workflow
+        if import_workflow_class(workflow_name):
+            # Instantiate the workflow object
+            workflow_object = get_workflow_object(
+                workflow_name, settings, logger, conn, token, decision, maximum_page_size)
+            # Process the workflow
+            invoke_do_workflow(workflow_name, workflow_object, logger)
+        else:
+            logger.info('error: could not load object %s\n', workflow_name)
 
 
 def invoke_do_workflow(workflow_name, workflow_object, logger):
