@@ -18,7 +18,7 @@ from tests.activity.classes_mock import FakeStorageContext
 
 
 def input_data(file_name_to_change=''):
-    activity_data = test_case_data.ingest_digest_data
+    activity_data = test_case_data.ingest_decision_letter_data
     activity_data["file_name"] = file_name_to_change
     return activity_data
 
