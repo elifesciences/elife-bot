@@ -8,7 +8,7 @@ import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.article as articlelib
-from provider import blacklist, email_provider, lax_provider, s3lib, utils
+from provider import email_provider, lax_provider, s3lib, utils
 
 import dateutil.parser
 from activity.objects import Activity
@@ -449,17 +449,6 @@ class activity_PubRouterDeposit(Activity):
                         self.logger.info(log_info)
                     remove_article_doi.append(article.doi)
 
-        # Check if article is on the blacklist to not send again
-        for article in articles:
-            blacklisted = self.is_article_on_blacklist(article.doi_id, workflow)
-            if blacklisted is True:
-                if self.logger:
-                    log_info = ("Removing because it is blacklisted from " +
-                                "sending again to pub router " + article.doi)
-                    self.admin_email_content += "\n" + log_info
-                    self.logger.info(log_info)
-                remove_article_doi.append(article.doi)
-
         # Check if a PMC zip file exists for this article
         if workflow != 'PMC':
             for article in articles:
@@ -554,24 +543,6 @@ class activity_PubRouterDeposit(Activity):
                 if isinstance(new_s3_key, boto.s3.key.Key):
                     old_s3_key = bucket.get_key(name)
                     old_s3_key.delete()
-
-    def is_article_on_blacklist(self, doi_id, workflow):
-        """
-        Check if article is on the do not send email list
-        This is used to not send a publication email when an article is correct
-        For articles published prior to the launch of this publication email feature
-          we cannot check the log of all emails sent to check if a duplicate
-          email exists already
-        """
-
-        # Convert to string for matching
-        if type(doi_id) == int:
-            doi_id = str(doi_id).zfill(5)
-
-        if doi_id in blacklist.pub_router_deposit_article_blacklist(workflow):
-            return True
-        else:
-            return False
 
     def does_source_zip_exist_from_s3(self, doi_id):
         """
