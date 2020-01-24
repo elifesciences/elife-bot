@@ -63,25 +63,20 @@ class activity_ValidateDecisionLetterInput(Activity):
             self.settings, real_filename, bucket_name, bucket_folder,
             self.directories.get("INPUT_DIR"))
 
-        # Unzip file
-        self.statuses["unzip"], docx_file_name, asset_file_names = letterparser_provider.unzip_zip(
-            self.input_file, self.directories.get("TEMP_DIR"), logger=self.logger)
+        # part 1 zip file to articles and assets
+        articles, asset_file_names, statuses, error_messages = letterparser_provider.process_zip(
+            self.input_file,
+            config=self.letterparser_config,
+            temp_dir=self.directories.get("TEMP_DIR"),
+            logger=self.logger)
 
-        # Convert docx to articles
-        self.statuses["build"], self.articles = letterparser_provider.docx_to_articles(
-            docx_file_name, config=self.letterparser_config, logger=self.logger)
+        self.copy_statuses(statuses)
 
-        # Validate content of articles
-        self.statuses["valid"], error_messages = letterparser_provider.validate_articles(
-            self.articles, logger=self.logger)
+        # part 2 articles to XML
+        self.xml_string, statuses = letterparser_provider.process_articles_to_xml(
+            articles, self.directories.get("TEMP_DIR"), self.logger, pretty=True, indent="    ")
 
-        # Generate XML from articles
-        self.statuses["generate"], self.root = letterparser_provider.generate_root(
-            self.articles, temp_dir=self.directories.get("TEMP_DIR"), logger=self.logger)
-
-        # Output XML
-        self.statuses["output"], self.xml_string = letterparser_provider.output_xml(
-            self.root, pretty=True, indent="   ", logger=self.logger)
+        self.copy_statuses(statuses)
 
         # Additional error messages
         if not self.statuses.get("unzip"):
@@ -95,6 +90,11 @@ class activity_ValidateDecisionLetterInput(Activity):
 
         self.log_statuses(self.input_file)
         return True
+
+    def copy_statuses(self, statuses):
+        """copy statuses values to self.statuses"""
+        for status, value in statuses.items():
+            self.statuses[status] = value
 
     def log_statuses(self, input_file):
         "log the statuses value"
