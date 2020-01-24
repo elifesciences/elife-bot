@@ -111,7 +111,7 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
                     comment=test_data.get("comment")))
 
         # check article values
-        if self.activity.articles and test_data.get("expected_doi_0"):
+        if test_data.get("expected_doi_0"):
             self.assertEqual(self.activity.articles[0].doi, test_data.get("expected_doi_0"),
                              'failed in {comment}'.format(comment=test_data.get("comment")))
 

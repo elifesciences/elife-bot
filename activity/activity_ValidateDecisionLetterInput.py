@@ -24,7 +24,6 @@ class activity_ValidateDecisionLetterInput(Activity):
         # Track some values
         self.input_file = None
         self.articles = None
-        self.root = None
         self.xml_string = None
 
         # Local directory settings
@@ -64,17 +63,22 @@ class activity_ValidateDecisionLetterInput(Activity):
             self.directories.get("INPUT_DIR"))
 
         # part 1 zip file to articles and assets
-        articles, asset_file_names, statuses, error_messages = letterparser_provider.process_zip(
-            self.input_file,
-            config=self.letterparser_config,
-            temp_dir=self.directories.get("TEMP_DIR"),
-            logger=self.logger)
+        self.articles, asset_file_names, statuses, error_messages = (
+            letterparser_provider.process_zip(
+                self.input_file,
+                config=self.letterparser_config,
+                temp_dir=self.directories.get("TEMP_DIR"),
+                logger=self.logger))
 
         self.copy_statuses(statuses)
 
         # part 2 articles to XML
         self.xml_string, statuses = letterparser_provider.process_articles_to_xml(
-            articles, self.directories.get("TEMP_DIR"), self.logger, pretty=True, indent="    ")
+            self.articles,
+            self.directories.get("TEMP_DIR"),
+            self.logger,
+            pretty=True,
+            indent="    ")
 
         self.copy_statuses(statuses)
 
