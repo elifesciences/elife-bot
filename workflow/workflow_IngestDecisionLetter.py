@@ -34,6 +34,7 @@ class workflow_IngestDecisionLetter(Workflow):
                 [
                     define_workflow_step("PingWorker", data),
                     define_workflow_step("ValidateDecisionLetterInput", data),
+                    define_workflow_step("GenerateDecisionLetterJATS", data),
                 ],
 
             "finish":
