@@ -123,6 +123,9 @@ class exp():
     # decision letter
     decision_letter_sender_email = 'sender@example.org'
     decision_letter_validate_error_recipient_email = 'error@example.org'
+    decision_letter_output_bucket = 'elife-bot-decision-letter-output'
+    decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
+    decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
@@ -390,6 +393,9 @@ class dev():
     # decision letter
     decision_letter_sender_email = 'sender@example.org'
     decision_letter_validate_error_recipient_email = 'error@example.org'
+    decision_letter_output_bucket = 'elife-bot-decision-letter-output'
+    decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
+    decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
@@ -654,6 +660,9 @@ class live():
     # decision letter
     decision_letter_sender_email = 'sender@example.org'
     decision_letter_validate_error_recipient_email = 'error@example.org'
+    decision_letter_output_bucket = 'elife-bot-decision-letter-output'
+    decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
+    decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'

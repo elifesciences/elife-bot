@@ -151,3 +151,11 @@ def manuscript_from_articles(articles):
     if articles:
         return articles[0].manuscript
     return None
+
+
+def output_bucket_folder_name(settings, manuscript):
+    return settings.decision_letter_bucket_folder_name_pattern.format(manuscript=manuscript)
+
+
+def output_xml_file_name(settings, manuscript):
+    return settings.decision_letter_xml_file_name_pattern.format(manuscript=manuscript)
