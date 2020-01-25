@@ -144,3 +144,10 @@ def output_xml(root, pretty=False, indent="", logger=LOGGER):
     except:
         logger.info('Error generating output XML from ElementTree root element')
     return False, None
+
+
+def manuscript_from_articles(articles):
+    """from a list of articles return a manuscript value"""
+    if articles:
+        return articles[0].manuscript
+    return None

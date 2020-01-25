@@ -127,3 +127,15 @@ class TestProcessZip(unittest.TestCase):
         self.assertEqual(statuses.get('generate'), True)
         self.assertEqual(statuses.get('output'), True)
         self.assertTrue(b'10.7554/eLife.39122.sa2' in xml_string)
+
+
+class TestManuscriptFromArticles(unittest.TestCase):
+
+    def test_manuscript_from_articles(self):
+        manuscript = 666
+        article = Article()
+        article.manuscript = manuscript
+        self.assertEqual(letterparser_provider.manuscript_from_articles([article]), manuscript)
+
+    def test_manuscript_from_articles_none(self):
+        self.assertEqual(letterparser_provider.manuscript_from_articles(None), None)
