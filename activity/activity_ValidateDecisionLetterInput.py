@@ -70,7 +70,7 @@ class activity_ValidateDecisionLetterInput(Activity):
                 temp_dir=self.directories.get("TEMP_DIR"),
                 logger=self.logger))
 
-        self.copy_statuses(statuses)
+        self.set_statuses(statuses)
 
         # part 2 articles to XML
         self.xml_string, statuses = letterparser_provider.process_articles_to_xml(
@@ -80,7 +80,7 @@ class activity_ValidateDecisionLetterInput(Activity):
             pretty=True,
             indent="    ")
 
-        self.copy_statuses(statuses)
+        self.set_statuses(statuses)
 
         # Additional error messages
         if not self.statuses.get("unzip"):
@@ -95,7 +95,7 @@ class activity_ValidateDecisionLetterInput(Activity):
         self.log_statuses(self.input_file)
         return True
 
-    def copy_statuses(self, statuses):
+    def set_statuses(self, statuses):
         """copy statuses values to self.statuses"""
         for status, value in statuses.items():
             self.statuses[status] = value

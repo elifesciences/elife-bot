@@ -82,7 +82,7 @@ class activity_GenerateDecisionLetterJATS(Activity):
             pretty=True,
             indent="    ")
 
-        self.copy_statuses(statuses)
+        self.set_statuses(statuses)
 
         # Populate folder and file names
         manuscript = letterparser_provider.manuscript_from_articles(self.articles)
@@ -117,7 +117,7 @@ class activity_GenerateDecisionLetterJATS(Activity):
         self.log_statuses(self.input_file)
         return True
 
-    def copy_statuses(self, statuses):
+    def set_statuses(self, statuses):
         """copy statuses values to self.statuses"""
         for status, value in statuses.items():
             self.statuses[status] = value
