@@ -41,6 +41,31 @@ def parse_file(file_name, config):
         raise
 
 
+def process_zip(file_name, config, temp_dir, logger=LOGGER):
+    """one-step processing of decision letter zip into article objects and assets"""
+    statuses = {}
+    # Unzip file
+    statuses["unzip"], docx_file_name, asset_file_names = unzip_zip(
+        file_name, temp_dir, logger=logger)
+    # Convert docx to articles
+    statuses["build"], articles = docx_to_articles(
+        docx_file_name, config=config, logger=logger)
+    # Validate content of articles
+    statuses["valid"], error_messages = validate_articles(
+        articles, logger=logger)
+    return articles, asset_file_names, statuses, error_messages
+
+
+def process_articles_to_xml(articles, temp_dir, logger=LOGGER, pretty=True, indent="    "):
+    """convert decision letter Article objects to XML"""
+    statuses = {}
+    # Generate XML from articles
+    statuses["generate"], root = generate_root(articles, temp_dir=temp_dir, logger=logger)
+    # Output XML
+    statuses["output"], xml_string = output_xml(root, pretty=pretty, indent=indent, logger=logger)
+    return xml_string, statuses
+
+
 def unzip_zip(file_name, temp_dir, logger=LOGGER):
     try:
         docx_file_name, asset_file_names = zip_lib.unzip_zip(file_name, temp_dir)
@@ -119,3 +144,18 @@ def output_xml(root, pretty=False, indent="", logger=LOGGER):
     except:
         logger.info('Error generating output XML from ElementTree root element')
     return False, None
+
+
+def manuscript_from_articles(articles):
+    """from a list of articles return a manuscript value"""
+    if articles:
+        return articles[0].manuscript
+    return None
+
+
+def output_bucket_folder_name(settings, manuscript):
+    return settings.decision_letter_bucket_folder_name_pattern.format(manuscript=manuscript)
+
+
+def output_xml_file_name(settings, manuscript):
+    return settings.decision_letter_xml_file_name_pattern.format(manuscript=manuscript)

@@ -1,8 +1,10 @@
 # coding=utf-8
 
+import os
 import unittest
 import docker
 from mock import patch
+from testfixtures import TempDirectory
 from elifearticle.article import Article
 import tests.settings_mock as settings_mock
 import provider.letterparser_provider as letterparser_provider
@@ -91,3 +93,49 @@ class TestValidateArticles(unittest.TestCase):
         valid, error_messages = letterparser_provider.validate_articles(articles)
         self.assertFalse(valid)
         self.assertTrue(len(error_messages) > 0)
+
+
+class TestProcessZip(unittest.TestCase):
+
+    def setUp(self):
+        self.temp_directory = TempDirectory()
+        self.temp_dir = self.temp_directory.path
+        self.config = letterparser_provider.letterparser_config(settings_mock)
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_process_zip(self):
+        file_name = 'tests/files_source/elife-39122.zip'
+        articles, asset_file_names, statuses, error_messages = letterparser_provider.process_zip(
+            file_name, config=self.config, temp_dir=self.temp_dir)
+        self.assertEqual(len(articles), 2)
+        self.assertEqual(statuses.get('unzip'), True)
+        self.assertEqual(statuses.get('build'), True)
+        self.assertEqual(statuses.get('valid'), True)
+        self.assertEqual(len(error_messages), 0)
+        simple_asset_file_names = [asset.split(os.sep)[-1] for asset in asset_file_names]
+        self.assertEqual(
+            simple_asset_file_names, ['elife-39122-sa2-fig1.jpg', 'elife-39122-sa2-fig2.jpg'])
+
+    def test_process_articles_to_xml(self):
+        file_name = 'tests/files_source/elife-39122.zip'
+        articles, asset_file_names, statuses, error_messages = letterparser_provider.process_zip(
+            file_name, config=self.config, temp_dir=self.temp_dir)
+        xml_string, statuses = letterparser_provider.process_articles_to_xml(
+            articles, self.temp_dir)
+        self.assertEqual(statuses.get('generate'), True)
+        self.assertEqual(statuses.get('output'), True)
+        self.assertTrue(b'10.7554/eLife.39122.sa2' in xml_string)
+
+
+class TestManuscriptFromArticles(unittest.TestCase):
+
+    def test_manuscript_from_articles(self):
+        manuscript = 666
+        article = Article()
+        article.manuscript = manuscript
+        self.assertEqual(letterparser_provider.manuscript_from_articles([article]), manuscript)
+
+    def test_manuscript_from_articles_none(self):
+        self.assertEqual(letterparser_provider.manuscript_from_articles(None), None)
