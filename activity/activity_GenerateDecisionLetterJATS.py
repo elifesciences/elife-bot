@@ -56,8 +56,7 @@ class activity_GenerateDecisionLetterJATS(Activity):
         session = get_session(self.settings, data, run)
 
         # output bucket
-        output_bucket_name = (
-            self.settings.publishing_buckets_prefix + self.settings.decision_letter_output_bucket)
+        output_bucket_name = self.settings.decision_letter_output_bucket
 
         # parse the activity data
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)

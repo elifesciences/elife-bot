@@ -71,7 +71,7 @@ class TestGenerateDecisionLetterJATS(unittest.TestCase):
         # check bucket XML resource value
         self.assertEqual(
             self.activity.xml_bucket_resource,
-            's3://elife-bot-decision-letter-output/elife39122/elife-39122.xml')
+            's3://dev-elife-bot-decision-letter-output/elife39122/elife-39122.xml')
 
     @patch.object(FakeStorageContext, 'set_resource_from_string')
     @patch.object(activity_module, 'get_session')
