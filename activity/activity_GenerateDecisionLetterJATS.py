@@ -79,7 +79,7 @@ class activity_GenerateDecisionLetterJATS(Activity):
             self.directories.get("TEMP_DIR"),
             self.logger,
             pretty=True,
-            indent="    ")
+            indent="")
 
         self.set_statuses(statuses)
 
