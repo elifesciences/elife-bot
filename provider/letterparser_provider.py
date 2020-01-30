@@ -56,7 +56,7 @@ def process_zip(file_name, config, temp_dir, logger=LOGGER):
     return articles, asset_file_names, statuses, error_messages
 
 
-def process_articles_to_xml(articles, temp_dir, logger=LOGGER, pretty=True, indent="    "):
+def process_articles_to_xml(articles, temp_dir, logger=LOGGER, pretty=True, indent=""):
     """convert decision letter Article objects to XML"""
     statuses = {}
     # Generate XML from articles
