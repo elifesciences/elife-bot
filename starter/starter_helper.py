@@ -1,6 +1,7 @@
 import os
 import json
 import log
+import importlib
 
 
 class NullRequiredDataException(Exception):
@@ -33,3 +34,34 @@ def set_workflow_information(name, workflow_version, child_policy, data, workflo
         child_policy, \
         execution_start_to_close_timeout, \
         workflow_input
+
+
+def get_starter_module(starter_name, logger):
+    """
+    Given an starter_name, and if the starter module is already
+    imported, load the module and return it
+    """
+    module_name = "starter." + starter_name
+    try:
+        module_object = importlib.import_module(module_name)
+        starter_class = getattr(module_object, starter_name)
+        # Create the object
+        starter_object = starter_class()
+        return starter_object
+    except ImportError:
+        logger.exception('')
+
+
+def import_starter_module(starter_name, logger):
+    """
+    Given an starter name as starter_name,
+    attempt to lazy load the module when needed
+    """
+    try:
+        module_name = "starter." + starter_name
+        importlib.import_module(module_name)
+        return True
+    except ImportError:
+        if logger:
+            logger.exception('')
+        return False

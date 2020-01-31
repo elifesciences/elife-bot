@@ -6,12 +6,11 @@ os.sys.path.insert(0, parentdir)
 import boto.swf
 import log
 import time
-import importlib
 
 import provider.simpleDB as dblib
 import provider.swfmeta as swfmetalib
 from provider import utils
-import starter
+import starter.starter_helper as helper
 
 """
 Cron job to check for new article S3 POA and start workflows
@@ -65,8 +64,8 @@ class cron_NewS3POA(object):
             # Start a PackagePOA starter
             try:
                 starter_name = "starter_PackagePOA"
-                self.import_starter_module(starter_name, logger)
-                s = self.get_starter_module(starter_name, logger)
+                helper.import_starter_module(starter_name, logger)
+                s = helper.get_starter_module(starter_name, logger)
                 s.start(settings=settings, last_updated_since=last_startDate)
             except:
                 logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
@@ -98,35 +97,6 @@ class cron_NewS3POA(object):
                        'a running workflow with ID %s' % workflow_id)
             print(message)
 
-    def get_starter_module(self, starter_name, logger=None):
-        """
-        Given an starter_name, and if the starter module is already
-        imported, load the module and return it
-        """
-        full_path = "starter." + starter_name + "." + starter_name + "()"
-        f = None
-
-        try:
-            f = eval(full_path)
-        except:
-            if logger:
-                logger.exception('')
-
-        return f
-
-    def import_starter_module(self, starter_name, logger=None):
-        """
-        Given an starter name as starter_name,
-        attempt to lazy load the module when needed
-        """
-        try:
-            module_name = "starter." + starter_name
-            importlib.import_module(module_name)
-            return True
-        except ImportError:
-            if logger:
-                logger.exception('')
-            return False
 
 if __name__ == "__main__":
 
