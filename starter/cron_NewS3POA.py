@@ -7,14 +7,18 @@ import boto.swf
 import log
 import time
 
-import provider.simpleDB as dblib
-import provider.swfmeta as swfmetalib
 from provider import utils
 import starter.starter_helper as helper
+from S3utility.s3_notification_info import S3NotificationInfo
+from S3utility.s3_sqs_message import S3SQSMessage
+
 
 """
 Cron job to check for new article S3 POA and start workflows
 """
+
+MAX_MESSAGE_COUNT = 100
+
 
 class cron_NewS3POA(object):
 
@@ -26,50 +30,13 @@ class cron_NewS3POA(object):
         logFile = "starter.log"
         logger = log.logger(logFile, settings.setLevel, ping_marker_id)
 
-        # Data provider
-        db = dblib.SimpleDB(settings)
-        db.connect()
-
-        # SWF meta data provider
-        swfmeta = swfmetalib.SWFMeta(settings)
-        swfmeta.connect()
-
-        last_startTimestamp = swfmeta.get_last_completed_workflow_execution_startTimestamp(
-            workflow_id=ping_marker_id)
-
         # Start a ping workflow as a marker
         self.start_ping_marker(ping_marker_id, settings)
 
-        # Check for S3 XML files that were updated since the last run
-        # Quick hack - subtract 15 minutes,
-        #   the time between S3Monitor running and this cron starter
-        last_startTimestamp_minus_15 = last_startTimestamp - (60 * 15)
-        time_tuple = time.gmtime(last_startTimestamp_minus_15)
-
-        last_startDate = time.strftime(utils.DATE_TIME_FORMAT, time_tuple)
-
-        logger.info('last run %s' % (last_startDate))
-
-        xml_item_list = db.elife_get_POA_delivery_S3_file_items(
-            last_updated_since=last_startDate)
-
-        logger.info('POA files updated since %s: %s' % (last_startDate, str(len(xml_item_list))))
-
-        if len(xml_item_list) <= 0:
-            # No new XML
-            pass
-        else:
-            # Found new XML files
-
-            # Start a PackagePOA starter
-            try:
-                starter_name = "starter_PackagePOA"
-                helper.import_starter_module(starter_name, logger)
-                s = helper.get_starter_module(starter_name, logger)
-                s.start(settings=settings, last_updated_since=last_startDate)
-            except:
-                logger.info('Error: %s starting %s' % (ping_marker_id, starter_name))
-                logger.exception('')
+        # Get data from SQS queue
+        sqs_conn = sqs_connect(settings)
+        sqs_queue = get_sqs_queue(sqs_conn, settings)
+        process_queue(sqs_queue, settings, logger)
 
     def start_ping_marker(self, workflow_id, settings):
         """
@@ -96,6 +63,54 @@ class cron_NewS3POA(object):
             message = ('SWFWorkflowExecutionAlreadyStartedError: There is already ' +
                        'a running workflow with ID %s' % workflow_id)
             print(message)
+
+
+def sqs_connect(settings):
+    """connect to the queue service"""
+    return boto.sqs.connect_to_region(
+        settings.sqs_region,
+        aws_access_key_id=settings.aws_access_key_id,
+        aws_secret_access_key=settings.aws_secret_access_key)
+
+
+def get_sqs_queue(sqs_conn, settings):
+    """get the queue"""
+    queue = sqs_conn.get_queue(settings.poa_incoming_queue)
+    queue.set_message_class(S3SQSMessage)
+    return queue
+
+
+def process_queue(sqs_queue, settings, logger):
+    """reach each message from the queue, start a workflow, then delete the message"""
+    messages = None
+    if sqs_queue:
+        messages = sqs_queue.get_messages(MAX_MESSAGE_COUNT)
+    if not messages:
+        logger.info('no messages available')
+        return
+    for message in messages:
+        if message.notification_type == 'S3Event':
+            result = start_package_poa_workflow(message, settings, logger)
+            if result:
+                sqs_queue.delete_message(message)
+
+
+def start_package_poa_workflow(sqs_message, settings, logger):
+    """
+    Start a PackagePOA workflow for the file in the SQS message
+    """
+    info = S3NotificationInfo.from_S3SQSMessage(sqs_message)
+    logger.info("S3NotificationInfo: %s", info.to_dict())
+    document = info.file_name
+    starter_name = "starter_PackagePOA"
+    try:
+        helper.import_starter_module(starter_name, logger)
+        starter_object = helper.get_starter_module(starter_name, logger)
+        starter_object.start(settings=settings, document=document)
+        logger.info('Started %s workflow for document %s' % (starter_name, document))
+        return True
+    except:
+        logger.exception('Error: starting %s for document %s' % (starter_PackagePOA, document))
 
 
 if __name__ == "__main__":
