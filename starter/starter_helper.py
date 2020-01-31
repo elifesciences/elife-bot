@@ -1,7 +1,8 @@
 import os
 import json
-import log
 import importlib
+import boto
+import log
 
 
 class NullRequiredDataException(Exception):
@@ -65,3 +66,32 @@ def import_starter_module(starter_name, logger):
         if logger:
             logger.exception('')
         return False
+
+
+def start_ping_marker(workflow_id, settings, logger):
+    """
+    Start a ping workflow with a unique name to serve as a time marker
+    for determining last time workflow_id was run
+    """
+
+    workflow_id = workflow_id
+    workflow_name = "Ping"
+    workflow_version = "1"
+    child_policy = None
+    execution_start_to_close_timeout = None
+    workflow_input = None
+
+    conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+    try:
+        conn.start_workflow_execution(
+            settings.domain, workflow_id, workflow_name,
+            workflow_version, settings.default_task_list,
+            child_policy, execution_start_to_close_timeout,
+            workflow_input)
+
+    except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
+        # There is already a running workflow with that ID, cannot start another
+        message = (
+            'SWFWorkflowExecutionAlreadyStartedError: There is already ' +
+            'a running workflow with ID %s' % workflow_id)
+        logger.exception(message)

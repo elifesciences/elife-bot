@@ -31,38 +31,12 @@ class cron_NewS3POA(object):
         logger = log.logger(logFile, settings.setLevel, ping_marker_id)
 
         # Start a ping workflow as a marker
-        self.start_ping_marker(ping_marker_id, settings)
+        helper.start_ping_marker(ping_marker_id, settings, logger)
 
         # Get data from SQS queue
         sqs_conn = sqs_connect(settings)
         sqs_queue = get_sqs_queue(sqs_conn, settings)
         process_queue(sqs_queue, settings, logger)
-
-    def start_ping_marker(self, workflow_id, settings):
-        """
-        Start a ping workflow with a unique name to serve as a time marker
-        for determining last time this was run
-        """
-
-        workflow_id = workflow_id
-        workflow_name = "Ping"
-        workflow_version = "1"
-        child_policy = None
-        execution_start_to_close_timeout = None
-        input = None
-
-        conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
-        try:
-            response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name,
-                                                     workflow_version, settings.default_task_list,
-                                                     child_policy, execution_start_to_close_timeout,
-                                                     input)
-
-        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-            # There is already a running workflow with that ID, cannot start another
-            message = ('SWFWorkflowExecutionAlreadyStartedError: There is already ' +
-                       'a running workflow with ID %s' % workflow_id)
-            print(message)
 
 
 def sqs_connect(settings):
