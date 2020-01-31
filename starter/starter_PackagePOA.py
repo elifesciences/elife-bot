@@ -22,7 +22,7 @@ class starter_PackagePOA():
         logFile = "starter.log"
         #logFile = None
         logger = log.logger(logFile, settings.setLevel, identity)
-        logger.info("input: document=%s, last_updated_since=%s", document)
+        logger.info("input: document=%s", document)
 
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
