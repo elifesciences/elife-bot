@@ -62,7 +62,7 @@ class activity_GeneratePDFCovers(Activity):
             self.logger.error(error_message)
             self.emit_monitor_event(self.settings, article_id, version, run,
                                     self.pretty_name, "error", error_message)
-            return self.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_SUCCESS
 
         except Exception as e:
             error_message = str(e)

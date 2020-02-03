@@ -31,7 +31,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
         result = self.generatepdfcovers.do_activity(data)
 
         self.assertEqual(self.fake_logger.logerror[:20], "PDF cover not found.")
-        self.assertEqual(result, self.generatepdfcovers.ACTIVITY_PERMANENT_FAILURE)
+        self.assertEqual(result, self.generatepdfcovers.ACTIVITY_SUCCESS)
         json.dumps(self.fake_logger.logerror)
 
     @patch('requests.post')
@@ -45,7 +45,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
         result = self.generatepdfcovers.do_activity(data)
 
         self.assertEqual(self.fake_logger.logerror[:44], "unhandled status code from PDF cover service")
-        self.assertEqual(result, self.generatepdfcovers.ACTIVITY_PERMANENT_FAILURE)
+        self.assertEqual(result, self.generatepdfcovers.ACTIVITY_SUCCESS)
         json.dumps(self.fake_logger.logerror)
 
     @patch.object(article, 'get_pdf_cover_link')
@@ -59,6 +59,21 @@ class TestGeneratePDFCovers(unittest.TestCase):
         result = self.generatepdfcovers.do_activity(data)
 
         self.assertEqual(self.fake_logger.logerror[:44], "Unexpected result from pdf covers API.")
+        self.assertEqual(result, self.generatepdfcovers.ACTIVITY_SUCCESS)
+        json.dumps(self.fake_logger.logerror)
+
+    @patch.object(article, 'get_pdf_cover_link')
+    @patch.object(activity_GeneratePDFCovers, 'emit_monitor_event')
+    def test_do_activity_get_pdf_exception(self, fake_monitor_event, fake_article_pdf_cover_link):
+        data = {"run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
+                "article_id": "00353",
+                "version": "1"}
+        exception_message = 'Exception for unknown reason'
+        fake_article_pdf_cover_link.side_effect = Exception(exception_message)
+
+        result = self.generatepdfcovers.do_activity(data)
+
+        self.assertEqual(self.fake_logger.logerror[:44], exception_message)
         self.assertEqual(result, self.generatepdfcovers.ACTIVITY_PERMANENT_FAILURE)
         json.dumps(self.fake_logger.logerror)
 
