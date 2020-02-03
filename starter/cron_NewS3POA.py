@@ -1,21 +1,15 @@
-import os
-# Add parent directory for imports
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0, parentdir)
-
 import boto.swf
 import log
 import time
 import importlib
-
 import provider.simpleDB as dblib
 import provider.swfmeta as swfmetalib
 from provider import utils
-import starter
 
 """
 Cron job to check for new article S3 POA and start workflows
 """
+
 
 class cron_NewS3POA(object):
 

@@ -32,6 +32,14 @@ python -m pytest --junitxml=build/junit.xml tests/
 In principle this system can be extended horizontally. Adding new workers and workflows should be easy. 
 
 
+## Tip using starter to execute and workflow
+
+To start a workflow execution manually, for the starter to import the modules it requires, add `PYTHONPATH` to the invocation. For example, from the `elife-bot` root directory:
+
+```
+PYTHONPATH=. python starter/starter_Ping.py -e dev
+```
+
 ## Issues and Backlog
 
 Issues and backlog items are stored in Github on the [project issues page][pip].
