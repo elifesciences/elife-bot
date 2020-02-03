@@ -2,15 +2,15 @@ boto==2.48.0
 Jinja2==2.10.1
 arrow==0.4.4
 requests==2.20.0
-git+https://github.com/elifesciences/elife-tools.git@1ca1de40c9747a2ba25559ec5c5f52f00c1fd85e#egg=elifetools
-git+https://github.com/elifesciences/elife-article.git@158d5d9484aeb22bfb5109a79db3615f8fbe8ab0#egg=elifearticle
-git+https://github.com/elifesciences/elife-crossref-xml-generation.git@b0779aaa92b7d5db820064a18cf382bbc6b324d1#egg=elifecrossref
+git+https://github.com/elifesciences/elife-tools.git@eae816f0bd20d92209327ed72c7519eb428770a5#egg=elifetools
+git+https://github.com/elifesciences/elife-article.git@bdd5d40ff289e53fd7ff9ab88ab5a68b7b467064#egg=elifearticle
+git+https://github.com/elifesciences/elife-crossref-xml-generation.git@e6ab6af02b24e7a12f8e7fcbef628f653160a251#egg=elifecrossref
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@d0edbc89910628da9b793daadb305c39ddb60370#egg=elifepubmed
 git+https://github.com/elifesciences/ejp-csv-parser.git@4a458be95d4177d19d53b8e4e8d70705dc6b07a1#egg=ejpcsvparser
-git+https://github.com/elifesciences/jats-generator.git@54864941d8cdd5f0aaddaa99bcd829d505f0b7ce#egg=jatsgenerator
+git+https://github.com/elifesciences/jats-generator.git@59e64e99b657d0942c376edd14f72c8c15a67e14#egg=jatsgenerator
 git+https://github.com/elifesciences/package-poa.git@f9c74b0503a3b776f59e551a9095838cef595cac#egg=packagepoa
 docker==4.0.2
-git+https://github.com/elifesciences/decision-letter-parser.git@3c9146491497932c4bc7e54c912c56286f6e549a#egg=letterparser
+git+https://github.com/elifesciences/decision-letter-parser.git@d4b1f5a6b7b5ea0b4fb9949d47279d876236c261#egg=letterparser
 PyYAML==4.2b2
 Wand==0.5.1
 paramiko==2.4.2
@@ -29,7 +29,7 @@ pyFunctional==1.2.0
 func_timeout==4.3.0
 # versions of python-docx>=0.8.9 have issues installing on python 3.5.2 (xenial default)
 python-docx==0.8.10
-git+https://github.com/elifesciences/digest-parser.git@04edbe9ac980e33125a4654b93280e42ac174db9#egg=digestparser
+git+https://github.com/elifesciences/digest-parser.git@3c532538facdafab7fd13bd98de7ec58386648a8#egg=digestparser
 git+https://github.com/Medium/medium-sdk-python.git@bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6#egg=medium
 psutil==5.4.6
 pytz==2019.2
