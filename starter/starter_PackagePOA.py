@@ -53,8 +53,7 @@ class starter_PackagePOA():
             message = (
                 'SWFWorkflowExecutionAlreadyStartedError: There is already ' +
                 'a running workflow with ID %s' % workflow_id)
-            print(message)
-            logger.info(message)
+            logger.error(message)
 
 
 if __name__ == "__main__":
