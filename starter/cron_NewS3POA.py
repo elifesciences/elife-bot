@@ -1,17 +1,10 @@
-import os
-# Add parent directory for imports
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0, parentdir)
-
 import boto.swf
 import log
-import time
 
 from provider import utils
 import starter.starter_helper as helper
 from S3utility.s3_notification_info import S3NotificationInfo
 from S3utility.s3_sqs_message import S3SQSMessage
-
 
 """
 Cron job to check for new article S3 POA and start workflows

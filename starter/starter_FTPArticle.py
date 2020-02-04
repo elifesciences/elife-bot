@@ -1,19 +1,13 @@
-import os
-# Add parent directory for imports, so activity classes can use elife-api-prototype
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0, parentdir)
-
 import boto.swf
 import log
 import json
 import random
 from optparse import OptionParser
 
-import provider.simpleDB as dblib
-
 """
 Amazon SWF PublishArticle starter, for Fluidinfo API publishing
 """
+
 
 class starter_FTPArticle():
 

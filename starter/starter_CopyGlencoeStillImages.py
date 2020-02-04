@@ -1,14 +1,7 @@
-# import os
 import boto.swf.exceptions
-
-# Add parent directory for imports
-# parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# os.sys.path.insert(0, parentdir)
-
 import boto.swf
 import json
 from argparse import ArgumentParser
-
 import starter.starter_helper as helper
 from starter.starter_helper import NullRequiredDataException
 
