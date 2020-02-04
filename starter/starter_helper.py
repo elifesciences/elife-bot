@@ -50,7 +50,7 @@ def get_starter_module(starter_name, logger):
         starter_object = starter_class()
         return starter_object
     except ImportError:
-        logger.exception('')
+        logger.exception('Failed to instantiate a starter module object for %s' % starter_name)
 
 
 def import_starter_module(starter_name, logger):
@@ -64,7 +64,7 @@ def import_starter_module(starter_name, logger):
         return True
     except ImportError:
         if logger:
-            logger.exception('')
+            logger.exception('Failed to import a starter module %s' % starter_name)
         return False
 
 
