@@ -77,7 +77,7 @@ def start_package_poa_workflow(sqs_message, settings, logger):
         logger.info('Started %s workflow for document %s' % (starter_name, document))
         return True
     except:
-        logger.exception('Error: starting %s for document %s' % (starter_PackagePOA, document))
+        logger.exception('Error: starting %s for document %s' % (starter_name, document))
 
 
 if __name__ == "__main__":
