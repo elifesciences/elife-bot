@@ -23,18 +23,6 @@ class TestCronFiveMinute(unittest.TestCase):
         fake_start.side_effect = SWFWorkflowExecutionAlreadyStartedError("message", None)
         self.assertIsNone(self.starter.start(settings_mock))
 
-    def test_get_starter_module_failure(self):
-        "for coverage test failure"
-        starter_name = 'not_a_starter'
-        module_object = self.starter.get_starter_module(starter_name, FakeLogger())
-        self.assertIsNone(module_object)
-
-    def test_import_starter_module_failure(self):
-        "for coverage test import failure"
-        starter_name = 'not_a_starter'
-        return_value = self.starter.import_starter_module(starter_name, FakeLogger())
-        self.assertFalse(return_value)
-
 
 if __name__ == '__main__':
     unittest.main()
