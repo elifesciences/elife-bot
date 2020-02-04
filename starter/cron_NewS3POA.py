@@ -5,6 +5,7 @@ import importlib
 import provider.simpleDB as dblib
 import provider.swfmeta as swfmetalib
 from provider import utils
+import starter
 
 """
 Cron job to check for new article S3 POA and start workflows
