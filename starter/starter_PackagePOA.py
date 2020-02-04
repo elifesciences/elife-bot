@@ -16,7 +16,7 @@ Amazon SWF PackagePOA starter
 
 class starter_PackagePOA():
 
-    def start(self, settings, document=None):
+    def start(self, settings, document):
         # Log
         identity = "starter_PackagePOA_%s" % int(random.random() * 1000)
         logFile = "starter.log"
@@ -27,52 +27,45 @@ class starter_PackagePOA():
         # Simple connect
         conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
 
-        doc = {}
-
-        if document is not None:
-            doc["document"] = document
+        doc = {"document": document}
 
         logger.info("doc: %s", doc)
 
-        if doc:
+        # Get a unique id from the document name for the workflow_id
+        id_string = None
+        try:
+            id_string = document.split("_")[0]
+        except:
+            id_string = "000"
 
-            document = doc["document"]
+        # Start a workflow execution
+        workflow_id = "PackagePOA_%s" % (id_string)
+        workflow_name = "PackagePOA"
+        workflow_version = "1"
+        child_policy = None
+        execution_start_to_close_timeout = None
+        input = '{"data": ' + json.dumps(doc) + '}'
 
-            # Get a unique id from the document name for the workflow_id
-            id_string = None
-            try:
-                id_string = document.split("_")[0]
-            except:
-                id_string = "000"
+        try:
+            logger.info('starting workflow_id: %s', workflow_id)
+            response = conn.start_workflow_execution(
+                settings.domain, workflow_id,
+                workflow_name, workflow_version,
+                settings.default_task_list,
+                child_policy,
+                execution_start_to_close_timeout,
+                input)
 
-            # Start a workflow execution
-            workflow_id = "PackagePOA_%s" % (id_string)
-            workflow_name = "PackagePOA"
-            workflow_version = "1"
-            child_policy = None
-            execution_start_to_close_timeout = None
-            input = '{"data": ' + json.dumps(doc) + '}'
+            logger.info('got response: \n%s' %
+                        json.dumps(response, sort_keys=True, indent=4))
 
-            try:
-                logger.info('starting workflow_id: %s', workflow_id)
-                response = conn.start_workflow_execution(
-                    settings.domain, workflow_id,
-                    workflow_name, workflow_version,
-                    settings.default_task_list,
-                    child_policy,
-                    execution_start_to_close_timeout,
-                    input)
-
-                logger.info('got response: \n%s' %
-                            json.dumps(response, sort_keys=True, indent=4))
-
-            except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-                # There is already a running workflow with that ID, cannot start another
-                message = (
-                    'SWFWorkflowExecutionAlreadyStartedError: There is already ' +
-                    'a running workflow with ID %s' % workflow_id)
-                print(message)
-                logger.info(message)
+        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
+            # There is already a running workflow with that ID, cannot start another
+            message = (
+                'SWFWorkflowExecutionAlreadyStartedError: There is already ' +
+                'a running workflow with ID %s' % workflow_id)
+            print(message)
+            logger.info(message)
 
 
 if __name__ == "__main__":
