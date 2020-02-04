@@ -77,9 +77,7 @@ class activity_GenerateDecisionLetterJATS(Activity):
         self.xml_string, statuses = letterparser_provider.process_articles_to_xml(
             self.articles,
             self.directories.get("TEMP_DIR"),
-            self.logger,
-            pretty=True,
-            indent="")
+            self.logger)
 
         self.set_statuses(statuses)
 
