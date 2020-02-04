@@ -31,15 +31,8 @@ class starter_PackagePOA():
 
         logger.info("doc: %s", doc)
 
-        # Get a unique id from the document name for the workflow_id
-        id_string = None
-        try:
-            id_string = document.split("_")[0]
-        except:
-            id_string = "000"
-
         # Start a workflow execution
-        workflow_id = "PackagePOA_%s" % (id_string)
+        workflow_id = "PackagePOA_%s" % (document)
         workflow_name = "PackagePOA"
         workflow_version = "1"
         child_policy = None
