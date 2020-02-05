@@ -57,10 +57,6 @@ class exp():
     domain = "Publish.dev"
     default_task_list = "DefaultTaskList"
 
-    # SimpleDB settings
-    simpledb_region = "eu-west-1"
-    simpledb_domain_postfix = "_dev"
-
     # SES settings
     # email needs to be verified by AWS
     ses_region = "eu-west-1"
@@ -327,10 +323,6 @@ class dev():
     domain = "Publish.dev"
     default_task_list = "DefaultTaskList"
 
-    # SimpleDB settings
-    simpledb_region = "us-east-1"
-    simpledb_domain_postfix = "_dev"
-
     # SES settings
     # email needs to be verified by AWS
     ses_region = "us-east-1"
@@ -593,10 +585,6 @@ class live():
     # SWF queue settings
     domain = "Publish"
     default_task_list = "DefaultTaskList"
-
-    # SimpleDB settings
-    simpledb_region = "us-east-1"
-    simpledb_domain_postfix = ""
 
     # SES settings
     # email needs to be verified by AWS

@@ -18,9 +18,6 @@ aws_secret_access_key = ""
 workflow_starter_queue = ""
 sqs_region = ""
 
-
-simpledb_region = ""
-simpledb_domain_postfix = "_test"
 ejp_bucket = 'ejp_bucket'
 templates_bucket = 'templates_bucket'
 ppp_cdn_bucket = 'ppd_cdn_bucket'
