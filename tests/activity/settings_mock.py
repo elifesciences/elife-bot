@@ -2,10 +2,6 @@
 domain = ""
 default_task_list = ""
 
-bucket = "old_articles_bucket"
-prefix = "a_test_prefix"
-delimiter = "/"
-
 storage_provider = 's3'
 expanded_bucket = 'origin_bucket'
 

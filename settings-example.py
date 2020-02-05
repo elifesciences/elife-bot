@@ -49,10 +49,6 @@ class exp():
 
     # end PPP settings
 
-    # S3 settings
-    prefix = ''
-    delimiter = '/'
-
     # SWF queue settings
     domain = "Publish.dev"
     default_task_list = "DefaultTaskList"
@@ -315,10 +311,6 @@ class dev():
 
     # end PPP settings
 
-    # S3 settings
-    prefix = ''
-    delimiter = '/'
-
     # SWF queue settings
     domain = "Publish.dev"
     default_task_list = "DefaultTaskList"
@@ -577,10 +569,6 @@ class live():
     no_download_extensions = 'tif'
 
     # end PPP settings
-
-    # S3 settings
-    prefix = ''
-    delimiter = '/'
 
     # SWF queue settings
     domain = "Publish"

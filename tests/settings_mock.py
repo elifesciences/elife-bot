@@ -8,8 +8,6 @@ expanded_bucket = 'origin_bucket'
 publishing_buckets_prefix = ""
 production_bucket = "production_bucket"
 
-bucket = ""
-
 s3_session_bucket = "origin_bucket"
 
 aws_access_key_id = ""
