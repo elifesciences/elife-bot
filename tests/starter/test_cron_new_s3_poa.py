@@ -54,9 +54,8 @@ class TestCronNewS3POA(unittest.TestCase):
         directory = TempDirectory()
         fake_queue = FakeSQSQueue(directory)
         fake_get_messages.side_effect = Exception('Get messages exception')
-        messages, status = starter_module.get_queue_messages(fake_queue, 1, FakeLogger())
-        self.assertFalse(status)
-        self.assertFalse(messages)
+        with self.assertRaises(Exception):
+            starter_module.get_queue_messages(fake_queue, 1, FakeLogger())
 
     @patch.object(FakeSQSQueue, 'get_messages')
     def test_process_queue_exception(self, fake_get_messages):
@@ -66,7 +65,7 @@ class TestCronNewS3POA(unittest.TestCase):
         logger = FakeLogger()
         starter_module.process_queue(fake_queue, settings_mock, logger)
         self.assertEqual(
-            logger.logerror,
+            logger.logexception,
             'Breaking process queue read loop, failed to get messages from queue')
 
     def test_process_queue_ignored_message(self):

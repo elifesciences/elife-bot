@@ -51,9 +51,10 @@ def process_queue(sqs_queue, settings, logger):
     """reach each message from the queue, start a workflow, then delete the message"""
     message_count = 0
     while True:
-        messages, status = get_queue_messages(sqs_queue, MAX_MESSAGE_COUNT, logger)
-        if not status:
-            logger.error('Breaking process queue read loop, failed to get messages from queue')
+        try:
+            messages = get_queue_messages(sqs_queue, MAX_MESSAGE_COUNT, logger)
+        except:
+            logger.exception('Breaking process queue read loop, failed to get messages from queue')
             break
 
         # check if any messages to process
@@ -91,10 +92,10 @@ def process_queue(sqs_queue, settings, logger):
 
 def get_queue_messages(sqs_queue, num_messages, logger):
     try:
-        return sqs_queue.get_messages(num_messages), True
+        return sqs_queue.get_messages(num_messages)
     except:
         logger.exception('Exception in getting messages from SQS queue')
-    return [], False
+        raise
 
 
 def start_package_poa_workflow(sqs_message, settings, logger):
