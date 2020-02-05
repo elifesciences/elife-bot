@@ -118,13 +118,6 @@ def conditional_starts(current_datetime):
                 ("start_seconds", 60 * 31)
             ]))
 
-        # POA bucket polling
-        conditional_start_list.append(OrderedDict([
-            ("starter_name", "starter_S3Monitor"),
-            ("workflow_id", "S3Monitor_POA"),
-            ("start_seconds", 60 * 31)
-        ]))
-
         # PMC deposits once per day 20:30 UTC
         if current_time.tm_hour == 20:
             conditional_start_list.append(OrderedDict([
@@ -259,12 +252,7 @@ def start_workflow(settings, starter_name, workflow_id=None):
     starter_object = starter_class()
 
     # Customised start functions
-    if starter_name == "starter_S3Monitor":
-
-        if workflow_id == "S3Monitor_POA":
-            starter_object.start(settings=settings, workflow="S3Monitor_POA")
-
-    elif starter_name == "starter_AdminEmail":
+    if starter_name == "starter_AdminEmail":
         starter_object.start(settings=settings, workflow="AdminEmail")
 
     elif starter_name == "starter_PubRouterDeposit":
