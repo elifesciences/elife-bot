@@ -49,17 +49,52 @@ def get_sqs_queue(sqs_conn, settings):
 
 def process_queue(sqs_queue, settings, logger):
     """reach each message from the queue, start a workflow, then delete the message"""
-    messages = None
-    if sqs_queue:
-        messages = sqs_queue.get_messages(MAX_MESSAGE_COUNT)
-    if not messages:
-        logger.info('no messages available')
-        return
-    for message in messages:
-        if message.notification_type == 'S3Event':
-            result = start_package_poa_workflow(message, settings, logger)
-            if result:
+    message_count = 0
+    while True:
+        messages, status = get_queue_messages(sqs_queue, MAX_MESSAGE_COUNT, logger)
+        if not status:
+            logger.error('Breaking process queue read loop, failed to get messages from queue')
+            break
+
+        # check if any messages to process
+        if not messages:
+            logger.info('no messages available')
+            break
+        else:
+            logger.info('Processing %s messages' % len(messages))
+
+        # process each message, deleting each message when done
+        for message in messages:
+            # increment count
+            message_count += 1
+            logger.info('Processing message number %s', message_count)
+
+            # check message type
+            if message.notification_type != 'S3Event':
+                logger.info(
+                    'Message not processed, deleting it from queue: %s' %
+                    message.get_body())
                 sqs_queue.delete_message(message)
+                continue
+
+            # start a workflow
+            try:
+                logger.info('Starting workflow for message: %s' % message)
+                start_package_poa_workflow(message, settings, logger)
+            except:
+                logger.exception(
+                    'Exception processing message, deleting it from queue: %s' %
+                    message.get_body())
+            finally:
+                sqs_queue.delete_message(message)
+
+
+def get_queue_messages(sqs_queue, num_messages, logger):
+    try:
+        return sqs_queue.get_messages(num_messages), True
+    except:
+        logger.exception('Exception in getting messages from SQS queue')
+    return [], False
 
 
 def start_package_poa_workflow(sqs_message, settings, logger):
@@ -75,9 +110,9 @@ def start_package_poa_workflow(sqs_message, settings, logger):
         starter_object = helper.get_starter_module(starter_name, logger)
         starter_object.start(settings=settings, document=document)
         logger.info('Started %s workflow for document %s' % (starter_name, document))
-        return True
     except:
         logger.exception('Error: starting %s for document %s' % (starter_name, document))
+        raise
 
 
 if __name__ == "__main__":
