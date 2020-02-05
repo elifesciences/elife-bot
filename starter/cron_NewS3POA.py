@@ -10,7 +10,8 @@ from S3utility.s3_sqs_message import S3SQSMessage
 Cron job to check for new article S3 POA and start workflows
 """
 
-MAX_MESSAGE_COUNT = 100
+# Note: boto accepts a number between 1 and 10
+MAX_MESSAGE_COUNT = 10
 
 
 class cron_NewS3POA(object):
