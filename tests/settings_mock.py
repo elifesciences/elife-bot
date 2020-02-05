@@ -29,6 +29,7 @@ bot_bucket = 'bot_bucket'
 lens_bucket = 'dest_bucket'
 poa_packaging_bucket = 'poa_packaging_bucket'
 poa_bucket = 'poa_bucket'
+poa_incoming_queue = ''
 ses_poa_sender_email = ""
 ses_poa_recipient_email = ""
 

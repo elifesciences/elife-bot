@@ -68,8 +68,11 @@ class FakeSQSConn:
 
 
 class FakeSQSQueue:
-    def __init__(self, directory):
+    def __init__(self, directory, messages=None):
         self.dir = directory
+        self.messages = []
+        if messages:
+            self.messages = messages
 
     # def write(self, body_dir):
     #     self.dir.write("fake_sqs_queue_container", body_dir.read("fake_sqs_body"))
@@ -79,12 +82,12 @@ class FakeSQSQueue:
     def read(self, dir_name):
         return self.dir.read(dir_name)
 
-    def get_messages(self):
+    def get_messages(self, num_messages=1):
         "for mocking return a list of messages"
-        return []
+        return self.messages
 
     def delete_message(self, message):
-        pass
+        self.messages = [q_message for q_message in self.messages if message != q_message]
 
 
 class FakeFTP:

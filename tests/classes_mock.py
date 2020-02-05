@@ -74,6 +74,7 @@ class FakeS3Event():
     def __init__(self):
         self.notification_type = 'S3Event'
         self.id = None
+        self.body = ''
         # test data below
         self._event_name = u'ObjectCreated:Put'
         self._event_time = u'2016-07-28T16:14:27.809576Z'
@@ -81,6 +82,9 @@ class FakeS3Event():
         self._file_name = u'elife-00353-vor-r1.zip'
         self._file_etag = u'e7f639f63171c097d4761e2d2efe8dc4'
         self._file_size = 1097506
+
+    def get_body(self):
+        return self.body
 
     def event_name(self):
         return self._event_name
