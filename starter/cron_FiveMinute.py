@@ -63,35 +63,6 @@ class cron_FiveMinute(object):
                        'a running workflow with ID %s' % workflow_id)
             print(message)
 
-    def get_starter_module(self, starter_name, logger=None):
-        """
-        Given an starter_name, and if the starter module is already
-        imported, load the module and return it
-        """
-        full_path = "starter." + starter_name + "." + starter_name + "()"
-        f = None
-
-        try:
-            f = eval(full_path)
-        except:
-            if logger:
-                logger.exception('')
-
-        return f
-
-    def import_starter_module(self, starter_name, logger=None):
-        """
-        Given an starter name as starter_name,
-        attempt to lazy load the module when needed
-        """
-        try:
-            module_name = "starter." + starter_name
-            importlib.import_module(module_name)
-            return True
-        except ImportError:
-            if logger:
-                logger.exception('')
-            return False
 
 if __name__ == "__main__":
 
