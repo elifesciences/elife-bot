@@ -109,6 +109,7 @@ def start(settings):
     activity_names.append("PostDigestJATS")
     activity_names.append("ValidateDecisionLetterInput")
     activity_names.append("GenerateDecisionLetterJATS")
+    activity_names.append("DepositDecisionLetterIngestAssets")
 
     for activity_name in activity_names:
         # Import the activity libraries
