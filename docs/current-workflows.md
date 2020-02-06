@@ -28,8 +28,6 @@ Push article metadata to Fluidinfo, in order to support eLife API.
 
 
 
-### S3Monitor workflow
-Monitoring an S3 bucket for modifications.
 
 
 ## Current Activities
@@ -41,7 +39,6 @@ Monitoring an S3 bucket for modifications.
 ### LensDocumentsJS
 ### LensXMLFilesList
 ### PingWorker
-### S3Monitor
 ### UnzipArticleXML
 ### WorkflowConflictCheck
 

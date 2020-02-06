@@ -58,11 +58,11 @@ class TestProviderSWFMeta(unittest.TestCase):
         "test whether a workflow is open on a test fixture JSON example open workflow executions"
         with open('tests/test_data/open_workflow_executions.json', 'r') as json_file:
             infos = json.loads(json_file.read())
-            is_open = self.swfmeta.is_workflow_open(infos=infos, workflow_name="S3Monitor")
+            is_open = self.swfmeta.is_workflow_open(infos=infos, workflow_name="DepositCrossref")
             self.assertTrue(is_open)
         # example where executionInfos list would be empty
         infos = json.loads('{"executionInfos": []}')
-        is_open = self.swfmeta.is_workflow_open(infos=infos, workflow_name="S3Monitor")
+        is_open = self.swfmeta.is_workflow_open(infos=infos, workflow_name="DepositCrossref")
         self.assertFalse(is_open)
 
 
@@ -72,7 +72,7 @@ class TestProviderSWFMeta(unittest.TestCase):
         with open('tests/test_data/completed_workflow_executions.json', 'r') as json_file:
             infos = json.loads(json_file.read())
             latest_timestamp = self.swfmeta.get_last_completed_workflow_execution_startTimestamp(
-                infos=infos, workflow_name="S3Monitor")
+                infos=infos, workflow_name="DepositCrossref")
             self.assertEqual(latest_timestamp, expected_timestamp)
 
 
@@ -93,7 +93,7 @@ class TestProviderSWFMeta(unittest.TestCase):
         mock_connect = FakeSWFConnection()
         mock_connect.add_infos(base_infos)
         self.swfmeta.conn = mock_connect
-        infos = self.swfmeta.get_open_workflow_executionInfos(workflow_name="S3Monitor")
+        infos = self.swfmeta.get_open_workflow_executionInfos(workflow_name="DepositCrossref")
         self.assertIsNotNone(infos)
 
         # second test is to add the data that has a nextPageToken to test pagination
@@ -101,7 +101,7 @@ class TestProviderSWFMeta(unittest.TestCase):
         mock_connect.add_infos(next_page_token_infos)
         mock_connect.add_infos(base_infos)
         self.swfmeta.conn = mock_connect
-        infos = self.swfmeta.get_open_workflow_executionInfos(workflow_name="S3Monitor")
+        infos = self.swfmeta.get_open_workflow_executionInfos(workflow_name="DepositCrossref")
         self.assertIsNotNone(infos)
 
 
@@ -122,7 +122,7 @@ class TestProviderSWFMeta(unittest.TestCase):
         mock_connect = FakeSWFConnection()
         mock_connect.add_infos(base_infos)
         self.swfmeta.conn = mock_connect
-        infos = self.swfmeta.get_closed_workflow_executionInfos(workflow_name="S3Monitor")
+        infos = self.swfmeta.get_closed_workflow_executionInfos(workflow_name="DepositCrossref")
         self.assertIsNotNone(infos)
         self.assertEqual(len(infos.get("executionInfos")), 43)
 
@@ -131,7 +131,7 @@ class TestProviderSWFMeta(unittest.TestCase):
         mock_connect.add_infos(base_infos)
         self.swfmeta.conn = mock_connect
         infos = self.swfmeta.get_closed_workflow_executionInfos(
-            workflow_name="S3Monitor", close_status="COMPLETED")
+            workflow_name="DepositCrossref", close_status="COMPLETED")
         self.assertIsNotNone(infos)
         self.assertEqual(len(infos.get("executionInfos")), 25)
 
@@ -141,7 +141,7 @@ class TestProviderSWFMeta(unittest.TestCase):
         mock_connect.add_infos(base_infos)
         self.swfmeta.conn = mock_connect
         infos = self.swfmeta.get_closed_workflow_executionInfos(
-            workflow_name="S3Monitor", close_status="TERMINATED")
+            workflow_name="DepositCrossref", close_status="TERMINATED")
         self.assertIsNotNone(infos)
         self.assertEqual(len(infos.get("executionInfos")), 15)
 

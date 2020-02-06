@@ -52,20 +52,6 @@ class TestCron(unittest.TestCase):
             "start_seconds": 0,
             "expected": True
         },
-        {
-            "workflow_id": "S3Monitor",
-            "last_timestamp": 10,
-            "current_timestamp": 21,
-            "start_seconds": 10,
-            "expected": True
-        },
-        {
-            "workflow_id": "S3Monitor_POA",
-            "last_timestamp": 10,
-            "current_timestamp": 19,
-            "start_seconds": 10,
-            "expected": None
-        }
     )
     def test_workflow_conditional_start(self, test_data, fake_timestamp, fake_timegm):
         fake_timestamp.return_value = test_data.get("last_timestamp")
@@ -82,10 +68,6 @@ class TestCron(unittest.TestCase):
         {
             "starter_name": "starter_AdminEmail",
             "workflow_id": "AdminEmail"
-        },
-        {
-            "starter_name": "starter_S3Monitor",
-            "workflow_id": "S3Monitor_POA"
         },
         {
             "starter_name": "starter_PubmedArticleDeposit",
@@ -176,12 +158,10 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossrefPeerReview",
-                "starter_S3Monitor"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossrefPeerReview",
-                "S3Monitor_POA"
             ]
         }
     )
@@ -217,13 +197,11 @@ class TestConditionalStarts(unittest.TestCase):
                 "cron_FiveMinute",
                 "starter_DepositCrossrefPeerReview",
                 "starter_PublishPOA",
-                "starter_S3Monitor"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossrefPeerReview",
                 "PublishPOA",
-                "S3Monitor_POA"
             ]
         },
     )
@@ -238,13 +216,11 @@ class TestConditionalStarts(unittest.TestCase):
                 "cron_FiveMinute",
                 "starter_DepositCrossrefPeerReview",
                 "starter_PublishPOA",
-                "starter_S3Monitor"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossrefPeerReview",
                 "PublishPOA",
-                "S3Monitor_POA"
             ]
         },
     )
@@ -279,13 +255,11 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossrefPeerReview",
-                "starter_S3Monitor",
                 "starter_PubRouterDeposit"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossrefPeerReview",
-                "S3Monitor_POA",
                 "PubRouterDeposit_PMC"
             ]
         },
@@ -300,13 +274,11 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossrefPeerReview",
-                "starter_S3Monitor",
                 "starter_PubRouterDeposit"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossrefPeerReview",
-                "S3Monitor_POA",
                 "PubRouterDeposit_WoS"
             ]
         },
@@ -340,13 +312,11 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossrefPeerReview",
-                "starter_S3Monitor",
                 "starter_PubRouterDeposit"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossrefPeerReview",
-                "S3Monitor_POA",
                 "PubRouterDeposit_Scopus"
             ]
         },
@@ -401,13 +371,11 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossrefPeerReview",
-                "starter_S3Monitor",
                 "starter_PubRouterDeposit"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossrefPeerReview",
-                "S3Monitor_POA",
                 "PubRouterDeposit_CNPIEC"
             ]
         },
