@@ -90,8 +90,9 @@ class activity_DepositDecisionLetterIngestAssets(Activity):
 
         # deposit assets to the bucket
         try:
-            self.deposit_assets_to_bucket(
-                output_bucket_name, bucket_folder_name, self.asset_file_names)
+            deposit_assets_to_bucket(
+                self.settings, output_bucket_name, bucket_folder_name,
+                self.asset_file_names, self.logger)
         except:
             self.logger.exception('%s failed to upload an asset to the bucket' % self.name)
             return self.ACTIVITY_PERMANENT_FAILURE
@@ -110,20 +111,14 @@ class activity_DepositDecisionLetterIngestAssets(Activity):
         self.logger.info(
             "%s for input_file %s statuses: %s" % (self.name, str(input_file), self.statuses))
 
-    def asset_dest_resource(self, bucket_name, folder_name, asset_file_name):
-        "concatenate the S3 bucket object path we copy the file to"
-        file_name = asset_file_name.split(os.sep)[-1]
-        storage_provider = self.settings.storage_provider + "://"
-        dest_resource = storage_provider + bucket_name + "/" + folder_name + "/" + file_name
-        return dest_resource
 
-    def deposit_assets_to_bucket(self, output_bucket, bucket_folder_name, asset_file_names):
-        "deposit the assets to the output bucket"
-        for asset_file_name in asset_file_names:
-            dest_resource = self.asset_dest_resource(
-                output_bucket, bucket_folder_name, asset_file_name)
-            storage = storage_context(self.settings)
-            self.logger.info("Depositing asset %s to S3 key %s" % (asset_file_name, dest_resource))
-            # set the bucket object resource from the local file
-            storage.set_resource_from_filename(dest_resource, asset_file_name)
-            self.logger.info("Deposited asset %s to S3" % asset_file_name)
+def deposit_assets_to_bucket(settings, output_bucket, bucket_folder_name, asset_file_names, logger):
+    "deposit the assets to the output bucket"
+    for asset_file_name in asset_file_names:
+        dest_resource = download_helper.file_resource_origin(
+            settings.storage_provider, asset_file_name, output_bucket, bucket_folder_name)
+        storage = storage_context(settings)
+        logger.info("Depositing asset %s to S3 key %s" % (asset_file_name, dest_resource))
+        # set the bucket object resource from the local file
+        storage.set_resource_from_filename(dest_resource, asset_file_name)
+        logger.info("Deposited asset %s to S3" % asset_file_name)
