@@ -292,13 +292,15 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 21:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
+                "starter_PubRouterDeposit",
                 "starter_PubmedArticleDeposit",
-                "starter_AdminEmail"
+                "starter_AdminEmail",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
+                "PubRouterDeposit_GoOA",
                 "PubmedArticleDeposit",
-                "AdminEmail"
+                "AdminEmail",
             ]
         },
     )
