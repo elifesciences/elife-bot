@@ -61,17 +61,27 @@ class activity_DepositDecisionLetterIngestAssets(Activity):
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)
 
         # Download from S3
-        self.input_file = download_helper.download_file_from_s3(
-            self.settings, real_filename, bucket_name, bucket_folder,
-            self.directories.get("INPUT_DIR"))
+        try:
+            self.input_file = download_helper.download_file_from_s3(
+                self.settings, real_filename, bucket_name, bucket_folder,
+                self.directories.get("INPUT_DIR"))
+        except:
+            self.logger.exception(
+                '%s failed to download input zip file from data %s' % (self.name, data))
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         # zip file to articles and assets
-        self.articles, self.asset_file_names, statuses, error_messages = (
-            letterparser_provider.process_zip(
-                self.input_file,
-                config=self.letterparser_config,
-                temp_dir=self.directories.get("TEMP_DIR"),
-                logger=self.logger))
+        try:
+            self.articles, self.asset_file_names, statuses, error_messages = (
+                letterparser_provider.process_zip(
+                    self.input_file,
+                    config=self.letterparser_config,
+                    temp_dir=self.directories.get("TEMP_DIR"),
+                    logger=self.logger))
+        except:
+            self.logger.exception(
+                '%s failed to process the zip file %s' % (self.name, self.input_file))
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         self.set_statuses(statuses)
 
@@ -80,13 +90,19 @@ class activity_DepositDecisionLetterIngestAssets(Activity):
             self.logger.info("%s file %s has no assets to deposit" % (self.name, self.input_file))
             return self.ACTIVITY_SUCCESS
 
-        # S3 bucket folder name
-        manuscript = letterparser_provider.manuscript_from_articles(self.articles)
-        bucket_folder_name = letterparser_provider.output_bucket_folder_name(
-            self.settings, manuscript)
-
         self.logger.info(
             "%s asset file names from %s: %s" % (self.name, self.input_file, self.asset_file_names))
+
+        # S3 bucket folder name
+        try:
+            manuscript = letterparser_provider.manuscript_from_articles(self.articles)
+            bucket_folder_name = letterparser_provider.output_bucket_folder_name(
+                self.settings, manuscript)
+        except:
+            self.logger.exception(
+                '%s failed get manuscript and bucket_folder_name for input file %s' %
+                (self.name, self.input_file))
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         # deposit assets to the bucket
         try:

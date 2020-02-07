@@ -4,7 +4,7 @@ import os
 import unittest
 from mock import patch
 from ddt import ddt, data
-from provider import download_helper
+from provider import download_helper, letterparser_provider
 from activity.activity_DepositDecisionLetterIngestAssets import (
     activity_DepositDecisionLetterIngestAssets as activity_object)
 import tests.activity.settings_mock as settings_mock
@@ -67,6 +67,78 @@ class TestDepositDecisionLetterIngestAssets(unittest.TestCase):
         compare_files = [file_name for file_name in files if file_name != '.gitkeep']
         self.assertEqual(compare_files, test_data.get("expected_file_list"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
+
+    @patch.object(download_helper, 'download_file_from_s3')
+    def test_do_activity_download_file_exception(self, fake_download_file):
+        fake_download_file.side_effect = Exception('Exception in download_file_from_s3')
+        # do the activity
+        result = self.activity.do_activity(input_data('test.zip'))
+        self.assertEqual(result, activity_object.ACTIVITY_PERMANENT_FAILURE)
+        self.assertTrue(
+            self.fake_logger.logexception.startswith(
+                'DepositDecisionLetterIngestAssets failed to download input zip file from data'),
+            'Got: %s' % self.fake_logger.logexception)
+
+    @patch.object(letterparser_provider, 'process_zip')
+    @patch.object(download_helper, 'storage_context')
+    @data(
+        {
+            "comment": 'decision letter zip file example',
+            "filename": 'elife-39122.zip',
+        },
+    )
+    def test_do_activity_process_zip_exception(
+            self, test_data, fake_storage_context, fake_manuscript):
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_manuscript.side_effect = Exception('Exception in process_zip')
+        # do the activity
+        result = self.activity.do_activity(input_data(test_data.get("filename")))
+        self.assertEqual(result, activity_object.ACTIVITY_PERMANENT_FAILURE)
+        self.assertTrue(
+            self.fake_logger.logexception.startswith(
+                'DepositDecisionLetterIngestAssets failed to process the zip file'),
+            'Got: %s' % self.fake_logger.logexception)
+
+    @patch.object(letterparser_provider, 'manuscript_from_articles')
+    @patch.object(download_helper, 'storage_context')
+    @data(
+        {
+            "comment": 'decision letter zip file example',
+            "filename": 'elife-39122.zip',
+        },
+    )
+    def test_do_activity_manuscript_exception(
+            self, test_data, fake_storage_context, fake_manuscript):
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_manuscript.side_effect = Exception('Exception in manuscript from articles')
+        # do the activity
+        result = self.activity.do_activity(input_data(test_data.get("filename")))
+        self.assertEqual(result, activity_object.ACTIVITY_PERMANENT_FAILURE)
+        self.assertTrue(
+            self.fake_logger.logexception.startswith(
+                'DepositDecisionLetterIngestAssets failed get manuscript '
+                'and bucket_folder_name for input file'),
+            'Got: %s' % self.fake_logger.logexception)
+
+    @patch('activity.activity_DepositDecisionLetterIngestAssets.deposit_assets_to_bucket')
+    @patch.object(download_helper, 'storage_context')
+    @data(
+        {
+            "comment": 'decision letter zip file example',
+            "filename": 'elife-39122.zip',
+        },
+    )
+    def test_do_activity_deposit_assets_exception(
+            self, test_data, fake_storage_context, fake_deposit_assets):
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_deposit_assets.side_effect = Exception('Exception in depositing assets')
+        # do the activity
+        result = self.activity.do_activity(input_data(test_data.get("filename")))
+        self.assertEqual(result, activity_object.ACTIVITY_PERMANENT_FAILURE)
+        self.assertTrue(
+            self.fake_logger.logexception.startswith(
+                'DepositDecisionLetterIngestAssets failed to upload an asset to the bucket'),
+            'Got: %s' % self.fake_logger.logexception)
 
 
 if __name__ == '__main__':
