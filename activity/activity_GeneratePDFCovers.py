@@ -1,4 +1,5 @@
 import provider.article as articlelib
+from provider import lax_provider
 from activity.objects import Activity
 
 """
@@ -29,6 +30,23 @@ class activity_GeneratePDFCovers(Activity):
             self.logger.error("Error retrieving basic article data. Data: %s, Exception: %s" % (str(data), str(e)))
             return self.ACTIVITY_PERMANENT_FAILURE
 
+        # check the article has subjects before continuing
+        try:
+            snippet = lax_provider.article_snippet(article_id, version, self.settings)
+            if not snippet:
+                self.logger.error("Article %s has no Lax data snippet in %s." % (article_id, self.name))
+                return self.ACTIVITY_PERMANENT_FAILURE
+            else:
+                if 'subjects' not in snippet:
+                    self.logger.info(
+                        "Article %s has no subjects in %s, not creating a PDF." %
+                        (article_id, self.name))
+                    return self.ACTIVITY_SUCCESS
+        except Exception:
+            self.logger.exception("Exception in %s getting data snippet from Lax" % (self.name))
+            return self.ACTIVITY_PERMANENT_FAILURE
+
+        # generate the PDF
         try:
 
             self.emit_monitor_event(self.settings, article_id, version, run,
