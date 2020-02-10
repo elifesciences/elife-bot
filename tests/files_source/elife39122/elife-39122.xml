@@ -1,0 +1,949 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns:ali="http://www.niso.org/schemas/ali/1.0/" xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink">
+<sub-article article-type="decision-letter" id="sa1">
+<front-stub>
+<article-id pub-id-type="doi">10.7554/eLife.39122.sa1</article-id>
+<title-group>
+<article-title>Decision letter</article-title>
+</title-group>
+</front-stub>
+<body>
+<boxed-text>
+<p>In the interests of transparency, eLife publishes the most substantive revision requests and the accompanying author responses.</p>
+</boxed-text>
+<p>
+Thank you for submitting your article &quot;Ligand-dependent electrostatic control of anion access to the pore of the calcium-activated chloride channel TMEM16A&quot; for consideration by 
+<italic>eLife</italic>
+. Your article has been reviewed by three peer reviewers, and the evaluation has been overseen by a Reviewing Editor and Richard Aldrich as the Senior Editor. The following individuals involved in review of your submission have agreed to reveal their identity: Criss Hartzell (Reviewer#1) and Alessio Accardi (Reviewer #2).
+</p>
+<p>The reviewers have discussed the reviews with one another and the Reviewing Editor has drafted this decision to help you prepare a revised submission.</p>
+<p>Summary:</p>
+<p>
+Lam and Dutzler discover that the negatively charged residues that form the Ca
+<sup>2+</sup>
+-binding sites act as an electrostatic barrier for the flow of anions once the pore has adopted the open conformation, thus acting as an additional activation gate in the absence of Ca
+<sup>2+</sup>
+. By introducing mutations in the Ca
+<sup>2+</sup>
+-sites in constitutively active mutants of TMEM16A and measuring their I-V relations at various Ca
+<sup>2+</sup>
+concentrations, the authors show that the binding of calcium reduces the two innermost energy barriers of an open channel through an electrostatic mechanism, allowing ions to flow. In the absence of Ca
+<sup>2+</sup>
+, the constitutively active mutants display pronounced outward rectification due to this electrostatic effect. Overall, these studies highlight a novel mechanism of regulation of ion permeation by a ligand. Nevertheless, the reviewers raise several concerns that should be addressed in the revised version.
+</p>
+<p>Essential revisions:</p>
+<p>
+1) I am not sure that I understand the permeation model. Why do the electrostatics of Ca
+<sup>2+</sup>
+ affect only inward and not outward current? The energy profile in Figure 1D could not lead to rectification, because the height of each energy barrier is the same whether the ion is coming from the inside or the outside. Outward rectification requires an energy well between the barriers 
+<italic>h</italic>
+ and 
+<italic>β</italic>
+ so that the height of 
+<italic>β</italic>
+ is greater from the out&gt;in than the in&gt;out direction. It would seem that the depth of this well would be significant considering the degree of rectification observed.
+</p>
+<p>
+2) Furthermore, the second paragraph of the subsection “Data analysis” states that 
+<italic>
+σ
+<sub>h</sub>
+</italic>
+ and 
+<italic>
+σ
+<sub>β</sub>
+</italic>
+ are voltage-independent, but Figure 1G seems to show that 
+<italic>
+σ
+<sub>β</sub>
+</italic>
+ is voltage-dependent. The statement in the next paragraph is rather inscrutable, as is the subsequent explanation about why the &quot;decay&quot; was omitted from the fits. What does &quot;inaccurate estimation of 
+<italic>
+σ
+<sub>β</sub>
+</italic>
+&quot; mean? It would be useful to know how the conclusions are affected by changing 
+<italic>n</italic>
+ in Equation 2. And why is 
+<italic>
+σ
+<sub>h</sub>
+</italic>
+ not shown beyond Figure 1?
+</p>
+<p>
+3) Even though the G644P and Q649A mutations increase the baseline open probability of the channel, it is unclear whether the protein with any of these mutations still undergoes some gating-associated conformational changes. If this were the case, some of the effects of Ca
+<sup>2+</sup>
+-binding on the rectification of the mutant channels could arise from these conformational changes rather than the simple electrostatic influence of the site and the bound Ca
+<sup>2+</sup>
+ ions. To test for this possibility, the authors could use Mg
+<sup>2+</sup>
+ instead of Ca
+<sup>2+</sup>
+, as it is reported to compete with Ca
+<sup>2+</sup>
+ without activating the channel. The authors should test whether the presence of internal magnesium in the context of either of the constitutively active mutants has the same effect as Ca
+<sup>2+</sup>
+, as expected from their proposed mechanism. Although it is not necessary, I think it would be also interesting to test whether a trivalent cation could also bind and have a larger effect than Ca
+<sup>2+</sup>
+.
+</p>
+<p>4) Large portions of the data shown depend on the use of a permeation model for analysis, together with the use of several equations for permeation and electrostatics. I think these play such a central role in the manuscript that it would make the reading easier if some of these models and equations were described with more detail in the main text, rather than the Materials and methods section.</p>
+</body>
+</sub-article>
+<sub-article article-type="reply" id="sa2">
+<front-stub>
+<article-id pub-id-type="doi">10.7554/eLife.39122.sa2</article-id>
+<title-group>
+<article-title>Author response</article-title>
+</title-group>
+</front-stub>
+<body>
+<disp-quote content-type="editor-comment">
+<p>Essential revisions:</p>
+<p>
+1) I am not sure that I understand the permeation model. Why do the electrostatics of Ca
+<sup>2+</sup>
+ affect only inward and not outward current? The energy profile in Figure 1D could not lead to rectification, because the height of each energy barrier is the same whether the ion is coming from the inside or the outside. Outward rectification requires an energy well between the barriers h and β so that the height of β is greater from the out&gt;in than the in&gt;out direction. It would seem that the depth of this well would be significant considering the degree of rectification observed.
+</p>
+</disp-quote>
+<fig id="sa2fig1">
+<label>Author response image 1.</label>
+<caption>
+<title>
+Model calculations based on the energy profile of G644P at zero Ca
+<sup>2+</sup>
+ (top) and a WT-like channel with a totally symmetric energy profile (bottom).
+</title>
+<p>
+Left, Ion occupancy in the model channel relative to that at the outermost wells (p
+<sub>n</sub>
+ or p
+<sub>0</sub>
+) as a function of voltage at the indicated locations. Right, Shape of the I-V relation at steady state. At zero voltage, the relative occupancy is 1 for all cases because our model assumes no binding affinity when no voltage gradient is present. The curves on the left panels were calculated using
+<disp-formula id="sa2equ1">
+<mml:math alttext="\frac{p_{1}}{\text{vc}} = \phi + \frac{J}{\text{vc}\beta_{V}}" display="block" id="sa2m1">
+<mml:mrow>
+<mml:mfrac>
+<mml:msub>
+<mml:mi>p</mml:mi>
+<mml:mn>1</mml:mn>
+</mml:msub>
+<mml:mtext mathvariant="normal">vc</mml:mtext>
+</mml:mfrac>
+<mml:mo>=</mml:mo>
+<mml:mi>ϕ</mml:mi>
+<mml:mo>+</mml:mo>
+<mml:mfrac>
+<mml:mi>J</mml:mi>
+<mml:mrow>
+<mml:mtext mathvariant="normal">vc</mml:mtext>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mi>V</mml:mi>
+</mml:msub>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<disp-formula id="sa2equ2">
+<mml:math alttext="\frac{p_{n - 1}}{\text{vc}} = \phi^{n - 1} + \frac{J}{\text{vc}\beta_{V}}\left( \phi^{n - 2} + \frac{1}{\sigma_{h}}\left( \frac{1 - \phi^{n - 2}}{1 - \phi} \right) \right)" display="block" id="sa2m2">
+<mml:mrow>
+<mml:mfrac>
+<mml:msub>
+<mml:mi>p</mml:mi>
+<mml:mrow>
+<mml:mi>n</mml:mi>
+<mml:mo>−</mml:mo>
+<mml:mn>1</mml:mn>
+</mml:mrow>
+</mml:msub>
+<mml:mtext mathvariant="normal">vc</mml:mtext>
+</mml:mfrac>
+<mml:mo>=</mml:mo>
+<mml:msup>
+<mml:mi>ϕ</mml:mi>
+<mml:mrow>
+<mml:mi>n</mml:mi>
+<mml:mo>−</mml:mo>
+<mml:mn>1</mml:mn>
+</mml:mrow>
+</mml:msup>
+<mml:mo>+</mml:mo>
+<mml:mfrac>
+<mml:mi>J</mml:mi>
+<mml:mrow>
+<mml:mtext mathvariant="normal">vc</mml:mtext>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mi>V</mml:mi>
+</mml:msub>
+</mml:mrow>
+</mml:mfrac>
+<mml:mrow>
+<mml:mo form="prefix" stretchy="true">(</mml:mo>
+<mml:msup>
+<mml:mi>ϕ</mml:mi>
+<mml:mrow>
+<mml:mi>n</mml:mi>
+<mml:mo>−</mml:mo>
+<mml:mn>2</mml:mn>
+</mml:mrow>
+</mml:msup>
+<mml:mo>+</mml:mo>
+<mml:mfrac>
+<mml:mn>1</mml:mn>
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>h</mml:mi>
+</mml:msub>
+</mml:mfrac>
+<mml:mrow>
+<mml:mo form="prefix" stretchy="true">(</mml:mo>
+<mml:mfrac>
+<mml:mrow>
+<mml:mn>1</mml:mn>
+<mml:mo>−</mml:mo>
+<mml:msup>
+<mml:mi>ϕ</mml:mi>
+<mml:mrow>
+<mml:mi>n</mml:mi>
+<mml:mo>−</mml:mo>
+<mml:mn>2</mml:mn>
+</mml:mrow>
+</mml:msup>
+</mml:mrow>
+<mml:mrow>
+<mml:mn>1</mml:mn>
+<mml:mo>−</mml:mo>
+<mml:mi>ϕ</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+<mml:mo form="postfix" stretchy="true">)</mml:mo>
+</mml:mrow>
+<mml:mo form="postfix" stretchy="true">)</mml:mo>
+</mml:mrow>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+and those on the right panels using
+<disp-formula id="sa2equ3">
+<mml:math alttext="I = zFJ" display="block" id="sa2m3">
+<mml:mrow>
+<mml:mi>I</mml:mi>
+<mml:mo>=</mml:mo>
+<mml:mi>z</mml:mi>
+<mml:mi>F</mml:mi>
+<mml:mi>J</mml:mi>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+where
+<disp-formula id="sa2equ4">
+<mml:math alttext="J = \frac{\beta_{V}\text{vc}\left( 1 - \phi^{n} \right)}{\phi^{n - 1} + \frac{1}{\sigma_{h}}\phi\left( \frac{1 - \phi^{n - 2}}{1 - \phi} \right) + \frac{1}{\sigma_{\beta}}}" display="block" id="sa2m4">
+<mml:mrow>
+<mml:mi>J</mml:mi>
+<mml:mo>=</mml:mo>
+<mml:mfrac>
+<mml:mrow>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mi>V</mml:mi>
+</mml:msub>
+<mml:mtext mathvariant="normal">vc</mml:mtext>
+<mml:mrow>
+<mml:mo form="prefix" stretchy="true">(</mml:mo>
+<mml:mn>1</mml:mn>
+<mml:mo>−</mml:mo>
+<mml:msup>
+<mml:mi>ϕ</mml:mi>
+<mml:mi>n</mml:mi>
+</mml:msup>
+<mml:mo form="postfix" stretchy="true">)</mml:mo>
+</mml:mrow>
+</mml:mrow>
+<mml:mrow>
+<mml:msup>
+<mml:mi>ϕ</mml:mi>
+<mml:mrow>
+<mml:mi>n</mml:mi>
+<mml:mo>−</mml:mo>
+<mml:mn>1</mml:mn>
+</mml:mrow>
+</mml:msup>
+<mml:mo>+</mml:mo>
+<mml:mfrac>
+<mml:mn>1</mml:mn>
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>h</mml:mi>
+</mml:msub>
+</mml:mfrac>
+<mml:mi>ϕ</mml:mi>
+<mml:mrow>
+<mml:mo form="prefix" stretchy="true">(</mml:mo>
+<mml:mfrac>
+<mml:mrow>
+<mml:mn>1</mml:mn>
+<mml:mo>−</mml:mo>
+<mml:msup>
+<mml:mi>ϕ</mml:mi>
+<mml:mrow>
+<mml:mi>n</mml:mi>
+<mml:mo>−</mml:mo>
+<mml:mn>2</mml:mn>
+</mml:mrow>
+</mml:msup>
+</mml:mrow>
+<mml:mrow>
+<mml:mn>1</mml:mn>
+<mml:mo>−</mml:mo>
+<mml:mi>ϕ</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+<mml:mo form="postfix" stretchy="true">)</mml:mo>
+</mml:mrow>
+<mml:mo>+</mml:mo>
+<mml:mfrac>
+<mml:mn>1</mml:mn>
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>β</mml:mi>
+</mml:msub>
+</mml:mfrac>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<disp-formula id="sa2equ5">
+<mml:math alttext="\phi = e^{- \frac{\text{zFV}}{\text{nRT}}}" display="block" id="sa2m5">
+<mml:mrow>
+<mml:mi>ϕ</mml:mi>
+<mml:mo>=</mml:mo>
+<mml:msup>
+<mml:mi>e</mml:mi>
+<mml:mrow>
+<mml:mo>−</mml:mo>
+<mml:mfrac>
+<mml:mtext mathvariant="normal">zFV</mml:mtext>
+<mml:mtext mathvariant="normal">nRT</mml:mtext>
+</mml:mfrac>
+</mml:mrow>
+</mml:msup>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<disp-formula id="sa2equ6">
+<mml:math alttext="\beta_{V} = \beta_{0}e^{\frac{\text{zFV}}{2nRT}}" display="block" id="sa2m6">
+<mml:mrow>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mi>V</mml:mi>
+</mml:msub>
+<mml:mo>=</mml:mo>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+<mml:msup>
+<mml:mi>e</mml:mi>
+<mml:mfrac>
+<mml:mtext mathvariant="normal">zFV</mml:mtext>
+<mml:mrow>
+<mml:mn>2</mml:mn>
+<mml:mi>n</mml:mi>
+<mml:mi>R</mml:mi>
+<mml:mi>T</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:msup>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+under symmetrical ionic conditions. The number of barriers 
+<inline-formula>
+<mml:math alttext="n" display="inline" id="sa2m7">
+<mml:mi>n</mml:mi>
+</mml:math>
+</inline-formula>
+ is 3 in this model. This has been determined to describe the conduction properties of mutants in our previous study (Paulino et al., 2017). 
+<inline-formula>
+<mml:math alttext="\beta_{V}" display="inline" id="sa2m8">
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mi>V</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ is the voltage-dependent rate constant of the outermost barrier. The rate constant of the innermost barrier is defined as 
+<inline-formula>
+<mml:math alttext="\sigma_{\beta}\beta_{V}" display="inline" id="sa2m9">
+<mml:mrow>
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>β</mml:mi>
+</mml:msub>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mi>V</mml:mi>
+</mml:msub>
+</mml:mrow>
+</mml:math>
+</inline-formula>
+ and that of the middle barrier as 
+<inline-formula>
+<mml:math alttext="\sigma_{h}\beta_{V}" display="inline" id="sa2m10">
+<mml:mrow>
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>h</mml:mi>
+</mml:msub>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mi>V</mml:mi>
+</mml:msub>
+</mml:mrow>
+</mml:math>
+</inline-formula>
+ where both fitted parameters 
+<italic>
+σ
+<sub>β</sub>
+</italic>
+ and 
+<italic>
+σ
+<sub>h</sub>
+</italic>
+ are independent of voltage. 
+<inline-formula>
+<mml:math alttext="p_{i}" display="inline" id="sa2m11">
+<mml:msub>
+<mml:mi>p</mml:mi>
+<mml:mi>i</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+’s are the probabilities of occupying the i
+<sup>th</sup>
+ wells (from 
+<inline-formula>
+<mml:math alttext="p_{0}" display="inline" id="sa2m12">
+<mml:msub>
+<mml:mi>p</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ to 
+<inline-formula>
+<mml:math alttext="p_{n}" display="inline" id="sa2m13">
+<mml:msub>
+<mml:mi>p</mml:mi>
+<mml:mi>n</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+). 
+<italic>v</italic>
+ is a proportionality factor that has a dimension of volume and may be interpreted as the hypothetical volume for outermost well at the channel entrance. 
+<inline-formula>
+<mml:math alttext="V" display="inline" id="sa2m14">
+<mml:mi>V</mml:mi>
+</mml:math>
+</inline-formula>
+ is the membrane potential, 
+<inline-formula>
+<mml:math alttext="z" display="inline" id="sa2m15">
+<mml:mi>z</mml:mi>
+</mml:math>
+</inline-formula>
+ is the valence of the ion, and 
+<inline-formula>
+<mml:math alttext="R" display="inline" id="sa2m16">
+<mml:mi>R</mml:mi>
+</mml:math>
+</inline-formula>
+, 
+<inline-formula>
+<mml:math alttext="T" display="inline" id="sa2m17">
+<mml:mi>T</mml:mi>
+</mml:math>
+</inline-formula>
+ and 
+<inline-formula>
+<mml:math alttext="F" display="inline" id="sa2m18">
+<mml:mi>F</mml:mi>
+</mml:math>
+</inline-formula>
+ have their usual meanings.
+</p>
+</caption>
+<graphic mimetype="image" xlink:href="elife-39122-sa2-fig1.jpg"/>
+</fig>
+<p>
+In our analysis, we rely on a simple rate theory model proposed by Peter Läuger (Lauger, 1973). We have explained this model in detail in our previous manuscript published in 
+<italic>eLife</italic>
+, to which this work refers to (Paulino et al., 2017). In this model, ions surmount energy barriers in a pore that does not contain deep energy wells and that cannot be saturated. We think that such model is appropriate for our analysis since we have not found evidence for tight ion binding sites in our structures and we have measured a K
+<sub>M</sub>
+ of chloride conduction between 300-400 mM, thus underlining that there is no saturation in the applied conditions (Paulino et al., 2017). The energy profile displayed in Figure 1D or Figure 1—figure supplement 1 represents the potential of mean force for permeation in the absence of an applied electric field, where, in symmetric ion concentrations, the system is at equilibrium and there is no net flux in either direction. Upon application of a potential difference, the model predicts ionic currents. In such case, rectification is a consequence of the asymmetric free energy profile. The location of the barrier maximum governs the shape of the I-V relation, which becomes increasingly outwardly rectifying when the barrier maximum moves closer to the inner end. We note that the I-V relation is a function of both occupancy and rate of barrier crossing. Unlike the pseudo-ohmic cases, in case of low symmetric barriers, where the total occupancy remains approximately constant, ion depletion occurs in cases of an increased intracellular barrier at negative voltages where the channel is less conductive while ion accumulation occurs at positive voltages (
+<xref ref-type="fig" rid="sa2fig1">Author response image 1.</xref>
+. Both behaviors likely account for the resulting outward rectification and the general reduction in ion conductance. The latter corresponds to an effect that also affects the outward current (as indicated by the reduction of current at positive voltages in the I-V profiles in 
+<xref ref-type="fig" rid="sa2fig1">Author response image 1.</xref>
+.
+</p>
+<disp-quote content-type="editor-comment">
+<p>
+2) Furthermore, the second paragraph of the subsection “Data analysis” states that σ
+<sub>h</sub>
+ and σ
+<sub>β</sub>
+ are voltage-independent, but Figure 1G seems to show that σ
+<sub>β</sub>
+ is voltage-dependent.
+</p>
+</disp-quote>
+<p>
+<italic>
+σ
+<sub>h</sub>
+</italic>
+ and 
+<italic>
+σ
+<sub>β</sub>
+</italic>
+ are both not intrinsically voltage-dependent as they denote the ratio of the rate constants in the case of a linear voltage drop (also see equation above). In Figure 1G they are only voltage-dependent because they change as a function of calcium binding and calcium binding itself is voltage-dependent. We have added the following sentences to our manuscript:
+</p>
+<p>
+“
+<inline-formula>
+<mml:math alttext="\sigma_{h}" display="inline" id="sa2m19">
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>h</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ and 
+<inline-formula>
+<mml:math alttext="\sigma_{\beta}" display="inline" id="sa2m20">
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>β</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ are respectively the rate of barrier crossing at the middle and the innermost barriers relative to that at the outermost barrier (
+<inline-formula>
+<mml:math alttext="\beta" display="inline" id="sa2m21">
+<mml:mi>β</mml:mi>
+</mml:math>
+</inline-formula>
+),
+</p>
+<p>
+<disp-formula id="sa2equ7">
+<mml:math alttext="\sigma_{h} = \frac{h_{V}}{\beta_{V}} = \frac{h_{0}e^{\frac{\text{zFV}}{2nRT}}}{\beta_{0}e^{\frac{\text{zFV}}{2nRT}}} = \frac{h_{0}}{\beta_{0}}" display="block" id="sa2m22">
+<mml:mrow>
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>h</mml:mi>
+</mml:msub>
+<mml:mo>=</mml:mo>
+<mml:mfrac>
+<mml:msub>
+<mml:mi>h</mml:mi>
+<mml:mi>V</mml:mi>
+</mml:msub>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mi>V</mml:mi>
+</mml:msub>
+</mml:mfrac>
+<mml:mo>=</mml:mo>
+<mml:mfrac>
+<mml:mrow>
+<mml:msub>
+<mml:mi>h</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+<mml:msup>
+<mml:mi>e</mml:mi>
+<mml:mfrac>
+<mml:mtext mathvariant="normal">zFV</mml:mtext>
+<mml:mrow>
+<mml:mn>2</mml:mn>
+<mml:mi>n</mml:mi>
+<mml:mi>R</mml:mi>
+<mml:mi>T</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:msup>
+</mml:mrow>
+<mml:mrow>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+<mml:msup>
+<mml:mi>e</mml:mi>
+<mml:mfrac>
+<mml:mtext mathvariant="normal">zFV</mml:mtext>
+<mml:mrow>
+<mml:mn>2</mml:mn>
+<mml:mi>n</mml:mi>
+<mml:mi>R</mml:mi>
+<mml:mi>T</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:msup>
+</mml:mrow>
+</mml:mfrac>
+<mml:mo>=</mml:mo>
+<mml:mfrac>
+<mml:msub>
+<mml:mi>h</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+</mml:mfrac>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<disp-formula id="sa2equ8">
+<mml:math alttext="\sigma_{\beta} = \frac{\delta_{V}}{\beta_{V}} = \frac{\delta_{0}e^{\frac{\text{zFV}}{2nRT}}}{\beta_{0}e^{\frac{\text{zFV}}{2nRT}}} = \frac{\delta_{0}}{\beta_{0}}" display="block" id="sa2m23">
+<mml:mrow>
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>β</mml:mi>
+</mml:msub>
+<mml:mo>=</mml:mo>
+<mml:mfrac>
+<mml:msub>
+<mml:mi>δ</mml:mi>
+<mml:mi>V</mml:mi>
+</mml:msub>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mi>V</mml:mi>
+</mml:msub>
+</mml:mfrac>
+<mml:mo>=</mml:mo>
+<mml:mfrac>
+<mml:mrow>
+<mml:msub>
+<mml:mi>δ</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+<mml:msup>
+<mml:mi>e</mml:mi>
+<mml:mfrac>
+<mml:mtext mathvariant="normal">zFV</mml:mtext>
+<mml:mrow>
+<mml:mn>2</mml:mn>
+<mml:mi>n</mml:mi>
+<mml:mi>R</mml:mi>
+<mml:mi>T</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:msup>
+</mml:mrow>
+<mml:mrow>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+<mml:msup>
+<mml:mi>e</mml:mi>
+<mml:mfrac>
+<mml:mtext mathvariant="normal">zFV</mml:mtext>
+<mml:mrow>
+<mml:mn>2</mml:mn>
+<mml:mi>n</mml:mi>
+<mml:mi>R</mml:mi>
+<mml:mi>T</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:msup>
+</mml:mrow>
+</mml:mfrac>
+<mml:mo>=</mml:mo>
+<mml:mfrac>
+<mml:msub>
+<mml:mi>δ</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+<mml:msub>
+<mml:mi>β</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+</mml:mfrac>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+where 
+<inline-formula>
+<mml:math alttext="h_{0}" display="inline" id="sa2m24">
+<mml:msub>
+<mml:mi>h</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ is the rate of barrier crossing at the middle barrier and 
+<inline-formula>
+<mml:math alttext="\delta_{0}" display="inline" id="sa2m25">
+<mml:msub>
+<mml:mi>δ</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ at the innermost barrier in the absence of voltage. Thus, for a linear voltage drop as is the case in our model, 
+<inline-formula>
+<mml:math alttext="\sigma_{h}" display="inline" id="sa2m26">
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>h</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ and 
+<inline-formula>
+<mml:math alttext="\sigma_{\beta}" display="inline" id="sa2m27">
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>β</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ are intrinsically voltage-independent and represent the relative rates when 
+<inline-formula>
+<mml:math alttext="V" display="inline" id="sa2m28">
+<mml:mi>V</mml:mi>
+</mml:math>
+</inline-formula>
+ = 0. 
+<inline-formula>
+<mml:math alttext="\sigma_{\beta}" display="inline" id="sa2m29">
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>β</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ appears to be voltage-dependent in Figure 1G because 
+<inline-formula>
+<mml:math alttext="\sigma_{\beta}" display="inline" id="sa2m30">
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>β</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ is a function of Ca
+<sup>2+</sup>
+ binding whose EC
+<sub>50</sub>
+ exhibits voltage dependence.”
+</p>
+<disp-quote content-type="editor-comment">
+<p>
+The statement in the next paragraph is rather inscrutable, as is the subsequent explanation about why the &quot;decay&quot; was omitted from the fits. What does &quot;inaccurate estimation of σ
+<sub>β</sub>
+&quot; mean? It would be useful to know how the conclusions are affected by changing n in Equation 2.
+</p>
+</disp-quote>
+<p>We have added the following sentences:</p>
+<p>
+We note that the decay phase in general does not follow the same trend as the high affinity phase and occurs an order of magnitude above the concentration range where activation takes place (
+<xref ref-type="fig" rid="sa2fig2">Author response image 2.</xref>
+. The decay might be related to additional processes conferred by Ca
+<sup>2+</sup>
+ not intrinsic to its high affinity binding, as we have observed in a previous study (Lim et al., 2016). As we are interested in the effect of calcium binding to the high affinity transmembrane site, the low affinity phase becomes irrelevant and was therefore omitted from analysis. Since the same treatment was applied consistently, this does not affect the outcome of the analysis. The number of barrier 
+<italic>n</italic>
+ is kept equal to that determined for the WT channel in our previous manuscript. This energy profile presents a minimal model required for a phenomenological description of ion permeation across a narrow neck region with two flanking barriers that account for the entry of ions into the neck whose heights are modulated by long-range electrostatics. It is reasonable to assume that the barrier heights are affected by the introduction of mutations, whereas the overall architecture of the energy profile remains similar.
+</p>
+<p>
+“We have previously shown that the model describes the behavior of WT best when the number of barriers 
+<inline-formula>
+<mml:math alttext="n" display="inline" id="sa2m31">
+<mml:mi>n</mml:mi>
+</mml:math>
+</inline-formula>
+ equals 3 (Paulino et al., 2017b), which was used as a fixed parameter. This leaves 
+<inline-formula>
+<mml:math alttext="\sigma_{h}" display="inline" id="sa2m32">
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>h</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+, 
+<inline-formula>
+<mml:math alttext="\sigma_{\beta}" display="inline" id="sa2m33">
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>β</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ and the amplitude factor 
+<inline-formula>
+<mml:math alttext="A" display="inline" id="sa2m34">
+<mml:mi>A</mml:mi>
+</mml:math>
+</inline-formula>
+ as the only free parameters to be fitted.”
+</p>
+<p>
+“We observed for mutants G644P/E654Q, G644P/E654R, G644P/E654Q/E705Q and G644P/E654R/E705Q a low affinity decay of 
+<inline-formula>
+<mml:math alttext="\sigma_{\beta}" display="inline" id="sa2m35">
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mi>β</mml:mi>
+</mml:msub>
+</mml:math>
+</inline-formula>
+ at high Ca
+<sup>2+</sup>
+ concentrations (Figure 3A, B, D, E). Since this decay might be related to processes not intrinsic to the transmembrane binding site (Lim et al., 2016), only the high affinity phase was analyzed.”
+</p>
+<fig id="sa2fig2">
+<label>Author response image 2.</label>
+<caption>
+<title>
+Relationship between experimental 
+<italic>
+σ
+<sub>β</sub>
+</italic>
+ and RI (I
+<sub>-100/+120</sub>
+) for the G644P family of constructs.
+</title>
+<p>Horizontal error bars indicate S.E.M and vertical error bars indicate the 95% confidence interval.</p>
+</caption>
+<graphic mimetype="image" xlink:href="elife-39122-sa2-fig2.jpg"/>
+</fig>
+<disp-quote content-type="editor-comment">
+<p>
+And why is σ
+<sub>h</sub>
+ not shown beyond Figure 1?
+</p>
+</disp-quote>
+<disp-quote content-type="editor-comment">
+<p>
+3) Even though the G644P and Q649A mutations increase the baseline open probability of the channel, it is unclear whether the protein with any of these mutations still undergoes some gating-associated conformational changes. If this were the case, some of the effects of Ca
+<sup>2+</sup>
+-binding on the rectification of the mutant channels could arise from these conformational changes rather than the simple electrostatic influence of the site and the bound Ca
+<sup>2+</sup>
+ ions. To test for this possibility, the authors could use Mg
+<sup>2+</sup>
+ instead of Ca
+<sup>2+</sup>
+, as it is reported to compete with Ca
+<sup>2+</sup>
+ without activating the channel. The authors should test whether the presence of internal magnesium in the context of either of the constitutively active mutants has the same effect as Ca
+<sup>2+</sup>
+, as expected from their proposed mechanism. Although it is not necessary, I think it would be also interesting to test whether a trivalent cation could also bind and have a larger effect than Ca
+<sup>2+</sup>
+.
+</p>
+</disp-quote>
+<p>
+We have selected 
+<italic>
+σ
+<sub>β</sub>
+</italic>
+ for most of our graphs since it was determined with higher precision than 
+<italic>
+σ
+<sub>h</sub>
+</italic>
+. As shown in Figure 1E, the 95% confidence interval of 
+<italic>
+σ
+<sub>h</sub>
+</italic>
+ is much wider than that of 
+<italic>
+σ
+<sub>β</sub>
+</italic>
+, indicating that the best-fit value of 
+<italic>
+σ
+<sub>h</sub>
+</italic>
+ is less well defined. In addition, the value of 
+<italic>
+σ
+<sub>β</sub>
+</italic>
+ increases monotonically (and almost linearly for the experimental range) with the rectification index (I
+<sub>-100/+120</sub>
+) (
+<xref ref-type="fig" rid="sa2fig2">Author response image 2.</xref>
+, which allows a straightforward comparison with the I-V data.
+</p>
+<p>We agree that gating-associated conformational changes may still exist. However, since for our analysis we characterize instantaneous currents following a voltage jump prior to any conformational changes, the I-V relations correspond to the open populations of the channel.</p>
+<p>
+In our revised version, we have now investigated the effect of Mg
+<sup>2+</sup>
+ binding on the conductance. For that purpose, we have recorded data at varying Mg
+<sup>2+</sup>
+ concentration in the absence of Ca
+<sup>2+</sup>
+. Consistent with previous observations by Chen and colleagues (Ni et al., 2014), we found that Mg
+<sup>2+</sup>
+ binds with an apparent affinity of around 1-2 mM. Although Mg
+<sup>2+</sup>
+ addition does not lead to activation of WT, its binding to the mutant G644P lowers the energy barrier for anion conduction at the intracellular part of the pore, consistent with the presence of a single Mg
+<sup>2+</sup>
+ ion in the site (as judged by the remaining rectification at high Mg
+<sup>2+</sup>
+ concentration). This result thus further confirms our proposed mechanism on the influence of divalent cations in the transmembrane binding site on the energetics of anion conduction in the open channel. In another set of experiments, we have also investigated the effect of the trivalent metal ion Gd
+<sup>3+</sup>
+ and found that the application of this ion at high µM concentrations exerts an even stronger effect than Ca
+<sup>2+</sup>
+, leading to slight inward rectification of currents. This behavior is consistent with a larger increase in the positive charge density after the binding of two Gd
+<sup>3+</sup>
+ ions. However, in this case the effect was not completely reversible upon washout indicating an unmeasurably slow off-rate for one of the bound ions. It should also be noted that in the case of Gd
+<sup>3+</sup>
+, we could not buffer residual Ca
+<sup>2+</sup>
+ in the solutions by addition of EGTA and we can thus not exclude the presence of traces of Ca
+<sup>2+</sup>
+ in the solutions. In light of our new data, we have added another subsection to our manuscript “The effect of the competitive antagonist Mg
+<sup>2+</sup>
+, and the trivalent cation Gd
+<sup>3+</sup>
+ on conduction”) and an additional accompanying figure (see the new Figure 2 and Figure 2—figure supplements 1 and 2).
+</p>
+<disp-quote content-type="editor-comment">
+<p>4) Large portions of the data shown depend on the use of a permeation model for analysis, together with the use of several equations for permeation and electrostatics. I think these play such a central role in the manuscript that it would make the reading easier if some of these models and equations were described with more detail in the main text, rather than the Materials and methods section.</p>
+</disp-quote>
+<p>We have added two sentences to the Results where we discuss general features of the model and extended its description in the methods. However, we have already explained the same model in great detail in our preceding study, which the current manuscript is referring to, and think that the link to this previous study would help interested readers to gain in-depth insight. We also think that a more extended description of the model in the main part of the manuscript might distract readers from the main findings of the work.</p>
+<p>The following sentences were added to the Results section:</p>
+<p>
+“The diffusion path does not contain deep energy wells and the model does not account for saturation of the pore, which is generally consistent with the high K
+<sub>M</sub>
+ for chloride conduction.”
+</p>
+<p>“The rectification is a consequence of both pore occupancy and the rate of barrier crossing at the applied potential.”</p>
+</body>
+</sub-article>
+</root>
