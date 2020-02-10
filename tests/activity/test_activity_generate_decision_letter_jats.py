@@ -48,7 +48,7 @@ class TestGenerateDecisionLetterJATS(unittest.TestCase):
         # activity storage context
         fake_storage_context.return_value = FakeStorageContext()
         # mock the session
-        fake_session = FakeSession(activity_input_data)
+        fake_session = FakeSession({})
         mock_session.return_value = fake_session
         # do the activity
         result = self.activity.do_activity(activity_input_data)
@@ -73,6 +73,10 @@ class TestGenerateDecisionLetterJATS(unittest.TestCase):
             self.activity.xml_bucket_resource,
             's3://dev-elife-bot-decision-letter-output/elife39122/elife-39122.xml')
 
+        # check session values
+        self.assertEqual(fake_session.get_value('bucket_folder_name'), 'elife39122')
+        self.assertEqual(fake_session.get_value('xml_file_name'), 'elife-39122.xml')
+
     @patch.object(FakeStorageContext, 'set_resource_from_string')
     @patch.object(activity_module, 'get_session')
     @patch.object(activity_module, 'storage_context')
@@ -82,10 +86,14 @@ class TestGenerateDecisionLetterJATS(unittest.TestCase):
         activity_input_data = input_data('elife-39122.zip')
         fake_download_storage_context.return_value = FakeStorageContext()
         fake_storage_context.return_value = FakeStorageContext()
-        fake_session = FakeSession(activity_input_data)
+        fake_session = FakeSession({})
         mock_session.return_value = fake_session
         # mock the exception
         fake_set_resource.side_effect = Exception()
         # do the activity
         result = self.activity.do_activity(activity_input_data)
         self.assertEqual(result, activity_object.ACTIVITY_PERMANENT_FAILURE)
+
+        # check session values will be empty
+        self.assertEqual(fake_session.get_value('bucket_folder_name'), None)
+        self.assertEqual(fake_session.get_value('xml_file_name'), None)
