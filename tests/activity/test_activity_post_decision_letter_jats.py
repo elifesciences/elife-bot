@@ -111,7 +111,8 @@ class TestPostDecisionLetterJats(unittest.TestCase):
 
         # check assertions
         self.assertEqual(result, expected_result)
-        self.assertEqual(self.fake_logger.logerror, 'Missing session data in PostDigestJATS.')
+        self.assertEqual(
+            self.fake_logger.logerror, 'Missing session data in PostDecisionLetterJATS.')
 
 
 class TestPostDecisionLetterBadSettings(unittest.TestCase):
@@ -138,7 +139,7 @@ class TestPostDecisionLetterBadSettings(unittest.TestCase):
         self.assertEqual(result, expected_result)
         self.assertEqual(
             self.fake_logger.logerror,
-            'No typesetter endpoint in settings, skipping PostDigestJATS.')
+            'No typesetter endpoint in settings, skipping PostDecisionLetterJATS.')
 
     @patch.object(activity_module, 'get_session')
     def test_do_activity_blank_endpoint(self, mock_session):
@@ -158,4 +159,4 @@ class TestPostDecisionLetterBadSettings(unittest.TestCase):
         self.assertEqual(result, expected_result)
         self.assertEqual(
             self.fake_logger.logerror,
-            'Typesetter endpoint in settings is blank, skipping PostDigestJATS.')
+            'Typesetter endpoint in settings is blank, skipping PostDecisionLetterJATS.')

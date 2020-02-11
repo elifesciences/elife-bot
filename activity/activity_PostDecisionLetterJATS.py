@@ -13,7 +13,7 @@ class activity_PostDecisionLetterJATS(Activity):
         super(activity_PostDecisionLetterJATS, self).__init__(
             settings, logger, conn, token, activity_task)
 
-        self.name = "PostDigestJATS"
+        self.name = "PostDecisionLetterJATS"
         self.pretty_name = "POST decision letter JATS content to API endpoint"
         self.version = "1"
         self.default_task_heartbeat_timeout = 30
