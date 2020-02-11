@@ -126,12 +126,12 @@ def choose_outboxes(status, outbox_map, first_by_status, run_type=None):
     if run_type != "silent-correction":
         if first_by_status:
             outbox_list.append(outbox_map.get("publication_email"))
+        outbox_list.append(outbox_map.get("pubmed"))
 
     if status == "poa":
-        outbox_list.append(outbox_map.get("pubmed"))
+        pass
 
     elif status == "vor":
-        outbox_list.append(outbox_map.get("pubmed"))
         outbox_list.append(outbox_map.get("pmc"))
         outbox_list.append(outbox_map.get("pub_router"))
         outbox_list.append(outbox_map.get("cengage"))
