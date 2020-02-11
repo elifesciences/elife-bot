@@ -125,15 +125,15 @@ class activity_PostDecisionLetterJATS(Activity):
         return None
 
     def send_email(self, doi, jats_content):
-        """send an email after digest JATS is posted to endpoint"""
+        """send an email after JATS is posted to endpoint"""
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
         body_content = success_email_body_content(doi, jats_content)
         body = email_provider.simple_email_body(datetime_string, body_content)
         subject = success_email_subject(doi)
-        sender_email = self.settings.digest_sender_email
+        sender_email = self.settings.decision_letter_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.digest_jats_recipient_email)
+            self.settings.decision_letter_jats_recipient_email)
 
         messages = email_provider.simple_messages(
             sender_email, recipient_email_list, subject, body, logger=self.logger)
@@ -150,10 +150,10 @@ class activity_PostDecisionLetterJATS(Activity):
         body_content = error_email_body_content(doi, jats_content, error_messages)
         body = email_provider.simple_email_body(datetime_string, body_content)
         subject = error_email_subject(doi)
-        sender_email = self.settings.digest_sender_email
+        sender_email = self.settings.decision_letter_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.digest_jats_error_recipient_email)
+            self.settings.decision_letter_jats_error_recipient_email)
 
         messages = email_provider.simple_messages(
             sender_email, recipient_email_list, subject, body, logger=self.logger)
