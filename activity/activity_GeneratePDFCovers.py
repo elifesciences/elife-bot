@@ -43,7 +43,7 @@ class activity_GeneratePDFCovers(Activity):
                         (article_id, self.name))
                     return self.ACTIVITY_SUCCESS
         except Exception:
-            self.logger.exception("Exception in %s getting data snippet from Lax" % (self.name))
+            self.logger.exception("Exception in data snippet in %s" % (self.name))
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # generate the PDF
