@@ -118,6 +118,8 @@ class exp():
     decision_letter_output_bucket = 'exp-elife-bot-decision-letter-output'
     decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
     decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
+    typesetter_decision_letter_endpoint = 'https://typesetter/decisionLetter'
+    typesetter_decision_letter_api_key = 'typesetter_api_key'
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
@@ -380,6 +382,8 @@ class dev():
     decision_letter_output_bucket = 'dev-elife-bot-decision-letter-output'
     decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
     decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
+    typesetter_decision_letter_endpoint = 'https://typesetter/decisionLetter'
+    typesetter_decision_letter_api_key = 'typesetter_api_key'
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
@@ -639,6 +643,8 @@ class live():
     decision_letter_output_bucket = 'prod-elife-bot-decision-letter-output'
     decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
     decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
+    typesetter_decision_letter_endpoint = 'https://typesetter/decisionLetter'
+    typesetter_decision_letter_api_key = 'typesetter_api_key'
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
