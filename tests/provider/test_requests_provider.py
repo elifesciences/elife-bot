@@ -2,6 +2,7 @@ import unittest
 from collections import OrderedDict
 from mock import patch
 from provider import requests_provider
+from provider.utils import bytes_decode
 from tests.activity.classes_mock import FakeLogger, FakeResponse
 
 
@@ -21,6 +22,73 @@ class TestRequestsProvider(unittest.TestCase):
         ])
         result = requests_provider.jats_post_payload(content_type, doi, content, api_key)
         self.assertEqual(result, expected)
+
+
+class TestRequestsProviderPostAs(unittest.TestCase):
+
+    @patch('requests.adapters.HTTPAdapter.get_connection')
+    def test_get_as_params(self, fake_connection):
+        """"test get data as params only"""
+        url = 'http://localhost/'
+        payload = OrderedDict([
+            ("type", "digest"),
+            ("content", '<p>"98%"β</p>')
+            ])
+        expected_url = url + '?type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
+        expected_body = None
+        # populate the fake request
+        resp = requests_provider.get_as_params(url, payload)
+        # make assertions
+        self.assertEqual(resp.request.url, expected_url)
+        self.assertEqual(resp.request.body, expected_body)
+
+    @patch('requests.adapters.HTTPAdapter.get_connection')
+    def test_post_as_params(self, fake_connection):
+        """"test posting data as params only"""
+        url = 'http://localhost/'
+        payload = OrderedDict([
+            ("type", "digest"),
+            ("content", '<p>"98%"β</p>')
+            ])
+        expected_url = url + '?type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
+        expected_body = None
+        # populate the fake request
+        resp = requests_provider.post_as_params(url, payload)
+        # make assertions
+        self.assertEqual(resp.request.url, expected_url)
+        self.assertEqual(resp.request.body, expected_body)
+
+    @patch('requests.adapters.HTTPAdapter.get_connection')
+    def test_post_as_data(self, fake_connection):
+        """"test posting data as data only"""
+        url = 'http://localhost/'
+        payload = OrderedDict([
+            ("type", "digest"),
+            ("content", '<p>"98%"β</p>')
+            ])
+        expected_url = url
+        expected_body = 'type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
+        # populate the fake request
+        resp = requests_provider.post_as_data(url, payload)
+        # make assertions
+        self.assertEqual(resp.request.url, expected_url)
+        self.assertEqual(resp.request.body, expected_body)
+
+    @patch('requests.adapters.HTTPAdapter.get_connection')
+    def test_post_as_json(self, fake_connection):
+        """test posting data as data only"""
+        url = 'http://localhost/'
+        payload = OrderedDict([
+            ("type", "digest"),
+            ("content", '<p>"98%"β</p>')
+            ])
+        expected_url = url
+        expected_body = '{"type": "digest", "content": "<p>\\"98%\\"\\u03b2</p>"}'
+        # populate the fake request
+        resp = requests_provider.post_as_json(url, payload)
+        # make assertions
+        self.assertEqual(resp.request.url, expected_url)
+        self.assertEqual(bytes_decode(resp.request.body), expected_body)
 
 
 class TestRequestsProviderPost(unittest.TestCase):

@@ -14,9 +14,24 @@ def jats_post_payload(content_type, doi, jats_content, api_key):
     return payload
 
 
+def get_as_params(url, payload):
+    """transmit the payload as a GET with URL parameters"""
+    return requests.get(url, params=payload)
+
+
+def post_as_params(url, payload):
+    """post the payload as URL parameters"""
+    return requests.post(url, params=payload)
+
+
 def post_as_data(url, payload):
     """post the payload as form data"""
     return requests.post(url, data=payload)
+
+
+def post_as_json(url, payload):
+    """post the payload as JSON data"""
+    return requests.post(url, json=payload)
 
 
 def post_to_endpoint(url, payload, logger, identifier):
