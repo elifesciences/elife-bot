@@ -1,23 +1,18 @@
 # coding=utf-8
 
-import os
 import unittest
-import time
-from collections import OrderedDict
 from mock import patch
 from ddt import ddt, data
 from digestparser.objects import Digest
 import activity.activity_PostDigestJATS as activity_module
 from activity.activity_PostDigestJATS import activity_PostDigestJATS as activity_object
-from tests import read_fixture
 import tests.activity.helpers as helpers
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeResponse, fake_get_tmp_dir
+from tests.activity.classes_mock import FakeLogger, FakeResponse
 import tests.test_data as test_case_data
 from tests.activity.classes_mock import FakeStorageContext
 from tests.classes_mock import FakeSMTPServer
 import provider.digest_provider as digest_provider
-from provider.utils import bytes_decode
 
 
 def input_data(file_name_to_change=''):
@@ -205,76 +200,6 @@ class TestPostDigestJatsNoEndpoint(unittest.TestCase):
         activity.settings.typesetter_digest_endpoint = ""
         result = activity.do_activity()
         self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
-
-
-class TestPost(unittest.TestCase):
-
-    def setUp(self):
-        self.fake_logger = FakeLogger()
-
-    @patch('requests.adapters.HTTPAdapter.get_connection')
-    def test_get_as_params(self, fake_connection):
-        """"test get data as params only"""
-        url = 'http://localhost/'
-        payload = OrderedDict([
-            ("type", "digest"),
-            ("content", '<p>"98%"β</p>')
-            ])
-        expected_url = url + '?type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
-        expected_body = None
-        # populate the fake request
-        resp = activity_module.get_as_params(url, payload)
-        # make assertions
-        self.assertEqual(resp.request.url, expected_url)
-        self.assertEqual(resp.request.body, expected_body)
-
-    @patch('requests.adapters.HTTPAdapter.get_connection')
-    def test_post_as_params(self, fake_connection):
-        """"test posting data as params only"""
-        url = 'http://localhost/'
-        payload = OrderedDict([
-            ("type", "digest"),
-            ("content", '<p>"98%"β</p>')
-            ])
-        expected_url = url + '?type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
-        expected_body = None
-        # populate the fake request
-        resp = activity_module.post_as_params(url, payload)
-        # make assertions
-        self.assertEqual(resp.request.url, expected_url)
-        self.assertEqual(resp.request.body, expected_body)
-
-    @patch('requests.adapters.HTTPAdapter.get_connection')
-    def test_post_as_data(self, fake_connection):
-        """"test posting data as data only"""
-        url = 'http://localhost/'
-        payload = OrderedDict([
-            ("type", "digest"),
-            ("content", '<p>"98%"β</p>')
-            ])
-        expected_url = url
-        expected_body = 'type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
-        # populate the fake request
-        resp = activity_module.post_as_data(url, payload)
-        # make assertions
-        self.assertEqual(resp.request.url, expected_url)
-        self.assertEqual(resp.request.body, expected_body)
-
-    @patch('requests.adapters.HTTPAdapter.get_connection')
-    def test_post_as_json(self, fake_connection):
-        """test posting data as data only"""
-        url = 'http://localhost/'
-        payload = OrderedDict([
-            ("type", "digest"),
-            ("content", '<p>"98%"β</p>')
-            ])
-        expected_url = url
-        expected_body = '{"type": "digest", "content": "<p>\\"98%\\"\\u03b2</p>"}'
-        # populate the fake request
-        resp = activity_module.post_as_json(url, payload)
-        # make assertions
-        self.assertEqual(resp.request.url, expected_url)
-        self.assertEqual(bytes_decode(resp.request.body), expected_body)
 
 
 class TestEmailErrorReport(unittest.TestCase):
