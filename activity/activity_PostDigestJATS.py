@@ -1,12 +1,10 @@
 import os
 import json
 import time
-from collections import OrderedDict
 import requests
-import digestparser.utils as digest_utils
 from elifetools.utils import doi_uri_to_doi
 from S3utility.s3_notification_info import parse_activity_data
-from provider import digest_provider, download_helper, email_provider, utils
+from provider import digest_provider, download_helper, email_provider, requests_provider, utils
 from activity.objects import Activity
 
 
@@ -130,9 +128,11 @@ class activity_PostDigestJATS(Activity):
     def post_jats(self, digest, jats_content):
         """prepare and POST jats to API endpoint"""
         url = self.settings.typesetter_digest_endpoint
-        payload = post_payload(digest, jats_content, self.settings.typesetter_digest_api_key)
+        doi = doi_uri_to_doi(digest.doi)
+        payload = requests_provider.jats_post_payload(
+            'digest', doi, jats_content, self.settings.typesetter_digest_api_key)
         if payload:
-            return post_jats_to_endpoint(url, payload, self.logger)
+            return requests_provider.post_to_endpoint(url, payload, self.logger, 'digest JATS')
         return None
 
     def send_email(self, digest_content, jats_content):
@@ -174,41 +174,6 @@ class activity_PostDigestJATS(Activity):
         self.logger.info('Email sending details: %s' % str(details))
 
         return True
-
-
-def post_payload(digest, jats_content, api_key):
-    """compile the POST data payload"""
-    if not digest:
-        return None
-    account_key = 1
-    content_type = "digest"
-    payload = OrderedDict()
-    payload["apiKey"] = api_key
-    payload["accountKey"] = account_key
-    payload["doi"] = doi_uri_to_doi(digest.doi)
-    payload["type"] = content_type
-    payload["content"] = jats_content
-    return payload
-
-
-def post_jats_to_endpoint(url, payload, logger):
-    """issue the POST"""
-    resp = post_as_data(url, payload)
-    # Check for good HTTP status code
-    if resp.status_code != 200:
-        response_error_message = (
-            "Error posting digest JATS to endpoint %s: status_code: %s\nresponse: %s" %
-            (url, resp.status_code, resp.content))
-        full_error_message = (
-            "%s\npayload: %s" %
-            (response_error_message, payload))
-        logger.error(full_error_message)
-        return response_error_message
-    logger.info(
-        ("Success posting digest JATS to endpoint %s: status_code: %s\nresponse: %s" +
-         " \npayload: %s") %
-        (url, resp.status_code, resp.content, payload))
-    return True
 
 
 def get_as_params(url, payload):

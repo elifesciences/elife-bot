@@ -176,7 +176,7 @@ class TestPostDigestJats(unittest.TestCase):
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch.object(activity_module.download_helper, 'storage_context')
     @patch.object(activity_module.digest_provider, 'storage_context')
-    @patch.object(activity_module, 'post_payload')
+    @patch.object(activity_module.requests_provider, 'jats_post_payload')
     def test_do_activity_post_failure(self, fake_post_jats, fake_storage_context,
                                       fake_download_storage_context, fake_email_smtp_connect):
         fake_storage_context.return_value = FakeStorageContext()
@@ -205,52 +205,6 @@ class TestPostDigestJatsNoEndpoint(unittest.TestCase):
         activity.settings.typesetter_digest_endpoint = ""
         result = activity.do_activity()
         self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
-
-
-class TestPostPayload(unittest.TestCase):
-
-    def setUp(self):
-        self.temp_dir = fake_get_tmp_dir()
-        self.digest_config = digest_provider.digest_config(
-            settings_mock.digest_config_section,
-            settings_mock.digest_config_file)
-
-    def tearDown(self):
-        # clean the temporary directory
-        helpers.delete_files_in_folder('tests/tmp', filter_out=['.keepme'])
-
-    def test_post_payload(self):
-        """POST payload for a digest"""
-        api_key = 'api_key'
-        filename = os.path.join('tests', 'files_source', 'DIGEST 99999.docx')
-        # JATS paragraphs are in an existing fixture file
-        content = read_fixture('jats_content_99999.py', 'digests')
-        expected = OrderedDict([
-            ('apiKey', api_key),
-            ('accountKey', 1),
-            ('doi', '10.7554/eLife.99999'),
-            ('type', 'digest'),
-            ('content', content)
-            ])
-        build_status, digest = digest_provider.build_digest(
-            filename, self.temp_dir, None, self.digest_config)
-        # build the jats_content from the filename
-        jats_content = digest_provider.digest_jats(digest)
-        # build the payload for the POST
-        payload = activity_module.post_payload(digest, jats_content, api_key)
-        # make assertions
-        self.assertEqual(payload, expected)
-
-    def test_post_payload_no_digest(self):
-        """POST payload for when there is no digest"""
-        digest = None
-        jats_content = '<p>JATS content</p>'
-        api_key = 'api_key'
-        expected = None
-        # build the payload for the POST
-        payload = activity_module.post_payload(digest, jats_content, api_key)
-        # make assertions
-        self.assertEqual(payload, expected)
 
 
 class TestPost(unittest.TestCase):
