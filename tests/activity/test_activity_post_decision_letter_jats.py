@@ -80,7 +80,7 @@ class TestPostDecisionLetterJats(unittest.TestCase):
     @patch.object(activity_module, 'get_session')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch.object(activity_module.download_helper, 'storage_context')
-    @patch.object(activity_module, 'post_jats_to_endpoint')
+    @patch.object(activity_module.requests_provider, 'post_to_endpoint')
     def test_do_activity_post_exception(self, fake_post_jats, fake_download_storage_context,
                                       fake_email_smtp_connect, mock_session):
         expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE

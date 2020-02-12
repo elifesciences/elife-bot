@@ -1,9 +1,8 @@
 import os
 import json
 import time
-from collections import OrderedDict
-import requests
-from provider import download_helper, email_provider, letterparser_provider, utils
+from provider import (
+    download_helper, email_provider, letterparser_provider, requests_provider, utils)
 from provider.execution_context import get_session
 from activity.objects import Activity
 
@@ -119,9 +118,11 @@ class activity_PostDecisionLetterJATS(Activity):
     def post_jats(self, doi, jats_content):
         """prepare and POST jats to API endpoint"""
         url = self.settings.typesetter_decision_letter_endpoint
-        payload = post_payload(doi, jats_content, self.settings.typesetter_decision_letter_api_key)
+        payload = requests_provider.jats_post_payload(
+            'decision', doi, jats_content, self.settings.typesetter_decision_letter_api_key)
         if payload:
-            return post_jats_to_endpoint(url, payload, self.logger)
+            return requests_provider.post_to_endpoint(
+                url, payload, self.logger, 'decision letter JATS')
         return None
 
     def send_email(self, doi, jats_content):
@@ -163,44 +164,6 @@ class activity_PostDecisionLetterJATS(Activity):
         self.logger.info('Email sending details: %s' % str(details))
 
         return True
-
-
-def post_payload(doi, jats_content, api_key):
-    """compile the POST data payload"""
-    account_key = 1
-    content_type = "decision"
-    payload = OrderedDict()
-    payload["apiKey"] = api_key
-    payload["accountKey"] = account_key
-    payload["doi"] = doi
-    payload["type"] = content_type
-    payload["content"] = jats_content
-    return payload
-
-
-def post_jats_to_endpoint(url, payload, logger):
-    """issue the POST"""
-    resp = post_as_data(url, payload)
-    # Check for good HTTP status code
-    if resp.status_code != 200:
-        response_error_message = (
-            "Error posting decision letter JATS to endpoint %s: status_code: %s\nresponse: %s" %
-            (url, resp.status_code, resp.content))
-        full_error_message = (
-            "%s\npayload: %s" %
-            (response_error_message, payload))
-        logger.error(full_error_message)
-        return response_error_message
-    logger.info(
-        ("Success posting decision letter JATS to endpoint %s: status_code: %s\nresponse: %s" +
-         " \npayload: %s") %
-        (url, resp.status_code, resp.content, payload))
-    return True
-
-
-def post_as_data(url, payload):
-    """post the payload as form data"""
-    return requests.post(url, data=payload)
 
 
 def success_email_subject(doi):
