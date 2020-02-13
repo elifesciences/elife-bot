@@ -63,7 +63,7 @@ class TestPostDecisionLetterJats(unittest.TestCase):
     @patch('requests.post')
     @patch.object(activity_module.download_helper, 'storage_context')
     def test_do_activity_post_failed(self, fake_download_storage_context,
-                         requests_method_mock, fake_email_smtp_connect, mock_session):
+                                     requests_method_mock, fake_email_smtp_connect, mock_session):
         expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
         fake_download_storage_context.return_value = FakeStorageContext()
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
@@ -76,13 +76,17 @@ class TestPostDecisionLetterJats(unittest.TestCase):
         result = self.activity.do_activity(self.input_data)
         # check assertions
         self.assertEqual(result, expected_result)
+        self.assertTrue(self.activity.post_error_message.startswith(
+            'POST was not successful, details: Error posting decision letter JATS to endpoint'
+            ' https://typesetter/decisionLetter: status_code: 500\n'
+            'response: None'))
 
     @patch.object(activity_module, 'get_session')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch.object(activity_module.download_helper, 'storage_context')
     @patch.object(activity_module.requests_provider, 'post_to_endpoint')
     def test_do_activity_post_exception(self, fake_post_jats, fake_download_storage_context,
-                                      fake_email_smtp_connect, mock_session):
+                                        fake_email_smtp_connect, mock_session):
         expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
         fake_download_storage_context.return_value = FakeStorageContext()
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())

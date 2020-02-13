@@ -1,6 +1,7 @@
 import os
 import json
 import time
+from requests.exceptions import HTTPError
 from provider import (
     download_helper, email_provider, letterparser_provider, requests_provider, utils)
 from provider.execution_context import get_session
@@ -24,6 +25,7 @@ class activity_PostDecisionLetterJATS(Activity):
         # Track some values
         self.xml_file = None
         self.doi = None
+        self.post_error_message = None
 
         # Local directory settings
         self.directories = {
@@ -87,28 +89,27 @@ class activity_PostDecisionLetterJATS(Activity):
 
         # POST to API endpoint
         try:
-            post_jats_return_value = self.post_jats(self.doi, xml_string)
-            if post_jats_return_value is True:
-                self.statuses["post"] = True
-                post_jats_error_message = ""
-            else:
-                self.statuses["post"] = False
-                post_jats_error_message = str(post_jats_return_value)
-            # send email
-            if self.statuses.get("post"):
-                self.statuses["email"] = self.send_email(self.doi, xml_string)
-            else:
-                # post was not a success, send error email
-                error_message = "POST was not successful, details: %s" % post_jats_error_message
-                self.statuses["error_email"] = self.email_error_report(
-                    self.doi, xml_string, error_message)
-                return self.ACTIVITY_PERMANENT_FAILURE
+            self.post_jats(self.doi, xml_string)
+            self.statuses["post"] = True
+        except HTTPError as exception:
+            # post was not a success, send error email
+            self.statuses["post"] = False
+            self.post_error_message = "POST was not successful, details: %s" % str(exception)
+            self.logger.exception(self.post_error_message)
+            self.statuses["error_email"] = self.email_error_report(
+                self.doi, xml_string, self.post_error_message)
+            return self.ACTIVITY_PERMANENT_FAILURE
         except Exception as exception:
             # exception, send error email
+            self.statuses["post"] = False
             self.statuses["error_email"] = self.email_error_report(
                 self.doi, xml_string, str(exception))
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
             return self.ACTIVITY_PERMANENT_FAILURE
+
+        # send success email
+        if self.statuses.get("post"):
+            self.statuses["email"] = self.send_email(self.doi, xml_string)
 
         self.logger.info(
             "%s for real_filename %s statuses: %s" % (self.name, str(self.xml_file), self.statuses))
@@ -121,9 +122,8 @@ class activity_PostDecisionLetterJATS(Activity):
         payload = requests_provider.jats_post_payload(
             'decision', doi, jats_content, self.settings.typesetter_decision_letter_api_key)
         if payload:
-            return requests_provider.post_to_endpoint(
+            requests_provider.post_to_endpoint(
                 url, payload, self.logger, 'decision letter JATS')
-        return None
 
     def send_email(self, doi, jats_content):
         """send an email after JATS is posted to endpoint"""

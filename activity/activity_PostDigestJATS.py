@@ -1,7 +1,7 @@
 import os
 import json
 import time
-import requests
+from requests.exceptions import HTTPError
 from elifetools.utils import doi_uri_to_doi
 from S3utility.s3_notification_info import parse_activity_data
 from provider import digest_provider, download_helper, email_provider, requests_provider, utils
@@ -40,6 +40,7 @@ class activity_PostDigestJATS(Activity):
         self.input_file = None
         self.digest = None
         self.jats_content = None
+        self.post_error_message = None
 
         # Load the config
         self.digest_config = digest_provider.digest_config(
@@ -99,26 +100,25 @@ class activity_PostDigestJATS(Activity):
 
         # POST to API endpoint
         try:
-            post_jats_return_value = self.post_jats(self.digest, self.jats_content)
-            if post_jats_return_value is True:
-                self.statuses["post"] = True
-                post_jats_error_message = ""
-            else:
-                self.statuses["post"] = False
-                post_jats_error_message = str(post_jats_return_value)
-            # send email
-            if self.statuses.get("post"):
-                self.statuses["email"] = self.send_email(self.digest, self.jats_content)
-            else:
-                # post was not a success, send error email
-                error_message = "POST was not successful, details: %s" % post_jats_error_message
-                self.statuses["error_email"] = self.email_error_report(
-                    self.digest, self.jats_content, error_message)
+            self.post_jats(self.digest, self.jats_content)
+            self.statuses["post"] = True
+        except HTTPError as exception:
+            # post was not a success, send error email
+            self.statuses["post"] = False
+            self.post_error_message = "POST was not successful, details: %s" % str(exception)
+            self.logger.exception(self.post_error_message)
+            self.statuses["error_email"] = self.email_error_report(
+                self.digest, self.jats_content, self.post_error_message)
         except Exception as exception:
             # exception, send error email
+            self.statuses["post"] = False
             self.statuses["error_email"] = self.email_error_report(
                 self.digest, self.jats_content, str(exception))
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
+
+        # send success email
+        if self.statuses.get("post"):
+            self.statuses["email"] = self.send_email(self.digest, self.jats_content)
 
         self.logger.info(
             "%s for real_filename %s statuses: %s" % (self.name, str(real_filename), self.statuses))
@@ -132,8 +132,7 @@ class activity_PostDigestJATS(Activity):
         payload = requests_provider.jats_post_payload(
             'digest', doi, jats_content, self.settings.typesetter_digest_api_key)
         if payload:
-            return requests_provider.post_to_endpoint(url, payload, self.logger, 'digest JATS')
-        return None
+            requests_provider.post_to_endpoint(url, payload, self.logger, 'digest JATS')
 
     def send_email(self, digest_content, jats_content):
         """send an email after digest JATS is posted to endpoint"""

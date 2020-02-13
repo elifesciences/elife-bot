@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import requests
+from requests.exceptions import HTTPError
 
 
 def jats_post_payload(content_type, doi, jats_content, api_key):
@@ -36,7 +37,12 @@ def post_as_json(url, payload):
 
 def post_to_endpoint(url, payload, logger, identifier):
     """issue the POST"""
-    resp = post_as_data(url, payload)
+    try:
+        resp = post_as_data(url, payload)
+    except:
+        logger.exception('Exception in post_to_endpoint')
+        raise
+    
     # Check for good HTTP status code
     if resp.status_code != 200:
         response_error_message = (
@@ -46,9 +52,8 @@ def post_to_endpoint(url, payload, logger, identifier):
             "%s\npayload: %s" %
             (response_error_message, payload))
         logger.error(full_error_message)
-        return response_error_message
+        raise HTTPError(response_error_message)
     logger.info(
         ("Success posting %s to endpoint %s: status_code: %s\nresponse: %s" +
          " \npayload: %s") %
         (identifier, url, resp.status_code, resp.content, payload))
-    return True

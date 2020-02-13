@@ -1,6 +1,7 @@
 import unittest
 from collections import OrderedDict
 from mock import patch
+from requests.exceptions import HTTPError
 from provider import requests_provider
 from provider.utils import bytes_decode
 from tests.activity.classes_mock import FakeLogger, FakeResponse
@@ -102,8 +103,10 @@ class TestRequestsProviderPost(unittest.TestCase):
         url = ''
         payload = {}
         identifier = 'test'
-        result = requests_provider.post_to_endpoint(url, payload, self.fake_logger, identifier)
-        self.assertTrue(result)
+        requests_provider.post_to_endpoint(url, payload, self.fake_logger, identifier)
+        # assert no errors or exceptions in log
+        self.assertEqual(self.fake_logger.logerror, 'First logger error')
+        self.assertEqual(self.fake_logger.logexception, 'First logger exception')
 
     @patch('requests.post')
     def test_post_to_endpoint_404(self, post_mock):
@@ -111,6 +114,20 @@ class TestRequestsProviderPost(unittest.TestCase):
         url = ''
         payload = {}
         identifier = 'test'
-        result = requests_provider.post_to_endpoint(url, payload, self.fake_logger, identifier)
+        with self.assertRaises(HTTPError):
+            requests_provider.post_to_endpoint(url, payload, self.fake_logger, identifier)
         self.assertEqual(
-            result, 'Error posting test to endpoint : status_code: 404\nresponse: None')
+            self.fake_logger.logerror,
+            'Error posting test to endpoint : status_code: 404\nresponse: None\npayload: {}')
+
+    @patch('requests.post')
+    def test_post_to_endpoint_exception(self, post_mock):
+        post_mock.side_effect = Exception('Unknown exception')
+        url = ''
+        payload = {}
+        identifier = 'test'
+        with self.assertRaises(Exception):
+            requests_provider.post_to_endpoint(url, payload, self.fake_logger, identifier)
+        self.assertEqual(
+            self.fake_logger.logexception,
+            'Exception in post_to_endpoint')
