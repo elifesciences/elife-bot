@@ -128,9 +128,9 @@ class activity_PostDecisionLetterJATS(Activity):
     def send_email(self, doi, jats_content):
         """send an email after JATS is posted to endpoint"""
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
-        body_content = success_email_body_content(doi, jats_content)
+        body_content = requests_provider.success_email_body_content(doi, jats_content)
         body = email_provider.simple_email_body(datetime_string, body_content)
-        subject = success_email_subject(doi)
+        subject = requests_provider.success_email_subject_doi('Decision letter ', doi)
         sender_email = self.settings.decision_letter_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
@@ -148,9 +148,9 @@ class activity_PostDecisionLetterJATS(Activity):
     def email_error_report(self, doi, jats_content, error_messages):
         """send an email on error"""
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
-        body_content = error_email_body_content(doi, jats_content, error_messages)
+        body_content = requests_provider.error_email_body_content(doi, jats_content, error_messages)
         body = email_provider.simple_email_body(datetime_string, body_content)
-        subject = error_email_subject(doi)
+        subject = requests_provider.error_email_subject_doi('decision letter', doi)
         sender_email = self.settings.decision_letter_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
@@ -164,34 +164,3 @@ class activity_PostDecisionLetterJATS(Activity):
         self.logger.info('Email sending details: %s' % str(details))
 
         return True
-
-
-def success_email_subject(doi):
-    """email subject for a success email"""
-    return u'Decision letter JATS posted for article {doi}'.format(
-        doi=str(doi))
-
-
-def success_email_body_content(doi, jats_content):
-    """
-    Format the body content of the email
-    """
-    return "JATS content for article %s:\n\n%s\n\n" % (doi, jats_content)
-
-
-def error_email_subject(doi):
-    """email subject for an error email"""
-    return u'Error in decision letter JATS post for article {doi}'.format(
-        doi=str(doi))
-
-
-def error_email_body_content(doi, jats_content, error_messages):
-    """body content of an error email"""
-    content = ""
-    if error_messages:
-        content += str(error_messages)
-        content += "\n\nMore details about the error may be found in the worker.log file\n\n"
-    if doi:
-        content += "Article DOI: %s\n\n" % doi
-    content += "JATS content: %s\n\n" % jats_content
-    return content

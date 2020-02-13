@@ -2,9 +2,11 @@ import unittest
 from collections import OrderedDict
 from mock import patch
 from requests.exceptions import HTTPError
-from provider import requests_provider
+from digestparser.objects import Digest
+from provider import requests_provider, digest_provider
 from provider.utils import bytes_decode
 from tests.activity.classes_mock import FakeLogger, FakeResponse
+import tests.activity.helpers as helpers
 
 
 class TestRequestsProvider(unittest.TestCase):
@@ -131,3 +133,91 @@ class TestRequestsProviderPost(unittest.TestCase):
         self.assertEqual(
             self.fake_logger.logexception,
             'Exception in post_to_endpoint')
+
+
+class TestEmailSubject(unittest.TestCase):
+
+    def test_success_email_subject_msid_author(self):
+        """email subject line with correct, unicode data"""
+        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
+        identity = 'Digest '
+        msid = digest_provider.get_digest_msid(digest_content)
+        expected = u'Digest JATS posted for article 99999, author Nö'
+        subject = requests_provider.success_email_subject_msid_author(
+            identity, msid, digest_content.author)
+        self.assertEqual(subject, expected)
+
+    def test_success_email_subject_digest_no_doi(self):
+        """email subject line when no doi attribute"""
+        digest_content = Digest()
+        identity = 'Digest '
+        msid = digest_provider.get_digest_msid(digest_content)
+        expected = u'Digest JATS posted for article 0None, author None'
+        file_name = requests_provider.success_email_subject_msid_author(
+            identity, msid, digest_content.author)
+        self.assertEqual(file_name, expected)
+
+    def test_error_email_subject_msid_author(self):
+        """error email subject"""
+        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
+        identity = 'digest'
+        msid = digest_provider.get_digest_msid(digest_content)
+        expected = u'Error in digest JATS post for article 99999, author Nö'
+        subject = requests_provider.error_email_subject_msid_author(
+            identity, msid, digest_content.author)
+        self.assertEqual(subject, expected)
+
+    def test_success_email_subject_doi(self):
+        """email subject line using doi"""
+        doi = '10.7554/eLife.99999'
+        identity = 'Decision letter '
+        expected = u'Decision letter JATS posted for article 10.7554/eLife.99999'
+        subject = requests_provider.success_email_subject_doi(
+            identity, doi)
+        self.assertEqual(subject, expected)
+
+    def test_error_email_subject_doi(self):
+        """email subject line using doi"""
+        doi = '10.7554/eLife.99999'
+        identity = 'decision letter'
+        expected = u'Error in decision letter JATS post for article 10.7554/eLife.99999'
+        subject = requests_provider.error_email_subject_doi(
+            identity, doi)
+        self.assertEqual(subject, expected)
+
+
+class TestEmailBody(unittest.TestCase):
+
+    def test_success_email_body_content(self):
+        """email body line with correct, unicode data"""
+        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
+        digest_content.text = [u'<i>First</i> paragraph.', u'<b>First</b> > second, nö?.']
+        jats_content = digest_provider.digest_jats(digest_content)
+
+        expected = u'''JATS content for article 10.7554/eLife.99999:
+
+<p><italic>First</italic> paragraph.</p><p><bold>First</bold> &gt; second, nö?.</p>
+
+'''
+        body = requests_provider.success_email_body_content(digest_content.doi, jats_content)
+        self.assertEqual(body, expected)
+
+    def test_error_email_body_content(self):
+        """email error body"""
+        error_message = "Exception blah blah blah"
+        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
+        digest_content.text = [u'<i>First</i> paragraph.', u'<b>First</b> > second, nö?.']
+        jats_content = digest_provider.digest_jats(digest_content)
+
+        expected = u'''Exception blah blah blah
+
+More details about the error may be found in the worker.log file
+
+Article DOI: 10.7554/eLife.99999
+
+JATS content: <p><italic>First</italic> paragraph.</p><p><bold>First</bold> &gt; second, nö?.</p>
+
+'''
+        body = requests_provider.error_email_body_content(
+            digest_content.doi, jats_content, error_message)
+        self.assertEqual(body, expected)

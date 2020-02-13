@@ -6,7 +6,6 @@ from ddt import ddt, data
 from digestparser.objects import Digest
 import activity.activity_PostDigestJATS as activity_module
 from activity.activity_PostDigestJATS import activity_PostDigestJATS as activity_object
-import tests.activity.helpers as helpers
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeResponse
 import tests.test_data as test_case_data
@@ -223,81 +222,6 @@ class TestEmailErrorReport(unittest.TestCase):
         settings_mock.typesetter_digest_endpoint = ""
         result = self.activity.email_error_report(digest_content, jats_content, error_messages)
         self.assertEqual(result, True)
-
-
-class TestEmailSubject(unittest.TestCase):
-
-    def test_success_email_subject(self):
-        """email subject line with correct, unicode data"""
-        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
-        expected = u'Digest JATS posted for article 99999, author Nö'
-        subject = activity_module.success_email_subject(digest_content)
-        self.assertEqual(subject, expected)
-
-    def test_success_email_subject_no_doi(self):
-        """email subject line when no doi attribute"""
-        digest_content = Digest()
-        expected = u'Digest JATS posted for article 0None, author None'
-        file_name = activity_module.success_email_subject(digest_content)
-        self.assertEqual(file_name, expected)
-
-    def test_success_email_subject_bad_object(self):
-        """email subject line when digest is None"""
-        digest_content = None
-        expected = u''
-        subject = activity_module.success_email_subject(digest_content)
-        self.assertEqual(subject, expected)
-
-    def test_error_email_subject(self):
-        """error email subject"""
-        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
-        expected = u'Error in digest JATS post for article 99999, author Nö'
-        subject = activity_module.error_email_subject(digest_content)
-        self.assertEqual(subject, expected)
-
-    def test_error_email_subject_bad_object(self):
-        """error email subject line when digest is None"""
-        digest_content = None
-        expected = u''
-        subject = activity_module.error_email_subject(digest_content)
-        self.assertEqual(subject, expected)
-
-
-class TestEmailBody(unittest.TestCase):
-
-    def test_success_email_body_content(self):
-        """email body line with correct, unicode data"""
-        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
-        digest_content.text = [u'<i>First</i> paragraph.', u'<b>First</b> > second, nö?.']
-        jats_content = digest_provider.digest_jats(digest_content)
-
-        expected = u'''JATS content for article 10.7554/eLife.99999:
-
-<p><italic>First</italic> paragraph.</p><p><bold>First</bold> &gt; second, nö?.</p>
-
-'''
-        body = activity_module.success_email_body_content(digest_content, jats_content)
-        self.assertEqual(body, expected)
-
-    def test_error_email_body_content(self):
-        """email error body"""
-        error_message = "Exception blah blah blah"
-        digest_content = helpers.create_digest(u'Nö', '10.7554/eLife.99999')
-        digest_content.text = [u'<i>First</i> paragraph.', u'<b>First</b> > second, nö?.']
-        jats_content = digest_provider.digest_jats(digest_content)
-
-        expected = u'''Exception blah blah blah
-
-More details about the error may be found in the worker.log file
-
-Article DOI: 10.7554/eLife.99999
-
-JATS content: <p><italic>First</italic> paragraph.</p><p><bold>First</bold> &gt; second, nö?.</p>
-
-'''
-        body = activity_module.error_email_body_content(
-            digest_content, jats_content, error_message)
-        self.assertEqual(body, expected)
 
 
 if __name__ == '__main__':

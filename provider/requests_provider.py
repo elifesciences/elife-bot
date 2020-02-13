@@ -42,7 +42,7 @@ def post_to_endpoint(url, payload, logger, identifier):
     except:
         logger.exception('Exception in post_to_endpoint')
         raise
-    
+
     # Check for good HTTP status code
     if resp.status_code != 200:
         response_error_message = (
@@ -57,3 +57,52 @@ def post_to_endpoint(url, payload, logger, identifier):
         ("Success posting %s to endpoint %s: status_code: %s\nresponse: %s" +
          " \npayload: %s") %
         (identifier, url, resp.status_code, resp.content, payload))
+
+
+def success_email_subject_doi(identity, doi):
+    """email subject for a success email"""
+    return u'{identity}JATS posted for article {doi}'.format(
+        identity=identity,
+        doi=str(doi))
+
+
+def success_email_subject_msid_author(identity, msid, author):
+    """email subject for a success email with msid and author values"""
+    return u'{identity}JATS posted for article {msid:0>5}, author {author}'.format(
+        identity=identity,
+        msid=str(msid),
+        author=author)
+
+
+def success_email_body_content(doi, jats_content):
+    """
+    Format the body content of the email
+    """
+    return "JATS content for article %s:\n\n%s\n\n" % (doi, jats_content)
+
+
+def error_email_subject_doi(identity, doi):
+    """email subject for an error email"""
+    return u'Error in {identity} JATS post for article {doi}'.format(
+        identity=identity,
+        doi=str(doi))
+
+
+def error_email_subject_msid_author(identity, msid, author):
+    """email subject for an error email with msid and author values"""
+    return u'Error in {identity} JATS post for article {msid:0>5}, author {author}'.format(
+        identity=identity,
+        msid=str(msid),
+        author=author)
+
+
+def error_email_body_content(doi, jats_content, error_messages):
+    """body content of an error email"""
+    content = ""
+    if error_messages:
+        content += str(error_messages)
+        content += "\n\nMore details about the error may be found in the worker.log file\n\n"
+    if doi:
+        content += "Article DOI: %s\n\n" % doi
+    content += "JATS content: %s\n\n" % jats_content
+    return content

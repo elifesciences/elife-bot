@@ -137,9 +137,13 @@ class activity_PostDigestJATS(Activity):
     def send_email(self, digest_content, jats_content):
         """send an email after digest JATS is posted to endpoint"""
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
-        body_content = success_email_body_content(digest_content, jats_content)
+        body_content = requests_provider.success_email_body_content(
+            digest_content.doi, jats_content)
         body = email_provider.simple_email_body(datetime_string, body_content)
-        subject = success_email_subject(digest_content)
+        subject = requests_provider.success_email_subject_msid_author(
+            'Digest ',
+            digest_provider.get_digest_msid(digest_content),
+            digest_content.author)
         sender_email = self.settings.digest_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
@@ -157,9 +161,19 @@ class activity_PostDigestJATS(Activity):
     def email_error_report(self, digest_content, jats_content, error_messages):
         """send an email on error"""
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
-        body_content = error_email_body_content(digest_content, jats_content, error_messages)
+        doi = None
+        if digest_content:
+            doi = digest_content.doi
+        body_content = requests_provider.error_email_body_content(
+            doi, jats_content, error_messages)
         body = email_provider.simple_email_body(datetime_string, body_content)
-        subject = error_email_subject(digest_content)
+        author = None
+        if digest_content:
+            author = digest_content.author
+        subject = requests_provider.error_email_subject_msid_author(
+            'digest',
+            digest_provider.get_digest_msid(digest_content),
+            author)
         sender_email = self.settings.digest_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
@@ -173,40 +187,3 @@ class activity_PostDigestJATS(Activity):
         self.logger.info('Email sending details: %s' % str(details))
 
         return True
-
-
-def success_email_subject(digest_content):
-    """email subject for a success email"""
-    if not digest_content:
-        return u''
-    return u'Digest JATS posted for article {msid:0>5}, author {author}'.format(
-        msid=str(digest_provider.get_digest_msid(digest_content)),
-        author=digest_content.author)
-
-
-def success_email_body_content(digest_content, jats_content):
-    """
-    Format the body content of the email
-    """
-    return "JATS content for article %s:\n\n%s\n\n" % (digest_content.doi, jats_content)
-
-
-def error_email_subject(digest_content):
-    """email subject for an error email"""
-    if not digest_content:
-        return u''
-    return u'Error in digest JATS post for article {msid:0>5}, author {author}'.format(
-        msid=str(digest_provider.get_digest_msid(digest_content)),
-        author=digest_content.author)
-
-
-def error_email_body_content(digest_content, jats_content, error_messages):
-    """body content of an error email"""
-    content = ""
-    if error_messages:
-        content += str(error_messages)
-        content += "\n\nMore details about the error may be found in the worker.log file\n\n"
-    if hasattr(digest_content, "doi"):
-        content += "Article DOI: %s\n\n" % digest_content.doi
-    content += "JATS content: %s\n\n" % jats_content
-    return content
