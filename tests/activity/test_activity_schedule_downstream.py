@@ -60,6 +60,7 @@ class TestScheduleDownstream(unittest.TestCase):
         """first vor version"""
         outbox_list = activity_module.choose_outboxes("vor", activity_module.outbox_map(), True)
         self.assertTrue("pmc/outbox/" in outbox_list)
+        self.assertTrue("pubmed/outbox/" in outbox_list)
         self.assertTrue("publication_email/outbox/" in outbox_list)
         self.assertTrue("pub_router/outbox/" in outbox_list)
 
@@ -67,6 +68,7 @@ class TestScheduleDownstream(unittest.TestCase):
         """vor but not the first vor"""
         outbox_list = activity_module.choose_outboxes("vor", activity_module.outbox_map(), False)
         self.assertTrue("pmc/outbox/" in outbox_list)
+        self.assertTrue("pubmed/outbox/" in outbox_list)
         self.assertTrue("pub_router/outbox/" in outbox_list)
         # do not send publication_email
         self.assertFalse("publication_email/outbox/" in outbox_list)
@@ -77,6 +79,8 @@ class TestScheduleDownstream(unittest.TestCase):
         self.assertTrue("pmc/outbox/" in outbox_list)
         # do not send publication_email
         self.assertFalse("publication_email/outbox/" in outbox_list)
+        # do not send to pubmed
+        self.assertFalse("pubmed/outbox/" in outbox_list)
 
 
 if __name__ == '__main__':
