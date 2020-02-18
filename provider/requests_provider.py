@@ -3,9 +3,16 @@ import requests
 from requests.exceptions import HTTPError
 
 
-def jats_post_payload(content_type, doi, jats_content, api_key):
+def jats_post_params(api_key, account_key):
+    """the full endpoint URL to authenticate via URL parameters"""
+    params = OrderedDict()
+    params["apiKey"] = api_key
+    params["accountKey"] = account_key
+    return params
+
+
+def jats_post_payload(content_type, doi, jats_content, api_key, account_key):
     """compile the POST data payload"""
-    account_key = 1
     payload = OrderedDict()
     payload["apiKey"] = api_key
     payload["accountKey"] = account_key
@@ -25,9 +32,9 @@ def post_as_params(url, payload):
     return requests.post(url, params=payload)
 
 
-def post_as_data(url, payload):
+def post_as_data(url, payload, params=None):
     """post the payload as form data"""
-    return requests.post(url, data=payload)
+    return requests.post(url, data=payload, params=params)
 
 
 def post_as_json(url, payload):
@@ -35,10 +42,10 @@ def post_as_json(url, payload):
     return requests.post(url, json=payload)
 
 
-def post_to_endpoint(url, payload, logger, identifier):
+def post_to_endpoint(url, payload, logger, identifier, params=None):
     """issue the POST"""
     try:
-        resp = post_as_data(url, payload)
+        resp = post_as_data(url, payload, params=params)
     except:
         logger.exception('Exception in post_to_endpoint')
         raise

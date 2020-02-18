@@ -128,11 +128,17 @@ class activity_PostDigestJATS(Activity):
     def post_jats(self, digest, jats_content):
         """prepare and POST jats to API endpoint"""
         url = self.settings.typesetter_digest_endpoint
+        params = requests_provider.jats_post_params(
+            self.settings.typesetter_digest_api_key,
+            self.settings.typesetter_digest_account_key)
         doi = doi_uri_to_doi(digest.doi)
         payload = requests_provider.jats_post_payload(
-            'digest', doi, jats_content, self.settings.typesetter_digest_api_key)
+            'digest', doi, jats_content,
+            self.settings.typesetter_digest_api_key,
+            self.settings.typesetter_digest_account_key)
         if payload:
-            requests_provider.post_to_endpoint(url, payload, self.logger, 'digest JATS')
+            requests_provider.post_to_endpoint(
+                url, payload, self.logger, 'digest JATS', params=params)
 
     def send_email(self, digest_content, jats_content):
         """send an email after digest JATS is posted to endpoint"""

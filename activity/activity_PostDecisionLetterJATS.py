@@ -119,11 +119,16 @@ class activity_PostDecisionLetterJATS(Activity):
     def post_jats(self, doi, jats_content):
         """prepare and POST jats to API endpoint"""
         url = self.settings.typesetter_decision_letter_endpoint
+        params = requests_provider.jats_post_params(
+            self.settings.typesetter_decision_letter_api_key,
+            self.settings.typesetter_decision_letter_account_key)
         payload = requests_provider.jats_post_payload(
-            'decision', doi, jats_content, self.settings.typesetter_decision_letter_api_key)
+            'decision', doi, jats_content,
+            self.settings.typesetter_decision_letter_api_key,
+            self.settings.typesetter_decision_letter_account_key)
         if payload:
             requests_provider.post_to_endpoint(
-                url, payload, self.logger, 'decision letter JATS')
+                url, payload, self.logger, 'decision letter JATS', params=params)
 
     def send_email(self, doi, jats_content):
         """send an email after JATS is posted to endpoint"""

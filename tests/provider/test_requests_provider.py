@@ -11,19 +11,32 @@ import tests.activity.helpers as helpers
 
 class TestRequestsProvider(unittest.TestCase):
 
+    def test_jats_post_params(self):
+        api_key = 'key'
+        account_key = '1'
+        expected = OrderedDict([
+            ('apiKey', api_key),
+            ('accountKey', account_key),
+        ])
+        result = requests_provider.jats_post_params(api_key, account_key)
+        self.assertEqual(result, expected)
+
     def test_jats_post_payload(self):
         content_type = 'decision'
         doi = '10.7554/eLife.00666'
         content = {}
         api_key = 'key'
+        account_key = '1'
+
         expected = OrderedDict([
             ('apiKey', api_key),
-            ('accountKey', 1),
+            ('accountKey', account_key),
             ('doi', doi),
             ('type', content_type),
             ('content', {})
         ])
-        result = requests_provider.jats_post_payload(content_type, doi, content, api_key)
+        result = requests_provider.jats_post_payload(
+            content_type, doi, content, api_key, account_key)
         self.assertEqual(result, expected)
 
 
@@ -65,14 +78,20 @@ class TestRequestsProviderPostAs(unittest.TestCase):
     def test_post_as_data(self, fake_connection):
         """"test posting data as data only"""
         url = 'http://localhost/'
+        api_key = 'key'
+        account_key = '1'
+        params = OrderedDict([
+            ("apiKey", api_key),
+            ("accountKey", account_key)
+        ])
         payload = OrderedDict([
             ("type", "digest"),
             ("content", '<p>"98%"β</p>')
             ])
-        expected_url = url
+        expected_url = '%s?apiKey=%s&accountKey=%s' % (url, api_key, account_key)
         expected_body = 'type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
         # populate the fake request
-        resp = requests_provider.post_as_data(url, payload)
+        resp = requests_provider.post_as_data(url, payload, params)
         # make assertions
         self.assertEqual(resp.request.url, expected_url)
         self.assertEqual(resp.request.body, expected_body)
