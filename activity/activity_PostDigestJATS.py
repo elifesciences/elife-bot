@@ -1,12 +1,10 @@
 import os
 import json
 import time
-from collections import OrderedDict
-import requests
-import digestparser.utils as digest_utils
+from requests.exceptions import HTTPError
 from elifetools.utils import doi_uri_to_doi
 from S3utility.s3_notification_info import parse_activity_data
-from provider import digest_provider, download_helper, email_provider, utils
+from provider import digest_provider, download_helper, email_provider, requests_provider, utils
 from activity.objects import Activity
 
 
@@ -42,6 +40,7 @@ class activity_PostDigestJATS(Activity):
         self.input_file = None
         self.digest = None
         self.jats_content = None
+        self.post_error_message = None
 
         # Load the config
         self.digest_config = digest_provider.digest_config(
@@ -101,26 +100,25 @@ class activity_PostDigestJATS(Activity):
 
         # POST to API endpoint
         try:
-            post_jats_return_value = self.post_jats(self.digest, self.jats_content)
-            if post_jats_return_value is True:
-                self.statuses["post"] = True
-                post_jats_error_message = ""
-            else:
-                self.statuses["post"] = False
-                post_jats_error_message = str(post_jats_return_value)
-            # send email
-            if self.statuses.get("post"):
-                self.statuses["email"] = self.send_email(self.digest, self.jats_content)
-            else:
-                # post was not a success, send error email
-                error_message = "POST was not successful, details: %s" % post_jats_error_message
-                self.statuses["error_email"] = self.email_error_report(
-                    self.digest, self.jats_content, error_message)
+            self.post_jats(self.digest, self.jats_content)
+            self.statuses["post"] = True
+        except HTTPError as exception:
+            # post was not a success, send error email
+            self.statuses["post"] = False
+            self.post_error_message = "POST was not successful, details: %s" % str(exception)
+            self.logger.exception(self.post_error_message)
+            self.statuses["error_email"] = self.email_error_report(
+                self.digest, self.jats_content, self.post_error_message)
         except Exception as exception:
             # exception, send error email
+            self.statuses["post"] = False
             self.statuses["error_email"] = self.email_error_report(
                 self.digest, self.jats_content, str(exception))
             self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
+
+        # send success email
+        if self.statuses.get("post"):
+            self.statuses["email"] = self.send_email(self.digest, self.jats_content)
 
         self.logger.info(
             "%s for real_filename %s statuses: %s" % (self.name, str(real_filename), self.statuses))
@@ -130,17 +128,28 @@ class activity_PostDigestJATS(Activity):
     def post_jats(self, digest, jats_content):
         """prepare and POST jats to API endpoint"""
         url = self.settings.typesetter_digest_endpoint
-        payload = post_payload(digest, jats_content, self.settings.typesetter_digest_api_key)
+        params = requests_provider.jats_post_params(
+            self.settings.typesetter_digest_api_key,
+            self.settings.typesetter_digest_account_key)
+        doi = doi_uri_to_doi(digest.doi)
+        payload = requests_provider.jats_post_payload(
+            'digest', doi, jats_content,
+            self.settings.typesetter_digest_api_key,
+            self.settings.typesetter_digest_account_key)
         if payload:
-            return post_jats_to_endpoint(url, payload, self.logger)
-        return None
+            requests_provider.post_to_endpoint(
+                url, payload, self.logger, 'digest JATS', params=params)
 
     def send_email(self, digest_content, jats_content):
         """send an email after digest JATS is posted to endpoint"""
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
-        body_content = success_email_body_content(digest_content, jats_content)
+        body_content = requests_provider.success_email_body_content(
+            digest_content.doi, jats_content)
         body = email_provider.simple_email_body(datetime_string, body_content)
-        subject = success_email_subject(digest_content)
+        subject = requests_provider.success_email_subject_msid_author(
+            'Digest ',
+            digest_provider.get_digest_msid(digest_content),
+            digest_content.author)
         sender_email = self.settings.digest_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
@@ -158,9 +167,19 @@ class activity_PostDigestJATS(Activity):
     def email_error_report(self, digest_content, jats_content, error_messages):
         """send an email on error"""
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
-        body_content = error_email_body_content(digest_content, jats_content, error_messages)
+        doi = None
+        if digest_content:
+            doi = digest_content.doi
+        body_content = requests_provider.error_email_body_content(
+            doi, jats_content, error_messages)
         body = email_provider.simple_email_body(datetime_string, body_content)
-        subject = error_email_subject(digest_content)
+        author = None
+        if digest_content:
+            author = digest_content.author
+        subject = requests_provider.error_email_subject_msid_author(
+            'digest',
+            digest_provider.get_digest_msid(digest_content),
+            author)
         sender_email = self.settings.digest_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
@@ -174,95 +193,3 @@ class activity_PostDigestJATS(Activity):
         self.logger.info('Email sending details: %s' % str(details))
 
         return True
-
-
-def post_payload(digest, jats_content, api_key):
-    """compile the POST data payload"""
-    if not digest:
-        return None
-    account_key = 1
-    content_type = "digest"
-    payload = OrderedDict()
-    payload["apiKey"] = api_key
-    payload["accountKey"] = account_key
-    payload["doi"] = doi_uri_to_doi(digest.doi)
-    payload["type"] = content_type
-    payload["content"] = jats_content
-    return payload
-
-
-def post_jats_to_endpoint(url, payload, logger):
-    """issue the POST"""
-    resp = post_as_data(url, payload)
-    # Check for good HTTP status code
-    if resp.status_code != 200:
-        response_error_message = (
-            "Error posting digest JATS to endpoint %s: status_code: %s\nresponse: %s" %
-            (url, resp.status_code, resp.content))
-        full_error_message = (
-            "%s\npayload: %s" %
-            (response_error_message, payload))
-        logger.error(full_error_message)
-        return response_error_message
-    logger.info(
-        ("Success posting digest JATS to endpoint %s: status_code: %s\nresponse: %s" +
-         " \npayload: %s") %
-        (url, resp.status_code, resp.content, payload))
-    return True
-
-
-def get_as_params(url, payload):
-    """transmit the payload as a GET with URL parameters"""
-    return requests.get(url, params=payload)
-
-
-def post_as_params(url, payload):
-    """post the payload as URL parameters"""
-    return requests.post(url, params=payload)
-
-
-def post_as_data(url, payload):
-    """post the payload as form data"""
-    return requests.post(url, data=payload)
-
-
-def post_as_json(url, payload):
-    """post the payload as JSON data"""
-    return requests.post(url, json=payload)
-
-
-def success_email_subject(digest_content):
-    """email subject for a success email"""
-    if not digest_content:
-        return u''
-    return u'Digest JATS posted for article {msid:0>5}, author {author}'.format(
-        msid=str(digest_provider.get_digest_msid(digest_content)),
-        author=digest_content.author)
-
-
-def success_email_body_content(digest_content, jats_content):
-    """
-    Format the body content of the email
-    """
-    return "JATS content for article %s:\n\n%s\n\n" % (digest_content.doi, jats_content)
-
-
-def error_email_subject(digest_content):
-    """email subject for an error email"""
-    if not digest_content:
-        return u''
-    return u'Error in digest JATS post for article {msid:0>5}, author {author}'.format(
-        msid=str(digest_provider.get_digest_msid(digest_content)),
-        author=digest_content.author)
-
-
-def error_email_body_content(digest_content, jats_content, error_messages):
-    """body content of an error email"""
-    content = ""
-    if error_messages:
-        content += str(error_messages)
-        content += "\n\nMore details about the error may be found in the worker.log file\n\n"
-    if hasattr(digest_content, "doi"):
-        content += "Article DOI: %s\n\n" % digest_content.doi
-    content += "JATS content: %s\n\n" % jats_content
-    return content

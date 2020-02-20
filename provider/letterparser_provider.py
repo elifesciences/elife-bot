@@ -3,6 +3,7 @@
 import os
 from collections import OrderedDict
 import docker
+from elifetools import parseJATS as parser
 from letterparser import generate, parse, zip_lib
 from letterparser.conf import raw_config, parse_raw_config
 import log
@@ -151,6 +152,18 @@ def manuscript_from_articles(articles):
     if articles:
         return articles[0].manuscript
     return None
+
+
+def article_doi_from_xml(xml_string):
+    """get main article DOI from XML string"""
+    doi = None
+    xml = parser.parse_xml(xml_string)
+    article_ids = parser.article_id_list(xml)
+    if article_ids:
+        first_article_id = article_ids[0]
+        article_id = first_article_id.get('value')
+        doi = '.'.join(article_id.split('.')[0:-1])
+    return doi
 
 
 def output_bucket_folder_name(settings, manuscript):
