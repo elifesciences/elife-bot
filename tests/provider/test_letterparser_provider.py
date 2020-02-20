@@ -139,3 +139,11 @@ class TestManuscriptFromArticles(unittest.TestCase):
 
     def test_manuscript_from_articles_none(self):
         self.assertEqual(letterparser_provider.manuscript_from_articles(None), None)
+
+
+class TestArticleDoiFromXml(unittest.TestCase):
+
+    def test_article_doi_from_xml(self):
+        xml_string = '<article-id>10.7554/eLife.39122.sa1'
+        self.assertEqual(
+            letterparser_provider.article_doi_from_xml(xml_string), '10.7554/eLife.39122')
