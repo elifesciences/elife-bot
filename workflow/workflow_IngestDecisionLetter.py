@@ -37,6 +37,7 @@ class workflow_IngestDecisionLetter(Workflow):
                     define_workflow_step("GenerateDecisionLetterJATS", data),
                     define_workflow_step("DepositDecisionLetterIngestAssets", data),
                     define_workflow_step("PostDecisionLetterJATS", data),
+                    define_workflow_step("DecisionLetterReceipt", data),
                 ],
 
             "finish":
