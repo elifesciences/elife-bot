@@ -19,13 +19,14 @@ class TestLetterParserProvider(unittest.TestCase):
     def test_letterparser_config(self):
         """test reading the letterparser config file"""
         config = letterparser_provider.letterparser_config(settings_mock)
-        self.assertEqual(config.get("docker_image"), "elifesciences/pandoc:2.7")
+        self.assertEqual(config.get("docker_image"), "elifesciences/pandoc:2.9.1.1")
 
     def test_parse_file(self):
         """test parsing docx file with pandoc which may be called via Docker"""
         # blank config will use pandoc executable if present, otherwise via Docker image default
         expected = (
-            '<p><bold>Preamble<break /></bold></p>\n'
+            '<p><bold>Preamble\n'
+            '</bold></p>\n'
             '<p>Preamble ....</p>\n'
             '<p><bold>Decision letter</bold></p>\n'
             '<p>Decision letter ....</p>\n'
