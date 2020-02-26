@@ -145,9 +145,13 @@ class MyTestCase(unittest.TestCase):
         self.assertDictEqual(result, expected)
 
     @unpack
-    @data({'file': u'elife-15224.xml', 'version': '1', 'expected': u'elife-15224-v1.xml'},
-          {'file': u'elife-15224-v1.xml', 'version': '1', 'expected': u'elife-15224-v1.xml'},
-          {'file': u'elife-15224-v1.xml', 'version': '2', 'expected': u'elife-15224-v2.xml'})
+    @data(
+        {'file': u'elife-15224.xml', 'version': '1', 'expected': u'elife-15224-v1.xml'},
+        {'file': u'elife-code1.tar.gz', 'version': '1', 'expected': u'elife-code1-v1.tar.gz'},
+        {'file': u'elife-15224-v1.xml', 'version': '1', 'expected': u'elife-15224-v1.xml'},
+        {'file': u'elife-15224-v1.xml', 'version': '2', 'expected': u'elife-15224-v2.xml'},
+        {'file': u'elife-code1-v1.tar.gz', 'version': '2', 'expected': u'elife-code1-v2.tar.gz'}
+        )
     def test_new_filename(self, file, version, expected):
         result = self.applyversionnumber.new_filename(file, version)
         self.assertEqual(result, expected)

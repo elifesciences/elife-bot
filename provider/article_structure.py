@@ -173,8 +173,12 @@ def get_videos(files):
 
 
 def file_parts(filename):
+    """
+    prefix is part before the first dot
+    extension is all the parts after the first dot
+    """
     prefix = filename.split('.')[0]
-    extension = filename.split('.')[-1]
+    extension = '.'.join(filename.split('.')[1:]).lstrip('.')
     return prefix, extension
 
 
