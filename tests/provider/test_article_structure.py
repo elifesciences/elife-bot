@@ -312,11 +312,15 @@ class TestArticleStructure(unittest.TestCase):
         result = article_structure.is_video_file(filename)
         self.assertTrue(result)
 
-    @data(u'elife-15224-fig1-figsupp1.tif')
-    def test_file_parts(self, filename):
+    @data(
+        (u'elife-15224-fig1-figsupp1.tif', u'elife-15224-fig1-figsupp1', u'tif'),
+        (u'elife-code1.tar.gz', u'elife-code1', u'tar.gz'),
+    )
+    @unpack
+    def test_file_parts(self, filename, expected_prefix, expected_extension):
         prefix, extension = article_structure.file_parts(filename)
-        self.assertEqual(prefix, u'elife-15224-fig1-figsupp1')
-        self.assertEqual(extension, u'tif')
+        self.assertEqual(prefix, expected_prefix)
+        self.assertEqual(extension, expected_extension)
 
     def test_get_videos(self):
         files = [u'elife-13273-fig1-v1.tif', u'elife-13273-fig2-figsupp1-v1.tif', u'elife-13273-fig2-figsupp2-v1.tif', u'elife-13273-fig2-figsupp3-v1.tif', u'elife-13273-fig2-v1.tif', u'elife-13273-fig3-data1-v1.xlsx', u'elife-13273-fig3-figsupp1-v1.tif', u'elife-13273-fig3-figsupp2-v1.tif', u'elife-13273-fig3-figsupp3-v1.tif', u'elife-13273-fig3-figsupp4-v1.tif', u'elife-13273-fig3-figsupp5-v1.tif', u'elife-13273-fig3-v1.tif', u'elife-13273-fig4-figsupp1-v1.tif', u'elife-13273-fig4-v1.tif', u'elife-13273-fig5-data1-v1.xlsx', u'elife-13273-fig5-figsupp1-v1.tif', u'elife-13273-fig5-v1.tif', u'elife-13273-fig6-data1-v1.xlsx', u'elife-13273-fig6-data2-v1.xlsx', u'elife-13273-fig6-figsupp1-v1.tif', u'elife-13273-fig6-figsupp2-v1.tif', u'elife-13273-fig6-v1.tif', u'elife-13273-fig7-v1.tif', u'elife-13273-fig8-v1.tif', u'elife-13273-fig9-v1.tif', u'elife-13273-figures-v1.pdf', u'elife-13273-media1.mp4', u'elife-13273-v1.pdf', u'elife-13273-v1.xml']
