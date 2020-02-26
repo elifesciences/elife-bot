@@ -2,7 +2,7 @@ import os
 import json
 from S3utility.s3_notification_info import parse_activity_data
 from provider.storage_provider import storage_context
-from provider import download_helper, letterparser_provider
+from provider import article_processing, download_helper, letterparser_provider
 from activity.objects import Activity
 
 """
@@ -131,8 +131,9 @@ class activity_DepositDecisionLetterIngestAssets(Activity):
 def deposit_assets_to_bucket(settings, output_bucket, bucket_folder_name, asset_file_names, logger):
     "deposit the assets to the output bucket"
     for asset_file_name in asset_file_names:
+        file_name = article_processing.file_name_from_name(asset_file_name)
         dest_resource = download_helper.file_resource_origin(
-            settings.storage_provider, asset_file_name, output_bucket, bucket_folder_name)
+            settings.storage_provider, file_name, output_bucket, bucket_folder_name)
         storage = storage_context(settings)
         logger.info("Depositing asset %s to S3 key %s" % (asset_file_name, dest_resource))
         # set the bucket object resource from the local file
