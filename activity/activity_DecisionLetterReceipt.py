@@ -47,7 +47,7 @@ class activity_DecisionLetterReceipt(Activity):
         sender_email = self.settings.decision_letter_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.decision_letter_validate_error_recipient_email)
+            self.settings.decision_letter_jats_recipient_email)
 
         connection = email_provider.smtp_connect(self.settings, self.logger)
         # send the emails

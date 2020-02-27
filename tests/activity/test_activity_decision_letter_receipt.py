@@ -37,7 +37,7 @@ class TestDecisionLetterReceipt(unittest.TestCase):
             "comment": 'decision letter zip file example',
             "filename": 'elife-39122.zip',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_email_count": 1,
+            "expected_email_count": 2,
             "expected_email_subject": (
                 "Subject: Decision letter workflow completed! file: elife-39122.zip"),
             "expected_email_from": "From: sender@example.org"
