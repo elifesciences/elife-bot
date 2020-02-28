@@ -30,8 +30,10 @@ class starter_Ping(Starter):
                 response = self.conn.start_workflow_execution(
                     self.settings.domain, workflow_id,
                     workflow_name, workflow_version,
-                    self.settings.default_task_list, child_policy,
-                    execution_start_to_close_timeout, workflow_input)
+                    task_list=self.settings.default_task_list,
+                    child_policy=child_policy,
+                    execution_start_to_close_timeout=execution_start_to_close_timeout,
+                    input=workflow_input)
 
                 self.logger.info(
                     'got response: \n%s', json.dumps(response, sort_keys=True, indent=4))
