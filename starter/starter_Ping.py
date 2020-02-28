@@ -1,43 +1,44 @@
-import boto.swf
-import log
 import json
 import random
+import boto.swf
+from starter.objects import Starter
 from provider import utils
 
 """
 Amazon SWF Ping workflow starter
 """
 
-class starter_Ping():
 
-    def start(self, settings, workflow="Ping"):
-        # Log
-        identity = "starter_%s" % int(random.random() * 1000)
-        logFile = "starter.log"
-        #logFile = None
-        logger = log.logger(logFile, settings.setLevel, identity)
+class starter_Ping(Starter):
+
+    def start(self, workflow="Ping"):
 
         # Simple connect
-        conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+        conn = boto.swf.layer1.Layer1(
+            self.settings.aws_access_key_id,
+            self.settings.aws_secret_access_key)
+
         if workflow:
             (workflow_id, workflow_name, workflow_version, child_policy,
-             execution_start_to_close_timeout, input) = self.get_workflow_params(workflow)
+             execution_start_to_close_timeout, workflow_input) = self.get_workflow_params(workflow)
 
-            logger.info('Starting workflow: %s' % workflow_id)
+            self.logger.info('Starting workflow: %s', workflow_id)
             try:
-                response = conn.start_workflow_execution(settings.domain, workflow_id,
-                                                         workflow_name, workflow_version,
-                                                         settings.default_task_list, child_policy,
-                                                         execution_start_to_close_timeout, input)
+                response = conn.start_workflow_execution(
+                    self.settings.domain, workflow_id,
+                    workflow_name, workflow_version,
+                    self.settings.default_task_list, child_policy,
+                    execution_start_to_close_timeout, workflow_input)
 
-                logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+                self.logger.info(
+                    'got response: \n%s', json.dumps(response, sort_keys=True, indent=4))
 
             except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
                 # There is already a running workflow with that ID, cannot start another
                 message = ('SWFWorkflowExecutionAlreadyStartedError: There is already ' +
                            'a running workflow with ID %s' % workflow_id)
                 print(message)
-                logger.info(message)
+                self.logger.info(message)
 
     def get_workflow_params(self, workflow):
 
@@ -47,7 +48,7 @@ class starter_Ping():
         child_policy = None
         execution_start_to_close_timeout = None
 
-        input = None
+        workflow_input = None
 
         if workflow == "Ping":
             workflow_id = "ping_%s" % int(random.random() * 10000)
@@ -55,16 +56,17 @@ class starter_Ping():
             workflow_version = "1"
             child_policy = None
             execution_start_to_close_timeout = None
-            input = None
+            workflow_input = None
 
         return (workflow_id, workflow_name, workflow_version, child_policy,
-                execution_start_to_close_timeout, input)
+                execution_start_to_close_timeout, workflow_input)
+
 
 if __name__ == "__main__":
 
     ENV = utils.console_start_env()
     SETTINGS = utils.get_settings(ENV)
 
-    o = starter_Ping()
+    STARTER_OBJECT = starter_Ping(SETTINGS)
 
-    o.start(settings=SETTINGS)
+    STARTER_OBJECT.start()
