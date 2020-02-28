@@ -11,7 +11,13 @@ Amazon SWF Ping workflow starter
 
 class starter_Ping(Starter):
 
-    def start(self, workflow="Ping"):
+    def start(self, settings, workflow="Ping"):
+        """method for backwards compatibility"""
+        self.settings = settings
+        self.instantiate_logger()
+        self.start_workflow(workflow)
+
+    def start_workflow(self, workflow="Ping"):
 
         self.connect_to_swf()
 
@@ -66,4 +72,4 @@ if __name__ == "__main__":
 
     STARTER_OBJECT = starter_Ping(SETTINGS)
 
-    STARTER_OBJECT.start()
+    STARTER_OBJECT.start_workflow()
