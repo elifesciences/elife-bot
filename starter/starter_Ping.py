@@ -13,10 +13,7 @@ class starter_Ping(Starter):
 
     def start(self, workflow="Ping"):
 
-        # Simple connect
-        conn = boto.swf.layer1.Layer1(
-            self.settings.aws_access_key_id,
-            self.settings.aws_secret_access_key)
+        self.connect_to_swf()
 
         if workflow:
             (workflow_id, workflow_name, workflow_version, child_policy,
@@ -24,7 +21,7 @@ class starter_Ping(Starter):
 
             self.logger.info('Starting workflow: %s', workflow_id)
             try:
-                response = conn.start_workflow_execution(
+                response = self.conn.start_workflow_execution(
                     self.settings.domain, workflow_id,
                     workflow_name, workflow_version,
                     self.settings.default_task_list, child_policy,
