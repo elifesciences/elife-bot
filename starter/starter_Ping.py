@@ -1,6 +1,5 @@
-import json
 import random
-import boto.swf
+from collections import OrderedDict
 from starter.objects import Starter
 from provider import utils
 
@@ -25,25 +24,25 @@ class starter_Ping(Starter):
             (workflow_id, workflow_name, workflow_version, child_policy,
              execution_start_to_close_timeout, workflow_input) = self.get_workflow_params(workflow)
 
+            # temporary workflow_params var
+            workflow_params = OrderedDict()
+            workflow_params['domain'] = self.settings.domain
+            workflow_params['workflow_id'] = workflow_id
+            workflow_params['workflow_name'] = workflow_name
+            workflow_params['workflow_version'] = workflow_version
+            workflow_params['task_list'] = self.settings.default_task_list
+            workflow_params['child_policy'] = child_policy
+            workflow_params['execution_start_to_close_timeout'] = execution_start_to_close_timeout
+            workflow_params['input'] = workflow_input
+
             self.logger.info('Starting workflow: %s', workflow_id)
             try:
-                response = self.conn.start_workflow_execution(
-                    self.settings.domain, workflow_id,
-                    workflow_name, workflow_version,
-                    task_list=self.settings.default_task_list,
-                    child_policy=child_policy,
-                    execution_start_to_close_timeout=execution_start_to_close_timeout,
-                    input=workflow_input)
-
-                self.logger.info(
-                    'got response: \n%s', json.dumps(response, sort_keys=True, indent=4))
-
-            except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-                # There is already a running workflow with that ID, cannot start another
-                message = ('SWFWorkflowExecutionAlreadyStartedError: There is already ' +
-                           'a running workflow with ID %s' % workflow_id)
-                print(message)
-                self.logger.info(message)
+                self.start_swf_workflow_execution(workflow_params)
+            except:
+                message = (
+                    'Exception starting workflow execution for workflow_id %s' %
+                    workflow_params.get('workflow_id'))
+                self.logger.exception(message)
 
     def get_workflow_params(self, workflow):
 
