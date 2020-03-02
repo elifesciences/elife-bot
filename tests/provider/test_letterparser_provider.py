@@ -75,11 +75,11 @@ class TestValidateArticles(unittest.TestCase):
         self.assertTrue(len(error_messages) > 0)
 
     def test_validate_articles_count(self):
-        """test one article which is not enough"""
-        articles = [Article()]
+        """test one article which is enough"""
+        articles = [Article('10.7554/eLife.99999.sa1')]
         valid, error_messages = letterparser_provider.validate_articles(articles)
-        self.assertFalse(valid)
-        self.assertTrue(len(error_messages) > 0)
+        self.assertTrue(valid)
+        self.assertTrue(len(error_messages) == 0)
 
     def test_validate_articles_doi(self):
         """test article missing a DOI"""
@@ -92,8 +92,8 @@ class TestValidateArticles(unittest.TestCase):
         """test two articles without titles"""
         articles = [Article('10.7554/eLife.99999.sa1'), Article('10.7554/eLife.99999.sa2')]
         valid, error_messages = letterparser_provider.validate_articles(articles)
-        self.assertFalse(valid)
-        self.assertTrue(len(error_messages) > 0)
+        self.assertTrue(valid)
+        self.assertTrue(len(error_messages) == 0)
 
 
 class TestProcessZip(unittest.TestCase):
