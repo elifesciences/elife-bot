@@ -80,10 +80,12 @@ class TestRequestsProviderPostAs(unittest.TestCase):
         url = 'http://localhost/'
         api_key = 'key'
         account_key = '1'
+        content_type = 'application/xml'
         params = OrderedDict([
             ("apiKey", api_key),
             ("accountKey", account_key)
         ])
+        headers = {'Content-Type': content_type}
         payload = OrderedDict([
             ("type", "digest"),
             ("content", '<p>"98%"β</p>')
@@ -91,10 +93,11 @@ class TestRequestsProviderPostAs(unittest.TestCase):
         expected_url = '%s?apiKey=%s&accountKey=%s' % (url, api_key, account_key)
         expected_body = 'type=digest&content=%3Cp%3E%2298%25%22%CE%B2%3C%2Fp%3E'
         # populate the fake request
-        resp = requests_provider.post_as_data(url, payload, params)
+        resp = requests_provider.post_as_data(url, payload, params, headers)
         # make assertions
         self.assertEqual(resp.request.url, expected_url)
         self.assertEqual(resp.request.body, expected_body)
+        self.assertEqual(resp.request.headers.get('Content-Type'), content_type)
 
     @patch('requests.adapters.HTTPAdapter.get_connection')
     def test_post_as_json(self, fake_connection):

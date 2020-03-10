@@ -13,16 +13,16 @@ IDENTITY = "process_%s" % os.getpid()
 LOGGER = log.logger("letterparser_provider.log", 'INFO', IDENTITY, loggerName=__name__)
 
 
-ARTICLES_MIN_COUNT = 2
+ARTICLES_MIN_COUNT = 1
 
 ARTICLE_TITLE_MAP = [
     OrderedDict([
         ('snippet', 'decision letter'),
-        ('min_count', 1)
+        ('min_count', 0)
     ]),
     OrderedDict([
         ('snippet', 'author response'),
-        ('min_count', 1)
+        ('min_count', 0)
     ])
 ]
 
