@@ -32,9 +32,9 @@ def post_as_params(url, payload):
     return requests.post(url, params=payload)
 
 
-def post_as_data(url, payload, params=None):
+def post_as_data(url, payload, params=None, headers=None):
     """post the payload as form data"""
-    return requests.post(url, data=payload, params=params)
+    return requests.post(url, data=payload, params=params, headers=headers)
 
 
 def post_as_json(url, payload):
@@ -42,10 +42,12 @@ def post_as_json(url, payload):
     return requests.post(url, json=payload)
 
 
-def post_to_endpoint(url, payload, logger, identifier, params=None):
+def post_to_endpoint(url, payload, logger, identifier,
+                     params=None, content_type='multipart/form-data'):
     """issue the POST"""
+    headers = {'Content-Type': content_type}
     try:
-        resp = post_as_data(url, payload, params=params)
+        resp = post_as_data(url, payload, params=params, headers=headers)
     except:
         logger.exception('Exception in post_to_endpoint')
         raise

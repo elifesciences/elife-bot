@@ -126,9 +126,10 @@ class activity_PostDecisionLetterJATS(Activity):
             'decision', doi, jats_content,
             self.settings.typesetter_decision_letter_api_key,
             self.settings.typesetter_decision_letter_account_key)
+        content_type = 'application/xml'
         if payload:
             requests_provider.post_to_endpoint(
-                url, payload, self.logger, 'decision letter JATS', params=params)
+                url, payload, self.logger, 'decision letter JATS', params=params, content_type=content_type)
 
     def send_email(self, doi, jats_content):
         """send an email after JATS is posted to endpoint"""
