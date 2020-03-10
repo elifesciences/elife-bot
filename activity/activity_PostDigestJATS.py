@@ -136,9 +136,10 @@ class activity_PostDigestJATS(Activity):
             'digest', doi, jats_content,
             self.settings.typesetter_digest_api_key,
             self.settings.typesetter_digest_account_key)
+        content_type = 'application/xml'
         if payload:
             requests_provider.post_to_endpoint(
-                url, payload, self.logger, 'digest JATS', params=params)
+                url, payload, self.logger, 'digest JATS', params=params, content_type=content_type)
 
     def send_email(self, digest_content, jats_content):
         """send an email after digest JATS is posted to endpoint"""
