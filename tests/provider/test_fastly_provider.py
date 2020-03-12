@@ -20,6 +20,7 @@ class TestFastlyProvider(unittest.TestCase):
             [
                 'https://api.fastly.com/service/3M35rb7puabccOLrFFxy2/purge/article/10627v1',
                 'https://api.fastly.com/service/3M35rb7puabccOLrFFxy2/purge/article/10627/videos',
+                'https://api.fastly.com/service/3M35rb7puabccOLrFFxy2/purge/digest/10627',
             ]
         )
 
