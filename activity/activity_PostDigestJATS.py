@@ -136,7 +136,7 @@ class activity_PostDigestJATS(Activity):
             'digest', doi, jats_content,
             self.settings.typesetter_digest_api_key,
             self.settings.typesetter_digest_account_key)
-        content_type = 'application/xml'
+        content_type = 'application/x-www-form-urlencoded'
         if payload:
             requests_provider.post_to_endpoint(
                 url, payload, self.logger, 'digest JATS', params=params, content_type=content_type)
