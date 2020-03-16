@@ -15,7 +15,11 @@ class FastlyApi:
         response.raise_for_status()
         return response
 
-KEYS = ['article/{article_id}v{version}', 'article/{article_id}/videos']
+KEYS = [
+    'article/{article_id}v{version}',
+    'article/{article_id}/videos',
+    'digest/{article_id}',
+    ]
 
 def purge(article_id, version, settings):
     responses = []
