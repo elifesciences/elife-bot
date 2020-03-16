@@ -1,5 +1,6 @@
 import random
 import json
+from collections import OrderedDict
 import boto.swf
 
 import log
@@ -61,3 +62,21 @@ class Starter():
             print(message)
             self.logger.info(message)
             raise
+
+
+def get_workflow_params(workflow):
+
+    workflow_params = OrderedDict()
+    workflow_params['workflow_id'] = None
+    workflow_params['workflow_name'] = None
+    workflow_params['workflow_version'] = None
+    workflow_params['child_policy'] = None
+    workflow_params['execution_start_to_close_timeout'] = None
+    workflow_params['input'] = None
+
+    if workflow == "Ping":
+        workflow_params['workflow_id'] = "ping_%s" % int(random.random() * 10000)
+        workflow_params['workflow_name'] = "Ping"
+        workflow_params['input'] = "1"
+
+    return workflow_params

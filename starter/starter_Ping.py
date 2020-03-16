@@ -1,6 +1,4 @@
-import random
-from collections import OrderedDict
-from starter.objects import Starter
+from starter.objects import Starter, get_workflow_params
 from provider import utils
 
 """
@@ -21,21 +19,14 @@ class starter_Ping(Starter):
         self.connect_to_swf()
 
         if workflow:
-            (workflow_id, workflow_name, workflow_version, child_policy,
-             execution_start_to_close_timeout, workflow_input) = self.get_workflow_params(workflow)
+            workflow_params = get_workflow_params(workflow)
 
-            # temporary workflow_params var
-            workflow_params = OrderedDict()
+            # add domain and task list
             workflow_params['domain'] = self.settings.domain
-            workflow_params['workflow_id'] = workflow_id
-            workflow_params['workflow_name'] = workflow_name
-            workflow_params['workflow_version'] = workflow_version
             workflow_params['task_list'] = self.settings.default_task_list
-            workflow_params['child_policy'] = child_policy
-            workflow_params['execution_start_to_close_timeout'] = execution_start_to_close_timeout
-            workflow_params['input'] = workflow_input
 
-            self.logger.info('Starting workflow: %s', workflow_id)
+            # start a workflow execution
+            self.logger.info('Starting workflow: %s', workflow_params.get('workflow_id'))
             try:
                 self.start_swf_workflow_execution(workflow_params)
             except:
@@ -43,27 +34,6 @@ class starter_Ping(Starter):
                     'Exception starting workflow execution for workflow_id %s' %
                     workflow_params.get('workflow_id'))
                 self.logger.exception(message)
-
-    def get_workflow_params(self, workflow):
-
-        workflow_id = None
-        workflow_name = None
-        workflow_version = None
-        child_policy = None
-        execution_start_to_close_timeout = None
-
-        workflow_input = None
-
-        if workflow == "Ping":
-            workflow_id = "ping_%s" % int(random.random() * 10000)
-            workflow_name = "Ping"
-            workflow_version = "1"
-            child_policy = None
-            execution_start_to_close_timeout = None
-            workflow_input = None
-
-        return (workflow_id, workflow_name, workflow_version, child_policy,
-                execution_start_to_close_timeout, workflow_input)
 
 
 if __name__ == "__main__":
