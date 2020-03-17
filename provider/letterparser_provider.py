@@ -50,7 +50,7 @@ def process_zip(file_name, config, temp_dir, logger=LOGGER):
         file_name, temp_dir, logger=logger)
     # Convert docx to articles
     statuses["build"], articles = docx_to_articles(
-        docx_file_name, config=config, logger=logger)
+        docx_file_name, temp_dir, config=config, logger=logger)
     # Validate content of articles
     statuses["valid"], error_messages = validate_articles(
         articles, logger=logger)
@@ -76,9 +76,9 @@ def unzip_zip(file_name, temp_dir, logger=LOGGER):
     return False, None, []
 
 
-def docx_to_articles(file_name, root_tag="root", config=None, logger=LOGGER):
+def docx_to_articles(file_name, temp_dir, root_tag="root", config=None, logger=LOGGER):
     try:
-        return True, generate.docx_to_articles(file_name, root_tag, config)
+        return True, generate.docx_to_articles(file_name, root_tag, config, temp_dir)
     except:
         logger.info('Error converting file %s to articles' % file_name)
     return False, None
