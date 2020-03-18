@@ -65,6 +65,24 @@ class TestArticleProcessing(unittest.TestCase):
             xml_content = fp.read()
             self.assertTrue(expected_xml_contains in xml_content)
 
+    def test_convert_xml_extra_xml(self):
+        xml_file = 'tests/test_data/xml_sample_with_directive.xml'
+        file_name_map = {}
+
+        with open(xml_file, 'rb') as open_file:
+            expected = open_file.read()
+            path = self.directory.write(xml_file, expected)
+
+        xml_file_path = path
+
+        article_processing.convert_xml(
+            xml_file=xml_file_path,
+            file_name_map=file_name_map)
+
+        with open(xml_file_path, 'rb') as open_file:
+            xml_string = open_file.read()
+            self.assertEqual(xml_string, expected)
+
     def test_verify_rename_files(self):
         verified, renamed_list, not_renamed_list = article_processing.verify_rename_files(
             self.file_name_map_19405)
