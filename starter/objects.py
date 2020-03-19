@@ -64,7 +64,7 @@ class Starter():
             raise
 
 
-def get_workflow_params(workflow):
+def default_workflow_params():
 
     workflow_params = OrderedDict()
     workflow_params['workflow_id'] = None
@@ -73,10 +73,5 @@ def get_workflow_params(workflow):
     workflow_params['child_policy'] = None
     workflow_params['execution_start_to_close_timeout'] = None
     workflow_params['input'] = None
-
-    if workflow == "Ping":
-        workflow_params['workflow_id'] = "ping_%s" % int(random.random() * 10000)
-        workflow_params['workflow_name'] = "Ping"
-        workflow_params['input'] = "1"
 
     return workflow_params
