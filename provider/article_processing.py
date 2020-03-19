@@ -78,14 +78,21 @@ def convert_xml(xml_file, file_name_map):
     # Register namespaces
     xmlio.register_xmlns()
 
-    root, doctype_dict = xmlio.parse(xml_file, return_doctype_dict=True)
+    root, doctype_dict, processing_instructions = xmlio.parse(
+        xml_file,
+        return_doctype_dict=True,
+        return_processing_instructions=True)
 
     # Convert xlink href values
     total = xmlio.convert_xlink_href(root, file_name_map)
     # TODO - compare whether all file names were converted
 
     # Start the file output
-    reparsed_string = xmlio.output(root, type=None, doctype_dict=doctype_dict)
+    reparsed_string = xmlio.output(
+        root,
+        type=None,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions)
 
     f = open(xml_file, 'wb')
     f.write(reparsed_string)

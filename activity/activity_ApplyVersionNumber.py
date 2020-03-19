@@ -129,13 +129,16 @@ class activity_ApplyVersionNumber(Activity):
         local_xml_filename = path.join(self.get_tmp_dir(), xml_filename)
 
         xmlio.register_xmlns()
-        root, doctype_dict = xmlio.parse(local_xml_filename, return_doctype_dict=True)
+        root, doctype_dict, processing_instructions = xmlio.parse(
+            local_xml_filename, return_doctype_dict=True, return_processing_instructions=True)
 
         # Convert xlink href values
         total = xmlio.convert_xlink_href(root, file_name_map)
 
         # Start the file output
-        reparsed_string = xmlio.output(root, type=None, doctype_dict=doctype_dict)
+        reparsed_string = xmlio.output(
+            root, type=None, doctype_dict=doctype_dict,
+            processing_instructions=processing_instructions)
         f = open(local_xml_filename, 'wb')
         f.write(reparsed_string)
         f.close()

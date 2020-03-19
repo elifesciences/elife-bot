@@ -252,13 +252,16 @@ class activity_ModifyArticleSubjects(Activity):
     def rewrite_xml_file(self, article_xml_file, subject_group_type, subjects):
         xmlio.register_xmlns()
 
-        root, doctype_dict = xmlio.parse(article_xml_file, return_doctype_dict=True)
+        root, doctype_dict, processing_instructions = xmlio.parse(
+            article_xml_file, return_doctype_dict=True, return_processing_instructions=True)
 
         # Modify subject values
         total = xmlio.rewrite_subject_group(root, subjects, subject_group_type)
 
         # Start the file output
-        reparsed_string = xmlio.output(root, type=None, doctype_dict=doctype_dict)
+        reparsed_string = xmlio.output(
+            root, type=None, doctype_dict=doctype_dict,
+            processing_instructions=processing_instructions)
         with open(article_xml_file, 'wb') as open_file:
             open_file.write(reparsed_string)
 
