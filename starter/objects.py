@@ -64,9 +64,11 @@ class Starter():
             raise
 
 
-def default_workflow_params():
+def default_workflow_params(settings):
 
     workflow_params = OrderedDict()
+    workflow_params['domain'] = settings.domain
+    workflow_params['task_list'] = settings.default_task_list
     workflow_params['workflow_id'] = None
     workflow_params['workflow_name'] = None
     workflow_params['workflow_version'] = None

@@ -8,6 +8,13 @@ Amazon SWF Admin Email starter
 
 class starter_AdminEmail(Starter):
 
+    def get_workflow_params(self):
+        workflow_params = default_workflow_params(self.settings)
+        workflow_params['workflow_id'] = "AdminEmail"
+        workflow_params['workflow_name'] = "AdminEmail"
+        workflow_params['workflow_version'] = "1"
+        return workflow_params
+
     def start(self, settings, workflow="AdminEmail"):
         """method for backwards compatibility"""
         self.settings = settings
@@ -18,11 +25,7 @@ class starter_AdminEmail(Starter):
 
         self.connect_to_swf()
 
-        workflow_params = get_workflow_params()
-
-        # add domain and task list
-        workflow_params['domain'] = self.settings.domain
-        workflow_params['task_list'] = self.settings.default_task_list
+        workflow_params = self.get_workflow_params()
 
         # start a workflow execution
         self.logger.info('Starting workflow: %s', workflow_params.get('workflow_id'))
@@ -33,14 +36,6 @@ class starter_AdminEmail(Starter):
                 'Exception starting workflow execution for workflow_id %s' %
                 workflow_params.get('workflow_id'))
             self.logger.exception(message)
-
-
-def get_workflow_params():
-    workflow_params = default_workflow_params()
-    workflow_params['workflow_id'] = "AdminEmail"
-    workflow_params['workflow_name'] = "AdminEmail"
-    workflow_params['workflow_version'] = "1"
-    return workflow_params
 
 
 if __name__ == "__main__":
