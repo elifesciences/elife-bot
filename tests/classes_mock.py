@@ -7,7 +7,7 @@ class FakeBotoConnection:
     def __init__(self):
         self.start_called = None
 
-    def start_workflow_execution(self, *args):
+    def start_workflow_execution(self, *args, **kwargs):
         self.start_called = True
 
 
