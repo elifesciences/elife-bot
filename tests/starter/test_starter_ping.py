@@ -15,6 +15,11 @@ class TestStarterPing(unittest.TestCase):
     @patch('boto.swf.layer1.Layer1')
     def test_start(self, fake_conn):
         fake_conn.return_value = FakeLayer1()
+        self.assertIsNone(self.starter.start(settings_mock))
+
+    @patch('boto.swf.layer1.Layer1')
+    def test_start_workflow(self, fake_conn):
+        fake_conn.return_value = FakeLayer1()
         self.assertIsNone(self.starter.start_workflow())
 
     @patch.object(FakeLayer1, 'start_workflow_execution')
