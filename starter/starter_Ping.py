@@ -41,6 +41,6 @@ if __name__ == "__main__":
     ENV = utils.console_start_env()
     SETTINGS = utils.get_settings(ENV)
 
-    STARTER_OBJECT = starter_Ping(SETTINGS)
+    STARTER = starter_Ping(SETTINGS)
 
-    STARTER_OBJECT.start_workflow()
+    STARTER.start_workflow()
