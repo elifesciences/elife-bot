@@ -1,7 +1,7 @@
-import boto.swf
 import json
 from provider import utils
 from S3utility.s3_notification_info import S3NotificationInfo
+from starter.objects import Starter, default_workflow_params
 import starter.starter_helper as helper
 from starter.starter_helper import NullRequiredDataException
 
@@ -10,59 +10,60 @@ Amazon SWF IngestDigest starter
 """
 
 
-class starter_IngestDigest():
-    def __init__(self):
+class starter_IngestDigest(Starter):
+
+    def __init__(self, settings=None, logger=None):
+        super(starter_IngestDigest, self).__init__(
+            settings, logger)
         self.const_name = "IngestDigest"
+        # logging
+        if not self.logger:
+            self.logger = helper.get_starter_logger(
+                self.settings.setLevel, helper.get_starter_identity(self.const_name))
+
+    def get_workflow_params(self, run, info):
+        workflow_params = default_workflow_params(self.settings)
+        workflow_params['workflow_id'] = "%s_%s" % (self.const_name,
+                                                    info.file_name.replace('/', '_'))
+        workflow_params['workflow_name'] = self.const_name
+        workflow_params['workflow_version'] = "1"
+        workflow_params['execution_start_to_close_timeout'] = str(60 * 15)
+
+        input_data = S3NotificationInfo.to_dict(info)
+        input_data['run'] = run
+        workflow_params['input'] = json.dumps(input_data, default=lambda ob: None)
+
+        return workflow_params
 
     def start(self, settings, run, info):
+        """method for backwards compatibility"""
+        self.settings = settings
+        self.instantiate_logger()
+        self.start_workflow(run, info)
 
-        # Log
-        logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
+    def start_workflow(self, run, info):
 
         if hasattr(info, 'file_name') is False or info.file_name is None:
             raise NullRequiredDataException("filename is Null. Did not get a filename.")
 
-        input_data = S3NotificationInfo.to_dict(info)
-        input_data['run'] = run
+        self.connect_to_swf()
 
-        workflow_id, \
-        workflow_name, \
-        workflow_version, \
-        child_policy, \
-        execution_start_to_close_timeout, \
-        workflow_input = helper.set_workflow_information(self.const_name, "1", None, input_data,
-                                                         info.file_name.replace('/', '_'),
-                                                         start_to_close_timeout=str(60 * 15))
+        workflow_params = self.get_workflow_params(run, info)
 
-        # Simple connect
-        conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
-
+        # start a workflow execution
+        self.logger.info('Starting workflow: %s', workflow_params.get('workflow_id'))
         try:
-            response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version,
-                                                     settings.default_task_list, child_policy,
-                                                     execution_start_to_close_timeout, workflow_input)
-
-            logger.info('got response: \n%s', json.dumps(response, sort_keys=True, indent=4))
-
+            self.start_swf_workflow_execution(workflow_params)
         except NullRequiredDataException as null_exception:
-            logger.exception(null_exception.message)
+            self.logger.exception(null_exception.message)
             raise
-
-        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-            # There is already a running workflow with that ID, cannot start another
-            message = 'SWFWorkflowExecutionAlreadyStartedError: ' \
-                      'There is already a running workflow with ID %s' % workflow_id
-            logger.info(message)
+        except:
+            message = (
+                'Exception starting workflow execution for workflow_id %s' %
+                workflow_params.get('workflow_id'))
+            self.logger.exception(message)
 
 
 if __name__ == "__main__":
-
-    ENV = utils.console_start_env()
-    SETTINGS = utils.get_settings(ENV)
-
-    STARTER_OBJECT = starter_IngestDigest()
-
     # note: this starter must be started by an S3Notification and not directly from command line
-    RUN = None
-    INFO = None
-    STARTER_OBJECT.start(settings=SETTINGS, run=RUN, info=INFO)
+    pass

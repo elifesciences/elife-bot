@@ -1,7 +1,4 @@
-import boto.swf
-import log
-import json
-import random
+from starter.objects import Starter, default_workflow_params
 from provider import utils
 
 """
@@ -9,46 +6,43 @@ Amazon SWF DepositCrossref starter
 """
 
 
-class starter_DepositCrossref():
+class starter_DepositCrossref(Starter):
+
+    def get_workflow_params(self):
+        workflow_params = default_workflow_params(self.settings)
+        workflow_params['workflow_id'] = "DepositCrossref"
+        workflow_params['workflow_name'] = "DepositCrossref"
+        workflow_params['workflow_version'] = "1"
+        return workflow_params
 
     def start(self, settings):
-        # Log
-        identity = "starter_%s" % int(random.random() * 1000)
-        logFile = "starter.log"
-        #logFile = None
-        logger = log.logger(logFile, settings.setLevel, identity)
+        """method for backwards compatibility"""
+        self.settings = settings
+        self.instantiate_logger()
+        self.start_workflow()
 
-        # Simple connect
-        conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+    def start_workflow(self):
 
-        # Start a workflow execution
-        workflow_id = "DepositCrossref"
-        workflow_name = "DepositCrossref"
-        workflow_version = "1"
-        child_policy = None
-        execution_start_to_close_timeout = None
-        input = None
+        self.connect_to_swf()
 
+        workflow_params = self.get_workflow_params()
+
+        # start a workflow execution
+        self.logger.info('Starting workflow: %s', workflow_params.get('workflow_id'))
         try:
-            response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name,
-                                                     workflow_version, settings.default_task_list,
-                                                     child_policy, execution_start_to_close_timeout,
-                                                     input)
+            self.start_swf_workflow_execution(workflow_params)
+        except:
+            message = (
+                'Exception starting workflow execution for workflow_id %s' %
+                workflow_params.get('workflow_id'))
+            self.logger.exception(message)
 
-            logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
-
-        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-            # There is already a running workflow with that ID, cannot start another
-            message = ('SWFWorkflowExecutionAlreadyStartedError: There is already ' +
-                       'a running workflow with ID %s' % workflow_id)
-            print(message)
-            logger.info(message)
 
 if __name__ == "__main__":
 
     ENV = utils.console_start_env()
     SETTINGS = utils.get_settings(ENV)
 
-    o = starter_DepositCrossref()
+    STARTER = starter_DepositCrossref(SETTINGS)
 
-    o.start(settings=SETTINGS)
+    STARTER.start_workflow()
