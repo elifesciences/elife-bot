@@ -184,15 +184,24 @@ def fake_clean_tmp_dir():
     tmp_dir = fake_get_tmp_dir()
     shutil.rmtree(tmp_dir)
 
+
+class FakeRequest:
+    def __init__(self):
+        self.headers = {}
+
+
 class FakeResponse:
     def __init__(self, status_code, response_json=None, text=""):
         self.status_code = status_code
         self.response_json = response_json
         self.content = None
         self.text = text
+        self.request = FakeRequest()
+        self.headers = {}
 
     def json(self):
         return self.response_json
+
 
 class FakeKey:
 

@@ -142,7 +142,8 @@ class TestRequestsProviderPost(unittest.TestCase):
             requests_provider.post_to_endpoint(url, payload, self.fake_logger, identifier)
         self.assertEqual(
             self.fake_logger.logerror,
-            'Error posting test to endpoint : status_code: 404\nresponse: None\npayload: {}')
+            ('Error posting test to endpoint : status_code: 404\nrequest headers: {}\n' +
+             'response headers: {}\nresponse: None\npayload: {}'))
 
     @patch('requests.post')
     def test_post_to_endpoint_exception(self, post_mock):
