@@ -79,6 +79,8 @@ class TestPostDecisionLetterJats(unittest.TestCase):
         self.assertTrue(self.activity.post_error_message.startswith(
             'POST was not successful, details: Error posting decision letter JATS to endpoint'
             ' https://typesetter/decisionLetter: status_code: 500\n'
+            'request headers: {}\n'
+            'response headers: {}\n'
             'response: None'))
 
     @patch.object(activity_module, 'get_session')
