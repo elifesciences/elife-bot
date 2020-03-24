@@ -56,8 +56,9 @@ def post_to_endpoint(url, payload, logger, identifier,
     if resp.status_code != 200:
         response_error_message = (
             ("Error posting %s to endpoint %s: status_code: %s\nrequest headers: %s" +
-             "\nresponse headers: %s\nresponse: %s") %
-            (identifier, url, resp.status_code, resp.request.headers, resp.headers, resp.content))
+             "\nrequest body: %s\nresponse headers: %s\nresponse: %s") %
+            (identifier, url, resp.status_code, resp.request.headers,
+             resp.request.body, resp.headers, resp.content))
         full_error_message = (
             "%s\npayload: %s" %
             (response_error_message, payload))
@@ -65,9 +66,9 @@ def post_to_endpoint(url, payload, logger, identifier,
         raise HTTPError(response_error_message)
     logger.info(
         ("Success posting %s to endpoint %s: status_code: %s\nrequest headers: %s" +
-         "\nresponse headers: %s\nresponse: %s\npayload: %s") %
+         "\nrequest body: %s\nresponse headers: %s\nresponse: %s\npayload: %s") %
         (identifier, url, resp.status_code, resp.request.headers,
-         resp.headers, resp.content, payload))
+         resp.request.body, resp.headers, resp.content, payload))
 
 
 def success_email_subject_doi(identity, doi):

@@ -188,6 +188,7 @@ def fake_clean_tmp_dir():
 class FakeRequest:
     def __init__(self):
         self.headers = {}
+        self.body = None
 
 
 class FakeResponse:
