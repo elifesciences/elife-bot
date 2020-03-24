@@ -137,7 +137,8 @@ class TestPubRouterDeposit(unittest.TestCase):
         "WoS",
         "Scopus",
         "CNPIEC",
-        "CNKI"
+        "CNKI",
+        "CLOCKSS",
     )
     def test_workflow_specific_values(self, workflow):
         "test functions that look at the workflow name"
