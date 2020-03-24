@@ -43,7 +43,7 @@ def post_as_json(url, payload):
 
 
 def post_to_endpoint(url, payload, logger, identifier,
-                     params=None, content_type='multipart/form-data'):
+                     params=None, content_type='application/x-www-form-urlencoded'):
     """issue the POST"""
     headers = {'Content-Type': content_type}
     try:

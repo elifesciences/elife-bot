@@ -126,7 +126,7 @@ class activity_PostDecisionLetterJATS(Activity):
             'decision', doi, jats_content,
             self.settings.typesetter_decision_letter_api_key,
             self.settings.typesetter_decision_letter_account_key)
-        content_type = 'multipart/form-data'
+        content_type = 'application/x-www-form-urlencoded'
         if payload:
             requests_provider.post_to_endpoint(
                 url, payload, self.logger, 'decision letter JATS', params=params, content_type=content_type)
