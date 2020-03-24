@@ -80,6 +80,7 @@ class TestPostDecisionLetterJats(unittest.TestCase):
             'POST was not successful, details: Error posting decision letter JATS to endpoint'
             ' https://typesetter/decisionLetter: status_code: 500\n'
             'request headers: {}\n'
+            'request body: None\n'
             'response headers: {}\n'
             'response: None'))
 
