@@ -158,6 +158,8 @@ class activity_PubRouterDeposit(Activity):
             return "cnpiec/outbox/"
         elif workflow == "CNKI":
             return "cnki/outbox/"
+        elif workflow == "CLOCKSS":
+            return "clockss/outbox/"
 
         return None
 
@@ -181,6 +183,8 @@ class activity_PubRouterDeposit(Activity):
             return "cnpiec/published/"
         elif workflow == "CNKI":
             return "cnki/published/"
+        elif workflow == "CLOCKSS":
+            return "clockss/published/"
 
         return None
 
@@ -645,6 +649,8 @@ class activity_PubRouterDeposit(Activity):
                 recipients = self.settings.CNPIEC_EMAIL
             elif workflow == "CNKI":
                 recipients = self.settings.CNKI_EMAIL
+            elif workflow == "CLOCKSS":
+                recipients = self.settings.CLOCKSS_EMAIL
         except:
             pass
 

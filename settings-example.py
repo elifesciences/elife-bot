@@ -237,6 +237,12 @@ class exp():
     CNKI_FTP_CWD = ""
     CNKI_EMAIL = "cnki@example.org"
 
+    # CLOCKSS FTP settings
+    CLOCKSS_FTP_URI = ""
+    CLOCKSS_FTP_USERNAME = ""
+    CLOCKSS_FTP_PASSWORD = ""
+    CLOCKSS_FTP_CWD = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -505,6 +511,12 @@ class dev():
     CNKI_FTP_CWD = ""
     CNKI_EMAIL = "cnki@example.org"
 
+    # CLOCKSS FTP settings
+    CLOCKSS_FTP_URI = ""
+    CLOCKSS_FTP_USERNAME = ""
+    CLOCKSS_FTP_PASSWORD = ""
+    CLOCKSS_FTP_CWD = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -765,6 +777,12 @@ class live():
     CNKI_FTP_PASSWORD = ""
     CNKI_FTP_CWD = ""
     CNKI_EMAIL = "cnki@example.org"
+
+    # CLOCKSS FTP settings
+    CLOCKSS_FTP_URI = ""
+    CLOCKSS_FTP_USERNAME = ""
+    CLOCKSS_FTP_PASSWORD = ""
+    CLOCKSS_FTP_CWD = ""
 
     # Logging
     setLevel = "INFO"

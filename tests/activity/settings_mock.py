@@ -144,6 +144,11 @@ CNKI_FTP_USERNAME = ""
 CNKI_FTP_PASSWORD = ""
 CNKI_FTP_CWD = ""
 
+CLOCKSS_FTP_URI = "clockss.localhost"
+CLOCKSS_FTP_USERNAME = ""
+CLOCKSS_FTP_PASSWORD = ""
+CLOCKSS_FTP_CWD = ""
+
 git_repo_name = 'elife-article-xml-ci'
 git_repo_path = '/articles/'
 github_token = '1234567890abcdef'
