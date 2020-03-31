@@ -9,6 +9,7 @@ def resize(format, filep, info, logger):
     try:
 
         with Image(file=filep, resolution=96) as tiff:
+            image = None
             image_format = format.get('format')
             if image_format is not None:
                 image = tiff.convert(image_format)
@@ -43,6 +44,9 @@ def resize(format, filep, info, logger):
     except Exception as e:
         message = "error resizing image %s" % info.filename
         logger.error(message, exc_info=True)
+        # free up memory
+        if image:
+            image.destroy()
         raise RuntimeError("%s (%s)" % (message, str(e)))
 
     filename = info.filename
