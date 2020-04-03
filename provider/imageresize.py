@@ -6,10 +6,10 @@ from wand.image import Image
 def resize(format, filep, info, logger):
 
     image_buffer = None
+    image = None
     try:
 
         with Image(file=filep, resolution=96) as tiff:
-            image = None
             image_format = format.get('format')
             if image_format is not None:
                 image = tiff.convert(image_format)

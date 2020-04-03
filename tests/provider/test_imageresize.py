@@ -1,4 +1,5 @@
 import unittest
+import io
 from mock import patch
 import wand
 import provider.imageresize as resizer
@@ -61,6 +62,21 @@ class TestImageresize(unittest.TestCase):
             with open(file_name, 'rb') as open_file:
                 resizer.resize(
                     format_spec, open_file, info, self.fake_logger)
+        self.assertEqual(
+            self.fake_logger.logerror,
+            'error resizing image tests/files_source/elife-00353-fig1-v1')
+
+    @patch.object(wand.image.Image, 'save')
+    def test_resize_exception_bad_file(self, fake_save):
+        fake_save.side_effect = Exception('An exception')
+        file_name = 'tests/files_source/elife-00353-fig1-v1.tif'
+        info, format_spec = image_spec_info(file_name)
+        # create a bad file that wand.Image will not open
+        in_memory_file = io.BytesIO(b'junk')
+
+        with self.assertRaises(RuntimeError):
+            resizer.resize(
+                format_spec, in_memory_file, info, self.fake_logger)
         self.assertEqual(
             self.fake_logger.logerror,
             'error resizing image tests/files_source/elife-00353-fig1-v1')
