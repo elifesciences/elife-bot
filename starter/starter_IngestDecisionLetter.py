@@ -58,8 +58,3 @@ class starter_IngestDecisionLetter(Starter):
                 'Exception starting workflow execution for workflow_id %s' %
                 workflow_params.get('workflow_id'))
             self.logger.exception(message)
-
-
-if __name__ == "__main__":
-    # note: this starter must be started by an S3Notification and not directly from command line
-    pass
