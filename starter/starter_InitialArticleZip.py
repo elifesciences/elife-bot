@@ -55,28 +55,3 @@ class starter_InitialArticleZip():
             message = 'SWFWorkflowExecutionAlreadyStartedError: ' \
                       'There is already a running workflow with ID %s' % workflow_id
             logger.info(message)
-
-
-if __name__ == "__main__":
-
-    doi_id = None
-
-    # Add options
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, either dev or live")
-    parser.add_option("-f", "--filename", default=None, action="store", type="string", dest="filename",
-                      help="specify the DOI id the article to process")
-
-    (options, args) = parser.parse_args()
-    if options.env:
-        ENV = options.env
-    if options.filename:
-        filename = options.filename
-
-    import settings as settingsLib
-    settings = settingsLib.get_settings(ENV)
-
-    o = starter_InitialArticleZip()
-
-    o.start(settings=settings,)
