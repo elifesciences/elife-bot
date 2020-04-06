@@ -28,7 +28,8 @@ class Starter():
             else:
                 identity = "starter_%s" % int(random.random() * 1000)
 
-            helper.get_starter_logger(self.settings.setLevel, identity, log_file=LOG_FILE)
+            self.logger = helper.get_starter_logger(
+                self.settings.setLevel, identity, log_file=LOG_FILE)
 
     def connect_to_swf(self):
         """connect to SWF"""
