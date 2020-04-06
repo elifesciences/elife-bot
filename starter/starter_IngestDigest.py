@@ -1,31 +1,20 @@
 import json
-from provider import utils
 from S3utility.s3_notification_info import S3NotificationInfo
 from starter.objects import Starter, default_workflow_params
-import starter.starter_helper as helper
 from starter.starter_helper import NullRequiredDataException
-
-"""
-Amazon SWF IngestDigest starter
-"""
 
 
 class starter_IngestDigest(Starter):
 
     def __init__(self, settings=None, logger=None):
         super(starter_IngestDigest, self).__init__(
-            settings, logger)
-        self.const_name = "IngestDigest"
-        # logging
-        if not self.logger:
-            self.logger = helper.get_starter_logger(
-                self.settings.setLevel, helper.get_starter_identity(self.const_name))
+            settings, logger, "IngestDigest")
 
     def get_workflow_params(self, run, info):
         workflow_params = default_workflow_params(self.settings)
-        workflow_params['workflow_id'] = "%s_%s" % (self.const_name,
+        workflow_params['workflow_id'] = "%s_%s" % (self.name,
                                                     info.file_name.replace('/', '_'))
-        workflow_params['workflow_name'] = self.const_name
+        workflow_params['workflow_name'] = self.name
         workflow_params['workflow_version'] = "1"
         workflow_params['execution_start_to_close_timeout'] = str(60 * 15)
 
