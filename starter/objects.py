@@ -2,8 +2,7 @@ import random
 import json
 from collections import OrderedDict
 import boto.swf
-
-import log
+import starter.starter_helper as helper
 
 
 LOG_FILE = "starter.log"
@@ -12,21 +11,25 @@ LOG_FILE = "starter.log"
 class Starter():
 
     # Base class
-    def __init__(self, settings=None, logger=None):
+    def __init__(self, settings=None, logger=None, name=None):
         self.settings = settings
-        self.logger = None
+        self.name = name
+        self.logger = logger
         self.conn = None
 
         # logging
-        if logger:
-            self.logger = logger
-        else:
+        if not self.logger:
             self.instantiate_logger()
 
     def instantiate_logger(self):
         if not self.logger and self.settings:
-            identity = "starter_%s" % int(random.random() * 1000)
-            self.logger = log.logger(LOG_FILE, self.settings.setLevel, identity)
+            if self.name:
+                identity = helper.get_starter_identity(self.name)
+            else:
+                identity = "starter_%s" % int(random.random() * 1000)
+
+            self.logger = helper.get_starter_logger(
+                self.settings.setLevel, identity, log_file=LOG_FILE)
 
     def connect_to_swf(self):
         """connect to SWF"""
@@ -64,9 +67,11 @@ class Starter():
             raise
 
 
-def default_workflow_params():
+def default_workflow_params(settings):
 
     workflow_params = OrderedDict()
+    workflow_params['domain'] = settings.domain
+    workflow_params['task_list'] = settings.default_task_list
     workflow_params['workflow_id'] = None
     workflow_params['workflow_name'] = None
     workflow_params['workflow_version'] = None
