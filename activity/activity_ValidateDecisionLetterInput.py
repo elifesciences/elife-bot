@@ -34,6 +34,7 @@ class activity_ValidateDecisionLetterInput(Activity):
 
         # Track the success of some steps
         self.statuses = {
+            "check_input": None,
             "unzip": None,
             "build": None,
             "valid": None,
@@ -61,6 +62,16 @@ class activity_ValidateDecisionLetterInput(Activity):
         self.input_file = download_helper.download_file_from_s3(
             self.settings, real_filename, bucket_name, bucket_folder,
             self.directories.get("INPUT_DIR"))
+
+        # check the input for suitability before continuing
+        error_messages = letterparser_provider.check_input(self.input_file)
+        # status True if no error messages, otherwise False
+        self.statuses['check_input'] = not bool(error_messages)
+        if not self.statuses.get('check_input'):
+            # Send error email
+            self.statuses["email"] = self.email_error_report(real_filename, error_messages)
+            self.log_statuses(self.input_file)
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         # part 1 zip file to articles and assets
         self.articles, asset_file_names, statuses, error_messages = (

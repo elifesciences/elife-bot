@@ -2,10 +2,12 @@
 
 import os
 from collections import OrderedDict
+import zipfile
 import docker
 from elifetools import parseJATS as parser
 from letterparser import generate, parse, zip_lib
 from letterparser.conf import raw_config, parse_raw_config
+from letterparser.utils import manuscript_from_file_name
 import log
 
 
@@ -40,6 +42,44 @@ def parse_file(file_name, config):
     except docker.errors.APIError:
         LOGGER.info('Error connecting to docker')
         raise
+
+
+def check_input(file_name):
+    """check the input zip file complies with the expected naming and structure"""
+    error_messages = []
+    # check file_name exists
+    if not file_name:
+        error_messages.append('File %s does not exist' % file_name)
+    # check file name
+    if file_name and not file_name.endswith('.zip'):
+        error_messages.append('File %s name does not end in .zip' % file_name)
+    # check file is a valid zip
+    if file_name and not zipfile.is_zipfile(file_name):
+        error_messages.append('File %s is not a valid zip file' % file_name)
+    # profile the zip using letterparser library to check for .docx file
+    zip_docx_info = None
+    if file_name and zipfile.is_zipfile(file_name):
+        zip_docx_info, zip_asset_infos = zip_lib.profile_zip(file_name)
+        if not zip_docx_info:
+            error_messages.append('Could not find .docx file in zip file %s' % file_name)
+        # provide additional hint whether a docx file is in a subfolder
+        with zipfile.ZipFile(file_name, 'r') as open_zipfile:
+            for zipfile_info in open_zipfile.infolist():
+                zipfile_file = zipfile_info.filename
+                if (
+                        zipfile_file.endswith('.docx')
+                        and not zipfile_file.startswith('__MACOSX/')
+                        and '/' in zipfile_file):
+                    error_messages.append(
+                        'Note: .docx file %s may be in a subfolder in zip file %s' %
+                        (zipfile_file, file_name))
+    # check manuscript can be extracted from the docx file name
+    if zip_docx_info and not manuscript_from_file_name(zip_docx_info.filename):
+        error_messages.append(
+            'Cannot get manuscript ID from %s inside %s' %
+            (zip_docx_info.filename, file_name))
+
+    return error_messages
 
 
 def process_zip(file_name, config, temp_dir, logger=LOGGER):
