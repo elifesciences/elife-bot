@@ -2,6 +2,7 @@
 
 import os
 import unittest
+import zipfile
 import docker
 from mock import patch
 from testfixtures import TempDirectory
@@ -94,6 +95,65 @@ class TestValidateArticles(unittest.TestCase):
         valid, error_messages = letterparser_provider.validate_articles(articles)
         self.assertTrue(valid)
         self.assertTrue(len(error_messages) == 0)
+
+
+class TestCheckInput(unittest.TestCase):
+
+    def setUp(self):
+        self.temp_directory = TempDirectory()
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def create_zip(self, zip_file_name, zip_docx_file_name):
+        zip_file = os.path.join(self.temp_directory.path, zip_file_name)
+        docx_file = 'tests/fixtures/letterparser/sections.docx'
+        with zipfile.ZipFile(zip_file, 'w') as open_zip:
+            open_zip.write(docx_file, zip_docx_file_name)
+        return zip_file
+
+    def test_check_input(self):
+        file_name = 'tests/files_source/elife-39122.zip'
+        error_messages = letterparser_provider.check_input(file_name)
+        self.assertEqual(len(error_messages), 0)
+
+    def test_check_input_none(self):
+        file_name = None
+        error_messages = letterparser_provider.check_input(file_name)
+        self.assertEqual(len(error_messages), 1)
+        self.assertEqual(error_messages[0], 'File None does not exist')
+
+    def test_check_input_file_name(self):
+        file_name = 'not_a_zip.docx'
+        error_messages = letterparser_provider.check_input(file_name)
+        self.assertEqual(len(error_messages), 2)
+        self.assertEqual(error_messages[0], 'File %s name does not end in .zip' % file_name)
+        self.assertEqual(error_messages[1], 'File %s is not a valid zip file' % file_name)
+
+    def test_check_input_zip_subfolder(self):
+        zip_file_name = 'elife-00666.zip'
+        zip_docx_file_name = 'subfolder/elife-00666.docx'
+        zip_file = self.create_zip(zip_file_name, zip_docx_file_name)
+
+        error_messages = letterparser_provider.check_input(zip_file)
+        self.assertEqual(len(error_messages), 2)
+        self.assertEqual(
+            error_messages[0], 'Could not find .docx file in zip file %s' % zip_file_name)
+        self.assertEqual(
+            error_messages[1], 'Note: .docx file %s may be in a subfolder in zip file %s' %
+            (zip_docx_file_name, zip_file_name))
+
+    def test_check_input_docx_file_name(self):
+        """a mansucript ID cannot be found from the .docx file name"""
+        zip_file_name = 'elife-00666.zip'
+        zip_docx_file_name = 'elife-00666 edit.docx'
+        zip_file = self.create_zip(zip_file_name, zip_docx_file_name)
+
+        error_messages = letterparser_provider.check_input(zip_file)
+        self.assertEqual(len(error_messages), 1)
+        self.assertEqual(
+            error_messages[0], 'Cannot get manuscript ID from %s inside %s' %
+            (zip_docx_file_name, zip_file_name))
 
 
 class TestProcessZip(unittest.TestCase):

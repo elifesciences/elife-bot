@@ -51,6 +51,7 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
             "comment": 'decision letter zip file example',
             "filename": 'elife-39122.zip',
             "expected_result": True,
+            "expected_check_input_status": True,
             "expected_unzip_status": True,
             "expected_build_status": True,
             "expected_valid_status": True,
@@ -64,16 +65,17 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
             "comment": 'file does not exist example',
             "filename": '',
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
-            "expected_unzip_status": False,
-            "expected_build_status": False,
-            "expected_valid_status": False,
-            "expected_generate_status": False,
-            "expected_output_status": False,
+            "expected_check_input_status": False,
+            "expected_unzip_status": None,
+            "expected_build_status": None,
+            "expected_valid_status": None,
+            "expected_generate_status": None,
+            "expected_output_status": None,
             "expected_email_status": True,
             "expected_email_count": 1,
             "expected_email_subject": "Error processing decision letter file: ",
             "expected_email_from": "From: sender@example.org",
-            "expected_email_body": "Unable to unzip decision letter"
+            "expected_email_body": "File None does not exist"
         },
     )
     def test_do_activity(self, test_data, fake_download_storage_context, fake_email_smtp_connect):
@@ -95,6 +97,7 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
 
         # check assertions on status values
         status_map = OrderedDict([
+            ("check_input", "expected_check_input_status"),
             ("unzip", "expected_unzip_status"),
             ("build", "expected_build_status"),
             ("valid", "expected_valid_status"),
