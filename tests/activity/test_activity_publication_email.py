@@ -150,6 +150,7 @@ class TestPublicationEmail(unittest.TestCase):
             shutil.copy(source_doc, dest_doc)
         self.activity.templates.email_templates_warmed = templates_warmed
 
+    @patch.object(activity_module, 'get_related_article')
     @patch('provider.article.article.download_article_xml_from_s3')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('provider.lax_provider.article_versions')
@@ -164,7 +165,8 @@ class TestPublicationEmail(unittest.TestCase):
                          fake_download_email_templates,
                          fake_article_versions,
                          fake_email_smtp_connect,
-                         fake_download_xml):
+                         fake_download_xml,
+                         fake_get_related_article):
 
         directory = TempDirectory()
         fake_storage_context.return_value = FakeStorageContext()
@@ -184,7 +186,9 @@ class TestPublicationEmail(unittest.TestCase):
             if pass_test_data.get("related_article"):
                 related_article = article()
                 related_article.parse_article_file(pass_test_data.get("related_article"))
-                self.activity.related_articles = [related_article]
+                fake_get_related_article.return_value = related_article
+            else:
+                fake_get_related_article.return_value = None
 
             fake_article_versions.return_value = (
                 200, pass_test_data.get("lax_article_versions_response_data"))

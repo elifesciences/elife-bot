@@ -37,7 +37,6 @@ class activity_PublicationEmail(Activity):
         self.published_folder = "publication_email/published/"
 
         # Track XML files selected for publication
-        self.related_articles = []
         self.insight_articles_to_remove_from_outbox = []
         self.articles_do_not_remove_from_outbox = []
 
