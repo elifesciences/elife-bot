@@ -552,6 +552,44 @@ class TestS3KeyNamesToClean(unittest.TestCase):
             'failed check in {comment}'.format(comment=test_data.get("comment")))
 
 
+@ddt
+class TestAuthorsFromXML(unittest.TestCase):
+
+    @data(
+        {
+            "comment": "example of email in author aff",
+            "filename": "elife-18753-v1.xml",
+            "expected": [
+                OrderedDict([
+                    ('e_mail', 'seppe@illinois.edu'),
+                    ('first_nm', 'Seppe'),
+                    ('last_nm', 'Kuehn')]),
+            ]
+        },
+        {
+            "comment": "newer style XML example",
+            "filename": "elife-32991-v2.xml",
+            "expected": [
+                OrderedDict([
+                    ('e_mail', 'alhonore@hotmail.com'),
+                    ('first_nm', 'Aurore'),
+                    ('last_nm', "L'honoré")]),
+                OrderedDict([
+                    ('e_mail', 'didier.montarras@pasteur.fr'),
+                    ('first_nm', 'Didier'),
+                    ('last_nm', 'Montarras')]),
+            ]
+        },
+    )
+    def test_authors_from_xml(self, test_data):
+        article_object = article()
+        full_filename = os.path.join(
+            'tests/files_source/publication_email/outbox', test_data.get('filename'))
+        article_object.parse_article_file(full_filename)
+        authors = activity_module.authors_from_xml(article_object)
+        self.assertEqual(authors, test_data.get("expected"))
+
+
 def fake_get_s3key(directory, to_dir, document, source_doc):
     """
     EJP data do two things, copy the CSV file to where it should be
