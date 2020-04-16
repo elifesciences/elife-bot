@@ -204,6 +204,26 @@ class TestPublicationEmail(unittest.TestCase):
                 ]
             })
 
+        self.do_activity_passes.append({
+            "comment": "recipients from the article XML file",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+            "input_data": {},
+            "templates_warmed": True,
+            "article_xml_filenames": ["elife-32991-v2.xml"],
+            "article_id": "23065",
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.32991',
+                    'Total approved articles: 1',
+                    'Total prepared articles: 1',
+                    'No authors found for article doi id 32991',
+                    ('Sending author_publication_email_VOR_after_POA type email for '
+                     'article 32991 to recipient_email alhonore@hotmail.com'),
+                    'Adding alhonore@hotmail.com from additional',
+                ]
+            })
+
     def tearDown(self):
         TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()

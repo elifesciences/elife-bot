@@ -284,12 +284,16 @@ class activity_PublicationEmail(Activity):
             if is_insight_article(article):
                 # Check if the related article object was instantiated properly
                 if hasattr(article.related_insight_article, "doi_id"):
-                    authors = self.get_authors(article.related_insight_article.doi_id)
+                    article_authors = self.get_authors(article.related_insight_article.doi_id)
+                    xml_authors = authors_from_xml(article.related_insight_article)
+                    authors = self.merge_recipients(article_authors, xml_authors)
                 else:
                     authors = None
                     self.log_cannot_find_authors(article.doi)
             else:
-                authors = self.get_authors(article.doi_id)
+                article_authors = self.get_authors(article.doi_id)
+                xml_authors = authors_from_xml(article)
+                authors = self.merge_recipients(article_authors, xml_authors)
 
             # Send an email to each author
             recipient_authors = choose_recipient_authors(
@@ -308,6 +312,25 @@ class activity_PublicationEmail(Activity):
                         email_type, article.doi_id, recipient_author, article, authors)
                     if result is False:
                         self.log_cannot_find_authors(article.doi)
+
+    def merge_recipients(self, list_one, list_two):
+        """merge two lists of email recipients with no deuplicate email addresses"""
+        merged_list = []
+
+        list_one_email_list = []
+        if list_one:
+            merged_list = list_one
+            list_one_email_list = [recipient.get('e_mail') for recipient in list_one]
+
+        if list_two:
+            # add values from list_two to list_one
+            for recipient in list_two:
+                if recipient.get('e_mail') and recipient.get('e_mail') not in list_one_email_list:
+                    self.admin_email_content += (
+                        '\nAdding %s from additional recipient list' % recipient.get('e_mail'))
+                    merged_list.append(recipient)
+
+        return merged_list
 
     def send_email(self, email_type, elife_id, author, article, authors):
         """
