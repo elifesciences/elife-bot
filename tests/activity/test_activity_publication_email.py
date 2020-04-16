@@ -557,6 +557,11 @@ class TestAuthorsFromXML(unittest.TestCase):
 
     @data(
         {
+            "comment": "older style xml with email in author notes, not supported",
+            "filename": "elife00013.xml",
+            "expected": []
+        },
+        {
             "comment": "example of email in author aff",
             "filename": "elife-18753-v1.xml",
             "expected": [
