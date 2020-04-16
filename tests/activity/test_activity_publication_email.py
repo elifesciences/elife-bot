@@ -536,6 +536,79 @@ class TestChooseRecipientAuthors(unittest.TestCase):
             self.assertEqual(recipient_authors[0]["e_mail"], expected_0_e_mail)
 
 
+class TestMergeRecipients(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(settings_mock, fake_logger, None, None, None)
+        # some list data as would be normally be produced and used
+        self.list_one = [
+            {
+                'author_type_cde': 'Contributing Author',
+                'e_mail': 'author13-01@example.com',
+                'first_nm': 'Author',
+                'ms_no': '13',
+                'dual_corr_author_ind': ' ',
+                'author_seq': '1',
+                'last_nm': 'Uno'},
+            {
+                'author_type_cde': 'Contributing Author',
+                'e_mail': 'author13-02@example.com',
+                'first_nm': 'Author',
+                'ms_no': '13',
+                'dual_corr_author_ind': ' ',
+                'author_seq': '2',
+                'last_nm': 'Dos'}]
+        self.list_two = [
+            OrderedDict([
+                ('e_mail', 'article_xml_recipient@example.org'),
+                ('first_nm', 'First'),
+                ('last_nm', 'Last')
+            ])
+        ]
+        self.list_two_duplicate = [
+            OrderedDict([
+                ('e_mail', 'author13-01@example.com'),
+                ('first_nm', 'First'),
+                ('last_nm', 'Last')
+            ])
+        ]
+
+    def test_merge_recipients_empty(self):
+        list_one = None
+        list_two = None
+        expected_count = 0
+        merged_list = self.activity.merge_recipients(list_one, list_two)
+        self.assertEqual(len(merged_list), expected_count)
+
+    def test_merge_recipients_one_only(self):
+        list_one = self.list_one
+        list_two = None
+        expected_count = 2
+        merged_list = self.activity.merge_recipients(list_one, list_two)
+        self.assertEqual(len(merged_list), expected_count)
+
+    def test_merge_recipients_two_only(self):
+        list_one = None
+        list_two = self.list_two
+        expected_count = 1
+        merged_list = self.activity.merge_recipients(list_one, list_two)
+        self.assertEqual(len(merged_list), expected_count)
+
+    def test_merge_recipients(self):
+        list_one = self.list_one
+        list_two = self.list_two
+        expected_count = 3
+        merged_list = self.activity.merge_recipients(list_one, list_two)
+        self.assertEqual(len(merged_list), expected_count)
+
+    def test_merge_recipients_duplicate(self):
+        list_one = self.list_one
+        list_two = self.list_two_duplicate
+        expected_count = 2
+        merged_list = self.activity.merge_recipients(list_one, list_two)
+        self.assertEqual(len(merged_list), expected_count)
+
+
 class TestGetRelatedArticle(unittest.TestCase):
 
     def tearDown(self):
