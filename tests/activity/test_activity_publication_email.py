@@ -316,7 +316,7 @@ class TestPublicationEmail(unittest.TestCase):
         expected_headers = {
             'format': 'html',
             u'email_type': u'author_publication_email_VOR_no_POA',
-            u'sender_email': u'press@elifesciences.org',
+            u'sender_email': u'press@example.org',
             u'subject': u'Authoré, Your eLife paper is now online'
             }
 
