@@ -105,9 +105,9 @@ class activity_PublicationEmail(Activity):
         prepared = self.prepare_articles(approved)
 
         log_info = "Total parsed articles: " + str(len(articles))
-        log_info += "\n" + "Total approved articles " + str(len(approved))
+        log_info += "\n" + "Total approved articles: " + str(len(approved))
         log_info += (
-            "\n" + "Total prepared articles " + str(len(prepared)))
+            "\n" + "Total prepared articles: " + str(len(prepared)))
         self.admin_email_content += "\n" + log_info
         self.logger.info(log_info)
 

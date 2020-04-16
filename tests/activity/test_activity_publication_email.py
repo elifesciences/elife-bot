@@ -53,7 +53,15 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife00013.xml"],
             "article_id": "00013",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.00013',
+                    'Total prepared articles: 1',
+                    ('Sending author_publication_email_VOR_after_POA type email '
+                     'for article 00013 to recipient_email author13-01@example.com')
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "normal article with input_data None",
@@ -62,7 +70,13 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife03385.xml"],
             "article_id": "03385",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.03385',
+                    'Total prepared articles: 1'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "basic PoA article",
@@ -71,7 +85,13 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
             "article_id": "03977",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.03977',
+                    'Total prepared articles: 1'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "Cannot build article",
@@ -80,7 +100,12 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["does_not_exist.xml"],
             "article_id": None,
-            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE})
+            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE,
+            "admin_email_content_contains":
+                [
+                    'PublicationEmail email templates warmed'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "Not warmed templates",
@@ -89,7 +114,12 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": False,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
             "article_id": None,
-            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE})
+            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE,
+            "admin_email_content_contains":
+                [
+                    'PublicationEmail email templates did not warm successfully'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "article-commentary with a related article",
@@ -99,7 +129,13 @@ class TestPublicationEmail(unittest.TestCase):
             "article_xml_filenames": ["elife-18753-v1.xml"],
             "related_article": "tests/test_data/elife-15747-v2.xml",
             "article_id": "18753",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.18753',
+                    'Total prepared articles: 1'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "article-commentary, related article cannot be found",
@@ -109,7 +145,14 @@ class TestPublicationEmail(unittest.TestCase):
             "article_xml_filenames": ["elife-18753-v1.xml"],
             "related_article": None,
             "article_id": "18753",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.18753',
+                    'Could not build the article related to insight 10.7554/eLife.18753',
+                    'Total prepared articles: 0'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "article-commentary plus its matching insight",
@@ -118,7 +161,16 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife-18753-v1.xml", "elife-15747-v2.xml"],
             "article_id": "18753",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.18753',
+                    'Parsed https://doi.org/10.7554/eLife.15747',
+                    'Total parsed articles: 2',
+                    'Total approved articles: 2',
+                    'Total prepared articles: 1'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "feature article",
@@ -127,7 +179,13 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife-00353-v1.xml"],
             "article_id": "00353",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.00353',
+                    'Total prepared articles: 1'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "article-commentary with no related-article tag",
@@ -136,7 +194,15 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife-23065-v1.xml"],
             "article_id": "23065",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.23065',
+                    'Could not build the article related to insight 10.7554/eLife.23065',
+                    'Total approved articles: 1',
+                    'Total prepared articles: 0'
+                ]
+            })
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -205,8 +271,16 @@ class TestPublicationEmail(unittest.TestCase):
                 'failed success check in {comment}'.format(
                     comment=pass_test_data.get("comment")))
 
+            if pass_test_data.get("admin_email_content_contains"):
+                for expected in pass_test_data.get("admin_email_content_contains"):
+                    self.assertTrue(
+                        expected in self.activity.admin_email_content,
+                        '{expected} not found in admin_email_content for {comment}'.format(
+                            expected=expected, comment=pass_test_data.get('comment')))
+
             # reset object values
             self.activity.related_articles = []
+            self.activity.admin_email_content = ''
 
     @patch.object(activity_PublicationEmail, "download_templates")
     def test_do_activity_download_failure(self, fake_download_templates):
