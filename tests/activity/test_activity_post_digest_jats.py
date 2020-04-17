@@ -83,7 +83,7 @@ class TestPostDigestJats(unittest.TestCase):
         },
         {
             "comment": 'digest author name encoding file example',
-            "filename": 'DIGEST+99997.docx',
+            "filename": 'DIGEST+99997.zip',
             "post_status_code": 200,
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_activity_status": True,

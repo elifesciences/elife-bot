@@ -240,7 +240,8 @@ class TestValidateDigest(unittest.TestCase):
         expected_status = False
         expected_error_messages = ['Digest author is missing', 'Digest DOI is missing',
                                    'Digest text is missing', 'Digest title is missing',
-                                   'Digest image is missing']
+                                   'Digest image is missing',
+                                   'Digest image [unknown] type is not supported']
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
@@ -293,7 +294,8 @@ class TestValidateDigest(unittest.TestCase):
         digest_content = create_digest(
             'Anonymous', '10.7554/eLife.99999', ['text'], 'Title', None)
         expected_status = False
-        expected_error_messages = ['Digest image is missing']
+        expected_error_messages = [
+            'Digest image is missing', 'Digest image [unknown] type is not supported']
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
@@ -305,6 +307,19 @@ class TestValidateDigest(unittest.TestCase):
             'Anonymous', '10.7554/eLife.99999', ['text'], 'Title', digest_image)
         expected_status = False
         expected_error_messages = ['Digest image caption is missing']
+        status, error_messages = digest_provider.validate_digest(digest_content)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(error_messages, expected_error_messages)
+
+    def test_validate_digest_digest_image_type_unsupported(self):
+        "approving an Digest with and image type not supported"
+        image_file = 'file.unsupported'
+        digest_image = create_digest_image('Caption', image_file)
+        digest_content = create_digest(
+            'Anonymous', '10.7554/eLife.99999', ['text'], 'Title', digest_image)
+        expected_status = False
+        expected_error_messages = [
+            'Digest image %s type is not supported' % image_file]
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
