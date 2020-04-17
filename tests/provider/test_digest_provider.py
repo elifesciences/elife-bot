@@ -1,16 +1,16 @@
 # coding=utf-8
- 
+
 import unittest
 import os
 import copy
-import tests.settings_mock as settings_mock
-from digestparser.objects import Digest, Image
 from mock import patch, MagicMock
-from tests.activity.helpers import create_digest, create_digest_image
-import tests.test_data as test_data
+from digestparser.objects import Digest, Image
 import provider.digest_provider as digest_provider
 from provider.digest_provider import ErrorCallingDigestException
 from tests import read_fixture
+from tests.activity.helpers import create_digest, create_digest_image
+import tests.test_data as test_data
+import tests.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 
 
@@ -184,7 +184,7 @@ class TestDigestProvider(unittest.TestCase):
     def test_published_date_from_lax_no_vor(self, fake_article_versions):
         versions_data = copy.copy(test_data.lax_article_versions_response_data)
         # delete the vor data
-        del(versions_data[2])
+        del versions_data[2]
         print(versions_data)
         fake_article_versions.return_value = 200, versions_data
         published = digest_provider.published_date_from_lax(settings_mock, '08411')
