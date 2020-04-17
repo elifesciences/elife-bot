@@ -59,6 +59,35 @@ class TestDigestProvider(unittest.TestCase):
         digest.image = Image()
         self.assertEqual(digest_provider.has_image(digest), False)
 
+    def test_validate_image(self):
+        "validate digest image file type"
+        digest = Digest()
+        image = Image()
+        image.file = 'image.jpg'
+        digest.image = image
+        self.assertEqual(digest_provider.validate_image(digest), True)
+
+    def test_validate_image_no_file(self):
+        "validate digest image file is missing"
+        digest = Digest()
+        self.assertEqual(digest_provider.validate_image(digest), False)
+
+    def test_validate_image_unsupported_extension(self):
+        "validate digest image file type pdf"
+        digest = Digest()
+        image = Image()
+        image.file = 'image.pdf'
+        digest.image = image
+        self.assertEqual(digest_provider.validate_image(digest), False)
+
+    def test_validate_image_upper_case_unsupported(self):
+        "validate digest image file extension uppercase is not allowed by RAML schema"
+        digest = Digest()
+        image = Image()
+        image.file = 'image.JPG'
+        digest.image = image
+        self.assertEqual(digest_provider.validate_image(digest), False)
+
     @patch('requests.get')
     def test_get_digest_200(self, mock_requests_get):
         expected_data = {'id': u'99999'}
