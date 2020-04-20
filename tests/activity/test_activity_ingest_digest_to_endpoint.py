@@ -45,8 +45,8 @@ RELATED_DATA = [{
 class TestIngestDigestToEndpoint(unittest.TestCase):
 
     def setUp(self):
-        fake_logger = FakeLogger()
-        self.activity = activity_object(settings_mock, fake_logger, None, None, None)
+        self.logger = FakeLogger()
+        self.activity = activity_object(settings_mock, self.logger, None, None, None)
 
     def tearDown(self):
         # clean the temporary directory
@@ -70,7 +70,9 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "first_vor": True,
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": True,
-            "expected_download_status": None
+            "expected_download_status": None,
+            "expected_log_info": [
+                'Digest docx file does not exist in S3 for article 00000']
         },
         {
             "comment": "digest files with version greater than lax highest version",
@@ -89,7 +91,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "expected_approve_status": True,
             "expected_download_status": True,
             "expected_generate_status": True,
-            "expected_ingest_status": True,
+            "expected_ingest_status": None,
             "expected_json_contains": [
                 u'"title": "Fishing for errors in the\u00a0tests"',
                 "Microbes live in us and on us",
@@ -116,7 +118,9 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                 u'"title": "Fishing for errors in the\u00a0tests"',
                 "Microbes live in us and on us",
                 '"stage": "preview"',
-                ]
+                ],
+            "expected_log_info": [
+                'Did not get existing digest json from the endpoint for digest_id 99999']
         },
         {
             "comment": "poa article has no digest",
@@ -126,7 +130,10 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "lax_highest_version": '1',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": False,
-            "expected_download_status": None
+            "expected_download_status": None,
+            "expected_log_info": [
+                '\nNot ingesting digest for PoA article 99999',
+                'Digest for article 99999 was not approved for ingestion']
         },
         {
             "comment": "silent correction of a previous version",
@@ -138,7 +145,11 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "lax_highest_version": '2',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": False,
-            "expected_download_status": None
+            "expected_download_status": None,
+            "expected_log_info": [
+                ('\nNot ingesting digest for silent correction 99999 version 1'
+                 ' is less than highest version 2'),
+                'Digest for article 99999 was not approved for ingestion']
         },
         {
             "comment": "silent correction exception for bad version number",
@@ -148,7 +159,9 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "lax_highest_version": None,
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_approve_status": False,
-            "expected_download_status": None
+            "expected_download_status": None,
+            "expected_log_info": [
+                'Digest for article 99999 was not approved for ingestion']
         },
     )
     def test_do_activity(self, test_data, fake_emit,
@@ -200,6 +213,13 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                 self.assertTrue(
                     (expected in json_string, 'failed in json_content in {comment}'.format(
                         comment=test_data.get("comment"))))
+        if test_data.get('expected_log_info'):
+            for loginfo in test_data.get('expected_log_info'):
+                self.assertTrue(
+                    loginfo in self.activity.logger.loginfo,
+                    'failed in {comment}, "{loginfo}" not in loginfo'.format(
+                        comment=test_data.get("comment"),
+                        loginfo=loginfo))
 
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
     def test_do_activity_bad_data(self, fake_session):

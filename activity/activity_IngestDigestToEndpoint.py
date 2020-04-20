@@ -66,70 +66,69 @@ class activity_IngestDigestToEndpoint(Activity):
             self.logger.error("Failed to emit a start message in %s" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
 
-        # Wrap in an exception during testing phase
-        try:
-            # Approve for ingestion
-            self.statuses["approve"] = self.approve(
-                article_id, session.get_value("status"), version, session.get_value("run_type"))
-            if self.statuses.get("approve") is not True:
-                self.logger.info(
-                    "Digest for article %s was not approved for ingestion" % article_id)
-                self.emit_end_message(article_id, version, run)
-                return self.ACTIVITY_SUCCESS
+        # Approve for ingestion
+        self.statuses["approve"] = self.approve(
+            article_id, session.get_value("status"), version, session.get_value("run_type"))
+        if self.statuses.get("approve") is not True:
+            self.logger.info(
+                "Digest for article %s was not approved for ingestion" % article_id)
+            self.emit_end_message(article_id, version, run)
+            return self.ACTIVITY_SUCCESS
 
-            # check if there is a digest docx in the bucket for this article
-            docx_file_exists = digest_provider.docx_exists_in_s3(
-                self.settings, article_id, self.settings.bot_bucket, self.logger)
-            if docx_file_exists is not True:
-                self.logger.info(
-                    "Digest docx file does not exist in S3 for article %s" % article_id)
-                self.emit_end_message(article_id, version, run)
-                return self.ACTIVITY_SUCCESS
+        # check if there is a digest docx in the bucket for this article
+        docx_file_exists = digest_provider.docx_exists_in_s3(
+            self.settings, article_id, self.settings.bot_bucket, self.logger)
+        if docx_file_exists is not True:
+            self.logger.info(
+                "Digest docx file does not exist in S3 for article %s" % article_id)
+            self.emit_end_message(article_id, version, run)
+            return self.ACTIVITY_SUCCESS
 
-            # Download digest from the S3 outbox
-            docx_file = digest_provider.download_docx_from_s3(
-                self.settings, article_id, self.settings.bot_bucket,
-                self.directories.get("INPUT_DIR"), self.logger)
-            if docx_file:
-                self.statuses["download"] = True
-            if self.statuses.get("download") is not True:
-                self.logger.info("Unable to download digest file %s for article %s" %
-                                    (docx_file, article_id))
-                return self.ACTIVITY_PERMANENT_FAILURE
-            # find the image file name
-            image_file = digest_provider.image_file_name_from_s3(
-                self.settings, article_id, self.settings.bot_bucket)
+        # Download digest from the S3 outbox
+        docx_file = digest_provider.download_docx_from_s3(
+            self.settings, article_id, self.settings.bot_bucket,
+            self.directories.get("INPUT_DIR"), self.logger)
+        if docx_file:
+            self.statuses["download"] = True
+        if self.statuses.get("download") is not True:
+            self.logger.info(
+                "Unable to download digest file %s for article %s" %
+                (docx_file, article_id))
+            return self.ACTIVITY_PERMANENT_FAILURE
+        # find the image file name
+        image_file = digest_provider.image_file_name_from_s3(
+            self.settings, article_id, self.settings.bot_bucket)
 
-            # download jats file
-            jats_file = download_jats(
-                self.settings, session.get_value("expanded_folder"),
-                self.directories.get("TEMP_DIR"), self.logger)
-            # related article data
-            related = related_from_lax(article_id, version, self.settings, self.logger)
-            # generate the digest content
-            self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
-            if self.digest_content:
-                self.statuses["generate"] = True
-            if self.statuses.get("generate") is not True:
-                self.logger.info(
-                    ("Unable to generate Digest content for docx_file %s, " +
-                     "jats_file %s, image_file %s") %
-                    (docx_file, jats_file, image_file))
-                # for now return success to not impede the article ingest workflow
-                return self.ACTIVITY_SUCCESS
+        # download jats file
+        jats_file = download_jats(
+            self.settings, session.get_value("expanded_folder"),
+            self.directories.get("TEMP_DIR"), self.logger)
+        # related article data
+        related = related_from_lax(article_id, version, self.settings, self.logger)
+        # generate the digest content
+        self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
+        if self.digest_content:
+            self.statuses["generate"] = True
+        if self.statuses.get("generate") is not True:
+            self.logger.info(
+                ("Unable to generate Digest content for docx_file %s, " +
+                 "jats_file %s, image_file %s") %
+                (docx_file, jats_file, image_file))
+            # for now return success to not impede the article ingest workflow
+            return self.ACTIVITY_SUCCESS
 
-            # get existing digest data
-            digest_id = self.digest_content.get("id")
-            # TODO: what are we doing this for?
-            # assumption: we are ingesting the digest multiple times on the first VoR version
-            # assumption: we are not ingesting the digest on any other version
-            # only possible case is silent correction?
-            # but then, only do it on silent correction?
-            existing_digest_json = digest_provider.get_digest(digest_id, self.settings)
-            if not existing_digest_json:
-                self.logger.info(
-                    "Did not get existing digest json from the endpoint for digest_id %s" %
-                    str(digest_id))
+        # get existing digest data
+        digest_id = self.digest_content.get("id")
+        # TODO: what are we doing this for?
+        # assumption: we are ingesting the digest multiple times on the first VoR version
+        # assumption: we are not ingesting the digest on any other version
+        # only possible case is silent correction?
+        # but then, only do it on silent correction?
+        existing_digest_json = digest_provider.get_digest(digest_id, self.settings)
+        if not existing_digest_json:
+            self.logger.info(
+                "Did not get existing digest json from the endpoint for digest_id %s" %
+                str(digest_id))
             self.digest_content = sync_json(self.digest_content, existing_digest_json)
             # set the stage attribute if missing
             if self.digest_content.get("stage") != "published":
@@ -140,9 +139,6 @@ class activity_IngestDigestToEndpoint(Activity):
                 self.logger, digest_id, self.digest_content, self.settings)
             if put_response:
                 self.statuses["ingest"] = True
-
-        except Exception as exception:
-            self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
 
         self.logger.info(
             "%s for article_id %s statuses: %s" % (self.name, str(article_id), self.statuses))
