@@ -75,33 +75,6 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                 'Digest docx file does not exist in S3 for article 00000']
         },
         {
-            "comment": "digest files with version greater than lax highest version",
-            "bucket_resources": ["elife-15747-v2.xml"],
-            "bot_bucket_resources": ["digests/outbox/99999/digest-99999.docx",
-                                     "digests/outbox/99999/digest-99999.jpg"],
-            "expanded_folder": "digests",
-            "article_id": '99999',
-            "status": 'vor',
-            'version': '2',
-            "first_vor": True,
-            "lax_highest_version": '1',
-            "article_snippet": RELATED_DATA[0],
-            "existing_digest_json": {"stage": "published", "published": "2018-07-06T09:06:01Z"},
-            "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_approve_status": True,
-            "expected_download_status": True,
-            "expected_generate_status": True,
-            "expected_ingest_status": None,
-            "expected_json_contains": [
-                u'"title": "Fishing for errors in the\u00a0tests"',
-                "Microbes live in us and on us",
-                u'"relatedContent": [{"type": "research-article"',
-                '"stage": "published"',
-                '"published": "2018-07-06T09:06:01Z"',
-                '"filename": "digest-99999.jpg"}'
-                ]
-        },
-        {
             "comment": "digest files with no existing digest json ingested",
             "bucket_resources": ["elife-15747-v2.xml"],
             "bot_bucket_resources": ["digests/outbox/99999/digest-99999.docx",
@@ -120,7 +93,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                 '"stage": "preview"',
                 ],
             "expected_log_info": [
-                'Did not get existing digest json from the endpoint for digest_id 99999']
+                'Digest stage value preview']
         },
         {
             "comment": "poa article has no digest",
@@ -134,6 +107,24 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "expected_log_info": [
                 '\nNot ingesting digest for PoA article 99999',
                 'Digest for article 99999 was not approved for ingestion']
+        },
+        {
+            "comment": "silent correction of current version",
+            "article_id": '99999',
+            "run_type": "silent-correction",
+            "status": 'vor',
+            'version': '1',
+            "first_vor": True,
+            "lax_highest_version": '1',
+            "article_snippet": RELATED_DATA[0],
+            "existing_digest_json": {"stage": "published", "published": "2018-07-06T09:06:01Z"},
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_approve_status": True,
+            "expected_download_status": True,
+            "expected_generate_status": True,
+            "expected_ingest_status": True,
+            "expected_log_info": [
+                'Digest stage value published']
         },
         {
             "comment": "silent correction of a previous version",

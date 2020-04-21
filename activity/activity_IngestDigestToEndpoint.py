@@ -117,28 +117,19 @@ class activity_IngestDigestToEndpoint(Activity):
             # for now return success to not impede the article ingest workflow
             return self.ACTIVITY_SUCCESS
 
-        # get existing digest data
+        # issue put to the endpoint
         digest_id = self.digest_content.get("id")
-        # TODO: what are we doing this for?
-        # assumption: we are ingesting the digest multiple times on the first VoR version
-        # assumption: we are not ingesting the digest on any other version
-        # only possible case is silent correction?
-        # but then, only do it on silent correction?
-        existing_digest_json = digest_provider.get_digest(digest_id, self.settings)
-        if not existing_digest_json:
-            self.logger.info(
-                "Did not get existing digest json from the endpoint for digest_id %s" %
-                str(digest_id))
-            self.digest_content = sync_json(self.digest_content, existing_digest_json)
-            # set the stage attribute if missing
-            if self.digest_content.get("stage") != "published":
-                digest_provider.set_stage(self.digest_content, "preview")
-            self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
+        # set the stage attribute depending on silent correction or not
+        if session.get_value("run_type") and session.get_value("run_type") == "silent-correction":
+            digest_provider.set_stage(self.digest_content, "published")
+        else:
+            digest_provider.set_stage(self.digest_content, "preview")
+        self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
-            put_response = digest_provider.put_digest_to_endpoint(
-                self.logger, digest_id, self.digest_content, self.settings)
-            if put_response:
-                self.statuses["ingest"] = True
+        put_response = digest_provider.put_digest_to_endpoint(
+            self.logger, digest_id, self.digest_content, self.settings)
+        if put_response:
+            self.statuses["ingest"] = True
 
         self.logger.info(
             "%s for article_id %s statuses: %s" % (self.name, str(article_id), self.statuses))
@@ -253,13 +244,3 @@ def related_from_lax(article_id, version, settings, logger=None, auth=True):
     if related_json:
         related = [related_json]
     return related
-
-
-def sync_json(json_content, existing_digest_json):
-    "update values in json_content with some from existing digest json if present"
-    if not existing_digest_json:
-        return json_content
-    for attr in ["published", "stage"]:
-        if existing_digest_json.get(attr):
-            json_content[attr] = existing_digest_json.get(attr)
-    return json_content
