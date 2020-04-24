@@ -280,20 +280,10 @@ class activity_PublicationEmail(Activity):
                 feature_article=is_feature_article(article)
                 )
 
-            # Get the authors depending on the article type
-            if is_insight_article(article):
-                # Check if the related article object was instantiated properly
-                if hasattr(article.related_insight_article, "doi_id"):
-                    article_authors = self.get_authors(article.related_insight_article.doi_id)
-                    xml_authors = authors_from_xml(article.related_insight_article)
-                    authors = self.merge_recipients(article_authors, xml_authors)
-                else:
-                    authors = None
-                    self.log_cannot_find_authors(article.doi)
-            else:
-                article_authors = self.get_authors(article.doi_id)
-                xml_authors = authors_from_xml(article)
-                authors = self.merge_recipients(article_authors, xml_authors)
+            # Get the article author data
+            authors = self.article_authors_by_article_type(article)
+            if not authors:
+                self.log_cannot_find_authors(article.doi)
 
             # Send an email to each author
             recipient_authors = choose_recipient_authors(
@@ -312,6 +302,32 @@ class activity_PublicationEmail(Activity):
                         email_type, article.doi_id, recipient_author, article, authors)
                     if result is False:
                         self.log_cannot_find_authors(article.doi)
+
+    def article_authors_by_article_type(self, article):
+        """get article authors depending on the article type"""
+        authors = None
+        doi_id = None
+        source_article = None
+        if is_insight_article(article) and hasattr(article.related_insight_article, "doi_id"):
+            # use related article to populate authors
+            doi_id = article.related_insight_article.doi_id
+            source_article = article.related_insight_article
+        else:
+            # use the actual article to populate authors
+            doi_id = article.doi_id
+            source_article = article
+
+        if doi_id and source_article:
+            authors = self.article_authors(doi_id, source_article)
+
+        return authors
+
+    def article_authors(self, doi_id, article):
+        """get a merged list of authors from CSV for the doi_id and from the article object"""
+        article_authors = self.get_authors(doi_id)
+        xml_authors = authors_from_xml(article)
+        all_authors = self.merge_recipients(article_authors, xml_authors)
+        return all_authors
 
     def merge_recipients(self, list_one, list_two):
         """merge two lists of email recipients with no deuplicate email addresses"""
