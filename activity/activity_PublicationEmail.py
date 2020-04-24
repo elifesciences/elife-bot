@@ -3,6 +3,7 @@ import time
 import os
 import re
 import arrow
+from collections import OrderedDict
 from provider import ejp, email_provider, lax_provider, templates, utils
 import provider.article as articlelib
 from provider.storage_provider import storage_context
@@ -36,7 +37,6 @@ class activity_PublicationEmail(Activity):
         self.published_folder = "publication_email/published/"
 
         # Track XML files selected for publication
-        self.related_articles = []
         self.insight_articles_to_remove_from_outbox = []
         self.articles_do_not_remove_from_outbox = []
 
@@ -105,9 +105,9 @@ class activity_PublicationEmail(Activity):
         prepared = self.prepare_articles(approved)
 
         log_info = "Total parsed articles: " + str(len(articles))
-        log_info += "\n" + "Total approved articles " + str(len(approved))
+        log_info += "\n" + "Total approved articles: " + str(len(approved))
         log_info += (
-            "\n" + "Total prepared articles " + str(len(prepared)))
+            "\n" + "Total prepared articles: " + str(len(prepared)))
         self.admin_email_content += "\n" + log_info
         self.logger.info(log_info)
 
@@ -280,16 +280,10 @@ class activity_PublicationEmail(Activity):
                 feature_article=is_feature_article(article)
                 )
 
-            # Get the authors depending on the article type
-            if is_insight_article(article):
-                # Check if the related article object was instantiated properly
-                if hasattr(article.related_insight_article, "doi_id"):
-                    authors = self.get_authors(article.related_insight_article.doi_id)
-                else:
-                    authors = None
-                    self.log_cannot_find_authors(article.doi)
-            else:
-                authors = self.get_authors(article.doi_id)
+            # Get the article author data
+            authors = self.article_authors_by_article_type(article)
+            if not authors:
+                self.log_cannot_find_authors(article.doi)
 
             # Send an email to each author
             recipient_authors = choose_recipient_authors(
@@ -308,6 +302,51 @@ class activity_PublicationEmail(Activity):
                         email_type, article.doi_id, recipient_author, article, authors)
                     if result is False:
                         self.log_cannot_find_authors(article.doi)
+
+    def article_authors_by_article_type(self, article):
+        """get article authors depending on the article type"""
+        authors = None
+        doi_id = None
+        source_article = None
+        if is_insight_article(article) and hasattr(article.related_insight_article, "doi_id"):
+            # use related article to populate authors
+            doi_id = article.related_insight_article.doi_id
+            source_article = article.related_insight_article
+        else:
+            # use the actual article to populate authors
+            doi_id = article.doi_id
+            source_article = article
+
+        if doi_id and source_article:
+            authors = self.article_authors(doi_id, source_article)
+
+        return authors
+
+    def article_authors(self, doi_id, article):
+        """get a merged list of authors from CSV for the doi_id and from the article object"""
+        article_authors = self.get_authors(doi_id)
+        xml_authors = authors_from_xml(article)
+        all_authors = self.merge_recipients(article_authors, xml_authors)
+        return all_authors
+
+    def merge_recipients(self, list_one, list_two):
+        """merge two lists of email recipients with no deuplicate email addresses"""
+        merged_list = []
+
+        list_one_email_list = []
+        if list_one:
+            merged_list = list_one
+            list_one_email_list = [recipient.get('e_mail') for recipient in list_one]
+
+        if list_two:
+            # add values from list_two to list_one
+            for recipient in list_two:
+                if recipient.get('e_mail') and recipient.get('e_mail') not in list_one_email_list:
+                    self.admin_email_content += (
+                        '\nAdding %s from additional recipient list' % recipient.get('e_mail'))
+                    merged_list.append(recipient)
+
+        return merged_list
 
     def send_email(self, email_type, elife_id, author, article, authors):
         """
@@ -723,3 +762,30 @@ def choose_email_type(article_type, is_poa, was_ever_poa, feature_article):
                 email_type = "author_publication_email_VOR_no_POA"
 
     return email_type
+
+
+def author_data(email, surname, given_names):
+    return OrderedDict([
+        ('e_mail', email),
+        ('first_nm', str(given_names)),
+        ('last_nm', str(surname)),
+    ])
+
+
+def authors_from_xml(article):
+    """get corresponding email addresses from the article XML"""
+    authors = []
+    for author in [author for author in article.authors if author.get('corresp')]:
+        # find the email from two possible places
+        if author.get('email'):
+            # email value is a list of email addresses
+            for email in author.get('email'):
+                authors.append(author_data(
+                    email, author.get('surname'), author.get('given-names')))
+        elif author.get('affiliations'):
+            # add author for each affiliation email
+            for aff in author.get('affiliations'):
+                if aff.get('email'):
+                    authors.append(author_data(
+                        aff.get('email'), author.get('surname'), author.get('given-names')))
+    return authors
