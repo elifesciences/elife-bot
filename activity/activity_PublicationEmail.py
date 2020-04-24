@@ -764,26 +764,28 @@ def choose_email_type(article_type, is_poa, was_ever_poa, feature_article):
     return email_type
 
 
+def author_data(email, surname, given_names):
+    return OrderedDict([
+        ('e_mail', email),
+        ('first_nm', str(given_names)),
+        ('last_nm', str(surname)),
+    ])
+
+
 def authors_from_xml(article):
     """get corresponding email addresses from the article XML"""
     authors = []
     for author in [author for author in article.authors if author.get('corresp')]:
         # find the email from two possible places
         if author.get('email'):
-            xml_author = OrderedDict()
             # email value is a list of email addresses
             for email in author.get('email'):
-                xml_author['e_mail'] = email
-                xml_author['first_nm'] = str(author.get('given-names'))
-                xml_author['last_nm'] = str(author.get('surname'))
-                authors.append(xml_author)
+                authors.append(author_data(
+                    email, author.get('surname'), author.get('given-names')))
         elif author.get('affiliations'):
             # add author for each affiliation email
             for aff in author.get('affiliations'):
                 if aff.get('email'):
-                    xml_author = OrderedDict()
-                    xml_author['e_mail'] = aff.get('email')
-                    xml_author['first_nm'] = str(author.get('given-names'))
-                    xml_author['last_nm'] = str(author.get('surname'))
-                    authors.append(xml_author)
+                    authors.append(author_data(
+                        aff.get('email'), author.get('surname'), author.get('given-names')))
     return authors
