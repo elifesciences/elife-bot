@@ -31,6 +31,10 @@ class ErrorCallingDigestException(Exception):
     pass
 
 
+class DigestValidateImageException(Exception):
+    pass
+
+
 def build_digest(input_file, temp_dir, logger=None, digest_config=None):
     "Parse input and build a Digest object"
     if not input_file:
@@ -163,11 +167,12 @@ def has_image(digest_content):
 
 def validate_image(digest_content):
     """validate the image file by its name"""
-    if not has_image(digest_content):
-        return False
-    for allowed in ALLOWED_IMAGE_FILE_EXTENSIONS:
-        if digest_content.image.file.endswith(allowed):
-            return True
+    try:
+        for allowed in ALLOWED_IMAGE_FILE_EXTENSIONS:
+            if digest_content.image.file.endswith(allowed):
+                return True
+    except AttributeError:
+        raise DigestValidateImageException("Digest has no image to validate")
     return False
 
 
@@ -342,12 +347,16 @@ def validate_digest(digest_content):
     elif digest_content and not digest_content.image.caption:
         error_messages.append('Digest image caption is missing')
 
-    if digest_content and not validate_image(digest_content):
-        image_file = '[unknown]'
-        if hasattr(digest_content.image, 'file'):
-            image_file = digest_content.image.file
+    try:
+        if digest_content and not validate_image(digest_content):
+            image_file = '[unknown]'
+            if hasattr(digest_content.image, 'file'):
+                image_file = digest_content.image.file
+            error_messages.append(
+                'Digest image %s type is not supported' % image_file)
+    except DigestValidateImageException as exception:
         error_messages.append(
-            'Digest image %s type is not supported' % image_file)
+            'Validating digest image raised an exception')
 
     return not bool(error_messages), error_messages
 

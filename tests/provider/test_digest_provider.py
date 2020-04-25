@@ -6,7 +6,7 @@ import copy
 from mock import patch, MagicMock
 from digestparser.objects import Digest, Image
 import provider.digest_provider as digest_provider
-from provider.digest_provider import ErrorCallingDigestException
+from provider.digest_provider import ErrorCallingDigestException, DigestValidateImageException
 from tests import read_fixture
 from tests.activity.helpers import create_digest, create_digest_image
 import tests.test_data as test_data
@@ -70,7 +70,8 @@ class TestDigestProvider(unittest.TestCase):
     def test_validate_image_no_file(self):
         "validate digest image file is missing"
         digest = Digest()
-        self.assertEqual(digest_provider.validate_image(digest), False)
+        self.assertRaises(
+            DigestValidateImageException, digest_provider.validate_image, digest)
 
     def test_validate_image_unsupported_extension(self):
         "validate digest image file type pdf"
@@ -270,7 +271,7 @@ class TestValidateDigest(unittest.TestCase):
         expected_error_messages = ['Digest author is missing', 'Digest DOI is missing',
                                    'Digest text is missing', 'Digest title is missing',
                                    'Digest image is missing',
-                                   'Digest image [unknown] type is not supported']
+                                   'Validating digest image raised an exception']
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
@@ -324,7 +325,8 @@ class TestValidateDigest(unittest.TestCase):
             'Anonymous', '10.7554/eLife.99999', ['text'], 'Title', None)
         expected_status = False
         expected_error_messages = [
-            'Digest image is missing', 'Digest image [unknown] type is not supported']
+            'Digest image is missing',
+            'Validating digest image raised an exception']
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
