@@ -17,7 +17,21 @@ IDENTITY = "process_%s" % os.getpid()
 LOGGER = log.logger("digest_provider.log", 'INFO', IDENTITY, loggerName=__name__)
 
 
+ALLOWED_IMAGE_FILE_EXTENSIONS = [
+    '.jpg',
+    '.jpeg',
+    '.tif',
+    '.tiff',
+    '.png',
+    '.gif',
+]
+
+
 class ErrorCallingDigestException(Exception):
+    pass
+
+
+class DigestValidateImageException(Exception):
     pass
 
 
@@ -142,11 +156,24 @@ def image_file_name_from_s3(settings, article_id, bucket_name):
 
 def has_image(digest_content):
     "check if the Digest object has an image file"
+    if not digest_content:
+        return False
     if not digest_content.image:
         return False
     if not digest_content.image.file:
         return False
     return True
+
+
+def validate_image(digest_content):
+    """validate the image file by its name"""
+    try:
+        for allowed in ALLOWED_IMAGE_FILE_EXTENSIONS:
+            if digest_content.image.file.endswith(allowed):
+                return True
+    except AttributeError:
+        raise DigestValidateImageException("Digest has no image to validate")
+    return False
 
 
 def digest_get_request(url, verify_ssl, digest_id, auth_key=None):
@@ -314,10 +341,23 @@ def validate_digest(digest_content):
         error_messages.append('Digest text is missing')
     if digest_content and not digest_content.title:
         error_messages.append('Digest title is missing')
+
     if digest_content and not digest_content.image:
         error_messages.append('Digest image is missing')
     elif digest_content and not digest_content.image.caption:
         error_messages.append('Digest image caption is missing')
+
+    try:
+        if digest_content and not validate_image(digest_content):
+            image_file = '[unknown]'
+            if hasattr(digest_content.image, 'file'):
+                image_file = digest_content.image.file
+            error_messages.append(
+                'Digest image %s type is not supported' % image_file)
+    except DigestValidateImageException as exception:
+        error_messages.append(
+            'Validating digest image raised an exception')
+
     return not bool(error_messages), error_messages
 
 
