@@ -49,3 +49,44 @@ class TestGlencoeCheck(unittest.TestCase):
         ]
         for xml_str, expected in cases:
             self.assertEqual(glencoe_check.has_videos(xml_str), expected)
+
+
+class TestGlencoeCheckValidateSources(unittest.TestCase):
+
+    def test_validate_sources_empty(self):
+        gc_data = {}
+        result = glencoe_check.validate_sources(gc_data)
+        self.assertIsNone(result)
+
+    def test_validate_sources_good(self):
+        """all video sources available is good, does not raise an exception"""
+        gc_data = {
+            'video1': {
+                'mp4_href': '',
+                'webm_href': '',
+                'ogv_href': ''
+            },
+            'video2': {
+                'mp4_href': '',
+                'webm_href': '',
+                'ogv_href': ''
+            }
+        }
+        gc_data = {}
+        result = glencoe_check.validate_sources(gc_data)
+        self.assertIsNone(result)
+
+    def test_validate_sources_bad(self):
+        """not enough video sources for a video raises an exception"""
+        gc_data = {
+            'video1': {
+                'mp4_href': '',
+                'webm_href': '',
+                'ogv_href': ''
+            },
+            'video2': {
+                'mp4_href': '',
+            }
+        }
+        with self.assertRaises(AssertionError):
+            glencoe_check.validate_sources(gc_data)
