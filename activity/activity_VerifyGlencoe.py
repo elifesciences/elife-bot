@@ -62,8 +62,10 @@ class activity_VerifyGlencoe(Activity):
             xml_content = storage.get_resource_as_string(xml_origin)
 
             if glencoe_check.has_videos(xml_content):
-                glencoe_check.validate_sources(
-                    glencoe_check.metadata(glencoe_check.check_msid(article_id), self.settings))
+                gc_data = glencoe_check.metadata(
+                    glencoe_check.check_msid(article_id), self.settings)
+                self.logger.info('gc_data: %s' % json.dumps(gc_data, indent=4))
+                glencoe_check.validate_sources(gc_data)
                 self.emit_monitor_event(
                     self.settings, article_id, version, run,
                     self.pretty_name, "end",
