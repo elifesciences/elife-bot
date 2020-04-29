@@ -19,9 +19,13 @@ class TestGlencoeCheck(unittest.TestCase):
 
     def test_jpg_href_values(self):
         result = glencoe_check.jpg_href_values(glencoe_metadata)
-        self.assertCountEqual([
-            "http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.jpg",
-            "http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.jpg"],
+        self.assertCountEqual(
+            [
+                ("http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/"
+                 "1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.jpg"),
+                ("http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/"
+                 "1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.jpg")
+            ],
             result)
 
     def test_simple_jpg_href_values(self):
@@ -35,17 +39,31 @@ class TestGlencoeCheck(unittest.TestCase):
     def test_extend_article_for_end2end(self):
         filename = "elife-01234-media1-v1.jpg"
         article_id = "7777777701234"
-        result  = glencoe_check.force_article_id(filename, article_id)
+        result = glencoe_check.force_article_id(filename, article_id)
         self.assertEqual("elife-7777777701234-media1-v1.jpg", result)
 
     def test_has_videos(self):
         cases = [
-            ('<media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="avi" mimetype="video" xlink:href="elife-00007-media1.avi"></media>', True),
-            ('<media mimetype="video" mime-subtype="mp4" id="fig3video1" xlink:href="elife-00666-fig3-video1.mp4"></media>', True),
-            ('<media mimetype="video" mime-subtype="gif" id="video2" xlink:href="elife-00666-video2.gif"></media>', True),
-            ('<media mimetype="application" mime-subtype="xlsx" xlink:href="elife-00666-video1-data1.xlsx"/><media mimetype="video" mime-subtype="gif" id="video2" xlink:href="elife-00666-video2.gif"></media>', True),
-            ('<media mimetype="application" mime-subtype="xlsx" xlink:href="elife-00666-video1-data1.xlsx"/>', False),
-            (b'<media mimetype="video" mime-subtype="gif" id="video2" xlink:href="elife-00666-video2.gif"></media>', True),
+            ('<media content-type="glencoe play-in-place height-250 width-310" id="media1"'
+             ' mime-subtype="avi" mimetype="video" xlink:href="elife-00007-media1.avi"></media>',
+             True),
+            ('<media mimetype="video" mime-subtype="mp4" id="fig3video1"'
+             ' xlink:href="elife-00666-fig3-video1.mp4"></media>',
+             True),
+            ('<media mimetype="video" mime-subtype="gif" id="video2"'
+             ' xlink:href="elife-00666-video2.gif"></media>',
+             True),
+            ('<media mimetype="application" mime-subtype="xlsx"'
+             ' xlink:href="elife-00666-video1-data1.xlsx"/>'
+             '<media mimetype="video" mime-subtype="gif" id="video2"'
+             ' xlink:href="elife-00666-video2.gif"></media>',
+             True),
+            ('<media mimetype="application" mime-subtype="xlsx"'
+             ' xlink:href="elife-00666-video1-data1.xlsx"/>',
+             False),
+            (b'<media mimetype="video" mime-subtype="gif" id="video2"'
+             b' xlink:href="elife-00666-video2.gif"></media>',
+             True),
         ]
         for xml_str, expected in cases:
             self.assertEqual(glencoe_check.has_videos(xml_str), expected)
