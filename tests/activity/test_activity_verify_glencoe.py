@@ -61,7 +61,7 @@ class TestVerifyGlencoe(unittest.TestCase):
         fake_emit_monitor.assert_called_with(settings_mock,
                                              test_data.session_example["article_id"],
                                              test_data.session_example["version"],
-                                             test_data.session_example["run"],
+                                             test_data.ExpandArticle_data["run"],
                                              self.verifyglencoe.pretty_name,
                                              "error",
                                              'Glencoe video is not available for article 00353; message: '
@@ -90,7 +90,7 @@ class TestVerifyGlencoe(unittest.TestCase):
         fake_emit_monitor.assert_called_with(settings_mock,
                                              test_data.session_example["article_id"],
                                              test_data.session_example["version"],
-                                             test_data.session_example["run"],
+                                             test_data.ExpandArticle_data["run"],
                                              self.verifyglencoe.pretty_name,
                                              "error",
                                              "An error occurred when checking for Glencoe video. Article 00353; message: "
