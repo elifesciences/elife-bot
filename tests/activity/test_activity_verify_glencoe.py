@@ -1,7 +1,7 @@
 import unittest
+from mock import patch
 from activity.activity_VerifyGlencoe import activity_VerifyGlencoe
 import tests.activity.settings_mock as settings_mock
-from mock import patch, MagicMock
 from tests.activity.classes_mock import FakeResponse, FakeSession, FakeStorageContext, FakeLogger
 import tests.activity.test_activity_data as test_data
 
@@ -9,7 +9,8 @@ import tests.activity.test_activity_data as test_data
 class TestVerifyGlencoe(unittest.TestCase):
 
     def setUp(self):
-        self.verifyglencoe = activity_VerifyGlencoe(settings_mock, None, None, None, None)
+        self.logger = FakeLogger()
+        self.verifyglencoe = activity_VerifyGlencoe(settings_mock, self.logger, None, None, None)
 
     @patch('time.sleep')
     @patch('provider.lax_provider.get_xml_file_name')
@@ -33,7 +34,7 @@ class TestVerifyGlencoe(unittest.TestCase):
         fake_session.return_value = FakeSession(session_example)
         fake_storage_context.return_value = FakeStorageContext()
         fake_get_xml_file_name.return_value = "anything.xml"
-        self.verifyglencoe.logger = MagicMock()
+
         result = self.verifyglencoe.do_activity(test_data.ExpandArticle_data)
         fake_emit_monitor.assert_called_with(
             settings_mock,
@@ -59,7 +60,7 @@ class TestVerifyGlencoe(unittest.TestCase):
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext()
         fake_get_xml_file_name.return_value = "anything.xml"
-        self.verifyglencoe.logger = MagicMock()
+
         result = self.verifyglencoe.do_activity(test_data.ExpandArticle_data)
         fake_emit_monitor.assert_called_with(
             settings_mock,
@@ -85,8 +86,6 @@ class TestVerifyGlencoe(unittest.TestCase):
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext()
         fake_get_xml_file_name.return_value = "anything.xml"
-
-        self.verifyglencoe.logger = MagicMock()
 
         fake_glencoe_check_validate_sources.side_effect = Exception("Fake Time out")
 
