@@ -73,8 +73,10 @@ class TestGlencoeCheckValidateSources(unittest.TestCase):
 
     def test_validate_sources_empty(self):
         gc_data = {}
-        result = glencoe_check.validate_sources(gc_data)
-        self.assertIsNone(result)
+        try:
+            glencoe_check.validate_sources(gc_data)
+        except AssertionError:
+            self.fail("Encountered an unexpected exception.")
 
     def test_validate_sources_good(self):
         """all video sources available is good, does not raise an exception"""
@@ -90,9 +92,10 @@ class TestGlencoeCheckValidateSources(unittest.TestCase):
                 'ogv_href': ''
             }
         }
-        gc_data = {}
-        result = glencoe_check.validate_sources(gc_data)
-        self.assertIsNone(result)
+        try:
+            glencoe_check.validate_sources(gc_data)
+        except AssertionError:
+            self.fail("Encountered an unexpected exception.")
 
     def test_validate_sources_bad(self):
         """not enough video sources for a video raises an exception"""
