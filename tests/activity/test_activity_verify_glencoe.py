@@ -17,8 +17,9 @@ class TestVerifyGlencoe(unittest.TestCase):
     @patch('activity.activity_VerifyGlencoe.get_session')
     @patch.object(activity_VerifyGlencoe, 'emit_monitor_event')
     @patch('requests.get')
-    def test_do_activity_bad_response_glencoe_404(self, request_mock, fake_emit_monitor, fake_session,
-                                                  fake_storage_context, fake_get_xml_file_name, fake_sleep):
+    def test_do_activity_bad_response_glencoe_404(
+            self, request_mock, fake_emit_monitor, fake_session,
+            fake_storage_context, fake_get_xml_file_name, fake_sleep):
         session_example = {
             'version': '1',
             'article_id': '7777777701234',
@@ -34,14 +35,15 @@ class TestVerifyGlencoe(unittest.TestCase):
         fake_get_xml_file_name.return_value = "anything.xml"
         self.verifyglencoe.logger = MagicMock()
         result = self.verifyglencoe.do_activity(test_data.ExpandArticle_data)
-        fake_emit_monitor.assert_called_with(settings_mock,
-                                             session_example["article_id"],
-                                             session_example["version"],
-                                             session_example["run"],
-                                             self.verifyglencoe.pretty_name,
-                                             "error",
-                                             "Glencoe video is not available for article 7777777701234; message: "
-                                             "article has no videos - url requested: 10.7554/eLife.01234")
+        fake_emit_monitor.assert_called_with(
+            settings_mock,
+            session_example["article_id"],
+            session_example["version"],
+            session_example["run"],
+            self.verifyglencoe.pretty_name,
+            "error",
+            "Glencoe video is not available for article 7777777701234; message: "
+            "article has no videos - url requested: 10.7554/eLife.01234")
         self.assertEqual(result, self.verifyglencoe.ACTIVITY_TEMPORARY_FAILURE)
 
     @patch('time.sleep')
@@ -50,23 +52,25 @@ class TestVerifyGlencoe(unittest.TestCase):
     @patch('activity.activity_VerifyGlencoe.get_session')
     @patch.object(activity_VerifyGlencoe, 'emit_monitor_event')
     @patch('requests.get')
-    def test_do_activity_bad_response_glencoe_500(self, request_mock, fake_emit_monitor, fake_session,
-                                                  fake_storage_context, fake_get_xml_file_name, fake_sleep):
+    def test_do_activity_bad_response_glencoe_500(
+            self, request_mock, fake_emit_monitor, fake_session,
+            fake_storage_context, fake_get_xml_file_name, fake_sleep):
         request_mock.return_value = FakeResponse(500, None)
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext()
         fake_get_xml_file_name.return_value = "anything.xml"
         self.verifyglencoe.logger = MagicMock()
         result = self.verifyglencoe.do_activity(test_data.ExpandArticle_data)
-        fake_emit_monitor.assert_called_with(settings_mock,
-                                             test_data.session_example["article_id"],
-                                             test_data.session_example["version"],
-                                             test_data.ExpandArticle_data["run"],
-                                             self.verifyglencoe.pretty_name,
-                                             "error",
-                                             'Glencoe video is not available for article 00353; message: '
-                                             'unhandled status code from Glencoe: 500 - '
-                                             'url requested: 10.7554/eLife.00353')
+        fake_emit_monitor.assert_called_with(
+            settings_mock,
+            test_data.session_example["article_id"],
+            test_data.session_example["version"],
+            test_data.ExpandArticle_data["run"],
+            self.verifyglencoe.pretty_name,
+            "error",
+            'Glencoe video is not available for article 00353; message: '
+            'unhandled status code from Glencoe: 500 - '
+            'url requested: 10.7554/eLife.00353')
         self.assertEqual(result, self.verifyglencoe.ACTIVITY_TEMPORARY_FAILURE)
 
     @patch('provider.glencoe_check.metadata')
@@ -75,8 +79,9 @@ class TestVerifyGlencoe(unittest.TestCase):
     @patch('activity.activity_VerifyGlencoe.storage_context')
     @patch('activity.activity_VerifyGlencoe.get_session')
     @patch.object(activity_VerifyGlencoe, 'emit_monitor_event')
-    def test_do_acitvity_exception(self, fake_emit_monitor, fake_session, fake_storage_context, fake_get_xml_file_name,
-                                   fake_glencoe_check_validate_sources, fake_glencoe_check_metadata):
+    def test_do_acitvity_exception(
+            self, fake_emit_monitor, fake_session, fake_storage_context, fake_get_xml_file_name,
+            fake_glencoe_check_validate_sources, fake_glencoe_check_metadata):
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext()
         fake_get_xml_file_name.return_value = "anything.xml"
@@ -87,14 +92,15 @@ class TestVerifyGlencoe(unittest.TestCase):
 
         result = self.verifyglencoe.do_activity(test_data.ExpandArticle_data)
 
-        fake_emit_monitor.assert_called_with(settings_mock,
-                                             test_data.session_example["article_id"],
-                                             test_data.session_example["version"],
-                                             test_data.ExpandArticle_data["run"],
-                                             self.verifyglencoe.pretty_name,
-                                             "error",
-                                             "An error occurred when checking for Glencoe video. Article 00353; message: "
-                                             "Fake Time out")
+        fake_emit_monitor.assert_called_with(
+            settings_mock,
+            test_data.session_example["article_id"],
+            test_data.session_example["version"],
+            test_data.ExpandArticle_data["run"],
+            self.verifyglencoe.pretty_name,
+            "error",
+            "An error occurred when checking for Glencoe video. Article 00353; message: "
+            "Fake Time out")
 
         self.assertEqual(result, self.verifyglencoe.ACTIVITY_PERMANENT_FAILURE)
 
