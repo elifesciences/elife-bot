@@ -1,14 +1,10 @@
+import time
 import json
 from provider.execution_context import get_session
 import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
-import time
 import provider.glencoe_check as glencoe_check
 from activity.objects import Activity
-
-"""
-activity_VerifyGlencoe.py activity
-"""
 
 
 class ValidationException(RuntimeError):
@@ -89,11 +85,11 @@ class activity_VerifyGlencoe(Activity):
                  '; message: ' + str(err)))
             time.sleep(60)
             return self.ACTIVITY_TEMPORARY_FAILURE
-        except Exception as e:
-            self.logger.exception(str(e))
+        except Exception as exception:
+            self.logger.exception(str(exception))
             self.emit_monitor_event(
                 self.settings, article_id, version, run,
                 self.pretty_name, "error",
                 ("An error occurred when checking for Glencoe video. Article " +
-                 article_id + '; message: ' + str(e)))
+                 article_id + '; message: ' + str(exception)))
             return self.ACTIVITY_PERMANENT_FAILURE
