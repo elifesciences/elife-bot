@@ -1,18 +1,15 @@
+import time
 import json
 from provider.execution_context import get_session
 import provider.lax_provider as lax_provider
 from provider.storage_provider import storage_context
-import time
 import provider.glencoe_check as glencoe_check
 from activity.objects import Activity
-
-"""
-activity_VerifyGlencoe.py activity
-"""
 
 
 class ValidationException(RuntimeError):
     pass
+
 
 class activity_VerifyGlencoe(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
@@ -48,40 +45,53 @@ class activity_VerifyGlencoe(Activity):
             if expanded_folder is None:
                 raise RuntimeError("No session value for expanded folder")
 
-            expanded_bucket = self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
+            expanded_bucket = (
+                self.settings.publishing_buckets_prefix + self.settings.expanded_bucket)
             self.logger.info("expanded_bucket: " + expanded_bucket)
 
-            xml_filename = lax_provider.get_xml_file_name(self.settings, expanded_folder, expanded_bucket, version)
+            xml_filename = lax_provider.get_xml_file_name(
+                self.settings, expanded_folder, expanded_bucket, version)
             if xml_filename is None:
                 raise RuntimeError("No xml_filename found.")
 
-            xml_origin = "".join((self.settings.storage_provider, "://", expanded_bucket, "/", expanded_folder + '/' +
-                                  xml_filename))
+            xml_origin = "".join(
+                (self.settings.storage_provider, "://", expanded_bucket, "/",
+                 expanded_folder + '/' + xml_filename))
 
             storage = storage_context(self.settings)
             xml_content = storage.get_resource_as_string(xml_origin)
 
             if glencoe_check.has_videos(xml_content):
-                glencoe_check.validate_sources(glencoe_check.metadata(glencoe_check.check_msid(article_id), self.settings))
-                self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
-                                        "Finished Verification. Glencoe is available. Article: " + article_id)
+                gc_data = glencoe_check.metadata(
+                    glencoe_check.check_msid(article_id), self.settings)
+                self.logger.info('gc_data: %s' % json.dumps(gc_data, indent=4))
+                glencoe_check.validate_sources(gc_data)
+                self.emit_monitor_event(
+                    self.settings, article_id, version, run,
+                    self.pretty_name, "end",
+                    "Finished Verification. Glencoe is available. Article: " + article_id)
                 return True
 
-            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
-                                    "Finished Verification. No Glencoe media tags found in xml. "
-                                    "Article: " + article_id)
+            self.emit_monitor_event(
+                self.settings, article_id, version, run,
+                self.pretty_name, "end",
+                ("Finished Verification. No Glencoe media tags found in xml. "
+                 "Article: " + article_id))
             return True
         except AssertionError as err:
             self.logger.info(err)
-            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
-                                    "Glencoe video is not available for article " + article_id + '; message: ' + str(err))
+            self.emit_monitor_event(
+                self.settings, article_id, version, run,
+                self.pretty_name, "error",
+                ("Glencoe video is not available for article " + article_id +
+                 '; message: ' + str(err)))
             time.sleep(60)
             return self.ACTIVITY_TEMPORARY_FAILURE
-        except Exception as e:
-            self.logger.exception(str(e))
-            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
-                                    "An error occurred when checking for Glencoe video. Article " +
-                                    article_id + '; message: ' + str(e))
+        except Exception as exception:
+            self.logger.exception(str(exception))
+            self.emit_monitor_event(
+                self.settings, article_id, version, run,
+                self.pretty_name, "error",
+                ("An error occurred when checking for Glencoe video. Article " +
+                 article_id + '; message: ' + str(exception)))
             return self.ACTIVITY_PERMANENT_FAILURE
-
-
