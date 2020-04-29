@@ -33,6 +33,7 @@ class TestVerifyGlencoe(unittest.TestCase):
         request_mock.return_value = FakeResponse(404, None)
         fake_session.return_value = FakeSession(session_example)
         fake_storage_context.return_value = FakeStorageContext()
+        fake_sleep.return_value = True
         fake_get_xml_file_name.return_value = "anything.xml"
 
         result = self.verifyglencoe.do_activity(test_data.ExpandArticle_data)
@@ -59,6 +60,7 @@ class TestVerifyGlencoe(unittest.TestCase):
         request_mock.return_value = FakeResponse(500, None)
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext()
+        fake_sleep.return_value = True
         fake_get_xml_file_name.return_value = "anything.xml"
 
         result = self.verifyglencoe.do_activity(test_data.ExpandArticle_data)
@@ -85,6 +87,7 @@ class TestVerifyGlencoe(unittest.TestCase):
             fake_glencoe_check_validate_sources, fake_glencoe_check_metadata):
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext()
+        fake_glencoe_check_metadata.return_value = {}
         fake_get_xml_file_name.return_value = "anything.xml"
 
         fake_glencoe_check_validate_sources.side_effect = Exception("Fake Time out")
