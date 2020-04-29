@@ -12,6 +12,46 @@ class TestVerifyGlencoe(unittest.TestCase):
         self.logger = FakeLogger()
         self.verifyglencoe = activity_VerifyGlencoe(settings_mock, self.logger, None, None, None)
 
+    @patch('provider.glencoe_check.validate_sources')
+    @patch('provider.glencoe_check.metadata')
+    @patch('provider.glencoe_check.has_videos')
+    @patch('provider.glencoe_check.check_msid')
+    @patch('provider.lax_provider.get_xml_file_name')
+    @patch('activity.activity_VerifyGlencoe.storage_context')
+    @patch('activity.activity_VerifyGlencoe.get_session')
+    @patch.object(activity_VerifyGlencoe, 'emit_monitor_event')
+    def test_do_acitvity_has_videos(
+            self, fake_emit_monitor, fake_session, fake_storage_context, fake_get_xml_file_name,
+            fake_check_msid, fake_has_videos, fake_metadata, fake_validate_sources):
+        """test for a successful result if has videos"""
+        fake_session.return_value = FakeSession(test_data.session_example)
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_get_xml_file_name.return_value = "anything.xml"
+        fake_check_msid.return_value = test_data.session_example.get('article_id')
+        fake_metadata.return_value = {}
+        fake_has_videos.return_value = True
+        fake_validate_sources.return_value = True
+        result = self.verifyglencoe.do_activity(test_data.ExpandArticle_data)
+        self.assertTrue(result)
+
+    @patch('provider.glencoe_check.has_videos')
+    @patch('provider.glencoe_check.check_msid')
+    @patch('provider.lax_provider.get_xml_file_name')
+    @patch('activity.activity_VerifyGlencoe.storage_context')
+    @patch('activity.activity_VerifyGlencoe.get_session')
+    @patch.object(activity_VerifyGlencoe, 'emit_monitor_event')
+    def test_do_acitvity_no_videos(
+            self, fake_emit_monitor, fake_session, fake_storage_context, fake_get_xml_file_name,
+            fake_check_msid, fake_has_videos):
+        """test for a successful result if article does not have videos"""
+        fake_session.return_value = FakeSession(test_data.session_example)
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_get_xml_file_name.return_value = "anything.xml"
+        fake_check_msid.return_value = test_data.session_example.get('article_id')
+        fake_has_videos.return_value = False
+        result = self.verifyglencoe.do_activity(test_data.ExpandArticle_data)
+        self.assertTrue(result)
+
     @patch('time.sleep')
     @patch('provider.lax_provider.get_xml_file_name')
     @patch('activity.activity_VerifyGlencoe.storage_context')
