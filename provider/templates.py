@@ -297,6 +297,8 @@ class Templates(object):
 
             jinja_env = self.get_jinja_env()
             tmpl = self.get_jinja_template(jinja_env, template_name)
+            # fix special characters in subject
+            article = article_title_char_escape(article)
             headers_str = tmpl.render(author=author, article=article)
             headers = json.loads(headers_str)
             # Add the email format as specified
@@ -383,3 +385,16 @@ def email_body(templates_object, email_type, recipient,
             logger.info(log_info)
             logger.exception(str(exception))
     return body
+
+
+def json_char_escape(string):
+    return string.replace('\\', '\\\\').replace('"', '\\"')
+
+
+def article_title_char_escape(article):
+    """escape characters in article object article_title for JSON parsing"""
+    if hasattr(article, 'article_title'):
+        article.article_title = json_char_escape(article.article_title)
+    if isinstance(article, dict) and 'article_title' in article:
+        article['article_title'] = json_char_escape(article['article_title'])
+    return article
