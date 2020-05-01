@@ -1,10 +1,10 @@
 import os
+import time
 import json
 from digestparser import json_output
 from provider.execution_context import get_session
 from provider.article_processing import download_jats
-import provider.digest_provider as digest_provider
-import provider.lax_provider as lax_provider
+from provider import digest_provider, email_provider, lax_provider, utils
 from activity.objects import Activity
 
 
@@ -103,19 +103,38 @@ class activity_IngestDigestToEndpoint(Activity):
         jats_file = download_jats(
             self.settings, session.get_value("expanded_folder"),
             self.directories.get("TEMP_DIR"), self.logger)
+
         # related article data
-        related = related_from_lax(article_id, version, self.settings, self.logger)
+        try:
+            related = related_from_lax(article_id, version, self.settings, self.logger)
+        except Exception as exception:
+            # email error message and return self.ACTIVITY_SUCCESS
+            message = (
+                'Failed to get related from lax for digest %s in %s: %s' %
+                (article_id, self.pretty_name, str(exception)))
+            self.logger.exception(message)
+            return self.email_error_return(article_id, message)
+
         # generate the digest content
-        self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
-        if self.digest_content:
-            self.statuses["generate"] = True
-        if self.statuses.get("generate") is not True:
-            self.logger.info(
-                ("Unable to generate Digest content for docx_file %s, " +
-                 "jats_file %s, image_file %s") %
-                (docx_file, jats_file, image_file))
-            # for now return success to not impede the article ingest workflow
-            return self.ACTIVITY_SUCCESS
+        try:
+            self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
+            if self.digest_content:
+                self.statuses["generate"] = True
+            if self.statuses.get("generate") is not True:
+                # email error message and return self.ACTIVITY_SUCCESS
+                message = (
+                    ("Unable to generate Digest content for docx_file %s, " +
+                     "jats_file %s, image_file %s") %
+                    (docx_file, jats_file, image_file))
+                self.logger.info(message)
+                return self.email_error_return(article_id, message)
+        except Exception as exception:
+            # email error message and return self.ACTIVITY_SUCCESS
+            message = (
+                'Failed to generate digest json for %s in %s: %s' %
+                (article_id, self.pretty_name, str(exception)))
+            self.logger.exception(message)
+            return self.email_error_return(article_id, message)
 
         # issue put to the endpoint
         digest_id = self.digest_content.get("id")
@@ -126,10 +145,18 @@ class activity_IngestDigestToEndpoint(Activity):
             digest_provider.set_stage(self.digest_content, "preview")
         self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
-        put_response = digest_provider.put_digest_to_endpoint(
-            self.logger, digest_id, self.digest_content, self.settings)
-        if put_response:
-            self.statuses["ingest"] = True
+        try:
+            put_response = digest_provider.put_digest_to_endpoint(
+                self.logger, digest_id, self.digest_content, self.settings)
+            if put_response:
+                self.statuses["ingest"] = True
+        except Exception as exception:
+            # email error message and return self.ACTIVITY_SUCCESS
+            message = (
+                'Failed to ingest digest json to endpoint %s in %s: %s' %
+                (article_id, self.pretty_name, str(exception)))
+            self.logger.exception(message)
+            return self.email_error_return(article_id, message)
 
         self.logger.info(
             "%s for article_id %s statuses: %s" % (self.name, str(article_id), self.statuses))
@@ -155,6 +182,11 @@ class activity_IngestDigestToEndpoint(Activity):
             self.logger.exception("Exception when getting the session for Starting ingest digest " +
                                   " to endpoint. Details: %s" % str(exception))
         return success, run, session, article_id, version
+
+    def email_error_return(self, article_id, message):
+        """log exception, email error message and return activity result"""
+        send_error_email(article_id, message, self.settings, self.logger)
+        return self.ACTIVITY_SUCCESS
 
     def emit_message(self, article_id, version, run, status, message):
         "emit message to the queue"
@@ -241,6 +273,31 @@ def related_from_lax(article_id, version, settings, logger=None, auth=True):
         logger.exception(
             "Exception in getting article snippet from Lax for article_id %s, version %s. Details: %s" %
             (str(article_id), str(version), str(exception)))
+        raise
     if related_json:
         related = [related_json]
     return related
+
+
+def error_email_subject(article_id):
+    "email subject for an error email"
+    return u'Error ingesting digest to endpoint: {article_id}'.format(article_id=article_id)
+
+
+def send_error_email(article_id, message, settings, logger):
+    "email error message to the recipients"
+
+    datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
+    body = email_provider.simple_email_body(datetime_string, message)
+    subject = error_email_subject(article_id)
+    sender_email = settings.digest_sender_email
+
+    recipient_email_list = email_provider.list_email_recipients(
+        settings.digest_validate_error_recipient_email)
+
+    messages = email_provider.simple_messages(
+        sender_email, recipient_email_list, subject, body, logger=logger)
+    logger.info('Formatted %d email error messages' % len(messages))
+
+    details = email_provider.smtp_send_messages(settings, messages, logger)
+    logger.info('Email sending details: %s' % str(details))

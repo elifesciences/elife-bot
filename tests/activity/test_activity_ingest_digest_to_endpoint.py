@@ -6,9 +6,11 @@ import unittest
 from mock import patch
 from ddt import ddt, data
 from provider import article, article_processing, digest_provider, lax_provider
+import activity.activity_IngestDigestToEndpoint as activity_module
 from activity.activity_IngestDigestToEndpoint import (
     activity_IngestDigestToEndpoint as activity_object)
 from tests import read_fixture
+from tests.classes_mock import FakeSMTPServer
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext, FakeSession, FakeResponse
 import tests.activity.test_activity_data as test_activity_data
@@ -267,6 +269,38 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
         result = self.activity.do_activity(activity_data)
         self.assertEqual(result, expected_result)
+
+    @patch.object(activity_module, 'related_from_lax')
+    @patch.object(article_processing, 'download_article_xml')
+    @patch.object(digest_provider, 'image_file_name_from_s3')
+    @patch.object(digest_provider, 'download_docx_from_s3')
+    @patch.object(digest_provider, 'docx_exists_in_s3')
+    @patch.object(activity_object, 'approve')
+    @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch.object(activity_object, 'emit_monitor_event')
+    @patch('activity.activity_IngestDigestToEndpoint.get_session')
+    def test_do_activity_lax_exception(
+            self, fake_session, fake_emit, fake_email_smtp_connect,
+            fake_approve, fake_docx_exists, fake_download,
+            fake_image, fake_download_article_xml, fake_related_from_lax):
+        session_test_data = session_data({})
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
+        fake_session.return_value = FakeSession(session_test_data)
+        fake_approve.return_value = True
+        fake_docx_exists.return_value = True
+        fake_download.return_value = True
+        fake_image.return_value = True
+        fake_download_article_xml.return_value = True
+        fake_related_from_lax.side_effect = Exception('Related from lax exception')
+
+        activity_data = test_activity_data.data_example_before_publish
+        expected_result = activity_object.ACTIVITY_SUCCESS
+        result = self.activity.do_activity(activity_data)
+        self.assertEqual(result, expected_result)
+        self.assertEqual(
+            self.activity.logger.logexception,
+            ('Failed to get related from lax for digest 00353 in Ingest Digest'
+             ' to API endpoint: Related from lax exception'))
 
     @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
     @data(
