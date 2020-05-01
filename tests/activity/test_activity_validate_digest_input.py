@@ -47,15 +47,6 @@ class TestValidateDigestInput(unittest.TestCase):
     @patch.object(activity_module.digest_provider, 'storage_context')
     @data(
         {
-            "comment": 'digest docx file example',
-            "filename": 'DIGEST+99999.docx',
-            "expected_result": True,
-            "expected_build_status": True,
-            "expected_valid_status": True,
-            "expected_email_status": None,
-            "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
-        },
-        {
             "comment": 'digest zip file example',
             "filename": 'DIGEST+99999.zip',
             "expected_result": True,
@@ -91,7 +82,7 @@ class TestValidateDigestInput(unittest.TestCase):
         },
         {
             "comment": 'digest author name encoding file example',
-            "filename": 'DIGEST+99997.docx',
+            "filename": 'DIGEST+99997.zip',
             "expected_result": True,
             "expected_build_status": True,
             "expected_valid_status": True,
@@ -118,14 +109,15 @@ class TestValidateDigestInput(unittest.TestCase):
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         filename_used = input_data(test_data.get("filename")).get("file_name")
         # check assertions
-        self.assertEqual(result, test_data.get("expected_result"),
-                         'failed in {comment}, got {result}, filename {filename}, ' +
-                         'input_file {input_file}, digest {digest}'.format(
-                             comment=test_data.get("comment"),
-                             result=result,
-                             input_file=self.activity.input_file,
-                             filename=filename_used,
-                             digest=self.activity.digest))
+        self.assertEqual(
+            result, test_data.get("expected_result"),
+            ('failed in {comment}, got {result}, filename {filename}, ' +
+             'input_file {input_file}, digest {digest}').format(
+                 comment=test_data.get("comment"),
+                 result=result,
+                 input_file=self.activity.input_file,
+                 filename=filename_used,
+                 digest=self.activity.digest))
         self.assertEqual(self.activity.statuses.get("build"),
                          test_data.get("expected_build_status"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))

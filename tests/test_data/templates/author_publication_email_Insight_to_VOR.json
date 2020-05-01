@@ -1,5 +1,5 @@
 {
- "sender_email": "production@elifesciences.org",
- "email_type": "author_publication_email_Insight_to_VOR",
- "subject": "eLife has published an Insight article about your research article: {{ article.article_title }}"
+  "sender_email": "press@example.org",
+  "email_type": "author_publication_email_Insight_to_VOR",
+  "subject": "eLife has published an Insight article about your research article: {{ article.doi }} {{ article.article_title }}"
 }

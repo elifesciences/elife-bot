@@ -1,0 +1,5 @@
+{
+  "sender_email": "press@example.org",
+  "email_type": "author_publication_email_POA",
+  "subject": "The accepted version of your eLife article has been published: {{ article.doi }} {{ article.article_title }}"
+}

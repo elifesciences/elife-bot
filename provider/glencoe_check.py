@@ -31,10 +31,6 @@ glencoe_resp = {
 
 def validate_sources(gc_data):
 
-    sys.stderr.write(json.dumps(gc_data, indent=4))
-    sys.stderr.write('\n')
-    sys.stderr.flush()
-
     sources = {
         'mp4': 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
         'webm': 'video/webm; codecs="vp8.0, vorbis"',

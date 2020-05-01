@@ -53,7 +53,15 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife00013.xml"],
             "article_id": "00013",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.00013',
+                    'Total prepared articles: 1',
+                    ('Sending author_publication_email_VOR_after_POA type email '
+                     'for article 00013 to recipient_email author13-01@example.com')
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "normal article with input_data None",
@@ -62,7 +70,13 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife03385.xml"],
             "article_id": "03385",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.03385',
+                    'Total prepared articles: 1'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "basic PoA article",
@@ -71,7 +85,13 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
             "article_id": "03977",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.03977',
+                    'Total prepared articles: 1'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "Cannot build article",
@@ -80,7 +100,12 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["does_not_exist.xml"],
             "article_id": None,
-            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE})
+            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE,
+            "admin_email_content_contains":
+                [
+                    'PublicationEmail email templates warmed'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "Not warmed templates",
@@ -89,7 +114,12 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": False,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
             "article_id": None,
-            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE})
+            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE,
+            "admin_email_content_contains":
+                [
+                    'PublicationEmail email templates did not warm successfully'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "article-commentary with a related article",
@@ -99,7 +129,13 @@ class TestPublicationEmail(unittest.TestCase):
             "article_xml_filenames": ["elife-18753-v1.xml"],
             "related_article": "tests/test_data/elife-15747-v2.xml",
             "article_id": "18753",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.18753',
+                    'Total prepared articles: 1'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "article-commentary, related article cannot be found",
@@ -109,7 +145,14 @@ class TestPublicationEmail(unittest.TestCase):
             "article_xml_filenames": ["elife-18753-v1.xml"],
             "related_article": None,
             "article_id": "18753",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.18753',
+                    'Could not build the article related to insight 10.7554/eLife.18753',
+                    'Total prepared articles: 0'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "article-commentary plus its matching insight",
@@ -118,7 +161,16 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife-18753-v1.xml", "elife-15747-v2.xml"],
             "article_id": "18753",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.18753',
+                    'Parsed https://doi.org/10.7554/eLife.15747',
+                    'Total parsed articles: 2',
+                    'Total approved articles: 2',
+                    'Total prepared articles: 1'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "feature article",
@@ -127,7 +179,13 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife-00353-v1.xml"],
             "article_id": "00353",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.00353',
+                    'Total prepared articles: 1'
+                ]
+            })
 
         self.do_activity_passes.append({
             "comment": "article-commentary with no related-article tag",
@@ -136,7 +194,35 @@ class TestPublicationEmail(unittest.TestCase):
             "templates_warmed": True,
             "article_xml_filenames": ["elife-23065-v1.xml"],
             "article_id": "23065",
-            "activity_success": True})
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.23065',
+                    'Could not build the article related to insight 10.7554/eLife.23065',
+                    'Total approved articles: 1',
+                    'Total prepared articles: 0'
+                ]
+            })
+
+        self.do_activity_passes.append({
+            "comment": "recipients from the article XML file",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+            "input_data": {},
+            "templates_warmed": True,
+            "article_xml_filenames": ["elife-32991-v2.xml"],
+            "article_id": "23065",
+            "activity_success": True,
+            "admin_email_content_contains":
+                [
+                    'Parsed https://doi.org/10.7554/eLife.32991',
+                    'Total approved articles: 1',
+                    'Total prepared articles: 1',
+                    'No authors found for article doi id 32991',
+                    ('Sending author_publication_email_VOR_after_POA type email for '
+                     'article 32991 to recipient_email alhonore@hotmail.com'),
+                    'Adding alhonore@hotmail.com from additional',
+                ]
+            })
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -150,6 +236,7 @@ class TestPublicationEmail(unittest.TestCase):
             shutil.copy(source_doc, dest_doc)
         self.activity.templates.email_templates_warmed = templates_warmed
 
+    @patch.object(activity_module, 'get_related_article')
     @patch('provider.article.article.download_article_xml_from_s3')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('provider.lax_provider.article_versions')
@@ -164,7 +251,8 @@ class TestPublicationEmail(unittest.TestCase):
                          fake_download_email_templates,
                          fake_article_versions,
                          fake_email_smtp_connect,
-                         fake_download_xml):
+                         fake_download_xml,
+                         fake_get_related_article):
 
         directory = TempDirectory()
         fake_storage_context.return_value = FakeStorageContext()
@@ -184,7 +272,9 @@ class TestPublicationEmail(unittest.TestCase):
             if pass_test_data.get("related_article"):
                 related_article = article()
                 related_article.parse_article_file(pass_test_data.get("related_article"))
-                self.activity.related_articles = [related_article]
+                fake_get_related_article.return_value = related_article
+            else:
+                fake_get_related_article.return_value = None
 
             fake_article_versions.return_value = (
                 200, pass_test_data.get("lax_article_versions_response_data"))
@@ -201,8 +291,16 @@ class TestPublicationEmail(unittest.TestCase):
                 'failed success check in {comment}'.format(
                     comment=pass_test_data.get("comment")))
 
+            if pass_test_data.get("admin_email_content_contains"):
+                for expected in pass_test_data.get("admin_email_content_contains"):
+                    self.assertTrue(
+                        expected in self.activity.admin_email_content,
+                        '{expected} not found in admin_email_content for {comment}'.format(
+                            expected=expected, comment=pass_test_data.get('comment')))
+
             # reset object values
             self.activity.related_articles = []
+            self.activity.admin_email_content = ''
 
     @patch.object(activity_PublicationEmail, "download_templates")
     def test_do_activity_download_failure(self, fake_download_templates):
@@ -312,7 +410,7 @@ class TestPublicationEmail(unittest.TestCase):
         expected_headers = {
             'format': 'html',
             u'email_type': u'author_publication_email_VOR_no_POA',
-            u'sender_email': u'press@elifesciences.org',
+            u'sender_email': u'press@example.org',
             u'subject': u'Authoré, Your eLife paper is now online'
             }
 
@@ -438,6 +536,79 @@ class TestChooseRecipientAuthors(unittest.TestCase):
             self.assertEqual(recipient_authors[0]["e_mail"], expected_0_e_mail)
 
 
+class TestMergeRecipients(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(settings_mock, fake_logger, None, None, None)
+        # some list data as would be normally be produced and used
+        self.list_one = [
+            {
+                'author_type_cde': 'Contributing Author',
+                'e_mail': 'author13-01@example.com',
+                'first_nm': 'Author',
+                'ms_no': '13',
+                'dual_corr_author_ind': ' ',
+                'author_seq': '1',
+                'last_nm': 'Uno'},
+            {
+                'author_type_cde': 'Contributing Author',
+                'e_mail': 'author13-02@example.com',
+                'first_nm': 'Author',
+                'ms_no': '13',
+                'dual_corr_author_ind': ' ',
+                'author_seq': '2',
+                'last_nm': 'Dos'}]
+        self.list_two = [
+            OrderedDict([
+                ('e_mail', 'article_xml_recipient@example.org'),
+                ('first_nm', 'First'),
+                ('last_nm', 'Last')
+            ])
+        ]
+        self.list_two_duplicate = [
+            OrderedDict([
+                ('e_mail', 'author13-01@example.com'),
+                ('first_nm', 'First'),
+                ('last_nm', 'Last')
+            ])
+        ]
+
+    def test_merge_recipients_empty(self):
+        list_one = None
+        list_two = None
+        expected_count = 0
+        merged_list = self.activity.merge_recipients(list_one, list_two)
+        self.assertEqual(len(merged_list), expected_count)
+
+    def test_merge_recipients_one_only(self):
+        list_one = self.list_one
+        list_two = None
+        expected_count = 2
+        merged_list = self.activity.merge_recipients(list_one, list_two)
+        self.assertEqual(len(merged_list), expected_count)
+
+    def test_merge_recipients_two_only(self):
+        list_one = None
+        list_two = self.list_two
+        expected_count = 1
+        merged_list = self.activity.merge_recipients(list_one, list_two)
+        self.assertEqual(len(merged_list), expected_count)
+
+    def test_merge_recipients(self):
+        list_one = self.list_one
+        list_two = self.list_two
+        expected_count = 3
+        merged_list = self.activity.merge_recipients(list_one, list_two)
+        self.assertEqual(len(merged_list), expected_count)
+
+    def test_merge_recipients_duplicate(self):
+        list_one = self.list_one
+        list_two = self.list_two_duplicate
+        expected_count = 2
+        merged_list = self.activity.merge_recipients(list_one, list_two)
+        self.assertEqual(len(merged_list), expected_count)
+
+
 class TestGetRelatedArticle(unittest.TestCase):
 
     def tearDown(self):
@@ -550,6 +721,49 @@ class TestS3KeyNamesToClean(unittest.TestCase):
         self.assertEqual(
             s3_key_names, test_data.get("expected"),
             'failed check in {comment}'.format(comment=test_data.get("comment")))
+
+
+@ddt
+class TestAuthorsFromXML(unittest.TestCase):
+
+    @data(
+        {
+            "comment": "older style xml with email in author notes, not supported",
+            "filename": "elife00013.xml",
+            "expected": []
+        },
+        {
+            "comment": "example of email in author aff",
+            "filename": "elife-18753-v1.xml",
+            "expected": [
+                OrderedDict([
+                    ('e_mail', 'seppe@illinois.edu'),
+                    ('first_nm', 'Seppe'),
+                    ('last_nm', 'Kuehn')]),
+            ]
+        },
+        {
+            "comment": "newer style XML example",
+            "filename": "elife-32991-v2.xml",
+            "expected": [
+                OrderedDict([
+                    ('e_mail', 'alhonore@hotmail.com'),
+                    ('first_nm', 'Aurore'),
+                    ('last_nm', "L'honoré")]),
+                OrderedDict([
+                    ('e_mail', 'didier.montarras@pasteur.fr'),
+                    ('first_nm', 'Didier'),
+                    ('last_nm', 'Montarras')]),
+            ]
+        },
+    )
+    def test_authors_from_xml(self, test_data):
+        article_object = article()
+        full_filename = os.path.join(
+            'tests/files_source/publication_email/outbox', test_data.get('filename'))
+        article_object.parse_article_file(full_filename)
+        authors = activity_module.authors_from_xml(article_object)
+        self.assertEqual(authors, test_data.get("expected"))
 
 
 def fake_get_s3key(directory, to_dir, document, source_doc):

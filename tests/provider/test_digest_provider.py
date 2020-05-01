@@ -1,16 +1,16 @@
 # coding=utf-8
- 
+
 import unittest
 import os
 import copy
-import tests.settings_mock as settings_mock
-from digestparser.objects import Digest, Image
 from mock import patch, MagicMock
+from digestparser.objects import Digest, Image
+import provider.digest_provider as digest_provider
+from provider.digest_provider import ErrorCallingDigestException, DigestValidateImageException
+from tests import read_fixture
 from tests.activity.helpers import create_digest, create_digest_image
 import tests.test_data as test_data
-import provider.digest_provider as digest_provider
-from provider.digest_provider import ErrorCallingDigestException
-from tests import read_fixture
+import tests.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 
 
@@ -58,6 +58,36 @@ class TestDigestProvider(unittest.TestCase):
         digest = Digest()
         digest.image = Image()
         self.assertEqual(digest_provider.has_image(digest), False)
+
+    def test_validate_image(self):
+        "validate digest image file type"
+        digest = Digest()
+        image = Image()
+        image.file = 'image.jpg'
+        digest.image = image
+        self.assertEqual(digest_provider.validate_image(digest), True)
+
+    def test_validate_image_no_file(self):
+        "validate digest image file is missing"
+        digest = Digest()
+        self.assertRaises(
+            DigestValidateImageException, digest_provider.validate_image, digest)
+
+    def test_validate_image_unsupported_extension(self):
+        "validate digest image file type pdf"
+        digest = Digest()
+        image = Image()
+        image.file = 'image.pdf'
+        digest.image = image
+        self.assertEqual(digest_provider.validate_image(digest), False)
+
+    def test_validate_image_upper_case_unsupported(self):
+        "validate digest image file extension uppercase is not allowed by RAML schema"
+        digest = Digest()
+        image = Image()
+        image.file = 'image.JPG'
+        digest.image = image
+        self.assertEqual(digest_provider.validate_image(digest), False)
 
     @patch('requests.get')
     def test_get_digest_200(self, mock_requests_get):
@@ -155,7 +185,7 @@ class TestDigestProvider(unittest.TestCase):
     def test_published_date_from_lax_no_vor(self, fake_article_versions):
         versions_data = copy.copy(test_data.lax_article_versions_response_data)
         # delete the vor data
-        del(versions_data[2])
+        del versions_data[2]
         print(versions_data)
         fake_article_versions.return_value = 200, versions_data
         published = digest_provider.published_date_from_lax(settings_mock, '08411')
@@ -240,7 +270,8 @@ class TestValidateDigest(unittest.TestCase):
         expected_status = False
         expected_error_messages = ['Digest author is missing', 'Digest DOI is missing',
                                    'Digest text is missing', 'Digest title is missing',
-                                   'Digest image is missing']
+                                   'Digest image is missing',
+                                   'Validating digest image raised an exception']
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
@@ -293,7 +324,9 @@ class TestValidateDigest(unittest.TestCase):
         digest_content = create_digest(
             'Anonymous', '10.7554/eLife.99999', ['text'], 'Title', None)
         expected_status = False
-        expected_error_messages = ['Digest image is missing']
+        expected_error_messages = [
+            'Digest image is missing',
+            'Validating digest image raised an exception']
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
@@ -305,6 +338,19 @@ class TestValidateDigest(unittest.TestCase):
             'Anonymous', '10.7554/eLife.99999', ['text'], 'Title', digest_image)
         expected_status = False
         expected_error_messages = ['Digest image caption is missing']
+        status, error_messages = digest_provider.validate_digest(digest_content)
+        self.assertEqual(status, expected_status)
+        self.assertEqual(error_messages, expected_error_messages)
+
+    def test_validate_digest_digest_image_type_unsupported(self):
+        "approving an Digest with and image type not supported"
+        image_file = 'file.unsupported'
+        digest_image = create_digest_image('Caption', image_file)
+        digest_content = create_digest(
+            'Anonymous', '10.7554/eLife.99999', ['text'], 'Title', digest_image)
+        expected_status = False
+        expected_error_messages = [
+            'Digest image %s type is not supported' % image_file]
         status, error_messages = digest_provider.validate_digest(digest_content)
         self.assertEqual(status, expected_status)
         self.assertEqual(error_messages, expected_error_messages)
