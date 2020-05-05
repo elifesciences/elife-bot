@@ -71,7 +71,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "article_id": '00000',
             "first_vor": True,
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_approve_status": True,
+            "expected_approve_status": False,
             "expected_download_status": None,
             "expected_log_info": [
                 'Digest docx file does not exist in S3 for article 00000']
@@ -274,20 +274,18 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch.object(article_processing, 'download_article_xml')
     @patch.object(digest_provider, 'image_file_name_from_s3')
     @patch.object(digest_provider, 'download_docx_from_s3')
-    @patch.object(digest_provider, 'docx_exists_in_s3')
     @patch.object(activity_object, 'approve')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch.object(activity_object, 'emit_monitor_event')
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
     def test_do_activity_lax_exception(
             self, fake_session, fake_emit, fake_email_smtp_connect,
-            fake_approve, fake_docx_exists, fake_download,
+            fake_approve, fake_download,
             fake_image, fake_download_article_xml, fake_related_from_lax):
         session_test_data = session_data({})
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_session.return_value = FakeSession(session_test_data)
         fake_approve.return_value = True
-        fake_docx_exists.return_value = True
         fake_download.return_value = True
         fake_image.return_value = True
         fake_download_article_xml.return_value = True
@@ -400,6 +398,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         success = self.activity.emit_error_message("", "", "", "")
         self.assertEqual(success, True)
 
+    @patch.object(digest_provider, 'docx_exists_in_s3')
     @patch.object(lax_provider, 'article_status_version_map')
     @patch.object(lax_provider, 'article_highest_version')
     @data(
@@ -454,8 +453,9 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             "expected": False
         },
         )
-    def test_approve(self, test_data, fake_highest_version, fake_version_map):
+    def test_approve(self, test_data, fake_highest_version, fake_version_map, fake_doc_exists):
         "test various scenarios for digest ingest approval"
+        fake_doc_exists.return_value = True
         fake_highest_version.return_value = test_data.get("highest_version")
         fake_version_map.return_value = test_data.get("version_map")
         status = self.activity.approve(

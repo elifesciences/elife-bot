@@ -75,15 +75,6 @@ class activity_IngestDigestToEndpoint(Activity):
             self.emit_end_message(article_id, version, run)
             return self.ACTIVITY_SUCCESS
 
-        # check if there is a digest docx in the bucket for this article
-        docx_file_exists = digest_provider.docx_exists_in_s3(
-            self.settings, article_id, self.settings.bot_bucket, self.logger)
-        if docx_file_exists is not True:
-            self.logger.info(
-                "Digest docx file does not exist in S3 for article %s" % article_id)
-            self.emit_end_message(article_id, version, run)
-            return self.ACTIVITY_SUCCESS
-
         # Download digest from the S3 outbox
         docx_file = digest_provider.download_docx_from_s3(
             self.settings, article_id, self.settings.bot_bucket,
@@ -246,6 +237,14 @@ class activity_IngestDigestToEndpoint(Activity):
         elif run_type_status is False:
             # otherwise depend on the silent correction run_type logic
             approve_status = False
+
+        # check if there is a digest docx in the bucket for this article
+        if approve_status:
+            if not digest_provider.docx_exists_in_s3(
+                    self.settings, article_id, self.settings.bot_bucket, self.logger):
+                self.logger.info(
+                    "Digest docx file does not exist in S3 for article %s" % article_id)
+                approve_status = False
 
         return approve_status
 
