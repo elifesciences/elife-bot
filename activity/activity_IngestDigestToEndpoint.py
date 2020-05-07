@@ -84,31 +84,10 @@ class activity_IngestDigestToEndpoint(Activity):
                 article_id, str(digest_details.get("error_messages")))
 
         # generate the digest content
-        try:
-            self.digest_content = self.digest_json(
-                digest_details.get("docx_file"),
-                digest_details.get("jats_file"),
-                digest_details.get("image_file"),
-                digest_details.get("related"))
-            if self.digest_content:
-                self.statuses["generate"] = True
-            if self.statuses.get("generate") is not True:
-                # email error message and return self.ACTIVITY_SUCCESS
-                message = (
-                    ("Unable to generate Digest content for docx_file %s, " +
-                     "jats_file %s, image_file %s") % (
-                         digest_details.get("docx_file"),
-                         digest_details.get("jats_file"),
-                         digest_details.get("image_file")))
-                self.logger.info(message)
-                return self.email_error_return(article_id, message)
-        except Exception as exception:
-            # email error message and return self.ACTIVITY_SUCCESS
-            message = (
-                'Failed to generate digest json for %s in %s: %s' %
-                (article_id, self.pretty_name, str(exception)))
-            self.logger.exception(message)
-            return self.email_error_return(article_id, message)
+        self.digest_content, error_messages = self.generate_digest_content(
+            article_id, digest_details)
+        if error_messages:
+            return self.email_error_return(article_id, str(error_messages))
 
         # issue put to the endpoint
         digest_id = self.digest_content.get("id")
@@ -276,6 +255,39 @@ class activity_IngestDigestToEndpoint(Activity):
         digest_details['error_messages'] = error_messages
 
         return digest_details
+
+    def generate_digest_content(self, article_id, digest_details):
+        digest_content = None
+        error_messages = []
+
+        try:
+            digest_content = self.digest_json(
+                digest_details.get("docx_file"),
+                digest_details.get("jats_file"),
+                digest_details.get("image_file"),
+                digest_details.get("related"))
+        except Exception as exception:
+            # email error message and return self.ACTIVITY_SUCCESS
+            message = (
+                'Failed to generate digest json for %s in %s: %s' %
+                (article_id, self.pretty_name, str(exception)))
+            self.logger.exception(message)
+            error_messages.append(message)
+
+        if digest_content:
+            self.statuses["generate"] = True
+        else:
+            # email error message and return self.ACTIVITY_SUCCESS
+            message = (
+                ("Unable to generate Digest content for docx_file %s, " +
+                 "jats_file %s, image_file %s") % (
+                     digest_details.get("docx_file"),
+                     digest_details.get("jats_file"),
+                     digest_details.get("image_file")))
+            self.logger.info(message)
+            error_messages.append(message)
+
+        return digest_content, error_messages
 
     def digest_json(self, docx_file, jats_file=None, image_file=None, related=None):
         "generate the digest json content from the docx file and other data"
