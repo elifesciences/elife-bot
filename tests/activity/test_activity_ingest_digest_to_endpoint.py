@@ -303,7 +303,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         self.assertEqual(result, expected_result)
         self.assertEqual(
             self.activity.logger.logexception,
-            ('Failed to get related from lax for digest 00353 in Ingest Digest'
+            ('Error in gathering digest details:'
+             ' Failed to get related from lax for digest 00353 in Ingest Digest'
              ' to API endpoint: Related from lax exception'))
 
     @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
