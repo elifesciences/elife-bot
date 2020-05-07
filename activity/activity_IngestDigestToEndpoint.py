@@ -1,6 +1,7 @@
 import os
 import time
 import json
+from collections import OrderedDict
 from digestparser import json_output
 from provider.execution_context import get_session
 from provider.article_processing import download_jats
@@ -75,48 +76,30 @@ class activity_IngestDigestToEndpoint(Activity):
             self.emit_end_message(article_id, version, run)
             return self.ACTIVITY_SUCCESS
 
-        # Download digest from the S3 outbox
-        docx_file = digest_provider.download_docx_from_s3(
-            self.settings, article_id, self.settings.bot_bucket,
-            self.directories.get("INPUT_DIR"), self.logger)
-        if docx_file:
-            self.statuses["download"] = True
-        if self.statuses.get("download") is not True:
-            self.logger.info(
-                "Unable to download digest file %s for article %s" %
-                (docx_file, article_id))
-            return self.ACTIVITY_PERMANENT_FAILURE
-        # find the image file name
-        image_file = digest_provider.image_file_name_from_s3(
-            self.settings, article_id, self.settings.bot_bucket)
-
-        # download jats file
-        jats_file = download_jats(
-            self.settings, session.get_value("expanded_folder"),
-            self.directories.get("TEMP_DIR"), self.logger)
-
-        # related article data
-        try:
-            related = related_from_lax(article_id, version, self.settings, self.logger)
-        except Exception as exception:
-            # email error message and return self.ACTIVITY_SUCCESS
-            message = (
-                'Failed to get related from lax for digest %s in %s: %s' %
-                (article_id, self.pretty_name, str(exception)))
-            self.logger.exception(message)
-            return self.email_error_return(article_id, message)
+        digest_details = self.gather_digest_details(
+            article_id, version, session.get_value("expanded_folder"))
+        # send email error if any error message is returned
+        if digest_details.get("error_messages"):
+            return self.email_error_return(
+                article_id, str(digest_details.get("error_messages")))
 
         # generate the digest content
         try:
-            self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
+            self.digest_content = self.digest_json(
+                digest_details.get("docx_file"),
+                digest_details.get("jats_file"),
+                digest_details.get("image_file"),
+                digest_details.get("related"))
             if self.digest_content:
                 self.statuses["generate"] = True
             if self.statuses.get("generate") is not True:
                 # email error message and return self.ACTIVITY_SUCCESS
                 message = (
                     ("Unable to generate Digest content for docx_file %s, " +
-                     "jats_file %s, image_file %s") %
-                    (docx_file, jats_file, image_file))
+                     "jats_file %s, image_file %s") % (
+                         digest_details.get("docx_file"),
+                         digest_details.get("jats_file"),
+                         digest_details.get("image_file")))
                 self.logger.info(message)
                 return self.email_error_return(article_id, message)
         except Exception as exception:
@@ -247,6 +230,52 @@ class activity_IngestDigestToEndpoint(Activity):
                 approve_status = False
 
         return approve_status
+
+    def gather_digest_details(self, article_id, version, expanded_folder):
+        digest_details = OrderedDict()
+        error_messages = []
+
+        # Download digest from the S3 outbox
+        docx_file = digest_provider.download_docx_from_s3(
+            self.settings, article_id, self.settings.bot_bucket,
+            self.directories.get("INPUT_DIR"), self.logger)
+        if docx_file:
+            self.statuses["download"] = True
+        if self.statuses.get("download") is not True:
+            message = (
+                "Unable to download digest file %s for article %s" %
+                (docx_file, article_id))
+            self.logger.info(message)
+            error_messages.append(message)
+
+        # find the image file name
+        image_file = digest_provider.image_file_name_from_s3(
+            self.settings, article_id, self.settings.bot_bucket)
+
+        # download jats file
+        jats_file = download_jats(
+            self.settings, expanded_folder,
+            self.directories.get("TEMP_DIR"), self.logger)
+
+        # related article data
+        try:
+            related = related_from_lax(article_id, version, self.settings, self.logger)
+        except Exception as exception:
+            # email error message and return self.ACTIVITY_SUCCESS
+            message = (
+                'Failed to get related from lax for digest %s in %s: %s' %
+                (article_id, self.pretty_name, str(exception)))
+            self.logger.exception(message)
+            error_messages.append(message)
+            related = None
+
+        digest_details['docx_file'] = docx_file
+        digest_details['image_file'] = image_file
+        digest_details['jats_file'] = jats_file
+        digest_details['related'] = related
+        digest_details['error_messages'] = error_messages
+
+        return digest_details
 
     def digest_json(self, docx_file, jats_file=None, image_file=None, related=None):
         "generate the digest json content from the docx file and other data"
