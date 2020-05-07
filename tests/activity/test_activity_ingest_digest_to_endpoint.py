@@ -68,16 +68,6 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch.object(activity_object, 'emit_monitor_event')
     @data(
         {
-            "comment": "article with no digest files",
-            "article_id": '00000',
-            "first_vor": True,
-            "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_approve_status": False,
-            "expected_download_status": None,
-            "expected_log_info": [
-                'Digest docx file does not exist in S3 for article 00000']
-        },
-        {
             "comment": "digest files with no existing digest json ingested",
             "bucket_resources": ["elife-15747-v2.xml"],
             "bot_bucket_resources": ["digests/outbox/99999/digest-99999.docx",
@@ -216,6 +206,33 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                     'failed in {comment}, "{loginfo}" not in loginfo'.format(
                         comment=test_data.get("comment"),
                         loginfo=loginfo))
+
+    @patch.object(lax_provider, 'article_first_by_status')
+    @patch.object(lax_provider, 'article_highest_version')
+    @patch.object(digest_provider, 'storage_context')
+    @patch('activity.activity_IngestDigestToEndpoint.get_session')
+    @patch.object(activity_object, 'emit_monitor_event')
+    def test_do_activity_no_digest(self, fake_emit, fake_session, fake_provider_storage_context,
+                                   fake_highest_version, fake_first):
+        "article with no digest files"
+        fake_provider_storage_context.return_value = FakeStorageContext()
+        fake_first.return_value = True
+        session_test_data = session_data({})
+        fake_session.return_value = FakeSession(session_test_data)
+        fake_highest_version.return_value = 1
+        activity_data = test_activity_data.data_example_before_publish
+
+        # do the activity
+        result = self.activity.do_activity(activity_data)
+        self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
+        self.assertEqual(self.activity.statuses.get("approve"), False)
+        self.assertEqual(self.activity.statuses.get("download"), None)
+        self.assertEqual(
+            'Digest docx file does not exist in S3 for article 00353',
+            self.activity.logger.loginfo[-2])
+        self.assertEqual(
+            'Digest for article 00353 was not approved for ingestion',
+            self.activity.logger.loginfo[-1])
 
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
     def test_do_activity_bad_data(self, fake_session):
