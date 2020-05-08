@@ -3,6 +3,7 @@
 import json
 import copy
 import unittest
+from collections import OrderedDict
 from mock import patch
 from ddt import ddt, data
 from provider import article, article_processing, digest_provider, lax_provider
@@ -74,10 +75,12 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
             "article_id": '99999',
             "first_vor": True,
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_approve_status": True,
-            "expected_download_status": True,
-            "expected_generate_status": True,
-            "expected_ingest_status": True,
+            "expected_statuses": OrderedDict([
+                ("approve", True),
+                ("download", True),
+                ("generate", True),
+                ("ingest", True),
+            ]),
             "expected_json_contains": [
                 u'"title": "Fishing for errors in the\u00a0tests"',
                 "Microbes live in us and on us",
@@ -96,10 +99,12 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
             "lax_highest_version": '1',
             "article_snippet": RELATED_DATA[0],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_approve_status": True,
-            "expected_download_status": True,
-            "expected_generate_status": True,
-            "expected_ingest_status": True,
+            "expected_statuses": OrderedDict([
+                ("approve", True),
+                ("download", True),
+                ("generate", True),
+                ("ingest", True),
+            ]),
             "expected_log_info": [
                 'Digest stage value published']
         },
@@ -135,17 +140,8 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.statuses.get("approve"),
-                         test_data.get("expected_approve_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.statuses.get("download"),
-                         test_data.get("expected_download_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.statuses.get("generate"),
-                         test_data.get("expected_generate_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.statuses.get("ingest"),
-                         test_data.get("expected_ingest_status"),
+        self.assertEqual(self.activity.statuses,
+                         test_data.get("expected_statuses"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         if self.activity.digest_content and test_data.get("expected_json_contains"):
             json_string = json.dumps(self.activity.digest_content)
@@ -174,8 +170,12 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
             'version': '1',
             "lax_highest_version": '1',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_approve_status": False,
-            "expected_download_status": None,
+            "expected_statuses": OrderedDict([
+                ("approve", False),
+                ("download", None),
+                ("generate", None),
+                ("ingest", None),
+            ]),
             "expected_log_info": [
                 '\nNot ingesting digest for PoA article 99999',
                 'Digest for article 99999 was not approved for ingestion']
@@ -189,8 +189,12 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
             "first_vor": False,
             "lax_highest_version": '2',
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_approve_status": False,
-            "expected_download_status": None,
+            "expected_statuses": OrderedDict([
+                ("approve", False),
+                ("download", None),
+                ("generate", None),
+                ("ingest", None),
+            ]),
             "expected_log_info": [
                 ('\nNot ingesting digest for silent correction 99999 version 1'
                  ' is less than highest version 2'),
@@ -203,8 +207,12 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
             "status": 'vor',
             "lax_highest_version": None,
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_approve_status": False,
-            "expected_download_status": None,
+            "expected_statuses": OrderedDict([
+                ("approve", False),
+                ("download", None),
+                ("generate", None),
+                ("ingest", None),
+            ]),
             "expected_log_info": [
                 'Digest for article 99999 was not approved for ingestion']
         },
@@ -226,11 +234,8 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.statuses.get("approve"),
-                         test_data.get("expected_approve_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.statuses.get("download"),
-                         test_data.get("expected_download_status"),
+        self.assertEqual(self.activity.statuses,
+                         test_data.get("expected_statuses"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
         if test_data.get('expected_log_info'):
             for loginfo in test_data.get('expected_log_info'):

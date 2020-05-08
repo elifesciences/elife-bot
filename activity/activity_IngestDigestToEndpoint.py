@@ -31,12 +31,12 @@ class activity_IngestDigestToEndpoint(Activity):
         }
 
         # Track the success of some steps
-        self.statuses = {
-            "approve": None,
-            "download": None,
-            "generate": None,
-            "ingest": None
-        }
+        self.statuses = OrderedDict([
+            ("approve", None),
+            ("download", None),
+            ("generate", None),
+            ("ingest", None),
+        ])
 
         # Digest JSON content
         self.digest_content = None
