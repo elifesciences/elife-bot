@@ -86,10 +86,13 @@ class activity_IngestDigestToEndpoint(Activity):
             return self.email_error_return(article_id, message)
 
         # generate the digest content
-        self.digest_content, error_messages = self.generate_digest_content(
-            article_id, digest_details)
-        if error_messages:
-            return self.email_error_return(article_id, str(error_messages))
+        try:
+            self.digest_content = self.generate_digest_content(article_id, digest_details)
+        except Exception as exception:
+            # send email error if unable to generate digest content
+            message = 'Error in generating digest content for article: %s' % str(exception)
+            self.logger.exception(message)
+            return self.email_error_return(article_id, message)
 
         # issue put to the endpoint
         digest_id = self.digest_content.get("id")
@@ -237,7 +240,6 @@ class activity_IngestDigestToEndpoint(Activity):
 
     def generate_digest_content(self, article_id, digest_details):
         digest_content = None
-        error_messages = []
 
         try:
             digest_content = self.digest_json(
@@ -250,8 +252,7 @@ class activity_IngestDigestToEndpoint(Activity):
             message = (
                 'Failed to generate digest json for %s in %s: %s' %
                 (article_id, self.pretty_name, str(exception)))
-            self.logger.exception(message)
-            error_messages.append(message)
+            raise Exception(message)
 
         if digest_content:
             self.statuses["generate"] = True
@@ -263,10 +264,9 @@ class activity_IngestDigestToEndpoint(Activity):
                      digest_details.get("docx_file"),
                      digest_details.get("jats_file"),
                      digest_details.get("image_file")))
-            self.logger.info(message)
-            error_messages.append(message)
+            raise Exception(message)
 
-        return digest_content, error_messages
+        return digest_content
 
     def digest_json(self, docx_file, jats_file=None, image_file=None, related=None):
         "generate the digest json content from the docx file and other data"

@@ -355,6 +355,59 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
              ' Failed to get related from lax for digest 00353 in Ingest Digest'
              ' to API endpoint: Related from lax exception'))
 
+    @patch.object(activity_object, 'digest_json')
+    @patch.object(activity_object, 'gather_digest_details')
+    @patch.object(activity_object, 'approve')
+    @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch.object(activity_object, 'emit_monitor_event')
+    @patch('activity.activity_IngestDigestToEndpoint.get_session')
+    def test_do_activity_digest_json_exception(
+            self, fake_session, fake_emit, fake_email_smtp_connect,
+            fake_approve, fake_gather_digest_details, fake_digest_json):
+        session_test_data = session_data({})
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
+        fake_session.return_value = FakeSession(session_test_data)
+        fake_approve.return_value = True
+        fake_gather_digest_details.return_value = {}
+        fake_digest_json.side_effect = Exception('Digest content exception')
+
+        activity_data = test_activity_data.data_example_before_publish
+        expected_result = activity_object.ACTIVITY_SUCCESS
+        result = self.activity.do_activity(activity_data)
+        self.assertEqual(result, expected_result)
+        self.assertEqual(
+            self.activity.logger.logexception,
+            ('Error in generating digest content for article: Failed to generate digest json'
+             ' for 00353 in Ingest Digest to API endpoint: Digest content exception'))
+
+    @patch.object(digest_provider, 'put_digest')
+    @patch.object(activity_object, 'generate_digest_content')
+    @patch.object(activity_object, 'gather_digest_details')
+    @patch.object(activity_object, 'approve')
+    @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch.object(activity_object, 'emit_monitor_event')
+    @patch('activity.activity_IngestDigestToEndpoint.get_session')
+    def test_do_activity_put_digest_exception(
+            self, fake_session, fake_emit, fake_email_smtp_connect,
+            fake_approve,
+            fake_gather_digest_details, fake_generate_digest_content, fake_put_digest):
+        session_test_data = session_data({})
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
+        fake_session.return_value = FakeSession(session_test_data)
+        fake_approve.return_value = True
+        fake_gather_digest_details.return_value = {}
+        fake_generate_digest_content.return_value = {}
+        fake_put_digest.side_effect = Exception('Put digest exception')
+
+        activity_data = test_activity_data.data_example_before_publish
+        expected_result = activity_object.ACTIVITY_SUCCESS
+        result = self.activity.do_activity(activity_data)
+        self.assertEqual(result, expected_result)
+        self.assertEqual(
+            self.activity.logger.logexception,
+            ('Failed to ingest digest json to endpoint 00353 in Ingest Digest to API endpoint:'
+             ' Put digest exception'))
+
     @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
     @data(
         {
