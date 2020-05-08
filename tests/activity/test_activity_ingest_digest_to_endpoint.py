@@ -44,7 +44,7 @@ RELATED_DATA = [{
 
 
 @ddt
-class TestIngestDigestToEndpoint(unittest.TestCase):
+class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
 
     def setUp(self):
         self.logger = FakeLogger()
@@ -111,6 +111,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                          fake_first, fake_processing_storage_context,
                          fake_article_storage_context, fake_get):
         # copy files into the input directory using the storage context
+        fake_emit.return_value = True
         named_storage_context = FakeStorageContext()
         if test_data.get('bucket_resources'):
             named_storage_context.resources = test_data.get('bucket_resources')
@@ -212,6 +213,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                                        fake_session, fake_highest_version,
                                        fake_first, fake_email_smtp_connect):
         "situations where approve will be false"
+        fake_emit.return_value = True
         fake_first.return_value = test_data.get("first_vor")
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
@@ -246,6 +248,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     def test_do_activity_no_digest(self, fake_emit, fake_session, fake_provider_storage_context,
                                    fake_highest_version, fake_first):
         "article with no digest files"
+        fake_emit.return_value = True
+        fake_session.return_value = FakeSession({})
         fake_provider_storage_context.return_value = FakeStorageContext()
         fake_first.return_value = True
         session_test_data = session_data({})
@@ -268,6 +272,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
     def test_do_activity_bad_data(self, fake_session):
         "test bad data will be a permanent failure"
+        fake_session.return_value = FakeSession({})
         activity_data = None
         expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
         result = self.activity.do_activity(activity_data)
@@ -276,6 +281,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
     def test_do_activity_bad_queue(self, fake_session):
         "test a bad message queue by not mocking it"
+        fake_session.return_value = FakeSession({})
         activity_data = test_activity_data.data_example_before_publish
         expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
         result = self.activity.do_activity(activity_data)
@@ -289,6 +295,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     def test_do_activity_docx_exists_exception(self, fake_session, fake_emit, fake_first,
                                                fake_highest_version, fake_docx_exists):
         "test and error when checking if a docx exists"
+        fake_emit.return_value = True
+        fake_session.return_value = FakeSession({})
         fake_first.return_value = True
         fake_highest_version.return_value = 1
         session_test_data = session_data({})
@@ -310,6 +318,8 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
                                       fake_emit, fake_first, fake_highest_version,
                                       fake_email_smtp_connect):
         "test unable to download a digest docx file"
+        fake_emit.return_value = True
+        fake_session.return_value = FakeSession({})
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_first.return_value = True
         fake_highest_version.return_value = 1
@@ -336,6 +346,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             self, fake_session, fake_emit, fake_email_smtp_connect,
             fake_approve, fake_download,
             fake_image, fake_download_article_xml, fake_related_from_lax):
+        fake_emit.return_value = True
         session_test_data = session_data({})
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_session.return_value = FakeSession(session_test_data)
@@ -364,6 +375,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     def test_do_activity_digest_json_exception(
             self, fake_session, fake_emit, fake_email_smtp_connect,
             fake_approve, fake_gather_digest_details, fake_digest_json):
+        fake_emit.return_value = True
         session_test_data = session_data({})
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_session.return_value = FakeSession(session_test_data)
@@ -391,6 +403,7 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             self, fake_session, fake_emit, fake_email_smtp_connect,
             fake_approve,
             fake_gather_digest_details, fake_generate_digest_content, fake_put_digest):
+        fake_emit.return_value = True
         session_test_data = session_data({})
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_session.return_value = FakeSession(session_test_data)
@@ -407,6 +420,14 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
             self.activity.logger.logexception,
             ('Failed to ingest digest json to endpoint 00353 in Ingest Digest to API endpoint:'
              ' Put digest exception'))
+
+
+@ddt
+class TestIngestDigestToEndpointDigestJson(unittest.TestCase):
+
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.activity = activity_object(settings_mock, self.logger, None, None, None)
 
     @patch('activity.activity_IngestDigestToEndpoint.json_output.requests.get')
     @data(
@@ -456,15 +477,29 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         expected_json = read_fixture(test_data.get("expected_json_file"), folder_name)
         self.assertEqual(json_content, expected_json)
 
+
+class TestIngestDigestToEndpointSession(unittest.TestCase):
+
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.activity = activity_object(settings_mock, self.logger, None, None, None)
+
     def test_session_data_none_data(self):
         "test no data supplied"
-        success, run, session, article_id, version = self.activity.session_data(None)
-        self.assertEqual(success, None)
+        session_data = self.activity.session_data(None)
+        self.assertEqual(session_data[0], None)
 
     def test_session_data_bad_data(self):
         "test missing data run attribute"
-        success, run, session, article_id, version = self.activity.session_data({})
-        self.assertEqual(success, None)
+        session_data = self.activity.session_data({})
+        self.assertEqual(session_data[0], None)
+
+
+class TestIngestDigestToEndpointEmit(unittest.TestCase):
+
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.activity = activity_object(settings_mock, self.logger, None, None, None)
 
     def test_emit_start_message_none_data(self):
         "test missing data run attribute"
@@ -475,13 +510,6 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
         "test a possible bad connection to the emit queue"
         success = self.activity.emit_start_message("", "", "")
         self.assertEqual(success, None)
-
-    def test_digest_preview_link(self):
-        "digest preview url from settings value and article_id"
-        article_id = "00353"
-        expected = "https://preview/digests/" + article_id
-        preview_link = self.activity.digest_preview_link(article_id)
-        self.assertEqual(preview_link, expected)
 
     def test_activity_end_message_ingest(self):
         "activity end message after a digest ingest"
@@ -503,8 +531,31 @@ class TestIngestDigestToEndpoint(unittest.TestCase):
     @patch.object(activity_object, 'emit_monitor_event')
     def test_emit_error_message(self, fake_emit):
         "test a possible bad connection to the emit queue"
+        fake_emit.return_value = True
         success = self.activity.emit_error_message("", "", "", "")
         self.assertEqual(success, True)
+
+
+class TestIngestDigestToEndpointPreview(unittest.TestCase):
+
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.activity = activity_object(settings_mock, self.logger, None, None, None)
+
+    def test_digest_preview_link(self):
+        "digest preview url from settings value and article_id"
+        article_id = "00353"
+        expected = "https://preview/digests/" + article_id
+        preview_link = self.activity.digest_preview_link(article_id)
+        self.assertEqual(preview_link, expected)
+
+
+@ddt
+class TestIngestDigestToEndpointApprove(unittest.TestCase):
+
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.activity = activity_object(settings_mock, self.logger, None, None, None)
 
     @patch.object(digest_provider, 'docx_exists_in_s3')
     @patch.object(lax_provider, 'article_status_version_map')

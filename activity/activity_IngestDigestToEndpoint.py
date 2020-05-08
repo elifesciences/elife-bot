@@ -9,11 +9,6 @@ from provider import digest_provider, email_provider, lax_provider, utils
 from activity.objects import Activity
 
 
-"""
-activity_IngestDigestToEndpoint.py activity
-"""
-
-
 class activity_IngestDigestToEndpoint(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_IngestDigestToEndpoint, self).__init__(
@@ -171,8 +166,7 @@ class activity_IngestDigestToEndpoint(Activity):
         if statuses.get("ingest") is True:
             return "Finished ingest digest to endpoint for %s. Statuses %s Preview link %s" % (
                 article_id, statuses, self.digest_preview_link(article_id))
-        else:
-            return "No digest ingested for %s. Statuses %s" % (article_id, statuses)
+        return "No digest ingested for %s. Statuses %s" % (article_id, statuses)
 
     def emit_end_message(self, article_id, version, run):
         "emit the end message to the queue"
@@ -196,7 +190,8 @@ class activity_IngestDigestToEndpoint(Activity):
         # check silent corrections and consider the first vor version
         run_type_status = digest_provider.approve_by_run_type(
             self.settings, self.logger, article_id, run_type, version)
-        first_vor_status = digest_provider.approve_by_first_vor(self.settings, self.logger, article_id, version, status)
+        first_vor_status = digest_provider.approve_by_first_vor(
+            self.settings, self.logger, article_id, version, status)
         if (first_vor_status is False and
                 run_type != "silent-correction"):
             # not the first vor and not a silent correction, do not approve
@@ -226,7 +221,7 @@ class activity_IngestDigestToEndpoint(Activity):
 
         # find the image file name
         digest_details['image_file'] = digest_image_file_name_from_s3(
-            article_id, self.settings.bot_bucket, self.settings, self.logger)
+            article_id, self.settings.bot_bucket, self.settings)
 
         # download jats file
         digest_details['jats_file'] = download_jats_for_digest(
@@ -293,7 +288,7 @@ def digest_download_docx_from_s3(article_id, bucket_name, input_dir, settings, l
         raise Exception(message)
 
 
-def digest_image_file_name_from_s3(article_id, bucket_name, settings, logger):
+def digest_image_file_name_from_s3(article_id, bucket_name, settings):
     try:
         return digest_provider.image_file_name_from_s3(settings, article_id, bucket_name)
     except Exception as exception:
@@ -331,7 +326,8 @@ def related_from_lax(article_id, version, settings, logger=None, auth=True):
         related_json = lax_provider.article_snippet(article_id, version, settings, auth)
     except Exception as exception:
         logger.exception(
-            "Exception in getting article snippet from Lax for article_id %s, version %s. Details: %s" %
+            ("Exception in getting article snippet from Lax for article_id"
+             " %s, version %s. Details: %s") %
             (str(article_id), str(version), str(exception)))
         raise
     if related_json:
