@@ -283,7 +283,7 @@ def digest_download_docx_from_s3(article_id, bucket_name, input_dir, settings, l
             settings, article_id, bucket_name, input_dir, logger)
     except Exception as exception:
         message = (
-            "Unable to download digest docx file for article %s" %
+            "Unable to download digest docx file for article %s: %s" %
             (article_id, str(exception)))
         raise Exception(message)
 

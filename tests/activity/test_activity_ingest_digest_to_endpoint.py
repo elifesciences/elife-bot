@@ -427,6 +427,33 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
              ' Put digest exception'))
 
 
+class TestIngestDigestToEndpointGenerate(unittest.TestCase):
+
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.activity = activity_object(settings_mock, self.logger, None, None, None)
+
+    @patch.object(activity_object, 'digest_json')
+    def test_digest_json_exception(self, fake_digest_json):
+        fake_digest_json.side_effect = Exception('Digest content exception')
+        with self.assertRaises(Exception) as test_exception:
+            self.activity.generate_digest_content('00666', {})
+        self.assertEqual(
+            str(test_exception.exception),
+            ('Failed to generate digest json for 00666 in Ingest Digest to API endpoint:'
+             ' Digest content exception'))
+
+    @patch.object(activity_object, 'digest_json')
+    def test_digest_json_blank_content(self, fake_digest_json):
+        fake_digest_json.return_value = {}
+        with self.assertRaises(Exception) as test_exception:
+            self.activity.generate_digest_content('', {})
+        self.assertEqual(
+            str(test_exception.exception),
+            ('Unable to generate Digest content for docx_file None, '
+             'jats_file None, image_file None'))
+
+
 @ddt
 class TestIngestDigestToEndpointDigestJson(unittest.TestCase):
 
@@ -481,6 +508,14 @@ class TestIngestDigestToEndpointDigestJson(unittest.TestCase):
         folder_name = "digests"
         expected_json = read_fixture(test_data.get("expected_json_file"), folder_name)
         self.assertEqual(json_content, expected_json)
+
+    @patch.object(activity_module.json_output, 'build_json')
+    def test_digest_json_exception(self, fake_build_json):
+        fake_build_json.side_effect = Exception('Exception in build_json')
+        self.activity.digest_json('')
+        self.assertEqual(
+            self.activity.logger.logexception,
+            'Exception generating digest json for docx_file . Details: Exception in build_json')
 
 
 class TestIngestDigestToEndpointSession(unittest.TestCase):
@@ -630,6 +665,44 @@ class TestIngestDigestToEndpointApprove(unittest.TestCase):
         )
         self.assertEqual(status, test_data.get("expected"),
                          "failed in {comment}".format(comment=test_data.get("comment")))
+
+
+class TestDigestDownloadDocx(unittest.TestCase):
+
+    @patch.object(digest_provider, 'download_docx_from_s3')
+    def test_digest_download_docx_from_s3_exception(self, fake_download_docx):
+        fake_download_docx.side_effect = Exception('Exception in download docx')
+        with self.assertRaises(Exception) as test_exception:
+            activity_module.digest_download_docx_from_s3('00666', None, None, None, None)
+        self.assertEqual(
+            str(test_exception.exception),
+            'Unable to download digest docx file for article 00666: Exception in download docx')
+
+
+class TestDigestImageFileName(unittest.TestCase):
+
+    @patch.object(digest_provider, 'image_file_name_from_s3')
+    def test_digest_image_file_name_from_s3_exception(self, fake_image_file_name):
+        fake_image_file_name.side_effect = Exception('Exception in digest image file_name')
+        with self.assertRaises(Exception) as test_exception:
+            activity_module.digest_image_file_name_from_s3('00666', None, None)
+        self.assertEqual(
+            str(test_exception.exception),
+            ('Failed to get image file name from S3 for digest 00666:'
+             ' Exception in digest image file_name'))
+
+
+class TestDownloadJatsForDigest(unittest.TestCase):
+
+    @patch.object(activity_module, 'download_jats')
+    def test_download_jats_for_digest_exception(self, fake_download_jats):
+        fake_download_jats.side_effect = Exception('Exception in download jats for digest')
+        with self.assertRaises(Exception) as test_exception:
+            activity_module.download_jats_for_digest(None, None, None, None)
+        self.assertEqual(
+            str(test_exception.exception),
+            ('Failed to download JATS from expanded folder None:'
+             ' Exception in download jats for digest'))
 
 
 if __name__ == '__main__':
