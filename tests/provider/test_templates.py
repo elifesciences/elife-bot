@@ -1,6 +1,7 @@
 import unittest
 import os
 import shutil
+import provider.templates as templates_provider
 from provider.templates import Templates
 from provider.article import article
 import tests.settings_mock as settings_mock
@@ -109,6 +110,37 @@ class TestProviderTemplates(unittest.TestCase):
             self.assertEqual(headers.get('subject'), expected_subject)
             self.assertEqual(headers.get('format'), expected_format)
 
+    @patch('provider.templates.Templates.download_email_templates_from_s3')
+    def test_get_email_headers_vor_after_poa(self, fake_download_email_templates_from_s3):
+        """test for backslash and quotation mark in article title"""
+        fake_download_email_templates_from_s3 = MagicMock()
+        # set templates to warmed and copy some template files
+        self.copy_email_templates()
+        self.templates.email_templates_warmed = True
+        author = {"first_nm": "Test"}
+        article_data = {
+            "doi": "10.7554/eLife.00666",
+            "article_title": 'Test \\ and \" in article'
+            }
+        email_type = 'author_publication_email_VOR_after_POA'
+        email_format = 'html'
+
+        expected_headers_type = {}
+        expected_sender_email = 'press@example.org'
+        expected_email_type = email_type
+        expected_subject = (
+            'The full version of your eLife article is now available:'
+            ' 10.7554/eLife.00666 Test \\ and \" in article')
+        expected_format = email_format
+
+        headers = self.templates.get_email_headers(email_type, author, article_data, email_format)
+        self.assertEqual(type(headers), type(expected_headers_type))
+        if headers:
+            # compare more values if headers were produced
+            self.assertEqual(headers.get('sender_email'), expected_sender_email)
+            self.assertEqual(headers.get('email_type'), expected_email_type)
+            self.assertEqual(headers.get('subject'), expected_subject)
+            self.assertEqual(headers.get('format'), expected_format)
 
     @data(
         ('tests/test_data/templates/', u'<!DOCTYPE html>\n<html xmlns:mml="http://www.w3.org/1998/Math/MathML">\n<head>\n<title>Differential TAM receptor\u2013ligand\u2013phospholipid interactions delimit differential TAM bioactivities | eLife Lens</title>\n<script>\ndocument_url: "http://example.com/cdn-bucket/elife03385.xml"\n</script>\n</head>\n<body>\n</body>\n</html>'),
@@ -123,6 +155,40 @@ class TestProviderTemplates(unittest.TestCase):
         cdn_bucket = 'cdn-bucket'
         content = self.templates.get_lens_article_html(from_dir, article_object, cdn_bucket, article_xml_filename)
         self.assertEqual(content, expected_content)
+
+
+@ddt
+class TestProviderTemplatesFunctions(unittest.TestCase):
+
+    @data(
+        {
+            'string': 'Test',
+            'expected': 'Test'
+        },
+        {
+            'string': 'Test \\ and \" in article',
+            'expected': 'Test \\\\ and \\" in article'
+        },
+    )
+    def test_json_char_escape(self, test_data):
+        new_string = templates_provider.json_char_escape(test_data.get('string'))
+        self.assertEqual(new_string, test_data.get('expected'))
+
+    @data(
+        {
+            'article_title': 'Test',
+            'expected': 'Test'
+        },
+        {
+            'article_title': 'Test \\ and \" in article',
+            'expected': 'Test \\\\ and \\" in article'
+        },
+    )
+    def test_article_title_char_escape(self, test_data):
+        test_article = article()
+        test_article.article_title = test_data.get('article_title')
+        test_article = templates_provider.article_title_char_escape(test_article)
+        self.assertEqual(test_article.article_title, test_data.get('expected'))
 
 
 if __name__ == '__main__':
