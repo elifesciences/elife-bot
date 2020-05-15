@@ -2,11 +2,13 @@ import unittest
 import shutil
 import os
 import zipfile
-from activity.activity_FTPArticle import activity_FTPArticle
 from mock import patch, MagicMock
-import tests.activity.settings_mock as settings_mock
 from ddt import ddt, data, unpack
+import activity.activity_FTPArticle as activity_module
+from activity.activity_FTPArticle import activity_FTPArticle
+import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
+
 
 @ddt
 class TestFTPArticle(unittest.TestCase):
@@ -16,7 +18,6 @@ class TestFTPArticle(unittest.TestCase):
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
-
 
     @patch.object(activity_FTPArticle, "repackage_archive_zip_to_pmc_zip")
     @patch.object(activity_FTPArticle, "download_archive_zip_from_s3")
@@ -57,7 +58,6 @@ class TestFTPArticle(unittest.TestCase):
         self.assertEqual(self.activity.FTP_URI, expected_ftp_uri)
         self.assertEqual(self.activity.SFTP_URI, expected_sftp_uri)
 
-
     @patch.object(activity_FTPArticle, "download_archive_zip_from_s3")
     @patch.object(activity_FTPArticle, "download_pmc_zip_from_s3")
     @patch.object(activity_FTPArticle, "ftp_to_endpoint")
@@ -82,12 +82,13 @@ class TestFTPArticle(unittest.TestCase):
         }
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
 
-
     @data(
         ('tests/test_data/pmc/elife-05-19405.zip', 19405, 'Cengage', 'elife-19405-xml-pdf.zip',
          ['elife-19405.pdf', 'elife-19405.xml']),
         ('tests/test_data/pmc/elife-05-19405.zip', 19405, 'HEFCE', 'elife-05-19405.zip',
          ['elife-19405.pdf', 'elife-19405.xml', 'elife-19405-inf1.tif', 'elife-19405-fig1.tif']),
+        ('tests/test_data/pmc/elife-05-19405.zip', 19405, 'CNKI', 'elife-19405-xml.zip',
+         ['elife-19405.xml']),
     )
     @unpack
     def test_move_or_repackage_pmc_zip(self, input_zip_file_path, doi_id, workflow,
@@ -105,7 +106,6 @@ class TestFTPArticle(unittest.TestCase):
         self.assertTrue(expected_zip_file in os.listdir(ftp_outbox_dir))
         with zipfile.ZipFile(os.path.join(ftp_outbox_dir, expected_zip_file)) as zip_file:
             self.assertEqual(sorted(zip_file.namelist()), sorted(expected_zip_file_contents))
-
 
     def test_repackage_archive_zip_to_pmc_zip(self):
         input_zip_file_path = 'tests/test_data/pmc/elife-19405-vor-v1-20160802113816.zip'
@@ -127,13 +127,48 @@ class TestFTPArticle(unittest.TestCase):
         # now can check the results
         self.assertTrue(os.path.exists(expected_pmc_zip_file))
         self.assertTrue(os.path.exists(expected_article_xml_file))
-        with open(expected_article_xml_file, 'rb') as fp:
+        with open(expected_article_xml_file, 'rb') as open_file:
             # check for a renamed file in the XML contents
-            self.assertTrue(expected_article_xml_string in fp.read())
+            self.assertTrue(expected_article_xml_string in open_file.read())
         with zipfile.ZipFile(expected_pmc_zip_file) as zip_file:
             # check pmc zip file contents
             self.assertEqual(sorted(zip_file.namelist()), sorted(expected_pmc_zip_file_contents))
 
+
+@ddt
+class TestZipFileSuffix(unittest.TestCase):
+
+    @data(
+        (['xml', 'pdf'], '-xml-pdf.zip'),
+        (['xml'], '-xml.zip'),
+    )
+    @unpack
+    def test_zip_file_suffix(self, file_types, expected):
+        self.assertEqual(activity_module.zip_file_suffix(file_types), expected)
+
+
+@ddt
+class TestNewZipFileName(unittest.TestCase):
+
+    @data(
+        (666, 'elife-', '-xml-pdf.zip', 'elife-00666-xml-pdf.zip'),
+
+    )
+    @unpack
+    def test_zip_file_suffix(self, doi_id, prefix, suffix, expected):
+        self.assertEqual(activity_module.new_zip_file_name(doi_id, prefix, suffix), expected)
+
+
+@ddt
+class TestFileTypeMatches(unittest.TestCase):
+
+    @data(
+        (['xml', 'pdf'], ['/*.xml', '/*.pdf']),
+        (['xml'], ['/*.xml']),
+    )
+    @unpack
+    def test_file_type_matches(self, file_types, expected):
+        self.assertEqual(activity_module.file_type_matches(file_types), expected)
 
 
 if __name__ == '__main__':
