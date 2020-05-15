@@ -2,6 +2,7 @@ import unittest
 import shutil
 import os
 import zipfile
+import activity.activity_FTPArticle as activity_module
 from activity.activity_FTPArticle import activity_FTPArticle
 from mock import patch, MagicMock
 import tests.activity.settings_mock as settings_mock
@@ -88,6 +89,8 @@ class TestFTPArticle(unittest.TestCase):
          ['elife-19405.pdf', 'elife-19405.xml']),
         ('tests/test_data/pmc/elife-05-19405.zip', 19405, 'HEFCE', 'elife-05-19405.zip',
          ['elife-19405.pdf', 'elife-19405.xml', 'elife-19405-inf1.tif', 'elife-19405-fig1.tif']),
+        ('tests/test_data/pmc/elife-05-19405.zip', 19405, 'CNKI', 'elife-19405-xml.zip',
+         ['elife-19405.xml']),
     )
     @unpack
     def test_move_or_repackage_pmc_zip(self, input_zip_file_path, doi_id, workflow,
@@ -134,6 +137,41 @@ class TestFTPArticle(unittest.TestCase):
             # check pmc zip file contents
             self.assertEqual(sorted(zip_file.namelist()), sorted(expected_pmc_zip_file_contents))
 
+
+@ddt
+class TestZipFileSuffix(unittest.TestCase):
+
+    @data(
+        (['xml', 'pdf'], '-xml-pdf.zip'),
+        (['xml'], '-xml.zip'),
+    )
+    @unpack
+    def test_zip_file_suffix(self, file_types, expected):
+        self.assertEqual(activity_module.zip_file_suffix(file_types), expected)
+
+
+@ddt
+class TestNewZipFileName(unittest.TestCase):
+
+    @data(
+        (666, 'elife-', '-xml-pdf.zip', 'elife-00666-xml-pdf.zip'),
+
+    )
+    @unpack
+    def test_zip_file_suffix(self, doi_id, prefix, suffix, expected):
+        self.assertEqual(activity_module.new_zip_file_name(doi_id, prefix, suffix), expected)
+
+
+@ddt
+class TestFileTypeMatches(unittest.TestCase):
+
+    @data(
+        (['xml', 'pdf'], ['/*.xml', '/*.pdf']),
+        (['xml'], ['/*.xml']),
+    )
+    @unpack
+    def test_file_type_matches(self, file_types, expected):
+        self.assertEqual(activity_module.file_type_matches(file_types), expected)
 
 
 if __name__ == '__main__':

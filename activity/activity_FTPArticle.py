@@ -20,6 +20,10 @@ from activity.objects import Activity
 FTPArticle activity
 """
 
+JOURNAL = 'elife'
+ZIP_FILE_PREFIX = '%s-' % JOURNAL
+
+
 class activity_FTPArticle(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
@@ -64,7 +68,7 @@ class activity_FTPArticle(Activity):
         self.SFTP_CWD = None
 
         # journal
-        self.journal = 'elife'
+        self.journal = JOURNAL
 
         self.workflow = None
         self.doi_id = None
@@ -337,7 +341,6 @@ class activity_FTPArticle(Activity):
                                  % (self.workflow, self.doi_id))
             return False
 
-
     def move_or_repackage_pmc_zip(self, doi_id, workflow):
         """
         Run if we downloaded a PMC zip file, either
@@ -346,45 +349,54 @@ class activity_FTPArticle(Activity):
         """
 
         # Repackage or move the zip depending on the workflow type
-        if workflow == 'Cengage' or workflow == 'Scopus' or workflow == 'WoS':
-            # Extract the zip and build a new zip
-            zipfiles = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")
-            to_dir = self.directories.get("TMP_DIR")
-            for filename in zipfiles:
-                myzip = zipfile.ZipFile(filename, 'r')
-                myzip.extractall(to_dir)
+        if workflow in ['Cengage', 'Scopus', 'WoS', 'CNKI']:
+            if workflow == 'CNKI':
+                file_types = ["xml"]
+            else:
+                file_types = ["xml", "pdf"]
+            self.repackage_pmc_zip(doi_id, file_types)
+        else:
+            self.move_pmc_zip()
 
-            # Create the new zip
-            zip_file_name = 'elife-' + str(doi_id).zfill(5) + '-xml-pdf.zip'
-            zip_dir = self.directories.get("ZIP_DIR")
-            new_zipfile = zipfile.ZipFile(zip_dir + os.sep + zip_file_name, 'w',
-                                          zipfile.ZIP_DEFLATED, allowZip64=True)
+    def repackage_pmc_zip(self, doi_id, keep_file_types):
+        """repackage the zip file to include only certain file types then move it to folder"""
+
+        ignore_name_fragments = ["-supp", "-data", "-code"]
+
+        # Extract the zip and build a new zip
+        zipfiles = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")
+        to_dir = self.directories.get("TMP_DIR")
+        for filename in zipfiles:
+            with zipfile.ZipFile(filename, 'r') as open_zip_file:
+                open_zip_file.extractall(to_dir)
+
+        # Create the new zip
+        zip_file_path = os.path.join(
+            self.directories.get("ZIP_DIR"),
+            new_zip_file_name(doi_id, ZIP_FILE_PREFIX, zip_file_suffix(keep_file_types)))
+        with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED,
+                             allowZip64=True) as new_zipfile:
             # Add files
-            ignore_name_fragments = ["-supp", "-data", "-code"]
-            file_types = ["/*.pdf", "/*.xml"]
-            for file_type in file_types:
+            for file_type in file_type_matches(keep_file_types):
                 files = glob.glob(to_dir + file_type)
-                for file in files:
+                for to_dir_file in files:
                     # Ignore some files that are PDF we do not want to include
                     for ignore in ignore_name_fragments:
-                        if ignore in file:
+                        if ignore in to_dir_file:
                             continue
-                    filename = file.split(os.sep)[-1]
-                    new_zipfile.write(file, filename)
+                    filename = to_dir_file.split(os.sep)[-1]
+                    new_zipfile.write(to_dir_file, filename)
 
-            # Close zip
-            new_zipfile.close()
+        # Move the zip
+        shutil.move(
+            zip_file_path,
+            self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep)
 
-            # Move the zip
-            shutil.move(
-                zip_dir + os.sep + zip_file_name,
-                self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep)
-
-        else:
-            # Default, move all the zip files from TMP_DIR to FTP_OUTBOX
-            zipfiles = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")
-            for filename in zipfiles:
-                shutil.move(filename, self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep)
+    def move_pmc_zip(self):
+        """Default, move all the zip files from TMP_DIR to FTP_OUTBOX"""
+        zipfiles = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")
+        for filename in zipfiles:
+            shutil.move(filename, self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep)
 
     def ftp_upload(self, ftp, file):
         ext = os.path.splitext(file)[1]
@@ -443,3 +455,17 @@ class activity_FTPArticle(Activity):
 
         if sftp_client is not None:
             sftp.sftp_to_endpoint(sftp_client, uploadfiles, self.SFTP_CWD, sub_dir)
+
+
+def zip_file_suffix(file_types):
+    """suffix for new zip file name"""
+    return '-%s.zip' % '-'.join(file_types)
+
+
+def new_zip_file_name(doi_id, prefix, suffix):
+    return '%s%s%s' % (prefix, str(doi_id).zfill(5), suffix)
+
+
+def file_type_matches(file_types):
+    """wildcard file name matches for the file types to include"""
+    return ['/*.%s' % file_type for file_type in file_types]
