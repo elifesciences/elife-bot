@@ -1,25 +1,16 @@
 import os
-import boto.swf
 import json
-import importlib
 import time
-import arrow
 import glob
 import re
-import requests
-from collections import namedtuple
-
+from elifepubmed import generate
+from elifepubmed.conf import config, parse_raw_config
 import provider.article as articlelib
 from provider.sftp import SFTP
 from provider import email_provider, lax_provider, utils
 from provider.storage_provider import storage_context
-from elifepubmed import generate
-from elifepubmed.conf import config, parse_raw_config
 from activity.objects import Activity
 
-"""
-PubmedArticleDeposit activity
-"""
 
 class activity_PubmedArticleDeposit(Activity):
 
@@ -118,7 +109,7 @@ class activity_PubmedArticleDeposit(Activity):
 
         # Send email
         # Only if there were files approved for publishing
-        if len(self.article_published_file_names) > 0:
+        if self.article_published_file_names:
             self.send_email()
 
         # Clean up disk
@@ -127,8 +118,8 @@ class activity_PubmedArticleDeposit(Activity):
         # return a value based on the activity_status
         if self.activity_status is True:
             return True
-        else:
-            return self.ACTIVITY_PERMANENT_FAILURE
+
+        return self.ACTIVITY_PERMANENT_FAILURE
 
     def download_files_from_s3_outbox(self):
         """
@@ -154,7 +145,6 @@ class activity_PubmedArticleDeposit(Activity):
                 with open(filename_plus_path, 'wb') as open_file:
                     storage_resource_origin = orig_resource + '/' + name
                     storage.get_resource_to_file(storage_resource_origin, open_file)
-
 
     def elifepubmed_config(self, config_section):
         "parse the config values from the elifepubmed config"
@@ -253,7 +243,7 @@ class activity_PubmedArticleDeposit(Activity):
 
         # Check for empty directory
         xml_files = glob.glob(self.directories.get("TMP_DIR") + "/*.xml")
-        if len(xml_files) <= 0:
+        if not xml_files:
             status = False
         else:
             # Default until full sets of files checker is built
@@ -261,12 +251,12 @@ class activity_PubmedArticleDeposit(Activity):
 
         return status
 
-    def get_filename_from_path(self, f, extension):
+    def get_filename_from_path(self, filename_path, extension):
         """
         Get a filename minus the supplied file extension
         and without any folder or path
         """
-        filename = f.split(extension)[0]
+        filename = filename_path.split(extension)[0]
         # Remove path if present
         try:
             filename = filename.split(os.sep)[-1]
@@ -342,9 +332,6 @@ class activity_PubmedArticleDeposit(Activity):
         """
         Clean out the S3 outbox folder
         """
-        # Save the list of outbox contents to report on later
-        outbox_s3_key_names = self.get_outbox_s3_key_names()
-
         # Move only the published files from the S3 outbox to the published folder
         bucket_name = self.publish_bucket
         to_folder = self.get_to_folder_name()
@@ -473,14 +460,14 @@ class activity_PubmedArticleDeposit(Activity):
             body += "No files in outbox." + "\n"
 
         # Report on published files
-        if len(self.article_published_file_names) > 0:
+        if self.article_published_file_names:
             body += "\n"
             body += "Published files included in pubmed XML: " + "\n"
             for name in self.article_published_file_names:
                 body += name.split(os.sep)[-1] + "\n"
 
         # Report on not published files
-        if len(self.article_not_published_file_names) > 0:
+        if self.article_not_published_file_names:
             body += "\n"
             body += "Files in pubmed outbox not yet published: " + "\n"
             for name in self.article_not_published_file_names:
