@@ -10,7 +10,7 @@ import requests
 from collections import namedtuple
 
 import provider.article as articlelib
-from provider.ftp import FTP
+from provider.sftp import SFTP
 from provider import email_provider, lax_provider, utils
 from provider.storage_provider import storage_context
 from elifepubmed import generate
@@ -56,7 +56,7 @@ class activity_PubmedArticleDeposit(Activity):
         self.activity_status = None
         self.generate_status = None
         self.approve_status = None
-        self.ftp_status = None
+        self.upload_status = None
         self.outbox_status = None
         self.publish_status = None
 
@@ -92,18 +92,22 @@ class activity_PubmedArticleDeposit(Activity):
 
         if self.approve_status is True:
             # Publish files
-            self.ftp_status = self.ftp_files_to_endpoint(
-                from_dir=self.directories.get("TMP_DIR"),
-                file_type="/*.xml")
+            try:
+                self.upload_status = self.sftp_files_to_endpoint(
+                    from_dir=self.directories.get("TMP_DIR"),
+                    file_type="/*.xml")
+            except Exception as exception:
+                self.logger.exception(str(exception))
+                return self.ACTIVITY_PERMANENT_FAILURE
 
-        if self.ftp_status is True:
+        if self.upload_status is True:
             # Clean up outbox
             print("Moving files from outbox folder to published folder")
             self.clean_outbox()
             self.upload_pubmed_xml_to_s3()
             self.outbox_status = True
             self.publish_status = True
-        elif self.ftp_status is False:
+        elif self.upload_status is False:
             self.publish_status = False
 
         # Set the activity status of this activity based on successes
@@ -271,33 +275,32 @@ class activity_PubmedArticleDeposit(Activity):
 
         return filename
 
-    def ftp_files_to_endpoint(self, from_dir, file_type):
+    def sftp_files_to_endpoint(self, from_dir, file_type, sub_dir=None):
         """
-        FTP files to endpoint
-        as specified by the file_type to use in the glob
-        e.g. "/*.zip"
+        Using the sftp provider module, connect to sftp server and transmit files
         """
-        ftp_status = None
+        uploadfiles = glob.glob(from_dir + file_type)
+
+        sftp = SFTP(logger=self.logger)
         try:
-            ftp_provider = FTP()
-            ftp_instance = ftp_provider.ftp_connect(
-                uri=self.settings.PUBMED_FTP_URI,
-                username=self.settings.PUBMED_FTP_USERNAME,
-                password=self.settings.PUBMED_FTP_PASSWORD
-            )
-            # collect the list of files
-            zipfiles = glob.glob(from_dir + file_type)
-            # transfer them by FTP to the endpoint
-            ftp_provider.ftp_to_endpoint(
-                ftp_instance=ftp_instance,
-                uploadfiles=zipfiles,
-                sub_dir_list=[self.settings.PUBMED_FTP_CWD])
-            # disconnect the FTP connection
-            ftp_provider.ftp_disconnect(ftp_instance)
-            ftp_status = True
-        except:
-            ftp_status = False
-        return ftp_status
+            sftp_client = sftp.sftp_connect(
+                self.settings.PUBMED_SFTP_URI,
+                self.settings.PUBMED_SFTP_USERNAME,
+                self.settings.PUBMED_SFTP_PASSWORD)
+        except Exception as exception:
+            self.logger.exception(
+                'Failed to connect to SFTP endpoint %s: %s' % (
+                    self.settings.PUBMED_SFTP_URI, str(exception)))
+            raise
+
+        try:
+            sftp.sftp_to_endpoint(
+                sftp_client, uploadfiles, self.settings.PUBMED_SFTP_CWD, sub_dir)
+        except Exception as exception:
+            self.logger.exception('Failed to upload files by SFTP to PubMed: %s' % str(exception))
+            raise
+
+        return True
 
     def get_outbox_s3_key_names(self, force=None):
         """
@@ -452,7 +455,7 @@ class activity_PubmedArticleDeposit(Activity):
         body += "activity_status: " + str(self.activity_status) + "\n"
         body += "generate_status: " + str(self.generate_status) + "\n"
         body += "approve_status: " + str(self.approve_status) + "\n"
-        body += "ftp_status: " + str(self.ftp_status) + "\n"
+        body += "upload_status: " + str(self.upload_status) + "\n"
         body += "publish_status: " + str(self.publish_status) + "\n"
         body += "outbox_status: " + str(self.outbox_status) + "\n"
 
