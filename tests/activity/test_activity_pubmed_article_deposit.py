@@ -209,6 +209,14 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             self.activity.logger.logexception,
             'Failed to upload files by SFTP to PubMed: SFTP transfer exception')
 
+
+@ddt
+class TestPubmedParseArticleXml(unittest.TestCase):
+
+    def tearDown(self):
+        helpers.delete_files_in_folder(activity_test_data.ExpandArticle_files_dest_folder,
+                                       filter_out=['.gitkeep'])
+
     @data(
         {
             "article_xml": 'elife-29353-v1.xml',
@@ -222,7 +230,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     )
     def test_parse_article_xml(self, test_data):
         source_doc = "tests/files_source/pubmed/outbox/" + test_data.get('article_xml')
-        article = self.activity.parse_article_xml(source_doc)
+        article = activity_module.parse_article_xml(
+            source_doc, {}, activity_test_data.ExpandArticle_files_dest_folder)
         if test_data.get('expected_article') is None:
             self.assertEqual(article, test_data.get('expected_article'),
                              'failed comparing expected_article')

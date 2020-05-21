@@ -57,9 +57,6 @@ class activity_PubmedArticleDeposit(Activity):
         self.article_published_file_names = []
         self.article_not_published_file_names = []
 
-        # Load the config
-        self.pubmed_config = self.elifepubmed_config(self.settings.elifepubmed_config_section)
-
     def do_activity(self, data=None):
         """
         Activity, do the work
@@ -146,32 +143,6 @@ class activity_PubmedArticleDeposit(Activity):
                     storage_resource_origin = orig_resource + '/' + name
                     storage.get_resource_to_file(storage_resource_origin, open_file)
 
-    def elifepubmed_config(self, config_section):
-        "parse the config values from the elifepubmed config"
-        config.read(self.settings.elifepubmed_config_file)
-        raw_config = config[config_section]
-        return parse_raw_config(raw_config)
-
-    def parse_article_xml(self, xml_file):
-        """
-        Given an article XML files, parse it into an article object
-        """
-        article = None
-        generate.TMP_DIR = self.directories.get("TMP_DIR")
-        try:
-            # Convert the XML file to article objects
-            article_list = generate.build_articles(
-                article_xmls=[xml_file],
-                build_parts=self.pubmed_config.get('build_parts'),
-                remove_tags=self.pubmed_config.get('remove_tags'))
-            # take the first article from the list
-            if article_list:
-                article = article_list[0]
-        except:
-            article = None
-
-        return article
-
     def get_article_version_from_lax(self, article_id):
         """
         Temporary fix to set the version of the article if available
@@ -208,7 +179,8 @@ class activity_PubmedArticleDeposit(Activity):
         for xml_file in article_xml_files:
             generate_status = True
 
-            article = self.parse_article_xml(xml_file)
+            article = parse_article_xml(xml_file, elifepubmed_config(
+                self.settings), self.directories.get("TMP_DIR"))
 
             if article is None:
                 self.article_not_published_file_names.append(xml_file)
@@ -472,3 +444,31 @@ class activity_PubmedArticleDeposit(Activity):
         body += "\n\nSincerely\n\neLife bot"
 
         return body
+
+
+def elifepubmed_config(settings):
+    "parse the config values from the elifepubmed config"
+    config.read(settings.elifepubmed_config_file)
+    raw_config = config[settings.elifepubmed_config_section]
+    return parse_raw_config(raw_config)
+
+
+def parse_article_xml(xml_file, pubmed_config, tmp_dir):
+    """
+    Given an article XML files, parse it into an article object
+    """
+    article = None
+    generate.TMP_DIR = tmp_dir
+    try:
+        # Convert the XML file to article objects
+        article_list = generate.build_articles(
+            article_xmls=[xml_file],
+            build_parts=pubmed_config.get('build_parts'),
+            remove_tags=pubmed_config.get('remove_tags'))
+        # take the first article from the list
+        if article_list:
+            article = article_list[0]
+    except:
+        article = None
+
+    return article
