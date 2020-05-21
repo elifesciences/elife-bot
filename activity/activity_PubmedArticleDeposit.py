@@ -3,6 +3,7 @@ import json
 import time
 import glob
 import re
+from collections import OrderedDict
 from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
 import provider.article as articlelib
@@ -44,12 +45,14 @@ class activity_PubmedArticleDeposit(Activity):
         self.published_folder = "pubmed/published"
 
         # Track the success of some steps
-        self.activity_status = None
-        self.generate_status = None
-        self.approve_status = None
-        self.upload_status = None
-        self.outbox_status = None
-        self.publish_status = None
+        self.statuses = OrderedDict([
+            ('generate', None),
+            ('approve', None),
+            ('upload', None),
+            ('publish', None),
+            ('outbox', None),
+            ('activity', None),
+        ])
 
         self.outbox_s3_key_names = None
 
@@ -72,36 +75,36 @@ class activity_PubmedArticleDeposit(Activity):
         self.download_files_from_s3_outbox()
 
         # Generate pubmed XML
-        self.generate_status = self.generate_pubmed_xml()
+        self.statuses['generate'] = self.generate_pubmed_xml()
 
         # Approve files for publishing
-        self.approve_status = self.approve_for_publishing()
+        self.statuses['approve'] = self.approve_for_publishing()
 
-        if self.approve_status is True:
+        if self.statuses.get('approve'):
             # Publish files
             try:
-                self.upload_status = self.sftp_files_to_endpoint(
+                self.statuses['upload'] = self.sftp_files_to_endpoint(
                     from_dir=self.directories.get("TMP_DIR"),
                     file_type="/*.xml")
             except Exception as exception:
                 self.logger.exception(str(exception))
                 return self.ACTIVITY_PERMANENT_FAILURE
 
-        if self.upload_status is True:
+        if self.statuses.get('upload'):
             # Clean up outbox
             print("Moving files from outbox folder to published folder")
             self.clean_outbox()
             self.upload_pubmed_xml_to_s3()
-            self.outbox_status = True
-            self.publish_status = True
-        elif self.upload_status is False:
-            self.publish_status = False
+            self.statuses['outbox'] = True
+            self.statuses['publish'] = True
+        elif self.statuses.get('upload') is False:
+            self.statuses['publish'] = False
 
         # Set the activity status of this activity based on successes
-        if self.publish_status is not False:
-            self.activity_status = True
+        if self.statuses.get('publish') in (None, True):
+            self.statuses['activity'] = True
         else:
-            self.activity_status = False
+            self.statuses['activity'] = False
 
         # Send email
         # Only if there were files approved for publishing
@@ -112,7 +115,7 @@ class activity_PubmedArticleDeposit(Activity):
         self.clean_tmp_dir()
 
         # return a value based on the activity_status
-        if self.activity_status is True:
+        if self.statuses.get('activity') is True:
             return True
 
         return self.ACTIVITY_PERMANENT_FAILURE
@@ -364,7 +367,7 @@ class activity_PubmedArticleDeposit(Activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = utils.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.statuses.get('activity'))
 
         # Count the files moved from the outbox, the files that were processed
         files_count = 0
@@ -388,7 +391,7 @@ class activity_PubmedArticleDeposit(Activity):
 
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, current_time)
 
-        activity_status_text = utils.get_activity_status_text(self.activity_status)
+        activity_status_text = utils.get_activity_status_text(self.statuses.get('activity'))
 
         # Bulk of body
         body += self.name + " status:" + "\n"
@@ -396,12 +399,12 @@ class activity_PubmedArticleDeposit(Activity):
         body += activity_status_text + "\n"
         body += "\n"
 
-        body += "activity_status: " + str(self.activity_status) + "\n"
-        body += "generate_status: " + str(self.generate_status) + "\n"
-        body += "approve_status: " + str(self.approve_status) + "\n"
-        body += "upload_status: " + str(self.upload_status) + "\n"
-        body += "publish_status: " + str(self.publish_status) + "\n"
-        body += "outbox_status: " + str(self.outbox_status) + "\n"
+        body += "activity_status: " + str(self.statuses.get('activity')) + "\n"
+        body += "generate_status: " + str(self.statuses.get('generate')) + "\n"
+        body += "approve_status: " + str(self.statuses.get('approve')) + "\n"
+        body += "upload_status: " + str(self.statuses.get('upload')) + "\n"
+        body += "publish_status: " + str(self.statuses.get('publish')) + "\n"
+        body += "outbox_status: " + str(self.statuses.get('outbox')) + "\n"
 
         body += "\n"
         body += "Outbox files: " + "\n"

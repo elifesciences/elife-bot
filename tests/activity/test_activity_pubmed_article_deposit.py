@@ -1,5 +1,6 @@
 import unittest
 import os
+from collections import OrderedDict
 from ddt import ddt, data
 from mock import patch
 import activity.activity_PubmedArticleDeposit as activity_module
@@ -43,11 +44,14 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "sftp_files_return_value": True,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
-            "expected_approve_status": True,
-            "expected_generate_status": True,
-            "expected_publish_status": True,
-            "expected_upload_status": True,
-            "expected_activity_status": True,
+            "expected_statuses": OrderedDict([
+                ('generate', True),
+                ('approve', True),
+                ('upload', True),
+                ('publish', True),
+                ('outbox', True),
+                ('activity', True),
+            ]),
             "expected_file_count": 1,
             "expected_pubmed_xml_contains": [
                 (b'<ArticleTitle>An evolutionary young defense metabolite influences the root' +
@@ -65,11 +69,14 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "sftp_files_return_value": True,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
-            "expected_approve_status": True,
-            "expected_generate_status": True,
-            "expected_publish_status": True,
-            "expected_upload_status": True,
-            "expected_activity_status": True,
+            "expected_statuses": OrderedDict([
+                ('generate', True),
+                ('approve', True),
+                ('upload', True),
+                ('publish', True),
+                ('outbox', True),
+                ('activity', True),
+            ]),
             "expected_file_count": 1,
             "expected_pubmed_xml_contains": [
                 b'<Replaces IdType="doi">10.7554/eLife.15747</Replaces>',
@@ -86,11 +93,14 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "sftp_files_return_value": True,
             "article_versions_data": [],
             "expected_result": True,
-            "expected_approve_status": False,
-            "expected_generate_status": False,
-            "expected_publish_status": None,
-            "expected_upload_status": None,
-            "expected_activity_status": True,
+            "expected_statuses": OrderedDict([
+                ('generate', False),
+                ('approve', False),
+                ('upload', None),
+                ('publish', None),
+                ('outbox', None),
+                ('activity', True),
+            ]),
             "expected_file_count": 0
         },
         {
@@ -99,11 +109,14 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "sftp_files_return_value": False,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": activity_PubmedArticleDeposit.ACTIVITY_PERMANENT_FAILURE,
-            "expected_approve_status": True,
-            "expected_generate_status": True,
-            "expected_publish_status": False,
-            "expected_upload_status": False,
-            "expected_activity_status": False,
+            "expected_statuses": OrderedDict([
+                ('generate', True),
+                ('approve', True),
+                ('upload', False),
+                ('publish', False),
+                ('outbox', None),
+                ('activity', False),
+            ]),
             "expected_file_count": 1,
         },
         {
@@ -112,11 +125,14 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "sftp_files_return_value": True,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
-            "expected_approve_status": True,
-            "expected_generate_status": True,
-            "expected_publish_status": True,
-            "expected_upload_status": True,
-            "expected_activity_status": True,
+            "expected_statuses": OrderedDict([
+                ('generate', True),
+                ('approve', True),
+                ('upload', True),
+                ('publish', True),
+                ('outbox', True),
+                ('activity', True),
+            ]),
             "expected_file_count": 1,
             "expected_pubmed_xml_contains": [
                 b'<Replaces IdType="doi">10.7554/eLife.15747</Replaces>'
@@ -140,14 +156,16 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.approve_status, test_data.get("expected_approve_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.generate_status, test_data.get("expected_generate_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.publish_status, test_data.get("expected_publish_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
+        # check statuses assertions
+        for status_name in test_data.get("expected_statuses"):
+            status_value = self.activity.statuses.get(status_name)
+            expected = test_data.get("expected_statuses").get(status_name)
+            self.assertEqual(
+                status_value, expected,
+                '{expected} {status_name} status not equal to {status_value} in {comment}'.format(
+                    expected=expected, status_name=status_name, status_value=status_value,
+                    comment=test_data.get("comment")))
+
         # check the outbox_s3_key_names values
         self.assertEqual(self.activity.outbox_s3_key_names,
                          [self.activity.outbox_folder + '/' + filename
@@ -186,7 +204,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         # do the activity
         self.activity.do_activity()
         # check assertions
-        self.assertIsNone(self.activity.upload_status)
+        self.assertIsNone(self.activity.statuses.get('upload'))
         self.assertEqual(self.activity.logger.logexception, 'SFTP upload exception')
 
     @patch.object(sftp.SFTP, 'sftp_connect')
