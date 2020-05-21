@@ -7,7 +7,7 @@ from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
 import provider.article as articlelib
 from provider.sftp import SFTP
-from provider import email_provider, lax_provider, utils
+from provider import article_processing, email_provider, lax_provider, utils
 from provider.storage_provider import storage_context
 from activity.objects import Activity
 
@@ -251,20 +251,6 @@ class activity_PubmedArticleDeposit(Activity):
 
         return status
 
-    def get_filename_from_path(self, filename_path, extension):
-        """
-        Get a filename minus the supplied file extension
-        and without any folder or path
-        """
-        filename = filename_path.split(extension)[0]
-        # Remove path if present
-        try:
-            filename = filename.split(os.sep)[-1]
-        except:
-            pass
-
-        return filename
-
     def sftp_files_to_endpoint(self, from_dir, file_type, sub_dir=None):
         """
         Using the sftp provider module, connect to sftp server and transmit files
@@ -371,7 +357,7 @@ class activity_PubmedArticleDeposit(Activity):
         for xml_file in xml_files:
             resource_dest = (storage_provider + bucket_name + "/" +
                              s3_folder_name + "/" +
-                             self.get_filename_from_path(xml_file, '.xml') + '.xml')
+                             article_processing.file_name_from_name(xml_file))
             storage.set_resource_from_filename(resource_dest, xml_file)
 
     def send_email(self):
