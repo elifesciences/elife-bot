@@ -61,8 +61,7 @@ class activity_PubmedArticleDeposit(Activity):
         """
         Activity, do the work
         """
-        if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         self.make_activity_directories()
 
