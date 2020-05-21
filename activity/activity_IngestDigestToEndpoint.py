@@ -1,16 +1,12 @@
 import os
+import time
 import json
+from collections import OrderedDict
 from digestparser import json_output
 from provider.execution_context import get_session
 from provider.article_processing import download_jats
-import provider.digest_provider as digest_provider
-import provider.lax_provider as lax_provider
+from provider import digest_provider, email_provider, lax_provider, utils
 from activity.objects import Activity
-
-
-"""
-activity_IngestDigestToEndpoint.py activity
-"""
 
 
 class activity_IngestDigestToEndpoint(Activity):
@@ -35,12 +31,12 @@ class activity_IngestDigestToEndpoint(Activity):
         }
 
         # Track the success of some steps
-        self.statuses = {
-            "approve": None,
-            "download": None,
-            "generate": None,
-            "ingest": None
-        }
+        self.statuses = OrderedDict([
+            ("approve", None),
+            ("download", None),
+            ("generate", None),
+            ("ingest", None),
+        ])
 
         # Digest JSON content
         self.digest_content = None
@@ -66,83 +62,54 @@ class activity_IngestDigestToEndpoint(Activity):
             self.logger.error("Failed to emit a start message in %s" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
 
-        # Wrap in an exception during testing phase
+        # Approve for ingestion
+        self.statuses["approve"] = self.approve(
+            article_id, session.get_value("status"), version, session.get_value("run_type"))
+        if self.statuses.get("approve") is not True:
+            self.logger.info(
+                "Digest for article %s was not approved for ingestion" % article_id)
+            self.emit_end_message(article_id, version, run)
+            return self.ACTIVITY_SUCCESS
+
         try:
-            # Approve for ingestion
-            self.statuses["approve"] = self.approve(
-                article_id, session.get_value("status"), version, session.get_value("run_type"))
-            if self.statuses.get("approve") is not True:
-                self.logger.info(
-                    "Digest for article %s was not approved for ingestion" % article_id)
-                self.emit_end_message(article_id, version, run)
-                return self.ACTIVITY_SUCCESS
+            digest_details = self.gather_digest_details(
+                article_id, version, session.get_value("expanded_folder"))
+        except Exception as exception:
+            # send email error if any error message is returned
+            message = 'Error in gathering digest details: %s' % str(exception)
+            self.logger.exception(message)
+            return self.email_error_return(article_id, message)
 
-            # check if there is a digest docx in the bucket for this article
-            docx_file_exists = digest_provider.docx_exists_in_s3(
-                self.settings, article_id, self.settings.bot_bucket, self.logger)
-            if docx_file_exists is not True:
-                self.logger.info(
-                    "Digest docx file does not exist in S3 for article %s" % article_id)
-                self.emit_end_message(article_id, version, run)
-                return self.ACTIVITY_SUCCESS
+        # generate the digest content
+        try:
+            self.digest_content = self.generate_digest_content(article_id, digest_details)
+        except Exception as exception:
+            # send email error if unable to generate digest content
+            message = 'Error in generating digest content for article: %s' % str(exception)
+            self.logger.exception(message)
+            return self.email_error_return(article_id, message)
 
-            # Download digest from the S3 outbox
-            docx_file = digest_provider.download_docx_from_s3(
-                self.settings, article_id, self.settings.bot_bucket,
-                self.directories.get("INPUT_DIR"), self.logger)
-            if docx_file:
-                self.statuses["download"] = True
-            if self.statuses.get("download") is not True:
-                self.logger.info("Unable to download digest file %s for article %s" %
-                                    (docx_file, article_id))
-                return self.ACTIVITY_PERMANENT_FAILURE
-            # find the image file name
-            image_file = digest_provider.image_file_name_from_s3(
-                self.settings, article_id, self.settings.bot_bucket)
+        # issue put to the endpoint
+        digest_id = self.digest_content.get("id")
+        # set the stage attribute depending on silent correction or not
+        if session.get_value("run_type") and session.get_value("run_type") == "silent-correction":
+            digest_provider.set_stage(self.digest_content, "published")
+        else:
+            digest_provider.set_stage(self.digest_content, "preview")
+        self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
 
-            # download jats file
-            jats_file = download_jats(
-                self.settings, session.get_value("expanded_folder"),
-                self.directories.get("TEMP_DIR"), self.logger)
-            # related article data
-            related = related_from_lax(article_id, version, self.settings, self.logger)
-            # generate the digest content
-            self.digest_content = self.digest_json(docx_file, jats_file, image_file, related)
-            if self.digest_content:
-                self.statuses["generate"] = True
-            if self.statuses.get("generate") is not True:
-                self.logger.info(
-                    ("Unable to generate Digest content for docx_file %s, " +
-                     "jats_file %s, image_file %s") %
-                    (docx_file, jats_file, image_file))
-                # for now return success to not impede the article ingest workflow
-                return self.ACTIVITY_SUCCESS
-
-            # get existing digest data
-            digest_id = self.digest_content.get("id")
-            # TODO: what are we doing this for?
-            # assumption: we are ingesting the digest multiple times on the first VoR version
-            # assumption: we are not ingesting the digest on any other version
-            # only possible case is silent correction?
-            # but then, only do it on silent correction?
-            existing_digest_json = digest_provider.get_digest(digest_id, self.settings)
-            if not existing_digest_json:
-                self.logger.info(
-                    "Did not get existing digest json from the endpoint for digest_id %s" %
-                    str(digest_id))
-            self.digest_content = sync_json(self.digest_content, existing_digest_json)
-            # set the stage attribute if missing
-            if self.digest_content.get("stage") != "published":
-                digest_provider.set_stage(self.digest_content, "preview")
-            self.logger.info("Digest stage value %s" % str(self.digest_content.get("stage")))
-
+        try:
             put_response = digest_provider.put_digest_to_endpoint(
                 self.logger, digest_id, self.digest_content, self.settings)
             if put_response:
                 self.statuses["ingest"] = True
-
         except Exception as exception:
-            self.logger.exception("Exception raised in do_activity. Details: %s" % str(exception))
+            # email error message and return self.ACTIVITY_SUCCESS
+            message = (
+                'Failed to ingest digest json to endpoint %s in %s: %s' %
+                (article_id, self.pretty_name, str(exception)))
+            self.logger.exception(message)
+            return self.email_error_return(article_id, message)
 
         self.logger.info(
             "%s for article_id %s statuses: %s" % (self.name, str(article_id), self.statuses))
@@ -169,6 +136,11 @@ class activity_IngestDigestToEndpoint(Activity):
                                   " to endpoint. Details: %s" % str(exception))
         return success, run, session, article_id, version
 
+    def email_error_return(self, article_id, message):
+        """log exception, email error message and return activity result"""
+        send_error_email(article_id, message, self.settings, self.logger)
+        return self.ACTIVITY_SUCCESS
+
     def emit_message(self, article_id, version, run, status, message):
         "emit message to the queue"
         try:
@@ -194,8 +166,7 @@ class activity_IngestDigestToEndpoint(Activity):
         if statuses.get("ingest") is True:
             return "Finished ingest digest to endpoint for %s. Statuses %s Preview link %s" % (
                 article_id, statuses, self.digest_preview_link(article_id))
-        else:
-            return "No digest ingested for %s. Statuses %s" % (article_id, statuses)
+        return "No digest ingested for %s. Statuses %s" % (article_id, statuses)
 
     def emit_end_message(self, article_id, version, run):
         "emit the end message to the queue"
@@ -219,7 +190,8 @@ class activity_IngestDigestToEndpoint(Activity):
         # check silent corrections and consider the first vor version
         run_type_status = digest_provider.approve_by_run_type(
             self.settings, self.logger, article_id, run_type, version)
-        first_vor_status = digest_provider.approve_by_first_vor(self.settings, self.logger, article_id, version, status)
+        first_vor_status = digest_provider.approve_by_first_vor(
+            self.settings, self.logger, article_id, version, status)
         if (first_vor_status is False and
                 run_type != "silent-correction"):
             # not the first vor and not a silent correction, do not approve
@@ -228,7 +200,68 @@ class activity_IngestDigestToEndpoint(Activity):
             # otherwise depend on the silent correction run_type logic
             approve_status = False
 
+        # check if there is a digest docx in the bucket for this article
+        if approve_status:
+            if not digest_provider.docx_exists_in_s3(
+                    self.settings, article_id, self.settings.bot_bucket, self.logger):
+                self.logger.info(
+                    "Digest docx file does not exist in S3 for article %s" % article_id)
+                approve_status = False
+
         return approve_status
+
+    def gather_digest_details(self, article_id, version, expanded_folder):
+        digest_details = OrderedDict()
+
+        # Download digest from the S3 outbox
+        digest_details['docx_file'] = digest_download_docx_from_s3(
+            article_id, self.settings.bot_bucket, self.directories.get("INPUT_DIR"),
+            self.settings, self.logger)
+        self.statuses["download"] = True
+
+        # find the image file name
+        digest_details['image_file'] = digest_image_file_name_from_s3(
+            article_id, self.settings.bot_bucket, self.settings)
+
+        # download jats file
+        digest_details['jats_file'] = download_jats_for_digest(
+            expanded_folder, self.settings, self.directories.get("TEMP_DIR"), self.logger)
+
+        # related article data
+        digest_details['related'] = get_related_from_lax(
+            article_id, version, self.settings, self.pretty_name, self.logger)
+
+        return digest_details
+
+    def generate_digest_content(self, article_id, digest_details):
+        digest_content = None
+
+        try:
+            digest_content = self.digest_json(
+                digest_details.get("docx_file"),
+                digest_details.get("jats_file"),
+                digest_details.get("image_file"),
+                digest_details.get("related"))
+        except Exception as exception:
+            # email error message and return self.ACTIVITY_SUCCESS
+            message = (
+                'Failed to generate digest json for %s in %s: %s' %
+                (article_id, self.pretty_name, str(exception)))
+            raise Exception(message)
+
+        if digest_content:
+            self.statuses["generate"] = True
+        else:
+            # email error message and return self.ACTIVITY_SUCCESS
+            message = (
+                ("Unable to generate Digest content for docx_file %s, " +
+                 "jats_file %s, image_file %s") % (
+                     digest_details.get("docx_file"),
+                     digest_details.get("jats_file"),
+                     digest_details.get("image_file")))
+            raise Exception(message)
+
+        return digest_content
 
     def digest_json(self, docx_file, jats_file=None, image_file=None, related=None):
         "generate the digest json content from the docx file and other data"
@@ -244,6 +277,47 @@ class activity_IngestDigestToEndpoint(Activity):
         return json_content
 
 
+def digest_download_docx_from_s3(article_id, bucket_name, input_dir, settings, logger):
+    try:
+        return digest_provider.download_docx_from_s3(
+            settings, article_id, bucket_name, input_dir, logger)
+    except Exception as exception:
+        message = (
+            "Unable to download digest docx file for article %s: %s" %
+            (article_id, str(exception)))
+        raise Exception(message)
+
+
+def digest_image_file_name_from_s3(article_id, bucket_name, settings):
+    try:
+        return digest_provider.image_file_name_from_s3(settings, article_id, bucket_name)
+    except Exception as exception:
+        message = (
+            'Failed to get image file name from S3 for digest %s: %s' %
+            (article_id, str(exception)))
+        raise Exception(message)
+
+
+def download_jats_for_digest(expanded_folder, settings, temp_dir, logger):
+    try:
+        return download_jats(settings, expanded_folder, temp_dir, logger)
+    except Exception as exception:
+        message = (
+            'Failed to download JATS from expanded folder %s: %s' %
+            (expanded_folder, str(exception)))
+        raise Exception(message)
+
+
+def get_related_from_lax(article_id, version, settings, pretty_name, logger):
+    try:
+        return related_from_lax(article_id, version, settings, logger)
+    except Exception as exception:
+        message = (
+            'Failed to get related from lax for digest %s in %s: %s' %
+            (article_id, pretty_name, str(exception)))
+        raise Exception(message)
+
+
 def related_from_lax(article_id, version, settings, logger=None, auth=True):
     "get article json from Lax and return as a list of related data"
     related = None
@@ -252,18 +326,34 @@ def related_from_lax(article_id, version, settings, logger=None, auth=True):
         related_json = lax_provider.article_snippet(article_id, version, settings, auth)
     except Exception as exception:
         logger.exception(
-            "Exception in getting article snippet from Lax for article_id %s, version %s. Details: %s" %
+            ("Exception in getting article snippet from Lax for article_id"
+             " %s, version %s. Details: %s") %
             (str(article_id), str(version), str(exception)))
+        raise
     if related_json:
         related = [related_json]
     return related
 
 
-def sync_json(json_content, existing_digest_json):
-    "update values in json_content with some from existing digest json if present"
-    if not existing_digest_json:
-        return json_content
-    for attr in ["published", "stage"]:
-        if existing_digest_json.get(attr):
-            json_content[attr] = existing_digest_json.get(attr)
-    return json_content
+def error_email_subject(article_id):
+    "email subject for an error email"
+    return u'Error ingesting digest to endpoint: {article_id}'.format(article_id=article_id)
+
+
+def send_error_email(article_id, message, settings, logger):
+    "email error message to the recipients"
+
+    datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
+    body = email_provider.simple_email_body(datetime_string, message)
+    subject = error_email_subject(article_id)
+    sender_email = settings.digest_sender_email
+
+    recipient_email_list = email_provider.list_email_recipients(
+        settings.digest_validate_error_recipient_email)
+
+    messages = email_provider.simple_messages(
+        sender_email, recipient_email_list, subject, body, logger=logger)
+    logger.info('Formatted %d email error messages' % len(messages))
+
+    details = email_provider.smtp_send_messages(settings, messages, logger)
+    logger.info('Email sending details: %s' % str(details))
