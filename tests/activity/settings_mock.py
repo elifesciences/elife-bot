@@ -158,6 +158,11 @@ PUBMED_FTP_USERNAME = ""
 PUBMED_FTP_PASSWORD = ""
 PUBMED_FTP_CWD = ""
 
+PUBMED_SFTP_URI = ""
+PUBMED_SFTP_USERNAME = ""
+PUBMED_SFTP_PASSWORD = ""
+PUBMED_SFTP_CWD = ""
+
 # PDF cover
 pdf_cover_landing_page = "https://localhost.org/download-your-cover/"
 pdf_cover_generator = "https://localhost/personalised-covers/"

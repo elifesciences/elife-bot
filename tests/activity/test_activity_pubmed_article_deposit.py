@@ -1,10 +1,11 @@
 import unittest
 import os
+from collections import OrderedDict
 from ddt import ddt, data
 from mock import patch
 import activity.activity_PubmedArticleDeposit as activity_module
 from activity.activity_PubmedArticleDeposit import activity_PubmedArticleDeposit
-from provider import lax_provider
+from provider import lax_provider, sftp
 from tests.classes_mock import FakeSMTPServer
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
@@ -33,21 +34,24 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     @patch.object(activity_PubmedArticleDeposit, 'clean_tmp_dir')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch.object(lax_provider, 'article_versions')
-    @patch.object(activity_PubmedArticleDeposit, 'ftp_files_to_endpoint')
+    @patch.object(activity_PubmedArticleDeposit, 'sftp_files_to_endpoint')
     @patch('activity.activity_PubmedArticleDeposit.storage_context')
     @patch.object(FakeStorageContext, 'list_resources')
     @data(
         {
             "comment": 'example PoA file will have an aheadofprint',
             "outbox_filenames": ['elife-29353-v1.xml', 'not_an_xml_file.pdf'],
-            "ftp_files_return_value": True,
+            "sftp_files_return_value": True,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
-            "expected_approve_status": True,
-            "expected_generate_status": True,
-            "expected_publish_status": True,
-            "expected_ftp_status": True,
-            "expected_activity_status": True,
+            "expected_statuses": OrderedDict([
+                ('generate', True),
+                ('approve', True),
+                ('upload', True),
+                ('publish', True),
+                ('outbox', True),
+                ('activity', True),
+            ]),
             "expected_file_count": 1,
             "expected_pubmed_xml_contains": [
                 (b'<ArticleTitle>An evolutionary young defense metabolite influences the root' +
@@ -62,14 +66,17 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         {
             "comment": 'example VoR file will have a Replaces tag',
             "outbox_filenames": ['elife-15747-v2.xml'],
-            "ftp_files_return_value": True,
+            "sftp_files_return_value": True,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
-            "expected_approve_status": True,
-            "expected_generate_status": True,
-            "expected_publish_status": True,
-            "expected_ftp_status": True,
-            "expected_activity_status": True,
+            "expected_statuses": OrderedDict([
+                ('generate', True),
+                ('approve', True),
+                ('upload', True),
+                ('publish', True),
+                ('outbox', True),
+                ('activity', True),
+            ]),
             "expected_file_count": 1,
             "expected_pubmed_xml_contains": [
                 b'<Replaces IdType="doi">10.7554/eLife.15747</Replaces>',
@@ -83,40 +90,49 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         {
             "comment": 'test for if the article is published False (not published yet)',
             "outbox_filenames": ['elife-15747-v2.xml'],
-            "ftp_files_return_value": True,
+            "sftp_files_return_value": True,
             "article_versions_data": [],
             "expected_result": True,
-            "expected_approve_status": False,
-            "expected_generate_status": False,
-            "expected_publish_status": None,
-            "expected_ftp_status": None,
-            "expected_activity_status": True,
+            "expected_statuses": OrderedDict([
+                ('generate', False),
+                ('approve', False),
+                ('upload', None),
+                ('publish', None),
+                ('outbox', None),
+                ('activity', True),
+            ]),
             "expected_file_count": 0
         },
         {
             "comment": 'test for if FTP status is False',
             "outbox_filenames": ['elife-15747-v2.xml'],
-            "ftp_files_return_value": False,
+            "sftp_files_return_value": False,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": activity_PubmedArticleDeposit.ACTIVITY_PERMANENT_FAILURE,
-            "expected_approve_status": True,
-            "expected_generate_status": True,
-            "expected_publish_status": False,
-            "expected_ftp_status": False,
-            "expected_activity_status": False,
+            "expected_statuses": OrderedDict([
+                ('generate', True),
+                ('approve', True),
+                ('upload', False),
+                ('publish', False),
+                ('outbox', None),
+                ('activity', False),
+            ]),
             "expected_file_count": 1,
         },
         {
             "comment": 'test for if the XML file has no version it will use lax data',
             "outbox_filenames": ['elife-15747.xml'],
-            "ftp_files_return_value": True,
+            "sftp_files_return_value": True,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
-            "expected_approve_status": True,
-            "expected_generate_status": True,
-            "expected_publish_status": True,
-            "expected_ftp_status": True,
-            "expected_activity_status": True,
+            "expected_statuses": OrderedDict([
+                ('generate', True),
+                ('approve', True),
+                ('upload', True),
+                ('publish', True),
+                ('outbox', True),
+                ('activity', True),
+            ]),
             "expected_file_count": 1,
             "expected_pubmed_xml_contains": [
                 b'<Replaces IdType="doi">10.7554/eLife.15747</Replaces>'
@@ -124,7 +140,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         },
     )
     def test_do_activity(self, test_data, fake_list_resources, fake_storage_context,
-                         fake_ftp_files_to_endpoint, fake_article_versions,
+                         fake_sftp_files_to_endpoint, fake_article_versions,
                          fake_email_smtp_connect, fake_clean_tmp_dir):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
         fake_clean_tmp_dir.return_value = None
@@ -134,20 +150,22 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         # lax data overrides
         fake_article_versions.return_value = 200, test_data.get("article_versions_data")
         # ftp
-        fake_ftp_files_to_endpoint.return_value = test_data.get("ftp_files_return_value")
+        fake_sftp_files_to_endpoint.return_value = test_data.get("sftp_files_return_value")
         # do the activity
         result = self.activity.do_activity()
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"),
                          'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.approve_status, test_data.get("expected_approve_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.generate_status, test_data.get("expected_generate_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.publish_status, test_data.get("expected_publish_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
-        self.assertEqual(self.activity.activity_status, test_data.get("expected_activity_status"),
-                         'failed in {comment}'.format(comment=test_data.get("comment")))
+        # check statuses assertions
+        for status_name in test_data.get("expected_statuses"):
+            status_value = self.activity.statuses.get(status_name)
+            expected = test_data.get("expected_statuses").get(status_name)
+            self.assertEqual(
+                status_value, expected,
+                '{expected} {status_name} status not equal to {status_value} in {comment}'.format(
+                    expected=expected, status_name=status_name, status_value=status_value,
+                    comment=test_data.get("comment")))
+
         # check the outbox_s3_key_names values
         self.assertEqual(self.activity.outbox_s3_key_names,
                          [self.activity.outbox_folder + '/' + filename
@@ -171,6 +189,52 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         # clean directory after each test
         self.activity.clean_tmp_dir()
 
+    @patch.object(activity_PubmedArticleDeposit, 'sftp_files_to_endpoint')
+    @patch.object(activity_PubmedArticleDeposit, 'approve_for_publishing')
+    @patch.object(activity_PubmedArticleDeposit, 'generate_pubmed_xml')
+    @patch.object(activity_PubmedArticleDeposit, 'download_files_from_s3_outbox')
+    @patch.object(activity_PubmedArticleDeposit, 'get_outbox_s3_key_names')
+    def test_do_activity_upload_exception(self, fake_get, fake_download, fake_generate,
+                                          fake_approve, fake_sftp_files_to_endpoint):
+        fake_get.return_value = True
+        fake_download.return_value = True
+        fake_generate.return_value = True
+        fake_approve.return_value = True
+        fake_sftp_files_to_endpoint.side_effect = Exception('SFTP upload exception')
+        # do the activity
+        self.activity.do_activity()
+        # check assertions
+        self.assertIsNone(self.activity.statuses.get('upload'))
+        self.assertEqual(self.activity.logger.logexception, 'SFTP upload exception')
+
+    @patch.object(sftp.SFTP, 'sftp_connect')
+    def test_sftp_files_connection_exception(self, fake_sftp_connect):
+        fake_sftp_connect.side_effect = Exception('SFTP connect exception')
+        with self.assertRaises(Exception):
+            self.activity.sftp_files_to_endpoint('', '')
+        self.assertEqual(
+            self.activity.logger.logexception,
+            'Failed to connect to SFTP endpoint : SFTP connect exception')
+
+    @patch.object(sftp.SFTP, 'sftp_to_endpoint')
+    @patch.object(sftp.SFTP, 'sftp_connect')
+    def test_sftp_files_transfer_exception(self, fake_sftp_connect, fake_sftp_to_endpoint):
+        fake_sftp_connect.return_value = True
+        fake_sftp_to_endpoint.side_effect = Exception('SFTP transfer exception')
+        with self.assertRaises(Exception):
+            self.activity.sftp_files_to_endpoint('', '')
+        self.assertEqual(
+            self.activity.logger.logexception,
+            'Failed to upload files by SFTP to PubMed: SFTP transfer exception')
+
+
+@ddt
+class TestPubmedParseArticleXml(unittest.TestCase):
+
+    def tearDown(self):
+        helpers.delete_files_in_folder(activity_test_data.ExpandArticle_files_dest_folder,
+                                       filter_out=['.gitkeep'])
+
     @data(
         {
             "article_xml": 'elife-29353-v1.xml',
@@ -184,7 +248,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     )
     def test_parse_article_xml(self, test_data):
         source_doc = "tests/files_source/pubmed/outbox/" + test_data.get('article_xml')
-        article = self.activity.parse_article_xml(source_doc)
+        article = activity_module.parse_article_xml(
+            source_doc, {}, activity_test_data.ExpandArticle_files_dest_folder)
         if test_data.get('expected_article') is None:
             self.assertEqual(article, test_data.get('expected_article'),
                              'failed comparing expected_article')

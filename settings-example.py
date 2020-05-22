@@ -173,6 +173,12 @@ class exp():
     PUBMED_FTP_PASSWORD = ""
     PUBMED_FTP_CWD = ""
 
+    # PubMed SFTP settings
+    PUBMED_SFTP_URI = ""
+    PUBMED_SFTP_USERNAME = ""
+    PUBMED_SFTP_PASSWORD = ""
+    PUBMED_SFTP_CWD = ""
+
     # PMC FTP settings
     PMC_FTP_URI = ""
     PMC_FTP_USERNAME = ""
@@ -447,6 +453,12 @@ class dev():
     PUBMED_FTP_PASSWORD = ""
     PUBMED_FTP_CWD = ""
 
+    # PubMed SFTP settings
+    PUBMED_SFTP_URI = ""
+    PUBMED_SFTP_USERNAME = ""
+    PUBMED_SFTP_PASSWORD = ""
+    PUBMED_SFTP_CWD = ""
+
     # PMC FTP settings
     PMC_FTP_URI = ""
     PMC_FTP_USERNAME = ""
@@ -713,6 +725,12 @@ class live():
     PUBMED_FTP_USERNAME = ""
     PUBMED_FTP_PASSWORD = ""
     PUBMED_FTP_CWD = ""
+
+    # PubMed SFTP settings
+    PUBMED_SFTP_URI = ""
+    PUBMED_SFTP_USERNAME = ""
+    PUBMED_SFTP_PASSWORD = ""
+    PUBMED_SFTP_CWD = ""
 
     # PMC FTP settings
     PMC_FTP_URI = ""
