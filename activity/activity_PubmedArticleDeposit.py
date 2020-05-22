@@ -1,17 +1,25 @@
 import os
+import boto.swf
 import json
+import importlib
 import time
+import arrow
 import glob
 import re
-from collections import OrderedDict
+import requests
+from collections import namedtuple
+
+import provider.article as articlelib
+from provider.ftp import FTP
+from provider import email_provider, lax_provider, utils
+from provider.storage_provider import storage_context
 from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
-import provider.article as articlelib
-from provider.sftp import SFTP
-from provider import article_processing, email_provider, lax_provider, utils
-from provider.storage_provider import storage_context
 from activity.objects import Activity
 
+"""
+PubmedArticleDeposit activity
+"""
 
 class activity_PubmedArticleDeposit(Activity):
 
@@ -45,14 +53,12 @@ class activity_PubmedArticleDeposit(Activity):
         self.published_folder = "pubmed/published"
 
         # Track the success of some steps
-        self.statuses = OrderedDict([
-            ('generate', None),
-            ('approve', None),
-            ('upload', None),
-            ('publish', None),
-            ('outbox', None),
-            ('activity', None),
-        ])
+        self.activity_status = None
+        self.generate_status = None
+        self.approve_status = None
+        self.ftp_status = None
+        self.outbox_status = None
+        self.publish_status = None
 
         self.outbox_s3_key_names = None
 
@@ -60,11 +66,15 @@ class activity_PubmedArticleDeposit(Activity):
         self.article_published_file_names = []
         self.article_not_published_file_names = []
 
+        # Load the config
+        self.pubmed_config = self.elifepubmed_config(self.settings.elifepubmed_config_section)
+
     def do_activity(self, data=None):
         """
         Activity, do the work
         """
-        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        if self.logger:
+            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         self.make_activity_directories()
 
@@ -75,50 +85,46 @@ class activity_PubmedArticleDeposit(Activity):
         self.download_files_from_s3_outbox()
 
         # Generate pubmed XML
-        self.statuses['generate'] = self.generate_pubmed_xml()
+        self.generate_status = self.generate_pubmed_xml()
 
         # Approve files for publishing
-        self.statuses['approve'] = self.approve_for_publishing()
+        self.approve_status = self.approve_for_publishing()
 
-        if self.statuses.get('approve'):
+        if self.approve_status is True:
             # Publish files
-            try:
-                self.statuses['upload'] = self.sftp_files_to_endpoint(
-                    from_dir=self.directories.get("TMP_DIR"),
-                    file_type="/*.xml")
-            except Exception as exception:
-                self.logger.exception(str(exception))
-                return self.ACTIVITY_PERMANENT_FAILURE
+            self.ftp_status = self.ftp_files_to_endpoint(
+                from_dir=self.directories.get("TMP_DIR"),
+                file_type="/*.xml")
 
-        if self.statuses.get('upload'):
+        if self.ftp_status is True:
             # Clean up outbox
             print("Moving files from outbox folder to published folder")
             self.clean_outbox()
             self.upload_pubmed_xml_to_s3()
-            self.statuses['outbox'] = True
-            self.statuses['publish'] = True
-        elif self.statuses.get('upload') is False:
-            self.statuses['publish'] = False
+            self.outbox_status = True
+            self.publish_status = True
+        elif self.ftp_status is False:
+            self.publish_status = False
 
         # Set the activity status of this activity based on successes
-        if self.statuses.get('publish') in (None, True):
-            self.statuses['activity'] = True
+        if self.publish_status is not False:
+            self.activity_status = True
         else:
-            self.statuses['activity'] = False
+            self.activity_status = False
 
         # Send email
         # Only if there were files approved for publishing
-        if self.article_published_file_names:
+        if len(self.article_published_file_names) > 0:
             self.send_email()
 
         # Clean up disk
         self.clean_tmp_dir()
 
         # return a value based on the activity_status
-        if self.statuses.get('activity') is True:
+        if self.activity_status is True:
             return True
-
-        return self.ACTIVITY_PERMANENT_FAILURE
+        else:
+            return self.ACTIVITY_PERMANENT_FAILURE
 
     def download_files_from_s3_outbox(self):
         """
@@ -144,6 +150,33 @@ class activity_PubmedArticleDeposit(Activity):
                 with open(filename_plus_path, 'wb') as open_file:
                     storage_resource_origin = orig_resource + '/' + name
                     storage.get_resource_to_file(storage_resource_origin, open_file)
+
+
+    def elifepubmed_config(self, config_section):
+        "parse the config values from the elifepubmed config"
+        config.read(self.settings.elifepubmed_config_file)
+        raw_config = config[config_section]
+        return parse_raw_config(raw_config)
+
+    def parse_article_xml(self, xml_file):
+        """
+        Given an article XML files, parse it into an article object
+        """
+        article = None
+        generate.TMP_DIR = self.directories.get("TMP_DIR")
+        try:
+            # Convert the XML file to article objects
+            article_list = generate.build_articles(
+                article_xmls=[xml_file],
+                build_parts=self.pubmed_config.get('build_parts'),
+                remove_tags=self.pubmed_config.get('remove_tags'))
+            # take the first article from the list
+            if article_list:
+                article = article_list[0]
+        except:
+            article = None
+
+        return article
 
     def get_article_version_from_lax(self, article_id):
         """
@@ -181,8 +214,7 @@ class activity_PubmedArticleDeposit(Activity):
         for xml_file in article_xml_files:
             generate_status = True
 
-            article = parse_article_xml(xml_file, elifepubmed_config(
-                self.settings), self.directories.get("TMP_DIR"))
+            article = self.parse_article_xml(xml_file)
 
             if article is None:
                 self.article_not_published_file_names.append(xml_file)
@@ -217,7 +249,7 @@ class activity_PubmedArticleDeposit(Activity):
 
         # Check for empty directory
         xml_files = glob.glob(self.directories.get("TMP_DIR") + "/*.xml")
-        if not xml_files:
+        if len(xml_files) <= 0:
             status = False
         else:
             # Default until full sets of files checker is built
@@ -225,32 +257,47 @@ class activity_PubmedArticleDeposit(Activity):
 
         return status
 
-    def sftp_files_to_endpoint(self, from_dir, file_type, sub_dir=None):
+    def get_filename_from_path(self, f, extension):
         """
-        Using the sftp provider module, connect to sftp server and transmit files
+        Get a filename minus the supplied file extension
+        and without any folder or path
         """
-        uploadfiles = glob.glob(from_dir + file_type)
-
-        sftp = SFTP(logger=self.logger)
+        filename = f.split(extension)[0]
+        # Remove path if present
         try:
-            sftp_client = sftp.sftp_connect(
-                self.settings.PUBMED_SFTP_URI,
-                self.settings.PUBMED_SFTP_USERNAME,
-                self.settings.PUBMED_SFTP_PASSWORD)
-        except Exception as exception:
-            self.logger.exception(
-                'Failed to connect to SFTP endpoint %s: %s' % (
-                    self.settings.PUBMED_SFTP_URI, str(exception)))
-            raise
+            filename = filename.split(os.sep)[-1]
+        except:
+            pass
 
+        return filename
+
+    def ftp_files_to_endpoint(self, from_dir, file_type):
+        """
+        FTP files to endpoint
+        as specified by the file_type to use in the glob
+        e.g. "/*.zip"
+        """
+        ftp_status = None
         try:
-            sftp.sftp_to_endpoint(
-                sftp_client, uploadfiles, self.settings.PUBMED_SFTP_CWD, sub_dir)
-        except Exception as exception:
-            self.logger.exception('Failed to upload files by SFTP to PubMed: %s' % str(exception))
-            raise
-
-        return True
+            ftp_provider = FTP()
+            ftp_instance = ftp_provider.ftp_connect(
+                uri=self.settings.PUBMED_FTP_URI,
+                username=self.settings.PUBMED_FTP_USERNAME,
+                password=self.settings.PUBMED_FTP_PASSWORD
+            )
+            # collect the list of files
+            zipfiles = glob.glob(from_dir + file_type)
+            # transfer them by FTP to the endpoint
+            ftp_provider.ftp_to_endpoint(
+                ftp_instance=ftp_instance,
+                uploadfiles=zipfiles,
+                sub_dir_list=[self.settings.PUBMED_FTP_CWD])
+            # disconnect the FTP connection
+            ftp_provider.ftp_disconnect(ftp_instance)
+            ftp_status = True
+        except:
+            ftp_status = False
+        return ftp_status
 
     def get_outbox_s3_key_names(self, force=None):
         """
@@ -292,6 +339,9 @@ class activity_PubmedArticleDeposit(Activity):
         """
         Clean out the S3 outbox folder
         """
+        # Save the list of outbox contents to report on later
+        outbox_s3_key_names = self.get_outbox_s3_key_names()
+
         # Move only the published files from the S3 outbox to the published folder
         bucket_name = self.publish_bucket
         to_folder = self.get_to_folder_name()
@@ -331,7 +381,7 @@ class activity_PubmedArticleDeposit(Activity):
         for xml_file in xml_files:
             resource_dest = (storage_provider + bucket_name + "/" +
                              s3_folder_name + "/" +
-                             article_processing.file_name_from_name(xml_file))
+                             self.get_filename_from_path(xml_file, '.xml') + '.xml')
             storage.set_resource_from_filename(resource_dest, xml_file)
 
     def send_email(self):
@@ -367,7 +417,7 @@ class activity_PubmedArticleDeposit(Activity):
         date_format = '%Y-%m-%d %H:%M'
         datetime_string = time.strftime(date_format, current_time)
 
-        activity_status_text = utils.get_activity_status_text(self.statuses.get('activity'))
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         # Count the files moved from the outbox, the files that were processed
         files_count = 0
@@ -391,7 +441,7 @@ class activity_PubmedArticleDeposit(Activity):
 
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, current_time)
 
-        activity_status_text = utils.get_activity_status_text(self.statuses.get('activity'))
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         # Bulk of body
         body += self.name + " status:" + "\n"
@@ -399,12 +449,12 @@ class activity_PubmedArticleDeposit(Activity):
         body += activity_status_text + "\n"
         body += "\n"
 
-        body += "activity_status: " + str(self.statuses.get('activity')) + "\n"
-        body += "generate_status: " + str(self.statuses.get('generate')) + "\n"
-        body += "approve_status: " + str(self.statuses.get('approve')) + "\n"
-        body += "upload_status: " + str(self.statuses.get('upload')) + "\n"
-        body += "publish_status: " + str(self.statuses.get('publish')) + "\n"
-        body += "outbox_status: " + str(self.statuses.get('outbox')) + "\n"
+        body += "activity_status: " + str(self.activity_status) + "\n"
+        body += "generate_status: " + str(self.generate_status) + "\n"
+        body += "approve_status: " + str(self.approve_status) + "\n"
+        body += "ftp_status: " + str(self.ftp_status) + "\n"
+        body += "publish_status: " + str(self.publish_status) + "\n"
+        body += "outbox_status: " + str(self.outbox_status) + "\n"
 
         body += "\n"
         body += "Outbox files: " + "\n"
@@ -420,14 +470,14 @@ class activity_PubmedArticleDeposit(Activity):
             body += "No files in outbox." + "\n"
 
         # Report on published files
-        if self.article_published_file_names:
+        if len(self.article_published_file_names) > 0:
             body += "\n"
             body += "Published files included in pubmed XML: " + "\n"
             for name in self.article_published_file_names:
                 body += name.split(os.sep)[-1] + "\n"
 
         # Report on not published files
-        if self.article_not_published_file_names:
+        if len(self.article_not_published_file_names) > 0:
             body += "\n"
             body += "Files in pubmed outbox not yet published: " + "\n"
             for name in self.article_not_published_file_names:
@@ -446,31 +496,3 @@ class activity_PubmedArticleDeposit(Activity):
         body += "\n\nSincerely\n\neLife bot"
 
         return body
-
-
-def elifepubmed_config(settings):
-    "parse the config values from the elifepubmed config"
-    config.read(settings.elifepubmed_config_file)
-    raw_config = config[settings.elifepubmed_config_section]
-    return parse_raw_config(raw_config)
-
-
-def parse_article_xml(xml_file, pubmed_config, tmp_dir):
-    """
-    Given an article XML files, parse it into an article object
-    """
-    article = None
-    generate.TMP_DIR = tmp_dir
-    try:
-        # Convert the XML file to article objects
-        article_list = generate.build_articles(
-            article_xmls=[xml_file],
-            build_parts=pubmed_config.get('build_parts'),
-            remove_tags=pubmed_config.get('remove_tags'))
-        # take the first article from the list
-        if article_list:
-            article = article_list[0]
-    except:
-        article = None
-
-    return article
