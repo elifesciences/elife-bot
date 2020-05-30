@@ -6,7 +6,7 @@ GitPython==3.1.2
 git+https://github.com/elifesciences/elife-tools.git@045a279275d78464533f84aad4d539e8ba44ff05#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@0944c90ce641fea09706d70059a4db3bbec8cec4#egg=elifearticle
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@2e4e99e791db45d1b0f912adffc4fc431b1585de#egg=elifecrossref
-git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@fb1d8098a33537b8a0238352f3b193bca49abe4c#egg=elifepubmed
+git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@05e9c1e80bdc99583f1317e3a0219afd7c437e89#egg=elifepubmed
 git+https://github.com/elifesciences/ejp-csv-parser.git@7ecae0064e6ae34267ecfd587bf274cb5b612691#egg=ejpcsvparser
 git+https://github.com/elifesciences/jats-generator.git@2181152e49ace9d38bc821f4a2337176ea291e2c#egg=jatsgenerator
 git+https://github.com/elifesciences/package-poa.git@f5003c020a9efbc5d3bccb4c20e8586e247e3acb#egg=packagepoa
