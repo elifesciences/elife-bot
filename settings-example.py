@@ -167,12 +167,6 @@ class exp():
     letterparser_config_file = 'letterparser.cfg'
     letterparser_config_section = 'elife'
 
-    # PubMed FTP settings
-    PUBMED_FTP_URI = ""
-    PUBMED_FTP_USERNAME = ""
-    PUBMED_FTP_PASSWORD = ""
-    PUBMED_FTP_CWD = ""
-
     # PubMed SFTP settings
     PUBMED_SFTP_URI = ""
     PUBMED_SFTP_USERNAME = ""
@@ -447,12 +441,6 @@ class dev():
     letterparser_config_file = 'letterparser.cfg'
     letterparser_config_section = 'elife'
 
-    # PubMed FTP settings
-    PUBMED_FTP_URI = ""
-    PUBMED_FTP_USERNAME = ""
-    PUBMED_FTP_PASSWORD = ""
-    PUBMED_FTP_CWD = ""
-
     # PubMed SFTP settings
     PUBMED_SFTP_URI = ""
     PUBMED_SFTP_USERNAME = ""
@@ -719,12 +707,6 @@ class live():
     # Decision letter parser
     letterparser_config_file = 'letterparser.cfg'
     letterparser_config_section = 'elife'
-
-    # PubMed FTP settings
-    PUBMED_FTP_URI = ""
-    PUBMED_FTP_USERNAME = ""
-    PUBMED_FTP_PASSWORD = ""
-    PUBMED_FTP_CWD = ""
 
     # PubMed SFTP settings
     PUBMED_SFTP_URI = ""
