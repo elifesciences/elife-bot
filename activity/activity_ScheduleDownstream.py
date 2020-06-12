@@ -117,6 +117,7 @@ def outbox_map():
     outboxes["scopus"] = "scopus/outbox/"
     outboxes["cnpiec"] = "cnpiec/outbox/"
     outboxes["cnki"] = "cnki/outbox/"
+    outboxes["clockss"] = "clockss/outbox/"
     return outboxes
 
 
@@ -140,7 +141,7 @@ def choose_outboxes(status, outbox_map, first_by_status, run_type=None):
         outbox_list.append(outbox_map.get("scopus"))
         outbox_list.append(outbox_map.get("cnpiec"))
         outbox_list.append(outbox_map.get("cnki"))
-
+        outbox_list.append(outbox_map.get("clockss"))
     return outbox_list
 
 

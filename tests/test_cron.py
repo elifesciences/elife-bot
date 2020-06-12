@@ -309,6 +309,25 @@ class TestConditionalStarts(unittest.TestCase):
 
     @data(
         {
+            "comment": "22:00 UTC",
+            "date_time": "1970-01-01 22:00:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_DepositCrossref",
+                "starter_PubRouterDeposit"
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "DepositCrossref",
+                "PubRouterDeposit_CLOCKSS"
+            ]
+        },
+    )
+    def test_conditional_starts_22_00_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
             "comment": "22:30 UTC",
             "date_time": "1970-01-01 22:30:00 UTC",
             "expected_starter_names": [
