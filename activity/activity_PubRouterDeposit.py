@@ -443,7 +443,7 @@ class activity_PubRouterDeposit(Activity):
                 remove_article_doi.append(article.doi)
 
         # Check if article is a resupply
-        if workflow != 'PMC':
+        if workflow not in ['CLOCKSS', 'PMC']:
             for article in articles:
                 was_ever_published = blank_article.was_ever_published(article.doi, workflow)
                 if was_ever_published is True:
