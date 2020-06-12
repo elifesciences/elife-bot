@@ -242,6 +242,7 @@ class exp():
     CLOCKSS_FTP_USERNAME = ""
     CLOCKSS_FTP_PASSWORD = ""
     CLOCKSS_FTP_CWD = ""
+    CLOCKSS_EMAIL = "clockss@example.org"
 
     # Logging
     setLevel = "INFO"
@@ -516,6 +517,7 @@ class dev():
     CLOCKSS_FTP_USERNAME = ""
     CLOCKSS_FTP_PASSWORD = ""
     CLOCKSS_FTP_CWD = ""
+    CLOCKSS_EMAIL = "clockss@example.org"
 
     # Logging
     setLevel = "INFO"
@@ -783,6 +785,7 @@ class live():
     CLOCKSS_FTP_USERNAME = ""
     CLOCKSS_FTP_PASSWORD = ""
     CLOCKSS_FTP_CWD = ""
+    CLOCKSS_EMAIL = "clockss@example.org"
 
     # Logging
     setLevel = "INFO"
