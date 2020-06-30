@@ -282,10 +282,8 @@ class activity_PublicationEmail(Activity):
 
             # Get the article author data
             authors = self.article_authors_by_article_type(article)
-            if not authors:
-                self.log_cannot_find_authors(article.doi)
 
-            # Send an email to each author
+            # process the recipient data, adding Feature article recipients if applicable
             recipient_authors = choose_recipient_authors(
                 authors=authors,
                 article_type=article.article_type,
