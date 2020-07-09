@@ -4,8 +4,8 @@ arrow==0.4.4
 requests==2.20.0
 GitPython==3.1.2
 git+https://github.com/elifesciences/elife-tools.git@141ccae952165238c94c46609b5608b190cead0e#egg=elifetools
-git+https://github.com/elifesciences/elife-article.git@230de0696fc43913558fbbb16e2a0c44fc04123f#egg=elifearticle
-git+https://github.com/elifesciences/elife-crossref-xml-generation.git@e78142e057fb0776e3eb99166a3ee7127f3e7b81#egg=elifecrossref
+git+https://github.com/elifesciences/elife-article.git@e8f97a98e517718da4f3ff0e0145486e3a6dfe08#egg=elifearticle
+git+https://github.com/elifesciences/elife-crossref-xml-generation.git@fb156c84d324eb737a0b554ae5b67bb201fe68e0#egg=elifecrossref
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@cc3b2494357b9c27b2e5f30e3f56f7d3f75b3155#egg=elifepubmed
 git+https://github.com/elifesciences/ejp-csv-parser.git@46c39d07830789dc89b00de202d14ccd4cd5af76#egg=ejpcsvparser
 git+https://github.com/elifesciences/jats-generator.git@45069c1e6e0cd70b242ea33e715780daa9f8d443#egg=jatsgenerator
