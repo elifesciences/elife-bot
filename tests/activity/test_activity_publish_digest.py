@@ -87,6 +87,19 @@ class TestPublishDigest(unittest.TestCase):
             "expected_published_date": "2015-12-29T00:00:00Z"
         },
         {
+            "comment": "published digest with no date, put it to the endpoint",
+            "article_id": "99999",
+            "status": "vor",
+            "existing_digest_json": digest_data_no_published(),
+            "put_response": FakeResponse(204, None),
+            "stage": "published",
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
+            "expected_stage": "published",
+            "expected_approve_status": True,
+            "expected_put_status": True,
+            "expected_published_date": "2015-12-29T00:00:00Z"
+        },
+        {
             "comment": "fail to put a digest",
             "article_id": "99999",
             "status": "vor",
