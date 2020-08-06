@@ -105,11 +105,72 @@ class TestPMCDeposit(unittest.TestCase):
 
         fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
         fake_list_resources.return_value = test_data["pmc_zip_key_names"]
-        fake_ftp_to_endpoint.return_value = False
+        fake_ftp_to_endpoint.return_value = None
 
         success = self.activity.do_activity(test_data["input_data"])
 
         self.assertEqual(False, success)
+
+    @patch.object(FakeStorageContext, 'list_resources')
+    @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
+    @patch('activity.activity_PMCDeposit.storage_context')
+    def test_do_activity_ftp_to_endpoint_exception(
+            self, fake_storage_context, fake_ftp_to_endpoint, fake_list_resources):
+
+        test_data = self.do_activity_passes[1]
+
+        fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
+        fake_list_resources.return_value = test_data["pmc_zip_key_names"]
+        fake_ftp_to_endpoint.side_effect = Exception('An exception')
+
+        success = self.activity.do_activity(test_data["input_data"])
+
+        self.assertEqual(self.activity.ACTIVITY_TEMPORARY_FAILURE, success)
+        self.assertEqual(
+            str(self.activity.logger.logexception),
+            ('Exception in ftp_to_endpoint sending file elife-05-19405.zip: An exception'))
+
+
+class TestFtpToEndpoint(unittest.TestCase):
+
+    def setUp(self):
+        self.fake_logger = FakeLogger()
+        self.activity = activity_PMCDeposit(settings_mock, self.fake_logger, None, None, None)
+        self.test_data_dir = "tests/test_data/pmc/"
+
+    @patch.object(activity_module.FTP, 'ftp_connect')
+    def test_ftp_to_endpoint_connect_exception(self, fake_ftp_connect):
+        fake_ftp_connect.side_effect = Exception('An exception')
+        with self.assertRaises(Exception):
+            self.activity.ftp_to_endpoint(self.test_data_dir)
+        self.assertEqual(
+            str(self.activity.logger.logexception),
+            ('Exception connecting to FTP server: An exception'))
+
+    @patch.object(activity_module.FTP, 'ftp_to_endpoint')
+    @patch.object(activity_module.FTP, 'ftp_connect')
+    def test_ftp_to_endpoint_transfer_exception(self, fake_ftp_connect, fake_ftp_to_endpoint):
+        fake_ftp_connect.return_value = True
+        fake_ftp_to_endpoint.side_effect = Exception('An exception')
+        with self.assertRaises(Exception):
+            self.activity.ftp_to_endpoint(self.test_data_dir)
+        self.assertEqual(
+            str(self.activity.logger.logexception),
+            ('Exception in transfer of files by FTP: An exception'))
+
+    @patch.object(activity_module.FTP, 'ftp_disconnect')
+    @patch.object(activity_module.FTP, 'ftp_to_endpoint')
+    @patch.object(activity_module.FTP, 'ftp_connect')
+    def test_ftp_to_endpoint_disconnect_exception(
+            self, fake_ftp_connect, fake_ftp_to_endpoint, fake_ftp_disconnect):
+        fake_ftp_connect.return_value = True
+        fake_ftp_to_endpoint.return_value = True
+        fake_ftp_disconnect.side_effect = Exception('An exception')
+        with self.assertRaises(Exception):
+            self.activity.ftp_to_endpoint(self.test_data_dir)
+        self.assertEqual(
+            str(self.activity.logger.logexception),
+            ('Exception disconnecting from FTP server: An exception'))
 
 
 @ddt

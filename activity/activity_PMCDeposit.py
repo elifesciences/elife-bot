@@ -116,7 +116,13 @@ class activity_PMCDeposit(Activity):
         # FTP the zip
         ftp_status = None
         if verified and self.zip_file_name:
-            ftp_status = self.ftp_to_endpoint(self.directories.get("ZIP_DIR"))
+            try:
+                ftp_status = self.ftp_to_endpoint(self.directories.get("ZIP_DIR"))
+            except Exception as exception:
+                self.logger.exception(
+                    "Exception in ftp_to_endpoint sending file %s: %s" %
+                    (self.zip_file_name, exception))
+                return self.ACTIVITY_TEMPORARY_FAILURE
 
             if ftp_status is True:
                 self.upload_article_zip_to_s3()
@@ -136,26 +142,38 @@ class activity_PMCDeposit(Activity):
         e.g. "/*.zip"
         """
         try:
-            ftp_provider = FTP()
+            ftp_provider = FTP(self.logger)
             ftp_instance = ftp_provider.ftp_connect(
                 uri=self.settings.PMC_FTP_URI,
                 username=self.settings.PMC_FTP_USERNAME,
                 password=self.settings.PMC_FTP_PASSWORD,
                 passive=passive
             )
-            # collect the list of files
-            zipfiles = glob.glob(from_dir + file_type)
+        except Exception as exception:
+            self.logger.exception("Exception connecting to FTP server: %s" % exception)
+            raise
+
+        # collect the list of files
+        zipfiles = glob.glob(from_dir + file_type)
+
+        try:
             # transfer them by FTP to the endpoint
             ftp_provider.ftp_to_endpoint(
                 ftp_instance=ftp_instance,
                 uploadfiles=zipfiles,
                 sub_dir_list=[self.settings.PMC_FTP_CWD])
+        except Exception as exception:
+            self.logger.exception("Exception in transfer of files by FTP: %s" % exception)
+            raise
+
+        try:
             # disconnect the FTP connection
             ftp_provider.ftp_disconnect(ftp_instance)
-            ftp_status = True
-        except:
-            ftp_status = False
-        return ftp_status
+        except Exception as exception:
+            self.logger.exception("Exception disconnecting from FTP server: %s" % exception)
+            raise
+
+        return True
 
     def download_files_from_s3(self, document):
         """download input zip document from the bucket"""
