@@ -164,6 +164,7 @@ class activity_PMCDeposit(Activity):
                 sub_dir_list=[self.settings.PMC_FTP_CWD])
         except Exception as exception:
             self.logger.exception("Exception in transfer of files by FTP: %s" % exception)
+            ftp_provider.ftp_disconnect(ftp_instance)
             raise
 
         try:
