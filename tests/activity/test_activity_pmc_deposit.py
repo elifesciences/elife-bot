@@ -147,10 +147,13 @@ class TestFtpToEndpoint(unittest.TestCase):
             str(self.activity.logger.logexception),
             ('Exception connecting to FTP server: An exception'))
 
+    @patch.object(activity_module.FTP, 'ftp_disconnect')
     @patch.object(activity_module.FTP, 'ftp_to_endpoint')
     @patch.object(activity_module.FTP, 'ftp_connect')
-    def test_ftp_to_endpoint_transfer_exception(self, fake_ftp_connect, fake_ftp_to_endpoint):
+    def test_ftp_to_endpoint_transfer_exception(
+            self, fake_ftp_connect, fake_ftp_to_endpoint, fake_ftp_disconnect):
         fake_ftp_connect.return_value = True
+        fake_ftp_disconnect.return_value = True
         fake_ftp_to_endpoint.side_effect = Exception('An exception')
         with self.assertRaises(Exception):
             self.activity.ftp_to_endpoint(self.test_data_dir)
