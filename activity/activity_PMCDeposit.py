@@ -3,12 +3,12 @@ import json
 import zipfile
 import re
 import glob
+from elifetools import parseJATS as parser
 import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo
 from provider.storage_provider import storage_context
 from provider import article_processing
 from provider.ftp import FTP
-from elifetools import parseJATS as parser
 from activity.objects import Activity
 
 
@@ -95,11 +95,12 @@ class activity_PMCDeposit(Activity):
         (verified, renamed_list, not_renamed_list) = article_processing.verify_rename_files(
             file_name_map)
 
-        self.logger.info("verified " + self.directories.get("INPUT_DIR") + ": " + str(verified))
-        self.logger.info(file_name_map)
-
-        if len(not_renamed_list) > 0:
-            self.logger.info("not renamed " + str(not_renamed_list))
+        self.logger.info("verified %s: %s" % (self.directories.get("INPUT_DIR"), verified))
+        self.logger.info("file_name_map: %s" % file_name_map)
+        if renamed_list:
+            self.logger.info("renamed: %s" % renamed_list)
+        if not_renamed_list:
+            self.logger.info("not renamed: %s" % not_renamed_list)
 
         # Convert the XML
         article_processing.convert_xml(article_xml_file(xml_search_folders), file_name_map)
@@ -248,6 +249,7 @@ def get_journal(document):
     if document:
         info = ArticleInfo(article_processing.file_name_from_name(document))
         return info.journal
+    return None
 
 
 def article_xml_file(folders):
