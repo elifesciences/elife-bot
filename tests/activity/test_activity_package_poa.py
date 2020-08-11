@@ -3,6 +3,7 @@ import os
 import json
 import shutil
 import glob
+from xml.parsers.expat import ExpatError
 from mock import patch
 from ddt import ddt, data, unpack
 from packagepoa import transform
@@ -26,7 +27,8 @@ def outbox_files(folder):
 class TestPackagePOA(unittest.TestCase):
 
     def setUp(self):
-        self.poa = activity_PackagePOA(settings_mock, FakeLogger(), None, None, None)
+        self.logger = FakeLogger()
+        self.poa = activity_PackagePOA(settings_mock, self.logger, None, None, None)
         self.test_data_dir = "tests/test_data/poa"
 
     def tearDown(self):
@@ -114,6 +116,7 @@ class TestPackagePOA(unittest.TestCase):
     def test_process_poa_zipfile(self, test_data, fake_copy_pdf_to_output_dir):
         "test processing the zip file directly"
         self.poa.make_activity_directories()
+        fake_copy_pdf_to_output_dir.return_value = None
         self.fake_copy_pdf_to_hw_staging_dir(test_data.get('poa_decap_pdf'))
         file_path = self.fake_download_poa_zip(test_data.get('filename'))
         print(file_path)
@@ -199,6 +202,8 @@ class TestPackagePOA(unittest.TestCase):
         # make directories first
         self.poa.make_activity_directories()
         # mock things
+        fake_copy_pdf_to_output_dir.return_value = None
+        fake_clean_tmp_dir.return_value = None
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
         test_outbox_folder = activity_test_data.ExpandArticle_files_dest_folder
         bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list_new.json")
@@ -252,6 +257,84 @@ class TestPackagePOA(unittest.TestCase):
                              value=value,
                              expected=expected,
                              scenario=scenario))
+
+    @patch.object(activity_PackagePOA, 'generate_xml')
+    @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch('activity.activity_PackagePOA.storage_context')
+    @patch('provider.ejp.EJP.ejp_bucket_file_list')
+    @patch.object(lax_provider, 'article_publication_date')
+    @patch.object(activity_PackagePOA, 'clean_tmp_dir')
+    @patch.object(transform, 'copy_pdf_to_output_dir')
+    @data(
+        {
+            "scenario": "1",
+            "poa_input_zip": "18022_1_supp_mat_highwire_zip_268991_x75s4v.zip",
+            "poa_decap_pdf": "decap_elife_poa_e12717.pdf",
+            "doi": "10.7554/eLife.12717",
+            "expected_generate_xml_status": False,
+            "expected_activity_status": False,
+            "expected_result": True,
+            "expected_outbox_count": 2
+        },
+    )
+    def test_do_activity_generate_xml_exception(
+            self, test_data, fake_copy_pdf_to_output_dir, fake_clean_tmp_dir,
+            fake_article_publication_date, fake_ejp_bucket_file_list,
+            fake_storage_context, fake_email_smtp_connect, fake_generate_xml):
+        # make directories first
+        self.poa.make_activity_directories()
+        # mock things
+        fake_generate_xml.side_effect = ExpatError('An exception')
+        fake_copy_pdf_to_output_dir.return_value = None
+        fake_clean_tmp_dir.return_value = None
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
+        test_outbox_folder = activity_test_data.ExpandArticle_files_dest_folder
+        bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list_new.json")
+        with open(bucket_list_file, 'rb') as open_file:
+            fake_ejp_bucket_file_list.return_value = json.loads(open_file.read().decode())
+        fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
+        fake_article_publication_date.return_value = None
+
+        # For now mock the PDF decapitator during tests
+        self.fake_copy_pdf_to_hw_staging_dir(test_data.get('poa_decap_pdf'))
+
+        param_data = json.loads('{"data": {"document": "' +
+                                str(test_data["poa_input_zip"]) + '"}}')
+        success = self.poa.do_activity(param_data)
+
+        self.assertEqual(test_data["doi"], self.poa.doi)
+        self.boolean_assertion(self.poa.generate_xml_status,
+                               test_data.get('expected_generate_xml_status'),
+                               test_data.get('scenario'))
+        self.boolean_assertion(self.poa.activity_status,
+                               test_data.get('expected_activity_status'),
+                               test_data.get('scenario'))
+        self.boolean_assertion(success,
+                               test_data.get('expected_result'),
+                               test_data.get('scenario'))
+        # count the outbox files except the hidden .gitkeep file
+        if test_data.get('expected_outbox_count'):
+            self.boolean_assertion(len(outbox_files(test_outbox_folder)),
+                                   test_data.get('expected_outbox_count'),
+                                   test_data.get('scenario'))
+
+    @patch.object(activity_module.generate, 'build_article_from_csv')
+    def test_generate_xml_build_article_exception(self, fake_build_article):
+        fake_build_article.side_effect = Exception('An exception')
+        with self.assertRaises(Exception):
+            self.poa.generate_xml(12717)
+        self.assertEqual(
+            self.poa.logger.logexception,
+            'Exception in build_article_from_csv for article_id 12717: An exception')
+
+    @patch.object(activity_module.generate, 'build_xml_to_disk')
+    def test_generate_xml_expat_exception(self, fake_build_xml):
+        fake_build_xml.side_effect = ExpatError('An exception')
+        with self.assertRaises(ExpatError):
+            self.poa.generate_xml(12717)
+        self.assertEqual(
+            self.poa.logger.logexception,
+            'Exception in build_xml_to_disk for article_id 12717: An exception')
 
 
 if __name__ == '__main__':

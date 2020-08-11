@@ -5,6 +5,7 @@ import zipfile
 import glob
 import shutil
 from collections import OrderedDict
+from xml.parsers.expat import ExpatError
 from jatsgenerator import generate
 from jatsgenerator import conf as jats_conf
 from packagepoa import transform
@@ -107,7 +108,12 @@ class activity_PackagePOA(Activity):
             self.download_latest_csv()
             pub_date = self.get_pub_date(doi_id)
             volume = utils.volume_from_pub_date(pub_date)
-            self.generate_xml_status = self.generate_xml(doi_id, pub_date, volume)
+            try:
+                self.generate_xml(doi_id, pub_date, volume)
+                self.generate_xml_status = True
+            except Exception as exception:
+                self.logger.exception('Exception in generate_xml: %s' % str(exception))
+                self.generate_xml_status = False
             self.logger.info('XML generation status: %s' % self.generate_xml_status)
 
             # Copy finished files to S3 outbox
@@ -253,12 +259,19 @@ class activity_PackagePOA(Activity):
         Given DOI number as article_id, use the POA library to generate
         article XML from the CSV files
         """
-        result = None
         # override the CSV directory in the ejp-csv-parser library
         jats_config = self.jatsgenerator_config(self.settings.jatsgenerator_config_section)
         generate.parse.data.CSV_PATH = self.directories.get("CSV") + os.sep
         generate.parse.data.TMP_DIR = self.directories.get("CSV_TMP")
-        article = generate.build_article_from_csv(article_id, jats_config)
+
+        article = None
+        try:
+            article = generate.build_article_from_csv(article_id, jats_config)
+        except Exception as exception:
+            self.logger.exception(
+                'Exception in build_article_from_csv for article_id %s: %s' %
+                (article_id, str(exception)))
+            raise
 
         if article:
             # Here can set the pub-date and volume, if provided
@@ -271,17 +284,20 @@ class activity_PackagePOA(Activity):
 
             # Override the output_dir in the jatsgenerator config
             jats_config['target_output_dir'] = self.directories.get("XML_OUTPUT")
-            result = generate.build_xml_to_disk(
-                article_id, article, jats_config, True)
-        else:
-            result = False
+
+            try:
+                generate.build_xml_to_disk(
+                    article_id, article, jats_config, True)
+            except ExpatError as exception:
+                self.logger.exception(
+                    'Exception in build_xml_to_disk for article_id %s: %s' %
+                    (article_id, str(exception)))
+                raise
 
         # Copy to output_dir because we need it there
         xml_files = glob.glob(self.directories.get("XML_OUTPUT") + "/*.xml")
         for xml_file in xml_files:
             shutil.copy(xml_file, self.directories.get("OUTPUT"))
-
-        return result
 
     def copy_files_to_s3_outbox(self):
         """
