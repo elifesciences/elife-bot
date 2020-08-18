@@ -170,17 +170,32 @@ class TestConditionalStarts(unittest.TestCase):
 
     @data(
         {
+            "comment": "06:15 UTC",
+            "date_time": "1970-01-01 06:15:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "cron_NewS3POA",
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "cron_NewS3POA",
+            ]
+        },
+    )
+    def test_conditional_starts_06_15_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
             "comment": "10:45 UTC",
             "date_time": "1970-01-01 10:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "cron_NewS3POA",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail"
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "cron_NewS3POA",
                 "PubmedArticleDeposit",
                 "AdminEmail"
             ]
@@ -196,12 +211,10 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossrefPeerReview",
-                "starter_PublishPOA",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossrefPeerReview",
-                "PublishPOA",
             ]
         },
     )
@@ -215,16 +228,33 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossrefPeerReview",
-                "starter_PublishPOA",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossrefPeerReview",
-                "PublishPOA",
             ]
         },
     )
     def test_conditional_starts_12_30_utc_october_27_2019(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "2019-08-19 13:00 UTC",
+            "date_time": "2019-08-19 13:00:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_DepositCrossref",
+                "starter_PublishPOA",
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "DepositCrossref",
+                "PublishPOA",
+            ]
+        },
+    )
+    def test_conditional_starts_13_00_utc_august(self, test_data):
         self.conditional_start_test_run(test_data)
 
     @data(
