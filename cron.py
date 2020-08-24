@@ -81,7 +81,7 @@ def conditional_starts(current_datetime):
         ]))
 
     # Based on the minutes of the current time, run certain starters
-    if current_time.tm_min >= 0 and current_time.tm_min <= 29:
+    if current_time.tm_min >= 0 and current_time.tm_min <= 14:
         # Jobs to start at the top of the hour
         LOGGER.info("Top of the hour")
 
@@ -90,6 +90,17 @@ def conditional_starts(current_datetime):
             ("workflow_id", "DepositCrossref"),
             ("start_seconds", 60 * 31)
         ]))
+
+        # POA Publish at specific hours of the day UK time
+        if (local_current_time.tm_hour == 10
+                or local_current_time.tm_hour == 12
+                or local_current_time.tm_hour == 14
+                or local_current_time.tm_hour == 16):
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "starter_PublishPOA"),
+                ("workflow_id", "PublishPOA"),
+                ("start_seconds", 60 * 31)
+            ]))
 
         # CLOCKSS deposits once per day 22:00 UTC
         if current_time.tm_hour == 22:
@@ -107,6 +118,19 @@ def conditional_starts(current_datetime):
                 ("start_seconds", 60 * 31)
             ]))
 
+    elif current_time.tm_min >= 15 and current_time.tm_min <= 29:
+        # Jobs to start at quarter past the hour
+        LOGGER.info("Quarter past the hour")
+
+        # POA Packaging at UK local time, hourly between 6:15 and 15:15
+        if (local_current_time.tm_hour >= 6
+                and local_current_time.tm_hour <= 15):
+            conditional_start_list.append(OrderedDict([
+                ("starter_name", "cron_NewS3POA"),
+                ("workflow_id", "cron_NewS3POA"),
+                ("start_seconds", 60 * 31)
+            ]))
+
     elif current_time.tm_min >= 30 and current_time.tm_min <= 44:
         # Jobs to start at the half past to quarter to the hour
         LOGGER.info("half past to quarter to the hour")
@@ -116,15 +140,6 @@ def conditional_starts(current_datetime):
             ("workflow_id", "DepositCrossrefPeerReview"),
             ("start_seconds", 60 * 31)
         ]))
-
-        # POA Publish once per day 12:30 local time
-        #  (used to be set to 11:30 UTC during British Summer Time for 12:30 local UK time)
-        if local_current_time.tm_hour == 12:
-            conditional_start_list.append(OrderedDict([
-                ("starter_name", "starter_PublishPOA"),
-                ("workflow_id", "PublishPOA"),
-                ("start_seconds", 60 * 31)
-            ]))
 
         # PMC deposits once per day 20:30 UTC
         if current_time.tm_hour == 20:
@@ -158,17 +173,8 @@ def conditional_starts(current_datetime):
                 ("start_seconds", 60 * 31)
             ]))
 
-    if current_time.tm_min >= 45 and current_time.tm_min <= 59:
+    elif current_time.tm_min >= 45 and current_time.tm_min <= 59:
         # Bottom quarter of the hour
-
-        # POA Package once per day 11:45 local time
-        # (used to be set to 10:45 UTC during British Summer Time for 11:45 local UK time)
-        if local_current_time.tm_hour == 11:
-            conditional_start_list.append(OrderedDict([
-                ("starter_name", "cron_NewS3POA"),
-                ("workflow_id", "cron_NewS3POA"),
-                ("start_seconds", 60 * 31)
-            ]))
 
         # Author emails once per day 17:45 local time
         # (used to be set to 16:45 UTC during British Summer Time for 17:45 local UK time)
