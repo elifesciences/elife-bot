@@ -122,9 +122,9 @@ def conditional_starts(current_datetime):
         # Jobs to start at quarter past the hour
         LOGGER.info("Quarter past the hour")
 
-        # POA Packaging at UK local time, hourly between 6:15 and 13:15
+        # POA Packaging at UK local time, hourly between 6:15 and 15:15
         if (local_current_time.tm_hour >= 6
-                and local_current_time.tm_hour <= 13):
+                and local_current_time.tm_hour <= 15):
             conditional_start_list.append(OrderedDict([
                 ("starter_name", "cron_NewS3POA"),
                 ("workflow_id", "cron_NewS3POA"),
