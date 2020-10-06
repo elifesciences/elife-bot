@@ -170,8 +170,8 @@ class TestConditionalStarts(unittest.TestCase):
 
     @data(
         {
-            "comment": "06:15 UTC",
-            "date_time": "1970-01-01 06:15:00 UTC",
+            "comment": "06:20 UTC",
+            "date_time": "1970-01-01 06:20:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "cron_NewS3POA",
@@ -182,7 +182,7 @@ class TestConditionalStarts(unittest.TestCase):
             ]
         },
     )
-    def test_conditional_starts_06_15_utc(self, test_data):
+    def test_conditional_starts_06_20_utc(self, test_data):
         self.conditional_start_test_run(test_data)
 
     @data(
