@@ -118,11 +118,15 @@ def conditional_starts(current_datetime):
                 ("start_seconds", 60 * 31)
             ]))
 
-    elif current_time.tm_min >= 15 and current_time.tm_min <= 29:
+    elif current_time.tm_min >= 15 and current_time.tm_min <= 19:
         # Jobs to start at quarter past the hour
         LOGGER.info("Quarter past the hour")
 
-        # POA Packaging at UK local time, hourly between 6:15 and 15:15
+    elif current_time.tm_min >= 20 and current_time.tm_min <= 29:
+        # Jobs to start at 20 minutes past the hour
+        LOGGER.info("Twenty minutes past the hour")
+
+        # POA Packaging at UK local time, hourly between 6:20 and 15:20
         if (local_current_time.tm_hour >= 6
                 and local_current_time.tm_hour <= 15):
             conditional_start_list.append(OrderedDict([

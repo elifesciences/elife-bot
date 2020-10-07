@@ -10,6 +10,7 @@ git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@6d352645389
 git+https://github.com/elifesciences/ejp-csv-parser.git@46c39d07830789dc89b00de202d14ccd4cd5af76#egg=ejpcsvparser
 git+https://github.com/elifesciences/jats-generator.git@45069c1e6e0cd70b242ea33e715780daa9f8d443#egg=jatsgenerator
 git+https://github.com/elifesciences/package-poa.git@f5003c020a9efbc5d3bccb4c20e8586e247e3acb#egg=packagepoa
+six==1.13.0
 docker==4.0.2
 git+https://github.com/elifesciences/decision-letter-parser.git@ae9fe68c11b78ad44f03af8d75049bb3474ce657#egg=letterparser
 PyYAML==4.2b2
