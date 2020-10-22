@@ -323,7 +323,13 @@ class activity_PublicationEmail(Activity):
     def article_authors(self, doi_id, article):
         """get a merged list of authors from CSV for the doi_id and from the article object"""
         article_authors = self.get_authors(doi_id)
-        xml_authors = authors_from_xml(article)
+
+        # do not get email addresses from the XML for feature articles
+        if is_feature_article(article):
+            xml_authors = []
+        else:
+            xml_authors = authors_from_xml(article)
+
         all_authors = self.merge_recipients(article_authors, xml_authors)
         return all_authors
 

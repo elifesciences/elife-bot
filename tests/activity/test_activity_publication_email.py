@@ -506,6 +506,73 @@ class TestPublicationEmail(unittest.TestCase):
         self.assertEqual(approved_articles[0].doi, research_article_doi)
 
 
+class TestArticleAuthors(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(settings_mock, fake_logger, None, None, None)
+        self.article_xml_authors = [
+            {
+                'surname': 'Author',
+                'given-names': 'Article',
+                'email': ['article_xml_author@example.org'],
+                'corresp': True,
+            }
+        ]
+        self.article_csv_authors = [
+            {
+                'surname': 'Author',
+                'given-names': 'CSV',
+                'email': ['article_csv_author@example.org'],
+            }
+        ]
+
+    @patch.object(activity_PublicationEmail, 'get_authors')
+    def test_article_authors(self, fake_get_authors):
+        "test getting authors for a research article"
+        fake_get_authors.return_value = self.article_csv_authors
+        doi_id = 3
+        display_channel = 'Research Article'
+        expected = [
+            {
+                'surname': 'Author',
+                'given-names': 'CSV',
+                'email': ['article_csv_author@example.org']
+            },
+            OrderedDict([
+                ('e_mail', 'article_xml_author@example.org'),
+                ('first_nm', 'Article'),
+                ('last_nm', 'Author')]),
+        ]
+
+        article_object = article()
+        article_object.authors = self.article_xml_authors
+        article_object.display_channel = display_channel
+
+        all_authors = self.activity.article_authors(doi_id, article_object)
+        self.assertEqual(all_authors, expected)
+
+    @patch.object(activity_PublicationEmail, 'get_authors')
+    def test_article_authors_feature_article(self, fake_get_authors):
+        "test getting authors for a feature article"
+        fake_get_authors.return_value = self.article_csv_authors
+        doi_id = 3
+        display_channel = 'Feature Article'
+        expected = [
+            {
+                'surname': 'Author',
+                'given-names': 'CSV',
+                'email': ['article_csv_author@example.org']
+            },
+        ]
+
+        article_object = article()
+        article_object.authors = self.article_xml_authors
+        article_object.display_channel = display_channel
+
+        all_authors = self.activity.article_authors(doi_id, article_object)
+        self.assertEqual(all_authors, expected)
+
+
 @ddt
 class TestChooseRecipientAuthors(unittest.TestCase):
     def setUp(self):
