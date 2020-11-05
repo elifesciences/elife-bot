@@ -2,7 +2,7 @@ import re
 import datetime
 
 
-class ArticleInfo(object):
+class ArticleInfo():
     """
     Determine useful information about an article file from its filename
     see https://github.com/elifesciences/ppp-project/blob/master/file_naming_spec.md
@@ -83,13 +83,17 @@ class ArticleInfo(object):
                 child_name = self.extra_info[1]
             final_name = self.extra_info[-1]
             # determine the file_type based on the extra file parts
-            if parent_name.startswith('resp') and child_name.startswith('fig'):
+            if parent_name.startswith('resp') and final_name.startswith('fig'):
                 self.file_type = "Figure"
-            elif parent_name.startswith('sa') and child_name.startswith('fig'):
+            elif parent_name.startswith('sa') and final_name.startswith('fig'):
                 self.file_type = "Figure"
-            elif parent_name.startswith('app') and child_name.startswith('fig'):
+            elif parent_name.startswith('app') and final_name.startswith('fig'):
                 self.file_type = "Figure"
-            elif parent_name.startswith('box') and child_name.startswith('fig'):
+            elif parent_name.startswith('box') and final_name.startswith('fig'):
+                self.file_type = "Figure"
+            elif parent_name.startswith('chem') and final_name.startswith('fig'):
+                self.file_type = "Figure"
+            elif parent_name.startswith('scheme') and final_name.startswith('fig'):
                 self.file_type = "Figure"
             elif final_name.startswith('video') or final_name.startswith('code'):
                 self.file_type = 'Other'
@@ -106,21 +110,19 @@ class ArticleInfo(object):
         match = re.search(r'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
         if match is None:
             return None
-        else:
-            try:
-                raw_update_date = match.group(1)
-                updated_date = datetime.datetime.strptime(raw_update_date, "%Y%m%d%H%M%S")
-                return updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
-            except:
-                return None
+        try:
+            raw_update_date = match.group(1)
+            updated_date = datetime.datetime.strptime(raw_update_date, "%Y%m%d%H%M%S")
+            return updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+        except:
+            return None
 
     def get_version_from_zip_filename(self):
         filename = self.full_filename
         match = re.search(r'-v([0-9]+?)[\.|-]', filename)
         if match is None:
             return None
-        else:
-            return match.group(1)
+        return match.group(1)
 
 
 def article_figure(filename):
