@@ -1,16 +1,19 @@
 import unittest
-from ddt import ddt, data, unpack
-from mock import patch
 from collections import OrderedDict
+from mock import patch
+from ddt import ddt, data, unpack
+from testfixtures import TempDirectory
 from provider.article_structure import ArticleInfo
 import provider.article_structure as article_structure
 from tests.activity.classes_mock import FakeBucket
 from tests.activity.classes_mock import FakeKey
-from testfixtures import TempDirectory
 
 
 @ddt
 class TestArticleStructure(unittest.TestCase):
+
+    def setUp(self):
+        self.articleinfo = None
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -112,132 +115,134 @@ class TestArticleStructure(unittest.TestCase):
         self.articleinfo = ArticleInfo(full_filename)
         for attr, value in attrs.items():
             info_value = getattr(self.articleinfo, attr)
-            self.assertEqual(info_value, value,
-                             '{attr} not equal for {full_filename}: {info_value} != value'.format(
-                                attr=attr, full_filename=full_filename, info_value=info_value,
-                                value=value))
+            self.assertEqual(
+                info_value, value,
+                '{attr} not equal for {full_filename}: {info_value} != value'.format(
+                    attr=attr, full_filename=full_filename, info_value=info_value,
+                    value=value))
 
     @unpack
-    @data({'input': 'elife-07702-vor-r4.zip', 'expected': None},
-          {'input': 'elife-00013-vor-v1-20121015000000.zip', 'expected':'2012-10-15T00:00:00Z'},
-          {'input': 'elife-07702-vor-r4-2012bad_date.zip', 'expected': None})
-    def test_get_update_date_from_zip_filename(self, input, expected):
-        self.articleinfo = ArticleInfo(input)
+    @data(
+        {'filename': 'elife-07702-vor-r4.zip', 'expected': None},
+        {'filename': 'elife-00013-vor-v1-20121015000000.zip', 'expected': '2012-10-15T00:00:00Z'},
+        {'filename': 'elife-07702-vor-r4-2012bad_date.zip', 'expected': None})
+    def test_get_update_date_from_zip_filename(self, filename, expected):
+        self.articleinfo = ArticleInfo(filename)
         result = self.articleinfo.get_update_date_from_zip_filename()
         self.assertEqual(result, expected)
 
     @unpack
-    @data({'input': 'elife-07702-vor-r4.zip', 'expected': None},
-          {'input': 'elife-00013-vor-v1-20121015000000.zip', 'expected': '1'})
-    def test_get_version_from_zip_filename(self, input, expected):
-        self.articleinfo = ArticleInfo(input)
+    @data({'filename': 'elife-07702-vor-r4.zip', 'expected': None},
+          {'filename': 'elife-00013-vor-v1-20121015000000.zip', 'expected': '1'})
+    def test_get_version_from_zip_filename(self, filename, expected):
+        self.articleinfo = ArticleInfo(filename)
         result = self.articleinfo.get_version_from_zip_filename()
         self.assertEqual(result, expected)
 
     @unpack
     @data(
-        {'input': 'elife-07702-vor-r4.zip', 'expected': 'ArticleZip'},
-        {'input': 'elife-00013-vor-v1-20121015000000.zip', 'expected': 'ArticleZip'},
-        {'input': 'elife-00666-v1.pdf', 'expected': 'Other'},
-        {'input': 'elife-00666-v1.xml', 'expected': 'ArticleXML'},
-        {'input': 'elife-00666-app1-fig1-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-app1-fig1-figsupp1-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-app2-video1.mp4', 'expected': 'Other'},
-        {'input': 'elife-00666-box2-fig1-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-code1-v1.xml', 'expected': 'Other'},
-        {'input': 'elife-00666-data1-v1.xlsx', 'expected': 'Other'},
-        {'input': 'elife-00666-fig1-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-fig2-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-fig2-figsupp1-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-fig2-figsupp2-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-fig3-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-fig3-v10.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-fig3-figsupp1-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-fig3-video1.mp4', 'expected': 'Other'},
-        {'input': 'elife-00666-fig4-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-fig4-code1-v1.xlsx', 'expected': 'Other'},
-        {'input': 'elife-00666-figures-v1.pdf', 'expected': 'FigurePDF'},
-        {'input': 'elife-00666-inf001-v1.jpeg', 'expected': 'Inline'},
-        {'input': 'elife-00666-repstand1-v1.pdf', 'expected': 'Other'},
-        {'input': 'elife-00666-resp-fig1-v1.png', 'expected': 'Figure'},
-        {'input': 'elife-00666-resp-video1.mp4', 'expected': 'Other'},
-        {'input': 'elife-00666-supp1-v1.csv', 'expected': 'Other'},
-        {'input': 'elife-00666-supp2-v2.tif', 'expected': 'Other'},
-        {'input': 'elife-00666-supp2-v3.docx', 'expected': 'Other'},
-        {'input': 'elife-00666-table3-data1-v1.xlsx', 'expected': 'Other'},
-        {'input': 'elife-00666-video1.mp4', 'expected': 'Other'},
-        {'input': 'elife-00666-video1-data1-v1.xlsx', 'expected': 'Other'},
-        {'input': 'elife-00666.xml', 'expected': 'ArticleXML'},
-        {'input': 'elife-00666.pdf', 'expected': 'Other'},
-        {'input': 'elife-00666-supp99.xml', 'expected': 'Other'},
-        {'input': 'elife-00666-supp99-v1.xml', 'expected': 'Other'},
-        {'input': 'elife-00666-sa1-fig1-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-sa2-video1.mp4', 'expected': 'Other'},
-        {'input': 'elife-00666-chem1-fig1-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-scheme1-fig1-v1.tif', 'expected': 'Figure'},
-        {'input': 'elife-00666-app1-scheme1-fig1-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-07702-vor-r4.zip', 'expected': 'ArticleZip'},
+        {'filename': 'elife-00013-vor-v1-20121015000000.zip', 'expected': 'ArticleZip'},
+        {'filename': 'elife-00666-v1.pdf', 'expected': 'Other'},
+        {'filename': 'elife-00666-v1.xml', 'expected': 'ArticleXML'},
+        {'filename': 'elife-00666-app1-fig1-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-app1-fig1-figsupp1-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-app2-video1.mp4', 'expected': 'Other'},
+        {'filename': 'elife-00666-box2-fig1-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-code1-v1.xml', 'expected': 'Other'},
+        {'filename': 'elife-00666-data1-v1.xlsx', 'expected': 'Other'},
+        {'filename': 'elife-00666-fig1-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-fig2-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-fig2-figsupp1-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-fig2-figsupp2-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-fig3-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-fig3-v10.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-fig3-figsupp1-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-fig3-video1.mp4', 'expected': 'Other'},
+        {'filename': 'elife-00666-fig4-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-fig4-code1-v1.xlsx', 'expected': 'Other'},
+        {'filename': 'elife-00666-figures-v1.pdf', 'expected': 'FigurePDF'},
+        {'filename': 'elife-00666-inf001-v1.jpeg', 'expected': 'Inline'},
+        {'filename': 'elife-00666-repstand1-v1.pdf', 'expected': 'Other'},
+        {'filename': 'elife-00666-resp-fig1-v1.png', 'expected': 'Figure'},
+        {'filename': 'elife-00666-resp-video1.mp4', 'expected': 'Other'},
+        {'filename': 'elife-00666-supp1-v1.csv', 'expected': 'Other'},
+        {'filename': 'elife-00666-supp2-v2.tif', 'expected': 'Other'},
+        {'filename': 'elife-00666-supp2-v3.docx', 'expected': 'Other'},
+        {'filename': 'elife-00666-table3-data1-v1.xlsx', 'expected': 'Other'},
+        {'filename': 'elife-00666-video1.mp4', 'expected': 'Other'},
+        {'filename': 'elife-00666-video1-data1-v1.xlsx', 'expected': 'Other'},
+        {'filename': 'elife-00666.xml', 'expected': 'ArticleXML'},
+        {'filename': 'elife-00666.pdf', 'expected': 'Other'},
+        {'filename': 'elife-00666-supp99.xml', 'expected': 'Other'},
+        {'filename': 'elife-00666-supp99-v1.xml', 'expected': 'Other'},
+        {'filename': 'elife-00666-sa1-fig1-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-sa2-video1.mp4', 'expected': 'Other'},
+        {'filename': 'elife-00666-chem1-fig1-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-scheme1-fig1-v1.tif', 'expected': 'Figure'},
+        {'filename': 'elife-00666-app1-scheme1-fig1-v1.tif', 'expected': 'Figure'},
     )
-    def test_get_file_type_from_zip_filename(self, input, expected):
-        self.articleinfo = ArticleInfo(input)
+    def test_get_file_type_from_zip_filename(self, filename, expected):
+        self.articleinfo = ArticleInfo(filename)
         result = self.articleinfo.file_type
         self.assertEqual(result, expected, 'failed on input %s, expected %s' % (input, expected))
 
     @unpack
     @data(
-        {'input': 'Video_22.zip', 'expected': None}
+        {'filename': 'Video_22.zip', 'expected': None}
         )
-    def test_get_file_type_edge_case(self, input, expected):
+    def test_get_file_type_edge_case(self, filename, expected):
         "edge case in elife 04493 PoA"
-        self.articleinfo = ArticleInfo(input)
+        self.articleinfo = ArticleInfo(filename)
         result = self.articleinfo.file_type
         self.assertEqual(result, expected)
 
     @unpack
     @data(
-        {'input': 'elife-07702-vor-r4.zip', 'expected': False},
-        {'input': 'elife-00013-vor-v1-20121015000000.zip', 'expected': False},
-        {'input': 'elife-00666-v1.pdf', 'expected': False},
-        {'input': 'elife-00666-v1.xml', 'expected': False},
-        {'input': 'elife-00666-app1-fig1-v1.tif', 'expected': True},
-        {'input': 'elife-00666-app1-fig1-figsupp1-v1.tif', 'expected': True},
-        {'input': 'elife-00666-app2-video1.mp4', 'expected': False},
-        {'input': 'elife-00666-box2-fig1-v1.tif', 'expected': True},
-        {'input': 'elife-00666-code1-v1.xml', 'expected': False},
-        {'input': 'elife-00666-data1-v1.xlsx', 'expected': False},
-        {'input': 'elife-00666-fig1-v1.tif', 'expected': True},
-        {'input': 'elife-00666-fig2-v1.tif', 'expected': True},
-        {'input': 'elife-00666-fig2-figsupp1-v1.tif', 'expected': True},
-        {'input': 'elife-00666-fig2-figsupp2-v1.tif', 'expected': True},
-        {'input': 'elife-00666-fig3-v1.tif', 'expected': True},
-        {'input': 'elife-00666-fig3-figsupp1-v1.tif', 'expected': True},
-        {'input': 'elife-00666-fig3-video1.mp4', 'expected': False},
-        {'input': 'elife-00666-fig4-v1.tif', 'expected': True},
-        {'input': 'elife-00666-fig4-code1-v1.xlsx', 'expected': False},
-        {'input': 'elife-00666-figures-v1.pdf', 'expected': False},
-        {'input': 'elife-00666-inf001-v1.jpeg', 'expected': False},
-        {'input': 'elife-00666-repstand1-v1.pdf', 'expected': False},
-        {'input': 'elife-00666-resp-fig1-v1.png', 'expected': True},
-        {'input': 'elife-00666-resp-video1.mp4', 'expected': False},
-        {'input': 'elife-00666-supp1-v1.csv', 'expected': False},
-        {'input': 'elife-00666-table3-data1-v1.xlsx', 'expected': False},
-        {'input': 'elife-00666-video1.mp4', 'expected': False},
-        {'input': 'elife-00666-video1-data1-v1.xlsx', 'expected': False},
-        {'input': 'elife-00666-supp1-v1.tif', 'expected': False},
-        {'input': 'elife-00666-sa1-fig1-v1.tif', 'expected': True},
-        {'input': 'elife-00666-chem1-fig1-v1.tif', 'expected': True},
-        {'input': 'elife-00666-scheme1-fig1-v1.tif', 'expected': True},
+        {'filename': 'elife-07702-vor-r4.zip', 'expected': False},
+        {'filename': 'elife-00013-vor-v1-20121015000000.zip', 'expected': False},
+        {'filename': 'elife-00666-v1.pdf', 'expected': False},
+        {'filename': 'elife-00666-v1.xml', 'expected': False},
+        {'filename': 'elife-00666-app1-fig1-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-app1-fig1-figsupp1-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-app2-video1.mp4', 'expected': False},
+        {'filename': 'elife-00666-box2-fig1-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-code1-v1.xml', 'expected': False},
+        {'filename': 'elife-00666-data1-v1.xlsx', 'expected': False},
+        {'filename': 'elife-00666-fig1-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-fig2-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-fig2-figsupp1-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-fig2-figsupp2-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-fig3-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-fig3-figsupp1-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-fig3-video1.mp4', 'expected': False},
+        {'filename': 'elife-00666-fig4-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-fig4-code1-v1.xlsx', 'expected': False},
+        {'filename': 'elife-00666-figures-v1.pdf', 'expected': False},
+        {'filename': 'elife-00666-inf001-v1.jpeg', 'expected': False},
+        {'filename': 'elife-00666-repstand1-v1.pdf', 'expected': False},
+        {'filename': 'elife-00666-resp-fig1-v1.png', 'expected': True},
+        {'filename': 'elife-00666-resp-video1.mp4', 'expected': False},
+        {'filename': 'elife-00666-supp1-v1.csv', 'expected': False},
+        {'filename': 'elife-00666-table3-data1-v1.xlsx', 'expected': False},
+        {'filename': 'elife-00666-video1.mp4', 'expected': False},
+        {'filename': 'elife-00666-video1-data1-v1.xlsx', 'expected': False},
+        {'filename': 'elife-00666-supp1-v1.tif', 'expected': False},
+        {'filename': 'elife-00666-sa1-fig1-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-chem1-fig1-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-scheme1-fig1-v1.tif', 'expected': True},
     )
-    def test_article_figure(self, input, expected):
-        self.assertEqual(article_structure.article_figure(input), expected)
+    def test_article_figure(self, filename, expected):
+        self.assertEqual(article_structure.article_figure(filename), expected)
 
     @unpack
     @data(
-        {'input': 'elife-00666-app1-fig1-v1.tif', 'expected': False},
-        {'input': 'elife-00666-fig1-v1.tif', 'expected': False},
-        {'input': 'elife-00666-inf1-v1.tif', 'expected': True},
+        {'filename': 'elife-00666-app1-fig1-v1.tif', 'expected': False},
+        {'filename': 'elife-00666-fig1-v1.tif', 'expected': False},
+        {'filename': 'elife-00666-inf1-v1.tif', 'expected': True},
     )
-    def test_inline_figure(self, input, expected):
-        self.assertEqual(article_structure.inline_figure(input), expected, "Case %s" % input)
+    def test_inline_figure(self, filename, expected):
+        self.assertEqual(article_structure.inline_figure(filename), expected, "Case %s" % filename)
 
     def test_get_original_files(self):
         files = ['elife-00666-fig2-figsupp2-v1.tif',
@@ -306,7 +311,6 @@ class TestArticleStructure(unittest.TestCase):
                     'elife-18425-figures-v2.pdf']
         self.assertListEqual(article_structure.get_figures_pdfs(files), expected)
 
-
     @data(u'elife-15224-fig1-figsupp1.tif',
           u'elife-15224-resp-fig1.tif', u'elife-15224-figures.pdf',
           u'elife-15802-fig9-data3.docx', u'elife-11792.mp4',
@@ -318,7 +322,7 @@ class TestArticleStructure(unittest.TestCase):
     @data(u'elife-11792-media2.mp4', u'elife-15224-fig1-figsupp1-media.tif',
           u'elife-11792-video1.mp4', u'elife-99999-resp-media1.avi',
           u'elife-00005-media1.mov', u'elife-00666-sa2-video1.mp4')
-    def test_is_video_file_true(self,filename):
+    def test_is_video_file_true(self, filename):
         result = article_structure.is_video_file(filename)
         self.assertTrue(result)
 
@@ -333,7 +337,37 @@ class TestArticleStructure(unittest.TestCase):
         self.assertEqual(extension, expected_extension)
 
     def test_get_videos(self):
-        files = [u'elife-13273-fig1-v1.tif', u'elife-13273-fig2-figsupp1-v1.tif', u'elife-13273-fig2-figsupp2-v1.tif', u'elife-13273-fig2-figsupp3-v1.tif', u'elife-13273-fig2-v1.tif', u'elife-13273-fig3-data1-v1.xlsx', u'elife-13273-fig3-figsupp1-v1.tif', u'elife-13273-fig3-figsupp2-v1.tif', u'elife-13273-fig3-figsupp3-v1.tif', u'elife-13273-fig3-figsupp4-v1.tif', u'elife-13273-fig3-figsupp5-v1.tif', u'elife-13273-fig3-v1.tif', u'elife-13273-fig4-figsupp1-v1.tif', u'elife-13273-fig4-v1.tif', u'elife-13273-fig5-data1-v1.xlsx', u'elife-13273-fig5-figsupp1-v1.tif', u'elife-13273-fig5-v1.tif', u'elife-13273-fig6-data1-v1.xlsx', u'elife-13273-fig6-data2-v1.xlsx', u'elife-13273-fig6-figsupp1-v1.tif', u'elife-13273-fig6-figsupp2-v1.tif', u'elife-13273-fig6-v1.tif', u'elife-13273-fig7-v1.tif', u'elife-13273-fig8-v1.tif', u'elife-13273-fig9-v1.tif', u'elife-13273-figures-v1.pdf', u'elife-13273-media1.mp4', u'elife-13273-v1.pdf', u'elife-13273-v1.xml']
+        files = [
+            u'elife-13273-fig1-v1.tif',
+            u'elife-13273-fig2-figsupp1-v1.tif',
+            u'elife-13273-fig2-figsupp2-v1.tif',
+            u'elife-13273-fig2-figsupp3-v1.tif',
+            u'elife-13273-fig2-v1.tif',
+            u'elife-13273-fig3-data1-v1.xlsx',
+            u'elife-13273-fig3-figsupp1-v1.tif',
+            u'elife-13273-fig3-figsupp2-v1.tif',
+            u'elife-13273-fig3-figsupp3-v1.tif',
+            u'elife-13273-fig3-figsupp4-v1.tif',
+            u'elife-13273-fig3-figsupp5-v1.tif',
+            u'elife-13273-fig3-v1.tif',
+            u'elife-13273-fig4-figsupp1-v1.tif',
+            u'elife-13273-fig4-v1.tif',
+            u'elife-13273-fig5-data1-v1.xlsx',
+            u'elife-13273-fig5-figsupp1-v1.tif',
+            u'elife-13273-fig5-v1.tif',
+            u'elife-13273-fig6-data1-v1.xlsx',
+            u'elife-13273-fig6-data2-v1.xlsx',
+            u'elife-13273-fig6-figsupp1-v1.tif',
+            u'elife-13273-fig6-figsupp2-v1.tif',
+            u'elife-13273-fig6-v1.tif',
+            u'elife-13273-fig7-v1.tif',
+            u'elife-13273-fig8-v1.tif',
+            u'elife-13273-fig9-v1.tif',
+            u'elife-13273-figures-v1.pdf',
+            u'elife-13273-media1.mp4',
+            u'elife-13273-v1.pdf',
+            u'elife-13273-v1.xml'
+        ]
 
         result = article_structure.get_videos(files)
 
@@ -358,16 +392,22 @@ class TestArticleStructure(unittest.TestCase):
                     'elife-18425-figures-v2.pdf']
         self.assertEqual(sorted(article_structure.pre_ingest_assets(files)), sorted(expected))
 
-
     @patch.object(FakeBucket, 'list')
     @data(
-        (['test/elife-00666-video2.jpg', 'test/elife-00666-v1.xml',
-          'test/elife-00666-supp3-v1.xml'],
-            'test/elife-00666-v1.xml', 'elife-00666-v1.xml'),
+        (
+            [
+                'test/elife-00666-video2.jpg',
+                'test/elife-00666-v1.xml',
+                'test/elife-00666-supp3-v1.xml'
+            ],
+            'test/elife-00666-v1.xml',
+            'elife-00666-v1.xml'
+        ),
         (['test/elife-00666-video2.jpg'], None, None),
     )
     @unpack
-    def test_get_article_xml_key(self, bucket_list, expected_key_name, expected_filename, fake_bucket_list):
+    def test_get_article_xml_key(self, bucket_list, expected_key_name,
+                                 expected_filename, fake_bucket_list):
         directory = TempDirectory()
         # Build a list of key objects for the bucket list return value
         bucket_key_list = []
@@ -386,6 +426,7 @@ class TestArticleStructure(unittest.TestCase):
             result_key_name = key
         self.assertEqual(result_key_name, expected_key_name)
         self.assertEqual(filename, expected_filename)
+
 
 if __name__ == '__main__':
     unittest.main()

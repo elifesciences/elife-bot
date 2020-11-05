@@ -2,7 +2,7 @@ import re
 import datetime
 
 
-class ArticleInfo(object):
+class ArticleInfo():
     """
     Determine useful information about an article file from its filename
     see https://github.com/elifesciences/ppp-project/blob/master/file_naming_spec.md
@@ -110,21 +110,19 @@ class ArticleInfo(object):
         match = re.search(r'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
         if match is None:
             return None
-        else:
-            try:
-                raw_update_date = match.group(1)
-                updated_date = datetime.datetime.strptime(raw_update_date, "%Y%m%d%H%M%S")
-                return updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
-            except:
-                return None
+        try:
+            raw_update_date = match.group(1)
+            updated_date = datetime.datetime.strptime(raw_update_date, "%Y%m%d%H%M%S")
+            return updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+        except:
+            return None
 
     def get_version_from_zip_filename(self):
         filename = self.full_filename
         match = re.search(r'-v([0-9]+?)[\.|-]', filename)
         if match is None:
             return None
-        else:
-            return match.group(1)
+        return match.group(1)
 
 
 def article_figure(filename):
