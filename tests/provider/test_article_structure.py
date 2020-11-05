@@ -173,11 +173,14 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666-supp99-v1.xml', 'expected': 'Other'},
         {'input': 'elife-00666-sa1-fig1-v1.tif', 'expected': 'Figure'},
         {'input': 'elife-00666-sa2-video1.mp4', 'expected': 'Other'},
-          )
+        {'input': 'elife-00666-chem1-fig1-v1.tif', 'expected': 'Figure'},
+        {'input': 'elife-00666-scheme1-fig1-v1.tif', 'expected': 'Figure'},
+        {'input': 'elife-00666-app1-scheme1-fig1-v1.tif', 'expected': 'Figure'},
+    )
     def test_get_file_type_from_zip_filename(self, input, expected):
         self.articleinfo = ArticleInfo(input)
         result = self.articleinfo.file_type
-        self.assertEqual(result, expected)
+        self.assertEqual(result, expected, 'failed on input %s, expected %s' % (input, expected))
 
     @unpack
     @data(
@@ -220,8 +223,10 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666-video1.mp4', 'expected': False},
         {'input': 'elife-00666-video1-data1-v1.xlsx', 'expected': False},
         {'input': 'elife-00666-supp1-v1.tif', 'expected': False},
-        {'input': 'elife-00666-sa1-fig1-v1.tif', 'expected': True}
-          )
+        {'input': 'elife-00666-sa1-fig1-v1.tif', 'expected': True},
+        {'input': 'elife-00666-chem1-fig1-v1.tif', 'expected': True},
+        {'input': 'elife-00666-scheme1-fig1-v1.tif', 'expected': True},
+    )
     def test_article_figure(self, input, expected):
         self.assertEqual(article_structure.article_figure(input), expected)
 
@@ -230,7 +235,7 @@ class TestArticleStructure(unittest.TestCase):
         {'input': 'elife-00666-app1-fig1-v1.tif', 'expected': False},
         {'input': 'elife-00666-fig1-v1.tif', 'expected': False},
         {'input': 'elife-00666-inf1-v1.tif', 'expected': True},
-          )
+    )
     def test_inline_figure(self, input, expected):
         self.assertEqual(article_structure.inline_figure(input), expected, "Case %s" % input)
 
@@ -238,12 +243,14 @@ class TestArticleStructure(unittest.TestCase):
         files = ['elife-00666-fig2-figsupp2-v1.tif',
                  'elife-00666-fig2-figsupp2-v10.tif',
                  'elife-00666-inf001-v1.tif',
+                 'elife-00666-chem1-v1.tif',
                  'elife-00666-table3-data1-v1.xlsx',
                  'elife-07702-vor-r4.zip',
                  'elife-07398-media1.jpg']
         expected = ['elife-00666-fig2-figsupp2-v1.tif',
                     'elife-00666-fig2-figsupp2-v10.tif',
                     'elife-00666-inf001-v1.tif',
+                    'elife-00666-chem1-v1.tif',
                     'elife-00666-table3-data1-v1.xlsx']
 
         self.assertListEqual(article_structure.get_original_files(files), expected)
@@ -265,12 +272,14 @@ class TestArticleStructure(unittest.TestCase):
         files = ['elife-00666-app1-fig1-figsupp1-v1.tif',
                  'elife-00666-fig2-figsupp2-v1.tif',
                  'elife-00666-inf001-v1.tif',
+                 'elife-00666-chem1-fig1-v1.tif',
                  'elife-00666-table3-data1-v1.xlsx',
                  'elife-07702-vor-r4.zip',
                  'elife-6148691793723703318-fig10-v1.gif',
                  'elife-9204580859652100230-fig2-data1-v1.xls']
         expected = ['elife-00666-app1-fig1-figsupp1-v1.tif',
-                    'elife-00666-fig2-figsupp2-v1.tif']
+                    'elife-00666-fig2-figsupp2-v1.tif',
+                    'elife-00666-chem1-fig1-v1.tif']
         self.assertListEqual(article_structure.get_figures_for_iiif(files), expected)
 
     def test_get_inline_figures_for_iiif(self):
@@ -278,6 +287,7 @@ class TestArticleStructure(unittest.TestCase):
         files = ['elife-00666-app1-fig1-figsupp1-v1.tif',
                  'elife-00666-fig2-figsupp2-v1.tif',
                  'elife-00666-inf001-v1.tif',
+                 'elife-00666-chem1-v1.tif',
                  'elife-00666-table3-data1-v1.xlsx',
                  'elife-07702-vor-r4.zip',
                  'elife-6148691793723703318-fig10-v1.gif',

@@ -83,13 +83,17 @@ class ArticleInfo(object):
                 child_name = self.extra_info[1]
             final_name = self.extra_info[-1]
             # determine the file_type based on the extra file parts
-            if parent_name.startswith('resp') and child_name.startswith('fig'):
+            if parent_name.startswith('resp') and final_name.startswith('fig'):
                 self.file_type = "Figure"
-            elif parent_name.startswith('sa') and child_name.startswith('fig'):
+            elif parent_name.startswith('sa') and final_name.startswith('fig'):
                 self.file_type = "Figure"
-            elif parent_name.startswith('app') and child_name.startswith('fig'):
+            elif parent_name.startswith('app') and final_name.startswith('fig'):
                 self.file_type = "Figure"
-            elif parent_name.startswith('box') and child_name.startswith('fig'):
+            elif parent_name.startswith('box') and final_name.startswith('fig'):
+                self.file_type = "Figure"
+            elif parent_name.startswith('chem') and final_name.startswith('fig'):
+                self.file_type = "Figure"
+            elif parent_name.startswith('scheme') and final_name.startswith('fig'):
                 self.file_type = "Figure"
             elif final_name.startswith('video') or final_name.startswith('code'):
                 self.file_type = 'Other'
