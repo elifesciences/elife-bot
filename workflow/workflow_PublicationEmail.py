@@ -1,5 +1,5 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step, define_workflow_step_short
+from workflow.helper import define_workflow_step
 
 
 class workflow_PublicationEmail(Workflow):
@@ -34,7 +34,13 @@ class workflow_PublicationEmail(Workflow):
             "steps":
                 [
                     define_workflow_step("PingWorker", data),
-                    define_workflow_step_short("PublicationEmail", data),
+                    define_workflow_step(
+                        "PublicationEmail", data,
+                        heartbeat_timeout=60 * 20,
+                        schedule_to_close_timeout=60 * 20,
+                        schedule_to_start_timeout=60 * 5,
+                        start_to_close_timeout=60 * 20,
+                    ),
                 ],
 
             "finish":
