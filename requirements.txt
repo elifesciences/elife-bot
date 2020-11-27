@@ -12,7 +12,7 @@ git+https://github.com/elifesciences/jats-generator.git@da53da99954a6661bc09c137
 git+https://github.com/elifesciences/package-poa.git@f5003c020a9efbc5d3bccb4c20e8586e247e3acb#egg=packagepoa
 six==1.13.0
 docker==4.0.2
-git+https://github.com/elifesciences/decision-letter-parser.git@e5f508a3fdf5a1478e60525c45c2bed60a2de660#egg=letterparser
+git+https://github.com/elifesciences/decision-letter-parser.git@c737e67eb5c1486873a2a77a7ac923d74b4270fb#egg=letterparser
 PyYAML==4.2b2
 Wand==0.5.1
 paramiko==2.4.2
