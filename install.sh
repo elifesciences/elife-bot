@@ -33,6 +33,6 @@ grep "git+" requirements.txt > source-requirements.txt
 # '--no-deps': "If you don’t want pip to actually resolve dependencies, use the --no-deps option. 
 # This is useful when you have a set of package versions that work together in reality, even though their metadata says that they conflict."
 pip install --ignore-installed -r source-requirements.txt --no-deps
-pip install -r requirements.txt
+pip install -r requirements.txt --no-deps
 # pip install -r source-requirements.txt --no-cache-dir # only if old revisions are still 'sticking'
 rm source-requirements.txt
