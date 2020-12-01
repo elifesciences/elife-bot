@@ -20,7 +20,7 @@ find S3utility/ -maxdepth 1 -name '*.pyc' -delete
 source venv/bin/activate
 
 # fixes issues installing wheel packages, hides deprecation warnings
-pip install "pip~=19.2" --upgrade
+pip install pip --upgrade
 
 # fixes python-docx issue #594 
 # https://github.com/python-openxml/python-docx/issues/594
