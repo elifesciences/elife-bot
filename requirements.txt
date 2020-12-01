@@ -27,7 +27,7 @@ testfixtures==4.9.1
 pytest==2.9.1
 ddt==1.1.0
 ndg-httpsclient==0.4.2
-pyasn1==0.1.9
+pyasn1==0.4.8
 pyOpenSSL==18.0.0
 newrelic==2.72.0.52
 pylint==2.3.1
