@@ -3,8 +3,12 @@ Jinja2==2.10.1
 arrow==0.4.4
 requests==2.20.0
 GitPython==3.1.2
+beautifulsoup4==4.7.1
+lxml==4.3.0
+python-slugify==1.2.4
 git+https://github.com/elifesciences/elife-tools.git@e671697e65dcf428184772b37ac9a940889ff865#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@efb0f8c02b149c9f307e64be23470ae1989f540e#egg=elifearticle
+configparser==3.5.0
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@1c4d2d9755634ef8440dc27fcc074bd56f01fe2c#egg=elifecrossref
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@6d352645389acf2b9c8f42bae06f32c456354fb5#egg=elifepubmed
 git+https://github.com/elifesciences/ejp-csv-parser.git@b3d0d740c789ed8df07b379d0bd2e041b5713035#egg=ejpcsvparser
@@ -12,6 +16,7 @@ git+https://github.com/elifesciences/jats-generator.git@da53da99954a6661bc09c137
 git+https://github.com/elifesciences/package-poa.git@f5003c020a9efbc5d3bccb4c20e8586e247e3acb#egg=packagepoa
 six==1.13.0
 docker==4.0.2
+pypandoc==1.4
 git+https://github.com/elifesciences/decision-letter-parser.git@c737e67eb5c1486873a2a77a7ac923d74b4270fb#egg=letterparser
 PyYAML==4.2b2
 Wand==0.5.1
