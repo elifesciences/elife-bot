@@ -25,4 +25,4 @@ source venv/bin/activate
 # - https://github.com/python-openxml/python-docx/issues/594
 pip install wheel pip "setuptools>=40.6" --upgrade
 
-pip install -r requirements.txt
+pip install -r requirements.txt --ignore-installed
