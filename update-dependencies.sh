@@ -18,4 +18,4 @@ VIRTUAL_ENV="venv" pipenv update --dev
 
 datestamp=$(date -I)
 echo "# file generated $datestamp - see update-dependencies.sh" > requirements.txt
-VIRTUAL_ENV="venv" pipenv run pip freeze >> requirements.txt
+VIRTUAL_ENV="venv" pipenv lock -r >> requirements.txt
