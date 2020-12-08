@@ -6,6 +6,7 @@ import glob
 from elifetools import parseJATS as parser
 import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo
+from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import article_processing
 from provider.ftp import FTP
@@ -53,6 +54,9 @@ class activity_PMCDeposit(Activity):
         Activity, do the work
         """
         self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+
+        run = data['run']
+        session = get_session(self.settings, data, run)
 
         # Data passed to this activity
         self.document = data["data"]["document"]

@@ -1,3 +1,4 @@
+import uuid
 import boto.swf
 import log
 import json
@@ -53,7 +54,11 @@ class starter_PMCDeposit():
                 workflow_version = "1"
                 child_policy = None
                 execution_start_to_close_timeout = None
-                input = '{"data": ' + json.dumps(doc) + '}'
+
+                input_json = {}
+                input_json['run'] = str(uuid.uuid4())
+                input_json['data'] = doc
+                workflow_input = json.dumps(input_json)
 
                 try:
                     response = conn.start_workflow_execution(settings.domain, workflow_id,
@@ -61,7 +66,7 @@ class starter_PMCDeposit():
                                                              settings.default_task_list,
                                                              child_policy,
                                                              execution_start_to_close_timeout,
-                                                             input)
+                                                             workflow_input)
 
                     logger.info('got response: \n%s' %
                                 json.dumps(response, sort_keys=True, indent=4))
