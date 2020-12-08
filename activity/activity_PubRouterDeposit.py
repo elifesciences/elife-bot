@@ -1,4 +1,5 @@
 import os
+import uuid
 import boto.swf
 import json
 import time
@@ -301,8 +302,9 @@ class activity_PubRouterDeposit(Activity):
         data['document'] = zip_file_name
         data['folder'] = folder
         input_json = {}
+        input_json['run'] = str(uuid.uuid4())
         input_json['data'] = data
-        input = json.dumps(input_json)
+        workflow_input = json.dumps(input_json)
 
         # Connect to SWF
         conn = boto.swf.layer1.Layer1(self.settings.aws_access_key_id,
@@ -314,7 +316,8 @@ class activity_PubRouterDeposit(Activity):
                                                      workflow_name, workflow_version,
                                                      self.settings.default_task_list,
                                                      child_policy,
-                                                     execution_start_to_close_timeout, input)
+                                                     execution_start_to_close_timeout,
+                                                     workflow_input)
             starter_status = True
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
             # There is already a running workflow with that ID, cannot start another

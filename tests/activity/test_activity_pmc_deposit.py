@@ -24,7 +24,9 @@ class TestPMCDeposit(unittest.TestCase):
 
         self.do_activity_passes.append({
             "scenario": "zip file was not downloaded",
-            "input_data": {"data": {"document": "does_not_exist.zip"}},
+            "input_data": {
+                "data": {"document": "does_not_exist.zip"},
+                "run": "test-uuid"},
             "pmc_zip_key_names": [],
             "expected_zip_filename": None,
             "expected_result": self.activity.ACTIVITY_TEMPORARY_FAILURE,
@@ -32,7 +34,9 @@ class TestPMCDeposit(unittest.TestCase):
 
         self.do_activity_passes.append({
             "scenario": "no previous PMC zip file",
-            "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
+            "input_data": {
+                "data": {"document": "elife-19405-vor-v1-20160802113816.zip"},
+                "run": "test-uuid"},
             "pmc_zip_key_names": [],
             "expected_zip_filename": "elife-05-19405.zip",
             "expected_result": True,
@@ -41,7 +45,9 @@ class TestPMCDeposit(unittest.TestCase):
 
         self.do_activity_passes.append({
             "scenario": "one previous PMC zip file",
-            "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
+            "input_data": {
+                "data": {"document": "elife-19405-vor-v1-20160802113816.zip"},
+                "run": "test-uuid"},
             "pmc_zip_key_names": ["pmc/zip/elife-05-19405.zip"],
             "expected_zip_filename": "elife-05-19405.r1.zip",
             "expected_result": True,
@@ -50,7 +56,9 @@ class TestPMCDeposit(unittest.TestCase):
 
         self.do_activity_passes.append({
             "scenario": "two previous PMC zip file revisions present",
-            "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
+            "input_data": {
+                "data": {"document": "elife-19405-vor-v1-20160802113816.zip"},
+                "run": "test-uuid"},
             "pmc_zip_key_names": ["pmc/zip/elife-05-19405.zip", "pmc/zip/elife-05-19405.r1.zip"],
             "expected_zip_filename": "elife-05-19405.r2.zip",
             "expected_result": True,
