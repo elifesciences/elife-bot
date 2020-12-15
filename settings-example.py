@@ -125,6 +125,10 @@ class exp():
     decision_letter_jats_recipient_email = ["e@example.org", "life@example.org"]
     decision_letter_jats_error_recipient_email = "error@example.org"
 
+    # PMC or FTP sending error email settings
+    ftp_deposit_error_sender_email = "sender@example.org"
+    ftp_deposit_error_recipient_email = ["e@example.org", "life@example.org"]
+
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
 
@@ -400,6 +404,10 @@ class dev():
     decision_letter_jats_recipient_email = ["e@example.org", "life@example.org"]
     decision_letter_jats_error_recipient_email = "error@example.org"
 
+    # PMC or FTP sending error email settings
+    ftp_deposit_error_sender_email = "sender@example.org"
+    ftp_deposit_error_recipient_email = ["e@example.org", "life@example.org"]
+
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
 
@@ -671,6 +679,10 @@ class live():
     typesetter_decision_letter_account_key = '1'
     decision_letter_jats_recipient_email = ["e@example.org", "life@example.org"]
     decision_letter_jats_error_recipient_email = "error@example.org"
+
+    # PMC or FTP sending error email settings
+    ftp_deposit_error_sender_email = "sender@example.org"
+    ftp_deposit_error_recipient_email = ["e@example.org", "life@example.org"]
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
