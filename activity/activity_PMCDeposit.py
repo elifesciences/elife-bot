@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import zipfile
 import re
@@ -8,7 +9,7 @@ import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import article_processing
+from provider import article_processing, email_provider, utils
 from provider.ftp import FTP
 from activity.objects import Activity
 
@@ -123,9 +124,16 @@ class activity_PMCDeposit(Activity):
             try:
                 ftp_status = self.ftp_to_endpoint(self.directories.get("ZIP_DIR"))
             except Exception as exception:
-                self.logger.exception(
+                message = (
                     "Exception in ftp_to_endpoint sending file %s: %s" %
                     (self.zip_file_name, exception))
+                self.logger.exception(message)
+                # send email once when an exception is raised
+                if not session.get_value('ftp_exception'):
+                    subject = ftp_exception_email_subject(self.document)
+                    send_ftp_exception_email(subject, message, self.settings, self.logger)
+                    session.store_value('ftp_exception', 1)
+                # return a temporary failure
                 return self.ACTIVITY_TEMPORARY_FAILURE
 
             if ftp_status is True:
@@ -312,3 +320,26 @@ def profile_article(document):
     volume = parser.volume(soup)
 
     return fid, volume
+
+
+def ftp_exception_email_subject(document):
+    "email subject for sending an email"
+    return u'Exception raised sending article to PMC: {document}'.format(document=document)
+
+
+def send_ftp_exception_email(subject, message, settings, logger):
+    "email error message to the recipients"
+
+    datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
+    body = email_provider.simple_email_body(datetime_string, message)
+    sender_email = settings.ftp_deposit_error_sender_email
+
+    recipient_email_list = email_provider.list_email_recipients(
+        settings.ftp_deposit_error_recipient_email)
+
+    messages = email_provider.simple_messages(
+        sender_email, recipient_email_list, subject, body, logger=logger)
+    logger.info('Formatted %d email error messages' % len(messages))
+
+    details = email_provider.smtp_send_messages(settings, messages, logger)
+    logger.info('Email sending details: %s' % str(details))

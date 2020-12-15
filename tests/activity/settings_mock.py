@@ -65,6 +65,9 @@ typesetter_digest_endpoint = 'https://typesetter/updateDigest'
 typesetter_digest_api_key = 'typesetter_api_key'
 typesetter_digest_account_key = '1'
 
+ftp_deposit_error_sender_email = "sender@example.org"
+ftp_deposit_error_recipient_email = ["e@example.org", "life@example.org"]
+
 journal_preview_base_url = 'https://preview'
 
 features_publication_recipient_email = "features_team@example.org"
