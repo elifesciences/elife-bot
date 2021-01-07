@@ -45,6 +45,10 @@ class S3StorageContext:
         key.key = s3_key
         return key.exists()
 
+    def get_resource_as_key(self, resource):
+        bucket, s3_key = self.s3_storage_objects(resource)
+        return bucket.get_key(s3_key)
+
     def get_resource_to_file(self, resource, file):
         bucket, s3_key = self.s3_storage_objects(resource)
         key = Key(bucket)

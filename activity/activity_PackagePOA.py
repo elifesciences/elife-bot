@@ -71,8 +71,7 @@ class activity_PackagePOA(Activity):
         """
         Activity, do the work
         """
-        if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         # Create output directories
         self.make_activity_directories()
@@ -234,19 +233,21 @@ class activity_PackagePOA(Activity):
             storage = storage_context(self.settings)
             storage_provider = self.settings.storage_provider + "://"
             orig_resource = storage_provider + bucket_name + "/"
-            storage_resource_origin = orig_resource + s3_key_name
             try:
                 storage_resource_origin = orig_resource + s3_key_name
             except TypeError:
-                if self.logger:
-                    self.logger.info(
-                        'PackagePoA unable to download CSV file for {file_type}'.format(
-                            file_type=file_type
-                        ))
+                self.logger.info(
+                    'PackagePoA unable to download CSV file for {file_type}'.format(
+                        file_type=file_type
+                    ))
                 continue
             filename_plus_path = os.path.join(self.directories.get("CSV"), filename)
             with open(filename_plus_path, 'wb') as open_file:
                 storage.get_resource_to_file(storage_resource_origin, open_file)
+            # log last modified date if available
+            s3_key = storage.get_resource_as_key(storage_resource_origin)
+            self.logger.info('CSV file %s last_modified: %s' % (
+                storage_resource_origin, getattr(s3_key, 'last_modified', '[unknown]')))
 
     def jatsgenerator_config(self, config_section):
         "parse the config values from the jatsgenerator config"

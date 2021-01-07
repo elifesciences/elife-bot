@@ -249,6 +249,15 @@ class TestPackagePOA(unittest.TestCase):
             self.boolean_assertion(len(outbox_files(test_outbox_folder)),
                                    test_data.get('expected_outbox_count'),
                                    test_data.get('scenario'))
+        # check logging of CSV file S3 object last_modified date
+        if test_data.get('expected_activity_status'):
+            loginfo_message = (
+                'CSV file '
+                's3://ejp_bucket/ejp_query_tool_query_id_POA_Author_2019_06_10_eLife.csv'
+                ' last_modified: 2021-01-01T00:00:01.000Z')
+            self.assertTrue(
+                loginfo_message in self.logger.loginfo,
+                'failed in scenario %s' % test_data.get('scenario'))
 
     def boolean_assertion(self, value, expected, scenario=None):
         "shorthand for checking and displaying output for equality assertions"
@@ -335,6 +344,42 @@ class TestPackagePOA(unittest.TestCase):
         self.assertEqual(
             self.poa.logger.logexception,
             'Exception in build_xml_to_disk for article_id 12717: An exception')
+
+    @patch('activity.activity_PackagePOA.storage_context')
+    @patch('provider.ejp.EJP.ejp_bucket_file_list')
+    def test_download_latest_csv(self, fake_ejp_bucket_file_list, fake_storage_context):
+        "test downloading CSV files from bucket storage"
+        # make directories first
+        self.poa.make_activity_directories()
+        # mock other methods
+        fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
+        bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list_new.json")
+        with open(bucket_list_file, 'rb') as open_file:
+            fake_ejp_bucket_file_list.return_value = json.loads(open_file.read().decode())
+        # download the CSV files
+        self.poa.download_latest_csv()
+        # make assertions
+        loginfo_message = (
+            'CSV file '
+            's3://ejp_bucket/ejp_query_tool_query_id_POA_Author_2019_06_10_eLife.csv'
+            ' last_modified: 2021-01-01T00:00:01.000Z')
+        self.assertTrue(loginfo_message in self.logger.loginfo)
+
+    @patch('activity.activity_PackagePOA.storage_context')
+    @patch('provider.ejp.EJP.find_latest_s3_file_name')
+    def test_download_latest_csv_ejp_exception(self, fake_ejp_s3_file_name, fake_storage_context):
+        "test exception if CSV file cannot be found using ejp provider"
+        # make directories first
+        self.poa.make_activity_directories()
+        # mock other methods
+        fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
+        fake_ejp_s3_file_name.return_value = None
+        # download the CSV files
+        self.poa.download_latest_csv()
+        # make assertions
+        loginfo_message = (
+            'PackagePoA unable to download CSV file for poa_author')
+        self.assertTrue(loginfo_message in self.logger.loginfo)
 
 
 if __name__ == '__main__':
