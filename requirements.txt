@@ -4,7 +4,7 @@ arrow==0.4.4
 requests==2.20.0
 GitPython==3.1.2
 beautifulsoup4==4.7.1
-lxml==4.3.0
+lxml==4.6.2
 python-slugify==1.2.4
 git+https://github.com/elifesciences/elife-tools.git@0ab7dfd32833892f3cd6235902ba03ec95e59cca#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@efb0f8c02b149c9f307e64be23470ae1989f540e#egg=elifearticle
