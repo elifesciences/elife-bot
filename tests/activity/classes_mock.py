@@ -129,6 +129,13 @@ class FakeStorageContext:
         s3_key = match.group(3)
         return bucket_name, s3_key
 
+    def get_resource_as_key(self, resource):
+        bucket, s3_key = self.get_bucket_and_key(resource)
+        attributes = {
+            'last_modified': '2021-01-01T00:00:01.000Z'
+        }
+        return FakeKey(None, s3_key, **attributes)
+
     def resource_exists(self, resource):
         "check if a key exists"
         bucket, s3_key = self.get_bucket_and_key(resource)
@@ -206,19 +213,21 @@ class FakeResponse:
 
 class FakeKey:
 
-    def __init__(self, directory, destination=None, source=None, key=None):
+    def __init__(self, directory=None, destination=None, source=None, **kwargs):
         self.d = directory
         if destination is None:
             destination = data.bucket_origin_file_name
         if source is None:
             source = data.xml_content_for_xml_key
 
-        if destination and source:
+        if directory and destination and source:
             self.d.write(destination, source)
 
         self.destination = destination
-        if key:
-            self.key = key
+
+        # set object attributes from remaining keyword arguments
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def get_contents_as_string(self):
         return self.d.read(self.destination)
