@@ -252,7 +252,7 @@ class TestPackagePOA(unittest.TestCase):
         # check logging of CSV file S3 object last_modified date
         if test_data.get('expected_activity_status'):
             loginfo_message = (
-                'CSV object '
+                'CSV file '
                 's3://ejp_bucket/ejp_query_tool_query_id_POA_Author_2019_06_10_eLife.csv'
                 ' last_modified: 2021-01-01T00:00:01.000Z')
             self.assertTrue(
@@ -360,7 +360,7 @@ class TestPackagePOA(unittest.TestCase):
         self.poa.download_latest_csv()
         # make assertions
         loginfo_message = (
-            'CSV object '
+            'CSV file '
             's3://ejp_bucket/ejp_query_tool_query_id_POA_Author_2019_06_10_eLife.csv'
             ' last_modified: 2021-01-01T00:00:01.000Z')
         self.assertTrue(loginfo_message in self.logger.loginfo)
