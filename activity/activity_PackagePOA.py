@@ -134,6 +134,14 @@ class activity_PackagePOA(Activity):
 
         return result
 
+    def clean_tmp_dir(self):
+        "custom cleaning of temp directory in order to retain some files for debugging purposes"
+        keep_dirs = ['CSV', 'CSV_TMP']
+        for dir_name, dir_path in self.directories.items():
+            if dir_name in keep_dirs or not os.path.exists(dir_path):
+                continue
+            shutil.rmtree(dir_path)
+
     def get_pub_date(self, doi_id):
         # Get the date for the first version
         date_struct = None
