@@ -99,12 +99,14 @@ def add_text(message, text, subtype='plain', charset='utf-8'):
     message.attach(MIMEText(text, subtype, charset))
 
 
-def message(subject, sender, recipient):
+def message(subject, sender, recipient, bcc=None):
     "create an email message to later attach things to"
     message = MIMEMultipart()
     message['Subject'] = subject
     message['From'] = sender
     message['To'] = recipient
+    if bcc:
+        message['BCC'] = bcc
     return message
 
 
@@ -145,7 +147,7 @@ def smtp_send_messages(settings, messages, logger=None):
 
 
 def simple_message(sender, recipient, subject, body, subtype='plain',
-                   charset='utf-8', attachments=None, logger=None):
+                   charset='utf-8', attachments=None, logger=None, bcc=None):
     """set values of a message
 
     :param sender: email address of the sender
@@ -156,9 +158,10 @@ def simple_message(sender, recipient, subject, body, subtype='plain',
     :param charset: charset for the body text
     :param attachments: optional list of email attachments, each a file system path to the file
     :param logger: optional log.logger object
+    :param bcc: optional email address to BCC to
     :returns: MIMEMultipart email message object
     """
-    email_message = message(subject, sender, recipient)
+    email_message = message(subject, sender, recipient, bcc)
     add_text(email_message, body, subtype, charset)
     if attachments:
         for attachment in attachments:
@@ -167,7 +170,7 @@ def simple_message(sender, recipient, subject, body, subtype='plain',
 
 
 def simple_messages(sender, recipients, subject, body, subtype='plain',
-                   charset='utf-8', attachments=None, logger=None):
+                   charset='utf-8', attachments=None, logger=None, bcc=None):
     """list of simple messages for a list of recipients
 
     :param sender: email address of the sender
@@ -178,13 +181,14 @@ def simple_messages(sender, recipients, subject, body, subtype='plain',
     :param charset: charset for the body text
     :param attachments: optional list of email attachments, each a file system path to the file
     :param logger: optional log.logger object
+    :param bcc: optional email address to BCC to
     :returns: list of MIMEMultipart email message objects
     """
     messages = []
     for recipient in recipients:
         messages.append(simple_message(
             sender, recipient, subject, body, subtype=subtype, 
-            charset=charset, attachments=attachments, logger=logger))
+            charset=charset, attachments=attachments, logger=logger, bcc=bcc))
     return messages
 
 

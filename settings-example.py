@@ -58,6 +58,7 @@ class exp():
     ses_region = "eu-west-1"
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
+    ses_bcc_recipient_email = ""
 
     # SMTP settings
     smtp_host = 'localhost'
@@ -337,6 +338,7 @@ class dev():
     ses_region = "us-east-1"
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
+    ses_bcc_recipient_email = ""
 
     # SMTP settings
     smtp_host = 'localhost'
@@ -613,6 +615,7 @@ class live():
     ses_region = "us-east-1"
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
+    ses_bcc_recipient_email = ""
 
     # SMTP settings
     smtp_host = 'localhost'

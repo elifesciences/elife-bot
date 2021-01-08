@@ -297,7 +297,8 @@ class activity_PublicationEmail(Activity):
                 # Good, we can send emails
                 for recipient_author in recipient_authors:
                     result = self.send_email(
-                        email_type, article.doi_id, recipient_author, article, authors)
+                        email_type, article.doi_id, recipient_author, article, authors,
+                        self.settings.ses_bcc_recipient_email)
                     if result is False:
                         self.log_cannot_find_authors(article.doi)
 
@@ -352,7 +353,7 @@ class activity_PublicationEmail(Activity):
 
         return merged_list
 
-    def send_email(self, email_type, elife_id, author, article, authors):
+    def send_email(self, email_type, elife_id, author, article, authors, bcc=None):
         """
         Given the email type and author,
         send the email
@@ -397,14 +398,15 @@ class activity_PublicationEmail(Activity):
                 article=article,
                 authors=authors,
                 doi_id=elife_id,
-                subtype="html")
+                subtype="html",
+                bcc=bcc)
 
             return True
         except Exception:
             self.logger.exception("An error has occurred on send_email method")
 
     def send_author_email(self, email_type, author, headers, article, authors, doi_id,
-                          subtype="html"):
+                          subtype="html", bcc=None):
         """
         Format the email body and send the email by SMTP
         Only call this to send actual emails!
@@ -418,7 +420,7 @@ class activity_PublicationEmail(Activity):
 
         message = email_provider.simple_message(
             headers["sender_email"], str(author.get('e_mail')), headers["subject"], body,
-            subtype=headers["format"], logger=self.logger)
+            subtype=headers["format"], logger=self.logger, bcc=bcc)
 
         email_provider.smtp_send_messages(
             self.settings, messages=[message], logger=self.logger)
