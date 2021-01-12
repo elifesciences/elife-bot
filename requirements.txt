@@ -6,7 +6,7 @@ GitPython==3.1.2
 beautifulsoup4==4.7.1
 lxml==4.6.2
 python-slugify==1.2.4
-git+https://github.com/elifesciences/elife-tools.git@a75d9bcdb1910c25db1d4110177cb9d467afedfb#egg=elifetools
+git+https://github.com/elifesciences/elife-tools.git@2f5924fcab9e1ae4eeea3e8f8f70e2488845d332#egg=elifetools
 git+https://github.com/elifesciences/elife-article.git@efb0f8c02b149c9f307e64be23470ae1989f540e#egg=elifearticle
 configparser==3.5.0
 git+https://github.com/elifesciences/elife-crossref-xml-generation.git@1c4d2d9755634ef8440dc27fcc074bd56f01fe2c#egg=elifecrossref
