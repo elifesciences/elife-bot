@@ -228,6 +228,124 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             'Failed to upload files by SFTP to PubMed: SFTP transfer exception')
 
 
+class TestPubmedGeneratePubmedXml(unittest.TestCase):
+
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PubmedArticleDeposit(settings_mock, fake_logger, None, None, None)
+        self.activity.make_activity_directories()
+        self.xml_file = "elife-15747-v2.xml"
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+        helpers.delete_files_in_folder(activity_test_data.ExpandArticle_files_dest_folder,
+                                       filter_out=['.gitkeep'])
+
+    @patch.object(lax_provider, 'article_versions')
+    @patch('activity.activity_PubmedArticleDeposit.storage_context')
+    @patch.object(FakeStorageContext, 'list_resources')
+    def test_generate_pubmed_xml(
+            self, fake_list_resources, fake_storage_context,
+            fake_article_versions):
+        "test a successful result for generate_pubmed_xml()"
+        expected_status = True
+        expected_logexception = "First logger exception"
+        # mocks
+        fake_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
+        # copy XML files into the input directory using the storage context
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = [self.xml_file]
+        self.activity.download_files_from_s3_outbox()
+        # invoke object method
+        generate_status = self.activity.generate_pubmed_xml()
+        # assertions
+        self.assertEqual(generate_status, expected_status)
+        self.assertEqual(self.activity.logger.logexception, expected_logexception)
+        self.assertEqual(len(self.activity.article_published_file_names), 1)
+        self.assertEqual(len(self.activity.article_not_published_file_names), 0)
+
+    @patch('activity.activity_PubmedArticleDeposit.generate.build_articles')
+    @patch.object(lax_provider, 'article_versions')
+    @patch('activity.activity_PubmedArticleDeposit.storage_context')
+    @patch.object(FakeStorageContext, 'list_resources')
+    def test_generate_pubmed_xml_article_exception(
+            self, fake_list_resources, fake_storage_context,
+            fake_article_versions, fake_build_articles):
+        "test if generate.build_articles raises an exception"
+        expected_status = True
+        expected_logexception = (
+            "Exception in parsing article XML %s/%s for PubMed generation" %
+            (self.activity.directories.get("INPUT_DIR"), self.xml_file))
+        # mocks
+        fake_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
+        fake_build_articles.side_effect = Exception('Exception in fake_build_articles')
+        # copy XML files into the input directory using the storage context
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = [self.xml_file]
+        self.activity.download_files_from_s3_outbox()
+        # invoke object method
+        generate_status = self.activity.generate_pubmed_xml()
+        # assertions
+        self.assertEqual(generate_status, expected_status)
+        self.assertEqual(self.activity.logger.logexception, expected_logexception)
+        self.assertEqual(len(self.activity.article_published_file_names), 0)
+        self.assertEqual(len(self.activity.article_not_published_file_names), 1)
+
+    @patch.object(activity_PubmedArticleDeposit, 'enhance_article')
+    @patch.object(lax_provider, 'article_versions')
+    @patch('activity.activity_PubmedArticleDeposit.storage_context')
+    @patch.object(FakeStorageContext, 'list_resources')
+    def test_generate_pubmed_xml_enhance_article_exception(
+            self, fake_list_resources, fake_storage_context,
+            fake_article_versions, fake_enhance_article):
+        "test enhance_article raises an exception"
+        expected_status = True
+        expected_logexception = (
+            "Exception in enhance_article for xml_file %s/%s in %s" %
+            (self.activity.directories.get("INPUT_DIR"), self.xml_file, self.activity.name))
+        # mocks
+        fake_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
+        fake_enhance_article.side_effect = Exception('Exception in enhance_article')
+        # copy XML files into the input directory using the storage context
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = [self.xml_file]
+        self.activity.download_files_from_s3_outbox()
+        # invoke object method
+        generate_status = self.activity.generate_pubmed_xml()
+        # assertions
+        self.assertEqual(generate_status, expected_status)
+        self.assertEqual(self.activity.logger.logexception, expected_logexception)
+        self.assertEqual(len(self.activity.article_published_file_names), 0)
+        self.assertEqual(len(self.activity.article_not_published_file_names), 1)
+
+    @patch('activity.activity_PubmedArticleDeposit.generate.pubmed_xml_to_disk')
+    @patch.object(lax_provider, 'article_versions')
+    @patch('activity.activity_PubmedArticleDeposit.storage_context')
+    @patch.object(FakeStorageContext, 'list_resources')
+    def test_generate_pubmed_xml_generate_pubmed_xml_exception(
+            self, fake_list_resources, fake_storage_context,
+            fake_article_versions, fake_pubmed_xml_to_disk):
+        "test if generate.pubmed_xml_to_disk raises an exception"
+        expected_status = False
+        expected_logexception = (
+            "Exception in generate.pubmed_xml_to_disk for xml_file %s/%s in %s" %
+            (self.activity.directories.get("INPUT_DIR"), self.xml_file, self.activity.name))
+        # mocks
+        fake_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
+        fake_pubmed_xml_to_disk.side_effect = Exception('Exception in fake_pubmed_xml_to_disk')
+        # copy XML files into the input directory using the storage context
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = [self.xml_file]
+        self.activity.download_files_from_s3_outbox()
+        # invoke object method
+        generate_status = self.activity.generate_pubmed_xml()
+        # assertions
+        self.assertEqual(generate_status, expected_status)
+        self.assertEqual(self.activity.logger.logexception, expected_logexception)
+        self.assertEqual(len(self.activity.article_published_file_names), 0)
+        self.assertEqual(len(self.activity.article_not_published_file_names), 1)
+
+
 @ddt
 class TestPubmedParseArticleXml(unittest.TestCase):
 
@@ -239,17 +357,22 @@ class TestPubmedParseArticleXml(unittest.TestCase):
         {
             "article_xml": 'elife-29353-v1.xml',
             "expected_article": "not none",
-            "expected_doi": '10.7554/eLife.29353'
+            "expected_doi": '10.7554/eLife.29353',
+            "expected_logexception": "First logger exception",
         },
         {
             "article_xml": 'bad_xml.xml',
-            "expected_article": None
+            "expected_article": None,
+            "expected_logexception": (
+                "Exception in parsing article XML tests/files_source/pubmed/outbox/bad_xml.xml"
+                " for PubMed generation"),
         }
     )
     def test_parse_article_xml(self, test_data):
+        fake_logger = FakeLogger()
         source_doc = "tests/files_source/pubmed/outbox/" + test_data.get('article_xml')
         article = activity_module.parse_article_xml(
-            source_doc, {}, activity_test_data.ExpandArticle_files_dest_folder)
+            source_doc, {}, activity_test_data.ExpandArticle_files_dest_folder, fake_logger)
         if test_data.get('expected_article') is None:
             self.assertEqual(article, test_data.get('expected_article'),
                              'failed comparing expected_article')
@@ -258,6 +381,9 @@ class TestPubmedParseArticleXml(unittest.TestCase):
         if article:
             self.assertEqual(article.doi, test_data.get('expected_doi'),
                              'failed comparing expected_doi')
+        self.assertEqual(
+            str(fake_logger.logexception),
+            (test_data.get('expected_logexception')))
 
 
 if __name__ == '__main__':

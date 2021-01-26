@@ -182,13 +182,20 @@ class activity_PubmedArticleDeposit(Activity):
             generate_status = True
 
             article = parse_article_xml(xml_file, elifepubmed_config(
-                self.settings), self.directories.get("TMP_DIR"))
+                self.settings), self.directories.get("TMP_DIR"), self.logger)
 
             if article is None:
                 self.article_not_published_file_names.append(xml_file)
                 continue
 
-            article = self.enhance_article(article)
+            try:
+                article = self.enhance_article(article)
+            except:
+                self.logger.exception(
+                    "Exception in enhance_article for xml_file %s in %s" %
+                    (xml_file, self.name))
+                self.article_not_published_file_names.append(xml_file)
+                continue
 
             if article.is_published is True:
                 # generate pubmed deposit
@@ -196,6 +203,9 @@ class activity_PubmedArticleDeposit(Activity):
                     generate.pubmed_xml_to_disk(
                         [article], config_section=self.settings.elifepubmed_config_section)
                 except:
+                    self.logger.exception(
+                        "Exception in generate.pubmed_xml_to_disk for xml_file %s in %s" %
+                        (xml_file, self.name))
                     generate_status = False
             else:
                 generate_status = False
@@ -455,7 +465,7 @@ def elifepubmed_config(settings):
     return parse_raw_config(raw_config)
 
 
-def parse_article_xml(xml_file, pubmed_config, tmp_dir):
+def parse_article_xml(xml_file, pubmed_config, tmp_dir, logger):
     """
     Given an article XML files, parse it into an article object
     """
@@ -471,6 +481,7 @@ def parse_article_xml(xml_file, pubmed_config, tmp_dir):
         if article_list:
             article = article_list[0]
     except:
+        logger.exception('Exception in parsing article XML %s for PubMed generation' % xml_file)
         article = None
 
     return article
