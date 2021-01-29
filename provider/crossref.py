@@ -203,7 +203,7 @@ def download_files_from_s3_outbox(settings, bucket_name, outbox_s3_key_names, to
         storage_resource_origin = orig_resource + '/' + name
         try:
             with open(file_path, 'wb') as open_file:
-                logger.info("Downloading %s to %s", (storage_resource_origin, file_path))
+                logger.info("Downloading %s to %s" % (storage_resource_origin, file_path))
                 storage.get_resource_to_file(storage_resource_origin, open_file)
         except IOError:
             logger.exception("Failed to download file %s.", name)
