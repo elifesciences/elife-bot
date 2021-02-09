@@ -106,11 +106,13 @@ class TestEmailDigest(unittest.TestCase):
             "expected_build_status": True,
             "expected_generate_status": True,
             "expected_approve_status": True,
-            "expected_email_status": None,
+            "expected_email_status": True,
             "expected_digest_doi": u'https://doi.org/10.7554/eLife.99999',
             "expected_digest_image_file": u'IMAGE 99999.jpeg',
             "expected_output_dir_files": ['Anonymous_99999.docx'],
-            "expected_email_count": 0
+            "expected_email_count": 2,
+            "expected_email_subject": "Subject: Digest: Anonymous_99999",
+            "expected_email_from": "From: sender@example.org",
         },
     )
     def test_do_activity(self, test_data, fake_storage_context, fake_download_storage_context,

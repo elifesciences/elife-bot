@@ -76,13 +76,9 @@ class activity_EmailDigest(Activity):
         # Approve files for emailing
         self.approve_status, error_messages = digest_provider.validate_digest(self.digest)
 
-        silent = digest_provider.silent_digest(real_filename)
-
-        if not silent and self.approve_status is True and self.generate_status is True:
+        if self.approve_status is True and self.generate_status is True:
             # Email file
             self.email_status = self.email_digest(self.digest, output_file)
-        elif silent:
-            self.logger.info('EmailDigest silent deposit of real_filename: %s', real_filename)
 
         # return a value based on the activity_status
         if self.activity_status is True:
