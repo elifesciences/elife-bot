@@ -36,7 +36,9 @@ class activity_DownstreamStart(Activity):
             for key in ["article_id", "input_file", "recipient", "version", "workflow"]:
                 if data.get(key):
                     session.store_value(key, data.get(key))
-                    self.logger.info("Stored %s in session, activity %s" % (key, self.name))
+                    self.logger.info(
+                        "Stored %s in session, activity %s" % (key, self.name)
+                    )
 
             return self.ACTIVITY_SUCCESS
 
