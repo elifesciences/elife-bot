@@ -117,6 +117,8 @@ def ses_send(connection, sender, recipient, message):
 
 def smtp_send(connection, sender, recipient, message, logger=None):
     "send a MIMEMultipart email to the recipient from sender by SMTP"
+    # strip the BCC header from the message, if present, prior to sending
+    message.pop('BCC', None)
     try:
         connection.sendmail(sender, recipient, message.as_string())
     except smtplib.SMTPSenderRefused:
