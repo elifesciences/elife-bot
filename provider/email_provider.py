@@ -1,4 +1,5 @@
 "provider for sending email"
+import copy
 import os
 import smtplib
 import unicodedata
@@ -117,10 +118,11 @@ def ses_send(connection, sender, recipient, message):
 
 def smtp_send(connection, sender, recipient, message, logger=None):
     "send a MIMEMultipart email to the recipient from sender by SMTP"
-    # strip the BCC header from the message, if present, prior to sending
-    message.__delitem__('BCC')
+    # strip the BCC header from a copy of the message, if present, prior to sending
+    message_to_send = copy.copy(message)
+    message_to_send.__delitem__('BCC')
     try:
-        connection.sendmail(sender, recipient, message.as_string())
+        connection.sendmail(sender, recipient, message_to_send.as_string())
     except smtplib.SMTPSenderRefused:
         if logger:
             logger.error('error in smtp_send: %s ', traceback.format_exc())
