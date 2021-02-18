@@ -130,6 +130,11 @@ def smtp_send_message(connection, email_message, logger=None):
     """send the email message using the connection"""
     sender = email_message.get('From')
     recipient = email_message.get('To')
+    # if there is a BCC address, add them to the recipient list
+    if email_message.get('BCC'):
+        if isinstance(recipient, str):
+            recipient = [recipient]
+        recipient.append(email_message.get('BCC'))
     return smtp_send(connection, sender, recipient, email_message, logger)
 
 
