@@ -89,7 +89,6 @@ class TestListEmailRecipients(unittest.TestCase):
     def test_simple_message(self, subtype, expected_content_type):
         sender = 'sender@example.org'
         recipient = 'recipient@example.org'
-        bcc_recipient = 'bcc_recipient@example.org'
         subject = 'Email subject'
         body = '<p>Email body</p>'
         expected_fragments = []
@@ -98,7 +97,7 @@ class TestListEmailRecipients(unittest.TestCase):
         expected_fragments.append('Subject: %s' % subject)
         expected_fragments.append('From: %s' % sender)
         expected_fragments.append('To: %s' % recipient)
-        expected_fragments.append('BCC: %s' % bcc_recipient)
+
         expected_fragments.append(expected_content_type)
         expected_fragments.append('MIME-Version: 1.0')
         expected_fragments.append('Content-Transfer-Encoding: base64')
@@ -106,7 +105,7 @@ class TestListEmailRecipients(unittest.TestCase):
         expected_fragments.append(base64_encode_string(body))
         # create the message
         email_message = email_provider.simple_message(
-            sender, recipient, subject, body, subtype=subtype, bcc=bcc_recipient)
+            sender, recipient, subject, body, subtype=subtype)
         for expected in expected_fragments:
             self.assertTrue(
                 expected in str(email_message),
