@@ -36,6 +36,7 @@ class workflow_SoftwareHeritageDeposit(Workflow):
             "steps": [
                 define_workflow_step("PingWorker", data),
                 define_workflow_step("DownstreamStart", data),
+                define_workflow_step("PackageSWH", data),
             ],
             "finish": {"requirements": None},
         }

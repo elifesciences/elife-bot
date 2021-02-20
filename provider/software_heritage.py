@@ -6,6 +6,9 @@ from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 
 
+FILE_NAME_FORMAT = "elife-%s-v%s-era.zip"
+
+
 class MetaData(object):
     def __init__(self, file_name=None, article=None):
         self.id = None

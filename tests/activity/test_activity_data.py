@@ -81,6 +81,15 @@ SoftwareHeritageDeposit_data_example = {
 }
 
 
+SoftwareHeritageDeposit_session_example = {
+    "article_id": "30274",
+    "version": "1",
+    "workflow": "software_heritage",
+    "recipient": "software_heritage",
+    "input_file": "https://hub.stenci.la/api/projects/518/snapshots/15/archive",
+}
+
+
 lax_article_versions_response_data = {u'1':
                                           {u'rev4_decision': None, u'date_initial_decision': u'2015-05-06',
                                            u'datetime_record_updated': u'2016-05-24T16:45:13.815502Z',
