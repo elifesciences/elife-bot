@@ -70,6 +70,26 @@ ExpandArticle_data_invalid_status2_session_example = {
             'filename_last_element': 'elife-00353-v1-20121213000000.zip'
         }
 
+
+SoftwareHeritageDeposit_data_example = {
+    "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
+    "article_id": "30274",
+    "version": "1",
+    "workflow": "software_heritage",
+    "recipient": "software_heritage",
+    "input_file": "https://hub.stenci.la/api/projects/518/snapshots/15/archive",
+}
+
+
+SoftwareHeritageDeposit_session_example = {
+    "article_id": "30274",
+    "version": "1",
+    "workflow": "software_heritage",
+    "recipient": "software_heritage",
+    "input_file": "https://hub.stenci.la/api/projects/518/snapshots/15/archive",
+}
+
+
 lax_article_versions_response_data = {u'1':
                                           {u'rev4_decision': None, u'date_initial_decision': u'2015-05-06',
                                            u'datetime_record_updated': u'2016-05-24T16:45:13.815502Z',
