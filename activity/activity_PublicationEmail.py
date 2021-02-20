@@ -420,10 +420,10 @@ class activity_PublicationEmail(Activity):
 
         message = email_provider.simple_message(
             headers["sender_email"], str(author.get('e_mail')), headers["subject"], body,
-            subtype=headers["format"], logger=self.logger, bcc=bcc)
+            subtype=headers["format"], logger=self.logger)
 
         email_provider.smtp_send_messages(
-            self.settings, messages=[message], logger=self.logger)
+            self.settings, messages=[message], logger=self.logger, bcc=bcc)
         self.logger.info('Email sending details: article %s, email %s, to %s' %
                          (doi_id, headers["email_type"], str(author.get('e_mail'))))
 

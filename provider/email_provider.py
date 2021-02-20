@@ -99,14 +99,12 @@ def add_text(message, text, subtype='plain', charset='utf-8'):
     message.attach(MIMEText(text, subtype, charset))
 
 
-def message(subject, sender, recipient, bcc=None):
+def message(subject, sender, recipient):
     "create an email message to later attach things to"
     message = MIMEMultipart()
     message['Subject'] = subject
     message['From'] = sender
     message['To'] = recipient
-    if bcc:
-        message['BCC'] = bcc
     return message
 
 
@@ -126,19 +124,24 @@ def smtp_send(connection, sender, recipient, message, logger=None):
     return True
 
 
-def smtp_send_message(connection, email_message, logger=None):
+def smtp_send_message(connection, email_message, logger=None, bcc=None):
     """send the email message using the connection"""
     sender = email_message.get('From')
     recipient = email_message.get('To')
+    # if there is a BCC address, add them to the recipient list
+    if bcc:
+        if isinstance(recipient, str):
+            recipient = [recipient]
+        recipient.append(bcc)
     return smtp_send(connection, sender, recipient, email_message, logger)
 
 
-def smtp_send_messages(settings, messages, logger=None):
+def smtp_send_messages(settings, messages, logger=None, bcc=None):
     """send a list of messages on the connection"""
     connection = smtp_connect(settings, logger)
     details = OrderedDict([("error", 0), ("success", 0)])
     for email_message in messages:
-        result = smtp_send_message(connection, email_message, logger)
+        result = smtp_send_message(connection, email_message, logger, bcc)
         if result:
             details["success"] += 1
         else:
@@ -147,7 +150,7 @@ def smtp_send_messages(settings, messages, logger=None):
 
 
 def simple_message(sender, recipient, subject, body, subtype='plain',
-                   charset='utf-8', attachments=None, logger=None, bcc=None):
+                   charset='utf-8', attachments=None, logger=None):
     """set values of a message
 
     :param sender: email address of the sender
@@ -158,10 +161,9 @@ def simple_message(sender, recipient, subject, body, subtype='plain',
     :param charset: charset for the body text
     :param attachments: optional list of email attachments, each a file system path to the file
     :param logger: optional log.logger object
-    :param bcc: optional email address to BCC to
     :returns: MIMEMultipart email message object
     """
-    email_message = message(subject, sender, recipient, bcc)
+    email_message = message(subject, sender, recipient)
     add_text(email_message, body, subtype, charset)
     if attachments:
         for attachment in attachments:
@@ -170,7 +172,7 @@ def simple_message(sender, recipient, subject, body, subtype='plain',
 
 
 def simple_messages(sender, recipients, subject, body, subtype='plain',
-                   charset='utf-8', attachments=None, logger=None, bcc=None):
+                    charset='utf-8', attachments=None, logger=None):
     """list of simple messages for a list of recipients
 
     :param sender: email address of the sender
@@ -181,14 +183,13 @@ def simple_messages(sender, recipients, subject, body, subtype='plain',
     :param charset: charset for the body text
     :param attachments: optional list of email attachments, each a file system path to the file
     :param logger: optional log.logger object
-    :param bcc: optional email address to BCC to
     :returns: list of MIMEMultipart email message objects
     """
     messages = []
     for recipient in recipients:
         messages.append(simple_message(
-            sender, recipient, subject, body, subtype=subtype, 
-            charset=charset, attachments=attachments, logger=logger, bcc=bcc))
+            sender, recipient, subject, body, subtype=subtype,
+            charset=charset, attachments=attachments, logger=logger))
     return messages
 
 
