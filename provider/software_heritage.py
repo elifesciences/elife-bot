@@ -7,6 +7,7 @@ from xml.etree.ElementTree import Element, SubElement
 
 
 FILE_NAME_FORMAT = "elife-%s-v%s-era.zip"
+BUCKET_FOLDER = "software_heritage/run"
 
 
 class MetaData(object):
