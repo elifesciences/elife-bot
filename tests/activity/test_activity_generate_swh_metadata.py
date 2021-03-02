@@ -177,3 +177,22 @@ class TestGenerateSWHMetadata(unittest.TestCase):
             testdata.SoftwareHeritageDeposit_data_example
         )
         self.assertEqual(return_value, self.activity.ACTIVITY_PERMANENT_FAILURE)
+
+
+class TestSWHGetCreateOrigin(unittest.TestCase):
+    def test_get_create_origin_success(self):
+        display = "https://example.org"
+        data = {"data": {"display": display}}
+        self.assertEqual(activity_module.get_create_origin(data), display)
+
+    def test_get_create_origin_no_data(self):
+        data = None
+        self.assertIsNone(activity_module.get_create_origin(data))
+
+    def test_get_create_origin_blank_data(self):
+        data = {}
+        self.assertIsNone(activity_module.get_create_origin(data))
+
+    def test_get_create_origin_no_data_display(self):
+        data = {"data": None}
+        self.assertIsNone(activity_module.get_create_origin(data))

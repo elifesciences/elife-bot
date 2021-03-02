@@ -152,6 +152,6 @@ class activity_GenerateSWHMetadata(Activity):
 
 def get_create_origin(data):
     "get create_origin url from the data if available"
-    if data.get("data") and data.get("data").get("display"):
+    if data and data.get("data") and data.get("data").get("display"):
         return data.get("data").get("display")
     return None
