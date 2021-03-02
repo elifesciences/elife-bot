@@ -47,7 +47,9 @@ class TestGenerateSWHMetadata(unittest.TestCase):
         self, mock_storage_context, mock_session, fake_download_article_xml
     ):
         article_xml_file = "elife-30274-v2.xml"
-        mock_storage_context.return_value = FakeStorageContext()
+        mock_storage_context.return_value = FakeStorageContext(
+            testdata.ExpandArticle_files_dest_folder
+        )
         mock_session.return_value = FakeSession(
             testdata.SoftwareHeritageDeposit_session_example
         )
@@ -59,6 +61,32 @@ class TestGenerateSWHMetadata(unittest.TestCase):
             testdata.SoftwareHeritageDeposit_data_example
         )
         self.assertEqual(return_value, self.activity.ACTIVITY_SUCCESS)
+
+        # look at the metadata XML file contents
+        files = os.listdir(testdata.ExpandArticle_files_dest_folder)
+        xml_files = [
+            file_name
+            for file_name in files
+            if file_name != ".gitkeep" and file_name.endswith(".xml")
+        ]
+        metadata_file = xml_files[0]
+        with open(
+            os.path.join(testdata.ExpandArticle_files_dest_folder, metadata_file), "rb"
+        ) as open_file:
+            metadata_xml = open_file.read()
+            self.assertTrue(
+                b"<title>Replication Study: Transcriptional amplification in tumor cells with elevated c-Myc</title>"
+                in metadata_xml
+            )
+            self.assertTrue(b"<id>elife-30274-v1-era.zip</id>" in metadata_xml)
+            self.assertTrue(
+                b'<swhdeposit:origin url="https://elife.stencila.io/article-30274/"/>'
+                in metadata_xml
+            )
+            self.assertTrue(
+                b"<codemeta:description>ERA complement for &quot;Replication Study: Transcriptional amplification in tumor cells with elevated c-Myc&quot;, https://doi.org/10.7554/eLife.30274</codemeta:description>"
+                in metadata_xml
+            )
 
     @patch.object(article, "download_article_xml_from_s3")
     @patch.object(activity_module, "get_session")

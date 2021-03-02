@@ -4,6 +4,7 @@ from activity.activity_CopyGlencoeStillImages import activity_CopyGlencoeStillIm
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeSession, FakeStorageContext, FakeLogger
 import tests.activity.test_activity_data as test_activity_data
+import tests.activity.helpers as helpers
 
 
 class TestCopyGlencoeStillImages(unittest.TestCase):
@@ -12,6 +13,11 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         self.copyglencoestillimages = activity_CopyGlencoeStillImages(
             settings_mock, None, None, None, None)
         self.copyglencoestillimages.logger = FakeLogger()
+
+    def tearDown(self):
+        helpers.delete_files_in_folder(
+            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     @patch('provider.article_processing.storage_context')
     @patch('provider.lax_provider.get_xml_file_name')
@@ -251,9 +257,11 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
     @patch('activity.activity_CopyGlencoeStillImages.storage_context')
     def test_store_file_according_to_the_current_article_id_whatever_is_the_filename_on_glencoe(
             self, fake_storage_context, fake_requests_get):
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            test_activity_data.ExpandArticle_files_dest_folder)
         fake_requests_get.return_value = MagicMock()
         fake_requests_get.return_value.status_code = 200
+        fake_requests_get.return_value.content = b""
         cdn_jpg_filename = self.copyglencoestillimages.store_file(
             "http://glencoe.com/some-dir/elife-00666-media1.jpg", "12345600666")
         self.assertEqual(cdn_jpg_filename, "elife-12345600666-media1.jpg")

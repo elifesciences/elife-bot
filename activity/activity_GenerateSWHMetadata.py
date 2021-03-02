@@ -7,7 +7,7 @@ from provider import software_heritage, utils
 from provider.storage_provider import storage_context
 from activity.objects import Activity
 
-DESCRIPTION_PATTERN = "ERA complement for %s, %s"
+DESCRIPTION_PATTERN = 'ERA complement for "%s", %s'
 
 
 class activity_GenerateSWHMetadata(Activity):
