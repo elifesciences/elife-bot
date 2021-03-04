@@ -38,7 +38,7 @@ class starter_SoftwareHeritageDeposit(Starter):
             raise NullRequiredDataException(
                 "Did not get info in starter %s" % self.name
             )
-        for info_key in ["doi_id", "download_url"]:
+        for info_key in ["article_id", "input_file"]:
             if info.get(info_key) is None or str(info.get(info_key)) == "":
                 raise NullRequiredDataException(
                     "Did not get a %s in starter %s" % (info_key, self.name)
