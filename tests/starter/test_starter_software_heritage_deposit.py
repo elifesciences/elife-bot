@@ -11,8 +11,8 @@ from tests.classes_mock import FakeBotoConnection
 RUN_EXAMPLE = u"1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
 
 INFO_EXAMPLE = {
-    "doi_id": "00666",
-    "download_url": "https://example.org/api/projects/1/snapshots/1/archive",
+    "article_id": "00666",
+    "input_file": "https://example.org/api/projects/1/snapshots/1/archive",
 }
 
 
@@ -32,9 +32,9 @@ class TestStarterSoftwareHeritageDeposit(unittest.TestCase):
             info={},
         )
 
-    def test_software_heritage_deposit_starter_info_missing_doi_id(self):
+    def test_software_heritage_deposit_starter_info_missing_article_id(self):
         info = copy.copy(INFO_EXAMPLE)
-        del info["doi_id"]
+        del info["article_id"]
         self.assertRaises(
             NullRequiredDataException,
             self.starter.start,
