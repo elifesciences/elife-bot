@@ -158,7 +158,9 @@ class FakeStorageContext:
         copy(file_name, dest)
 
     def set_resource_from_string(self, resource, data, content_type=None):
-        pass
+        file_name = os.path.join(self.dir, resource.split('/')[-1])
+        with open(file_name, 'wb') as open_file:
+            open_file.write(data)
 
     def list_resources(self, resource):
         return self.resources

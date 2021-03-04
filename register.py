@@ -113,6 +113,7 @@ def start(settings):
     activity_names.append("PostDecisionLetterJATS")
     activity_names.append("DownstreamStart")
     activity_names.append("PackageSWH")
+    activity_names.append("GenerateSWHMetadata")
 
     for activity_name in activity_names:
         # Import the activity libraries

@@ -32,8 +32,6 @@ class activity_PackageSWH(Activity):
             "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
         }
 
-        self.bucket_folder = "software_heritage/run"
-
     def do_activity(self, data=None):
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
@@ -76,7 +74,7 @@ class activity_PackageSWH(Activity):
             resource_path = "/".join(
                 [
                     self.settings.bot_bucket,
-                    self.bucket_folder,
+                    software_heritage.BUCKET_FOLDER,
                     run,
                     file_name,
                 ]
