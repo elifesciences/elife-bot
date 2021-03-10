@@ -3,17 +3,14 @@ import json
 import zipfile
 import glob
 import shutil
-from ftplib import FTP
-import ftplib
 
 from elifetools import parseJATS as parser
 
 from boto.s3.connection import S3Connection
 
-import provider.s3lib as s3lib
+from provider import article_processing, s3lib
 import provider.sftp as sftplib
-import provider.article_processing as article_processing
-
+from provider.ftp import FTP
 from activity.objects import Activity
 
 
@@ -399,53 +396,50 @@ class activity_FTPArticle(Activity):
         for filename in zipfiles:
             shutil.move(filename, self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep)
 
-    def ftp_upload(self, ftp, file):
-        ext = os.path.splitext(file)[1]
-        # print file
-        uploadname = file.split(os.sep)[-1]
-        if ext in (".txt", ".htm", ".html"):
-            ftp.storlines("STOR " + file, open(file))
-        else:
-            # print "uploading " + uploadname
-            ftp.storbinary("STOR " + uploadname, open(file, "rb"), 1024)
-            # print "uploaded " + uploadname
-
-    def ftp_cwd_mkd(self, ftp, sub_dir):
-        """
-        Given an FTP connection and a sub_dir name
-        try to cwd to the directory. If the directory
-        does not exist, create it, then cwd again
-        """
-        cwd_success = None
-        try:
-            ftp.cwd(sub_dir)
-            cwd_success = True
-        except ftplib.error_perm:
-            # Directory probably does not exist, create it
-            ftp.mkd(sub_dir)
-            cwd_success = False
-        if cwd_success is not True:
-            ftp.cwd(sub_dir)
-
-        return cwd_success
-
     def ftp_to_endpoint(self, uploadfiles, sub_dir_list=None, passive=True):
+        "FTP files to endpoint"
+        try:
+            ftp_provider = FTP(self.logger)
+            ftp_instance = ftp_provider.ftp_connect(
+                uri=self.FTP_URI,
+                username=self.FTP_USERNAME,
+                password=self.FTP_PASSWORD,
+                passive=passive
+            )
+            self.logger.info("Connected to FTP server %s" % self.FTP_URI)
+        except Exception as exception:
+            self.logger.exception(
+                "Exception connecting to FTP server %s: %s" % (self.FTP_URI, exception))
+            raise
+
         for uploadfile in uploadfiles:
-            ftp = FTP()
-            if passive is False:
-                ftp.set_pasv(False)
-            ftp.connect(self.FTP_URI)
-            ftp.login(self.FTP_USERNAME, self.FTP_PASSWORD)
+            try:
+                self.logger.info(
+                    "Uploading file %s to FTP server %s" % (uploadfile, self.FTP_URI))
+                ftp_provider.ftp_cwd_mkd(ftp_instance, "/")
+                if self.FTP_CWD != "":
+                    ftp_provider.ftp_cwd_mkd(ftp_instance, self.FTP_CWD)
+                if sub_dir_list is not None:
+                    for sub_dir in sub_dir_list:
+                        ftp_provider.ftp_cwd_mkd(ftp_instance, sub_dir)
+                ftp_provider.ftp_upload(ftp_instance, uploadfile)
+                self.logger.info(
+                    "Completed uploading file %s to FTP server %s" % (uploadfile, self.FTP_URI))
+            except Exception as exception:
+                self.logger.exception(
+                    "Exception in uploading file %s by FTP in %s: %s" %
+                    (uploadfile, self.name, exception))
+                ftp_provider.ftp_disconnect(ftp_instance)
+                raise
 
-            self.ftp_cwd_mkd(ftp, "/")
-            if self.FTP_CWD != "":
-                self.ftp_cwd_mkd(ftp, self.FTP_CWD)
-            if sub_dir_list is not None:
-                for sub_dir in sub_dir_list:
-                    self.ftp_cwd_mkd(ftp, sub_dir)
-
-            self.ftp_upload(ftp, uploadfile)
-            ftp.quit()
+        try:
+            # disconnect the FTP connection
+            ftp_provider.ftp_disconnect(ftp_instance)
+            self.logger.info("Disconnected from FTP server %s" % self.FTP_URI)
+        except Exception as exception:
+            self.logger.exception(
+                "Exception disconnecting from FTP server %s: %s" % (self.FTP_URI, exception))
+            raise
 
     def sftp_to_endpoint(self, uploadfiles, sub_dir=None):
         """
