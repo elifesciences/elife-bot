@@ -97,7 +97,13 @@ class FakeFTP:
     def ftp_connect(self, **kwargs):
         return self.ftp_instance
 
+    def ftp_cwd_mkd(self, ftp_instance, sub_dir):
+        pass
+
     def ftp_to_endpoint(self, **kwargs):
+        pass
+
+    def ftp_upload(self, ftp_instance, filename):
         pass
 
     def ftp_disconnect(self, ftp_instance=None):
