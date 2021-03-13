@@ -32,7 +32,7 @@ class FTP(object):
         #print filename
         uploadname = filename.split(os.sep)[-1]
         if ext in (".txt", ".htm", ".html"):
-            ftp_instance.storlines("STOR " + filename, open(filename))
+            ftp_instance.storlines("STOR " + uploadname, open(filename))
         else:
             #print "uploading " + uploadname
             ftp_instance.storbinary("STOR " + uploadname, open(filename, "rb"), 1024)

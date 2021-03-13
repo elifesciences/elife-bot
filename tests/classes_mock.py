@@ -1,5 +1,6 @@
 import time
 import os
+import ftplib
 from datetime import datetime
 
 
@@ -149,3 +150,53 @@ class FakeBigQueryRowIterator():
     def __iter__(self):
         for row in self.rows:
             yield row
+
+
+class FakeFTPServer:
+    def __init__(self, dir=None):
+        # original directory
+        self.dir = dir
+        # current working directory
+        self.cwd_dir = dir
+
+    def connect(self, uri):
+        pass
+
+    def set_pasv(self, passive):
+        pass
+
+    def login(self, username, password):
+        pass
+
+    def quit(self):
+        pass
+
+    def storlines(self, cmd, fp, callback=None):
+        if self.cwd_dir:
+            filename = cmd.split(" ")[-1]
+            with open(os.path.join(self.cwd_dir, filename), "w") as open_file:
+                open_file.write(fp.read())
+
+    def storbinary(self, cmd, fp, blocksize=8192, callback=None, rest=None):
+        if self.cwd_dir:
+            filename = cmd.split(" ")[-1]
+            with open(os.path.join(self.cwd_dir, filename), "wb") as open_file:
+                open_file.write(fp.read())
+
+    def cwd(self, folder_name):
+        if self.cwd_dir:
+            if folder_name == "/":
+                # reset current working directory to original value
+                new_dir = self.dir
+            else:
+                new_dir = os.path.join(self.dir, folder_name.lstrip("/").rstrip("/"))
+            if os.path.exists(new_dir):
+                self.cwd_dir = new_dir
+            else:
+                raise ftplib.error_perm("Directory does not exist")
+
+    def mkd(self, folder_name):
+        if self.cwd_dir:
+            new_dir = os.path.join(self.cwd_dir, folder_name.lstrip("/"))
+            os.mkdir(new_dir)
+            self.cwd_dir = new_dir
