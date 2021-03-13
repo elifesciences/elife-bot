@@ -28,8 +28,9 @@ def delete_files_in_folder(folder, filter_out=[]):
 def delete_directories_in_folder(folder):
     folder_list = os.listdir(folder)
     for dir in folder_list:
-        if os.path.isdir(dir):
-            delete_folder(dir, True)
+        dir_path = os.path.join(folder, dir)
+        if os.path.isdir(dir_path):
+            delete_folder(dir_path, True)
 
 
 def delete_everything_in_folder(self, folder):
