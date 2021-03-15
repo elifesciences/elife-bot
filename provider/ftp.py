@@ -1,13 +1,9 @@
 import os
 import ftplib
 
-"""
 
-"""
-
-class FTP(object):
-
-    def __init__(self, logger=None):
+class FTP:
+    def __init__(self, logger):
         self.logger = logger
 
     def ftp_connect(self, uri, username, password, passive=True):
@@ -16,8 +12,11 @@ class FTP(object):
         """
         ftp_instance = ftplib.FTP()
         if passive is False:
+            self.logger.info("Disabling passive mode in FTP")
             ftp_instance.set_pasv(False)
+        self.logger.info("Connecting to FTP host %s" % uri)
         ftp_instance.connect(uri)
+        self.logger.info("Logging in to FTP host %s" % uri)
         ftp_instance.login(username, password)
         return ftp_instance
 
@@ -25,18 +24,25 @@ class FTP(object):
         """
         Disconnect from FTP server
         """
+        self.logger.info("Disconnecting from FTP host %s" % ftp_instance.host)
         ftp_instance.quit()
 
     def ftp_upload(self, ftp_instance, filename):
         ext = os.path.splitext(filename)[1]
-        #print filename
+        self.logger.info("FTP uploading filename %s" % filename)
         uploadname = filename.split(os.sep)[-1]
         if ext in (".txt", ".htm", ".html"):
-            ftp_instance.storlines("STOR " + uploadname, open(filename))
+            with open(filename) as open_file:
+                ftp_instance.storlines("STOR " + uploadname, open_file)
+            self.logger.info(
+                "Uploaded %s by storlines method to %s" % (filename, uploadname)
+            )
         else:
-            #print "uploading " + uploadname
-            ftp_instance.storbinary("STOR " + uploadname, open(filename, "rb"), 1024)
-            #print "uploaded " + uploadname
+            with open(filename, "rb") as open_file:
+                ftp_instance.storbinary("STOR " + uploadname, open_file, 1024)
+            self.logger.info(
+                "Uploaded %s by storbinary method to %s" % (filename, uploadname)
+            )
 
     def ftp_cwd_mkd(self, ftp_instance, sub_dir):
         """
@@ -44,17 +50,25 @@ class FTP(object):
         try to cwd to the directory. If the directory
         does not exist, create it, then cwd again
         """
-        cwd_success = None
         try:
             ftp_instance.cwd(sub_dir)
-            cwd_success = True
+            return
         except ftplib.error_perm:
-            # Directory probably does not exist, create it
+            self.logger.exception(
+                'Exception when changing working directory to "%s" at host %s'
+                % (sub_dir, ftp_instance.host)
+            )
+
+        # Directory may not exist, create it
+        try:
             ftp_instance.mkd(sub_dir)
-            cwd_success = False
-        if cwd_success is not True:
             ftp_instance.cwd(sub_dir)
-        return cwd_success
+        except ftplib.error_perm:
+            self.logger.exception(
+                'Exception when creating directory "%s" at host %s'
+                % (sub_dir, ftp_instance.host)
+            )
+            raise
 
     def ftp_to_endpoint(self, ftp_instance, uploadfiles, sub_dir_list=None):
         for uploadfile in uploadfiles:

@@ -1,5 +1,6 @@
 import os
 import unittest
+import ftplib
 from mock import patch
 from testfixtures import TempDirectory
 from provider import ftp as ftp_provider
@@ -17,13 +18,27 @@ class TestFtpConnect(unittest.TestCase):
     @patch("ftplib.FTP")
     def test_ftp_connect(self, fake_ftp_server):
         fake_ftp_server.return_value = FakeFTPServer()
-        self.assertIsNotNone(self.ftp_instance.ftp_connect(None, None, None))
+        self.assertIsNotNone(
+            self.ftp_instance.ftp_connect("ftp.example.org", None, None)
+        )
+        self.assertEqual(
+            self.ftp_instance.logger.loginfo[-2],
+            "Connecting to FTP host ftp.example.org",
+        )
+        self.assertEqual(
+            self.ftp_instance.logger.loginfo[-1],
+            "Logging in to FTP host ftp.example.org",
+        )
 
     @patch("ftplib.FTP")
     def test_ftp_connect_active(self, fake_ftp_server):
         fake_ftp_server.return_value = FakeFTPServer()
         passive = False
         self.assertIsNotNone(self.ftp_instance.ftp_connect(None, None, None, passive))
+        self.assertEqual(
+            self.ftp_instance.logger.loginfo[-3],
+            "Disabling passive mode in FTP",
+        )
 
 
 class TestFtpProvider(unittest.TestCase):
@@ -35,7 +50,8 @@ class TestFtpProvider(unittest.TestCase):
         )
         self.logger = FakeLogger()
         self.ftp_instance = ftp_provider.FTP(self.logger)
-        self.ftp_connection = self.ftp_instance.ftp_connect(None, None, None)
+        self.host = "ftp.example.org"
+        self.ftp_connection = self.ftp_instance.ftp_connect(self.host, None, None)
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -46,6 +62,10 @@ class TestFtpProvider(unittest.TestCase):
 
     def test_ftp_disconnect(self):
         self.assertIsNone(self.ftp_instance.ftp_disconnect(self.ftp_connection))
+        self.assertEqual(
+            self.ftp_instance.logger.loginfo[-1],
+            "Disconnecting from FTP host ftp.example.org",
+        )
 
     def test_ftp_upload_text(self):
         # create a file with a .txt extension to invoke it
@@ -54,6 +74,11 @@ class TestFtpProvider(unittest.TestCase):
         self.ftp_instance.ftp_upload(self.ftp_connection, filename)
         uploaded_files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
         self.assertTrue(filename.split("/")[-1] in uploaded_files)
+        self.assertEqual(
+            self.ftp_instance.logger.loginfo[-1],
+            "Uploaded %s by storlines method to %s"
+            % (filename, filename.split("/")[-1]),
+        )
 
     def test_ftp_upload_binary(self):
         # create a binary file to upload
@@ -62,11 +87,20 @@ class TestFtpProvider(unittest.TestCase):
         self.ftp_instance.ftp_upload(self.ftp_connection, filename)
         uploaded_files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
         self.assertTrue(filename.split("/")[-1] in uploaded_files)
+        self.assertEqual(
+            self.ftp_instance.logger.loginfo[-1],
+            "Uploaded %s by storbinary method to %s"
+            % (filename, filename.split("/")[-1]),
+        )
 
     def test_ftp_cwd_mkd(self):
         # test for when folder does not initial exist, the folder will be created
         sub_dir = "test"
-        self.assertFalse(self.ftp_instance.ftp_cwd_mkd(self.ftp_connection, sub_dir))
+        self.assertIsNone(self.ftp_instance.ftp_cwd_mkd(self.ftp_connection, sub_dir))
+        self.assertEqual(
+            self.ftp_instance.logger.logexception,
+            'Exception when changing working directory to "test" at host ftp.example.org',
+        )
         uploaded_files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
         self.assertTrue(sub_dir in uploaded_files)
 
@@ -74,9 +108,20 @@ class TestFtpProvider(unittest.TestCase):
         sub_dir = "test"
         # create the folder so it already exists
         os.mkdir(os.path.join(testdata.ExpandArticle_files_dest_folder, sub_dir))
-        self.assertTrue(self.ftp_instance.ftp_cwd_mkd(self.ftp_connection, sub_dir))
+        self.assertIsNone(self.ftp_instance.ftp_cwd_mkd(self.ftp_connection, sub_dir))
         uploaded_files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
         self.assertTrue(sub_dir in uploaded_files)
+
+    @patch.object(FakeFTPServer, "mkd")
+    def test_ftp_cwd_mkd_exception(self, fake_mkd):
+        fake_mkd.side_effect = ftplib.error_perm("Exception in FTP mkd")
+        sub_dir = "test"
+        with self.assertRaises(ftplib.error_perm):
+            self.ftp_instance.ftp_cwd_mkd(self.ftp_connection, sub_dir)
+        self.assertEqual(
+            self.ftp_instance.logger.logexception,
+            'Exception when creating directory "test" at host ftp.example.org',
+        )
 
     def test_ftp_to_endpoint(self):
         sub_dir = "test"
