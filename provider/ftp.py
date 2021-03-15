@@ -32,12 +32,14 @@ class FTP:
         self.logger.info("FTP uploading filename %s" % filename)
         uploadname = filename.split(os.sep)[-1]
         if ext in (".txt", ".htm", ".html"):
-            ftp_instance.storlines("STOR " + uploadname, open(filename))
+            with open(filename) as open_file:
+                ftp_instance.storlines("STOR " + uploadname, open_file)
             self.logger.info(
                 "Uploaded %s by storlines method to %s" % (filename, uploadname)
             )
         else:
-            ftp_instance.storbinary("STOR " + uploadname, open(filename, "rb"), 1024)
+            with open(filename, "rb") as open_file:
+                ftp_instance.storbinary("STOR " + uploadname, open_file, 1024)
             self.logger.info(
                 "Uploaded %s by storbinary method to %s" % (filename, uploadname)
             )
