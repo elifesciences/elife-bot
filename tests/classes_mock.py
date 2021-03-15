@@ -158,12 +158,14 @@ class FakeFTPServer:
         self.dir = dir
         # current working directory
         self.cwd_dir = dir
+        self.host = None
+        self.passiveserver = True
 
     def connect(self, uri):
-        pass
+        self.host = uri
 
     def set_pasv(self, passive):
-        pass
+        self.passiveserver = passive
 
     def login(self, username, password):
         pass
