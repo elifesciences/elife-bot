@@ -117,6 +117,8 @@ class activity_FTPArticle(Activity):
                 self.ftp_to_endpoint(zipfiles, passive=True)
             if workflow == 'CLOCKSS':
                 self.ftp_to_endpoint(zipfiles, passive=True)
+            if workflow == 'OVID':
+                self.ftp_to_endpoint(zipfiles, passive=True)
 
         except:
             # Something went wrong, fail
@@ -204,6 +206,12 @@ class activity_FTPArticle(Activity):
             self.FTP_USERNAME = self.settings.CLOCKSS_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.CLOCKSS_FTP_PASSWORD
             self.FTP_CWD = self.settings.CLOCKSS_FTP_CWD
+
+        if workflow == 'OVID':
+            self.FTP_URI = self.settings.OVID_FTP_URI
+            self.FTP_USERNAME = self.settings.OVID_FTP_USERNAME
+            self.FTP_PASSWORD = self.settings.OVID_FTP_PASSWORD
+            self.FTP_CWD = self.settings.OVID_FTP_CWD
 
     def download_files_from_s3(self, doi_id, workflow):
 

@@ -36,6 +36,7 @@ class TestFTPArticle(unittest.TestCase):
         ('CNKI', False, True, 'cnki.localhost', None, True),
         ('CLOCKSS', True, None, 'clockss.localhost', None, True),
         ('CLOCKSS', False, True, 'clockss.localhost', None, True),
+        ('OVID', False, True, 'ovid.localhost', None, True),
     )
     @unpack
     def test_do_activity(self, workflow, pmc_zip_return_value, archive_zip_return_value,
