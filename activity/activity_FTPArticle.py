@@ -3,6 +3,7 @@ import json
 import zipfile
 import glob
 import shutil
+import re
 
 from elifetools import parseJATS as parser
 
@@ -245,9 +246,23 @@ class activity_FTPArticle(Activity):
         for key in s3_keys_in_bucket:
             s3_keys.append({"name": key.name, "last_modified": key.last_modified})
 
-        status = 'vor'
-        s3_key_name = article_processing.latest_archive_zip_revision(
-            doi_id, s3_keys, self.journal, status)
+        for status in ["vor", "poa"]:
+            s3_key_name = article_processing.latest_archive_zip_revision(
+                doi_id, s3_keys, self.journal, status
+            )
+            if s3_key_name:
+                if self.logger:
+                    self.logger.info(
+                        "Latest archive zip for status %s, doi id %s, is s3 key name %s"
+                        % (status, doi_id, s3_key_name)
+                    )
+                break
+            else:
+                if self.logger:
+                    self.logger.info(
+                        "Fpr archive zip for status %s, doi id %s, no s3 key name was found"
+                        % (status, doi_id)
+                    )
 
         if s3_key_name:
             # download it to disk
@@ -402,7 +417,14 @@ class activity_FTPArticle(Activity):
         """Default, move all the zip files from TMP_DIR to FTP_OUTBOX"""
         zipfiles = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")
         for filename in zipfiles:
-            shutil.move(filename, self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep)
+            # remove r revision number from the PMC zip file name
+            new_filename = re.sub(r"\.r[0-9]*\.", ".", filename.split(os.sep)[-1])
+            shutil.move(
+                filename,
+                os.path.join(
+                    self.directories.get("FTP_TO_SOMEWHERE_DIR"), new_filename
+                ),
+            )
 
     def ftp_to_endpoint(self, uploadfiles, sub_dir_list=None, passive=True):
         "FTP files to endpoint"
