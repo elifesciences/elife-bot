@@ -153,6 +153,11 @@ CLOCKSS_FTP_USERNAME = ""
 CLOCKSS_FTP_PASSWORD = ""
 CLOCKSS_FTP_CWD = ""
 
+OVID_FTP_URI = "ovid.localhost"
+OVID_FTP_USERNAME = ""
+OVID_FTP_PASSWORD = ""
+OVID_FTP_CWD = ""
+
 git_repo_name = 'elife-article-xml-ci'
 git_repo_path = '/articles/'
 github_token = '1234567890abcdef'

@@ -55,14 +55,17 @@ class starter_FTPArticle():
         execution_start_to_close_timeout = str(60 * 60* 23)
         input = None
 
-        if (workflow == 'HEFCE'
-                or workflow == 'Cengage'
-                or workflow == 'Scopus'
-                or workflow == 'WoS'
-                or workflow == 'GoOA'
-                or workflow == 'CNPIEC'
-                or workflow == 'CNKI'
-                or workflow == 'CLOCKSS'):
+        if (
+            workflow == "HEFCE"
+            or workflow == "Cengage"
+            or workflow == "Scopus"
+            or workflow == "WoS"
+            or workflow == "GoOA"
+            or workflow == "CNPIEC"
+            or workflow == "CNKI"
+            or workflow == "CLOCKSS"
+            or workflow == "OVID"
+        ):
             workflow_id = "FTPArticle_" + workflow + "_" + str(doi_id)
 
         # workflow_id as set above

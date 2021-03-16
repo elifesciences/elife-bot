@@ -249,6 +249,13 @@ class exp():
     CLOCKSS_FTP_CWD = ""
     CLOCKSS_EMAIL = "clockss@example.org"
 
+    # OVID FTP settings
+    OVID_FTP_URI = ""
+    OVID_FTP_USERNAME = ""
+    OVID_FTP_PASSWORD = ""
+    OVID_FTP_CWD = ""
+    OVID_EMAIL = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -529,6 +536,13 @@ class dev():
     CLOCKSS_FTP_CWD = ""
     CLOCKSS_EMAIL = "clockss@example.org"
 
+    # OVID FTP settings
+    OVID_FTP_URI = ""
+    OVID_FTP_USERNAME = ""
+    OVID_FTP_PASSWORD = ""
+    OVID_FTP_CWD = ""
+    OVID_EMAIL = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -801,6 +815,13 @@ class live():
     CLOCKSS_FTP_PASSWORD = ""
     CLOCKSS_FTP_CWD = ""
     CLOCKSS_EMAIL = "clockss@example.org"
+
+    # OVID FTP settings
+    OVID_FTP_URI = ""
+    OVID_FTP_USERNAME = ""
+    OVID_FTP_PASSWORD = ""
+    OVID_FTP_CWD = ""
+    OVID_EMAIL = ""
 
     # Logging
     setLevel = "INFO"
