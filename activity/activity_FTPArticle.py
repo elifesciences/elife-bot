@@ -3,6 +3,7 @@ import json
 import zipfile
 import glob
 import shutil
+import re
 
 from elifetools import parseJATS as parser
 
@@ -402,7 +403,14 @@ class activity_FTPArticle(Activity):
         """Default, move all the zip files from TMP_DIR to FTP_OUTBOX"""
         zipfiles = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")
         for filename in zipfiles:
-            shutil.move(filename, self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep)
+            # remove r revision number from the PMC zip file name
+            new_filename = re.sub(r"\.r[0-9]*\.", ".", filename.split(os.sep)[-1])
+            shutil.move(
+                filename,
+                os.path.join(
+                    self.directories.get("FTP_TO_SOMEWHERE_DIR"), new_filename
+                ),
+            )
 
     def ftp_to_endpoint(self, uploadfiles, sub_dir_list=None, passive=True):
         "FTP files to endpoint"
