@@ -53,15 +53,18 @@ class starter_PubRouterDeposit():
         execution_start_to_close_timeout = None
         input = None
 
-        if (workflow == 'HEFCE'
-                or workflow == 'Cengage'
-                or workflow == 'GoOA'
-                or workflow == 'WoS'
-                or workflow == 'Scopus'
-                or workflow == 'PMC'
-                or workflow == 'CNPIEC'
-                or workflow == 'CNKI'
-                or workflow == 'CLOCKSS'):
+        if (
+            workflow == "HEFCE"
+            or workflow == "Cengage"
+            or workflow == "GoOA"
+            or workflow == "WoS"
+            or workflow == "Scopus"
+            or workflow == "PMC"
+            or workflow == "CNPIEC"
+            or workflow == "CNKI"
+            or workflow == "CLOCKSS"
+            or workflow == "OVID"
+        ):
             workflow_id = "PubRouterDeposit_" + workflow
 
         # workflow_id as set above
