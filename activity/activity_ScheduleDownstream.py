@@ -118,6 +118,7 @@ def outbox_map():
     outboxes["cnpiec"] = "cnpiec/outbox/"
     outboxes["cnki"] = "cnki/outbox/"
     outboxes["clockss"] = "clockss/outbox/"
+    outboxes["ovid"] = "ovid/outbox/"
     return outboxes
 
 
@@ -128,6 +129,8 @@ def choose_outboxes(status, outbox_map, first_by_status, run_type=None):
         if first_by_status:
             outbox_list.append(outbox_map.get("publication_email"))
         outbox_list.append(outbox_map.get("pubmed"))
+
+    outbox_list.append(outbox_map.get("ovid"))
 
     if status == "poa":
         pass

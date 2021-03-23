@@ -262,6 +262,8 @@ class article(object):
             published_folder = "cnki/published/"
         if workflow == "CLOCKSS":
             published_folder = "clockss/published/"
+        if workflow == "OVID":
+            published_folder = "ovid/published/"
 
         file_extensions = []
         file_extensions.append(".xml")
