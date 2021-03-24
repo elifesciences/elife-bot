@@ -122,6 +122,18 @@ def conditional_starts(current_datetime):
         # Jobs to start at quarter past the hour
         LOGGER.info("Quarter past the hour")
 
+        # OVID deposits once per day 22:15 UTC
+        if current_time.tm_hour == 22:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_PubRouterDeposit"),
+                        ("workflow_id", "PubRouterDeposit_OVID"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
+
     elif current_time.tm_min >= 20 and current_time.tm_min <= 29:
         # Jobs to start at 20 minutes past the hour
         LOGGER.info("Twenty minutes past the hour")
