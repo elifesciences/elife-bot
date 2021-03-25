@@ -327,14 +327,31 @@ class TestPackagePOA(unittest.TestCase):
                                    test_data.get('expected_outbox_count'),
                                    test_data.get('scenario'))
 
-    @patch.object(activity_module.generate, 'build_article_from_csv')
+    @patch.object(activity_module.parse, "build_article")
     def test_generate_xml_build_article_exception(self, fake_build_article):
-        fake_build_article.side_effect = Exception('An exception')
+        fake_build_article.side_effect = Exception("An exception")
         with self.assertRaises(Exception):
             self.poa.generate_xml(12717)
         self.assertEqual(
             self.poa.logger.logexception,
-            'Exception in build_article_from_csv for article_id 12717: An exception')
+            "Exception in build_article for article_id 12717: An exception",
+        )
+
+    @patch.object(activity_module.parse, "build_article")
+    def test_generate_xml_build_article_errors(self, fake_build_article):
+        article_id = 12717
+        error_count = 1
+        error_messages = ["article_id %s error in set_title" % article_id]
+        fake_build_article.return_value = None, error_count, error_messages
+        with self.assertRaises(Exception):
+            self.poa.generate_xml(article_id)
+        self.assertEqual(
+            self.poa.logger.logexception,
+            (
+                "Exception raised in generate_xml, error count: %s, error_messages: %s"
+                % (error_count, ", ".join(error_messages))
+            ),
+        )
 
     @patch.object(activity_module.generate, 'build_xml_to_disk')
     def test_generate_xml_expat_exception(self, fake_build_xml):

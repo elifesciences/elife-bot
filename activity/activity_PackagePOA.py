@@ -6,6 +6,7 @@ import glob
 import shutil
 from collections import OrderedDict
 from xml.parsers.expat import ExpatError
+from ejpcsvparser import parse
 from jatsgenerator import generate
 from jatsgenerator import conf as jats_conf
 from packagepoa import transform
@@ -269,18 +270,32 @@ class activity_PackagePOA(Activity):
         article XML from the CSV files
         """
         # override the CSV directory in the ejp-csv-parser library
-        jats_config = self.jatsgenerator_config(self.settings.jatsgenerator_config_section)
-        generate.parse.data.CSV_PATH = self.directories.get("CSV") + os.sep
-        generate.parse.data.TMP_DIR = self.directories.get("CSV_TMP")
+        jats_config = self.jatsgenerator_config(
+            self.settings.jatsgenerator_config_section
+        )
+        parse.data.CSV_PATH = self.directories.get("CSV") + os.sep
+        parse.data.TMP_DIR = self.directories.get("CSV_TMP")
 
         article = None
         try:
-            article = generate.build_article_from_csv(article_id, jats_config)
+            article, self.error_count, self.error_messages = parse.build_article(
+                article_id
+            )
         except Exception as exception:
             self.logger.exception(
-                'Exception in build_article_from_csv for article_id %s: %s' %
-                (article_id, str(exception)))
+                "Exception in build_article for article_id %s: %s"
+                % (article_id, str(exception))
+            )
             raise
+
+        # check for errors
+        if self.error_count and self.error_count > 0:
+            exception_message = (
+                "Exception raised in generate_xml, error count: %s, error_messages: %s"
+                % (self.error_count, ", ".join(self.error_messages))
+            )
+            self.logger.exception(exception_message)
+            raise Exception(exception_message)
 
         if article:
             # Here can set the pub-date and volume, if provided
