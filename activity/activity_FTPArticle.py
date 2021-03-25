@@ -260,7 +260,7 @@ class activity_FTPArticle(Activity):
             else:
                 if self.logger:
                     self.logger.info(
-                        "Fpr archive zip for status %s, doi id %s, no s3 key name was found"
+                        "For archive zip for status %s, doi id %s, no s3 key name was found"
                         % (status, doi_id)
                     )
 
