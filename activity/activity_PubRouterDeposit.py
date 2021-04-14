@@ -163,6 +163,8 @@ class activity_PubRouterDeposit(Activity):
             return "clockss/outbox/"
         elif workflow == "OVID":
             return "ovid/outbox/"
+        elif workflow == "Zendy":
+            return "zendy/outbox/"
 
         return None
 
@@ -190,6 +192,8 @@ class activity_PubRouterDeposit(Activity):
             return "clockss/published/"
         elif workflow == "OVID":
             return "ovid/published/"
+        elif workflow == "Zendy":
+            return "zendy/published/"
 
         return None
 
@@ -450,7 +454,7 @@ class activity_PubRouterDeposit(Activity):
                 remove_article_doi.append(article.doi)
 
         # Check if article is a resupply
-        if workflow not in ["CLOCKSS", "OVID", "PMC"]:
+        if workflow not in ["CLOCKSS", "OVID", "PMC", "Zendy"]:
             for article in articles:
                 was_ever_published = blank_article.was_ever_published(article.doi, workflow)
                 if was_ever_published is True:
@@ -461,7 +465,7 @@ class activity_PubRouterDeposit(Activity):
                     remove_article_doi.append(article.doi)
 
         # Check if a PMC zip file exists for this article
-        if workflow not in ["OVID", "PMC"]:
+        if workflow not in ["OVID", "PMC", "Zendy"]:
             for article in articles:
                 if not self.does_source_zip_exist_from_s3(doi_id=article.doi_id):
                     if self.logger:
@@ -660,6 +664,8 @@ class activity_PubRouterDeposit(Activity):
                 recipients = self.settings.CLOCKSS_EMAIL
             elif workflow == "OVID":
                 recipients = self.settings.OVID_EMAIL
+            elif workflow == "Zendy":
+                recipients = self.settings.ZENDY_EMAIL
         except:
             pass
 
