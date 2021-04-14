@@ -256,6 +256,13 @@ class exp():
     OVID_FTP_CWD = ""
     OVID_EMAIL = ""
 
+    # Zendy SFTP settings
+    ZENDY_SFTP_URI = ""
+    ZENDY_SFTP_USERNAME = ""
+    ZENDY_SFTP_PASSWORD = ""
+    ZENDY_SFTP_CWD = ""
+    ZENDY_EMAIL = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -543,6 +550,13 @@ class dev():
     OVID_FTP_CWD = ""
     OVID_EMAIL = ""
 
+    # Zendy SFTP settings
+    ZENDY_SFTP_URI = ""
+    ZENDY_SFTP_USERNAME = ""
+    ZENDY_SFTP_PASSWORD = ""
+    ZENDY_SFTP_CWD = ""
+    ZENDY_EMAIL = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -822,6 +836,13 @@ class live():
     OVID_FTP_PASSWORD = ""
     OVID_FTP_CWD = ""
     OVID_EMAIL = ""
+
+    # Zendy SFTP settings
+    ZENDY_SFTP_URI = ""
+    ZENDY_SFTP_USERNAME = ""
+    ZENDY_SFTP_PASSWORD = ""
+    ZENDY_SFTP_CWD = ""
+    ZENDY_EMAIL = ""
 
     # Logging
     setLevel = "INFO"

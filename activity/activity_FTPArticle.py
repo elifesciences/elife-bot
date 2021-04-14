@@ -120,6 +120,8 @@ class activity_FTPArticle(Activity):
                 self.ftp_to_endpoint(zipfiles, passive=True)
             if workflow == 'OVID':
                 self.ftp_to_endpoint(zipfiles, passive=True)
+            if workflow == 'Zendy':
+                self.sftp_to_endpoint(zipfiles)
 
         except:
             # Something went wrong, fail
@@ -213,6 +215,12 @@ class activity_FTPArticle(Activity):
             self.FTP_USERNAME = self.settings.OVID_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.OVID_FTP_PASSWORD
             self.FTP_CWD = self.settings.OVID_FTP_CWD
+
+        if workflow == 'Zendy':
+            self.SFTP_URI = self.settings.ZENDY_SFTP_URI
+            self.SFTP_USERNAME = self.settings.ZENDY_SFTP_USERNAME
+            self.SFTP_PASSWORD = self.settings.ZENDY_SFTP_PASSWORD
+            self.SFTP_CWD = self.settings.ZENDY_SFTP_CWD
 
     def download_files_from_s3(self, doi_id, workflow):
 

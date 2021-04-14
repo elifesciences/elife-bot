@@ -64,6 +64,7 @@ class starter_PubRouterDeposit():
             or workflow == "CNKI"
             or workflow == "CLOCKSS"
             or workflow == "OVID"
+            or workflow == "Zendy"
         ):
             workflow_id = "PubRouterDeposit_" + workflow
 

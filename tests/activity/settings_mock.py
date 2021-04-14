@@ -158,6 +158,12 @@ OVID_FTP_USERNAME = ""
 OVID_FTP_PASSWORD = ""
 OVID_FTP_CWD = ""
 
+ZENDY_SFTP_URI = "zendy.localhost"
+ZENDY_SFTP_USERNAME = ""
+ZENDY_SFTP_PASSWORD = ""
+ZENDY_SFTP_CWD = ""
+ZENDY_EMAIL = ""
+
 git_repo_name = 'elife-article-xml-ci'
 git_repo_path = '/articles/'
 github_token = '1234567890abcdef'
