@@ -10,6 +10,7 @@ class SFTP(object):
     def __init__(self, logger=None):
         paramiko.util.log_to_file('paramiko.log')
         self.logger = logger
+        self.transport = None
 
     def sftp_connect(self, uri, username, password, port=22):
         """
@@ -17,10 +18,10 @@ class SFTP(object):
         """
         #print "trying to SFTP now"
 
-        transport = paramiko.Transport((uri, port))
+        self.transport = paramiko.Transport((uri, port))
 
         try:
-            transport.connect(hostkey=None,
+            self.transport.connect(hostkey=None,
                               username=username,
                               password=password)
         except:
@@ -28,7 +29,7 @@ class SFTP(object):
                 self.logger.info("was unable to connect to SFTP server")
             return None
 
-        sftp = paramiko.SFTPClient.from_transport(transport)
+        sftp = paramiko.SFTPClient.from_transport(self.transport)
         return sftp
 
     def sftp_to_endpoint(self, sftp_client, uploadfiles, sftp_cwd='', sub_dir=None):
@@ -54,3 +55,16 @@ class SFTP(object):
                 self.logger.info("putting file by sftp " + uploadfile +
                                  " to remote_file " + remote_file)
             result = sftp_client.put(uploadfile, remote_file)
+
+    def disconnect(self):
+        "close the transport connection to disconnect from the SSH port"
+        if self.transport:
+            try:
+                self.transport.close()
+                if self.logger:
+                    self.logger.info("Closed transport connectin in SFTP provider")
+            except Exception as exception:
+                if self.logger:
+                    self.logger.exception(
+                        "Failed to close the transport connection in SFTP provider: %s" %
+                        str(exception))
