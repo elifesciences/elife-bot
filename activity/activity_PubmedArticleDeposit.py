@@ -259,6 +259,8 @@ class activity_PubmedArticleDeposit(Activity):
         except Exception as exception:
             self.logger.exception('Failed to upload files by SFTP to PubMed: %s' % str(exception))
             raise
+        finally:
+            sftp.disconnect()
 
         return True
 
