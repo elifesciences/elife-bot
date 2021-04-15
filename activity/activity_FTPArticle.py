@@ -488,7 +488,8 @@ class activity_FTPArticle(Activity):
 
         if sftp_client is not None:
             sftp.sftp_to_endpoint(sftp_client, uploadfiles, self.SFTP_CWD, sub_dir)
-            sftp.disconnect()
+
+        sftp.disconnect()
 
 
 def zip_file_suffix(file_types):
