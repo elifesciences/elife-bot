@@ -62,7 +62,7 @@ class SFTP(object):
             try:
                 self.transport.close()
                 if self.logger:
-                    self.logger.info("Closed transport connectin in SFTP provider")
+                    self.logger.info("Closed transport connection in SFTP provider")
             except Exception as exception:
                 if self.logger:
                     self.logger.exception(
