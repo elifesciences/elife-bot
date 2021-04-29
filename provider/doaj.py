@@ -66,7 +66,6 @@ def author(authors_json):
     author_list = []
     for author in authors_json:
         author_json = OrderedDict()
-        # todo!!! test and format group author name
 
         # affiliations
         affiliations = []
@@ -74,8 +73,15 @@ def author(authors_json):
             affiliations.append(affiliation_string(aff_json))
         if affiliations:
             author_json["affiliation"] = "; ".join(affiliations)
+
         # name
-        author_json["name"] = author.get("name").get("preferred")
+        if author.get("type") == "group":
+            # format group author name
+            author_json["name"] = author.get("name")
+        else:
+            # person name
+            author_json["name"] = author.get("name").get("preferred")
+
         # orcid
         if author.get("orcid"):
             author_json["orcid_id"] = "https://orcid.org/%s" % author.get("orcid")

@@ -184,6 +184,43 @@ class TestDoajAuthor(unittest.TestCase):
         ]
         self.assertEqual(doaj.author(authors_json), expected)
 
+    def test_author_group(self):
+        authors_json = [
+            {
+                "affiliations": [
+                    {
+                        "address": {
+                            "components": {
+                                "country": "United Kingdom",
+                                "locality": ["London"],
+                            },
+                            "formatted": ["London", "United Kingdom"],
+                        },
+                        "name": [
+                            "Centre for Mathematical Modelling of Infectious Diseases, Department of Infectious Disease Epidemiology, Faculty of Epidemiology and Population Health, London School of Hygiene and Tropical Medicine"
+                        ],
+                    }
+                ],
+                "name": "CMMID COVID-19 Working Group",
+                "type": "group",
+            }
+        ]
+        expected = [
+            OrderedDict(
+                [
+                    (
+                        "affiliation",
+                        "Centre for Mathematical Modelling of Infectious Diseases, "
+                        "Department of Infectious Disease Epidemiology, Faculty of "
+                        "Epidemiology and Population Health, London School of Hygiene "
+                        "and Tropical Medicine, London, United Kingdom",
+                    ),
+                    ("name", "CMMID COVID-19 Working Group"),
+                ]
+            )
+        ]
+        self.assertEqual(doaj.author(authors_json), expected)
+
 
 class TestDoajAffiliationString(unittest.TestCase):
     def test_affiliation_string(self):
