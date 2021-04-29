@@ -1,9 +1,24 @@
+import re
 import time
 from collections import OrderedDict
+from elifetools import utils as etoolsutils
 
 
 LINK_URL_PATTERN = "https://elifesciences.org/articles/%s"
 EISSN = "2050-084X"
+REMOVE_TITLE_TAGS = ["b", "i", "sub", "sup"]
+REMOVE_ABSTRACT_TAGS = ["a", "b", "i", "span", "sub", "sup"]
+
+
+def substitute_math_tags(string, replacement="[Formula: see text]"):
+    "eplace math tags with a string, similar to function in elifepubmed library"
+    if not string:
+        return string
+    # match over newlines with DOTALL for kitchen sink testing and if found in real articles
+    for tag_match in re.finditer("<math(.*?)>(.*?)</math>", string, re.DOTALL):
+        old_tag = "<math%s>%s</math>" % (tag_match.group(1), tag_match.group(2))
+        string = string.replace(old_tag, replacement)
+    return string
 
 
 def doaj_json(article_json):
@@ -28,10 +43,21 @@ def bibjson(article_json):
 
 
 def abstract(abstract_json):
-    # todo!!! formatting structured abstracts
-    # todo!! strip out inline formatting
-    # todo!! replace maths with a placeholder string
-    abstract = abstract_json.get("content")[0].get("text")
+    # collapse abstract content into a single string
+    abstract_parts = []
+    for content_block in abstract_json.get("content"):
+        if content_block.get("type") == "section":
+            # concatenate structured abstract content
+            content = content_block.get("content")[0].get("text")
+            abstract_parts.append("%s %s" % (content_block.get("title"), content))
+        else:
+            abstract_parts.append(content_block.get("text"))
+    abstract = "\n".join(abstract_parts)
+    # replace maths with a placeholder string
+    abstract = substitute_math_tags(abstract, "[Formula: see text]")
+    # remove inline formatting tags
+    for tag_name in REMOVE_ABSTRACT_TAGS:
+        abstract = etoolsutils.remove_tag(tag_name, abstract)
     return abstract
 
 
@@ -112,8 +138,10 @@ def month(date_struct):
 
 
 def title(article_json):
-    # todo!!! remove inline formatting tags
     title = article_json.get("title")
+    # remove inline formatting tags
+    for tag_name in REMOVE_TITLE_TAGS:
+        title = etoolsutils.remove_tag(tag_name, title)
     return title
 
 

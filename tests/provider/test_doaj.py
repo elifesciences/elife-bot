@@ -6,6 +6,18 @@ from provider import doaj
 from tests import read_fixture
 
 
+class TestSubstituteMathTags(unittest.TestCase):
+    def test_substitute_math_tags(self):
+        abstract = 'A <math><mi>β</mi></math> <math id="inf1"><mi>β</mi></math>.'
+        expected = "A [Formula: see text] [Formula: see text]."
+        self.assertEqual(doaj.substitute_math_tags(abstract), expected)
+
+    def test_substitute_math_tags_none(self):
+        abstract = None
+        expected = None
+        self.assertEqual(doaj.substitute_math_tags(abstract), expected)
+
+
 class TestDoajProvider(unittest.TestCase):
     def test_doaj_json(self):
         article_json_string = read_fixture("e65469_article_json.txt", "doaj")
@@ -19,6 +31,119 @@ class TestDoajAbstract(unittest.TestCase):
     def test_abstract(self):
         abstract_json = {"content": [{"text": "The abstract.", "type": "paragraph"}]}
         expected = "The abstract."
+        self.assertEqual(doaj.abstract(abstract_json), expected)
+
+    def test_abstract_remove_tags(self):
+        abstract_json = {
+            "content": [
+                {
+                    "text": (
+                        'The abstract. <span class="underline">B</span> '
+                        '<span class="small-caps">ON</span> '
+                        '<span class="monospace">Bonsai</span> '
+                        '(within 15 ms, &gt;100 FPS) '
+                        '(<a href="#bib34">Lin et al., 2017</a>).'
+                    ),
+                    "type": "paragraph",
+                }
+            ]
+        }
+        expected = (
+            "The abstract. B ON Bonsai (within 15 ms, &gt;100 FPS) (Lin et al., 2017)."
+        )
+        self.assertEqual(doaj.abstract(abstract_json), expected)
+
+    def test_abstract_structured(self):
+        abstract_json = {
+            "content": [
+                {
+                    "content": [
+                        {
+                            "text": "Malaria ....",
+                            "type": "paragraph",
+                        }
+                    ],
+                    "id": "abs1",
+                    "title": "Background:",
+                    "type": "section",
+                },
+                {
+                    "content": [
+                        {
+                            "text": "In a single centre, ....",
+                            "type": "paragraph",
+                        }
+                    ],
+                    "id": "abs2",
+                    "title": "Methods:",
+                    "type": "section",
+                },
+                {
+                    "content": [
+                        {
+                            "text": "Mature gametocytes ....",
+                            "type": "paragraph",
+                        }
+                    ],
+                    "id": "abs3",
+                    "title": "Results:",
+                    "type": "section",
+                },
+                {
+                    "content": [
+                        {
+                            "text": "The early appearance ....",
+                            "type": "paragraph",
+                        }
+                    ],
+                    "id": "abs4",
+                    "title": "Conclusions:",
+                    "type": "section",
+                },
+                {
+                    "content": [
+                        {
+                            "text": "Funded by PATH Malaria Vaccine Initiative (MVI).",
+                            "type": "paragraph",
+                        }
+                    ],
+                    "id": "abs5",
+                    "title": "Funding:",
+                    "type": "section",
+                },
+                {
+                    "content": [
+                        {
+                            "text": '<a href="https://clinicaltrials.gov/show/NCT02836002">NCT02836002</a>.',
+                            "type": "paragraph",
+                        }
+                    ],
+                    "id": "abs6",
+                    "title": "Clinical trial number:",
+                    "type": "section",
+                },
+            ]
+        }
+        expected = (
+            "Background: Malaria ....\n"
+            "Methods: In a single centre, ....\n"
+            "Results: Mature gametocytes ....\n"
+            "Conclusions: The early appearance ....\n"
+            "Funding: Funded by PATH Malaria Vaccine Initiative (MVI).\n"
+            "Clinical trial number: NCT02836002."
+        )
+        self.assertEqual(doaj.abstract(abstract_json), expected)
+
+    def test_abstract_maths(self):
+        abstract_json = {
+            "content": [
+                {
+                    "text": 'Darwinian fitness ... <math id="inf1"><mi>β</mi></math>-lactamase.',
+                    "type": "paragraph",
+                }
+            ]
+        }
+        expected = "Darwinian fitness ... [Formula: see text]-lactamase."
         self.assertEqual(doaj.abstract(abstract_json), expected)
 
 
@@ -154,6 +279,12 @@ class TestDoajTitle(unittest.TestCase):
         )
         article_json = {"title": title}
         expected = title
+        self.assertEqual(doaj.title(article_json), expected)
+
+    def test_title_tag_removal(self):
+        title = "Sample title, <i>PTPRG</i> CUT&RUN HCO<sub>3</sub><sup>–</sup>-dependent <b>τ</b>"
+        article_json = {"title": title}
+        expected = "Sample title, PTPRG CUT&RUN HCO3–-dependent τ"
         self.assertEqual(doaj.title(article_json), expected)
 
 
