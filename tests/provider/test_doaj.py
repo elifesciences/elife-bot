@@ -41,7 +41,7 @@ class TestDoajAbstract(unittest.TestCase):
                         'The abstract. <span class="underline">B</span> '
                         '<span class="small-caps">ON</span> '
                         '<span class="monospace">Bonsai</span> '
-                        '(within 15 ms, &gt;100 FPS) '
+                        "(within 15 ms, &gt;100 FPS) "
                         '(<a href="#bib34">Lin et al., 2017</a>).'
                     ),
                     "type": "paragraph",
