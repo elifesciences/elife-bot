@@ -4,8 +4,6 @@ from collections import OrderedDict
 from elifetools import utils as etoolsutils
 
 
-LINK_URL_PATTERN = "https://elifesciences.org/articles/%s"
-EISSN = "2050-084X"
 REMOVE_TITLE_TAGS = ["b", "i", "sub", "sup"]
 REMOVE_ABSTRACT_TAGS = ["a", "b", "i", "span", "sub", "sup"]
 
@@ -21,20 +19,24 @@ def substitute_math_tags(string, replacement="[Formula: see text]"):
     return string
 
 
-def doaj_json(article_json):
+def doaj_json(article_json, settings=None):
     doaj_json = OrderedDict()
-    doaj_json["bibjson"] = bibjson(article_json)
+    doaj_json["bibjson"] = bibjson(article_json, settings)
     return doaj_json
 
 
-def bibjson(article_json):
+def bibjson(article_json, settings=None):
     bibjson = OrderedDict()
     bibjson["abstract"] = abstract(article_json.get("abstract", {}))
     bibjson["author"] = author(article_json.get("authors", []))
-    bibjson["identifier"] = identifier(article_json)
+    bibjson["identifier"] = identifier(
+        article_json, eissn=getattr(settings, "journal_eissn", None)
+    )
     bibjson["journal"] = journal(article_json)
     bibjson["keywords"] = keywords(article_json.get("keywords", []))
-    bibjson["link"] = link(article_json)
+    bibjson["link"] = link(
+        article_json, url_link_pattern=getattr(settings, "doaj_url_link_pattern", None)
+    )
     published_date = time.strptime(article_json["published"], "%Y-%m-%dT%H:%M:%SZ")
     bibjson["month"] = month(published_date)
     bibjson["title"] = title(article_json)
@@ -100,7 +102,7 @@ def affiliation_string(aff_json):
     return ", ".join(aff_parts)
 
 
-def identifier(article_json):
+def identifier(article_json, eissn=None):
     identifier_list = []
     # doi
     doi = OrderedDict()
@@ -108,10 +110,11 @@ def identifier(article_json):
     doi["type"] = "doi"
     identifier_list.append(doi)
     # eissn
-    eissn = OrderedDict()
-    eissn["id"] = EISSN
-    eissn["type"] = "eissn"
-    identifier_list.append(eissn)
+    if eissn:
+        eissn_json = OrderedDict()
+        eissn_json["id"] = eissn
+        eissn_json["type"] = "eissn"
+        identifier_list.append(eissn_json)
     # elocationid
     elocationid = OrderedDict()
     elocationid["id"] = article_json.get("elocationId")
@@ -131,11 +134,12 @@ def keywords(keywords_json):
     return keyword_list
 
 
-def link(article_json):
+def link(article_json, url_link_pattern=None):
     link_json = OrderedDict()
-    link_json["content_type"] = "text/html"
-    link_json["type"] = "fulltext"
-    link_json["url"] = LINK_URL_PATTERN % article_json.get("id")
+    if url_link_pattern:
+        link_json["content_type"] = "text/html"
+        link_json["type"] = "fulltext"
+        link_json["url"] = url_link_pattern.format(article_id=article_json.get("id"))
     return link_json
 
 

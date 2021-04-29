@@ -28,6 +28,7 @@ poa_incoming_queue = ''
 ses_poa_sender_email = ""
 ses_poa_recipient_email = ""
 
+lax_article_endpoint = "https://test/eLife.{article_id}"
 lax_article_versions = 'https://test/eLife.{article_id}/version/'
 verify_ssl = False
 lax_auth_key = 'an_auth_key'
@@ -65,3 +66,7 @@ big_query_project_id = ''
 
 letterparser_config_file = 'tests/activity/letterparser.cfg'
 letterparser_config_section = 'elife'
+
+# DOAJ deposit settings
+journal_eissn = "2050-084X"
+doaj_url_link_pattern = "https://elifesciences.org/articles/{article_id}"

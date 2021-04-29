@@ -4,6 +4,7 @@ import time
 from collections import OrderedDict
 from provider import doaj
 from tests import read_fixture
+import tests.settings_mock as settings_mock
 
 
 class TestSubstituteMathTags(unittest.TestCase):
@@ -23,7 +24,7 @@ class TestDoajProvider(unittest.TestCase):
         article_json_string = read_fixture("e65469_article_json.txt", "doaj")
         article_json = json.loads(article_json_string)
         expected = read_fixture("e65469_doaj_json.py", "doaj")
-        doaj_json = doaj.doaj_json(article_json)
+        doaj_json = doaj.doaj_json(article_json, settings_mock)
         self.assertEqual(doaj_json, expected)
 
 
@@ -248,7 +249,9 @@ class TestDoajIdentifier(unittest.TestCase):
             OrderedDict([("id", "2050-084X"), ("type", "eissn")]),
             OrderedDict([("id", None), ("type", "elocationid")]),
         ]
-        self.assertEqual(doaj.identifier(article_json), expected)
+        self.assertEqual(
+            doaj.identifier(article_json, settings_mock.journal_eissn), expected
+        )
 
     def test_identifier_all(self):
         article_json = {"doi": "10.7554/eLife.65469", "elocationId": "e65469"}
@@ -257,7 +260,9 @@ class TestDoajIdentifier(unittest.TestCase):
             OrderedDict([("id", "2050-084X"), ("type", "eissn")]),
             OrderedDict([("id", "e65469"), ("type", "elocationid")]),
         ]
-        self.assertEqual(doaj.identifier(article_json), expected)
+        self.assertEqual(
+            doaj.identifier(article_json, settings_mock.journal_eissn), expected
+        )
 
 
 class TestDoajJournal(unittest.TestCase):
@@ -298,7 +303,9 @@ class TestDoajLink(unittest.TestCase):
                 ("url", "https://elifesciences.org/articles/65469"),
             ]
         )
-        self.assertEqual(doaj.link(article_json), expected)
+        self.assertEqual(
+            doaj.link(article_json, settings_mock.doaj_url_link_pattern), expected
+        )
 
 
 class TestDoajMonth(unittest.TestCase):
