@@ -97,13 +97,15 @@ EXPECTED = OrderedDict(
                     ),
                     (
                         "link",
-                        OrderedDict(
-                            [
-                                ("content_type", "text/html"),
-                                ("type", "fulltext"),
-                                ("url", "https://elifesciences.org/articles/65469"),
-                            ]
-                        ),
+                        [
+                            OrderedDict(
+                                [
+                                    ("content_type", "text/html"),
+                                    ("type", "fulltext"),
+                                    ("url", "https://elifesciences.org/articles/65469"),
+                                ]
+                            )
+                        ],
                     ),
                     ("month", "3"),
                     (

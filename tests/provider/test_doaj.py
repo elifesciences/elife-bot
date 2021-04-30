@@ -296,13 +296,15 @@ class TestDoajKeywords(unittest.TestCase):
 class TestDoajLink(unittest.TestCase):
     def test_link(self):
         article_json = {"id": "65469"}
-        expected = OrderedDict(
-            [
-                ("content_type", "text/html"),
-                ("type", "fulltext"),
-                ("url", "https://elifesciences.org/articles/65469"),
-            ]
-        )
+        expected = [
+            OrderedDict(
+                [
+                    ("content_type", "text/html"),
+                    ("type", "fulltext"),
+                    ("url", "https://elifesciences.org/articles/65469"),
+                ]
+            )
+        ]
         self.assertEqual(
             doaj.link(article_json, settings_mock.doaj_url_link_pattern), expected
         )

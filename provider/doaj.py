@@ -135,12 +135,14 @@ def keywords(keywords_json):
 
 
 def link(article_json, url_link_pattern=None):
+    link_list = []
     link_json = OrderedDict()
     if url_link_pattern:
         link_json["content_type"] = "text/html"
         link_json["type"] = "fulltext"
         link_json["url"] = url_link_pattern.format(article_id=article_json.get("id"))
-    return link_json
+        link_list.append(link_json)
+    return link_list
 
 
 def month(date_struct):
