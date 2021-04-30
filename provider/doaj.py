@@ -71,7 +71,7 @@ def author(authors_json):
 
         # affiliations
         affiliations = []
-        for aff_json in author.get("affiliations"):
+        for aff_json in author.get("affiliations", []):
             affiliations.append(affiliation_string(aff_json))
         if affiliations:
             author_json["affiliation"] = "; ".join(affiliations)
