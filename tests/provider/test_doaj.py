@@ -281,6 +281,7 @@ class TestDoajKeywords(unittest.TestCase):
             "oligodendrocyte",
             "cuprizone",
             "multiple sclerosis",
+            "<i>eLife</i>"
         ]
         expected = [
             "integrated stress response",
@@ -289,6 +290,7 @@ class TestDoajKeywords(unittest.TestCase):
             "oligodendrocyte",
             "cuprizone",
             "multiple sclerosis",
+            "eLife",
         ]
         self.assertEqual(doaj.keywords(keywords_json), expected)
 

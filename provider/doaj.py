@@ -130,7 +130,13 @@ def journal(article_json):
 
 
 def keywords(keywords_json):
-    keyword_list = keywords_json
+    keyword_list = []
+    for keyword in keywords_json:
+        # check for any HTML tags to remove
+        if "<" in keyword:
+            for tag_name in REMOVE_TITLE_TAGS:
+                keyword = etoolsutils.remove_tag(tag_name, keyword)
+        keyword_list.append(keyword)
     return keyword_list
 
 
