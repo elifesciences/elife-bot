@@ -93,6 +93,18 @@ class TestLaxProvider(unittest.TestCase):
         mock_requests_get.return_value = response
         self.assertRaises(ErrorCallingLaxException, lax_provider.article_highest_version, '08411', settings_mock)
 
+    @patch('requests.get')
+    def test_article_json_200(self, mock_requests_get):
+        article_json = {"status": "vor"}
+        response = MagicMock()
+        response.status_code = 200
+        response.json.return_value = article_json
+        mock_requests_get.return_value = response
+        status_code, data = lax_provider.article_json("65469", settings_mock)
+        self.assertEqual(status_code, 200)
+        # data returned will be exactly the value assigned to the mock response
+        self.assertEqual(data, article_json)
+
     def test_lax_auth_header_none(self):
         expected = {}
         self.assertEqual(lax_provider.lax_auth_header(None), expected)
