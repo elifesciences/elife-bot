@@ -2,9 +2,11 @@ import unittest
 import json
 import time
 from collections import OrderedDict
+from mock import patch, MagicMock
 from provider import doaj
 from tests import read_fixture
 import tests.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger, FakeResponse
 
 
 class TestSubstituteMathTags(unittest.TestCase):
@@ -281,7 +283,7 @@ class TestDoajKeywords(unittest.TestCase):
             "oligodendrocyte",
             "cuprizone",
             "multiple sclerosis",
-            "<i>eLife</i>"
+            "<i>eLife</i>",
         ]
         expected = [
             "integrated stress response",
@@ -341,3 +343,56 @@ class TestDoajYear(unittest.TestCase):
         published_date = time.strptime("2021-03-23T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
         expected = "2021"
         self.assertEqual(doaj.year(published_date), expected)
+
+
+class TestDoajPostRequest(unittest.TestCase):
+    def setUp(self):
+        self.url = settings_mock.doaj_endpoint
+        self.api_key = settings_mock.doaj_api_key
+        self.logger = FakeLogger()
+        self.article_id = "00003"
+        self.response_content_success = (
+            b'{"status": "created", "id": "26ce51c630d04c8c8664410488150acc", '
+            b'"location": "/api/v2/articles/26ce51c630d04c8c8664410488150acc"}'
+        )
+
+    @patch("requests.post")
+    def test_doaj_post_request_201(self, mock_requests_post):
+        verify_ssl = False
+        data = {}
+        response_status_code = 201
+        response = FakeResponse(response_status_code)
+        response.content = self.response_content_success
+        mock_requests_post.return_value = response
+
+        doaj.doaj_post_request(
+            self.url, self.article_id, data, self.api_key, verify_ssl, self.logger
+        )
+
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "Response from DOAJ API: %s\n%s"
+            % (response_status_code, self.response_content_success),
+        )
+        self.assertEqual(
+            self.logger.loginfo[-2],
+            "Post article %s to DOAJ API: POST %s\n%s"
+            % (self.article_id, self.url, data),
+        )
+
+    @patch("requests.post")
+    def test_doaj_post_request_400(self, mock_requests_post):
+        verify_ssl = False
+        data = {}
+        response = FakeResponse(400)
+        mock_requests_post.return_value = response
+        self.assertRaises(
+            Exception,
+            doaj.doaj_post_request,
+            self.url,
+            self.article_id,
+            data,
+            self.api_key,
+            verify_ssl,
+            self.logger,
+        )

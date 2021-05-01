@@ -1,6 +1,8 @@
+from pprint import pformat
 import re
 import time
 from collections import OrderedDict
+import requests
 from elifetools import utils as etoolsutils
 
 
@@ -165,3 +167,28 @@ def title(article_json):
 
 def year(date_struct):
     return str(date_struct.tm_year)
+
+
+def doaj_post_request(url, article_id, data, api_key, verify_ssl=False, logger=None):
+    "POST JSON data to DOAJ API endpoint"
+    headers = {"Content-Type": "application/json"}
+    params = {"api_key": api_key}
+    response = requests.post(
+        url, params=params, json=data, verify=verify_ssl, headers=headers
+    )
+    if logger:
+        logger.info(
+            "Post article %s to DOAJ API: POST %s\n%s"
+            % (article_id, url, pformat(data))
+        )
+        logger.info(
+            "Response from DOAJ API: %s\n%s" % (response.status_code, response.content)
+        )
+    status_code = response.status_code
+    if not 300 > status_code >= 200:
+        raise Exception(
+            "Error in doaj_post_request %s to DOAJ API: %s\n%s"
+            % (article_id, status_code, response.content)
+        )
+
+    return response
