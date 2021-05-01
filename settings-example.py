@@ -309,6 +309,8 @@ class exp():
     # DOAJ deposit settings
     journal_eissn = ""
     doaj_url_link_pattern = "https://example.org/articles/{article_id}"
+    doaj_endpoint = "https://doaj/api/v2/articles"
+    doaj_api_key = ""
 
 
 class dev():
@@ -604,6 +606,8 @@ class dev():
     # DOAJ deposit settings
     journal_eissn = ""
     doaj_url_link_pattern = "https://example.org/articles/{article_id}"
+    doaj_endpoint = "https://doaj/api/v2/articles"
+    doaj_api_key = ""
 
 
 class live():
@@ -900,6 +904,8 @@ class live():
     # DOAJ deposit settings
     journal_eissn = ""
     doaj_url_link_pattern = "https://example.org/articles/{article_id}"
+    doaj_endpoint = "https://doaj/api/v2/articles"
+    doaj_api_key = ""
 
 
 def get_settings(ENV="dev"):
