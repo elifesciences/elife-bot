@@ -59,10 +59,9 @@ class activity_DepositDOAJ(Activity):
 
         # get JSON from Lax
         try:
-            status_code, article_json_string = lax_provider.article_json(
+            status_code, article_json = lax_provider.article_json(
                 article_id, self.settings
             )
-            article_json = json.loads(article_json_string)
             self.statuses["build"] = True
         except Exception as exception:
             self.logger.exception(
