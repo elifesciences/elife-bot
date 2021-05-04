@@ -40,6 +40,7 @@ def start(settings):
     workflow_names.append("PostPerfectPublication")
     workflow_names.append("IngestDigest")
     workflow_names.append("IngestDecisionLetter")
+    workflow_names.append("DepositDOAJ")
     workflow_names.append("SoftwareHeritageDeposit")
 
     for workflow_name in workflow_names:
@@ -111,6 +112,7 @@ def start(settings):
     activity_names.append("DecisionLetterReceipt")
     activity_names.append("DepositDecisionLetterIngestAssets")
     activity_names.append("PostDecisionLetterJATS")
+    activity_names.append("DepositDOAJ")
     activity_names.append("DownstreamStart")
     activity_names.append("PackageSWH")
     activity_names.append("GenerateSWHMetadata")

@@ -209,3 +209,9 @@ typesetter_decision_letter_api_key = 'typesetter_api_key'
 typesetter_decision_letter_account_key = '1'
 decision_letter_jats_recipient_email = ["e@example.org", "life@example.org"]
 decision_letter_jats_error_recipient_email = "error@example.org"
+
+# DOAJ deposit settings
+journal_eissn = "2050-084X"
+doaj_url_link_pattern = "https://elifesciences.org/articles/{article_id}"
+doaj_endpoint = "https://doaj/api/v2/articles"
+doaj_api_key = ""

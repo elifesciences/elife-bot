@@ -51,6 +51,13 @@ def lax_auth_key(settings, auth=False):
     return 'public'
 
 
+def article_json(article_id, settings, auth=False):
+    "get json for the latest article version from lax"
+    url = settings.lax_article_endpoint.replace('{article_id}', article_id)
+    return lax_request(url, article_id, settings.verify_ssl, None,
+                       lax_auth_key(settings, auth))
+
+
 def article_versions(article_id, settings, auth=False):
     "get json for article versions from lax"
     url = settings.lax_article_versions.replace('{article_id}', article_id)

@@ -41,6 +41,7 @@ class exp():
     digest_cdn_bucket = 'elife-published/digests'
     archive_bucket = 'elife-publishing-archive'
 
+    lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
     verify_ssl = True  # False when testing
@@ -305,6 +306,12 @@ class exp():
     # BigQuery settings
     big_query_project_id = ''
 
+    # DOAJ deposit settings
+    journal_eissn = ""
+    doaj_url_link_pattern = "https://example.org/articles/{article_id}"
+    doaj_endpoint = "https://doaj/api/v2/articles"
+    doaj_api_key = ""
+
 
 class dev():
     # AWS settings
@@ -335,6 +342,7 @@ class dev():
     digest_cdn_bucket = 'elife-published/digests'
     archive_bucket = 'elife-publishing-archive'
 
+    lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
     verify_ssl = True  # False when testing
@@ -595,6 +603,12 @@ class dev():
     # BigQuery settings
     big_query_project_id = ''
 
+    # DOAJ deposit settings
+    journal_eissn = ""
+    doaj_url_link_pattern = "https://example.org/articles/{article_id}"
+    doaj_endpoint = "https://doaj/api/v2/articles"
+    doaj_api_key = ""
+
 
 class live():
     # AWS settings
@@ -626,6 +640,7 @@ class live():
     digest_cdn_bucket = 'prod-elife-published/digests'
     archive_bucket = 'prod-elife-publishing-archive'
 
+    lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
     verify_ssl = True  # False when testing
@@ -885,6 +900,12 @@ class live():
 
     # BigQuery settings
     big_query_project_id = ''
+
+    # DOAJ deposit settings
+    journal_eissn = ""
+    doaj_url_link_pattern = "https://example.org/articles/{article_id}"
+    doaj_endpoint = "https://doaj/api/v2/articles"
+    doaj_api_key = ""
 
 
 def get_settings(ENV="dev"):
