@@ -61,6 +61,14 @@ class activity_DepositDOAJ(Activity):
             )
             return self.ACTIVITY_TEMPORARY_FAILURE
 
+        # check for VoR status
+        if not article_json.get("status") == "vor":
+            self.logger.info(
+                "%s, article_id %s is not VoR status and will not be deposited"
+                % (self.name, article_id)
+            )
+            return self.ACTIVITY_SUCCESS
+
         # convert Lax JSON to DOAJ JSON
         try:
             doaj_json = doaj.doaj_json(article_json, self.settings)

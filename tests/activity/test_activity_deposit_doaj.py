@@ -107,6 +107,24 @@ class TestDepositDOAJ(unittest.TestCase):
             ),
         )
 
+    @patch.object(lax_provider, "article_json")
+    @patch.object(activity_module, "get_session")
+    def test_do_activity_article_poa_status(self, mock_session, fake_article_json):
+        mock_session.return_value = self.session
+        poa_article_json_string = self.article_json_string.replace(b'"vor"', b'"poa"')
+        fake_article_json.return_value = (200, poa_article_json_string)
+        # do the activity
+        result = self.activity.do_activity(self.data)
+
+        # check assertions
+        self.assertEqual(result, self.activity.ACTIVITY_SUCCESS)
+        self.assertEqual(
+            self.activity.logger.loginfo[-1],
+            (
+                "DepositDOAJ, article_id 65469 is not VoR status and will not be deposited"
+            ),
+        )
+
     @patch.object(doaj, "doaj_json")
     @patch.object(lax_provider, "article_json")
     @patch.object(activity_module, "get_session")
