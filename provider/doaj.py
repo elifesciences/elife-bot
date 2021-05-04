@@ -36,7 +36,7 @@ def bibjson(article_json, settings=None):
         article_json, eissn=getattr(settings, "journal_eissn", None)
     )
     bibjson["journal"] = journal(article_json)
-    bibjson["keywords"] = keywords(article_json.get("keywords", []))
+    bibjson["keywords"] = keywords(article_json.get("keywords", []), max=6)
     bibjson["link"] = link(
         article_json, url_link_pattern=getattr(settings, "doaj_url_link_pattern", None)
     )
@@ -132,7 +132,8 @@ def journal(article_json):
     return journal_json
 
 
-def keywords(keywords_json):
+def keywords(keywords_json, max=6):
+    # DOAJ allows up to six keywords per article
     keyword_list = []
     for keyword in keywords_json:
         # check for any HTML tags to remove
@@ -140,7 +141,7 @@ def keywords(keywords_json):
             for tag_name in REMOVE_TITLE_TAGS:
                 keyword = etoolsutils.remove_tag(tag_name, keyword)
         keyword_list.append(keyword)
-    return keyword_list
+    return keyword_list[:max]
 
 
 def link(article_json, url_link_pattern=None):
