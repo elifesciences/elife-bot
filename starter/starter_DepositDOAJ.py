@@ -2,7 +2,6 @@ import json
 import uuid
 from optparse import OptionParser
 from provider import utils
-from provider.execution_context import get_session
 from starter.objects import Starter, default_workflow_params
 from starter.starter_helper import NullRequiredDataException
 
@@ -11,7 +10,7 @@ class starter_DepositDOAJ(Starter):
     def __init__(self, settings=None, logger=None):
         super(starter_DepositDOAJ, self).__init__(settings, logger, "DepositDOAJ")
 
-    def get_workflow_params(self, run, info):
+    def get_workflow_params(self, info):
         workflow_params = default_workflow_params(self.settings)
         workflow_params["workflow_id"] = "%s_%s" % (
             self.name,
@@ -22,21 +21,17 @@ class starter_DepositDOAJ(Starter):
         workflow_params["execution_start_to_close_timeout"] = str(60 * 15)
 
         input_data = info
-        input_data["run"] = run
         workflow_params["input"] = json.dumps(input_data, default=lambda ob: None)
 
         return workflow_params
 
-    def start(self, settings, run, info):
+    def start(self, settings, info):
         """method for backwards compatibility"""
         self.settings = settings
         self.instantiate_logger()
-        self.start_workflow(run, info)
+        self.start_workflow(info)
 
-    def start_workflow(self, run=None, info=None):
-
-        if run is None:
-            run = str(uuid.uuid4())
+    def start_workflow(self, info=None):
 
         if not info:
             raise NullRequiredDataException(
@@ -48,13 +43,9 @@ class starter_DepositDOAJ(Starter):
                     "Did not get a %s in starter %s" % (info_key, self.name)
                 )
 
-        # save article_id into the session for stand-alone workflow execution
-        session = get_session(self.settings, info, run)
-        session.store_value("article_id", info.get("article_id"))
-
         self.connect_to_swf()
 
-        workflow_params = self.get_workflow_params(run, info)
+        workflow_params = self.get_workflow_params(info)
 
         # start a workflow execution
         self.logger.info("Starting workflow: %s", workflow_params.get("workflow_id"))
@@ -111,4 +102,4 @@ if __name__ == "__main__":
 
     info = {"article_id": utils.pad_msid(doi_id)}
 
-    o.start(settings=settings, run=None, info=info)
+    o.start(settings=settings, info=info)

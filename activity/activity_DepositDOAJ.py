@@ -36,16 +36,26 @@ class activity_DepositDOAJ(Activity):
             )
             return self.ACTIVITY_SUCCESS
 
-        try:
-            run = data["run"]
-            session = get_session(self.settings, data, run)
-            article_id = session.get_value("article_id")
-        except Exception as exception:
-            self.logger.exception(
-                "Exception in %s getting article_id from session, run %s: %s"
-                % (self.name, run, str(exception)),
+        if data and not data.get("run"):
+            # get article_id from the workflow input data if this activity is not part of a run
+            article_id = data.get("article_id")
+            self.logger.info(
+                "%s got article_id %s from input data" % (self.name, article_id)
             )
-            return self.ACTIVITY_PERMANENT_FAILURE
+        else:
+            try:
+                run = data["run"]
+                session = get_session(self.settings, data, run)
+                article_id = session.get_value("article_id")
+                self.logger.info(
+                    "%s got article_id %s from session data" % (self.name, article_id)
+                )
+            except Exception as exception:
+                self.logger.exception(
+                    "Exception in %s getting article_id from session, run %s: %s"
+                    % (self.name, run, str(exception)),
+                )
+                return self.ACTIVITY_PERMANENT_FAILURE
 
         # get JSON from Lax
         try:

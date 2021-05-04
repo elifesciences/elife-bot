@@ -48,6 +48,43 @@ class TestDepositDOAJ(unittest.TestCase):
             "DepositDOAJ doaj_json for article_id 65469: %s" % expected_doaj_json
         )
         self.assertEqual(self.activity.logger.loginfo[-2], doaj_json_loginfo_expected)
+        self.assertEqual(
+            self.activity.logger.loginfo[-3],
+            "DepositDOAJ got article_id 65469 from session data",
+        )
+
+    @patch("requests.post")
+    @patch.object(lax_provider, "article_json")
+    def test_do_activity_article_id_from_data(self, fake_article_json, fake_post):
+        "test passing the article_id as data rather than from a run session"
+        data = {
+            "article_id": "65469",
+        }
+        fake_article_json.return_value = (200, self.article_json_string)
+        response = FakeResponse(201)
+        fake_post.return_value = response
+        expected_doaj_json = read_fixture("e65469_doaj_json.py", "doaj")
+
+        # do the activity
+        result = self.activity.do_activity(data)
+
+        # check assertions
+        self.assertEqual(result, self.activity.ACTIVITY_SUCCESS)
+        self.assertEqual(
+            self.activity.logger.loginfo[-1],
+            (
+                "DepositDOAJ for article_id 65469 statuses: "
+                "{'download': True, 'build': True, 'post': True}"
+            ),
+        )
+        doaj_json_loginfo_expected = (
+            "DepositDOAJ doaj_json for article_id 65469: %s" % expected_doaj_json
+        )
+        self.assertEqual(self.activity.logger.loginfo[-2], doaj_json_loginfo_expected)
+        self.assertEqual(
+            self.activity.logger.loginfo[-3],
+            "DepositDOAJ got article_id 65469 from input data",
+        )
 
     def test_do_activity_settings_no_endpoint(self):
         self.activity.settings = {}
