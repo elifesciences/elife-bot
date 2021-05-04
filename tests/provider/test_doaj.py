@@ -284,6 +284,7 @@ class TestDoajJournal(unittest.TestCase):
 
 class TestDoajKeywords(unittest.TestCase):
     def test_keywords(self):
+        # maximum number of keywords per article is six
         keywords_json = [
             "integrated stress response",
             "remyelination",
@@ -291,7 +292,7 @@ class TestDoajKeywords(unittest.TestCase):
             "oligodendrocyte",
             "cuprizone",
             "multiple sclerosis",
-            "<i>eLife</i>",
+            "seventh keyword",
         ]
         expected = [
             "integrated stress response",
@@ -300,6 +301,14 @@ class TestDoajKeywords(unittest.TestCase):
             "oligodendrocyte",
             "cuprizone",
             "multiple sclerosis",
+        ]
+        self.assertEqual(doaj.keywords(keywords_json), expected)
+
+    def test_keywords_italic(self):
+        keywords_json = [
+            "<i>eLife</i>",
+        ]
+        expected = [
             "eLife",
         ]
         self.assertEqual(doaj.keywords(keywords_json), expected)
