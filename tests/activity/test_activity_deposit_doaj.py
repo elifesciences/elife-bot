@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import unittest
+import json
 from mock import patch
 import activity.activity_DepositDOAJ as activity_module
 from activity.activity_DepositDOAJ import activity_DepositDOAJ as activity_object
@@ -20,14 +21,14 @@ class TestDepositDOAJ(unittest.TestCase):
                 "article_id": "65469",
             }
         )
-        self.article_json_string = read_fixture("e65469_article_json.txt", "doaj")
+        self.article_json = json.loads(read_fixture("e65469_article_json.txt", "doaj"))
 
     @patch("requests.post")
     @patch.object(lax_provider, "article_json")
     @patch.object(activity_module, "get_session")
     def test_do_activity(self, mock_session, fake_article_json, fake_post):
         mock_session.return_value = self.session
-        fake_article_json.return_value = (200, self.article_json_string)
+        fake_article_json.return_value = (200, self.article_json)
         response = FakeResponse(201)
         fake_post.return_value = response
         expected_doaj_json = read_fixture("e65469_doaj_json.py", "doaj")
@@ -60,7 +61,7 @@ class TestDepositDOAJ(unittest.TestCase):
         data = {
             "article_id": "65469",
         }
-        fake_article_json.return_value = (200, self.article_json_string)
+        fake_article_json.return_value = (200, self.article_json)
         response = FakeResponse(201)
         fake_post.return_value = response
         expected_doaj_json = read_fixture("e65469_doaj_json.py", "doaj")
@@ -148,8 +149,9 @@ class TestDepositDOAJ(unittest.TestCase):
     @patch.object(activity_module, "get_session")
     def test_do_activity_article_poa_status(self, mock_session, fake_article_json):
         mock_session.return_value = self.session
-        poa_article_json_string = self.article_json_string.replace(b'"vor"', b'"poa"')
-        fake_article_json.return_value = (200, poa_article_json_string)
+        poa_article_json = self.article_json
+        poa_article_json["status"] = "poa"
+        fake_article_json.return_value = (200, poa_article_json)
         # do the activity
         result = self.activity.do_activity(self.data)
 
@@ -169,7 +171,7 @@ class TestDepositDOAJ(unittest.TestCase):
         self, mock_session, fake_article_json, fake_doaj_json
     ):
         mock_session.return_value = self.session
-        fake_article_json.return_value = (200, self.article_json_string)
+        fake_article_json.return_value = (200, self.article_json)
         fake_doaj_json.side_effect = Exception("Exception building json")
         # do the activity
         result = self.activity.do_activity(self.data)
@@ -191,7 +193,7 @@ class TestDepositDOAJ(unittest.TestCase):
         self, mock_session, fake_article_json, fake_post
     ):
         mock_session.return_value = self.session
-        fake_article_json.return_value = (200, self.article_json_string)
+        fake_article_json.return_value = (200, self.article_json)
         fake_post.side_effect = Exception("DOAJ endpoint exception")
         # do the activity
         result = self.activity.do_activity(self.data)
