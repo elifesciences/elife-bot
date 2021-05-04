@@ -29,6 +29,14 @@ class TestDoajProvider(unittest.TestCase):
         doaj_json = doaj.doaj_json(article_json, settings_mock)
         self.assertEqual(doaj_json, expected)
 
+    def test_doaj_json_no_abstract(self):
+        "no error when an article json has no abstract"
+        article_json_string = read_fixture("e65469_article_json.txt", "doaj")
+        article_json = json.loads(article_json_string)
+        del article_json["abstract"]
+        doaj_json = doaj.doaj_json(article_json, settings_mock)
+        self.assertIsNotNone(doaj_json)
+
 
 class TestDoajAbstract(unittest.TestCase):
     def test_abstract(self):
