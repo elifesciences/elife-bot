@@ -40,6 +40,7 @@ def start(settings):
     workflow_names.append("PostPerfectPublication")
     workflow_names.append("IngestDigest")
     workflow_names.append("IngestDecisionLetter")
+    workflow_names.append("DepositDOAJ")
     workflow_names.append("SoftwareHeritageDeposit")
 
     for workflow_name in workflow_names:
