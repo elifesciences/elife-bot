@@ -83,6 +83,9 @@ def author(authors_json):
         if author.get("type") == "group":
             # format group author name
             author_json["name"] = author.get("name")
+        elif author.get("type") == "on-behalf-of":
+            # format group author name
+            author_json["name"] = author.get("onBehalfOf")
         else:
             # person name
             author_json["name"] = author.get("name").get("preferred")

@@ -232,6 +232,25 @@ class TestDoajAuthor(unittest.TestCase):
         ]
         self.assertEqual(doaj.author(authors_json), expected)
 
+    def test_author_on_behalf_of(self):
+        authors_json = [
+            {
+                "onBehalfOf": "for the HIV Genome-to-Genome Study and the Swiss HIV Cohort Study",
+                "type": "on-behalf-of",
+            }
+        ]
+        expected = [
+            OrderedDict(
+                [
+                    (
+                        "name",
+                        "for the HIV Genome-to-Genome Study and the Swiss HIV Cohort Study",
+                    ),
+                ]
+            )
+        ]
+        self.assertEqual(doaj.author(authors_json), expected)
+
 
 class TestDoajAffiliationString(unittest.TestCase):
     def test_affiliation_string(self):
