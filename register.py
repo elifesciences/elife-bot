@@ -111,6 +111,7 @@ def start(settings):
     activity_names.append("DecisionLetterReceipt")
     activity_names.append("DepositDecisionLetterIngestAssets")
     activity_names.append("PostDecisionLetterJATS")
+    activity_names.append("DepositDOAJ")
     activity_names.append("DownstreamStart")
     activity_names.append("PackageSWH")
     activity_names.append("GenerateSWHMetadata")
