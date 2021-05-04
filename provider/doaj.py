@@ -29,7 +29,8 @@ def doaj_json(article_json, settings=None):
 
 def bibjson(article_json, settings=None):
     bibjson = OrderedDict()
-    bibjson["abstract"] = abstract(article_json.get("abstract", {}))
+    if article_json.get("abstract"):
+        bibjson["abstract"] = abstract(article_json.get("abstract", {}))
     bibjson["author"] = author(article_json.get("authors", []))
     bibjson["identifier"] = identifier(
         article_json, eissn=getattr(settings, "journal_eissn", None)
