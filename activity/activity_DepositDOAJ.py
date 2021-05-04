@@ -42,8 +42,8 @@ class activity_DepositDOAJ(Activity):
             article_id = session.get_value("article_id")
         except Exception as exception:
             self.logger.exception(
-                "Exception in %s getting article_id from session, run %s: %s" %
-                (self.name, run, str(exception)),
+                "Exception in %s getting article_id from session, run %s: %s"
+                % (self.name, run, str(exception)),
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
@@ -56,8 +56,8 @@ class activity_DepositDOAJ(Activity):
             self.statuses["build"] = True
         except Exception as exception:
             self.logger.exception(
-                "Exception in %s getting article json using lax_provider, article_id %s: %s" %
-                (self.name, article_id, str(exception))
+                "Exception in %s getting article json using lax_provider, article_id %s: %s"
+                % (self.name, article_id, str(exception))
             )
             return self.ACTIVITY_TEMPORARY_FAILURE
 
@@ -72,12 +72,15 @@ class activity_DepositDOAJ(Activity):
         # convert Lax JSON to DOAJ JSON
         try:
             doaj_json = doaj.doaj_json(article_json, self.settings)
-            self.logger.info("%s doaj_json for article_id %s: %s" % (self.name, article_id, doaj_json))
+            self.logger.info(
+                "%s doaj_json for article_id %s: %s"
+                % (self.name, article_id, doaj_json)
+            )
             self.statuses["download"] = True
         except Exception as exception:
             self.logger.exception(
-                "Exception in %s building DOAJ json, article_id %s: %s" %
-                (self.name, article_id, str(exception)),
+                "Exception in %s building DOAJ json, article_id %s: %s"
+                % (self.name, article_id, str(exception)),
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
@@ -92,8 +95,8 @@ class activity_DepositDOAJ(Activity):
             self.statuses["post"] = True
         except Exception as exception:
             self.logger.exception(
-                "Exception in %s posting to DOAJ API endpoint, article_id %s: %s" %
-                (self.name, article_id, str(exception)),
+                "Exception in %s posting to DOAJ API endpoint, article_id %s: %s"
+                % (self.name, article_id, str(exception)),
             )
             return self.ACTIVITY_TEMPORARY_FAILURE
 
