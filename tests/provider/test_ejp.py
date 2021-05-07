@@ -3,12 +3,14 @@
 import unittest
 import json
 import os
+import arrow
 from provider.ejp import EJP
 import tests.settings_mock as settings_mock
 from testfixtures import tempdir
 from testfixtures import TempDirectory
 from mock import patch, MagicMock
 from ddt import ddt, data, unpack
+from tests.activity.classes_mock import FakeBucket
 
 
 @ddt
@@ -121,6 +123,37 @@ class TestProviderEJP(unittest.TestCase):
         self.assertEqual(column_headings, self.editor_column_headings)
         self.assertEqual(authors, expected_editors)
 
+    @patch.object(arrow, "utcnow")
+    @patch("provider.ejp.EJP.get_bucket")
+    @data(
+        ('author', 'ejp_query_tool_query_id_15a)_Accepted_Paper_Details_2019_06_10_eLife.csv'),
+        ('editor', 'ejp_query_tool_query_id_15b)_Accepted_Paper_Details_2019_06_10_eLife.csv'),
+        ('poa_manuscript', 'ejp_query_tool_query_id_POA_Manuscript_2019_06_10_eLife.csv'),
+        ('poa_author', 'ejp_query_tool_query_id_POA_Author_2019_06_10_eLife.csv'),
+        ('poa_license', 'ejp_query_tool_query_id_POA_License_2019_06_10_eLife.csv'),
+        ('poa_subject_area', 'ejp_query_tool_query_id_POA_Subject_Area_2019_06_10_eLife.csv'),
+        ('poa_received', 'ejp_query_tool_query_id_POA_Received_2019_06_10_eLife.csv'),
+        ('poa_research_organism',
+         'ejp_query_tool_query_id_POA_Research_Organism_2019_06_10_eLife.csv'),
+        ('poa_abstract', 'ejp_query_tool_query_id_POA_Abstract_2019_06_10_eLife.csv'),
+        ('poa_title', 'ejp_query_tool_query_id_POA_Title_2019_06_10_eLife.csv'),
+        ('poa_keywords', 'ejp_query_tool_query_id_POA_Keywords_2019_06_10_eLife.csv'),
+        ('poa_group_authors', 'ejp_query_tool_query_id_POA_Group_Authors_2019_06_10_eLife.csv'),
+        ('poa_datasets', 'ejp_query_tool_query_id_POA_Datasets_2019_06_10_eLife.csv'),
+        ('poa_funding', 'ejp_query_tool_query_id_POA_Funding_2019_06_10_eLife.csv'),
+        ('poa_ethics', 'ejp_query_tool_query_id_POA_Ethics_2019_06_10_eLife.csv'),
+    )
+    @unpack
+    def test_find_latest_s3_file_name_by_convention(self, file_type, expected_s3_key_name, fake_get_bucket, fake_utcnow):
+        """test finding latest CSV file names by their expected file name"""
+        fake_get_bucket.return_value = FakeBucket()
+        fake_utcnow.return_value = arrow.arrow.Arrow(2019, 6, 10)
+        # call the function
+        s3_key_name = self.ejp.find_latest_s3_file_name(file_type)
+        # assert results
+        self.assertEqual(s3_key_name, expected_s3_key_name)
+
+    @patch("provider.ejp.EJP.latest_s3_file_name_by_convention")
     @patch('provider.ejp.EJP.ejp_bucket_file_list')
     @data(
         ('author', 'ejp_query_tool_query_id_15a)_Accepted_Paper_Details_2019_06_10_eLife.csv'),
@@ -142,8 +175,9 @@ class TestProviderEJP(unittest.TestCase):
     )
     @unpack
     def test_find_latest_s3_file_name_new(self, file_type, expected_s3_key_name,
-                                          fake_ejp_bucket_file_list):
+                                          fake_ejp_bucket_file_list, fake_by_convention):
         """from new file naming find the latest CSV file names"""
+        fake_by_convention.return_value = None
         bucket_list_file_new = os.path.join("tests", "test_data", "ejp_bucket_list_new.json")
         # mock things
         ejp_bucket_file_list = []

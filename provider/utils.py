@@ -85,10 +85,15 @@ def unicode_encode(string):
     return bytes_decode(string)
 
 
-def set_datestamp():
+def set_datestamp(glue=""):
     arrow_date = arrow.utcnow()
-    date_stamp = (str(arrow_date.datetime.year) + str(arrow_date.datetime.month).zfill(2) +
-                  str(arrow_date.datetime.day).zfill(2))
+    date_stamp = glue.join(
+        [
+            str(arrow_date.datetime.year),
+            str(arrow_date.datetime.month).zfill(2),
+            str(arrow_date.datetime.day).zfill(2),
+        ]
+    )
     return date_stamp
 
 

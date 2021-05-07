@@ -3,6 +3,7 @@
 import unittest
 import time
 import sys
+import arrow
 from mock import patch
 from ddt import ddt, data, unpack
 import provider.utils as utils
@@ -104,6 +105,19 @@ class TestUtils(unittest.TestCase):
         encoded_value = utils.unicode_encode(value)
         self.assertEqual(encoded_value, expected)
         self.assertEqual(type(encoded_value), expected_type)
+
+    @patch.object(arrow, "utcnow")
+    def test_set_datestamp(self, fake_utcnow):
+        fake_utcnow.return_value = arrow.arrow.Arrow(2021, 1, 1)
+        expected = "20210101"
+        self.assertEqual(utils.set_datestamp(), expected)
+
+    @patch.object(arrow, "utcnow")
+    def test_set_datestamp_glued(self, fake_utcnow):
+        fake_utcnow.return_value = arrow.arrow.Arrow(2021, 1, 1)
+        glue = "_"
+        expected = "2021_01_01"
+        self.assertEqual(utils.set_datestamp(glue), expected)
 
     def test_get_doi_url(self):
         doi_url = utils.get_doi_url("10.7554/eLife.08411")
