@@ -10,7 +10,7 @@ from testfixtures import tempdir
 from testfixtures import TempDirectory
 from mock import patch, MagicMock
 from ddt import ddt, data, unpack
-from tests.activity.classes_mock import FakeBucket
+from tests.activity.classes_mock import FakeBucket, FakeKey
 
 
 @ddt
@@ -123,6 +123,7 @@ class TestProviderEJP(unittest.TestCase):
         self.assertEqual(column_headings, self.editor_column_headings)
         self.assertEqual(authors, expected_editors)
 
+    @patch.object(FakeBucket, "get_key")
     @patch.object(arrow, "utcnow")
     @patch("provider.ejp.EJP.get_bucket")
     @data(
@@ -144,9 +145,17 @@ class TestProviderEJP(unittest.TestCase):
         ('poa_ethics', 'ejp_query_tool_query_id_POA_Ethics_2019_06_10_eLife.csv'),
     )
     @unpack
-    def test_find_latest_s3_file_name_by_convention(self, file_type, expected_s3_key_name, fake_get_bucket, fake_utcnow):
+    def test_find_latest_s3_file_name_by_convention(
+        self,
+        file_type,
+        expected_s3_key_name,
+        fake_get_bucket,
+        fake_utcnow,
+        fake_get_key,
+    ):
         """test finding latest CSV file names by their expected file name"""
         fake_get_bucket.return_value = FakeBucket()
+        fake_get_key.return_value = FakeKey(name=expected_s3_key_name)
         fake_utcnow.return_value = arrow.arrow.Arrow(2019, 6, 10)
         # call the function
         s3_key_name = self.ejp.find_latest_s3_file_name(file_type)
