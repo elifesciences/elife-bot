@@ -124,6 +124,7 @@ class TestPackagePOA(unittest.TestCase):
 
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('activity.activity_PackagePOA.storage_context')
+    @patch("provider.ejp.EJP.latest_s3_file_name_by_convention")
     @patch('provider.ejp.EJP.ejp_bucket_file_list')
     @patch.object(lax_provider, 'article_publication_date')
     @patch.object(activity_PackagePOA, 'clean_tmp_dir')
@@ -198,7 +199,7 @@ class TestPackagePOA(unittest.TestCase):
     )
     def test_do_activity(self, test_data, fake_copy_pdf_to_output_dir, fake_clean_tmp_dir,
                          fake_article_publication_date, fake_ejp_bucket_file_list,
-                         fake_storage_context, fake_email_smtp_connect):
+                         fake_by_convention, fake_storage_context, fake_email_smtp_connect):
         # make directories first
         self.poa.make_activity_directories()
         # mock things
@@ -209,6 +210,7 @@ class TestPackagePOA(unittest.TestCase):
         bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list_new.json")
         with open(bucket_list_file, 'rb') as open_file:
             fake_ejp_bucket_file_list.return_value = json.loads(open_file.read().decode())
+        fake_by_convention.return_value = None
         fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
         if "pub_date" in test_data and test_data["pub_date"]:
             fake_article_publication_date.return_value = test_data["pub_date"]
@@ -270,6 +272,7 @@ class TestPackagePOA(unittest.TestCase):
     @patch.object(activity_PackagePOA, 'generate_xml')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('activity.activity_PackagePOA.storage_context')
+    @patch("provider.ejp.EJP.latest_s3_file_name_by_convention")
     @patch('provider.ejp.EJP.ejp_bucket_file_list')
     @patch.object(lax_provider, 'article_publication_date')
     @patch.object(activity_PackagePOA, 'clean_tmp_dir')
@@ -288,7 +291,7 @@ class TestPackagePOA(unittest.TestCase):
     )
     def test_do_activity_generate_xml_exception(
             self, test_data, fake_copy_pdf_to_output_dir, fake_clean_tmp_dir,
-            fake_article_publication_date, fake_ejp_bucket_file_list,
+            fake_article_publication_date, fake_ejp_bucket_file_list, fake_by_convention,
             fake_storage_context, fake_email_smtp_connect, fake_generate_xml):
         # make directories first
         self.poa.make_activity_directories()
@@ -299,6 +302,7 @@ class TestPackagePOA(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
         test_outbox_folder = activity_test_data.ExpandArticle_files_dest_folder
         bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list_new.json")
+        fake_by_convention.return_value = None
         with open(bucket_list_file, 'rb') as open_file:
             fake_ejp_bucket_file_list.return_value = json.loads(open_file.read().decode())
         fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
@@ -363,8 +367,9 @@ class TestPackagePOA(unittest.TestCase):
             'Exception in build_xml_to_disk for article_id 12717: An exception')
 
     @patch('activity.activity_PackagePOA.storage_context')
+    @patch("provider.ejp.EJP.latest_s3_file_name_by_convention")
     @patch('provider.ejp.EJP.ejp_bucket_file_list')
-    def test_download_latest_csv(self, fake_ejp_bucket_file_list, fake_storage_context):
+    def test_download_latest_csv(self, fake_ejp_bucket_file_list, fake_by_convention, fake_storage_context):
         "test downloading CSV files from bucket storage"
         # make directories first
         self.poa.make_activity_directories()
@@ -373,6 +378,7 @@ class TestPackagePOA(unittest.TestCase):
         bucket_list_file = os.path.join("tests", "test_data", "ejp_bucket_list_new.json")
         with open(bucket_list_file, 'rb') as open_file:
             fake_ejp_bucket_file_list.return_value = json.loads(open_file.read().decode())
+        fake_by_convention.return_value = None
         # download the CSV files
         self.poa.download_latest_csv()
         # make assertions
