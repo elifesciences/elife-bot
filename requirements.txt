@@ -7,9 +7,9 @@ beautifulsoup4==4.7.1
 lxml==4.6.3
 python-slugify==1.2.4
 git+https://github.com/elifesciences/elife-tools.git@8ef9fd866909749bb23c23b9b76364cef8a25fcf#egg=elifetools
-git+https://github.com/elifesciences/elife-article.git@a3cc8244d3ddcb45039d8a3d876dfd4673c9975e#egg=elifearticle
+elifearticle==0.2.0
 configparser==3.5.0
-git+https://github.com/elifesciences/elife-crossref-xml-generation.git@1c4d2d9755634ef8440dc27fcc074bd56f01fe2c#egg=elifecrossref
+elifecrossref==0.2.0
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@ebd128176df5044673a9dd4777ff432dcd8aaa66#egg=elifepubmed
 git+https://github.com/elifesciences/ejp-csv-parser.git@2e07c7a9bf60c435dac78207858b4c80d250511a#egg=ejpcsvparser
 git+https://github.com/elifesciences/jats-generator.git@7dde779b334e7d554174dbed1a78d63603ded293#egg=jatsgenerator
