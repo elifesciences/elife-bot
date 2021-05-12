@@ -78,7 +78,7 @@ class TestPostDecisionLetterJats(unittest.TestCase):
         self.assertEqual(result, expected_result)
         self.assertTrue(self.activity.post_error_message.startswith(
             'POST was not successful, details: Error posting decision letter JATS to endpoint'
-            ' https://typesetter/decisionLetter: status_code: 500\n'
+            ' https://typesetter/updatedigest: status_code: 500\n'
             'request headers: {}\n'
             'request body: None\n'
             'response headers: {}\n'

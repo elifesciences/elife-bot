@@ -120,10 +120,9 @@ class activity_PostDecisionLetterJATS(Activity):
         """prepare and POST jats to API endpoint"""
         url = self.settings.typesetter_decision_letter_endpoint
         params = requests_provider.jats_post_params(
-            self.settings.typesetter_decision_letter_api_key,
-            self.settings.typesetter_decision_letter_account_key)
+            self.settings.typesetter_decision_letter_api_key)
         payload = requests_provider.jats_post_payload(
-            'decision', doi, jats_content,
+            'decisionletter', utils.msid_from_doi(doi), jats_content,
             self.settings.typesetter_decision_letter_api_key,
             self.settings.typesetter_decision_letter_account_key)
         content_type = 'application/x-www-form-urlencoded'
