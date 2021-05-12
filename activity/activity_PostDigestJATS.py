@@ -129,9 +129,8 @@ class activity_PostDigestJATS(Activity):
         """prepare and POST jats to API endpoint"""
         url = self.settings.typesetter_digest_endpoint
         params = requests_provider.jats_post_params(
-            self.settings.typesetter_digest_api_key,
-            self.settings.typesetter_digest_account_key)
-        doi = doi_uri_to_doi(digest.doi)
+            self.settings.typesetter_digest_api_key)
+        doi = utils.msid_from_doi(doi_uri_to_doi(digest.doi))
         payload = requests_provider.jats_post_payload(
             'digest', doi, jats_content,
             self.settings.typesetter_digest_api_key,
