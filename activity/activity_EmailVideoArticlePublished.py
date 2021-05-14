@@ -139,7 +139,7 @@ class activity_EmailVideoArticlePublished(Activity):
         Download the email templates from s3
         """
         # Prepare email templates
-        self.templates.download_video_email_templates_from_s3()
+        self.templates.copy_email_templates(self.settings.email_templates_path)
         if self.templates.email_templates_warmed is not True:
             if self.logger:
                 log_info = 'EmailVideoArticlePublished email templates did not warm successfully'
