@@ -145,6 +145,7 @@ class exp():
 
     # Templates S3 settings
     templates_bucket = 'elife-bot-dev'
+    email_templates_path = "/opt/elife-email-templates"
 
     # Article subjects data
     article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
@@ -446,6 +447,7 @@ class dev():
 
     # Templates S3 settings
     templates_bucket = 'elife-bot-dev'
+    email_templates_path = "/opt/elife-email-templates"
 
     # Article subjects data
     article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
@@ -744,6 +746,7 @@ class live():
 
     # Templates S3 settings
     templates_bucket = 'elife-bot'
+    email_templates_path = "/opt/elife-email-templates"
 
     # Crossref generation
     elifecrossref_config_file = 'crossref.cfg'

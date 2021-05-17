@@ -1,6 +1,7 @@
 import json
 import os
-
+import glob
+import shutil
 from jinja2 import Environment, FileSystemLoader
 
 from boto.s3.connection import S3Connection
@@ -156,6 +157,16 @@ class Templates(object):
             self.lens_templates_warmed = False
         elif template_missing is False:
             self.lens_templates_warmed = True
+
+    def copy_email_templates(self, from_dir):
+        "copy email templates from from_dir to the tmp_dir"
+        template_file_paths = []
+        for file_type in ["html", "json"]:
+            match_pattern = "%s/*.%s" % (from_dir, file_type)
+            template_file_paths += glob.glob(match_pattern)
+        for file_path in template_file_paths:
+            shutil.copy(file_path, self.get_tmp_dir())
+        self.email_templates_warmed = True
 
     def download_templates_from_s3(self, template_list):
         "download template files from s3"

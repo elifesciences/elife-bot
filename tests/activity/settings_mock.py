@@ -34,6 +34,7 @@ ses_poa_recipient_email = ""
 ses_admin_email = ""
 ses_bcc_recipient_email = ""
 templates_bucket = ""
+email_templates_path = "tests/test_data/templates"
 ppp_cdn_bucket = 'ppd_cdn_bucket'
 digest_cdn_bucket = 'ppd_cdn_bucket/digests'
 
