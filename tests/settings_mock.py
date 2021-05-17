@@ -22,7 +22,6 @@ redis_db = 0
 redis_expire_key = 86400  # seconds
 
 ejp_bucket = 'ejp_bucket'
-templates_bucket = 'templates_bucket'
 ppp_cdn_bucket = 'ppd_cdn_bucket'
 archive_bucket = "archive_bucket"
 bot_bucket = 'bot_bucket'

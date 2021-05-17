@@ -23,85 +23,54 @@ class TestProviderTemplates(unittest.TestCase):
 
 
     def copy_email_templates(self):
-        for template_file in self.templates.get_email_templates_list():
-            source_doc = 'tests/test_data/templates/' + template_file
+        templates_path = 'tests/test_data/templates'
+        for template_file in os.listdir(templates_path):
+            source_doc = os.path.join(templates_path, template_file)
             dest_doc = os.path.join(self.directory.path, template_file)
             shutil.copy(source_doc, dest_doc)
-
-    def test_get_email_templates_list(self):
-        self.assertTrue(len(self.templates.get_email_templates_list()) > 0)
-
-
-    def test_get_lens_templates_list(self):
-        self.assertTrue(len(self.templates.get_lens_templates_list()) > 0)
-
 
     def test_copy_lens_templates(self):
         from_dir = os.path.join('tests', 'test_data', 'templates')
         self.templates.copy_lens_templates(from_dir)
         self.assertTrue(self.templates.lens_templates_warmed)
 
-
-    def test_save_template_contents_to_tmp_dir(self):
-        contents = "contents"
-        template_name = "template_name"
-        result = self.templates.save_template_contents_to_tmp_dir(contents, template_name)
-        self.assertTrue(result)
-
-
-    @data(
-        ('email', 'email_header.html', 'email_templates/email_header.html'),
-        ('foo', 'email_header.html', None)
-        )
-    @unpack
-    def test_get_s3_key_name(self, template_type, template_name, expected_s3_key_name):
-        s3_key_name = self.templates.get_s3_key_name(template_type, template_name)
-        self.assertEqual(s3_key_name, expected_s3_key_name)
-
-
-    @patch('provider.templates.Templates.download_email_templates_from_s3')
-    @data(
-        ('author_publication_email', True, 'html',
-         'Header\n<p>Dear Test, <a href="http://doi.org/">read it</a> online.</p>\nFooter'),
-        ('author_publication_email', False, 'html',
-         None),
-        )
-    @unpack
-    def test_get_email_body(self, email_type, warm_templates, format, expected_body,
-                            fake_download_email_templates_from_s3):
-        fake_download_email_templates_from_s3 = MagicMock()
+    def test_get_email_body(self):
         # set templates to warmed and copy some template files
-        if warm_templates is True:
-            self.copy_email_templates()
-            self.templates.email_templates_warmed = True
+        email_type = "author_publication_email"
+        email_format = "html"
         author = {"first_nm": "Test"}
         article_data = {"doi_url": "http://doi.org/"}
         authors = None
-        body = self.templates.get_email_body(email_type, author, article_data, authors, format)
+        expected_body = ('Header\n<p>Dear Test, <a href="http://doi.org/">read it</a> online.</p>\nFooter')
+        # copy the email template files
+        self.copy_email_templates()
+        self.templates.email_templates_warmed = True
+        # render the email body
+        body = self.templates.get_email_body(email_type, author, article_data, authors, email_format)
         self.assertEqual(body, expected_body)
 
+    def test_get_email_body_exception(self):
+        # test for when templates are not warmed
+        self.templates.email_templates_warmed = False
+        with self.assertRaises(Exception):
+            self.templates.get_email_body(None, None, None, None)
 
-    @patch('provider.templates.Templates.download_email_templates_from_s3')
     @data(
-        ('author_publication_email', True, 'html',
+        ('author_publication_email', 'html',
          {}, 'press@elifesciences.org', 'author_publication_email',
          'Test, Your eLife paper is now online', 'html'),
-        ('author_publication_email', False, 'html',
-         None, '', '', '', ''),
-        )
+         )
     @unpack
-    def test_get_email_headers(self, email_type, warm_templates, format,
+    def test_get_email_headers(self, email_type, email_format,
                                expected_headers_type, expected_sender_email, expected_email_type,
-                               expected_subject, expected_format,
-                               fake_download_email_templates_from_s3):
-        fake_download_email_templates_from_s3 = MagicMock()
+                               expected_subject, expected_format):
+
         # set templates to warmed and copy some template files
-        if warm_templates is True:
-            self.copy_email_templates()
-            self.templates.email_templates_warmed = True
+        self.copy_email_templates()
+        self.templates.email_templates_warmed = True
         author = {"first_nm": "Test"}
         article_data = {"doi_url": "http://doi.org/"}
-        headers = self.templates.get_email_headers(email_type, author, article_data, format)
+        headers = self.templates.get_email_headers(email_type, author, article_data, email_format)
         self.assertEqual(type(headers), type(expected_headers_type))
         if headers:
             # compare more values if headers were produced
@@ -110,10 +79,14 @@ class TestProviderTemplates(unittest.TestCase):
             self.assertEqual(headers.get('subject'), expected_subject)
             self.assertEqual(headers.get('format'), expected_format)
 
-    @patch('provider.templates.Templates.download_email_templates_from_s3')
-    def test_get_email_headers_vor_after_poa(self, fake_download_email_templates_from_s3):
+    def test_get_email_headers_exception(self):
+        # test rendering headers for when templates are not warmed
+        self.templates.email_templates_warmed = False
+        with self.assertRaises(Exception):
+            self.templates.get_email_headers(None, None, None)
+
+    def test_get_email_headers_vor_after_poa(self, ):
         """test for backslash and quotation mark in article title"""
-        fake_download_email_templates_from_s3 = MagicMock()
         # set templates to warmed and copy some template files
         self.copy_email_templates()
         self.templates.email_templates_warmed = True
