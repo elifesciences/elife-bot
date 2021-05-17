@@ -224,11 +224,11 @@ class activity_PublicationEmail(Activity):
 
     def download_templates(self):
         """
-        Download the email templates from s3
+        Download the email templates
         """
 
         # Prepare email templates
-        self.templates.download_email_templates_from_s3()
+        self.templates.copy_email_templates(self.settings.email_templates_path)
         if self.templates.email_templates_warmed is not True:
             log_info = 'PublicationEmail email templates did not warm successfully'
             self.admin_email_content += "\n" + log_info
