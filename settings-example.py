@@ -143,8 +143,7 @@ class exp():
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
-    # Templates S3 settings
-    templates_bucket = 'elife-bot-dev'
+    # Templates settings
     email_templates_path = "/opt/elife-email-templates"
 
     # Article subjects data
@@ -445,8 +444,7 @@ class dev():
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
-    # Templates S3 settings
-    templates_bucket = 'elife-bot-dev'
+    # Templates settings
     email_templates_path = "/opt/elife-email-templates"
 
     # Article subjects data
@@ -744,8 +742,7 @@ class live():
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp'
 
-    # Templates S3 settings
-    templates_bucket = 'elife-bot'
+    # Templates settings
     email_templates_path = "/opt/elife-email-templates"
 
     # Crossref generation

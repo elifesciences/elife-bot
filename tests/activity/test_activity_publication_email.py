@@ -50,7 +50,6 @@ class TestPublicationEmail(unittest.TestCase):
             "comment": "normal article with dict input_data",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
-            "templates_warmed": True,
             "article_xml_filenames": ["elife00013.xml"],
             "article_id": "00013",
             "activity_success": True,
@@ -67,7 +66,6 @@ class TestPublicationEmail(unittest.TestCase):
             "comment": "normal article with input_data None",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": None,
-            "templates_warmed": True,
             "article_xml_filenames": ["elife03385.xml"],
             "article_id": "03385",
             "activity_success": True,
@@ -82,7 +80,6 @@ class TestPublicationEmail(unittest.TestCase):
             "comment": "basic PoA article",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_1,
             "input_data": None,
-            "templates_warmed": True,
             "article_xml_filenames": ["elife_poa_e03977.xml"],
             "article_id": "03977",
             "activity_success": True,
@@ -97,7 +94,6 @@ class TestPublicationEmail(unittest.TestCase):
             "comment": "Cannot build article",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": None,
-            "templates_warmed": True,
             "article_xml_filenames": ["does_not_exist.xml"],
             "article_id": None,
             "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE,
@@ -108,24 +104,9 @@ class TestPublicationEmail(unittest.TestCase):
             })
 
         self.do_activity_passes.append({
-            "comment": "Not warmed templates",
-            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-            "input_data": None,
-            "templates_warmed": False,
-            "article_xml_filenames": ["elife_poa_e03977.xml"],
-            "article_id": None,
-            "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE,
-            "admin_email_content_contains":
-                [
-                    'PublicationEmail email templates did not warm successfully'
-                ]
-            })
-
-        self.do_activity_passes.append({
             "comment": "article-commentary with a related article",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
-            "templates_warmed": True,
             "article_xml_filenames": ["elife-18753-v1.xml"],
             "related_article": "tests/test_data/elife-15747-v2.xml",
             "article_id": "18753",
@@ -141,7 +122,6 @@ class TestPublicationEmail(unittest.TestCase):
             "comment": "article-commentary, related article cannot be found",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
-            "templates_warmed": True,
             "article_xml_filenames": ["elife-18753-v1.xml"],
             "related_article": None,
             "article_id": "18753",
@@ -158,7 +138,6 @@ class TestPublicationEmail(unittest.TestCase):
             "comment": "article-commentary plus its matching insight",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
-            "templates_warmed": True,
             "article_xml_filenames": ["elife-18753-v1.xml", "elife-15747-v2.xml"],
             "article_id": "18753",
             "activity_success": True,
@@ -176,7 +155,6 @@ class TestPublicationEmail(unittest.TestCase):
             "comment": "feature article",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
-            "templates_warmed": True,
             "article_xml_filenames": ["elife-00353-v1.xml"],
             "article_id": "00353",
             "activity_success": True,
@@ -191,7 +169,6 @@ class TestPublicationEmail(unittest.TestCase):
             "comment": "article-commentary with no related-article tag",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
-            "templates_warmed": True,
             "article_xml_filenames": ["elife-23065-v1.xml"],
             "article_id": "23065",
             "activity_success": True,
@@ -208,7 +185,6 @@ class TestPublicationEmail(unittest.TestCase):
             "comment": "recipients from the article XML file",
             "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
             "input_data": {},
-            "templates_warmed": True,
             "article_xml_filenames": ["elife-32991-v2.xml"],
             "article_id": "23065",
             "activity_success": True,
@@ -228,19 +204,10 @@ class TestPublicationEmail(unittest.TestCase):
         TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
 
-    def fake_download_email_templates_from_s3(self, to_dir, templates_warmed):
-        template_list = self.activity.templates.get_email_templates_list()
-        for filename in template_list:
-            source_doc = "tests/test_data/templates/" + filename
-            dest_doc = os.path.join(to_dir, filename)
-            shutil.copy(source_doc, dest_doc)
-        self.activity.templates.email_templates_warmed = templates_warmed
-
     @patch.object(activity_module, 'get_related_article')
     @patch('provider.article.article.download_article_xml_from_s3')
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('provider.lax_provider.article_versions')
-    @patch.object(Templates, 'download_email_templates_from_s3')
     @patch.object(EJP, 'get_s3key')
     @patch.object(EJP, 'find_latest_s3_file_name')
     @patch.object(FakeStorageContext, 'list_resources')
@@ -248,7 +215,6 @@ class TestPublicationEmail(unittest.TestCase):
     def test_do_activity(self, fake_storage_context, fake_list_resources,
                          fake_find_latest_s3_file_name,
                          fake_ejp_get_s3key,
-                         fake_download_email_templates,
                          fake_article_versions,
                          fake_email_smtp_connect,
                          fake_download_xml,
@@ -279,9 +245,6 @@ class TestPublicationEmail(unittest.TestCase):
             fake_article_versions.return_value = (
                 200, pass_test_data.get("lax_article_versions_response_data"))
 
-            self.fake_download_email_templates_from_s3(
-                self.activity.get_tmp_dir(), pass_test_data["templates_warmed"])
-
             fake_list_resources.return_value = pass_test_data["article_xml_filenames"]
 
             success = self.activity.do_activity(pass_test_data["input_data"])
@@ -304,7 +267,13 @@ class TestPublicationEmail(unittest.TestCase):
 
     @patch.object(activity_PublicationEmail, "download_templates")
     def test_do_activity_download_failure(self, fake_download_templates):
-        fake_download_templates.side_effect = Exception("Something went wrong!")
+        fake_download_templates.return_value = False
+        result = self.activity.do_activity()
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+
+    @patch.object(Templates, "copy_email_templates")
+    def test_do_activity_download_exception(self, fake_copy_email_templates):
+        fake_copy_email_templates.side_effect = Exception("Something went wrong!")
         result = self.activity.do_activity()
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
@@ -332,6 +301,14 @@ class TestPublicationEmail(unittest.TestCase):
         fake_send_emails.return_value = Exception("Something went wrong!")
         result = self.activity.do_activity()
         self.assertEqual(result, True)
+
+    @patch.object(Templates, "copy_email_templates")
+    def test_download_templates_failure(self, fake_copy_email_templates):
+        fake_copy_email_templates.return_value = False
+        result = self.activity.download_templates()
+        self.assertFalse(result)
+        self.assertEqual(self.activity.logger.loginfo[-1],
+            "PublicationEmail email templates did not warm successfully")
 
     @patch('provider.article.article.download_article_xml_from_s3')
     @patch('provider.lax_provider.article_versions')
@@ -385,10 +362,9 @@ class TestPublicationEmail(unittest.TestCase):
             article_type, is_poa, was_ever_poa, feature_article)
         self.assertEqual(email_type, expected_email_type)
 
-    @patch.object(Templates, 'download_email_templates_from_s3')
-    def test_template_get_email_headers_00013(self, fake_download_email_templates):
+    def test_template_get_email_headers_00013(self):
 
-        self.fake_download_email_templates_from_s3(self.activity.get_tmp_dir(), True)
+        self.activity.download_templates()
 
         email_type = "author_publication_email_VOR_no_POA"
 
@@ -422,10 +398,9 @@ class TestPublicationEmail(unittest.TestCase):
 
         self.assertEqual(body, expected_headers)
 
-    @patch.object(Templates, 'download_email_templates_from_s3')
-    def test_template_get_email_body_00353(self, fake_download_email_templates):
+    def test_template_get_email_body_00353(self):
 
-        self.fake_download_email_templates_from_s3(self.activity.get_tmp_dir(), True)
+        self.activity.download_templates()
 
         email_type = "author_publication_email_Feature"
 
