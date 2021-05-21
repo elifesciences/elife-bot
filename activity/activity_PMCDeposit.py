@@ -9,7 +9,7 @@ import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import article_processing, email_provider, utils
+from provider import article_processing, email_provider, lax_provider, utils
 from provider.ftp import FTP
 from activity.objects import Activity
 
@@ -118,9 +118,17 @@ class activity_PMCDeposit(Activity):
         zip_file_path = self.directories.get("ZIP_DIR") + os.sep + self.zip_file_name
         create_new_zip(zip_file_path, self.directories.get("OUTPUT_DIR"), self.logger)
 
+        # check if the article is retracted
+        article_retracted_status = lax_provider.article_retracted_status(fid, self.settings)
+        if article_retracted_status is None:
+            self.logger.info(
+                "%s could not determine article retracted status for article id %s" %
+                (self.name, fid))
+            return self.ACTIVITY_TEMPORARY_FAILURE
+
         # FTP the zip
         ftp_status = None
-        if verified and self.zip_file_name:
+        if verified and self.zip_file_name and not article_retracted_status:
             try:
                 ftp_status = self.ftp_to_endpoint(self.directories.get("ZIP_DIR"))
             except Exception as exception:
@@ -136,11 +144,14 @@ class activity_PMCDeposit(Activity):
                 # return a temporary failure
                 return self.ACTIVITY_TEMPORARY_FAILURE
 
-            if ftp_status is True:
-                self.upload_article_zip_to_s3()
+        if ftp_status is True or article_retracted_status is True:
+            self.upload_article_zip_to_s3()
 
         # Return the activity result, True or False
-        result = bool(verified and ftp_status)
+        if article_retracted_status:
+            result = True
+        else:
+            result = bool(verified and ftp_status)
 
         # Clean up disk
         self.clean_tmp_dir()

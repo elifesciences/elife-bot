@@ -38,6 +38,7 @@ ppp_cdn_bucket = 'ppd_cdn_bucket'
 digest_cdn_bucket = 'ppd_cdn_bucket/digests'
 
 lax_article_versions = 'https://test/eLife.{article_id}/version/'
+lax_article_related = "https://test/eLife.{article_id}/related"
 verify_ssl = False
 lax_auth_key = 'an_auth_key'
 

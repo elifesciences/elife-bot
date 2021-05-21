@@ -44,6 +44,7 @@ class exp():
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
+    lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
 
     no_download_extensions = 'tif'
@@ -345,6 +346,7 @@ class dev():
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
+    lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
 
     no_download_extensions = 'tif'
@@ -643,6 +645,7 @@ class live():
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
+    lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
 
     no_download_extensions = 'tif'
