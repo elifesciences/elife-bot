@@ -219,12 +219,10 @@ def article_retracted_status(article_id, settings):
     retracted_status = None
     status_code, data = article_related(article_id, settings)
     if status_code == 200:
-        if not data:
-            retracted_status = False
-        else:
-            for related_article in data:
-                if related_article.get("type") == "retraction":
-                    retracted_status = True
+        retracted_status = False
+        for related_article in data:
+            if related_article.get("type") == "retraction":
+                retracted_status = True
     return retracted_status
 
 
