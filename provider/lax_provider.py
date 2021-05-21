@@ -65,6 +65,14 @@ def article_versions(article_id, settings, auth=False):
                        lax_auth_key(settings, auth))
 
 
+def article_related(article_id, settings, auth=False):
+    "get json for related article data from lax"
+    url = settings.lax_article_related.replace("{article_id}", article_id)
+    return lax_request(
+        url, article_id, settings.verify_ssl, None, lax_auth_key(settings, auth)
+    )
+
+
 def article_snippet(article_id, version, settings, auth=False):
     "snippet from the versions list for this version"
     status_code, data = article_versions(article_id, settings, auth)
@@ -204,6 +212,20 @@ def published_considering_poa_status(article_id, settings, is_poa, was_ever_poa)
             return True
     # Default
     return False
+
+
+def article_retracted_status(article_id, settings):
+    "using related article data is this article retracted"
+    retracted_status = None
+    status_code, data = article_related(article_id, settings)
+    if status_code == 200:
+        if not data:
+            retracted_status = False
+        else:
+            for related_article in data:
+                if related_article.get("type") == "retraction":
+                    retracted_status = True
+    return retracted_status
 
 
 def prepare_action_message(settings, article_id, run, expanded_folder, version,
