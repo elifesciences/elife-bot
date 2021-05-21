@@ -283,7 +283,7 @@ class TestLaxProvider(unittest.TestCase):
         related_article_json = []
         mock_article_related.return_value = 200, related_article_json
         retracted_status = lax_provider.article_retracted_status("04132", settings_mock)
-        self.assertFalse(retracted_status)
+        self.assertEqual(retracted_status, False)
 
     @patch("provider.lax_provider.article_related")
     def test_article_retracted_status_related(self, mock_article_related):
@@ -325,6 +325,17 @@ class TestLaxProvider(unittest.TestCase):
         mock_article_related.return_value = 200, related_article_json
         retracted_status = lax_provider.article_retracted_status("44594", settings_mock)
         self.assertTrue(retracted_status)
+
+    @patch("provider.lax_provider.article_related")
+    def test_article_retracted_status_related_insight_only(self, mock_article_related):
+        related_article_json = [
+            {
+                "type":"insight"
+            }
+        ]
+        mock_article_related.return_value = 200, related_article_json
+        retracted_status = lax_provider.article_retracted_status("99999", settings_mock)
+        self.assertEqual(retracted_status, False)
 
     @patch("provider.lax_provider.article_related")
     def test_article_retracted_status_404(self, mock_article_related):

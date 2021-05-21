@@ -120,6 +120,9 @@ class activity_PMCDeposit(Activity):
 
         # check if the article is retracted
         article_retracted_status = lax_provider.article_retracted_status(fid, self.settings)
+        self.logger.info(
+            "%s article_id %s article_retracted_status: %s" %
+            (self.name, fid, article_retracted_status))
         if article_retracted_status is None:
             self.logger.info(
                 "%s could not determine article retracted status for article id %s" %
