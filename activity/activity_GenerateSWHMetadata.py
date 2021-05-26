@@ -118,14 +118,14 @@ class activity_GenerateSWHMetadata(Activity):
             metadata_filename = "%s.xml" % "".join(file_name.split(".")[0:-1])
             resource_path = "/".join(
                 [
-                    self.settings.bot_bucket,
                     software_heritage.BUCKET_FOLDER,
                     run,
                     metadata_filename,
                 ]
             )
-            resource_dest = "%s://%s" % (
+            resource_dest = "%s://%s/%s" % (
                 self.settings.storage_provider,
+                self.settings.bot_bucket,
                 resource_path,
             )
             storage.set_resource_from_string(resource_dest, metadata_xml)

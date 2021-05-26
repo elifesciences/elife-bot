@@ -91,11 +91,11 @@ SoftwareHeritageDeposit_session_example = {
     "recipient": "software_heritage",
     "input_file": "https://hub.stenci.la/api/projects/518/snapshots/15/archive",
     "bucket_resource": (
-        "bot_bucket/software_heritage/run/"
+        "software_heritage/run/"
         "cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-30274-v1-era.zip"
     ),
     "bucket_metadata_resource": (
-        "bot_bucket/software_heritage/run/"
+        "software_heritage/run/"
         "cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-30274-v1-era.xml"
     ),
 }
