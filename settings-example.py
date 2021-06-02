@@ -313,6 +313,12 @@ class exp():
     doaj_endpoint = "https://doaj/api/v2/articles"
     doaj_api_key = ""
 
+    # Software Heritage deposit settings
+    software_heritage_deposit_endpoint = "https://deposit.swh.example.org/1"
+    software_heritage_collection_name = "elife"
+    software_heritage_auth_user = "user"
+    software_heritage_auth_pass = "pass"
+
 
 class dev():
     # AWS settings
@@ -610,6 +616,12 @@ class dev():
     doaj_url_link_pattern = "https://example.org/articles/{article_id}"
     doaj_endpoint = "https://doaj/api/v2/articles"
     doaj_api_key = ""
+
+    # Software Heritage deposit settings
+    software_heritage_deposit_endpoint = "https://deposit.swh.example.org/1"
+    software_heritage_collection_name = "elife"
+    software_heritage_auth_user = "user"
+    software_heritage_auth_pass = "pass"
 
 
 class live():
@@ -909,6 +921,12 @@ class live():
     doaj_url_link_pattern = "https://example.org/articles/{article_id}"
     doaj_endpoint = "https://doaj/api/v2/articles"
     doaj_api_key = ""
+
+    # Software Heritage deposit settings
+    software_heritage_deposit_endpoint = "https://deposit.swh.example.org/1"
+    software_heritage_collection_name = "elife"
+    software_heritage_auth_user = "user"
+    software_heritage_auth_pass = "pass"
 
 
 def get_settings(ENV="dev"):

@@ -73,14 +73,14 @@ class activity_PackageSWH(Activity):
         try:
             resource_path = "/".join(
                 [
-                    self.settings.bot_bucket,
                     software_heritage.BUCKET_FOLDER,
                     run,
                     file_name,
                 ]
             )
-            resource_dest = "%s://%s" % (
+            resource_dest = "%s://%s/%s" % (
                 self.settings.storage_provider,
+                self.settings.bot_bucket,
                 resource_path,
             )
             storage.set_resource_from_filename(resource_dest, local_zip_file)

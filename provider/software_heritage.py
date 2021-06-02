@@ -1,5 +1,7 @@
 "functions for processing deposits to Software Heritage"
 
+import os
+import requests
 from collections import OrderedDict
 from xml.dom import minidom
 from xml.etree import ElementTree
@@ -164,3 +166,51 @@ def codemeta_author_affiliations(root, author):
         for affiliation in author.get("affiliations"):
             affiliation_tag = SubElement(root, "%s:%s" % (prefix, section_name))
             affiliation_tag.text = affiliation
+
+
+def swh_post_request(
+    url,
+    auth_user,
+    auth_pass,
+    zip_file_path,
+    atom_file_path,
+    verify_ssl=False,
+    logger=None,
+):
+    "POST data to SWH API endpoint"
+
+    headers = {"In-Progress": "false"}
+
+    zip_file_name = zip_file_path.split(os.sep)[-1]
+    atom_file_name = atom_file_path.split(os.sep)[-1]
+
+    multiple_files = [
+        ("file", (zip_file_name, open(zip_file_path, "rb"), "application/zip")),
+        ("atom", (atom_file_name, open(atom_file_path, "rb"), "application/atom+xml")),
+    ]
+
+    response = requests.post(
+        url,
+        files=multiple_files,
+        verify=verify_ssl,
+        headers=headers,
+        auth=(auth_user, auth_pass),
+    )
+
+    if logger:
+        logger.info(
+            "Post zip file %s and atom file %s to SWH API: POST %s"
+            % (zip_file_name, atom_file_name, url)
+        )
+        logger.info(
+            "Response from SWH API: %s\n%s" % (response.status_code, response.content)
+        )
+
+    status_code = response.status_code
+    if not 201 >= status_code >= 200:
+        raise Exception(
+            "Error posting zip file %s and atom file %s to SWH API: %s\n%s"
+            % (zip_file_name, atom_file_name, status_code, response.content)
+        )
+
+    return response

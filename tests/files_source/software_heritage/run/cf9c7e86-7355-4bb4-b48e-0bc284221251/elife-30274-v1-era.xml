@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom" xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0" xmlns:swhdeposit="https://www.softwareheritage.org/schema/2018/deposit">
+    <title>Replication Study: Transcriptional amplification in tumor cells with elevated c-Myc</title>
+    <id>elife-30274-v1-era.zip</id>
+    <swhdeposit:deposit>
+        <swhdeposit:create_origin>
+            <swhdeposit:origin url="https://elife.stencila.io/article-30274/"/>
+        </swhdeposit:create_origin>
+    </swhdeposit:deposit>
+    <codemeta:description>ERA complement for &quot;Replication Study: Transcriptional amplification in tumor cells with elevated c-Myc&quot;, https://doi.org/10.7554/eLife.30274</codemeta:description>
+    <codemeta:referencePublication>
+        <codemeta:name>Replication Study: Transcriptional amplification in tumor cells with elevated c-Myc</codemeta:name>
+        <codemeta:identifier>10.7554/eLife.30274</codemeta:identifier>
+    </codemeta:referencePublication>
+    <codemeta:license>
+        <codemeta:url>http://creativecommons.org/licenses/by/4.0/</codemeta:url>
+    </codemeta:license>
+    <codemeta:author>
+        <codemeta:name>L Michelle Lewis</codemeta:name>
+        <codemeta:affiliation>University of Georgia, Bioexpression and Fermentation Facility, Georgia, United States</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+        <codemeta:name>Meredith C Edwards</codemeta:name>
+        <codemeta:affiliation>University of Georgia, Bioexpression and Fermentation Facility, Georgia, United States</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+        <codemeta:name>Zachary R Meyers</codemeta:name>
+        <codemeta:affiliation>University of Georgia, Bioexpression and Fermentation Facility, Georgia, United States</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+        <codemeta:name>C Conover Talbot Jr</codemeta:name>
+        <codemeta:affiliation>Johns Hopkins University, Deep Sequencing and Microarray Core Facility, Maryland, United States</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+        <codemeta:name>Haiping Hao</codemeta:name>
+        <codemeta:affiliation>Johns Hopkins University, Deep Sequencing and Microarray Core Facility, Maryland, United States</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+        <codemeta:name>David Blum</codemeta:name>
+        <codemeta:affiliation>University of Georgia, Bioexpression and Fermentation Facility, Georgia, United States</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+        <codemeta:name/>
+    </codemeta:author>
+    <codemeta:author>
+        <codemeta:name>Elizabeth Iorns</codemeta:name>
+        <codemeta:affiliation>Science Exchange, Palo Alto, United States</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+        <codemeta:name>Rachel Tsui</codemeta:name>
+        <codemeta:affiliation>Science Exchange, Palo Alto, United States</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+        <codemeta:name>Alexandria Denis</codemeta:name>
+        <codemeta:affiliation>Center for Open Science, Charlottesville, United States</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+        <codemeta:name>Nicole Perfito</codemeta:name>
+        <codemeta:affiliation>Science Exchange, Palo Alto, United States</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+        <codemeta:name>Timothy M Errington</codemeta:name>
+        <codemeta:affiliation>Center for Open Science, Charlottesville, United States</codemeta:affiliation>
+    </codemeta:author>
+</entry>
