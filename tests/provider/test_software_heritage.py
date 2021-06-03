@@ -1,9 +1,10 @@
 # coding=utf-8
 
 import unittest
+from collections import OrderedDict
 from xml.etree.ElementTree import Element
 from elifearticle import parse
-from elifearticle.article import Article
+from elifearticle.article import Article, Contributor
 import provider.software_heritage as software_heritage
 
 
@@ -70,3 +71,30 @@ class TestSoftwareHeritageProviderMetadata(unittest.TestCase):
         element = Element("root")
         expected = b'<?xml version="1.0" encoding="utf-8"?><root/>'
         self.assertEqual(software_heritage.metadata_xml(element), expected)
+
+    def test_metadata_xml_contrib_collab(self):
+        "test for group authors in collab tags and group member contributors"
+        collab_contributor = Contributor("author", "", "", "Test Research Group")
+        collab_contributor.group_author_key = "group1"
+        group_member = Contributor("author", "Smith", "Chris")
+        group_member.group_author_key = "group1"
+        self.article.contributors.append(collab_contributor)
+        self.article.contributors.append(group_member)
+        metadata_object = software_heritage.metadata(self.file_name, self.article)
+        expected = [
+            OrderedDict(
+                [
+                    ("name", "Mikhail Tikhonov"),
+                    (
+                        "affiliations",
+                        [
+                            "Center of Mathematical Sciences and Applications, Harvard University, Cambridge, United States",
+                            "Harvard John A Paulson School of Engineering and Applied Sciences, Harvard University, Cambridge, United States",
+                            "Kavli Institute for Bionano Science and Technology, Harvard University, Cambridge, United States",
+                        ],
+                    ),
+                ]
+            ),
+            OrderedDict([("name", "Test Research Group")]),
+        ]
+        self.assertEqual(metadata_object.codemeta["authors"], expected)
