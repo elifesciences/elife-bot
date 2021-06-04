@@ -21,6 +21,7 @@ class TestPushSWHDeposit(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder(
             testdata.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
         )
