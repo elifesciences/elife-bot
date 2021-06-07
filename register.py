@@ -42,6 +42,7 @@ def start(settings):
     workflow_names.append("IngestDecisionLetter")
     workflow_names.append("DepositDOAJ")
     workflow_names.append("SoftwareHeritageDeposit")
+    workflow_names.append("IngestAcceptedSubmission")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries
