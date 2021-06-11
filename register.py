@@ -42,6 +42,7 @@ def start(settings):
     workflow_names.append("IngestDecisionLetter")
     workflow_names.append("DepositDOAJ")
     workflow_names.append("SoftwareHeritageDeposit")
+    workflow_names.append("IngestAcceptedSubmission")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries
@@ -117,6 +118,7 @@ def start(settings):
     activity_names.append("PackageSWH")
     activity_names.append("GenerateSWHMetadata")
     activity_names.append("PushSWHDeposit")
+    activity_names.append("ValidateAcceptedSubmission")
 
     for activity_name in activity_names:
         # Import the activity libraries
