@@ -118,6 +118,7 @@ def start(settings):
     activity_names.append("PackageSWH")
     activity_names.append("GenerateSWHMetadata")
     activity_names.append("PushSWHDeposit")
+    activity_names.append("ValidateAcceptedSubmission")
 
     for activity_name in activity_names:
         # Import the activity libraries
