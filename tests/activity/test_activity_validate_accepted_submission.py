@@ -2,8 +2,10 @@
 
 import os
 import unittest
+from xml.etree.ElementTree import ParseError
 from mock import patch
 from ddt import ddt, data
+from provider import cleaner
 import activity.activity_ValidateAcceptedSubmission as activity_module
 from activity.activity_ValidateAcceptedSubmission import (
     activity_ValidateAcceptedSubmission as activity_object,
@@ -77,3 +79,43 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             line for line in log_contents.split("\n") if line.startswith("WARNING ")
         ]
         self.assertEqual(len(log_warnings), test_data.get("expected_log_warning_count"))
+
+    @patch.object(cleaner, "check_ejp_zip")
+    @patch.object(activity_module.download_helper, "storage_context")
+    def test_do_activity_exception_parseerror(
+        self, fake_download_storage_context, fake_check_ejp_zip
+    ):
+        # copy files into the input directory using the storage context
+        fake_download_storage_context.return_value = FakeStorageContext()
+        fake_check_ejp_zip.side_effect = ParseError()
+        # do the activity
+        result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+        self.assertTrue(
+            self.activity.logger.logexception.startswith(
+                (
+                    "ValidateAcceptedSubmission, XML ParseError exception"
+                    " in cleaner.check_ejp_zip for file"
+                )
+            )
+        )
+
+    @patch.object(cleaner, "check_ejp_zip")
+    @patch.object(activity_module.download_helper, "storage_context")
+    def test_do_activity_exception_unknown(
+        self, fake_download_storage_context, fake_check_ejp_zip
+    ):
+        # copy files into the input directory using the storage context
+        fake_download_storage_context.return_value = FakeStorageContext()
+        fake_check_ejp_zip.side_effect = Exception()
+        # do the activity
+        result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+        self.assertTrue(
+            self.activity.logger.logexception.startswith(
+                (
+                    "ValidateAcceptedSubmission, unhandled exception"
+                    " in cleaner.check_ejp_zip for file"
+                )
+            )
+        )
