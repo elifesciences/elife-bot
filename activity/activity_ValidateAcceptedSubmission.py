@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 import time
+from xml.etree.ElementTree import ParseError
 from S3utility.s3_notification_info import parse_activity_data
 from provider import cleaner, download_helper, utils
 from activity.objects import Activity
@@ -74,9 +75,22 @@ class activity_ValidateAcceptedSubmission(Activity):
         self.logger.info("%s, downloaded file to %s" % (self.name, self.input_file))
 
         # unzip the file and validate
-        self.statuses["valid"] = cleaner.check_ejp_zip(
-            self.input_file, self.directories.get("TEMP_DIR")
-        )
+        try:
+            self.statuses["valid"] = cleaner.check_ejp_zip(
+                self.input_file, self.directories.get("TEMP_DIR")
+            )
+        except ParseError:
+            self.logger.exception(
+                "%s, XML ParseError exception in cleaner.check_ejp_zip for file %s"
+                % (self.name, self.input_file)
+            )
+            return self.ACTIVITY_PERMANENT_FAILURE
+        except Exception:
+            self.logger.exception(
+                "%s, unhandled exception in cleaner.check_ejp_zip for file %s"
+                % (self.name, self.input_file)
+            )
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         self.log_statuses(self.input_file)
 
