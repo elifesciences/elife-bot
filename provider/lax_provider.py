@@ -16,9 +16,13 @@ class ErrorCallingLaxException(Exception):
     pass
 
 
-def lax_request(url, article_id, verify_ssl, request_type='version', auth_key=None):
+def lax_request(
+    url, article_id, verify_ssl, request_type="version", auth_key=None, headers=None
+):
     "common request logic to Lax"
-    response = requests.get(url, verify=verify_ssl, headers=lax_auth_header(auth_key))
+    auth_headers = lax_auth_header(auth_key)
+    request_headers = auth_headers.update(headers) if headers else auth_headers
+    response = requests.get(url, verify=verify_ssl, headers=request_headers)
     logger.info("Request to lax: GET %s", url)
     logger.info("Response from lax: %s\n%s", response.status_code, response.content)
     status_code = response.status_code
@@ -60,9 +64,21 @@ def article_json(article_id, settings, auth=False):
 
 def article_versions(article_id, settings, auth=False):
     "get json for article versions from lax"
-    url = settings.lax_article_versions.replace('{article_id}', article_id)
-    return lax_request(url, article_id, settings.verify_ssl, 'version',
-                       lax_auth_key(settings, auth))
+    url = settings.lax_article_versions.replace("{article_id}", article_id)
+    headers = {}
+    if (
+        hasattr(settings, "lax_article_versions_accept_header")
+        and settings.lax_article_versions_accept_header
+    ):
+        headers["Accept"] = settings.lax_article_versions_accept_header
+    return lax_request(
+        url,
+        article_id,
+        settings.verify_ssl,
+        "version",
+        lax_auth_key(settings, auth),
+        headers=headers,
+    )
 
 
 def article_related(article_id, settings, auth=False):
