@@ -34,6 +34,7 @@ ses_poa_recipient_email = ""
 
 lax_article_endpoint = "https://test/eLife.{article_id}"
 lax_article_versions = 'https://test/eLife.{article_id}/version/'
+lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=1"
 lax_article_related = "https://test/eLife.{article_id}/related"
 verify_ssl = False
 lax_auth_key = 'an_auth_key'
