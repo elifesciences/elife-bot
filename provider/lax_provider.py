@@ -20,8 +20,9 @@ def lax_request(
     url, article_id, verify_ssl, request_type="version", auth_key=None, headers=None
 ):
     "common request logic to Lax"
-    auth_headers = lax_auth_header(auth_key)
-    request_headers = auth_headers.update(headers) if headers else auth_headers
+    request_headers = lax_auth_header(auth_key)
+    if headers:
+        request_headers.update(headers)
     response = requests.get(url, verify=verify_ssl, headers=request_headers)
     logger.info("Request to lax: GET %s", url)
     logger.info("Response from lax: %s\n%s", response.status_code, response.content)
