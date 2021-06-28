@@ -43,6 +43,7 @@ class activity_GenerateSWHMetadata(Activity):
         input_file = session.get_value("input_file")
         bucket_resource = session.get_value("bucket_resource")
         create_origin_url = get_create_origin(data)
+        session.store_value("create_origin_url", create_origin_url)
         self.logger.info(
             (
                 "%s activity session data: article_id: %s, version: %s, input_file: %s, "
