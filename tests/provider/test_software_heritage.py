@@ -3,9 +3,10 @@
 import unittest
 from collections import OrderedDict
 from xml.etree.ElementTree import Element
+from mock import patch
 from elifearticle import parse
 from elifearticle.article import Article, Contributor
-import provider.software_heritage as software_heritage
+from provider import software_heritage, utils
 
 
 def pretty_string(bytes):
@@ -98,3 +99,25 @@ class TestSoftwareHeritageProviderMetadata(unittest.TestCase):
             OrderedDict([("name", "Test Research Group")]),
         ]
         self.assertEqual(metadata_object.codemeta["authors"], expected)
+
+
+class TestSoftwareHeritageProviderReadme(unittest.TestCase):
+    def test_readme(self):
+        kwargs = {
+            "article_title": "The eLife research article",
+            "doi": "10.7554/eLife.00666",
+            "article_id": utils.pad_msid(666),
+            "create_origin_url": "https://stencila.example.org/article-00666/",
+            "content_license": "http://creativecommons.org/licenses/by/4.0/",
+        }
+        with open("tests/test_data/software_heritage/README", "r") as open_file:
+            expected = open_file.read()
+        readme_string = software_heritage.readme(kwargs)
+        self.assertEqual(readme_string, expected)
+
+    @patch.object(software_heritage, "Template")
+    def test_readme_(self, mock_template):
+        mock_template.return_value = None
+        kwargs = {}
+        readme_string = software_heritage.readme(kwargs)
+        self.assertEqual(readme_string, "")

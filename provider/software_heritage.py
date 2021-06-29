@@ -3,6 +3,7 @@
 import os
 import requests
 from collections import OrderedDict
+from string import Template
 from xml.dom import minidom
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
@@ -174,6 +175,16 @@ def codemeta_author_affiliations(root, author):
         for affiliation in author.get("affiliations"):
             affiliation_tag = SubElement(root, "%s:%s" % (prefix, section_name))
             affiliation_tag.text = affiliation
+
+
+def readme(kwargs):
+    "generate readme file using a template with string substitutions"
+    string_template = None
+    with open("template/swh_readme_template.txt", "r") as open_file:
+        string_template = Template(open_file.read())
+    if string_template:
+        return string_template.safe_substitute(kwargs)
+    return ""
 
 
 def swh_post_request(
