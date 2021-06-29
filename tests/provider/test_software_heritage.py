@@ -110,7 +110,7 @@ class TestSoftwareHeritageProviderReadme(unittest.TestCase):
             "create_origin_url": "https://stencila.example.org/article-00666/",
             "content_license": "http://creativecommons.org/licenses/by/4.0/",
         }
-        with open("tests/test_data/software_heritage/README", "r") as open_file:
+        with open("tests/test_data/software_heritage/README.md", "r") as open_file:
             expected = open_file.read()
         readme_string = software_heritage.readme(kwargs)
         self.assertEqual(readme_string, expected)

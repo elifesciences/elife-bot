@@ -101,7 +101,7 @@ SoftwareHeritageDeposit_session_example = {
     ),
     "bucket_readme_resource": (
         "software_heritage/run/"
-        "cf9c7e86-7355-4bb4-b48e-0bc284221251/README"
+        "cf9c7e86-7355-4bb4-b48e-0bc284221251/README.md"
     ),
 }
 
