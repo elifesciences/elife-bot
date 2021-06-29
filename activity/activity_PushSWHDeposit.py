@@ -89,11 +89,11 @@ class activity_PushSWHDeposit(Activity):
                 self.logger,
             )
             with zipfile.ZipFile(
-                readme_file_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True
+                zip_file_path, "a", zipfile.ZIP_DEFLATED, allowZip64=True
             ) as open_zip:
-                open_zip.write(readme_file_path, "README")
+                open_zip.write(readme_file_path, arcname="README.md")
             self.logger.info(
-                "%s, added README file to the zip %s" % (self.name, zip_file_path)
+                "%s, added README.md file to the zip %s" % (self.name, zip_file_path)
             )
 
         url = "%s/%s/" % (

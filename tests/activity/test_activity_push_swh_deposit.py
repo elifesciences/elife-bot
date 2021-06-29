@@ -58,7 +58,7 @@ class TestPushSWHDeposit(unittest.TestCase):
         )
         self.assertTrue(
             self.activity.logger.loginfo[-4].startswith(
-                "PushSWHDeposit, added README file to the zip"
+                "PushSWHDeposit, added README.md file to the zip"
             )
         )
 

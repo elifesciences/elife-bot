@@ -8,7 +8,7 @@ from provider.storage_provider import storage_context
 from activity.objects import Activity
 
 
-README_FILENAME = "README"
+README_FILENAME = "README.md"
 
 
 class activity_GenerateSWHReadme(Activity):
