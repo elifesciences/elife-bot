@@ -14,6 +14,6 @@ A version of this article with executable support can be viewed [here]($create_o
 
 # License
 
-The article content is licensed under the $content_license.
+The article content is licensed under $content_license.
 
-The code is licensed as per the contents of LICENSE.md.
+The code is licensed as per the contents of LICENSE.md (where present).

@@ -105,7 +105,7 @@ class TestSoftwareHeritageProviderReadme(unittest.TestCase):
     def test_readme(self):
         kwargs = {
             "article_title": "The eLife research article",
-            "doi": "10.7554/eLife.00666",
+            "doi": "https://doi.org/10.7554/eLife.00666",
             "article_id": utils.pad_msid(666),
             "create_origin_url": "https://stencila.example.org/article-00666/",
             "content_license": "http://creativecommons.org/licenses/by/4.0/",

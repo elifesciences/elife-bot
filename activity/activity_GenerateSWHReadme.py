@@ -97,7 +97,7 @@ class activity_GenerateSWHReadme(Activity):
         try:
             readme_keywords = {
                 "article_title": article.title,
-                "doi": article.doi,
+                "doi": utils.get_doi_url(article.doi),
                 "article_id": utils.pad_msid(article_id),
                 "create_origin_url": create_origin_url,
                 "content_license": article.license.href,
