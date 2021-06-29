@@ -1,4 +1,4 @@
-# Executable Research Article for "The eLife research article", 10.7554/eLife.00666.
+# Executable Research Article for "The eLife research article", https://doi.org/10.7554/eLife.00666.
 
 This is an archived version of an Executable Research Article created using tools developed by [Stencila](https://stenci.la/) and published by [eLife Sciences](https://elifesciences.org/).
 
@@ -14,6 +14,6 @@ A version of this article with executable support can be viewed [here](https://s
 
 # License
 
-The article content is licensed under the http://creativecommons.org/licenses/by/4.0/.
+The article content is licensed under http://creativecommons.org/licenses/by/4.0/.
 
-The code is licensed as per the contents of LICENSE.md.
+The code is licensed as per the contents of LICENSE.md (where present).
