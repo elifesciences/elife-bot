@@ -7,22 +7,25 @@ from provider import software_heritage, utils
 from provider.storage_provider import storage_context
 from activity.objects import Activity
 
-DESCRIPTION_PATTERN = 'ERA complement for "%s", %s'
+
+README_FILENAME = "README"
 
 
-class activity_GenerateSWHMetadata(Activity):
+class activity_GenerateSWHReadme(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
-        super(activity_GenerateSWHMetadata, self).__init__(
+        super(activity_GenerateSWHReadme, self).__init__(
             settings, logger, conn, token, activity_task
         )
 
-        self.name = "GenerateSWHMetadata"
+        self.name = "GenerateSWHReadme"
         self.version = "1"
         self.default_task_heartbeat_timeout = 30
         self.default_task_schedule_to_close_timeout = 60 * 5
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
-        self.description = "Generate XML metadata file for a Software Heritage deposit"
+        self.description = (
+            "Generate readme file for inclusion in a Software Heritage deposit"
+        )
         self.logger = logger
 
         # Local directory settings
@@ -42,8 +45,7 @@ class activity_GenerateSWHMetadata(Activity):
         version = session.get_value("version")
         input_file = session.get_value("input_file")
         bucket_resource = session.get_value("bucket_resource")
-        create_origin_url = get_create_origin(data)
-        session.store_value("create_origin_url", create_origin_url)
+        create_origin_url = session.get_value("create_origin_url")
         self.logger.info(
             (
                 "%s activity session data: article_id: %s, version: %s, input_file: %s, "
@@ -91,37 +93,36 @@ class activity_GenerateSWHMetadata(Activity):
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
-        # generate XML metadata / metadata file
+        # generate readme file
         try:
-            file_name = bucket_resource.split("/")[-1]
-            metadata_object = software_heritage.metadata(file_name, article)
-            metadata_object.codemeta["description"] = DESCRIPTION_PATTERN % (
-                article.title,
-                utils.get_doi_url(article.doi),
-            )
-            if create_origin_url:
-                metadata_object.swhdeposit["deposit"]["create_origin"][
-                    "url"
-                ] = create_origin_url
-            metadata_element = software_heritage.metadata_element(metadata_object)
-            metadata_xml = software_heritage.metadata_xml(
-                metadata_element, pretty=True, indent="    "
-            )
-            self.logger.info("Metadata XML generated for article doi %s" % article.doi)
+            readme_keywords = {
+                "article_title": article.title,
+                "doi": article.doi,
+                "article_id": utils.pad_msid(article_id),
+                "create_origin_url": create_origin_url,
+                "content_license": article.license.href,
+            }
+            readme_string = software_heritage.readme(readme_keywords)
+            readme_string = bytes(readme_string, "utf8")
+            self.logger.info("Readme generated for article doi %s" % article.doi)
         except Exception:
             self.logger.exception(
-                "Exception raised creating metadata for article doi %s" % article.doi
+                "Exception raised creating readme for article doi %s" % article.doi
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
+        self.logger.info(
+            "Readme string for article doi %s: %s" % (article.doi, readme_string)
+        )
+
         # upload XML metadata file to bucket
         try:
-            metadata_filename = "%s.xml" % "".join(file_name.split(".")[0:-1])
+            readme_filename = README_FILENAME
             resource_path = "/".join(
                 [
                     software_heritage.BUCKET_FOLDER,
                     run,
-                    metadata_filename,
+                    readme_filename,
                 ]
             )
             resource_dest = "%s://%s/%s" % (
@@ -129,30 +130,22 @@ class activity_GenerateSWHMetadata(Activity):
                 self.settings.bot_bucket,
                 resource_path,
             )
-            storage.set_resource_from_string(resource_dest, metadata_xml)
+            storage.set_resource_from_string(resource_dest, readme_string)
             self.logger.info(
-                "Uploaded metadata XML for article %s to %s"
-                % (article.doi, resource_dest)
+                "Uploaded readme for article %s to %s" % (article.doi, resource_dest)
             )
         except Exception:
             self.logger.exception(
-                "Exception raised uploading metadata to bucket for article doi %s"
+                "Exception raised uploading readme to bucket for article doi %s"
                 % article.doi
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # save S3 location in session
-        session.store_value("bucket_metadata_resource", resource_path)
+        session.store_value("bucket_readme_resource", resource_path)
 
         # clean temporary directory
         self.clean_tmp_dir()
 
         # return success
         return self.ACTIVITY_SUCCESS
-
-
-def get_create_origin(data):
-    "get create_origin url from the data if available"
-    if data and data.get("data") and data.get("data").get("display"):
-        return data.get("data").get("display")
-    return None

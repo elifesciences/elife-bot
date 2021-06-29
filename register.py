@@ -117,6 +117,7 @@ def start(settings):
     activity_names.append("DownstreamStart")
     activity_names.append("PackageSWH")
     activity_names.append("GenerateSWHMetadata")
+    activity_names.append("GenerateSWHReadme")
     activity_names.append("PushSWHDeposit")
     activity_names.append("ValidateAcceptedSubmission")
 

@@ -90,6 +90,7 @@ SoftwareHeritageDeposit_session_example = {
     "workflow": "software_heritage",
     "recipient": "software_heritage",
     "input_file": "https://hub.stenci.la/api/projects/518/snapshots/15/archive",
+    "create_origin_url": "https://elife.stencila.io/article-30274/",
     "bucket_resource": (
         "software_heritage/run/"
         "cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-30274-v1-era.zip"
@@ -97,6 +98,10 @@ SoftwareHeritageDeposit_session_example = {
     "bucket_metadata_resource": (
         "software_heritage/run/"
         "cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-30274-v1-era.xml"
+    ),
+    "bucket_readme_resource": (
+        "software_heritage/run/"
+        "cf9c7e86-7355-4bb4-b48e-0bc284221251/README"
     ),
 }
 

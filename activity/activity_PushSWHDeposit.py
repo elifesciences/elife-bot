@@ -1,5 +1,6 @@
 import json
 import os
+import zipfile
 from provider.execution_context import get_session
 from provider import software_heritage, utils
 from provider.storage_provider import storage_context
@@ -60,7 +61,8 @@ class activity_PushSWHDeposit(Activity):
         if not self.settings.software_heritage_deposit_endpoint:
             # if no endpoint is specified then return failure before attempting HTTP request
             self.logger.info(
-                "%s, software_heritage_deposit_endpoint setting is empty or missing" % self.name
+                "%s, software_heritage_deposit_endpoint setting is empty or missing"
+                % self.name
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
@@ -77,6 +79,22 @@ class activity_PushSWHDeposit(Activity):
             self.directories.get("INPUT_DIR"),
             self.logger,
         )
+
+        # add README file, if present
+        if session.get_value("bucket_readme_resource"):
+            readme_file_path = download_bucket_resource(
+                self.settings,
+                session.get_value("bucket_readme_resource"),
+                self.directories.get("INPUT_DIR"),
+                self.logger,
+            )
+            with zipfile.ZipFile(
+                readme_file_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True
+            ) as open_zip:
+                open_zip.write(readme_file_path, "README")
+            self.logger.info(
+                "%s, added README file to the zip %s" % (self.name, zip_file_path)
+            )
 
         url = "%s/%s/" % (
             self.settings.software_heritage_deposit_endpoint,

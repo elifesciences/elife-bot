@@ -38,6 +38,7 @@ class workflow_SoftwareHeritageDeposit(Workflow):
                 define_workflow_step("DownstreamStart", data),
                 define_workflow_step("PackageSWH", data),
                 define_workflow_step("GenerateSWHMetadata", data),
+                define_workflow_step("GenerateSWHReadme", data),
                 define_workflow_step("PushSWHDeposit", data),
             ],
             "finish": {"requirements": None},
