@@ -56,6 +56,11 @@ class TestPushSWHDeposit(unittest.TestCase):
                 "to SWH API: POST https://deposit.swh.example.org/1/elife/"
             ),
         )
+        self.assertTrue(
+            self.activity.logger.loginfo[-4].startswith(
+                "PushSWHDeposit, added README file to the zip"
+            )
+        )
 
     @patch("requests.post")
     @patch.object(activity_module, "get_session")
