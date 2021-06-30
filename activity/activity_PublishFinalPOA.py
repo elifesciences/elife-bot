@@ -266,7 +266,7 @@ class activity_PublishFinalPOA(Activity):
 
         # Start the file output
         reparsed_string = xmlio.output(
-            root, type=None, doctype_dict=doctype_dict,
+            root, output_type=None, doctype_dict=doctype_dict,
             processing_instructions=processing_instructions)
 
         # Remove extra whitespace here for PoA articles to clean up and one VoR file too

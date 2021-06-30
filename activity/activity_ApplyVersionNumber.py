@@ -137,7 +137,7 @@ class activity_ApplyVersionNumber(Activity):
 
         # Start the file output
         reparsed_string = xmlio.output(
-            root, type=None, doctype_dict=doctype_dict,
+            root, output_type=None, doctype_dict=doctype_dict,
             processing_instructions=processing_instructions)
         f = open(local_xml_filename, 'wb')
         f.write(reparsed_string)
