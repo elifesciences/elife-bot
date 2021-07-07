@@ -203,12 +203,14 @@ def swh_post_request(
 
     multiple_files = []
 
+    zip_file_name = None
     if zip_file_path:
         zip_file_name = zip_file_path.split(os.sep)[-1]
         multiple_files.append(
             ("file", (zip_file_name, open(zip_file_path, "rb"), "application/zip"))
         )
 
+    atom_file_name = None
     if atom_file_path:
         atom_file_name = atom_file_path.split(os.sep)[-1]
         multiple_files.append(
