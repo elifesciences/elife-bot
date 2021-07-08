@@ -1,0 +1,28 @@
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/terms/"
+       xmlns:dcterms="http://purl.org/dc/terms/"
+       xmlns:sd="https://www.softwareheritage.org/schema/2018/deposit"
+       >
+    <sd:deposit_id>1677</sd:deposit_id>
+    <sd:deposit_date>June 30, 2021, 4:14 p.m.</sd:deposit_date>
+    <sd:deposit_archive>elife-30274-v1-era.zip</sd:deposit_archive>
+    <sd:deposit_status>deposited</sd:deposit_status>
+
+    <!-- The following tags are deprecated and may be removed in the future,
+         as they do not belong in the http://www.w3.org/2005/Atom namespace. -->
+    <deposit_id>1677</deposit_id>
+    <deposit_date>June 30, 2021, 4:14 p.m.</deposit_date>
+    <deposit_archive>elife-30274-v1-era.zip</deposit_archive>
+    <deposit_status>deposited</deposit_status>
+
+    <!-- Edit-IRI -->
+    <link rel="edit" href="https://deposit.softwareheritage.org/1/elife/1677/atom/" />
+    <!-- EM-IRI -->
+    <link rel="edit-media" href="https://deposit.softwareheritage.org/1/elife/1677/media/"/>
+    <!-- SE-IRI -->
+    <link rel="http://purl.org/net/sword/terms/add" href="https://deposit.softwareheritage.org/1/elife/1677/metadata/" />
+    <!-- State-IRI -->
+    <link rel="alternate" href="https://deposit.softwareheritage.org/1/elife/1677/status/" />
+
+    <sword:packaging>http://purl.org/net/sword/package/SimpleZip</sword:packaging>
+</entry>
