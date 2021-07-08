@@ -226,8 +226,10 @@ def swh_post_request(
         )
     elif zip_file_path:
         # if only a zip file, send with a Content-Type: application/zip header
+        # also must include a Content-Disposition header
         with open(zip_file_path, "rb") as payload:
             headers["Content-Type"] = "application/zip"
+            headers["Content-Disposition"] = 'attachment; filename="%s"' % zip_file_name
             response = requests.post(
                 url,
                 data=payload,
