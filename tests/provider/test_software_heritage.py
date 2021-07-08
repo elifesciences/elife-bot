@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import os
 import unittest
 from collections import OrderedDict
 from xml.etree.ElementTree import Element
@@ -7,6 +8,8 @@ from mock import patch
 from elifearticle import parse
 from elifearticle.article import Article, Contributor
 from provider import software_heritage, utils
+import tests.activity.settings_mock as settings_mock
+from tests.activity.classes_mock import FakeLogger, FakeResponse
 
 
 def pretty_string(bytes):
@@ -121,3 +124,70 @@ class TestSoftwareHeritageProviderReadme(unittest.TestCase):
         kwargs = {}
         readme_string = software_heritage.readme(kwargs)
         self.assertEqual(readme_string, "")
+
+
+class TestSWHPostRequest(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.zip_file_name = "elife-30274-v1-era.zip"
+        self.atom_file_name = "elife-30274-v1-era.xml"
+        folder_path = os.path.join(
+            "tests",
+            "files_source",
+            "software_heritage",
+            "run",
+            "cf9c7e86-7355-4bb4-b48e-0bc284221251/",
+        )
+        self.zip_file_path = os.path.join(folder_path, self.zip_file_name)
+        self.atom_file_path = os.path.join(folder_path, self.atom_file_name)
+
+    @patch("requests.post")
+    def test_swh_post_request_201(self, mock_requests_post):
+        url = "https://example.org/"
+        response_content = (
+            '<entry><link rel="edit-media" href="/1/hal/10/media/"/></entry>'
+        )
+        response = FakeResponse(201)
+        response.content = response_content
+        mock_requests_post.return_value = response
+        response = software_heritage.swh_post_request(
+            url,
+            settings_mock.software_heritage_auth_user,
+            settings_mock.software_heritage_auth_pass,
+            self.zip_file_path,
+            self.atom_file_path,
+            in_progress=False,
+            logger=self.logger,
+        )
+        self.assertEqual(
+            self.logger.loginfo[-1], "Response from SWH API: 201\n%s" % response_content
+        )
+        self.assertEqual(
+            self.logger.loginfo[-2],
+            "Post zip file %s, atom file %s to SWH API: POST %s"
+            % (self.zip_file_name, self.atom_file_name, url),
+        )
+
+    @patch("requests.post")
+    def test_swh_post_request_412(self, mock_requests_post):
+        url = "https://example.org/"
+        response = FakeResponse(412)
+        response.content = ""
+        mock_requests_post.return_value = response
+
+        with self.assertRaises(Exception) as test_exception:
+            response = software_heritage.swh_post_request(
+                url,
+                settings_mock.software_heritage_auth_user,
+                settings_mock.software_heritage_auth_pass,
+                self.zip_file_path,
+                self.atom_file_path,
+                in_progress=False,
+                logger=self.logger,
+            )
+
+        self.assertEqual(
+            str(test_exception.exception),
+            "Error posting zip file %s and atom file %s to SWH API: 412\n"
+            % (self.zip_file_name, self.atom_file_name),
+        )

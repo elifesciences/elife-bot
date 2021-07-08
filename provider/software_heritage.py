@@ -193,20 +193,32 @@ def swh_post_request(
     auth_pass,
     zip_file_path,
     atom_file_path,
+    in_progress=False,
     verify_ssl=False,
     logger=None,
 ):
     "POST data to SWH API endpoint"
 
-    headers = {"In-Progress": "false"}
+    headers = {"In-Progress": "%s" % str(in_progress).lower()}
 
-    zip_file_name = zip_file_path.split(os.sep)[-1]
-    atom_file_name = atom_file_path.split(os.sep)[-1]
+    multiple_files = []
 
-    multiple_files = [
-        ("file", (zip_file_name, open(zip_file_path, "rb"), "application/zip")),
-        ("atom", (atom_file_name, open(atom_file_path, "rb"), "application/atom+xml")),
-    ]
+    zip_file_name = None
+    if zip_file_path:
+        zip_file_name = zip_file_path.split(os.sep)[-1]
+        multiple_files.append(
+            ("file", (zip_file_name, open(zip_file_path, "rb"), "application/zip"))
+        )
+
+    atom_file_name = None
+    if atom_file_path:
+        atom_file_name = atom_file_path.split(os.sep)[-1]
+        multiple_files.append(
+            (
+                "atom",
+                (atom_file_name, open(atom_file_path, "rb"), "application/atom+xml"),
+            )
+        )
 
     response = requests.post(
         url,
@@ -217,10 +229,13 @@ def swh_post_request(
     )
 
     if logger:
-        logger.info(
-            "Post zip file %s and atom file %s to SWH API: POST %s"
-            % (zip_file_name, atom_file_name, url)
-        )
+        file_details = []
+        if zip_file_path:
+            file_details.append("zip file %s" % zip_file_name)
+        if atom_file_path:
+            file_details.append("atom file %s" % atom_file_name)
+
+        logger.info("Post %s to SWH API: POST %s" % (", ".join(file_details), url))
         logger.info(
             "Response from SWH API: %s\n%s" % (response.status_code, response.content)
         )

@@ -1,6 +1,8 @@
 import json
+import re
 import os
 import zipfile
+from xml.etree import ElementTree
 from provider.execution_context import get_session
 from provider import software_heritage, utils
 from provider.storage_provider import storage_context
@@ -96,28 +98,81 @@ class activity_PushSWHDeposit(Activity):
                 "%s, added README.md file to the zip %s" % (self.name, zip_file_path)
             )
 
-        url = "%s/%s/" % (
+        """
+        In order to support sending larger files to Software Heritage, follow a
+        particular set of requests to their API, setting the In-Progress header value
+        to True as each file is uploaded, until the final file use In-Progress of False
+        """
+
+        # preparatory step, break up the zip file into smaller zip file chunks
+        new_zip_files = split_zip_file(
+            zip_file_path, self.directories.get("TMP_DIR"), self.logger
+        )
+
+        # first API request, part one, upload the first file
+        first_request_url = "%s/%s/" % (
             self.settings.software_heritage_deposit_endpoint,
             self.settings.software_heritage_collection_name,
         )
-
+        first_zip_file_path = os.path.join(
+            self.directories.get("TMP_DIR"), new_zip_files[0]
+        )
         try:
-            response = software_heritage.swh_post_request(
-                url,
-                self.settings.software_heritage_auth_user,
-                self.settings.software_heritage_auth_pass,
-                zip_file_path,
-                atom_file_path,
-                logger=self.logger,
+            response = self.post_file_to_swh(
+                endpoint_url=first_request_url,
+                article_id=article_id,
+                zip_file_path=first_zip_file_path,
+                atom_file_path=None,
+                in_progress=True,
             )
-            self.logger.info(
-                "%s, finished post request to %s, zip_file_path %s, atom_file_path %s"
-                % (self.name, url, zip_file_path, atom_file_path)
-            )
+
         except Exception as exception:
             self.logger.exception(
-                "Exception in %s posting to SWH API endpoint, article_id %s: %s"
-                % (self.name, article_id, str(exception)),
+                "Exception in %s posting first file to endpoint, workflow permanent failure"
+                % self.name,
+            )
+            return self.ACTIVITY_PERMANENT_FAILURE
+
+        # first API request, part two, get the URI of this upload to which we can send more files
+        edit_request_url = endpoint_from_response(response.content)
+        self.logger.info(
+            "%s, endpoint for sending additional files: %s"
+            % (self.name, edit_request_url)
+        )
+
+        # second phase, send each additional file as a separate request
+        for new_zip_file in new_zip_files[1:-1]:
+            zip_file_path = os.path.join(self.directories.get("TMP_DIR"), new_zip_file)
+            try:
+                response = self.post_file_to_swh(
+                    endpoint_url=edit_request_url,
+                    article_id=article_id,
+                    zip_file_path=zip_file_path,
+                    atom_file_path=None,
+                    in_progress=True,
+                )
+
+            except Exception as exception:
+                self.logger.exception(
+                    "Exception in %s posting file %s to endpoint, workflow permanent failure"
+                    % (self.name, new_zip_file),
+                )
+                return self.ACTIVITY_PERMANENT_FAILURE
+
+        # third and final request, upload the metadata XML file with In-Progress False header
+        try:
+            response = self.post_file_to_swh(
+                endpoint_url=first_request_url,
+                article_id=article_id,
+                zip_file_path=None,
+                atom_file_path=atom_file_path,
+                in_progress=False,
+            )
+
+        except Exception as exception:
+            self.logger.exception(
+                "Exception in %s posting atom file to endpoint, workflow permanent failure"
+                % self.name,
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
@@ -128,6 +183,37 @@ class activity_PushSWHDeposit(Activity):
 
         # return success
         return self.ACTIVITY_SUCCESS
+
+    def post_file_to_swh(
+        self, endpoint_url, article_id, zip_file_path, atom_file_path, in_progress
+    ):
+        try:
+            response = software_heritage.swh_post_request(
+                endpoint_url,
+                self.settings.software_heritage_auth_user,
+                self.settings.software_heritage_auth_pass,
+                zip_file_path=zip_file_path,
+                atom_file_path=atom_file_path,
+                in_progress=in_progress,
+                logger=self.logger,
+            )
+            self.logger.info(
+                "%s, finished post request to %s, file paths: %s"
+                % (
+                    self.name,
+                    endpoint_url,
+                    ", ".join([str(zip_file_path), str(atom_file_path)]),
+                )
+            )
+
+        except Exception as exception:
+            self.logger.exception(
+                "Exception in %s posting to SWH API endpoint, article_id %s: %s"
+                % (self.name, article_id, str(exception)),
+            )
+            raise
+
+        return response
 
 
 def download_bucket_resource(settings, storage_resource, to_dir, logger):
@@ -144,3 +230,44 @@ def download_bucket_resource(settings, storage_resource, to_dir, logger):
         logger.info("Downloading %s to %s", (storage_resource_origin, file_path))
         storage.get_resource_to_file(storage_resource_origin, open_file)
     return file_path
+
+
+def split_zip_file(zip_file_path, output_dir, logger):
+    "create a new zip file for each file in the original zip file"
+    with zipfile.ZipFile(
+        zip_file_path, "r", zipfile.ZIP_DEFLATED, allowZip64=True
+    ) as open_zip:
+        open_zip_info_list = open_zip.infolist()
+        for zip_info in sorted(
+            open_zip_info_list, key=lambda zip_info: zip_info.filename
+        ):
+            if zip_info.filename.endswith("/"):
+                logger.info(
+                    'split_zip_file, "%s" ends with a slash, skipping it'
+                    % zip_info.filename
+                )
+                continue
+            clean_filename = re.sub(
+                r"[^a-zA-Z0-9_\.]", "", re.sub(r"/", "__", zip_info.filename)
+            )
+            new_zip_filename = clean_filename + ".zip"
+            logger.info(
+                'split_zip_file, "%s" new zip file name "%s"'
+                % (zip_info.filename, new_zip_filename)
+            )
+
+            with zipfile.ZipFile(
+                os.path.join(output_dir, new_zip_filename),
+                "w",
+                zipfile.ZIP_DEFLATED,
+                allowZip64=True,
+            ) as new_zip:
+                new_zip.writestr(zip_info, open_zip.read(zip_info))
+    return sorted(os.listdir(output_dir))
+
+
+def endpoint_from_response(response_string):
+    "from the API response XML, get the endpoint where more media can be posted"
+    root = ElementTree.fromstring(response_string)
+    link_tag = root.find('{http://www.w3.org/2005/Atom}link[@rel="edit-media"]')
+    return link_tag.get("href")
