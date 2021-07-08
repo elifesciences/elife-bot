@@ -157,7 +157,7 @@ class activity_PushSWHDeposit(Activity):
                         endpoint_url=edit_request_url,
                         article_id=article_id,
                         zip_file_path=zip_file_path,
-                        atom_file_path=atom_file_path,
+                        atom_file_path=None,
                         in_progress=True,
                     )
 
@@ -178,7 +178,7 @@ class activity_PushSWHDeposit(Activity):
                     endpoint_url=edit_request_url,
                     article_id=article_id,
                     zip_file_path=final_zip_file_path,
-                    atom_file_path=atom_file_path,
+                    atom_file_path=None,
                     in_progress=False,
                 )
 
