@@ -67,7 +67,7 @@ class TestPushSWHDeposit(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.loginfo[32],
             (
-                "Post zip file README.md.zip "
+                "Post zip file README.md.zip, atom file elife-30274-v1-era.xml "
                 "to SWH API: POST https://deposit.swh.example.org/1/elife/"
             ),
         )

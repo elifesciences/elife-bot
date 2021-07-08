@@ -117,13 +117,17 @@ class activity_PushSWHDeposit(Activity):
         first_zip_file_path = os.path.join(
             self.directories.get("TMP_DIR"), new_zip_files[0]
         )
+        # if there is only one zip file to upload, use in_progress False
+        in_progress = True
+        if len(new_zip_files) == 1:
+            in_progress = False
         try:
             response = self.post_file_to_swh(
                 endpoint_url=first_request_url,
                 article_id=article_id,
                 zip_file_path=first_zip_file_path,
-                atom_file_path=None,
-                in_progress=True,
+                atom_file_path=atom_file_path,
+                in_progress=in_progress,
             )
 
         except Exception as exception:
@@ -140,41 +144,50 @@ class activity_PushSWHDeposit(Activity):
             % (self.name, edit_request_url)
         )
 
-        # second phase, send each additional file as a separate request
-        for new_zip_file in new_zip_files[1:-1]:
-            zip_file_path = os.path.join(self.directories.get("TMP_DIR"), new_zip_file)
+        # send multiple files in a loop if there is more than two files to upload
+        if len(new_zip_files) > 2:
+
+            # second phase, send each additional file as a separate request
+            for new_zip_file in new_zip_files[1:-2]:
+                zip_file_path = os.path.join(
+                    self.directories.get("TMP_DIR"), new_zip_file
+                )
+                try:
+                    response = self.post_file_to_swh(
+                        endpoint_url=edit_request_url,
+                        article_id=article_id,
+                        zip_file_path=zip_file_path,
+                        atom_file_path=atom_file_path,
+                        in_progress=True,
+                    )
+
+                except Exception as exception:
+                    self.logger.exception(
+                        "Exception in %s posting file %s to endpoint, workflow permanent failure"
+                        % (self.name, new_zip_file),
+                    )
+                    return self.ACTIVITY_PERMANENT_FAILURE
+
+        # third and final request, upload the final file with In-Progress False header
+        if len(new_zip_files) > 1:
+            final_zip_file_path = os.path.join(
+                self.directories.get("TMP_DIR"), new_zip_files[-1]
+            )
             try:
                 response = self.post_file_to_swh(
                     endpoint_url=edit_request_url,
                     article_id=article_id,
-                    zip_file_path=zip_file_path,
-                    atom_file_path=None,
-                    in_progress=True,
+                    zip_file_path=final_zip_file_path,
+                    atom_file_path=atom_file_path,
+                    in_progress=False,
                 )
 
             except Exception as exception:
                 self.logger.exception(
-                    "Exception in %s posting file %s to endpoint, workflow permanent failure"
-                    % (self.name, new_zip_file),
+                    "Exception in %s posting final file to endpoint, workflow permanent failure"
+                    % self.name,
                 )
                 return self.ACTIVITY_PERMANENT_FAILURE
-
-        # third and final request, upload the metadata XML file with In-Progress False header
-        try:
-            response = self.post_file_to_swh(
-                endpoint_url=first_request_url,
-                article_id=article_id,
-                zip_file_path=None,
-                atom_file_path=atom_file_path,
-                in_progress=False,
-            )
-
-        except Exception as exception:
-            self.logger.exception(
-                "Exception in %s posting atom file to endpoint, workflow permanent failure"
-                % self.name,
-            )
-            return self.ACTIVITY_PERMANENT_FAILURE
 
         # clean temporary directory
 
