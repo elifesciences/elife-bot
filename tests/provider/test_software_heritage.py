@@ -169,6 +169,32 @@ class TestSWHPostRequest(unittest.TestCase):
         )
 
     @patch("requests.post")
+    def test_swh_post_request_201_zip_only(self, mock_requests_post):
+        url = "https://example.org/"
+        response_content = (
+            '<entry><link rel="edit-media" href="/1/hal/10/media/"/></entry>'
+        )
+        response = FakeResponse(201)
+        response.content = response_content
+        mock_requests_post.return_value = response
+        response = software_heritage.swh_post_request(
+            url,
+            settings_mock.software_heritage_auth_user,
+            settings_mock.software_heritage_auth_pass,
+            self.zip_file_path,
+            None,
+            in_progress=False,
+            logger=self.logger,
+        )
+        self.assertEqual(
+            self.logger.loginfo[-1], "Response from SWH API: 201\n%s" % response_content
+        )
+        self.assertEqual(
+            self.logger.loginfo[-2],
+            "Post zip file %s to SWH API: POST %s" % (self.zip_file_name, url),
+        )
+
+    @patch("requests.post")
     def test_swh_post_request_412(self, mock_requests_post):
         url = "https://example.org/"
         response = FakeResponse(412)
