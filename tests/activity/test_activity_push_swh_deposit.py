@@ -67,7 +67,7 @@ class TestPushSWHDeposit(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.loginfo[32],
             (
-                "Post zip file Study_48_Protocols_3_4_Combined_Means.csv.zip "
+                "Post zip file README.md.zip "
                 "to SWH API: POST https://deposit.swh.example.org/1/elife/"
             ),
         )
@@ -140,18 +140,18 @@ class TestSplitZipFile(unittest.TestCase):
         zip_file_path = os.path.join(input_dir, zip_file_name)
         # expected values after the function call
         loginfo_expected = [
-            "First logger info",
-            'split_zip_file, "article.rmd.media/" ends with a slash, skipping it',
-            'split_zip_file, "index.html.media/" ends with a slash, skipping it',
-            'split_zip_file, "index.html" new zip file name "index.html.zip"',
+            ("First logger info"),
             (
-                'split_zip_file, "Study_48_Protocol_2_Data.csv" '
-                'new zip file name "Study_48_Protocol_2_Data.csv.zip"'
+                'split_zip_file, "Study_48_Figure_2_Supplemental_Tables.csv" '
+                'new zip file name "Study_48_Figure_2_Supplemental_Tables.csv.zip"'
             ),
-            'split_zip_file, "article.rmd" new zip file name "article.rmd.zip"',
             (
                 'split_zip_file, "Study_48_Meta_Analysis.csv" '
                 'new zip file name "Study_48_Meta_Analysis.csv.zip"'
+            ),
+            (
+                'split_zip_file, "Study_48_Protocol_2_Data.csv" '
+                'new zip file name "Study_48_Protocol_2_Data.csv.zip"'
             ),
             (
                 'split_zip_file, "Study_48_Protocols_3_4_Combined_Means.csv" '
@@ -161,85 +161,92 @@ class TestSplitZipFile(unittest.TestCase):
                 'split_zip_file, "article.references.bib" '
                 'new zip file name "article.references.bib.zip"'
             ),
+            ('split_zip_file, "article.rmd" new zip file name "article.rmd.zip"'),
+            ('split_zip_file, "article.rmd.media/" ends with a slash, skipping it'),
             (
-                'split_zip_file, "Study_48_Figure_2_Supplemental_Tables.csv" '
-                'new zip file name "Study_48_Figure_2_Supplemental_Tables.csv.zip"'
-            ),
-            'split_zip_file, "index.html.media/1" new zip file name "index.html.media__1.zip"',
-            (
-                'split_zip_file, "index.html.media/fig2-figsupp2.jpg" '
-                'new zip file name "index.html.media__fig2figsupp2.jpg.zip"'
-            ),
-            (
-                'split_zip_file, "index.html.media/fig1a.png" '
-                'new zip file name "index.html.media__fig1a.png.zip"'
-            ),
-            'split_zip_file, "index.html.media/2" new zip file name "index.html.media__2.zip"',
-            (
-                'split_zip_file, "index.html.media/fig1.jpg" '
-                'new zip file name "index.html.media__fig1.jpg.zip"'
-            ),
-            (
-                'split_zip_file, "index.html.media/fig2.jpg" '
-                'new zip file name "index.html.media__fig2.jpg.zip"'
-            ),
-            (
-                'split_zip_file, "index.html.media/fig2-figsupp1.jpg" '
-                'new zip file name "index.html.media__fig2figsupp1.jpg.zip"'
-            ),
-            'split_zip_file, "index.html.media/0" new zip file name "index.html.media__0.zip"',
-            (
-                'split_zip_file, "index.html.media/fig3.jpg" '
-                'new zip file name "index.html.media__fig3.jpg.zip"'
-            ),
-            (
-                'split_zip_file, "article.rmd.media/fig2-figsupp2.jpg" '
-                'new zip file name "article.rmd.media__fig2figsupp2.jpg.zip"'
+                'split_zip_file, "article.rmd.media/fig1.jpg" '
+                'new zip file name "article.rmd.media__fig1.jpg.zip"'
             ),
             (
                 'split_zip_file, "article.rmd.media/fig1a.png" '
                 'new zip file name "article.rmd.media__fig1a.png.zip"'
             ),
             (
-                'split_zip_file, "article.rmd.media/fig1.jpg" '
-                'new zip file name "article.rmd.media__fig1.jpg.zip"'
+                'split_zip_file, "article.rmd.media/fig2-figsupp1.jpg" '
+                'new zip file name "article.rmd.media__fig2figsupp1.jpg.zip"'
+            ),
+            (
+                'split_zip_file, "article.rmd.media/fig2-figsupp2.jpg" '
+                'new zip file name "article.rmd.media__fig2figsupp2.jpg.zip"'
             ),
             (
                 'split_zip_file, "article.rmd.media/fig2.jpg" '
                 'new zip file name "article.rmd.media__fig2.jpg.zip"'
             ),
             (
-                'split_zip_file, "article.rmd.media/fig2-figsupp1.jpg" '
-                'new zip file name "article.rmd.media__fig2figsupp1.jpg.zip"'
-            ),
-            (
                 'split_zip_file, "article.rmd.media/fig3.jpg" '
                 'new zip file name "article.rmd.media__fig3.jpg.zip"'
             ),
+            ('split_zip_file, "index.html" new zip file name "index.html.zip"'),
+            ('split_zip_file, "index.html.media/" ends with a slash, skipping it'),
+            (
+                'split_zip_file, "index.html.media/0" new zip file name "index.html.media__0.zip"'
+            ),
+            (
+                'split_zip_file, "index.html.media/1" new zip file name "index.html.media__1.zip"'
+            ),
+            (
+                'split_zip_file, "index.html.media/2" new zip file name "index.html.media__2.zip"'
+            ),
+            (
+                'split_zip_file, "index.html.media/fig1.jpg" '
+                'new zip file name "index.html.media__fig1.jpg.zip"'
+            ),
+            (
+                'split_zip_file, "index.html.media/fig1a.png" '
+                'new zip file name "index.html.media__fig1a.png.zip"'
+            ),
+            (
+                'split_zip_file, "index.html.media/fig2-figsupp1.jpg" '
+                'new zip file name "index.html.media__fig2figsupp1.jpg.zip"'
+            ),
+            (
+                'split_zip_file, "index.html.media/fig2-figsupp2.jpg" '
+                'new zip file name "index.html.media__fig2figsupp2.jpg.zip"'
+            ),
+            (
+                'split_zip_file, "index.html.media/fig2.jpg" '
+                'new zip file name "index.html.media__fig2.jpg.zip"'
+            ),
+            (
+                'split_zip_file, "index.html.media/fig3.jpg" '
+                'new zip file name "index.html.media__fig3.jpg.zip"'
+            ),
         ]
+
         return_value_expected = [
-            "Study_48_Protocols_3_4_Combined_Means.csv.zip",
-            "Study_48_Meta_Analysis.csv.zip",
-            "article.rmd.media__fig2.jpg.zip",
-            "article.rmd.media__fig1a.png.zip",
             "Study_48_Figure_2_Supplemental_Tables.csv.zip",
-            "article.rmd.media__fig3.jpg.zip",
-            "index.html.zip",
+            "Study_48_Meta_Analysis.csv.zip",
+            "Study_48_Protocol_2_Data.csv.zip",
+            "Study_48_Protocols_3_4_Combined_Means.csv.zip",
             "article.references.bib.zip",
             "article.rmd.media__fig1.jpg.zip",
-            "index.html.media__2.zip",
+            "article.rmd.media__fig1a.png.zip",
+            "article.rmd.media__fig2.jpg.zip",
+            "article.rmd.media__fig2figsupp1.jpg.zip",
+            "article.rmd.media__fig2figsupp2.jpg.zip",
+            "article.rmd.media__fig3.jpg.zip",
+            "article.rmd.zip",
             "index.html.media__0.zip",
             "index.html.media__1.zip",
-            "article.rmd.media__fig2figsupp1.jpg.zip",
-            "Study_48_Protocol_2_Data.csv.zip",
+            "index.html.media__2.zip",
             "index.html.media__fig1.jpg.zip",
-            "index.html.media__fig2figsupp1.jpg.zip",
-            "article.rmd.zip",
-            "article.rmd.media__fig2figsupp2.jpg.zip",
-            "index.html.media__fig3.jpg.zip",
-            "index.html.media__fig2.jpg.zip",
-            "index.html.media__fig2figsupp2.jpg.zip",
             "index.html.media__fig1a.png.zip",
+            "index.html.media__fig2.jpg.zip",
+            "index.html.media__fig2figsupp1.jpg.zip",
+            "index.html.media__fig2figsupp2.jpg.zip",
+            "index.html.media__fig3.jpg.zip",
+            "index.html.zip",
         ]
         # call the function
         return_value = activity_module.split_zip_file(zip_file_path, tmp_dir, logger)

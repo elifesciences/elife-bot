@@ -237,7 +237,10 @@ def split_zip_file(zip_file_path, output_dir, logger):
     with zipfile.ZipFile(
         zip_file_path, "r", zipfile.ZIP_DEFLATED, allowZip64=True
     ) as open_zip:
-        for zip_info in open_zip.infolist():
+        open_zip_info_list = open_zip.infolist()
+        for zip_info in sorted(
+            open_zip_info_list, key=lambda zip_info: zip_info.filename
+        ):
             if zip_info.filename.endswith("/"):
                 logger.info(
                     'split_zip_file, "%s" ends with a slash, skipping it'
@@ -260,7 +263,7 @@ def split_zip_file(zip_file_path, output_dir, logger):
                 allowZip64=True,
             ) as new_zip:
                 new_zip.writestr(zip_info, open_zip.read(zip_info))
-    return os.listdir(output_dir)
+    return sorted(os.listdir(output_dir))
 
 
 def endpoint_from_response(response_string):
