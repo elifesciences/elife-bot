@@ -201,18 +201,15 @@ def swh_post_request(
 
     headers = {"In-Progress": "%s" % str(in_progress).lower()}
 
-    multiple_files = []
+    zip_file_name = zip_file_path.split(os.sep)[-1] if zip_file_path else None
+    atom_file_name = atom_file_path.split(os.sep)[-1] if atom_file_path else None
 
-    zip_file_name = None
-    if zip_file_path:
-        zip_file_name = zip_file_path.split(os.sep)[-1]
+    if zip_file_path and atom_file_path:
+        # multiple files, send with a Content-Type: multipart/form-data header
+        multiple_files = []
         multiple_files.append(
             ("file", (zip_file_name, open(zip_file_path, "rb"), "application/zip"))
         )
-
-    atom_file_name = None
-    if atom_file_path:
-        atom_file_name = atom_file_path.split(os.sep)[-1]
         multiple_files.append(
             (
                 "atom",
@@ -220,13 +217,24 @@ def swh_post_request(
             )
         )
 
-    response = requests.post(
-        url,
-        files=multiple_files,
-        verify=verify_ssl,
-        headers=headers,
-        auth=(auth_user, auth_pass),
-    )
+        response = requests.post(
+            url,
+            files=multiple_files,
+            verify=verify_ssl,
+            headers=headers,
+            auth=(auth_user, auth_pass),
+        )
+    elif zip_file_path:
+        # if only a zip file, send with a Content-Type: application/zip header
+        with open(zip_file_path, "rb") as payload:
+            headers["Content-Type"] = "application/zip"
+            response = requests.post(
+                url,
+                data=payload,
+                verify=verify_ssl,
+                headers=headers,
+                auth=(auth_user, auth_pass),
+            )
 
     if logger:
         file_details = []
