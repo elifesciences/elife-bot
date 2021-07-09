@@ -148,7 +148,7 @@ class activity_PushSWHDeposit(Activity):
         if len(new_zip_files) > 2:
 
             # second phase, send each additional file as a separate request
-            for new_zip_file in new_zip_files[1:-2]:
+            for new_zip_file in new_zip_files[1:-1]:
                 zip_file_path = os.path.join(
                     self.directories.get("TMP_DIR"), new_zip_file
                 )
