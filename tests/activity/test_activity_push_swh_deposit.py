@@ -55,17 +55,17 @@ class TestPushSWHDeposit(unittest.TestCase):
         # note: if the assertions below on the loginfo are hard to maintain,
         # they can potentially be removed
         self.assertTrue(
-            self.activity.logger.loginfo[34].startswith(
+            self.activity.logger.loginfo[35].startswith(
                 "PushSWHDeposit, finished post request to "
                 "https://deposit.swh.example.org/1/elife/, file path"
             ),
         )
         self.assertEqual(
-            self.activity.logger.loginfo[33],
+            self.activity.logger.loginfo[34],
             "Response from SWH API: 201\n%s" % response_string,
         )
         self.assertEqual(
-            self.activity.logger.loginfo[32],
+            self.activity.logger.loginfo[33],
             (
                 "Post zip file README.md.zip, atom file elife-30274-v1-era.xml "
                 "to SWH API: POST https://deposit.swh.example.org/1/elife/"
