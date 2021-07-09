@@ -15,7 +15,7 @@ class starter_SoftwareHeritageDeposit(Starter):
         workflow_params["workflow_id"] = "%s_%s" % (self.name, str(info.get("article_id")))
         workflow_params["workflow_name"] = self.name
         workflow_params["workflow_version"] = "1"
-        workflow_params["execution_start_to_close_timeout"] = str(60 * 15)
+        workflow_params["execution_start_to_close_timeout"] = str(60 * 45)
 
         input_data = info
         input_data["run"] = run

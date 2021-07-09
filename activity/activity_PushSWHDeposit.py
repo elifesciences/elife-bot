@@ -108,6 +108,9 @@ class activity_PushSWHDeposit(Activity):
         new_zip_files = split_zip_file(
             zip_file_path, self.directories.get("TMP_DIR"), self.logger
         )
+        self.logger.info(
+            "%s, ready to send %s zip files" % (self.name, len(new_zip_files))
+        )
 
         # first API request, part one, upload the first file
         first_request_url = "%s/%s/" % (
@@ -146,9 +149,13 @@ class activity_PushSWHDeposit(Activity):
 
         # send multiple files in a loop if there is more than two files to upload
         if len(new_zip_files) > 2:
-
+            file_count = 2
             # second phase, send each additional file as a separate request
             for new_zip_file in new_zip_files[1:-1]:
+                self.logger.info(
+                    "%s, sending zip file %s of %s"
+                    % (self.name, file_count, len(new_zip_files))
+                )
                 zip_file_path = os.path.join(
                     self.directories.get("TMP_DIR"), new_zip_file
                 )
@@ -167,6 +174,8 @@ class activity_PushSWHDeposit(Activity):
                         % (self.name, new_zip_file),
                     )
                     return self.ACTIVITY_PERMANENT_FAILURE
+
+                file_count = file_count + 1
 
         # third and final request, upload the final file with In-Progress False header
         if len(new_zip_files) > 1:

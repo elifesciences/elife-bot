@@ -20,7 +20,7 @@ class workflow_SoftwareHeritageDeposit(Workflow):
         self.name = "SoftwareHeritageDeposit"
         self.version = "1"
         self.description = "Deposit article data to Software Heritage repository"
-        self.default_execution_start_to_close_timeout = 60 * 15
+        self.default_execution_start_to_close_timeout = 60 * 45
         self.default_task_start_to_close_timeout = 30
 
         # Get the input from the JSON decision response
@@ -39,7 +39,13 @@ class workflow_SoftwareHeritageDeposit(Workflow):
                 define_workflow_step("PackageSWH", data),
                 define_workflow_step("GenerateSWHMetadata", data),
                 define_workflow_step("GenerateSWHReadme", data),
-                define_workflow_step("PushSWHDeposit", data),
+                define_workflow_step(
+                    "PushSWHDeposit", data,
+                    heartbeat_timeout=60 * 45,
+                    schedule_to_close_timeout=60 * 45,
+                    schedule_to_start_timeout=60 * 5,
+                    start_to_close_timeout=60 * 45,
+                ),
             ],
             "finish": {"requirements": None},
         }
