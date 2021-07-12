@@ -230,12 +230,16 @@ def conditional_starts(current_datetime):
             ]))
 
         # GoOA / CAS deposits once per day 21:45 UTC
-        # if current_time.tm_hour == 21:
-        #    conditional_start_list.append(OrderedDict([
-        #        ("starter_name", "starter_PubRouterDeposit"),
-        #        ("workflow_id", "PubRouterDeposit_GoOA"),
-        #        ("start_seconds", 60 * 31)
-        #    ]))
+        if current_time.tm_hour == 21:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_PubRouterDeposit"),
+                        ("workflow_id", "PubRouterDeposit_GoOA"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
 
         conditional_start_list.append(OrderedDict([
             ("starter_name", "starter_PubmedArticleDeposit"),
