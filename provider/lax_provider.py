@@ -94,7 +94,9 @@ def article_snippet(article_id, version, settings, auth=False):
     "snippet from the versions list for this version"
     status_code, data = article_versions(article_id, settings, auth)
     if status_code == 200:
-        snippet = next(vd for vd in data if vd["version"] == int(version))
+        snippet = next(
+            vd for vd in data if vd.get("version") and vd["version"] == int(version)
+        )
         return snippet
     raise Exception("Error in article_snippet: Version not found. Status: " + str(status_code))
 
@@ -105,9 +107,14 @@ def article_status_version_map(article_id, settings, auth=False):
     status_code, data = article_versions(article_id, settings, auth)
     if status_code == 200:
         for version_data in data:
-            if version_data.get('status') not in status_version_map:
-                status_version_map[version_data.get('status')] = []
-            status_version_map[version_data.get('status')].append(version_data.get('version'))
+            if not version_data.get("version"):
+                # skip the data if there is no version key, such as for a preprint article
+                continue
+            if version_data.get("status") not in status_version_map:
+                status_version_map[version_data.get("status")] = []
+            status_version_map[version_data.get("status")].append(
+                version_data.get("version")
+            )
     return status_version_map
 
 
@@ -126,7 +133,12 @@ def article_first_by_status(article_id, version, status, settings, auth=False):
 def article_highest_version(article_id, settings, auth=False):
     status_code, data = article_versions(article_id, settings, auth)
     if status_code == 200:
-        high_version = 0 if len(data) < 1 else max([int(x["version"]) for x in data])
+        data_with_a_version = [x for x in data if x.get("version")]
+        high_version = (
+            0
+            if len(data_with_a_version) < 1
+            else max([int(x["version"]) for x in data_with_a_version])
+        )
         return high_version
     elif status_code == 404:
         return "1"
@@ -153,7 +165,9 @@ def article_version_date_by_version(article_id, version, settings):
 def article_publication_date(article_id, settings, logger=None):
     status_code, data = article_versions(article_id, settings)
     if status_code == 200:
-        first_published_version_list = [x for x in data if int(x['version']) == 1]
+        first_published_version_list = [
+            x for x in data if x.get("version") and int(x["version"]) == 1
+        ]
         if len(first_published_version_list) < 1:
             return None
         first_published_version = first_published_version_list[0]

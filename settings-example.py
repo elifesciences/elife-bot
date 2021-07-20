@@ -44,7 +44,7 @@ class exp():
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
-    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=1"
+    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2"
     lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
 
@@ -353,7 +353,7 @@ class dev():
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
-    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=1"
+    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2"
     lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
 
@@ -659,7 +659,7 @@ class live():
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
-    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=1" 
+    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2" 
     lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
 
