@@ -71,11 +71,11 @@ class TestLaxProvider(unittest.TestCase):
     def test_article_version_200(self, mock_requests_get):
         response = MagicMock()
         response.status_code = 200
-        response.json.return_value = {'versions': [{'version': 1}]}
+        response.json.return_value = {'versions': [{"status": "preprint"}, {'version': 1}]}
         mock_requests_get.return_value = response
         status_code, versions = lax_provider.article_versions('08411', settings_mock)
         self.assertEqual(status_code, 200)
-        self.assertEqual(versions, [{'version': 1}])
+        self.assertEqual(versions, [{"status": "preprint"}, {'version': 1}])
 
     @patch('requests.get')
     def test_article_version_404(self, mock_requests_get):
@@ -136,7 +136,9 @@ class TestLaxProvider(unittest.TestCase):
     @patch('requests.get')
     def test_article_snippet_200_auth(self, mock_requests_get):
         expected_data = {'version': 1, 'type': 'research-article'}
-        response_data = {'versions': [expected_data]}
+        # add a preprint article, which has no version key, for test coverage
+        versions_response_data = [{"status": "preprint"}, expected_data]
+        response_data = {'versions': versions_response_data}
         response = MagicMock()
         response.status_code = 200
         response.json.return_value = response_data
