@@ -217,3 +217,44 @@ class TestSWHPostRequest(unittest.TestCase):
             "Error posting zip file %s and atom file %s to SWH API: 412\n"
             % (self.zip_file_name, self.atom_file_name),
         )
+
+
+class TestSWHOriginExists(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.url_pattern = settings_mock.software_heritage_api_get_origin_pattern
+        self.origin = "https://stencila.example.org/article-00666/"
+
+    @patch("requests.head")
+    def test_swh_origin_exists_200(self, mock_requests_head):
+        mock_requests_head.return_value = FakeResponse(200)
+        origin_exists = software_heritage.swh_origin_exists(
+            self.url_pattern, self.origin, logger=self.logger
+        )
+        self.assertEqual(origin_exists, True)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "Returning SWH origin exists value of True for origin %s" % self.origin,
+        )
+        self.assertEqual(self.logger.loginfo[-2], "SWH origin status code 200")
+        self.assertEqual(
+            self.logger.loginfo[-3],
+            "Checking of SWH origin exists at API URL %s"
+            % self.url_pattern.format(origin=self.origin),
+        )
+
+    @patch("requests.head")
+    def test_swh_origin_exists_404(self, mock_requests_head):
+        mock_requests_head.return_value = FakeResponse(404)
+        origin_exists = software_heritage.swh_origin_exists(
+            self.url_pattern, self.origin, logger=self.logger
+        )
+        self.assertEqual(origin_exists, False)
+
+    @patch("requests.head")
+    def test_swh_origin_exists_500(self, mock_requests_head):
+        mock_requests_head.return_value = FakeResponse(500)
+        origin_exists = software_heritage.swh_origin_exists(
+            self.url_pattern, self.origin, logger=self.logger
+        )
+        self.assertEqual(origin_exists, None)

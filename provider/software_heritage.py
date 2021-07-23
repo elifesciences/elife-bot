@@ -258,3 +258,28 @@ def swh_post_request(
         )
 
     return response
+
+
+def swh_origin_exists(url_pattern, origin, verify_ssl=False, logger=None):
+    "check Software Heritage API for whether an origin already exists"
+    url = url_pattern.format(origin=origin)
+
+    if logger:
+        logger.info("Checking of SWH origin exists at API URL %s" % url)
+    response = requests.head(
+        url,
+        verify=verify_ssl,
+    )
+    if logger:
+        logger.info("SWH origin status code %s" % response.status_code)
+    return_value = None
+    if response.status_code == 404:
+        return_value = False
+    elif response.status_code == 200:
+        return_value = True
+    if logger:
+        logger.info(
+            "Returning SWH origin exists value of %s for origin %s"
+            % (return_value, origin)
+        )
+    return return_value
