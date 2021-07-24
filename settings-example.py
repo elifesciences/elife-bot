@@ -319,6 +319,10 @@ class exp():
     software_heritage_collection_name = "elife"
     software_heritage_auth_user = "user"
     software_heritage_auth_pass = "pass"
+    software_heritage_api_get_origin_pattern = "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+
+    # ERA article incoming queue
+    era_incoming_queue = "exp-era-incoming-queue"
 
 
 class dev():
@@ -624,6 +628,10 @@ class dev():
     software_heritage_collection_name = "elife"
     software_heritage_auth_user = "user"
     software_heritage_auth_pass = "pass"
+    software_heritage_api_get_origin_pattern = "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+
+    # ERA article incoming queue
+    era_incoming_queue = "dev-era-incoming-queue"
 
 
 class live():
@@ -930,6 +938,10 @@ class live():
     software_heritage_collection_name = "elife"
     software_heritage_auth_user = "user"
     software_heritage_auth_pass = "pass"
+    software_heritage_api_get_origin_pattern = "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+
+    # ERA article incoming queue
+    era_incoming_queue = "prod-era-incoming-queue"
 
 
 def get_settings(ENV="dev"):
