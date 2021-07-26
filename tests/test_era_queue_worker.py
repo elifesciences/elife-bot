@@ -83,14 +83,43 @@ class TestEraQueueWorker(unittest.TestCase):
     @patch("requests.head")
     def test_approve_workflow_start_200(self, mock_requests_head):
         mock_requests_head.return_value = FakeResponse(200)
-        self.assertEqual(self.queue_worker.approve_workflow_start(None), False)
+        self.assertEqual(
+            self.queue_worker.approve_workflow_start("https://example.org"), False
+        )
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "Origin https://example.org already exists at Software Heritage",
+        )
 
     @patch("requests.head")
     def test_approve_workflow_start_404(self, mock_requests_head):
         mock_requests_head.return_value = FakeResponse(404)
-        self.assertEqual(self.queue_worker.approve_workflow_start(None), True)
+        self.assertEqual(
+            self.queue_worker.approve_workflow_start("https://example.org"), True
+        )
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "Origin https://example.org does not exist yet at Software Heritage",
+        )
 
     @patch("requests.head")
     def test_approve_workflow_start_500(self, mock_requests_head):
         mock_requests_head.return_value = FakeResponse(500)
-        self.assertEqual(self.queue_worker.approve_workflow_start(None), False)
+        self.assertEqual(
+            self.queue_worker.approve_workflow_start("https://example.org"), False
+        )
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "Could not determine the status of the origin https://example.org",
+        )
+
+    @patch("requests.head")
+    def test_approve_workflow_start_exception(self, mock_requests_head):
+        mock_requests_head.side_effect = Exception("An exception")
+        self.assertEqual(
+            self.queue_worker.approve_workflow_start("https://example.org"), False
+        )
+        self.assertEqual(
+            self.logger.logexception,
+            "Exception when checking swh_origin_exists for origin https://example.org",
+        )
