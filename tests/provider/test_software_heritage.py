@@ -239,7 +239,7 @@ class TestSWHOriginExists(unittest.TestCase):
         self.assertEqual(self.logger.loginfo[-2], "SWH origin status code 200")
         self.assertEqual(
             self.logger.loginfo[-3],
-            "Checking of SWH origin exists at API URL %s"
+            "Checking if SWH origin exists at API URL %s"
             % self.url_pattern.format(origin=self.origin),
         )
 

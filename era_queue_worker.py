@@ -124,11 +124,17 @@ class EraQueueWorker:
             self.logger.error("error obtaining queue")
 
     def approve_workflow_start(self, origin):
-        origin_exists = software_heritage.swh_origin_exists(
-            url_pattern=self.settings.software_heritage_api_get_origin_pattern,
-            origin=origin,
-            logger=self.logger,
-        )
+        try:
+            origin_exists = software_heritage.swh_origin_exists(
+                url_pattern=self.settings.software_heritage_api_get_origin_pattern,
+                origin=origin,
+                logger=self.logger,
+            )
+        except:
+            self.logger.exception(
+                "Exception when checking swh_origin_exists for origin %s" % origin
+            )
+            return False
         if origin_exists is None:
             self.logger.info("Could not determine the status of the origin %s", origin)
             return False

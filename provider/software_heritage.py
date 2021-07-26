@@ -265,7 +265,7 @@ def swh_origin_exists(url_pattern, origin, verify_ssl=False, logger=None):
     url = url_pattern.format(origin=origin)
 
     if logger:
-        logger.info("Checking of SWH origin exists at API URL %s" % url)
+        logger.info("Checking if SWH origin exists at API URL %s" % url)
     response = requests.head(
         url,
         verify=verify_ssl,
