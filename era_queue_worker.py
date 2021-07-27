@@ -85,8 +85,15 @@ class EraQueueWorker:
                         input_file = message_dict.get("download")
                         display = message_dict.get("display")
 
+                        origin = software_heritage.display_to_origin(display)
+                        self.logger.info(
+                            'display value "%s" turned into origin value "%s"',
+                            display,
+                            origin,
+                        )
+
                         # determine if a workflow should be started
-                        if self.approve_workflow_start(origin=display):
+                        if self.approve_workflow_start(origin=origin):
                             run = None
                             info = {
                                 "article_id": article_id,

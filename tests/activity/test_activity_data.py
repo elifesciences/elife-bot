@@ -79,7 +79,7 @@ SoftwareHeritageDeposit_data_example = {
     "recipient": "software_heritage",
     "input_file": "https://hub.stenci.la/api/projects/518/snapshots/15/archive",
     "data": {
-        "display": "https://elife.stencila.io/article-30274/",
+        "display": "https://elife.stencila.io/article-30274/v99/",
     }
 }
 
