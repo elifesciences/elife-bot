@@ -126,6 +126,21 @@ class TestSoftwareHeritageProviderReadme(unittest.TestCase):
         self.assertEqual(readme_string, "")
 
 
+class TestDisplayToOrigin(unittest.TestCase):
+    def test_display_to_origin_general(self):
+        display = "https://example.org"
+        self.assertEqual(software_heritage.display_to_origin(display), display)
+
+    def test_display_to_origin_era(self):
+        display = "https://elife.stencila.io/article-30274/"
+        self.assertEqual(software_heritage.display_to_origin(display), display)
+
+    def test_display_to_origin_era_with_version(self):
+        display = "https://elife.stencila.io/article-30274/v99/"
+        expected = "https://elife.stencila.io/article-30274/"
+        self.assertEqual(software_heritage.display_to_origin(display), expected)
+
+
 class TestSWHPostRequest(unittest.TestCase):
     def setUp(self):
         self.logger = FakeLogger()

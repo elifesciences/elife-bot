@@ -1,6 +1,7 @@
 "functions for processing deposits to Software Heritage"
 
 import os
+import re
 import requests
 from collections import OrderedDict
 from string import Template
@@ -185,6 +186,19 @@ def readme(kwargs):
     if string_template:
         return string_template.safe_substitute(kwargs)
     return ""
+
+
+def display_to_origin(display):
+    """
+    from the display value, an stencila article version,
+    trim it to be the SWH origin value
+
+    e.g. for display value
+    https://elife.stencila.io/article-30274/v99/
+    return https://elife.stencila.io/article-30274/
+    """
+    match_pattern = re.compile(r"^(https://elife.stencila.io/.*?/).*$")
+    return match_pattern.sub(r"\1", display)
 
 
 def swh_post_request(
