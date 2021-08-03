@@ -18,7 +18,7 @@ git+https://github.com/elifesciences/package-poa.git@514517f5644cf3eb34514368f25
 six==1.13.0
 docker==4.0.2
 pypandoc==1.4
-git+https://github.com/elifesciences/decision-letter-parser.git@1e31e6c4b24e8fd49d4587ae38deb198b5618788#egg=letterparser
+git+https://github.com/elifesciences/decision-letter-parser.git@60383aa4d4dd7c273a8def46f3b9f1031626a618#egg=letterparser
 PyYAML==5.4
 Wand==0.5.2
 paramiko==2.4.2
