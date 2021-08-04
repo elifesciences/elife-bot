@@ -261,6 +261,13 @@ class TestPackagePOA(unittest.TestCase):
                 loginfo_message in self.logger.loginfo,
                 'failed in scenario %s' % test_data.get('scenario'))
 
+        # assert the cached csv data was cleared at the end of do_activity
+        # this function call should raise an exception trying to parse the csv file again, e.g.
+        # FileNotFoundError: [Errno 2] No such file or directory: 'tests/test_data/poa_funding.csv'
+        # ../site-packages/ejpcsvparser/csv_data.py:142: FileNotFoundError
+        with self.assertRaises(FileNotFoundError):
+            activity_module.parse.data.index_funding_table()
+
     def boolean_assertion(self, value, expected, scenario=None):
         "shorthand for checking and displaying output for equality assertions"
         self.assertEqual(value, expected,
