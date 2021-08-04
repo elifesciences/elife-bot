@@ -4,6 +4,7 @@ import time
 import zipfile
 import glob
 import shutil
+import importlib
 from collections import OrderedDict
 from xml.parsers.expat import ExpatError
 from ejpcsvparser import parse
@@ -132,6 +133,9 @@ class activity_PackagePOA(Activity):
 
         if self.activity_status is True:
             self.clean_tmp_dir()
+
+        # reload the ejpcsvparser/csv_data.py module to clear cached CSV data
+        importlib.reload(parse.data)
 
         return result
 
