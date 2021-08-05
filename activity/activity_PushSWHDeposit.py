@@ -4,11 +4,13 @@ import os
 import zipfile
 from xml.etree import ElementTree
 from provider.execution_context import get_session
-from provider import software_heritage, utils
+from provider import software_heritage
 from provider.storage_provider import storage_context
 from activity.objects import Activity
 
 DESCRIPTION_PATTERN = 'ERA complement for "%s", %s'
+# maximum size of each zip file part when splitting apart large zip files
+MAX_ZIP_SIZE_IN_BYTES = 50000000
 
 
 class activity_PushSWHDeposit(Activity):
@@ -106,7 +108,10 @@ class activity_PushSWHDeposit(Activity):
 
         # preparatory step, break up the zip file into smaller zip file chunks
         new_zip_files = split_zip_file(
-            zip_file_path, self.directories.get("TMP_DIR"), self.logger
+            zip_file_path,
+            self.directories.get("TMP_DIR"),
+            self.logger,
+            max_zip_size=MAX_ZIP_SIZE_IN_BYTES,
         )
         self.logger.info(
             "%s, ready to send %s zip files" % (self.name, len(new_zip_files))
@@ -254,12 +259,18 @@ def download_bucket_resource(settings, storage_resource, to_dir, logger):
     return file_path
 
 
-def split_zip_file(zip_file_path, output_dir, logger):
+def split_zip_file(zip_file_path, output_dir, logger, max_zip_size=0):
     "create a new zip file for each file in the original zip file"
+    zip_file_name = zip_file_path.split(os.sep)[-1]
+    # remove the .zip file extension
+    zip_file_name_start = ".".join(zip_file_name.split(".")[:-1])
     with zipfile.ZipFile(
         zip_file_path, "r", zipfile.ZIP_DEFLATED, allowZip64=True
     ) as open_zip:
         open_zip_info_list = open_zip.infolist()
+        part_count = 1
+        new_zip_filename = None
+
         for zip_info in sorted(
             open_zip_info_list, key=lambda zip_info: zip_info.filename
         ):
@@ -269,22 +280,36 @@ def split_zip_file(zip_file_path, output_dir, logger):
                     % zip_info.filename
                 )
                 continue
-            clean_filename = re.sub(
-                r"[^a-zA-Z0-9_\.]", "", re.sub(r"/", "__", zip_info.filename)
-            )
-            new_zip_filename = clean_filename + ".zip"
+
+            if not new_zip_filename:
+                new_zip_filename = "%s_part%s.zip" % (
+                    zip_file_name_start,
+                    "{:04d}".format(part_count),
+                )
+            new_zip_filename_path = os.path.join(output_dir, new_zip_filename)
+
             logger.info(
                 'split_zip_file, "%s" new zip file name "%s"'
                 % (zip_info.filename, new_zip_filename)
             )
 
             with zipfile.ZipFile(
-                os.path.join(output_dir, new_zip_filename),
-                "w",
+                new_zip_filename_path,
+                "a",
                 zipfile.ZIP_DEFLATED,
-                allowZip64=True,
             ) as new_zip:
                 new_zip.writestr(zip_info, open_zip.read(zip_info))
+
+            # check size of zip file exceeds the max, and whether to start writing a new one
+            zip_file_size = os.path.getsize(new_zip_filename_path)
+            if zip_file_size > max_zip_size:
+                logger.info(
+                    "zip file %s size of %s bytes exceeds maximum of %s bytes, "
+                    "it will not be written to again"
+                    % (new_zip_filename, zip_file_size, max_zip_size)
+                )
+                new_zip_filename = None
+                part_count += 1
     return sorted(os.listdir(output_dir))
 
 

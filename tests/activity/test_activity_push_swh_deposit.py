@@ -22,6 +22,8 @@ class TestPushSWHDeposit(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
+        # set a smaller max zip file size in order to split the test fixture into multiple zips
+        activity_module.MAX_ZIP_SIZE_IN_BYTES = 500000
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
@@ -55,19 +57,19 @@ class TestPushSWHDeposit(unittest.TestCase):
         # note: if the assertions below on the loginfo are hard to maintain,
         # they can potentially be removed
         self.assertTrue(
-            self.activity.logger.loginfo[35].startswith(
+            self.activity.logger.loginfo[37].startswith(
                 "PushSWHDeposit, finished post request to "
                 "https://deposit.swh.example.org/1/elife/, file path"
             ),
         )
         self.assertEqual(
-            self.activity.logger.loginfo[34],
+            self.activity.logger.loginfo[36],
             "Response from SWH API: 201\n%s" % response_string,
         )
         self.assertEqual(
-            self.activity.logger.loginfo[33],
+            self.activity.logger.loginfo[35],
             (
-                "Post zip file README.md.zip, atom file elife-30274-v1-era.xml "
+                "Post zip file elife-30274-v1-era_part0001.zip, atom file elife-30274-v1-era.xml "
                 "to SWH API: POST https://deposit.swh.example.org/1/elife/"
             ),
         )
@@ -121,6 +123,7 @@ class TestSplitZipFile(unittest.TestCase):
     def test_split_zip_file(self):
         logger = FakeLogger()
         zip_file_name = "elife-30274-v1-era.zip"
+        max_zip_size = 1000000
         # create temporary directories for testing
         directory = TempDirectory()
         directory.makedir("input_dir")
@@ -143,113 +146,102 @@ class TestSplitZipFile(unittest.TestCase):
             ("First logger info"),
             (
                 'split_zip_file, "Study_48_Figure_2_Supplemental_Tables.csv" '
-                'new zip file name "Study_48_Figure_2_Supplemental_Tables.csv.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "Study_48_Meta_Analysis.csv" '
-                'new zip file name "Study_48_Meta_Analysis.csv.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "Study_48_Protocol_2_Data.csv" '
-                'new zip file name "Study_48_Protocol_2_Data.csv.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "Study_48_Protocols_3_4_Combined_Means.csv" '
-                'new zip file name "Study_48_Protocols_3_4_Combined_Means.csv.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "article.references.bib" '
-                'new zip file name "article.references.bib.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
-            ('split_zip_file, "article.rmd" new zip file name "article.rmd.zip"'),
+            (
+                'split_zip_file, "article.rmd" new zip file name "elife-30274-v1-era_part0001.zip"'
+            ),
             ('split_zip_file, "article.rmd.media/" ends with a slash, skipping it'),
             (
                 'split_zip_file, "article.rmd.media/fig1.jpg" '
-                'new zip file name "article.rmd.media__fig1.jpg.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "article.rmd.media/fig1a.png" '
-                'new zip file name "article.rmd.media__fig1a.png.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "article.rmd.media/fig2-figsupp1.jpg" '
-                'new zip file name "article.rmd.media__fig2figsupp1.jpg.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "article.rmd.media/fig2-figsupp2.jpg" '
-                'new zip file name "article.rmd.media__fig2figsupp2.jpg.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "article.rmd.media/fig2.jpg" '
-                'new zip file name "article.rmd.media__fig2.jpg.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "article.rmd.media/fig3.jpg" '
-                'new zip file name "article.rmd.media__fig3.jpg.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
-            ('split_zip_file, "index.html" new zip file name "index.html.zip"'),
+            (
+                'split_zip_file, "index.html" new zip file name "elife-30274-v1-era_part0001.zip"'
+            ),
             ('split_zip_file, "index.html.media/" ends with a slash, skipping it'),
             (
-                'split_zip_file, "index.html.media/0" new zip file name "index.html.media__0.zip"'
+                'split_zip_file, "index.html.media/0" new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
-                'split_zip_file, "index.html.media/1" new zip file name "index.html.media__1.zip"'
+                'split_zip_file, "index.html.media/1" new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
-                'split_zip_file, "index.html.media/2" new zip file name "index.html.media__2.zip"'
+                'split_zip_file, "index.html.media/2" new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "index.html.media/fig1.jpg" '
-                'new zip file name "index.html.media__fig1.jpg.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "index.html.media/fig1a.png" '
-                'new zip file name "index.html.media__fig1a.png.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "index.html.media/fig2-figsupp1.jpg" '
-                'new zip file name "index.html.media__fig2figsupp1.jpg.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
             ),
             (
                 'split_zip_file, "index.html.media/fig2-figsupp2.jpg" '
-                'new zip file name "index.html.media__fig2figsupp2.jpg.zip"'
+                'new zip file name "elife-30274-v1-era_part0001.zip"'
+            ),
+            (
+                "zip file elife-30274-v1-era_part0001.zip size of 1059117 bytes exceeds maximum of 1000000 bytes, it will not be written to again"
             ),
             (
                 'split_zip_file, "index.html.media/fig2.jpg" '
-                'new zip file name "index.html.media__fig2.jpg.zip"'
+                'new zip file name "elife-30274-v1-era_part0002.zip"'
             ),
             (
                 'split_zip_file, "index.html.media/fig3.jpg" '
-                'new zip file name "index.html.media__fig3.jpg.zip"'
+                'new zip file name "elife-30274-v1-era_part0002.zip"'
             ),
         ]
 
         return_value_expected = [
-            "Study_48_Figure_2_Supplemental_Tables.csv.zip",
-            "Study_48_Meta_Analysis.csv.zip",
-            "Study_48_Protocol_2_Data.csv.zip",
-            "Study_48_Protocols_3_4_Combined_Means.csv.zip",
-            "article.references.bib.zip",
-            "article.rmd.media__fig1.jpg.zip",
-            "article.rmd.media__fig1a.png.zip",
-            "article.rmd.media__fig2.jpg.zip",
-            "article.rmd.media__fig2figsupp1.jpg.zip",
-            "article.rmd.media__fig2figsupp2.jpg.zip",
-            "article.rmd.media__fig3.jpg.zip",
-            "article.rmd.zip",
-            "index.html.media__0.zip",
-            "index.html.media__1.zip",
-            "index.html.media__2.zip",
-            "index.html.media__fig1.jpg.zip",
-            "index.html.media__fig1a.png.zip",
-            "index.html.media__fig2.jpg.zip",
-            "index.html.media__fig2figsupp1.jpg.zip",
-            "index.html.media__fig2figsupp2.jpg.zip",
-            "index.html.media__fig3.jpg.zip",
-            "index.html.zip",
+            "elife-30274-v1-era_part0001.zip",
+            "elife-30274-v1-era_part0002.zip",
         ]
         # call the function
-        return_value = activity_module.split_zip_file(zip_file_path, tmp_dir, logger)
+        return_value = activity_module.split_zip_file(
+            zip_file_path, tmp_dir, logger, max_zip_size
+        )
         # test assertions
         self.assertEqual(logger.loginfo, loginfo_expected)
         self.assertEqual(return_value, return_value_expected)
