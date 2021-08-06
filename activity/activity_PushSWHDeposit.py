@@ -204,9 +204,7 @@ class activity_PushSWHDeposit(Activity):
                 return self.ACTIVITY_PERMANENT_FAILURE
 
         # clean temporary directory
-
-        # do not deleted files from the temp folder for now so they can be inspected
-        # self.clean_tmp_dir()
+        self.clean_tmp_dir()
 
         # return success
         return self.ACTIVITY_SUCCESS
