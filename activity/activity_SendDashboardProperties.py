@@ -58,7 +58,20 @@ class activity_SendDashboardProperties(Activity):
             bucket_folder_name = expanded_folder_name
             (xml_key, xml_filename) = get_article_xml_key(bucket, bucket_folder_name)
             if xml_key is None:
-                self.logger.error("Article XML path not found")
+                error_message = "Article XML path not found"
+                self.logger.error("%s for article_id %s" % (error_message, article_id))
+                self.emit_monitor_event(
+                    self.settings,
+                    article_id,
+                    version,
+                    run,
+                    "Send dashboard properties",
+                    "error",
+                    "Error in send of article properties to dashboard for article "
+                    + article_id
+                    + " message:"
+                    + error_message,
+                )
                 return self.ACTIVITY_PERMANENT_FAILURE
 
             xml = xml_key.get_contents_as_string()
