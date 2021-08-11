@@ -67,6 +67,20 @@ class TestLaxProvider(unittest.TestCase):
         result = lax_provider.article_version_date_by_version('08411', "2", settings_mock)
         self.assertEqual("2015-11-30T00:00:00Z", result)
 
+    @patch("provider.lax_provider.article_versions")
+    def test_article_version_date_by_version_with_preprint(
+        self, mock_lax_provider_article_versions
+    ):
+        response_data = [
+            {"status": "preprint"},
+            {"version": 1, "versionDate": "2015-11-30T00:00:00Z"},
+        ]
+        mock_lax_provider_article_versions.return_value = 200, response_data
+        result = lax_provider.article_version_date_by_version(
+            "08411", "1", settings_mock
+        )
+        self.assertEqual("2015-11-30T00:00:00Z", result)
+
     @patch('requests.get')
     def test_article_version_200(self, mock_requests_get):
         response = MagicMock()

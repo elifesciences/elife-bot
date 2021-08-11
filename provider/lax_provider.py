@@ -162,9 +162,10 @@ def article_next_version(article_id, settings):
 
 def article_version_date_by_version(article_id, version, settings):
     status_code, data = article_versions(article_id, settings)
-    print(data)
     if status_code == 200:
-        version_data = next(vd for vd in data if vd["version"] == int(version))
+        version_data = next(
+            vd for vd in data if vd.get("version") and vd["version"] == int(version)
+        )
         return parse(version_data["versionDate"]).strftime("%Y-%m-%dT%H:%M:%SZ")
     raise Exception(
         "Error in article_publication_date_by_version: Version date not found. Status: "
