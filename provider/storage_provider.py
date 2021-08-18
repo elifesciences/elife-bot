@@ -108,8 +108,7 @@ class S3StorageContext:
         folder = s3_key[1:] if s3_key[:1] == "/" else s3_key
         bucketlist = bucket.list(prefix=folder + "/")
         files = []
-        for file in bucketlist:
-            key = bucket.get_key(file.key)
+        for key in bucketlist:
             filename = key.name.rsplit('/', 1)[1]
             files.append(filename)
 
