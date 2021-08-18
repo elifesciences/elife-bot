@@ -135,7 +135,6 @@ class TestPubRouterDeposit(unittest.TestCase):
         "Cengage",
         "GoOA",
         "WoS",
-        "Scopus",
         "CNPIEC",
         "CNKI",
         "CLOCKSS",

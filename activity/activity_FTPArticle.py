@@ -106,8 +106,6 @@ class activity_FTPArticle(Activity):
                 self.sftp_to_endpoint(zipfiles, sub_dir)
             if workflow == 'Cengage':
                 self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == 'Scopus':
-                self.sftp_to_endpoint(zipfiles)
             if workflow == 'WoS':
                 self.ftp_to_endpoint(zipfiles, passive=True)
             if workflow == 'GoOA':
@@ -167,18 +165,6 @@ class activity_FTPArticle(Activity):
             self.FTP_USERNAME = self.settings.CENGAGE_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.CENGAGE_FTP_PASSWORD
             self.FTP_CWD = self.settings.CENGAGE_FTP_CWD
-
-        if workflow == 'Scopus':
-            self.FTP_URI = self.settings.SCOPUS_FTP_URI
-            self.FTP_USERNAME = self.settings.SCOPUS_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.SCOPUS_FTP_PASSWORD
-            self.FTP_CWD = self.settings.SCOPUS_FTP_CWD
-
-            # SFTP settings
-            self.SFTP_URI = self.settings.SCOPUS_SFTP_URI
-            self.SFTP_USERNAME = self.settings.SCOPUS_SFTP_USERNAME
-            self.SFTP_PASSWORD = self.settings.SCOPUS_SFTP_PASSWORD
-            self.SFTP_CWD = self.settings.SCOPUS_SFTP_CWD
 
         if workflow == 'WoS':
             self.FTP_URI = self.settings.WOS_FTP_URI
@@ -378,7 +364,7 @@ class activity_FTPArticle(Activity):
         """
 
         # Repackage or move the zip depending on the workflow type
-        if workflow in ['Cengage', 'Scopus', 'WoS', 'CNKI']:
+        if workflow in ['Cengage', 'WoS', 'CNKI']:
             if workflow == 'CNKI':
                 file_types = ["xml"]
             else:
