@@ -28,7 +28,6 @@ class TestFTPArticle(unittest.TestCase):
         ('HEFCE', True, None, 'hefce_ftp.localhost', 'hefce_sftp.localhost', True),
         ('Cengage', True, None, 'cengage.localhost', None, True),
         ('GoOA', True, None, 'gooa.localhost', None, True),
-        ('Scopus', True, None, 'scopus_ftp.localhost', 'scopus_sftp.localhost', True),
         ('WoS', True, None, 'wos.localhost', None, True),
         ('CNPIEC', True, None, 'cnpiec.localhost', None, True),
         ('CNPIEC', False, True, 'cnpiec.localhost', None, True),

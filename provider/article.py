@@ -254,8 +254,6 @@ class article(object):
             published_folder = "gooa/published/"
         if workflow == "WoS":
             published_folder = "wos/published/"
-        if workflow == "Scopus":
-            published_folder = "scopus/published/"
         if workflow == "CNPIEC":
             published_folder = "cnpiec/published/"
         if workflow == "CNKI":

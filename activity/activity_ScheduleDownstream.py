@@ -114,7 +114,6 @@ def outbox_map():
     outboxes["cengage"] = "cengage/outbox/"
     outboxes["gooa"] = "gooa/outbox/"
     outboxes["wos"] = "wos/outbox/"
-    outboxes["scopus"] = "scopus/outbox/"
     outboxes["cnpiec"] = "cnpiec/outbox/"
     outboxes["cnki"] = "cnki/outbox/"
     outboxes["clockss"] = "clockss/outbox/"
@@ -143,7 +142,6 @@ def choose_outboxes(status, outbox_map, first_by_status, run_type=None):
         outbox_list.append(outbox_map.get("cengage"))
         outbox_list.append(outbox_map.get("gooa"))
         outbox_list.append(outbox_map.get("wos"))
-        outbox_list.append(outbox_map.get("scopus"))
         outbox_list.append(outbox_map.get("cnpiec"))
         outbox_list.append(outbox_map.get("cnki"))
         outbox_list.append(outbox_map.get("clockss"))

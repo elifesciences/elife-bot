@@ -151,8 +151,6 @@ class activity_PubRouterDeposit(Activity):
             return "gooa/outbox/"
         elif workflow == "WoS":
             return "wos/outbox/"
-        elif workflow == "Scopus":
-            return "scopus/outbox/"
         elif workflow == "PMC":
             return "pmc/outbox/"
         elif workflow == "CNPIEC":
@@ -180,8 +178,6 @@ class activity_PubRouterDeposit(Activity):
             return "gooa/published/"
         elif workflow == "WoS":
             return "wos/published/"
-        elif workflow == "Scopus":
-            return "scopus/published/"
         elif workflow == "PMC":
             return "pmc/published/"
         elif workflow == "CNPIEC":
@@ -654,8 +650,6 @@ class activity_PubRouterDeposit(Activity):
                 recipients = self.settings.GOOA_EMAIL
             elif workflow == "WoS":
                 recipients = self.settings.WOS_EMAIL
-            elif workflow == "Scopus":
-                recipients = self.settings.SCOPUS_EMAIL
             elif workflow == "CNPIEC":
                 recipients = self.settings.CNPIEC_EMAIL
             elif workflow == "CNKI":

@@ -58,7 +58,6 @@ class starter_PubRouterDeposit():
             or workflow == "Cengage"
             or workflow == "GoOA"
             or workflow == "WoS"
-            or workflow == "Scopus"
             or workflow == "PMC"
             or workflow == "CNPIEC"
             or workflow == "CNKI"

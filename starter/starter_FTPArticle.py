@@ -58,7 +58,6 @@ class starter_FTPArticle():
         if (
             workflow == "HEFCE"
             or workflow == "Cengage"
-            or workflow == "Scopus"
             or workflow == "WoS"
             or workflow == "GoOA"
             or workflow == "CNPIEC"
