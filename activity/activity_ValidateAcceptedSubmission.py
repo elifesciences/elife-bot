@@ -51,10 +51,19 @@ class activity_ValidateAcceptedSubmission(Activity):
         self.make_activity_directories()
 
         # configure log files for the cleaner provider
+        cleaner_log_handers = []
+        format_string = (
+            "%(asctime)s %(levelname)s %(name)s:%(module)s:%(funcName)s: %(message)s"
+        )
         # log to a common log file
-        cleaner.log_to_file()
+        cleaner_log_handers.append(cleaner.log_to_file(format_string=format_string))
         # log file for this activity only
-        cleaner.log_to_file(os.path.join(self.get_tmp_dir(), self.activity_log_file))
+        cleaner_log_handers.append(
+            cleaner.log_to_file(
+                os.path.join(self.get_tmp_dir(), self.activity_log_file),
+                format_string=format_string,
+            )
+        )
 
         # parse the input data
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)
@@ -91,6 +100,10 @@ class activity_ValidateAcceptedSubmission(Activity):
                 % (self.name, self.input_file)
             )
             return self.ACTIVITY_PERMANENT_FAILURE
+        finally:
+            # remove the log handlers
+            for log_handler in cleaner_log_handers:
+                cleaner.log_remove_handler(log_handler)
 
         self.log_statuses(self.input_file)
 
