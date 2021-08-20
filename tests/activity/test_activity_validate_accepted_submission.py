@@ -76,7 +76,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         with open(log_file_path, "r") as open_file:
             log_contents = open_file.read()
         log_warnings = [
-            line for line in log_contents.split("\n") if line.startswith("WARNING ")
+            line for line in log_contents.split("\n") if "WARNING elifecleaner:parse:check_ejp_zip:" in line
         ]
         self.assertEqual(len(log_warnings), test_data.get("expected_log_warning_count"))
 

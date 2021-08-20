@@ -10,7 +10,7 @@ git+https://github.com/elifesciences/elife-tools.git@66c248f0e5b32fbd3427c2f1586
 elifearticle==0.5.0
 configparser==3.5.0
 elifecrossref==0.4.0
-elifecleaner==0.4.0
+elifecleaner==0.5.0
 git+https://github.com/elifesciences/elife-pubmed-xml-generation.git@ebd128176df5044673a9dd4777ff432dcd8aaa66#egg=elifepubmed
 git+https://github.com/elifesciences/ejp-csv-parser.git@2e07c7a9bf60c435dac78207858b4c80d250511a#egg=ejpcsvparser
 git+https://github.com/elifesciences/jats-generator.git@7dde779b334e7d554174dbed1a78d63603ded293#egg=jatsgenerator
