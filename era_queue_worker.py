@@ -78,7 +78,14 @@ class EraQueueWorker:
                         self.logger.info("got message: %s", str(queue_message))
 
                         message_body = queue_message.get_body()
-                        message_dict = json.loads(message_body)
+                        try:
+                            message_dict = json.loads(message_body)
+                        except json.decoder.JSONDecodeError as exception:
+                            self.logger.exception(
+                                "Exception loading message body as JSON: %s: %s"
+                                % (message_body, str(exception))
+                            )
+                            message_dict = {}
 
                         # get values from the queue message
                         article_id = message_dict.get("id")
@@ -93,37 +100,40 @@ class EraQueueWorker:
                         )
 
                         # determine if a workflow should be started
-                        if self.approve_workflow_start(origin=origin):
-                            run = None
-                            info = {
-                                "article_id": article_id,
-                                "version": "1",
-                                "workflow": "software_heritage",
-                                "recipient": "software_heritage",
-                                "input_file": input_file,
-                                "data": {
-                                    "display": display,
-                                },
-                            }
-                            workflow_data = {"run": run, "info": info}
+                        if origin:
+                            if self.approve_workflow_start(origin=origin):
+                                run = None
+                                info = {
+                                    "article_id": article_id,
+                                    "version": "1",
+                                    "workflow": "software_heritage",
+                                    "recipient": "software_heritage",
+                                    "input_file": input_file,
+                                    "data": {
+                                        "display": display,
+                                    },
+                                }
+                                workflow_data = {"run": run, "info": info}
 
-                            # build message
-                            message = {
-                                "workflow_name": WORKFLOW_NAME,
-                                "workflow_data": workflow_data,
-                            }
-                            self.logger.info(
-                                "Starting a %s workflow for %s", WORKFLOW_NAME, display
-                            )
-                            # send workflow initiation message
-                            message_object = Message()
-                            message_object.set_body(json.dumps(message))
-                            out_queue.write(message_object)
+                                # build message
+                                message = {
+                                    "workflow_name": WORKFLOW_NAME,
+                                    "workflow_data": workflow_data,
+                                }
+                                self.logger.info(
+                                    "Starting a %s workflow for %s",
+                                    WORKFLOW_NAME,
+                                    display,
+                                )
+                                # send workflow initiation message
+                                message_object = Message()
+                                message_object.set_body(json.dumps(message))
+                                out_queue.write(message_object)
 
-                        # cancel incoming message
-                        self.logger.info("cancelling message")
-                        queue.delete_message(queue_message)
-                        self.logger.info("message cancelled")
+                            # cancel incoming message
+                            self.logger.info("cancelling message")
+                            queue.delete_message(queue_message)
+                            self.logger.info("message cancelled")
 
             self.logger.info("graceful shutdown")
 

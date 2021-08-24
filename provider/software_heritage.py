@@ -197,6 +197,8 @@ def display_to_origin(display):
     https://elife.stencila.io/article-30274/v99/
     return https://elife.stencila.io/article-30274/
     """
+    if not display:
+        return None
     match_pattern = re.compile(r"^(https://elife.stencila.io/.*?/).*$")
     return match_pattern.sub(r"\1", display)
 
