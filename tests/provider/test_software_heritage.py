@@ -127,6 +127,10 @@ class TestSoftwareHeritageProviderReadme(unittest.TestCase):
 
 
 class TestDisplayToOrigin(unittest.TestCase):
+    def test_display_to_origin_none(self):
+        display = None
+        self.assertIsNone(software_heritage.display_to_origin(display))
+
     def test_display_to_origin_general(self):
         display = "https://example.org"
         self.assertEqual(software_heritage.display_to_origin(display), display)
