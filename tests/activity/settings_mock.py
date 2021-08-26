@@ -212,3 +212,7 @@ software_heritage_collection_name = "elife"
 software_heritage_auth_user = "user"
 software_heritage_auth_pass = "pass"
 software_heritage_api_get_origin_pattern = "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+
+# Accepted submission workflow
+accepted_submission_sender_email = "sender@example.org"
+accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
