@@ -12,6 +12,7 @@ import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 import tests.test_data as test_case_data
 from tests.classes_mock import FakeSMTPServer
+from tests.activity import helpers
 from tests.activity.classes_mock import FakeStorageContext
 
 
@@ -19,16 +20,6 @@ def input_data(file_name_to_change=''):
     activity_data = test_case_data.ingest_digest_data
     activity_data["file_name"] = file_name_to_change
     return activity_data
-
-
-def body_from_multipart_email_string(email_string):
-    """Given a multipart email string, convert to Message and return decoded body"""
-    body = None
-    email_message = email.message_from_string(email_string)
-    if email_message.is_multipart():
-        for payload in email_message.get_payload():
-            body = payload.get_payload(decode=True)
-    return body
 
 
 @ddt
@@ -153,7 +144,7 @@ class TestValidateDigestInput(unittest.TestCase):
                 if test_data.get("expected_email_from"):
                     self.assertTrue(test_data.get("expected_email_from") in first_email_content)
                 if test_data.get("expected_email_body"):
-                    body = body_from_multipart_email_string(first_email_content)
+                    body = helpers.body_from_multipart_email_string(first_email_content)
                     self.assertTrue(test_data.get("expected_email_body") in str(body))
 
 

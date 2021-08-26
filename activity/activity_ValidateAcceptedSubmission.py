@@ -4,7 +4,7 @@ import shutil
 import time
 from xml.etree.ElementTree import ParseError
 from S3utility.s3_notification_info import parse_activity_data
-from provider import cleaner, download_helper, utils
+from provider import cleaner, download_helper, email_provider, utils
 from activity.objects import Activity
 
 
@@ -38,7 +38,7 @@ class activity_ValidateAcceptedSubmission(Activity):
         }
 
         # Track the success of some steps
-        self.statuses = {"valid": None}
+        self.statuses = {"valid": None, "email": None}
 
     def do_activity(self, data=None):
         """
@@ -58,9 +58,10 @@ class activity_ValidateAcceptedSubmission(Activity):
         # log to a common log file
         cleaner_log_handers.append(cleaner.log_to_file(format_string=format_string))
         # log file for this activity only
+        log_file_path = os.path.join(self.get_tmp_dir(), self.activity_log_file)
         cleaner_log_handers.append(
             cleaner.log_to_file(
-                os.path.join(self.get_tmp_dir(), self.activity_log_file),
+                log_file_path,
                 format_string=format_string,
             )
         )
@@ -89,21 +90,43 @@ class activity_ValidateAcceptedSubmission(Activity):
                 self.input_file, self.directories.get("TEMP_DIR")
             )
         except ParseError:
-            self.logger.exception(
+            log_message = (
                 "%s, XML ParseError exception in cleaner.check_ejp_zip for file %s"
                 % (self.name, self.input_file)
             )
+            self.logger.exception(log_message)
+            # Send error email
+            self.statuses["email"] = self.email_error_report(real_filename, log_message)
+            self.log_statuses(self.input_file)
             return self.ACTIVITY_PERMANENT_FAILURE
         except Exception:
-            self.logger.exception(
+            log_message = (
                 "%s, unhandled exception in cleaner.check_ejp_zip for file %s"
                 % (self.name, self.input_file)
             )
+            self.logger.exception(log_message)
+            # Send error email
+            self.statuses["email"] = self.email_error_report(real_filename, log_message)
+            self.log_statuses(self.input_file)
             return self.ACTIVITY_PERMANENT_FAILURE
         finally:
             # remove the log handlers
             for log_handler in cleaner_log_handers:
                 cleaner.log_remove_handler(log_handler)
+
+        # Send an email if the log has warnings
+        log_contents = ""
+        with open(log_file_path, "r") as open_file:
+            log_contents = open_file.read()
+        if "WARNING" in log_contents:
+            # Send error email
+            error_messages = (
+                "Warnings found in the log file for zip file %s\n\n" % real_filename
+            )
+            error_messages += log_contents
+            self.statuses["email"] = self.email_error_report(
+                real_filename, error_messages
+            )
 
         self.log_statuses(self.input_file)
 
@@ -126,3 +149,33 @@ class activity_ValidateAcceptedSubmission(Activity):
             if dir_name in keep_dirs or not os.path.exists(dir_path):
                 continue
             shutil.rmtree(dir_path)
+
+    def email_error_report(self, filename, error_messages):
+        "send an email on error"
+        datetime_string = time.strftime("%Y-%m-%d %H:%M", time.gmtime())
+        body = email_provider.simple_email_body(datetime_string, error_messages)
+        subject = error_email_subject(filename)
+        sender_email = self.settings.accepted_submission_sender_email
+
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.accepted_submission_validate_error_recipient_email
+        )
+
+        connection = email_provider.smtp_connect(self.settings, self.logger)
+        # send the emails
+        for recipient in recipient_email_list:
+            # create the email
+            email_message = email_provider.message(subject, sender_email, recipient)
+            email_provider.add_text(email_message, body)
+            # send the email
+            email_provider.smtp_send(
+                connection, sender_email, recipient, email_message, self.logger
+            )
+        return True
+
+
+def error_email_subject(filename):
+    "email subject for an error email"
+    return u"Error validating accepted submission file: {filename}".format(
+        filename=filename
+    )
