@@ -47,6 +47,7 @@ class exp():
     lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2"
     lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
+    lax_auth_key = ""
 
     no_download_extensions = 'tif'
 
@@ -147,10 +148,6 @@ class exp():
 
     # Templates settings
     email_templates_path = "/opt/elife-email-templates"
-
-    # Article subjects data
-    article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
-    article_subjects_data_file = "article_subjects.csv"
 
     # Crossref generation
     elifecrossref_config_file = 'crossref.cfg'
@@ -351,6 +348,7 @@ class dev():
     lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2"
     lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
+    lax_auth_key = ""
 
     no_download_extensions = 'tif'
 
@@ -451,10 +449,6 @@ class dev():
 
     # Templates settings
     email_templates_path = "/opt/elife-email-templates"
-
-    # Article subjects data
-    article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
-    article_subjects_data_file = "article_subjects.csv"
 
     # Crossref generation
     elifecrossref_config_file = 'crossref.cfg'
@@ -652,6 +646,7 @@ class live():
     lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2" 
     lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
+    lax_auth_key = ""
 
     no_download_extensions = 'tif'
 
