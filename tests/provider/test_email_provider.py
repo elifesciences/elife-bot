@@ -160,3 +160,108 @@ class TestAdminEmail(unittest.TestCase):
         self.assertTrue(("As part of workflowId: %s" % workflow_id) in email_body_foot)
         self.assertTrue(("As at %s" % datetime_string) in email_body_foot)
         self.assertTrue(("Domain: %s" % domain) in email_body_foot)
+
+
+class TestGetEmailSubject(unittest.TestCase):
+    def test_get_email_subject(self):
+        datetime_string = "2019-08-21T16:00:13.000Z"
+        activity_status_text = "Success!"
+        name = "DepositCrossref"
+        domain = "Publish"
+        outbox_s3_key_names = ["crossref/outbox/elife-00666-v1.xml"]
+        expected = "%s %s files: 1, 2019-08-21T16:00:13.000Z, eLife SWF domain: %s" % (
+            name,
+            activity_status_text,
+            domain,
+        )
+        email_subject = email_provider.get_email_subject(
+            datetime_string, activity_status_text, name, domain, outbox_s3_key_names
+        )
+        self.assertEqual(email_subject, expected)
+
+
+class TestGetEmailBodyHead(unittest.TestCase):
+    def test_get_email_body_head_no_statuses(self):
+        name = "DepositCrossref"
+        activity_status_text = "Success!"
+        statuses = {}
+        expected = "DepositCrossref status:\n\nSuccess!\n\n\n"
+        email_body_head = email_provider.get_email_body_head(
+            name, activity_status_text, statuses
+        )
+        self.assertEqual(email_body_head, expected)
+
+    def test_get_email_body_head_all_statuses(self):
+        name = "DepositCrossref"
+        activity_status_text = "Success!"
+        statuses = {
+            "unsupported_status_value": None,
+            "activity": True,
+            "generate": True,
+            "approve": True,
+            "upload": False,
+            "publish": None,
+            "outbox": None,
+        }
+        expected = (
+            "DepositCrossref status:\n\n"
+            "Success!\n\n"
+            "activity_status: True\n"
+            "generate_status: True\n"
+            "approve_status: True\n"
+            "upload_status: False\n"
+            "publish_status: None\n"
+            "outbox_status: None\n\n"
+        )
+        email_body_head = email_provider.get_email_body_head(
+            name, activity_status_text, statuses
+        )
+        self.assertEqual(email_body_head, expected)
+
+
+class TestGetEmailBodyMiddle(unittest.TestCase):
+    def test_get_email_body_middle_no_outbox_files(self):
+        activity_name = "crossref"
+        outbox_s3_key_names = []
+        published_file_names = []
+        not_published_file_names = []
+        http_detail_list = None
+        expected = "\nOutbox files: \nNo files in outbox.\n"
+        email_body_middle = email_provider.get_email_body_middle(
+            activity_name,
+            outbox_s3_key_names,
+            published_file_names,
+            not_published_file_names,
+            http_detail_list,
+        )
+        self.assertEqual(email_body_middle, expected)
+
+    def test_get_email_body_middle(self):
+        activity_name = "crossref"
+        outbox_s3_key_names = ["crossref/outbox/elife-00666-v1.xml"]
+        published_file_names = ["elife-00777-v1.xml"]
+        not_published_file_names = ["elife-99999-v1.xml"]
+        http_detail_list = [
+            "XML file: tmp/elife-crossref-00666.xml",
+            "HTTP status: 200",
+            "HTTP response: \n<html/>",
+        ]
+        expected = (
+            "\nOutbox files: \n"
+            "crossref/outbox/elife-00666-v1.xml\n\n"
+            "Published files generated crossref XML: \nelife-00777-v1.xml\n\n"
+            "Files not approved or failed crossref XML: \nelife-99999-v1.xml\n\n"
+            "-------------------------------\n"
+            "HTTP deposit details: \n"
+            "XML file: tmp/elife-crossref-00666.xml\n"
+            "HTTP status: 200\n"
+            "HTTP response: \n<html/>\n"
+        )
+        email_body_middle = email_provider.get_email_body_middle(
+            activity_name,
+            outbox_s3_key_names,
+            published_file_names,
+            not_published_file_names,
+            http_detail_list,
+        )
+        self.assertEqual(email_body_middle, expected)

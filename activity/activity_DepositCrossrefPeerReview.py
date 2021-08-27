@@ -225,14 +225,14 @@ class activity_DepositCrossrefPeerReview(Activity):
         datetime_string = time.strftime('%Y-%m-%d %H:%M', time.gmtime())
         activity_status_text = utils.get_activity_status_text(self.statuses.get("activity"))
 
-        body = crossref.get_email_body_head(self.name, activity_status_text, self.statuses)
-        body += crossref.get_email_body_middle(
-            outbox_s3_key_names, self.good_xml_files,
+        body = email_provider.get_email_body_head(self.name, activity_status_text, self.statuses)
+        body += email_provider.get_email_body_middle(
+            "crossref", outbox_s3_key_names, self.good_xml_files,
             self.bad_xml_files, http_detail_list)
         body += email_provider.get_admin_email_body_foot(
             self.get_activityId(), self.get_workflowId(), datetime_string, self.settings.domain)
 
-        subject = crossref.get_email_subject(
+        subject = email_provider.get_email_subject(
             datetime_string, activity_status_text, self.name,
             self.settings.domain, outbox_s3_key_names)
         sender_email = self.settings.ses_poa_sender_email
