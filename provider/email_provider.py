@@ -273,3 +273,83 @@ def simple_email_body(datetime_string, body_content=''):
             body_content=body_content,
             datetime_string=datetime_string)
     return ''
+
+
+def get_email_subject(
+    datetime_string, activity_status_text, name, domain, outbox_s3_key_names
+):
+    "Assemble an the email subject for activity status emails"
+    # Count the files moved from the outbox, the files that were processed
+    files_count = 0
+    if outbox_s3_key_names:
+        files_count = len(outbox_s3_key_names)
+
+    return "%s %s files: %s, %s, eLife SWF domain: %s" % (
+        name,
+        activity_status_text,
+        files_count,
+        datetime_string,
+        domain,
+    )
+
+
+def get_email_body_head(name, activity_status_text, statuses):
+    "Format the body of the email for activity status emails"
+
+    body = ""
+
+    # Bulk of body
+    body += "%s status:\n\n" % name
+    body += "%s\n\n" % activity_status_text
+
+    # print status values if they exist, even if the status value is None
+    status_values = ["activity", "generate", "approve", "upload", "publish", "outbox"]
+    for status_value in status_values:
+        if status_value in statuses:
+            body += "%s_status: %s\n" % (status_value, statuses.get(status_value))
+
+    body += "\n"
+
+    return body
+
+
+def get_email_body_middle(
+    activity_name,
+    outbox_s3_key_names,
+    published_file_names,
+    not_published_file_names,
+    http_detail_list=None,
+):
+    "Format the body of the email for activity status emails"
+
+    body = ""
+    body += "\nOutbox files: \n"
+
+    files_count = 0
+    if outbox_s3_key_names:
+        files_count = len(outbox_s3_key_names)
+    if files_count > 0:
+        for name in outbox_s3_key_names:
+            body += "%s\n" % name
+    else:
+        body += "No files in outbox.\n"
+
+    # Report on published files
+    if len(published_file_names) > 0:
+        body += "\nPublished files generated %s XML: \n" % activity_name
+        for name in published_file_names:
+            body += "%s\n" % name.split(os.sep)[-1]
+
+    # Report on not published files
+    if len(not_published_file_names) > 0:
+        body += "\nFiles not approved or failed %s XML: \n" % activity_name
+        for name in not_published_file_names:
+            body += "%s\n" % name.split(os.sep)[-1]
+
+    if http_detail_list:
+        body += "\n-------------------------------"
+        body += "\nHTTP deposit details: \n"
+        for text in http_detail_list:
+            body += "%s\n" % text
+
+    return body

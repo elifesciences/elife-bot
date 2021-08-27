@@ -1,3 +1,4 @@
+import glob
 import os
 import unittest
 import shutil
@@ -67,7 +68,14 @@ class TestDepositCrossref(unittest.TestCase):
                  '<article_title>The Earth Microbiome project: successes and aspirations' +
                  '</article_title><doi>10.1186/s12915-014-0069-1</doi>' +
                  '<elocation_id>69</elocation_id></citation>')
-                ]
+                ],
+            "expected_email_count": 1,
+            "expected_email_subject": "DepositCrossref Success! files: 1,",
+            "expected_email_from": "From: sender@example.org",
+            "expected_email_body_contains": [
+                r"DepositCrossref status:\n\nSuccess!\n\nactivity_status: True",
+                r"Published files generated crossref XML: \nelife-15747-v2.xml",
+                "HTTP status: 200"],
         },
         {
             "comment": "Multiple files to deposit",
@@ -144,6 +152,31 @@ class TestDepositCrossref(unittest.TestCase):
                         expected in crossref_xml,
                         '{expected} not found in crossref_xml {path}'.format(
                             expected=expected, path=crossref_xml_filename_path))
+
+        # check email files and contents
+        email_files_filter = os.path.join(self.activity.get_tmp_dir(), "*.eml")
+        email_files = glob.glob(email_files_filter)
+        if "expected_email_count" in test_data:
+            self.assertEqual(len(email_files), test_data.get("expected_email_count"))
+            # can look at the first email for the subject and sender
+            first_email_content = None
+            with open(email_files[0]) as open_file:
+                first_email_content = open_file.read()
+            if first_email_content:
+                if test_data.get("expected_email_subject"):
+                    self.assertTrue(
+                        test_data.get("expected_email_subject") in first_email_content
+                    )
+                if test_data.get("expected_email_from"):
+                    self.assertTrue(
+                        test_data.get("expected_email_from") in first_email_content
+                    )
+                if test_data.get("expected_email_body_contains"):
+                    body = helpers.body_from_multipart_email_string(first_email_content)
+                    for expected_to_contain in test_data.get(
+                        "expected_email_body_contains"
+                    ):
+                        self.assertTrue(expected_to_contain in str(body))
 
     @patch('provider.lax_provider.article_versions')
     def test_get_article_objects(self, mock_article_versions):
