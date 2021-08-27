@@ -118,6 +118,17 @@ class TestSimpleMessage(unittest.TestCase):
                 "Fragment %s not found in email %s" % (expected, str(email_message)),
             )
 
+    def test_simple_messages(self):
+        "test creating multiple messages"
+        sender = "sender@example.org"
+        recipients = ["recipient_one@example.org", "recipient_two@example.org"]
+        subject = "Email subject"
+        body = "<p>Email body</p>"
+        email_messages = email_provider.simple_messages(
+            sender, recipients, subject, body
+        )
+        self.assertEqual(len(email_messages), 2)
+
     def test_simple_message_attachments(self):
         """test adding an email attachment to a message"""
         subtype = "html"
@@ -143,6 +154,13 @@ class TestSimpleMessage(unittest.TestCase):
                 expected in str(email_message),
                 "Fragment %s not found in email %s" % (expected, str(email_message)),
             )
+
+    def test_simple_email_body(self):
+        datetime_string = "2019-08-21T16:00:13.000Z"
+        body_content = "Body"
+        expected = "Body\n\nAs at 2019-08-21T16:00:13.000Z\n\nSincerely\n\neLife bot"
+        email_body = email_provider.simple_email_body(datetime_string, body_content)
+        self.assertEqual(email_body, expected)
 
 
 class TestAdminEmail(unittest.TestCase):
