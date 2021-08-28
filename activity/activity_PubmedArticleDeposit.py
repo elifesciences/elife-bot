@@ -14,10 +14,10 @@ from activity.objects import Activity
 
 
 class activity_PubmedArticleDeposit(Activity):
-
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_PubmedArticleDeposit, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "PubmedArticleDeposit"
         self.version = "1"
@@ -25,13 +25,15 @@ class activity_PubmedArticleDeposit(Activity):
         self.default_task_schedule_to_close_timeout = 60 * 30
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 15
-        self.description = ("Download article XML from pubmed outbox, generate pubmed " +
-                            "article XML, and deposit with pubmed.")
+        self.description = (
+            "Download article XML from pubmed outbox, generate pubmed "
+            + "article XML, and deposit with pubmed."
+        )
 
         # Local directory settings
         self.directories = {
             "TMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
-            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
         }
 
         self.date_stamp = utils.set_datestamp()
@@ -45,14 +47,16 @@ class activity_PubmedArticleDeposit(Activity):
         self.published_folder = "pubmed/published"
 
         # Track the success of some steps
-        self.statuses = OrderedDict([
-            ('generate', None),
-            ('approve', None),
-            ('upload', None),
-            ('publish', None),
-            ('outbox', None),
-            ('activity', None),
-        ])
+        self.statuses = OrderedDict(
+            [
+                ("generate", None),
+                ("approve", None),
+                ("upload", None),
+                ("publish", None),
+                ("outbox", None),
+                ("activity", None),
+            ]
+        )
 
         self.outbox_s3_key_names = None
 
@@ -64,7 +68,7 @@ class activity_PubmedArticleDeposit(Activity):
         """
         Activity, do the work
         """
-        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         self.make_activity_directories()
 
@@ -75,36 +79,36 @@ class activity_PubmedArticleDeposit(Activity):
         self.download_files_from_s3_outbox()
 
         # Generate pubmed XML
-        self.statuses['generate'] = self.generate_pubmed_xml()
+        self.statuses["generate"] = self.generate_pubmed_xml()
 
         # Approve files for publishing
-        self.statuses['approve'] = self.approve_for_publishing()
+        self.statuses["approve"] = self.approve_for_publishing()
 
-        if self.statuses.get('approve'):
+        if self.statuses.get("approve"):
             # Publish files
             try:
-                self.statuses['upload'] = self.sftp_files_to_endpoint(
-                    from_dir=self.directories.get("TMP_DIR"),
-                    file_type="/*.xml")
+                self.statuses["upload"] = self.sftp_files_to_endpoint(
+                    from_dir=self.directories.get("TMP_DIR"), file_type="/*.xml"
+                )
             except Exception as exception:
                 self.logger.exception(str(exception))
                 return self.ACTIVITY_PERMANENT_FAILURE
 
-        if self.statuses.get('upload'):
+        if self.statuses.get("upload"):
             # Clean up outbox
             print("Moving files from outbox folder to published folder")
             self.clean_outbox()
             self.upload_pubmed_xml_to_s3()
-            self.statuses['outbox'] = True
-            self.statuses['publish'] = True
-        elif self.statuses.get('upload') is False:
-            self.statuses['publish'] = False
+            self.statuses["outbox"] = True
+            self.statuses["publish"] = True
+        elif self.statuses.get("upload") is False:
+            self.statuses["publish"] = False
 
         # Set the activity status of this activity based on successes
-        if self.statuses.get('publish') in (None, True):
-            self.statuses['activity'] = True
+        if self.statuses.get("publish") in (None, True):
+            self.statuses["activity"] = True
         else:
-            self.statuses['activity'] = False
+            self.statuses["activity"] = False
 
         # Send email
         # Only if there were files approved for publishing
@@ -115,7 +119,7 @@ class activity_PubmedArticleDeposit(Activity):
         self.clean_tmp_dir()
 
         # return a value based on the activity_status
-        if self.statuses.get('activity') is True:
+        if self.statuses.get("activity") is True:
             return True
 
         return self.ACTIVITY_PERMANENT_FAILURE
@@ -141,8 +145,8 @@ class activity_PubmedArticleDeposit(Activity):
             dirname = self.directories.get("INPUT_DIR")
             if dirname:
                 filename_plus_path = dirname + os.sep + filename
-                with open(filename_plus_path, 'wb') as open_file:
-                    storage_resource_origin = orig_resource + '/' + name
+                with open(filename_plus_path, "wb") as open_file:
+                    storage_resource_origin = orig_resource + "/" + name
                     storage.get_resource_to_file(storage_resource_origin, open_file)
 
     def get_article_version_from_lax(self, article_id):
@@ -157,14 +161,17 @@ class activity_PubmedArticleDeposit(Activity):
     def enhance_article(self, article):
         "set additional details on the article object from Lax data or other sources"
 
-        article.was_ever_poa = lax_provider.was_ever_poa(article.manuscript, self.settings)
+        article.was_ever_poa = lax_provider.was_ever_poa(
+            article.manuscript, self.settings
+        )
 
         # Check if each article is published
         article.is_published = lax_provider.published_considering_poa_status(
             article_id=article.manuscript,
             settings=self.settings,
             is_poa=article.is_poa,
-            was_ever_poa=article.was_ever_poa)
+            was_ever_poa=article.was_ever_poa,
+        )
 
         if not article.version:
             article.version = self.get_article_version_from_lax(article.manuscript)
@@ -181,8 +188,12 @@ class activity_PubmedArticleDeposit(Activity):
         for xml_file in article_xml_files:
             generate_status = True
 
-            article = parse_article_xml(xml_file, elifepubmed_config(
-                self.settings), self.directories.get("TMP_DIR"), self.logger)
+            article = parse_article_xml(
+                xml_file,
+                elifepubmed_config(self.settings),
+                self.directories.get("TMP_DIR"),
+                self.logger,
+            )
 
             if article is None:
                 self.article_not_published_file_names.append(xml_file)
@@ -192,8 +203,9 @@ class activity_PubmedArticleDeposit(Activity):
                 article = self.enhance_article(article)
             except:
                 self.logger.exception(
-                    "Exception in enhance_article for xml_file %s in %s" %
-                    (xml_file, self.name))
+                    "Exception in enhance_article for xml_file %s in %s"
+                    % (xml_file, self.name)
+                )
                 self.article_not_published_file_names.append(xml_file)
                 continue
 
@@ -201,11 +213,14 @@ class activity_PubmedArticleDeposit(Activity):
                 # generate pubmed deposit
                 try:
                     generate.pubmed_xml_to_disk(
-                        [article], config_section=self.settings.elifepubmed_config_section)
+                        [article],
+                        config_section=self.settings.elifepubmed_config_section,
+                    )
                 except:
                     self.logger.exception(
-                        "Exception in generate.pubmed_xml_to_disk for xml_file %s in %s" %
-                        (xml_file, self.name))
+                        "Exception in generate.pubmed_xml_to_disk for xml_file %s in %s"
+                        % (xml_file, self.name)
+                    )
                     generate_status = False
             else:
                 generate_status = False
@@ -246,18 +261,23 @@ class activity_PubmedArticleDeposit(Activity):
             sftp_client = sftp.sftp_connect(
                 self.settings.PUBMED_SFTP_URI,
                 self.settings.PUBMED_SFTP_USERNAME,
-                self.settings.PUBMED_SFTP_PASSWORD)
+                self.settings.PUBMED_SFTP_PASSWORD,
+            )
         except Exception as exception:
             self.logger.exception(
-                'Failed to connect to SFTP endpoint %s: %s' % (
-                    self.settings.PUBMED_SFTP_URI, str(exception)))
+                "Failed to connect to SFTP endpoint %s: %s"
+                % (self.settings.PUBMED_SFTP_URI, str(exception))
+            )
             raise
 
         try:
             sftp.sftp_to_endpoint(
-                sftp_client, uploadfiles, self.settings.PUBMED_SFTP_CWD, sub_dir)
+                sftp_client, uploadfiles, self.settings.PUBMED_SFTP_CWD, sub_dir
+            )
         except Exception as exception:
-            self.logger.exception('Failed to upload files by SFTP to PubMed: %s' % str(exception))
+            self.logger.exception(
+                "Failed to upload files by SFTP to PubMed: %s" % str(exception)
+            )
             raise
         finally:
             sftp.disconnect()
@@ -282,9 +302,11 @@ class activity_PubmedArticleDeposit(Activity):
         files_in_bucket = storage.list_resources(orig_resource)
         # add the prefix back to the file name to set the value
         # and ignore the original folder name
-        self.outbox_s3_key_names = [self.outbox_folder + '/' + filename
-                                    for filename in files_in_bucket
-                                    if filename != '']
+        self.outbox_s3_key_names = [
+            self.outbox_folder + "/" + filename
+            for filename in files_in_bucket
+            if filename != ""
+        ]
 
         return self.outbox_s3_key_names
 
@@ -315,7 +337,7 @@ class activity_PubmedArticleDeposit(Activity):
         s3_key_names = []
         for name in self.article_published_file_names:
             filename = name.split(os.sep)[-1]
-            s3_key_name = self.outbox_folder + '/' + filename
+            s3_key_name = self.outbox_folder + "/" + filename
             s3_key_names.append(s3_key_name)
 
         for name in s3_key_names:
@@ -338,12 +360,17 @@ class activity_PubmedArticleDeposit(Activity):
         storage_provider = self.settings.storage_provider + "://"
 
         date_folder_name = self.date_stamp
-        s3_folder_name = self.published_folder + '/' + date_folder_name + "/" + "batch"
+        s3_folder_name = self.published_folder + "/" + date_folder_name + "/" + "batch"
 
         for xml_file in xml_files:
-            resource_dest = (storage_provider + bucket_name + "/" +
-                             s3_folder_name + "/" +
-                             article_processing.file_name_from_name(xml_file))
+            resource_dest = (
+                storage_provider
+                + bucket_name
+                + "/"
+                + s3_folder_name
+                + "/"
+                + article_processing.file_name_from_name(xml_file)
+            )
             storage.set_resource_from_filename(resource_dest, xml_file)
 
     def send_email(self):
@@ -419,13 +446,16 @@ def parse_article_xml(xml_file, pubmed_config, tmp_dir, logger):
         # Convert the XML file to article objects
         article_list = generate.build_articles(
             article_xmls=[xml_file],
-            build_parts=pubmed_config.get('build_parts'),
-            remove_tags=pubmed_config.get('remove_tags'))
+            build_parts=pubmed_config.get("build_parts"),
+            remove_tags=pubmed_config.get("remove_tags"),
+        )
         # take the first article from the list
         if article_list:
             article = article_list[0]
     except:
-        logger.exception('Exception in parsing article XML %s for PubMed generation' % xml_file)
+        logger.exception(
+            "Exception in parsing article XML %s for PubMed generation" % xml_file
+        )
         article = None
 
     return article
