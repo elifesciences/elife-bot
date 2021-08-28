@@ -1,4 +1,5 @@
 import unittest
+import glob
 import os
 from collections import OrderedDict
 from ddt import ddt, data
@@ -71,6 +72,14 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                     b'<AbstractText Label="">To optimize fitness a plant should monitor its'
                     + b" metabolism to appropriately control growth and defense."
                 ),
+            ],
+            "expected_email_count": 1,
+            "expected_email_subject": "PubmedArticleDeposit Success! files: 2,",
+            "expected_email_from": "From: sender@example.org",
+            "expected_email_body_contains": [
+                r"PubmedArticleDeposit status:\n\nSuccess!\n\nactivity_status: True",
+                r"Published files generated pubmed XML: \nelife-29353-v1.xml",
+                r"SWF workflow details: \nactivityId:",
             ],
         },
         {
@@ -237,6 +246,31 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                             path=pubmed_xml_filename_path,
                         ),
                     )
+
+        # check email files and contents
+        email_files_filter = os.path.join(self.activity.get_tmp_dir(), "*.eml")
+        email_files = glob.glob(email_files_filter)
+        if "expected_email_count" in test_data:
+            self.assertEqual(len(email_files), test_data.get("expected_email_count"))
+            # can look at the first email for the subject and sender
+            first_email_content = None
+            with open(email_files[0]) as open_file:
+                first_email_content = open_file.read()
+            if first_email_content:
+                if test_data.get("expected_email_subject"):
+                    self.assertTrue(
+                        test_data.get("expected_email_subject") in first_email_content
+                    )
+                if test_data.get("expected_email_from"):
+                    self.assertTrue(
+                        test_data.get("expected_email_from") in first_email_content
+                    )
+                if test_data.get("expected_email_body_contains"):
+                    body = helpers.body_from_multipart_email_string(first_email_content)
+                    for expected_to_contain in test_data.get(
+                        "expected_email_body_contains"
+                    ):
+                        self.assertTrue(expected_to_contain in str(body))
         # clean directory after each test
         self.activity.clean_tmp_dir()
 

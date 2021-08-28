@@ -434,7 +434,7 @@ class activity_PubmedArticleDeposit(Activity):
         # Report on published files
         if self.article_published_file_names:
             body += "\n"
-            body += "Published files included in pubmed XML: " + "\n"
+            body += "Published files generated pubmed XML: " + "\n"
             for name in self.article_published_file_names:
                 body += name.split(os.sep)[-1] + "\n"
 
