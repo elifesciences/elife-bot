@@ -78,8 +78,9 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             "expected_email_from": "From: sender@example.org",
             "expected_email_body_contains": [
                 r"PubmedArticleDeposit status:\n\nSuccess!\n\nactivity_status: True",
+                r"Outbox files: \npubmed/outbox/elife-29353-v1.xml",
                 r"Published files generated pubmed XML: \nelife-29353-v1.xml",
-                r"SWF workflow details: \nactivityId:",
+                r"SWF workflow details:\nactivityId:",
             ],
         },
         {
@@ -267,6 +268,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                     )
                 if test_data.get("expected_email_body_contains"):
                     body = helpers.body_from_multipart_email_string(first_email_content)
+                    print(body)
                     for expected_to_contain in test_data.get(
                         "expected_email_body_contains"
                     ):
