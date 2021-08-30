@@ -61,13 +61,8 @@ def metadata(msid, settings):
     
     return resp.json()
 
-
 def jpg_href_values(metadata):
-
-    return list((seq(list(metadata.items()))
-                .filter(lambda key_value: 'jpg_href' in key_value[1])
-                .map(lambda k_v: k_v[1]['jpg_href'])))
-
+    return [val['jpg_href'] for val in metadata.values() if 'jpg_href' in val]
 
 def has_videos(xml_str):
     if re.search(r'<media[^>]*mimetype="video".*?>', unicode_encode(xml_str)):
@@ -80,7 +75,24 @@ def pad_msid(msid):
 
 
 def check_msid(msid):
-    if int(msid) > 100000:
+    """Replaces the msid of testing articles with the reference one they were generated from.
+    Leaves real articles AND the kitchen sink untouched.
+
+    Testing uses actual articles and generate a very long random msid from their shorter one.
+      for example: 09560 => 5432109560 (trailing msid is preserved)
+
+    All instances of the msid in the XML are replaced with this generated msid.
+    `check_msid` *truncates* this so external references continue pointing to the actual article assets.
+      for example: 5432109560 => 09560
+
+    The kitchen sink however is its own article with its own set of videos.
+    Its msid is still changed from 1234567890 to a generated one during testing *except* for video hrefs.
+    See `elife-spectrum/update-kitchen-sinks-from-github.sh`."""
+    msid = int(msid)
+    kitchen_sink_id = 1234567890
+    if msid == kitchen_sink_id:
+        return str(msid)
+    if msid > 100000:
         return pad_msid(msid[-5:])
     return pad_msid(msid)
 
