@@ -90,10 +90,11 @@ def check_msid(msid):
     See `elife-spectrum/update-kitchen-sinks-from-github.sh`."""
     msid = int(msid)
     kitchen_sink_id = 1234567890
-    if msid == kitchen_sink_id:
-        return str(msid)
+    # check if rightmost digits match the kitchen_sink_id
+    if int(str(msid)[-10:]) == kitchen_sink_id:
+        return str(msid)[-10:]
     if msid > 100000:
-        return pad_msid(msid[-5:])
+        return pad_msid(msid)[-5:]
     return pad_msid(msid)
 
 def force_article_id(filename, article_id):
