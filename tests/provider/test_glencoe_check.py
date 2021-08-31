@@ -9,6 +9,10 @@ class TestGlencoeCheck(unittest.TestCase):
         result = glencoe_check.check_msid("7777777701234")
         self.assertEqual('01234', result)
 
+    def test_check_msid_kitchen_sink(self):
+        result = glencoe_check.check_msid("91234567890")
+        self.assertEqual('1234567890', result)
+
     def test_check_msdi_proper_id(self):
         result = glencoe_check.check_msid("01234")
         self.assertEqual('01234', result)
