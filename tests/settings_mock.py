@@ -15,6 +15,7 @@ aws_secret_access_key = ""
 
 workflow_starter_queue = ""
 sqs_region = ""
+S3_monitor_queue = 'incoming_queue'
 
 redis_host = ""
 redis_port = 6379

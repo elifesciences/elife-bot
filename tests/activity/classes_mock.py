@@ -89,6 +89,9 @@ class FakeSQSQueue:
     def delete_message(self, message):
         self.messages = [q_message for q_message in self.messages if message != q_message]
 
+    def set_message_class(self, message_class):
+        pass
+
 
 class FakeFTP:
     def __init__(self, ftp_instance=None):
