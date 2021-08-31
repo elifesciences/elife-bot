@@ -18,7 +18,8 @@ Amazon SQS worker
 
 
 class QueueWorker:
-    def __init__(self, settings, logger=None):
+    def __init__(self, settings, logger=None, identity="queue_worker"):
+        self.identity = identity
         self.settings = settings
         if logger:
             self.logger = logger
@@ -26,11 +27,13 @@ class QueueWorker:
             self.create_log()
         self.conn = None
         self.sleep_seconds = 10
+        self.input_queue_name = self.settings.S3_monitor_queue
+        self.output_queue_name = self.settings.workflow_starter_queue
 
     def create_log(self):
         # Log
-        identity = "queue_worker_%s" % os.getpid()
-        log_file = "queue_worker.log"
+        identity = "%s_%s" % (self.identity, os.getpid())
+        log_file = "%s.log" % self.identity
         # logFile = None
         self.logger = log.logger(log_file, self.settings.setLevel, identity)
 
@@ -46,9 +49,9 @@ class QueueWorker:
     def queues(self):
         "get the queues"
         self.connect()
-        queue = self.conn.get_queue(self.settings.S3_monitor_queue)
+        queue = self.conn.get_queue(self.input_queue_name)
         queue.set_message_class(S3SQSMessage)
-        out_queue = self.conn.get_queue(self.settings.workflow_starter_queue)
+        out_queue = self.conn.get_queue(self.output_queue_name)
         return queue, out_queue
 
     def work(self, flag):
@@ -75,7 +78,7 @@ class QueueWorker:
                     with newrelic.agent.BackgroundTask(
                         application,
                         name=queue_message.notification_type,
-                        group="queue_worker.py",
+                        group="%s.py" % self.identity,
                     ):
                         self.logger.info("got message id: %s" % queue_message.id)
                         if queue_message.notification_type == "S3Event":
