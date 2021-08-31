@@ -30,7 +30,7 @@ class TestQueueWorker(unittest.TestCase):
         "test rules matching to the S3 notification info"
         rules = test_data.queue_worker_rules
         info = S3NotificationInfo.from_dict(test_data.queue_worker_article_zip_data)
-        expected_starter_name = 'InitialArticleZip'
+        expected_starter_name = "InitialArticleZip"
         starter_name = self.worker.get_starter_name(rules, info)
         self.assertEqual(starter_name, expected_starter_name)
 
@@ -38,7 +38,7 @@ class TestQueueWorker(unittest.TestCase):
         "test S3 notification info matching for the ingest digest workflow"
         rules = test_data.queue_worker_rules
         info = S3NotificationInfo.from_dict(test_data.ingest_digest_data)
-        expected_starter_name = 'IngestDigest'
+        expected_starter_name = "IngestDigest"
         starter_name = self.worker.get_starter_name(rules, info)
         self.assertEqual(starter_name, expected_starter_name)
 
@@ -46,15 +46,17 @@ class TestQueueWorker(unittest.TestCase):
         "test S3 notification info matching for the ingest decision letter workflow"
         rules = test_data.queue_worker_rules
         info = S3NotificationInfo.from_dict(test_data.ingest_decision_letter_data)
-        expected_starter_name = 'IngestDecisionLetter'
+        expected_starter_name = "IngestDecisionLetter"
         starter_name = self.worker.get_starter_name(rules, info)
         self.assertEqual(starter_name, expected_starter_name)
 
-    @patch('queue_worker.Message')
-    @patch('tests.activity.classes_mock.FakeSQSQueue.read')
-    @patch('queue_worker.QueueWorker.queues')
-    @patch('queue_worker.QueueWorker.connect')
-    def test_work(self, mock_sqs_connect, mock_queues, mock_queue_read, mock_sqs_message):
+    @patch("queue_worker.Message")
+    @patch("tests.activity.classes_mock.FakeSQSQueue.read")
+    @patch("queue_worker.QueueWorker.queues")
+    @patch("queue_worker.QueueWorker.connect")
+    def test_work(
+        self, mock_sqs_connect, mock_queues, mock_queue_read, mock_sqs_message
+    ):
         "test the main method of the class"
         directory = TempDirectory()
         mock_sqs_connect = FakeSQSConn(directory)
@@ -72,11 +74,13 @@ class TestQueueWorker(unittest.TestCase):
         self.assertEqual(out_queue_message, test_data.queue_worker_starter_message)
         self.assertEqual(return_value, None)
 
-    @patch('queue_worker.Message')
-    @patch('tests.activity.classes_mock.FakeSQSQueue.read')
-    @patch('queue_worker.QueueWorker.queues')
-    @patch('queue_worker.QueueWorker.connect')
-    def test_work_unknown_bucket(self, mock_sqs_connect, mock_queues, mock_queue_read, mock_sqs_message):
+    @patch("queue_worker.Message")
+    @patch("tests.activity.classes_mock.FakeSQSQueue.read")
+    @patch("queue_worker.QueueWorker.queues")
+    @patch("queue_worker.QueueWorker.connect")
+    def test_work_unknown_bucket(
+        self, mock_sqs_connect, mock_queues, mock_queue_read, mock_sqs_message
+    ):
         "test work method with an unrecognised bucket name"
         directory = TempDirectory()
         mock_sqs_connect = FakeSQSConn(directory)
@@ -85,7 +89,7 @@ class TestQueueWorker(unittest.TestCase):
         # create an S3 event message
         s3_event = FakeS3Event()
         # here override the bucket name
-        s3_event._bucket_name = 'not_a_real_bucket'
+        s3_event._bucket_name = "not_a_real_bucket"
         mock_queue_read.return_value = s3_event
         # create a fake green flag
         flag = FakeFlag()
@@ -96,5 +100,6 @@ class TestQueueWorker(unittest.TestCase):
         self.assertIsNone(out_queue_list, None)
         self.assertEqual(return_value, None)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
