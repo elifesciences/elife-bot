@@ -57,7 +57,7 @@ class QueueWorker:
         # Simple connect to the queues
         queue, out_queue = self.queues()
 
-        rules = self.load_rules()
+        rules = load_rules()
         application = newrelic.agent.application()
 
         # Poll for an activity task indefinitely
@@ -81,7 +81,7 @@ class QueueWorker:
                         if queue_message.notification_type == "S3Event":
                             info = S3NotificationInfo.from_S3SQSMessage(queue_message)
                             self.logger.info("S3NotificationInfo: %s", info.to_dict())
-                            workflow_name = self.get_starter_name(rules, info)
+                            workflow_name = get_starter_name(rules, info)
                             if workflow_name is None:
                                 self.logger.error(
                                     "Could not handle file %s in bucket %s"
@@ -113,18 +113,20 @@ class QueueWorker:
         else:
             self.logger.error("error obtaining queue")
 
-    def load_rules(self):
-        # load the rules from the YAML file
-        with open("newFileWorkflows.yaml", "r") as open_file:
-            return yaml.load(open_file.read())
 
-    def get_starter_name(self, rules, info):
-        for rule_name in rules:
-            rule = rules[rule_name]
-            if re.match(rule["bucket_name_pattern"], info.bucket_name) and re.match(
-                rule["file_name_pattern"], info.file_name
-            ):
-                return rule["starter_name"]
+def load_rules():
+    # load the rules from the YAML file
+    with open("newFileWorkflows.yaml", "r") as open_file:
+        return yaml.load(open_file.read())
+
+
+def get_starter_name(rules, info):
+    for rule_name in rules:
+        rule = rules[rule_name]
+        if re.match(rule["bucket_name_pattern"], info.bucket_name) and re.match(
+            rule["file_name_pattern"], info.file_name
+        ):
+            return rule["starter_name"]
 
 
 if __name__ == "__main__":
