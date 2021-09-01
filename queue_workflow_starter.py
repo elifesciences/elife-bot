@@ -114,6 +114,10 @@ def process_data_ingestdecisionletter(workflow_data):
     return process_data_s3_notification_default(workflow_data)
 
 
+def process_data_ingestacceptedsubmission(workflow_data):
+    return process_data_s3_notification_default(workflow_data)
+
+
 workflow_data_processors = {
     'IngestArticleZip': process_data_ingestarticlezip,
     'InitialArticleZip': process_data_initialarticlezip,
@@ -122,6 +126,7 @@ workflow_data_processors = {
     'PubmedArticleDeposit': process_data_pubmedarticledeposit,
     'IngestDigest': process_data_ingestdigest,
     'IngestDecisionLetter': process_data_ingestdecisionletter,
+    'IngestAcceptedSubmission': process_data_ingestacceptedsubmission,
 }
 
 
