@@ -16,7 +16,7 @@ class AcceptedSubmissionQueueWorker(QueueWorker):
 if __name__ == "__main__":
     ENV = utils.console_start_env()
     SETTINGS = utils.get_settings(ENV)
-    queue_worker_object = CleaningQueueWorker(SETTINGS)
+    queue_worker_object = AcceptedSubmissionQueueWorker(SETTINGS)
     # only start if the queue name is specified in the settings
     if getattr(SETTINGS, QUEUE_SETTING_NAME, None):
         process.monitor_interrupt(lambda flag: queue_worker_object.work(flag))
