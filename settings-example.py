@@ -311,6 +311,7 @@ class exp():
     # Accepted submission workflow
     accepted_submission_sender_email = "sender@example.org"
     accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
+    accepted_submission_queue = ""
 
 
 class dev():
@@ -608,6 +609,7 @@ class dev():
     # Accepted submission workflow
     accepted_submission_sender_email = "sender@example.org"
     accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
+    accepted_submission_queue = ""
 
 
 class live():
@@ -910,6 +912,7 @@ class live():
     # Accepted submission workflow
     accepted_submission_sender_email = "sender@example.org"
     accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
+    accepted_submission_queue = "cleaning-queue"
 
 
 def get_settings(ENV="dev"):

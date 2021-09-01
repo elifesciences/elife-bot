@@ -72,7 +72,7 @@ class FakeFlag():
 
 class FakeS3Event():
     "object to test an S3 notification event from an SQS queue"
-    def __init__(self):
+    def __init__(self, bucket_name=None):
         self.notification_type = 'S3Event'
         self.id = None
         self.body = ''
@@ -80,6 +80,8 @@ class FakeS3Event():
         self._event_name = u'ObjectCreated:Put'
         self._event_time = u'2016-07-28T16:14:27.809576Z'
         self._bucket_name = u'jen-elife-production-final'
+        if bucket_name:
+            self._bucket_name = bucket_name
         self._file_name = u'elife-00353-vor-r1.zip'
         self._file_etag = u'e7f639f63171c097d4761e2d2efe8dc4'
         self._file_size = 1097506

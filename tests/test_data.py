@@ -188,6 +188,11 @@ queue_worker_rules = {
        'file_name_pattern': r'.*\.(docx|zip)',
        'starter_name': 'IngestDecisionLetter'
        },
+    'AcceptedSubmissionInputFile': {
+       'bucket_name_pattern': '.*elife-accepted-submission-cleaning$',
+       'file_name_pattern': r'.*\.zip',
+       'starter_name': 'IngestAcceptedSubmission'
+       },
     }
 
 queue_worker_article_zip_data = {u'event_time': u'2016-07-28T16:14:27.809576Z',
