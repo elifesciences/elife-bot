@@ -1,6 +1,7 @@
 import unittest
 import glob
 import os
+import shutil
 from collections import OrderedDict
 from ddt import ddt, data
 from mock import patch
@@ -38,12 +39,12 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(lax_provider, "article_versions")
     @patch.object(activity_PubmedArticleDeposit, "sftp_files_to_endpoint")
-    @patch("activity.activity_PubmedArticleDeposit.storage_context")
+    @patch("provider.outbox_provider.storage_context")
     @patch.object(FakeStorageContext, "list_resources")
     @data(
         {
             "comment": "example PoA file will have an aheadofprint",
-            "outbox_filenames": ["elife-29353-v1.xml", "not_an_xml_file.pdf"],
+            "outbox_filenames": ["elife-29353-v1.xml"],
             "sftp_files_return_value": True,
             "article_versions_data": test_case_data.lax_article_versions_response_data,
             "expected_result": True,
@@ -74,7 +75,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                 ),
             ],
             "expected_email_count": 1,
-            "expected_email_subject": "PubmedArticleDeposit Success! files: 2,",
+            "expected_email_subject": "PubmedArticleDeposit Success! files: 1,",
             "expected_email_from": "From: sender@example.org",
             "expected_email_body_contains": [
                 r"PubmedArticleDeposit status:\n\nSuccess!\n\nactivity_status: True",
@@ -279,8 +280,8 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     @patch.object(activity_PubmedArticleDeposit, "sftp_files_to_endpoint")
     @patch.object(activity_PubmedArticleDeposit, "approve_for_publishing")
     @patch.object(activity_PubmedArticleDeposit, "generate_pubmed_xml")
-    @patch.object(activity_PubmedArticleDeposit, "download_files_from_s3_outbox")
-    @patch.object(activity_PubmedArticleDeposit, "get_outbox_s3_key_names")
+    @patch("provider.outbox_provider.download_files_from_s3_outbox")
+    @patch("provider.outbox_provider.get_outbox_s3_key_names")
     def test_do_activity_upload_exception(
         self,
         fake_get,
@@ -333,6 +334,10 @@ class TestPubmedGeneratePubmedXml(unittest.TestCase):
         )
         self.activity.make_activity_directories()
         self.xml_file = "elife-15747-v2.xml"
+        shutil.copy(
+            "tests/files_source/pubmed/outbox/%s" % self.xml_file,
+            "%s/%s" % (self.activity.directories.get("INPUT_DIR"), self.xml_file),
+        )
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
@@ -341,11 +346,7 @@ class TestPubmedGeneratePubmedXml(unittest.TestCase):
         )
 
     @patch.object(lax_provider, "article_versions")
-    @patch("activity.activity_PubmedArticleDeposit.storage_context")
-    @patch.object(FakeStorageContext, "list_resources")
-    def test_generate_pubmed_xml(
-        self, fake_list_resources, fake_storage_context, fake_article_versions
-    ):
+    def test_generate_pubmed_xml(self, fake_article_versions):
         "test a successful result for generate_pubmed_xml()"
         expected_status = True
         expected_logexception = "First logger exception"
@@ -354,10 +355,6 @@ class TestPubmedGeneratePubmedXml(unittest.TestCase):
             200,
             test_case_data.lax_article_versions_response_data,
         )
-        # copy XML files into the input directory using the storage context
-        fake_storage_context.return_value = FakeStorageContext()
-        fake_list_resources.return_value = [self.xml_file]
-        self.activity.download_files_from_s3_outbox()
         # invoke object method
         generate_status = self.activity.generate_pubmed_xml()
         # assertions
@@ -368,12 +365,8 @@ class TestPubmedGeneratePubmedXml(unittest.TestCase):
 
     @patch("activity.activity_PubmedArticleDeposit.generate.build_articles")
     @patch.object(lax_provider, "article_versions")
-    @patch("activity.activity_PubmedArticleDeposit.storage_context")
-    @patch.object(FakeStorageContext, "list_resources")
     def test_generate_pubmed_xml_article_exception(
         self,
-        fake_list_resources,
-        fake_storage_context,
         fake_article_versions,
         fake_build_articles,
     ):
@@ -389,10 +382,6 @@ class TestPubmedGeneratePubmedXml(unittest.TestCase):
             test_case_data.lax_article_versions_response_data,
         )
         fake_build_articles.side_effect = Exception("Exception in fake_build_articles")
-        # copy XML files into the input directory using the storage context
-        fake_storage_context.return_value = FakeStorageContext()
-        fake_list_resources.return_value = [self.xml_file]
-        self.activity.download_files_from_s3_outbox()
         # invoke object method
         generate_status = self.activity.generate_pubmed_xml()
         # assertions
@@ -403,12 +392,8 @@ class TestPubmedGeneratePubmedXml(unittest.TestCase):
 
     @patch.object(activity_PubmedArticleDeposit, "enhance_article")
     @patch.object(lax_provider, "article_versions")
-    @patch("activity.activity_PubmedArticleDeposit.storage_context")
-    @patch.object(FakeStorageContext, "list_resources")
     def test_generate_pubmed_xml_enhance_article_exception(
         self,
-        fake_list_resources,
-        fake_storage_context,
         fake_article_versions,
         fake_enhance_article,
     ):
@@ -428,10 +413,6 @@ class TestPubmedGeneratePubmedXml(unittest.TestCase):
             test_case_data.lax_article_versions_response_data,
         )
         fake_enhance_article.side_effect = Exception("Exception in enhance_article")
-        # copy XML files into the input directory using the storage context
-        fake_storage_context.return_value = FakeStorageContext()
-        fake_list_resources.return_value = [self.xml_file]
-        self.activity.download_files_from_s3_outbox()
         # invoke object method
         generate_status = self.activity.generate_pubmed_xml()
         # assertions
@@ -442,12 +423,8 @@ class TestPubmedGeneratePubmedXml(unittest.TestCase):
 
     @patch("activity.activity_PubmedArticleDeposit.generate.pubmed_xml_to_disk")
     @patch.object(lax_provider, "article_versions")
-    @patch("activity.activity_PubmedArticleDeposit.storage_context")
-    @patch.object(FakeStorageContext, "list_resources")
     def test_generate_pubmed_xml_generate_pubmed_xml_exception(
         self,
-        fake_list_resources,
-        fake_storage_context,
         fake_article_versions,
         fake_pubmed_xml_to_disk,
     ):
@@ -469,10 +446,6 @@ class TestPubmedGeneratePubmedXml(unittest.TestCase):
         fake_pubmed_xml_to_disk.side_effect = Exception(
             "Exception in fake_pubmed_xml_to_disk"
         )
-        # copy XML files into the input directory using the storage context
-        fake_storage_context.return_value = FakeStorageContext()
-        fake_list_resources.return_value = [self.xml_file]
-        self.activity.download_files_from_s3_outbox()
         # invoke object method
         generate_status = self.activity.generate_pubmed_xml()
         # assertions
@@ -531,7 +504,3 @@ class TestPubmedParseArticleXml(unittest.TestCase):
         self.assertEqual(
             str(fake_logger.logexception), (test_data.get("expected_logexception"))
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
