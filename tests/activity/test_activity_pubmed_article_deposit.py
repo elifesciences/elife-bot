@@ -220,7 +220,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         self.assertEqual(
             self.activity.outbox_s3_key_names,
             [
-                self.activity.outbox_folder + "/" + filename
+                self.activity.outbox_folder + filename
                 for filename in test_data.get("outbox_filenames")
             ],
             "failed in {comment}".format(comment=test_data.get("comment")),
