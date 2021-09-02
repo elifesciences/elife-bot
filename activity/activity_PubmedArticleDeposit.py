@@ -2,14 +2,12 @@ import os
 import json
 import time
 import glob
-import re
 from collections import OrderedDict
 from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
 import provider.article as articlelib
 from provider.sftp import SFTP
-from provider import article_processing, email_provider, lax_provider, utils
-from provider.storage_provider import storage_context
+from provider import email_provider, lax_provider, outbox_provider, utils
 from activity.objects import Activity
 
 
@@ -73,10 +71,18 @@ class activity_PubmedArticleDeposit(Activity):
         self.make_activity_directories()
 
         # Get a list of outbox file names always
-        self.outbox_s3_key_names = self.get_outbox_s3_key_names()
+        self.outbox_s3_key_names = outbox_provider.get_outbox_s3_key_names(
+            self.settings, self.publish_bucket, self.outbox_folder
+        )
 
         # Download the S3 objects
-        self.download_files_from_s3_outbox()
+        outbox_provider.download_files_from_s3_outbox(
+            self.settings,
+            self.publish_bucket,
+            self.outbox_s3_key_names,
+            self.directories.get("INPUT_DIR"),
+            self.logger,
+        )
 
         # Generate pubmed XML
         self.statuses["generate"] = self.generate_pubmed_xml()
@@ -96,9 +102,27 @@ class activity_PubmedArticleDeposit(Activity):
 
         if self.statuses.get("upload"):
             # Clean up outbox
-            print("Moving files from outbox folder to published folder")
-            self.clean_outbox()
-            self.upload_pubmed_xml_to_s3()
+            self.logger.info("Moving files from outbox folder to published folder")
+            date_stamp = utils.set_datestamp()
+            to_folder = outbox_provider.get_to_folder_name(
+                self.published_folder, date_stamp
+            )
+            outbox_provider.clean_outbox(
+                self.settings,
+                self.publish_bucket,
+                self.outbox_folder,
+                to_folder,
+                self.article_published_file_names,
+            )
+            # copy the deposit XML files to the batch folder
+            batch_file_names = glob.glob(self.directories.get("TMP_DIR") + "/*.xml")
+            batch_file_to_folder = to_folder + "batch/"
+            outbox_provider.upload_files_to_s3_folder(
+                self.settings,
+                self.publish_bucket,
+                batch_file_to_folder,
+                batch_file_names,
+            )
             self.statuses["outbox"] = True
             self.statuses["publish"] = True
         elif self.statuses.get("upload") is False:
@@ -123,31 +147,6 @@ class activity_PubmedArticleDeposit(Activity):
             return True
 
         return self.ACTIVITY_PERMANENT_FAILURE
-
-    def download_files_from_s3_outbox(self):
-        """
-        Connect to the S3 bucket, and from the outbox folder,
-        download the .xml files
-        """
-        bucket_name = self.publish_bucket
-
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-        orig_resource = storage_provider + bucket_name + "/" + self.outbox_folder
-        files_in_bucket = storage.list_resources(orig_resource)
-
-        for name in files_in_bucket:
-            # Download objects from S3 and save to disk
-            # Only need to copy .xml files
-            if not re.search(".*\\.xml$", name):
-                continue
-            filename = name.split("/")[-1]
-            dirname = self.directories.get("INPUT_DIR")
-            if dirname:
-                filename_plus_path = dirname + os.sep + filename
-                with open(filename_plus_path, "wb") as open_file:
-                    storage_resource_origin = orig_resource + "/" + name
-                    storage.get_resource_to_file(storage_resource_origin, open_file)
 
     def get_article_version_from_lax(self, article_id):
         """
@@ -284,95 +283,6 @@ class activity_PubmedArticleDeposit(Activity):
 
         return True
 
-    def get_outbox_s3_key_names(self, force=None):
-        """
-        Separately get a list of S3 key names from the outbox
-        for reporting purposes, excluding the outbox folder itself
-        """
-
-        # Return cached values if available
-        if self.outbox_s3_key_names and not force:
-            return self.outbox_s3_key_names
-
-        bucket_name = self.publish_bucket
-
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-        orig_resource = storage_provider + bucket_name + "/" + self.outbox_folder
-        files_in_bucket = storage.list_resources(orig_resource)
-        # add the prefix back to the file name to set the value
-        # and ignore the original folder name
-        self.outbox_s3_key_names = [
-            self.outbox_folder + "/" + filename
-            for filename in files_in_bucket
-            if filename != ""
-        ]
-
-        return self.outbox_s3_key_names
-
-    def get_to_folder_name(self):
-        """
-        From the date_stamp
-        return the S3 folder name to save published files into
-        """
-        to_folder = None
-
-        date_folder_name = self.date_stamp
-        to_folder = self.published_folder + "/" + date_folder_name + "/"
-
-        return to_folder
-
-    def clean_outbox(self):
-        """
-        Clean out the S3 outbox folder
-        """
-        # Move only the published files from the S3 outbox to the published folder
-        bucket_name = self.publish_bucket
-        to_folder = self.get_to_folder_name()
-
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-
-        # Concatenate the expected S3 outbox file names
-        s3_key_names = []
-        for name in self.article_published_file_names:
-            filename = name.split(os.sep)[-1]
-            s3_key_name = self.outbox_folder + "/" + filename
-            s3_key_names.append(s3_key_name)
-
-        for name in s3_key_names:
-            filename = name.split("/")[-1]
-            orig_resource = storage_provider + bucket_name + "/" + name
-            dest_resource = storage_provider + bucket_name + "/" + to_folder + filename
-            storage.copy_resource(orig_resource, dest_resource)
-            # Then delete the old key
-            storage.delete_resource(orig_resource)
-
-    def upload_pubmed_xml_to_s3(self):
-        """
-        Upload a copy of the pubmed XML to S3 for reference
-        """
-        xml_files = glob.glob(self.directories.get("TMP_DIR") + "/*.xml")
-
-        bucket_name = self.publish_bucket
-
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-
-        date_folder_name = self.date_stamp
-        s3_folder_name = self.published_folder + "/" + date_folder_name + "/" + "batch"
-
-        for xml_file in xml_files:
-            resource_dest = (
-                storage_provider
-                + bucket_name
-                + "/"
-                + s3_folder_name
-                + "/"
-                + article_processing.file_name_from_name(xml_file)
-            )
-            storage.set_resource_from_filename(resource_dest, xml_file)
-
     def send_email(self):
         """
         After do_activity is finished, send emails to recipients
@@ -382,7 +292,9 @@ class activity_PubmedArticleDeposit(Activity):
         activity_status_text = utils.get_activity_status_text(
             self.statuses.get("activity")
         )
-        outbox_s3_key_names = self.get_outbox_s3_key_names()
+        outbox_s3_key_names = outbox_provider.get_outbox_s3_key_names(
+            self.settings, self.publish_bucket, self.outbox_folder
+        )
 
         body = email_provider.get_email_body_head(
             self.name, activity_status_text, self.statuses
