@@ -44,7 +44,7 @@ class TestDepositCrossref(unittest.TestCase):
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
-    @patch('provider.crossref.storage_context')
+    @patch('provider.outbox_provider.storage_context')
     @data(
         {
             "comment": "Article 15747",

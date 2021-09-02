@@ -3,7 +3,7 @@ import json
 import time
 import glob
 from activity.objects import Activity
-from provider import crossref, email_provider, utils
+from provider import crossref, email_provider, outbox_provider, utils
 
 """
 DepositCrossref activity
@@ -57,13 +57,18 @@ class activity_DepositCrossref(Activity):
 
         date_stamp = utils.set_datestamp()
 
-        outbox_s3_key_names = crossref.get_outbox_s3_key_names(
-            self.settings, self.publish_bucket, self.outbox_folder)
+        outbox_s3_key_names = outbox_provider.get_outbox_s3_key_names(
+            self.settings, self.publish_bucket, self.outbox_folder
+        )
 
         # Download the S3 objects
-        self.statuses["download"] = crossref.download_files_from_s3_outbox(
-            self.settings, self.publish_bucket, outbox_s3_key_names,
-            self.directories.get("INPUT_DIR"), self.logger)
+        self.statuses["download"] = outbox_provider.download_files_from_s3_outbox(
+            self.settings,
+            self.publish_bucket,
+            outbox_s3_key_names,
+            self.directories.get("INPUT_DIR"),
+            self.logger,
+        )
 
         article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
 
@@ -93,14 +98,25 @@ class activity_DepositCrossref(Activity):
         if self.statuses.get("publish") is True:
             # Clean up outbox
             self.logger.info("Moving files from outbox folder to published folder")
-            to_folder = crossref.get_to_folder_name(self.published_folder, date_stamp)
-            crossref.clean_outbox(self.settings, self.publish_bucket, self.outbox_folder,
-                                  to_folder, self.good_xml_files)
+            to_folder = outbox_provider.get_to_folder_name(
+                self.published_folder, date_stamp
+            )
+            outbox_provider.clean_outbox(
+                self.settings,
+                self.publish_bucket,
+                self.outbox_folder,
+                to_folder,
+                self.good_xml_files,
+            )
             # copy the Crossref deposit XML files to the batch folder
             batch_file_names = glob.glob(self.directories.get("TMP_DIR") + "/*.xml")
             batch_file_to_folder = to_folder + "batch/"
-            crossref.upload_crossref_xml_to_s3(
-                self.settings, self.publish_bucket, batch_file_to_folder, batch_file_names)
+            outbox_provider.upload_files_to_s3_folder(
+                self.settings,
+                self.publish_bucket,
+                batch_file_to_folder,
+                batch_file_names,
+            )
             self.statuses["outbox"] = True
 
         # Set the activity status of this activity based on successes

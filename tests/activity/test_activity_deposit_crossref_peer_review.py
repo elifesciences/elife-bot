@@ -48,7 +48,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
     @patch('requests.head')
     @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
-    @patch('provider.crossref.storage_context')
+    @patch('provider.outbox_provider.storage_context')
     @data(
         {
             "comment": "Article 15747",
@@ -130,7 +130,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
     @patch('requests.head')
     @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
-    @patch('provider.crossref.storage_context')
+    @patch('provider.outbox_provider.storage_context')
     def test_do_activity_crossref_exception(self, fake_storage_context, fake_list_resources,
                                             fake_post_request, fake_head_request,
                                             fake_email_smtp_connect, fake_check_vor,
@@ -154,7 +154,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
     @patch.object(activity_module.email_provider, 'smtp_connect')
     @patch('requests.post')
     @patch.object(FakeStorageContext, 'list_resources')
-    @patch('provider.crossref.storage_context')
+    @patch('provider.outbox_provider.storage_context')
     def test_do_activity_no_good_one_bad(self, fake_storage_context, fake_list_resources,
                                          fake_request, fake_email_smtp_connect,
                                          fake_get_client):
