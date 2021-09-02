@@ -7,9 +7,9 @@ beautifulsoup4==4.7.1
 lxml==4.6.3
 python-slugify==1.2.4
 git+https://github.com/elifesciences/elife-tools.git@d07d978f03d879e19aa35b7c7bb51f23a3ea3108#egg=elifetools
-elifearticle==0.5.0
+elifearticle==0.6.0
 configparser==3.5.0
-elifecrossref==0.4.0
+elifecrossref==0.5.0
 elifecleaner==0.5.0
 elifepubmed==0.3.0
 git+https://github.com/elifesciences/ejp-csv-parser.git@2e07c7a9bf60c435dac78207858b4c80d250511a#egg=ejpcsvparser
@@ -18,7 +18,7 @@ git+https://github.com/elifesciences/package-poa.git@514517f5644cf3eb34514368f25
 six==1.13.0
 docker==4.0.2
 pypandoc==1.4
-letterparser==0.2.2
+letterparser==0.3.0
 PyYAML==5.4
 Wand==0.5.2
 paramiko==2.4.2
