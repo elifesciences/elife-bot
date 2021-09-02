@@ -15,9 +15,11 @@ def override_tmp_dir(tmp_dir):
 
 def elifecrossref_config(settings):
     "parse the config values from the elifecrossref config"
-    return parse_raw_config(raw_config(
-        settings.elifecrossref_config_section,
-        settings.elifecrossref_config_file))
+    return parse_raw_config(
+        raw_config(
+            settings.elifecrossref_config_section, settings.elifecrossref_config_file
+        )
+    )
 
 
 def parse_article_xml(article_xml_files, tmp_dir=None):
@@ -57,19 +59,20 @@ def set_article_pub_date(article, crossref_config, settings, logger):
     # if no date was found then look for one on Lax
     if not article_pub_date:
         lax_pub_date = lax_provider.article_publication_date(
-            article.manuscript, settings, logger)
+            article.manuscript, settings, logger
+        )
         if lax_pub_date:
             date_struct = time.strptime(lax_pub_date, utils.S3_DATE_FORMAT)
             pub_date_object = ArticleDate(
-                crossref_config.get('pub_date_types')[0], date_struct)
+                crossref_config.get("pub_date_types")[0], date_struct
+            )
             article.add_date(pub_date_object)
 
 
 def set_article_version(article, settings):
     """if there is no version then set it from lax data"""
     if not article.version:
-        lax_version = lax_provider.article_highest_version(
-            article.manuscript, settings)
+        lax_version = lax_provider.article_highest_version(article.manuscript, settings)
         if lax_version:
             article.version = lax_version
 
@@ -77,9 +80,9 @@ def set_article_version(article, settings):
 def article_first_pub_date(crossref_config, article):
     "find the first article pub date from the list of crossref config pub_date_types"
     pub_date = None
-    if crossref_config.get('pub_date_types'):
+    if crossref_config.get("pub_date_types"):
         # check for any useable pub date
-        for pub_date_type in crossref_config.get('pub_date_types'):
+        for pub_date_type in crossref_config.get("pub_date_types"):
             if article.get_date(pub_date_type):
                 pub_date = article.get_date(pub_date_type)
                 break
@@ -116,12 +119,14 @@ def approve_to_generate_list(article_object_map, crossref_config, bad_xml_files)
     return generate_article_object_map
 
 
-def crossref_data_payload(crossref_login_id, crossref_login_passwd, operation='doMDUpload'):
+def crossref_data_payload(
+    crossref_login_id, crossref_login_passwd, operation="doMDUpload"
+):
     """assemble a requests data payload for Crossref endpoint"""
     return {
-        'operation': operation,
-        'login_id': crossref_login_id,
-        'login_passwd': crossref_login_passwd
+        "operation": operation,
+        "login_id": crossref_login_id,
+        "login_passwd": crossref_login_passwd,
     }
 
 
@@ -133,7 +138,7 @@ def upload_files_to_endpoint(url, payload, xml_files):
     http_detail_list = []
 
     for xml_file in xml_files:
-        files = {'file': open(xml_file, 'rb')}
+        files = {"file": open(xml_file, "rb")}
 
         response = requests.post(url, data=payload, files=files)
 
@@ -148,16 +153,26 @@ def upload_files_to_endpoint(url, payload, xml_files):
     return status, http_detail_list
 
 
-def generate_crossref_xml_to_disk(article_object_map, crossref_config, good_xml_files,
-                                  bad_xml_files, submission_type="journal",
-                                  pretty=False, indent=""):
+def generate_crossref_xml_to_disk(
+    article_object_map,
+    crossref_config,
+    good_xml_files,
+    bad_xml_files,
+    submission_type="journal",
+    pretty=False,
+    indent="",
+):
     """from the article object generate crossref deposit XML"""
     for xml_file, article in list(article_object_map.items()):
         try:
             # Will write the XML to the TMP_DIR
             generate.crossref_xml_to_disk(
-                [article], crossref_config, submission_type=submission_type,
-                pretty=pretty, indent=indent)
+                [article],
+                crossref_config,
+                submission_type=submission_type,
+                pretty=pretty,
+                indent=indent,
+            )
             # Add filename to the list of good files
             good_xml_files.append(xml_file)
         except:
@@ -175,5 +190,5 @@ def doi_exists(doi, logger):
     if 300 <= response.status_code < 400:
         exists = True
     elif response.status_code < 300 or response.status_code >= 500:
-        logger.info('Status code for %s was %s' % (doi, response.status_code))
+        logger.info("Status code for %s was %s" % (doi, response.status_code))
     return exists

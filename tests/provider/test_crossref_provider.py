@@ -1,4 +1,3 @@
-import os
 import time
 import unittest
 from collections import OrderedDict
@@ -8,16 +7,16 @@ from elifearticle.article import ArticleDate
 import provider.crossref as crossref
 import tests.settings_mock as settings_mock
 import tests.test_data as test_case_data
-from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeResponse
 import tests.activity.helpers as helpers
 import tests.activity.test_activity_data as activity_test_data
 
 
 def expected_http_detail(file_name, status_code):
     return [
-        'XML file: ' + file_name,
-        'HTTP status: ' + str(status_code),
-        'HTTP response: '
+        "XML file: " + file_name,
+        "HTTP status: " + str(status_code),
+        "HTTP response: ",
     ]
 
 
@@ -30,7 +29,8 @@ class TestCrossrefProvider(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
         helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=['.gitkeep'])
+            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     def test_elifecrossref_config(self):
         """test reading the crossref config file"""
@@ -49,15 +49,19 @@ class TestCrossrefProvider(unittest.TestCase):
         article_xml_files = [self.good_xml_file, self.bad_xml_file]
         bad_xml_files = []
         article_object_map = crossref.article_xml_list_parse(
-            article_xml_files, bad_xml_files, self.directory.path)
+            article_xml_files, bad_xml_files, self.directory.path
+        )
         # one good article in the map, one bad xml file in the bad_xml_files list
         self.assertEqual(len(article_object_map), 1)
         self.assertEqual(len(bad_xml_files), 1)
 
-    @patch('provider.lax_provider.article_versions')
+    @patch("provider.lax_provider.article_versions")
     def test_set_article_pub_date(self, mock_article_versions):
         """test for when the date is missing and uses lax data"""
-        mock_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
+        mock_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
         crossref_config = crossref.elifecrossref_config(settings_mock)
         # build an article
         articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
@@ -65,7 +69,9 @@ class TestCrossrefProvider(unittest.TestCase):
         # reset the dates
         article.dates = {}
         # now set the date
-        crossref.set_article_pub_date(article, crossref_config, settings_mock, FakeLogger())
+        crossref.set_article_pub_date(
+            article, crossref_config, settings_mock, FakeLogger()
+        )
         self.assertEqual(len(article.dates), 1)
 
     def test_set_article_version(self):
@@ -77,10 +83,13 @@ class TestCrossrefProvider(unittest.TestCase):
         crossref.set_article_version(article, settings_mock)
         self.assertEqual(article.version, 1)
 
-    @patch('provider.lax_provider.article_versions')
+    @patch("provider.lax_provider.article_versions")
     def test_set_article_version_missing(self, mock_article_versions):
         """test setting version when missing"""
-        mock_article_versions.return_value = 200, test_case_data.lax_article_versions_response_data
+        mock_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
         # build an article
         articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
         article = articles[0]
@@ -111,7 +120,7 @@ class TestCrossrefProvider(unittest.TestCase):
         approved = crossref.approve_to_generate(crossref_config, article)
         self.assertTrue(approved)
 
-    @patch('time.gmtime')
+    @patch("time.gmtime")
     def test_approve_to_generate_not_approved(self, mock_gmtime):
         """test approving if the pub date is after the mock current date"""
         mock_gmtime.return_value = (1, 1, 1, 1, 1, 1, 1, 1, 0)
@@ -137,34 +146,39 @@ class TestCrossrefProvider(unittest.TestCase):
         """test approving a list of files based on the pub date"""
         crossref_config = crossref.elifecrossref_config(settings_mock)
         # build an article
-        article = crossref.parse_article_xml([self.good_xml_file], self.directory.path)[0]
+        article = crossref.parse_article_xml([self.good_xml_file], self.directory.path)[
+            0
+        ]
         # make a fake article with a future pub date
-        future_article = crossref.parse_article_xml([self.good_xml_file], self.directory.path)[0]
-        future_date = ArticleDate('pub', time.strptime("2999-07-15 UTC", "%Y-%m-%d %Z"))
+        future_article = crossref.parse_article_xml(
+            [self.good_xml_file], self.directory.path
+        )[0]
+        future_date = ArticleDate("pub", time.strptime("2999-07-15 UTC", "%Y-%m-%d %Z"))
         future_article.dates = {}
         future_article.add_date(future_date)
         # assemble the map of article objects
-        article_object_map = OrderedDict([
-            (self.good_xml_file, article),
-            ('future_article.xml', future_article)
-        ])
+        article_object_map = OrderedDict(
+            [(self.good_xml_file, article), ("future_article.xml", future_article)]
+        )
         bad_xml_files = []
         approved = crossref.approve_to_generate_list(
-            article_object_map, crossref_config, bad_xml_files)
+            article_object_map, crossref_config, bad_xml_files
+        )
         self.assertEqual(len(approved), 1)
         self.assertEqual(len(bad_xml_files), 1)
 
     def test_crossref_data_payload(self):
         expected = {
-            'operation': 'doMDUpload',
-            'login_id': settings_mock.crossref_login_id,
-            'login_passwd': settings_mock.crossref_login_passwd
+            "operation": "doMDUpload",
+            "login_id": settings_mock.crossref_login_id,
+            "login_passwd": settings_mock.crossref_login_passwd,
         }
         payload = crossref.crossref_data_payload(
-            settings_mock.crossref_login_id, settings_mock.crossref_login_passwd)
+            settings_mock.crossref_login_id, settings_mock.crossref_login_passwd
+        )
         self.assertEqual(payload, expected)
 
-    @patch('requests.post')
+    @patch("requests.post")
     def test_upload_files_to_endpoint(self, fake_request):
         status_code = 200
         xml_files = [self.good_xml_file]
@@ -174,11 +188,11 @@ class TestCrossrefProvider(unittest.TestCase):
         expected_status = True
         expected_detail = expected_http_detail(self.good_xml_file, status_code)
 
-        status, http_detail_list = crossref.upload_files_to_endpoint('', '', xml_files)
+        status, http_detail_list = crossref.upload_files_to_endpoint("", "", xml_files)
         self.assertEqual(status, expected_status)
         self.assertEqual(http_detail_list, expected_detail)
 
-    @patch('requests.post')
+    @patch("requests.post")
     def test_upload_files_to_endpoint_failure(self, fake_request):
         status_code = 500
         xml_files = [self.good_xml_file]
@@ -188,44 +202,48 @@ class TestCrossrefProvider(unittest.TestCase):
         expected_status = False
         expected_detail = expected_http_detail(self.good_xml_file, status_code)
 
-        status, http_detail_list = crossref.upload_files_to_endpoint('', '', xml_files)
+        status, http_detail_list = crossref.upload_files_to_endpoint("", "", xml_files)
         self.assertEqual(status, expected_status)
         self.assertEqual(http_detail_list, expected_detail)
 
     def test_generate_crossref_xml_to_disk(self):
         articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
-        article_object_map = OrderedDict([
-            (self.good_xml_file, articles[0]),
-            ('fake_file_will_raise_exception.xml', None)
-        ])
+        article_object_map = OrderedDict(
+            [
+                (self.good_xml_file, articles[0]),
+                ("fake_file_will_raise_exception.xml", None),
+            ]
+        )
         good_xml_files = []
         bad_xml_files = []
         crossref_config = crossref.elifecrossref_config(settings_mock)
         result = crossref.generate_crossref_xml_to_disk(
-            article_object_map, crossref_config, good_xml_files, bad_xml_files)
+            article_object_map, crossref_config, good_xml_files, bad_xml_files
+        )
         self.assertTrue(result)
         self.assertEqual(len(good_xml_files), 1)
         self.assertEqual(len(bad_xml_files), 1)
 
 
 class TestDoiExists(unittest.TestCase):
-
     def setUp(self):
         self.logger = FakeLogger()
-        self.doi = '10.7554/eLife.99999'
+        self.doi = "10.7554/eLife.99999"
 
-    @patch('requests.head')
+    @patch("requests.head")
     def test_doi_exists_302(self, fake_request):
         fake_request.return_value = FakeResponse(302)
         self.assertTrue(crossref.doi_exists(self.doi, self.logger))
 
-    @patch('requests.head')
+    @patch("requests.head")
     def test_doi_exists_404(self, fake_request):
         fake_request.return_value = FakeResponse(404)
         self.assertFalse(crossref.doi_exists(self.doi, self.logger))
 
-    @patch('requests.head')
+    @patch("requests.head")
     def test_doi_exists_200(self, fake_request):
         fake_request.return_value = FakeResponse(200)
         self.assertFalse(crossref.doi_exists(self.doi, self.logger))
-        self.assertEqual(self.logger.loginfo[-1], 'Status code for 10.7554/eLife.99999 was 200')
+        self.assertEqual(
+            self.logger.loginfo[-1], "Status code for 10.7554/eLife.99999 was 200"
+        )
