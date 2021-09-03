@@ -6,14 +6,14 @@ from collections import OrderedDict
 from xml.etree.ElementTree import Element
 from mock import patch
 from elifearticle import parse
-from elifearticle.article import Article, Contributor
+from elifearticle.article import Contributor
 from provider import software_heritage, utils
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeResponse
 
 
-def pretty_string(bytes):
-    return str(bytes).replace("\\n", "\n")
+def pretty_string(byte_string):
+    return str(byte_string).replace("\\n", "\n")
 
 
 class TestSoftwareHeritageProviderMetadata(unittest.TestCase):

@@ -262,15 +262,18 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         self.assertEqual(sub_article.contributors[0].orcid, expected)
 
 
+ARTICLE_OBJECT_MAP = crossref.article_xml_list_parse(
+    [
+        "tests/test_data/crossref_peer_review/outbox/elife-15747-v2.xml",
+        "tests/test_data/crossref_peer_review/outbox/elife_poa_e03977.xml",
+    ],
+    [],
+    activity_test_data.ExpandArticle_files_dest_folder,
+)
+
+
 class TestPrune(unittest.TestCase):
     def setUp(self):
-        article_xml_list = [
-            "tests/test_data/crossref_peer_review/outbox/elife-15747-v2.xml",
-            "tests/test_data/crossref_peer_review/outbox/elife_poa_e03977.xml",
-        ]
-        self.article_object_map = crossref.article_xml_list_parse(
-            article_xml_list, [], activity_test_data.ExpandArticle_files_dest_folder
-        )
         self.logger = FakeLogger()
 
     def tearDown(self):
@@ -284,7 +287,7 @@ class TestPrune(unittest.TestCase):
         fake_doi_exists.return_value = True
         fake_check_vor.return_value = True
         good_article_map = activity_module.prune_article_object_map(
-            self.article_object_map, settings_mock, self.logger
+            ARTICLE_OBJECT_MAP, settings_mock, self.logger
         )
         self.assertEqual(len(good_article_map), 1)
 
@@ -296,9 +299,14 @@ class TestPrune(unittest.TestCase):
         fake_doi_exists.return_value = False
         fake_check_vor.return_value = True
         good_article_map = activity_module.prune_article_object_map(
-            self.article_object_map, settings_mock, self.logger
+            ARTICLE_OBJECT_MAP, settings_mock, self.logger
         )
         self.assertEqual(len(good_article_map), 0)
+
+
+class TestCheckVorIsPublished(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
 
     @patch.object(lax_provider, "article_status_version_map")
     def test_check_vor_is_published_vor(self, fake_version_map):

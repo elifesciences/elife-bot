@@ -56,7 +56,7 @@ class FakeLayer1:
 
 class FakeFlag():
     "a fake object to return process monitoring status"
-    def __init__(self, timeout_seconds=1):
+    def __init__(self, timeout_seconds=0.1):
         self.timeout_seconds = timeout_seconds
         self.green_value = True
 

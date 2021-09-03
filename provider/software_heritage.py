@@ -36,26 +36,30 @@ class MetaData(object):
                 self.codemeta["license"] = OrderedDict()
                 self.codemeta["license"]["url"] = article.license.href
             self.codemeta["authors"] = []
-            for author in [author for author in article.contributors]:
+            for author in article.contributors:
                 author_dict = OrderedDict()
                 if author.collab:
                     author_dict["name"] = author.collab
-                else:
-                    if not author.group_author_key:
-                        author_dict["name"] = " ".join(
-                            [
-                                part
-                                for part in [author.given_name, author.surname, author.suffix]
-                                if part is not None
+                elif not author.group_author_key:
+                    author_dict["name"] = " ".join(
+                        [
+                            part
+                            for part in [
+                                author.given_name,
+                                author.surname,
+                                author.suffix,
                             ]
-                        )
+                            if part is not None
+                        ]
+                    )
                 if not author_dict.get("name"):
                     continue
 
                 if author.affiliations:
-                    author_dict["affiliations"] = []
-                    for aff in author.affiliations:
-                        author_dict["affiliations"].append(aff.text)
+                    author_dict["affiliations"] = [
+                        aff.text for aff in author.affiliations
+                    ]
+
                 self.codemeta["authors"].append(author_dict)
 
         if file_name:
