@@ -1,88 +1,84 @@
-import boto.swf.exceptions
-import boto.swf
 import json
-from optparse import OptionParser
-import starter.starter_helper as helper
 from starter.starter_helper import NullRequiredDataException
+from starter.objects import Starter, default_workflow_params
 
 """
 Amazon SWF PublishArticle starter, for API and Lens publishing etc.
 """
 
 
-class starter_ApproveArticlePublication():
-    def __init__(self):
-        self.const_name = "ApproveArticlePublication"
+class starter_ApproveArticlePublication(Starter):
+    def get_workflow_params(
+        self,
+        article_id=None,
+        version=None,
+        run=None,
+        publication_data=None,
+        workflow=None,
+    ):
+        if workflow is None:
+            raise NullRequiredDataException("Did not get a workflow parameter")
 
-    def start(self, settings, article_id=None, version=None, run=None, publication_data=None):
-
-        # TODO : much of this is common to many starters and could probably be streamlined
-
-        # Log
-        logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
+        workflow_params = default_workflow_params(self.settings)
+        workflow_params["workflow_id"] = "%s_%s" % (workflow, article_id)
+        workflow_params["workflow_name"] = workflow
+        workflow_params["workflow_version"] = "1"
 
         if article_id is None or version is None or publication_data is None:
-            raise NullRequiredDataException("Did not get an article id, version or publication data")
+            raise NullRequiredDataException(
+                "Did not get an article id, version or publication data"
+            )
 
         info = {
-            'article_id': article_id,
-            'version': str(version),
-            'run': run,
-            'publication_data': publication_data
+            "article_id": article_id,
+            "version": str(version),
+            "run": run,
+            "publication_data": publication_data,
         }
+        workflow_params["input"] = json.dumps(info, default=lambda ob: None)
+        return workflow_params
 
-        workflow_id, \
-        workflow_name, \
-        workflow_version, \
-        child_policy, \
-        execution_start_to_close_timeout, \
-        workflow_input = helper.set_workflow_information(self.const_name, "1", None, info,
-                                                         article_id + "." + str(version))
+    def start(
+        self,
+        settings,
+        article_id=None,
+        version=None,
+        run=None,
+        publication_data=None,
+    ):
+        """method for backwards compatibility"""
+        self.settings = settings
+        self.instantiate_logger()
+        self.start_workflow(
+            article_id,
+            version,
+            run,
+            publication_data,
+            workflow="ApproveArticlePublication",
+        )
 
-        # Simple connect
-        conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+    def start_workflow(
+        self,
+        article_id=None,
+        version=None,
+        run=None,
+        publication_data=None,
+        workflow="ApproveArticlePublication",
+    ):
 
+        workflow_params = self.get_workflow_params(
+            article_id, version, run, publication_data, workflow
+        )
+
+        self.connect_to_swf()
+
+        # start a workflow execution
+        self.logger.info("Starting workflow: %s", workflow_params.get("workflow_id"))
         try:
-            response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version,
-                                                     settings.default_task_list, child_policy,
-                                                     execution_start_to_close_timeout, workflow_input)
-
-            logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
-
-        except NullRequiredDataException as e:
-            logger.exception(e.message)
-            raise
-
-        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-            # There is already a running workflow with that ID, cannot start another
-            message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
-            logger.info(message)
-
-
-def main():
-
-    # Add options
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, either dev or live")
-    parser.add_option("-i", "--article-version-id", default=None, action="store", type="string",
-                      dest="article_version_id",
-                      help="specify the DOI id the article to process")
-
-    (options, args) = parser.parse_args()
-    ENV = None
-    if options.env:
-        ENV = options.env
-    article_version_id = None
-    if options.article_version_id:
-        article_version_id = options.article_version_id
-
-    import settings as settingsLib
-    settings = settingsLib.get_settings(ENV)
-
-    o = starter_ApproveArticlePublication()
-
-    o.start(settings=settings, article_version_id=article_version_id)
-
-if __name__ == "__main__":
-    main()
+            self.start_swf_workflow_execution(workflow_params)
+        except:
+            message = (
+                "Exception starting workflow execution for workflow_id %s"
+                % workflow_params.get("workflow_id")
+            )
+            self.logger.exception(message)
