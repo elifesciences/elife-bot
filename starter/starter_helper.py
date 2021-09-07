@@ -18,8 +18,15 @@ def get_starter_logger(set_level, identity, log_file="starter.log"):
     return log.logger(log_file, set_level, identity)
 
 
-def set_workflow_information(name, workflow_version, child_policy, data, workflow_id_part,
-                             extra="", start_to_close_timeout=str(60 * 30)):
+def set_workflow_information(
+    name,
+    workflow_version,
+    child_policy,
+    data,
+    workflow_id_part,
+    extra="",
+    start_to_close_timeout=str(60 * 30),
+):
     workflow_id = "%s_%s" % (name, workflow_id_part)
     if extra:
         workflow_id = workflow_id + (".%s" % extra)
@@ -29,12 +36,14 @@ def set_workflow_information(name, workflow_version, child_policy, data, workflo
     execution_start_to_close_timeout = start_to_close_timeout
     workflow_input = json.dumps(data, default=lambda ob: None)
 
-    return workflow_id, \
-        workflow_name, \
-        workflow_version, \
-        child_policy, \
-        execution_start_to_close_timeout, \
-        workflow_input
+    return (
+        workflow_id,
+        workflow_name,
+        workflow_version,
+        child_policy,
+        execution_start_to_close_timeout,
+        workflow_input,
+    )
 
 
 def get_starter_module(starter_name, logger):
@@ -50,7 +59,9 @@ def get_starter_module(starter_name, logger):
         starter_object = starter_class()
         return starter_object
     except ImportError:
-        logger.exception('Failed to instantiate a starter module object for %s' % starter_name)
+        logger.exception(
+            "Failed to instantiate a starter module object for %s" % starter_name
+        )
 
 
 def import_starter_module(starter_name, logger):
@@ -64,7 +75,7 @@ def import_starter_module(starter_name, logger):
         return True
     except ImportError:
         if logger:
-            logger.exception('Failed to import a starter module %s' % starter_name)
+            logger.exception("Failed to import a starter module %s" % starter_name)
         return False
 
 
@@ -81,17 +92,25 @@ def start_ping_marker(workflow_id, settings, logger):
     execution_start_to_close_timeout = None
     workflow_input = None
 
-    conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+    conn = boto.swf.layer1.Layer1(
+        settings.aws_access_key_id, settings.aws_secret_access_key
+    )
     try:
         conn.start_workflow_execution(
-            settings.domain, workflow_id, workflow_name,
-            workflow_version, settings.default_task_list,
-            child_policy, execution_start_to_close_timeout,
-            workflow_input)
+            settings.domain,
+            workflow_id,
+            workflow_name,
+            workflow_version,
+            settings.default_task_list,
+            child_policy,
+            execution_start_to_close_timeout,
+            workflow_input,
+        )
 
     except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
         # There is already a running workflow with that ID, cannot start another
         message = (
-            'SWFWorkflowExecutionAlreadyStartedError: There is already ' +
-            'a running workflow with ID %s' % workflow_id)
+            "SWFWorkflowExecutionAlreadyStartedError: There is already "
+            + "a running workflow with ID %s" % workflow_id
+        )
         logger.exception(message)
