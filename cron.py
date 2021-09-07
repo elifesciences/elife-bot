@@ -239,11 +239,15 @@ def conditional_starts(current_datetime):
             ("start_seconds", 60 * 31)
         ]))
 
-        conditional_start_list.append(OrderedDict([
-            ("starter_name", "starter_AdminEmail"),
-            ("workflow_id", "AdminEmail"),
-            ("start_seconds", (60*60*4)-(14*60))
-        ]))
+        conditional_start_list.append(
+            OrderedDict(
+                [
+                    ("starter_name", "starter_AdminEmail"),
+                    ("workflow_id", "AdminEmail"),
+                    ("start_seconds", (60 * 60 * 4) - (14 * 60)),
+                ]
+            )
+        )
 
     return conditional_start_list
 
@@ -289,7 +293,7 @@ def start_workflow(settings, starter_name, workflow_id=None):
 
     # Customised start functions
     if starter_name == "starter_AdminEmail":
-        starter_object.start(settings=settings, workflow="AdminEmail")
+        starter_object.start(settings=settings)
 
     elif starter_name == "starter_PubRouterDeposit":
         # PubRouterDeposit has different variants specified by the workflow variable
