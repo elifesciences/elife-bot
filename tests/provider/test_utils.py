@@ -147,5 +147,28 @@ class TestConsoleStart(unittest.TestCase):
             self.assertEqual(utils.console_start_env(), expected)
 
 
-if __name__ == '__main__':
+class TestConsoleStartEnvDoiId(unittest.TestCase):
+    def test_console_start_env_doi_id(self):
+        env = "foo"
+        doi_id = "7"
+        expected = env, doi_id
+        testargs = ["cron.py", "-e", env, "-d", doi_id]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(utils.console_start_env_doi_id(), expected)
+
+    def test_console_start_env_doi_id_blank(self):
+        expected = "dev", None
+        testargs = ["cron.py"]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(utils.console_start_env_doi_id(), expected)
+
+    def test_console_start_env_doi_id_unrecognized_arguments(self):
+        env = "foo"
+        expected = env, None
+        testargs = ["cron.py", "-e", env, "0"]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(utils.console_start_env_doi_id(), expected)
+
+
+if __name__ == "__main__":
     unittest.main()

@@ -126,6 +126,31 @@ def console_start_env():
     return args.env
 
 
+def console_start_env_doi_id():
+    """capture ENV and DOI_ID from arguments when running standalone"""
+    parser = ArgumentParser()
+    parser.add_argument(
+        "-e",
+        "--env",
+        default="dev",
+        action="store",
+        type=str,
+        dest="env",
+        help="set the environment to run, either dev or live",
+    )
+    parser.add_argument(
+        "-d",
+        "--doi-id",
+        default=None,
+        action="store",
+        type=str,
+        dest="doi_id",
+        help="specify the DOI id of a single article",
+    )
+    args, unknown = parser.parse_known_args()
+    return args.env, args.doi_id
+
+
 def get_settings(env):
     """for runtime importing of settings module"""
     import settings as settings_lib
