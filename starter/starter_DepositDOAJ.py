@@ -1,6 +1,4 @@
 import json
-import uuid
-from optparse import OptionParser
 from provider import utils
 from starter.objects import Starter, default_workflow_params
 from starter.starter_helper import NullRequiredDataException
@@ -64,42 +62,11 @@ class starter_DepositDOAJ(Starter):
 
 if __name__ == "__main__":
 
-    doi_id = None
-    workflow = None
+    ENV, DOI_ID = utils.console_start_env_doi_id()
+    SETTINGS = utils.get_settings(ENV)
 
-    # Add options
-    parser = OptionParser()
-    parser.add_option(
-        "-e",
-        "--env",
-        default="dev",
-        action="store",
-        type="string",
-        dest="env",
-        help="set the environment to run, either dev or live",
-    )
-    parser.add_option(
-        "-d",
-        "--doi-id",
-        default=None,
-        action="store",
-        type="string",
-        dest="doi_id",
-        help="specify the DOI id of a single article",
-    )
+    STARTER = starter_DepositDOAJ()
 
-    (options, args) = parser.parse_args()
-    if options.env:
-        ENV = options.env
-    if options.doi_id:
-        doi_id = options.doi_id
+    INFO = {"article_id": utils.pad_msid(DOI_ID)}
 
-    import settings as settingsLib
-
-    settings = settingsLib.get_settings(ENV)
-
-    o = starter_DepositDOAJ()
-
-    info = {"article_id": utils.pad_msid(doi_id)}
-
-    o.start(settings=settings, info=info)
+    STARTER.start(settings=SETTINGS, info=INFO)
