@@ -18,7 +18,7 @@ git+https://github.com/elifesciences/package-poa.git@514517f5644cf3eb34514368f25
 six==1.13.0
 docker==4.0.2
 pypandoc==1.4
-letterparser==0.3.0
+letterparser==0.4.0
 PyYAML==5.4
 Wand==0.5.2
 paramiko==2.4.2
