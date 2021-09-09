@@ -1,8 +1,5 @@
-import boto.swf.exceptions
-import boto.swf
 import json
 from argparse import ArgumentParser
-import starter.starter_helper as helper
 from starter.starter_helper import NullRequiredDataException
 from starter.objects import Starter, default_workflow_params
 
@@ -97,14 +94,36 @@ def main():
     # python starter/starter_CopyGlencoeStillImages.py --env=dev --article-id=15224 --no-poa
 
     parser = ArgumentParser()
-    parser.add_argument("-e", "--env", action="store", type=str, dest="env",
-                        help="set the environment to run, e.g. dev, live, prod, end2end")
-    parser.add_argument("-a", "--article-id", action="store", type=str, dest="article_id",
-                        help="specify the article id to process")
-    parser.add_argument("-p", "--poa", action="store_true", dest="poa",
-                        help="Article is POA. If omitted it defaults to False.")
-    parser.add_argument("-np", "--no-poa", action="store_false", dest="poa",
-                        help="Article is NOT POA. If omitted it defaults to False.")
+    parser.add_argument(
+        "-e",
+        "--env",
+        action="store",
+        type=str,
+        dest="env",
+        help="set the environment to run, e.g. dev, live, prod, end2end",
+    )
+    parser.add_argument(
+        "-a",
+        "--article-id",
+        action="store",
+        type=str,
+        dest="article_id",
+        help="specify the article id to process",
+    )
+    parser.add_argument(
+        "-p",
+        "--poa",
+        action="store_true",
+        dest="poa",
+        help="Article is POA. If omitted it defaults to False.",
+    )
+    parser.add_argument(
+        "-np",
+        "--no-poa",
+        action="store_false",
+        dest="poa",
+        help="Article is NOT POA. If omitted it defaults to False.",
+    )
     parser.set_defaults(env="dev", article_id=None, poa=False)
 
     args = parser.parse_args()
@@ -119,11 +138,18 @@ def main():
         is_poa = args.poa
 
     import settings as settingsLib
+
     settings = settingsLib.get_settings(ENV)
 
-    o = starter_CopyGlencoeStillImages()
+    starter_object = starter_CopyGlencoeStillImages()
 
-    o.start(settings=settings, article_id=article_id, standalone=True, standalone_is_poa=is_poa)
+    starter_object.start(
+        settings=settings,
+        article_id=article_id,
+        standalone=True,
+        standalone_is_poa=is_poa,
+    )
+
 
 if __name__ == "__main__":
     main()
