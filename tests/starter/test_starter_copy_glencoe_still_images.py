@@ -5,11 +5,15 @@ import tests.settings_mock as settings_mock
 import tests.test_data as test_data
 from mock import patch
 from tests.classes_mock import FakeBotoConnection
+from tests.activity.classes_mock import FakeLogger
 
 
 class TestStarterCopyGlencoeStillImages(unittest.TestCase):
     def setUp(self):
-        self.starter_copy_glencoe_still_images = starter_CopyGlencoeStillImages()
+        self.logger = FakeLogger()
+        self.starter_copy_glencoe_still_images = starter_CopyGlencoeStillImages(
+            settings_mock, self.logger
+        )
 
     def test_copy_glencoe_still_images_starter_no_article(self):
         self.assertRaises(NullRequiredDataException, self.starter_copy_glencoe_still_images.start,
