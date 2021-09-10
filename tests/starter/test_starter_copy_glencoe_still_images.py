@@ -1,5 +1,7 @@
 import unittest
+import sys
 from mock import patch
+import starter.starter_CopyGlencoeStillImages as starter_module
 from starter.starter_CopyGlencoeStillImages import starter_CopyGlencoeStillImages
 from starter.starter_helper import NullRequiredDataException
 import tests.settings_mock as settings_mock
@@ -27,3 +29,13 @@ class TestStarterCopyGlencoeStillImages(unittest.TestCase):
         self.starter_copy_glencoe_still_images.start(
             settings=settings_mock, article_id="00353"
         )
+
+    @patch("boto.swf.layer1.Layer1")
+    def test_main(self, fake_boto_conn):
+        fake_boto_conn.return_value = FakeBotoConnection()
+        env = "dev"
+        doi_id = "7"
+        testargs = ["starter_CopyGlencoeStillImages.py", "-e", env, "-a", doi_id, "-p"]
+        with patch.object(sys, "argv", testargs):
+            # not too much can be asserted at this time, just test it returns None
+            self.assertEqual(starter_module.main(), None)
