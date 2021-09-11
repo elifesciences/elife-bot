@@ -340,6 +340,10 @@ class TestPackagePOA(unittest.TestCase):
 
     @patch.object(activity_module.parse, "build_article")
     def test_generate_xml_build_article_exception(self, fake_build_article):
+        # make directories first
+        self.poa.make_activity_directories()
+        # add CSV files to folder
+        self.fake_download_latest_csv()
         fake_build_article.side_effect = Exception("An exception")
         with self.assertRaises(Exception):
             self.poa.generate_xml(12717)
@@ -350,6 +354,10 @@ class TestPackagePOA(unittest.TestCase):
 
     @patch.object(activity_module.parse, "build_article")
     def test_generate_xml_build_article_errors(self, fake_build_article):
+        # make directories first
+        self.poa.make_activity_directories()
+        # add CSV files to folder
+        self.fake_download_latest_csv()
         article_id = 12717
         error_count = 1
         error_messages = ["article_id %s error in set_title" % article_id]
@@ -366,6 +374,10 @@ class TestPackagePOA(unittest.TestCase):
 
     @patch.object(activity_module.generate, 'build_xml_to_disk')
     def test_generate_xml_expat_exception(self, fake_build_xml):
+        # make directories first
+        self.poa.make_activity_directories()
+        # add CSV files to folder
+        self.fake_download_latest_csv()
         fake_build_xml.side_effect = ExpatError('An exception')
         with self.assertRaises(ExpatError):
             self.poa.generate_xml(12717)
