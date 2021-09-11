@@ -140,6 +140,14 @@ CONSOLE_ARGUMENT_MAP = {
         "dest": "doi_id",
         "help": "specify the DOI id of a single article",
     },
+    "w": {
+        "flags": ["-w", "--workflow-name"],
+        "default": None,
+        "action": "store",
+        "type": str,
+        "dest": "workflow",
+        "help": "specify the workflow name to start",
+    },
 }
 
 
@@ -171,6 +179,16 @@ def console_start_env_doi_id():
     add_console_argument(parser, "d")
     args, unknown = parser.parse_known_args()
     return args.env, args.doi_id
+
+
+def console_start_env_workflow_doi_id():
+    """capture ENV, WORKFLOW, and DOI_ID from arguments when running standalone"""
+    parser = ArgumentParser()
+    add_console_argument(parser, "e")
+    add_console_argument(parser, "d")
+    add_console_argument(parser, "w")
+    args, unknown = parser.parse_known_args()
+    return args.env, args.doi_id, args.workflow
 
 
 def get_settings(env):
