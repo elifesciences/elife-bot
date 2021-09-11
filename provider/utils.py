@@ -123,18 +123,51 @@ def get_doi_url(doi):
     return "https://doi.org/%s" % doi
 
 
+CONSOLE_ARGUMENT_MAP = {
+    "e": {
+        "flags": ["-e", "--env"],
+        "default": "dev",
+        "action": "store",
+        "type": str,
+        "dest": "env",
+        "help": "set the environment to run, either dev or live",
+    },
+    "d": {
+        "flags": ["-d", "--doi-id"],
+        "default": None,
+        "action": "store",
+        "type": str,
+        "dest": "doi_id",
+        "help": "specify the DOI id of a single article",
+    },
+    "w": {
+        "flags": ["-w", "--workflow-name"],
+        "default": None,
+        "action": "store",
+        "type": str,
+        "dest": "workflow",
+        "help": "specify the workflow name to start",
+    },
+}
+
+
+def add_console_argument(parser, argument_name):
+    details = CONSOLE_ARGUMENT_MAP.get(argument_name)
+    if details:
+        parser.add_argument(
+            *details.get("flags"),
+            default=details.get("default"),
+            action=details.get("action"),
+            type=details.get("type"),
+            dest=details.get("dest"),
+            help=details.get("help")
+        )
+
+
 def console_start_env():
     """capture ENV from arguments when running standalone"""
     parser = ArgumentParser()
-    parser.add_argument(
-        "-e",
-        "--env",
-        default="dev",
-        action="store",
-        type=str,
-        dest="env",
-        help="set the environment to run, either dev or live",
-    )
+    add_console_argument(parser, "e")
     args, unknown = parser.parse_known_args()
     return args.env
 
@@ -142,26 +175,20 @@ def console_start_env():
 def console_start_env_doi_id():
     """capture ENV and DOI_ID from arguments when running standalone"""
     parser = ArgumentParser()
-    parser.add_argument(
-        "-e",
-        "--env",
-        default="dev",
-        action="store",
-        type=str,
-        dest="env",
-        help="set the environment to run, either dev or live",
-    )
-    parser.add_argument(
-        "-d",
-        "--doi-id",
-        default=None,
-        action="store",
-        type=str,
-        dest="doi_id",
-        help="specify the DOI id of a single article",
-    )
+    add_console_argument(parser, "e")
+    add_console_argument(parser, "d")
     args, unknown = parser.parse_known_args()
     return args.env, args.doi_id
+
+
+def console_start_env_workflow_doi_id():
+    """capture ENV, WORKFLOW, and DOI_ID from arguments when running standalone"""
+    parser = ArgumentParser()
+    add_console_argument(parser, "e")
+    add_console_argument(parser, "d")
+    add_console_argument(parser, "w")
+    args, unknown = parser.parse_known_args()
+    return args.env, args.doi_id, args.workflow
 
 
 def get_settings(env):
