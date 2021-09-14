@@ -127,7 +127,7 @@ class TestGetStarterName(unittest.TestCase):
         "test rules matching to the S3 notification info"
         rules = test_data.queue_worker_rules
         info = S3NotificationInfo.from_dict(test_data.queue_worker_article_zip_data)
-        expected_starter_name = "InitialArticleZip"
+        expected_starter_name = "IngestArticleZip"
         starter_name = get_starter_name(rules, info)
         self.assertEqual(starter_name, expected_starter_name)
 
