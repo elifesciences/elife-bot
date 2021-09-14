@@ -38,16 +38,13 @@ class activity_PMCDeposit(Activity):
         }
 
         # Bucket settings
-        self.input_bucket = None
-        self.input_bucket_default = (settings.publishing_buckets_prefix +
-                                     settings.archive_bucket)
+        self.input_bucket = settings.publishing_buckets_prefix + settings.archive_bucket
 
         self.publish_bucket = settings.poa_packaging_bucket
         self.published_folder = "pmc/published"
         self.published_zip_folder = "pmc/zip"
 
         self.document = None
-        self.input_bucket = None
         self.zip_file_name = None
 
     def do_activity(self, data=None):
@@ -61,12 +58,6 @@ class activity_PMCDeposit(Activity):
 
         # Data passed to this activity
         self.document = data["data"]["document"]
-
-        # Custom bucket, if specified
-        if "bucket" in data["data"]:
-            self.input_bucket = data["data"]["bucket"]
-        else:
-            self.input_bucket = self.input_bucket_default
 
         # Create output directories
         self.make_activity_directories(list(self.directories.values()))

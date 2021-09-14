@@ -148,6 +148,14 @@ CONSOLE_ARGUMENT_MAP = {
         "dest": "workflow",
         "help": "specify the workflow name to start",
     },
+    "f": {
+        "flags": ["-f", "--file"],
+        "default": None,
+        "action": "store",
+        "type": str,
+        "dest": "document",
+        "help": "specify the S3 object name of the input file",
+    },
 }
 
 
@@ -179,6 +187,15 @@ def console_start_env_doi_id():
     add_console_argument(parser, "d")
     args, unknown = parser.parse_known_args()
     return args.env, args.doi_id
+
+
+def console_start_env_document():
+    """capture ENV and DOCUMENT from arguments when running standalone"""
+    parser = ArgumentParser()
+    add_console_argument(parser, "e")
+    add_console_argument(parser, "f")
+    args, unknown = parser.parse_known_args()
+    return args.env, args.document
 
 
 def console_start_env_workflow_doi_id():
