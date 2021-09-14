@@ -164,6 +164,29 @@ class TestConsoleStartEnvDoiId(unittest.TestCase):
             self.assertEqual(utils.console_start_env_doi_id(), expected)
 
 
+class TestConsoleStartEnvDocument(unittest.TestCase):
+    def test_console_start_env_document(self):
+        env = "foo"
+        document = "elife-00666-vor-v1-20210914000000.zip"
+        expected = env, document
+        testargs = ["cron.py", "-e", env, "-f", document]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(utils.console_start_env_document(), expected)
+
+    def test_console_start_env_document_blank(self):
+        expected = "dev", None
+        testargs = ["cron.py"]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(utils.console_start_env_document(), expected)
+
+    def test_console_start_env_document_unrecognized_arguments(self):
+        env = "foo"
+        expected = env, None
+        testargs = ["cron.py", "-e", env, "0"]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(utils.console_start_env_document(), expected)
+
+
 class TestConsoleStartEnvWorkflowDoiId(unittest.TestCase):
     def test_console_start_env_workflow_doi_id(self):
         env = "foo"
