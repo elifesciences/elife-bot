@@ -86,16 +86,6 @@ class TestQueueWorkflowStarter(unittest.TestCase):
 
     def test_process_data_ingestarticlezip(self):
         workflow_data = {
-            'article_id': '',
-            'run': '',
-            'version_reason': '',
-            'scheduled_publication_date': '',
-        }
-        data = queue_workflow_starter.process_data_ingestarticlezip(workflow_data)
-        self.assertEqual(sorted(data), sorted(workflow_data))
-
-    def test_process_data_initialarticlezip(self):
-        workflow_data = {
             'event_name': '',
             'event_time': '',
             'bucket_name': '',
@@ -103,7 +93,7 @@ class TestQueueWorkflowStarter(unittest.TestCase):
             'file_etag': '',
             'file_size': '',
         }
-        data = queue_workflow_starter.process_data_initialarticlezip(workflow_data)
+        data = queue_workflow_starter.process_data_ingestarticlezip(workflow_data)
         s3_notification_dict = data.get("info").to_dict()
         self.assertEqual(sorted(s3_notification_dict), sorted(workflow_data))
         self.assertIsNotNone(data.get('run'))

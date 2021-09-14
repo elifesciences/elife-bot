@@ -79,10 +79,7 @@ def start_workflow(settings, workflow_name, workflow_data):
 
 
 def process_data_ingestarticlezip(workflow_data):
-    data = {'article_id': workflow_data['article_id'],
-            'run': workflow_data['run'], 'version_reason': workflow_data.get('version_reason'),
-            'scheduled_publication_date': workflow_data.get('scheduled_publication_date')}
-    return data
+    return process_data_s3_notification_default(workflow_data)
 
 
 def process_data_s3_notification_default(workflow_data):
@@ -90,10 +87,6 @@ def process_data_s3_notification_default(workflow_data):
     data = {'info': S3NotificationInfo.from_dict(workflow_data),
             'run': str(uuid.uuid4())}
     return data
-
-
-def process_data_initialarticlezip(workflow_data):
-    return process_data_s3_notification_default(workflow_data)
 
 
 def process_data_postperfectpublication(workflow_data):
@@ -120,8 +113,7 @@ def process_data_ingestacceptedsubmission(workflow_data):
 
 workflow_data_processors = {
     'IngestArticleZip': process_data_ingestarticlezip,
-    'InitialArticleZip': process_data_initialarticlezip,
-    'SilentCorrectionsIngest': process_data_initialarticlezip,
+    'SilentCorrectionsIngest': process_data_ingestarticlezip,
     'PostPerfectPublication': process_data_postperfectpublication,
     'PubmedArticleDeposit': process_data_pubmedarticledeposit,
     'IngestDigest': process_data_ingestdigest,

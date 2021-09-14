@@ -122,15 +122,10 @@ silent_ingest_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda
                                   u'bucket_name': u'jen-elife-production-final',
                                   u'file_size': 1097506}
 
-ingest_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
-                           u"article_id": u"00353",
-                           u"version_reason": "article version reason",
-                           u"scheduled_publication_date": "1520585023"}
-
 ingest_article_zip_no_vr_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
                                  u"article_id": u"00353"}
 
-initial_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
+ingest_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
                             u'event_time': u'2016-07-28T16:14:27.809576Z',
                             u'event_name': u'ObjectCreated:Put',
                             u'file_name': u'elife-00353-vor-r1.zip',
@@ -171,7 +166,7 @@ queue_worker_rules = {
     'ArticleZip': {
         'bucket_name_pattern': '.*elife-production-final$',
         'file_name_pattern': r'.*\.zip',
-        'starter_name': 'InitialArticleZip'
+        'starter_name': 'IngestArticleZip'
         },
     'SilentCorrectionsArticleZip': {
        'bucket_name_pattern': '.*elife-silent-corrections$',
@@ -203,7 +198,7 @@ queue_worker_article_zip_data = {u'event_time': u'2016-07-28T16:14:27.809576Z',
                                  u'file_size': 1097506}
 
 queue_worker_starter_message = {
-    "workflow_name": "InitialArticleZip",
+    "workflow_name": "IngestArticleZip",
     "workflow_data": {
         "event_time": "2016-07-28T16:14:27.809576Z",
         "event_name": "ObjectCreated:Put",

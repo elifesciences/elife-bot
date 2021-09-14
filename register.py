@@ -22,7 +22,6 @@ def start(settings):
     workflow_names.append("SilentCorrectionsIngest")
     workflow_names.append("SilentCorrectionsProcess")
     workflow_names.append("IngestArticleZip")
-    workflow_names.append("InitialArticleZip")
     workflow_names.append("ProcessArticleZip")
     workflow_names.append("Ping")
     workflow_names.append("ApproveArticlePublication")
@@ -62,8 +61,6 @@ def start(settings):
 
     activity_names = []
     activity_names.append("ReadyToPublish")
-    activity_names.append("VersionReasonDecider"),
-    activity_names.append("AcceptVersionReason"),
     activity_names.append("InvalidateCdn")
     activity_names.append("ConvertImagesToJPG")
     activity_names.append("SendDashboardProperties")
