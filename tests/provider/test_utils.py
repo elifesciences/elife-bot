@@ -187,6 +187,29 @@ class TestConsoleStartEnvDocument(unittest.TestCase):
             self.assertEqual(utils.console_start_env_document(), expected)
 
 
+class TestConsoleStartEnvWorkflow(unittest.TestCase):
+    def test_console_start_env_workflow(self):
+        env = "foo"
+        workflow = "HEFCE"
+        expected = env, workflow
+        testargs = ["cron.py", "-e", env, "-w", workflow]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(utils.console_start_env_workflow(), expected)
+
+    def test_console_start_env_workflow_blank(self):
+        expected = "dev", None
+        testargs = ["cron.py"]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(utils.console_start_env_workflow(), expected)
+
+    def test_console_start_env_workflow_unrecognized_arguments(self):
+        env = "foo"
+        expected = env, None
+        testargs = ["cron.py", "-e", env, "0"]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(utils.console_start_env_workflow(), expected)
+
+
 class TestConsoleStartEnvWorkflowDoiId(unittest.TestCase):
     def test_console_start_env_workflow_doi_id(self):
         env = "foo"
