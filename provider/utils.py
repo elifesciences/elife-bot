@@ -198,6 +198,15 @@ def console_start_env_document():
     return args.env, args.document
 
 
+def console_start_env_workflow():
+    """capture ENV, WORKFLOW from arguments when running standalone"""
+    parser = ArgumentParser()
+    add_console_argument(parser, "e")
+    add_console_argument(parser, "w")
+    args, unknown = parser.parse_known_args()
+    return args.env, args.workflow
+
+
 def console_start_env_workflow_doi_id():
     """capture ENV, WORKFLOW, and DOI_ID from arguments when running standalone"""
     parser = ArgumentParser()
