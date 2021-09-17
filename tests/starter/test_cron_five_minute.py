@@ -1,9 +1,6 @@
-import sys
 import unittest
 from mock import patch
 from boto.swf.exceptions import SWFWorkflowExecutionAlreadyStartedError
-from starter.objects import Starter
-import starter.cron_FiveMinute as starter_module
 from starter.cron_FiveMinute import cron_FiveMinute
 from tests.classes_mock import FakeLayer1
 from tests.activity.classes_mock import FakeLogger

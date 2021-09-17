@@ -11,6 +11,17 @@ class starter_SoftwareHeritageDeposit(Starter):
         )
 
     def get_workflow_params(self, run, info):
+
+        if not info:
+            raise NullRequiredDataException(
+                "Did not get info in starter %s" % self.name
+            )
+        for info_key in ["article_id", "input_file"]:
+            if info.get(info_key) is None or str(info.get(info_key)) == "":
+                raise NullRequiredDataException(
+                    "Did not get a %s in starter %s" % (info_key, self.name)
+                )
+
         workflow_params = default_workflow_params(self.settings)
         workflow_params["workflow_id"] = "%s_%s" % (
             self.name,
@@ -37,30 +48,5 @@ class starter_SoftwareHeritageDeposit(Starter):
         if run is None:
             run = str(uuid.uuid4())
 
-        if not info:
-            raise NullRequiredDataException(
-                "Did not get info in starter %s" % self.name
-            )
-        for info_key in ["article_id", "input_file"]:
-            if info.get(info_key) is None or str(info.get(info_key)) == "":
-                raise NullRequiredDataException(
-                    "Did not get a %s in starter %s" % (info_key, self.name)
-                )
-
-        self.connect_to_swf()
-
         workflow_params = self.get_workflow_params(run, info)
-
-        # start a workflow execution
-        self.logger.info("Starting workflow: %s", workflow_params.get("workflow_id"))
-        try:
-            self.start_swf_workflow_execution(workflow_params)
-        except NullRequiredDataException as null_exception:
-            self.logger.exception(null_exception.message)
-            raise
-        except:
-            message = (
-                "Exception starting workflow execution for workflow_id %s"
-                % workflow_params.get("workflow_id")
-            )
-            self.logger.exception(message)
+        self.start_workflow_execution(workflow_params)

@@ -47,18 +47,4 @@ class starter_PostPerfectPublication(Starter):
 
         workflow_params = self.get_workflow_params(info)
 
-        self.connect_to_swf()
-
-        # start a workflow execution
-        self.logger.info("Starting workflow: %s", workflow_params.get("workflow_id"))
-        try:
-            self.start_swf_workflow_execution(workflow_params)
-        except NullRequiredDataException as null_exception:
-            self.logger.exception(null_exception.message)
-            raise
-        except:
-            message = (
-                "Exception starting workflow execution for workflow_id %s"
-                % workflow_params.get("workflow_id")
-            )
-            self.logger.exception(message)
+        self.start_workflow_execution(workflow_params)

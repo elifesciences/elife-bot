@@ -46,18 +46,9 @@ class starter_PackagePOA(Starter):
 
         workflow_params = self.get_workflow_params(document)
 
-        self.connect_to_swf()
+        self.start_workflow_execution(workflow_params)
 
-        # start a workflow execution
-        self.logger.info("Starting workflow: %s", workflow_params.get("workflow_id"))
-        try:
-            self.start_swf_workflow_execution(workflow_params)
-        except:
-            message = (
-                "Exception starting workflow execution for workflow_id %s"
-                % workflow_params.get("workflow_id")
-            )
-            self.logger.exception(message)
+        self.connect_to_swf()
 
 
 if __name__ == "__main__":

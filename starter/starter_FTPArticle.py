@@ -24,11 +24,7 @@ class starter_FTPArticle(Starter):
     def __init__(self, settings=None, logger=None):
         super(starter_FTPArticle, self).__init__(settings, logger, "FTPArticle")
 
-    def get_workflow_params(
-        self,
-        workflow=None,
-        doi_id=None,
-    ):
+    def get_workflow_params(self, workflow=None, doi_id=None):
         if workflow is None:
             raise NullRequiredDataException(
                 "Did not get a workflow argument. Required."
@@ -57,12 +53,7 @@ class starter_FTPArticle(Starter):
         workflow_params["input"] = json.dumps(info, default=lambda ob: None)
         return workflow_params
 
-    def start(
-        self,
-        settings,
-        workflow=None,
-        doi_id=None,
-    ):
+    def start(self, settings, workflow=None, doi_id=None):
         """method for backwards compatibility"""
         self.settings = settings
         self.instantiate_logger()
@@ -71,26 +62,11 @@ class starter_FTPArticle(Starter):
             doi_id,
         )
 
-    def start_workflow(
-        self,
-        workflow=None,
-        doi_id=None,
-    ):
+    def start_workflow(self, workflow=None, doi_id=None):
 
         workflow_params = self.get_workflow_params(workflow, doi_id)
 
-        self.connect_to_swf()
-
-        # start a workflow execution
-        self.logger.info("Starting workflow: %s", workflow_params.get("workflow_id"))
-        try:
-            self.start_swf_workflow_execution(workflow_params)
-        except:
-            message = (
-                "Exception starting workflow execution for workflow_id %s"
-                % workflow_params.get("workflow_id")
-            )
-            self.logger.exception(message)
+        self.start_workflow_execution(workflow_params)
 
 
 if __name__ == "__main__":

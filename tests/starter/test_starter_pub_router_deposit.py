@@ -41,11 +41,3 @@ class TestStarterPubRouterDeposit(unittest.TestCase):
         workflow = "HEFCE"
         fake_conn.return_value = FakeLayer1()
         self.assertIsNone(self.starter.start(settings_mock, workflow))
-
-    @patch.object(FakeLayer1, "start_workflow_execution")
-    @patch("boto.swf.layer1.Layer1")
-    def test_start_exception(self, fake_conn, fake_start):
-        workflow = "HEFCE"
-        fake_conn.return_value = FakeLayer1()
-        fake_start.side_effect = Exception("An unhandled exception")
-        self.assertIsNone(self.starter.start(settings_mock, workflow))

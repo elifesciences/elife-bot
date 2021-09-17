@@ -9,6 +9,17 @@ class starter_DepositDOAJ(Starter):
         super(starter_DepositDOAJ, self).__init__(settings, logger, "DepositDOAJ")
 
     def get_workflow_params(self, info):
+
+        if not info:
+            raise NullRequiredDataException(
+                "Did not get info in starter %s" % self.name
+            )
+        for info_key in ["article_id"]:
+            if info.get(info_key) is None or str(info.get(info_key)) == "":
+                raise NullRequiredDataException(
+                    "Did not get a %s in starter %s" % (info_key, self.name)
+                )
+
         workflow_params = default_workflow_params(self.settings)
         workflow_params["workflow_id"] = "%s_%s" % (
             self.name,
@@ -31,33 +42,9 @@ class starter_DepositDOAJ(Starter):
 
     def start_workflow(self, info=None):
 
-        if not info:
-            raise NullRequiredDataException(
-                "Did not get info in starter %s" % self.name
-            )
-        for info_key in ["article_id"]:
-            if info.get(info_key) is None or str(info.get(info_key)) == "":
-                raise NullRequiredDataException(
-                    "Did not get a %s in starter %s" % (info_key, self.name)
-                )
-
-        self.connect_to_swf()
-
         workflow_params = self.get_workflow_params(info)
 
-        # start a workflow execution
-        self.logger.info("Starting workflow: %s", workflow_params.get("workflow_id"))
-        try:
-            self.start_swf_workflow_execution(workflow_params)
-        except NullRequiredDataException as null_exception:
-            self.logger.exception(null_exception.message)
-            raise
-        except:
-            message = (
-                "Exception starting workflow execution for workflow_id %s"
-                % workflow_params.get("workflow_id")
-            )
-            self.logger.exception(message)
+        self.start_workflow_execution(workflow_params)
 
 
 if __name__ == "__main__":
