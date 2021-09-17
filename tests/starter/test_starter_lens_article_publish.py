@@ -1,7 +1,6 @@
 import unittest
 from collections import OrderedDict
 from mock import patch
-from boto.swf.exceptions import SWFWorkflowExecutionAlreadyStartedError
 from starter.starter_LensArticlePublish import starter_LensArticlePublish
 from starter.starter_helper import NullRequiredDataException
 import tests.settings_mock as settings_mock
@@ -43,14 +42,4 @@ class TestStarterLensArticlePublish(unittest.TestCase):
     def test_start(self, fake_conn):
         doi_id = 3
         fake_conn.return_value = FakeLayer1()
-        self.assertIsNone(self.starter.start(settings_mock, doi_id))
-
-    @patch.object(FakeLayer1, "start_workflow_execution")
-    @patch("boto.swf.layer1.Layer1")
-    def test_start_exception(self, fake_conn, fake_start):
-        doi_id = 3
-        fake_conn.return_value = FakeLayer1()
-        fake_start.side_effect = SWFWorkflowExecutionAlreadyStartedError(
-            "message", None
-        )
         self.assertIsNone(self.starter.start(settings_mock, doi_id))

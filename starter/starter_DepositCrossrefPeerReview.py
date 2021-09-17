@@ -3,10 +3,15 @@ from provider import utils
 
 
 class starter_DepositCrossrefPeerReview(Starter):
+    def __init__(self, settings=None, logger=None):
+        super(starter_DepositCrossrefPeerReview, self).__init__(
+            settings, logger, "DepositCrossrefPeerReview"
+        )
+
     def get_workflow_params(self):
         workflow_params = default_workflow_params(self.settings)
-        workflow_params["workflow_id"] = "DepositCrossrefPeerReview"
-        workflow_params["workflow_name"] = "DepositCrossrefPeerReview"
+        workflow_params["workflow_id"] = self.name
+        workflow_params["workflow_name"] = self.name
         workflow_params["workflow_version"] = "1"
         return workflow_params
 
@@ -18,20 +23,9 @@ class starter_DepositCrossrefPeerReview(Starter):
 
     def start_workflow(self):
 
-        self.connect_to_swf()
-
         workflow_params = self.get_workflow_params()
 
-        # start a workflow execution
-        self.logger.info("Starting workflow: %s", workflow_params.get("workflow_id"))
-        try:
-            self.start_swf_workflow_execution(workflow_params)
-        except:
-            message = (
-                "Exception starting workflow execution for workflow_id %s"
-                % workflow_params.get("workflow_id")
-            )
-            self.logger.exception(message)
+        self.start_workflow_execution(workflow_params)
 
 
 if __name__ == "__main__":

@@ -7,10 +7,15 @@ Amazon SWF PubmedArticleDeposit starter
 
 
 class starter_PubmedArticleDeposit(Starter):
+    def __init__(self, settings=None, logger=None):
+        super(starter_PubmedArticleDeposit, self).__init__(
+            settings, logger, "PubmedArticleDeposit"
+        )
+
     def get_workflow_params(self):
         workflow_params = default_workflow_params(self.settings)
-        workflow_params["workflow_id"] = "PubmedArticleDeposit"
-        workflow_params["workflow_name"] = "PubmedArticleDeposit"
+        workflow_params["workflow_id"] = self.name
+        workflow_params["workflow_name"] = self.name
         workflow_params["workflow_version"] = "1"
         return workflow_params
 
@@ -22,20 +27,8 @@ class starter_PubmedArticleDeposit(Starter):
 
     def start_workflow(self):
 
-        self.connect_to_swf()
-
         workflow_params = self.get_workflow_params()
-
-        # start a workflow execution
-        self.logger.info("Starting workflow: %s", workflow_params.get("workflow_id"))
-        try:
-            self.start_swf_workflow_execution(workflow_params)
-        except:
-            message = (
-                "Exception starting workflow execution for workflow_id %s"
-                % workflow_params.get("workflow_id")
-            )
-            self.logger.exception(message)
+        self.start_workflow_execution(workflow_params)
 
 
 if __name__ == "__main__":

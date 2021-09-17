@@ -6,7 +6,7 @@ from starter.starter_helper import NullRequiredDataException
 from S3utility.s3_notification_info import S3NotificationInfo
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
-from tests.classes_mock import FakeBotoConnection
+from tests.classes_mock import FakeLayer1
 from tests.activity.classes_mock import FakeLogger
 
 RUN_EXAMPLE = u"1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
@@ -15,9 +15,7 @@ RUN_EXAMPLE = u"1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
 class TestStarterSilentCorrectionsIngest(unittest.TestCase):
     def setUp(self):
         self.fake_logger = FakeLogger()
-        self.starter = starter_SilentCorrectionsIngest(
-            settings_mock, logger=self.fake_logger
-        )
+        self.starter = starter_SilentCorrectionsIngest(settings_mock, self.fake_logger)
 
     def test_get_workflow_params(self):
         expected = OrderedDict(
@@ -65,25 +63,9 @@ class TestStarterSilentCorrectionsIngest(unittest.TestCase):
 
     @patch("boto.swf.layer1.Layer1")
     def test_silent_corrections_ingest_starter(self, fake_boto_conn):
-        fake_boto_conn.return_value = FakeBotoConnection()
+        fake_boto_conn.return_value = FakeLayer1()
         self.starter.start(
             settings=settings_mock,
             run=RUN_EXAMPLE,
             info=S3NotificationInfo.from_dict(test_data.silent_ingest_article_zip_data),
-        )
-
-    @patch.object(starter_SilentCorrectionsIngest, "start_swf_workflow_execution")
-    @patch("boto.swf.layer1.Layer1")
-    def test_silent_corrections_ingest_starter_exception(
-        self, fake_boto_conn, fake_start
-    ):
-        fake_boto_conn.return_value = FakeBotoConnection()
-        fake_start.side_effect = Exception("An unhandled exception")
-        self.assertIsNone(
-            self.starter.start_workflow(
-                run=RUN_EXAMPLE,
-                info=S3NotificationInfo.from_dict(
-                    test_data.silent_ingest_article_zip_data
-                ),
-            )
         )

@@ -10,7 +10,7 @@ import tests.settings_mock as settings_mock
 class TestStarterPackagePOA(unittest.TestCase):
     def setUp(self):
         self.fake_logger = FakeLogger()
-        self.starter = starter_PackagePOA(settings_mock, logger=self.fake_logger)
+        self.starter = starter_PackagePOA(settings_mock, self.fake_logger)
 
     def test_start_no_document(self):
         self.assertRaises(
@@ -24,12 +24,4 @@ class TestStarterPackagePOA(unittest.TestCase):
     def test_start(self, fake_conn):
         document = "document"
         fake_conn.return_value = FakeLayer1()
-        self.assertIsNone(self.starter.start(settings_mock, document))
-
-    @patch.object(FakeLayer1, "start_workflow_execution")
-    @patch("boto.swf.layer1.Layer1")
-    def test_start_exception(self, fake_conn, fake_start):
-        document = "document"
-        fake_conn.return_value = FakeLayer1()
-        fake_start.side_effect = Exception("An unhandled exception")
         self.assertIsNone(self.starter.start(settings_mock, document))

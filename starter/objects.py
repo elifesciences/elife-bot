@@ -39,6 +39,21 @@ class Starter:
             self.settings.aws_access_key_id, self.settings.aws_secret_access_key
         )
 
+    def start_workflow_execution(self, workflow_params):
+        "start a workflow execution with exception handling and logging messages"
+
+        self.connect_to_swf()
+
+        self.logger.info("Starting workflow: %s", workflow_params.get("workflow_id"))
+        try:
+            self.start_swf_workflow_execution(workflow_params)
+        except:
+            message = (
+                "Exception starting workflow execution for workflow_id %s"
+                % workflow_params.get("workflow_id")
+            )
+            self.logger.exception(message)
+
     def start_swf_workflow_execution(self, workflow_params):
         if not self.conn:
             self.connect_to_swf()

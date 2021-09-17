@@ -4,37 +4,18 @@ from collections import OrderedDict
 from mock import patch
 from starter.starter_ApproveArticlePublication import starter_ApproveArticlePublication
 from starter.starter_helper import NullRequiredDataException
-from tests.classes_mock import FakeBotoConnection
+from tests.classes_mock import FakeLayer1
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
+from tests.activity.classes_mock import FakeLogger
 
 
 class TestStarterApproveArticlePublication(unittest.TestCase):
     def setUp(self):
-        self.starter = starter_ApproveArticlePublication()
-
-    def test_process_approve_article_publication(self):
-        invalid_data = test_data.ApprovePublication_data()
-        invalid_data["version"] = None
-        self.assertRaises(
-            NullRequiredDataException,
-            self.starter.start,
-            settings=settings_mock,
-            **invalid_data
+        self.fake_logger = FakeLogger()
+        self.starter = starter_ApproveArticlePublication(
+            settings_mock, self.fake_logger
         )
-
-    @patch("boto.swf.layer1.Layer1")
-    def test_approve_article_publication_starter(self, fake_boto_conn):
-        fake_boto_conn.return_value = FakeBotoConnection()
-        self.starter.start(
-            settings=settings_mock, **test_data.ApprovePublication_data()
-        )
-
-
-class TestStarterApproveArticlePublicationWorkflowParams(unittest.TestCase):
-    def setUp(self):
-        # instantiate the starter object with settings in order to test get_workflow_params
-        self.starter = starter_ApproveArticlePublication(settings_mock)
 
     def test_get_workflow_params(self):
         data = test_data.ApprovePublication_data()
@@ -54,13 +35,28 @@ class TestStarterApproveArticlePublicationWorkflowParams(unittest.TestCase):
                 ),
             ]
         )
-        workflow_data = self.starter.get_workflow_params(workflow=workflow, **data)
+        workflow_data = self.starter.get_workflow_params(**data)
         self.assertEqual(workflow_data, expected)
 
-    def test_get_workflow_params_no_workflow(self):
+    def test_get_workflow_params_no_article_id(self):
+        invalid_data = {}
+        self.assertRaises(
+            NullRequiredDataException, self.starter.get_workflow_params, **invalid_data
+        )
+
+    def test_process_approve_article_publication(self):
         invalid_data = test_data.ApprovePublication_data()
+        invalid_data["version"] = None
         self.assertRaises(
             NullRequiredDataException,
-            self.starter.get_workflow_params,
+            self.starter.start,
+            settings=settings_mock,
             **invalid_data
+        )
+
+    @patch("boto.swf.layer1.Layer1")
+    def test_approve_article_publication_starter(self, fake_boto_conn):
+        fake_boto_conn.return_value = FakeLayer1()
+        self.starter.start(
+            settings=settings_mock, **test_data.ApprovePublication_data()
         )

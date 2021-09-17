@@ -31,6 +31,30 @@ class TestStarterObject(unittest.TestCase):
         self.assertIsNotNone(self.starter.conn)
 
     @patch("boto.swf.layer1.Layer1")
+    def test_start_workflow_execution(self, fake_conn):
+        fake_conn.return_value = FakeLayer1()
+        workflow_params = {}
+        self.starter.start_workflow_execution(workflow_params)
+        self.assertEqual(self.logger.loginfo[-1], "got response: \nnull")
+
+    @patch.object(FakeLayer1, "start_workflow_execution")
+    @patch("boto.swf.layer1.Layer1")
+    def test_start_workflow_execution_exception(self, fake_conn, fake_start):
+        fake_conn.return_value = FakeLayer1()
+        fake_start.side_effect = SWFWorkflowExecutionAlreadyStartedError(
+            "message", None
+        )
+        workflow_params = {}
+        self.starter.start_workflow_execution(workflow_params)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            (
+                "SWFWorkflowExecutionAlreadyStartedError: "
+                "There is already a running workflow with ID None"
+            ),
+        )
+
+    @patch("boto.swf.layer1.Layer1")
     def test_start_swf_workflow_execution(self, fake_conn):
         fake_conn.return_value = FakeLayer1()
         workflow_params = {}
