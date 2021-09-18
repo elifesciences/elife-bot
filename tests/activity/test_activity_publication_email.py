@@ -14,7 +14,7 @@ import activity.activity_PublicationEmail as activity_module
 from activity.activity_PublicationEmail import activity_PublicationEmail
 import tests.test_data as test_data
 from tests.classes_mock import FakeSMTPServer
-from tests.activity.helpers import instantiate_article
+import tests.activity.helpers as helpers
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeKey, FakeStorageContext
 
@@ -211,8 +211,11 @@ class TestPublicationEmail(unittest.TestCase):
     @patch.object(EJP, 'get_s3key')
     @patch.object(EJP, 'find_latest_s3_file_name')
     @patch.object(FakeStorageContext, 'list_resources')
+    @patch("provider.outbox_provider.get_outbox_s3_key_names")
+    @patch("provider.outbox_provider.storage_context")
     @patch('activity.activity_PublicationEmail.storage_context')
-    def test_do_activity(self, fake_storage_context, fake_list_resources,
+    def test_do_activity(self, fake_storage_context, fake_outbox_storage_provider, fake_outbox_key_names,
+                         fake_list_resources,
                          fake_find_latest_s3_file_name,
                          fake_ejp_get_s3key,
                          fake_article_versions,
@@ -222,6 +225,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         directory = TempDirectory()
         fake_storage_context.return_value = FakeStorageContext()
+        fake_outbox_storage_provider.return_value = FakeStorageContext("tests/files_source/publication_email/outbox/")
         fake_download_xml.return_value = False
 
         # Basic fake data for all activity passes
@@ -245,6 +249,7 @@ class TestPublicationEmail(unittest.TestCase):
             fake_article_versions.return_value = (
                 200, pass_test_data.get("lax_article_versions_response_data"))
 
+            fake_outbox_key_names.return_value = pass_test_data["article_xml_filenames"]
             fake_list_resources.return_value = pass_test_data["article_xml_filenames"]
 
             success = self.activity.do_activity(pass_test_data["input_data"])
@@ -264,25 +269,45 @@ class TestPublicationEmail(unittest.TestCase):
             # reset object values
             self.activity.related_articles = []
             self.activity.admin_email_content = ''
+            # clean the tmp_dir between test passes
+            helpers.delete_files_in_folder(self.activity.get_tmp_dir())
 
+
+    @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch.object(activity_PublicationEmail, "download_templates")
-    def test_do_activity_download_failure(self, fake_download_templates):
+    def test_do_activity_download_failure(self, fake_download_templates, fake_outbox_key_names):
         fake_download_templates.return_value = False
+        fake_outbox_key_names.return_value = []
         result = self.activity.do_activity()
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
+    @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch.object(Templates, "copy_email_templates")
-    def test_do_activity_download_exception(self, fake_copy_email_templates):
+    def test_do_activity_download_templates_exception(self, fake_copy_email_templates, fake_outbox_key_names):
         fake_copy_email_templates.side_effect = Exception("Something went wrong!")
+        fake_outbox_key_names.return_value = []
         result = self.activity.do_activity()
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+
+    @patch("provider.outbox_provider.download_files_from_s3_outbox")
+    @patch("provider.outbox_provider.get_outbox_s3_key_names")
+    @patch.object(activity_PublicationEmail, "download_templates")
+    def test_do_activity_download_articles_exception(self, fake_download_templates, fake_outbox_key_names, fake_download_files):
+        fake_download_templates.return_value = True
+        fake_outbox_key_names.return_value = ["elife00013.xml"]
+        fake_download_files.side_effect = Exception("Something went wrong!")
+        result = self.activity.do_activity()
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+
 
     @patch.object(activity_PublicationEmail, "process_articles")
-    @patch.object(activity_PublicationEmail, "download_files_from_s3_outbox")
+    @patch("provider.outbox_provider.download_files_from_s3_outbox")
+    @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch.object(activity_PublicationEmail, "download_templates")
     def test_do_activity_process_articles_failure(
-            self, fake_download_templates, fake_download_files, fake_process_articles):
+            self, fake_download_templates, fake_outbox_key_names, fake_download_files, fake_process_articles):
         fake_download_templates.return_value = True
+        fake_outbox_key_names.return_value = []
         fake_download_files.return_value = True
         fake_process_articles.side_effect = Exception("Something went wrong!")
         result = self.activity.do_activity()
@@ -290,12 +315,14 @@ class TestPublicationEmail(unittest.TestCase):
 
     @patch.object(activity_PublicationEmail, "send_emails_for_articles")
     @patch.object(activity_PublicationEmail, "process_articles")
-    @patch.object(activity_PublicationEmail, "download_files_from_s3_outbox")
+    @patch("provider.outbox_provider.download_files_from_s3_outbox")
+    @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch.object(activity_PublicationEmail, "download_templates")
     def test_do_activity_process_send_emails_failure(
-            self, fake_download_templates, fake_download_files,
+            self, fake_download_templates, fake_outbox_key_names, fake_download_files,
             fake_process_articles, fake_send_emails):
         fake_download_templates.return_value = True
+        fake_outbox_key_names.return_value = []
         fake_download_files.return_value = True
         fake_process_articles.return_value = None, [0], None
         fake_send_emails.return_value = Exception("Something went wrong!")
@@ -469,10 +496,10 @@ class TestPublicationEmail(unittest.TestCase):
         "test removing articles based on article type"
         fake_article_versions.return_value = 200, test_data.lax_article_versions_response_data
         research_article_doi = '10.7554/eLife.99996'
-        editorial_article = instantiate_article('editorial', '10.7554/eLife.99999')
-        correction_article = instantiate_article('correction', '10.7554/eLife.99998')
-        retraction_article = instantiate_article('retraction', '10.7554/eLife.99997')
-        research_article = instantiate_article(
+        editorial_article = helpers.instantiate_article('editorial', '10.7554/eLife.99999')
+        correction_article = helpers.instantiate_article('correction', '10.7554/eLife.99998')
+        retraction_article = helpers.instantiate_article('retraction', '10.7554/eLife.99997')
+        research_article = helpers.instantiate_article(
             'research-article', research_article_doi, False, True)
         articles = [editorial_article, correction_article, retraction_article, research_article]
         approved_articles = self.activity.approve_articles(articles)

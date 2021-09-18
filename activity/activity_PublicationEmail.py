@@ -2,9 +2,17 @@ import json
 import time
 import os
 import re
+import glob
 import arrow
 from collections import OrderedDict
-from provider import ejp, email_provider, lax_provider, templates, utils
+from provider import (
+    ejp,
+    email_provider,
+    lax_provider,
+    outbox_provider,
+    templates,
+    utils,
+)
 import provider.article as articlelib
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -60,7 +68,17 @@ class activity_PublicationEmail(Activity):
 
         try:
             # Download the article XML from S3 and parse them
-            article_xml_filenames = self.download_files_from_s3_outbox()
+            outbox_s3_key_names = outbox_provider.get_outbox_s3_key_names(
+                self.settings, self.publish_bucket, self.outbox_folder
+            )
+            outbox_provider.download_files_from_s3_outbox(
+                self.settings,
+                self.publish_bucket,
+                outbox_s3_key_names,
+                self.get_tmp_dir(),
+                self.logger,
+            )
+            article_xml_filenames = glob.glob(self.get_tmp_dir() + "/*.xml")
         except Exception:
             self.logger.exception("Failed to download files from the S3 outbox")
             return self.ACTIVITY_PERMANENT_FAILURE
@@ -91,8 +109,11 @@ class activity_PublicationEmail(Activity):
         return True
 
     def log_cannot_find_authors(self, doi):
-        log_info = ("Leaving article in the outbox because we cannot " +
-                    "find its authors: " + doi)
+        log_info = (
+            "Leaving article in the outbox because we cannot "
+            + "find its authors: "
+            + doi
+        )
         self.admin_email_content += "\n" + log_info
         self.logger.info(log_info)
         # Make a note of this and we will not remove from the outbox, save for a later day
@@ -106,8 +127,7 @@ class activity_PublicationEmail(Activity):
 
         log_info = "Total parsed articles: " + str(len(articles))
         log_info += "\n" + "Total approved articles: " + str(len(approved))
-        log_info += (
-            "\n" + "Total prepared articles: " + str(len(prepared)))
+        log_info += "\n" + "Total prepared articles: " + str(len(prepared))
         self.admin_email_content += "\n" + log_info
         self.logger.info(log_info)
 
@@ -167,34 +187,6 @@ class activity_PublicationEmail(Activity):
             self.admin_email_content += "\n" + log_info
             self.logger.info(log_info)
             remove_article_doi.append(article.doi)
-
-    def download_files_from_s3_outbox(self):
-        """
-        From the outbox folder in the S3 bucket,
-        download the .xml to be processed
-        """
-        filenames = []
-        bucket_name = self.publish_bucket
-
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-        orig_resource = storage_provider + bucket_name + "/" + self.outbox_folder
-        files_in_bucket = storage.list_resources(orig_resource.rstrip("/"))
-
-        for name in files_in_bucket:
-            # Download objects from S3 and save to disk
-            # Only need to copy .xml files
-            if not re.search(".*\\.xml$", name):
-                continue
-            filename = name.split("/")[-1]
-            dirname = self.get_tmp_dir()
-            if dirname:
-                filename_plus_path = dirname + os.sep + filename
-                with open(filename_plus_path, 'wb') as open_file:
-                    storage_resource_origin = orig_resource + name
-                    storage.get_resource_to_file(storage_resource_origin, open_file)
-                filenames.append(filename_plus_path)
-        return filenames
 
     def parse_article_xml(self, article_xml_filenames):
         """
