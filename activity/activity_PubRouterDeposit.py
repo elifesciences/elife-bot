@@ -2,13 +2,20 @@ import os
 import uuid
 import json
 import time
-
+import glob
 import boto.swf
 import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.article as articlelib
-from provider import article_processing, email_provider, lax_provider, s3lib, utils
+from provider import (
+    article_processing,
+    email_provider,
+    lax_provider,
+    outbox_provider,
+    s3lib,
+    utils,
+)
 
 from activity.objects import Activity
 
@@ -95,7 +102,18 @@ class activity_PubRouterDeposit(Activity):
             return False
 
         # Download the S3 objects from the outbox
-        self.article_xml_filenames = self.download_files_from_s3_outbox()
+        outbox_s3_key_names = outbox_provider.get_outbox_s3_key_names(
+            self.settings, self.publish_bucket, self.outbox_folder
+        )
+        outbox_provider.download_files_from_s3_outbox(
+            self.settings,
+            self.publish_bucket,
+            outbox_s3_key_names,
+            self.get_tmp_dir(),
+            self.logger,
+        )
+        self.article_xml_filenames = glob.glob(self.get_tmp_dir() + "/*.xml")
+
         # Parse the XML
         self.articles = self.parse_article_xml(self.article_xml_filenames)
         # Approve the articles to be sent
@@ -284,48 +302,6 @@ class activity_PubRouterDeposit(Activity):
             starter_status = False
 
         return starter_status
-
-    def download_files_from_s3_outbox(self):
-        """
-        Connect to the S3 bucket, and from the outbox folder,
-        download the .xml to be processed
-        """
-        filenames = []
-
-        file_extensions = []
-        file_extensions.append(".xml")
-
-        bucket_name = self.publish_bucket
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = s3_conn.lookup(bucket_name)
-
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket, prefix=self.outbox_folder, file_extensions=file_extensions
-        )
-
-        for name in s3_key_names:
-            # Download objects from S3 and save to disk
-            s3_key = bucket.get_key(name)
-
-            filename = name.split("/")[-1]
-
-            # Download to the activity temp directory
-            dirname = self.get_tmp_dir()
-
-            filename_plus_path = dirname + os.sep + filename
-
-            mode = "wb"
-            open_file = open(filename_plus_path, mode)
-            s3_key.get_contents_to_file(open_file)
-            open_file.close()
-
-            filenames.append(filename_plus_path)
-
-        return filenames
 
     def parse_article_xml(self, article_xml_filenames):
         """
