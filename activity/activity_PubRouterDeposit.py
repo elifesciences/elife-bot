@@ -497,9 +497,28 @@ class activity_PubRouterDeposit(Activity):
         on the status of the activity
         """
         current_time = time.gmtime()
+        date_format = "%Y-%m-%d %H:%M"
+        datetime_string = time.strftime(date_format, current_time)
 
-        body = self.get_admin_email_body(current_time)
-        subject = self.get_admin_email_subject(current_time)
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
+
+        subject = email_provider.get_email_subject(
+            datetime_string,
+            activity_status_text,
+            self.name,
+            self.settings.domain,
+            self.articles_approved,
+        )
+
+        body = email_provider.get_email_body_head(self.name, activity_status_text, {})
+        body += "\nDetails:\n\n%s\n" % self.admin_email_content
+        body += email_provider.get_admin_email_body_foot(
+            self.get_activityId(),
+            self.get_workflowId(),
+            datetime_string,
+            self.settings.domain,
+        )
+
         sender_email = self.settings.ses_poa_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
@@ -591,66 +610,6 @@ class activity_PubRouterDeposit(Activity):
             recipient_email_list.append(recipients)
 
         return recipient_email_list
-
-    def get_admin_email_subject(self, current_time):
-        """
-        Assemble the email subject
-        """
-        date_format = "%Y-%m-%d %H:%M"
-        datetime_string = time.strftime(date_format, current_time)
-
-        activity_status_text = utils.get_activity_status_text(self.activity_status)
-
-        subject = (
-            self.name
-            + " "
-            + str(self.workflow)
-            + " "
-            + activity_status_text
-            + ", "
-            + datetime_string
-            + ", eLife SWF domain: "
-            + self.settings.domain
-        )
-
-        return subject
-
-    def get_admin_email_body(self, current_time):
-        """
-        Format the body of the email
-        """
-
-        body = ""
-
-        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, current_time)
-
-        activity_status_text = utils.get_activity_status_text(self.activity_status)
-
-        # Bulk of body
-        body += "Workflow type:" + str(self.workflow)
-        body += "\n"
-        body += self.name + " status:" + "\n"
-        body += "\n"
-        body += activity_status_text + "\n"
-        body += "\n"
-        body += "Details:" + "\n"
-        body += "\n"
-        body += self.admin_email_content + "\n"
-        body += "\n"
-
-        body += "\n"
-        body += "-------------------------------\n"
-        body += "SWF workflow details: " + "\n"
-        body += "activityId: " + str(self.get_activityId()) + "\n"
-        body += "As part of workflowId: " + str(self.get_workflowId()) + "\n"
-        body += "As at " + datetime_string + "\n"
-        body += "Domain: " + self.settings.domain + "\n"
-
-        body += "\n"
-
-        body += "\n\nSincerely\n\neLife bot"
-
-        return body
 
 
 def get_friendly_email_subject(current_time, workflow):
