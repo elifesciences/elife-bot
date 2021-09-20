@@ -38,7 +38,6 @@ class TestPubRouterDeposit(unittest.TestCase):
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")
-    @patch.object(activity_PubRouterDeposit, "clean_outbox")
     @patch.object(activity_PubRouterDeposit, "start_ftp_article_workflow")
     @patch.object(activity_PubRouterDeposit, "does_source_zip_exist_from_s3")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
@@ -53,7 +52,6 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_outbox_key_names,
         fake_zip_exists,
         fake_start,
-        fake_clean_outbox,
         fake_article_versions,
         fake_email_smtp_connect,
     ):
@@ -61,7 +59,6 @@ class TestPubRouterDeposit(unittest.TestCase):
             self.pubrouterdeposit.get_tmp_dir()
         )
         activity_data = {"data": {"workflow": "HEFCE"}}
-        fake_clean_outbox.return_value = None
         fake_was_ever_published.return_value = None
         fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
         fake_outbox_key_names.return_value = ["elife00013.xml", "elife09169.xml"]
@@ -77,7 +74,6 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.was_ever_poa")
     @patch("provider.lax_provider.article_versions")
-    @patch.object(activity_PubRouterDeposit, "clean_outbox")
     @patch.object(activity_PubRouterDeposit, "start_pmc_deposit_workflow")
     @patch.object(activity_PubRouterDeposit, "archive_zip_file_name")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
@@ -92,7 +88,6 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_outbox_key_names,
         fake_archive_zip_file_name,
         fake_start,
-        fake_clean_outbox,
         fake_article_versions,
         fake_was_ever_poa,
         fake_email_smtp_connect,
@@ -102,7 +97,6 @@ class TestPubRouterDeposit(unittest.TestCase):
             self.pubrouterdeposit.get_tmp_dir()
         )
         activity_data = {"data": {"workflow": workflow_name}}
-        fake_clean_outbox.return_value = None
         fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
         fake_outbox_key_names.return_value = ["elife00013.xml"]
         fake_archive_zip_file_name.return_value = "elife-01-00013.zip"

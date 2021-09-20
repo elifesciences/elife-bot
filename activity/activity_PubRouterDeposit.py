@@ -154,8 +154,19 @@ class activity_PubRouterDeposit(Activity):
                     self.logger.info(log_info)
 
         # Clean up outbox
-        print("Moving files from outbox folder to published folder")
-        self.clean_outbox()
+        self.logger.info("Moving files from outbox folder to published folder")
+        published_file_names = self.s3_key_names_to_clean()
+        date_stamp = utils.set_datestamp()
+        to_folder = outbox_provider.get_to_folder_name(
+            self.published_folder, date_stamp
+        )
+        outbox_provider.clean_outbox(
+            self.settings,
+            self.publish_bucket,
+            self.outbox_folder,
+            to_folder,
+            published_file_names,
+        )
         self.outbox_status = True
 
         # Send email to admins with the status
@@ -443,22 +454,7 @@ class activity_PubRouterDeposit(Activity):
 
         return to_folder
 
-    def clean_outbox(self):
-        """
-        Clean out the S3 outbox folder
-        """
-
-        to_folder = self.get_to_folder_name()
-
-        # Move only the published files from the S3 outbox to the published folder
-        bucket_name = self.publish_bucket
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = s3_conn.lookup(bucket_name)
-
+    def s3_key_names_to_clean(self):
         # Concatenate the expected S3 outbox file names
         s3_key_names = []
 
@@ -476,26 +472,7 @@ class activity_PubRouterDeposit(Activity):
             filename = name.split(os.sep)[-1]
             s3_key_name = self.outbox_folder + filename
             s3_key_names.append(s3_key_name)
-
-        for name in s3_key_names:
-            # Download objects from S3 and save to disk
-
-            # Do not delete the from_folder itself, if it is in the list
-            if name != self.outbox_folder:
-                filename = name.split("/")[-1]
-                new_s3_key_name = to_folder + filename
-
-                # First copy
-                new_s3_key = None
-                try:
-                    new_s3_key = bucket.copy_key(new_s3_key_name, bucket_name, name)
-                except:
-                    pass
-
-                # Then delete the old key if successful
-                if isinstance(new_s3_key, boto.s3.key.Key):
-                    old_s3_key = bucket.get_key(name)
-                    old_s3_key.delete()
+        return s3_key_names
 
     def does_source_zip_exist_from_s3(self, doi_id):
         """"""
