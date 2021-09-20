@@ -231,11 +231,9 @@ class TestPublicationEmail(unittest.TestCase):
     @patch.object(FakeStorageContext, "list_resources")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
-    @patch("activity.activity_PublicationEmail.storage_context")
     def test_do_activity(
         self,
         fake_storage_context,
-        fake_outbox_storage_provider,
         fake_outbox_key_names,
         fake_list_resources,
         fake_find_latest_s3_file_name,
@@ -247,8 +245,7 @@ class TestPublicationEmail(unittest.TestCase):
     ):
 
         directory = TempDirectory()
-        fake_storage_context.return_value = FakeStorageContext()
-        fake_outbox_storage_provider.return_value = FakeStorageContext(
+        fake_storage_context.return_value = FakeStorageContext(
             "tests/files_source/publication_email/outbox/"
         )
         fake_download_xml.return_value = False
@@ -361,6 +358,7 @@ class TestPublicationEmail(unittest.TestCase):
         result = self.activity.do_activity()
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
+    @patch.object(activity_PublicationEmail, "send_admin_email")
     @patch.object(activity_PublicationEmail, "send_emails_for_articles")
     @patch.object(activity_PublicationEmail, "process_articles")
     @patch("provider.outbox_provider.download_files_from_s3_outbox")
@@ -373,10 +371,12 @@ class TestPublicationEmail(unittest.TestCase):
         fake_download_files,
         fake_process_articles,
         fake_send_emails,
+        fake_send_admin_email,
     ):
         fake_download_templates.return_value = True
         fake_outbox_key_names.return_value = []
         fake_download_files.return_value = True
+        fake_send_admin_email.return_value = True
         fake_process_articles.return_value = None, [0], None
         fake_send_emails.return_value = Exception("Something went wrong!")
         result = self.activity.do_activity()
@@ -907,6 +907,14 @@ class TestS3KeyNamesToClean(unittest.TestCase):
             "comment": "blank inputs",
             "prepared": [],
             "xml_file_to_doi_map": {},
+            "do_not_remove": [],
+            "do_remove": [],
+            "expected": [],
+        },
+        {
+            "comment": "edge case None value",
+            "prepared": [],
+            "xml_file_to_doi_map": None,
             "do_not_remove": [],
             "do_remove": [],
             "expected": [],

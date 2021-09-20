@@ -12,7 +12,6 @@ from provider import (
     utils,
 )
 import provider.article as articlelib
-from provider.storage_provider import storage_context
 from activity.objects import Activity
 
 
@@ -101,7 +100,24 @@ class activity_PublicationEmail(Activity):
             self.send_emails_for_articles(prepared)
 
             # Clean the outbox
-            self.clean_outbox(prepared, xml_file_to_doi_map)
+            published_file_names = s3_key_names_to_clean(
+                self.outbox_folder,
+                prepared,
+                xml_file_to_doi_map,
+                self.articles_do_not_remove_from_outbox,
+                self.insight_articles_to_remove_from_outbox,
+            )
+            date_stamp = utils.set_datestamp()
+            to_folder = outbox_provider.get_to_folder_name(
+                self.published_folder, date_stamp
+            )
+            outbox_provider.clean_outbox(
+                self.settings,
+                self.publish_bucket,
+                self.outbox_folder,
+                to_folder,
+                published_file_names,
+            )
 
             # Send email to admins with the status
             self.send_admin_email(True)
@@ -482,43 +498,6 @@ class activity_PublicationEmail(Activity):
 
         return True
 
-    def clean_outbox(self, prepared, xml_file_to_doi_map):
-        """
-        Clean out the S3 outbox folder
-        """
-
-        to_folder = get_to_folder_name(self.published_folder)
-
-        # Move only the published files from the S3 outbox to the published folder
-        bucket_name = self.publish_bucket
-
-        s3_key_names = s3_key_names_to_clean(
-            self.outbox_folder,
-            prepared,
-            xml_file_to_doi_map,
-            self.articles_do_not_remove_from_outbox,
-            self.insight_articles_to_remove_from_outbox,
-        )
-
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-
-        for name in s3_key_names:
-            # Do not delete the from_folder itself, if it is in the list
-            if name == self.outbox_folder:
-                continue
-            filename = name.split("/")[-1]
-            new_s3_key_name = to_folder + filename
-
-            orig_resource = storage_provider + bucket_name + "/" + name
-            dest_resource = storage_provider + bucket_name + "/" + new_s3_key_name
-
-            # First copy
-            storage.copy_resource(orig_resource, dest_resource)
-
-            # Then delete the old key if successful
-            storage.delete_resource(orig_resource)
-
     def get_authors(self, doi_id=None, corresponding=None, local_document=None):
         """
         Using the EJP data provider, get the column headings
@@ -687,15 +666,16 @@ def s3_key_names_to_clean(
     remove_doi_list = []
     processed_file_names = []
     for article in prepared:
-        if article.doi not in do_not_remove:
+        if article and article.doi not in do_not_remove:
             remove_doi_list.append(article.doi)
 
     for article in do_remove:
         remove_doi_list.append(article.doi)
 
-    for key, value in list(xml_file_to_doi_map.items()):
-        if key in remove_doi_list:
-            processed_file_names.append(value)
+    if xml_file_to_doi_map:
+        for key, value in list(xml_file_to_doi_map.items()):
+            if key in remove_doi_list:
+                processed_file_names.append(value)
 
     for name in processed_file_names:
         filename = name.split(os.sep)[-1]
@@ -769,19 +749,6 @@ def get_related_article(
     logger.info(log_info)
 
     return article
-
-
-def get_to_folder_name(published_folder):
-    """
-    From the date_stamp
-    return the S3 folder name to save published files into
-    """
-    to_folder = None
-
-    date_folder_name = utils.set_datestamp()
-    to_folder = published_folder + date_folder_name + "/"
-
-    return to_folder
 
 
 def choose_recipient_authors(
