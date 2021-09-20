@@ -18,11 +18,12 @@ from activity.objects import Activity
 PubRouterDeposit activity
 """
 
-class activity_PubRouterDeposit(Activity):
 
+class activity_PubRouterDeposit(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_PubRouterDeposit, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "PubRouterDeposit"
         self.version = "1"
@@ -30,8 +31,8 @@ class activity_PubRouterDeposit(Activity):
         self.default_task_schedule_to_close_timeout = 60 * 30
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 15
-        self.description = ("Download article XML from pub_router outbox, \
-                            approve each for publication, and deposit files via FTP to pub router.")
+        self.description = "Download article XML from pub_router outbox, \
+                            approve each for publication, and deposit files via FTP to pub router."
 
         # Set date_stamp
         self.date_stamp = utils.set_datestamp()
@@ -49,7 +50,9 @@ class activity_PubRouterDeposit(Activity):
         self.pmc_zip_folder = "pmc/zip/"
 
         # Bucket settings for source files of PMCDeposit workflows
-        self.archive_bucket = self.settings.publishing_buckets_prefix + self.settings.archive_bucket
+        self.archive_bucket = (
+            self.settings.publishing_buckets_prefix + self.settings.archive_bucket
+        )
 
         # Track the success of some steps
         self.activity_status = None
@@ -67,20 +70,20 @@ class activity_PubRouterDeposit(Activity):
         self.xml_file_to_doi_map = {}
         self.articles = []
 
-        #self.article_published_file_names = []
-        #self.article_not_published_file_names = []
+        # self.article_published_file_names = []
+        # self.article_not_published_file_names = []
 
-        self.admin_email_content = ''
+        self.admin_email_content = ""
 
         # journal
-        self.journal = 'elife'
+        self.journal = "elife"
 
     def do_activity(self, data=None):
         """
         Activity, do the work
         """
         if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+            self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         self.workflow = data["data"]["workflow"]
         self.outbox_folder = self.get_outbox_folder(self.workflow)
@@ -97,25 +100,37 @@ class activity_PubRouterDeposit(Activity):
         # Approve the articles to be sent
         self.articles_approved = self.approve_articles(self.articles, self.workflow)
 
-
         for article in self.articles_approved:
             # Start a workflow for each article this is approved to publish
             if self.workflow == "PMC":
                 zip_file_name = self.archive_zip_file_name(article)
-                starter_status = self.start_pmc_deposit_workflow(article, zip_file_name,)
+                starter_status = self.start_pmc_deposit_workflow(
+                    article,
+                    zip_file_name,
+                )
             else:
                 starter_status = self.start_ftp_article_workflow(article)
 
             if starter_status is True:
                 if self.logger:
-                    log_info = (self.name + " " + self.workflow +
-                                " Started a workflow for article: " + article.doi)
+                    log_info = (
+                        self.name
+                        + " "
+                        + self.workflow
+                        + " Started a workflow for article: "
+                        + article.doi
+                    )
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
             else:
                 if self.logger:
-                    log_info = (self.name + " " + self.workflow +
-                                " FAILED to start a workflow for article: " + article.doi)
+                    log_info = (
+                        self.name
+                        + " "
+                        + self.workflow
+                        + " FAILED to start a workflow for article: "
+                        + article.doi
+                    )
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
 
@@ -205,32 +220,40 @@ class activity_PubRouterDeposit(Activity):
         workflow_version = "1"
         child_policy = None
         # Allow workflow 120 minutes to finish
-        execution_start_to_close_timeout = str(60*120)
+        execution_start_to_close_timeout = str(60 * 120)
 
         # Input data
         data = {}
-        data['workflow'] = self.workflow
-        data['elife_id'] = article.doi_id
+        data["workflow"] = self.workflow
+        data["elife_id"] = article.doi_id
         input_json = {}
-        input_json['data'] = data
+        input_json["data"] = data
         input = json.dumps(input_json)
 
         # Connect to SWF
-        conn = boto.swf.layer1.Layer1(self.settings.aws_access_key_id,
-                                      self.settings.aws_secret_access_key)
+        conn = boto.swf.layer1.Layer1(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
 
         # Try and start a workflow
         try:
-            response = conn.start_workflow_execution(self.settings.domain, workflow_id,
-                                                     workflow_name, workflow_version,
-                                                     self.settings.default_task_list,
-                                                     child_policy,
-                                                     execution_start_to_close_timeout, input)
+            response = conn.start_workflow_execution(
+                self.settings.domain,
+                workflow_id,
+                workflow_name,
+                workflow_version,
+                self.settings.default_task_list,
+                child_policy,
+                execution_start_to_close_timeout,
+                input,
+            )
             starter_status = True
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
             # There is already a running workflow with that ID, cannot start another
-            message = ('SWFWorkflowExecutionAlreadyStartedError: ' +
-                       'There is already a running workflow with ID %s' % workflow_id)
+            message = (
+                "SWFWorkflowExecutionAlreadyStartedError: "
+                + "There is already a running workflow with ID %s" % workflow_id
+            )
             print(message)
             if self.logger:
                 self.logger.info(message)
@@ -238,15 +261,16 @@ class activity_PubRouterDeposit(Activity):
 
         return starter_status
 
-    def archive_zip_file_name(self, article, status='vor'):
+    def archive_zip_file_name(self, article, status="vor"):
         """
         Get the file name of the most recent archive zip from the archive bucket
         """
         bucket_name = self.archive_bucket
 
         # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
         bucket = s3_conn.lookup(bucket_name)
 
         s3_keys_in_bucket = s3lib.get_s3_keys_from_bucket(bucket=bucket)
@@ -255,7 +279,9 @@ class activity_PubRouterDeposit(Activity):
         for key in s3_keys_in_bucket:
             s3_keys.append({"name": key.name, "last_modified": key.last_modified})
 
-        return self.latest_archive_zip_revision(article.doi_id, s3_keys, self.journal, status)
+        return self.latest_archive_zip_revision(
+            article.doi_id, s3_keys, self.journal, status
+        )
 
     def latest_archive_zip_revision(self, doi_id, s3_keys, journal, status):
         """
@@ -264,8 +290,9 @@ class activity_PubRouterDeposit(Activity):
         """
         s3_key_name = None
 
-        name_prefix_to_match = (journal + '-' + str(doi_id).zfill(5)
-                                + '-' + status + '-v')
+        name_prefix_to_match = (
+            journal + "-" + str(doi_id).zfill(5) + "-" + status + "-v"
+        )
 
         highest = 0
         for key in s3_keys:
@@ -273,9 +300,9 @@ class activity_PubRouterDeposit(Activity):
                 version_and_date = None
                 try:
                     parts = key["name"].split(name_prefix_to_match)
-                    version = parts[1].split('-')[0]
+                    version = parts[1].split("-")[0]
                     date_formatted = dateutil.parser.parse(key["last_modified"])
-                    date_part = date_formatted.strftime('%Y%m%d%H%M%S')
+                    date_part = date_formatted.strftime("%Y%m%d%H%M%S")
                     version_and_date = int(version + date_part)
                 except:
                     pass
@@ -284,7 +311,6 @@ class activity_PubRouterDeposit(Activity):
                     highest = version_and_date
 
         return s3_key_name
-
 
     def start_pmc_deposit_workflow(self, article, zip_file_name, folder=""):
         """
@@ -303,30 +329,37 @@ class activity_PubRouterDeposit(Activity):
 
         # Input data
         data = {}
-        data['document'] = zip_file_name
-        data['folder'] = folder
+        data["document"] = zip_file_name
+        data["folder"] = folder
         input_json = {}
-        input_json['run'] = str(uuid.uuid4())
-        input_json['data'] = data
+        input_json["run"] = str(uuid.uuid4())
+        input_json["data"] = data
         workflow_input = json.dumps(input_json)
 
         # Connect to SWF
-        conn = boto.swf.layer1.Layer1(self.settings.aws_access_key_id,
-                                      self.settings.aws_secret_access_key)
+        conn = boto.swf.layer1.Layer1(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
 
         # Try and start a workflow
         try:
-            response = conn.start_workflow_execution(self.settings.domain, workflow_id,
-                                                     workflow_name, workflow_version,
-                                                     self.settings.default_task_list,
-                                                     child_policy,
-                                                     execution_start_to_close_timeout,
-                                                     workflow_input)
+            response = conn.start_workflow_execution(
+                self.settings.domain,
+                workflow_id,
+                workflow_name,
+                workflow_version,
+                self.settings.default_task_list,
+                child_policy,
+                execution_start_to_close_timeout,
+                workflow_input,
+            )
             starter_status = True
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
             # There is already a running workflow with that ID, cannot start another
-            message = ('SWFWorkflowExecutionAlreadyStartedError: ' +
-                       'There is already a running workflow with ID %s' % workflow_id)
+            message = (
+                "SWFWorkflowExecutionAlreadyStartedError: "
+                + "There is already a running workflow with ID %s" % workflow_id
+            )
             print(message)
             if self.logger:
                 self.logger.info(message)
@@ -347,14 +380,14 @@ class activity_PubRouterDeposit(Activity):
         bucket_name = self.publish_bucket
 
         # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
         bucket = s3_conn.lookup(bucket_name)
 
         s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=self.outbox_folder,
-            file_extensions=file_extensions)
+            bucket=bucket, prefix=self.outbox_folder, file_extensions=file_extensions
+        )
 
         for name in s3_key_names:
             # Download objects from S3 and save to disk
@@ -415,7 +448,9 @@ class activity_PubRouterDeposit(Activity):
             if type(doi_id) == int:
                 doi_id = str(doi_id).zfill(5)
             article_xml_filename = article.download_article_xml_from_s3(doi_id)
-            article.parse_article_file(self.get_tmp_dir() + os.sep + article_xml_filename)
+            article.parse_article_file(
+                self.get_tmp_dir() + os.sep + article_xml_filename
+            )
         return article
 
     def approve_articles(self, articles, workflow):
@@ -434,14 +469,17 @@ class activity_PubRouterDeposit(Activity):
 
         for article in articles:
             # Check whether the DOI was ever POA
-            article.was_ever_poa = lax_provider.was_ever_poa(article.doi_id, self.settings)
+            article.was_ever_poa = lax_provider.was_ever_poa(
+                article.doi_id, self.settings
+            )
 
             # Now can check if published
             is_published = lax_provider.published_considering_poa_status(
                 article_id=article.doi_id,
                 settings=self.settings,
                 is_poa=article.is_poa,
-                was_ever_poa=article.was_ever_poa)
+                was_ever_poa=article.was_ever_poa,
+            )
             if is_published is not True:
                 if self.logger:
                     log_info = "Removing because it is not published " + article.doi
@@ -452,10 +490,15 @@ class activity_PubRouterDeposit(Activity):
         # Check if article is a resupply
         if workflow not in ["CLOCKSS", "OVID", "PMC", "Zendy"]:
             for article in articles:
-                was_ever_published = blank_article.was_ever_published(article.doi, workflow)
+                was_ever_published = blank_article.was_ever_published(
+                    article.doi, workflow
+                )
                 if was_ever_published is True:
                     if self.logger:
-                        log_info = "Removing because it has been published before " + article.doi
+                        log_info = (
+                            "Removing because it has been published before "
+                            + article.doi
+                        )
                         self.admin_email_content += "\n" + log_info
                         self.logger.info(log_info)
                     remove_article_doi.append(article.doi)
@@ -465,20 +508,24 @@ class activity_PubRouterDeposit(Activity):
             for article in articles:
                 if not self.does_source_zip_exist_from_s3(doi_id=article.doi_id):
                     if self.logger:
-                        log_info = ("Removing because there is no PMC zip file to send " +
-                                    article.doi)
+                        log_info = (
+                            "Removing because there is no PMC zip file to send "
+                            + article.doi
+                        )
                         self.admin_email_content += "\n" + log_info
                         self.logger.info(log_info)
                     remove_article_doi.append(article.doi)
 
         # For PMC workflows, check the archive zip file exists
-        if workflow == 'PMC':
+        if workflow == "PMC":
             for article in articles:
                 zip_file_name = self.archive_zip_file_name(article)
                 if not zip_file_name:
                     if self.logger:
-                        log_info = ("Removing because there is no archive zip for PMC to send " +
-                                    article.doi)
+                        log_info = (
+                            "Removing because there is no archive zip for PMC to send "
+                            + article.doi
+                        )
                         self.admin_email_content += "\n" + log_info
                         self.logger.info(log_info)
                     remove_article_doi.append(article.doi)
@@ -513,8 +560,9 @@ class activity_PubRouterDeposit(Activity):
         bucket_name = self.publish_bucket
 
         # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
         bucket = s3_conn.lookup(bucket_name)
 
         # Concatenate the expected S3 outbox file names
@@ -556,20 +604,17 @@ class activity_PubRouterDeposit(Activity):
                     old_s3_key.delete()
 
     def does_source_zip_exist_from_s3(self, doi_id):
-        """
-
-        """
+        """"""
         bucket_name = self.pmc_zip_bucket
         prefix = self.pmc_zip_folder
 
         # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
         bucket = s3_conn.lookup(bucket_name)
 
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=prefix)
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket=bucket, prefix=prefix)
 
         s3_key_name = s3lib.latest_pmc_zip_revision(doi_id, s3_key_names)
 
@@ -577,7 +622,6 @@ class activity_PubRouterDeposit(Activity):
             return True
         else:
             return False
-
 
     def send_admin_email(self):
         """
@@ -591,17 +635,22 @@ class activity_PubRouterDeposit(Activity):
         sender_email = self.settings.ses_poa_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.ses_admin_email)
+            self.settings.ses_admin_email
+        )
 
         for email in recipient_email_list:
             # send the email by SMTP
             message = email_provider.simple_message(
-                sender_email, email, subject, body, logger=self.logger)
+                sender_email, email, subject, body, logger=self.logger
+            )
 
             email_provider.smtp_send_messages(
-                self.settings, messages=[message], logger=self.logger)
-            self.logger.info('Email sending details: admin email, email %s, to %s' %
-                             ("PubRouterDeposit", email))
+                self.settings, messages=[message], logger=self.logger
+            )
+            self.logger.info(
+                "Email sending details: admin email, email %s, to %s"
+                % ("PubRouterDeposit", email)
+            )
 
         return True
 
@@ -621,17 +670,22 @@ class activity_PubRouterDeposit(Activity):
 
         # Add admin email recipients
         recipient_email_list += email_provider.list_email_recipients(
-            self.settings.ses_admin_email)
+            self.settings.ses_admin_email
+        )
 
         for email in recipient_email_list:
             # send the email by SMTP
             message = email_provider.simple_message(
-                sender_email, email, subject, body, logger=self.logger)
+                sender_email, email, subject, body, logger=self.logger
+            )
 
             email_provider.smtp_send_messages(
-                self.settings, messages=[message], logger=self.logger)
-            self.logger.info('Email sending details: friendly email, email %s, to %s' %
-                             ("PubRouterDeposit", email))
+                self.settings, messages=[message], logger=self.logger
+            )
+            self.logger.info(
+                "Email sending details: friendly email, email %s, to %s"
+                % ("PubRouterDeposit", email)
+            )
 
         return True
 
@@ -674,14 +728,22 @@ class activity_PubRouterDeposit(Activity):
         """
         Assemble the email subject
         """
-        date_format = '%Y-%m-%d %H:%M'
+        date_format = "%Y-%m-%d %H:%M"
         datetime_string = time.strftime(date_format, current_time)
 
         activity_status_text = utils.get_activity_status_text(self.activity_status)
 
-        subject = (self.name + " " + str(self.workflow) + " " + activity_status_text +
-                   ", " + datetime_string +
-                   ", eLife SWF domain: " + self.settings.domain)
+        subject = (
+            self.name
+            + " "
+            + str(self.workflow)
+            + " "
+            + activity_status_text
+            + ", "
+            + datetime_string
+            + ", eLife SWF domain: "
+            + self.settings.domain
+        )
 
         return subject
 
@@ -726,10 +788,10 @@ class activity_PubRouterDeposit(Activity):
         """
         Assemble the email subject
         """
-        date_format = '%Y-%m-%d'
+        date_format = "%Y-%m-%d"
         datetime_string = time.strftime(date_format, current_time)
 
-        subject = ("eLife content for " + workflow + " " +  datetime_string)
+        subject = "eLife content for " + workflow + " " + datetime_string
 
         return subject
 
@@ -740,7 +802,7 @@ class activity_PubRouterDeposit(Activity):
 
         body = ""
 
-        date_format = '%Y-%m-%d'
+        date_format = "%Y-%m-%d"
         datetime_string = time.strftime(date_format, current_time)
 
         body += datetime_string
