@@ -1,17 +1,15 @@
 import os
 import uuid
-import boto.swf
 import json
 import time
-import arrow
 
+import boto.swf
 import boto.s3
 from boto.s3.connection import S3Connection
 
 import provider.article as articlelib
-from provider import email_provider, lax_provider, s3lib, utils
+from provider import article_processing, email_provider, lax_provider, s3lib, utils
 
-import dateutil.parser
 from activity.objects import Activity
 
 """
@@ -31,8 +29,10 @@ class activity_PubRouterDeposit(Activity):
         self.default_task_schedule_to_close_timeout = 60 * 30
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 15
-        self.description = "Download article XML from pub_router outbox, \
-                            approve each for publication, and deposit files via FTP to pub router."
+        self.description = (
+            "Download article XML from pub_router outbox, "
+            "approve each for publication, and deposit files via FTP to pub router."
+        )
 
         # Set date_stamp
         self.date_stamp = utils.set_datestamp()
@@ -69,6 +69,7 @@ class activity_PubRouterDeposit(Activity):
         self.article_xml_filenames = []
         self.xml_file_to_doi_map = {}
         self.articles = []
+        self.articles_approved = []
 
         # self.article_published_file_names = []
         # self.article_not_published_file_names = []
@@ -86,8 +87,8 @@ class activity_PubRouterDeposit(Activity):
             self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         self.workflow = data["data"]["workflow"]
-        self.outbox_folder = self.get_outbox_folder(self.workflow)
-        self.published_folder = self.get_published_folder(self.workflow)
+        self.outbox_folder = get_outbox_folder(self.workflow)
+        self.published_folder = get_published_folder(self.workflow)
 
         if self.outbox_folder is None or self.published_folder is None:
             # Total fail
@@ -143,7 +144,7 @@ class activity_PubRouterDeposit(Activity):
         self.activity_status = True
         self.send_admin_email()
 
-        if len(self.articles_approved) > 0:
+        if self.articles_approved:
             self.send_friendly_email(self.workflow, self.articles_approved)
 
         # Return the activity result, True or False
@@ -153,60 +154,6 @@ class activity_PubRouterDeposit(Activity):
         self.clean_tmp_dir()
 
         return result
-
-    def get_outbox_folder(self, workflow):
-        """
-        S3 outbox, where files to be processed are
-        """
-        if workflow == "HEFCE":
-            return "pub_router/outbox/"
-        elif workflow == "Cengage":
-            return "cengage/outbox/"
-        elif workflow == "GoOA":
-            return "gooa/outbox/"
-        elif workflow == "WoS":
-            return "wos/outbox/"
-        elif workflow == "PMC":
-            return "pmc/outbox/"
-        elif workflow == "CNPIEC":
-            return "cnpiec/outbox/"
-        elif workflow == "CNKI":
-            return "cnki/outbox/"
-        elif workflow == "CLOCKSS":
-            return "clockss/outbox/"
-        elif workflow == "OVID":
-            return "ovid/outbox/"
-        elif workflow == "Zendy":
-            return "zendy/outbox/"
-
-        return None
-
-    def get_published_folder(self, workflow):
-        """
-        S3 published folder, where processed files are copied to
-        """
-        if workflow == "HEFCE":
-            return "pub_router/published/"
-        elif workflow == "Cengage":
-            return "cengage/published/"
-        elif workflow == "GoOA":
-            return "gooa/published/"
-        elif workflow == "WoS":
-            return "wos/published/"
-        elif workflow == "PMC":
-            return "pmc/published/"
-        elif workflow == "CNPIEC":
-            return "cnpiec/published/"
-        elif workflow == "CNKI":
-            return "cnki/published/"
-        elif workflow == "CLOCKSS":
-            return "clockss/published/"
-        elif workflow == "OVID":
-            return "ovid/published/"
-        elif workflow == "Zendy":
-            return "zendy/published/"
-
-        return None
 
     def start_ftp_article_workflow(self, article):
         """
@@ -228,7 +175,7 @@ class activity_PubRouterDeposit(Activity):
         data["elife_id"] = article.doi_id
         input_json = {}
         input_json["data"] = data
-        input = json.dumps(input_json)
+        input_data = json.dumps(input_json)
 
         # Connect to SWF
         conn = boto.swf.layer1.Layer1(
@@ -245,7 +192,7 @@ class activity_PubRouterDeposit(Activity):
                 self.settings.default_task_list,
                 child_policy,
                 execution_start_to_close_timeout,
-                input,
+                input_data,
             )
             starter_status = True
         except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
@@ -279,38 +226,9 @@ class activity_PubRouterDeposit(Activity):
         for key in s3_keys_in_bucket:
             s3_keys.append({"name": key.name, "last_modified": key.last_modified})
 
-        return self.latest_archive_zip_revision(
+        return article_processing.latest_archive_zip_revision(
             article.doi_id, s3_keys, self.journal, status
         )
-
-    def latest_archive_zip_revision(self, doi_id, s3_keys, journal, status):
-        """
-        Get the most recent version of the article zip file from the
-        list of bucket key names
-        """
-        s3_key_name = None
-
-        name_prefix_to_match = (
-            journal + "-" + str(doi_id).zfill(5) + "-" + status + "-v"
-        )
-
-        highest = 0
-        for key in s3_keys:
-            if key["name"].startswith(name_prefix_to_match):
-                version_and_date = None
-                try:
-                    parts = key["name"].split(name_prefix_to_match)
-                    version = parts[1].split("-")[0]
-                    date_formatted = dateutil.parser.parse(key["last_modified"])
-                    date_part = date_formatted.strftime("%Y%m%d%H%M%S")
-                    version_and_date = int(version + date_part)
-                except:
-                    pass
-                if version_and_date and version_and_date > highest:
-                    s3_key_name = key["name"]
-                    highest = version_and_date
-
-        return s3_key_name
 
     def start_pmc_deposit_workflow(self, article, zip_file_name, folder=""):
         """
@@ -401,9 +319,9 @@ class activity_PubRouterDeposit(Activity):
             filename_plus_path = dirname + os.sep + filename
 
             mode = "wb"
-            f = open(filename_plus_path, mode)
-            s3_key.get_contents_to_file(f)
-            f.close()
+            open_file = open(filename_plus_path, mode)
+            s3_key.get_contents_to_file(open_file)
+            open_file.close()
 
             filenames.append(filename_plus_path)
 
@@ -445,8 +363,8 @@ class activity_PubRouterDeposit(Activity):
         if doi_id:
             # Get and parse the article XML for data
             # Convert the doi_id to 5 digit string in case it was an integer
-            if type(doi_id) == int:
-                doi_id = str(doi_id).zfill(5)
+            if isinstance(doi_id, int):
+                doi_id = utils.pad_msid(doi_id)
             article_xml_filename = article.download_article_xml_from_s3(doi_id)
             article.parse_article_file(
                 self.get_tmp_dir() + os.sep + article_xml_filename
@@ -574,9 +492,9 @@ class activity_PubRouterDeposit(Activity):
         for article in self.articles_approved:
             remove_doi_list.append(article.doi)
 
-        for k, v in list(self.xml_file_to_doi_map.items()):
-            if k in remove_doi_list:
-                processed_file_names.append(v)
+        for key, value in list(self.xml_file_to_doi_map.items()):
+            if key in remove_doi_list:
+                processed_file_names.append(value)
 
         for name in processed_file_names:
             filename = name.split(os.sep)[-1]
@@ -618,10 +536,7 @@ class activity_PubRouterDeposit(Activity):
 
         s3_key_name = s3lib.latest_pmc_zip_revision(doi_id, s3_key_names)
 
-        if s3_key_name:
-            return True
-        else:
-            return False
+        return bool(s3_key_name)
 
     def send_admin_email(self):
         """
@@ -661,8 +576,8 @@ class activity_PubRouterDeposit(Activity):
         """
         current_time = time.gmtime()
 
-        body = self.get_friendly_email_body(current_time, workflow, articles_approved)
-        subject = self.get_friendly_email_subject(current_time, workflow)
+        body = get_friendly_email_body(current_time, articles_approved)
+        subject = get_friendly_email_subject(current_time, workflow)
         sender_email = self.settings.ses_poa_sender_email
 
         # Get pub router recipients
@@ -784,36 +699,94 @@ class activity_PubRouterDeposit(Activity):
 
         return body
 
-    def get_friendly_email_subject(self, current_time, workflow):
-        """
-        Assemble the email subject
-        """
-        date_format = "%Y-%m-%d"
-        datetime_string = time.strftime(date_format, current_time)
 
-        subject = "eLife content for " + workflow + " " + datetime_string
+def get_friendly_email_subject(current_time, workflow):
+    """
+    Assemble the email subject
+    """
+    date_format = "%Y-%m-%d"
+    datetime_string = time.strftime(date_format, current_time)
 
-        return subject
+    subject = "eLife content for " + workflow + " " + datetime_string
 
-    def get_friendly_email_body(self, current_time, workflow, approved_articles):
-        """
-        Format the body of the email
-        """
+    return subject
 
-        body = ""
 
-        date_format = "%Y-%m-%d"
-        datetime_string = time.strftime(date_format, current_time)
+def get_friendly_email_body(current_time, approved_articles):
+    """
+    Format the body of the email
+    """
 
-        body += datetime_string
-        body += "\n\n"
-        body += "eLife is sending content for the following articles"
-        body += "\n\n"
+    body = ""
 
-        for article in approved_articles:
-            body += article.doi
-            body += "\n"
+    date_format = "%Y-%m-%d"
+    datetime_string = time.strftime(date_format, current_time)
 
-        body += "\n\nSincerely\n\neLife bot"
+    body += datetime_string
+    body += "\n\n"
+    body += "eLife is sending content for the following articles"
+    body += "\n\n"
 
-        return body
+    for article in approved_articles:
+        body += article.doi
+        body += "\n"
+
+    body += "\n\nSincerely\n\neLife bot"
+
+    return body
+
+
+def get_outbox_folder(workflow):
+    """
+    S3 outbox, where files to be processed are
+    """
+    if workflow == "HEFCE":
+        return "pub_router/outbox/"
+    if workflow == "Cengage":
+        return "cengage/outbox/"
+    if workflow == "GoOA":
+        return "gooa/outbox/"
+    if workflow == "WoS":
+        return "wos/outbox/"
+    if workflow == "PMC":
+        return "pmc/outbox/"
+    if workflow == "CNPIEC":
+        return "cnpiec/outbox/"
+    if workflow == "CNKI":
+        return "cnki/outbox/"
+    if workflow == "CLOCKSS":
+        return "clockss/outbox/"
+    if workflow == "OVID":
+        return "ovid/outbox/"
+    if workflow == "Zendy":
+        return "zendy/outbox/"
+
+    return None
+
+
+def get_published_folder(workflow):
+    """
+    S3 published folder, where processed files are copied to
+    """
+    if workflow == "HEFCE":
+        return "pub_router/published/"
+    if workflow == "Cengage":
+        return "cengage/published/"
+    if workflow == "GoOA":
+        return "gooa/published/"
+    if workflow == "WoS":
+        return "wos/published/"
+    if workflow == "PMC":
+        return "pmc/published/"
+    if workflow == "CNPIEC":
+        return "cnpiec/published/"
+    if workflow == "CNKI":
+        return "cnki/published/"
+    if workflow == "CLOCKSS":
+        return "clockss/published/"
+    if workflow == "OVID":
+        return "ovid/published/"
+    if workflow == "Zendy":
+        return "zendy/published/"
+
+    return None

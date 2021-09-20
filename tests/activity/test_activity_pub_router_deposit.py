@@ -13,6 +13,19 @@ import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 
 
+WORKFLOW_NAMES = [
+    "HEFCE",
+    "Cengage",
+    "WoS",
+    "GoOA",
+    "CNPIEC",
+    "CNKI",
+    "CLOCKSS",
+    "OVID",
+    "Zendy",
+]
+
+
 def download_files(filenames, to_dir):
     copied_filenames = []
     for filename in filenames:
@@ -110,48 +123,6 @@ class TestPubRouterDeposit(unittest.TestCase):
         result = self.pubrouterdeposit.do_activity(activity_data)
         self.assertTrue(result)
 
-    # input: s3 archive zip file name (name) and date last modified
-    # expected output: file name - highest version file (displayed on -v[number]-)
-    # then latest last modified date/time
-    @unpack
-    @data(
-        {
-            "s3_keys": [
-                {
-                    "name": "elife-16747-vor-v1-20160831000000.zip",
-                    "last_modified": "2017-05-18T09:04:11.000Z",
-                },
-                {
-                    "name": "elife-16747-vor-v1-20160831132647.zip",
-                    "last_modified": "2016-08-31T06:26:56.000Z",
-                },
-            ],
-            "expected": "elife-16747-vor-v1-20160831000000.zip",
-        },
-        {
-            "s3_keys": [
-                {
-                    "name": "elife-16747-vor-v1-20160831000000.zip",
-                    "last_modified": "2017-05-18T09:04:11.000Z",
-                },
-                {
-                    "name": "elife-16747-vor-v1-20160831132647.zip",
-                    "last_modified": "2016-08-31T06:26:56.000Z",
-                },
-                {
-                    "name": "elife-16747-vor-v2-20160831000000.zip",
-                    "last_modified": "2015-01-05T00:20:50.000Z",
-                },
-            ],
-            "expected": "elife-16747-vor-v2-20160831000000.zip",
-        },
-    )
-    def test_latest_archive_zip_revision(self, s3_keys, expected):
-        output = self.pubrouterdeposit.latest_archive_zip_revision(
-            "16747", s3_keys, "elife", "vor"
-        )
-        self.assertEqual(output, expected)
-
     @data(
         "HEFCE",
         "Cengage",
@@ -163,12 +134,27 @@ class TestPubRouterDeposit(unittest.TestCase):
     )
     def test_workflow_specific_values(self, workflow):
         "test functions that look at the workflow name"
+        print(workflow)
         self.assertIsNotNone(
             self.pubrouterdeposit.get_friendly_email_recipients(workflow)
         )
-        self.assertIsNotNone(self.pubrouterdeposit.get_outbox_folder(workflow))
-        self.assertIsNotNone(self.pubrouterdeposit.get_published_folder(workflow))
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestGetOutboxFolder(unittest.TestCase):
+    def test_get_outbox_folder(self):
+        for workflow in WORKFLOW_NAMES:
+            self.assertIsNotNone(activity_module.get_outbox_folder(workflow))
+
+    def test_get_outbox_folder_undefined(self):
+        workflow = "foo"
+        self.assertIsNone(activity_module.get_outbox_folder(workflow))
+
+
+class TestGetPublishedFolder(unittest.TestCase):
+    def test_get_published_folder(self):
+        for workflow in WORKFLOW_NAMES:
+            self.assertIsNotNone(activity_module.get_published_folder(workflow))
+
+    def test_get_published_folder_undefined(self):
+        workflow = "foo"
+        self.assertIsNone(activity_module.get_published_folder(workflow))
