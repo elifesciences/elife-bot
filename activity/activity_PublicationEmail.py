@@ -545,17 +545,16 @@ class activity_PublicationEmail(Activity):
         datetime_string = time.strftime(date_format, current_time)
         activity_status_text = utils.get_activity_status_text(activity_status)
 
-        body = get_admin_email_body_head(
-            self.name, activity_status_text, self.admin_email_content
-        )
+        body = email_provider.get_email_body_head(self.name, activity_status_text, {})
+        body += "\nDetails:\n\n%s\n" % self.admin_email_content
         body += email_provider.get_admin_email_body_foot(
             self.get_activityId(),
             self.get_workflowId(),
             datetime_string,
             self.settings.domain,
         )
-        subject = get_admin_email_subject(
-            datetime_string, activity_status_text, self.name, self.settings.domain
+        subject = email_provider.get_email_subject(
+            datetime_string, activity_status_text, self.name, self.settings.domain, None
         )
         sender_email = self.settings.ses_poa_sender_email
 
@@ -683,34 +682,6 @@ def s3_key_names_to_clean(
         s3_key_names.append(s3_key_name)
 
     return s3_key_names
-
-
-def get_admin_email_body_head(name, activity_status_text, details):
-    """Format the top of the body of the email"""
-    body_head = ""
-    # Bulk of body
-    body_head += name + " status:" + "\n"
-    body_head += "\n"
-    body_head += activity_status_text + "\n"
-    body_head += "\n"
-    body_head += "Details:" + "\n"
-    body_head += "\n"
-    body_head += details + "\n"
-    body_head += "\n"
-    return body_head
-
-
-def get_admin_email_subject(datetime_string, activity_status_text, name, domain):
-    """Assemble the email subject"""
-    return (
-        name
-        + " "
-        + activity_status_text
-        + ", "
-        + datetime_string
-        + ", eLife SWF domain: "
-        + domain
-    )
 
 
 def get_related_article(
