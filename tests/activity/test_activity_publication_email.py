@@ -56,7 +56,7 @@ class TestPublicationEmail(unittest.TestCase):
                 "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
                 "input_data": {},
                 "article_xml_filenames": ["elife00013.xml"],
-                "article_id": "00013",
+                "article_id": "13",
                 "activity_success": True,
                 "admin_email_content_contains": [
                     "Parsed https://doi.org/10.7554/eLife.00013",
@@ -75,7 +75,7 @@ class TestPublicationEmail(unittest.TestCase):
                 "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
                 "input_data": None,
                 "article_xml_filenames": ["elife03385.xml"],
-                "article_id": "03385",
+                "article_id": "3385",
                 "activity_success": True,
                 "admin_email_content_contains": [
                     "Parsed https://doi.org/10.7554/eLife.03385",
@@ -90,7 +90,7 @@ class TestPublicationEmail(unittest.TestCase):
                 "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_1,
                 "input_data": None,
                 "article_xml_filenames": ["elife_poa_e03977.xml"],
-                "article_id": "03977",
+                "article_id": "3977",
                 "activity_success": True,
                 "admin_email_content_contains": [
                     "Parsed https://doi.org/10.7554/eLife.03977",
@@ -170,7 +170,7 @@ class TestPublicationEmail(unittest.TestCase):
                 "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
                 "input_data": {},
                 "article_xml_filenames": ["elife-00353-v1.xml"],
-                "article_id": "00353",
+                "article_id": "353",
                 "activity_success": True,
                 "admin_email_content_contains": [
                     "Parsed https://doi.org/10.7554/eLife.00353",

@@ -11,7 +11,7 @@ from testfixtures import TempDirectory
 
 
 ACTIVITY_DATA = {
-    "article_id": "00353",
+    "article_id": "353",
     "version": "1",
     "run": "bb2d37b8-e73c-43b3-a092-d555753316af",
     "status": "vor",
@@ -21,7 +21,7 @@ ACTIVITY_DATA = {
 
 WORKFLOW_DATA = {
     "workflow_data": {
-        "article_id": u"00353",
+        "article_id": u"353",
         "expanded_folder": u"00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
         "message": None,
         "requested_action": u"publish",

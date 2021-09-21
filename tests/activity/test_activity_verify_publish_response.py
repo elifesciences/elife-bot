@@ -8,7 +8,7 @@ import tests.activity.settings_mock as settings_mock
 
 DATA_PUBLISHED_LAX = {
     "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-    "article_id": "00353",
+    "article_id": "353",
     "result": "published",
     "status": "vor",
     "version": "1",
@@ -21,7 +21,7 @@ DATA_PUBLISHED_LAX = {
 
 DATA_ERROR_LAX = {
     "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-    "article_id": "00353",
+    "article_id": "353",
     "result": "error",
     "status": "vor",
     "version": "1",

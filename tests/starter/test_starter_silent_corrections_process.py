@@ -19,7 +19,7 @@ class TestStarterSilentCorrectionsProcess(unittest.TestCase):
             [
                 ("domain", ""),
                 ("task_list", ""),
-                ("workflow_id", "SilentCorrectionsProcess_00353.1"),
+                ("workflow_id", "SilentCorrectionsProcess_353.1"),
                 ("workflow_name", "SilentCorrectionsProcess"),
                 ("workflow_version", "1"),
                 ("child_policy", None),
@@ -29,7 +29,7 @@ class TestStarterSilentCorrectionsProcess(unittest.TestCase):
                     (
                         "{"
                         '"run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",'
-                        ' "article_id": "00353",'
+                        ' "article_id": "353",'
                         ' "result": "ingested",'
                         ' "status": "vor",'
                         ' "version": "1",'

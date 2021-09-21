@@ -11,7 +11,7 @@ from testfixtures import TempDirectory
 
 
 data_example = {
-    "article_id": "00353",
+    "article_id": "353",
     "update_date": "2016-10-05T10:31:54Z",
     "expanded_folder": "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
     "message": None,

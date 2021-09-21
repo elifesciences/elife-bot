@@ -5,7 +5,7 @@ from activity.objects import Activity
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider.article_processing import download_jats
-import provider.glencoe_check as glencoe_check
+from provider import glencoe_check, utils
 
 
 """
@@ -192,7 +192,7 @@ class activity_CopyGlencoeStillImages(Activity):
         filename = glencoe_check.force_article_id(filename, article_id)
         cdn = (self.settings.storage_provider + "://" +
                self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket + "/" +
-               article_id + "/" + filename)
+               utils.pad_msid(article_id) + "/" + filename)
         return cdn
 
     def store_file(self, path, article_id):
@@ -216,7 +216,7 @@ class activity_CopyGlencoeStillImages(Activity):
         storage = storage_context(self.settings)
         article_path_in_cdn = (
             self.settings.storage_provider + "://" + self.settings.publishing_buckets_prefix +
-            self.settings.ppp_cdn_bucket + "/" + article_id)
+            self.settings.ppp_cdn_bucket + "/" + utils.pad_msid(article_id))
         return storage.list_resources(article_path_in_cdn)
 
     def validate_jpgs_against_cdn(self, cdn_all_files, cdn_still_jpgs):

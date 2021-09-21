@@ -11,7 +11,7 @@ from tests.classes_mock import FakeLayer1
 RUN_EXAMPLE = u"1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
 
 INFO_EXAMPLE = {
-    "article_id": "00666",
+    "article_id": "666",
     "input_file": "https://example.org/api/projects/1/snapshots/1/archive",
 }
 

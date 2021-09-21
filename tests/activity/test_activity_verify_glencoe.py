@@ -111,7 +111,7 @@ class TestVerifyGlencoe(unittest.TestCase):
             test_data.ExpandArticle_data["run"],
             self.verifyglencoe.pretty_name,
             "error",
-            'Glencoe video is not available for article 00353; message: '
+            'Glencoe video is not available for article 353; message: '
             'unhandled status code from Glencoe: 500 - '
             'url requested: 10.7554/eLife.00353')
         self.assertEqual(result, self.verifyglencoe.ACTIVITY_TEMPORARY_FAILURE)
@@ -141,7 +141,7 @@ class TestVerifyGlencoe(unittest.TestCase):
             test_data.ExpandArticle_data["run"],
             self.verifyglencoe.pretty_name,
             "error",
-            "An error occurred when checking for Glencoe video. Article 00353; message: "
+            "An error occurred when checking for Glencoe video. Article 353; message: "
             "Fake Time out")
 
         self.assertEqual(result, self.verifyglencoe.ACTIVITY_PERMANENT_FAILURE)

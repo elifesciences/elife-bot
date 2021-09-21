@@ -8,7 +8,7 @@ from tests.activity.classes_mock import FakeLogger
 
 EXAMPLE_WORKFLOW_NAME = "PostPerfectPublication"
 EXAMPLE_WORKFLOW_ID = (
-    lambda fe, version: "PostPerfectPublication_00353." + version + "." + fe
+    lambda fe, version: "PostPerfectPublication_353." + version + "." + fe
 )
 
 

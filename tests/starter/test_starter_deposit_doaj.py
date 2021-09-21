@@ -30,5 +30,5 @@ class TestStarterDepositDOAJ(unittest.TestCase):
     @patch("boto.swf.layer1.Layer1")
     def test_deposit_doaj_start(self, fake_boto_conn):
         fake_boto_conn.return_value = FakeLayer1()
-        info = {"article_id": "00353"}
+        info = {"article_id": "353"}
         self.starter.start(settings=settings_mock, info=info)

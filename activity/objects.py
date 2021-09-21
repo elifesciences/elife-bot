@@ -5,6 +5,7 @@ import re
 
 import boto.swf
 import dashboard_queue
+from provider import utils
 
 """
 Amazon SWF activity base class
@@ -251,7 +252,7 @@ class Activity(object):
 
     @staticmethod
     def emit_monitor_event(settings, item_identifier, version, run, event_type, status, message):
-        message = dashboard_queue.build_event_message(item_identifier, version, run, event_type,
+        message = dashboard_queue.build_event_message(utils.pad_msid(item_identifier), version, run, event_type,
                                                       datetime.datetime.now(),
                                                       status, message)
 
@@ -259,6 +260,6 @@ class Activity(object):
 
     @staticmethod
     def set_monitor_property(settings, item_identifier, name, value, property_type, version=0):
-        message = dashboard_queue.build_property_message(item_identifier, version,
+        message = dashboard_queue.build_property_message(utils.pad_msid(item_identifier), version,
                                                          name, value, property_type)
         dashboard_queue.send_message(message, settings)

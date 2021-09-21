@@ -202,13 +202,13 @@ class TestLaxProvider(unittest.TestCase):
     def test_prepare_action_message(self, fake_xml_file_name):
         fake_xml_file_name.return_value = "elife-00353-v1.xml"
         message = lax_provider.prepare_action_message(settings_mock,
-                                                      "00353", "bb2d37b8-e73c-43b3-a092-d555753316af",
+                                                      "353", "bb2d37b8-e73c-43b3-a092-d555753316af",
                                                       "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
                                                       "1", "vor", "ingest")
         self.assertIn('token', message)
         del message['token']
         self.assertDictEqual(message, {'action': 'ingest',
-                                       'id': '00353',
+                                       'id': '353',
                                        'location': 'https://s3-external-1.amazonaws.com/origin_bucket/00353.1/bb2d37b8-e73c-43b3-a092-d555753316af/elife-00353-v1.xml',
                                        'version': 1,
                                        'force': False})
@@ -298,7 +298,7 @@ class TestLaxProvider(unittest.TestCase):
     def test_article_retracted_status_no_related(self, mock_article_related):
         related_article_json = []
         mock_article_related.return_value = 200, related_article_json
-        retracted_status = lax_provider.article_retracted_status("04132", settings_mock)
+        retracted_status = lax_provider.article_retracted_status("4132", settings_mock)
         self.assertEqual(retracted_status, False)
 
     @patch("provider.lax_provider.article_related")
@@ -356,7 +356,7 @@ class TestLaxProvider(unittest.TestCase):
     @patch("provider.lax_provider.article_related")
     def test_article_retracted_status_404(self, mock_article_related):
         mock_article_related.return_value = 404, None
-        retracted_status = lax_provider.article_retracted_status("04132", settings_mock)
+        retracted_status = lax_provider.article_retracted_status("4132", settings_mock)
         self.assertIsNone(retracted_status)
 
     @patch("provider.lax_provider.article_versions")

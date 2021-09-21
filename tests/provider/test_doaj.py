@@ -386,7 +386,7 @@ class TestDoajPostRequest(unittest.TestCase):
         self.url = settings_mock.doaj_endpoint
         self.api_key = settings_mock.doaj_api_key
         self.logger = FakeLogger()
-        self.article_id = "00003"
+        self.article_id = "3"
         self.response_content_success = (
             b'{"status": "created", "id": "26ce51c630d04c8c8664410488150acc", '
             b'"location": "/api/v2/articles/26ce51c630d04c8c8664410488150acc"}'

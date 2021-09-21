@@ -9,7 +9,7 @@ bucket_dest_file_name = "test_dest.json"
 
 session_example = {
             'version': '1',
-            'article_id': '00353',
+            'article_id': '353',
             'run': 'cf9c7e86-7355-4bb4-b48e-0bc284221251',
             'expanded_folder': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251',
             'update_date': '2012-12-13T00:00:00Z',
@@ -22,7 +22,7 @@ data_example_before_publish = {
             "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
             "expanded_folder": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251",
             "version": "1",
-            "article_id": "00353",
+            "article_id": "353",
             'file_name': 'elife-00353-vor-v1.zip',
             'filename_last_element': 'elife-00353-vor-r1.zip'}
 
@@ -53,7 +53,7 @@ ExpandArticle_data_invalid_status = {u'event_time': u'2016-06-07T10:45:18.141126
 
 ExpandArticle_data_invalid_status1_session_example = {
             'version': '1',
-            'article_id': '00353',
+            'article_id': '353',
             'run': '1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'expanded_folder': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'update_date': '2012-12-13T00:00:00Z',
@@ -62,7 +62,7 @@ ExpandArticle_data_invalid_status1_session_example = {
         }
 ExpandArticle_data_invalid_status2_session_example = {
             'version': '1',
-            'article_id': '00353',
+            'article_id': '353',
             'run': '1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'expanded_folder': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'update_date': '2012-12-13T00:00:00Z',

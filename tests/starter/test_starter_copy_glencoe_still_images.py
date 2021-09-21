@@ -24,7 +24,7 @@ class TestStarterCopyGlencoeStillImages(unittest.TestCase):
     @patch("boto.swf.layer1.Layer1")
     def test_copy_glencoe_still_images_starter(self, fake_boto_conn):
         fake_boto_conn.return_value = FakeLayer1()
-        self.starter.start(settings=settings_mock, article_id="00353")
+        self.starter.start(settings=settings_mock, article_id="353")
 
     @patch("boto.swf.layer1.Layer1")
     def test_main(self, fake_boto_conn):

@@ -159,7 +159,7 @@ class activity_IngestDigestToEndpoint(Activity):
 
     def digest_preview_link(self, article_id):
         "preview link for the digest using the preview base url"
-        return "%s/digests/%s" % (self.settings.journal_preview_base_url, article_id)
+        return "%s/digests/%s" % (self.settings.journal_preview_base_url, utils.pad_msid(article_id))
 
     def activity_end_message(self, article_id, statuses):
         "different end message to emit based on the ingest status"
