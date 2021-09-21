@@ -12,7 +12,7 @@ from elifetools import xmlio
 import boto.swf
 import boto.s3
 from boto.s3.connection import S3Connection
-from provider import email_provider, lax_provider, s3lib, utils
+from provider import email_provider, lax_provider, outbox_provider, s3lib, utils
 from activity.objects import Activity
 
 """
@@ -87,7 +87,30 @@ class activity_PublishFinalPOA(Activity):
         )
 
         # Download the S3 objects
-        self.download_files_from_s3()
+        outbox_s3_key_names = outbox_provider.get_outbox_s3_key_names(
+            self.settings, self.input_bucket, self.outbox_folder
+        )
+        file_extensions = [
+            ".xml",
+            ".pdf",
+            ".zip",
+        ]
+        self.outbox_s3_key_names = [
+            s3_key
+            for s3_key in outbox_s3_key_names
+            if ".%s" % s3_key.split(".")[-1] in file_extensions
+        ]
+        self.logger.info(
+            "PublishFinalPOA downloading files from S3 bucket: %s"
+            % self.outbox_s3_key_names
+        )
+        outbox_provider.download_files_from_s3_outbox(
+            self.settings,
+            self.input_bucket,
+            self.outbox_s3_key_names,
+            self.directories.get("INPUT_DIR"),
+            self.logger,
+        )
 
         # Approve files for publishing
         self.approve_status = self.approve_for_publishing()
@@ -124,9 +147,7 @@ class activity_PublishFinalPOA(Activity):
                 revision = self.next_revision_number(doi_id)
                 zip_file_name = self.new_zip_file_name(doi_id, revision)
                 if revision and zip_file_name:
-                    self.zip_article_files(
-                        filenames, new_filenames, zip_file_name
-                    )
+                    self.zip_article_files(filenames, new_filenames, zip_file_name)
                     # Add files to the lists to be processed after
                     new_article_xml_file_name = self.article_xml_from_filename_map(
                         new_filenames
@@ -643,48 +664,6 @@ class activity_PublishFinalPOA(Activity):
                 )
         return True
 
-    def download_files_from_s3(self):
-        """
-        Connect to the S3 bucket, and from the outbox folder,
-        download the .xml and .pdf files to be bundled.
-        """
-
-        file_extensions = []
-        file_extensions.append(".xml")
-        file_extensions.append(".pdf")
-        file_extensions.append(".zip")
-
-        bucket_name = self.input_bucket
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = s3_conn.lookup(bucket_name)
-
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket, prefix=self.outbox_folder, file_extensions=file_extensions
-        )
-        self.outbox_s3_key_names = s3_key_names
-
-        for name in s3_key_names:
-            # Download objects from S3 and save to disk
-            s3_key = bucket.get_key(name)
-
-            filename = name.split("/")[-1]
-
-            filename_plus_path = os.path.join(
-                self.directories.get("INPUT_DIR"), filename
-            )
-
-            if self.logger:
-                self.logger.info("PublishFinalPOA downloading: %s" % filename_plus_path)
-
-            mode = "wb"
-            open_file = open(filename_plus_path, mode)
-            s3_key.get_contents_to_file(open_file)
-            open_file.close()
-
     def approve_for_publishing(self):
         """
         Final checks before processing the downloaded files
@@ -822,7 +801,9 @@ class activity_PublishFinalPOA(Activity):
         xml_files = glob.glob(self.directories.get("INPUT_DIR") + file_type)
         xml_file_articles_numbers = []
         for xml_file in xml_files:
-            xml_file_articles_numbers.append(self.get_filename_from_path(xml_file, ".xml"))
+            xml_file_articles_numbers.append(
+                self.get_filename_from_path(xml_file, ".xml")
+            )
         # print xml_file_articles_numbers
 
         if zip_file_article_number in xml_file_articles_numbers:

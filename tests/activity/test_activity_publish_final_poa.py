@@ -8,7 +8,7 @@ import activity.activity_PublishFinalPOA as activity_module
 from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
 from tests.classes_mock import FakeSMTPServer
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 
 
 class TestPublishFinalPOA(unittest.TestCase):
@@ -230,15 +230,6 @@ class TestPublishFinalPOA(unittest.TestCase):
     def tearDown(self):
         self.poa.clean_tmp_dir()
 
-    def fake_download_files_from_s3(self, file_list):
-        for file in file_list:
-            source_doc = "tests/test_data/poa/outbox/" + file
-            # print(source_doc)
-            dest_doc = os.path.join(self.poa.directories.get("INPUT_DIR"), file)
-            # print(dest_doc)
-            shutil.copy(source_doc, dest_doc)
-        self.poa.outbox_s3_key_names = file_list
-
     def remove_files_from_tmp_dir_subfolders(self):
         """
         Run between each test pass, delete the subfolders in tmp_dir
@@ -254,12 +245,14 @@ class TestPublishFinalPOA(unittest.TestCase):
     @patch.object(activity_PublishFinalPOA, "get_pub_date_str_from_lax")
     @patch.object(activity_PublishFinalPOA, "upload_files_to_s3")
     @patch.object(activity_PublishFinalPOA, "next_revision_number")
-    @patch.object(activity_PublishFinalPOA, "download_files_from_s3")
+    @patch("provider.outbox_provider.get_outbox_s3_key_names")
+    @patch("provider.outbox_provider.storage_context")
     @patch.object(activity_PublishFinalPOA, "clean_tmp_dir")
     def test_do_activity(
         self,
         fake_clean_tmp_dir,
-        fake_download_files_from_s3,
+        fake_storage_context,
+        fake_outbox_key_names,
         fake_next_revision_number,
         fake_upload_files_to_s3,
         fake_get_pub_date_str_from_lax,
@@ -269,7 +262,9 @@ class TestPublishFinalPOA(unittest.TestCase):
 
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
         fake_clean_tmp_dir.return_value = None
-        fake_download_files_from_s3.return_value = None
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/test_data/poa/outbox"
+        )
         fake_clean_outbox.return_value = None
         fake_next_revision_number.return_value = 1
         fake_upload_files_to_s3.return_value = True
@@ -277,7 +272,7 @@ class TestPublishFinalPOA(unittest.TestCase):
 
         for test_data in self.do_activity_passes:
 
-            self.fake_download_files_from_s3(test_data["outbox_file_list"])
+            fake_outbox_key_names.return_value = test_data["outbox_file_list"]
 
             param_data = None
             success = self.poa.do_activity(param_data)
