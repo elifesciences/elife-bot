@@ -194,7 +194,7 @@ class activity_PublishFinalPOA(Activity):
         """
         new_filenames = []
         for filename in filenames:
-            name_prefix = "elife-" + str(doi_id).zfill(5)
+            name_prefix = "elife-" + utils.pad_msid(doi_id)
             if filename.endswith(".xml"):
                 new_filenames.append(name_prefix + ".xml")
             if filename.endswith(".pdf"):
@@ -214,7 +214,7 @@ class activity_PublishFinalPOA(Activity):
             filename = file.split(os.sep)[-1]
             doi_id = self.doi_id_from_filename(filename)
             if doi_id:
-                # doi_id_str = str(doi_id).zfill(5)
+                # doi_id_str = utils.pad_msid(doi_id)
                 if doi_id not in article_filenames_map:
                     article_filenames_map[doi_id] = []
                 # Add the filename to the map for this article
@@ -387,7 +387,7 @@ class activity_PublishFinalPOA(Activity):
         for tag in root.findall("./front/article-meta/article-id"):
             if tag.get("pub-id-type") == "publisher-id":
                 # Overwrite the text with the base DOI value
-                tag.text = str(doi_id).zfill(5)
+                tag.text = utils.pad_msid(doi_id)
 
         return root
 
@@ -462,7 +462,7 @@ class activity_PublishFinalPOA(Activity):
         Check lax for any article published version
         If found, get the pub date and format it as a string YYYYMMDDhhmmss
         """
-        article_id = str(doi_id).zfill(5)
+        article_id = utils.pad_msid(doi_id)
         return lax_provider.article_publication_date(
             article_id, self.settings, self.logger
         )
@@ -490,7 +490,7 @@ class activity_PublishFinalPOA(Activity):
         max_revision_number = 0
         for key_name in s3_key_names:
 
-            name_prefix = "elife-" + str(doi_id).zfill(5) + "-" + str(status) + "-r"
+            name_prefix = "elife-" + utils.pad_msid(doi_id) + "-" + str(status) + "-r"
             if key_name.startswith(name_prefix):
                 # Attempt to get a revision number from the matching files
                 try:
@@ -511,7 +511,7 @@ class activity_PublishFinalPOA(Activity):
 
         new_file_name = (
             "elife-"
-            + str(doi_id).zfill(5)
+            + utils.pad_msid(doi_id)
             + "-"
             + str(status)
             + "-r"
