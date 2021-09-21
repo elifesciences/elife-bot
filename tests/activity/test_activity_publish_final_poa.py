@@ -8,7 +8,7 @@ import activity.activity_PublishFinalPOA as activity_module
 from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
 from tests.classes_mock import FakeSMTPServer
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeS3Connection, FakeStorageContext
 
 
 class TestPublishFinalPOA(unittest.TestCase):
@@ -336,6 +336,26 @@ class TestPublishFinalPOA(unittest.TestCase):
             self.poa.empty_ds_file_names = []
             self.poa.unmatched_ds_file_names = []
 
+    @patch("provider.s3lib.get_s3_key_names_from_bucket")
+    @patch("activity.activity_PublishFinalPOA.S3Connection")
+    def test_next_revision_number_default(self, fake_s3_mock, fake_get_s3_key_names):
+        doi_id = "7"
+        key_names = []
+        expected = 1
+        fake_s3_mock.return_value = FakeS3Connection()
+        fake_get_s3_key_names.return_value = key_names
+        self.assertEqual(self.poa.next_revision_number(doi_id), expected)
+
+    @patch("provider.s3lib.get_s3_key_names_from_bucket")
+    @patch("activity.activity_PublishFinalPOA.S3Connection")
+    def test_next_revision_number_next(self, fake_s3_mock, fake_get_s3_key_names):
+        doi_id = "7"
+        key_names = ["elife-00007-poa-r1.zip", "elife-00007-poa-r_bad_number.zip"]
+        expected = 2
+        fake_s3_mock.return_value = FakeS3Connection()
+        fake_get_s3_key_names.return_value = key_names
+        self.assertEqual(self.poa.next_revision_number(doi_id), expected)
+
 
 def count_files_in_dir(dir_name):
     """
@@ -397,7 +417,3 @@ def ds_zip_in_list_of_files(xml_file, file_list):
         if str(doi_id) in file and file.endswith("ds.zip"):
             return True
     return False
-
-
-if __name__ == "__main__":
-    unittest.main()
