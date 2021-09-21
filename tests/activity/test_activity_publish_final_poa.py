@@ -4,9 +4,9 @@ import glob
 import os
 import xml.etree.ElementTree as ET
 from mock import patch
-from tests.classes_mock import FakeSMTPServer
 import activity.activity_PublishFinalPOA as activity_module
 from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
+from tests.classes_mock import FakeSMTPServer
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 
@@ -269,6 +269,7 @@ class TestPublishFinalPOA(unittest.TestCase):
 
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
         fake_clean_tmp_dir.return_value = None
+        fake_download_files_from_s3.return_value = None
         fake_clean_outbox.return_value = None
         fake_next_revision_number.return_value = 1
         fake_upload_files_to_s3.return_value = True

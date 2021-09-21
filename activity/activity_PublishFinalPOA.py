@@ -1,23 +1,17 @@
 import os
-import boto.swf
 import json
 import datetime
 import time
-
 import zipfile
-import requests
 import glob
 import shutil
 import re
-
 from xml.etree.ElementTree import Element, SubElement
-
 from elifetools import parseJATS as parser
 from elifetools import xmlio
-
+import boto.swf
 import boto.s3
 from boto.s3.connection import S3Connection
-
 from provider import email_provider, lax_provider, s3lib, utils
 from activity.objects import Activity
 
@@ -68,6 +62,8 @@ class activity_PublishFinalPOA(Activity):
         self.publish_status = None
 
         # More file status tracking for reporting in email
+        self.done_xml_files = []
+        self.clean_from_outbox_files = []
         self.outbox_s3_key_names = []
         self.malformed_ds_file_names = []
         self.empty_ds_file_names = []
@@ -115,13 +111,13 @@ class activity_PublishFinalPOA(Activity):
                     )
 
                     try:
-                        self.convert_xml(doi_id, xml_file, filenames, new_filenames)
-                    except Exception as e:
+                        self.convert_xml(doi_id, xml_file, new_filenames)
+                    except Exception as exception:
                         # One possible error is an entirely blank XML file or a malformed xml file
                         if self.logger:
                             self.logger.exception(
                                 "Exception when converting XML for doi %s, %s"
-                                % (str(doi_id), e)
+                                % (str(doi_id), exception)
                             )
                         continue
 
@@ -129,7 +125,7 @@ class activity_PublishFinalPOA(Activity):
                 zip_file_name = self.new_zip_file_name(doi_id, revision)
                 if revision and zip_file_name:
                     self.zip_article_files(
-                        doi_id, filenames, new_filenames, zip_file_name
+                        filenames, new_filenames, zip_file_name
                     )
                     # Add files to the lists to be processed after
                     new_article_xml_file_name = self.article_xml_from_filename_map(
@@ -144,7 +140,7 @@ class activity_PublishFinalPOA(Activity):
             self.publish_status = self.upload_files_to_s3()
 
         # Clean the outbox
-        if len(self.clean_from_outbox_files) > 0:
+        if self.clean_from_outbox_files:
             self.clean_outbox(self.published_folder_name, self.clean_from_outbox_files)
 
         # Set the activity status of this activity based on successes
@@ -230,12 +226,12 @@ class activity_PublishFinalPOA(Activity):
         """
         Given a list of file names, return the article xml file name
         """
-        for f in filenames:
-            if f.endswith(".xml"):
-                return f
+        for file_name in filenames:
+            if file_name.endswith(".xml"):
+                return file_name
         return None
 
-    def convert_xml(self, doi_id, xml_file, filenames, new_filenames):
+    def convert_xml(self, doi_id, xml_file, new_filenames):
 
         # Register namespaces
         xmlio.register_xmlns()
@@ -265,18 +261,18 @@ class activity_PublishFinalPOA(Activity):
             root = self.set_article_id_xml(doi_id, root)
 
             # if pdf file then add self-uri tag
-            if parser.self_uri(soup) is not None and len(parser.self_uri(soup)) == 0:
+            if parser.self_uri(soup) is not None and not parser.self_uri(soup):
                 for filename in new_filenames:
                     if filename.endswith(".pdf"):
                         root = self.add_self_uri_to_xml(doi_id, filename, root)
 
             # if ds.zip file is there, then add it to the xml
             poa_ds_zip_file = None
-            for f in new_filenames:
-                if f.endswith(".zip"):
-                    poa_ds_zip_file = f
+            for new_file in new_filenames:
+                if new_file.endswith(".zip"):
+                    poa_ds_zip_file = new_file
             if poa_ds_zip_file:
-                root = self.add_poa_ds_zip_to_xml(doi_id, poa_ds_zip_file, root)
+                root = self.add_poa_ds_zip_to_xml(poa_ds_zip_file, root)
 
         # Start the file output
         reparsed_string = xmlio.output(
@@ -289,9 +285,9 @@ class activity_PublishFinalPOA(Activity):
         # Remove extra whitespace here for PoA articles to clean up and one VoR file too
         reparsed_string = reparsed_string.replace(b"\n", b"").replace(b"\t", b"")
 
-        f = open(xml_file, "wb")
-        f.write(reparsed_string)
-        f.close()
+        open_file = open(xml_file, "wb")
+        open_file.write(reparsed_string)
+        open_file.close()
 
     def article_soup(self, xml_file):
         return parser.parse_document(xml_file)
@@ -370,13 +366,13 @@ class activity_PublishFinalPOA(Activity):
 
         return root
 
-    def add_poa_ds_zip_to_xml(self, doi_id, file_name, root):
+    def add_poa_ds_zip_to_xml(self, file_name, root):
         """
         Add the ext-link tag to the XML for the PoA ds.zip file
         """
 
         # Create the XML tag
-        supp_tag = self.ds_zip_xml_element(file_name, doi_id)
+        supp_tag = self.ds_zip_xml_element(file_name)
 
         # Add the tag to the XML
         back_sec_tags = root.findall('./back/sec[@sec-type="supplementary-material"]')
@@ -393,7 +389,7 @@ class activity_PublishFinalPOA(Activity):
 
         return root
 
-    def ds_zip_xml_element(self, file_name, doi_id):
+    def ds_zip_xml_element(self, file_name):
 
         supp_tag = Element("supplementary-material")
         ext_link_tag = SubElement(supp_tag, "ext-link")
@@ -415,7 +411,7 @@ class activity_PublishFinalPOA(Activity):
         """
 
         # Create the XML tag
-        self_uri_tag = self.self_uri_xml_element(file_name, doi_id)
+        self_uri_tag = self.self_uri_xml_element(file_name)
 
         # Add the tag to the XML
         for tag in root.findall("./front/article-meta"):
@@ -430,7 +426,7 @@ class activity_PublishFinalPOA(Activity):
 
         return root
 
-    def self_uri_xml_element(self, file_name, doi_id):
+    def self_uri_xml_element(self, file_name):
         self_uri_tag = Element("self-uri")
         self_uri_tag.set("content-type", "pdf")
         self_uri_tag.set("xlink:href", file_name)
@@ -500,7 +496,7 @@ class activity_PublishFinalPOA(Activity):
 
         return new_file_name
 
-    def zip_article_files(self, doi_id, filenames, new_filenames, zip_filename):
+    def zip_article_files(self, filenames, new_filenames, zip_filename):
         """
         Move the files from old to new name into the tmp_dir
         add them to a zip file
@@ -685,9 +681,9 @@ class activity_PublishFinalPOA(Activity):
                 self.logger.info("PublishFinalPOA downloading: %s" % filename_plus_path)
 
             mode = "wb"
-            f = open(filename_plus_path, mode)
-            s3_key.get_contents_to_file(f)
-            f.close()
+            open_file = open(filename_plus_path, mode)
+            s3_key.get_contents_to_file(open_file)
+            open_file.close()
 
     def approve_for_publishing(self):
         """
@@ -779,16 +775,11 @@ class activity_PublishFinalPOA(Activity):
             return False
 
         if manifest:
-            if len(str(manifest)) > 0:
-                # Has some content
-                return True
-            else:
-                return False
-        else:
-            return False
+            # Has some content
+            return True
 
         # Default return
-        return None
+        return False
 
     def check_empty_supplemental_files(self, input_zipfile):
         """
@@ -803,7 +794,7 @@ class activity_PublishFinalPOA(Activity):
                 sub_folder_name = name
 
         # skip this check if there is no internal zip file
-        if not sub_folder_name and len(input_zipfile.namelist()) > 0:
+        if not sub_folder_name and input_zipfile.namelist():
             return True
 
         if sub_folder_name:
@@ -816,8 +807,9 @@ class activity_PublishFinalPOA(Activity):
         #  Non-empty file will have more than 1 line
         if zipextfile_line_count <= 1:
             return False
-        elif zipextfile_line_count > 1:
+        if zipextfile_line_count > 1:
             return True
+        return None
 
     def check_matching_xml_file(self, zip_filename):
         """
@@ -829,8 +821,8 @@ class activity_PublishFinalPOA(Activity):
         file_type = "/*.xml"
         xml_files = glob.glob(self.directories.get("INPUT_DIR") + file_type)
         xml_file_articles_numbers = []
-        for f in xml_files:
-            xml_file_articles_numbers.append(self.get_filename_from_path(f, ".xml"))
+        for xml_file in xml_files:
+            xml_file_articles_numbers.append(self.get_filename_from_path(xml_file, ".xml"))
         # print xml_file_articles_numbers
 
         if zip_file_article_number in xml_file_articles_numbers:
@@ -849,8 +841,8 @@ class activity_PublishFinalPOA(Activity):
         file_type = "/*.pdf"
         pdf_files = glob.glob(self.directories.get("INPUT_DIR") + file_type)
         pdf_file_articles_numbers = []
-        for f in pdf_files:
-            pdf_file_name = self.get_filename_from_path(f, ".pdf")
+        for file_name in pdf_files:
+            pdf_file_name = self.get_filename_from_path(file_name, ".pdf")
             # Remove the decap_ from the start of the file name before comparing
             pdf_file_name = pdf_file_name.replace("decap_", "")
             pdf_file_articles_numbers.append(pdf_file_name)
@@ -891,12 +883,12 @@ class activity_PublishFinalPOA(Activity):
                 old_s3_key = bucket.get_key(old_s3_key_name)
                 old_s3_key.delete()
 
-    def get_filename_from_path(self, f, extension):
+    def get_filename_from_path(self, file_path, extension):
         """
         Get a filename minus the supplied file extension
         and without any folder or path
         """
-        filename = f.split(extension)[0]
+        filename = file_path.split(extension)[0]
         # Remove path if present
         try:
             filename = filename.split(os.sep)[-1]
@@ -999,17 +991,17 @@ class activity_PublishFinalPOA(Activity):
 
         if files_count > 0:
             # Report on any empty or unmatched supplement files
-            if len(self.malformed_ds_file_names) > 0:
+            if self.malformed_ds_file_names:
                 body += "\n"
                 body += "Note: Malformed ds files not sent by ftp: " + "\n"
                 for name in self.malformed_ds_file_names:
                     body += name + "\n"
-            if len(self.empty_ds_file_names) > 0:
+            if self.empty_ds_file_names:
                 body += "\n"
                 body += "Note: Empty ds files not sent by ftp: " + "\n"
                 for name in self.empty_ds_file_names:
                     body += name + "\n"
-            if len(self.unmatched_ds_file_names) > 0:
+            if self.unmatched_ds_file_names:
                 body += "\n"
                 body += "Note: Unmatched ds files not sent by ftp: " + "\n"
                 for name in self.unmatched_ds_file_names:
