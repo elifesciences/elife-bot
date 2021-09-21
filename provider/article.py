@@ -117,8 +117,7 @@ class article(object):
         # Check for the document
 
         # Convert the value just in case
-        if type(doi_id) == int:
-            doi_id = str(doi_id).zfill(5)
+        doi_id = pad_msid(doi_id)
 
         article_id = doi_id
         # Get the highest published version from lax
@@ -194,7 +193,7 @@ class article(object):
 
     def get_pdf_cover_link(self, pdf_cover_generator_url ,doi_id, logger):
 
-        url = pdf_cover_generator_url + str(doi_id)
+        url = pdf_cover_generator_url + pad_msid(doi_id)
         logger.info("URL for PDF Generator %s", url)
         resp = requests.post(url)
         logger.info("Response code for PDF Generator %s", str(resp.status_code))

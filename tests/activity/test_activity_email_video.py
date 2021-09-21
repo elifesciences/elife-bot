@@ -19,7 +19,7 @@ from activity.activity_EmailVideoArticlePublished import (
 
 BASE_ACTIVITY_DATA = {
     "run": "",
-    "article_id": "00353",
+    "article_id": "353",
     "version": "1",
     "status": "vor",
     "expanded_folder": "email_video"
@@ -54,31 +54,31 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
         {
             "comment": "article has video and not a duplicate email",
             "xml_file": "elife-00007-v1.xml",
-            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor", None),
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "7", "vor", None),
             "first_vor": True,
             "activity_success": activity_object.ACTIVITY_SUCCESS
         },
         {
             "comment": "poa article does not send an email",
-            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "poa", None),
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "7", "poa", None),
             "activity_success": activity_object.ACTIVITY_SUCCESS
         },
         {
             "comment": "silent correction article does not send an email",
-            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor", "silent-correction"),
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "7", "vor", "silent-correction"),
             "activity_success": activity_object.ACTIVITY_SUCCESS
         },
         {
             "comment": "article is not the first VoR",
             "xml_file": "elife-00007-v1.xml",
-            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor", None),
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "7", "vor", None),
             "first_vor": None,
             "activity_success": activity_object.ACTIVITY_SUCCESS
         },
         {
             "comment": "article does not have a video",
             "xml_file": "elife-00353-v1.xml",
-            "input_data": activity_data(BASE_ACTIVITY_DATA, "00353", "vor", None),
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "353", "vor", None),
             "first_vor": True,
             "activity_success": activity_object.ACTIVITY_SUCCESS
         }
@@ -107,7 +107,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
             "comment": "article has video but templates were not downloaded",
             "xml_file": "elife-00007-v1.xml",
             "templates_warmed": False,
-            "input_data": activity_data(BASE_ACTIVITY_DATA, "00007", "vor", None),
+            "input_data": activity_data(BASE_ACTIVITY_DATA, "7", "vor", None),
             "first_vor": True,
             "activity_success": activity_object.ACTIVITY_PERMANENT_FAILURE
         }

@@ -56,7 +56,7 @@ lax_article_by_version_response_data_incomplete = {
 
 data_published_lax = {
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "article_id": "00353",
+            "article_id": "353",
             "result": "published",
             "status": "vor",
             "version": "1",
@@ -68,7 +68,7 @@ data_published_lax = {
 
 data_ingested_lax = {
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "article_id": "00353",
+            "article_id": "353",
             "result": "ingested",
             "status": "vor",
             "version": "1",
@@ -82,7 +82,7 @@ data_ingested_lax = {
 
 data_published_website = {
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "article_id": "00353",
+            "article_id": "353",
             "status": "vor",
             "version": "1",
             "expanded_folder": "00353.1/74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
@@ -91,7 +91,7 @@ data_published_website = {
 
 data_error_lax = {
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "article_id": "00353",
+            "article_id": "353",
             "result": "error",
             "status": "vor",
             "version": "1",
@@ -123,7 +123,7 @@ silent_ingest_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda
                                   u'file_size': 1097506}
 
 ingest_article_zip_no_vr_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
-                                 u"article_id": u"00353"}
+                                 u"article_id": u"353"}
 
 ingest_article_zip_data = {u'run': u'1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
                             u'event_time': u'2016-07-28T16:14:27.809576Z',
@@ -211,7 +211,7 @@ queue_worker_starter_message = {
 
 def ApprovePublication_data(update_date="2012-12-13T00:00:00Z"):
         return {
-            "article_id": "00353",
+            "article_id": "353",
             "version": "1",
             "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
             "publication_data": base64_encode_string(json.dumps(ApprovePublication_publication_data(update_date)))
@@ -229,7 +229,7 @@ def ApprovePublication_publication_data(update_date):
                             "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
                             "expanded_folder": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251",
                             "version": "1",
-                            "article_id": "00353"}
+                            "article_id": "353"}
                 }
 
 glencoe_metadata = \

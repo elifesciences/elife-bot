@@ -3,10 +3,7 @@ from activity.objects import Activity
 import json
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-import provider.article_structure as article_structure
-import provider.image_conversion as image_conversion
-
-
+from provider import article_structure, image_conversion, utils
 
 
 class activity_ConvertImagesToJPG(Activity):
@@ -66,7 +63,7 @@ class activity_ConvertImagesToJPG(Activity):
                 file_pointer = storage.get_resource_to_file_pointer(figure_resource, file_path)
 
                 cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
-                cdn_resource_path = storage_provider + cdn_bucket_name + "/" + article_id + "/"
+                cdn_resource_path = storage_provider + cdn_bucket_name + "/" + utils.pad_msid(article_id) + "/"
 
                 publish_locations = [cdn_resource_path]
 

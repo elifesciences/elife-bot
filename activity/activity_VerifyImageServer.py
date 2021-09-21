@@ -1,9 +1,8 @@
 import json
+import requests
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-import provider.article_structure as article_structure
-import provider.iiif as iiif
-import requests
+from provider import article_structure, iiif, utils
 from activity.objects import Activity
 
 """
@@ -49,12 +48,12 @@ class activity_VerifyImageServer(Activity):
         try:
             storage = storage_context(self.settings)
             bucket = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
-            images_resource = "".join((self.settings.storage_provider, "://", bucket, "/", article_id))
+            images_resource = "".join((self.settings.storage_provider, "://", bucket, "/", utils.pad_msid(article_id)))
 
             files_in_bucket = storage.list_resources(images_resource)
             original_figures = article_structure.get_figures_for_iiif(files_in_bucket)
 
-            iiif_path_for_article = self.settings.iiif_resolver.replace('{article_id}', article_id)
+            iiif_path_for_article = self.settings.iiif_resolver.replace('{article_id}', utils.pad_msid(article_id))
 
             results = self.retrieve_endpoints_check(original_figures, iiif_path_for_article)
 

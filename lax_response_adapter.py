@@ -70,7 +70,7 @@ class LaxResponseAdapter:
             date_time = parse(message_data['datetime'])
             date_time = date_time.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-            article_id = utils.pad_msid(message_data["id"])
+            article_id = message_data["id"]
             operation = message_data["requested-action"]
             response_message = None
             if "message" in message_data:

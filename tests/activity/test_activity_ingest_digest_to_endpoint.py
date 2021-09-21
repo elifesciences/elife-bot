@@ -6,7 +6,7 @@ import unittest
 from collections import OrderedDict
 from mock import patch
 from ddt import ddt, data
-from provider import article, article_processing, digest_provider, lax_provider
+from provider import article, article_processing, digest_provider, lax_provider, utils
 import activity.activity_IngestDigestToEndpoint as activity_module
 from activity.activity_IngestDigestToEndpoint import (
     activity_IngestDigestToEndpoint as activity_object)
@@ -268,10 +268,10 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         self.assertEqual(self.activity.statuses.get("approve"), False)
         self.assertEqual(self.activity.statuses.get("download"), None)
         self.assertEqual(
-            'Digest docx file does not exist in S3 for article 00353',
+            'Digest docx file does not exist in S3 for article 353',
             self.activity.logger.loginfo[-2])
         self.assertEqual(
-            'Digest for article 00353 was not approved for ingestion',
+            'Digest for article 353 was not approved for ingestion',
             self.activity.logger.loginfo[-1])
 
     @patch('activity.activity_IngestDigestToEndpoint.get_session')
@@ -374,7 +374,7 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.logexception,
             ('Error in gathering digest details:'
-             ' Failed to get related from lax for digest 00353 in Ingest Digest'
+             ' Failed to get related from lax for digest 353 in Ingest Digest'
              ' to API endpoint: Related from lax exception'))
 
     @patch.object(activity_object, 'digest_json')
@@ -401,7 +401,7 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.logexception,
             ('Error in generating digest content for article: Failed to generate digest json'
-             ' for 00353 in Ingest Digest to API endpoint: Digest content exception'))
+             ' for 353 in Ingest Digest to API endpoint: Digest content exception'))
 
     @patch.object(digest_provider, 'put_digest')
     @patch.object(activity_object, 'generate_digest_content')
@@ -429,7 +429,7 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         self.assertEqual(result, expected_result)
         self.assertEqual(
             self.activity.logger.logexception,
-            ('Failed to ingest digest json to endpoint 00353 in Ingest Digest to API endpoint:'
+            ('Failed to ingest digest json to endpoint 353 in Ingest Digest to API endpoint:'
              ' Put digest exception'))
 
 
@@ -443,10 +443,10 @@ class TestIngestDigestToEndpointGenerate(unittest.TestCase):
     def test_digest_json_exception(self, fake_digest_json):
         fake_digest_json.side_effect = Exception('Digest content exception')
         with self.assertRaises(Exception) as test_exception:
-            self.activity.generate_digest_content('00666', {})
+            self.activity.generate_digest_content('666', {})
         self.assertEqual(
             str(test_exception.exception),
-            ('Failed to generate digest json for 00666 in Ingest Digest to API endpoint:'
+            ('Failed to generate digest json for 666 in Ingest Digest to API endpoint:'
              ' Digest content exception'))
 
     @patch.object(activity_object, 'digest_json')
@@ -559,18 +559,18 @@ class TestIngestDigestToEndpointEmit(unittest.TestCase):
 
     def test_activity_end_message_ingest(self):
         "activity end message after a digest ingest"
-        article_id = "00353"
+        article_id = "353"
         statuses = {"ingest": True}
-        expected = ("Finished ingest digest to endpoint for 00353. Statuses {'ingest': True}" +
+        expected = ("Finished ingest digest to endpoint for 353. Statuses {'ingest': True}" +
                     " Preview link https://preview/digests/00353")
         message = self.activity.activity_end_message(article_id, statuses)
         self.assertEqual(message, expected)
 
     def test_activity_end_message_no_ingest(self):
         "activity end message after no digest ingested"
-        article_id = "00353"
+        article_id = "353"
         statuses = {"ingest": None}
-        expected = "No digest ingested for 00353. Statuses {'ingest': None}"
+        expected = "No digest ingested for 353. Statuses {'ingest': None}"
         message = self.activity.activity_end_message(article_id, statuses)
         self.assertEqual(message, expected)
 
@@ -590,8 +590,8 @@ class TestIngestDigestToEndpointPreview(unittest.TestCase):
 
     def test_digest_preview_link(self):
         "digest preview url from settings value and article_id"
-        article_id = "00353"
-        expected = "https://preview/digests/" + article_id
+        article_id = "353"
+        expected = "https://preview/digests/" + utils.pad_msid(article_id)
         preview_link = self.activity.digest_preview_link(article_id)
         self.assertEqual(preview_link, expected)
 
@@ -609,7 +609,7 @@ class TestIngestDigestToEndpointApprove(unittest.TestCase):
     @data(
         {
             "comment": "normal first vor",
-            "article_id": '00000',
+            "article_id": '0',
             "status": "vor",
             "version": 2,
             "run_type": None,
@@ -619,7 +619,7 @@ class TestIngestDigestToEndpointApprove(unittest.TestCase):
         },
         {
             "comment": "poa is not approved",
-            "article_id": '00000',
+            "article_id": '0',
             "status": "poa",
             "version": 2,
             "run_type": None,
@@ -629,7 +629,7 @@ class TestIngestDigestToEndpointApprove(unittest.TestCase):
         },
         {
             "comment": "silent correction of highest vor",
-            "article_id": '00000',
+            "article_id": '0',
             "status": "vor",
             "version": 3,
             "run_type": "silent-correction",
@@ -639,7 +639,7 @@ class TestIngestDigestToEndpointApprove(unittest.TestCase):
         },
         {
             "comment": "silent correction of older version of vor",
-            "article_id": '00000',
+            "article_id": '0',
             "status": "vor",
             "version": 2,
             "run_type": "silent-correction",
@@ -649,7 +649,7 @@ class TestIngestDigestToEndpointApprove(unittest.TestCase):
         },
         {
             "comment": "ingest a non-first vor",
-            "article_id": '00000',
+            "article_id": '0',
             "status": "vor",
             "version": 3,
             "run_type": None,

@@ -1,6 +1,6 @@
 import json
 
-from provider import crossref, lax_provider
+from provider import crossref, lax_provider, utils
 from provider.article_processing import download_jats
 from provider.storage_provider import storage_context
 from provider.execution_context import get_session
@@ -54,7 +54,7 @@ class activity_ScheduleCrossrefPeerReview(Activity):
                     ('%s will not deposit article %s' +
                      ' ingested by silent-correction, its version of %s does not equal the' +
                      ' highest version which is %s') %
-                    (self.name, article_id, version, highest_version))
+                    (self.name, utils.pad_msid(article_id), version, highest_version))
                 self.logger.info(log_message)
                 self.emit_monitor_event(
                     self.settings, article_id, version, run, self.pretty_name, "end", log_message)
@@ -64,7 +64,7 @@ class activity_ScheduleCrossrefPeerReview(Activity):
         if self.xml_sub_article_exists(expanded_folder_name) is False:
             log_message = (
                 '%s finds version %s of %s has no sub-article for peer review depositing' %
-                (self.name, version, article_id))
+                (self.name, version, utils.pad_msid(article_id)))
             self.logger.info(log_message)
             self.emit_monitor_event(
                 self.settings, article_id, version, run, self.pretty_name, "end", log_message)

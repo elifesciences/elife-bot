@@ -5,7 +5,7 @@ import json
 from dateutil.parser import parse
 import log
 import os
-from provider.utils import base64_encode_string
+from provider import utils
 
 
 identity = "process_%s" % os.getpid()
@@ -30,7 +30,7 @@ def lax_request(
     if status_code not in [200, 404]:
         raise ErrorCallingLaxException(
             "Error looking up article "
-            + article_id
+            + utils.pad_msid(article_id)
             + " %s in Lax: %s\n%s" % (request_type, status_code, response.content)
         )
 
@@ -60,7 +60,7 @@ def lax_auth_key(settings, auth=False):
 
 def article_json(article_id, settings, auth=False):
     "get json for the latest article version from lax"
-    url = settings.lax_article_endpoint.replace("{article_id}", article_id)
+    url = settings.lax_article_endpoint.replace("{article_id}", utils.pad_msid(article_id))
     return lax_request(
         url, article_id, settings.verify_ssl, None, lax_auth_key(settings, auth)
     )
@@ -68,7 +68,7 @@ def article_json(article_id, settings, auth=False):
 
 def article_versions(article_id, settings, auth=False):
     "get json for article versions from lax"
-    url = settings.lax_article_versions.replace("{article_id}", article_id)
+    url = settings.lax_article_versions.replace("{article_id}", utils.pad_msid(article_id))
     headers = {}
     if (
         hasattr(settings, "lax_article_versions_accept_header")
@@ -87,7 +87,7 @@ def article_versions(article_id, settings, auth=False):
 
 def article_related(article_id, settings, auth=False):
     "get json for related article data from lax"
-    url = settings.lax_article_related.replace("{article_id}", article_id)
+    url = settings.lax_article_related.replace("{article_id}", utils.pad_msid(article_id))
     return lax_request(
         url, article_id, settings.verify_ssl, None, lax_auth_key(settings, auth)
     )
@@ -326,7 +326,7 @@ def lax_token(run, version, expanded_folder, status, force=False, run_type=None)
         "force": force,
         "run_type": run_type,
     }
-    return base64_encode_string(json.dumps(token))
+    return utils.base64_encode_string(json.dumps(token))
 
 
 def message_from_lax(data):
