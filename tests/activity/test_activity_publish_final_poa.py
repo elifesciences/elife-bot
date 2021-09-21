@@ -241,7 +241,6 @@ class TestPublishFinalPOA(unittest.TestCase):
                     os.remove(file)
 
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch.object(activity_PublishFinalPOA, "clean_outbox")
     @patch.object(activity_PublishFinalPOA, "get_pub_date_str_from_lax")
     @patch.object(activity_PublishFinalPOA, "upload_files_to_s3")
     @patch.object(activity_PublishFinalPOA, "next_revision_number")
@@ -256,7 +255,6 @@ class TestPublishFinalPOA(unittest.TestCase):
         fake_next_revision_number,
         fake_upload_files_to_s3,
         fake_get_pub_date_str_from_lax,
-        fake_clean_outbox,
         fake_email_smtp_connect,
     ):
 
@@ -265,7 +263,6 @@ class TestPublishFinalPOA(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext(
             "tests/test_data/poa/outbox"
         )
-        fake_clean_outbox.return_value = None
         fake_next_revision_number.return_value = 1
         fake_upload_files_to_s3.return_value = True
         fake_get_pub_date_str_from_lax.return_value = "20160704000000"

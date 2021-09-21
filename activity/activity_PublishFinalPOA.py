@@ -1,6 +1,5 @@
 import os
 import json
-import datetime
 import time
 import zipfile
 import glob
@@ -79,13 +78,6 @@ class activity_PublishFinalPOA(Activity):
         # Create output directories
         self.make_activity_directories()
 
-        # Set the published folder name as todays date
-        self.published_folder_name = (
-            self.published_folder_prefix
-            + str(datetime.datetime.utcnow().strftime("%Y%m%d"))
-            + "/"
-        )
-
         # Download the S3 objects
         outbox_s3_key_names = outbox_provider.get_outbox_s3_key_names(
             self.settings, self.input_bucket, self.outbox_folder
@@ -160,9 +152,21 @@ class activity_PublishFinalPOA(Activity):
             # Upload the zip files to the publishing bucket
             self.publish_status = self.upload_files_to_s3()
 
+        # Set the published folder name as todays date
+        date_stamp = utils.set_datestamp()
+        self.published_folder_name = outbox_provider.get_to_folder_name(
+            self.published_folder_prefix, date_stamp
+        )
+
         # Clean the outbox
         if self.clean_from_outbox_files:
-            self.clean_outbox(self.published_folder_name, self.clean_from_outbox_files)
+            outbox_provider.clean_outbox(
+                self.settings,
+                self.input_bucket,
+                self.outbox_folder,
+                self.published_folder_name,
+                self.clean_from_outbox_files,
+            )
 
         # Set the activity status of this activity based on successes
         if self.publish_status is not False:
@@ -833,36 +837,6 @@ class activity_PublishFinalPOA(Activity):
 
         # Default return
         return False
-
-    def clean_outbox(self, published_folder_name, outbox_files):
-        """
-        Move files from S3 outbox to the published folder
-        """
-        bucket_name = self.input_bucket
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = s3_conn.lookup(bucket_name)
-
-        for file_name in outbox_files:
-            old_s3_key_name = self.outbox_folder + file_name
-            new_s3_key_name = published_folder_name + file_name
-
-            # First copy
-            new_s3_key = None
-            try:
-                new_s3_key = bucket.copy_key(
-                    new_s3_key_name, bucket_name, old_s3_key_name
-                )
-            except:
-                pass
-
-            # Then delete the old key if successful
-            if isinstance(new_s3_key, boto.s3.key.Key):
-                old_s3_key = bucket.get_key(old_s3_key_name)
-                old_s3_key.delete()
 
     def get_filename_from_path(self, file_path, extension):
         """
