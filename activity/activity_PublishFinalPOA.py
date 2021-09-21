@@ -746,24 +746,6 @@ class activity_PublishFinalPOA(Activity):
 
         return status
 
-    def manifest_xml_not_empty(self, input_zipfile):
-        """
-        Given a zipfile.ZipFile object, check if it contains a
-        manifest.xml file and it is non-empty (has a size greater than zero)
-        """
-        manifest = None
-        try:
-            manifest = input_zipfile.read("manifest.xml")
-        except KeyError:
-            return False
-
-        if manifest:
-            # Has some content
-            return True
-
-        # Default return
-        return False
-
     def check_empty_supplemental_files(self, input_zipfile):
         """
         Given a zipfile.ZipFile object, look inside the internal zipped folder
