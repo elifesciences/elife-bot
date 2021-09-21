@@ -6,7 +6,7 @@ storage_provider = 's3'
 expanded_bucket = 'origin_bucket'
 
 publishing_buckets_prefix = ""
-production_bucket = "production_bucket"
+production_bucket = "origin_bucket"
 ppp_cdn_bucket = ""
 
 archive_bucket = "archive_bucket"
