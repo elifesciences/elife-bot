@@ -183,7 +183,7 @@ class activity_CopyGlencoeStillImages(Activity):
     def store_jpgs(self, glencoe_jpgs, article_id):
         cdn_still_jpgs = []
         for jpg in glencoe_jpgs:
-            jpg_filename = self.store_file(jpg, article_id)
+            jpg_filename = self.store_file(jpg, utils.pad_msid(article_id))
             cdn_still_jpgs.append(jpg_filename)
         return cdn_still_jpgs
 
