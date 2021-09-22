@@ -55,7 +55,7 @@ class activity_UpdateRepository(Activity):
             try:
 
                 xml_file = provider.lax_provider.get_xml_file_name(self.settings,
-                                                            data['article_id'],
+                                                            pad_msid(data['article_id']),
                                                             self.settings.publishing_buckets_prefix +
                                                             self.settings.ppp_cdn_bucket,
                                                             data['version'])
