@@ -80,7 +80,7 @@ class activity_PublishFinalPOA(Activity):
 
         # Download the S3 objects
         outbox_s3_key_names = outbox_provider.get_outbox_s3_key_names(
-            self.settings, self.input_bucket, self.outbox_folder
+            self.settings, self.input_bucket, self.outbox_folder, xml_only=False
         )
         file_extensions = [
             ".xml",

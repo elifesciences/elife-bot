@@ -11,7 +11,7 @@ def get_to_folder_name(folder_name, date_stamp):
     return folder_name + date_stamp + "/"
 
 
-def get_outbox_s3_key_names(settings, bucket_name, outbox_folder):
+def get_outbox_s3_key_names(settings, bucket_name, outbox_folder, xml_only=True):
     """get a list of .xml S3 key names from the outbox"""
     storage = storage_context(settings)
     storage_provider = settings.storage_provider + "://"
@@ -21,8 +21,10 @@ def get_outbox_s3_key_names(settings, bucket_name, outbox_folder):
     full_s3_key_names = [
         (outbox_folder.rstrip("/") + "/" + key_name) for key_name in s3_key_names
     ]
-    # return only the .xml files
-    return [key_name for key_name in full_s3_key_names if key_name.endswith(".xml")]
+    if xml_only:
+        # return only the .xml files
+        return [key_name for key_name in full_s3_key_names if key_name.endswith(".xml")]
+    return full_s3_key_names
 
 
 def download_files_from_s3_outbox(
