@@ -20,11 +20,11 @@ find S3utility/ -maxdepth 1 -name '*.pyc' -delete
 source venv/bin/activate
 
 # fixes issues installing wheel packages, hides deprecation warnings
-pip install pip --upgrade
+pip install pip wheel --upgrade
 
-# fixes python-docx issue #594 
+# setuptools>=58 dropped support for a dependency '2to3' that PyGithub depends on
 # https://github.com/python-openxml/python-docx/issues/594
-pip install "setuptools>=40.6" --upgrade
+pip install "setuptools<58" --upgrade
 
 grep "git+" requirements.txt > source-requirements.txt
 #pip uninstall -r source-requirements.txt -y
