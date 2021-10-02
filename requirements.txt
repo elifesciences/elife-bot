@@ -9,7 +9,7 @@ python-slugify==1.2.4
 git+https://github.com/elifesciences/elife-tools.git@d07d978f03d879e19aa35b7c7bb51f23a3ea3108#egg=elifetools
 elifearticle==0.6.0
 configparser==3.5.0
-elifecrossref==0.5.0
+elifecrossref==0.6.0
 elifecleaner==0.5.0
 elifepubmed==0.3.0
 ejpcsvparser==0.1.2
