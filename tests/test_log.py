@@ -10,5 +10,5 @@ class TestLog(unittest.TestCase):
         logger.error("Test error message")
 
     def test_identity_generation(self):
-        self.assertRegex(log.identity('worker'), r'^worker_[0-9]+$')
+        self.assertRegexpMatches(log.identity('worker'), '^worker_[0-9]+$')
 
