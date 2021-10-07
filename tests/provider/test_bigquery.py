@@ -3,7 +3,7 @@ import datetime
 from mock import patch
 from google.oauth2.service_account import Credentials
 from google.cloud.bigquery import Client
-from google.cloud._helpers import UTC
+from google.cloud._helpers import _UTC
 from google.auth.exceptions import DefaultCredentialsError
 from provider import bigquery
 from tests.activity.classes_mock import FakeLogger
@@ -58,9 +58,9 @@ class TestBigQueryProvider(unittest.TestCase):
     def test_get_review_date(self):
         manuscript = bigquery.Manuscript()
         manuscript.decision_letter_datetime = datetime.datetime(
-            2016, 5, 31, 11, 31, 1, tzinfo=UTC)
+            2016, 5, 31, 11, 31, 1, tzinfo=_UTC())
         manuscript.author_response_datetime = datetime.datetime(
-            2016, 6, 10, 6, 28, 43, tzinfo=UTC)
+            2016, 6, 10, 6, 28, 43, tzinfo=_UTC())
         self.assertEqual(bigquery.get_review_date(manuscript, 'article-commentary'), '2016-05-31')
         self.assertEqual(bigquery.get_review_date(manuscript, 'decision-letter'), '2016-05-31')
         self.assertEqual(bigquery.get_review_date(manuscript, 'editor-report'), '2016-05-31')
@@ -69,7 +69,7 @@ class TestBigQueryProvider(unittest.TestCase):
     def test_get_review_date_no_author_response_datetime(self):
         manuscript = bigquery.Manuscript()
         manuscript.decision_letter_datetime = datetime.datetime(
-            2016, 5, 31, 11, 31, 1, tzinfo=UTC)
+            2016, 5, 31, 11, 31, 1, tzinfo=_UTC())
         manuscript.author_response_datetime = None
         self.assertEqual(bigquery.get_review_date(manuscript, 'article-commentary'), '2016-05-31')
         self.assertEqual(bigquery.get_review_date(manuscript, 'decision-letter'), '2016-05-31')
@@ -89,12 +89,12 @@ class TestManuscript(unittest.TestCase):
         # check decision_letter_datetime
         self.assertEqual(
             manuscript.decision_letter_datetime,
-            datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=UTC))
+            datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=_UTC()))
         self.assertEqual('2016-05-31', bigquery.date_to_string(manuscript.decision_letter_datetime))
         # check author_response_datetime
         self.assertEqual(
             manuscript.author_response_datetime,
-            datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=UTC))
+            datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=_UTC()))
         self.assertEqual('2016-06-10', bigquery.date_to_string(manuscript.author_response_datetime))
         # check reviwers
         self.assertEqual(len(manuscript.reviewers), 2)
