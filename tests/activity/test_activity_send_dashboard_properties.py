@@ -1,7 +1,7 @@
 import unittest
 import os
 from mock import patch, ANY
-from testfixtures import TempDirectory
+from testfixtures import TempDirectory, tempdir
 from activity.activity_SendDashboardProperties import activity_SendDashboardProperties
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeSession, FakeS3Connection, FakeKey, FakeLogger
@@ -20,6 +20,7 @@ class TestSendDashboardEvents(unittest.TestCase):
         self.directory.cleanup()
         TempDirectory.cleanup_all()
 
+    @tempdir()
     @patch.object(activity_SendDashboardProperties, 'emit_monitor_event')
     @patch('activity.activity_SendDashboardProperties.get_article_xml_key')
     @patch('activity.activity_SendDashboardProperties.S3Connection')
@@ -51,7 +52,10 @@ class TestSendDashboardEvents(unittest.TestCase):
                                                 'Send dashboard properties', 'end',
                                                 'Article properties sent to dashboard for article  353')
 
+        self.directory.cleanup()
 
+
+    @tempdir()
     @patch.object(activity_SendDashboardProperties, 'emit_monitor_event')
     @patch('activity.activity_SendDashboardProperties.get_article_xml_key')
     @patch('activity.activity_SendDashboardProperties.S3Connection')
@@ -68,7 +72,10 @@ class TestSendDashboardEvents(unittest.TestCase):
 
         self.assertEqual(result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE)
 
+        self.directory.cleanup()
 
+
+    @tempdir()
     @patch.object(activity_SendDashboardProperties, 'emit_monitor_event')
     @patch('activity.activity_SendDashboardProperties.get_article_xml_key')
     @patch('activity.activity_SendDashboardProperties.S3Connection')
@@ -86,6 +93,8 @@ class TestSendDashboardEvents(unittest.TestCase):
         result = self.send_dashboard_properties.do_activity(test_data.dashboard_data)
 
         self.assertEqual(result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE)
+
+        self.directory.cleanup()
 
 
 if __name__ == '__main__':
