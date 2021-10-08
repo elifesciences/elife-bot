@@ -1,14 +1,14 @@
 import datetime
 from google.cloud.bigquery.table import Row
-from google.cloud._helpers import UTC
+from google.cloud._helpers import _UTC
 
 
 ARTICLE_RESULT_15747 = Row(
     (
         (
             '15747', '10.7554/eLife.15747',
-            datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=UTC),
-            datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=UTC),
+            datetime.datetime(2016, 5, 31, 11, 31, 1, tzinfo=_UTC()),
+            datetime.datetime(2016, 6, 10, 6, 28, 43, tzinfo=_UTC()),
             [
                 {
                     'Title': 'Dr.',
