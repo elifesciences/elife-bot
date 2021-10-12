@@ -29,7 +29,7 @@ pytest==6.2.5
 ddt==1.4.4
 newrelic==7.0.0.166
 pylint==2.11.1
-pyGithub==1.55
+pyGithub==1.27.1
 pyFunctional==1.4.3
 func_timeout==4.3.5
 # versions of python-docx>=0.8.9 have issues installing on python 3.5.2 (xenial default)
