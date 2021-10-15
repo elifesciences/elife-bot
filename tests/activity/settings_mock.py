@@ -155,7 +155,7 @@ ZENDY_SFTP_CWD = ""
 ZENDY_EMAIL = ""
 
 git_repo_name = 'elife-article-xml-ci'
-git_repo_path = '/articles/'
+git_repo_path = 'articles/'
 github_token = '1234567890abcdef'
 
 PUBMED_SFTP_URI = ""
