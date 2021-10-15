@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD Journal Archiving and Interchange DTD v3.0 20080202//EN" "archivearticle3.dtd">
+<article article-type="research-article">
+  <front>
+    <journal-meta>
+      <journal-id journal-id-type="nlm-ta">elife</journal-id>
+      <journal-id journal-id-type="hwp">eLife</journal-id>
+      <journal-id journal-id-type="publisher-id">eLife</journal-id>
+      <journal-title-group>
+        <journal-title>eLife</journal-title>
+      </journal-title-group>
+      <issn pub-type="epub">2050-084X</issn>
+      <publisher>
+        <publisher-name>eLife Sciences Publications, Ltd</publisher-name>
+      </publisher>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="publisher-id">64719</article-id>
+      <article-id pub-id-type="doi">https://doi.org/10.7554/eLife.64719</article-id>
+      <open-access>YES</open-access>
+      <article-categories>
+        <subj-group subj-group-type="display-channel">
+          <subject>Feature Article</subject>
+        </subj-group>
+      </article-categories>
+      <title-group>
+        <article-title>A community-led initiative for training in reproducible research</article-title>
+        <alt-title></alt-title>
+      </title-group>
+      <contrib-group>
+        <contrib contrib-type="author" id="groupAu1">
+          <collab>Reproducibility for Everyone Team</collab>
+        </contrib>
+        <contrib contrib-type="author" id="author-219883" equal-contrib="yes">
+          <name>
+            <surname>Auer</surname>
+            <given-names>Susann</given-names>
+          </name>
+          <ext-link ext-link-type="orcid">http://orcid.org/0000-0001-6566-5060</ext-link>
+          <aff>
+            <addr-line>
+              <named-content content-type="department">Biology</named-content>
+            </addr-line>
+            <institution>TU Dresden</institution>
+            <addr-line>
+              <named-content content-type="city">Dresden</named-content>
+            </addr-line>
+            <country>Germany</country>
+            <email>s@example.org</email>
+          </aff>
+        </contrib>
+        <contrib contrib-type="author" id="author-219884" equal-contrib="yes">
+          <name>
+            <surname>Haelterman</surname>
+            <given-names>Nele</given-names>
+          </name>
+          <ext-link ext-link-type="orcid">http://orcid.org/0000-0002-1431-7581</ext-link>
+          <aff>
+            <addr-line>
+              <named-content content-type="department">Molecular and Human Genetics</named-content>
+            </addr-line>
+            <institution>Baylor College of Medicine</institution>
+            <addr-line>
+              <named-content content-type="city">Houston</named-content>
+            </addr-line>
+            <country>United States</country>
+            <email>n@example.org</email>
+          </aff>
+        </contrib>
+        <contrib contrib-type="author" id="author-179856">
+          <name>
+            <surname>Weissgerber</surname>
+            <given-names>Tracey</given-names>
+          </name>
+          <ext-link ext-link-type="orcid">http://orcid.org/0000-0002-7490-2600</ext-link>
+          <aff>
+            <addr-line>
+              <named-content content-type="department">QUEST - Quality | Ethics | Open Science | Translation</named-content>
+            </addr-line>
+            <institution>Charit&#x00E9; - Universit&#x00E4;tsmedizin Berlin, Berlin Institutes of Health (BIH)</institution>
+            <addr-line>
+              <named-content content-type="city">Berlin</named-content>
+            </addr-line>
+            <country>Germany</country>
+            <email>t@example.org</email>
+          </aff>
+        </contrib>
+        <contrib contrib-type="author" id="author-20827">
+          <name>
+            <surname>Erlich</surname>
+            <given-names>Jeffrey C</given-names>
+          </name>
+          <ext-link ext-link-type="orcid">http://orcid.org/0000-0001-9073-7986</ext-link>
+          <aff>
+            <addr-line>
+              <named-content content-type="department">NYU-ECNU Institute of Brain and Cognitive Science</named-content>
+            </addr-line>
+            <institution>New York University Shanghai</institution>
+            <addr-line>
+              <named-content content-type="city">Shanghai</named-content>
+            </addr-line>
+            <country>China</country>
+            <email>j@example.org</email>
+          </aff>
+        </contrib>
+        <contrib contrib-type="author" id="author-118833">
+          <name>
+            <surname>Susilaradeya</surname>
+            <given-names>Damar</given-names>
+          </name>
+          <ext-link ext-link-type="orcid">http://orcid.org/0000-0002-4548-5924</ext-link>
+          <aff>
+            <addr-line>
+              <named-content content-type="department">Faculty of Medicine</named-content>
+            </addr-line>
+            <institution>Universitas Indonesia</institution>
+            <addr-line>
+              <named-content content-type="city">Jakarta</named-content>
+            </addr-line>
+            <country>Indonesia</country>
+            <phone>5555555</phone>
+            <email>d@example.org</email>
+          </aff>
+        </contrib>
+        <contrib contrib-type="author" id="author-219885">
+          <name>
+            <surname>Julkowska</surname>
+            <given-names>Magdalena</given-names>
+          </name>
+          <aff>
+            <addr-line>
+              <named-content content-type="department">Boyce Thompson Institute</named-content>
+            </addr-line>
+            <institution>Cornell University</institution>
+            <addr-line>
+              <named-content content-type="city">Ithaca</named-content>
+            </addr-line>
+            <country>United States</country>
+            <email>m@example.org</email>
+          </aff>
+        </contrib>
+        <contrib contrib-type="author" id="author-219886">
+          <name>
+            <surname>Gazda</surname>
+            <given-names>Ma&#x0142;gorzata Anna</given-names>
+          </name>
+          <ext-link ext-link-type="orcid">http://orcid.org/0000-0001-8369-1350</ext-link>
+          <aff>
+            <addr-line>
+              <named-content content-type="department">Departamento de Biologia</named-content>
+            </addr-line>
+            <institution>Facldade de Ci&#x00EA;ncias, Universidade do Portio</institution>
+            <addr-line>
+              <named-content content-type="city">Porto</named-content>
+            </addr-line>
+            <country>Portugal</country>
+            <email>m@example.org</email>
+          </aff>
+        </contrib>
+        <contrib contrib-type="author" corresp="yes" id="author-74710">
+          <name>
+            <surname>Schwessinger</surname>
+            <given-names>Benjamin</given-names>
+          </name>
+          <ext-link ext-link-type="orcid">http://orcid.org/0000-0002-7194-2922</ext-link>
+          <aff>
+            <addr-line>
+              <named-content content-type="department">Research School of Biology</named-content>
+            </addr-line>
+            <institution>The Australian National University</institution>
+            <addr-line>
+              <named-content content-type="city">Acton</named-content>
+            </addr-line>
+            <country>Australia</country>
+            <email>b@example.org</email>
+          </aff>
+        </contrib>
+        <contrib contrib-type="author" corresp="yes" id="author-169234">
+          <name>
+            <surname>Jadavji</surname>
+            <given-names>Nafisa M</given-names>
+          </name>
+          <ext-link ext-link-type="orcid">http://orcid.org/0000-0002-3557-7307</ext-link>
+          <aff>
+            <addr-line>
+              <named-content content-type="department">Department of Biomedical Sciences</named-content>
+            </addr-line>
+            <institution>Midwestern University</institution>
+            <addr-line>
+              <named-content content-type="city">Glendale</named-content>
+            </addr-line>
+            <country>United States</country>
+            <email>n@example.org</email>
+          </aff>
+        </contrib>
+      </contrib-group>
+      <contrib-group content-type="section">
+        <contrib contrib-type="assoc_ed" id="author-149092">
+          <name>
+            <surname>P&#x00E9;rez Valle</surname>
+            <given-names>Helena</given-names>
+          </name>
+          <role>Reviewing Editor</role>
+          <aff>
+            <institution>eLife</institution>
+            <country>United Kingdom</country>
+          </aff>
+        </contrib>
+      </contrib-group>
+      <contrib-group content-type="section">
+        <contrib contrib-type="editor" id="author-1390">
+          <name>
+            <surname>Rodgers</surname>
+            <given-names>Peter</given-names>
+          </name>
+          <role>Senior Editor</role>
+          <aff>
+            <institution>eLife</institution>
+            <country>United Kingdom</country>
+          </aff>
+        </contrib>
+      </contrib-group>
+      <contrib-group>
+      </contrib-group>
+      <pub-date pub-type="epub">
+        <year>2021</year>
+      </pub-date>
+      <volume>0</volume>
+      <issue>0</issue>
+      <elocation-id>e64719</elocation-id>
+      <history>
+        <date date-type="accepted">
+          <day>18</day>
+          <month>06</month>
+          <year>2021</year>
+        </date>
+        <date date-type="received">
+          <day>9</day>
+          <month>11</month>
+          <year>2020</year>
+        </date>
+        <date date-type="rev-recd">
+          <day>11</day>
+          <month>05</month>
+          <year>2021</year>
+        </date>
+      </history>
+      <permissions>
+        <copyright-statement>Copyright &#x00A9; 2021, Auer et al</copyright-statement>
+        <copyright-year>2021</copyright-year>
+        <copyright-holder>Auer</copyright-holder>
+        <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/4.0/">
+          <license-p>This article is distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use and redistribution provided that the original author and source are credited.</license-p>
+        </license>
+      </permissions>
+      <abstract><p>Open and reproducible research practices increase the reusability and impact of scientific research. The reproducibility of research results is influenced by many factors, most of which can be addressed by improved education and training. Here we describe how workshops developed by the Reproducibility for Everyone (R4E) initiative can be customized to provide researchers at all career stages and across most discipline levels and across disciplines with education and training in reproducible research practices. The R4E initiative, which is led by volunteers, has reached more than 2000 researchers worldwide to date, and all workshop materials, including accompanying resources, are available under a CC-BY 4.0 license at www.repro4everyone.org.</p></abstract>
+      <kwd-group kwd-group-type="research-organism">
+        <title>Research organism</title>
+        <kwd>None</kwd>
+      </kwd-group>
+      <kwd-group kwd-group-type="author-keywords">
+        <title>Author keywords</title>
+        <kwd>rigor</kwd>
+        <kwd>reproducibility</kwd>
+        <kwd>transparency</kwd>
+        <kwd>FAIR data</kwd>
+        <kwd>accessible protocols</kwd>
+        <kwd>transparent data processing</kwd>
+      </kwd-group>
+      <funding-group>
+        <award-group>
+          <principal-award-recipient>author-74710</principal-award-recipient>
+          <funding-source id="http://dx.doi.org/10.13039/501100012642">Mozilla Foundation</funding-source>
+          <award-id>MF-1811-05938</award-id>
+          <principal-award-recipient>author-219883</principal-award-recipient>
+          <funding-source id="http://dx.doi.org/10.13039/100014989">Chan Zuckerberg Initiative (CZI)</funding-source>
+          <award-id>223046</award-id>
+          <principal-award-recipient>author-219884</principal-award-recipient>
+          <funding-source id="http://dx.doi.org/10.13039/100014989">Chan Zuckerberg Initiative (CZI)</funding-source>
+          <award-id>223046</award-id>
+          <principal-award-recipient>author-74710</principal-award-recipient>
+          <funding-source id="http://dx.doi.org/10.13039/100014989">Chan Zuckerberg Initiative (CZI)</funding-source>
+          <award-id>223046</award-id>
+          <funding-statement>The funders had no role in study design, data collection and interpretation, or the decision to submit the work for publication.</funding-statement>
+        </award-group>
+      </funding-group>
+      <custom-meta-group>
+        <custom-meta>
+        <meta-name>Data Statement</meta-name>
+        <meta-name>Data Availability</meta-name>
+        <meta-value>No new data were generated in this study.</meta-value>
+        </custom-meta>
+        <custom-meta>
+          <meta-name>Corresponding author for proofs</meta-name>
+          <meta-value>author-169234</meta-value>
+        </custom-meta>
+        <production-comments>
+          <p>fao Peter &mdash; Revised QC issues as follows:
+-no trf
+-paper structure not as standard
+-DAS says NA but datasets are cited in this paper
+-Impact statement starts 'we'
+</p>
+        </production-comments>
+        <custom-meta>
+          <meta-name>Copy editing requirement</meta-name>
+          <meta-value>0</meta-value>
+        </custom-meta>
+        <custom-meta specific-use="meta-only">
+          <meta-name>Author impact statement</meta-name>
+          <meta-value>The Reproducibility for Everyone initiative aims to provide researchers at all career stages and across many disciplines with training in reproducible research practices via customizable workshop material.</meta-value>
+        </custom-meta>
+        <custom-meta>
+          <meta-name>fast-track</meta-name>
+          <meta-value>yes</meta-value>
+        </custom-meta>
+        <custom-meta>
+          <meta-name>export-timing</meta-name>
+          <meta-value>ready-for-production</meta-value>
+        </custom-meta>
+        <custom-meta>
+          <meta-name>PoA</meta-name>
+          <meta-value>Yes</meta-value>
+        </custom-meta>
+      </custom-meta-group>
+      <fn-group>
+        <fn fn-type="con" id="author-219883">Formal analysis, Visualization, Methodology, Writing - original draft, Writing - review and editing, </fn>
+        <fn fn-type="con" id="author-219884">Visualization, Writing - original draft, Project administration, Writing - review and editing, </fn>
+        <fn fn-type="con" id="author-179856">Conceptualization, Funding acquisition, Visualization, Writing - original draft, Project administration, Writing - review and editing, </fn>
+        <fn fn-type="con" id="author-20827">Visualization, Writing - original draft, </fn>
+        <fn fn-type="con" id="author-118833">Visualization, Writing - original draft, Project administration, </fn>
+        <fn fn-type="con" id="author-219885">Visualization, Writing - original draft, Writing - review and editing, </fn>
+        <fn fn-type="con" id="author-219886">Visualization, Writing - original draft, Project administration, Writing - review and editing, </fn>
+        <fn fn-type="con" id="author-74710">Conceptualization, Funding acquisition, Investigation, Methodology, Writing - original draft, Writing - review and editing, </fn>
+        <fn fn-type="con" id="author-169234">Supervision, Visualization, Writing - original draft, Project administration, Writing - review and editing, </fn>
+        <fn fn-type="conflict" id="author-219883">none</fn>
+        <fn fn-type="conflict" id="author-219884">none</fn>
+        <fn fn-type="conflict" id="author-179856">none</fn>
+        <fn fn-type="conflict" id="author-20827">none</fn>
+        <fn fn-type="conflict" id="author-118833">none</fn>
+        <fn fn-type="conflict" id="author-219885">none</fn>
+        <fn fn-type="conflict" id="author-219886">none</fn>
+        <fn fn-type="conflict" id="author-74710">none</fn>
+        <fn fn-type="conflict" id="author-169234">none</fn>
+      </fn-group>
+      <files>
+        <file file-type='merged_pdf' id='2070494'>
+          <upload_file_nm>08-11-2020-FA-eLife-64719.pdf</upload_file_nm>
+          <order>1</order>
+          <size units='bytes'>914253</size>
+        </file>
+        <file file-type='art_file' id='2007237'>
+          <upload_file_nm>eLife64719_template5.docx</upload_file_nm>
+          <order>2</order>
+          <size units='bytes'>44486</size>
+        </file>
+        <file file-type='figure' id='2063134'>
+          <upload_file_nm>eLife64719_figure1_classB.png</upload_file_nm>
+          <order>3</order>
+          <size units='bytes'>111229</size>
+          <custom-meta>
+            <meta-name>Figure number</meta-name>
+            <meta-value>Figure 1</meta-value>
+          </custom-meta>
+        </file>
+        <file file-type='figure' id='2063135'>
+          <upload_file_nm>eLife64719_figure2_classB.png</upload_file_nm>
+          <order>4</order>
+          <size units='bytes'>295900</size>
+          <custom-meta>
+            <meta-name>Figure number</meta-name>
+            <meta-value>Figure 2</meta-value>
+          </custom-meta>
+        </file>
+      </files>
+    </article-meta>
+  </front>
+  <back>
+  </back>
+</article>
