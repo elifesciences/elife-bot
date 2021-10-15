@@ -192,3 +192,16 @@ def doi_exists(doi, logger):
     elif response.status_code < 300 or response.status_code >= 500:
         logger.info("Status code for %s was %s" % (doi, response.status_code))
     return exists
+
+
+def doi_does_not_exist(doi, logger):
+    """given a DOI check if it does not exist at Crossref"""
+    does_not_exist = None
+    doi_url = utils.get_doi_url(doi)
+    response = requests.head(doi_url)
+    logger.info("Status code for %s was %s" % (doi, response.status_code))
+    if 200 <= response.status_code < 400:
+        does_not_exist = False
+    elif response.status_code < 500:
+        does_not_exist = True
+    return does_not_exist

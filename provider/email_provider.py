@@ -319,6 +319,7 @@ def get_email_body_middle(
     published_file_names,
     not_published_file_names,
     http_detail_list=None,
+    removed_file_names=None,
 ):
     "Format the body of the email for activity status emails"
 
@@ -344,6 +345,12 @@ def get_email_body_middle(
     if len(not_published_file_names) > 0:
         body += "\nFiles not approved or failed %s XML: \n" % activity_name
         for name in not_published_file_names:
+            body += "%s\n" % name.split(os.sep)[-1]
+
+    # Report on files removed from an outbox
+    if removed_file_names:
+        body += "\nFiles not approved and removed: \n"
+        for name in removed_file_names:
             body += "%s\n" % name.split(os.sep)[-1]
 
     if http_detail_list:

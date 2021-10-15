@@ -259,6 +259,7 @@ class TestGetEmailBodyMiddle(unittest.TestCase):
         outbox_s3_key_names = ["crossref/outbox/elife-00666-v1.xml"]
         published_file_names = ["elife-00777-v1.xml"]
         not_published_file_names = ["elife-99999-v1.xml"]
+        removed_file_names = ["elife-00001-v1.xml"]
         http_detail_list = [
             "XML file: tmp/elife-crossref-00666.xml",
             "HTTP status: 200",
@@ -269,6 +270,7 @@ class TestGetEmailBodyMiddle(unittest.TestCase):
             "crossref/outbox/elife-00666-v1.xml\n\n"
             "Published files generated crossref XML: \nelife-00777-v1.xml\n\n"
             "Files not approved or failed crossref XML: \nelife-99999-v1.xml\n\n"
+            "Files not approved and removed: \nelife-00001-v1.xml\n\n"
             "-------------------------------\n"
             "HTTP deposit details: \n"
             "XML file: tmp/elife-crossref-00666.xml\n"
@@ -281,5 +283,6 @@ class TestGetEmailBodyMiddle(unittest.TestCase):
             published_file_names,
             not_published_file_names,
             http_detail_list,
+            removed_file_names,
         )
         self.assertEqual(email_body_middle, expected)
