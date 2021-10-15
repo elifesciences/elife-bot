@@ -266,7 +266,7 @@ class exp():
     # Version control for xml
     github_token = "tokenhere"
     git_repo_name = "repository-name"
-    git_repo_path = "/articles/"
+    git_repo_path = "articles/"
 
     # eLife 2.0 bot lax communication settings
     xml_info_queue = "bot-lax-exp-inc"
@@ -568,7 +568,7 @@ class dev():
     # Version control for xml
     github_token = "tokenhere"
     git_repo_name = "repository-name"
-    git_repo_path = "/articles/"
+    git_repo_path = "articles/"
 
     # videos
     video_url = "https://video.url.here/"
@@ -867,7 +867,7 @@ class live():
     # Version control for xml
     github_token = "tokenhere"
     git_repo_name = "elife-articles-xml"
-    git_repo_path = "/articles/"
+    git_repo_path = "articles/"
 
     # eLife 2.0 bot lax communication settings
     xml_info_queue = "bot-lax-prod-inc"
