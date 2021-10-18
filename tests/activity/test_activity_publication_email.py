@@ -611,6 +611,37 @@ class TestPublicationEmail(unittest.TestCase):
     @patch("provider.templates.Templates.get_email_body")
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(activity_module.email_provider, "smtp_send_message")
+    def test_send_author_email(
+        self, fake_send_message, fake_email_smtp_connect, fake_get_email_body
+    ):
+        # self.activity.download_templates()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
+        fake_get_email_body.return_value = "Body."
+        fake_send_message.return_value = True
+        author = {"e_mail": "author@example.org"}
+        headers = {
+            "email_type": "author_publication_email_VOR_no_POA",
+            "format": "text",
+            "sender_email": "sender@example.org",
+            "subject": "Test",
+        }
+        doi_id = 99999
+
+        result = self.activity.send_author_email(
+            headers.get("email_type"), author, headers, None, None, doi_id
+        )
+        self.assertEqual(result, True)
+        self.assertEqual(
+            self.activity.logger.loginfo[-1],
+            ("Email sending details: result True, tries 1, article %s, email %s, to %s")
+            % (doi_id, headers.get("email_type"), author.get("e_mail")),
+        )
+
+    @patch("provider.templates.Templates.get_email_body")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(activity_module.email_provider, "smtp_send_message")
     def test_send_author_email_exception(
         self, fake_send_message, fake_email_smtp_connect, fake_get_email_body
     ):
@@ -630,9 +661,10 @@ class TestPublicationEmail(unittest.TestCase):
             "sender_email": "sender@example.org",
             "subject": "Test",
         }
+        doi_id = 99999
 
         result = self.activity.send_author_email(
-            headers.get("email_type"), author, headers, None, None, None
+            headers.get("email_type"), author, headers, None, None, doi_id
         )
         self.assertEqual(result, True)
         self.assertEqual(
@@ -641,6 +673,11 @@ class TestPublicationEmail(unittest.TestCase):
                 "Sending by SMTP reached smtplib.SMTPDataError, will sleep %s seconds and then try again: %s"
                 % (activity_module.SLEEP_SECONDS, str(smtp_exception))
             ),
+        )
+        self.assertEqual(
+            self.activity.logger.loginfo[-1],
+            ("Email sending details: result None, tries 3, article %s, email %s, to %s")
+            % (doi_id, headers.get("email_type"), author.get("e_mail")),
         )
 
     @patch("provider.lax_provider.article_versions")

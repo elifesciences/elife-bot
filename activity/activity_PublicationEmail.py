@@ -497,12 +497,13 @@ class activity_PublicationEmail(Activity):
         connection = email_provider.smtp_connect(self.settings, self.logger)
 
         result = None
-        tries = 1
-        while tries <= SENDING_RETRY:
+        tries = 0
+        while tries < SENDING_RETRY:
             try:
                 result = email_provider.smtp_send_message(
                     connection, message, logger=self.logger, bcc=bcc
                 )
+                break
             except smtplib.SMTPDataError as exception:
                 self.logger.exception(
                     (
@@ -517,8 +518,8 @@ class activity_PublicationEmail(Activity):
                 tries += 1
 
         self.logger.info(
-            "Email sending details: result %s, article %s, email %s, to %s"
-            % (result, doi_id, headers["email_type"], str(author.get("e_mail")))
+            "Email sending details: result %s, tries %s, article %s, email %s, to %s"
+            % (result, tries, doi_id, headers["email_type"], str(author.get("e_mail")))
         )
 
         return True
