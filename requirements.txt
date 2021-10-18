@@ -18,6 +18,7 @@ dill==0.3.4
 docker==5.0.3
 ejpcsvparser==0.1.2
 elifearticle==0.6.0
+elifecleaner==0.5.0
 elifecrossref==0.6.0
 elifepubmed==0.3.0
 elifetools @ git+https://github.com/elifesciences/elife-tools.git@ee345bf0e6703ef0f7e718355e85730abbdfd117
