@@ -98,7 +98,7 @@ def date_to_string(datetime_date):
 
 def get_review_date(manuscript_object, article_type):
     """get date for a peer review sub article"""
-    if article_type in ['article-commentary', 'decision-letter']:
+    if article_type in ['article-commentary', 'decision-letter', 'editor-report']:
         if manuscript_object.decision_letter_datetime:
             return date_to_string(manuscript_object.decision_letter_datetime)
     elif article_type == 'reply':

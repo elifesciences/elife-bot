@@ -3,7 +3,7 @@ from boto.s3.connection import S3Connection
 import tempfile
 from github import Github
 from github import GithubException
-from provider.utils import unicode_encode
+from provider.utils import pad_msid, unicode_encode
 import provider.lax_provider
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -55,11 +55,11 @@ class activity_UpdateRepository(Activity):
             try:
 
                 xml_file = provider.lax_provider.get_xml_file_name(self.settings,
-                                                            data['article_id'],
+                                                            pad_msid(data['article_id']),
                                                             self.settings.publishing_buckets_prefix +
                                                             self.settings.ppp_cdn_bucket,
                                                             data['version'])
-                s3_file_path = data['article_id'] + "/" + xml_file
+                s3_file_path = pad_msid(data['article_id']) + "/" + xml_file
 
                 storage = storage_context(self.settings)
                 bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket

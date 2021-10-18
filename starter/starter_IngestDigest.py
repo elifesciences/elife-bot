@@ -5,22 +5,26 @@ from starter.starter_helper import NullRequiredDataException
 
 
 class starter_IngestDigest(Starter):
-
     def __init__(self, settings=None, logger=None):
-        super(starter_IngestDigest, self).__init__(
-            settings, logger, "IngestDigest")
+        super(starter_IngestDigest, self).__init__(settings, logger, "IngestDigest")
 
     def get_workflow_params(self, run, info):
+
+        if hasattr(info, "file_name") is False or info.file_name is None:
+            raise NullRequiredDataException("filename is Null. Did not get a filename.")
+
         workflow_params = default_workflow_params(self.settings)
-        workflow_params['workflow_id'] = "%s_%s" % (self.name,
-                                                    info.file_name.replace('/', '_'))
-        workflow_params['workflow_name'] = self.name
-        workflow_params['workflow_version'] = "1"
-        workflow_params['execution_start_to_close_timeout'] = str(60 * 15)
+        workflow_params["workflow_id"] = "%s_%s" % (
+            self.name,
+            info.file_name.replace("/", "_"),
+        )
+        workflow_params["workflow_name"] = self.name
+        workflow_params["workflow_version"] = "1"
+        workflow_params["execution_start_to_close_timeout"] = str(60 * 15)
 
         input_data = S3NotificationInfo.to_dict(info)
-        input_data['run'] = run
-        workflow_params['input'] = json.dumps(input_data, default=lambda ob: None)
+        input_data["run"] = run
+        workflow_params["input"] = json.dumps(input_data, default=lambda ob: None)
 
         return workflow_params
 
@@ -32,22 +36,5 @@ class starter_IngestDigest(Starter):
 
     def start_workflow(self, run, info):
 
-        if hasattr(info, 'file_name') is False or info.file_name is None:
-            raise NullRequiredDataException("filename is Null. Did not get a filename.")
-
-        self.connect_to_swf()
-
         workflow_params = self.get_workflow_params(run, info)
-
-        # start a workflow execution
-        self.logger.info('Starting workflow: %s', workflow_params.get('workflow_id'))
-        try:
-            self.start_swf_workflow_execution(workflow_params)
-        except NullRequiredDataException as null_exception:
-            self.logger.exception(null_exception.message)
-            raise
-        except:
-            message = (
-                'Exception starting workflow execution for workflow_id %s' %
-                workflow_params.get('workflow_id'))
-            self.logger.exception(message)
+        self.start_workflow_execution(workflow_params)

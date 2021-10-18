@@ -90,7 +90,7 @@ def convert_xml(xml_file, file_name_map):
     # Start the file output
     reparsed_string = xmlio.output(
         root,
-        type=None,
+        output_type=None,
         doctype_dict=doctype_dict,
         processing_instructions=processing_instructions)
 

@@ -1,92 +1,60 @@
-import boto.swf
-import log
 import json
-import random
-from optparse import OptionParser
+from provider import utils
+from starter.objects import Starter, default_workflow_params
+from starter.starter_helper import NullRequiredDataException
+
 
 """
 Amazon SWF LensArticlePublish starter
 """
 
 
-class starter_LensArticlePublish():
+class starter_LensArticlePublish(Starter):
+    def __init__(self, settings=None, logger=None):
+        super(starter_LensArticlePublish, self).__init__(
+            settings, logger, "LensArticlePublish"
+        )
 
-    def start(self, settings, all_doi=None, doi_id=None):
-        # Log
-        identity = "starter_%s" % int(random.random() * 1000)
-        logFile = "starter.log"
-        #logFile = None
-        logger = log.logger(logFile, settings.setLevel, identity)
+    def get_workflow_params(self, doi_id=None):
 
-        # Simple connect
-        conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+        if not doi_id:
+            raise NullRequiredDataException(
+                "Did not get doi_id in starter %s" % self.name
+            )
 
-        docs = []
+        workflow_params = default_workflow_params(self.settings)
+        workflow_params["workflow_id"] = "%s_%s" % (
+            self.name,
+            doi_id,
+        )
+        workflow_params["workflow_name"] = self.name
+        workflow_params["workflow_version"] = "1"
+        workflow_params["execution_start_to_close_timeout"] = str(60 * 30)
 
-        if all_doi is True:
-            # Publish all articles
-            # TODO!! Add all articles support again
-            pass
+        input_data = {}
+        if doi_id:
+            input_data["article_id"] = utils.pad_msid(doi_id)
+        workflow_params["input"] = json.dumps(input_data, default=lambda ob: None)
 
-        elif doi_id is not None:
-            doc = {}
-            doc['article_id'] = str(doi_id).zfill(5)
-            docs.append(doc)
+        return workflow_params
 
-        if docs:
-            for doc in docs:
+    def start(self, settings, doi_id):
+        """method for backwards compatibility"""
+        self.settings = settings
+        self.instantiate_logger()
+        self.start_workflow(doi_id)
 
-                article_id = doc["article_id"]
+    def start_workflow(self, doi_id=None):
 
-                # Start a workflow execution
-                workflow_id = "LensArticlePublish_%s" % (article_id)
-                workflow_name = "LensArticlePublish"
-                workflow_version = "1"
-                child_policy = None
-                execution_start_to_close_timeout = str(60 * 30)
-                input = '{"article_id": "' + str(article_id) + '"}'
+        workflow_params = self.get_workflow_params(doi_id)
+        self.start_workflow_execution(workflow_params)
 
-                try:
-                    response = conn.start_workflow_execution(
-                        settings.domain, workflow_id, workflow_name, workflow_version,
-                        settings.default_task_list, child_policy, execution_start_to_close_timeout,
-                        input)
-
-                    logger.info('got response: \n%s' %
-                                json.dumps(response, sort_keys=True, indent=4))
-
-                except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-                    # There is already a running workflow with that ID, cannot start another
-                    message = ('SWFWorkflowExecutionAlreadyStartedError: There is already ' +
-                               'a running workflow with ID %s' % workflow_id)
-                    print(message)
-                    logger.info(message)
 
 if __name__ == "__main__":
 
-    doi_id = None
-    all_doi = False
+    ENV, DOI_ID = utils.console_start_env_doi_id()
+    SETTINGS = utils.get_settings(ENV)
 
-    # Add options
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string",
-                      dest="env", help="set the environment to run, either dev or live")
-    parser.add_option("-d", "--doi-id", default=None, action="store", type="string",
-                      dest="doi_id", help="specify the DOI id of a single article")
-    parser.add_option("-a", "--all", default=None, action="store_true", dest="all_doi",
-                      help="start workflow for all article DOI")
+    STARTER = starter_LensArticlePublish()
 
-    (options, args) = parser.parse_args()
-    if options.env:
-        ENV = options.env
-    if options.doi_id:
-        doi_id = options.doi_id
-    if options.all_doi:
-        all_doi = options.all_doi
-
-    import settings as settingsLib
-    settings = settingsLib.get_settings(ENV)
-
-    o = starter_LensArticlePublish()
-
-    o.start(settings=settings, all_doi=all_doi, doi_id=doi_id)
+    STARTER.start(settings=SETTINGS, doi_id=DOI_ID)

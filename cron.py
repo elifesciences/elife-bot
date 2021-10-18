@@ -122,6 +122,30 @@ def conditional_starts(current_datetime):
         # Jobs to start at quarter past the hour
         LOGGER.info("Quarter past the hour")
 
+        # Zendy deposits once per day 21:15 UTC
+        if current_time.tm_hour == 21:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_PubRouterDeposit"),
+                        ("workflow_id", "PubRouterDeposit_Zendy"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
+
+        # OVID deposits once per day 22:15 UTC
+        if current_time.tm_hour == 22:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_PubRouterDeposit"),
+                        ("workflow_id", "PubRouterDeposit_OVID"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
+
     elif current_time.tm_min >= 20 and current_time.tm_min <= 29:
         # Jobs to start at 20 minutes past the hour
         LOGGER.info("Twenty minutes past the hour")
@@ -158,14 +182,6 @@ def conditional_starts(current_datetime):
             conditional_start_list.append(OrderedDict([
                 ("starter_name", "starter_PubRouterDeposit"),
                 ("workflow_id", "PubRouterDeposit_WoS"),
-                ("start_seconds", 60 * 31)
-            ]))
-
-        # Scopus deposits once per day 22:30 UTC
-        if current_time.tm_hour == 22:
-            conditional_start_list.append(OrderedDict([
-                ("starter_name", "starter_PubRouterDeposit"),
-                ("workflow_id", "PubRouterDeposit_Scopus"),
                 ("start_seconds", 60 * 31)
             ]))
 
@@ -207,11 +223,15 @@ def conditional_starts(current_datetime):
 
         # GoOA / CAS deposits once per day 21:45 UTC
         if current_time.tm_hour == 21:
-            conditional_start_list.append(OrderedDict([
-                ("starter_name", "starter_PubRouterDeposit"),
-                ("workflow_id", "PubRouterDeposit_GoOA"),
-                ("start_seconds", 60 * 31)
-            ]))
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_PubRouterDeposit"),
+                        ("workflow_id", "PubRouterDeposit_GoOA"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
 
         conditional_start_list.append(OrderedDict([
             ("starter_name", "starter_PubmedArticleDeposit"),
@@ -219,11 +239,15 @@ def conditional_starts(current_datetime):
             ("start_seconds", 60 * 31)
         ]))
 
-        conditional_start_list.append(OrderedDict([
-            ("starter_name", "starter_AdminEmail"),
-            ("workflow_id", "AdminEmail"),
-            ("start_seconds", (60*60*4)-(14*60))
-        ]))
+        conditional_start_list.append(
+            OrderedDict(
+                [
+                    ("starter_name", "starter_AdminEmail"),
+                    ("workflow_id", "AdminEmail"),
+                    ("start_seconds", (60 * 60 * 4) - (14 * 60)),
+                ]
+            )
+        )
 
     return conditional_start_list
 
@@ -269,7 +293,7 @@ def start_workflow(settings, starter_name, workflow_id=None):
 
     # Customised start functions
     if starter_name == "starter_AdminEmail":
-        starter_object.start(settings=settings, workflow="AdminEmail")
+        starter_object.start(settings=settings)
 
     elif starter_name == "starter_PubRouterDeposit":
         # PubRouterDeposit has different variants specified by the workflow variable

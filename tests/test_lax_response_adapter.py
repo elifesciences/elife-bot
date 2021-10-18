@@ -49,7 +49,7 @@ FAKE_LAX_MESSAGE_269 = json.dumps({
 
 WORKFLOW_MESSAGE_EXPECTED_269 = {
     'workflow_data': {
-        'article_id': u'00269',
+        'article_id': u'269',
         'expanded_folder': u'00269.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148',
         'message': None,
         'requested_action': u'publish',

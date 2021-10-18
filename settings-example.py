@@ -41,9 +41,13 @@ class exp():
     digest_cdn_bucket = 'elife-published/digests'
     archive_bucket = 'elife-publishing-archive'
 
+    lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
+    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2"
+    lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
+    lax_auth_key = ""
 
     no_download_extensions = 'tif'
 
@@ -58,6 +62,7 @@ class exp():
     ses_region = "eu-west-1"
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
+    ses_bcc_recipient_email = ""
 
     # SMTP settings
     smtp_host = 'localhost'
@@ -109,7 +114,7 @@ class exp():
     digest_auth_key = 'digest_auth_key'
 
     # digest typesetter endpoint
-    typesetter_digest_endpoint = 'https://typesetter/updateDigest'
+    typesetter_digest_endpoint = 'https://typesetter/updatedigest'
     typesetter_digest_api_key = 'typesetter_api_key'
     typesetter_digest_account_key = '1'
 
@@ -119,11 +124,15 @@ class exp():
     decision_letter_output_bucket = 'exp-elife-bot-decision-letter-output'
     decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
     decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
-    typesetter_decision_letter_endpoint = 'https://typesetter/decisionLetter'
+    typesetter_decision_letter_endpoint = 'https://typesetter/updatedigest'
     typesetter_decision_letter_api_key = 'typesetter_api_key'
     typesetter_decision_letter_account_key = '1'
     decision_letter_jats_recipient_email = ["e@example.org", "life@example.org"]
     decision_letter_jats_error_recipient_email = "error@example.org"
+
+    # PMC or FTP sending error email settings
+    ftp_deposit_error_sender_email = "sender@example.org"
+    ftp_deposit_error_recipient_email = ["e@example.org", "life@example.org"]
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
@@ -137,12 +146,8 @@ class exp():
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
-    # Templates S3 settings
-    templates_bucket = 'elife-bot-dev'
-
-    # Article subjects data
-    article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
-    article_subjects_data_file = "article_subjects.csv"
+    # Templates settings
+    email_templates_path = "/opt/elife-email-templates"
 
     # Crossref generation
     elifecrossref_config_file = 'crossref.cfg'
@@ -204,19 +209,6 @@ class exp():
     GOOA_FTP_PASSWORD = ""
     GOOA_FTP_CWD = ""
 
-    # Scopus FTP settings
-    SCOPUS_FTP_URI = ""
-    SCOPUS_FTP_USERNAME = ""
-    SCOPUS_FTP_PASSWORD = ""
-    SCOPUS_FTP_CWD = ""
-    SCOPUS_EMAIL = "scopus@example.org"
-
-    # Scopus SFTP settings
-    SCOPUS_SFTP_URI = ""
-    SCOPUS_SFTP_USERNAME = ""
-    SCOPUS_SFTP_PASSWORD = ""
-    SCOPUS_SFTP_CWD = ""
-
     # Web of Science WoS FTP settings
     WOS_FTP_URI = ""
     WOS_FTP_USERNAME = ""
@@ -244,6 +236,20 @@ class exp():
     CLOCKSS_FTP_CWD = ""
     CLOCKSS_EMAIL = "clockss@example.org"
 
+    # OVID FTP settings
+    OVID_FTP_URI = ""
+    OVID_FTP_USERNAME = ""
+    OVID_FTP_PASSWORD = ""
+    OVID_FTP_CWD = ""
+    OVID_EMAIL = ""
+
+    # Zendy SFTP settings
+    ZENDY_SFTP_URI = ""
+    ZENDY_SFTP_USERNAME = ""
+    ZENDY_SFTP_PASSWORD = ""
+    ZENDY_SFTP_CWD = ""
+    ZENDY_EMAIL = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -260,7 +266,7 @@ class exp():
     # Version control for xml
     github_token = "tokenhere"
     git_repo_name = "repository-name"
-    git_repo_path = "/articles/"
+    git_repo_path = "articles/"
 
     # eLife 2.0 bot lax communication settings
     xml_info_queue = "bot-lax-exp-inc"
@@ -285,6 +291,27 @@ class exp():
 
     # BigQuery settings
     big_query_project_id = ''
+
+    # DOAJ deposit settings
+    journal_eissn = ""
+    doaj_url_link_pattern = "https://example.org/articles/{article_id}"
+    doaj_endpoint = "https://doaj/api/v2/articles"
+    doaj_api_key = ""
+
+    # Software Heritage deposit settings
+    software_heritage_deposit_endpoint = "https://deposit.swh.example.org/1"
+    software_heritage_collection_name = "elife"
+    software_heritage_auth_user = "user"
+    software_heritage_auth_pass = "pass"
+    software_heritage_api_get_origin_pattern = "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+
+    # ERA article incoming queue
+    era_incoming_queue = "exp-era-incoming-queue"
+
+    # Accepted submission workflow
+    accepted_submission_sender_email = "sender@example.org"
+    accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
+    accepted_submission_queue = ""
 
 
 class dev():
@@ -316,9 +343,13 @@ class dev():
     digest_cdn_bucket = 'elife-published/digests'
     archive_bucket = 'elife-publishing-archive'
 
+    lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
+    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2"
+    lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
+    lax_auth_key = ""
 
     no_download_extensions = 'tif'
 
@@ -333,6 +364,7 @@ class dev():
     ses_region = "us-east-1"
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
+    ses_bcc_recipient_email = ""
 
     # SMTP settings
     smtp_host = 'localhost'
@@ -384,7 +416,7 @@ class dev():
     digest_auth_key = 'digest_auth_key'
 
     # digest typesetter endpoint
-    typesetter_digest_endpoint = 'https://typesetter/updateDigest'
+    typesetter_digest_endpoint = 'https://typesetter/updatedigest'
     typesetter_digest_api_key = 'typesetter_api_key'
     typesetter_digest_account_key = '1'
 
@@ -394,11 +426,15 @@ class dev():
     decision_letter_output_bucket = 'dev-elife-bot-decision-letter-output'
     decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
     decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
-    typesetter_decision_letter_endpoint = 'https://typesetter/decisionLetter'
+    typesetter_decision_letter_endpoint = 'https://typesetter/updatedigest'
     typesetter_decision_letter_api_key = 'typesetter_api_key'
     typesetter_decision_letter_account_key = '1'
     decision_letter_jats_recipient_email = ["e@example.org", "life@example.org"]
     decision_letter_jats_error_recipient_email = "error@example.org"
+
+    # PMC or FTP sending error email settings
+    ftp_deposit_error_sender_email = "sender@example.org"
+    ftp_deposit_error_recipient_email = ["e@example.org", "life@example.org"]
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
@@ -412,12 +448,8 @@ class dev():
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp-dev'
 
-    # Templates S3 settings
-    templates_bucket = 'elife-bot-dev'
-
-    # Article subjects data
-    article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
-    article_subjects_data_file = "article_subjects.csv"
+    # Templates settings
+    email_templates_path = "/opt/elife-email-templates"
 
     # Crossref generation
     elifecrossref_config_file = 'crossref.cfg'
@@ -479,19 +511,6 @@ class dev():
     GOOA_FTP_PASSWORD = ""
     GOOA_FTP_CWD = ""
 
-    # Scopus FTP settings
-    SCOPUS_FTP_URI = ""
-    SCOPUS_FTP_USERNAME = ""
-    SCOPUS_FTP_PASSWORD = ""
-    SCOPUS_FTP_CWD = ""
-    SCOPUS_EMAIL = "scopus@example.org"
-
-    # Scopus SFTP settings
-    SCOPUS_SFTP_URI = ""
-    SCOPUS_SFTP_USERNAME = ""
-    SCOPUS_SFTP_PASSWORD = ""
-    SCOPUS_SFTP_CWD = ""
-
     # Web of Science WoS FTP settings
     WOS_FTP_URI = ""
     WOS_FTP_USERNAME = ""
@@ -519,6 +538,20 @@ class dev():
     CLOCKSS_FTP_CWD = ""
     CLOCKSS_EMAIL = "clockss@example.org"
 
+    # OVID FTP settings
+    OVID_FTP_URI = ""
+    OVID_FTP_USERNAME = ""
+    OVID_FTP_PASSWORD = ""
+    OVID_FTP_CWD = ""
+    OVID_EMAIL = ""
+
+    # Zendy SFTP settings
+    ZENDY_SFTP_URI = ""
+    ZENDY_SFTP_USERNAME = ""
+    ZENDY_SFTP_PASSWORD = ""
+    ZENDY_SFTP_CWD = ""
+    ZENDY_EMAIL = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -535,7 +568,7 @@ class dev():
     # Version control for xml
     github_token = "tokenhere"
     git_repo_name = "repository-name"
-    git_repo_path = "/articles/"
+    git_repo_path = "articles/"
 
     # videos
     video_url = "https://video.url.here/"
@@ -556,6 +589,27 @@ class dev():
 
     # BigQuery settings
     big_query_project_id = ''
+
+    # DOAJ deposit settings
+    journal_eissn = ""
+    doaj_url_link_pattern = "https://example.org/articles/{article_id}"
+    doaj_endpoint = "https://doaj/api/v2/articles"
+    doaj_api_key = ""
+
+    # Software Heritage deposit settings
+    software_heritage_deposit_endpoint = "https://deposit.swh.example.org/1"
+    software_heritage_collection_name = "elife"
+    software_heritage_auth_user = "user"
+    software_heritage_auth_pass = "pass"
+    software_heritage_api_get_origin_pattern = "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+
+    # ERA article incoming queue
+    era_incoming_queue = "dev-era-incoming-queue"
+
+    # Accepted submission workflow
+    accepted_submission_sender_email = "sender@example.org"
+    accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
+    accepted_submission_queue = ""
 
 
 class live():
@@ -588,9 +642,13 @@ class live():
     digest_cdn_bucket = 'prod-elife-published/digests'
     archive_bucket = 'prod-elife-publishing-archive'
 
+    lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
     lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
+    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2" 
+    lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
+    lax_auth_key = ""
 
     no_download_extensions = 'tif'
 
@@ -605,6 +663,7 @@ class live():
     ses_region = "us-east-1"
     ses_sender_email = "sender@example.com"
     ses_admin_email = "admin@example.com"
+    ses_bcc_recipient_email = ""
 
     # SMTP settings
     smtp_host = 'localhost'
@@ -656,7 +715,7 @@ class live():
     digest_auth_key = 'digest_auth_key'
 
     # digest typesetter endpoint
-    typesetter_digest_endpoint = 'https://typesetter/updateDigest'
+    typesetter_digest_endpoint = 'https://typesetter/updatedigest'
     typesetter_digest_api_key = 'typesetter_api_key'
     typesetter_digest_account_key = '1'
 
@@ -666,11 +725,15 @@ class live():
     decision_letter_output_bucket = 'prod-elife-bot-decision-letter-output'
     decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
     decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
-    typesetter_decision_letter_endpoint = 'https://typesetter/decisionLetter'
+    typesetter_decision_letter_endpoint = 'https://typesetter/updatedigest'
     typesetter_decision_letter_api_key = 'typesetter_api_key'
     typesetter_decision_letter_account_key = '1'
     decision_letter_jats_recipient_email = ["e@example.org", "life@example.org"]
     decision_letter_jats_error_recipient_email = "error@example.org"
+
+    # PMC or FTP sending error email settings
+    ftp_deposit_error_sender_email = "sender@example.org"
+    ftp_deposit_error_recipient_email = ["e@example.org", "life@example.org"]
 
     # journal preview
     journal_preview_base_url = 'https://preview--journal.example.org'
@@ -684,8 +747,8 @@ class live():
     # EJP S3 settings
     ejp_bucket = 'elife-ejp-ftp'
 
-    # Templates S3 settings
-    templates_bucket = 'elife-bot'
+    # Templates settings
+    email_templates_path = "/opt/elife-email-templates"
 
     # Crossref generation
     elifecrossref_config_file = 'crossref.cfg'
@@ -747,19 +810,6 @@ class live():
     GOOA_FTP_PASSWORD = ""
     GOOA_FTP_CWD = ""
 
-    # Scopus FTP settings
-    SCOPUS_FTP_URI = ""
-    SCOPUS_FTP_USERNAME = ""
-    SCOPUS_FTP_PASSWORD = ""
-    SCOPUS_FTP_CWD = ""
-    SCOPUS_EMAIL = "scopus@example.org"
-
-    # Scopus SFTP settings
-    SCOPUS_SFTP_URI = ""
-    SCOPUS_SFTP_USERNAME = ""
-    SCOPUS_SFTP_PASSWORD = ""
-    SCOPUS_SFTP_CWD = ""
-
     # Web of Science WoS FTP settings
     WOS_FTP_URI = ""
     WOS_FTP_USERNAME = ""
@@ -787,6 +837,20 @@ class live():
     CLOCKSS_FTP_CWD = ""
     CLOCKSS_EMAIL = "clockss@example.org"
 
+    # OVID FTP settings
+    OVID_FTP_URI = ""
+    OVID_FTP_USERNAME = ""
+    OVID_FTP_PASSWORD = ""
+    OVID_FTP_CWD = ""
+    OVID_EMAIL = ""
+
+    # Zendy SFTP settings
+    ZENDY_SFTP_URI = ""
+    ZENDY_SFTP_USERNAME = ""
+    ZENDY_SFTP_PASSWORD = ""
+    ZENDY_SFTP_CWD = ""
+    ZENDY_EMAIL = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -803,7 +867,7 @@ class live():
     # Version control for xml
     github_token = "tokenhere"
     git_repo_name = "elife-articles-xml"
-    git_repo_path = "/articles/"
+    git_repo_path = "articles/"
 
     # eLife 2.0 bot lax communication settings
     xml_info_queue = "bot-lax-prod-inc"
@@ -828,6 +892,27 @@ class live():
 
     # BigQuery settings
     big_query_project_id = ''
+
+    # DOAJ deposit settings
+    journal_eissn = ""
+    doaj_url_link_pattern = "https://example.org/articles/{article_id}"
+    doaj_endpoint = "https://doaj/api/v2/articles"
+    doaj_api_key = ""
+
+    # Software Heritage deposit settings
+    software_heritage_deposit_endpoint = "https://deposit.swh.example.org/1"
+    software_heritage_collection_name = "elife"
+    software_heritage_auth_user = "user"
+    software_heritage_auth_pass = "pass"
+    software_heritage_api_get_origin_pattern = "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+
+    # ERA article incoming queue
+    era_incoming_queue = "prod-era-incoming-queue"
+
+    # Accepted submission workflow
+    accepted_submission_sender_email = "sender@example.org"
+    accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
+    accepted_submission_queue = "cleaning-queue"
 
 
 def get_settings(ENV="dev"):

@@ -1,113 +1,79 @@
-import boto.swf
-import log
 import json
-import random
-from optparse import OptionParser
+from starter.starter_helper import NullRequiredDataException
+from starter.objects import Starter, default_workflow_params
+from provider import utils
 
 """
 Amazon SWF PublishArticle starter, for Fluidinfo API publishing
 """
 
+WORKFLOW_NAMES = [
+    "HEFCE",
+    "Cengage",
+    "WoS",
+    "GoOA",
+    "CNPIEC",
+    "CNKI",
+    "CLOCKSS",
+    "OVID",
+    "Zendy",
+]
 
-class starter_FTPArticle():
 
-    def start(self, settings, workflow=None, doi_id=None):
-        # Log
-        identity = "starter_%s" % int(random.random() * 1000)
-        logFile = "starter.log"
-        #logFile = None
-        logger = log.logger(logFile, settings.setLevel, identity)
+class starter_FTPArticle(Starter):
+    def __init__(self, settings=None, logger=None):
+        super(starter_FTPArticle, self).__init__(settings, logger, "FTPArticle")
 
-        # Simple connect
-        conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+    def get_workflow_params(self, workflow=None, doi_id=None):
+        if workflow is None:
+            raise NullRequiredDataException(
+                "Did not get a workflow argument. Required."
+            )
+        if workflow not in WORKFLOW_NAMES:
+            raise NullRequiredDataException(
+                "Value of workflow not found in supported WORKFLOW_NAMES."
+            )
+        if doi_id is None:
+            raise NullRequiredDataException("Did not get a doi_id argument. Required.")
 
-        if doi_id is not None and workflow is not None:
-
-            (workflow_id, workflow_name, workflow_version,
-             child_policy, execution_start_to_close_timeout,
-             input) = self.get_workflow_params(workflow, doi_id, settings)
-
-            logger.info('Starting workflow: %s' % workflow_id)
-            try:
-                response = conn.start_workflow_execution(settings.domain, workflow_id,
-                                                         workflow_name, workflow_version,
-                                                         settings.default_task_list, child_policy,
-                                                         execution_start_to_close_timeout, input)
-
-                logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
-
-            except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-                # There is already a running workflow with that ID, cannot start another
-                message = ('SWFWorkflowExecutionAlreadyStartedError: There is already ' +
-                           'a running workflow with ID %s' % workflow_id)
-                print(message)
-                logger.info(message)
-
-    def get_workflow_params(self, workflow, doi_id, settings):
-
-        workflow_id = None
-        workflow_name = None
-        workflow_version = None
-        child_policy = None
-        execution_start_to_close_timeout = None
-
-        # Setting timeout to 23 hours temporarily during article resupply
-        execution_start_to_close_timeout = str(60 * 60* 23)
-        input = None
-
-        if (workflow == 'HEFCE'
-                or workflow == 'Cengage'
-                or workflow == 'Scopus'
-                or workflow == 'WoS'
-                or workflow == 'GoOA'
-                or workflow == 'CNPIEC'
-                or workflow == 'CNKI'
-                or workflow == 'CLOCKSS'):
-            workflow_id = "FTPArticle_" + workflow + "_" + str(doi_id)
-
-        # workflow_id as set above
-        workflow_id = workflow_id
-        workflow_name = "FTPArticle"
-        workflow_version = "1"
+        workflow_params = default_workflow_params(self.settings)
+        workflow_params["workflow_id"] = "%s_%s_%s" % (self.name, workflow, doi_id)
+        workflow_params["workflow_name"] = self.name
+        workflow_params["workflow_version"] = "1"
+        workflow_params["execution_start_to_close_timeout"] = str(60 * 60 * 23)
 
         data = {}
-        data['workflow'] = workflow
-        data['elife_id'] = doi_id
+        data["workflow"] = workflow
+        data["elife_id"] = doi_id
 
-        input_json = {}
-        input_json['data'] = data
+        info = {
+            "data": data,
+        }
 
-        input = json.dumps(input_json)
+        workflow_params["input"] = json.dumps(info, default=lambda ob: None)
+        return workflow_params
 
-        return (workflow_id, workflow_name, workflow_version, child_policy,
-                execution_start_to_close_timeout, input)
+    def start(self, settings, workflow=None, doi_id=None):
+        """method for backwards compatibility"""
+        self.settings = settings
+        self.instantiate_logger()
+        self.start_workflow(
+            workflow,
+            doi_id,
+        )
+
+    def start_workflow(self, workflow=None, doi_id=None):
+
+        workflow_params = self.get_workflow_params(workflow, doi_id)
+
+        self.start_workflow_execution(workflow_params)
 
 
 if __name__ == "__main__":
 
-    doi_id = None
-    workflow = None
+    ENV, DOI_ID, WORKFLOW = utils.console_start_env_workflow_doi_id()
+    SETTINGS = utils.get_settings(ENV)
 
-    # Add options
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, either dev or live")
-    parser.add_option("-w", "--workflow-name", default=None, action="store", type="string",
-                      dest="workflow", help="specify the workflow name to start")
-    parser.add_option("-d", "--doi-id", default=None, action="store", type="string",
-                      dest="doi_id", help="specify the DOI id of a single article")
+    STARTER = starter_FTPArticle(SETTINGS)
 
-    (options, args) = parser.parse_args()
-    if options.env:
-        ENV = options.env
-    if options.workflow:
-        workflow = options.workflow
-    if options.doi_id:
-        doi_id = options.doi_id
-
-    import settings as settingsLib
-    settings = settingsLib.get_settings(ENV)
-
-    o = starter_FTPArticle()
-
-    o.start(settings=settings, workflow=workflow, doi_id=doi_id)
+    STARTER.start_workflow(workflow=WORKFLOW, doi_id=DOI_ID)

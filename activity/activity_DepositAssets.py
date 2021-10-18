@@ -2,7 +2,7 @@ from boto.s3.connection import S3Connection
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from mimetypes import guess_type
-from provider import article_structure
+from provider import article_structure, utils
 from activity.objects import Activity
 
 """
@@ -62,7 +62,7 @@ class activity_DepositAssets(Activity):
 
             for file_name in other_assets:
                 orig_resource = storage_provider + expanded_folder_bucket + "/" + expanded_folder_name + "/"
-                dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/"
+                dest_resource = storage_provider + cdn_bucket_name + "/" + utils.pad_msid(article_id) + "/"
 
                 storage.copy_resource(orig_resource + file_name, dest_resource + file_name)
 

@@ -8,7 +8,7 @@ def file_resource_origin(storage_provider, filename, bucket_name, bucket_folder)
         return None
     storage_provider_prefix = storage_provider + "://"
     orig_resource = storage_provider_prefix + bucket_name + "/" + bucket_folder
-    return orig_resource + '/' + filename
+    return orig_resource.rstrip("/") + "/" + filename
 
 
 def download_file(storage, filename, resource_origin, to_dir):

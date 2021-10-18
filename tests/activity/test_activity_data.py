@@ -9,7 +9,7 @@ bucket_dest_file_name = "test_dest.json"
 
 session_example = {
             'version': '1',
-            'article_id': '00353',
+            'article_id': '353',
             'run': 'cf9c7e86-7355-4bb4-b48e-0bc284221251',
             'expanded_folder': '00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251',
             'update_date': '2012-12-13T00:00:00Z',
@@ -22,7 +22,7 @@ data_example_before_publish = {
             "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
             "expanded_folder": "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251",
             "version": "1",
-            "article_id": "00353",
+            "article_id": "353",
             'file_name': 'elife-00353-vor-v1.zip',
             'filename_last_element': 'elife-00353-vor-r1.zip'}
 
@@ -53,7 +53,7 @@ ExpandArticle_data_invalid_status = {u'event_time': u'2016-06-07T10:45:18.141126
 
 ExpandArticle_data_invalid_status1_session_example = {
             'version': '1',
-            'article_id': '00353',
+            'article_id': '353',
             'run': '1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'expanded_folder': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'update_date': '2012-12-13T00:00:00Z',
@@ -62,13 +62,49 @@ ExpandArticle_data_invalid_status1_session_example = {
         }
 ExpandArticle_data_invalid_status2_session_example = {
             'version': '1',
-            'article_id': '00353',
+            'article_id': '353',
             'run': '1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'expanded_folder': '00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
             'update_date': '2012-12-13T00:00:00Z',
             'file_name': 'elife-00353-vor-v1.zip',
             'filename_last_element': 'elife-00353-v1-20121213000000.zip'
         }
+
+
+SoftwareHeritageDeposit_data_example = {
+    "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
+    "article_id": "30274",
+    "version": "1",
+    "workflow": "software_heritage",
+    "recipient": "software_heritage",
+    "input_file": "https://hub.stenci.la/api/projects/518/snapshots/15/archive",
+    "data": {
+        "display": "https://elife.stencila.io/article-30274/v99/",
+    }
+}
+
+
+SoftwareHeritageDeposit_session_example = {
+    "article_id": "30274",
+    "version": "1",
+    "workflow": "software_heritage",
+    "recipient": "software_heritage",
+    "input_file": "https://hub.stenci.la/api/projects/518/snapshots/15/archive",
+    "create_origin_url": "https://elife.stencila.io/article-30274/",
+    "bucket_resource": (
+        "software_heritage/run/"
+        "cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-30274-v1-era.zip"
+    ),
+    "bucket_metadata_resource": (
+        "software_heritage/run/"
+        "cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-30274-v1-era.xml"
+    ),
+    "bucket_readme_resource": (
+        "software_heritage/run/"
+        "cf9c7e86-7355-4bb4-b48e-0bc284221251/README.md"
+    ),
+}
+
 
 lax_article_versions_response_data = {u'1':
                                           {u'rev4_decision': None, u'date_initial_decision': u'2015-05-06',
@@ -131,7 +167,7 @@ glencoe_metadata = \
         "jpg_href": "http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.jpg",
         "duration": 43.159999999999997,
         "mp4_href": "http://static-movie-usa.glencoesoftware.com/mp4/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media2.mp4",
-        "legend": "<div class=\"caption\"><h3 class=\"title\">Effects of a highly-focused laser spot on directional motility in <i>Synechocystis.<\/i><\/h3><p>Cells are imaged by fluorescence from the photosynthetic pigments, and are moving towards an oblique LED light at the bottom of the frame: note the focused light spot at the rear edge of each cell. The superimposed red spot indicates the position of the laser, and time in min is shown at the top left.&#160;LED, light emitting diode.<\/p><p><b>DOI:<\/b> <a href=\"10.7554/eLife.12620.008\">http://dx.doi.org/10.7554/eLife.12620.008<\/a><\/p><\/div>", "size": 2578518},
+        "legend": r"<div class=\"caption\"><h3 class=\"title\">Effects of a highly-focused laser spot on directional motility in <i>Synechocystis.<\/i><\/h3><p>Cells are imaged by fluorescence from the photosynthetic pigments, and are moving towards an oblique LED light at the bottom of the frame: note the focused light spot at the rear edge of each cell. The superimposed red spot indicates the position of the laser, and time in min is shown at the top left.&#160;LED, light emitting diode.<\/p><p><b>DOI:<\/b> <a href=\"10.7554/eLife.12620.008\">http://dx.doi.org/10.7554/eLife.12620.008<\/a><\/p><\/div>", "size": 2578518},
      "media1": {
          "source_href": "http://static-movie-usa.glencoesoftware.com/source/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.mp4",
          "doi": "10.7554/eLife.12620.004",
@@ -146,7 +182,7 @@ glencoe_metadata = \
          "webm_href": "http://static-movie-usa.glencoesoftware.com/webm/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.webm",
          "jpg_href": "http://static-movie-usa.glencoesoftware.com/jpg/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.jpg",
          "duration": 89.400000000000006, "mp4_href": "http://static-movie-usa.glencoesoftware.com/mp4/10.7554/114/1245b554bd5cbda4fa4beeba806e659f0624128e/elife-12620-media1.mp4",
-         "legend": "<div class=\"caption\"><h3 class=\"title\">Motility of <i>Synechocystis<\/i> cells under different illumination regimes.<\/h3><p>The video gives a schematic overview of the experimental set-up, followed by movement of cells in a projected light gradient, and with oblique illumination from two orthogonal directions, and then from both directions simultaneously. In each case, the raw video data is followed by the same movie clip with the tracks of cells superimposed. Time in minutes is indicated.<\/p><p><b>DOI:<\/b> <a href=\"10.7554/eLife.12620.004\">http://dx.doi.org/10.7554/eLife.12620.004<\/a><\/p><\/div>",
+         "legend": r"<div class=\"caption\"><h3 class=\"title\">Motility of <i>Synechocystis<\/i> cells under different illumination regimes.<\/h3><p>The video gives a schematic overview of the experimental set-up, followed by movement of cells in a projected light gradient, and with oblique illumination from two orthogonal directions, and then from both directions simultaneously. In each case, the raw video data is followed by the same movie clip with the tracks of cells superimposed. Time in minutes is indicated.<\/p><p><b>DOI:<\/b> <a href=\"10.7554/eLife.12620.004\">http://dx.doi.org/10.7554/eLife.12620.004<\/a><\/p><\/div>",
          "size": 21300934}}
 
 cdn_folder_files = ["elife-12620-fig1-v1-1022w.jpg",

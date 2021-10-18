@@ -1,3 +1,4 @@
+import email
 import os
 import shutil
 from digestparser.objects import Digest, Image
@@ -28,8 +29,9 @@ def delete_files_in_folder(folder, filter_out=[]):
 def delete_directories_in_folder(folder):
     folder_list = os.listdir(folder)
     for dir in folder_list:
-        if os.path.isdir(dir):
-            delete_folder(dir, True)
+        dir_path = os.path.join(folder, dir)
+        if os.path.isdir(dir_path):
+            delete_folder(dir_path, True)
 
 
 def delete_everything_in_folder(self, folder):
@@ -69,3 +71,13 @@ def create_digest_image(caption=None, file_name=None):
     if file_name:
         digest_image.file = file_name
     return digest_image
+
+
+def body_from_multipart_email_string(email_string):
+    """Given a multipart email string, convert to Message and return decoded body"""
+    body = None
+    email_message = email.message_from_string(email_string)
+    if email_message.is_multipart():
+        for payload in email_message.get_payload():
+            body = payload.get_payload(decode=True)
+    return body

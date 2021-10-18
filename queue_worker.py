@@ -1,23 +1,25 @@
 import time
 import json
-from provider import process, utils
-from S3utility.s3_notification_info import S3NotificationInfo
-from S3utility.s3_sqs_message import S3SQSMessage
-import boto.sqs
-from boto.sqs.message import Message
-import log
 import os
 import yaml
 import re
 import newrelic.agent
+import boto.sqs
+from boto.sqs.message import Message
+from provider import process, utils
+import log
+from S3utility.s3_notification_info import S3NotificationInfo
+from S3utility.s3_sqs_message import S3SQSMessage
 
 
 """
 Amazon SQS worker
 """
 
+
 class QueueWorker:
-    def __init__(self, settings, logger=None):
+    def __init__(self, settings, logger=None, identity="queue_worker"):
+        self.identity = identity
         self.settings = settings
         if logger:
             self.logger = logger
@@ -25,11 +27,13 @@ class QueueWorker:
             self.create_log()
         self.conn = None
         self.sleep_seconds = 10
+        self.input_queue_name = self.settings.S3_monitor_queue
+        self.output_queue_name = self.settings.workflow_starter_queue
 
     def create_log(self):
         # Log
-        identity = "queue_worker_%s" % os.getpid()
-        log_file = "queue_worker.log"
+        identity = "%s_%s" % (self.identity, os.getpid())
+        log_file = "%s.log" % self.identity
         # logFile = None
         self.logger = log.logger(log_file, self.settings.setLevel, identity)
 
@@ -39,14 +43,15 @@ class QueueWorker:
             self.conn = boto.sqs.connect_to_region(
                 self.settings.sqs_region,
                 aws_access_key_id=self.settings.aws_access_key_id,
-                aws_secret_access_key=self.settings.aws_secret_access_key)
+                aws_secret_access_key=self.settings.aws_secret_access_key,
+            )
 
     def queues(self):
         "get the queues"
         self.connect()
-        queue = self.conn.get_queue(self.settings.S3_monitor_queue)
+        queue = self.conn.get_queue(self.input_queue_name)
         queue.set_message_class(S3SQSMessage)
-        out_queue = self.conn.get_queue(self.settings.workflow_starter_queue)
+        out_queue = self.conn.get_queue(self.output_queue_name)
         return queue, out_queue
 
     def work(self, flag):
@@ -55,36 +60,43 @@ class QueueWorker:
         # Simple connect to the queues
         queue, out_queue = self.queues()
 
-        rules = self.load_rules()
+        rules = load_rules()
         application = newrelic.agent.application()
 
         # Poll for an activity task indefinitely
         if queue is not None:
             while flag.green():
 
-                self.logger.info('reading message')
+                self.logger.info("reading message")
                 queue_message = queue.read(30)
                 # TODO : check for more-than-once delivery
                 # ( Dynamo conditional write? http://tinyurl.com/of3tmop )
 
                 if queue_message is None:
-                    self.logger.info('no messages available')
+                    self.logger.info("no messages available")
                 else:
-                    with newrelic.agent.BackgroundTask(application, name=queue_message.notification_type, group='queue_worker.py'):
-                        self.logger.info('got message id: %s' % queue_message.id)
-                        if queue_message.notification_type == 'S3Event':
+                    with newrelic.agent.BackgroundTask(
+                        application,
+                        name=queue_message.notification_type,
+                        group="%s.py" % self.identity,
+                    ):
+                        self.logger.info("got message id: %s" % queue_message.id)
+                        if queue_message.notification_type == "S3Event":
                             info = S3NotificationInfo.from_S3SQSMessage(queue_message)
                             self.logger.info("S3NotificationInfo: %s", info.to_dict())
-                            workflow_name = self.get_starter_name(rules, info)
+                            workflow_name = get_starter_name(rules, info)
                             if workflow_name is None:
-                                self.logger.error("Could not handle file %s in bucket %s" % (info.file_name, info.bucket_name))
+                                self.logger.error(
+                                    "Could not handle file %s in bucket %s"
+                                    % (info.file_name, info.bucket_name)
+                                )
                             else:
                                 # build message
                                 message = {
-                                    'workflow_name': workflow_name,
-                                    'workflow_data': info.to_dict()
+                                    "workflow_name": workflow_name,
+                                    "workflow_data": info.to_dict(),
                                 }
-    
+
                                 # send workflow initiation message
                                 m = Message()
                                 m.set_body(json.dumps(message))
@@ -102,21 +114,22 @@ class QueueWorker:
             self.logger.info("graceful shutdown")
 
         else:
-            self.logger.error('error obtaining queue')
+            self.logger.error("error obtaining queue")
 
 
-    def load_rules(self):
-        # load the rules from the YAML file
-        with open('newFileWorkflows.yaml', 'r') as open_file:
-            return yaml.load(open_file.read())
+def load_rules():
+    # load the rules from the YAML file
+    with open("newFileWorkflows.yaml", "r") as open_file:
+        return yaml.load(open_file.read(), Loader=yaml.FullLoader)
 
 
-    def get_starter_name(self, rules, info):
-        for rule_name in rules:
-            rule = rules[rule_name]
-            if re.match(rule['bucket_name_pattern'], info.bucket_name) and \
-                    re.match(rule['file_name_pattern'], info.file_name):
-                return rule['starter_name']
+def get_starter_name(rules, info):
+    for rule_name in rules:
+        rule = rules[rule_name]
+        if re.match(rule["bucket_name_pattern"], info.bucket_name) and re.match(
+            rule["file_name_pattern"], info.file_name
+        ):
+            return rule["starter_name"]
 
 
 if __name__ == "__main__":

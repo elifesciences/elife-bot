@@ -17,7 +17,7 @@ class TestVerifyLaxResponse(unittest.TestCase):
 
     @data({
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "article_id": "00353",
+            "article_id": "353",
             "result": "ingested",
             "status": "vor",
             "version": "1",
@@ -48,7 +48,7 @@ class TestVerifyLaxResponse(unittest.TestCase):
 
     @data({
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "article_id": "00353",
+            "article_id": "353",
             "result": "ingested",
             "status": "vor",
             "version": "1",
@@ -79,7 +79,7 @@ class TestVerifyLaxResponse(unittest.TestCase):
 
     @data({
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "article_id": "00353",
+            "article_id": "353",
             "result": "error",
             "status": "vor",
             "version": "1",
@@ -107,7 +107,7 @@ class TestVerifyLaxResponse(unittest.TestCase):
 
     @data({
             "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-            "article_id": "00353",
+            "article_id": "353",
             "result": "error",
             "status": "poa",
             "version": "1",

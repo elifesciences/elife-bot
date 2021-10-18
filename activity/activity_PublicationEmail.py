@@ -1,24 +1,29 @@
 import json
 import time
 import os
-import re
-import arrow
+import glob
 from collections import OrderedDict
-from provider import ejp, email_provider, lax_provider, templates, utils
+from provider import (
+    ejp,
+    email_provider,
+    lax_provider,
+    outbox_provider,
+    templates,
+    utils,
+)
 import provider.article as articlelib
-from provider.storage_provider import storage_context
 from activity.objects import Activity
 
 
 # Article types for which not to send emails
-ARTICLE_TYPES_DO_NOT_SEND = ['editorial', 'correction', 'retraction']
+ARTICLE_TYPES_DO_NOT_SEND = ["editorial", "correction", "retraction"]
 
 
 class activity_PublicationEmail(Activity):
-
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_PublicationEmail, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "PublicationEmail"
         self.version = "1"
@@ -40,14 +45,14 @@ class activity_PublicationEmail(Activity):
         self.insight_articles_to_remove_from_outbox = []
         self.articles_do_not_remove_from_outbox = []
 
-        self.admin_email_content = ''
+        self.admin_email_content = ""
 
     def do_activity(self, data=None):
         """
         PublicationEmail activity, do the work
         """
 
-        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         try:
             # Download templates
@@ -60,15 +65,29 @@ class activity_PublicationEmail(Activity):
 
         try:
             # Download the article XML from S3 and parse them
-            article_xml_filenames = self.download_files_from_s3_outbox()
+            outbox_s3_key_names = outbox_provider.get_outbox_s3_key_names(
+                self.settings, self.publish_bucket, self.outbox_folder
+            )
+            outbox_provider.download_files_from_s3_outbox(
+                self.settings,
+                self.publish_bucket,
+                outbox_s3_key_names,
+                self.get_tmp_dir(),
+                self.logger,
+            )
+            article_xml_filenames = glob.glob(self.get_tmp_dir() + "/*.xml")
         except Exception:
             self.logger.exception("Failed to download files from the S3 outbox")
             return self.ACTIVITY_PERMANENT_FAILURE
 
         try:
-            approved, prepared, xml_file_to_doi_map = self.process_articles(article_xml_filenames)
+            approved, prepared, xml_file_to_doi_map = self.process_articles(
+                article_xml_filenames
+            )
         except Exception:
-            self.logger.exception("Failed to parse, approve, and prepare all the articles")
+            self.logger.exception(
+                "Failed to parse, approve, and prepare all the articles"
+            )
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # return now if no articles are approved and prepared
@@ -81,7 +100,24 @@ class activity_PublicationEmail(Activity):
             self.send_emails_for_articles(prepared)
 
             # Clean the outbox
-            self.clean_outbox(prepared, xml_file_to_doi_map)
+            published_file_names = s3_key_names_to_clean(
+                self.outbox_folder,
+                prepared,
+                xml_file_to_doi_map,
+                self.articles_do_not_remove_from_outbox,
+                self.insight_articles_to_remove_from_outbox,
+            )
+            date_stamp = utils.set_datestamp()
+            to_folder = outbox_provider.get_to_folder_name(
+                self.published_folder, date_stamp
+            )
+            outbox_provider.clean_outbox(
+                self.settings,
+                self.publish_bucket,
+                self.outbox_folder,
+                to_folder,
+                published_file_names,
+            )
 
             # Send email to admins with the status
             self.send_admin_email(True)
@@ -91,8 +127,11 @@ class activity_PublicationEmail(Activity):
         return True
 
     def log_cannot_find_authors(self, doi):
-        log_info = ("Leaving article in the outbox because we cannot " +
-                    "find its authors: " + doi)
+        log_info = (
+            "Leaving article in the outbox because we cannot "
+            + "find its authors: "
+            + doi
+        )
         self.admin_email_content += "\n" + log_info
         self.logger.info(log_info)
         # Make a note of this and we will not remove from the outbox, save for a later day
@@ -106,8 +145,7 @@ class activity_PublicationEmail(Activity):
 
         log_info = "Total parsed articles: " + str(len(articles))
         log_info += "\n" + "Total approved articles: " + str(len(approved))
-        log_info += (
-            "\n" + "Total prepared articles: " + str(len(prepared)))
+        log_info += "\n" + "Total prepared articles: " + str(len(prepared))
         self.admin_email_content += "\n" + log_info
         self.logger.info(log_info)
 
@@ -134,8 +172,12 @@ class activity_PublicationEmail(Activity):
             self.logger.info(article.doi + " is type " + article.article_type)
             if is_insight_article(article):
                 self.set_related_article(
-                    article, articles, related_articles, article_non_insight_doi_list,
-                    remove_article_doi)
+                    article,
+                    articles,
+                    related_articles,
+                    article_non_insight_doi_list,
+                    remove_article_doi,
+                )
 
         # Can remove articles now if required
         for article in articles:
@@ -144,12 +186,22 @@ class activity_PublicationEmail(Activity):
 
         return prepared_articles
 
-    def set_related_article(self, article, articles, related_articles,
-                            article_non_insight_doi_list, remove_article_doi):
+    def set_related_article(
+        self,
+        article,
+        articles,
+        related_articles,
+        article_non_insight_doi_list,
+        remove_article_doi,
+    ):
         """set the related article for an insight article"""
         was_set = set_related_article_internal(
-            article, articles, article_non_insight_doi_list, self.logger,
-            self.admin_email_content)
+            article,
+            articles,
+            article_non_insight_doi_list,
+            self.logger,
+            self.admin_email_content,
+        )
         if was_set:
             # remove this insight from the list to send
             remove_article_doi.append(article.doi)
@@ -159,42 +211,19 @@ class activity_PublicationEmail(Activity):
             # If related article not set from internal sources, set from external source
             self.logger.info("No internal article match on " + article.doi)
             was_set = set_related_article_external(
-                self.settings, self.get_tmp_dir(), article, related_articles,
-                self.logger, self.admin_email_content)
+                self.settings,
+                self.get_tmp_dir(),
+                article,
+                related_articles,
+                self.logger,
+                self.admin_email_content,
+            )
         # finally if we count not set the value
         if not was_set:
             log_info = "Could not build the article related to insight " + article.doi
             self.admin_email_content += "\n" + log_info
             self.logger.info(log_info)
             remove_article_doi.append(article.doi)
-
-    def download_files_from_s3_outbox(self):
-        """
-        From the outbox folder in the S3 bucket,
-        download the .xml to be processed
-        """
-        filenames = []
-        bucket_name = self.publish_bucket
-
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-        orig_resource = storage_provider + bucket_name + "/" + self.outbox_folder
-        files_in_bucket = storage.list_resources(orig_resource.rstrip("/"))
-
-        for name in files_in_bucket:
-            # Download objects from S3 and save to disk
-            # Only need to copy .xml files
-            if not re.search(".*\\.xml$", name):
-                continue
-            filename = name.split("/")[-1]
-            dirname = self.get_tmp_dir()
-            if dirname:
-                filename_plus_path = dirname + os.sep + filename
-                with open(filename_plus_path, 'wb') as open_file:
-                    storage_resource_origin = orig_resource + name
-                    storage.get_resource_to_file(storage_resource_origin, open_file)
-                filenames.append(filename_plus_path)
-        return filenames
 
     def parse_article_xml(self, article_xml_filenames):
         """
@@ -210,7 +239,8 @@ class activity_PublicationEmail(Activity):
             article = articlelib.create_article(self.settings, self.get_tmp_dir)
             article.parse_article_file(article_xml_filename)
             article.pdf_cover_link = article.get_pdf_cover_page(
-                article.doi_id, self.settings, self.logger)
+                article.doi_id, self.settings, self.logger
+            )
             log_info = "Parsed " + article.doi_url
             self.admin_email_content += "\n" + log_info
             self.logger.info(log_info)
@@ -224,22 +254,22 @@ class activity_PublicationEmail(Activity):
 
     def download_templates(self):
         """
-        Download the email templates from s3
+        Download the email templates
         """
 
         # Prepare email templates
-        self.templates.download_email_templates_from_s3()
+        self.templates.copy_email_templates(self.settings.email_templates_path)
         if self.templates.email_templates_warmed is not True:
-            log_info = 'PublicationEmail email templates did not warm successfully'
+            log_info = "PublicationEmail email templates did not warm successfully"
             self.admin_email_content += "\n" + log_info
             self.logger.info(log_info)
             # Stop now! Return False if we do not have the necessary files
             return False
-        else:
-            log_info = 'PublicationEmail email templates warmed'
-            self.admin_email_content += "\n" + log_info
-            self.logger.info(log_info)
-            return True
+
+        log_info = "PublicationEmail email templates warmed"
+        self.admin_email_content += "\n" + log_info
+        self.logger.info(log_info)
+        return True
 
     def approve_articles(self, articles):
         """
@@ -263,7 +293,9 @@ class activity_PublicationEmail(Activity):
         for article in articles:
             if article.doi not in remove_article_doi:
                 # Set whether the DOI was ever POA
-                article.was_ever_poa = lax_provider.was_ever_poa(article.doi_id, self.settings)
+                article.was_ever_poa = lax_provider.was_ever_poa(
+                    article.doi_id, self.settings
+                )
                 approved_articles.append(article)
 
         return approved_articles
@@ -277,8 +309,8 @@ class activity_PublicationEmail(Activity):
                 article_type=article.article_type,
                 is_poa=article.is_poa,
                 was_ever_poa=article.was_ever_poa,
-                feature_article=is_feature_article(article)
-                )
+                feature_article=is_feature_article(article),
+            )
 
             # Get the article author data
             authors = self.article_authors_by_article_type(article)
@@ -289,7 +321,8 @@ class activity_PublicationEmail(Activity):
                 article_type=article.article_type,
                 feature_article=is_feature_article(article),
                 related_insight_article=article.related_insight_article,
-                features_email=self.settings.features_publication_recipient_email)
+                features_email=self.settings.features_publication_recipient_email,
+            )
 
             if not recipient_authors:
                 self.log_cannot_find_authors(article.doi)
@@ -297,7 +330,13 @@ class activity_PublicationEmail(Activity):
                 # Good, we can send emails
                 for recipient_author in recipient_authors:
                     result = self.send_email(
-                        email_type, article.doi_id, recipient_author, article, authors)
+                        email_type,
+                        article.doi_id,
+                        recipient_author,
+                        article,
+                        authors,
+                        self.settings.ses_bcc_recipient_email,
+                    )
                     if result is False:
                         self.log_cannot_find_authors(article.doi)
 
@@ -306,7 +345,9 @@ class activity_PublicationEmail(Activity):
         authors = None
         doi_id = None
         source_article = None
-        if is_insight_article(article) and hasattr(article.related_insight_article, "doi_id"):
+        if is_insight_article(article) and hasattr(
+            article.related_insight_article, "doi_id"
+        ):
             # use related article to populate authors
             doi_id = article.related_insight_article.doi_id
             source_article = article.related_insight_article
@@ -340,19 +381,24 @@ class activity_PublicationEmail(Activity):
         list_one_email_list = []
         if list_one:
             merged_list = list_one
-            list_one_email_list = [recipient.get('e_mail') for recipient in list_one]
+            list_one_email_list = [recipient.get("e_mail") for recipient in list_one]
 
         if list_two:
             # add values from list_two to list_one
             for recipient in list_two:
-                if recipient.get('e_mail') and recipient.get('e_mail') not in list_one_email_list:
+                if (
+                    recipient.get("e_mail")
+                    and recipient.get("e_mail") not in list_one_email_list
+                ):
                     self.admin_email_content += (
-                        '\nAdding %s from additional recipient list' % recipient.get('e_mail'))
+                        "\nAdding %s from additional recipient list"
+                        % recipient.get("e_mail")
+                    )
                     merged_list.append(recipient)
 
         return merged_list
 
-    def send_email(self, email_type, elife_id, author, article, authors):
+    def send_email(self, email_type, elife_id, author, article, authors, bcc=None):
         """
         Given the email type and author,
         send the email
@@ -360,23 +406,22 @@ class activity_PublicationEmail(Activity):
 
         if author is None:
             return False
-        if not author.get('e_mail') or str(author.get('e_mail')).strip() == "":
+        if not author.get("e_mail") or str(author.get("e_mail")).strip() == "":
             return False
 
         # First process the headers
         try:
             headers = self.templates.get_email_headers(
-                email_type=email_type,
-                author=author,
-                article=article,
-                format="html")
+                email_type=email_type, author=author, article=article, format="html"
+            )
         except:
             headers = None
 
         if not headers:
             log_info = (
-                'Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s' %
-                (str(elife_id), str(email_type), str(author.get('e_mail'))))
+                "Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s"
+                % (str(elife_id), str(email_type), str(author.get("e_mail")))
+            )
             self.admin_email_content += "\n" + log_info
             return False
 
@@ -384,9 +429,15 @@ class activity_PublicationEmail(Activity):
             # Now we can actually queue the email to be sent
 
             # Queue the email
-            log_info = ("Sending " + email_type + " type email" +
-                        " for article " + str(elife_id) +
-                        " to recipient_email " + str(author.get('e_mail')))
+            log_info = (
+                "Sending "
+                + email_type
+                + " type email"
+                + " for article "
+                + str(elife_id)
+                + " to recipient_email "
+                + str(author.get("e_mail"))
+            )
             self.admin_email_content += "\n" + log_info
             self.logger.info(log_info)
 
@@ -397,14 +448,25 @@ class activity_PublicationEmail(Activity):
                 article=article,
                 authors=authors,
                 doi_id=elife_id,
-                subtype="html")
+                subtype="html",
+                bcc=bcc,
+            )
 
             return True
         except Exception:
             self.logger.exception("An error has occurred on send_email method")
 
-    def send_author_email(self, email_type, author, headers, article, authors, doi_id,
-                          subtype="html"):
+    def send_author_email(
+        self,
+        email_type,
+        author,
+        headers,
+        article,
+        authors,
+        doi_id,
+        subtype="html",
+        bcc=None,
+    ):
         """
         Format the email body and send the email by SMTP
         Only call this to send actual emails!
@@ -414,54 +476,27 @@ class activity_PublicationEmail(Activity):
             author=author,
             article=article,
             authors=authors,
-            format=subtype)
+            format=subtype,
+        )
 
         message = email_provider.simple_message(
-            headers["sender_email"], str(author.get('e_mail')), headers["subject"], body,
-            subtype=headers["format"], logger=self.logger)
+            headers["sender_email"],
+            str(author.get("e_mail")),
+            headers["subject"],
+            body,
+            subtype=headers["format"],
+            logger=self.logger,
+        )
 
         email_provider.smtp_send_messages(
-            self.settings, messages=[message], logger=self.logger)
-        self.logger.info('Email sending details: article %s, email %s, to %s' %
-                         (doi_id, headers["email_type"], str(author.get('e_mail'))))
+            self.settings, messages=[message], logger=self.logger, bcc=bcc
+        )
+        self.logger.info(
+            "Email sending details: article %s, email %s, to %s"
+            % (doi_id, headers["email_type"], str(author.get("e_mail")))
+        )
 
         return True
-
-    def clean_outbox(self, prepared, xml_file_to_doi_map):
-        """
-        Clean out the S3 outbox folder
-        """
-
-        to_folder = get_to_folder_name(self.published_folder)
-
-        # Move only the published files from the S3 outbox to the published folder
-        bucket_name = self.publish_bucket
-
-        s3_key_names = s3_key_names_to_clean(
-            self.outbox_folder,
-            prepared,
-            xml_file_to_doi_map,
-            self.articles_do_not_remove_from_outbox,
-            self.insight_articles_to_remove_from_outbox)
-
-        storage = storage_context(self.settings)
-        storage_provider = self.settings.storage_provider + "://"
-
-        for name in s3_key_names:
-            # Do not delete the from_folder itself, if it is in the list
-            if name == self.outbox_folder:
-                continue
-            filename = name.split("/")[-1]
-            new_s3_key_name = to_folder + filename
-
-            orig_resource = storage_provider + bucket_name + "/" + name
-            dest_resource = storage_provider + bucket_name + "/" + new_s3_key_name
-
-            # First copy
-            storage.copy_resource(orig_resource, dest_resource)
-
-            # Then delete the old key if successful
-            storage.delete_resource(orig_resource)
 
     def get_authors(self, doi_id=None, corresponding=None, local_document=None):
         """
@@ -474,7 +509,8 @@ class activity_PublicationEmail(Activity):
         ejp_object = ejp.EJP(self.settings, self.get_tmp_dir())
 
         (column_headings, authors) = ejp_object.get_authors(
-            doi_id=doi_id, corresponding=corresponding, local_document=local_document)
+            doi_id=doi_id, corresponding=corresponding, local_document=local_document
+        )
 
         # Authors will be none if there is not data
         if authors is None:
@@ -505,15 +541,21 @@ class activity_PublicationEmail(Activity):
         # conn.verify_email_address(self.settings.ses_sender_email)
 
         current_time = time.gmtime()
-        date_format = '%Y-%m-%d %H:%M'
+        date_format = "%Y-%m-%d %H:%M"
         datetime_string = time.strftime(date_format, current_time)
         activity_status_text = utils.get_activity_status_text(activity_status)
 
-        body = get_admin_email_body_head(self.name, activity_status_text, self.admin_email_content)
+        body = email_provider.get_email_body_head(self.name, activity_status_text, {})
+        body += "\nDetails:\n\n%s\n" % self.admin_email_content
         body += email_provider.get_admin_email_body_foot(
-            self.get_activityId(), self.get_workflowId(), datetime_string, self.settings.domain)
-        subject = get_admin_email_subject(
-            datetime_string, activity_status_text, self.name, self.settings.domain)
+            self.get_activityId(),
+            self.get_workflowId(),
+            datetime_string,
+            self.settings.domain,
+        )
+        subject = email_provider.get_email_subject(
+            datetime_string, activity_status_text, self.name, self.settings.domain, None
+        )
         sender_email = self.settings.ses_poa_sender_email
 
         recipient_email_list = []
@@ -527,19 +569,26 @@ class activity_PublicationEmail(Activity):
         for email in recipient_email_list:
             # Add the email to the email queue
             message = email_provider.simple_message(
-                sender_email, email, subject, body, logger=self.logger)
+                sender_email, email, subject, body, logger=self.logger
+            )
 
             email_provider.smtp_send_messages(
-                self.settings, messages=[message], logger=self.logger)
-            self.logger.info('Email sending details: admin email, email %s, to %s' %
-                             ("PublicationEmail", email))
+                self.settings, messages=[message], logger=self.logger
+            )
+            self.logger.info(
+                "Email sending details: admin email, email %s, to %s"
+                % ("PublicationEmail", email)
+            )
 
         return True
 
 
 def is_insight_article(article):
     """is an article object an insight article"""
-    if hasattr(article, "article_type") and article.article_type == "article-commentary":
+    if (
+        hasattr(article, "article_type")
+        and article.article_type == "article-commentary"
+    ):
         return True
     return False
 
@@ -561,8 +610,9 @@ def get_non_insight_doi_list(articles, logger):
     return article_non_insight_doi_list
 
 
-def set_related_article_internal(article, articles, non_insight_doi_list,
-                                 logger, admin_email_content):
+def set_related_article_internal(
+    article, articles, non_insight_doi_list, logger, admin_email_content
+):
     """for insight article, set the related_article property from an article in the outbox"""
     # Set the related article of an insight article only if its related research article is
     #  in the list of non_insight_doi_list (from the outbox)
@@ -574,8 +624,9 @@ def set_related_article_internal(article, articles, non_insight_doi_list,
         # Set the relation on the research article to its insight article
         for research_article in articles:
             if research_article.doi == related_article_doi:
-                log_info = ("Setting match on " + related_article_doi +
-                            " to " + article.doi)
+                log_info = (
+                    "Setting match on " + related_article_doi + " to " + article.doi
+                )
                 admin_email_content += "\n" + log_info
                 logger.info(log_info)
                 research_article.set_related_insight_article(article)
@@ -584,21 +635,29 @@ def set_related_article_internal(article, articles, non_insight_doi_list,
     return None
 
 
-def set_related_article_external(settings, tmp_dir, article, related_articles,
-                                 logger, admin_email_content):
+def set_related_article_external(
+    settings, tmp_dir, article, related_articles, logger, admin_email_content
+):
     """for insight article, set the related_article property getting it from the big bucket"""
     related_article_doi = article.get_article_related_insight_doi()
     if related_article_doi:
         related_article = get_related_article(
-            settings, tmp_dir, related_article_doi,
-            related_articles, logger, admin_email_content)
+            settings,
+            tmp_dir,
+            related_article_doi,
+            related_articles,
+            logger,
+            admin_email_content,
+        )
         if related_article:
             article.set_related_insight_article(related_article)
             return True
     return None
 
 
-def s3_key_names_to_clean(outbox_folder, prepared, xml_file_to_doi_map, do_not_remove, do_remove):
+def s3_key_names_to_clean(
+    outbox_folder, prepared, xml_file_to_doi_map, do_not_remove, do_remove
+):
     """compile a list of S3 key names to clean from the outbox folder"""
 
     # Compile a list of the published file names
@@ -606,15 +665,16 @@ def s3_key_names_to_clean(outbox_folder, prepared, xml_file_to_doi_map, do_not_r
     remove_doi_list = []
     processed_file_names = []
     for article in prepared:
-        if article.doi not in do_not_remove:
+        if article and article.doi not in do_not_remove:
             remove_doi_list.append(article.doi)
 
     for article in do_remove:
         remove_doi_list.append(article.doi)
 
-    for key, value in list(xml_file_to_doi_map.items()):
-        if key in remove_doi_list:
-            processed_file_names.append(value)
+    if xml_file_to_doi_map:
+        for key, value in list(xml_file_to_doi_map.items()):
+            if key in remove_doi_list:
+                processed_file_names.append(value)
 
     for name in processed_file_names:
         filename = name.split(os.sep)[-1]
@@ -624,29 +684,9 @@ def s3_key_names_to_clean(outbox_folder, prepared, xml_file_to_doi_map, do_not_r
     return s3_key_names
 
 
-def get_admin_email_body_head(name, activity_status_text, details):
-    """Format the top of the body of the email"""
-    body_head = ""
-    # Bulk of body
-    body_head += name + " status:" + "\n"
-    body_head += "\n"
-    body_head += activity_status_text + "\n"
-    body_head += "\n"
-    body_head += "Details:" + "\n"
-    body_head += "\n"
-    body_head += details + "\n"
-    body_head += "\n"
-    return body_head
-
-
-def get_admin_email_subject(datetime_string, activity_status_text, name, domain):
-    """Assemble the email subject"""
-    return (
-        name + " " + activity_status_text + ", " + datetime_string +
-        ", eLife SWF domain: " + domain)
-
-
-def get_related_article(settings, tmp_dir, doi, related_articles, logger, admin_email_content):
+def get_related_article(
+    settings, tmp_dir, doi, related_articles, logger, admin_email_content
+):
     """
     When populating related articles, given a DOI,
     download the article XML and parse it,
@@ -682,29 +722,19 @@ def get_related_article(settings, tmp_dir, doi, related_articles, logger, admin_
     return article
 
 
-def get_to_folder_name(published_folder):
-    """
-    From the date_stamp
-    return the S3 folder name to save published files into
-    """
-    to_folder = None
-
-    date_folder_name = utils.set_datestamp()
-    to_folder = published_folder + date_folder_name + "/"
-
-    return to_folder
-
-
-def choose_recipient_authors(authors, article_type, feature_article,
-                             related_insight_article, features_email):
+def choose_recipient_authors(
+    authors, article_type, feature_article, related_insight_article, features_email
+):
     """
     The recipients of the email will change depending on if it is a
     feature article
     """
     recipient_authors = []
-    if (feature_article is True
-            or article_type == "article-commentary"
-            or related_insight_article is not None):
+    if (
+        feature_article is True
+        or article_type == "article-commentary"
+        or related_insight_article is not None
+    ):
         # feature article recipients
 
         recipient_email_list = []
@@ -721,7 +751,7 @@ def choose_recipient_authors(authors, article_type, feature_article,
             feature_author["e_mail"] = recipient_email
             recipient_authors.append(feature_author)
 
-    if authors and len(recipient_authors) > 0:
+    if authors and recipient_authors:
         recipient_authors = recipient_authors + authors
     elif authors:
         recipient_authors = authors
@@ -730,8 +760,10 @@ def choose_recipient_authors(authors, article_type, feature_article,
 
 
 def is_feature_article(article):
-    if (article.is_in_display_channel("Feature article") is True or
-            article.is_in_display_channel("Feature Article") is True):
+    if (
+        article.is_in_display_channel("Feature article") is True
+        or article.is_in_display_channel("Feature Article") is True
+    ):
         return True
     return False
 
@@ -769,27 +801,35 @@ def choose_email_type(article_type, is_poa, was_ever_poa, feature_article):
 
 
 def author_data(email, surname, given_names):
-    return OrderedDict([
-        ('e_mail', email),
-        ('first_nm', str(given_names)),
-        ('last_nm', str(surname)),
-    ])
+    return OrderedDict(
+        [
+            ("e_mail", email),
+            ("first_nm", str(given_names)),
+            ("last_nm", str(surname)),
+        ]
+    )
 
 
 def authors_from_xml(article):
     """get corresponding email addresses from the article XML"""
     authors = []
-    for author in [author for author in article.authors if author.get('corresp')]:
+    for author in [author for author in article.authors if author.get("corresp")]:
         # find the email from two possible places
-        if author.get('email'):
+        if author.get("email"):
             # email value is a list of email addresses
-            for email in author.get('email'):
-                authors.append(author_data(
-                    email, author.get('surname'), author.get('given-names')))
-        elif author.get('affiliations'):
+            for email in author.get("email"):
+                authors.append(
+                    author_data(email, author.get("surname"), author.get("given-names"))
+                )
+        elif author.get("affiliations"):
             # add author for each affiliation email
-            for aff in author.get('affiliations'):
-                if aff.get('email'):
-                    authors.append(author_data(
-                        aff.get('email'), author.get('surname'), author.get('given-names')))
+            for aff in author.get("affiliations"):
+                if aff.get("email"):
+                    authors.append(
+                        author_data(
+                            aff.get("email"),
+                            author.get("surname"),
+                            author.get("given-names"),
+                        )
+                    )
     return authors

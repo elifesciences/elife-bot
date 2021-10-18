@@ -1,7 +1,7 @@
 import unittest
 import os
 from mock import patch, ANY
-from testfixtures import TempDirectory, tempdir
+from testfixtures import TempDirectory
 from activity.activity_SendDashboardProperties import activity_SendDashboardProperties
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeSession, FakeS3Connection, FakeKey, FakeLogger
@@ -20,7 +20,6 @@ class TestSendDashboardEvents(unittest.TestCase):
         self.directory.cleanup()
         TempDirectory.cleanup_all()
 
-    @tempdir()
     @patch.object(activity_SendDashboardProperties, 'emit_monitor_event')
     @patch('activity.activity_SendDashboardProperties.get_article_xml_key')
     @patch('activity.activity_SendDashboardProperties.S3Connection')
@@ -37,25 +36,22 @@ class TestSendDashboardEvents(unittest.TestCase):
 
         self.assertEqual(result, True)
 
-        fake_emit_monitor_property.assert_any_call(ANY, '00353', 'doi', u'10.7554/eLife.00353', 'text', version='1')
-        fake_emit_monitor_property.assert_any_call(ANY, '00353', 'title', u'A good life', 'text', version='1')
-        fake_emit_monitor_property.assert_any_call(ANY, '00353', 'status', u'VOR', 'text', version='1')
-        fake_emit_monitor_property.assert_any_call(ANY, '00353', 'publication-date', u'2012-12-13', 'text', version='1')
-        fake_emit_monitor_property.assert_any_call(ANY, '00353', 'article-type', u'discussion', 'text', version='1')
-        fake_emit_monitor_property.assert_any_call(ANY, '00353', 'corresponding-authors', u'Eve Marder', 'text', version='1')
-        fake_emit_monitor_property.assert_any_call(ANY, '00353', 'authors', u'Eve Marder', 'text', version='1')
+        fake_emit_monitor_property.assert_any_call(ANY, '353', 'doi', u'10.7554/eLife.00353', 'text', version='1')
+        fake_emit_monitor_property.assert_any_call(ANY, '353', 'title', u'A good life', 'text', version='1')
+        fake_emit_monitor_property.assert_any_call(ANY, '353', 'status', u'VOR', 'text', version='1')
+        fake_emit_monitor_property.assert_any_call(ANY, '353', 'publication-date', u'2012-12-13', 'text', version='1')
+        fake_emit_monitor_property.assert_any_call(ANY, '353', 'article-type', u'discussion', 'text', version='1')
+        fake_emit_monitor_property.assert_any_call(ANY, '353', 'corresponding-authors', u'Eve Marder', 'text', version='1')
+        fake_emit_monitor_property.assert_any_call(ANY, '353', 'authors', u'Eve Marder', 'text', version='1')
 
-        fake_emit_monitor_event.assert_any_call(ANY, '00353', '1', '1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
+        fake_emit_monitor_event.assert_any_call(ANY, '353', '1', '1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
                                                 'Send dashboard properties', 'start',
-                                                'Starting send of article properties to dashboard for article 00353')
-        fake_emit_monitor_event.assert_any_call(ANY, '00353', '1', '1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
+                                                'Starting send of article properties to dashboard for article 353')
+        fake_emit_monitor_event.assert_any_call(ANY, '353', '1', '1ee54f9a-cb28-4c8e-8232-4b317cf4beda',
                                                 'Send dashboard properties', 'end',
-                                                'Article properties sent to dashboard for article  00353')
-
-        self.directory.cleanup()
+                                                'Article properties sent to dashboard for article  353')
 
 
-    @tempdir()
     @patch.object(activity_SendDashboardProperties, 'emit_monitor_event')
     @patch('activity.activity_SendDashboardProperties.get_article_xml_key')
     @patch('activity.activity_SendDashboardProperties.S3Connection')
@@ -72,10 +68,7 @@ class TestSendDashboardEvents(unittest.TestCase):
 
         self.assertEqual(result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE)
 
-        self.directory.cleanup()
 
-
-    @tempdir()
     @patch.object(activity_SendDashboardProperties, 'emit_monitor_event')
     @patch('activity.activity_SendDashboardProperties.get_article_xml_key')
     @patch('activity.activity_SendDashboardProperties.S3Connection')
@@ -93,8 +86,6 @@ class TestSendDashboardEvents(unittest.TestCase):
         result = self.send_dashboard_properties.do_activity(test_data.dashboard_data)
 
         self.assertEqual(result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE)
-
-        self.directory.cleanup()
 
 
 if __name__ == '__main__':

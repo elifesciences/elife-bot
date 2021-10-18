@@ -1,5 +1,6 @@
 import time
 import os
+import ftplib
 from datetime import datetime
 
 
@@ -55,7 +56,7 @@ class FakeLayer1:
 
 class FakeFlag():
     "a fake object to return process monitoring status"
-    def __init__(self, timeout_seconds=1):
+    def __init__(self, timeout_seconds=0.1):
         self.timeout_seconds = timeout_seconds
         self.green_value = True
 
@@ -71,7 +72,7 @@ class FakeFlag():
 
 class FakeS3Event():
     "object to test an S3 notification event from an SQS queue"
-    def __init__(self):
+    def __init__(self, bucket_name=None):
         self.notification_type = 'S3Event'
         self.id = None
         self.body = ''
@@ -79,6 +80,8 @@ class FakeS3Event():
         self._event_name = u'ObjectCreated:Put'
         self._event_time = u'2016-07-28T16:14:27.809576Z'
         self._bucket_name = u'jen-elife-production-final'
+        if bucket_name:
+            self._bucket_name = bucket_name
         self._file_name = u'elife-00353-vor-r1.zip'
         self._file_etag = u'e7f639f63171c097d4761e2d2efe8dc4'
         self._file_size = 1097506
@@ -149,3 +152,55 @@ class FakeBigQueryRowIterator():
     def __iter__(self):
         for row in self.rows:
             yield row
+
+
+class FakeFTPServer:
+    def __init__(self, dir=None):
+        # original directory
+        self.dir = dir
+        # current working directory
+        self.cwd_dir = dir
+        self.host = None
+        self.passiveserver = True
+
+    def connect(self, uri):
+        self.host = uri
+
+    def set_pasv(self, passive):
+        self.passiveserver = passive
+
+    def login(self, username, password):
+        pass
+
+    def quit(self):
+        pass
+
+    def storlines(self, cmd, fp, callback=None):
+        if self.cwd_dir:
+            filename = cmd.split(" ")[-1]
+            with open(os.path.join(self.cwd_dir, filename), "w") as open_file:
+                open_file.write(fp.read())
+
+    def storbinary(self, cmd, fp, blocksize=8192, callback=None, rest=None):
+        if self.cwd_dir:
+            filename = cmd.split(" ")[-1]
+            with open(os.path.join(self.cwd_dir, filename), "wb") as open_file:
+                open_file.write(fp.read())
+
+    def cwd(self, folder_name):
+        if self.cwd_dir:
+            if folder_name == "/":
+                # reset current working directory to original value
+                new_dir = self.dir
+            else:
+                new_dir = os.path.join(self.dir, folder_name.lstrip("/").rstrip("/"))
+            if os.path.exists(new_dir):
+                self.cwd_dir = new_dir
+            else:
+                raise ftplib.error_perm("Directory does not exist")
+
+    def mkd(self, folder_name):
+        if self.cwd_dir:
+            new_dir = os.path.join(self.cwd_dir, folder_name.lstrip("/"))
+            os.mkdir(new_dir)
+            self.cwd_dir = new_dir

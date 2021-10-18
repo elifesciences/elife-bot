@@ -15,7 +15,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
             settings_mock, self.fake_logger, None, None, None)
         self.data = {
             "run": "cf9c7e86-7355-4bb4-b48e-0bc284221251",
-            "article_id": "00353",
+            "article_id": "353",
             "version": "1"}
         self.article_snippet = {
             'subjects': [

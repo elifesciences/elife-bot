@@ -1,8 +1,6 @@
-import boto.swf
 import json
-from optparse import OptionParser
 from S3utility.s3_notification_info import S3NotificationInfo
-import starter.starter_helper as helper
+from starter.objects import Starter, default_workflow_params
 from starter.starter_helper import NullRequiredDataException
 
 """
@@ -10,47 +8,43 @@ Amazon SWF SilentCorrectionsIngest starter, preparing article xml for lax.
 """
 
 
-class starter_SilentCorrectionsIngest():
-    def __init__(self):
-        self.const_name = "SilentCorrectionsIngest"
+class starter_SilentCorrectionsIngest(Starter):
+    def __init__(self, settings=None, logger=None):
+        super(starter_SilentCorrectionsIngest, self).__init__(
+            settings, logger, "SilentCorrectionsIngest"
+        )
 
-    def start(self, settings, info=None, run=None):
+    def get_workflow_params(self, run, info):
+        workflow_params = default_workflow_params(self.settings)
 
-        # Log
-        logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
+        if hasattr(info, "file_name") is False or info.file_name is None:
+            raise NullRequiredDataException("filename is Null. Did not get a filename.")
 
-        if hasattr(info, 'file_name') == False or info.file_name is None:
-            raise NullRequiredDataException("filename is Null / Did not get a filename.")
+        workflow_params["workflow_id"] = "%s_%s" % (
+            self.name,
+            info.file_name.replace("/", "_"),
+        )
+        workflow_params["workflow_name"] = self.name
+        workflow_params["workflow_version"] = "1"
 
-        input = S3NotificationInfo.to_dict(info)
-        input['run'] = run
-        input['version_lookup_function'] = "article_highest_version"
-        input['run_type'] = "silent-correction"
-        input['force'] = True
+        input_data = S3NotificationInfo.to_dict(info)
+        input_data["run"] = run
+        input_data["version_lookup_function"] = "article_highest_version"
+        input_data["run_type"] = "silent-correction"
+        input_data["force"] = True
 
-        workflow_id, \
-        workflow_name, \
-        workflow_version, \
-        child_policy, \
-        execution_start_to_close_timeout, \
-        workflow_input = helper.set_workflow_information(self.const_name, "1", None, input,
-                                                         info.file_name.replace('/', '_'))
+        workflow_params["input"] = json.dumps(input_data, default=lambda ob: None)
 
-        # Simple connect
-        conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+        return workflow_params
 
-        try:
-            response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version,
-                                                     settings.default_task_list, child_policy,
-                                                     execution_start_to_close_timeout, workflow_input)
+    def start(self, settings, run=None, info=None):
+        """method for backwards compatibility"""
+        self.settings = settings
+        self.instantiate_logger()
+        self.start_workflow(run, info)
 
-            logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+    def start_workflow(self, run, info):
 
-        except NullRequiredDataException as e:
-            logger.exception(e.message)
-            raise
+        workflow_params = self.get_workflow_params(run, info)
 
-        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-            # There is already a running workflow with that ID, cannot start another
-            message = 'SWFWorkflowExecutionAlreadyStartedError: There is already a running workflow with ID %s' % workflow_id
-            logger.info(message)
+        self.start_workflow_execution(workflow_params)

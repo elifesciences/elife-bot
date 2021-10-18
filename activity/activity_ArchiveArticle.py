@@ -2,6 +2,7 @@ import os
 import json
 import zipfile
 from datetime import datetime
+from provider import utils
 from provider.storage_provider import storage_context
 from activity.objects import Activity
 
@@ -149,5 +150,5 @@ class activity_ArchiveArticle(Activity):
 
 def zip_dir(article_id, status, version, updated_date):
     "zip directory name"
-    return ("elife-" + article_id + '-' + status + '-v' + version
+    return ("elife-" + utils.pad_msid(article_id) + '-' + status + '-v' + version
             + '-' + updated_date.strftime('%Y%m%d%H%M%S'))

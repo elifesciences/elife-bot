@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import zipfile
 import re
@@ -6,8 +7,9 @@ import glob
 from elifetools import parseJATS as parser
 import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo
+from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import article_processing
+from provider import article_processing, email_provider, lax_provider, utils
 from provider.ftp import FTP
 from activity.objects import Activity
 
@@ -36,16 +38,13 @@ class activity_PMCDeposit(Activity):
         }
 
         # Bucket settings
-        self.input_bucket = None
-        self.input_bucket_default = (settings.publishing_buckets_prefix +
-                                     settings.archive_bucket)
+        self.input_bucket = settings.publishing_buckets_prefix + settings.archive_bucket
 
         self.publish_bucket = settings.poa_packaging_bucket
         self.published_folder = "pmc/published"
         self.published_zip_folder = "pmc/zip"
 
         self.document = None
-        self.input_bucket = None
         self.zip_file_name = None
 
     def do_activity(self, data=None):
@@ -54,14 +53,11 @@ class activity_PMCDeposit(Activity):
         """
         self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
+        run = data['run']
+        session = get_session(self.settings, data, run)
+
         # Data passed to this activity
         self.document = data["data"]["document"]
-
-        # Custom bucket, if specified
-        if "bucket" in data["data"]:
-            self.input_bucket = data["data"]["bucket"]
-        else:
-            self.input_bucket = self.input_bucket_default
 
         # Create output directories
         self.make_activity_directories(list(self.directories.values()))
@@ -113,22 +109,43 @@ class activity_PMCDeposit(Activity):
         zip_file_path = self.directories.get("ZIP_DIR") + os.sep + self.zip_file_name
         create_new_zip(zip_file_path, self.directories.get("OUTPUT_DIR"), self.logger)
 
+        # check if the article is retracted
+        article_retracted_status = lax_provider.article_retracted_status(fid, self.settings)
+        self.logger.info(
+            "%s article_id %s article_retracted_status: %s" %
+            (self.name, fid, article_retracted_status))
+        if article_retracted_status is None:
+            self.logger.info(
+                "%s could not determine article retracted status for article id %s" %
+                (self.name, fid))
+            return self.ACTIVITY_TEMPORARY_FAILURE
+
         # FTP the zip
         ftp_status = None
-        if verified and self.zip_file_name:
+        if verified and self.zip_file_name and not article_retracted_status:
             try:
                 ftp_status = self.ftp_to_endpoint(self.directories.get("ZIP_DIR"))
             except Exception as exception:
-                self.logger.exception(
+                message = (
                     "Exception in ftp_to_endpoint sending file %s: %s" %
                     (self.zip_file_name, exception))
+                self.logger.exception(message)
+                # send email once when an exception is raised
+                if not session.get_value('ftp_exception'):
+                    subject = ftp_exception_email_subject(self.document)
+                    send_ftp_exception_email(subject, message, self.settings, self.logger)
+                    session.store_value('ftp_exception', 1)
+                # return a temporary failure
                 return self.ACTIVITY_TEMPORARY_FAILURE
 
-            if ftp_status is True:
-                self.upload_article_zip_to_s3()
+        if ftp_status is True or article_retracted_status is True:
+            self.upload_article_zip_to_s3()
 
         # Return the activity result, True or False
-        result = bool(verified and ftp_status)
+        if article_retracted_status:
+            result = True
+        else:
+            result = bool(verified and ftp_status)
 
         # Clean up disk
         self.clean_tmp_dir()
@@ -308,3 +325,26 @@ def profile_article(document):
     volume = parser.volume(soup)
 
     return fid, volume
+
+
+def ftp_exception_email_subject(document):
+    "email subject for sending an email"
+    return u'Exception raised sending article to PMC: {document}'.format(document=document)
+
+
+def send_ftp_exception_email(subject, message, settings, logger):
+    "email error message to the recipients"
+
+    datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
+    body = email_provider.simple_email_body(datetime_string, message)
+    sender_email = settings.ftp_deposit_error_sender_email
+
+    recipient_email_list = email_provider.list_email_recipients(
+        settings.ftp_deposit_error_recipient_email)
+
+    messages = email_provider.simple_messages(
+        sender_email, recipient_email_list, subject, body, logger=logger)
+    logger.info('Formatted %d email error messages' % len(messages))
+
+    details = email_provider.smtp_send_messages(settings, messages, logger)
+    logger.info('Email sending details: %s' % str(details))

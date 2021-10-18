@@ -34,7 +34,9 @@ class workflow_IngestArticleZip(Workflow):
             "steps":
                 [
                     define_workflow_step("PingWorker", data),
-                    define_workflow_step_short("AcceptVersionReason", data),
+                    define_workflow_step_medium("VersionLookup", data),
+                    define_workflow_step_medium("ExpandArticle", data),
+                    define_workflow_step_medium("SendDashboardProperties", data),
                     define_workflow_step_short("ApplyVersionNumber", data),
                     define_workflow_step_medium("VerifyGlencoe", data),
                     define_workflow_step_medium("ConvertImagesToJPG", data),

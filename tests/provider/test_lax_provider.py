@@ -67,15 +67,29 @@ class TestLaxProvider(unittest.TestCase):
         result = lax_provider.article_version_date_by_version('08411', "2", settings_mock)
         self.assertEqual("2015-11-30T00:00:00Z", result)
 
+    @patch("provider.lax_provider.article_versions")
+    def test_article_version_date_by_version_with_preprint(
+        self, mock_lax_provider_article_versions
+    ):
+        response_data = [
+            {"status": "preprint"},
+            {"version": 1, "versionDate": "2015-11-30T00:00:00Z"},
+        ]
+        mock_lax_provider_article_versions.return_value = 200, response_data
+        result = lax_provider.article_version_date_by_version(
+            "08411", "1", settings_mock
+        )
+        self.assertEqual("2015-11-30T00:00:00Z", result)
+
     @patch('requests.get')
     def test_article_version_200(self, mock_requests_get):
         response = MagicMock()
         response.status_code = 200
-        response.json.return_value = {'versions': [{'version': 1}]}
+        response.json.return_value = {'versions': [{"status": "preprint"}, {'version': 1}]}
         mock_requests_get.return_value = response
         status_code, versions = lax_provider.article_versions('08411', settings_mock)
         self.assertEqual(status_code, 200)
-        self.assertEqual(versions, [{'version': 1}])
+        self.assertEqual(versions, [{"status": "preprint"}, {'version': 1}])
 
     @patch('requests.get')
     def test_article_version_404(self, mock_requests_get):
@@ -92,6 +106,29 @@ class TestLaxProvider(unittest.TestCase):
         response.status_code = 500
         mock_requests_get.return_value = response
         self.assertRaises(ErrorCallingLaxException, lax_provider.article_highest_version, '08411', settings_mock)
+
+    @patch('requests.get')
+    def test_article_json_200(self, mock_requests_get):
+        article_json = {"status": "vor"}
+        response = MagicMock()
+        response.status_code = 200
+        response.json.return_value = article_json
+        mock_requests_get.return_value = response
+        status_code, data = lax_provider.article_json("65469", settings_mock)
+        self.assertEqual(status_code, 200)
+        # data returned will be exactly the value assigned to the mock response
+        self.assertEqual(data, article_json)
+
+    @patch("requests.get")
+    def test_article_related_200(self, mock_requests_get):
+        related_article_json = []
+        response = MagicMock()
+        response.status_code = 200
+        response.json.return_value = related_article_json
+        mock_requests_get.return_value = response
+        status_code, data = lax_provider.article_related("08411", settings_mock)
+        self.assertEqual(status_code, 200)
+        self.assertEqual(data, related_article_json)
 
     def test_lax_auth_header_none(self):
         expected = {}
@@ -113,7 +150,9 @@ class TestLaxProvider(unittest.TestCase):
     @patch('requests.get')
     def test_article_snippet_200_auth(self, mock_requests_get):
         expected_data = {'version': 1, 'type': 'research-article'}
-        response_data = {'versions': [expected_data]}
+        # add a preprint article, which has no version key, for test coverage
+        versions_response_data = [{"status": "preprint"}, expected_data]
+        response_data = {'versions': versions_response_data}
         response = MagicMock()
         response.status_code = 200
         response.json.return_value = response_data
@@ -163,13 +202,13 @@ class TestLaxProvider(unittest.TestCase):
     def test_prepare_action_message(self, fake_xml_file_name):
         fake_xml_file_name.return_value = "elife-00353-v1.xml"
         message = lax_provider.prepare_action_message(settings_mock,
-                                                      "00353", "bb2d37b8-e73c-43b3-a092-d555753316af",
+                                                      "353", "bb2d37b8-e73c-43b3-a092-d555753316af",
                                                       "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
                                                       "1", "vor", "ingest")
         self.assertIn('token', message)
         del message['token']
         self.assertDictEqual(message, {'action': 'ingest',
-                                       'id': '00353',
+                                       'id': '353',
                                        'location': 'https://s3-external-1.amazonaws.com/origin_bucket/00353.1/bb2d37b8-e73c-43b3-a092-d555753316af/elife-00353-v1.xml',
                                        'version': 1,
                                        'force': False})
@@ -255,7 +294,72 @@ class TestLaxProvider(unittest.TestCase):
                                                                   is_poa, was_ever_poa)
         self.assertEqual(published, expected_return_value)
 
-    @patch('provider.lax_provider.article_versions')
+    @patch("provider.lax_provider.article_related")
+    def test_article_retracted_status_no_related(self, mock_article_related):
+        related_article_json = []
+        mock_article_related.return_value = 200, related_article_json
+        retracted_status = lax_provider.article_retracted_status("4132", settings_mock)
+        self.assertEqual(retracted_status, False)
+
+    @patch("provider.lax_provider.article_related")
+    def test_article_retracted_status_related(self, mock_article_related):
+        related_article_json = [
+            {
+                "status": "vor",
+                "id": "65227",
+                "version": 1,
+                "type": "retraction",
+                "doi": "10.7554/eLife.65227",
+                "authorLine": "Yang Li et al.",
+                "title": (
+                    "Retraction: Endocytic recycling and vesicular transport systems "
+                    "mediatetranscytosis of Leptospira interrogans across cell monolayer"),
+                "published": "2020-12-03T00:00:00Z",
+                "versionDate": "2020-12-03T00:00:00Z",
+                "volume": 9,
+                "elocationId": "e65227",
+                "subjects": [
+                    {
+                        "id": "microbiology-infectious-disease",
+                        "name": "Microbiology and Infectious Disease",
+                    }
+                ],
+                "copyright": {
+                    "license": "CC-BY-4.0",
+                    "holder": "Li et al.",
+                    "statement": (
+                        'This article is distributed under the terms of the '
+                        '<a href="http://creativecommons.org/licenses/by/4.0/">'
+                        'Creative Commons Attribution License</a>, which permits '
+                        'unrestricted use and redistribution provided that the '
+                        'original author and source are credited.'),
+                },
+                "stage": "published",
+                "statusDate": "2020-12-03T00:00:00Z",
+            }
+        ]
+        mock_article_related.return_value = 200, related_article_json
+        retracted_status = lax_provider.article_retracted_status("44594", settings_mock)
+        self.assertTrue(retracted_status)
+
+    @patch("provider.lax_provider.article_related")
+    def test_article_retracted_status_related_insight_only(self, mock_article_related):
+        related_article_json = [
+            {
+                "type":"insight"
+            }
+        ]
+        mock_article_related.return_value = 200, related_article_json
+        retracted_status = lax_provider.article_retracted_status("99999", settings_mock)
+        self.assertEqual(retracted_status, False)
+
+    @patch("provider.lax_provider.article_related")
+    def test_article_retracted_status_404(self, mock_article_related):
+        mock_article_related.return_value = 404, None
+        retracted_status = lax_provider.article_retracted_status("4132", settings_mock)
+        self.assertIsNone(retracted_status)
+
+    @patch("provider.lax_provider.article_versions")
     def test_article_status_version_map(self, mock_lax_provider_article_versions):
         expected = {"poa": [1, 2], "vor": [3]}
         article_id = '04132'

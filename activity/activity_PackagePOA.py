@@ -4,8 +4,10 @@ import time
 import zipfile
 import glob
 import shutil
+import importlib
 from collections import OrderedDict
 from xml.parsers.expat import ExpatError
+from ejpcsvparser import parse
 from jatsgenerator import generate
 from jatsgenerator import conf as jats_conf
 from packagepoa import transform
@@ -71,8 +73,7 @@ class activity_PackagePOA(Activity):
         """
         Activity, do the work
         """
-        if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
 
         # Create output directories
         self.make_activity_directories()
@@ -133,7 +134,18 @@ class activity_PackagePOA(Activity):
         if self.activity_status is True:
             self.clean_tmp_dir()
 
+        # reload the ejpcsvparser/csv_data.py module to clear cached CSV data
+        importlib.reload(parse.data)
+
         return result
+
+    def clean_tmp_dir(self):
+        "custom cleaning of temp directory in order to retain some files for debugging purposes"
+        keep_dirs = ['CSV', 'CSV_TMP']
+        for dir_name, dir_path in self.directories.items():
+            if dir_name in keep_dirs or not os.path.exists(dir_path):
+                continue
+            shutil.rmtree(dir_path)
 
     def get_pub_date(self, doi_id):
         # Get the date for the first version
@@ -234,19 +246,21 @@ class activity_PackagePOA(Activity):
             storage = storage_context(self.settings)
             storage_provider = self.settings.storage_provider + "://"
             orig_resource = storage_provider + bucket_name + "/"
-            storage_resource_origin = orig_resource + s3_key_name
             try:
                 storage_resource_origin = orig_resource + s3_key_name
             except TypeError:
-                if self.logger:
-                    self.logger.info(
-                        'PackagePoA unable to download CSV file for {file_type}'.format(
-                            file_type=file_type
-                        ))
+                self.logger.info(
+                    'PackagePoA unable to download CSV file for {file_type}'.format(
+                        file_type=file_type
+                    ))
                 continue
             filename_plus_path = os.path.join(self.directories.get("CSV"), filename)
             with open(filename_plus_path, 'wb') as open_file:
                 storage.get_resource_to_file(storage_resource_origin, open_file)
+            # log last modified date if available
+            s3_key = storage.get_resource_as_key(storage_resource_origin)
+            self.logger.info('CSV file %s last_modified: %s' % (
+                storage_resource_origin, getattr(s3_key, 'last_modified', '[unknown]')))
 
     def jatsgenerator_config(self, config_section):
         "parse the config values from the jatsgenerator config"
@@ -260,18 +274,32 @@ class activity_PackagePOA(Activity):
         article XML from the CSV files
         """
         # override the CSV directory in the ejp-csv-parser library
-        jats_config = self.jatsgenerator_config(self.settings.jatsgenerator_config_section)
-        generate.parse.data.CSV_PATH = self.directories.get("CSV") + os.sep
-        generate.parse.data.TMP_DIR = self.directories.get("CSV_TMP")
+        jats_config = self.jatsgenerator_config(
+            self.settings.jatsgenerator_config_section
+        )
+        parse.data.CSV_PATH = self.directories.get("CSV") + os.sep
+        parse.data.TMP_DIR = self.directories.get("CSV_TMP")
 
         article = None
         try:
-            article = generate.build_article_from_csv(article_id, jats_config)
+            article, self.error_count, self.error_messages = parse.build_article(
+                article_id
+            )
         except Exception as exception:
             self.logger.exception(
-                'Exception in build_article_from_csv for article_id %s: %s' %
-                (article_id, str(exception)))
+                "Exception in build_article for article_id %s: %s"
+                % (article_id, str(exception))
+            )
             raise
+
+        # check for errors
+        if self.error_count and self.error_count > 0:
+            exception_message = (
+                "Exception raised in generate_xml, error count: %s, error_messages: %s"
+                % (self.error_count, ", ".join(self.error_messages))
+            )
+            self.logger.exception(exception_message)
+            raise Exception(exception_message)
 
         if article:
             # Here can set the pub-date and volume, if provided

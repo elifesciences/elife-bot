@@ -1,7 +1,6 @@
-import boto.swf
 import json
-from optparse import OptionParser
-import starter.starter_helper as helper
+from S3utility.s3_notification_info import S3NotificationInfo
+from starter.objects import Starter, default_workflow_params
 from starter.starter_helper import NullRequiredDataException
 
 """
@@ -9,72 +8,43 @@ Amazon SWF IngestArticleZip starter, preparing article xml for lax.
 """
 
 
-class starter_IngestArticleZip():
-    def __init__(self):
-        self.const_name = "IngestArticleZip"
-        
-    def start(self, settings, run, article_id, version_reason=None, scheduled_publication_date=None):
+class starter_IngestArticleZip(Starter):
+    def __init__(self, settings=None, logger=None):
+        super(starter_IngestArticleZip, self).__init__(
+            settings, logger, "IngestArticleZip"
+        )
 
-        # Log
-        logger = helper.get_starter_logger(settings.setLevel, helper.get_starter_identity(self.const_name))
+    def get_workflow_params(self, run, info):
+        workflow_params = default_workflow_params(self.settings)
 
-        input = {
-                    "run": run,
-                    "article_id": article_id,
-                    "version_reason": version_reason,
-                    "scheduled_publication_date": scheduled_publication_date
-        }
+        if hasattr(info, "file_name") is False or info.file_name is None:
+            raise NullRequiredDataException("filename is Null. Did not get a filename.")
 
-        workflow_id, \
-        workflow_name, \
-        workflow_version, \
-        child_policy, \
-        execution_start_to_close_timeout, \
-        workflow_input = helper.set_workflow_information(self.const_name, "1", None, input,
-                                                         "ingest-%s" % article_id,
-                                                         start_to_close_timeout=str(60 * 60 * 1))
+        workflow_params["workflow_id"] = "%s_%s" % (
+            self.name,
+            info.file_name.replace("/", "_"),
+        )
+        workflow_params["workflow_name"] = self.name
+        workflow_params["workflow_version"] = "1"
+        workflow_params["execution_start_to_close_timeout"] = str(60 * 60)
 
-        # Simple connect
-        conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+        input_data = S3NotificationInfo.to_dict(info)
+        input_data["run"] = run
+        input_data["version_lookup_function"] = "article_next_version"
+        input_data["run_type"] = "initial-article"
 
-        try:
-            response = conn.start_workflow_execution(settings.domain, workflow_id, workflow_name, workflow_version,
-                                                     settings.default_task_list, child_policy,
-                                                     execution_start_to_close_timeout, workflow_input)
+        workflow_params["input"] = json.dumps(input_data, default=lambda ob: None)
 
-            logger.info('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4))
+        return workflow_params
 
-        except NullRequiredDataException as e:
-            logger.exception(e.message)
-            raise
+    def start(self, settings, run, info):
+        """method for backwards compatibility"""
+        self.settings = settings
+        self.instantiate_logger()
+        self.start_workflow(run, info)
 
-        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-            # There is already a running workflow with that ID, cannot start another
-            message = 'SWFWorkflowExecutionAlreadyStartedError: ' \
-                      'There is already a running workflow with ID %s' % workflow_id
-            logger.info(message)
+    def start_workflow(self, run, info):
 
+        workflow_params = self.get_workflow_params(run, info)
 
-if __name__ == "__main__":
-
-    doi_id = None
-
-    # Add options
-    parser = OptionParser()
-    parser.add_option("-e", "--env", default="dev", action="store", type="string", dest="env",
-                      help="set the environment to run, either dev or live")
-    parser.add_option("-f", "--filename", default=None, action="store", type="string", dest="filename",
-                      help="specify the DOI id the article to process")
-
-    (options, args) = parser.parse_args()
-    if options.env:
-        ENV = options.env
-    if options.filename:
-        filename = options.filename
-
-    import settings as settingsLib
-    settings = settingsLib.get_settings(ENV)
-
-    o = starter_IngestArticleZip()
-
-    o.start(settings=settings,)
+        self.start_workflow_execution(workflow_params)

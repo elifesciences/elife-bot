@@ -12,7 +12,7 @@ from provider.execution_context import get_session
 import requests
 from provider.storage_provider import storage_context
 from provider.article_structure import ArticleInfo
-import provider.lax_provider as lax_provider
+from provider import lax_provider, utils
 from activity.objects import Activity
 
 """
@@ -67,7 +67,7 @@ class activity_ExpandArticle(Activity):
                               filename_last_element)
             return self.ACTIVITY_PERMANENT_FAILURE  # status could not be determined, exit workflow.
 
-        article_version_id = article_id + '.' + version
+        article_version_id = utils.pad_msid(article_id) + '.' + version
         session.store_value('article_version_id', article_version_id)
         session.store_value('run', run)
         session.store_value('status', status)

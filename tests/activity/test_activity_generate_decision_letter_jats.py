@@ -10,6 +10,8 @@ import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 import tests.test_data as test_case_data
 from tests.activity.classes_mock import FakeSession, FakeStorageContext
+import tests.activity.test_activity_data as test_activity_data
+import tests.activity.helpers as helpers
 
 
 def input_data(file_name_to_change=''):
@@ -28,6 +30,9 @@ class TestGenerateDecisionLetterJATS(unittest.TestCase):
     def tearDown(self):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
+        helpers.delete_files_in_folder(
+            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     @patch.object(activity_module, 'get_session')
     @patch.object(activity_module, 'storage_context')
@@ -46,7 +51,8 @@ class TestGenerateDecisionLetterJATS(unittest.TestCase):
         # copy XML files into the input directory using the storage context
         fake_download_storage_context.return_value = FakeStorageContext()
         # activity storage context
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            test_activity_data.ExpandArticle_files_dest_folder)
         # mock the session
         fake_session = FakeSession({})
         mock_session.return_value = fake_session

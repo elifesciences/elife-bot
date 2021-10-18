@@ -307,6 +307,28 @@ class EJP(object):
         fn_fragment["poa_funding"] = "ejp_query_tool_query_id_POA_Funding"
         fn_fragment["poa_ethics"] = "ejp_query_tool_query_id_POA_Ethics"
 
+        # first try to locate the s3 key by looking for the expected name
+        s3_key_name = self.latest_s3_file_name_by_convention(fn_fragment, file_type)
+
+        if not s3_key_name:
+            # find s3_key_name by checking for the latest modified date on the s3 key
+            s3_key_name = self.latest_s3_file_name_by_modified_date(
+                fn_fragment, file_type, file_list)
+        
+        return s3_key_name
+
+    def latest_s3_file_name_by_convention(self, fn_fragment, file_type):
+        "concatenate the expected s3 file name and check if it exists in the bucket"
+        date_string = utils.set_datestamp("_")
+        # remove backslashes from regular expression fragments
+        clean_fn_fragment = fn_fragment[file_type].replace("\\", "")
+        file_name_to_match = "%s_%s_eLife.csv" % (clean_fn_fragment, date_string)
+        bucket = self.get_bucket(self.settings.ejp_bucket)
+        s3_key = bucket.get_key(file_name_to_match)
+        if s3_key:
+            return s3_key.name
+
+    def latest_s3_file_name_by_modified_date(self, fn_fragment, file_type, file_list):
         if file_list is None:
             file_list = self.ejp_bucket_file_list()
 

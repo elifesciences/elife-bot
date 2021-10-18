@@ -124,19 +124,24 @@ def smtp_send(connection, sender, recipient, message, logger=None):
     return True
 
 
-def smtp_send_message(connection, email_message, logger=None):
+def smtp_send_message(connection, email_message, logger=None, bcc=None):
     """send the email message using the connection"""
     sender = email_message.get('From')
     recipient = email_message.get('To')
+    # if there is a BCC address, add them to the recipient list
+    if bcc:
+        if isinstance(recipient, str):
+            recipient = [recipient]
+        recipient.append(bcc)
     return smtp_send(connection, sender, recipient, email_message, logger)
 
 
-def smtp_send_messages(settings, messages, logger=None):
+def smtp_send_messages(settings, messages, logger=None, bcc=None):
     """send a list of messages on the connection"""
     connection = smtp_connect(settings, logger)
     details = OrderedDict([("error", 0), ("success", 0)])
     for email_message in messages:
-        result = smtp_send_message(connection, email_message, logger)
+        result = smtp_send_message(connection, email_message, logger, bcc)
         if result:
             details["success"] += 1
         else:
@@ -167,7 +172,7 @@ def simple_message(sender, recipient, subject, body, subtype='plain',
 
 
 def simple_messages(sender, recipients, subject, body, subtype='plain',
-                   charset='utf-8', attachments=None, logger=None):
+                    charset='utf-8', attachments=None, logger=None):
     """list of simple messages for a list of recipients
 
     :param sender: email address of the sender
@@ -183,7 +188,7 @@ def simple_messages(sender, recipients, subject, body, subtype='plain',
     messages = []
     for recipient in recipients:
         messages.append(simple_message(
-            sender, recipient, subject, body, subtype=subtype, 
+            sender, recipient, subject, body, subtype=subtype,
             charset=charset, attachments=attachments, logger=logger))
     return messages
 
@@ -268,3 +273,90 @@ def simple_email_body(datetime_string, body_content=''):
             body_content=body_content,
             datetime_string=datetime_string)
     return ''
+
+
+def get_email_subject(
+    datetime_string, activity_status_text, name, domain, outbox_s3_key_names
+):
+    "Assemble an the email subject for activity status emails"
+    # Count the files moved from the outbox, the files that were processed
+    files_count = 0
+    if outbox_s3_key_names:
+        files_count = len(outbox_s3_key_names)
+
+    return "%s %s files: %s, %s, eLife SWF domain: %s" % (
+        name,
+        activity_status_text,
+        files_count,
+        datetime_string,
+        domain,
+    )
+
+
+def get_email_body_head(name, activity_status_text, statuses):
+    "Format the body of the email for activity status emails"
+
+    body = ""
+
+    # Bulk of body
+    body += "%s status:\n\n" % name
+    body += "%s\n\n" % activity_status_text
+
+    # print status values if they exist, even if the status value is None
+    status_values = ["activity", "generate", "approve", "upload", "publish", "outbox"]
+    for status_value in status_values:
+        if status_value in statuses:
+            body += "%s_status: %s\n" % (status_value, statuses.get(status_value))
+
+    body += "\n"
+
+    return body
+
+
+def get_email_body_middle(
+    activity_name,
+    outbox_s3_key_names,
+    published_file_names,
+    not_published_file_names,
+    http_detail_list=None,
+    removed_file_names=None,
+):
+    "Format the body of the email for activity status emails"
+
+    body = ""
+    body += "\nOutbox files: \n"
+
+    files_count = 0
+    if outbox_s3_key_names:
+        files_count = len(outbox_s3_key_names)
+    if files_count > 0:
+        for name in outbox_s3_key_names:
+            body += "%s\n" % name
+    else:
+        body += "No files in outbox.\n"
+
+    # Report on published files
+    if len(published_file_names) > 0:
+        body += "\nPublished files generated %s XML: \n" % activity_name
+        for name in published_file_names:
+            body += "%s\n" % name.split(os.sep)[-1]
+
+    # Report on not published files
+    if len(not_published_file_names) > 0:
+        body += "\nFiles not approved or failed %s XML: \n" % activity_name
+        for name in not_published_file_names:
+            body += "%s\n" % name.split(os.sep)[-1]
+
+    # Report on files removed from an outbox
+    if removed_file_names:
+        body += "\nFiles not approved and removed: \n"
+        for name in removed_file_names:
+            body += "%s\n" % name.split(os.sep)[-1]
+
+    if http_detail_list:
+        body += "\n-------------------------------"
+        body += "\nHTTP deposit details: \n"
+        for text in http_detail_list:
+            body += "%s\n" % text
+
+    return body

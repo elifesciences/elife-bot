@@ -1,7 +1,7 @@
 ArticleZip:
   bucket_name_pattern: '.*elife-production-final$'
   file_name_pattern: '.*\.zip'
-  starter_name: 'InitialArticleZip'
+  starter_name: 'IngestArticleZip'
 
 SilentCorrectionsArticleZip:
   bucket_name_pattern: '.*elife-silent-corrections$'
@@ -17,3 +17,8 @@ DecisionLetterInputFile:
   bucket_name_pattern: '.*elife-bot-decision-letter-input$'
   file_name_pattern: '.*\.(docx|zip)'
   starter_name: 'IngestDecisionLetter'
+
+AcceptedSubmissionInputFile:
+  bucket_name_pattern: '.*elife-accepted-submission-cleaning$'
+  file_name_pattern: '.*\.zip'
+  starter_name: 'IngestAcceptedSubmission'

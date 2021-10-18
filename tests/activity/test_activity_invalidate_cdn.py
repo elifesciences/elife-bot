@@ -8,7 +8,7 @@ import tests.activity.test_activity_data as test_activity_data
 
 activity_data = {
                     "run": "74e22d8f-6b5d-4fb7-b5bf-179c1aaa7cff",
-                    "article_id": "00353",
+                    "article_id": "353",
                     "version": "1"
                 }
 

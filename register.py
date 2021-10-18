@@ -22,7 +22,6 @@ def start(settings):
     workflow_names.append("SilentCorrectionsIngest")
     workflow_names.append("SilentCorrectionsProcess")
     workflow_names.append("IngestArticleZip")
-    workflow_names.append("InitialArticleZip")
     workflow_names.append("ProcessArticleZip")
     workflow_names.append("Ping")
     workflow_names.append("ApproveArticlePublication")
@@ -32,6 +31,7 @@ def start(settings):
     workflow_names.append("PublishPOA")
     workflow_names.append("DepositCrossref")
     workflow_names.append("DepositCrossrefPeerReview")
+    workflow_names.append("DepositCrossrefPendingPublication")
     workflow_names.append("PubmedArticleDeposit")
     workflow_names.append("PublicationEmail")
     workflow_names.append("FTPArticle")
@@ -40,6 +40,9 @@ def start(settings):
     workflow_names.append("PostPerfectPublication")
     workflow_names.append("IngestDigest")
     workflow_names.append("IngestDecisionLetter")
+    workflow_names.append("DepositDOAJ")
+    workflow_names.append("SoftwareHeritageDeposit")
+    workflow_names.append("IngestAcceptedSubmission")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries
@@ -59,8 +62,6 @@ def start(settings):
 
     activity_names = []
     activity_names.append("ReadyToPublish")
-    activity_names.append("VersionReasonDecider"),
-    activity_names.append("AcceptVersionReason"),
     activity_names.append("InvalidateCdn")
     activity_names.append("ConvertImagesToJPG")
     activity_names.append("SendDashboardProperties")
@@ -87,6 +88,7 @@ def start(settings):
     activity_names.append("PublishFinalPOA")
     activity_names.append("DepositCrossref")
     activity_names.append("DepositCrossrefPeerReview")
+    activity_names.append("DepositCrossrefPendingPublication")
     activity_names.append("PubmedArticleDeposit")
     activity_names.append("PublicationEmail")
     activity_names.append("FTPArticle")
@@ -110,6 +112,13 @@ def start(settings):
     activity_names.append("DecisionLetterReceipt")
     activity_names.append("DepositDecisionLetterIngestAssets")
     activity_names.append("PostDecisionLetterJATS")
+    activity_names.append("DepositDOAJ")
+    activity_names.append("DownstreamStart")
+    activity_names.append("PackageSWH")
+    activity_names.append("GenerateSWHMetadata")
+    activity_names.append("GenerateSWHReadme")
+    activity_names.append("PushSWHDeposit")
+    activity_names.append("ValidateAcceptedSubmission")
 
     for activity_name in activity_names:
         # Import the activity libraries

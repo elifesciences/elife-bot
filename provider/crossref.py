@@ -1,12 +1,10 @@
-import os
 import time
 from collections import OrderedDict
 import requests
 from elifearticle.article import ArticleDate
 from elifecrossref import generate
 from elifecrossref.conf import raw_config, parse_raw_config
-from provider import article_processing, lax_provider, utils
-from provider.storage_provider import storage_context
+from provider import lax_provider, utils
 
 
 def override_tmp_dir(tmp_dir):
@@ -17,9 +15,11 @@ def override_tmp_dir(tmp_dir):
 
 def elifecrossref_config(settings):
     "parse the config values from the elifecrossref config"
-    return parse_raw_config(raw_config(
-        settings.elifecrossref_config_section,
-        settings.elifecrossref_config_file))
+    return parse_raw_config(
+        raw_config(
+            settings.elifecrossref_config_section, settings.elifecrossref_config_file
+        )
+    )
 
 
 def parse_article_xml(article_xml_files, tmp_dir=None):
@@ -59,19 +59,20 @@ def set_article_pub_date(article, crossref_config, settings, logger):
     # if no date was found then look for one on Lax
     if not article_pub_date:
         lax_pub_date = lax_provider.article_publication_date(
-            article.manuscript, settings, logger)
+            article.manuscript, settings, logger
+        )
         if lax_pub_date:
             date_struct = time.strptime(lax_pub_date, utils.S3_DATE_FORMAT)
             pub_date_object = ArticleDate(
-                crossref_config.get('pub_date_types')[0], date_struct)
+                crossref_config.get("pub_date_types")[0], date_struct
+            )
             article.add_date(pub_date_object)
 
 
 def set_article_version(article, settings):
     """if there is no version then set it from lax data"""
     if not article.version:
-        lax_version = lax_provider.article_highest_version(
-            article.manuscript, settings)
+        lax_version = lax_provider.article_highest_version(article.manuscript, settings)
         if lax_version:
             article.version = lax_version
 
@@ -79,9 +80,9 @@ def set_article_version(article, settings):
 def article_first_pub_date(crossref_config, article):
     "find the first article pub date from the list of crossref config pub_date_types"
     pub_date = None
-    if crossref_config.get('pub_date_types'):
+    if crossref_config.get("pub_date_types"):
         # check for any useable pub date
-        for pub_date_type in crossref_config.get('pub_date_types'):
+        for pub_date_type in crossref_config.get("pub_date_types"):
             if article.get_date(pub_date_type):
                 pub_date = article.get_date(pub_date_type)
                 break
@@ -118,12 +119,14 @@ def approve_to_generate_list(article_object_map, crossref_config, bad_xml_files)
     return generate_article_object_map
 
 
-def crossref_data_payload(crossref_login_id, crossref_login_passwd, operation='doMDUpload'):
+def crossref_data_payload(
+    crossref_login_id, crossref_login_passwd, operation="doMDUpload"
+):
     """assemble a requests data payload for Crossref endpoint"""
     return {
-        'operation': operation,
-        'login_id': crossref_login_id,
-        'login_passwd': crossref_login_passwd
+        "operation": operation,
+        "login_id": crossref_login_id,
+        "login_passwd": crossref_login_passwd,
     }
 
 
@@ -135,7 +138,7 @@ def upload_files_to_endpoint(url, payload, xml_files):
     http_detail_list = []
 
     for xml_file in xml_files:
-        files = {'file': open(xml_file, 'rb')}
+        files = {"file": open(xml_file, "rb")}
 
         response = requests.post(url, data=payload, files=files)
 
@@ -150,16 +153,26 @@ def upload_files_to_endpoint(url, payload, xml_files):
     return status, http_detail_list
 
 
-def generate_crossref_xml_to_disk(article_object_map, crossref_config, good_xml_files,
-                                  bad_xml_files, submission_type="journal",
-                                  pretty=False, indent=""):
+def generate_crossref_xml_to_disk(
+    article_object_map,
+    crossref_config,
+    good_xml_files,
+    bad_xml_files,
+    submission_type="journal",
+    pretty=False,
+    indent="",
+):
     """from the article object generate crossref deposit XML"""
     for xml_file, article in list(article_object_map.items()):
         try:
             # Will write the XML to the TMP_DIR
             generate.crossref_xml_to_disk(
-                [article], crossref_config, submission_type=submission_type,
-                pretty=pretty, indent=indent)
+                [article],
+                crossref_config,
+                submission_type=submission_type,
+                pretty=pretty,
+                indent=indent,
+            )
             # Add filename to the list of good files
             good_xml_files.append(xml_file)
         except:
@@ -167,175 +180,6 @@ def generate_crossref_xml_to_disk(article_object_map, crossref_config, good_xml_
             bad_xml_files.append(xml_file)
     # Any files generated is a sucess, even if one failed
     return True
-
-
-def get_to_folder_name(folder_name, date_stamp):
-    """
-    From the date_stamp
-    return the S3 folder name to save published files into
-    """
-    return folder_name + date_stamp + "/"
-
-
-def get_outbox_s3_key_names(settings, bucket_name, outbox_folder):
-    """get a list of .xml S3 key names from the outbox"""
-    storage = storage_context(settings)
-    storage_provider = settings.storage_provider + "://"
-    orig_resource = (
-        storage_provider + bucket_name + "/" + outbox_folder.rstrip('/'))
-    s3_key_names = storage.list_resources(orig_resource)
-    # add back the outbox_folder to the key names
-    full_s3_key_names = [(outbox_folder.rstrip('/') + '/' + key_name) for key_name in s3_key_names]
-    # return only the .xml files
-    return [key_name for key_name in full_s3_key_names if key_name.endswith('.xml')]
-
-
-def download_files_from_s3_outbox(settings, bucket_name, outbox_s3_key_names, to_dir, logger):
-    """from the s3 outbox folder,  download the .xml files"""
-    storage = storage_context(settings)
-    storage_provider = settings.storage_provider + "://"
-    orig_resource = storage_provider + bucket_name + "/"
-
-    for name in outbox_s3_key_names:
-        # Download objects from S3 and save to disk
-        file_name = name.split('/')[-1]
-        file_path = os.path.join(to_dir, file_name)
-        storage_resource_origin = orig_resource + '/' + name
-        try:
-            with open(file_path, 'wb') as open_file:
-                logger.info("Downloading %s to %s", (storage_resource_origin, file_path))
-                storage.get_resource_to_file(storage_resource_origin, open_file)
-        except IOError:
-            logger.exception("Failed to download file %s.", name)
-            return False
-    return True
-
-
-def clean_outbox(settings, bucket_name, outbox_folder, to_folder, published_file_names):
-    """Clean out the S3 outbox folder"""
-
-    # Concatenate the expected S3 outbox file names
-    s3_key_names = []
-    for name in published_file_names:
-        filename = name.split(os.sep)[-1]
-        s3_key_name = outbox_folder + filename
-        s3_key_names.append(s3_key_name)
-
-    storage = storage_context(settings)
-    storage_provider = settings.storage_provider + "://"
-
-    for name in s3_key_names:
-        # Do not delete the from_folder itself, if it is in the list
-        if name == outbox_folder:
-            continue
-        filename = name.split("/")[-1]
-        new_s3_key_name = to_folder + filename
-
-        orig_resource = storage_provider + bucket_name + "/" + name
-        dest_resource = storage_provider + bucket_name + "/" + new_s3_key_name
-
-        # First copy
-        storage.copy_resource(orig_resource, dest_resource)
-
-        # Then delete the old key if successful
-        storage.delete_resource(orig_resource)
-
-
-def upload_crossref_xml_to_s3(settings, bucket_name, to_folder, file_names):
-    """
-    Upload a copy of the crossref XML to S3 for reference
-    """
-    storage = storage_context(settings)
-    storage_provider = settings.storage_provider + "://"
-
-    for file_name in file_names:
-        resource_dest = (
-            storage_provider + bucket_name + "/" + to_folder +
-            article_processing.file_name_from_name(file_name))
-        storage.set_resource_from_filename(resource_dest, file_name)
-
-
-def get_email_subject(datetime_string, activity_status_text, name, domain, outbox_s3_key_names):
-    """
-    Assemble the email subject
-    """
-    # Count the files moved from the outbox, the files that were processed
-    files_count = 0
-    if outbox_s3_key_names:
-        files_count = len(outbox_s3_key_names)
-
-    subject = (
-        name + " " + activity_status_text + " files: " + str(files_count) +
-        ", " + datetime_string + ", eLife SWF domain: " + domain)
-
-    return subject
-
-
-def get_email_body_head(name, activity_status_text, statuses):
-    """
-    Format the body of the email
-    """
-
-    body = ""
-
-    # Bulk of body
-    body += name + " status:" + "\n"
-    body += "\n"
-    body += activity_status_text + "\n"
-    body += "\n"
-
-    body += "activity_status: " + str(statuses.get("activity")) + "\n"
-    body += "generate_status: " + str(statuses.get("generate")) + "\n"
-    body += "approve_status: " + str(statuses.get("approve")) + "\n"
-    body += "publish_status: " + str(statuses.get("publish")) + "\n"
-    body += "outbox_status: " + str(statuses.get("outbox")) + "\n"
-
-    body += "\n"
-
-    return body
-
-
-def get_email_body_middle(outbox_s3_key_names, published_file_names,
-                          not_published_file_names, http_detail_list):
-    """
-    Format the body of the email
-    """
-
-    body = ""
-
-    body += "\n"
-    body += "Outbox files: " + "\n"
-
-    files_count = 0
-    if outbox_s3_key_names:
-        files_count = len(outbox_s3_key_names)
-    if files_count > 0:
-        for name in outbox_s3_key_names:
-            body += name + "\n"
-    else:
-        body += "No files in outbox." + "\n"
-
-    # Report on published files
-    if len(published_file_names) > 0:
-        body += "\n"
-        body += "Published files generated crossref XML: " + "\n"
-        for name in published_file_names:
-            body += name.split(os.sep)[-1] + "\n"
-
-    # Report on not published files
-    if len(not_published_file_names) > 0:
-        body += "\n"
-        body += "Files not approved or failed crossref XML: " + "\n"
-        for name in not_published_file_names:
-            body += name.split(os.sep)[-1] + "\n"
-
-    body += "\n"
-    body += "-------------------------------\n"
-    body += "HTTP deposit details: " + "\n"
-    for text in http_detail_list:
-        body += str(text) + "\n"
-
-    return body
 
 
 def doi_exists(doi, logger):
@@ -346,5 +190,18 @@ def doi_exists(doi, logger):
     if 300 <= response.status_code < 400:
         exists = True
     elif response.status_code < 300 or response.status_code >= 500:
-        logger.info('Status code for %s was %s' % (doi, response.status_code))
+        logger.info("Status code for %s was %s" % (doi, response.status_code))
     return exists
+
+
+def doi_does_not_exist(doi, logger):
+    """given a DOI check if it does not exist at Crossref"""
+    does_not_exist = None
+    doi_url = utils.get_doi_url(doi)
+    response = requests.head(doi_url)
+    logger.info("Status code for %s was %s" % (doi, response.status_code))
+    if 200 <= response.status_code < 400:
+        does_not_exist = False
+    elif response.status_code < 500:
+        does_not_exist = True
+    return does_not_exist

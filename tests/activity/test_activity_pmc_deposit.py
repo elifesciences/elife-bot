@@ -6,7 +6,8 @@ from ddt import ddt, data, unpack
 import activity.activity_PMCDeposit as activity_module
 from activity.activity_PMCDeposit import activity_PMCDeposit
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext, FakeFTP
+from tests.classes_mock import FakeSMTPServer
+from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext, FakeFTP
 import tests.activity.test_activity_data as activity_test_data
 import tests.activity.helpers as helpers
 
@@ -24,16 +25,22 @@ class TestPMCDeposit(unittest.TestCase):
 
         self.do_activity_passes.append({
             "scenario": "zip file was not downloaded",
-            "input_data": {"data": {"document": "does_not_exist.zip"}},
+            "input_data": {
+                "data": {"document": "does_not_exist.zip"},
+                "run": "test-uuid"},
             "pmc_zip_key_names": [],
+            "related_article_json": [],
             "expected_zip_filename": None,
             "expected_result": self.activity.ACTIVITY_TEMPORARY_FAILURE,
             "zip_file_names": None})
 
         self.do_activity_passes.append({
             "scenario": "no previous PMC zip file",
-            "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
+            "input_data": {
+                "data": {"document": "elife-19405-vor-v1-20160802113816.zip"},
+                "run": "test-uuid"},
             "pmc_zip_key_names": [],
+            "related_article_json": [],
             "expected_zip_filename": "elife-05-19405.zip",
             "expected_result": True,
             "zip_file_names": ['elife-19405-fig1.tif', 'elife-19405-inf1.tif',
@@ -41,8 +48,11 @@ class TestPMCDeposit(unittest.TestCase):
 
         self.do_activity_passes.append({
             "scenario": "one previous PMC zip file",
-            "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
+            "input_data": {
+                "data": {"document": "elife-19405-vor-v1-20160802113816.zip"},
+                "run": "test-uuid"},
             "pmc_zip_key_names": ["pmc/zip/elife-05-19405.zip"],
+            "related_article_json": [],
             "expected_zip_filename": "elife-05-19405.r1.zip",
             "expected_result": True,
             "zip_file_names": ['elife-19405-fig1.tif', 'elife-19405-inf1.tif',
@@ -50,9 +60,24 @@ class TestPMCDeposit(unittest.TestCase):
 
         self.do_activity_passes.append({
             "scenario": "two previous PMC zip file revisions present",
-            "input_data": {"data": {"document": "elife-19405-vor-v1-20160802113816.zip"}},
+            "input_data": {
+                "data": {"document": "elife-19405-vor-v1-20160802113816.zip"},
+                "run": "test-uuid"},
             "pmc_zip_key_names": ["pmc/zip/elife-05-19405.zip", "pmc/zip/elife-05-19405.r1.zip"],
+            "related_article_json": [],
             "expected_zip_filename": "elife-05-19405.r2.zip",
+            "expected_result": True,
+            "zip_file_names": ['elife-19405-fig1.tif', 'elife-19405-inf1.tif',
+                               'elife-19405.pdf', 'elife-19405.xml']})
+
+        self.do_activity_passes.append({
+            "scenario": "retracted article",
+            "input_data": {
+                "data": {"document": "elife-19405-vor-v1-20160802113816.zip"},
+                "run": "test-uuid"},
+            "pmc_zip_key_names": [],
+            "related_article_json": [{"type": "retraction"}],
+            "expected_zip_filename": "elife-05-19405.zip",
             "expected_result": True,
             "zip_file_names": ['elife-19405-fig1.tif', 'elife-19405-inf1.tif',
                                'elife-19405.pdf', 'elife-19405.xml']})
@@ -70,11 +95,12 @@ class TestPMCDeposit(unittest.TestCase):
         return file_list
 
     @patch.object(activity_PMCDeposit, 'clean_tmp_dir')
+    @patch("provider.lax_provider.article_related")
     @patch('activity.activity_PMCDeposit.FTP')
     @patch.object(FakeStorageContext, 'list_resources')
     @patch('activity.activity_PMCDeposit.storage_context')
     def test_do_activity(self, fake_storage_context, fake_list_resources, fake_ftp,
-                         fake_clean_tmp_dir):
+                         mock_article_related, fake_clean_tmp_dir):
 
         fake_ftp.return_value = FakeFTP()
         fake_clean_tmp_dir.return_value = None
@@ -83,6 +109,8 @@ class TestPMCDeposit(unittest.TestCase):
 
             fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
             fake_list_resources.return_value = test_data["pmc_zip_key_names"]
+            mock_article_related.return_value = 200, test_data["related_article_json"]
+
             success = self.activity.do_activity(test_data["input_data"])
 
             self.assertEqual(success, test_data["expected_result"],
@@ -95,33 +123,60 @@ class TestPMCDeposit(unittest.TestCase):
                 self.assertEqual(sorted(self.zip_file_list(self.activity.zip_file_name)),
                                  sorted(test_data["zip_file_names"]))
 
+    @patch("provider.lax_provider.article_related")
     @patch.object(FakeStorageContext, 'list_resources')
     @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
     @patch('activity.activity_PMCDeposit.storage_context')
-    def test_do_activity_failed_ftp_to_endpoint(self, fake_storage_context, fake_ftp_to_endpoint,
-                                                fake_list_resources):
+    def test_do_activity_lax_failure(self, fake_storage_context, fake_ftp_to_endpoint,
+                                                fake_list_resources, mock_article_related):
 
         test_data = self.do_activity_passes[1]
 
         fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
         fake_list_resources.return_value = test_data["pmc_zip_key_names"]
         fake_ftp_to_endpoint.return_value = None
+        mock_article_related.return_value = 404, None
 
         success = self.activity.do_activity(test_data["input_data"])
 
-        self.assertEqual(False, success)
+        self.assertEqual(self.activity.ACTIVITY_TEMPORARY_FAILURE, success)
 
+    @patch("provider.lax_provider.article_related")
     @patch.object(FakeStorageContext, 'list_resources')
     @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
     @patch('activity.activity_PMCDeposit.storage_context')
-    def test_do_activity_ftp_to_endpoint_exception(
-            self, fake_storage_context, fake_ftp_to_endpoint, fake_list_resources):
+    def test_do_activity_failed_ftp_to_endpoint(self, fake_storage_context, fake_ftp_to_endpoint,
+                                                fake_list_resources, mock_article_related):
 
         test_data = self.do_activity_passes[1]
 
         fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
         fake_list_resources.return_value = test_data["pmc_zip_key_names"]
+        fake_ftp_to_endpoint.return_value = None
+        mock_article_related.return_value = 200, []
+
+        success = self.activity.do_activity(test_data["input_data"])
+
+        self.assertEqual(False, success)
+
+    @patch("provider.lax_provider.article_related")
+    @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch('activity.activity_PMCDeposit.get_session')
+    @patch.object(FakeStorageContext, 'list_resources')
+    @patch.object(activity_PMCDeposit, 'ftp_to_endpoint')
+    @patch('activity.activity_PMCDeposit.storage_context')
+    def test_do_activity_ftp_to_endpoint_exception(
+            self, fake_storage_context, fake_ftp_to_endpoint, fake_list_resources,
+            fake_session, fake_email_smtp_connect, mock_article_related):
+
+        test_data = self.do_activity_passes[1]
+        fake_session.return_value = FakeSession({})
+        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
+
+        fake_storage_context.return_value = FakeStorageContext(directory=self.test_data_dir)
+        fake_list_resources.return_value = test_data["pmc_zip_key_names"]
         fake_ftp_to_endpoint.side_effect = Exception('An exception')
+        mock_article_related.return_value = 200, []
 
         success = self.activity.do_activity(test_data["input_data"])
 

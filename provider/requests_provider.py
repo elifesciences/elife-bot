@@ -3,11 +3,12 @@ import requests
 from requests.exceptions import HTTPError
 
 
-def jats_post_params(api_key, account_key):
+def jats_post_params(api_key, account_key=None):
     """the full endpoint URL to authenticate via URL parameters"""
     params = OrderedDict()
     params["apiKey"] = api_key
-    params["accountKey"] = account_key
+    if account_key:
+        params["accountKey"] = account_key
     return params
 
 

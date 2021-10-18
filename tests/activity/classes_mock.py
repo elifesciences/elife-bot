@@ -89,6 +89,9 @@ class FakeSQSQueue:
     def delete_message(self, message):
         self.messages = [q_message for q_message in self.messages if message != q_message]
 
+    def set_message_class(self, message_class):
+        pass
+
 
 class FakeFTP:
     def __init__(self, ftp_instance=None):
@@ -97,7 +100,13 @@ class FakeFTP:
     def ftp_connect(self, **kwargs):
         return self.ftp_instance
 
+    def ftp_cwd_mkd(self, ftp_instance, sub_dir):
+        pass
+
     def ftp_to_endpoint(self, **kwargs):
+        pass
+
+    def ftp_upload(self, ftp_instance, filename):
         pass
 
     def ftp_disconnect(self, ftp_instance=None):
@@ -129,6 +138,13 @@ class FakeStorageContext:
         s3_key = match.group(3)
         return bucket_name, s3_key
 
+    def get_resource_as_key(self, resource):
+        bucket, s3_key = self.get_bucket_and_key(resource)
+        attributes = {
+            'last_modified': '2021-01-01T00:00:01.000Z'
+        }
+        return FakeKey(None, s3_key, **attributes)
+
     def resource_exists(self, resource):
         "check if a key exists"
         bucket, s3_key = self.get_bucket_and_key(resource)
@@ -151,7 +167,9 @@ class FakeStorageContext:
         copy(file_name, dest)
 
     def set_resource_from_string(self, resource, data, content_type=None):
-        pass
+        file_name = os.path.join(self.dir, resource.split('/')[-1])
+        with open(file_name, 'wb') as open_file:
+            open_file.write(data)
 
     def list_resources(self, resource):
         return self.resources
@@ -206,19 +224,21 @@ class FakeResponse:
 
 class FakeKey:
 
-    def __init__(self, directory, destination=None, source=None, key=None):
+    def __init__(self, directory=None, destination=None, source=None, **kwargs):
         self.d = directory
         if destination is None:
             destination = data.bucket_origin_file_name
         if source is None:
             source = data.xml_content_for_xml_key
 
-        if destination and source:
+        if directory and destination and source:
             self.d.write(destination, source)
 
         self.destination = destination
-        if key:
-            self.key = key
+
+        # set object attributes from remaining keyword arguments
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def get_contents_as_string(self):
         return self.d.read(self.destination)

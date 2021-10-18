@@ -7,13 +7,15 @@ Amazon SWF PublishPOA starter
 
 
 class starter_PublishPOA(Starter):
+    def __init__(self, settings=None, logger=None):
+        super(starter_PublishPOA, self).__init__(settings, logger, "PublishPOA")
 
     def get_workflow_params(self):
         workflow_params = default_workflow_params(self.settings)
-        workflow_params['workflow_id'] = "PublishPOA"
-        workflow_params['workflow_name'] = "PublishPOA"
-        workflow_params['workflow_version'] = "1"
-        workflow_params['execution_start_to_close_timeout'] = str(60 * 35)
+        workflow_params["workflow_id"] = self.name
+        workflow_params["workflow_name"] = self.name
+        workflow_params["workflow_version"] = "1"
+        workflow_params["execution_start_to_close_timeout"] = str(60 * 35)
         return workflow_params
 
     def start(self, settings):
@@ -24,19 +26,8 @@ class starter_PublishPOA(Starter):
 
     def start_workflow(self):
 
-        self.connect_to_swf()
-
         workflow_params = self.get_workflow_params()
-
-        # start a workflow execution
-        self.logger.info('Starting workflow: %s', workflow_params.get('workflow_id'))
-        try:
-            self.start_swf_workflow_execution(workflow_params)
-        except:
-            message = (
-                'Exception starting workflow execution for workflow_id %s' %
-                workflow_params.get('workflow_id'))
-            self.logger.exception(message)
+        self.start_workflow_execution(workflow_params)
 
 
 if __name__ == "__main__":
