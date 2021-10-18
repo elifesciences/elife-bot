@@ -2,6 +2,7 @@ import json
 import time
 import os
 import glob
+import smtplib
 from collections import OrderedDict
 from provider import (
     ejp,
@@ -17,6 +18,11 @@ from activity.objects import Activity
 
 # Article types for which not to send emails
 ARTICLE_TYPES_DO_NOT_SEND = ["editorial", "correction", "retraction"]
+
+# time in seconds to sleep if SMTP sending rate limit is reached
+SLEEP_SECONDS = 5
+# number of times to sleep after reaching a sending exception
+SENDING_RETRY = 3
 
 
 class activity_PublicationEmail(Activity):
@@ -488,12 +494,31 @@ class activity_PublicationEmail(Activity):
             logger=self.logger,
         )
 
-        email_provider.smtp_send_messages(
-            self.settings, messages=[message], logger=self.logger, bcc=bcc
-        )
+        connection = email_provider.smtp_connect(self.settings, self.logger)
+
+        result = None
+        tries = 1
+        while tries <= SENDING_RETRY:
+            try:
+                result = email_provider.smtp_send_message(
+                    connection, message, logger=self.logger, bcc=bcc
+                )
+            except smtplib.SMTPDataError as exception:
+                self.logger.exception(
+                    (
+                        "Sending by SMTP reached smtplib.SMTPDataError, "
+                        "will sleep %s seconds and then try again: %s"
+                    )
+                    % (SLEEP_SECONDS, str(exception))
+                )
+                # sleep a short time
+                time.sleep(SLEEP_SECONDS)
+            finally:
+                tries += 1
+
         self.logger.info(
-            "Email sending details: article %s, email %s, to %s"
-            % (doi_id, headers["email_type"], str(author.get("e_mail")))
+            "Email sending details: result %s, article %s, email %s, to %s"
+            % (result, doi_id, headers["email_type"], str(author.get("e_mail")))
         )
 
         return True
