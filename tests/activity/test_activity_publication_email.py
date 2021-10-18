@@ -3,6 +3,7 @@
 import os
 import unittest
 import shutil
+import smtplib
 from collections import OrderedDict
 from testfixtures import TempDirectory
 from mock import mock, patch
@@ -44,6 +45,8 @@ def fake_authors(activity_object, article_id=3):
 class TestPublicationEmail(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
+        # reduce the sleep time to speed up test runs
+        activity_module.SLEEP_SECONDS = 0.1
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
@@ -604,6 +607,41 @@ class TestPublicationEmail(unittest.TestCase):
         for failed_author in failed_authors:
             result = self.activity.send_email(None, None, failed_author, None, None)
             self.assertEqual(result, False)
+
+    @patch("provider.templates.Templates.get_email_body")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(activity_module.email_provider, "smtp_send_message")
+    def test_send_author_email_exception(
+        self, fake_send_message, fake_email_smtp_connect, fake_get_email_body
+    ):
+        # self.activity.download_templates()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
+        fake_get_email_body.return_value = "Body."
+        smtp_exception = smtplib.SMTPDataError(
+            454, "Throttling failure: Maximum sending rate exceeded."
+        )
+        fake_send_message.side_effect = smtp_exception
+        author = {"e_mail": "author@example.org"}
+        headers = {
+            "email_type": "author_publication_email_VOR_no_POA",
+            "format": "text",
+            "sender_email": "sender@example.org",
+            "subject": "Test",
+        }
+
+        result = self.activity.send_author_email(
+            headers.get("email_type"), author, headers, None, None, None
+        )
+        self.assertEqual(result, True)
+        self.assertEqual(
+            self.activity.logger.logexception,
+            (
+                "Sending by SMTP reached smtplib.SMTPDataError, will sleep %s seconds and then try again: %s"
+                % (activity_module.SLEEP_SECONDS, str(smtp_exception))
+            ),
+        )
 
     @patch("provider.lax_provider.article_versions")
     def test_removes_articles_based_on_article_type(self, fake_article_versions):
