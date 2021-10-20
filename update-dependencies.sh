@@ -16,6 +16,6 @@ pip install pip wheel --upgrade
 # the envvar is necessary otherwise pipenv will use it's own .venv directory.
 VIRTUAL_ENV="venv" pipenv update --dev
 
-datestamp=$(date -I)
+datestamp=$(date +"%Y-%m-%d") # long form to support linux + bsd
 echo "# file generated $datestamp - see update-dependencies.sh" > requirements.txt
 VIRTUAL_ENV="venv" pipenv run pip freeze >> requirements.txt
