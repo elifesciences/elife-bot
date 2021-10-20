@@ -30,4 +30,4 @@ def identity(process_name):
 class NewRelicHandler(logging.Handler):
     def emit(self, record):
         if record.levelno >= logging.ERROR:
-            newrelic.agent.notice_error(*sys.exc_info())
+            newrelic.agent.notice_error()
