@@ -1,0 +1,51 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[requires]
+python_version = "3.6"
+
+[packages]
+boto = "~=2.49"
+arrow = "~=1.2"
+requests = "~=2.26"
+beautifulsoup4 = "~=4.10"
+lxml = "~=4.6"
+python-slugify = "~=5.0"
+elifetools = "~=0.12"
+elifearticle = "~=0.6"
+configparser = "~=5.0"
+elifecrossref = "~=0.6"
+elifepubmed = "~=0.3"
+ejpcsvparser = "~=0.1"
+jatsgenerator = "~=0.1"
+packagepoa = "~=0.1"
+six = "~=1.16"
+docker = "~=5.0"
+pypandoc = "~=1.6"
+letterparser = "~=0.5"
+paramiko = "~=2.7"
+redis = "~=3.5"
+ddt = "~=1.4"
+newrelic = "*"
+pyfunctional = "~=1.4"
+func-timeout = "~=4.3"
+python-docx = "~=0.8"
+digestparser = "~=0.1"
+medium = {git = "https://github.com/Medium/medium-sdk-python.git", ref = "bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6"}
+psutil = "~=5.8"
+pytz = "*"
+google-cloud-bigquery = "~=2.28"
+Jinja2 = "~=3.0"
+GitPython = "~=3.1"
+PyYAML = "~=5.4"
+Wand = "~=0.6"
+PyGithub = "~=1.55"
+
+[dev-packages]
+elifecleaner = "~=0.5"
+pylint = "~=2.11"
+testfixtures = "~=6.18"
+pytest = "~=6.2"
+mock = "~=4.0"
