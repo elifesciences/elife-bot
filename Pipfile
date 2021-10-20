@@ -13,7 +13,7 @@ requests = "~=2.26"
 beautifulsoup4 = "~=4.10"
 lxml = "~=4.6"
 python-slugify = "~=5.0"
-elifetools = {git = "https://github.com/elifesciences/elife-tools.git", ref = "ee345bf0e6703ef0f7e718355e85730abbdfd117"}
+elifetools = "~=0.12"
 elifearticle = "~=0.6"
 configparser = "~=5.0"
 elifecrossref = "~=0.6"

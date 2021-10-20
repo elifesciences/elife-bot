@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "db1a94c083d940a4c1677f278b00832d6d845cebff5abdde7c170971746c0bf9"
+            "sha256": "b5fbd76985818e144ffa68deb72e9dd099c778564d7c14b5dda2906bde435011"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -223,11 +223,11 @@
         },
         "elifecrossref": {
             "hashes": [
-                "sha256:755d3767dc7858d5dd11b015808e34e647a10181ced5a475b1fc6d25f65c863b",
-                "sha256:cf9c7c5e368c9bbd6e02e764015d2e2a153c7c6c35fb16a70c21870052616cfa"
+                "sha256:53810dd12cf1d113401ef6af663c44e92b89b329487832d09702abeafd3020c2",
+                "sha256:74470b073935922326de87939ab14403e6eea094257dc93337e0a30e3285222d"
             ],
             "index": "pypi",
-            "version": "==0.6.0"
+            "version": "==0.7.0"
         },
         "elifepubmed": {
             "hashes": [
@@ -238,8 +238,12 @@
             "version": "==0.3.0"
         },
         "elifetools": {
-            "git": "https://github.com/elifesciences/elife-tools.git",
-            "ref": "ee345bf0e6703ef0f7e718355e85730abbdfd117"
+            "hashes": [
+                "sha256:406bd75d108621269d99dc4b824e90a17094e94e591dd47fe7c17e93d3b4bd14",
+                "sha256:5aae79170278805b68bb457368670668973fdfe784565361797cafa6d1897cb8"
+            ],
+            "index": "pypi",
+            "version": "==0.12.0"
         },
         "func-timeout": {
             "hashes": [
