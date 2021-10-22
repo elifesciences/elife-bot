@@ -1,5 +1,4 @@
 import unittest
-import shutil
 import glob
 import os
 import xml.etree.ElementTree as ET
@@ -7,8 +6,8 @@ from mock import patch
 import activity.activity_PublishFinalPOA as activity_module
 from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
 from tests.classes_mock import FakeSMTPServer
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeS3Connection, FakeStorageContext
+from tests.activity import settings_mock
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 
 
 class TestPublishFinalPOA(unittest.TestCase):
@@ -242,29 +241,30 @@ class TestPublishFinalPOA(unittest.TestCase):
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(activity_PublishFinalPOA, "get_pub_date_str_from_lax")
-    @patch.object(activity_PublishFinalPOA, "upload_files_to_s3")
     @patch.object(activity_PublishFinalPOA, "next_revision_number")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_module, "storage_context")
     @patch.object(activity_PublishFinalPOA, "clean_tmp_dir")
     def test_do_activity(
         self,
         fake_clean_tmp_dir,
         fake_storage_context,
+        fake_provider_storage_context,
         fake_outbox_key_names,
         fake_next_revision_number,
-        fake_upload_files_to_s3,
         fake_get_pub_date_str_from_lax,
         fake_email_smtp_connect,
     ):
 
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
         fake_clean_tmp_dir.return_value = None
-        fake_storage_context.return_value = FakeStorageContext(
+        fake_provider_storage_context.return_value = FakeStorageContext(
             "tests/test_data/poa/outbox"
         )
+        fake_storage_context.return_value = FakeStorageContext()
         fake_next_revision_number.return_value = 1
-        fake_upload_files_to_s3.return_value = True
+        # fake_upload_files_to_s3.return_value = True
         fake_get_pub_date_str_from_lax.return_value = "20160704000000"
 
         for test_data in self.do_activity_passes:
@@ -336,24 +336,26 @@ class TestPublishFinalPOA(unittest.TestCase):
             self.poa.empty_ds_file_names = []
             self.poa.unmatched_ds_file_names = []
 
-    @patch("provider.s3lib.get_s3_key_names_from_bucket")
-    @patch("activity.activity_PublishFinalPOA.S3Connection")
-    def test_next_revision_number_default(self, fake_s3_mock, fake_get_s3_key_names):
+    @patch.object(FakeStorageContext, "list_resources")
+    @patch.object(activity_module, "storage_context")
+    def test_next_revision_number_default(
+        self, fake_storage_context, fake_list_resources
+    ):
         doi_id = "7"
         key_names = []
         expected = 1
-        fake_s3_mock.return_value = FakeS3Connection()
-        fake_get_s3_key_names.return_value = key_names
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = key_names
         self.assertEqual(self.poa.next_revision_number(doi_id), expected)
 
-    @patch("provider.s3lib.get_s3_key_names_from_bucket")
-    @patch("activity.activity_PublishFinalPOA.S3Connection")
-    def test_next_revision_number_next(self, fake_s3_mock, fake_get_s3_key_names):
+    @patch.object(FakeStorageContext, "list_resources")
+    @patch.object(activity_module, "storage_context")
+    def test_next_revision_number_next(self, fake_storage_context, fake_list_resources):
         doi_id = "7"
         key_names = ["elife-00007-poa-r1.zip", "elife-00007-poa-r_bad_number.zip"]
         expected = 2
-        fake_s3_mock.return_value = FakeS3Connection()
-        fake_get_s3_key_names.return_value = key_names
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = key_names
         self.assertEqual(self.poa.next_revision_number(doi_id), expected)
 
 

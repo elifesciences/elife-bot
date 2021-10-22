@@ -8,10 +8,8 @@ import re
 from xml.etree.ElementTree import Element, SubElement
 from elifetools import parseJATS as parser
 from elifetools import xmlio
-import boto.swf
-import boto.s3
-from boto.s3.connection import S3Connection
-from provider import email_provider, lax_provider, outbox_provider, s3lib, utils
+from provider.storage_provider import storage_context
+from provider import email_provider, lax_provider, outbox_provider, utils
 from activity.objects import Activity
 
 """
@@ -479,13 +477,11 @@ class activity_PublishFinalPOA(Activity):
         file_extensions = []
         file_extensions.append(".zip")
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = s3_conn.lookup(bucket_name)
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + bucket_name + "/"
 
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket=bucket)
+        s3_key_names = storage.list_resources(orig_resource)
 
         max_revision_number = 0
         for key_name in s3_key_names:
@@ -651,21 +647,16 @@ class activity_PublishFinalPOA(Activity):
 
         bucket_name = self.publish_bucket
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = s3_conn.lookup(bucket_name)
-
-        for file in glob.glob(self.directories.get("OUTPUT_DIR") + "/*.zip"):
-            s3_key_name = file.split(os.sep)[-1]
-            s3key = boto.s3.key.Key(bucket)
-            s3key.key = s3_key_name
-            s3key.set_contents_from_filename(file, replace=True)
-            if self.logger:
-                self.logger.info(
-                    "uploaded " + s3_key_name + " to s3 bucket " + bucket_name
-                )
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        self.logger.info("STARTING HERE")
+        for file_path in glob.glob(self.directories.get("OUTPUT_DIR") + "/*.zip"):
+            file_name = file_path.split(os.sep)[-1]
+            resource_dest = storage_provider + bucket_name + "/" + file_name
+            storage.set_resource_from_filename(resource_dest, file_path)
+            self.logger.info(
+                "uploaded %s to s3 bucket path %s", (file_path, resource_dest)
+            )
         return True
 
     def approve_for_publishing(self):
