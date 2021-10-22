@@ -106,11 +106,17 @@ class S3StorageContext:
     def list_resources(self, folder):
         bucket, s3_key = self.s3_storage_objects(folder)
         folder = s3_key[1:] if s3_key[:1] == "/" else s3_key
-        bucketlist = bucket.list(prefix=folder + "/")
-        files = []
-        for key in bucketlist:
-            filename = key.name.rsplit('/', 1)[1]
-            files.append(filename)
+        if not folder:
+            # get a list of all bucket contents if no folder is specified
+            bucketlist = bucket.list()
+            for key in bucketlist:
+                files.append(key.name)
+        else:
+            # list files from the folder and its subfolders and return object names only
+            bucketlist = bucket.list(prefix=folder + "/")
+            for key in bucketlist:
+                filename = key.name.rsplit("/", 1)[1]
+                files.append(filename)
 
         return files
 
