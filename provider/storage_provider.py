@@ -106,6 +106,7 @@ class S3StorageContext:
     def list_resources(self, folder):
         bucket, s3_key = self.s3_storage_objects(folder)
         folder = s3_key[1:] if s3_key[:1] == "/" else s3_key
+        files = []
         if not folder:
             # get a list of all bucket contents if no folder is specified
             bucketlist = bucket.list()
