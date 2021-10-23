@@ -114,9 +114,9 @@ class activity_PublishFinalPOA(Activity):
 
             for doi_id, filenames in list(article_filenames_map.items()):
 
-                article_xml_file_name = self.article_xml_from_filename_map(filenames)
+                article_xml_file_name = article_xml_from_filename_map(filenames)
 
-                new_filenames = self.new_filenames(doi_id, filenames)
+                new_filenames = create_new_filenames(doi_id, filenames)
 
                 if article_xml_file_name:
                     xml_file = os.path.join(
@@ -135,11 +135,11 @@ class activity_PublishFinalPOA(Activity):
                         continue
 
                 revision = self.next_revision_number(doi_id)
-                zip_file_name = self.new_zip_file_name(doi_id, revision)
+                zip_file_name = new_zip_file_name(doi_id, revision)
                 if revision and zip_file_name:
                     self.zip_article_files(filenames, new_filenames, zip_file_name)
                     # Add files to the lists to be processed after
-                    new_article_xml_file_name = self.article_xml_from_filename_map(
+                    new_article_xml_file_name = article_xml_from_filename_map(
                         new_filenames
                     )
                     self.done_xml_files.append(new_article_xml_file_name)
@@ -183,24 +183,6 @@ class activity_PublishFinalPOA(Activity):
 
         return result
 
-    def new_filenames(self, doi_id, filenames):
-        """
-        Given a list of file names for one article,
-        rename them
-        Since there should only be one xml, pdf and possible zip
-        this should be simple
-        """
-        new_filenames = []
-        for filename in filenames:
-            name_prefix = "elife-" + utils.pad_msid(doi_id)
-            if filename.endswith(".xml"):
-                new_filenames.append(name_prefix + ".xml")
-            if filename.endswith(".pdf"):
-                new_filenames.append(name_prefix + ".pdf")
-            if filename.endswith(".zip"):
-                new_filenames.append(name_prefix + "-supp.zip")
-        return new_filenames
-
     def profile_article_files(self):
         """
         In the inbox, look for each article doi_id
@@ -210,7 +192,7 @@ class activity_PublishFinalPOA(Activity):
 
         for file in glob.glob(self.directories.get("INPUT_DIR") + "/*"):
             filename = file.split(os.sep)[-1]
-            doi_id = self.doi_id_from_filename(filename)
+            doi_id = doi_id_from_filename(filename)
             if doi_id:
                 # doi_id_str = utils.pad_msid(doi_id)
                 if doi_id not in article_filenames_map:
@@ -219,40 +201,6 @@ class activity_PublishFinalPOA(Activity):
                 article_filenames_map[doi_id].append(filename)
 
         return article_filenames_map
-
-    def doi_id_from_filename(self, filename):
-        """
-        From a filename, get the doi_id portion
-        Example file names
-            decap_elife_poa_e10727.pdf
-            decap_elife_poa_e12029v2.pdf
-            elife_poa_e10727.xml
-            elife_poa_e10727_ds.zip
-            elife_poa_e12029v2.xml
-        """
-        if filename is None:
-            return None
-
-        doi_id = None
-        # Remove folder names, if present
-        filename = filename.split(os.sep)[-1]
-        part = filename.replace("decap_elife_poa_e", "")
-        part = part.replace("elife_poa_e", "")
-        # Take the next five characters as digits
-        try:
-            doi_id = int(part[0:5])
-        except (IndexError, ValueError):
-            doi_id = None
-        return doi_id
-
-    def article_xml_from_filename_map(self, filenames):
-        """
-        Given a list of file names, return the article xml file name
-        """
-        for file_name in filenames:
-            if file_name.endswith(".xml"):
-                return file_name
-        return None
 
     def convert_xml(self, doi_id, xml_file, new_filenames):
 
@@ -263,7 +211,7 @@ class activity_PublishFinalPOA(Activity):
             xml_file, return_doctype_dict=True, return_processing_instructions=True
         )
 
-        soup = self.article_soup(xml_file)
+        soup = article_soup(xml_file)
 
         if parser.is_poa(soup):
             pub_date = None
@@ -281,7 +229,7 @@ class activity_PublishFinalPOA(Activity):
                 self.add_volume_to_xml(doi_id, volume, root)
 
             # set the article-id, to overwrite the v2, v3 value if present
-            root = self.set_article_id_xml(doi_id, root)
+            root = set_article_id_xml(doi_id, root)
 
             # if pdf file then add self-uri tag
             if parser.self_uri(soup) is not None and not parser.self_uri(soup):
@@ -295,7 +243,7 @@ class activity_PublishFinalPOA(Activity):
                 if new_file.endswith(".zip"):
                     poa_ds_zip_file = new_file
             if poa_ds_zip_file:
-                root = self.add_poa_ds_zip_to_xml(poa_ds_zip_file, root)
+                root = add_poa_ds_zip_to_xml(poa_ds_zip_file, root)
 
         # Start the file output
         reparsed_string = xmlio.output(
@@ -311,9 +259,6 @@ class activity_PublishFinalPOA(Activity):
         open_file = open(xml_file, "wb")
         open_file.write(reparsed_string)
         open_file.close()
-
-    def article_soup(self, xml_file):
-        return parser.parse_document(xml_file)
 
     def add_tag_to_xml_before_elocation_id(self, add_tag, root, doi_id=""):
         # Add the tag to the XML
@@ -348,85 +293,15 @@ class activity_PublishFinalPOA(Activity):
 
     def add_pub_date_to_xml(self, doi_id, date_struct, root):
         # Create the pub-date XML tag
-        pub_date_tag = self.pub_date_xml_element(date_struct)
+        pub_date_tag = pub_date_xml_element(date_struct)
         root = self.add_tag_to_xml_before_elocation_id(pub_date_tag, root, doi_id)
         return root
 
-    def pub_date_xml_element(self, pub_date):
-
-        pub_date_tag = Element("pub-date")
-        pub_date_tag.set("publication-format", "electronic")
-        pub_date_tag.set("date-type", "pub")
-
-        day = SubElement(pub_date_tag, "day")
-        day.text = str(pub_date.tm_mday).zfill(2)
-
-        month = SubElement(pub_date_tag, "month")
-        month.text = str(pub_date.tm_mon).zfill(2)
-
-        year = SubElement(pub_date_tag, "year")
-        year.text = str(pub_date.tm_year)
-
-        return pub_date_tag
-
     def add_volume_to_xml(self, doi_id, volume, root):
         # Create the pub-date XML tag
-        volume_tag = self.volume_xml_element(volume)
+        volume_tag = volume_xml_element(volume)
         root = self.add_tag_to_xml_before_elocation_id(volume_tag, root, doi_id)
         return root
-
-    def volume_xml_element(self, volume):
-        volume_tag = Element("volume")
-        volume_tag.text = str(volume)
-        return volume_tag
-
-    def set_article_id_xml(self, doi_id, root):
-
-        for tag in root.findall("./front/article-meta/article-id"):
-            if tag.get("pub-id-type") == "publisher-id":
-                # Overwrite the text with the base DOI value
-                tag.text = utils.pad_msid(doi_id)
-
-        return root
-
-    def add_poa_ds_zip_to_xml(self, file_name, root):
-        """
-        Add the ext-link tag to the XML for the PoA ds.zip file
-        """
-
-        # Create the XML tag
-        supp_tag = self.ds_zip_xml_element(file_name)
-
-        # Add the tag to the XML
-        back_sec_tags = root.findall('./back/sec[@sec-type="supplementary-material"]')
-        if not back_sec_tags:
-            # add sec tag
-            back_tags = root.findall("./back")
-            back_tag = back_tags[0]
-            sec_tag = SubElement(back_tag, "sec")
-            sec_tag.set("sec-type", "supplementary-material")
-        else:
-            sec_tag = back_sec_tags[-1]
-
-        sec_tag.append(supp_tag)
-
-        return root
-
-    def ds_zip_xml_element(self, file_name):
-
-        supp_tag = Element("supplementary-material")
-        ext_link_tag = SubElement(supp_tag, "ext-link")
-        ext_link_tag.set("xlink:href", file_name)
-        if "supp" in file_name:
-            ext_link_tag.text = "Download zip"
-
-            p_tag = SubElement(supp_tag, "p")
-            p_tag.text = (
-                "Any figures and tables for this article are included "
-                + "in the PDF. The zip folder contains additional supplemental files."
-            )
-
-        return supp_tag
 
     def add_self_uri_to_xml(self, doi_id, file_name, root):
         """
@@ -434,7 +309,7 @@ class activity_PublishFinalPOA(Activity):
         """
 
         # Create the XML tag
-        self_uri_tag = self.self_uri_xml_element(file_name)
+        self_uri_tag = self_uri_xml_element(file_name)
 
         # Add the tag to the XML
         for tag in root.findall("./front/article-meta"):
@@ -448,12 +323,6 @@ class activity_PublishFinalPOA(Activity):
                 tag.insert(parent_tag_index, self_uri_tag)
 
         return root
-
-    def self_uri_xml_element(self, file_name):
-        self_uri_tag = Element("self-uri")
-        self_uri_tag.set("content-type", "pdf")
-        self_uri_tag.set("xlink:href", file_name)
-        return self_uri_tag
 
     def get_pub_date_str_from_lax(self, doi_id):
         """
@@ -502,21 +371,6 @@ class activity_PublishFinalPOA(Activity):
 
         return next_revision_number
 
-    def new_zip_file_name(self, doi_id, revision, status="poa"):
-        new_file_name = None
-
-        new_file_name = (
-            "elife-"
-            + utils.pad_msid(doi_id)
-            + "-"
-            + str(status)
-            + "-r"
-            + str(revision)
-            + ".zip"
-        )
-
-        return new_file_name
-
     def zip_article_files(self, filenames, new_filenames, zip_filename):
         """
         Move the files from old to new name into the tmp_dir
@@ -526,7 +380,7 @@ class activity_PublishFinalPOA(Activity):
 
         # Move the files
         for filename in filenames:
-            new_filename = self.new_filename_from_old(filename, new_filenames)
+            new_filename = new_filename_from_old(filename, new_filenames)
             if new_filename:
                 old_filename_plus_path = os.path.join(
                     self.directories.get("INPUT_DIR"), filename
@@ -620,26 +474,6 @@ class activity_PublishFinalPOA(Activity):
                         os.path.join(self.directories.get("TMP_DIR"), zipfile_filename),
                     )
 
-    def new_filename_from_old(self, old_filename, new_filenames):
-        """
-        From a list of new file names, find the new name
-        that corresponds with the old file name based on the file extension
-        """
-        new_filename = None
-        try:
-            extension = old_filename.split(".")[-1]
-        except IndexError:
-            extension = None
-        if extension:
-            for filename in new_filenames:
-                try:
-                    new_extension = filename.split(".")[-1]
-                except IndexError:
-                    new_extension = None
-                if new_extension and extension == new_extension:
-                    new_filename = filename
-        return new_filename
-
     def upload_files_to_s3(self):
         """
         Upload the article zip files to S3
@@ -691,7 +525,7 @@ class activity_PublishFinalPOA(Activity):
             if current_zipfile:
                 filename = current_zipfile.filename.split(os.sep)[-1]
                 # Check for those with no zipped folder contents
-                if self.check_empty_supplemental_files(current_zipfile) is not True:
+                if check_empty_supplemental_files(current_zipfile) is not True:
                     badfile = True
                     self.empty_ds_file_names.append(filename)
 
@@ -719,68 +553,36 @@ class activity_PublishFinalPOA(Activity):
         pdf_files = glob.glob(self.directories.get("INPUT_DIR") + pdf_file_type)
 
         for filename in xml_files:
-            matching_filename = self.get_filename_from_path(filename, ".xml")
-            pdf_filenames = [self.get_filename_from_path(f, ".pdf") for f in pdf_files]
+            matching_filename = get_filename_from_path(filename, ".xml")
+            pdf_filenames = [get_filename_from_path(f, ".pdf") for f in pdf_files]
             pdf_filenames = [fname.replace("decap_", "") for fname in pdf_filenames]
 
             if matching_filename not in pdf_filenames:
                 shutil.move(filename, self.directories.get("JUNK_DIR") + "/")
 
         for filename in pdf_files:
-            matching_filename = self.get_filename_from_path(filename, ".pdf")
+            matching_filename = get_filename_from_path(filename, ".pdf")
             matching_filename = matching_filename.replace("decap_", "")
             xml_filenames = [
-                self.get_filename_from_path(fname, ".xml") for fname in xml_files
+                get_filename_from_path(fname, ".xml") for fname in xml_files
             ]
             if matching_filename not in xml_filenames:
                 shutil.move(filename, self.directories.get("JUNK_DIR") + "/")
 
         return status
 
-    def check_empty_supplemental_files(self, input_zipfile):
-        """
-        Given a zipfile.ZipFile object, look inside the internal zipped folder
-        and assess the zipextfile object length to see whether it is empty
-        """
-        zipextfile_line_count = 0
-        sub_folder_name = None
-
-        for name in input_zipfile.namelist():
-            if re.match(r"^.*\.zip$", name):
-                sub_folder_name = name
-
-        # skip this check if there is no internal zip file
-        if not sub_folder_name and input_zipfile.namelist():
-            return True
-
-        if sub_folder_name:
-            zipextfile = input_zipfile.open(sub_folder_name)
-
-            while zipextfile.readline():
-                zipextfile_line_count += 1
-
-        # Empty subfolder zipextfile object will have only 1 line
-        #  Non-empty file will have more than 1 line
-        if zipextfile_line_count <= 1:
-            return False
-        if zipextfile_line_count > 1:
-            return True
-        return None
-
     def check_matching_xml_file(self, zip_filename):
         """
         Given a zipfile.ZipFile object, check if for the DOI it represents
         there is a matching XML file for that DOI
         """
-        zip_file_article_number = self.get_filename_from_path(zip_filename, "_ds.zip")
+        zip_file_article_number = get_filename_from_path(zip_filename, "_ds.zip")
 
         file_type = "/*.xml"
         xml_files = glob.glob(self.directories.get("INPUT_DIR") + file_type)
         xml_file_articles_numbers = []
         for xml_file in xml_files:
-            xml_file_articles_numbers.append(
-                self.get_filename_from_path(xml_file, ".xml")
-            )
+            xml_file_articles_numbers.append(get_filename_from_path(xml_file, ".xml"))
         # print xml_file_articles_numbers
 
         if zip_file_article_number in xml_file_articles_numbers:
@@ -794,13 +596,13 @@ class activity_PublishFinalPOA(Activity):
         Given a zipfile.ZipFile object, check if for the DOI it represents
         there is a matching PDF file for that DOI
         """
-        zip_file_article_number = self.get_filename_from_path(zip_filename, "_ds.zip")
+        zip_file_article_number = get_filename_from_path(zip_filename, "_ds.zip")
 
         file_type = "/*.pdf"
         pdf_files = glob.glob(self.directories.get("INPUT_DIR") + file_type)
         pdf_file_articles_numbers = []
         for file_name in pdf_files:
-            pdf_file_name = self.get_filename_from_path(file_name, ".pdf")
+            pdf_file_name = get_filename_from_path(file_name, ".pdf")
             # Remove the decap_ from the start of the file name before comparing
             pdf_file_name = pdf_file_name.replace("decap_", "")
             pdf_file_articles_numbers.append(pdf_file_name)
@@ -810,20 +612,6 @@ class activity_PublishFinalPOA(Activity):
 
         # Default return
         return False
-
-    def get_filename_from_path(self, file_path, extension):
-        """
-        Get a filename minus the supplied file extension
-        and without any folder or path
-        """
-        filename = file_path.split(extension)[0]
-        # Remove path if present
-        try:
-            filename = filename.split(os.sep)[-1]
-        except IndexError:
-            pass
-
-        return filename
 
     def send_email(self):
         """
@@ -955,3 +743,218 @@ class activity_PublishFinalPOA(Activity):
         body += "\n\nSincerely\n\neLife bot"
 
         return body
+
+
+def create_new_filenames(doi_id, filenames):
+    """
+    Given a list of file names for one article,
+    rename them
+    Since there should only be one xml, pdf and possible zip
+    this should be simple
+    """
+    new_filenames = []
+    for filename in filenames:
+        name_prefix = "elife-" + utils.pad_msid(doi_id)
+        if filename.endswith(".xml"):
+            new_filenames.append(name_prefix + ".xml")
+        if filename.endswith(".pdf"):
+            new_filenames.append(name_prefix + ".pdf")
+        if filename.endswith(".zip"):
+            new_filenames.append(name_prefix + "-supp.zip")
+    return new_filenames
+
+
+def doi_id_from_filename(filename):
+    """
+    From a filename, get the doi_id portion
+    Example file names
+        decap_elife_poa_e10727.pdf
+        decap_elife_poa_e12029v2.pdf
+        elife_poa_e10727.xml
+        elife_poa_e10727_ds.zip
+        elife_poa_e12029v2.xml
+    """
+    if filename is None:
+        return None
+
+    doi_id = None
+    # Remove folder names, if present
+    filename = filename.split(os.sep)[-1]
+    part = filename.replace("decap_elife_poa_e", "")
+    part = part.replace("elife_poa_e", "")
+    # Take the next five characters as digits
+    try:
+        doi_id = int(part[0:5])
+    except (IndexError, ValueError):
+        doi_id = None
+    return doi_id
+
+
+def article_xml_from_filename_map(filenames):
+    """
+    Given a list of file names, return the article xml file name
+    """
+    for file_name in filenames:
+        if file_name.endswith(".xml"):
+            return file_name
+    return None
+
+
+def article_soup(xml_file):
+    return parser.parse_document(xml_file)
+
+
+def pub_date_xml_element(pub_date):
+
+    pub_date_tag = Element("pub-date")
+    pub_date_tag.set("publication-format", "electronic")
+    pub_date_tag.set("date-type", "pub")
+
+    day = SubElement(pub_date_tag, "day")
+    day.text = str(pub_date.tm_mday).zfill(2)
+
+    month = SubElement(pub_date_tag, "month")
+    month.text = str(pub_date.tm_mon).zfill(2)
+
+    year = SubElement(pub_date_tag, "year")
+    year.text = str(pub_date.tm_year)
+
+    return pub_date_tag
+
+
+def volume_xml_element(volume):
+    volume_tag = Element("volume")
+    volume_tag.text = str(volume)
+    return volume_tag
+
+
+def set_article_id_xml(doi_id, root):
+
+    for tag in root.findall("./front/article-meta/article-id"):
+        if tag.get("pub-id-type") == "publisher-id":
+            # Overwrite the text with the base DOI value
+            tag.text = utils.pad_msid(doi_id)
+
+    return root
+
+
+def add_poa_ds_zip_to_xml(file_name, root):
+    """
+    Add the ext-link tag to the XML for the PoA ds.zip file
+    """
+
+    # Create the XML tag
+    supp_tag = ds_zip_xml_element(file_name)
+
+    # Add the tag to the XML
+    back_sec_tags = root.findall('./back/sec[@sec-type="supplementary-material"]')
+    if not back_sec_tags:
+        # add sec tag
+        back_tags = root.findall("./back")
+        back_tag = back_tags[0]
+        sec_tag = SubElement(back_tag, "sec")
+        sec_tag.set("sec-type", "supplementary-material")
+    else:
+        sec_tag = back_sec_tags[-1]
+
+    sec_tag.append(supp_tag)
+
+    return root
+
+
+def ds_zip_xml_element(file_name):
+
+    supp_tag = Element("supplementary-material")
+    ext_link_tag = SubElement(supp_tag, "ext-link")
+    ext_link_tag.set("xlink:href", file_name)
+    if "supp" in file_name:
+        ext_link_tag.text = "Download zip"
+
+        p_tag = SubElement(supp_tag, "p")
+        p_tag.text = (
+            "Any figures and tables for this article are included "
+            + "in the PDF. The zip folder contains additional supplemental files."
+        )
+
+    return supp_tag
+
+
+def self_uri_xml_element(file_name):
+    self_uri_tag = Element("self-uri")
+    self_uri_tag.set("content-type", "pdf")
+    self_uri_tag.set("xlink:href", file_name)
+    return self_uri_tag
+
+
+def new_zip_file_name(doi_id, revision, status="poa"):
+    new_file_name = None
+
+    new_file_name = (
+        "elife-"
+        + utils.pad_msid(doi_id)
+        + "-"
+        + str(status)
+        + "-r"
+        + str(revision)
+        + ".zip"
+    )
+
+    return new_file_name
+
+
+def new_filename_from_old(old_filename, new_filenames):
+    """
+    From a list of new file names, find the new name
+    that corresponds with the old file name based on the file extension
+    """
+    new_filename = None
+    try:
+        extension = old_filename.split(".")[-1]
+    except AttributeError:
+        extension = None
+    if extension:
+        for filename in new_filenames:
+            new_extension = filename.split(".")[-1]
+            if new_extension and extension == new_extension:
+                new_filename = filename
+    return new_filename
+
+
+def check_empty_supplemental_files(input_zipfile):
+    """
+    Given a zipfile.ZipFile object, look inside the internal zipped folder
+    and assess the zipextfile object length to see whether it is empty
+    """
+    zipextfile_line_count = 0
+    sub_folder_name = None
+
+    for name in input_zipfile.namelist():
+        if re.match(r"^.*\.zip$", name):
+            sub_folder_name = name
+
+    # skip this check if there is no internal zip file
+    if not sub_folder_name and input_zipfile.namelist():
+        return True
+
+    if sub_folder_name:
+        zipextfile = input_zipfile.open(sub_folder_name)
+
+        while zipextfile.readline():
+            zipextfile_line_count += 1
+
+    # Empty subfolder zipextfile object will have only 1 line
+    #  Non-empty file will have more than 1 line
+    if zipextfile_line_count <= 1:
+        return False
+    return True
+
+
+def get_filename_from_path(file_path, extension):
+    """
+    Get a filename minus the supplied file extension
+    and without any folder or path
+    """
+    filename = file_path.split(extension)[0]
+    # Remove path if present
+    filename = filename.split(os.sep)[-1]
+    return filename

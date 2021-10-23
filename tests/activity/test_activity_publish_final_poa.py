@@ -1,13 +1,17 @@
 import unittest
 import glob
 import os
+import zipfile
 import xml.etree.ElementTree as ET
 from mock import patch
+from testfixtures import TempDirectory
+from ddt import ddt, data, unpack
 import activity.activity_PublishFinalPOA as activity_module
 from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
 from tests.classes_mock import FakeSMTPServer
-from tests.activity import settings_mock
+from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+import tests.activity.test_activity_data as activity_test_data
 
 
 class TestPublishFinalPOA(unittest.TestCase):
@@ -228,6 +232,9 @@ class TestPublishFinalPOA(unittest.TestCase):
 
     def tearDown(self):
         self.poa.clean_tmp_dir()
+        helpers.delete_files_in_folder(
+            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     def remove_files_from_tmp_dir_subfolders(self):
         """
@@ -419,3 +426,113 @@ def ds_zip_in_list_of_files(xml_file, file_list):
         if str(doi_id) in file and file.endswith("ds.zip"):
             return True
     return False
+
+
+@ddt
+class TestGetFilenameFromPath(unittest.TestCase):
+    @data(
+        ("elife_poa_e99999.xml", ".xml", "elife_poa_e99999"),
+        (
+            os.path.join("folder", "elife_poa_e99999_ds.zip"),
+            "_ds.zip",
+            "elife_poa_e99999",
+        ),
+    )
+    @unpack
+    def test_get_filename_from_path(self, file_path, extension, expected):
+        self.assertEqual(
+            activity_module.get_filename_from_path(file_path, extension), expected
+        )
+
+
+class TestCheckEmptySupplementalFiles(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_check_empty_supplemental_files(self):
+        input_zipfile = "tests/test_data/poa/outbox/elife_poa_e13833_ds.zip"
+        with zipfile.ZipFile(input_zipfile, "r") as current_zipfile:
+            self.assertTrue(
+                activity_module.check_empty_supplemental_files(current_zipfile)
+            )
+
+    def test_check_empty_supplemental_files_no_internal_zip(self):
+        input_zipfile = "tests/test_data/poa/outbox/elife_poa_e99997_ds.zip"
+        with zipfile.ZipFile(input_zipfile, "r") as current_zipfile:
+            self.assertTrue(
+                activity_module.check_empty_supplemental_files(current_zipfile)
+            )
+
+    def test_check_empty_supplemental_files_empty_internal_zip(self):
+        directory = TempDirectory()
+        internal_zip_path = os.path.join(directory.path, "internal.zip")
+        with zipfile.ZipFile(internal_zip_path, "w") as input_zipfile:
+            pass
+        zip_file_path = os.path.join(directory.path, "empty.zip")
+        with zipfile.ZipFile(zip_file_path, "w") as input_zipfile:
+            input_zipfile.write(internal_zip_path, "elife13833_Supplemental_files.zip")
+        with zipfile.ZipFile(zip_file_path, "r") as current_zipfile:
+            self.assertEqual(
+                activity_module.check_empty_supplemental_files(current_zipfile), False
+            )
+
+
+@ddt
+class TestNewFilenameFromOld(unittest.TestCase):
+    def setUp(self):
+        self.new_filenames = [
+            "elife-13833-supp.zip",
+            "elife-13833.xml",
+            "elife-13833.pdf",
+            "fake_file",
+        ]
+
+    def test_new_filename_from_old(self):
+        old_filename = "elife_poa_e13833_ds.zip"
+        expected = "elife-13833-supp.zip"
+        self.assertEqual(
+            activity_module.new_filename_from_old(old_filename, self.new_filenames),
+            expected,
+        )
+
+    @data(
+        (None, None),
+        ("", None),
+        ("fake_file", "fake_file"),
+        ("fake_file.", None),
+        ("does_not_exist", None),
+    )
+    @unpack
+    def test_new_filename_from_old_edge_cases(self, old_filename, expected):
+        # edge cases for test coverage
+        self.assertEqual(
+            activity_module.new_filename_from_old(old_filename, self.new_filenames),
+            expected,
+        )
+
+
+class TestNewZipFileName(unittest.TestCase):
+    def test_new_zip_file_name(self):
+        doi_id = "666"
+        revision = "1"
+        status = "poa"
+        expected = "elife-00666-poa-r1.zip"
+        self.assertEqual(
+            activity_module.new_zip_file_name(doi_id, revision, status), expected
+        )
+
+
+class TestArticleXmlFromFilenameMap(unittest.TestCase):
+    def test_article_xml_from_filename_map(self):
+        filenames = ["elife_poa_e99999.xml"]
+        expected = "elife_poa_e99999.xml"
+        self.assertEqual(
+            activity_module.article_xml_from_filename_map(filenames), expected
+        )
+
+    def test_article_xml_from_filename_map_not_found(self):
+        filenames = ["elife_poa_e99999_ds.zip"]
+        expected = None
+        self.assertEqual(
+            activity_module.article_xml_from_filename_map(filenames), expected
+        )
