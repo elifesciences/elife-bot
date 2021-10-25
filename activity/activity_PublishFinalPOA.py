@@ -602,10 +602,37 @@ class activity_PublishFinalPOA(Activity):
         After do_activity is finished, send emails to recipients
         on the status
         """
-        current_time = time.gmtime()
+        datetime_string = time.strftime("%Y-%m-%d %H:%M", time.gmtime())
+        activity_status_text = utils.get_activity_status_text(self.activity_status)
 
-        body = self.get_email_body(current_time)
-        subject = self.get_email_subject(current_time)
+        statuses = {
+            "activity": self.activity_status,
+            "approve": self.approve_status,
+            "publish": self.publish_status,
+        }
+
+        body = email_provider.get_email_body_head(
+            self.name, activity_status_text, statuses
+        )
+        body += email_provider.get_email_body_middle_outbox_files(
+            self.outbox_s3_key_names
+        )
+        body += self.get_email_body()
+        body += email_provider.get_admin_email_body_foot(
+            self.get_activityId(),
+            self.get_workflowId(),
+            datetime_string,
+            self.settings.domain,
+        )
+
+        subject = email_provider.get_email_subject(
+            datetime_string,
+            activity_status_text,
+            self.name,
+            self.settings.domain,
+            self.outbox_s3_key_names,
+        )
+
         sender_email = self.settings.ses_poa_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
@@ -628,103 +655,33 @@ class activity_PublishFinalPOA(Activity):
 
         return True
 
-    def get_email_subject(self, current_time):
+    def get_email_body(self):
         """
-        Assemble the email subject
-        """
-        date_format = "%Y-%m-%d %H:%M"
-        datetime_string = time.strftime(date_format, current_time)
-
-        activity_status_text = utils.get_activity_status_text(self.activity_status)
-
-        # Count the files moved from the outbox, the files that were processed
-        files_count = 0
-        if self.outbox_s3_key_names:
-            files_count = len(self.outbox_s3_key_names)
-
-        subject = (
-            self.name
-            + " "
-            + activity_status_text
-            + " files: "
-            + str(files_count)
-            + ", "
-            + datetime_string
-            + ", eLife SWF domain: "
-            + self.settings.domain
-        )
-
-        return subject
-
-    def get_email_body(self, current_time):
-        """
-        Format the body of the email
+        Format the unique body of the email
         """
 
         body = ""
 
-        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, current_time)
-
-        activity_status_text = utils.get_activity_status_text(self.activity_status)
-
-        # Bulk of body
-        body += self.name + " status:" + "\n"
-        body += "\n"
-        body += activity_status_text + "\n"
-        body += "\n"
-
-        body += "activity_status: " + str(self.activity_status) + "\n"
-        body += "approve_status: " + str(self.approve_status) + "\n"
-        body += "publish_status: " + str(self.publish_status) + "\n"
-
-        body += "\n"
-        body += "Outbox files: " + "\n"
-
-        files_count = 0
         if self.outbox_s3_key_names:
-            files_count = len(self.outbox_s3_key_names)
-        if files_count > 0:
-            for name in self.outbox_s3_key_names:
-                body += name + "\n"
-        else:
-            body += "No files in outbox." + "\n"
-
-        if files_count > 0:
             # Report on any empty or unmatched supplement files
             if self.malformed_ds_file_names:
-                body += "\n"
-                body += "Note: Malformed ds files not sent by ftp: " + "\n"
+                body += "\nNote: Malformed ds files not sent by ftp: \n"
                 for name in self.malformed_ds_file_names:
-                    body += name + "\n"
+                    body += "%s\n" % name
             if self.empty_ds_file_names:
-                body += "\n"
-                body += "Note: Empty ds files not sent by ftp: " + "\n"
+                body += "\nNote: Empty ds files not sent by ftp: \n"
                 for name in self.empty_ds_file_names:
-                    body += name + "\n"
+                    body += "%s\n" % name
             if self.unmatched_ds_file_names:
-                body += "\n"
-                body += "Note: Unmatched ds files not sent by ftp: " + "\n"
+                body += "\nNote: Unmatched ds files not sent by ftp: \n"
                 for name in self.unmatched_ds_file_names:
-                    body += name + "\n"
+                    body += "%s\n" % name
 
-        if self.publish_status is True and files_count > 0:
-            body += "\n"
-            body += "Files moved to: " + str(self.published_folder_name) + "\n"
+        if self.publish_status is True and self.outbox_s3_key_names:
+            body += "\nFiles moved to: %s\n" % str(self.published_folder_name)
 
         for name in self.clean_from_outbox_files:
-            body += name + "\n"
-
-        body += "\n"
-        body += "-------------------------------\n"
-        body += "SWF workflow details: " + "\n"
-        body += "activityId: " + str(self.get_activityId()) + "\n"
-        body += "As part of workflowId: " + str(self.get_workflowId()) + "\n"
-        body += "As at " + datetime_string + "\n"
-        body += "Domain: " + self.settings.domain + "\n"
-
-        body += "\n"
-
-        body += "\n\nSincerely\n\neLife bot"
+            body += "%s\n" % name
 
         return body
 
