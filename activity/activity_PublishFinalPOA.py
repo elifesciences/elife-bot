@@ -70,8 +70,7 @@ class activity_PublishFinalPOA(Activity):
         """
         Activity, do the work
         """
-        if self.logger:
-            self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         # Create output directories
         self.make_activity_directories()
@@ -127,11 +126,10 @@ class activity_PublishFinalPOA(Activity):
                         self.convert_xml(doi_id, xml_file, new_filenames)
                     except Exception as exception:
                         # One possible error is an entirely blank XML file or a malformed xml file
-                        if self.logger:
-                            self.logger.exception(
-                                "Exception when converting XML for doi %s, %s"
-                                % (str(doi_id), exception)
-                            )
+                        self.logger.exception(
+                            "Exception when converting XML for doi %s, %s"
+                            % (str(doi_id), exception)
+                        )
                         continue
 
                 revision = self.next_revision_number(doi_id)
@@ -264,10 +262,9 @@ class activity_PublishFinalPOA(Activity):
         for tag in root.findall("./front/article-meta"):
             parent_tag_index = xmlio.get_first_element_index(tag, "elocation-id")
             if not parent_tag_index:
-                if self.logger:
-                    self.logger.info(
-                        "no elocation-id tag and no %s added: %s", (add_tag.tag, doi_id)
-                    )
+                self.logger.info(
+                    "no elocation-id tag and no %s added: %s", (add_tag.tag, doi_id)
+                )
             else:
                 tag.insert(parent_tag_index - 1, add_tag)
 
@@ -311,10 +308,9 @@ class activity_PublishFinalPOA(Activity):
         for tag in root.findall("./front/article-meta"):
             parent_tag_index = xmlio.get_first_element_index(tag, "permissions")
             if not parent_tag_index:
-                if self.logger:
-                    self.logger.info(
-                        "no permissions tag and no self-uri tag added: %s", doi_id
-                    )
+                self.logger.info(
+                    "no permissions tag and no self-uri tag added: %s", doi_id
+                )
             else:
                 tag.insert(parent_tag_index, self_uri_tag)
 
@@ -384,11 +380,10 @@ class activity_PublishFinalPOA(Activity):
                 new_filename_plus_path = os.path.join(
                     self.directories.get("TMP_DIR"), new_filename
                 )
-                if self.logger:
-                    self.logger.info(
-                        "moving poa file from %s to %s"
-                        % (old_filename_plus_path, new_filename_plus_path)
-                    )
+                self.logger.info(
+                    "moving poa file from %s to %s"
+                    % (old_filename_plus_path, new_filename_plus_path)
+                )
 
                 shutil.move(old_filename_plus_path, new_filename_plus_path)
 
@@ -439,8 +434,7 @@ class activity_PublishFinalPOA(Activity):
                     os.path.join(self.directories.get("TMP_DIR"), "manifest.xml"),
                     os.path.join(self.directories.get("JUNK_DIR"), "manifest.xml"),
                 )
-                if self.logger:
-                    self.logger.info("moving PoA zip manifest.xml to the junk folder")
+                self.logger.info("moving PoA zip manifest.xml to the junk folder")
             except IOError:
                 pass
 
