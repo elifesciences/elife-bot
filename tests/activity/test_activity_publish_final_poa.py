@@ -431,6 +431,42 @@ def ds_zip_in_list_of_files(xml_file, file_list):
     return False
 
 
+class TestCheckMatchingXmlFile(unittest.TestCase):
+    @patch("glob.glob")
+    def test_check_matching_xml_file(self, fake_glob):
+        zip_filename = "elife_poa_e14692_ds.zip"
+        fake_glob.return_value = ["input_dir/elife_poa_e14692.xml"]
+        self.assertTrue(
+            activity_module.check_matching_xml_file(zip_filename, input_dir="")
+        )
+
+    @patch("glob.glob")
+    def test_check_matching_xml_file_not_found(self, fake_glob):
+        zip_filename = "elife_poa_e14692_ds.zip"
+        fake_glob.return_value = ["input_dir/not_found.xml"]
+        self.assertEqual(
+            activity_module.check_matching_xml_file(zip_filename, input_dir=""), False
+        )
+
+
+class TestCheckMatchingPdfFile(unittest.TestCase):
+    @patch("glob.glob")
+    def test_check_matching_pdf_file(self, fake_glob):
+        zip_filename = "elife_poa_e14692_ds.zip"
+        fake_glob.return_value = ["input_dir/decap_elife_poa_e14692.pdf"]
+        self.assertTrue(
+            activity_module.check_matching_pdf_file(zip_filename, input_dir="")
+        )
+
+    @patch("glob.glob")
+    def test_check_matching_pdf_file_not_found(self, fake_glob):
+        zip_filename = "elife_poa_e14692_ds.zip"
+        fake_glob.return_value = ["input_dir/not_found.pdf"]
+        self.assertEqual(
+            activity_module.check_matching_pdf_file(zip_filename, input_dir=""), False
+        )
+
+
 class TestAddSelfUriToXml(unittest.TestCase):
     def setUp(self):
         self.logger = FakeLogger()

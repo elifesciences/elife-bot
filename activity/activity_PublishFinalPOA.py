@@ -104,44 +104,42 @@ class activity_PublishFinalPOA(Activity):
         # Approve files for publishing
         self.approve_status = self.approve_for_publishing()
 
+        self.filter_ds_zip_files()
+        self.filter_file_pairs()
+
+        article_filenames_map = profile_article_files(self.directories.get("INPUT_DIR"))
+
+        for doi_id, filenames in list(article_filenames_map.items()):
+
+            article_xml_file_name = article_xml_from_filename_map(filenames)
+
+            new_filenames = create_new_filenames(doi_id, filenames)
+
+            if article_xml_file_name:
+                xml_file = os.path.join(
+                    self.directories.get("INPUT_DIR"), article_xml_file_name
+                )
+
+                try:
+                    self.convert_xml(doi_id, xml_file, new_filenames)
+                except Exception as exception:
+                    # One possible error is an entirely blank XML file or a malformed xml file
+                    self.logger.exception(
+                        "Exception when converting XML for doi %s, %s"
+                        % (str(doi_id), exception)
+                    )
+                    continue
+
+            revision = self.next_revision_number(doi_id)
+            zip_file_name = new_zip_file_name(doi_id, revision)
+            if revision and zip_file_name:
+                self.zip_article_files(filenames, new_filenames, zip_file_name)
+                # Add files to the lists to be processed after
+                new_article_xml_file_name = article_xml_from_filename_map(new_filenames)
+                self.done_xml_files.append(new_article_xml_file_name)
+                self.clean_from_outbox_files = self.clean_from_outbox_files + filenames
+
         if self.approve_status is True:
-
-            article_filenames_map = self.profile_article_files()
-
-            for doi_id, filenames in list(article_filenames_map.items()):
-
-                article_xml_file_name = article_xml_from_filename_map(filenames)
-
-                new_filenames = create_new_filenames(doi_id, filenames)
-
-                if article_xml_file_name:
-                    xml_file = os.path.join(
-                        self.directories.get("INPUT_DIR"), article_xml_file_name
-                    )
-
-                    try:
-                        self.convert_xml(doi_id, xml_file, new_filenames)
-                    except Exception as exception:
-                        # One possible error is an entirely blank XML file or a malformed xml file
-                        self.logger.exception(
-                            "Exception when converting XML for doi %s, %s"
-                            % (str(doi_id), exception)
-                        )
-                        continue
-
-                revision = self.next_revision_number(doi_id)
-                zip_file_name = new_zip_file_name(doi_id, revision)
-                if revision and zip_file_name:
-                    self.zip_article_files(filenames, new_filenames, zip_file_name)
-                    # Add files to the lists to be processed after
-                    new_article_xml_file_name = article_xml_from_filename_map(
-                        new_filenames
-                    )
-                    self.done_xml_files.append(new_article_xml_file_name)
-                    self.clean_from_outbox_files = (
-                        self.clean_from_outbox_files + filenames
-                    )
-
             # Upload the zip files to the publishing bucket
             self.publish_status = self.upload_files_to_s3()
 
@@ -177,25 +175,6 @@ class activity_PublishFinalPOA(Activity):
             self.clean_tmp_dir()
 
         return result
-
-    def profile_article_files(self):
-        """
-        In the inbox, look for each article doi_id
-        and the files associated with that article
-        """
-        article_filenames_map = {}
-
-        for file in glob.glob("%s/*" % self.directories.get("INPUT_DIR")):
-            filename = file.split(os.sep)[-1]
-            doi_id = doi_id_from_filename(filename)
-            if doi_id:
-                # doi_id_str = utils.pad_msid(doi_id)
-                if doi_id not in article_filenames_map:
-                    article_filenames_map[doi_id] = []
-                # Add the filename to the map for this article
-                article_filenames_map[doi_id].append(filename)
-
-        return article_filenames_map
 
     def convert_xml(self, doi_id, xml_file, new_filenames):
 
@@ -434,19 +413,14 @@ class activity_PublishFinalPOA(Activity):
         """
         Final checks before processing the downloaded files
         Check for empty INPUT_DIR
-        Also, remove files that should not be published due to incomplete
-        sets of files per article
         """
-
-        status = None
-
         # Check for empty directory
         if len(glob.glob("%s/*" % self.directories.get("INPUT_DIR"))) <= 1:
-            status = False
-        else:
-            status = True
+            return False
+        return True
 
-        # For each data supplements file, move invalid ones to not publish by FTP
+    def filter_ds_zip_files(self):
+        "For each data supplements file, move invalid ones to not publish by FTP"
         zipfiles = glob.glob("%s/*_ds.zip" % self.directories.get("INPUT_DIR"))
         for input_zipfile in zipfiles:
             badfile = None
@@ -461,8 +435,14 @@ class activity_PublishFinalPOA(Activity):
 
                     # Check for a file with no matching XML document
                     if (
-                        self.check_matching_xml_file(filename) is not True
-                        or self.check_matching_pdf_file(filename) is not True
+                        check_matching_xml_file(
+                            filename, self.directories.get("INPUT_DIR")
+                        )
+                        is not True
+                        or check_matching_pdf_file(
+                            filename, self.directories.get("INPUT_DIR")
+                        )
+                        is not True
                     ):
                         badfile = True
                         self.unmatched_ds_file_names.append(filename)
@@ -478,6 +458,11 @@ class activity_PublishFinalPOA(Activity):
                     self.directories.get("JUNK_DIR") + "/",
                 )
 
+    def filter_file_pairs(self):
+        """
+        Remove files that should not be published due to incomplete
+        sets of files per article
+        """
         # For each xml or pdf file, check there is a matching pair
         xml_files = glob.glob("%s/*.xml" % self.directories.get("INPUT_DIR"))
         pdf_files = glob.glob("%s/*.pdf" % self.directories.get("INPUT_DIR"))
@@ -498,48 +483,6 @@ class activity_PublishFinalPOA(Activity):
             ]
             if matching_filename not in xml_filenames:
                 shutil.move(filename, self.directories.get("JUNK_DIR") + "/")
-
-        return status
-
-    def check_matching_xml_file(self, zip_filename):
-        """
-        Given a zipfile.ZipFile object, check if for the DOI it represents
-        there is a matching XML file for that DOI
-        """
-        zip_file_article_number = get_filename_from_path(zip_filename, "_ds.zip")
-
-        xml_files = glob.glob("%s/*.xml" % self.directories.get("INPUT_DIR"))
-        xml_file_articles_numbers = []
-        for xml_file in xml_files:
-            xml_file_articles_numbers.append(get_filename_from_path(xml_file, ".xml"))
-        # print xml_file_articles_numbers
-
-        if zip_file_article_number in xml_file_articles_numbers:
-            return True
-
-        # Default return
-        return False
-
-    def check_matching_pdf_file(self, zip_filename):
-        """
-        Given a zipfile.ZipFile object, check if for the DOI it represents
-        there is a matching PDF file for that DOI
-        """
-        zip_file_article_number = get_filename_from_path(zip_filename, "_ds.zip")
-
-        pdf_files = glob.glob("%s/*.pdf" % self.directories.get("INPUT_DIR"))
-        pdf_file_articles_numbers = []
-        for file_name in pdf_files:
-            pdf_file_name = get_filename_from_path(file_name, ".pdf")
-            # Remove the decap_ from the start of the file name before comparing
-            pdf_file_name = pdf_file_name.replace("decap_", "")
-            pdf_file_articles_numbers.append(pdf_file_name)
-
-        if zip_file_article_number in pdf_file_articles_numbers:
-            return True
-
-        # Default return
-        return False
 
     def send_email(self):
         """
@@ -628,6 +571,67 @@ class activity_PublishFinalPOA(Activity):
             body += "%s\n" % name
 
         return body
+
+
+def check_matching_xml_file(zip_filename, input_dir):
+    """
+    Given a zipfile.ZipFile object, check if for the DOI it represents
+    there is a matching XML file for that DOI
+    """
+    zip_file_article_number = get_filename_from_path(zip_filename, "_ds.zip")
+
+    xml_files = glob.glob("%s/*.xml" % input_dir)
+    xml_file_articles_numbers = []
+    for xml_file in xml_files:
+        xml_file_articles_numbers.append(get_filename_from_path(xml_file, ".xml"))
+
+    if zip_file_article_number in xml_file_articles_numbers:
+        return True
+
+    # Default return
+    return False
+
+
+def check_matching_pdf_file(zip_filename, input_dir):
+    """
+    Given a zipfile.ZipFile object, check if for the DOI it represents
+    there is a matching PDF file for that DOI
+    """
+    zip_file_article_number = get_filename_from_path(zip_filename, "_ds.zip")
+
+    pdf_files = glob.glob("%s/*.pdf" % input_dir)
+    pdf_file_articles_numbers = []
+    for file_name in pdf_files:
+        pdf_file_name = get_filename_from_path(file_name, ".pdf")
+        # Remove the decap_ from the start of the file name before comparing
+        pdf_file_name = pdf_file_name.replace("decap_", "")
+        pdf_file_articles_numbers.append(pdf_file_name)
+
+    if zip_file_article_number in pdf_file_articles_numbers:
+        return True
+
+    # Default return
+    return False
+
+
+def profile_article_files(input_dir):
+    """
+    In the inbox, look for each article doi_id
+    and the files associated with that article
+    """
+    article_filenames_map = {}
+
+    for file_path in glob.glob("%s/*" % input_dir):
+        filename = file_path.split(os.sep)[-1]
+        doi_id = doi_id_from_filename(filename)
+        if doi_id:
+            # doi_id_str = utils.pad_msid(doi_id)
+            if doi_id not in article_filenames_map:
+                article_filenames_map[doi_id] = []
+            # Add the filename to the map for this article
+            article_filenames_map[doi_id].append(filename)
+
+    return article_filenames_map
 
 
 def create_new_filenames(doi_id, filenames):
