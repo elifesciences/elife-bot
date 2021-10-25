@@ -190,7 +190,7 @@ class activity_PublishFinalPOA(Activity):
         """
         article_filenames_map = {}
 
-        for file in glob.glob(self.directories.get("INPUT_DIR") + "/*"):
+        for file in glob.glob("%s/*" % self.directories.get("INPUT_DIR")):
             filename = file.split(os.sep)[-1]
             doi_id = doi_id_from_filename(filename)
             if doi_id:
@@ -266,10 +266,7 @@ class activity_PublishFinalPOA(Activity):
             if not parent_tag_index:
                 if self.logger:
                     self.logger.info(
-                        "no elocation-id tag and no "
-                        + str(add_tag.tag)
-                        + " added: "
-                        + str(doi_id)
+                        "no elocation-id tag and no %s added: %s", (add_tag.tag, doi_id)
                     )
             else:
                 tag.insert(parent_tag_index - 1, add_tag)
@@ -316,7 +313,7 @@ class activity_PublishFinalPOA(Activity):
             if not parent_tag_index:
                 if self.logger:
                     self.logger.info(
-                        "no permissions tag and no self-uri tag added: " + str(doi_id)
+                        "no permissions tag and no self-uri tag added: %s", doi_id
                     )
             else:
                 tag.insert(parent_tag_index, self_uri_tag)
@@ -354,7 +351,7 @@ class activity_PublishFinalPOA(Activity):
         max_revision_number = 0
         for key_name in s3_key_names:
 
-            name_prefix = "elife-" + utils.pad_msid(doi_id) + "-" + str(status) + "-r"
+            name_prefix = "elife-%s-%s-r" % (utils.pad_msid(doi_id), status)
             if key_name.startswith(name_prefix):
                 # Attempt to get a revision number from the matching files
                 try:
@@ -406,12 +403,12 @@ class activity_PublishFinalPOA(Activity):
             zip_filename_plus_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True
         ) as new_zipfile:
             # Add the files
-            for file in glob.glob(self.directories.get("TMP_DIR") + "/*"):
+            for file in glob.glob("%s/*" % self.directories.get("TMP_DIR")):
                 filename = file.split(os.sep)[-1]
                 new_zipfile.write(file, filename)
 
         # Clean out the tmp_dir
-        for file in glob.glob(self.directories.get("TMP_DIR") + "/*"):
+        for file in glob.glob("%s/*" % self.directories.get("TMP_DIR")):
             filename = file.split(os.sep)[-1]
             new_filename_plus_path = os.path.join(
                 self.directories.get("DONE_DIR"), filename
@@ -423,7 +420,7 @@ class activity_PublishFinalPOA(Activity):
         If there is a ds zip file for this article files in the tmp_dir
         then repackage it
         """
-        zipfiles = glob.glob(self.directories.get("TMP_DIR") + "/*.zip")
+        zipfiles = glob.glob("%s/*.zip" % self.directories.get("TMP_DIR"))
         if len(zipfiles) == 1:
             zipfile_file = zipfiles[0]
             zipfile_filename = zipfile_file.split(os.sep)[-1]
@@ -448,7 +445,7 @@ class activity_PublishFinalPOA(Activity):
                 pass
 
             # Move the old zip file
-            zipfiles_now = glob.glob(self.directories.get("TMP_DIR") + "/*.zip")
+            zipfiles_now = glob.glob("%s/*.zip" % self.directories.get("TMP_DIR"))
             for new_zipfile in zipfiles_now:
                 if not new_zipfile.endswith("_Supplemental_files.zip"):
                     # Old zip file, move it to junk
@@ -461,7 +458,7 @@ class activity_PublishFinalPOA(Activity):
                     )
 
             # Then can rename the new zip file
-            zipfiles_now = glob.glob(self.directories.get("TMP_DIR") + "/*.zip")
+            zipfiles_now = glob.glob("%s/*.zip" % self.directories.get("TMP_DIR"))
             for new_zipfile in zipfiles_now:
                 if new_zipfile.endswith("_Supplemental_files.zip"):
                     # Rename the zip as the old zip
@@ -480,7 +477,7 @@ class activity_PublishFinalPOA(Activity):
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
         self.logger.info("STARTING HERE")
-        for file_path in glob.glob(self.directories.get("OUTPUT_DIR") + "/*.zip"):
+        for file_path in glob.glob("%s/*.zip" % self.directories.get("OUTPUT_DIR")):
             file_name = file_path.split(os.sep)[-1]
             resource_dest = storage_provider + bucket_name + "/" + file_name
             storage.set_resource_from_filename(resource_dest, file_path)
@@ -500,14 +497,13 @@ class activity_PublishFinalPOA(Activity):
         status = None
 
         # Check for empty directory
-        if len(glob.glob(self.directories.get("INPUT_DIR") + "/*")) <= 1:
+        if len(glob.glob("%s/*" % self.directories.get("INPUT_DIR"))) <= 1:
             status = False
         else:
             status = True
 
         # For each data supplements file, move invalid ones to not publish by FTP
-        file_type = "/*_ds.zip"
-        zipfiles = glob.glob(self.directories.get("INPUT_DIR") + file_type)
+        zipfiles = glob.glob("%s/*_ds.zip" % self.directories.get("INPUT_DIR"))
         for input_zipfile in zipfiles:
             badfile = None
             filename = input_zipfile.split(os.sep)[-1]
@@ -539,10 +535,8 @@ class activity_PublishFinalPOA(Activity):
                 )
 
         # For each xml or pdf file, check there is a matching pair
-        xml_file_type = "/*.xml"
-        pdf_file_type = "/*.pdf"
-        xml_files = glob.glob(self.directories.get("INPUT_DIR") + xml_file_type)
-        pdf_files = glob.glob(self.directories.get("INPUT_DIR") + pdf_file_type)
+        xml_files = glob.glob("%s/*.xml" % self.directories.get("INPUT_DIR"))
+        pdf_files = glob.glob("%s/*.pdf" % self.directories.get("INPUT_DIR"))
 
         for filename in xml_files:
             matching_filename = get_filename_from_path(filename, ".xml")
@@ -570,8 +564,7 @@ class activity_PublishFinalPOA(Activity):
         """
         zip_file_article_number = get_filename_from_path(zip_filename, "_ds.zip")
 
-        file_type = "/*.xml"
-        xml_files = glob.glob(self.directories.get("INPUT_DIR") + file_type)
+        xml_files = glob.glob("%s/*.xml" % self.directories.get("INPUT_DIR"))
         xml_file_articles_numbers = []
         for xml_file in xml_files:
             xml_file_articles_numbers.append(get_filename_from_path(xml_file, ".xml"))
@@ -590,8 +583,7 @@ class activity_PublishFinalPOA(Activity):
         """
         zip_file_article_number = get_filename_from_path(zip_filename, "_ds.zip")
 
-        file_type = "/*.pdf"
-        pdf_files = glob.glob(self.directories.get("INPUT_DIR") + file_type)
+        pdf_files = glob.glob("%s/*.pdf" % self.directories.get("INPUT_DIR"))
         pdf_file_articles_numbers = []
         for file_name in pdf_files:
             pdf_file_name = get_filename_from_path(file_name, ".pdf")
@@ -879,19 +871,7 @@ def self_uri_xml_element(file_name):
 
 
 def new_zip_file_name(doi_id, revision, status="poa"):
-    new_file_name = None
-
-    new_file_name = (
-        "elife-"
-        + utils.pad_msid(doi_id)
-        + "-"
-        + str(status)
-        + "-r"
-        + str(revision)
-        + ".zip"
-    )
-
-    return new_file_name
+    return "elife-%s-%s-r%s.zip" % (utils.pad_msid(doi_id), status, revision)
 
 
 def new_filename_from_old(old_filename, new_filenames):
