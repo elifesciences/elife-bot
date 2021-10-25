@@ -256,9 +256,8 @@ class activity_PublishFinalPOA(Activity):
         # Remove extra whitespace here for PoA articles to clean up and one VoR file too
         reparsed_string = reparsed_string.replace(b"\n", b"").replace(b"\t", b"")
 
-        open_file = open(xml_file, "wb")
-        open_file.write(reparsed_string)
-        open_file.close()
+        with open(xml_file, "wb") as open_file:
+            open_file.write(reparsed_string)
 
     def add_tag_to_xml_before_elocation_id(self, add_tag, root, doi_id=""):
         # Add the tag to the XML
@@ -403,15 +402,13 @@ class activity_PublishFinalPOA(Activity):
         zip_filename_plus_path = os.path.join(
             self.directories.get("OUTPUT_DIR"), zip_filename
         )
-        new_zipfile = zipfile.ZipFile(
+        with zipfile.ZipFile(
             zip_filename_plus_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True
-        )
-
-        # Add the files
-        for file in glob.glob(self.directories.get("TMP_DIR") + "/*"):
-            filename = file.split(os.sep)[-1]
-            new_zipfile.write(file, filename)
-        new_zipfile.close()
+        ) as new_zipfile:
+            # Add the files
+            for file in glob.glob(self.directories.get("TMP_DIR") + "/*"):
+                filename = file.split(os.sep)[-1]
+                new_zipfile.write(file, filename)
 
         # Clean out the tmp_dir
         for file in glob.glob(self.directories.get("TMP_DIR") + "/*"):
@@ -430,15 +427,14 @@ class activity_PublishFinalPOA(Activity):
         if len(zipfiles) == 1:
             zipfile_file = zipfiles[0]
             zipfile_filename = zipfile_file.split(os.sep)[-1]
-            myzip = zipfile.ZipFile(zipfile_file, "r")
-            # New style zip file, if no manifest.xml file then leave the zip file alone
-            if "manifest.xml" not in myzip.namelist():
-                myzip.close()
-                return
+            with zipfile.ZipFile(zipfile_file, "r") as myzip:
+                # New style zip file, if no manifest.xml file then leave the zip file alone
+                if "manifest.xml" not in myzip.namelist():
+                    myzip.close()
+                    return
 
-            # Extract the zip
-            myzip.extractall(self.directories.get("TMP_DIR"))
-            myzip.close()
+                # Extract the zip
+                myzip.extractall(self.directories.get("TMP_DIR"))
 
             # Remove the manifest.xml file
             try:
@@ -516,28 +512,24 @@ class activity_PublishFinalPOA(Activity):
             badfile = None
             filename = input_zipfile.split(os.sep)[-1]
             try:
-                current_zipfile = zipfile.ZipFile(input_zipfile, "r")
+                with zipfile.ZipFile(input_zipfile, "r") as current_zipfile:
+                    filename = current_zipfile.filename.split(os.sep)[-1]
+                    # Check for those with no zipped folder contents
+                    if check_empty_supplemental_files(current_zipfile) is not True:
+                        badfile = True
+                        self.empty_ds_file_names.append(filename)
+
+                    # Check for a file with no matching XML document
+                    if (
+                        self.check_matching_xml_file(filename) is not True
+                        or self.check_matching_pdf_file(filename) is not True
+                    ):
+                        badfile = True
+                        self.unmatched_ds_file_names.append(filename)
             except zipfile.BadZipfile:
                 badfile = True
                 self.malformed_ds_file_names.append(filename)
                 current_zipfile = None
-
-            if current_zipfile:
-                filename = current_zipfile.filename.split(os.sep)[-1]
-                # Check for those with no zipped folder contents
-                if check_empty_supplemental_files(current_zipfile) is not True:
-                    badfile = True
-                    self.empty_ds_file_names.append(filename)
-
-                # Check for a file with no matching XML document
-                if (
-                    self.check_matching_xml_file(filename) is not True
-                    or self.check_matching_pdf_file(filename) is not True
-                ):
-                    badfile = True
-                    self.unmatched_ds_file_names.append(filename)
-
-                current_zipfile.close()
 
             if badfile:
                 # File is not good, move it somewhere
