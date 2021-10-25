@@ -3,6 +3,7 @@ import glob
 import os
 import zipfile
 import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import Element
 from mock import patch
 from testfixtures import TempDirectory
 from ddt import ddt, data, unpack
@@ -339,6 +340,8 @@ class TestPublishFinalPOA(unittest.TestCase):
             self.poa.activity_status = None
             self.poa.approve_status = None
             self.poa.publish_status = None
+            self.poa.clean_from_outbox_files = []
+            self.poa.done_xml_files = []
             self.poa.malformed_ds_file_names = []
             self.poa.empty_ds_file_names = []
             self.poa.unmatched_ds_file_names = []
@@ -426,6 +429,100 @@ def ds_zip_in_list_of_files(xml_file, file_list):
         if str(doi_id) in file and file.endswith("ds.zip"):
             return True
     return False
+
+
+class TestAddSelfUriToXml(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    def test_add_self_uri_to_xml(self):
+        file_name = "article.pdf"
+        doi_id = 666
+        xml_string = b"""<article>
+    <front>
+        <article-meta>
+            <permissions />
+        </article-meta>
+    </front>
+</article>"""
+        root = ET.fromstring(xml_string)
+        expected = b"""<article>
+    <front>
+        <article-meta>
+            <permissions />
+        <self-uri content-type="pdf" xlink:href="article.pdf" /></article-meta>
+    </front>
+</article>"""
+        output = activity_module.add_self_uri_to_xml(
+            doi_id, file_name, root, self.logger
+        )
+        self.assertEqual(ET.tostring(output), expected)
+
+    def test_add_self_uri_to_xml_no_permissions_tag(self):
+        file_name = "article.pdf"
+        doi_id = 666
+        xml_string = b"""<article>
+    <front>
+        <article-meta />
+    </front>
+</article>"""
+        root = ET.fromstring(xml_string)
+        expected = xml_string
+        output = activity_module.add_self_uri_to_xml(
+            doi_id, file_name, root, self.logger
+        )
+        self.assertEqual(ET.tostring(output), expected)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "no permissions tag and no self-uri tag added: %s" % doi_id,
+        )
+
+
+class TestAddTagToXml(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    def test_add_tag_to_xml(self):
+        add_tag = Element("volume")
+        add_tag.text = "1"
+        doi_id = 666
+        xml_string = b"""<article>
+    <front>
+        <article-meta>
+            <elocation-id />
+        </article-meta>
+    </front>
+</article>"""
+        root = ET.fromstring(xml_string)
+        expected = b"""<article>
+    <front>
+        <article-meta>
+            <volume>1</volume><elocation-id />
+        </article-meta>
+    </front>
+</article>"""
+        output = activity_module.add_tag_to_xml_before_elocation_id(
+            add_tag, root, doi_id, self.logger
+        )
+        self.assertEqual(ET.tostring(output), expected)
+
+    def test_add_tag_to_xml_no_elocation_id_tag(self):
+        add_tag = Element("foo")
+        doi_id = 666
+        xml_string = b"""<article>
+    <front>
+        <article-meta />
+    </front>
+</article>"""
+        root = ET.fromstring(xml_string)
+        expected = xml_string
+        output = activity_module.add_tag_to_xml_before_elocation_id(
+            add_tag, root, doi_id, self.logger
+        )
+        self.assertEqual(ET.tostring(output), expected)
+        self.assertEqual(
+            self.logger.loginfo[-1], "no elocation-id tag and no foo added: %s" % doi_id
+        )
 
 
 @ddt

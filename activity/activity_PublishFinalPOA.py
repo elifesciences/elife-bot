@@ -104,9 +104,6 @@ class activity_PublishFinalPOA(Activity):
         # Approve files for publishing
         self.approve_status = self.approve_for_publishing()
 
-        self.done_xml_files = []
-        self.clean_from_outbox_files = []
-
         if self.approve_status is True:
 
             article_filenames_map = self.profile_article_files()
@@ -216,7 +213,7 @@ class activity_PublishFinalPOA(Activity):
             if parser.pub_date(soup) is None:
                 # add the published date to the XML
                 pub_date = self.get_pub_date_if_missing(doi_id)
-                root = self.add_pub_date_to_xml(doi_id, pub_date, root)
+                root = add_pub_date_to_xml(doi_id, pub_date, root, self.logger)
             else:
                 pub_date = parser.pub_date(soup)
 
@@ -224,7 +221,7 @@ class activity_PublishFinalPOA(Activity):
                 # Get the pub-date year to calculate the volume
                 year = pub_date[0]
                 volume = year - 2011
-                self.add_volume_to_xml(doi_id, volume, root)
+                add_volume_to_xml(doi_id, volume, root, self.logger)
 
             # set the article-id, to overwrite the v2, v3 value if present
             root = set_article_id_xml(doi_id, root)
@@ -233,7 +230,7 @@ class activity_PublishFinalPOA(Activity):
             if parser.self_uri(soup) is not None and not parser.self_uri(soup):
                 for filename in new_filenames:
                     if filename.endswith(".pdf"):
-                        root = self.add_self_uri_to_xml(doi_id, filename, root)
+                        root = add_self_uri_to_xml(doi_id, filename, root, self.logger)
 
             # if ds.zip file is there, then add it to the xml
             poa_ds_zip_file = None
@@ -257,21 +254,6 @@ class activity_PublishFinalPOA(Activity):
         with open(xml_file, "wb") as open_file:
             open_file.write(reparsed_string)
 
-    def add_tag_to_xml_before_elocation_id(self, add_tag, root, doi_id=""):
-        # Add the tag to the XML
-        for tag in root.findall("./front/article-meta"):
-            parent_tag_index = xmlio.get_first_element_index(tag, "elocation-id")
-            if not parent_tag_index:
-                self.logger.info(
-                    "no elocation-id tag and no %s added: %s", (add_tag.tag, doi_id)
-                )
-            else:
-                tag.insert(parent_tag_index - 1, add_tag)
-
-            # Should only do it once but ensure it is only done once
-            break
-        return root
-
     def get_pub_date_if_missing(self, doi_id):
         # Get the date for the first version
         date_struct = None
@@ -283,38 +265,6 @@ class activity_PublishFinalPOA(Activity):
             # Use current date
             date_struct = time.gmtime()
         return date_struct
-
-    def add_pub_date_to_xml(self, doi_id, date_struct, root):
-        # Create the pub-date XML tag
-        pub_date_tag = pub_date_xml_element(date_struct)
-        root = self.add_tag_to_xml_before_elocation_id(pub_date_tag, root, doi_id)
-        return root
-
-    def add_volume_to_xml(self, doi_id, volume, root):
-        # Create the pub-date XML tag
-        volume_tag = volume_xml_element(volume)
-        root = self.add_tag_to_xml_before_elocation_id(volume_tag, root, doi_id)
-        return root
-
-    def add_self_uri_to_xml(self, doi_id, file_name, root):
-        """
-        Add the self-uri tag to the XML for the PDF file
-        """
-
-        # Create the XML tag
-        self_uri_tag = self_uri_xml_element(file_name)
-
-        # Add the tag to the XML
-        for tag in root.findall("./front/article-meta"):
-            parent_tag_index = xmlio.get_first_element_index(tag, "permissions")
-            if not parent_tag_index:
-                self.logger.info(
-                    "no permissions tag and no self-uri tag added: %s", doi_id
-                )
-            else:
-                tag.insert(parent_tag_index, self_uri_tag)
-
-        return root
 
     def get_pub_date_str_from_lax(self, doi_id):
         """
@@ -737,6 +687,55 @@ def article_xml_from_filename_map(filenames):
 
 def article_soup(xml_file):
     return parser.parse_document(xml_file)
+
+
+def add_self_uri_to_xml(doi_id, file_name, root, logger):
+    """
+    Add the self-uri tag to the XML for the PDF file
+    """
+
+    # Create the XML tag
+    self_uri_tag = self_uri_xml_element(file_name)
+
+    # Add the tag to the XML
+    for tag in root.findall("./front/article-meta"):
+        parent_tag_index = xmlio.get_first_element_index(tag, "permissions")
+        if not parent_tag_index:
+            logger.info("no permissions tag and no self-uri tag added: %s", doi_id)
+        else:
+            tag.insert(parent_tag_index, self_uri_tag)
+
+    return root
+
+
+def add_tag_to_xml_before_elocation_id(add_tag, root, doi_id, logger):
+    # Add the tag to the XML
+    for tag in root.findall("./front/article-meta"):
+        parent_tag_index = xmlio.get_first_element_index(tag, "elocation-id")
+        if not parent_tag_index:
+            logger.info(
+                "no elocation-id tag and no %s added: %s", (add_tag.tag, doi_id)
+            )
+        else:
+            tag.insert(parent_tag_index - 1, add_tag)
+
+        # Should only do it once but ensure it is only done once
+        break
+    return root
+
+
+def add_pub_date_to_xml(doi_id, date_struct, root, logger):
+    # Create the pub-date XML tag
+    pub_date_tag = pub_date_xml_element(date_struct)
+    root = add_tag_to_xml_before_elocation_id(pub_date_tag, root, doi_id, logger)
+    return root
+
+
+def add_volume_to_xml(doi_id, volume, root, logger):
+    # Create the pub-date XML tag
+    volume_tag = volume_xml_element(volume)
+    root = add_tag_to_xml_before_elocation_id(volume_tag, root, doi_id, logger)
+    return root
 
 
 def pub_date_xml_element(pub_date):
