@@ -1,6 +1,7 @@
 import unittest
 import glob
 import os
+import time
 import zipfile
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element
@@ -248,7 +249,7 @@ class TestPublishFinalPOA(unittest.TestCase):
                     os.remove(file)
 
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch.object(activity_PublishFinalPOA, "get_pub_date_str_from_lax")
+    @patch("provider.lax_provider.article_publication_date")
     @patch.object(activity_PublishFinalPOA, "next_revision_number")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
@@ -429,6 +430,70 @@ def ds_zip_in_list_of_files(xml_file, file_list):
         if str(doi_id) in file and file.endswith("ds.zip"):
             return True
     return False
+
+
+@ddt
+class TestDoiIdFromFilename(unittest.TestCase):
+    @data(
+        (None, None),
+        ("", None),
+        ("decap_elife_poa_e10727.pdf", 10727),
+        ("decap_elife_poa_e12029v2.pdf", 12029),
+        ("elife_poa_e10727.xml", 10727),
+        ("elife_poa_e10727_ds.zip", 10727),
+        ("elife_poa_e12029v2.xml", 12029),
+        ("bad_file_name.xml", None),
+    )
+    @unpack
+    def test_doi_id_from_filename(self, filename, expected):
+        doi_id = activity_module.doi_id_from_filename(filename)
+        self.assertEqual(doi_id, expected)
+
+
+class TestGetPubDateIfMissing(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    @patch.object(activity_module, "get_pub_date_str_from_lax")
+    def test_get_pub_date_if_missing_lax(self, fake_get_pub_date):
+        doi_id = 666
+        fake_get_pub_date.return_value = "20160704000000"
+        expected = time.strptime("2016-07-04T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
+        pub_date = activity_module.get_pub_date_if_missing(
+            doi_id, settings_mock, self.logger
+        )
+        self.assertEqual(pub_date, expected)
+
+    @patch("time.gmtime")
+    @patch.object(activity_module, "get_pub_date_str_from_lax")
+    def test_get_pub_date_if_missing_no_lax(self, fake_get_pub_date, fake_gmtime):
+        fake_get_pub_date.return_value = None
+        struct_time = time.strptime("2016-07-04T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
+        fake_gmtime.return_value = struct_time
+        doi_id = 666
+        expected = struct_time
+        pub_date = activity_module.get_pub_date_if_missing(
+            doi_id, settings_mock, self.logger
+        )
+        self.assertEqual(pub_date, expected)
+
+
+class TestModifyXml(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    @patch.object(activity_module, "convert_xml")
+    def test_modify_xml_exception(self, fake_convert_xml):
+        fake_convert_xml.side_effect = Exception("An exception")
+        doi_id = 666
+        return_value = activity_module.modify_xml(
+            None, doi_id, None, settings_mock, self.logger
+        )
+        self.assertEqual(return_value, False)
+        self.assertEqual(
+            self.logger.logexception,
+            "Exception when converting XML for doi %s, An exception" % doi_id,
+        )
 
 
 class TestCheckMatchingXmlFile(unittest.TestCase):

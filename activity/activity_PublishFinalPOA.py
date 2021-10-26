@@ -119,15 +119,10 @@ class activity_PublishFinalPOA(Activity):
                 xml_file = os.path.join(
                     self.directories.get("INPUT_DIR"), article_xml_file_name
                 )
-
-                try:
-                    self.convert_xml(doi_id, xml_file, new_filenames)
-                except Exception as exception:
-                    # One possible error is an entirely blank XML file or a malformed xml file
-                    self.logger.exception(
-                        "Exception when converting XML for doi %s, %s"
-                        % (str(doi_id), exception)
-                    )
+                modify_success = modify_xml(
+                    xml_file, doi_id, new_filenames, self.settings, self.logger
+                )
+                if not modify_success:
                     continue
 
             revision = self.next_revision_number(doi_id)
@@ -175,85 +170,6 @@ class activity_PublishFinalPOA(Activity):
             self.clean_tmp_dir()
 
         return result
-
-    def convert_xml(self, doi_id, xml_file, new_filenames):
-
-        # Register namespaces
-        xmlio.register_xmlns()
-
-        root, doctype_dict, processing_instructions = xmlio.parse(
-            xml_file, return_doctype_dict=True, return_processing_instructions=True
-        )
-
-        soup = article_soup(xml_file)
-
-        if parser.is_poa(soup):
-            pub_date = None
-            if parser.pub_date(soup) is None:
-                # add the published date to the XML
-                pub_date = self.get_pub_date_if_missing(doi_id)
-                root = add_pub_date_to_xml(doi_id, pub_date, root, self.logger)
-            else:
-                pub_date = parser.pub_date(soup)
-
-            if parser.volume(soup) is None:
-                # Get the pub-date year to calculate the volume
-                year = pub_date[0]
-                volume = year - 2011
-                add_volume_to_xml(doi_id, volume, root, self.logger)
-
-            # set the article-id, to overwrite the v2, v3 value if present
-            root = set_article_id_xml(doi_id, root)
-
-            # if pdf file then add self-uri tag
-            if parser.self_uri(soup) is not None and not parser.self_uri(soup):
-                for filename in new_filenames:
-                    if filename.endswith(".pdf"):
-                        root = add_self_uri_to_xml(doi_id, filename, root, self.logger)
-
-            # if ds.zip file is there, then add it to the xml
-            poa_ds_zip_file = None
-            for new_file in new_filenames:
-                if new_file.endswith(".zip"):
-                    poa_ds_zip_file = new_file
-            if poa_ds_zip_file:
-                root = add_poa_ds_zip_to_xml(poa_ds_zip_file, root)
-
-        # Start the file output
-        reparsed_string = xmlio.output(
-            root,
-            output_type=None,
-            doctype_dict=doctype_dict,
-            processing_instructions=processing_instructions,
-        )
-
-        # Remove extra whitespace here for PoA articles to clean up and one VoR file too
-        reparsed_string = reparsed_string.replace(b"\n", b"").replace(b"\t", b"")
-
-        with open(xml_file, "wb") as open_file:
-            open_file.write(reparsed_string)
-
-    def get_pub_date_if_missing(self, doi_id):
-        # Get the date for the first version
-        date_struct = None
-        date_str = self.get_pub_date_str_from_lax(doi_id)
-
-        if date_str is not None:
-            date_struct = time.strptime(date_str, "%Y%m%d000000")
-        else:
-            # Use current date
-            date_struct = time.gmtime()
-        return date_struct
-
-    def get_pub_date_str_from_lax(self, doi_id):
-        """
-        Check lax for any article published version
-        If found, get the pub date and format it as a string YYYYMMDDhhmmss
-        """
-        article_id = utils.pad_msid(doi_id)
-        return lax_provider.article_publication_date(
-            article_id, self.settings, self.logger
-        )
 
     def next_revision_number(self, doi_id, status="poa"):
         """
@@ -691,6 +607,99 @@ def article_xml_from_filename_map(filenames):
 
 def article_soup(xml_file):
     return parser.parse_document(xml_file)
+
+
+def get_pub_date_if_missing(doi_id, settings, logger):
+    # Get the date for the first version
+    date_struct = None
+    date_str = get_pub_date_str_from_lax(doi_id, settings, logger)
+
+    if date_str is not None:
+        date_struct = time.strptime(date_str, "%Y%m%d000000")
+    else:
+        # Use current date
+        date_struct = time.gmtime()
+    return date_struct
+
+
+def get_pub_date_str_from_lax(doi_id, settings, logger):
+    """
+    Check lax for any article published version
+    If found, get the pub date and format it as a string YYYYMMDDhhmmss
+    """
+    article_id = utils.pad_msid(doi_id)
+    return lax_provider.article_publication_date(article_id, settings, logger)
+
+
+def convert_xml(doi_id, xml_file, new_filenames, settings, logger):
+
+    # Register namespaces
+    xmlio.register_xmlns()
+
+    root, doctype_dict, processing_instructions = xmlio.parse(
+        xml_file, return_doctype_dict=True, return_processing_instructions=True
+    )
+
+    soup = article_soup(xml_file)
+
+    if parser.is_poa(soup):
+        pub_date = None
+        if parser.pub_date(soup) is None:
+            # add the published date to the XML
+            pub_date = get_pub_date_if_missing(doi_id, settings, logger)
+            root = add_pub_date_to_xml(doi_id, pub_date, root, logger)
+        else:
+            pub_date = parser.pub_date(soup)
+
+        if parser.volume(soup) is None:
+            # Get the pub-date year to calculate the volume
+            year = pub_date[0]
+            volume = year - 2011
+            add_volume_to_xml(doi_id, volume, root, logger)
+
+        # set the article-id, to overwrite the v2, v3 value if present
+        root = set_article_id_xml(doi_id, root)
+
+        # if pdf file then add self-uri tag
+        if parser.self_uri(soup) is not None and not parser.self_uri(soup):
+            for filename in new_filenames:
+                if filename.endswith(".pdf"):
+                    root = add_self_uri_to_xml(doi_id, filename, root, logger)
+
+        # if ds.zip file is there, then add it to the xml
+        poa_ds_zip_file = None
+        for new_file in new_filenames:
+            if new_file.endswith(".zip"):
+                poa_ds_zip_file = new_file
+        if poa_ds_zip_file:
+            root = add_poa_ds_zip_to_xml(poa_ds_zip_file, root)
+
+    # Start the file output
+    reparsed_string = xmlio.output(
+        root,
+        output_type=None,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions,
+    )
+
+    # Remove extra whitespace here for PoA articles to clean up and one VoR file too
+    reparsed_string = reparsed_string.replace(b"\n", b"").replace(b"\t", b"")
+
+    with open(xml_file, "wb") as open_file:
+        open_file.write(reparsed_string)
+
+
+def modify_xml(xml_file, doi_id, new_filenames, settings, logger):
+    "Convert the XML file with exception handling"
+    try:
+        convert_xml(doi_id, xml_file, new_filenames, settings, logger)
+    except Exception as exception:
+        # One possible error is an entirely blank XML file or a malformed xml file
+        logger.exception(
+            "Exception when converting XML for doi %s, %s" % (str(doi_id), exception)
+        )
+        return False
+    return True
 
 
 def add_self_uri_to_xml(doi_id, file_name, root, logger):
