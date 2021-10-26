@@ -1,14 +1,19 @@
 import unittest
-import shutil
 import glob
 import os
+import time
+import zipfile
 import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import Element
 from mock import patch
+from testfixtures import TempDirectory
+from ddt import ddt, data, unpack
 import activity.activity_PublishFinalPOA as activity_module
 from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
 from tests.classes_mock import FakeSMTPServer
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeS3Connection, FakeStorageContext
+from tests.activity import helpers, settings_mock
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+import tests.activity.test_activity_data as activity_test_data
 
 
 class TestPublishFinalPOA(unittest.TestCase):
@@ -229,6 +234,9 @@ class TestPublishFinalPOA(unittest.TestCase):
 
     def tearDown(self):
         self.poa.clean_tmp_dir()
+        helpers.delete_files_in_folder(
+            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     def remove_files_from_tmp_dir_subfolders(self):
         """
@@ -241,30 +249,31 @@ class TestPublishFinalPOA(unittest.TestCase):
                     os.remove(file)
 
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch.object(activity_PublishFinalPOA, "get_pub_date_str_from_lax")
-    @patch.object(activity_PublishFinalPOA, "upload_files_to_s3")
+    @patch("provider.lax_provider.article_publication_date")
     @patch.object(activity_PublishFinalPOA, "next_revision_number")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_module, "storage_context")
     @patch.object(activity_PublishFinalPOA, "clean_tmp_dir")
     def test_do_activity(
         self,
         fake_clean_tmp_dir,
         fake_storage_context,
+        fake_provider_storage_context,
         fake_outbox_key_names,
         fake_next_revision_number,
-        fake_upload_files_to_s3,
         fake_get_pub_date_str_from_lax,
         fake_email_smtp_connect,
     ):
 
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
         fake_clean_tmp_dir.return_value = None
-        fake_storage_context.return_value = FakeStorageContext(
+        fake_provider_storage_context.return_value = FakeStorageContext(
             "tests/test_data/poa/outbox"
         )
+        fake_storage_context.return_value = FakeStorageContext()
         fake_next_revision_number.return_value = 1
-        fake_upload_files_to_s3.return_value = True
+        # fake_upload_files_to_s3.return_value = True
         fake_get_pub_date_str_from_lax.return_value = "20160704000000"
 
         for test_data in self.do_activity_passes:
@@ -332,28 +341,32 @@ class TestPublishFinalPOA(unittest.TestCase):
             self.poa.activity_status = None
             self.poa.approve_status = None
             self.poa.publish_status = None
+            self.poa.clean_from_outbox_files = []
+            self.poa.done_xml_files = []
             self.poa.malformed_ds_file_names = []
             self.poa.empty_ds_file_names = []
             self.poa.unmatched_ds_file_names = []
 
-    @patch("provider.s3lib.get_s3_key_names_from_bucket")
-    @patch("activity.activity_PublishFinalPOA.S3Connection")
-    def test_next_revision_number_default(self, fake_s3_mock, fake_get_s3_key_names):
+    @patch.object(FakeStorageContext, "list_resources")
+    @patch.object(activity_module, "storage_context")
+    def test_next_revision_number_default(
+        self, fake_storage_context, fake_list_resources
+    ):
         doi_id = "7"
         key_names = []
         expected = 1
-        fake_s3_mock.return_value = FakeS3Connection()
-        fake_get_s3_key_names.return_value = key_names
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = key_names
         self.assertEqual(self.poa.next_revision_number(doi_id), expected)
 
-    @patch("provider.s3lib.get_s3_key_names_from_bucket")
-    @patch("activity.activity_PublishFinalPOA.S3Connection")
-    def test_next_revision_number_next(self, fake_s3_mock, fake_get_s3_key_names):
+    @patch.object(FakeStorageContext, "list_resources")
+    @patch.object(activity_module, "storage_context")
+    def test_next_revision_number_next(self, fake_storage_context, fake_list_resources):
         doi_id = "7"
         key_names = ["elife-00007-poa-r1.zip", "elife-00007-poa-r_bad_number.zip"]
         expected = 2
-        fake_s3_mock.return_value = FakeS3Connection()
-        fake_get_s3_key_names.return_value = key_names
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = key_names
         self.assertEqual(self.poa.next_revision_number(doi_id), expected)
 
 
@@ -417,3 +430,307 @@ def ds_zip_in_list_of_files(xml_file, file_list):
         if str(doi_id) in file and file.endswith("ds.zip"):
             return True
     return False
+
+
+@ddt
+class TestDoiIdFromFilename(unittest.TestCase):
+    @data(
+        (None, None),
+        ("", None),
+        ("decap_elife_poa_e10727.pdf", 10727),
+        ("decap_elife_poa_e12029v2.pdf", 12029),
+        ("elife_poa_e10727.xml", 10727),
+        ("elife_poa_e10727_ds.zip", 10727),
+        ("elife_poa_e12029v2.xml", 12029),
+        ("bad_file_name.xml", None),
+    )
+    @unpack
+    def test_doi_id_from_filename(self, filename, expected):
+        doi_id = activity_module.doi_id_from_filename(filename)
+        self.assertEqual(doi_id, expected)
+
+
+class TestGetPubDateIfMissing(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    @patch.object(activity_module, "get_pub_date_str_from_lax")
+    def test_get_pub_date_if_missing_lax(self, fake_get_pub_date):
+        doi_id = 666
+        fake_get_pub_date.return_value = "20160704000000"
+        expected = time.strptime("2016-07-04T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
+        pub_date = activity_module.get_pub_date_if_missing(
+            doi_id, settings_mock, self.logger
+        )
+        self.assertEqual(pub_date, expected)
+
+    @patch("time.gmtime")
+    @patch.object(activity_module, "get_pub_date_str_from_lax")
+    def test_get_pub_date_if_missing_no_lax(self, fake_get_pub_date, fake_gmtime):
+        fake_get_pub_date.return_value = None
+        struct_time = time.strptime("2016-07-04T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
+        fake_gmtime.return_value = struct_time
+        doi_id = 666
+        expected = struct_time
+        pub_date = activity_module.get_pub_date_if_missing(
+            doi_id, settings_mock, self.logger
+        )
+        self.assertEqual(pub_date, expected)
+
+
+class TestModifyXml(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    @patch.object(activity_module, "convert_xml")
+    def test_modify_xml_exception(self, fake_convert_xml):
+        fake_convert_xml.side_effect = Exception("An exception")
+        doi_id = 666
+        return_value = activity_module.modify_xml(
+            None, doi_id, None, settings_mock, self.logger
+        )
+        self.assertEqual(return_value, False)
+        self.assertEqual(
+            self.logger.logexception,
+            "Exception when converting XML for doi %s, An exception" % doi_id,
+        )
+
+
+class TestCheckMatchingXmlFile(unittest.TestCase):
+    @patch("glob.glob")
+    def test_check_matching_xml_file(self, fake_glob):
+        zip_filename = "elife_poa_e14692_ds.zip"
+        fake_glob.return_value = ["input_dir/elife_poa_e14692.xml"]
+        self.assertTrue(
+            activity_module.check_matching_xml_file(zip_filename, input_dir="")
+        )
+
+    @patch("glob.glob")
+    def test_check_matching_xml_file_not_found(self, fake_glob):
+        zip_filename = "elife_poa_e14692_ds.zip"
+        fake_glob.return_value = ["input_dir/not_found.xml"]
+        self.assertEqual(
+            activity_module.check_matching_xml_file(zip_filename, input_dir=""), False
+        )
+
+
+class TestCheckMatchingPdfFile(unittest.TestCase):
+    @patch("glob.glob")
+    def test_check_matching_pdf_file(self, fake_glob):
+        zip_filename = "elife_poa_e14692_ds.zip"
+        fake_glob.return_value = ["input_dir/decap_elife_poa_e14692.pdf"]
+        self.assertTrue(
+            activity_module.check_matching_pdf_file(zip_filename, input_dir="")
+        )
+
+    @patch("glob.glob")
+    def test_check_matching_pdf_file_not_found(self, fake_glob):
+        zip_filename = "elife_poa_e14692_ds.zip"
+        fake_glob.return_value = ["input_dir/not_found.pdf"]
+        self.assertEqual(
+            activity_module.check_matching_pdf_file(zip_filename, input_dir=""), False
+        )
+
+
+class TestAddSelfUriToXml(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    def test_add_self_uri_to_xml(self):
+        file_name = "article.pdf"
+        doi_id = 666
+        xml_string = b"""<article>
+    <front>
+        <article-meta>
+            <permissions />
+        </article-meta>
+    </front>
+</article>"""
+        root = ET.fromstring(xml_string)
+        expected = b"""<article>
+    <front>
+        <article-meta>
+            <permissions />
+        <self-uri content-type="pdf" xlink:href="article.pdf" /></article-meta>
+    </front>
+</article>"""
+        output = activity_module.add_self_uri_to_xml(
+            doi_id, file_name, root, self.logger
+        )
+        self.assertEqual(ET.tostring(output), expected)
+
+    def test_add_self_uri_to_xml_no_permissions_tag(self):
+        file_name = "article.pdf"
+        doi_id = 666
+        xml_string = b"""<article>
+    <front>
+        <article-meta />
+    </front>
+</article>"""
+        root = ET.fromstring(xml_string)
+        expected = xml_string
+        output = activity_module.add_self_uri_to_xml(
+            doi_id, file_name, root, self.logger
+        )
+        self.assertEqual(ET.tostring(output), expected)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "no permissions tag and no self-uri tag added: %s" % doi_id,
+        )
+
+
+class TestAddTagToXml(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    def test_add_tag_to_xml(self):
+        add_tag = Element("volume")
+        add_tag.text = "1"
+        doi_id = 666
+        xml_string = b"""<article>
+    <front>
+        <article-meta>
+            <elocation-id />
+        </article-meta>
+    </front>
+</article>"""
+        root = ET.fromstring(xml_string)
+        expected = b"""<article>
+    <front>
+        <article-meta>
+            <volume>1</volume><elocation-id />
+        </article-meta>
+    </front>
+</article>"""
+        output = activity_module.add_tag_to_xml_before_elocation_id(
+            add_tag, root, doi_id, self.logger
+        )
+        self.assertEqual(ET.tostring(output), expected)
+
+    def test_add_tag_to_xml_no_elocation_id_tag(self):
+        add_tag = Element("foo")
+        doi_id = 666
+        xml_string = b"""<article>
+    <front>
+        <article-meta />
+    </front>
+</article>"""
+        root = ET.fromstring(xml_string)
+        expected = xml_string
+        output = activity_module.add_tag_to_xml_before_elocation_id(
+            add_tag, root, doi_id, self.logger
+        )
+        self.assertEqual(ET.tostring(output), expected)
+        self.assertEqual(
+            self.logger.loginfo[-1], "no elocation-id tag and no foo added: %s" % doi_id
+        )
+
+
+@ddt
+class TestGetFilenameFromPath(unittest.TestCase):
+    @data(
+        ("elife_poa_e99999.xml", ".xml", "elife_poa_e99999"),
+        (
+            os.path.join("folder", "elife_poa_e99999_ds.zip"),
+            "_ds.zip",
+            "elife_poa_e99999",
+        ),
+    )
+    @unpack
+    def test_get_filename_from_path(self, file_path, extension, expected):
+        self.assertEqual(
+            activity_module.get_filename_from_path(file_path, extension), expected
+        )
+
+
+class TestCheckEmptySupplementalFiles(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_check_empty_supplemental_files(self):
+        input_zipfile = "tests/test_data/poa/outbox/elife_poa_e13833_ds.zip"
+        with zipfile.ZipFile(input_zipfile, "r") as current_zipfile:
+            self.assertTrue(
+                activity_module.check_empty_supplemental_files(current_zipfile)
+            )
+
+    def test_check_empty_supplemental_files_no_internal_zip(self):
+        input_zipfile = "tests/test_data/poa/outbox/elife_poa_e99997_ds.zip"
+        with zipfile.ZipFile(input_zipfile, "r") as current_zipfile:
+            self.assertTrue(
+                activity_module.check_empty_supplemental_files(current_zipfile)
+            )
+
+    def test_check_empty_supplemental_files_empty_internal_zip(self):
+        directory = TempDirectory()
+        internal_zip_path = os.path.join(directory.path, "internal.zip")
+        with zipfile.ZipFile(internal_zip_path, "w") as input_zipfile:
+            pass
+        zip_file_path = os.path.join(directory.path, "empty.zip")
+        with zipfile.ZipFile(zip_file_path, "w") as input_zipfile:
+            input_zipfile.write(internal_zip_path, "elife13833_Supplemental_files.zip")
+        with zipfile.ZipFile(zip_file_path, "r") as current_zipfile:
+            self.assertEqual(
+                activity_module.check_empty_supplemental_files(current_zipfile), False
+            )
+
+
+@ddt
+class TestNewFilenameFromOld(unittest.TestCase):
+    def setUp(self):
+        self.new_filenames = [
+            "elife-13833-supp.zip",
+            "elife-13833.xml",
+            "elife-13833.pdf",
+            "fake_file",
+        ]
+
+    def test_new_filename_from_old(self):
+        old_filename = "elife_poa_e13833_ds.zip"
+        expected = "elife-13833-supp.zip"
+        self.assertEqual(
+            activity_module.new_filename_from_old(old_filename, self.new_filenames),
+            expected,
+        )
+
+    @data(
+        (None, None),
+        ("", None),
+        ("fake_file", "fake_file"),
+        ("fake_file.", None),
+        ("does_not_exist", None),
+    )
+    @unpack
+    def test_new_filename_from_old_edge_cases(self, old_filename, expected):
+        # edge cases for test coverage
+        self.assertEqual(
+            activity_module.new_filename_from_old(old_filename, self.new_filenames),
+            expected,
+        )
+
+
+class TestNewZipFileName(unittest.TestCase):
+    def test_new_zip_file_name(self):
+        doi_id = "666"
+        revision = "1"
+        status = "poa"
+        expected = "elife-00666-poa-r1.zip"
+        self.assertEqual(
+            activity_module.new_zip_file_name(doi_id, revision, status), expected
+        )
+
+
+class TestArticleXmlFromFilenameMap(unittest.TestCase):
+    def test_article_xml_from_filename_map(self):
+        filenames = ["elife_poa_e99999.xml"]
+        expected = "elife_poa_e99999.xml"
+        self.assertEqual(
+            activity_module.article_xml_from_filename_map(filenames), expected
+        )
+
+    def test_article_xml_from_filename_map_not_found(self):
+        filenames = ["elife_poa_e99999_ds.zip"]
+        expected = None
+        self.assertEqual(
+            activity_module.article_xml_from_filename_map(filenames), expected
+        )

@@ -313,6 +313,18 @@ def get_email_body_head(name, activity_status_text, statuses):
     return body
 
 
+def get_email_body_middle_outbox_files(outbox_s3_key_names):
+    body = ""
+    body += "\nOutbox files: \n"
+
+    if outbox_s3_key_names:
+        for name in outbox_s3_key_names:
+            body += "%s\n" % name
+    else:
+        body += "No files in outbox.\n"
+    return body
+
+
 def get_email_body_middle(
     activity_name,
     outbox_s3_key_names,
@@ -323,17 +335,7 @@ def get_email_body_middle(
 ):
     "Format the body of the email for activity status emails"
 
-    body = ""
-    body += "\nOutbox files: \n"
-
-    files_count = 0
-    if outbox_s3_key_names:
-        files_count = len(outbox_s3_key_names)
-    if files_count > 0:
-        for name in outbox_s3_key_names:
-            body += "%s\n" % name
-    else:
-        body += "No files in outbox.\n"
+    body = get_email_body_middle_outbox_files(outbox_s3_key_names)
 
     # Report on published files
     if len(published_file_names) > 0:
