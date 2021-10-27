@@ -96,6 +96,7 @@ def start(settings):
     activity_names.append("PMCDeposit")
     activity_names.append("ScheduleCrossref")
     activity_names.append("ScheduleCrossrefPeerReview")
+    activity_names.append("ScheduleCrossrefPendingPublication")
     activity_names.append("ScheduleDownstream")
     activity_names.append("ModifyArticleSubjects")
     activity_names.append("EmailDigest")
