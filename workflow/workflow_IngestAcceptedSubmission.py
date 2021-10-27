@@ -38,6 +38,7 @@ class workflow_IngestAcceptedSubmission(Workflow):
             "steps": [
                 define_workflow_step("PingWorker", data),
                 define_workflow_step("ValidateAcceptedSubmission", data),
+                define_workflow_step("ScheduleCrossrefPendingPublication", data),
             ],
             "finish": {"requirements": None},
         }
