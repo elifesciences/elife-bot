@@ -47,6 +47,7 @@ class TestPublicationEmail(unittest.TestCase):
         fake_logger = FakeLogger()
         # reduce the sleep time to speed up test runs
         activity_module.SLEEP_SECONDS = 0.1
+        activity_module.MAX_EMAILS_PER_SECOND = 1000
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
