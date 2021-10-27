@@ -19,7 +19,9 @@ from activity.objects import Activity
 # Article types for which not to send emails
 ARTICLE_TYPES_DO_NOT_SEND = ["editorial", "correction", "retraction"]
 
-# time in seconds to sleep if SMTP sending rate limit is reached
+# maximum emails to send per second
+MAX_EMAILS_PER_SECOND = 1
+# time in seconds to sleep when an smtplib.SMTPDataError exception is raised
 SLEEP_SECONDS = 5
 # number of times to sleep after reaching a sending exception
 SENDING_RETRY = 3
@@ -521,6 +523,10 @@ class activity_PublicationEmail(Activity):
             "Email sending details: result %s, tries %s, article %s, email %s, to %s"
             % (result, tries, doi_id, headers["email_type"], str(author.get("e_mail")))
         )
+
+        # sleep to not exceed max emails per second sending rate
+        if MAX_EMAILS_PER_SECOND and MAX_EMAILS_PER_SECOND > 0:
+            time.sleep(1 / MAX_EMAILS_PER_SECOND)
 
         return True
 
