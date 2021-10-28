@@ -301,8 +301,16 @@ class TestConditionalStarts(unittest.TestCase):
         {
             "comment": "21:15 UTC",
             "date_time": "1970-01-01 21:15:00 UTC",
-            "expected_starter_names": ["cron_FiveMinute", "starter_PubRouterDeposit"],
-            "expected_workflow_ids": ["cron_FiveMinute", "PubRouterDeposit_Zendy"],
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_DepositCrossrefPendingPublication",
+                "starter_PubRouterDeposit",
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "DepositCrossrefPendingPublication",
+                "PubRouterDeposit_Zendy",
+            ],
         },
     )
     def test_conditional_starts_21_15_utc(self, test_data):
@@ -371,8 +379,16 @@ class TestConditionalStarts(unittest.TestCase):
         {
             "comment": "22:15 UTC",
             "date_time": "1970-01-01 22:15:00 UTC",
-            "expected_starter_names": ["cron_FiveMinute", "starter_PubRouterDeposit"],
-            "expected_workflow_ids": ["cron_FiveMinute", "PubRouterDeposit_OVID"],
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_DepositCrossrefPendingPublication",
+                "starter_PubRouterDeposit",
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "DepositCrossrefPendingPublication",
+                "PubRouterDeposit_OVID",
+            ],
         },
     )
     def test_conditional_starts_22_15_utc(self, test_data):
