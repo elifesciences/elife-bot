@@ -12,6 +12,9 @@ from provider import (
 )
 
 
+PLACEHOLDER_ARTICLE_TITLE = "Title to be confirmed"
+
+
 class activity_DepositCrossrefPendingPublication(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_DepositCrossrefPendingPublication, self).__init__(
@@ -85,6 +88,9 @@ class activity_DepositCrossrefPendingPublication(Activity):
         generate_article_object_map = prune_article_object_map(
             article_object_map, self.logger
         )
+
+        # change article title values
+        generate_article_object_map = article_title_rewrite(generate_article_object_map)
 
         # Generate crossref XML
         self.statuses["generate"] = crossref.generate_crossref_xml_to_disk(
@@ -280,6 +286,13 @@ def prune_article_object_map(article_object_map, logger):
         if check_doi_does_not_exist(article, logger):
             good_article_object_map[file_name] = article
     return good_article_object_map
+
+
+def article_title_rewrite(article_object_map):
+    """change article title to the placeholder value"""
+    for file_name, article in article_object_map.items():
+        article.title = PLACEHOLDER_ARTICLE_TITLE
+    return article_object_map
 
 
 def check_doi_does_not_exist(article, logger):

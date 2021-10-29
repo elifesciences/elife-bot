@@ -2,6 +2,7 @@ import os
 import time
 import unittest
 from mock import patch
+from elifearticle.article import Article
 from provider import crossref
 import activity.activity_DepositCrossrefPendingPublication as activity_module
 from activity.activity_DepositCrossrefPendingPublication import (
@@ -214,3 +215,15 @@ class TestPrune(unittest.TestCase):
             ARTICLE_OBJECT_MAP, self.logger
         )
         self.assertEqual(len(good_article_map), 0)
+
+
+class TestArticleTitleRewrite(unittest.TestCase):
+    def test_article_title_rewrite(self):
+        filename = "filename.xml"
+        article = Article()
+        article_object_map = {filename: article}
+        article_object_map = activity_module.article_title_rewrite(article_object_map)
+        self.assertEqual(
+            article_object_map.get(filename).title,
+            activity_module.PLACEHOLDER_ARTICLE_TITLE,
+        )
