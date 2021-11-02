@@ -1,4 +1,4 @@
-# file generated 2021-11-01 - see update-dependencies.sh
+# file generated 2021-11-02 - see update-dependencies.sh
 arrow==1.2.1
 astroid==2.8.4
 attrs==21.2.0
@@ -19,13 +19,13 @@ docker==5.0.3
 ejpcsvparser==0.1.2
 elifearticle==0.7.0
 elifecleaner==0.5.1
-elifecrossref==0.8.0
+elifecrossref==0.9.0
 elifepubmed==0.3.0
 elifetools==0.13.0
 func-timeout==4.3.5
 gitdb==4.0.9
 GitPython==3.1.18
-google-api-core==2.2.1
+google-api-core==2.2.2
 google-auth==2.3.3
 google-cloud-bigquery==2.29.0
 google-cloud-core==2.1.0
@@ -42,7 +42,7 @@ jatsgenerator==0.1.2
 Jinja2==3.0.2
 lazy-object-proxy==1.6.0
 letterparser==0.5.0
-lxml==4.6.3
+lxml==4.6.4
 MarkupSafe==2.0.1
 mccabe==0.6.1
 medium @ git+https://github.com/Medium/medium-sdk-python.git@bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6
