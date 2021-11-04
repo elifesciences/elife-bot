@@ -228,6 +228,31 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         self.assertEqual(first_sub_article.contributors[1].surname, "Brack")
 
     @patch.object(activity_DepositCrossrefPeerReview, "get_manuscript_object")
+    def test_get_article_objects_editor_evaluation(self, fake_manuscript_object):
+        """test for parsing an XML file and not to add editor names to an Editor's evaluation"""
+        fake_manuscript_object.return_value = bigquery.Manuscript(
+            bigquery_test_data.ARTICLE_RESULT_15747
+        )
+        xml_file_name = "tests/test_data/crossref_peer_review/outbox/elife-73240-v2.xml"
+        article_object_map = self.activity.get_article_objects([xml_file_name])
+        self.assertEqual(len(article_object_map), 1)
+        article_object = article_object_map.get(xml_file_name)
+        first_sub_article = article_object.review_articles[0]
+        self.assertEqual(len(first_sub_article.contributors), 1)
+        self.assertEqual(first_sub_article.contributors[0].contrib_type, "author")
+        self.assertEqual(first_sub_article.contributors[0].surname, "Linstedt")
+        second_sub_article = article_object.review_articles[1]
+        self.assertEqual(second_sub_article.contributors[0].contrib_type, "editor")
+        self.assertEqual(second_sub_article.contributors[0].surname, "Linstedt")
+        self.assertEqual(second_sub_article.contributors[1].contrib_type, "reviewer")
+        self.assertEqual(second_sub_article.contributors[1].surname, "Merz")
+        third_sub_article = article_object.review_articles[2]
+        self.assertEqual(second_sub_article.contributors[0].contrib_type, "editor")
+        self.assertEqual(second_sub_article.contributors[0].surname, "Linstedt")
+        self.assertEqual(second_sub_article.contributors[1].contrib_type, "reviewer")
+        self.assertEqual(second_sub_article.contributors[1].surname, "Merz")
+
+    @patch.object(activity_DepositCrossrefPeerReview, "get_manuscript_object")
     def test_get_article_objects_dedupe(self, fake_manuscript_object):
         """test for deduping the same editor exists twice"""
         fake_manuscript_object.return_value = bigquery.Manuscript(
