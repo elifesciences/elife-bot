@@ -1,4 +1,4 @@
-# file generated 2021-11-04 - see update-dependencies.sh
+# file generated 2021-11-08 - see update-dependencies.sh
 arrow==1.2.1
 astroid==2.8.4
 attrs==21.2.0
@@ -19,7 +19,7 @@ docker==5.0.3
 ejpcsvparser==0.1.2
 elifearticle==0.7.0
 elifecleaner==0.6.0
-elifecrossref==0.9.0
+elifecrossref==0.10.0
 elifepubmed==0.3.0
 elifetools==0.13.0
 func-timeout==4.3.5
@@ -59,7 +59,7 @@ psutil==5.8.0
 py==1.11.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
-pycparser==2.20
+pycparser==2.21
 pyfunctional==1.4.3
 PyGithub==1.55
 PyJWT==2.3.0
