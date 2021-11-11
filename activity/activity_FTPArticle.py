@@ -121,7 +121,11 @@ class activity_FTPArticle(Activity):
             if workflow == 'Zendy':
                 self.sftp_to_endpoint(zipfiles)
             if workflow == 'OASwitchboard':
-                self.sftp_to_endpoint(zipfiles)
+                # send XML files only, unzipped
+                with zipfile.ZipFile(zipfiles[0], "r") as open_zip:
+                    open_zip.extractall(self.directories.get("FTP_TO_SOMEWHERE_DIR"))
+                uploadfiles = glob.glob(self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.xml")
+                self.sftp_to_endpoint(uploadfiles)
 
         except:
             # Something went wrong, fail
