@@ -392,8 +392,21 @@ class activity_PubRouterDeposit(Activity):
                     self.logger.info(log_info)
                 remove_article_doi.append(article.doi)
 
+        # Check article type for OA Switchboard recipient
+        if workflow == "OASwitchboard":
+            for article in articles:
+                if not approve_for_oa_switchboard(article):
+                    if self.logger:
+                        log_info = (
+                            "Removing because the article type is excluded from sending "
+                            + article.doi
+                        )
+                        self.admin_email_content += "\n" + log_info
+                        self.logger.info(log_info)
+                    remove_article_doi.append(article.doi)
+
         # Check if article is a resupply
-        if workflow not in ["CLOCKSS", "OVID", "PMC", "Zendy"]:
+        if workflow not in ["CLOCKSS", "OASwitchboard", "OVID", "PMC", "Zendy"]:
             for article in articles:
                 was_ever_published = blank_article.was_ever_published(
                     article.doi, workflow
@@ -409,7 +422,7 @@ class activity_PubRouterDeposit(Activity):
                     remove_article_doi.append(article.doi)
 
         # Check if a PMC zip file exists for this article
-        if workflow not in ["OVID", "PMC", "Zendy"]:
+        if workflow not in ["OASwitchboard", "OVID", "PMC", "Zendy"]:
             for article in articles:
                 if not self.does_source_zip_exist_from_s3(doi_id=article.doi_id):
                     if self.logger:
@@ -601,6 +614,8 @@ class activity_PubRouterDeposit(Activity):
                 recipients = self.settings.OVID_EMAIL
             elif workflow == "Zendy":
                 recipients = self.settings.ZENDY_EMAIL
+            elif workflow == "OASwitchboard":
+                recipients = self.settings.OASWITCHBOARD_EMAIL
         except:
             pass
 
@@ -672,6 +687,8 @@ def get_outbox_folder(workflow):
         return "ovid/outbox/"
     if workflow == "Zendy":
         return "zendy/outbox/"
+    if workflow == "OASwitchboard":
+        return "oaswitchboard/outbox/"
 
     return None
 
@@ -700,5 +717,27 @@ def get_published_folder(workflow):
         return "ovid/published/"
     if workflow == "Zendy":
         return "zendy/published/"
+    if workflow == "OASwitchboard":
+        return "oaswitchboard/published/"
 
     return None
+
+
+def approve_for_oa_switchboard(article):
+    "check article tyep and display channel to only sent particular types of articles"
+    allowed_article_type = "research-article"
+    allowed_display_channel_values = [
+        "Feature Article",
+        "Research Advance",
+        "Short Report",
+        "Tools and Resources",
+    ]
+    if (
+        article
+        and hasattr(article, "article_type")
+        and hasattr(article, "display_channel")
+        and article.article_type == allowed_article_type
+        and article.display_channel[0] in allowed_display_channel_values
+    ):
+        return True
+    return False

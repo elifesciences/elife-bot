@@ -21,6 +21,7 @@ WORKFLOW_NAMES = [
     "CLOCKSS",
     "OVID",
     "Zendy",
+    "OASwitchboard",
 ]
 
 
@@ -143,3 +144,23 @@ class TestGetPublishedFolder(unittest.TestCase):
     def test_get_published_folder_undefined(self):
         workflow = "foo"
         self.assertIsNone(activity_module.get_published_folder(workflow))
+
+
+class TestApproveForOaSwitchboard(unittest.TestCase):
+    def test_approve_for_oa_switchboard_true(self):
+        article_object = article()
+        article_object.parse_article_file(
+            "tests/files_source/oaswitchboard/outbox/elife-70357-v2.xml"
+        )
+        self.assertEqual(
+            activity_module.approve_for_oa_switchboard(article_object), True
+        )
+
+    def test_approve_for_oa_switchboard_false(self):
+        article_object = article()
+        article_object.parse_article_file(
+            "tests/files_source/oaswitchboard/outbox/elife-00353-v1.xml"
+        )
+        self.assertEqual(
+            activity_module.approve_for_oa_switchboard(article_object), False
+        )

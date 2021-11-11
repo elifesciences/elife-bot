@@ -120,6 +120,8 @@ class activity_FTPArticle(Activity):
                 self.ftp_to_endpoint(zipfiles, passive=True)
             if workflow == 'Zendy':
                 self.sftp_to_endpoint(zipfiles)
+            if workflow == 'OASwitchboard':
+                self.sftp_to_endpoint(zipfiles)
 
         except:
             # Something went wrong, fail
@@ -207,6 +209,12 @@ class activity_FTPArticle(Activity):
             self.SFTP_USERNAME = self.settings.ZENDY_SFTP_USERNAME
             self.SFTP_PASSWORD = self.settings.ZENDY_SFTP_PASSWORD
             self.SFTP_CWD = self.settings.ZENDY_SFTP_CWD
+
+        if workflow == 'OASwitchboard':
+            self.SFTP_URI = self.settings.OASWITCHBOARD_SFTP_URI
+            self.SFTP_USERNAME = self.settings.OASWITCHBOARD_SFTP_USERNAME
+            self.SFTP_PASSWORD = self.settings.OASWITCHBOARD_SFTP_PASSWORD
+            self.SFTP_CWD = self.settings.OASWITCHBOARD_SFTP_CWD
 
     def download_files_from_s3(self, doi_id, workflow):
 
@@ -364,8 +372,8 @@ class activity_FTPArticle(Activity):
         """
 
         # Repackage or move the zip depending on the workflow type
-        if workflow in ['Cengage', 'WoS', 'CNKI']:
-            if workflow == 'CNKI':
+        if workflow in ["Cengage", "WoS", "CNKI", "OASwitchboard"]:
+            if workflow in ["CNKI", "OASwitchboard"]:
                 file_types = ["xml"]
             else:
                 file_types = ["xml", "pdf"]
