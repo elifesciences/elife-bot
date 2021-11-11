@@ -727,8 +727,8 @@ def approve_for_oa_switchboard(article):
     "check article tyep and display channel to only sent particular types of articles"
     allowed_article_type = "research-article"
     allowed_display_channel_values = [
-        "Feature Article",
         "Research Advance",
+        "Research Article",
         "Short Report",
         "Tools and Resources",
     ]
