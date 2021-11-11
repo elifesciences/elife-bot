@@ -119,6 +119,7 @@ def outbox_map():
     outboxes["clockss"] = "clockss/outbox/"
     outboxes["ovid"] = "ovid/outbox/"
     outboxes["zendy"] = "zendy/outbox/"
+    outboxes["oaswitchboard"] = "oaswitchboard/outbox/"
     return outboxes
 
 
@@ -128,6 +129,8 @@ def choose_outboxes(status, outbox_map, first_by_status, run_type=None):
     if run_type != "silent-correction":
         if first_by_status:
             outbox_list.append(outbox_map.get("publication_email"))
+            if status == "vor":
+                outbox_list.append(outbox_map.get("oaswitchboard"))
         outbox_list.append(outbox_map.get("pubmed"))
 
     outbox_list.append(outbox_map.get("ovid"))

@@ -261,6 +261,8 @@ class article(object):
             published_folder = "clockss/published/"
         if workflow == "OVID":
             published_folder = "ovid/published/"
+        if workflow == "OASwitchboard":
+            published_folder = "oaswitchboard/published/"
 
         file_extensions = []
         file_extensions.append(".xml")

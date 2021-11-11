@@ -250,6 +250,13 @@ class exp():
     ZENDY_SFTP_CWD = ""
     ZENDY_EMAIL = ""
 
+    # OA Switchboard SFTP settings
+    OASWITCHBOARD_SFTP_URI = ""
+    OASWITCHBOARD_SFTP_USERNAME = ""
+    OASWITCHBOARD_SFTP_PASSWORD = ""
+    OASWITCHBOARD_SFTP_CWD = ""
+    OASWITCHBOARD_EMAIL = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -552,6 +559,13 @@ class dev():
     ZENDY_SFTP_CWD = ""
     ZENDY_EMAIL = ""
 
+    # OA Switchboard SFTP settings
+    OASWITCHBOARD_SFTP_URI = ""
+    OASWITCHBOARD_SFTP_USERNAME = ""
+    OASWITCHBOARD_SFTP_PASSWORD = ""
+    OASWITCHBOARD_SFTP_CWD = ""
+    OASWITCHBOARD_EMAIL = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -850,6 +864,13 @@ class live():
     ZENDY_SFTP_PASSWORD = ""
     ZENDY_SFTP_CWD = ""
     ZENDY_EMAIL = ""
+
+    # OA Switchboard SFTP settings
+    OASWITCHBOARD_SFTP_URI = ""
+    OASWITCHBOARD_SFTP_USERNAME = ""
+    OASWITCHBOARD_SFTP_PASSWORD = ""
+    OASWITCHBOARD_SFTP_CWD = ""
+    OASWITCHBOARD_EMAIL = ""
 
     # Logging
     setLevel = "INFO"

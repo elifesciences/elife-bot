@@ -17,6 +17,7 @@ WORKFLOW_NAMES = [
     "CLOCKSS",
     "OVID",
     "Zendy",
+    "OASwitchboard",
 ]
 
 
