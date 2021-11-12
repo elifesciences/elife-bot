@@ -401,10 +401,12 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossrefPeerReview",
+                "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossrefPeerReview",
+                "PubRouterDeposit_OASwitchboard",
             ]
         },
     )
