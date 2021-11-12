@@ -52,11 +52,7 @@ class activity_PubRouterDeposit(Activity):
         self.outbox_folder = None
         self.published_folder = None
 
-        # Bucket settings for source files of FTPArticle workflows
-        self.pmc_zip_bucket = settings.poa_packaging_bucket
-        self.pmc_zip_folder = "pmc/zip/"
-
-        # Bucket settings for source files of PMCDeposit workflows
+        # Bucket settings for source files workflows
         self.archive_bucket = (
             self.settings.publishing_buckets_prefix + self.settings.archive_bucket
         )
@@ -406,7 +402,7 @@ class activity_PubRouterDeposit(Activity):
                     remove_article_doi.append(article.doi)
 
         # Check if article is a resupply
-        if workflow not in ["CLOCKSS", "OASwitchboard", "OVID", "PMC", "Zendy"]:
+        if workflow not in ["CLOCKSS", "OVID", "PMC", "Zendy"]:
             for article in articles:
                 was_ever_published = blank_article.was_ever_published(
                     article.doi, workflow
@@ -421,27 +417,14 @@ class activity_PubRouterDeposit(Activity):
                         self.logger.info(log_info)
                     remove_article_doi.append(article.doi)
 
-        # Check if a PMC zip file exists for this article
-        if workflow not in ["OASwitchboard", "OVID", "PMC", "Zendy"]:
-            for article in articles:
-                if not self.does_source_zip_exist_from_s3(doi_id=article.doi_id):
-                    if self.logger:
-                        log_info = (
-                            "Removing because there is no PMC zip file to send "
-                            + article.doi
-                        )
-                        self.admin_email_content += "\n" + log_info
-                        self.logger.info(log_info)
-                    remove_article_doi.append(article.doi)
-
-        # For PMC workflows, check the archive zip file exists
-        if workflow == "PMC":
+        # Check a vor archive zip file exists
+        if workflow not in ["OVID", "Zendy"]:
             for article in articles:
                 zip_file_name = self.archive_zip_file_name(article)
                 if not zip_file_name:
                     if self.logger:
                         log_info = (
-                            "Removing because there is no archive zip for PMC to send "
+                            "Removing because there is no archive zip to send "
                             + article.doi
                         )
                         self.admin_email_content += "\n" + log_info
@@ -486,23 +469,6 @@ class activity_PubRouterDeposit(Activity):
             s3_key_name = self.outbox_folder + filename
             s3_key_names.append(s3_key_name)
         return s3_key_names
-
-    def does_source_zip_exist_from_s3(self, doi_id):
-        """"""
-        bucket_name = self.pmc_zip_bucket
-        prefix = self.pmc_zip_folder
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = s3_conn.lookup(bucket_name)
-
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket=bucket, prefix=prefix)
-
-        s3_key_name = s3lib.latest_pmc_zip_revision(doi_id, s3_key_names)
-
-        return bool(s3_key_name)
 
     def send_admin_email(self):
         """
