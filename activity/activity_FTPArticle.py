@@ -34,8 +34,6 @@ class activity_FTPArticle(Activity):
         self.description = "Download VOR files and publish by FTP to some particular place."
 
         # Bucket settings
-        self.pmc_zip_bucket = settings.poa_packaging_bucket
-        self.pmc_zip_folder = "pmc/zip/"
         self.archive_zip_bucket = (self.settings.publishing_buckets_prefix
                                    + self.settings.archive_bucket)
 
@@ -222,17 +220,12 @@ class activity_FTPArticle(Activity):
 
     def download_files_from_s3(self, doi_id, workflow):
 
-        # Download PMC zip file if present
-        pmc_zip_downloaded = self.download_pmc_zip_from_s3(doi_id, workflow)
-        archive_zip_repackaged = None
+        # download and convert the archive zip
+        archive_zip_downloaded = self.download_archive_zip_from_s3(doi_id)
+        if archive_zip_downloaded:
+            archive_zip_repackaged = self.repackage_archive_zip_to_pmc_zip(doi_id)
 
-        # if there is no PMC zip then download and convert the archive zip
-        if not pmc_zip_downloaded:
-            archive_zip_downloaded = self.download_archive_zip_from_s3(doi_id)
-            if archive_zip_downloaded:
-                archive_zip_repackaged = self.repackage_archive_zip_to_pmc_zip(doi_id)
-
-        if pmc_zip_downloaded or archive_zip_repackaged:
+        if archive_zip_repackaged:
             self.move_or_repackage_pmc_zip(doi_id, workflow)
         else:
             self.logger.info(
@@ -325,48 +318,6 @@ class activity_FTPArticle(Activity):
                 filename = dir_file.split(os.sep)[-1]
                 new_zipfile.write(dir_file, filename)
         return True
-
-    def download_pmc_zip_from_s3(self, doi_id, workflow):
-        """
-        Simple download of PMC zip file from the live bucket
-        """
-        bucket_name = self.pmc_zip_bucket
-        prefix = self.pmc_zip_folder
-
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(bucket_name)
-
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            prefix=prefix)
-
-        s3_key_name = s3lib.latest_pmc_zip_revision(doi_id, s3_key_names)
-
-        if s3_key_name:
-
-            # Download
-            s3_key = bucket.get_key(s3_key_name)
-
-            filename = s3_key_name.split("/")[-1]
-
-            filename_plus_path = os.path.join(self.directories.get("INPUT_DIR"), filename)
-
-            with open(filename_plus_path, "wb") as open_file:
-                s3_key.get_contents_to_file(open_file)
-
-            if self.logger:
-                self.logger.info(
-                    "FTPArticle running %s workflow for article %s, downloaded PMC zip %s"
-                    % (workflow, doi_id, filename))
-            return True
-
-        if self.logger:
-            self.logger.info(
-                "FTPArticle running %s workflow for article %s, could not download a PMC zip"
-                % (workflow, doi_id))
-        return False
 
     def move_or_repackage_pmc_zip(self, doi_id, workflow):
         """

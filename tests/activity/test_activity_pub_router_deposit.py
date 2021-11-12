@@ -38,7 +38,7 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")
     @patch("boto.swf.layer1.Layer1")
-    @patch.object(activity_PubRouterDeposit, "does_source_zip_exist_from_s3")
+    @patch.object(activity_PubRouterDeposit, "archive_zip_file_name")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(article, "was_ever_published")
@@ -49,7 +49,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_was_ever_published,
         fake_storage_context,
         fake_outbox_key_names,
-        fake_zip_exists,
+        fake_zip_file_name,
         fake_conn,
         fake_article_versions,
         fake_email_smtp_connect,
@@ -62,7 +62,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_get_s3_keys.return_value = None
         fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
         fake_outbox_key_names.return_value = ["elife00013.xml", "elife09169.xml"]
-        fake_zip_exists.return_value = True
+        fake_zip_file_name.return_value = True
         fake_conn.return_value = FakeLayer1()
         fake_article_versions.return_value = (
             200,
