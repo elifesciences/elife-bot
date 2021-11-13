@@ -1,8 +1,10 @@
 import os
+import shutil
 import unittest
 import zipfile
 from mock import patch
 from ddt import ddt, data, unpack
+from testfixtures import TempDirectory
 import activity.activity_PMCDeposit as activity_module
 from activity.activity_PMCDeposit import activity_PMCDeposit
 import tests.activity.settings_mock as settings_mock
@@ -255,5 +257,57 @@ class TestArticleXMLFile(unittest.TestCase):
         self.assertEqual(activity_module.article_xml_file(xml_search_folders), expected)
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestAlterXML(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_alter_xml_unchanged(self):
+        "test altering a file where no changes will be made, output is the same as input"
+        directory = TempDirectory()
+        filename = "elife-00353-v1.xml"
+        source_file = "tests/files_source/%s" % filename
+        test_file = os.path.join(directory.path, filename)
+        shutil.copy(source_file, test_file)
+        activity_module.alter_xml(test_file, self.logger)
+        with open(source_file, "r") as open_file:
+            with open(test_file, "r") as open_output_file:
+                self.assertEqual(open_file.read(), open_output_file.read())
+
+    def test_alter_xml(self):
+        "test an example XML"
+        directory = TempDirectory()
+        xml_declaration = """<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD with MathML3 v1.2 20190208//EN"  "JATS-archivearticle1-mathml3.dtd">"""
+        xml_string = (
+            """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+<sub-article>
+<front-stub>
+<related-object id="sa0ro1" link-type="continued-by" object-id="10.1101/2021.02.28.433255" object-id-type="id" xlink:href="https://sciety.org/articles/activity/10.1101/2021.02.28.433255"/>
+</front-stub>
+</sub-article>
+</article>"""
+            % xml_declaration
+        )
+        expected = (
+            """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+<sub-article>
+<front-stub>
+<ext-link ext-link-type="uri" id="sa0ro1" xlink:href="https://sciety.org/articles/activity/10.1101/2021.02.28.433255"/>
+</front-stub>
+</sub-article>
+</article>"""
+            % xml_declaration
+        )
+        filename = "elife-99999-v1.xml"
+        test_file = os.path.join(directory.path, filename)
+        with open(test_file, "w") as open_file:
+            open_file.write(xml_string)
+        activity_module.alter_xml(test_file, self.logger)
+        with open(test_file, "r") as open_file:
+            self.assertEqual(open_file.read(), expected)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "Converting related-object tag to ext-link tag in sub-article",
+        )
