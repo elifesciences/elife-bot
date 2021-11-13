@@ -4,6 +4,7 @@ import json
 import zipfile
 import re
 import glob
+from elifetools import xmlio
 from elifetools import parseJATS as parser
 import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo
@@ -97,6 +98,9 @@ class activity_PMCDeposit(Activity):
             self.logger.info("renamed: %s" % renamed_list)
         if not_renamed_list:
             self.logger.info("not renamed: %s" % not_renamed_list)
+
+        # Temporary XML rewrite of related-object tag
+        alter_xml(article_xml_file(xml_search_folders), self.logger)
 
         # Convert the XML
         article_processing.convert_xml(article_xml_file(xml_search_folders), file_name_map)
@@ -348,3 +352,34 @@ def send_ftp_exception_email(subject, message, settings, logger):
 
     details = email_provider.smtp_send_messages(settings, messages, logger)
     logger.info('Email sending details: %s' % str(details))
+
+
+def alter_xml(xml_file, logger):
+    # Register namespaces
+    xmlio.register_xmlns()
+
+    root, doctype_dict, processing_instructions = xmlio.parse(
+        xml_file, return_doctype_dict=True, return_processing_instructions=True
+    )
+
+    # Convert related-object tag
+    for xml_tag in root.findall("./sub-article/front-stub/related-object"):
+        logger.info("Converting related-object tag to ext-link tag in sub-article")
+        xml_tag.tag = "ext-link"
+        xml_tag.set("ext-link-type", "uri")
+        # delete attributes
+        for attribute_name in ["link-type", "object-id", "object-id-type"]:
+            if xml_tag.attrib.get(attribute_name):
+                del xml_tag.attrib[attribute_name]
+
+    # Start the file output
+    reparsed_string = xmlio.output(
+        root,
+        output_type=None,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions,
+    )
+
+    f = open(xml_file, "wb")
+    f.write(reparsed_string)
+    f.close()
