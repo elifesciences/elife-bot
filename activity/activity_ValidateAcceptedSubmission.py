@@ -8,6 +8,9 @@ from provider import cleaner, download_helper, email_provider, utils
 from activity.objects import Activity
 
 
+REPAIR_XML = False
+
+
 class activity_ValidateAcceptedSubmission(Activity):
     "ValidateAcceptedSubmission activity"
 
@@ -85,6 +88,8 @@ class activity_ValidateAcceptedSubmission(Activity):
         self.logger.info("%s, downloaded file to %s" % (self.name, self.input_file))
 
         # unzip the file and validate
+        original_repair_xml = cleaner.parse.REPAIR_XML
+        cleaner.parse.REPAIR_XML = REPAIR_XML
         try:
             self.statuses["valid"] = cleaner.check_ejp_zip(
                 self.input_file, self.directories.get("TEMP_DIR")
@@ -98,7 +103,6 @@ class activity_ValidateAcceptedSubmission(Activity):
             # Send error email
             self.statuses["email"] = self.email_error_report(real_filename, log_message)
             self.log_statuses(self.input_file)
-            return self.ACTIVITY_PERMANENT_FAILURE
         except Exception:
             log_message = (
                 "%s, unhandled exception in cleaner.check_ejp_zip for file %s"
@@ -113,6 +117,8 @@ class activity_ValidateAcceptedSubmission(Activity):
             # remove the log handlers
             for log_handler in cleaner_log_handers:
                 cleaner.log_remove_handler(log_handler)
+            # reset the parsing library flag
+            cleaner.parse.REPAIR_XML = original_repair_xml
 
         # Send an email if the log has warnings
         log_contents = ""

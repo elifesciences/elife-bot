@@ -60,6 +60,9 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
     def test_do_activity(
         self, test_data, fake_download_storage_context, fake_email_smtp_connect
     ):
+        # set REPAIR_XML value because test fixture is malformed XML
+        activity_module.REPAIR_XML = True
+
         # copy files into the input directory using the storage context
         fake_download_storage_context.return_value = FakeStorageContext()
         fake_email_smtp_connect.return_value = FakeSMTPServer(
@@ -127,6 +130,9 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
                     ):
                         self.assertTrue(expected_to_contain in str(body))
 
+        # reset REPAIR_XML value
+        activity_module.REPAIR_XML = False
+
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(cleaner, "check_ejp_zip")
     @patch.object(activity_module.download_helper, "storage_context")
@@ -141,7 +147,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_check_ejp_zip.side_effect = ParseError()
         # do the activity
         result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
-        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+        self.assertEqual(result, True)
         self.assertTrue(
             self.activity.logger.logexception.startswith(
                 (
