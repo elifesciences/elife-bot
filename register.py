@@ -120,6 +120,7 @@ def start(settings):
     activity_names.append("GenerateSWHReadme")
     activity_names.append("PushSWHDeposit")
     activity_names.append("ValidateAcceptedSubmission")
+    activity_names.append("TransformAcceptedSubmission")
 
     for activity_name in activity_names:
         # Import the activity libraries

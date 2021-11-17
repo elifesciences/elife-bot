@@ -1,5 +1,5 @@
 import logging
-from elifecleaner import LOGGER, configure_logging, parse
+from elifecleaner import LOGGER, configure_logging, parse, transform
 
 LOG_FILENAME = "elifecleaner.log"
 
@@ -17,3 +17,7 @@ def log_remove_handler(handler):
 
 def check_ejp_zip(zip_file, tmp_dir):
     return parse.check_ejp_zip(zip_file, tmp_dir)
+
+
+def transform_ejp_zip(zip_file, tmp_dir, output_dir):
+    return transform.transform_ejp_zip(zip_file, tmp_dir, output_dir)
