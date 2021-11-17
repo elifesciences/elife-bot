@@ -316,6 +316,7 @@ class exp():
     era_incoming_queue = "exp-era-incoming-queue"
 
     # Accepted submission workflow
+    accepted_submission_output_bucket = "exp-elife-bot-accepted-submission-cleaning-output"
     accepted_submission_sender_email = "sender@example.org"
     accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
     accepted_submission_queue = ""
@@ -621,6 +622,7 @@ class dev():
     era_incoming_queue = "dev-era-incoming-queue"
 
     # Accepted submission workflow
+    accepted_submission_output_bucket = "dev-elife-bot-accepted-submission-cleaning-output"
     accepted_submission_sender_email = "sender@example.org"
     accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
     accepted_submission_queue = ""
@@ -931,6 +933,7 @@ class live():
     era_incoming_queue = "prod-era-incoming-queue"
 
     # Accepted submission workflow
+    accepted_submission_output_bucket = "live-elife-bot-accepted-submission-cleaning-output"
     accepted_submission_sender_email = "sender@example.org"
     accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
     accepted_submission_queue = "cleaning-queue"
