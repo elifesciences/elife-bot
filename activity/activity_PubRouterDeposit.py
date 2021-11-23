@@ -49,8 +49,6 @@ class activity_PubRouterDeposit(Activity):
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
-        self.outbox_folder = None
-        self.published_folder = None
 
         # Bucket settings for source files workflows
         self.archive_bucket = (
@@ -90,16 +88,16 @@ class activity_PubRouterDeposit(Activity):
             self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         self.workflow = data["data"]["workflow"]
-        self.outbox_folder = get_outbox_folder(self.workflow)
-        self.published_folder = get_published_folder(self.workflow)
+        outbox_folder = get_outbox_folder(self.workflow)
+        published_folder = get_published_folder(self.workflow)
 
-        if self.outbox_folder is None or self.published_folder is None:
+        if outbox_folder is None or published_folder is None:
             # Total fail
             return False
 
         # Download the S3 objects from the outbox
         outbox_s3_key_names = outbox_provider.get_outbox_s3_key_names(
-            self.settings, self.publish_bucket, self.outbox_folder
+            self.settings, self.publish_bucket, outbox_folder
         )
         outbox_provider.download_files_from_s3_outbox(
             self.settings,
@@ -151,15 +149,15 @@ class activity_PubRouterDeposit(Activity):
 
         # Clean up outbox
         self.logger.info("Moving files from outbox folder to published folder")
-        published_file_names = self.s3_key_names_to_clean()
-        date_stamp = utils.set_datestamp()
-        to_folder = outbox_provider.get_to_folder_name(
-            self.published_folder, date_stamp
+        published_file_names = s3_key_names_to_clean(
+            outbox_folder, self.articles_approved, self.xml_file_to_doi_map
         )
+        date_stamp = utils.set_datestamp()
+        to_folder = outbox_provider.get_to_folder_name(published_folder, date_stamp)
         outbox_provider.clean_outbox(
             self.settings,
             self.publish_bucket,
-            self.outbox_folder,
+            outbox_folder,
             to_folder,
             published_file_names,
         )
@@ -438,38 +436,6 @@ class activity_PubRouterDeposit(Activity):
 
         return approved_articles
 
-    def get_to_folder_name(self):
-        """
-        From the date_stamp
-        return the S3 folder name to save published files into
-        """
-        to_folder = None
-
-        date_folder_name = self.date_stamp
-        to_folder = self.published_folder + date_folder_name + "/"
-
-        return to_folder
-
-    def s3_key_names_to_clean(self):
-        # Concatenate the expected S3 outbox file names
-        s3_key_names = []
-
-        # Compile a list of the published file names
-        remove_doi_list = []
-        processed_file_names = []
-        for article in self.articles_approved:
-            remove_doi_list.append(article.doi)
-
-        for key, value in list(self.xml_file_to_doi_map.items()):
-            if key in remove_doi_list:
-                processed_file_names.append(value)
-
-        for name in processed_file_names:
-            filename = name.split(os.sep)[-1]
-            s3_key_name = self.outbox_folder + filename
-            s3_key_names.append(s3_key_name)
-        return s3_key_names
-
     def send_admin_email(self):
         """
         After do_activity is finished, send emails to recipients
@@ -707,3 +673,25 @@ def approve_for_oa_switchboard(article):
     ):
         return True
     return False
+
+
+def s3_key_names_to_clean(outbox_folder, articles_approved, xml_file_to_doi_map):
+    """compile a list of S3 key names to clean from the outbox folder"""
+    # Concatenate the expected S3 outbox file names
+    s3_key_names = []
+
+    # Compile a list of the published file names
+    remove_doi_list = []
+    processed_file_names = []
+    for article in articles_approved:
+        remove_doi_list.append(article.doi)
+
+    for key, value in list(xml_file_to_doi_map.items()):
+        if key in remove_doi_list:
+            processed_file_names.append(value)
+
+    for name in processed_file_names:
+        filename = name.split(os.sep)[-1]
+        s3_key_name = outbox_folder + filename
+        s3_key_names.append(s3_key_name)
+    return s3_key_names
