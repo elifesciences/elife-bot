@@ -90,6 +90,7 @@ class activity_PubRouterDeposit(Activity):
         self.workflow = data["data"]["workflow"]
         outbox_folder = get_outbox_folder(self.workflow)
         published_folder = get_published_folder(self.workflow)
+        not_published_folder = get_not_published_folder(self.workflow)
 
         if outbox_folder is None or published_folder is None:
             # Total fail
@@ -111,7 +112,9 @@ class activity_PubRouterDeposit(Activity):
         # Parse the XML
         self.articles = self.parse_article_xml(self.article_xml_filenames)
         # Approve the articles to be sent
-        self.articles_approved = self.approve_articles(self.articles, self.workflow)
+        self.articles_approved, remove_doi_list = self.approve_articles(
+            self.articles, self.workflow
+        )
 
         for article in self.articles_approved:
             # Start a workflow for each article this is approved to publish
@@ -162,6 +165,29 @@ class activity_PubRouterDeposit(Activity):
             published_file_names,
         )
         self.outbox_status = True
+
+        # move file for a remove DOI article out of the outbox folder
+        self.logger.info("Moving files from outbox folder to the not_published folder")
+        not_published_to_folder = outbox_provider.get_to_folder_name(
+            not_published_folder, date_stamp
+        )
+        not_published_xml_files = []
+        for article_doi, file_name in self.xml_file_to_doi_map.items():
+            if article_doi in remove_doi_list:
+                log_message = (
+                    "DOI %s, %s to move file %s to the not_published folder"
+                    % (article_doi, self.name, file_name)
+                )
+                self.logger.info(log_message)
+                self.admin_email_content += "\n" + log_message
+                not_published_xml_files.append(file_name)
+        outbox_provider.clean_outbox(
+            self.settings,
+            self.publish_bucket,
+            outbox_folder,
+            not_published_to_folder,
+            not_published_xml_files,
+        )
 
         # Send email to admins with the status
         self.activity_status = True
@@ -360,7 +386,7 @@ class activity_PubRouterDeposit(Activity):
         approved_articles = []
 
         # Keep track of which articles to remove at the end
-        remove_article_doi = []
+        remove_doi_list = []
 
         # Create a blank article object to use its functions
         blank_article = self.create_article()
@@ -384,7 +410,8 @@ class activity_PubRouterDeposit(Activity):
                     log_info = "Removing because it is not published " + article.doi
                     self.admin_email_content += "\n" + log_info
                     self.logger.info(log_info)
-                remove_article_doi.append(article.doi)
+                if article.doi not in remove_doi_list:
+                    remove_doi_list.append(article.doi)
 
         # Check article type for OA Switchboard recipient
         if workflow == "OASwitchboard":
@@ -397,7 +424,8 @@ class activity_PubRouterDeposit(Activity):
                         )
                         self.admin_email_content += "\n" + log_info
                         self.logger.info(log_info)
-                    remove_article_doi.append(article.doi)
+                    if article.doi not in remove_doi_list:
+                        remove_doi_list.append(article.doi)
 
         # Check if article is a resupply
         if workflow not in ["CLOCKSS", "OVID", "PMC", "Zendy"]:
@@ -413,7 +441,8 @@ class activity_PubRouterDeposit(Activity):
                         )
                         self.admin_email_content += "\n" + log_info
                         self.logger.info(log_info)
-                    remove_article_doi.append(article.doi)
+                    if article.doi not in remove_doi_list:
+                        remove_doi_list.append(article.doi)
 
         # Check a vor archive zip file exists
         if workflow not in ["OVID", "Zendy"]:
@@ -427,14 +456,15 @@ class activity_PubRouterDeposit(Activity):
                         )
                         self.admin_email_content += "\n" + log_info
                         self.logger.info(log_info)
-                    remove_article_doi.append(article.doi)
+                    if article.doi not in remove_doi_list:
+                        remove_doi_list.append(article.doi)
 
         # Can remove the articles now without affecting the loops using del
         for article in articles:
-            if article.doi not in remove_article_doi:
+            if article.doi not in remove_doi_list:
                 approved_articles.append(article)
 
-        return approved_articles
+        return approved_articles, remove_doi_list
 
     def send_admin_email(self):
         """
@@ -651,6 +681,36 @@ def get_published_folder(workflow):
         return "zendy/published/"
     if workflow == "OASwitchboard":
         return "oaswitchboard/published/"
+
+    return None
+
+
+def get_not_published_folder(workflow):
+    """
+    S3 published folder, where processed files are copied to
+    """
+    if workflow == "HEFCE":
+        return "pub_router/not_published/"
+    if workflow == "Cengage":
+        return "cengage/not_published/"
+    if workflow == "GoOA":
+        return "gooa/not_published/"
+    if workflow == "WoS":
+        return "wos/not_published/"
+    if workflow == "PMC":
+        return "pmc/not_published/"
+    if workflow == "CNPIEC":
+        return "cnpiec/not_published/"
+    if workflow == "CNKI":
+        return "cnki/not_published/"
+    if workflow == "CLOCKSS":
+        return "clockss/not_published/"
+    if workflow == "OVID":
+        return "ovid/not_published/"
+    if workflow == "Zendy":
+        return "zendy/not_published/"
+    if workflow == "OASwitchboard":
+        return "oaswitchboard/not_published/"
 
     return None
 
