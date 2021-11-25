@@ -185,7 +185,7 @@ def generate_root(articles, root_tag="root", temp_dir="tmp", logger=LOGGER):
 
 def output_xml(root, pretty=False, indent="", logger=LOGGER):
     try:
-        return True, generate.output_xml_escaped(root, pretty, indent)
+        return True, generate.output_xml_modified(root, pretty, indent)
     except:
         logger.info('Error generating output XML from ElementTree root element')
     return False, None
