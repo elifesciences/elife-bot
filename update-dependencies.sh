@@ -1,6 +1,12 @@
 #!/bin/bash
-# updates Pipfile.lock and regenerates the requirements.txt file
+# updates Pipfile.lock and regenerates the requirements.txt file.
+# if a package and a version are passed in, then just that package will be updated to that version.
+
 set -e
+
+# optional
+package="$1"
+version="$2"
 
 # create/update existing venv
 rm -rf venv/
@@ -12,9 +18,25 @@ python3.6 -m venv venv
 source venv/bin/activate
 pip install pip wheel --upgrade
 
-# updates the Pipfile.lock file and then installs the newly updated dependencies.
-# the envvar is necessary otherwise pipenv will use it's own .venv directory.
-VIRTUAL_ENV="venv" pipenv update --dev
+if [ -n "$package" ]; then
+    # updates a single package to a specific version.
+
+    pip install -r requirements.txt
+
+    # make Pipenv install exactly as what we want (==).
+    sed --in-place --regexp-extended "s/$package = \".+\"/$package = \"==$version\"/" Pipfile
+    # the envvar is necessary otherwise Pipenv will use it's own .venv directory.
+    VIRTUAL_ENV="venv" pipenv install --keep-outdated "$package==$version"
+
+    # relax the constraint (~=).
+    sed --in-place --regexp-extended "s/$package = \".+\"/$package = \"~=$version\"/" Pipfile
+
+else
+    # updates the Pipfile.lock file and then installs the newly updated dependencies.
+    # the envvar is necessary otherwise Pipenv will use it's own .venv directory.
+    VIRTUAL_ENV="venv" pipenv update --dev
+
+fi
 
 datestamp=$(date +"%Y-%m-%d") # long form to support linux + bsd
 echo "# file generated $datestamp - see update-dependencies.sh" > requirements.txt
