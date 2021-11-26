@@ -19,7 +19,7 @@ docker==5.0.3
 ejpcsvparser==0.1.2
 elifearticle==0.7.0
 elifecleaner==0.7.0
-elifecrossref==0.10.0
+elifecrossref==0.11.0
 elifepubmed==0.3.0
 elifetools==0.13.1
 func-timeout==4.3.5

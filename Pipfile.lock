@@ -224,11 +224,11 @@
         },
         "elifecrossref": {
             "hashes": [
-                "sha256:5fecd0b16857bac523a0ba5441364cb2b5ecea9b6e71de7c5fac681b57f2c087",
-                "sha256:b799a3c1e22d592f0c3b321ac15627bfba0a890b0614c2f5d4480349b911c90d"
+                "sha256:8ef16bb36802c2a7ff822dd9c4526c3f8b2cc145e882c26e180353b54099e446",
+                "sha256:c2b5f425725804c0bed12724b13fe3084357009143354dd37a32ab9ae2b9ba54"
             ],
             "index": "pypi",
-            "version": "==0.10.0"
+            "version": "==0.11.0"
         },
         "elifepubmed": {
             "hashes": [
