@@ -54,6 +54,7 @@ class activity_PubRouterDeposit(Activity):
         self.archive_bucket = (
             self.settings.publishing_buckets_prefix + self.settings.archive_bucket
         )
+        self.archive_bucket_s3_keys = []
 
         # Track the success of some steps
         self.activity_status = None
@@ -109,6 +110,9 @@ class activity_PubRouterDeposit(Activity):
         )
         self.article_xml_filenames = glob.glob(self.get_tmp_dir() + "/*.xml")
 
+        # Get a list of archive zip keys from the bucket for using in approve_articles
+        self.archive_bucket_s3_keys = self.get_archive_bucket_s3_keys()
+
         # Parse the XML
         self.articles = self.parse_article_xml(self.article_xml_filenames)
         # Approve the articles to be sent
@@ -119,7 +123,7 @@ class activity_PubRouterDeposit(Activity):
         for article in self.articles_approved:
             # Start a workflow for each article this is approved to publish
             if self.workflow == "PMC":
-                zip_file_name = self.archive_zip_file_name(article)
+                zip_file_name = self.get_latest_archive_zip_name(article)
                 starter_status = self.start_pmc_deposit_workflow(
                     article,
                     zip_file_name,
@@ -257,7 +261,7 @@ class activity_PubRouterDeposit(Activity):
 
         return starter_status
 
-    def archive_zip_file_name(self, article, status="vor"):
+    def get_archive_bucket_s3_keys(self):
         """
         Get the file name of the most recent archive zip from the archive bucket
         """
@@ -274,9 +278,12 @@ class activity_PubRouterDeposit(Activity):
         s3_keys = []
         for key in s3_keys_in_bucket:
             s3_keys.append({"name": key.name, "last_modified": key.last_modified})
+        return s3_keys
 
+    def get_latest_archive_zip_name(self, article):
+        "from the list of s3 keys get the latest archive zip file name"
         return article_processing.latest_archive_zip_revision(
-            article.doi_id, s3_keys, self.journal, status
+            article.doi_id, self.archive_bucket_s3_keys, self.journal, status="vor"
         )
 
     def start_pmc_deposit_workflow(self, article, zip_file_name, folder=""):
@@ -447,7 +454,8 @@ class activity_PubRouterDeposit(Activity):
         # Check a vor archive zip file exists
         if workflow not in ["OVID", "Zendy"]:
             for article in articles:
-                zip_file_name = self.archive_zip_file_name(article)
+                # Get the file name of the most recent archive zip from the archive bucket
+                zip_file_name = self.get_latest_archive_zip_name(article)
                 if not zip_file_name:
                     if self.logger:
                         log_info = (
