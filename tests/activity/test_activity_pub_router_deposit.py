@@ -24,6 +24,17 @@ WORKFLOW_NAMES = [
     "OASwitchboard",
 ]
 
+ARCHIVE_ZIP_BUCKET_S3_KEYS = [
+    {
+        "name": "elife-00013-vor-v1-20121015000000.zip",
+        "last_modified": "2016-02-05T09:04:11.000Z",
+    },
+    {
+        "name": "elife-09169-vor-v1-20150608000000.zip",
+        "last_modified": "2020-02-05T09:04:11.000Z",
+    },
+]
+
 
 @ddt
 class TestPubRouterDeposit(unittest.TestCase):
@@ -38,7 +49,7 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")
     @patch("boto.swf.layer1.Layer1")
-    @patch.object(activity_PubRouterDeposit, "archive_zip_file_name")
+    @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(article, "was_ever_published")
@@ -49,7 +60,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_was_ever_published,
         fake_storage_context,
         fake_outbox_key_names,
-        fake_zip_file_name,
+        fake_archive_bucket_s3_keys,
         fake_conn,
         fake_article_versions,
         fake_email_smtp_connect,
@@ -62,7 +73,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_get_s3_keys.return_value = None
         fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
         fake_outbox_key_names.return_value = ["elife00013.xml", "elife09169.xml"]
-        fake_zip_file_name.return_value = True
+        fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
         fake_conn.return_value = FakeLayer1()
         fake_article_versions.return_value = (
             200,
@@ -74,7 +85,7 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")
     @patch("boto.swf.layer1.Layer1")
-    @patch.object(activity_PubRouterDeposit, "archive_zip_file_name")
+    @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(article, "was_ever_published")
@@ -85,22 +96,20 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_was_ever_published,
         fake_storage_context,
         fake_outbox_key_names,
-        fake_zip_file_name,
+        fake_archive_bucket_s3_keys,
         fake_conn,
         fake_article_versions,
         fake_email_smtp_connect,
     ):
         "test not_published logic by mocking Lax does not have version data"
         tmp_dir = self.pubrouterdeposit.get_tmp_dir()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            tmp_dir
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(tmp_dir)
         activity_data = {"data": {"workflow": "HEFCE"}}
         fake_was_ever_published.return_value = None
         fake_get_s3_keys.return_value = None
         fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
         fake_outbox_key_names.return_value = ["elife00013.xml", "elife09169.xml"]
-        fake_zip_file_name.return_value = True
+        fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
         fake_conn.return_value = FakeLayer1()
         fake_article_versions.return_value = (
             200,
@@ -149,7 +158,7 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch("provider.lax_provider.was_ever_poa")
     @patch("provider.lax_provider.article_versions")
     @patch("boto.swf.layer1.Layer1")
-    @patch.object(activity_PubRouterDeposit, "archive_zip_file_name")
+    @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(s3lib, "get_s3_keys_from_bucket")
@@ -160,7 +169,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_get_s3_keys,
         fake_storage_context,
         fake_outbox_key_names,
-        fake_archive_zip_file_name,
+        fake_archive_bucket_s3_keys,
         fake_conn,
         fake_article_versions,
         fake_was_ever_poa,
@@ -173,7 +182,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         activity_data = {"data": {"workflow": workflow_name}}
         fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
         fake_outbox_key_names.return_value = ["elife00013.xml"]
-        fake_archive_zip_file_name.return_value = "elife-01-00013.zip"
+        fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
         fake_was_ever_poa.return_value = False
         fake_get_s3_keys.return_value = False
         fake_article_versions.return_value = (
