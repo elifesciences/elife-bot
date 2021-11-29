@@ -1,6 +1,6 @@
 #!/bin/bash
 # updates Pipfile.lock and regenerates the requirements.txt file.
-# if a package and a version are passed in, then just that package will be updated to that version.
+# if a package and a version are passed in, then just that package (and it's dependencies) will be updated.
 
 set -e
 
@@ -23,12 +23,12 @@ if [ -n "$package" ]; then
 
     pip install -r requirements.txt
 
-    # make Pipenv install exactly as what we want (==).
+    # make Pipenv install exactly what we want (==).
     sed --in-place --regexp-extended "s/$package = \".+\"/$package = \"==$version\"/" Pipfile
     # the envvar is necessary otherwise Pipenv will use it's own .venv directory.
     VIRTUAL_ENV="venv" pipenv install --keep-outdated "$package==$version"
 
-    # relax the constraint (~=).
+    # relax the constraint again (~=).
     sed --in-place --regexp-extended "s/$package = \".+\"/$package = \"~=$version\"/" Pipfile
 
 else
