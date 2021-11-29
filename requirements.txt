@@ -1,4 +1,4 @@
-# file generated 2021-11-25 - see update-dependencies.sh
+# file generated 2021-11-29 - see update-dependencies.sh
 arrow==1.2.1
 astroid==2.9.0
 attrs==21.2.0
@@ -51,6 +51,7 @@ newrelic==7.2.4.171
 packagepoa==0.1.2
 packaging==21.3
 paramiko==2.8.0
+pkg_resources==0.0.0
 platformdirs==2.4.0
 pluggy==1.0.0
 proto-plus==1.19.8
