@@ -40,4 +40,5 @@ fi
 
 datestamp=$(date +"%Y-%m-%d") # long form to support linux + bsd
 echo "# file generated $datestamp - see update-dependencies.sh" > requirements.txt
-VIRTUAL_ENV="venv" pipenv run pip freeze >> requirements.txt
+# lsh@2021-11-29: re 'pkg-resources': https://github.com/pypa/pip/issues/4022
+VIRTUAL_ENV="venv" pipenv run pip freeze | grep -v pkg-resources >> requirements.txt
