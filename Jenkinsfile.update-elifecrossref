@@ -1,0 +1,18 @@
+elifeUpdatePipeline(
+    { commit ->
+        lock('elife-bot--ci') {
+            // ensure elife-bot--ci is on master
+            builderDeployRevision 'elife-bot--ci', commit
+            // on the elife-bot--ci instance, activate venv, run the 'update single dependency' script
+            builderCmd "elife-bot--ci", "./update-dependencies.sh elifecrossref ${params.tag}", "/opt/elife-bot", true
+            // rsync remote elife-bot to a ... local elife-bot?
+            builderSync "ci--bot.elife.internal", "/opt/elife-bot/"
+            // add the modified files
+            sh "git add Pipfile Pipfile.lock requirements.txt"
+        }
+    },
+    {
+        return "Dependency `elifecrossref` pinned to `${params.tag}`"
+    },
+    'update_elifecrossref/'
+)
