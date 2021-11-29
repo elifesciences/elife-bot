@@ -16,7 +16,7 @@ python3.6 -m venv venv
 
 # prefer using wheels to compilation
 source venv/bin/activate
-pip install pip wheel pipenv --upgrade
+pip install pip wheel --upgrade
 
 if [ -n "$package" ]; then
     # updates a single package to a specific version.
