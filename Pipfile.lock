@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b5fbd76985818e144ffa68deb72e9dd099c778564d7c14b5dda2906bde435011"
+            "sha256": "a7e9883186c11c14e0789d99e814ff0ceb08cd15389f0b8ecb92820d5e300111"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -647,6 +647,14 @@
             "index": "pypi",
             "version": "==2.8.0"
         },
+        "pip": {
+            "hashes": [
+                "sha256:deaf32dcd9ab821e359cd8330786bcd077604b5c5730c0b096eda46f95c24a2d",
+                "sha256:fd11ba3d0fdb4c07fbc5ecbba0b1b719809420f25038f8ee3cd913d3faa3033a"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==21.3.1"
+        },
         "proto-plus": {
             "hashes": [
                 "sha256:3434eadaed845a337d6c488d2b7d055d733aaa231c0c0d4c778ec720bb91cf87",
@@ -917,6 +925,14 @@
             "markers": "python_version >= '3.6'",
             "version": "==4.8"
         },
+        "setuptools": {
+            "hashes": [
+                "sha256:b4c634615a0cf5b02cf83c7bedffc8da0ca439f00e79452699454da6fbd4153d",
+                "sha256:feb5ff19b354cde9efd2344ef6d5e79880ce4be643037641b49508bbb850d060"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==59.4.0"
+        },
         "six": {
             "hashes": [
                 "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
@@ -968,7 +984,7 @@
                 "sha256:4987c65554f7a2dbf30c18fd48778ef124af6fab771a377103da0585e2336ece",
                 "sha256:c4fdf4019605b6e5423637e01bc9fe4daef873709a7973e195ceba0a62bbc844"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4.0'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4'",
             "version": "==1.26.7"
         },
         "wand": {
@@ -1289,6 +1305,14 @@
             ],
             "index": "pypi",
             "version": "==5.0.2"
+        },
+        "setuptools": {
+            "hashes": [
+                "sha256:b4c634615a0cf5b02cf83c7bedffc8da0ca439f00e79452699454da6fbd4153d",
+                "sha256:feb5ff19b354cde9efd2344ef6d5e79880ce4be643037641b49508bbb850d060"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==59.4.0"
         },
         "soupsieve": {
             "hashes": [
