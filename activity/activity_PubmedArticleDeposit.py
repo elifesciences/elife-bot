@@ -41,8 +41,8 @@ class activity_PubmedArticleDeposit(Activity):
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
-        self.outbox_folder = "pubmed/outbox/"
-        self.published_folder = "pubmed/published/"
+        self.outbox_folder = outbox_provider.outbox_folder("pubmed")
+        self.published_folder = outbox_provider.published_folder("pubmed")
 
         # Track the success of some steps
         self.statuses = OrderedDict(

@@ -42,14 +42,14 @@ class TestScheduleDownstream(unittest.TestCase):
 
     def test_choose_outboxes_poa_first(self):
         """first poa version"""
-        outbox_list = activity_module.choose_outboxes("poa", activity_module.outbox_map(), True)
+        outbox_list = activity_module.choose_outboxes("poa", True)
         self.assertTrue("pubmed/outbox/" in outbox_list)
         self.assertTrue("publication_email/outbox/" in outbox_list)
         self.assertFalse("pmc/outbox/" in outbox_list)
 
     def test_choose_outboxes_poa_not_first(self):
         """poa but not the first poa"""
-        outbox_list = activity_module.choose_outboxes("poa", activity_module.outbox_map(), False)
+        outbox_list = activity_module.choose_outboxes("poa", False)
         self.assertTrue("pubmed/outbox/" in outbox_list)
         # do not send to pmc
         self.assertFalse("pmc/outbox/" in outbox_list)
@@ -58,7 +58,7 @@ class TestScheduleDownstream(unittest.TestCase):
 
     def test_choose_outboxes_vor_first(self):
         """first vor version"""
-        outbox_list = activity_module.choose_outboxes("vor", activity_module.outbox_map(), True)
+        outbox_list = activity_module.choose_outboxes("vor", True)
         self.assertTrue("pmc/outbox/" in outbox_list)
         self.assertTrue("pubmed/outbox/" in outbox_list)
         self.assertTrue("publication_email/outbox/" in outbox_list)
@@ -66,7 +66,7 @@ class TestScheduleDownstream(unittest.TestCase):
 
     def test_choose_outboxes_vor_not_first(self):
         """vor but not the first vor"""
-        outbox_list = activity_module.choose_outboxes("vor", activity_module.outbox_map(), False)
+        outbox_list = activity_module.choose_outboxes("vor", False)
         self.assertTrue("pmc/outbox/" in outbox_list)
         self.assertTrue("pubmed/outbox/" in outbox_list)
         self.assertTrue("pub_router/outbox/" in outbox_list)
@@ -74,8 +74,7 @@ class TestScheduleDownstream(unittest.TestCase):
         self.assertFalse("publication_email/outbox/" in outbox_list)
 
     def test_choose_outboxes_vor_silent_first(self):
-        outbox_list = activity_module.choose_outboxes(
-            "vor", activity_module.outbox_map(), True, "silent-correction")
+        outbox_list = activity_module.choose_outboxes("vor", True, "silent-correction")
         self.assertTrue("pmc/outbox/" in outbox_list)
         # do not send publication_email
         self.assertFalse("publication_email/outbox/" in outbox_list)

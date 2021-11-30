@@ -89,9 +89,10 @@ class activity_PubRouterDeposit(Activity):
             self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         self.workflow = data["data"]["workflow"]
-        outbox_folder = get_outbox_folder(self.workflow)
-        published_folder = get_published_folder(self.workflow)
-        not_published_folder = get_not_published_folder(self.workflow)
+        workflow_folder = outbox_provider.workflow_foldername(self.workflow)
+        outbox_folder = outbox_provider.outbox_folder(workflow_folder)
+        published_folder = outbox_provider.published_folder(workflow_folder)
+        not_published_folder = outbox_provider.not_published_folder(workflow_folder)
 
         if outbox_folder is None or published_folder is None:
             # Total fail
@@ -631,96 +632,6 @@ def get_friendly_email_body(current_time, approved_articles):
     body += "\n\nSincerely\n\neLife bot"
 
     return body
-
-
-def get_outbox_folder(workflow):
-    """
-    S3 outbox, where files to be processed are
-    """
-    if workflow == "HEFCE":
-        return "pub_router/outbox/"
-    if workflow == "Cengage":
-        return "cengage/outbox/"
-    if workflow == "GoOA":
-        return "gooa/outbox/"
-    if workflow == "WoS":
-        return "wos/outbox/"
-    if workflow == "PMC":
-        return "pmc/outbox/"
-    if workflow == "CNPIEC":
-        return "cnpiec/outbox/"
-    if workflow == "CNKI":
-        return "cnki/outbox/"
-    if workflow == "CLOCKSS":
-        return "clockss/outbox/"
-    if workflow == "OVID":
-        return "ovid/outbox/"
-    if workflow == "Zendy":
-        return "zendy/outbox/"
-    if workflow == "OASwitchboard":
-        return "oaswitchboard/outbox/"
-
-    return None
-
-
-def get_published_folder(workflow):
-    """
-    S3 published folder, where processed files are copied to
-    """
-    if workflow == "HEFCE":
-        return "pub_router/published/"
-    if workflow == "Cengage":
-        return "cengage/published/"
-    if workflow == "GoOA":
-        return "gooa/published/"
-    if workflow == "WoS":
-        return "wos/published/"
-    if workflow == "PMC":
-        return "pmc/published/"
-    if workflow == "CNPIEC":
-        return "cnpiec/published/"
-    if workflow == "CNKI":
-        return "cnki/published/"
-    if workflow == "CLOCKSS":
-        return "clockss/published/"
-    if workflow == "OVID":
-        return "ovid/published/"
-    if workflow == "Zendy":
-        return "zendy/published/"
-    if workflow == "OASwitchboard":
-        return "oaswitchboard/published/"
-
-    return None
-
-
-def get_not_published_folder(workflow):
-    """
-    S3 published folder, where processed files are copied to
-    """
-    if workflow == "HEFCE":
-        return "pub_router/not_published/"
-    if workflow == "Cengage":
-        return "cengage/not_published/"
-    if workflow == "GoOA":
-        return "gooa/not_published/"
-    if workflow == "WoS":
-        return "wos/not_published/"
-    if workflow == "PMC":
-        return "pmc/not_published/"
-    if workflow == "CNPIEC":
-        return "cnpiec/not_published/"
-    if workflow == "CNKI":
-        return "cnki/not_published/"
-    if workflow == "CLOCKSS":
-        return "clockss/not_published/"
-    if workflow == "OVID":
-        return "ovid/not_published/"
-    if workflow == "Zendy":
-        return "zendy/not_published/"
-    if workflow == "OASwitchboard":
-        return "oaswitchboard/not_published/"
-
-    return None
 
 
 def approve_for_oa_switchboard(article):

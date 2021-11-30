@@ -35,8 +35,8 @@ class activity_DepositCrossref(Activity):
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
-        self.outbox_folder = "crossref/outbox/"
-        self.published_folder = "crossref/published/"
+        self.outbox_folder = outbox_provider.outbox_folder("crossref")
+        self.published_folder = outbox_provider.published_folder("crossref")
 
         # Track the success of some steps
         self.statuses = {}

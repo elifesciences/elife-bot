@@ -10,6 +10,7 @@ from boto.s3.connection import S3Connection
 
 import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
+from provider import outbox_provider
 from provider.article_structure import ArticleInfo
 from provider.storage_provider import storage_context
 from provider.utils import pad_msid, get_doi_url
@@ -245,24 +246,10 @@ class article(object):
 
         doi_ids = []
 
-        if workflow == "HEFCE":
-            published_folder = "pub_router/published/"
-        if workflow == "Cengage":
-            published_folder = "cengage/published/"
-        if workflow == "GoOA":
-            published_folder = "gooa/published/"
-        if workflow == "WoS":
-            published_folder = "wos/published/"
-        if workflow == "CNPIEC":
-            published_folder = "cnpiec/published/"
-        if workflow == "CNKI":
-            published_folder = "cnki/published/"
-        if workflow == "CLOCKSS":
-            published_folder = "clockss/published/"
-        if workflow == "OVID":
-            published_folder = "ovid/published/"
-        if workflow == "OASwitchboard":
-            published_folder = "oaswitchboard/published/"
+        # workflow e.g. "HEFCE"
+        workflow_folder = outbox_provider.workflow_foldername(workflow)
+        # published_folder e.g. "pub_router/published/""
+        published_folder = outbox_provider.published_folder(workflow_folder)
 
         file_extensions = []
         file_extensions.append(".xml")

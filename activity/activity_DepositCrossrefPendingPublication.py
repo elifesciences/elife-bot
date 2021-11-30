@@ -40,9 +40,15 @@ class activity_DepositCrossrefPendingPublication(Activity):
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
-        self.outbox_folder = "crossref_pending_publication/outbox/"
-        self.published_folder = "crossref_pending_publication/published/"
-        self.not_published_folder = "crossref_pending_publication/not_published/"
+        self.outbox_folder = outbox_provider.outbox_folder(
+            "crossref_pending_publication"
+        )
+        self.published_folder = outbox_provider.published_folder(
+            "crossref_pending_publication"
+        )
+        self.not_published_folder = outbox_provider.not_published_folder(
+            "crossref_pending_publication"
+        )
 
         # Track the success of some steps
         self.statuses = {}

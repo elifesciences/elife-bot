@@ -46,8 +46,8 @@ class activity_PublicationEmail(Activity):
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
-        self.outbox_folder = "publication_email/outbox/"
-        self.published_folder = "publication_email/published/"
+        self.outbox_folder = outbox_provider.outbox_folder("publication_email")
+        self.published_folder = outbox_provider.published_folder("publication_email")
 
         # Track XML files selected for publication
         self.insight_articles_to_remove_from_outbox = []
