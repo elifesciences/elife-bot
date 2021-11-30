@@ -109,3 +109,36 @@ class TestOutboxProvider(unittest.TestCase):
             if file_name.endswith(".xml")
         ]
         self.assertEqual(uploaded_files, expected)
+
+
+class TestGetOutboxFolder(unittest.TestCase):
+    def test_outbox_folder(self):
+        for workflow in outbox_provider.DOWNSTREAM_WORKFLOW_MAP:
+            foldername = outbox_provider.workflow_foldername(workflow)
+            self.assertIsNotNone(outbox_provider.outbox_folder(foldername))
+
+    def test_outbox_folder_undefined(self):
+        foldername = "foo"
+        self.assertIsNone(outbox_provider.outbox_folder(foldername))
+
+
+class TestGetPublishedFolder(unittest.TestCase):
+    def test_published_folder(self):
+        for workflow in outbox_provider.DOWNSTREAM_WORKFLOW_MAP:
+            foldername = outbox_provider.workflow_foldername(workflow)
+            self.assertIsNotNone(outbox_provider.published_folder(foldername))
+
+    def test_published_folder_undefined(self):
+        foldername = "foo"
+        self.assertIsNone(outbox_provider.published_folder(foldername))
+
+
+class TestGetNotPublishedFolder(unittest.TestCase):
+    def test_not_published_folder(self):
+        for workflow in outbox_provider.DOWNSTREAM_WORKFLOW_MAP:
+            foldername = outbox_provider.workflow_foldername(workflow)
+            self.assertIsNotNone(outbox_provider.not_published_folder(foldername))
+
+    def test_not_published_folder_undefined(self):
+        foldername = "foo"
+        self.assertIsNone(outbox_provider.not_published_folder(foldername))

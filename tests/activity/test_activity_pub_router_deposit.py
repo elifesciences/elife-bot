@@ -11,19 +11,6 @@ import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 
 
-WORKFLOW_NAMES = [
-    "HEFCE",
-    "Cengage",
-    "WoS",
-    "GoOA",
-    "CNPIEC",
-    "CNKI",
-    "CLOCKSS",
-    "OVID",
-    "Zendy",
-    "OASwitchboard",
-]
-
 ARCHIVE_ZIP_BUCKET_S3_KEYS = [
     {
         "name": "elife-00013-vor-v1-20121015000000.zip",
@@ -207,36 +194,6 @@ class TestPubRouterDeposit(unittest.TestCase):
         self.assertIsNotNone(
             self.pubrouterdeposit.get_friendly_email_recipients(workflow)
         )
-
-
-class TestGetOutboxFolder(unittest.TestCase):
-    def test_get_outbox_folder(self):
-        for workflow in WORKFLOW_NAMES:
-            self.assertIsNotNone(activity_module.get_outbox_folder(workflow))
-
-    def test_get_outbox_folder_undefined(self):
-        workflow = "foo"
-        self.assertIsNone(activity_module.get_outbox_folder(workflow))
-
-
-class TestGetPublishedFolder(unittest.TestCase):
-    def test_get_published_folder(self):
-        for workflow in WORKFLOW_NAMES:
-            self.assertIsNotNone(activity_module.get_published_folder(workflow))
-
-    def test_get_published_folder_undefined(self):
-        workflow = "foo"
-        self.assertIsNone(activity_module.get_published_folder(workflow))
-
-
-class TestGetNotPublishedFolder(unittest.TestCase):
-    def test_get_not_published_folder(self):
-        for workflow in WORKFLOW_NAMES:
-            self.assertIsNotNone(activity_module.get_not_published_folder(workflow))
-
-    def test_get_not_published_folder_undefined(self):
-        workflow = "foo"
-        self.assertIsNone(activity_module.get_not_published_folder(workflow))
 
 
 class TestApproveForOaSwitchboard(unittest.TestCase):

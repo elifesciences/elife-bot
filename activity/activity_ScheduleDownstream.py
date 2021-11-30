@@ -1,7 +1,7 @@
 import json
 from collections import OrderedDict
 from provider.storage_provider import storage_context
-import provider.lax_provider as lax_provider
+from provider import lax_provider, outbox_provider
 from activity.objects import Activity
 
 """
@@ -55,7 +55,7 @@ class activity_ScheduleDownstream(Activity):
             xml_file_name = lax_provider.get_xml_file_name(
                 self.settings, expanded_folder_name, expanded_bucket_name, version)
             xml_key_name = expanded_folder_name + "/" + xml_file_name
-            outbox_list = choose_outboxes(status, outbox_map(), first_by_status, run_type)
+            outbox_list = choose_outboxes(status, first_by_status, run_type)
 
             for outbox in outbox_list:
                 self.rename_and_copy_to_outbox(
@@ -104,50 +104,31 @@ class activity_ScheduleDownstream(Activity):
         storage.copy_resource(orig_resource, dest_resource)
 
 
-def outbox_map():
-    "map of outbox names to values"
-    outboxes = OrderedDict()
-    outboxes["pubmed"] = "pubmed/outbox/"
-    outboxes["pmc"] = "pmc/outbox/"
-    outboxes["publication_email"] = "publication_email/outbox/"
-    outboxes["pub_router"] = "pub_router/outbox/"
-    outboxes["cengage"] = "cengage/outbox/"
-    outboxes["gooa"] = "gooa/outbox/"
-    outboxes["wos"] = "wos/outbox/"
-    outboxes["cnpiec"] = "cnpiec/outbox/"
-    outboxes["cnki"] = "cnki/outbox/"
-    outboxes["clockss"] = "clockss/outbox/"
-    outboxes["ovid"] = "ovid/outbox/"
-    outboxes["zendy"] = "zendy/outbox/"
-    outboxes["oaswitchboard"] = "oaswitchboard/outbox/"
-    return outboxes
-
-
-def choose_outboxes(status, outbox_map, first_by_status, run_type=None):
+def choose_outboxes(status, first_by_status, run_type=None):
     outbox_list = []
 
     if run_type != "silent-correction":
         if first_by_status:
-            outbox_list.append(outbox_map.get("publication_email"))
+            outbox_list.append(outbox_provider.outbox_folder("publication_email"))
             if status == "vor":
-                outbox_list.append(outbox_map.get("oaswitchboard"))
-        outbox_list.append(outbox_map.get("pubmed"))
+                outbox_list.append(outbox_provider.outbox_folder("oaswitchboard"))
+        outbox_list.append(outbox_provider.outbox_folder("pubmed"))
 
-    outbox_list.append(outbox_map.get("ovid"))
-    outbox_list.append(outbox_map.get("zendy"))
+    outbox_list.append(outbox_provider.outbox_folder("ovid"))
+    outbox_list.append(outbox_provider.outbox_folder("zendy"))
 
     if status == "poa":
         pass
 
     elif status == "vor":
-        outbox_list.append(outbox_map.get("pmc"))
-        outbox_list.append(outbox_map.get("pub_router"))
-        outbox_list.append(outbox_map.get("cengage"))
-        outbox_list.append(outbox_map.get("gooa"))
-        outbox_list.append(outbox_map.get("wos"))
-        outbox_list.append(outbox_map.get("cnpiec"))
-        outbox_list.append(outbox_map.get("cnki"))
-        outbox_list.append(outbox_map.get("clockss"))
+        outbox_list.append(outbox_provider.outbox_folder("pmc"))
+        outbox_list.append(outbox_provider.outbox_folder("pub_router"))
+        outbox_list.append(outbox_provider.outbox_folder("cengage"))
+        outbox_list.append(outbox_provider.outbox_folder("gooa"))
+        outbox_list.append(outbox_provider.outbox_folder("wos"))
+        outbox_list.append(outbox_provider.outbox_folder("cnpiec"))
+        outbox_list.append(outbox_provider.outbox_folder("cnki"))
+        outbox_list.append(outbox_provider.outbox_folder("clockss"))
     return outbox_list
 
 

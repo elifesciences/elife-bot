@@ -31,7 +31,7 @@ class activity_ScheduleCrossrefPendingPublication(Activity):
         self.input_file = None
 
         # For copying to S3 bucket outbox
-        self.crossref_outbox_folder = "crossref_pending_publication/outbox/"
+        self.crossref_outbox_folder = outbox_provider.outbox_folder("crossref_pending_publication")
 
         # Local directory settings
         self.directories = {

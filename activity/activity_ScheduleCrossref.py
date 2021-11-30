@@ -1,7 +1,7 @@
 import json
 
 from boto.s3.connection import S3Connection
-from provider import lax_provider
+from provider import lax_provider, outbox_provider
 from provider.execution_context import get_session
 from provider.article_structure import get_article_xml_key
 from activity.objects import Activity
@@ -25,7 +25,7 @@ class activity_ScheduleCrossref(Activity):
         self.logger = logger
 
         # For copying to crossref outbox from here for now
-        self.crossref_outbox_folder = "crossref/outbox/"
+        self.crossref_outbox_folder = outbox_provider.outbox_folder("crossref")
 
     def do_activity(self, data=None):
 
