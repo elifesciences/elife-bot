@@ -1,9 +1,6 @@
 import json
-import os
 import importlib
-
 import boto.swf
-
 import workflow
 import activity
 from provider import utils
@@ -12,10 +9,13 @@ from provider import utils
 Amazon SWF register workflow or activity utility
 """
 
+
 def start(settings):
 
     # Simple connect
-    conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+    conn = boto.swf.layer1.Layer1(
+        settings.aws_access_key_id, settings.aws_secret_access_key
+    )
 
     workflow_names = []
     workflow_names.append("CopyGlencoeStillImages")
@@ -58,7 +58,7 @@ def start(settings):
         # Now register it
         response = workflow_object.register()
 
-        print(('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)))
+        print(("got response: \n%s" % json.dumps(response, sort_keys=True, indent=4)))
 
     activity_names = []
     activity_names.append("ReadyToPublish")
@@ -136,7 +136,8 @@ def start(settings):
         # Now register it
         response = activity_object.register()
 
-        print(('got response: \n%s' % json.dumps(response, sort_keys=True, indent=4)))
+        print(("got response: \n%s" % json.dumps(response, sort_keys=True, indent=4)))
+
 
 if __name__ == "__main__":
 

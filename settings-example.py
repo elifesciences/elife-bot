@@ -12,44 +12,48 @@
 """
 
 
-class exp():
+class exp:
     # AWS settings
-    aws_access_key_id = '<your access key>'
-    aws_secret_access_key = '<your secret key>'
+    aws_access_key_id = "<your access key>"
+    aws_secret_access_key = "<your secret key>"
 
-    workflow_context_path = 'workflow-context/'
+    workflow_context_path = "workflow-context/"
 
     # SQS settings
-    sqs_region = 'eu-west-1'
-    S3_monitor_queue = 'xxawsxx-incoming-queue'
-    event_monitor_topic = 'arn:aws:sns:eu-west-1:123456789012:elife-bot-event-property--exp'
-    event_monitor_queue = 'exp-event-property-incoming-queue'
-    workflow_starter_queue = 'exp-workflow-starter-queue'
+    sqs_region = "eu-west-1"
+    S3_monitor_queue = "xxawsxx-incoming-queue"
+    event_monitor_topic = (
+        "arn:aws:sns:eu-west-1:123456789012:elife-bot-event-property--exp"
+    )
+    event_monitor_queue = "exp-event-property-incoming-queue"
+    workflow_starter_queue = "exp-workflow-starter-queue"
     workflow_starter_queue_pool_size = 5
     workflow_starter_queue_message_count = 5
 
     # PPP S3 settings
     storage_provider = "s3"
-    publishing_buckets_prefix = 'exp-'
+    publishing_buckets_prefix = "exp-"
     # shouldn't need this but uploads seem to fail without. Should correspond with the s3 region
     # hostname list here http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
 
-    s3_hostname = 's3-eu-west-1.amazonaws.com'
-    production_bucket = 'elife-production-final'
-    expanded_bucket = 'elife-publishing-expanded'
-    ppp_cdn_bucket = 'elife-published/articles'
-    digest_cdn_bucket = 'elife-published/digests'
-    archive_bucket = 'elife-publishing-archive'
+    s3_hostname = "s3-eu-west-1.amazonaws.com"
+    production_bucket = "elife-production-final"
+    expanded_bucket = "elife-publishing-expanded"
+    ppp_cdn_bucket = "elife-published/articles"
+    digest_cdn_bucket = "elife-published/digests"
+    archive_bucket = "elife-publishing-archive"
 
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
-    lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
-    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2"
+    lax_article_versions = "http://gateway.internal/articles/{article_id}/versions"
+    lax_article_versions_accept_header = (
+        "application/vnd.elife.article-history+json;version=2"
+    )
     lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
     lax_auth_key = ""
 
-    no_download_extensions = 'tif'
+    no_download_extensions = "tif"
 
     # end PPP settings
 
@@ -65,7 +69,7 @@ class exp():
     ses_bcc_recipient_email = ""
 
     # SMTP settings
-    smtp_host = 'localhost'
+    smtp_host = "localhost"
     smtp_port = 2525
     smtp_starttls = False
     smtp_ssl = False
@@ -73,19 +77,19 @@ class exp():
     smtp_password = None
 
     # Lens bucket settings
-    lens_bucket = 'elife-lens-dev'
+    lens_bucket = "elife-lens-dev"
 
     # Lens jpg bucket
     lens_jpg_bucket = "exp-elife-production-lens-jpg"
 
     # Bot S3 settings
-    bot_bucket = 'elife-bot-dev'
+    bot_bucket = "elife-bot-dev"
 
     # POA delivery bucket
-    poa_bucket = 'elife-ejp-poa-delivery-dev'
+    poa_bucket = "elife-ejp-poa-delivery-dev"
 
     # POA packaging bucket
-    poa_packaging_bucket = 'elife-poa-packaging-dev'
+    poa_packaging_bucket = "elife-poa-packaging-dev"
 
     # Article subjects data
     article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
@@ -96,8 +100,8 @@ class exp():
     ses_poa_recipient_email = "admin@example.com"
 
     # Digest email settings
-    digest_config_file = 'digest.cfg'
-    digest_config_section = 'elife'
+    digest_config_file = "digest.cfg"
+    digest_config_section = "elife"
     digest_sender_email = "sender@example.org"
     # recipients of digest validation error emails
     digest_validate_error_recipient_email = "error@example.org"
@@ -110,23 +114,23 @@ class exp():
     digest_medium_recipient_email = ["e@example.org", "life@example.org"]
 
     # digest endpoint
-    digest_endpoint = 'https://digests/{digest_id}'
-    digest_auth_key = 'digest_auth_key'
+    digest_endpoint = "https://digests/{digest_id}"
+    digest_auth_key = "digest_auth_key"
 
     # digest typesetter endpoint
-    typesetter_digest_endpoint = 'https://typesetter/updatedigest'
-    typesetter_digest_api_key = 'typesetter_api_key'
-    typesetter_digest_account_key = '1'
+    typesetter_digest_endpoint = "https://typesetter/updatedigest"
+    typesetter_digest_api_key = "typesetter_api_key"
+    typesetter_digest_account_key = "1"
 
     # decision letter
-    decision_letter_sender_email = 'sender@example.org'
-    decision_letter_validate_error_recipient_email = 'error@example.org'
-    decision_letter_output_bucket = 'exp-elife-bot-decision-letter-output'
-    decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
-    decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
-    typesetter_decision_letter_endpoint = 'https://typesetter/updatedigest'
-    typesetter_decision_letter_api_key = 'typesetter_api_key'
-    typesetter_decision_letter_account_key = '1'
+    decision_letter_sender_email = "sender@example.org"
+    decision_letter_validate_error_recipient_email = "error@example.org"
+    decision_letter_output_bucket = "exp-elife-bot-decision-letter-output"
+    decision_letter_bucket_folder_name_pattern = "elife{manuscript:0>5}"
+    decision_letter_xml_file_name_pattern = "elife-{manuscript:0>5}.xml"
+    typesetter_decision_letter_endpoint = "https://typesetter/updatedigest"
+    typesetter_decision_letter_api_key = "typesetter_api_key"
+    typesetter_decision_letter_account_key = "1"
     decision_letter_jats_recipient_email = ["e@example.org", "life@example.org"]
     decision_letter_jats_error_recipient_email = "error@example.org"
 
@@ -135,7 +139,7 @@ class exp():
     ftp_deposit_error_recipient_email = ["e@example.org", "life@example.org"]
 
     # journal preview
-    journal_preview_base_url = 'https://preview--journal.example.org'
+    journal_preview_base_url = "https://preview--journal.example.org"
 
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
@@ -144,33 +148,33 @@ class exp():
     email_video_recipient_email = "features_team@example.org"
 
     # EJP S3 settings
-    ejp_bucket = 'elife-ejp-ftp-dev'
+    ejp_bucket = "elife-ejp-ftp-dev"
 
     # Templates settings
     email_templates_path = "/opt/elife-email-templates"
 
     # Crossref generation
-    elifecrossref_config_file = 'crossref.cfg'
-    elifecrossref_config_section = 'elife'
+    elifecrossref_config_file = "crossref.cfg"
+    elifecrossref_config_section = "elife"
 
     # Crossref
-    crossref_url = 'http://test.crossref.org/servlet/deposit'
-    crossref_login_id = ''
-    crossref_login_passwd = ''
+    crossref_url = "http://test.crossref.org/servlet/deposit"
+    crossref_login_id = ""
+    crossref_login_passwd = ""
 
     # PubMed generation
-    elifepubmed_config_file = 'pubmed.cfg'
-    elifepubmed_config_section = 'elife'
+    elifepubmed_config_file = "pubmed.cfg"
+    elifepubmed_config_section = "elife"
 
     # PoA generation
-    jatsgenerator_config_file = 'jatsgenerator.cfg'
-    jatsgenerator_config_section = 'elife'
-    packagepoa_config_file = 'packagepoa.cfg'
-    packagepoa_config_section = 'elife'
+    jatsgenerator_config_file = "jatsgenerator.cfg"
+    jatsgenerator_config_section = "elife"
+    packagepoa_config_file = "packagepoa.cfg"
+    packagepoa_config_section = "elife"
 
     # Decision letter parser
-    letterparser_config_file = 'letterparser.cfg'
-    letterparser_config_section = 'elife'
+    letterparser_config_file = "letterparser.cfg"
+    letterparser_config_section = "elife"
 
     # PubMed SFTP settings
     PUBMED_SFTP_URI = ""
@@ -291,13 +295,13 @@ class exp():
     iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
 
     # Fastly CDNs
-    fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
-    fastly_api_key = 'fake_fastly_api_key'
+    fastly_service_ids = ["3M35rb7puabccOLrFFxy2"]
+    fastly_api_key = "fake_fastly_api_key"
 
     article_path_pattern = "/articles/{id}v{version}"
 
     # BigQuery settings
-    big_query_project_id = ''
+    big_query_project_id = ""
 
     # DOAJ deposit settings
     journal_eissn = ""
@@ -310,56 +314,67 @@ class exp():
     software_heritage_collection_name = "elife"
     software_heritage_auth_user = "user"
     software_heritage_auth_pass = "pass"
-    software_heritage_api_get_origin_pattern = "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+    software_heritage_api_get_origin_pattern = (
+        "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+    )
 
     # ERA article incoming queue
     era_incoming_queue = "exp-era-incoming-queue"
 
     # Accepted submission workflow
-    accepted_submission_output_bucket = "exp-elife-bot-accepted-submission-cleaning-output"
+    accepted_submission_output_bucket = (
+        "exp-elife-bot-accepted-submission-cleaning-output"
+    )
     accepted_submission_sender_email = "sender@example.org"
-    accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
+    accepted_submission_validate_error_recipient_email = [
+        "e@example.org",
+        "life@example.org",
+    ]
     accepted_submission_queue = ""
 
 
-class dev():
+class dev:
     # AWS settings
-    aws_access_key_id = '<your access key>'
-    aws_secret_access_key = '<your secret key>'
+    aws_access_key_id = "<your access key>"
+    aws_secret_access_key = "<your secret key>"
 
-    workflow_context_path = 'workflow-context/'
+    workflow_context_path = "workflow-context/"
 
     # SQS settings
-    sqs_region = 'eu-west-1'
-    S3_monitor_queue = 'xxawsxx-incoming-queue'
-    event_monitor_topic = 'arn:aws:sns:eu-west-1:123456789012:elife-bot-event-property--dev'
-    event_monitor_queue = 'dev-event-property-incoming-queue'
-    workflow_starter_queue = 'dev-workflow-starter-queue'
+    sqs_region = "eu-west-1"
+    S3_monitor_queue = "xxawsxx-incoming-queue"
+    event_monitor_topic = (
+        "arn:aws:sns:eu-west-1:123456789012:elife-bot-event-property--dev"
+    )
+    event_monitor_queue = "dev-event-property-incoming-queue"
+    workflow_starter_queue = "dev-workflow-starter-queue"
     workflow_starter_queue_pool_size = 5
     workflow_starter_queue_message_count = 5
 
     # PPP S3 settings
     storage_provider = "s3"
-    publishing_buckets_prefix = 'dev-'
+    publishing_buckets_prefix = "dev-"
     # shouldn't need this but uploads seem to fail without. Should correspond with the s3 region
     # hostname list here http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
 
-    s3_hostname = 's3-eu-west-1.amazonaws.com'
-    production_bucket = 'elife-production-final'
-    expanded_bucket = 'elife-publishing-expanded'
-    ppp_cdn_bucket = 'elife-published/articles'
-    digest_cdn_bucket = 'elife-published/digests'
-    archive_bucket = 'elife-publishing-archive'
+    s3_hostname = "s3-eu-west-1.amazonaws.com"
+    production_bucket = "elife-production-final"
+    expanded_bucket = "elife-publishing-expanded"
+    ppp_cdn_bucket = "elife-published/articles"
+    digest_cdn_bucket = "elife-published/digests"
+    archive_bucket = "elife-publishing-archive"
 
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
-    lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
-    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2"
+    lax_article_versions = "http://gateway.internal/articles/{article_id}/versions"
+    lax_article_versions_accept_header = (
+        "application/vnd.elife.article-history+json;version=2"
+    )
     lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
     lax_auth_key = ""
 
-    no_download_extensions = 'tif'
+    no_download_extensions = "tif"
 
     # end PPP settings
 
@@ -375,7 +390,7 @@ class dev():
     ses_bcc_recipient_email = ""
 
     # SMTP settings
-    smtp_host = 'localhost'
+    smtp_host = "localhost"
     smtp_port = 2525
     smtp_starttls = False
     smtp_ssl = False
@@ -383,19 +398,19 @@ class dev():
     smtp_password = None
 
     # Lens bucket settings
-    lens_bucket = 'elife-lens-dev'
+    lens_bucket = "elife-lens-dev"
 
     # Lens jpg bucket
     lens_jpg_bucket = "dev-elife-production-lens-jpg"
 
     # Bot S3 settings
-    bot_bucket = 'elife-bot-dev'
+    bot_bucket = "elife-bot-dev"
 
     # POA delivery bucket
-    poa_bucket = 'elife-ejp-poa-delivery-dev'
+    poa_bucket = "elife-ejp-poa-delivery-dev"
 
     # POA packaging bucket
-    poa_packaging_bucket = 'elife-poa-packaging-dev'
+    poa_packaging_bucket = "elife-poa-packaging-dev"
 
     # Article subjects data
     article_subjects_data_bucket = "elife-bot-dev/article_subjects_data"
@@ -406,8 +421,8 @@ class dev():
     ses_poa_recipient_email = "admin@example.com"
 
     # Digest email settings
-    digest_config_file = 'digest.cfg'
-    digest_config_section = 'elife'
+    digest_config_file = "digest.cfg"
+    digest_config_section = "elife"
     digest_sender_email = "sender@example.org"
     # recipients of digest validation error emails
     digest_validate_error_recipient_email = "error@example.org"
@@ -420,23 +435,23 @@ class dev():
     digest_medium_recipient_email = ["e@example.org", "life@example.org"]
 
     # digest endpoint
-    digest_endpoint = 'https://digests/{digest_id}'
-    digest_auth_key = 'digest_auth_key'
+    digest_endpoint = "https://digests/{digest_id}"
+    digest_auth_key = "digest_auth_key"
 
     # digest typesetter endpoint
-    typesetter_digest_endpoint = 'https://typesetter/updatedigest'
-    typesetter_digest_api_key = 'typesetter_api_key'
-    typesetter_digest_account_key = '1'
+    typesetter_digest_endpoint = "https://typesetter/updatedigest"
+    typesetter_digest_api_key = "typesetter_api_key"
+    typesetter_digest_account_key = "1"
 
     # decision letter
-    decision_letter_sender_email = 'sender@example.org'
-    decision_letter_validate_error_recipient_email = 'error@example.org'
-    decision_letter_output_bucket = 'dev-elife-bot-decision-letter-output'
-    decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
-    decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
-    typesetter_decision_letter_endpoint = 'https://typesetter/updatedigest'
-    typesetter_decision_letter_api_key = 'typesetter_api_key'
-    typesetter_decision_letter_account_key = '1'
+    decision_letter_sender_email = "sender@example.org"
+    decision_letter_validate_error_recipient_email = "error@example.org"
+    decision_letter_output_bucket = "dev-elife-bot-decision-letter-output"
+    decision_letter_bucket_folder_name_pattern = "elife{manuscript:0>5}"
+    decision_letter_xml_file_name_pattern = "elife-{manuscript:0>5}.xml"
+    typesetter_decision_letter_endpoint = "https://typesetter/updatedigest"
+    typesetter_decision_letter_api_key = "typesetter_api_key"
+    typesetter_decision_letter_account_key = "1"
     decision_letter_jats_recipient_email = ["e@example.org", "life@example.org"]
     decision_letter_jats_error_recipient_email = "error@example.org"
 
@@ -445,7 +460,7 @@ class dev():
     ftp_deposit_error_recipient_email = ["e@example.org", "life@example.org"]
 
     # journal preview
-    journal_preview_base_url = 'https://preview--journal.example.org'
+    journal_preview_base_url = "https://preview--journal.example.org"
 
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
@@ -454,33 +469,33 @@ class dev():
     email_video_recipient_email = "features_team@example.org"
 
     # EJP S3 settings
-    ejp_bucket = 'elife-ejp-ftp-dev'
+    ejp_bucket = "elife-ejp-ftp-dev"
 
     # Templates settings
     email_templates_path = "/opt/elife-email-templates"
 
     # Crossref generation
-    elifecrossref_config_file = 'crossref.cfg'
-    elifecrossref_config_section = 'elife'
+    elifecrossref_config_file = "crossref.cfg"
+    elifecrossref_config_section = "elife"
 
     # Crossref
-    crossref_url = 'http://test.crossref.org/servlet/deposit'
-    crossref_login_id = ''
-    crossref_login_passwd = ''
+    crossref_url = "http://test.crossref.org/servlet/deposit"
+    crossref_login_id = ""
+    crossref_login_passwd = ""
 
     # PubMed generation
-    elifepubmed_config_file = 'pubmed.cfg'
-    elifepubmed_config_section = 'elife'
+    elifepubmed_config_file = "pubmed.cfg"
+    elifepubmed_config_section = "elife"
 
     # PoA generation
-    jatsgenerator_config_file = 'jatsgenerator.cfg'
-    jatsgenerator_config_section = 'elife'
-    packagepoa_config_file = 'packagepoa.cfg'
-    packagepoa_config_section = 'elife'
+    jatsgenerator_config_file = "jatsgenerator.cfg"
+    jatsgenerator_config_section = "elife"
+    packagepoa_config_file = "packagepoa.cfg"
+    packagepoa_config_section = "elife"
 
     # Decision letter parser
-    letterparser_config_file = 'letterparser.cfg'
-    letterparser_config_section = 'elife'
+    letterparser_config_file = "letterparser.cfg"
+    letterparser_config_section = "elife"
 
     # PubMed SFTP settings
     PUBMED_SFTP_URI = ""
@@ -597,13 +612,13 @@ class dev():
     iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
 
     # Fastly CDNs
-    fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
-    fastly_api_key = 'fake_fastly_api_key'
+    fastly_service_ids = ["3M35rb7puabccOLrFFxy2"]
+    fastly_api_key = "fake_fastly_api_key"
 
     article_path_pattern = "/articles/{id}v{version}"
 
     # BigQuery settings
-    big_query_project_id = ''
+    big_query_project_id = ""
 
     # DOAJ deposit settings
     journal_eissn = ""
@@ -616,57 +631,68 @@ class dev():
     software_heritage_collection_name = "elife"
     software_heritage_auth_user = "user"
     software_heritage_auth_pass = "pass"
-    software_heritage_api_get_origin_pattern = "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+    software_heritage_api_get_origin_pattern = (
+        "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+    )
 
     # ERA article incoming queue
     era_incoming_queue = "dev-era-incoming-queue"
 
     # Accepted submission workflow
-    accepted_submission_output_bucket = "dev-elife-bot-accepted-submission-cleaning-output"
+    accepted_submission_output_bucket = (
+        "dev-elife-bot-accepted-submission-cleaning-output"
+    )
     accepted_submission_sender_email = "sender@example.org"
-    accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
+    accepted_submission_validate_error_recipient_email = [
+        "e@example.org",
+        "life@example.org",
+    ]
     accepted_submission_queue = ""
 
 
-class live():
+class live:
     # AWS settings
-    aws_access_key_id = '<your access key>'
-    aws_secret_access_key = '<your secret key>'
+    aws_access_key_id = "<your access key>"
+    aws_secret_access_key = "<your secret key>"
 
-    workflow_context_path = 'workflow-context/'
+    workflow_context_path = "workflow-context/"
 
     # SQS settings
-    sqs_region = 'eu-west-1'
-    S3_monitor_queue = 'incoming-queue'
-    event_monitor_topic = 'arn:aws:sns:eu-west-1:123456789012:elife-bot-event-property--prod'
-    event_monitor_queue = 'event-property-incoming-queue'
-    workflow_starter_queue = 'workflow-starter-queue'
+    sqs_region = "eu-west-1"
+    S3_monitor_queue = "incoming-queue"
+    event_monitor_topic = (
+        "arn:aws:sns:eu-west-1:123456789012:elife-bot-event-property--prod"
+    )
+    event_monitor_queue = "event-property-incoming-queue"
+    workflow_starter_queue = "workflow-starter-queue"
     workflow_starter_queue_pool_size = 5
     workflow_starter_queue_message_count = 5
 
     # PPP S3 settings
     storage_provider = "s3"
-    publishing_buckets_prefix = ''
+    publishing_buckets_prefix = ""
     # shouldn't need this but uploads seem to fail without. Should correspond with the s3 region
     # hostname list here http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
 
-    s3_hostname = 's3-eu-west-1.amazonaws.com'
-    production_bucket = 'elife-production-final'
-    expanded_bucket = 'elife-publishing-expanded'
+    s3_hostname = "s3-eu-west-1.amazonaws.com"
+    production_bucket = "elife-production-final"
+    expanded_bucket = "elife-publishing-expanded"
     # since prefix is empty
-    ppp_cdn_bucket = 'prod-elife-published/articles'
-    digest_cdn_bucket = 'prod-elife-published/digests'
-    archive_bucket = 'prod-elife-publishing-archive'
+    ppp_cdn_bucket = "prod-elife-published/articles"
+    digest_cdn_bucket = "prod-elife-published/digests"
+    archive_bucket = "prod-elife-publishing-archive"
 
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
     # lax endpoint to retrieve information about published versions of articles
-    lax_article_versions = 'http://gateway.internal/articles/{article_id}/versions'
-    lax_article_versions_accept_header = "application/vnd.elife.article-history+json;version=2" 
+    lax_article_versions = "http://gateway.internal/articles/{article_id}/versions"
+    lax_article_versions_accept_header = (
+        "application/vnd.elife.article-history+json;version=2"
+    )
     lax_article_related = "http://gateway.internal/articles/{article_id}/related"
     verify_ssl = True  # False when testing
     lax_auth_key = ""
 
-    no_download_extensions = 'tif'
+    no_download_extensions = "tif"
 
     # end PPP settings
 
@@ -682,7 +708,7 @@ class live():
     ses_bcc_recipient_email = ""
 
     # SMTP settings
-    smtp_host = 'localhost'
+    smtp_host = "localhost"
     smtp_port = 2525
     smtp_starttls = False
     smtp_ssl = False
@@ -690,19 +716,19 @@ class live():
     smtp_password = None
 
     # Lens bucket settings
-    lens_bucket = 'elife-lens'
+    lens_bucket = "elife-lens"
 
     # Lens jpg bucket
     lens_jpg_bucket = "elife-production-lens-jpg"
 
     # Bot S3 settings
-    bot_bucket = 'elife-bot'
+    bot_bucket = "elife-bot"
 
     # POA delivery bucket
-    poa_bucket = 'elife-ejp-poa-delivery'
+    poa_bucket = "elife-ejp-poa-delivery"
 
     # POA packaging bucket
-    poa_packaging_bucket = 'elife-poa-packaging'
+    poa_packaging_bucket = "elife-poa-packaging"
 
     # Article subjects data
     article_subjects_data_bucket = "elife-bot/article_subjects_data"
@@ -713,8 +739,8 @@ class live():
     ses_poa_recipient_email = "admin@example.com"
 
     # Digest email settings
-    digest_config_file = 'digest.cfg'
-    digest_config_section = 'elife'
+    digest_config_file = "digest.cfg"
+    digest_config_section = "elife"
     digest_sender_email = "sender@example.org"
     # recipients of digest validation error emails
     digest_validate_error_recipient_email = "error@example.org"
@@ -727,23 +753,23 @@ class live():
     digest_medium_recipient_email = ["e@example.org", "life@example.org"]
 
     # digest endpoint
-    digest_endpoint = 'https://digests/{digest_id}'
-    digest_auth_key = 'digest_auth_key'
+    digest_endpoint = "https://digests/{digest_id}"
+    digest_auth_key = "digest_auth_key"
 
     # digest typesetter endpoint
-    typesetter_digest_endpoint = 'https://typesetter/updatedigest'
-    typesetter_digest_api_key = 'typesetter_api_key'
-    typesetter_digest_account_key = '1'
+    typesetter_digest_endpoint = "https://typesetter/updatedigest"
+    typesetter_digest_api_key = "typesetter_api_key"
+    typesetter_digest_account_key = "1"
 
     # decision letter
-    decision_letter_sender_email = 'sender@example.org'
-    decision_letter_validate_error_recipient_email = 'error@example.org'
-    decision_letter_output_bucket = 'prod-elife-bot-decision-letter-output'
-    decision_letter_bucket_folder_name_pattern = 'elife{manuscript:0>5}'
-    decision_letter_xml_file_name_pattern = 'elife-{manuscript:0>5}.xml'
-    typesetter_decision_letter_endpoint = 'https://typesetter/updatedigest'
-    typesetter_decision_letter_api_key = 'typesetter_api_key'
-    typesetter_decision_letter_account_key = '1'
+    decision_letter_sender_email = "sender@example.org"
+    decision_letter_validate_error_recipient_email = "error@example.org"
+    decision_letter_output_bucket = "prod-elife-bot-decision-letter-output"
+    decision_letter_bucket_folder_name_pattern = "elife{manuscript:0>5}"
+    decision_letter_xml_file_name_pattern = "elife-{manuscript:0>5}.xml"
+    typesetter_decision_letter_endpoint = "https://typesetter/updatedigest"
+    typesetter_decision_letter_api_key = "typesetter_api_key"
+    typesetter_decision_letter_account_key = "1"
     decision_letter_jats_recipient_email = ["e@example.org", "life@example.org"]
     decision_letter_jats_error_recipient_email = "error@example.org"
 
@@ -752,7 +778,7 @@ class live():
     ftp_deposit_error_recipient_email = ["e@example.org", "life@example.org"]
 
     # journal preview
-    journal_preview_base_url = 'https://preview--journal.example.org'
+    journal_preview_base_url = "https://preview--journal.example.org"
 
     # Publication email settings
     features_publication_recipient_email = "features_team@example.com"
@@ -761,33 +787,33 @@ class live():
     email_video_recipient_email = "features_team@example.org"
 
     # EJP S3 settings
-    ejp_bucket = 'elife-ejp-ftp'
+    ejp_bucket = "elife-ejp-ftp"
 
     # Templates settings
     email_templates_path = "/opt/elife-email-templates"
 
     # Crossref generation
-    elifecrossref_config_file = 'crossref.cfg'
-    elifecrossref_config_section = 'elife'
+    elifecrossref_config_file = "crossref.cfg"
+    elifecrossref_config_section = "elife"
 
     # Crossref
-    crossref_url = 'http://doi.crossref.org/servlet/deposit'
-    crossref_login_id = ''
-    crossref_login_passwd = ''
+    crossref_url = "http://doi.crossref.org/servlet/deposit"
+    crossref_login_id = ""
+    crossref_login_passwd = ""
 
     # PubMed generation
-    elifepubmed_config_file = 'pubmed.cfg'
-    elifepubmed_config_section = 'elife'
+    elifepubmed_config_file = "pubmed.cfg"
+    elifepubmed_config_section = "elife"
 
     # PoA generation
-    jatsgenerator_config_file = 'jatsgenerator.cfg'
-    jatsgenerator_config_section = 'elife'
-    packagepoa_config_file = 'packagepoa.cfg'
-    packagepoa_config_section = 'elife'
+    jatsgenerator_config_file = "jatsgenerator.cfg"
+    jatsgenerator_config_section = "elife"
+    packagepoa_config_file = "packagepoa.cfg"
+    packagepoa_config_section = "elife"
 
     # Decision letter parser
-    letterparser_config_file = 'letterparser.cfg'
-    letterparser_config_section = 'elife'
+    letterparser_config_file = "letterparser.cfg"
+    letterparser_config_section = "elife"
 
     # PubMed SFTP settings
     PUBMED_SFTP_URI = ""
@@ -908,13 +934,13 @@ class live():
     iiif_resolver = "{article_id}/{article_fig}/full/full/0/default.jpg"
 
     # Fastly CDNs
-    fastly_service_ids = ['3M35rb7puabccOLrFFxy2']
-    fastly_api_key = 'fake_fastly_api_key'
+    fastly_service_ids = ["3M35rb7puabccOLrFFxy2"]
+    fastly_api_key = "fake_fastly_api_key"
 
     article_path_pattern = "/articles/{id}v{version}"
 
     # BigQuery settings
-    big_query_project_id = ''
+    big_query_project_id = ""
 
     # DOAJ deposit settings
     journal_eissn = ""
@@ -927,15 +953,22 @@ class live():
     software_heritage_collection_name = "elife"
     software_heritage_auth_user = "user"
     software_heritage_auth_pass = "pass"
-    software_heritage_api_get_origin_pattern = "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+    software_heritage_api_get_origin_pattern = (
+        "https://archive.swh.example.org/api/1/origin/{origin}/get/"
+    )
 
     # ERA article incoming queue
     era_incoming_queue = "prod-era-incoming-queue"
 
     # Accepted submission workflow
-    accepted_submission_output_bucket = "live-elife-bot-accepted-submission-cleaning-output"
+    accepted_submission_output_bucket = (
+        "live-elife-bot-accepted-submission-cleaning-output"
+    )
     accepted_submission_sender_email = "sender@example.org"
-    accepted_submission_validate_error_recipient_email = ["e@example.org", "life@example.org"]
+    accepted_submission_validate_error_recipient_email = [
+        "e@example.org",
+        "life@example.org",
+    ]
     accepted_submission_queue = "cleaning-queue"
 
 

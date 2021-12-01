@@ -1,8 +1,8 @@
 import time
 import json
 import os
-import yaml
 import re
+import yaml
 import newrelic.agent
 import boto.sqs
 from boto.sqs.message import Message

@@ -1,13 +1,10 @@
-import boto.swf
-import log
 import json
-import random
 import os
 import importlib
-import time
+import boto.swf
 import newrelic.agent
+import log
 from provider import process, utils
-
 import activity
 from activity.objects import Activity
 
@@ -16,13 +13,16 @@ from activity.objects import Activity
 Amazon SWF worker
 """
 
+
 def work(settings, flag):
     # Log
     identity = "worker_%s" % os.getpid()
     logger = log.logger("worker.log", settings.setLevel, identity)
 
     # Simple connect
-    conn = boto.swf.layer1.Layer1(settings.aws_access_key_id, settings.aws_secret_access_key)
+    conn = boto.swf.layer1.Layer1(
+        settings.aws_access_key_id, settings.aws_secret_access_key
+    )
 
     token = None
     application = newrelic.agent.application()
@@ -30,13 +30,17 @@ def work(settings, flag):
     # Poll for an activity task indefinitely
     while flag.green():
         if token is None:
-            logger.info('polling for activity...')
-            activity_task = conn.poll_for_activity_task(settings.domain,
-                                                        settings.default_task_list, identity)
+            logger.info("polling for activity...")
+            activity_task = conn.poll_for_activity_task(
+                settings.domain, settings.default_task_list, identity
+            )
 
             token = get_taskToken(activity_task)
 
-            logger.info('got activity: \n%s' % json.dumps(activity_task, sort_keys=True, indent=4))
+            logger.info(
+                "got activity: \n%s"
+                % json.dumps(activity_task, sort_keys=True, indent=4)
+            )
 
             # Complete the activity based on data and activity type
             activity_result = False
@@ -44,17 +48,25 @@ def work(settings, flag):
                 # Get the activityType and attempt to do the work
                 activityType = get_activityType(activity_task)
                 if activityType is not None:
-                    logger.info('activityType: %s' % activityType)
+                    logger.info("activityType: %s" % activityType)
 
                     # Build a string for the object name
                     activity_name = get_activity_name(activityType)
 
-                    with newrelic.agent.BackgroundTask(application, name=activity_name, group='worker.py'):
+                    with newrelic.agent.BackgroundTask(
+                        application, name=activity_name, group="worker.py"
+                    ):
                         # Attempt to import the module for the activity
                         if import_activity_class(activity_name):
                             # Instantiate the activity object
-                            activity_object = get_activity_object(activity_name, settings,
-                                                                  logger, conn, token, activity_task)
+                            activity_object = get_activity_object(
+                                activity_name,
+                                settings,
+                                logger,
+                                conn,
+                                token,
+                                activity_task,
+                            )
 
                             # Get the data to pass
                             data = get_input(activity_task)
@@ -63,29 +75,47 @@ def work(settings, flag):
                             try:
                                 activity_result = activity_object.do_activity(data)
                             except Exception as e:
-                                logger.error('error executing activity %s' %
-                                             activity_name, exc_info=True)
+                                logger.error(
+                                    "error executing activity %s" % activity_name,
+                                    exc_info=True,
+                                )
 
                             # Print the result to the log
-                            logger.info('got result: \n%s' %
-                                        json.dumps(activity_object.result, sort_keys=True, indent=4))
+                            logger.info(
+                                "got result: \n%s"
+                                % json.dumps(
+                                    activity_object.result, sort_keys=True, indent=4
+                                )
+                            )
 
                             # Complete the activity task if it was successful
                             if type(activity_result) == str:
                                 if activity_result == Activity.ACTIVITY_SUCCESS:
                                     message = activity_object.result
                                     respond_completed(conn, logger, token, message)
-                                elif activity_result == Activity.ACTIVITY_TEMPORARY_FAILURE:
-                                    reason = ('error: activity failed with result '
-                                              + str(activity_object.result))
-                                    detail = ''
+                                elif (
+                                    activity_result
+                                    == Activity.ACTIVITY_TEMPORARY_FAILURE
+                                ):
+                                    reason = (
+                                        "error: activity failed with result "
+                                        + str(activity_object.result)
+                                    )
+                                    detail = ""
                                     respond_failed(conn, logger, token, detail, reason)
 
                                 else:
-                                    # (Activity.ACTIVITY_PERMANENT_FAILURE or Activity.ACTIVITY_EXIT_WORKFLOW)
-                                    signal_fail_workflow(conn, logger, settings.domain,
-                                                         activity_task['workflowExecution']['workflowId'],
-                                                         activity_task['workflowExecution']['runId'])
+                                    # (Activity.ACTIVITY_PERMANENT_FAILURE or
+                                    #  Activity.ACTIVITY_EXIT_WORKFLOW)
+                                    signal_fail_workflow(
+                                        conn,
+                                        logger,
+                                        settings.domain,
+                                        activity_task["workflowExecution"][
+                                            "workflowId"
+                                        ],
+                                        activity_task["workflowExecution"]["runId"],
+                                    )
                             else:
                                 # for legacy actions
 
@@ -94,21 +124,26 @@ def work(settings, flag):
                                     message = activity_object.result
                                     respond_completed(conn, logger, token, message)
                                 else:
-                                    reason = ('error: activity failed with result '
-                                              + str(activity_object.result))
-                                    detail = ''
+                                    reason = (
+                                        "error: activity failed with result "
+                                        + str(activity_object.result)
+                                    )
+                                    detail = ""
                                     respond_failed(conn, logger, token, detail, reason)
 
                         else:
-                            reason = 'error: could not load object %s\n' % activity_name
-                            detail = ''
+                            reason = "error: could not load object %s\n" % activity_name
+                            detail = ""
                             respond_failed(conn, logger, token, detail, reason)
-                            logger.info('error: could not load object %s\n' % activity_name)
+                            logger.info(
+                                "error: could not load object %s\n" % activity_name
+                            )
 
         # Reset and loop
         token = None
 
     logger.info("graceful shutdown")
+
 
 def get_input(activity_task):
     """
@@ -121,6 +156,7 @@ def get_input(activity_task):
         input = None
     return input
 
+
 def get_taskToken(activity_task):
     """
     Given a response from polling for activity from SWF via boto,
@@ -131,6 +167,7 @@ def get_taskToken(activity_task):
     except KeyError:
         # No taskToken returned
         return None
+
 
 def get_activityType(activity_task):
     """
@@ -143,12 +180,14 @@ def get_activityType(activity_task):
         # No activityType found
         return None
 
+
 def get_activity_name(activityType):
     """
     Given an activityType, return the name of a
     corresponding activity class to load
     """
     return "activity_" + activityType
+
 
 def import_activity_class(activity_name, reload=True):
     """
@@ -162,6 +201,7 @@ def import_activity_class(activity_name, reload=True):
     except ImportError as e:
         return False
 
+
 def get_activity_object(activity_name, settings, logger, conn, token, activity_task):
     """
     Given an activity_name, and if the module class is already
@@ -173,8 +213,12 @@ def get_activity_object(activity_name, settings, logger, conn, token, activity_t
     activity_object = f(settings, logger, conn, token, activity_task)
     return activity_object
 
+
 def _log_swf_response_error(logger, e):
-    logger.exception('SWFResponseError: status %s, reason %s, body %s', e.status, e.reason, e.body)
+    logger.exception(
+        "SWFResponseError: status %s, reason %s, body %s", e.status, e.reason, e.body
+    )
+
 
 def respond_completed(conn, logger, token, message):
     """
@@ -184,9 +228,10 @@ def respond_completed(conn, logger, token, message):
     """
     try:
         out = conn.respond_activity_task_completed(token, str(message))
-        logger.info('respond_activity_task_completed returned %s' % out)
+        logger.info("respond_activity_task_completed returned %s" % out)
     except boto.exception.SWFResponseError as e:
         _log_swf_response_error(logger, e)
+
 
 def respond_failed(conn, logger, token, details, reason):
     """
@@ -196,9 +241,10 @@ def respond_failed(conn, logger, token, details, reason):
     """
     try:
         out = conn.respond_activity_task_failed(token, str(details), str(reason))
-        logger.info('respond_activity_task_failed returned %s' % out)
+        logger.info("respond_activity_task_failed returned %s" % out)
     except boto.exception.SWFResponseError as e:
         _log_swf_response_error(logger, e)
+
 
 def signal_fail_workflow(conn, logger, domain, workflow_id, run_id):
     """
@@ -209,9 +255,10 @@ def signal_fail_workflow(conn, logger, domain, workflow_id, run_id):
     """
     try:
         out = conn.request_cancel_workflow_execution(domain, workflow_id, run_id=run_id)
-        logger.info('request_cancel_workflow_execution %s' % out)
+        logger.info("request_cancel_workflow_execution %s" % out)
     except boto.exception.SWFResponseError as e:
         _log_swf_response_error(logger, e)
+
 
 if __name__ == "__main__":
 
