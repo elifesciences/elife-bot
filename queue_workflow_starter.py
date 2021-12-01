@@ -5,9 +5,9 @@ import os
 import uuid
 import json
 import importlib
-import log
 import boto.sqs
 import newrelic.agent
+import log
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider import process, utils
 from provider.utils import bytes_decode

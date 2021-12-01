@@ -53,11 +53,13 @@ def get_current_datetime():
     return datetime.datetime.utcnow()
 
 
-def get_local_datetime(current_datetime, timezone):
+def get_local_datetime(current_datetime, timezone_object):
     """apply the timezone delta to the datetime and remove the tzinfo"""
     new_current_datetime = current_datetime
 
-    localized_current_datetime = timezone.localize(current_datetime, is_dst=False)
+    localized_current_datetime = timezone_object.localize(
+        current_datetime, is_dst=False
+    )
     if localized_current_datetime.utcoffset():
         new_current_datetime = current_datetime + localized_current_datetime.utcoffset()
         new_current_datetime = new_current_datetime.replace(tzinfo=None)
@@ -105,12 +107,7 @@ def conditional_starts(current_datetime):
         )
 
         # POA Publish at specific hours of the day UK time
-        if (
-            local_current_time.tm_hour == 10
-            or local_current_time.tm_hour == 12
-            or local_current_time.tm_hour == 14
-            or local_current_time.tm_hour == 16
-        ):
+        if local_current_time.tm_hour in (10, 12, 14, 16):
             conditional_start_list.append(
                 OrderedDict(
                     [

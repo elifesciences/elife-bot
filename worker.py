@@ -1,13 +1,10 @@
-import boto.swf
-import log
 import json
-import random
 import os
 import importlib
-import time
+import boto.swf
 import newrelic.agent
+import log
 from provider import process, utils
-
 import activity
 from activity.objects import Activity
 
@@ -108,7 +105,8 @@ def work(settings, flag):
                                     respond_failed(conn, logger, token, detail, reason)
 
                                 else:
-                                    # (Activity.ACTIVITY_PERMANENT_FAILURE or Activity.ACTIVITY_EXIT_WORKFLOW)
+                                    # (Activity.ACTIVITY_PERMANENT_FAILURE or
+                                    #  Activity.ACTIVITY_EXIT_WORKFLOW)
                                     signal_fail_workflow(
                                         conn,
                                         logger,

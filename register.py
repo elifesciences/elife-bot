@@ -1,9 +1,6 @@
 import json
-import os
 import importlib
-
 import boto.swf
-
 import workflow
 import activity
 from provider import utils

@@ -1,12 +1,12 @@
-import boto.sqs
-import log
 import json
+import boto.sqs
 from boto.sqs.message import Message
-from provider import process
-from provider import utils
-import base64
 from dateutil.parser import parse
 import newrelic.agent
+import log
+from provider import process
+from provider import utils
+
 
 identity = log.identity("lax_response_adapter")
 logger = log.logger("lax_response_adapter.log", "INFO", identity)
@@ -106,7 +106,7 @@ class LaxResponseAdapter:
             }
 
             if operation == "ingest":
-                if "force" in token and token["force"] == True:
+                if "force" in token and token["force"] is True:
                     workflow_starter_message = {
                         "workflow_name": "SilentCorrectionsProcess",
                         "workflow_data": workflow_data,
