@@ -8,8 +8,8 @@ SWFMeta data provider
 Functions to provide meta data from SWF so code is not duplicated
 """
 
-class SWFMeta(object):
 
+class SWFMeta:
     def __init__(self, settings):
         self.settings = settings
 
@@ -23,14 +23,21 @@ class SWFMeta(object):
 
     def connect(self):
         # Simple connect
-        self.conn = boto.swf.layer1.Layer1(self.settings.aws_access_key_id,
-                                           self.settings.aws_secret_access_key)
+        self.conn = boto.swf.layer1.Layer1(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
         return self.conn
 
-    def get_closed_workflow_execution_count(self, domain=None, workflow_id=None,
-                                            workflow_name=None, workflow_version=None,
-                                            start_oldest_date=None, start_latest_date=None,
-                                            close_status=None):
+    def get_closed_workflow_execution_count(
+        self,
+        domain=None,
+        workflow_id=None,
+        workflow_name=None,
+        workflow_version=None,
+        start_oldest_date=None,
+        start_latest_date=None,
+        close_status=None,
+    ):
         """
         Get the count of executions from SWF, limited to 90 days by Amazon,
         for the criteria supplied
@@ -51,15 +58,23 @@ class SWFMeta(object):
             workflow_version=workflow_version,
             start_oldest_date=start_oldest_date,
             start_latest_date=start_latest_date,
-            close_status=close_status)
+            close_status=close_status,
+        )
 
         self.count = count
         return count
 
-    def get_closed_workflow_executionInfos(self, domain=None, workflow_id=None,
-                                           workflow_name=None, workflow_version=None,
-                                           start_oldest_date=None, start_latest_date=None,
-                                           close_status=None, maximum_page_size=100):
+    def get_closed_workflow_executionInfos(
+        self,
+        domain=None,
+        workflow_id=None,
+        workflow_name=None,
+        workflow_version=None,
+        start_oldest_date=None,
+        start_latest_date=None,
+        close_status=None,
+        maximum_page_size=100,
+    ):
         """
         Get the full history of executions from SWF, limited to 90 days by Amazon,
         for the criteria supplied
@@ -76,7 +91,9 @@ class SWFMeta(object):
         #   {u'message': u'Cannot specify more than one exclusive filters in the
         #    same query: [WorkflowTypeFilter, CloseStatusFilter]
         #   ', u'__type': u'com.amazon.coral.validate#ValidationException'}
-        if (workflow_name is not None or workflow_id is not None) and close_status is not None:
+        if (
+            workflow_name is not None or workflow_id is not None
+        ) and close_status is not None:
             close_status_to_query = None
         else:
             close_status_to_query = close_status
@@ -90,7 +107,8 @@ class SWFMeta(object):
             start_oldest_date=start_oldest_date,
             start_latest_date=start_latest_date,
             close_status=close_status_to_query,
-            maximum_page_size=maximum_page_size)
+            maximum_page_size=maximum_page_size,
+        )
 
         # Check if there is no nextPageToken, if there is none
         #  return the result, nothing to page
@@ -116,7 +134,8 @@ class SWFMeta(object):
                             start_latest_date=start_latest_date,
                             close_status=close_status_to_query,
                             maximum_page_size=maximum_page_size,
-                            next_page_token=next_page_token)
+                            next_page_token=next_page_token,
+                        )
 
                     for execution in infos["executionInfos"]:
                         all_infos.append(execution)
@@ -137,9 +156,14 @@ class SWFMeta(object):
         self.infos = infos
         return infos
 
-    def get_last_completed_workflow_execution_startTimestamp(self, infos=None, domain=None,
-                                                             workflow_id=None, workflow_name=None,
-                                                             workflow_version=None):
+    def get_last_completed_workflow_execution_startTimestamp(
+        self,
+        infos=None,
+        domain=None,
+        workflow_id=None,
+        workflow_name=None,
+        workflow_version=None,
+    ):
         """
         For the specified workflow_id, or workflow_name + workflow_version,
         get the startTimestamp for the last successfully completed workflow
@@ -173,25 +197,32 @@ class SWFMeta(object):
                     workflow_version=workflow_version,
                     start_latest_date=start_latest_date,
                     start_oldest_date=start_oldest_date,
-                    close_status=close_status)
+                    close_status=close_status,
+                )
 
             # Find the latest run
             for execution in infos["executionInfos"]:
                 if latest_startTimestamp is None:
-                    latest_startTimestamp = execution['startTimestamp']
+                    latest_startTimestamp = execution["startTimestamp"]
                     continue
-                if execution['startTimestamp'] > latest_startTimestamp:
-                    latest_startTimestamp = execution['startTimestamp']
+                if execution["startTimestamp"] > latest_startTimestamp:
+                    latest_startTimestamp = execution["startTimestamp"]
             # Check if we found the last date
             if latest_startTimestamp:
                 break
 
         return latest_startTimestamp
 
-    def get_open_workflow_executionInfos(self, domain=None, workflow_id=None,
-                                         workflow_name=None, workflow_version=None,
-                                         oldest_date=None, latest_date=None,
-                                         maximum_page_size=100):
+    def get_open_workflow_executionInfos(
+        self,
+        domain=None,
+        workflow_id=None,
+        workflow_name=None,
+        workflow_version=None,
+        oldest_date=None,
+        latest_date=None,
+        maximum_page_size=100,
+    ):
         """
         Get a list of open running workflow executions from SWF, limited to 90 days by Amazon,
         for the criteria supplied
@@ -209,7 +240,7 @@ class SWFMeta(object):
             latest_date = calendar.timegm(time.gmtime())
         # Use full 90 day history if start_oldest_date is not supplied
         if oldest_date is None:
-            oldest_date = latest_date - (60 * 60* 24* 90)
+            oldest_date = latest_date - (60 * 60 * 24 * 90)
 
         # Still need to handle the nextPageToken
         infos = self.conn.list_open_workflow_executions(
@@ -219,7 +250,8 @@ class SWFMeta(object):
             workflow_version=workflow_version,
             oldest_date=oldest_date,
             latest_date=latest_date,
-            maximum_page_size=maximum_page_size)
+            maximum_page_size=maximum_page_size,
+        )
 
         # Check if there is no nextPageToken, if there is none
         #  return the result, nothing to page
@@ -245,7 +277,8 @@ class SWFMeta(object):
                             oldest_date=oldest_date,
                             latest_date=latest_date,
                             maximum_page_size=maximum_page_size,
-                            next_page_token=next_page_token)
+                            next_page_token=next_page_token,
+                        )
 
                     for execution in infos["executionInfos"]:
                         all_infos.append(execution)
@@ -259,8 +292,14 @@ class SWFMeta(object):
         self.infos = infos
         return infos
 
-    def is_workflow_open(self, infos=None, domain=None, workflow_id=None,
-                         workflow_name=None, workflow_version=None):
+    def is_workflow_open(
+        self,
+        infos=None,
+        domain=None,
+        workflow_id=None,
+        workflow_name=None,
+        workflow_version=None,
+    ):
         """
         For the specified workflow_id, or workflow_name + workflow_version,
         check if the workflow is currently open, in order to check for workflow conflicts
@@ -270,7 +309,7 @@ class SWFMeta(object):
         is_open = None
 
         latest_date = calendar.timegm(time.gmtime())
-        oldest_date = latest_date - (60*60*24*90)
+        oldest_date = latest_date - (60 * 60 * 24 * 90)
 
         # For automated tests, check if infos was supplied
         test_mode = False
@@ -284,7 +323,8 @@ class SWFMeta(object):
                 workflow_name=workflow_name,
                 workflow_version=workflow_version,
                 latest_date=latest_date,
-                oldest_date=oldest_date)
+                oldest_date=oldest_date,
+            )
 
         if len(infos["executionInfos"]) <= 0:
             is_open = False

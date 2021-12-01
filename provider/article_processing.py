@@ -1,7 +1,7 @@
 import os
 import shutil
-import dateutil.parser
 from collections import OrderedDict
+import dateutil.parser
 from elifetools import xmlio
 from provider import utils, lax_provider
 from provider.storage_provider import storage_context
@@ -11,6 +11,7 @@ from provider.article_structure import ArticleInfo, file_parts
 Functions for processing article zip and XML for reuse by different activities
 Originally refactoring them from the PMCDeposit activity for reuse into FTPArticle
 """
+
 
 def list_dir(dir_name):
     dir_list = os.listdir(dir_name)
@@ -31,8 +32,8 @@ def file_name_from_name(file_name):
 def file_extension(file_name):
     name = file_name_from_name(file_name)
     if name:
-        if len(name.split('.')) > 1:
-            return name.split('.')[-1]
+        if len(name.split(".")) > 1:
+            return name.split(".")[-1]
     return None
 
 
@@ -45,16 +46,16 @@ def stripped_file_name_map(file_names, logger=None):
         prefix, extension = file_parts(filename)
         if info.versioned is True and info.version is not None:
             # Use part before the -v number
-            part_without_version = prefix.split('-v')[0]
+            part_without_version = prefix.split("-v")[0]
         else:
             # Not a versioned file, use the whole file prefix
             part_without_version = prefix
-        renamed_filename = '.'.join([part_without_version, extension])
+        renamed_filename = ".".join([part_without_version, extension])
         if renamed_filename:
             file_name_map[filename] = renamed_filename
         else:
             if logger:
-                logger.info('there is no renamed file for ' + filename)
+                logger.info("there is no renamed file for " + filename)
     return file_name_map
 
 
@@ -79,9 +80,8 @@ def convert_xml(xml_file, file_name_map):
     xmlio.register_xmlns()
 
     root, doctype_dict, processing_instructions = xmlio.parse(
-        xml_file,
-        return_doctype_dict=True,
-        return_processing_instructions=True)
+        xml_file, return_doctype_dict=True, return_processing_instructions=True
+    )
 
     # Convert xlink href values
     total = xmlio.convert_xlink_href(root, file_name_map)
@@ -92,9 +92,10 @@ def convert_xml(xml_file, file_name_map):
         root,
         output_type=None,
         doctype_dict=doctype_dict,
-        processing_instructions=processing_instructions)
+        processing_instructions=processing_instructions,
+    )
 
-    f = open(xml_file, 'wb')
+    f = open(xml_file, "wb")
     f.write(reparsed_string)
     f.close()
 
@@ -120,11 +121,11 @@ def verify_rename_files(file_name_map):
 
 def new_pmc_zip_filename(journal, volume, fid, revision=None):
     filename = journal
-    filename = filename + '-' + utils.pad_volume(volume)
-    filename = filename + '-' + utils.pad_msid(fid)
+    filename = filename + "-" + utils.pad_volume(volume)
+    filename = filename + "-" + utils.pad_msid(fid)
     if revision:
-        filename = filename + '.r' + str(revision)
-    filename += '.zip'
+        filename = filename + ".r" + str(revision)
+    filename += ".zip"
     return filename
 
 
@@ -135,8 +136,7 @@ def latest_archive_zip_revision(doi_id, s3_keys, journal, status):
     """
     s3_key_name = None
 
-    name_prefix_to_match = (journal + '-' + utils.pad_msid(doi_id)
-                            + '-' + status + '-v')
+    name_prefix_to_match = journal + "-" + utils.pad_msid(doi_id) + "-" + status + "-v"
 
     highest = 0
     for key in s3_keys:
@@ -144,7 +144,7 @@ def latest_archive_zip_revision(doi_id, s3_keys, journal, status):
             version_and_date = None
             try:
                 parts = key["name"].split(name_prefix_to_match)
-                version = parts[1].split('-')[0]
+                version = parts[1].split("-")[0]
                 date_formatted = dateutil.parser.parse(key["last_modified"])
                 date_part = date_formatted.strftime(utils.S3_DATE_FORMAT)
                 version_and_date = int(version + date_part)
@@ -159,7 +159,8 @@ def latest_archive_zip_revision(doi_id, s3_keys, journal, status):
 
 def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=None):
     xml_file = lax_provider.get_xml_file_name(
-        settings, bucket_folder, bucket_name, version)
+        settings, bucket_folder, bucket_name, version
+    )
     storage = storage_context(settings)
     storage_provider = settings.storage_provider + "://"
     orig_resource = storage_provider + bucket_name + "/" + bucket_folder
@@ -175,13 +176,14 @@ def download_article_xml(settings, to_dir, bucket_folder, bucket_name, version=N
 def download_jats(settings, expanded_folder_name, to_dir, logger):
     """download the jats file from the expanded folder on S3"""
     jats_file = None
-    expanded_bucket_name = (
-        settings.publishing_buckets_prefix + settings.expanded_bucket)
+    expanded_bucket_name = settings.publishing_buckets_prefix + settings.expanded_bucket
     try:
         jats_file = download_article_xml(
-            settings, to_dir, expanded_folder_name, expanded_bucket_name)
+            settings, to_dir, expanded_folder_name, expanded_bucket_name
+        )
     except Exception as exception:
         logger.exception(
-            "Exception downloading jats from from expanded folder %s. Details: %s" %
-            (str(expanded_folder_name), str(exception)))
+            "Exception downloading jats from from expanded folder %s. Details: %s"
+            % (str(expanded_folder_name), str(exception))
+        )
     return jats_file

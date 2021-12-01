@@ -1,11 +1,11 @@
-import requests
+import os
 import time
-from . import article
 import json
+import requests
 from dateutil.parser import parse
 import log
-import os
 from provider import utils
+from . import article
 
 
 identity = "process_%s" % os.getpid()
@@ -60,7 +60,9 @@ def lax_auth_key(settings, auth=False):
 
 def article_json(article_id, settings, auth=False):
     "get json for the latest article version from lax"
-    url = settings.lax_article_endpoint.replace("{article_id}", utils.pad_msid(article_id))
+    url = settings.lax_article_endpoint.replace(
+        "{article_id}", utils.pad_msid(article_id)
+    )
     return lax_request(
         url, article_id, settings.verify_ssl, None, lax_auth_key(settings, auth)
     )
@@ -68,7 +70,9 @@ def article_json(article_id, settings, auth=False):
 
 def article_versions(article_id, settings, auth=False):
     "get json for article versions from lax"
-    url = settings.lax_article_versions.replace("{article_id}", utils.pad_msid(article_id))
+    url = settings.lax_article_versions.replace(
+        "{article_id}", utils.pad_msid(article_id)
+    )
     headers = {}
     if (
         hasattr(settings, "lax_article_versions_accept_header")
@@ -87,7 +91,9 @@ def article_versions(article_id, settings, auth=False):
 
 def article_related(article_id, settings, auth=False):
     "get json for related article data from lax"
-    url = settings.lax_article_related.replace("{article_id}", utils.pad_msid(article_id))
+    url = settings.lax_article_related.replace(
+        "{article_id}", utils.pad_msid(article_id)
+    )
     return lax_request(
         url, article_id, settings.verify_ssl, None, lax_auth_key(settings, auth)
     )
@@ -238,7 +244,9 @@ def was_ever_poa(article_id, settings):
         return None
 
 
-def published_considering_poa_status(article_id, settings, is_poa, was_ever_poa):
+def published_considering_poa_status(
+    article_id, settings, is_poa, article_was_ever_poa
+):
     """
     Check the lax data for whether an article is published
     considering whether it was or is PoA status
@@ -249,13 +257,13 @@ def published_considering_poa_status(article_id, settings, is_poa, was_ever_poa)
     else:
         poa_status, vor_status = None, None
     # Now a decision can be made
-    if (is_poa is True and was_ever_poa is True) or (
-        is_poa is False and was_ever_poa is False
+    if (is_poa is True and article_was_ever_poa is True) or (
+        is_poa is False and article_was_ever_poa is False
     ):
         # In this case, any version is sufficient
         if poa_status or vor_status:
             return True
-    elif is_poa is False and was_ever_poa is True:
+    elif is_poa is False and article_was_ever_poa is True:
         # In the case of was ever PoA but is not PoA
         #  check there is a VoR version
         if vor_status:

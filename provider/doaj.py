@@ -22,29 +22,29 @@ def substitute_math_tags(string, replacement="[Formula: see text]"):
 
 
 def doaj_json(article_json, settings=None):
-    doaj_json = OrderedDict()
-    doaj_json["bibjson"] = bibjson(article_json, settings)
-    return doaj_json
+    doaj_json_dict = OrderedDict()
+    doaj_json_dict["bibjson"] = bibjson(article_json, settings)
+    return doaj_json_dict
 
 
 def bibjson(article_json, settings=None):
-    bibjson = OrderedDict()
+    bibjson_dict = OrderedDict()
     if article_json.get("abstract"):
-        bibjson["abstract"] = abstract(article_json.get("abstract", {}))
-    bibjson["author"] = author(article_json.get("authors", []))
-    bibjson["identifier"] = identifier(
+        bibjson_dict["abstract"] = abstract(article_json.get("abstract", {}))
+    bibjson_dict["author"] = author(article_json.get("authors", []))
+    bibjson_dict["identifier"] = identifier(
         article_json, eissn=getattr(settings, "journal_eissn", None)
     )
-    bibjson["journal"] = journal(article_json)
-    bibjson["keywords"] = keywords(article_json.get("keywords", []), max=6)
-    bibjson["link"] = link(
+    bibjson_dict["journal"] = journal(article_json)
+    bibjson_dict["keywords"] = keywords(article_json.get("keywords", []), max_count=6)
+    bibjson_dict["link"] = link(
         article_json, url_link_pattern=getattr(settings, "doaj_url_link_pattern", None)
     )
     published_date = time.strptime(article_json["published"], "%Y-%m-%dT%H:%M:%SZ")
-    bibjson["month"] = month(published_date)
-    bibjson["title"] = title(article_json)
-    bibjson["year"] = year(published_date)
-    return bibjson
+    bibjson_dict["month"] = month(published_date)
+    bibjson_dict["title"] = title(article_json)
+    bibjson_dict["year"] = year(published_date)
+    return bibjson_dict
 
 
 def abstract(abstract_json):
@@ -57,42 +57,42 @@ def abstract(abstract_json):
             abstract_parts.append("%s %s" % (content_block.get("title"), content))
         else:
             abstract_parts.append(content_block.get("text"))
-    abstract = "\n".join(abstract_parts)
+    abstract_string = "\n".join(abstract_parts)
     # replace maths with a placeholder string
-    abstract = substitute_math_tags(abstract, "[Formula: see text]")
+    abstract_string = substitute_math_tags(abstract_string, "[Formula: see text]")
     # remove inline formatting tags
     for tag_name in REMOVE_ABSTRACT_TAGS:
-        abstract = etoolsutils.remove_tag(tag_name, abstract)
-    return abstract
+        abstract_string = etoolsutils.remove_tag(tag_name, abstract_string)
+    return abstract_string
 
 
 def author(authors_json):
 
     author_list = []
-    for author in authors_json:
+    for author_item in authors_json:
         author_json = OrderedDict()
 
         # affiliations
         affiliations = []
-        for aff_json in author.get("affiliations", []):
+        for aff_json in author_item.get("affiliations", []):
             affiliations.append(affiliation_string(aff_json))
         if affiliations:
             author_json["affiliation"] = "; ".join(affiliations)
 
         # name
-        if author.get("type") == "group":
+        if author_item.get("type") == "group":
             # format group author name
-            author_json["name"] = author.get("name")
-        elif author.get("type") == "on-behalf-of":
+            author_json["name"] = author_item.get("name")
+        elif author_item.get("type") == "on-behalf-of":
             # format group author name
-            author_json["name"] = author.get("onBehalfOf")
+            author_json["name"] = author_item.get("onBehalfOf")
         else:
             # person name
-            author_json["name"] = author.get("name").get("preferred")
+            author_json["name"] = author_item.get("name").get("preferred")
 
         # orcid
-        if author.get("orcid"):
-            author_json["orcid_id"] = "https://orcid.org/%s" % author.get("orcid")
+        if author_item.get("orcid"):
+            author_json["orcid_id"] = "https://orcid.org/%s" % author_item.get("orcid")
 
         author_list.append(author_json)
     return author_list
@@ -135,7 +135,7 @@ def journal(article_json):
     return journal_json
 
 
-def keywords(keywords_json, max=6):
+def keywords(keywords_json, max_count=6):
     # DOAJ allows up to six keywords per article
     keyword_list = []
     for keyword in keywords_json:
@@ -144,7 +144,7 @@ def keywords(keywords_json, max=6):
             for tag_name in REMOVE_TITLE_TAGS:
                 keyword = etoolsutils.remove_tag(tag_name, keyword)
         keyword_list.append(keyword)
-    return keyword_list[:max]
+    return keyword_list[:max_count]
 
 
 def link(article_json, url_link_pattern=None):
@@ -163,11 +163,11 @@ def month(date_struct):
 
 
 def title(article_json):
-    title = article_json.get("title")
+    title_string = article_json.get("title")
     # remove inline formatting tags
     for tag_name in REMOVE_TITLE_TAGS:
-        title = etoolsutils.remove_tag(tag_name, title)
-    return title
+        title_string = etoolsutils.remove_tag(tag_name, title_string)
+    return title_string
 
 
 def year(date_struct):

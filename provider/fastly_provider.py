@@ -1,5 +1,6 @@
 import requests
 
+
 class FastlyApi:
     def __init__(self, fastly_api_key):
         self._fastly_api_key = fastly_api_key
@@ -7,19 +8,24 @@ class FastlyApi:
     def purge(self, surrogate_key, service_id):
         url = "https://api.fastly.com/service/%s/purge/%s" % (service_id, surrogate_key)
 
-        response = requests.post(url, headers={
-            'Accept': 'application/json',
-            'Fastly-Key': self._fastly_api_key,
-            'Fastly-Soft-Purge': '1',
-        })
+        response = requests.post(
+            url,
+            headers={
+                "Accept": "application/json",
+                "Fastly-Key": self._fastly_api_key,
+                "Fastly-Soft-Purge": "1",
+            },
+        )
         response.raise_for_status()
         return response
 
+
 KEYS = [
-    'article/{article_id}v{version}',
-    'article/{article_id}/videos',
-    'digest/{article_id}',
-    ]
+    "article/{article_id}v{version}",
+    "article/{article_id}/videos",
+    "digest/{article_id}",
+]
+
 
 def purge(article_id, version, settings):
     responses = []

@@ -2,19 +2,19 @@
 
 import os
 import re
-import requests
 from collections import OrderedDict
 from string import Template
 from xml.dom import minidom
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
+import requests
 
 
 FILE_NAME_FORMAT = "elife-%s-v%s-era.zip"
 BUCKET_FOLDER = "software_heritage/run"
 
 
-class MetaData(object):
+class MetaData:
     def __init__(self, file_name=None, article=None):
         self.id = None
         self.title = None
@@ -68,8 +68,8 @@ class MetaData(object):
 
 def metadata(file_name, article):
     "generate metadata object for a deposit"
-    metadata = MetaData(file_name, article)
-    return metadata
+    metadata_object = MetaData(file_name, article)
+    return metadata_object
 
 
 def metadata_xml(element, pretty=False, indent=""):
@@ -83,7 +83,7 @@ def metadata_xml(element, pretty=False, indent=""):
     return reparsed.toxml(encoding=encoding)
 
 
-def metadata_element(metadata):
+def metadata_element(metadata_object):
     "generate metadata XML Element from metadata object"
     root = Element("entry")
     root.set("xmlns", "http://www.w3.org/2005/Atom")
@@ -91,23 +91,23 @@ def metadata_element(metadata):
     root.set("xmlns:swhdeposit", "https://www.softwareheritage.org/schema/2018/deposit")
     # simple tags
     for tag_name in ["title", "id"]:
-        if getattr(metadata, tag_name):
+        if getattr(metadata_object, tag_name):
             tag = SubElement(root, tag_name)
-            tag.text = getattr(metadata, tag_name)
+            tag.text = getattr(metadata_object, tag_name)
     # swhdeposit tags
-    swhdeposit(root, metadata)
+    swhdeposit(root, metadata_object)
     # codemeta tags
-    codemeta(root, metadata)
+    codemeta(root, metadata_object)
     return root
 
 
-def swhdeposit(root, metadata):
+def swhdeposit(root, metadata_object):
     "set swhdeposit:deposit XML tag"
     prefix = "swhdeposit"
     section_name = "deposit"
     tag_name = "create_origin"
     key = "url"
-    url = metadata.swhdeposit.get("deposit").get("create_origin").get("url")
+    url = metadata_object.swhdeposit.get("deposit").get("create_origin").get("url")
     if url:
         deposit_tag = SubElement(root, "%s:%s" % (prefix, section_name))
         create_origin_tag = SubElement(deposit_tag, "%s:%s" % (prefix, tag_name))
@@ -118,54 +118,54 @@ def swhdeposit(root, metadata):
         origin_tag.set(key, url)
 
 
-def codemeta(root, metadata):
+def codemeta(root, metadata_object):
     "set codemeta prefixed XML tags"
-    codemeta_simple(root, metadata)
-    codemeta_reference_publication(root, metadata)
-    codemeta_license(root, metadata)
-    codemeta_authors(root, metadata)
+    codemeta_simple(root, metadata_object)
+    codemeta_reference_publication(root, metadata_object)
+    codemeta_license(root, metadata_object)
+    codemeta_authors(root, metadata_object)
 
 
-def codemeta_simple(root, metadata):
+def codemeta_simple(root, metadata_object):
     "set codemeta XML tags which have no child tags"
     prefix = "codemeta"
     for tag_name in ["description"]:
-        if metadata.codemeta.get(tag_name):
+        if metadata_object.codemeta.get(tag_name):
             tag = SubElement(root, "%s:%s" % (prefix, tag_name))
-            tag.text = metadata.codemeta.get(tag_name)
+            tag.text = metadata_object.codemeta.get(tag_name)
 
 
-def codemeta_reference_publication(root, metadata):
+def codemeta_reference_publication(root, metadata_object):
     "set codemeta:referencePublication XML tags"
     prefix = "codemeta"
     section_name = "referencePublication"
-    if metadata.codemeta.get(section_name):
+    if metadata_object.codemeta.get(section_name):
         parent_tag = SubElement(root, "%s:%s" % (prefix, section_name))
         for tag_name in ["name", "identifier"]:
-            if metadata.codemeta.get(section_name).get(tag_name):
+            if metadata_object.codemeta.get(section_name).get(tag_name):
                 tag = SubElement(parent_tag, "%s:%s" % (prefix, tag_name))
-                tag.text = metadata.codemeta.get(section_name).get(tag_name)
+                tag.text = metadata_object.codemeta.get(section_name).get(tag_name)
 
 
-def codemeta_license(root, metadata):
+def codemeta_license(root, metadata_object):
     "set codemeta:license XML tags"
     prefix = "codemeta"
     section_name = "license"
     tag_name = "url"
-    if metadata.codemeta.get(section_name) and metadata.codemeta.get(section_name).get(
-        tag_name
-    ):
+    if metadata_object.codemeta.get(section_name) and metadata_object.codemeta.get(
+        section_name
+    ).get(tag_name):
         parent_tag = SubElement(root, "%s:%s" % (prefix, section_name))
         tag = SubElement(parent_tag, "%s:%s" % (prefix, tag_name))
-        tag.text = metadata.codemeta.get(section_name).get(tag_name)
+        tag.text = metadata_object.codemeta.get(section_name).get(tag_name)
 
 
-def codemeta_authors(root, metadata):
+def codemeta_authors(root, metadata_object):
     "set codemeta:author XML tags"
     prefix = "codemeta"
     section_name = "author"
-    if metadata.codemeta.get("authors"):
-        for author in metadata.codemeta.get("authors"):
+    if metadata_object.codemeta.get("authors"):
+        for author in metadata_object.codemeta.get("authors"):
             author_tag = SubElement(root, "%s:%s" % (prefix, section_name))
             name_tag = SubElement(author_tag, "%s:name" % prefix)
             name_tag.text = author.get("name")

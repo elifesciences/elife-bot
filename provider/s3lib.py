@@ -1,12 +1,20 @@
-import boto.s3
 import re
+import boto.s3
+
 
 """
 Functions for reuse concerning Amazon s3 and buckets
 """
 
-def get_s3_key_names_from_bucket(bucket, key_type="key", prefix=None,
-                                 delimiter='/', headers=None, file_extensions=None):
+
+def get_s3_key_names_from_bucket(
+    bucket,
+    key_type="key",
+    prefix=None,
+    delimiter="/",
+    headers=None,
+    file_extensions=None,
+):
     """
     Given a connected boto bucket object, and optional parameters,
     from the prefix (folder name), get the s3 key names for
@@ -15,8 +23,9 @@ def get_s3_key_names_from_bucket(bucket, key_type="key", prefix=None,
     key_type = "key" then look for s3 objects
     key_type = "prefix" then look for folders (also s3 objects of a different type)
     """
-    s3_keys = get_s3_keys_from_bucket(bucket, key_type, prefix,
-                                      delimiter, headers, file_extensions)
+    s3_keys = get_s3_keys_from_bucket(
+        bucket, key_type, prefix, delimiter, headers, file_extensions
+    )
     s3_key_names = []
     # Convert to key names instead of objects to make it testable later
     for key in s3_keys:
@@ -28,8 +37,15 @@ def get_s3_key_names_from_bucket(bucket, key_type="key", prefix=None,
 
     return s3_key_names
 
-def get_s3_keys_from_bucket(bucket, key_type="key", prefix=None,
-                                 delimiter='/', headers=None, file_extensions=None):
+
+def get_s3_keys_from_bucket(
+    bucket,
+    key_type="key",
+    prefix=None,
+    delimiter="/",
+    headers=None,
+    file_extensions=None,
+):
 
     s3_keys = []
 
@@ -46,6 +62,7 @@ def get_s3_keys_from_bucket(bucket, key_type="key", prefix=None,
                 s3_keys.append(item)
 
     return s3_keys
+
 
 def filter_list_by_file_extensions(s3_key_names, file_extensions):
     """
@@ -77,7 +94,7 @@ def latest_pmc_zip_revision(doi_id, s3_key_names):
 
     name_matches = []
     for key_name in s3_key_names:
-        name_match = '-' + str(doi_id).zfill(5)
+        name_match = "-" + str(doi_id).zfill(5)
         if name_match in key_name:
             name_matches.append(key_name)
 
@@ -88,7 +105,7 @@ def latest_pmc_zip_revision(doi_id, s3_key_names):
         highest_revision = None
         for key_name in name_matches:
 
-            revision_match = re.match(r'.*r(.*)\.zip$', key_name)
+            revision_match = re.match(r".*r(.*)\.zip$", key_name)
 
             if revision_match is None:
                 if highest_revision is None:
@@ -96,12 +113,11 @@ def latest_pmc_zip_revision(doi_id, s3_key_names):
                     s3_key_name = key_name
             elif revision_match is not None:
                 # Use either the first revision number found or the highest revision number
-                if (highest_revision is None or
-                        (highest_revision and
-                         int(revision_match.group(1)) > int(highest_revision))):
+                if highest_revision is None or (
+                    highest_revision
+                    and int(revision_match.group(1)) > int(highest_revision)
+                ):
                     s3_key_name = key_name
                     highest_revision = revision_match.group(1)
 
     return s3_key_name
-
-

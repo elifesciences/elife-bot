@@ -10,8 +10,8 @@ Templates provider
 Copies and parses templates using jinja2
 """
 
-class Templates(object):
 
+class Templates:
     def __init__(self, settings=None, tmp_dir=None):
         self.settings = settings
         self.tmp_dir = tmp_dir
@@ -98,7 +98,9 @@ class Templates(object):
 
         # Warm the template files
         if self.email_templates_warmed is not True:
-            raise Exception("Templates no warmed in templates provider get_email_body()")
+            raise Exception(
+                "Templates no warmed in templates provider get_email_body()"
+            )
 
         if format == "html":
             template_name = email_type + ".html"
@@ -125,7 +127,9 @@ class Templates(object):
 
         # Warm the template files
         if self.email_templates_warmed is not True:
-            raise Exception("Templates no warmed in templates provider get_email_headers()")
+            raise Exception(
+                "Templates no warmed in templates provider get_email_headers()"
+            )
 
         template_name = email_type + ".json"
 
@@ -144,7 +148,9 @@ class Templates(object):
         else:
             return None
 
-    def get_lens_article_html(self, from_dir, article, cdn_bucket, article_xml_filename):
+    def get_lens_article_html(
+        self, from_dir, article, cdn_bucket, article_xml_filename
+    ):
         """
         Given data objects, load the jinja environment,
         get the template, render it and return the content
@@ -159,16 +165,19 @@ class Templates(object):
 
             jinja_env = self.get_jinja_env()
             tmpl = self.get_jinja_template(jinja_env, "lens_article.html")
-            content = tmpl.render(article=article,
-                                  cdn_bucket=cdn_bucket,
-                                  article_xml_filename=article_xml_filename)
+            content = tmpl.render(
+                article=article,
+                cdn_bucket=cdn_bucket,
+                article_xml_filename=article_xml_filename,
+            )
             return content
         else:
             return None
 
 
-def email_headers(templates_object, email_type, recipient, 
-                  article, email_format="html", logger=None):
+def email_headers(
+    templates_object, email_type, recipient, article, email_format="html", logger=None
+):
     """Email headers for the template customised with data provided
 
     :param templates_object: Templates object
@@ -184,19 +193,28 @@ def email_headers(templates_object, email_type, recipient,
             email_type=email_type,
             author=recipient,
             article=article,
-            format=email_format)
+            format=email_format,
+        )
     except Exception as exception:
         log_info = (
-            'Failed to load email headers for: article: %s email_type: %s recipient: %s' %
-            (str(article), str(email_type), str(recipient)))
+            "Failed to load email headers for: article: %s email_type: %s recipient: %s"
+            % (str(article), str(email_type), str(recipient))
+        )
         if logger:
             logger.info(log_info)
             logger.exception(str(exception))
     return headers
 
 
-def email_body(templates_object, email_type, recipient, 
-                  article, authors=None, email_format="html", logger=None):
+def email_body(
+    templates_object,
+    email_type,
+    recipient,
+    article,
+    authors=None,
+    email_format="html",
+    logger=None,
+):
     """Email body for the template customised with data provided
 
     :param templates_object: Templates object
@@ -213,11 +231,13 @@ def email_body(templates_object, email_type, recipient,
             author=recipient,
             article=article,
             authors=authors,
-            format=email_format)
+            format=email_format,
+        )
     except Exception as exception:
         log_info = (
-            'Failed to load email body for: article: %s email_type: %s recipient: %s' %
-            (str(article), str(email_type), str(recipient)))
+            "Failed to load email body for: article: %s email_type: %s recipient: %s"
+            % (str(article), str(email_type), str(recipient))
+        )
         if logger:
             logger.info(log_info)
             logger.exception(str(exception))
@@ -225,13 +245,13 @@ def email_body(templates_object, email_type, recipient,
 
 
 def json_char_escape(string):
-    return string.replace('\\', '\\\\').replace('"', '\\"')
+    return string.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def article_title_char_escape(article):
     """escape characters in article object article_title for JSON parsing"""
-    if hasattr(article, 'article_title'):
+    if hasattr(article, "article_title"):
         article.article_title = json_char_escape(article.article_title)
-    if isinstance(article, dict) and 'article_title' in article:
-        article['article_title'] = json_char_escape(article['article_title'])
+    if isinstance(article, dict) and "article_title" in article:
+        article["article_title"] = json_char_escape(article["article_title"])
     return article

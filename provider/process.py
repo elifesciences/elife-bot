@@ -4,6 +4,7 @@ import signal
 Provides process-management utilities such as catching signals and interrupts
 """
 
+
 class Flag:
     def __init__(self):
         self._red = False
@@ -29,9 +30,11 @@ def monitor_interrupt(work):
     """
     try:
         flag = Flag()
+
         def signal_handler(signum, _frame):
             print(("received signal %s" % signum))
             flag.stop_process()
+
         signal.signal(signal.SIGTERM, signal_handler)
         work(flag)
     except KeyboardInterrupt:
