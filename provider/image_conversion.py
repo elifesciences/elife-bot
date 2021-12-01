@@ -1,7 +1,7 @@
+from mimetypes import guess_type
 import provider.imageresize as resizer
 from provider.storage_provider import storage_context
 from provider import memory
-from mimetypes import guess_type
 
 
 def generate_images(settings, formats, fp, info, publish_locations, logger):

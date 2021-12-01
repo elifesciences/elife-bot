@@ -1,5 +1,6 @@
-import boto.s3
 import re
+import boto.s3
+
 
 """
 Functions for reuse concerning Amazon s3 and buckets

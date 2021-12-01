@@ -1,7 +1,6 @@
-import sys, json
-import requests
+import sys
 import re
-from functional import seq
+import requests
 from provider.utils import unicode_encode
 
 
@@ -46,13 +45,10 @@ def validate_sources(gc_data):
         ]
 
         # fail if we have partial data
-        msg = (
-            "number of available sources (%r) less than known sources for %r. missing: %s"
-            % (
-                len(available_sources),
-                v_id,
-                ", ".join(set(known_sources) - set(available_sources)),
-            )
+        msg = "number of available sources (%r) less than known sources for %r. missing: %s" % (
+            len(available_sources),
+            v_id,
+            ", ".join(set(known_sources) - set(available_sources)),
         )
         assert len(available_sources) == len(known_sources), msg
 
@@ -75,8 +71,8 @@ def metadata(msid, settings):
     return resp.json()
 
 
-def jpg_href_values(metadata):
-    return [val["jpg_href"] for val in metadata.values() if "jpg_href" in val]
+def jpg_href_values(video_metadata):
+    return [val["jpg_href"] for val in video_metadata.values() if "jpg_href" in val]
 
 
 def has_videos(xml_str):

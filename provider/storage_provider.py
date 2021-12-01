@@ -1,9 +1,7 @@
-from pydoc import locate
+import os
+import re
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from boto.s3.bucket import Bucket
-import re
-import os
 import log
 
 

@@ -2,15 +2,15 @@
 from pprint import pformat
 import os
 import traceback
-import requests
-import log
 import re
+import requests
 from docx.opc.exceptions import PackageNotFoundError
 from digestparser import jats, build, conf
 import provider.utils as utils
 from provider.storage_provider import storage_context
 from provider.download_helper import download_file
 import provider.lax_provider as lax_provider
+import log
 
 
 IDENTITY = "process_%s" % os.getpid()
@@ -35,12 +35,12 @@ class DigestValidateImageException(Exception):
     pass
 
 
-def build_digest(input_file, temp_dir, logger=None, digest_config=None):
+def build_digest(input_file, temp_dir, logger=None, digest_config_object=None):
     "Parse input and build a Digest object"
     if not input_file:
         return False, None
     try:
-        digest = build.build_digest(input_file, temp_dir, digest_config)
+        digest = build.build_digest(input_file, temp_dir, digest_config_object)
     except PackageNotFoundError:
         # bad docx file
         if logger:

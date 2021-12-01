@@ -95,41 +95,41 @@ def attachment(
 
 
 def add_attachment(
-    message,
+    email_message,
     file_name,
     media_type="vnd.openxmlformats-officedocument.wordprocessingml.document",
     charset="utf-8",
 ):
     "add an attachment to the message"
     email_attachment = attachment(file_name, media_type, charset)
-    message.attach(email_attachment)
+    email_message.attach(email_attachment)
 
 
-def add_text(message, text, subtype="plain", charset="utf-8"):
+def add_text(email_message, text, subtype="plain", charset="utf-8"):
     "add text to the message"
-    message.attach(MIMEText(text, subtype, charset))
+    email_message.attach(MIMEText(text, subtype, charset))
 
 
 def message(subject, sender, recipient):
     "create an email message to later attach things to"
-    message = MIMEMultipart()
-    message["Subject"] = subject
-    message["From"] = sender
-    message["To"] = recipient
-    return message
+    email_message = MIMEMultipart()
+    email_message["Subject"] = subject
+    email_message["From"] = sender
+    email_message["To"] = recipient
+    return email_message
 
 
-def ses_send(connection, sender, recipient, message):
+def ses_send(connection, sender, recipient, email_message):
     "send a MIMEMultipart email to the recipient from sender"
     return connection.send_raw_email(
-        message.as_string(), source=sender, destinations=recipient
+        email_message.as_string(), source=sender, destinations=recipient
     )
 
 
-def smtp_send(connection, sender, recipient, message, logger=None):
+def smtp_send(connection, sender, recipient, email_message, logger=None):
     "send a MIMEMultipart email to the recipient from sender by SMTP"
     try:
-        connection.sendmail(sender, recipient, message.as_string())
+        connection.sendmail(sender, recipient, email_message.as_string())
     except smtplib.SMTPSenderRefused:
         if logger:
             logger.error("error in smtp_send: %s ", traceback.format_exc())
@@ -187,8 +187,8 @@ def simple_message(
     email_message = message(subject, sender, recipient)
     add_text(email_message, body, subtype, charset)
     if attachments:
-        for attachment in attachments:
-            add_attachment(email_message, attachment)
+        for attachment_item in attachments:
+            add_attachment(email_message, attachment_item)
     return email_message
 
 

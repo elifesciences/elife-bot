@@ -1,9 +1,9 @@
-import redis
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from boto.exception import S3ResponseError
 from pydoc import locate
 import json
+import redis
 from provider.utils import unicode_encode
 
 
@@ -16,7 +16,7 @@ def get_session(settings, input_data, session_key):
     return session_class(settings, input_data, session_key)
 
 
-class FileSession(object):
+class FileSession:
 
     # TODO : replace with better implementation - e.g. use Redis/Elasticache
 
@@ -48,7 +48,7 @@ class FileSession(object):
         return self.session_key + "__" + key
 
 
-class RedisSession(object):
+class RedisSession:
     def __init__(self, settings, input_data, session_key):
 
         self.input_data = input_data
@@ -75,7 +75,7 @@ class RedisSession(object):
         return value
 
 
-class S3Session(object):
+class S3Session:
     def __init__(self, settings, input_data, session_key):
 
         self.input_data = input_data

@@ -9,7 +9,7 @@ Functions to provide meta data from SWF so code is not duplicated
 """
 
 
-class SWFMeta(object):
+class SWFMeta:
     def __init__(self, settings):
         self.settings = settings
 

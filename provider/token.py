@@ -27,10 +27,10 @@ def starter_message(
     workflow_name,
 ):
     """create a dict for a workflow starter message"""
-    starter_message = OrderedDict()
+    starter_message_dict = OrderedDict()
     workflow_data = build_workflow_data(
         article_id, version, run, expanded_folder, status, update_date, run_type
     )
-    starter_message["workflow_name"] = workflow_name
-    starter_message["workflow_data"] = workflow_data
-    return starter_message
+    starter_message_dict["workflow_name"] = workflow_name
+    starter_message_dict["workflow_data"] = workflow_data
+    return starter_message_dict

@@ -1,7 +1,7 @@
 import os
 import shutil
-import dateutil.parser
 from collections import OrderedDict
+import dateutil.parser
 from elifetools import xmlio
 from provider import utils, lax_provider
 from provider.storage_provider import storage_context

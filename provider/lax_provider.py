@@ -1,11 +1,11 @@
-import requests
+import os
 import time
-from . import article
 import json
+import requests
 from dateutil.parser import parse
 import log
-import os
 from provider import utils
+from . import article
 
 
 identity = "process_%s" % os.getpid()
@@ -244,7 +244,9 @@ def was_ever_poa(article_id, settings):
         return None
 
 
-def published_considering_poa_status(article_id, settings, is_poa, was_ever_poa):
+def published_considering_poa_status(
+    article_id, settings, is_poa, article_was_ever_poa
+):
     """
     Check the lax data for whether an article is published
     considering whether it was or is PoA status
@@ -255,13 +257,13 @@ def published_considering_poa_status(article_id, settings, is_poa, was_ever_poa)
     else:
         poa_status, vor_status = None, None
     # Now a decision can be made
-    if (is_poa is True and was_ever_poa is True) or (
-        is_poa is False and was_ever_poa is False
+    if (is_poa is True and article_was_ever_poa is True) or (
+        is_poa is False and article_was_ever_poa is False
     ):
         # In this case, any version is sufficient
         if poa_status or vor_status:
             return True
-    elif is_poa is False and was_ever_poa is True:
+    elif is_poa is False and article_was_ever_poa is True:
         # In the case of was ever PoA but is not PoA
         #  check there is a VoR version
         if vor_status:

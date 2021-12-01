@@ -18,7 +18,7 @@ Connects to S3, discovers, downloads, and parses files exported by EJP
 """
 
 
-class EJP(object):
+class EJP:
     def __init__(self, settings=None, tmp_dir=None):
         self.settings = settings
         self.tmp_dir = tmp_dir
@@ -307,8 +307,8 @@ class EJP(object):
         # For each file_type, specify a unique file name fragment to filter on
         #  with regular expression search
         fn_fragment = {}
-        fn_fragment["author"] = "ejp_query_tool_query_id_15a\)_Accepted_Paper_Details"
-        fn_fragment["editor"] = "ejp_query_tool_query_id_15b\)_Accepted_Paper_Details"
+        fn_fragment["author"] = r"ejp_query_tool_query_id_15a\)_Accepted_Paper_Details"
+        fn_fragment["editor"] = r"ejp_query_tool_query_id_15b\)_Accepted_Paper_Details"
         fn_fragment["poa_manuscript"] = "ejp_query_tool_query_id_POA_Manuscript"
         fn_fragment["poa_author"] = "ejp_query_tool_query_id_POA_Author"
         fn_fragment["poa_license"] = "ejp_query_tool_query_id_POA_License"

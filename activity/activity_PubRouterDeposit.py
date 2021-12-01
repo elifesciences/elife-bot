@@ -411,7 +411,7 @@ class activity_PubRouterDeposit(Activity):
                 article_id=article.doi_id,
                 settings=self.settings,
                 is_poa=article.is_poa,
-                was_ever_poa=article.was_ever_poa,
+                article_was_ever_poa=article.was_ever_poa,
             )
             if is_published is not True:
                 if self.logger:

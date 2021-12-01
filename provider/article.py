@@ -1,15 +1,10 @@
-import calendar
-import time
 import os
 import re
-import requests
-
 import urllib
-
+import requests
 from boto.s3.connection import S3Connection
-
-import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
+import provider.s3lib as s3lib
 from provider import outbox_provider
 from provider.article_structure import ArticleInfo
 from provider.storage_provider import storage_context
@@ -46,7 +41,7 @@ def create_article(settings, tmp_dir, doi_id=None):
     return article_object
 
 
-class article(object):
+class article:
     def __init__(self, settings=None, tmp_dir=None):
         self.settings = settings
         self.tmp_dir = tmp_dir
@@ -230,12 +225,12 @@ class article(object):
             logger.error(str(err))
             return ""
 
-    def set_related_insight_article(self, article):
+    def set_related_insight_article(self, article_object):
         """
         If this article is type insight, then set the article
         the insight relates to here
         """
-        self.related_insight_article = article
+        self.related_insight_article = article_object
 
     def was_ever_published(self, doi, workflow):
         """

@@ -1,12 +1,13 @@
-import paramiko
 import os
+import paramiko
+
 
 """
 
 """
 
 
-class SFTP(object):
+class SFTP:
     def __init__(self, logger=None):
         paramiko.util.log_to_file("paramiko.log")
         self.logger = logger

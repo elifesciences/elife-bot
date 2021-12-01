@@ -1,4 +1,3 @@
-from google.oauth2 import service_account
 from google.cloud.bigquery import Client
 from google.auth.exceptions import DefaultCredentialsError
 

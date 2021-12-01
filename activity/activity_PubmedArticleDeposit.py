@@ -169,7 +169,7 @@ class activity_PubmedArticleDeposit(Activity):
             article_id=article.manuscript,
             settings=self.settings,
             is_poa=article.is_poa,
-            was_ever_poa=article.was_ever_poa,
+            article_was_ever_poa=article.was_ever_poa,
         )
 
         if not article.version:

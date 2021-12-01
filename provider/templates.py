@@ -11,7 +11,7 @@ Copies and parses templates using jinja2
 """
 
 
-class Templates(object):
+class Templates:
     def __init__(self, settings=None, tmp_dir=None):
         self.settings = settings
         self.tmp_dir = tmp_dir
