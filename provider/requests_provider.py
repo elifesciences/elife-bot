@@ -43,48 +43,69 @@ def post_as_json(url, payload):
     return requests.post(url, json=payload)
 
 
-def post_to_endpoint(url, payload, logger, identifier,
-                     params=None, content_type='application/x-www-form-urlencoded'):
+def post_to_endpoint(
+    url,
+    payload,
+    logger,
+    identifier,
+    params=None,
+    content_type="application/x-www-form-urlencoded",
+):
     """issue the POST"""
-    headers = {'Content-Type': content_type}
+    headers = {"Content-Type": content_type}
     try:
         resp = post_as_data(url, payload, params=params, headers=headers)
     except:
-        logger.exception('Exception in post_to_endpoint')
+        logger.exception("Exception in post_to_endpoint")
         raise
 
     # Check for good HTTP status code
     if resp.status_code != 200:
         response_error_message = (
-            ("Error posting %s to endpoint %s: status_code: %s\nrequest headers: %s" +
-             "\nrequest body: %s\nresponse headers: %s\nresponse: %s") %
-            (identifier, url, resp.status_code, resp.request.headers,
-             resp.request.body, resp.headers, resp.content))
-        full_error_message = (
-            "%s\npayload: %s" %
-            (response_error_message, payload))
+            "Error posting %s to endpoint %s: status_code: %s\nrequest headers: %s"
+            + "\nrequest body: %s\nresponse headers: %s\nresponse: %s"
+        ) % (
+            identifier,
+            url,
+            resp.status_code,
+            resp.request.headers,
+            resp.request.body,
+            resp.headers,
+            resp.content,
+        )
+        full_error_message = "%s\npayload: %s" % (response_error_message, payload)
         logger.error(full_error_message)
         raise HTTPError(response_error_message)
     logger.info(
-        ("Success posting %s to endpoint %s: status_code: %s\nrequest headers: %s" +
-         "\nrequest body: %s\nresponse headers: %s\nresponse: %s\npayload: %s") %
-        (identifier, url, resp.status_code, resp.request.headers,
-         resp.request.body, resp.headers, resp.content, payload))
+        (
+            "Success posting %s to endpoint %s: status_code: %s\nrequest headers: %s"
+            + "\nrequest body: %s\nresponse headers: %s\nresponse: %s\npayload: %s"
+        )
+        % (
+            identifier,
+            url,
+            resp.status_code,
+            resp.request.headers,
+            resp.request.body,
+            resp.headers,
+            resp.content,
+            payload,
+        )
+    )
 
 
 def success_email_subject_doi(identity, doi):
     """email subject for a success email"""
-    return u'{identity}JATS posted for article {doi}'.format(
-        identity=identity,
-        doi=str(doi))
+    return u"{identity}JATS posted for article {doi}".format(
+        identity=identity, doi=str(doi)
+    )
 
 
 def success_email_subject_msid_author(identity, msid, author):
     """email subject for a success email with msid and author values"""
-    return u'{identity}JATS posted for article {msid:0>5}, author {author}'.format(
-        identity=identity,
-        msid=str(msid),
-        author=author)
+    return u"{identity}JATS posted for article {msid:0>5}, author {author}".format(
+        identity=identity, msid=str(msid), author=author
+    )
 
 
 def success_email_body_content(doi, jats_content):
@@ -96,17 +117,18 @@ def success_email_body_content(doi, jats_content):
 
 def error_email_subject_doi(identity, doi):
     """email subject for an error email"""
-    return u'Error in {identity} JATS post for article {doi}'.format(
-        identity=identity,
-        doi=str(doi))
+    return u"Error in {identity} JATS post for article {doi}".format(
+        identity=identity, doi=str(doi)
+    )
 
 
 def error_email_subject_msid_author(identity, msid, author):
     """email subject for an error email with msid and author values"""
-    return u'Error in {identity} JATS post for article {msid:0>5}, author {author}'.format(
-        identity=identity,
-        msid=str(msid),
-        author=author)
+    return (
+        u"Error in {identity} JATS post for article {msid:0>5}, author {author}".format(
+            identity=identity, msid=str(msid), author=author
+        )
+    )
 
 
 def error_email_body_content(doi, jats_content, error_messages):
@@ -114,7 +136,9 @@ def error_email_body_content(doi, jats_content, error_messages):
     content = ""
     if error_messages:
         content += str(error_messages)
-        content += "\n\nMore details about the error may be found in the worker.log file\n\n"
+        content += (
+            "\n\nMore details about the error may be found in the worker.log file\n\n"
+        )
     if doi:
         content += "Article DOI: %s\n\n" % doi
     content += "JATS content: %s\n\n" % jats_content

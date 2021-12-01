@@ -5,7 +5,7 @@ from functional import seq
 from provider.utils import unicode_encode
 
 
-'''
+"""
 glencoe_resp = {
     "media1": {
         "source_href": "https://static-movie-usa.glencoesoftware.com/source/10.7554/659/0f10378e095dde7aaf579af504c4bfdc6fb86550/elife-00569-media1.wmv",
@@ -27,24 +27,33 @@ glencoe_resp = {
         "size": 20452423
     }
 }
-'''
+"""
+
 
 def validate_sources(gc_data):
 
     sources = {
-        'mp4': 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
-        'webm': 'video/webm; codecs="vp8.0, vorbis"',
-        'ogv': 'video/ogg; codecs="theora, vorbis"',
+        "mp4": 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
+        "webm": 'video/webm; codecs="vp8.0, vorbis"',
+        "ogv": 'video/ogg; codecs="theora, vorbis"',
     }
     known_sources = list(sources.keys())
 
     for v_id, v_data in list(gc_data.items()):
         # we can't guarantee all of the sources will always be present
-        available_sources = [mtype for mtype in known_sources if mtype + "_href" in v_data]
+        available_sources = [
+            mtype for mtype in known_sources if mtype + "_href" in v_data
+        ]
 
         # fail if we have partial data
-        msg = "number of available sources (%r) less than known sources for %r. missing: %s" % \
-          (len(available_sources), v_id, ", ".join(set(known_sources) - set(available_sources)))
+        msg = (
+            "number of available sources (%r) less than known sources for %r. missing: %s"
+            % (
+                len(available_sources),
+                v_id,
+                ", ".join(set(known_sources) - set(available_sources)),
+            )
+        )
         assert len(available_sources) == len(known_sources), msg
 
 
@@ -56,13 +65,19 @@ def metadata(msid, settings):
     resp = requests.get(url)
 
     assert resp.status_code != 404, "article has no videos - url requested: %s" % url
-    assert resp.status_code == 200, "unhandled status code from Glencoe: %s - url requested: %s" % \
-                                    (resp.status_code, url)
-    
+    assert (
+        resp.status_code == 200
+    ), "unhandled status code from Glencoe: %s - url requested: %s" % (
+        resp.status_code,
+        url,
+    )
+
     return resp.json()
 
+
 def jpg_href_values(metadata):
-    return [val['jpg_href'] for val in metadata.values() if 'jpg_href' in val]
+    return [val["jpg_href"] for val in metadata.values() if "jpg_href" in val]
+
 
 def has_videos(xml_str):
     if re.search(r'<media[^>]*mimetype="video".*?>', unicode_encode(xml_str)):
@@ -97,6 +112,7 @@ def check_msid(msid):
         return pad_msid(msid)[-5:]
     return pad_msid(msid)
 
+
 def force_article_id(filename, article_id):
     "In case of testing, we have generated article ids pointing to real article ids on Glencoe. This function forces the generated article id on a file coming from outside."
     padded_article_id = check_msid(article_id)
@@ -112,5 +128,6 @@ def main(msid):
     except AssertionError as err:
         return False
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(0) if main(sys.argv[1]) else sys.exit(1)

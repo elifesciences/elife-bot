@@ -60,7 +60,9 @@ def lax_auth_key(settings, auth=False):
 
 def article_json(article_id, settings, auth=False):
     "get json for the latest article version from lax"
-    url = settings.lax_article_endpoint.replace("{article_id}", utils.pad_msid(article_id))
+    url = settings.lax_article_endpoint.replace(
+        "{article_id}", utils.pad_msid(article_id)
+    )
     return lax_request(
         url, article_id, settings.verify_ssl, None, lax_auth_key(settings, auth)
     )
@@ -68,7 +70,9 @@ def article_json(article_id, settings, auth=False):
 
 def article_versions(article_id, settings, auth=False):
     "get json for article versions from lax"
-    url = settings.lax_article_versions.replace("{article_id}", utils.pad_msid(article_id))
+    url = settings.lax_article_versions.replace(
+        "{article_id}", utils.pad_msid(article_id)
+    )
     headers = {}
     if (
         hasattr(settings, "lax_article_versions_accept_header")
@@ -87,7 +91,9 @@ def article_versions(article_id, settings, auth=False):
 
 def article_related(article_id, settings, auth=False):
     "get json for related article data from lax"
-    url = settings.lax_article_related.replace("{article_id}", utils.pad_msid(article_id))
+    url = settings.lax_article_related.replace(
+        "{article_id}", utils.pad_msid(article_id)
+    )
     return lax_request(
         url, article_id, settings.verify_ssl, None, lax_auth_key(settings, auth)
     )

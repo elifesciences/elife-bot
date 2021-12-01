@@ -17,8 +17,8 @@ EJP data provider
 Connects to S3, discovers, downloads, and parses files exported by EJP
 """
 
-class EJP(object):
 
+class EJP(object):
     def __init__(self, settings=None, tmp_dir=None):
         self.settings = settings
         self.tmp_dir = tmp_dir
@@ -42,7 +42,9 @@ class EJP(object):
         """
         Connect to S3 using the settings
         """
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
         self.s3_conn = s3_conn
         return self.s3_conn
 
@@ -112,10 +114,12 @@ class EJP(object):
 
         # open the file and parse it
         if sys.version_info[0] < 3:
-            handle = open(document, 'rb')
+            handle = open(document, "rb")
         else:
             # https://docs.python.org/3/library/functions.html#open
-            handle = io.open(document, 'r', newline='', encoding='utf-8', errors='surrogateescape')
+            handle = io.open(
+                document, "r", newline="", encoding="utf-8", errors="surrogateescape"
+            )
         with handle as csvfile:
             filereader = csv.reader(csvfile)
             for row in filereader:
@@ -148,11 +152,15 @@ class EJP(object):
             s3_key_name = self.find_latest_s3_file_name(file_type="author")
             s3_key = self.get_s3key(s3_key_name)
             contents = s3_key.get_contents_as_string()
-            document = self.write_content_to_file(self.author_default_filename, contents)
+            document = self.write_content_to_file(
+                self.author_default_filename, contents
+            )
         else:
             # copy the document to the tmp_dir if provided
-            with open(local_document, 'rb') as fp:
-                document = self.write_content_to_file(self.author_default_filename, fp.read())
+            with open(local_document, "rb") as fp:
+                document = self.write_content_to_file(
+                    self.author_default_filename, fp.read()
+                )
 
         # Parse the author file
         (column_headings, author_rows) = self.parse_author_file(document)
@@ -169,7 +177,9 @@ class EJP(object):
 
                     author_type_cde = fields[4]
                     dual_corr_author_ind = fields[5]
-                    is_corr = self.is_corresponding_author(author_type_cde, dual_corr_author_ind)
+                    is_corr = self.is_corresponding_author(
+                        author_type_cde, dual_corr_author_ind
+                    )
 
                     if corresponding is True:
                         # If not a corresponding author, drop it
@@ -222,10 +232,12 @@ class EJP(object):
 
         # open the file and parse it
         if sys.version_info[0] < 3:
-            handle = open(document, 'rb')
+            handle = open(document, "rb")
         else:
             # https://docs.python.org/3/library/functions.html#open
-            handle = io.open(document, 'r', newline='', encoding='utf-8', errors='surrogateescape')
+            handle = io.open(
+                document, "r", newline="", encoding="utf-8", errors="surrogateescape"
+            )
         with handle as csvfile:
             filereader = csv.reader(csvfile)
             for row in filereader:
@@ -252,11 +264,15 @@ class EJP(object):
             s3_key_name = self.find_latest_s3_file_name(file_type="editor")
             s3_key = self.get_s3key(s3_key_name)
             contents = s3_key.get_contents_as_string()
-            document = self.write_content_to_file(self.editor_default_filename, contents)
+            document = self.write_content_to_file(
+                self.editor_default_filename, contents
+            )
         else:
             # copy the document to the tmp_dir if provided
-            with open(local_document, 'rb') as fp:
-                document = self.write_content_to_file(self.editor_default_filename, fp.read())
+            with open(local_document, "rb") as fp:
+                document = self.write_content_to_file(
+                    self.editor_default_filename, fp.read()
+                )
 
         # Parse the file
         (column_headings, editor_rows) = self.parse_editor_file(document)
@@ -298,7 +314,9 @@ class EJP(object):
         fn_fragment["poa_license"] = "ejp_query_tool_query_id_POA_License"
         fn_fragment["poa_subject_area"] = "ejp_query_tool_query_id_POA_Subject_Area"
         fn_fragment["poa_received"] = "ejp_query_tool_query_id_POA_Received"
-        fn_fragment["poa_research_organism"] = "ejp_query_tool_query_id_POA_Research_Organism"
+        fn_fragment[
+            "poa_research_organism"
+        ] = "ejp_query_tool_query_id_POA_Research_Organism"
         fn_fragment["poa_abstract"] = "ejp_query_tool_query_id_POA_Abstract"
         fn_fragment["poa_title"] = "ejp_query_tool_query_id_POA_Title"
         fn_fragment["poa_keywords"] = "ejp_query_tool_query_id_POA_Keywords"
@@ -313,8 +331,9 @@ class EJP(object):
         if not s3_key_name:
             # find s3_key_name by checking for the latest modified date on the s3 key
             s3_key_name = self.latest_s3_file_name_by_modified_date(
-                fn_fragment, file_type, file_list)
-        
+                fn_fragment, file_type, file_list
+            )
+
         return s3_key_name
 
     def latest_s3_file_name_by_convention(self, fn_fragment, file_type):
@@ -340,7 +359,9 @@ class EJP(object):
                 if re.search(pattern, s3_file["name"]) is not None:
                     good_file_list.append(s3_file)
             # Second, sort by last_updated_timestamp
-            s = sorted(good_file_list, key=itemgetter('last_modified_timestamp'), reverse=True)
+            s = sorted(
+                good_file_list, key=itemgetter("last_modified_timestamp"), reverse=True
+            )
 
             if len(s) > 0:
                 # We still have a list, take the name of the first one
@@ -361,7 +382,7 @@ class EJP(object):
         # List bucket contents
         (keys, folders) = self.get_keys_and_folders(bucket)
 
-        attr_list = ['name', 'last_modified']
+        attr_list = ["name", "last_modified"]
         file_list = []
 
         for key in keys:
@@ -376,12 +397,14 @@ class EJP(object):
                     item_attrs[attr_name] = string_value
 
                 try:
-                    if item_attrs['last_modified']:
+                    if item_attrs["last_modified"]:
                         # Parse last_modified into a timestamp for easy computations
                         date_format = utils.DATE_TIME_FORMAT
-                        date_str = time.strptime(item_attrs['last_modified'], date_format)
+                        date_str = time.strptime(
+                            item_attrs["last_modified"], date_format
+                        )
                         timestamp = calendar.timegm(date_str)
-                        item_attrs['last_modified_timestamp'] = timestamp
+                        item_attrs["last_modified_timestamp"] = timestamp
                 except KeyError:
                     pass
 
@@ -395,7 +418,7 @@ class EJP(object):
 
         return file_list
 
-    def get_keys_and_folders(self, bucket, prefix=None, delimiter='/', headers=None):
+    def get_keys_and_folders(self, bucket, prefix=None, delimiter="/", headers=None):
         # Get "keys" and "folders" from the bucket, with optional
         # prefix for the "folder" of interest
         # default delimiter is '/'
@@ -412,10 +435,10 @@ class EJP(object):
             if isinstance(item, boto.s3.prefix.Prefix):
                 # Can loop through each prefix and search for objects
                 folders.append(item)
-                #print 'Prefix: ' + item.name
+                # print 'Prefix: ' + item.name
             elif isinstance(item, boto.s3.key.Key):
                 keys.append(item)
-                #print 'Key: ' + item.name
+                # print 'Key: ' + item.name
 
         return keys, folders
 

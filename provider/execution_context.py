@@ -9,10 +9,10 @@ from provider.utils import unicode_encode
 
 def get_session(settings, input_data, session_key):
     settings_session_class = "RedisSession"  # Default
-    if hasattr(settings, 'session_class'):
+    if hasattr(settings, "session_class"):
         settings_session_class = settings.session_class
 
-    session_class = locate('provider.execution_context.' + settings_session_class)
+    session_class = locate("provider.execution_context." + settings_session_class)
     return session_class(settings, input_data, session_key)
 
 
@@ -29,14 +29,14 @@ class FileSession(object):
     def store_value(self, key, value):
 
         value = json.dumps(value)
-        f = open(self.settings.workflow_context_path + self.get_full_key(key), 'w')
+        f = open(self.settings.workflow_context_path + self.get_full_key(key), "w")
         f.write(value)
 
     def get_value(self, key):
 
         value = None
         try:
-            f = open(self.settings.workflow_context_path + self.get_full_key(key), 'r')
+            f = open(self.settings.workflow_context_path + self.get_full_key(key), "r")
             value = json.loads(f.readline())
         except:
             if self.input_data is not None and key in self.input_data:
@@ -45,17 +45,18 @@ class FileSession(object):
 
     def get_full_key(self, key):
 
-        return self.session_key + '__' + key
+        return self.session_key + "__" + key
 
 
 class RedisSession(object):
-
     def __init__(self, settings, input_data, session_key):
 
         self.input_data = input_data
         self.expire_key = settings.redis_expire_key
         self.session_key = session_key
-        self.r = redis.StrictRedis(host=settings.redis_host, port=settings.redis_port, db=settings.redis_db)
+        self.r = redis.StrictRedis(
+            host=settings.redis_host, port=settings.redis_port, db=settings.redis_db
+        )
 
     def store_value(self, key, value):
 
@@ -75,11 +76,12 @@ class RedisSession(object):
 
 
 class S3Session(object):
-
     def __init__(self, settings, input_data, session_key):
 
         self.input_data = input_data
-        self.conn = S3Connection(settings.aws_access_key_id, settings.aws_secret_access_key)
+        self.conn = S3Connection(
+            settings.aws_access_key_id, settings.aws_secret_access_key
+        )
         self.bucket = self.conn.get_bucket(settings.s3_session_bucket)
         self.session_key = session_key
 
@@ -104,4 +106,4 @@ class S3Session(object):
         return value
 
     def get_full_key(self, key):
-        return self.session_key + '/' + key
+        return self.session_key + "/" + key

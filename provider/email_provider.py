@@ -17,7 +17,8 @@ def ses_connect(settings):
     return boto.ses.connect_to_region(
         settings.ses_region,
         aws_access_key_id=settings.aws_access_key_id,
-        aws_secret_access_key=settings.aws_secret_access_key)
+        aws_secret_access_key=settings.aws_secret_access_key,
+    )
 
 
 def smtp_setting(settings, name):
@@ -29,19 +30,22 @@ def smtp_setting(settings, name):
 
 def smtp_connect(settings, logger=None):
     "connect to SMTP"
-    smtp_host = smtp_setting(settings, 'smtp_host')
-    smtp_port = smtp_setting(settings, 'smtp_port')
-    smtp_starttls = smtp_setting(settings, 'smtp_starttls')
-    smtp_ssl = smtp_setting(settings, 'smtp_ssl')
-    smtp_username = smtp_setting(settings, 'smtp_username')
-    smtp_password = smtp_setting(settings, 'smtp_password')
+    smtp_host = smtp_setting(settings, "smtp_host")
+    smtp_port = smtp_setting(settings, "smtp_port")
+    smtp_starttls = smtp_setting(settings, "smtp_starttls")
+    smtp_ssl = smtp_setting(settings, "smtp_ssl")
+    smtp_username = smtp_setting(settings, "smtp_username")
+    smtp_password = smtp_setting(settings, "smtp_password")
     try:
-        connection = (smtplib.SMTP_SSL(smtp_host, smtp_port)
-                      if smtp_ssl else smtplib.SMTP(smtp_host, smtp_port))
+        connection = (
+            smtplib.SMTP_SSL(smtp_host, smtp_port)
+            if smtp_ssl
+            else smtplib.SMTP(smtp_host, smtp_port)
+        )
     except:
         connection = None
         if logger:
-            logger.error('error in smtp_connect: %s ', traceback.format_exc())
+            logger.error("error in smtp_connect: %s ", traceback.format_exc())
     if smtp_starttls:
         connection.starttls()
     if smtp_username and smtp_password:
@@ -68,33 +72,40 @@ def encode_filename(file_name):
     """
     if file_name is None:
         return file_name
-    return unicode_encode(bytes_decode(
-        unicodedata.ucd_3_2_0.normalize('NFC', bytes_decode(file_name))))
+    return unicode_encode(
+        bytes_decode(unicodedata.ucd_3_2_0.normalize("NFC", bytes_decode(file_name)))
+    )
 
 
-def attachment(file_name,
-               media_type='vnd.openxmlformats-officedocument.wordprocessingml.document',
-               charset='utf-8'):
+def attachment(
+    file_name,
+    media_type="vnd.openxmlformats-officedocument.wordprocessingml.document",
+    charset="utf-8",
+):
     "create an attachment from the file"
     attachment_name = encode_filename(os.path.split(file_name)[-1])
-    with open(file_name, 'rb') as open_file:
+    with open(file_name, "rb") as open_file:
         email_attachment = MIMEApplication(
-            open_file.read(), media_type, name=(charset, '', attachment_name))
+            open_file.read(), media_type, name=(charset, "", attachment_name)
+        )
     email_attachment.add_header(
-        'Content-Disposition', 'attachment',
-        filename=(charset, '', attachment_name))
+        "Content-Disposition", "attachment", filename=(charset, "", attachment_name)
+    )
     return email_attachment
 
 
-def add_attachment(message, file_name,
-                   media_type='vnd.openxmlformats-officedocument.wordprocessingml.document',
-                   charset='utf-8'):
+def add_attachment(
+    message,
+    file_name,
+    media_type="vnd.openxmlformats-officedocument.wordprocessingml.document",
+    charset="utf-8",
+):
     "add an attachment to the message"
     email_attachment = attachment(file_name, media_type, charset)
     message.attach(email_attachment)
 
 
-def add_text(message, text, subtype='plain', charset='utf-8'):
+def add_text(message, text, subtype="plain", charset="utf-8"):
     "add text to the message"
     message.attach(MIMEText(text, subtype, charset))
 
@@ -102,15 +113,17 @@ def add_text(message, text, subtype='plain', charset='utf-8'):
 def message(subject, sender, recipient):
     "create an email message to later attach things to"
     message = MIMEMultipart()
-    message['Subject'] = subject
-    message['From'] = sender
-    message['To'] = recipient
+    message["Subject"] = subject
+    message["From"] = sender
+    message["To"] = recipient
     return message
 
 
 def ses_send(connection, sender, recipient, message):
     "send a MIMEMultipart email to the recipient from sender"
-    return connection.send_raw_email(message.as_string(), source=sender, destinations=recipient)
+    return connection.send_raw_email(
+        message.as_string(), source=sender, destinations=recipient
+    )
 
 
 def smtp_send(connection, sender, recipient, message, logger=None):
@@ -119,15 +132,15 @@ def smtp_send(connection, sender, recipient, message, logger=None):
         connection.sendmail(sender, recipient, message.as_string())
     except smtplib.SMTPSenderRefused:
         if logger:
-            logger.error('error in smtp_send: %s ', traceback.format_exc())
+            logger.error("error in smtp_send: %s ", traceback.format_exc())
         return False
     return True
 
 
 def smtp_send_message(connection, email_message, logger=None, bcc=None):
     """send the email message using the connection"""
-    sender = email_message.get('From')
-    recipient = email_message.get('To')
+    sender = email_message.get("From")
+    recipient = email_message.get("To")
     # if there is a BCC address, add them to the recipient list
     if bcc:
         if isinstance(recipient, str):
@@ -149,8 +162,16 @@ def smtp_send_messages(settings, messages, logger=None, bcc=None):
     return details
 
 
-def simple_message(sender, recipient, subject, body, subtype='plain',
-                   charset='utf-8', attachments=None, logger=None):
+def simple_message(
+    sender,
+    recipient,
+    subject,
+    body,
+    subtype="plain",
+    charset="utf-8",
+    attachments=None,
+    logger=None,
+):
     """set values of a message
 
     :param sender: email address of the sender
@@ -171,8 +192,16 @@ def simple_message(sender, recipient, subject, body, subtype='plain',
     return email_message
 
 
-def simple_messages(sender, recipients, subject, body, subtype='plain',
-                    charset='utf-8', attachments=None, logger=None):
+def simple_messages(
+    sender,
+    recipients,
+    subject,
+    body,
+    subtype="plain",
+    charset="utf-8",
+    attachments=None,
+    logger=None,
+):
     """list of simple messages for a list of recipients
 
     :param sender: email address of the sender
@@ -187,9 +216,18 @@ def simple_messages(sender, recipients, subject, body, subtype='plain',
     """
     messages = []
     for recipient in recipients:
-        messages.append(simple_message(
-            sender, recipient, subject, body, subtype=subtype,
-            charset=charset, attachments=attachments, logger=logger))
+        messages.append(
+            simple_message(
+                sender,
+                recipient,
+                subject,
+                body,
+                subtype=subtype,
+                charset=charset,
+                attachments=attachments,
+                logger=logger,
+            )
+        )
     return messages
 
 
@@ -229,7 +267,10 @@ def valid_recipient_dict(recipient):
         return False
     if recipient.get("e_mail") is None:
         return False
-    if recipient.get("e_mail") is not None and str(recipient.get("e_mail")).strip() == "":
+    if (
+        recipient.get("e_mail") is not None
+        and str(recipient.get("e_mail")).strip() == ""
+    ):
         return False
     return True
 
@@ -242,7 +283,7 @@ def valid_recipient_object(recipient):
     """
     if recipient is None:
         return False
-    if not hasattr(recipient, 'e_mail'):
+    if not hasattr(recipient, "e_mail"):
         return False
     if recipient.e_mail is None:
         return False
@@ -254,25 +295,28 @@ def valid_recipient_object(recipient):
 def get_admin_email_body_foot(activity_id, workflow_id, datetime_string, domain):
     """Format the footer of the body of the email"""
     string_template = None
-    with open('template/admin_email_body_foot.txt', 'r') as open_file:
+    with open("template/admin_email_body_foot.txt", "r") as open_file:
         string_template = Template(open_file.read())
     if string_template:
         return string_template.safe_substitute(
-            activity_id=activity_id, workflow_id=workflow_id, datetime_string=datetime_string,
-            domain=domain)
-    return ''
+            activity_id=activity_id,
+            workflow_id=workflow_id,
+            datetime_string=datetime_string,
+            domain=domain,
+        )
+    return ""
 
 
-def simple_email_body(datetime_string, body_content=''):
+def simple_email_body(datetime_string, body_content=""):
     """body of a simple success or error email"""
     string_template = None
-    with open('template/simple_email_body.txt', 'r') as open_file:
+    with open("template/simple_email_body.txt", "r") as open_file:
         string_template = Template(open_file.read())
     if string_template:
         return string_template.safe_substitute(
-            body_content=body_content,
-            datetime_string=datetime_string)
-    return ''
+            body_content=body_content, datetime_string=datetime_string
+        )
+    return ""
 
 
 def get_email_subject(

@@ -3,17 +3,20 @@ from google.cloud.bigquery import Client
 from google.auth.exceptions import DefaultCredentialsError
 
 
-BIG_QUERY_VIEW_NAME = 'elife-data-pipeline.prod.mv_Production_Manuscript_Crossref_Deposit'
+BIG_QUERY_VIEW_NAME = (
+    "elife-data-pipeline.prod.mv_Production_Manuscript_Crossref_Deposit"
+)
 
 
-class Manuscript():
+class Manuscript:
     """manuscript data populated from BigQuery row"""
+
     def __init__(self, row=None):
         self.attr_name_map = {
-            'Manuscript_ID': 'manuscript_id',
-            'DOI': 'doi',
-            'Review_Comment_UTC_Timestamp': 'decision_letter_datetime',
-            'Author_Response_UTC_Timestamp': 'author_response_datetime'
+            "Manuscript_ID": "manuscript_id",
+            "DOI": "doi",
+            "Review_Comment_UTC_Timestamp": "decision_letter_datetime",
+            "Author_Response_UTC_Timestamp": "author_response_datetime",
         }
         self.manuscript_id = None
         self.doi = None
@@ -30,23 +33,22 @@ class Manuscript():
         for row_key, attr_name in list(self.attr_name_map.items()):
             setattr(self, attr_name, getattr(row, row_key, None))
         # populate the reviewers
-        if hasattr(row, 'Reviewers_And_Editors'):
+        if hasattr(row, "Reviewers_And_Editors"):
             for row_dict in row.Reviewers_And_Editors:
                 reviewer = Reviewer(row_dict)
                 self.reviewers.append(reviewer)
 
 
-class Reviewer():
-
+class Reviewer:
     def __init__(self, row_dict=None):
         self.attr_name_map = {
-            'Title': 'title',
-            'Last_Name': 'last_name',
-            'Middle_Name': 'middle_name',
-            'Role': 'role',
-            'ORCID': 'orcid',
-            'First_Name': 'first_name',
-            'Person_ID': 'person_id'
+            "Title": "title",
+            "Last_Name": "last_name",
+            "Middle_Name": "middle_name",
+            "Role": "role",
+            "ORCID": "orcid",
+            "First_Name": "first_name",
+            "Person_ID": "person_id",
         }
         self.title = None
         self.last_name = None
@@ -77,13 +79,9 @@ def get_client(settings, logger):
 
 
 def article_query(doi):
-    return (
-        'SELECT * '
-        'FROM `{view_name}` '
-        'WHERE DOI = "{doi}" ').format(
-            view_name=BIG_QUERY_VIEW_NAME,
-            doi=doi
-        )
+    return ("SELECT * " "FROM `{view_name}` " 'WHERE DOI = "{doi}" ').format(
+        view_name=BIG_QUERY_VIEW_NAME, doi=doi
+    )
 
 
 def article_data(client, doi):
@@ -93,15 +91,15 @@ def article_data(client, doi):
 
 
 def date_to_string(datetime_date):
-    return datetime_date.strftime('%Y-%m-%d')
+    return datetime_date.strftime("%Y-%m-%d")
 
 
 def get_review_date(manuscript_object, article_type):
     """get date for a peer review sub article"""
-    if article_type in ['article-commentary', 'decision-letter', 'editor-report']:
+    if article_type in ["article-commentary", "decision-letter", "editor-report"]:
         if manuscript_object.decision_letter_datetime:
             return date_to_string(manuscript_object.decision_letter_datetime)
-    elif article_type == 'reply':
+    elif article_type == "reply":
         if manuscript_object.author_response_datetime:
             return date_to_string(manuscript_object.author_response_datetime)
         elif manuscript_object.decision_letter_datetime:

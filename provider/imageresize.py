@@ -10,16 +10,16 @@ def resize(format, filep, info, logger):
     try:
 
         with Image(file=filep, resolution=96) as tiff:
-            image_format = format.get('format')
+            image_format = format.get("format")
             if image_format is not None:
                 image = tiff.convert(image_format)
             else:
                 image = tiff
 
-            target_height = format.get('height')
-            target_width = format.get('width')
+            target_height = format.get("height")
+            target_width = format.get("width")
 
-            target_resolution = format.get('resolution')
+            target_resolution = format.get("resolution")
             if target_resolution is not None:
                 image.resolution = (target_resolution, target_resolution)
 
@@ -50,14 +50,14 @@ def resize(format, filep, info, logger):
         raise RuntimeError("%s (%s)" % (message, str(e)))
 
     filename = info.filename
-    if format.get('prefix') is not None:
-        filename = format.get('prefix') + filename
-    if format.get('suffix') is not None:
-        filename = filename + format.get('suffix')
-    if format.get('extension') is not None:
-        filename = filename + "." + format.get('extension')
-    elif format.get('format') is not None:
-        filename = filename + "." + format['format']
+    if format.get("prefix") is not None:
+        filename = format.get("prefix") + filename
+    if format.get("suffix") is not None:
+        filename = filename + format.get("suffix")
+    if format.get("extension") is not None:
+        filename = filename + "." + format.get("extension")
+    elif format.get("format") is not None:
+        filename = filename + "." + format["format"]
     else:
-        filename += '.tiff'
+        filename += ".tiff"
     return filename, image_buffer

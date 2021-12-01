@@ -2,7 +2,7 @@ import re
 import datetime
 
 
-class ArticleInfo():
+class ArticleInfo:
     """
     Determine useful information about an article file from its filename
     see https://github.com/elifesciences/ppp-project/blob/master/file_naming_spec.md
@@ -37,11 +37,14 @@ class ArticleInfo():
         # (-<supplementary file><supp-id>)|(-v<version>).<ext>`
         # including minimum required info of f-id, status and ext.
 
-        (self.filename, self.extension) = full_filename.rsplit('.', 1)
-        parts = self.filename.split('-')
+        (self.filename, self.extension) = full_filename.rsplit(".", 1)
+        parts = self.filename.split("-")
 
-        match = re.match(r'.*?-[a-zA-Z0-9]+?-(poa|vor)(-*?(v|r)[0-9]+?)?(-([0-9]+))?\.zip',
-                         self.full_filename, re.IGNORECASE)
+        match = re.match(
+            r".*?-[a-zA-Z0-9]+?-(poa|vor)(-*?(v|r)[0-9]+?)?(-([0-9]+))?\.zip",
+            self.full_filename,
+            re.IGNORECASE,
+        )
         first_other_index = 2
         if match is not None:
             self.status = match.group(1)
@@ -60,66 +63,68 @@ class ArticleInfo():
         self.article_id = parts[1]
         last_part_index = len(parts) - 1
         last_part = parts[last_part_index]
-        if last_part.startswith('v') and not last_part.startswith('video'):
+        if last_part.startswith("v") and not last_part.startswith("video"):
             self.versioned = True
             self.version = last_part[1:]
             last_part_index -= 1
         else:
             self.versioned = False
             self.version = None
-        self.extra_info = parts[first_other_index:last_part_index + 1]
+        self.extra_info = parts[first_other_index : last_part_index + 1]
 
-        self.file_type = 'Other'  # default type
+        self.file_type = "Other"  # default type
         if self.is_article_zip:
             self.file_type = "ArticleZip"
-        elif ((len(parts) == 2 or (len(parts) == 3 and not self.extra_info))
-              and self.extension == 'xml'):
-            self.file_type = 'ArticleXML'
+        elif (
+            len(parts) == 2 or (len(parts) == 3 and not self.extra_info)
+        ) and self.extension == "xml":
+            self.file_type = "ArticleXML"
         elif self.extra_info:
             # extra file parts
             parent_name = self.extra_info[0]
-            child_name = ''
+            child_name = ""
             if len(self.extra_info) > 1:
                 child_name = self.extra_info[1]
             final_name = self.extra_info[-1]
             # determine the file_type based on the extra file parts
-            if parent_name.startswith('resp') and final_name.startswith('fig'):
+            if parent_name.startswith("resp") and final_name.startswith("fig"):
                 self.file_type = "Figure"
-            elif parent_name.startswith('sa') and final_name.startswith('fig'):
+            elif parent_name.startswith("sa") and final_name.startswith("fig"):
                 self.file_type = "Figure"
-            elif parent_name.startswith('app') and final_name.startswith('fig'):
+            elif parent_name.startswith("app") and final_name.startswith("fig"):
                 self.file_type = "Figure"
-            elif parent_name.startswith('box') and final_name.startswith('fig'):
+            elif parent_name.startswith("box") and final_name.startswith("fig"):
                 self.file_type = "Figure"
-            elif parent_name.startswith('chem') and final_name.startswith('fig'):
+            elif parent_name.startswith("chem") and final_name.startswith("fig"):
                 self.file_type = "Figure"
-            elif parent_name.startswith('scheme') and final_name.startswith('fig'):
+            elif parent_name.startswith("scheme") and final_name.startswith("fig"):
                 self.file_type = "Figure"
-            elif final_name.startswith('video') or final_name.startswith('code'):
-                self.file_type = 'Other'
-            elif parent_name.startswith('figures'):
-                self.file_type = 'FigurePDF'
-            elif ((parent_name.startswith('fig') or parent_name.startswith('figsupp'))
-                  and not parent_name.startswith('figures')):
+            elif final_name.startswith("video") or final_name.startswith("code"):
+                self.file_type = "Other"
+            elif parent_name.startswith("figures"):
+                self.file_type = "FigurePDF"
+            elif (
+                parent_name.startswith("fig") or parent_name.startswith("figsupp")
+            ) and not parent_name.startswith("figures"):
                 self.file_type = "Figure"
-            elif parent_name.startswith('inf'):
+            elif parent_name.startswith("inf"):
                 self.file_type = "Inline"
 
     def get_update_date_from_zip_filename(self):
         filename = self.full_filename
-        match = re.search(r'.*?-.*?-.*?-.*?-(.*?)\..*', filename)
+        match = re.search(r".*?-.*?-.*?-.*?-(.*?)\..*", filename)
         if match is None:
             return None
         try:
             raw_update_date = match.group(1)
             updated_date = datetime.datetime.strptime(raw_update_date, "%Y%m%d%H%M%S")
-            return updated_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+            return updated_date.strftime("%Y-%m-%dT%H:%M:%SZ")
         except:
             return None
 
     def get_version_from_zip_filename(self):
         filename = self.full_filename
-        match = re.search(r'-v([0-9]+?)[\.|-]', filename)
+        match = re.search(r"-v([0-9]+?)[\.|-]", filename)
         if match is None:
             return None
         return match.group(1)
@@ -146,15 +151,18 @@ def has_extensions(filename, extensions):
 
 
 def get_original_files(files):
-    regex = re.compile(r'-v([0-9]+)[\.]')
+    regex = re.compile(r"-v([0-9]+)[\.]")
     file_list = list(filter(regex.search, files))
     return file_list
 
 
 def get_figures_for_iiif(files):
     # should only be tif
-    originals_figures_tif = [f for f in get_original_files(files)
-                             if article_figure(f) and has_extensions(f, ['tif'])]
+    originals_figures_tif = [
+        f
+        for f in get_original_files(files)
+        if article_figure(f) and has_extensions(f, ["tif"])
+    ]
     file_list = originals_figures_tif + get_media_file_images(files)
     return file_list
 
@@ -162,12 +170,15 @@ def get_figures_for_iiif(files):
 def get_inline_figures_for_iiif(files):
     # should only be tif
     "return a list of all inline figure files"
-    return [f for f in get_original_files(files)
-            if inline_figure(f) and has_extensions(f, ['tif'])]
+    return [
+        f
+        for f in get_original_files(files)
+        if inline_figure(f) and has_extensions(f, ["tif"])
+    ]
 
 
 def get_figures_pdfs(files):
-    return [f for f in files if figure_pdf(f) and has_extensions(f, ['pdf'])]
+    return [f for f in files if figure_pdf(f) and has_extensions(f, ["pdf"])]
 
 
 def get_videos(files):
@@ -179,13 +190,13 @@ def file_parts(filename):
     prefix is part before the first dot
     extension is all the parts after the first dot
     """
-    prefix = filename.split('.')[0]
-    extension = '.'.join(filename.split('.')[1:]).lstrip('.')
+    prefix = filename.split(".")[0]
+    extension = ".".join(filename.split(".")[1:]).lstrip(".")
     return prefix, extension
 
 
 def get_media_file_images(files):
-    return [f for f in files if is_video_file(f) and has_extensions(f, ['jpg'])]
+    return [f for f in files if is_video_file(f) and has_extensions(f, ["jpg"])]
 
 
 def is_video_file(filename):
@@ -197,7 +208,7 @@ def is_video_file(filename):
     """
 
     file_prefix, file_extension = file_parts(filename)
-    file_type_plus_index = file_prefix.split('-')[-1]
+    file_type_plus_index = file_prefix.split("-")[-1]
     return bool("media" in file_type_plus_index or "video" in file_type_plus_index)
 
 
@@ -217,9 +228,9 @@ def get_article_xml_key(bucket, expanded_folder_name):
     files = bucket.list(expanded_folder_name + "/", "/")
     for bucket_file in files:
         key = bucket.get_key(bucket_file.key)
-        filename = key.name.rsplit('/', 1)[1]
+        filename = key.name.rsplit("/", 1)[1]
         info = ArticleInfo(filename)
-        if info.file_type == 'ArticleXML':
+        if info.file_type == "ArticleXML":
             return key, filename
     return None, None
 
@@ -229,5 +240,5 @@ def main():
     print(article)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

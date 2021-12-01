@@ -36,7 +36,9 @@ def create_article(settings, tmp_dir, doi_id=None):
         doi_id = pad_msid(doi_id)
         article_xml_filename = article_object.download_article_xml_from_s3(doi_id)
         try:
-            article_object.parse_article_file(os.path.join(tmp_dir, article_xml_filename))
+            article_object.parse_article_file(
+                os.path.join(tmp_dir, article_xml_filename)
+            )
         except:
             # Article XML for this DOI was not parsed so return None
             return None
@@ -45,7 +47,6 @@ def create_article(settings, tmp_dir, doi_id=None):
 
 
 class article(object):
-
     def __init__(self, settings=None, tmp_dir=None):
         self.settings = settings
         self.tmp_dir = tmp_dir
@@ -99,14 +100,13 @@ class article(object):
 
             self.is_poa = parser.is_poa(soup)
 
-            #self.subject_area = self.parse_subject_area(soup)
+            # self.subject_area = self.parse_subject_area(soup)
 
             self.display_channel = parser.display_channel(soup)
 
             return True
         except:
             return False
-
 
     def download_article_xml_from_s3(self, doi_id=None):
         """
@@ -125,6 +125,7 @@ class article(object):
         try:
             # hack: work around circular dependency between lax_provider.py and article.py
             from provider.lax_provider import article_highest_version
+
             version = article_highest_version(article_id, self.settings)
             if not isinstance(version, int):
                 return False
@@ -135,10 +136,22 @@ class article(object):
             return False
 
         # Download XML file via HTTP for now
-        bucket_path = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
-        xml_file_url = ('http://s3-external-1.amazonaws.com/' + bucket_path + '/'
-                        + doi_id + '/' + 'elife-' + doi_id + '-v' + str(version) + '.xml')
-        xml_filename = xml_file_url.split('/')[-1]
+        bucket_path = (
+            self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
+        )
+        xml_file_url = (
+            "http://s3-external-1.amazonaws.com/"
+            + bucket_path
+            + "/"
+            + doi_id
+            + "/"
+            + "elife-"
+            + doi_id
+            + "-v"
+            + str(version)
+            + ".xml"
+        )
+        xml_filename = xml_file_url.split("/")[-1]
 
         r = requests.get(xml_file_url)
         if r.status_code == 200:
@@ -152,7 +165,6 @@ class article(object):
 
         return xml_filename
 
-
     def get_tmp_dir(self):
         """
         Get the temporary file directory, but if not set
@@ -164,7 +176,6 @@ class article(object):
             self.tmp_dir = self.tmp_dir_default
 
         return self.tmp_dir
-
 
     def get_tweet_url(self, doi):
         """
@@ -192,24 +203,28 @@ class article(object):
         doi_id = x[-1]
         return doi_id
 
-    def get_pdf_cover_link(self, pdf_cover_generator_url ,doi_id, logger):
+    def get_pdf_cover_link(self, pdf_cover_generator_url, doi_id, logger):
 
         url = pdf_cover_generator_url + pad_msid(doi_id)
         logger.info("URL for PDF Generator %s", url)
         resp = requests.post(url)
         logger.info("Response code for PDF Generator %s", str(resp.status_code))
-        assert resp.status_code != 404, "PDF cover not found. Format: %s - url requested: %s" % (format, url)
-        assert (resp.status_code in [200, 202]), "unhandled status code from PDF cover service: %s . " \
-                                          "Format: %s - url requested: %s" % \
-                                          (resp.status_code, format, url)
+        assert (
+            resp.status_code != 404
+        ), "PDF cover not found. Format: %s - url requested: %s" % (format, url)
+        assert resp.status_code in [200, 202], (
+            "unhandled status code from PDF cover service: %s . "
+            "Format: %s - url requested: %s" % (resp.status_code, format, url)
+        )
         data = resp.json()
         logger.info("PDF Generator Response %s", str(data))
-        return data['formats']
+        return data["formats"]
 
     def get_pdf_cover_page(self, doi_id, settings, logger):
         try:
-            assert hasattr(settings, "pdf_cover_landing_page"), \
-                "pdf_cover_landing_page variable is missing from settings file!"
+            assert hasattr(
+                settings, "pdf_cover_landing_page"
+            ), "pdf_cover_landing_page variable is missing from settings file!"
             return settings.pdf_cover_landing_page + doi_id
         except AssertionError as err:
             logger.error(str(err))
@@ -234,7 +249,9 @@ class article(object):
         else:
             return False
 
-    def was_published_doi_ids(self, workflow, force=False, folder_names=None, s3_key_names=None):
+    def was_published_doi_ids(
+        self, workflow, force=False, folder_names=None, s3_key_names=None
+    ):
         """
         Connect to the S3 bucket, and from the files in the published folder,
         get a list of .xml files, and then parse out the article id
@@ -256,9 +273,9 @@ class article(object):
 
         bucket_name = self.settings.poa_packaging_bucket
 
-        doi_ids = self.doi_ids_from_published_folder(bucket_name, published_folder,
-                                                     file_extensions, folder_names,
-                                                     s3_key_names)
+        doi_ids = self.doi_ids_from_published_folder(
+            bucket_name, published_folder, file_extensions, folder_names, s3_key_names
+        )
 
         # Cache it
         self.doi_ids = doi_ids
@@ -266,8 +283,14 @@ class article(object):
         # Return it
         return doi_ids
 
-    def doi_ids_from_published_folder(self, bucket_name, published_folder, file_extensions,
-                                      folder_names=None, s3_key_names=None):
+    def doi_ids_from_published_folder(
+        self,
+        bucket_name,
+        published_folder,
+        file_extensions,
+        folder_names=None,
+        s3_key_names=None,
+    ):
         """
         Connect to the S3 bucket, and from the files in the published folder,
         get a list of files by file extensions, and then parse out the article id
@@ -275,13 +298,11 @@ class article(object):
         """
         ids = []
 
-
         if folder_names is None:
             # Get the folder names from live s3 bucket if no test data supplied
             folder_names = self.get_folder_names_from_bucket(
-                bucket_name=bucket_name,
-                prefix=published_folder)
-
+                bucket_name=bucket_name, prefix=published_folder
+            )
 
         if s3_key_names is None:
             # Get the s3 key names from live s3 bucket if no test data supplied
@@ -291,7 +312,8 @@ class article(object):
                 key_names = self.get_s3_key_names_from_bucket(
                     bucket_name=bucket_name,
                     prefix=folder_name,
-                    file_extensions=file_extensions)
+                    file_extensions=file_extensions,
+                )
 
                 for key_name in key_names:
                     s3_key_names.append(key_name)
@@ -320,15 +342,15 @@ class article(object):
         """
         folder_names = None
         # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
         bucket = s3_conn.lookup(bucket_name)
 
         # Step one, get all the subfolder names
         folder_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            key_type="prefix",
-            prefix=prefix)
+            bucket=bucket, key_type="prefix", prefix=prefix
+        )
 
         return folder_names
 
@@ -340,15 +362,17 @@ class article(object):
         """
         s3_key_names = None
         # Connect to S3 and bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
         bucket = s3_conn.lookup(bucket_name)
 
         s3_key_names = s3lib.get_s3_key_names_from_bucket(
             bucket=bucket,
             key_type="key",
             prefix=prefix,
-            file_extensions=file_extensions)
+            file_extensions=file_extensions,
+        )
 
         return s3_key_names
 
@@ -362,7 +386,7 @@ class article(object):
         """
 
         doi_id = None
-        delimiter = '/'
+        delimiter = "/"
         file_name_prefix = "elife_poa_e"
 
         doi_id = self.get_doi_id_from_s3_key_name(s3_key_name, file_name_prefix)
@@ -378,13 +402,12 @@ class article(object):
         """
 
         doi_id = None
-        delimiter = '/'
+        delimiter = "/"
         file_name_prefix = "elife"
 
         doi_id = self.get_doi_id_from_s3_key_name(s3_key_name, file_name_prefix)
 
         return doi_id
-
 
     def get_doi_id_from_s3_key_name(self, s3_key_name, file_name_prefix="elife"):
         """
@@ -398,7 +421,7 @@ class article(object):
         """
 
         doi_id = None
-        delimiter = '/'
+        delimiter = "/"
         try:
             # Split on delimiter
             file_name_with_extension = s3_key_name.split(delimiter)[-1]
@@ -407,7 +430,7 @@ class article(object):
             # Remove file name prefix
             file_name_id = file_name.split(file_name_prefix)[-1]
             # Get the numeric part of the file name
-            doi_id = int("".join(re.findall(r'^\d+', file_name_id)))
+            doi_id = int("".join(re.findall(r"^\d+", file_name_id)))
         except:
             doi_id = None
 
@@ -447,7 +470,7 @@ class article(object):
             if author.get("surname"):
                 authors_string += author["surname"]
             if author.get("collab"):
-                authors_string += author['collab']
+                authors_string += author["collab"]
 
         return authors_string
 
@@ -469,7 +492,9 @@ class article(object):
     @staticmethod
     def _get_bucket_files(settings, expanded_folder_name, xml_bucket):
         storage = storage_context(settings)
-        resource = settings.storage_provider + "://" + xml_bucket + "/" + expanded_folder_name
+        resource = (
+            settings.storage_provider + "://" + xml_bucket + "/" + expanded_folder_name
+        )
         files_in_bucket = storage.list_resources(resource)
         return files_in_bucket
 
@@ -477,10 +502,10 @@ class article(object):
         files = self._get_bucket_files(settings, expanded_folder_name, xml_bucket)
         for filename in files:
             info = ArticleInfo(filename)
-            if info.file_type == 'ArticleXML':
+            if info.file_type == "ArticleXML":
                 if version is None:
                     return filename
-                v_number = '-v'+ version + '.'
+                v_number = "-v" + version + "."
                 if v_number in filename:
                     return filename
         return None
