@@ -57,11 +57,18 @@ class Activity(object):
         Describe activity type from SWF, to confirm it exists
         Requires object to have an active connection to SWF using boto
         """
-        if self.conn is None or self.domain is None or self.name is None or self.version is None:
+        if (
+            self.conn is None
+            or self.domain is None
+            or self.name is None
+            or self.version is None
+        ):
             return None
 
         try:
-            response = self.conn.describe_activity_type(self.domain, self.name, self.version)
+            response = self.conn.describe_activity_type(
+                self.domain, self.name, self.version
+            )
         except boto.exception.SWFResponseError:
             response = None
 
@@ -72,7 +79,12 @@ class Activity(object):
         Register the activity type with SWF, if it does not already exist
         Requires object to have an active connection to SWF using boto
         """
-        if self.conn is None or self.domain is None or self.name is None or self.version is None:
+        if (
+            self.conn is None
+            or self.domain is None
+            or self.name is None
+            or self.version is None
+        ):
             return None
 
         if self.describe() is None:
@@ -85,7 +97,8 @@ class Activity(object):
                 str(self.default_task_schedule_to_close_timeout),
                 str(self.default_task_schedule_to_start_timeout),
                 str(self.default_task_start_to_close_timeout),
-                str(self.description))
+                str(self.description),
+            )
 
             return response
 
@@ -133,7 +146,7 @@ class Activity(object):
                 pass
 
         # Create a new directory specifically for this activity
-        dir_name = datetime.datetime.utcnow().strftime('%Y-%m-%d.%H.%M.%S')
+        dir_name = datetime.datetime.utcnow().strftime("%Y-%m-%d.%H.%M.%S")
         workflowId = self.get_workflowId()
         activityId = self.get_activityId()
         try:
@@ -142,16 +155,16 @@ class Activity(object):
             domain = None
         if domain:
             # Use regular expression to strip out messy symbols
-            domain_safe = re.sub(r'\W', '', domain)
-            dir_name += '.' + domain_safe
+            domain_safe = re.sub(r"\W", "", domain)
+            dir_name += "." + domain_safe
         if workflowId:
             # Use regular expression to strip out messy symbols
-            workflowId_safe = re.sub(r'\W', '', workflowId)
-            dir_name += '.' + workflowId_safe
+            workflowId_safe = re.sub(r"\W", "", workflowId)
+            dir_name += "." + workflowId_safe
         if activityId:
             # Use regular expression to strip out messy symbols
-            activityId_safe = re.sub(r'\W', '', activityId)
-            dir_name += '.' + activityId_safe
+            activityId_safe = re.sub(r"\W", "", activityId)
+            dir_name += "." + activityId_safe
 
         if self.tmp_base_dir:
             full_dir_name = self.tmp_base_dir + os.sep + dir_name
@@ -202,7 +215,7 @@ class Activity(object):
                 raise
         return True
 
-    def open_file_from_tmp_dir(self, filename, mode='r'):
+    def open_file_from_tmp_dir(self, filename, mode="r"):
         """
         Read the file from the tmp_dir
         """
@@ -225,12 +238,21 @@ class Activity(object):
     def emit_activity_message(self, article_id, version, run, status, message):
         "emit message to the queue"
         try:
-            self.emit_monitor_event(self.settings, article_id, version, run,
-                                    self.pretty_name, status, message)
+            self.emit_monitor_event(
+                self.settings,
+                article_id,
+                version,
+                run,
+                self.pretty_name,
+                status,
+                message,
+            )
             return True
         except Exception as exception:
-            self.logger.exception("Exception emitting %s message. Details: %s" %
-                                  (str(status), str(exception)))
+            self.logger.exception(
+                "Exception emitting %s message. Details: %s"
+                % (str(status), str(exception))
+            )
 
     def message_activity_name(self):
         "the name for the activity to use in emit messages"
@@ -241,25 +263,44 @@ class Activity(object):
     def emit_activity_start_message(self, article_id, version, run):
         "emit the start message to the queue"
         return self.emit_activity_message(
-            article_id, version, run, "start",
-            "Starting " + self.message_activity_name() + " for " + str(article_id))
+            article_id,
+            version,
+            run,
+            "start",
+            "Starting " + self.message_activity_name() + " for " + str(article_id),
+        )
 
     def emit_activity_end_message(self, article_id, version, run):
         "emit the end message to the queue"
         return self.emit_activity_message(
-            article_id, version, run, "end",
-            "Finished " + self.message_activity_name() + " for " + str(article_id))
+            article_id,
+            version,
+            run,
+            "end",
+            "Finished " + self.message_activity_name() + " for " + str(article_id),
+        )
 
     @staticmethod
-    def emit_monitor_event(settings, item_identifier, version, run, event_type, status, message):
-        message = dashboard_queue.build_event_message(utils.pad_msid(item_identifier), version, run, event_type,
-                                                      datetime.datetime.now(),
-                                                      status, message)
+    def emit_monitor_event(
+        settings, item_identifier, version, run, event_type, status, message
+    ):
+        message = dashboard_queue.build_event_message(
+            utils.pad_msid(item_identifier),
+            version,
+            run,
+            event_type,
+            datetime.datetime.now(),
+            status,
+            message,
+        )
 
         dashboard_queue.send_message(message, settings)
 
     @staticmethod
-    def set_monitor_property(settings, item_identifier, name, value, property_type, version=0):
-        message = dashboard_queue.build_property_message(utils.pad_msid(item_identifier), version,
-                                                         name, value, property_type)
+    def set_monitor_property(
+        settings, item_identifier, name, value, property_type, version=0
+    ):
+        message = dashboard_queue.build_property_message(
+            utils.pad_msid(item_identifier), version, name, value, property_type
+        )
         dashboard_queue.send_message(message, settings)

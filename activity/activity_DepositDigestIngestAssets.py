@@ -14,7 +14,8 @@ DepositDigestIngestAssets.py activity
 class activity_DepositDigestIngestAssets(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_DepositDigestIngestAssets, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "DepositDigestIngestAssets"
         self.pretty_name = "Deposit Digest Ingest Assets"
@@ -33,7 +34,7 @@ class activity_DepositDigestIngestAssets(Activity):
         # Local directory settings
         self.directories = {
             "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
-            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
         }
 
         # Track the success of some steps
@@ -42,7 +43,7 @@ class activity_DepositDigestIngestAssets(Activity):
     def do_activity(self, data=None):
         "do the work"
         if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+            self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         # Create output directories
         self.make_activity_directories()
@@ -51,28 +52,41 @@ class activity_DepositDigestIngestAssets(Activity):
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)
         # Download from S3
         self.input_file = download_helper.download_file_from_s3(
-            self.settings, real_filename, bucket_name, bucket_folder,
-            self.directories.get("INPUT_DIR"))
+            self.settings,
+            real_filename,
+            bucket_name,
+            bucket_folder,
+            self.directories.get("INPUT_DIR"),
+        )
         # Parse input and build digest
         digest_config = digest_provider.digest_config(
-            self.settings.digest_config_section,
-            self.settings.digest_config_file)
+            self.settings.digest_config_section, self.settings.digest_config_file
+        )
         self.build_status, self.digest = digest_provider.build_digest(
-            self.input_file, self.directories.get("TEMP_DIR"), self.logger, digest_config)
+            self.input_file,
+            self.directories.get("TEMP_DIR"),
+            self.logger,
+            digest_config,
+        )
 
         if not self.build_status:
-            self.logger.info("Failed to build the Digest in Deposit Digest Ingest Assets for %s",
-                             real_filename)
+            self.logger.info(
+                "Failed to build the Digest in Deposit Digest Ingest Assets for %s",
+                real_filename,
+            )
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # check if there is an image and if not return True
         if not digest_provider.has_image(self.digest):
-            self.logger.info("Digest for file %s has no images to deposit",
-                             real_filename)
+            self.logger.info(
+                "Digest for file %s has no images to deposit", real_filename
+            )
             return self.ACTIVITY_SUCCESS
 
         # bucket name
-        cdn_bucket_name = self.settings.publishing_buckets_prefix + self.settings.digest_cdn_bucket
+        cdn_bucket_name = (
+            self.settings.publishing_buckets_prefix + self.settings.digest_cdn_bucket
+        )
 
         # deposit the image file to S3
         self.deposit_digest_image(self.digest, cdn_bucket_name)
@@ -87,17 +101,17 @@ class activity_DepositDigestIngestAssets(Activity):
         file_name = digest.image.file.split(os.sep)[-1]
         new_file_name = digest_provider.new_file_name(file_name, msid)
         storage_provider = self.settings.storage_provider + "://"
-        dest_resource = storage_provider + cdn_bucket_name + "/" + article_id + "/" + new_file_name
+        dest_resource = (
+            storage_provider + cdn_bucket_name + "/" + article_id + "/" + new_file_name
+        )
         return dest_resource
 
     def deposit_digest_image(self, digest, cdn_bucket_name):
         "deposit the image file from the digest to the bucket"
         self.dest_resource = self.image_dest_resource(digest, cdn_bucket_name)
         storage = storage_context(self.settings)
-        self.logger.info("Depositing digest image to S3 key %s",
-                         self.dest_resource)
+        self.logger.info("Depositing digest image to S3 key %s", self.dest_resource)
         # set the bucket object resource from the local file
         storage.set_resource_from_filename(self.dest_resource, digest.image.file)
-        self.logger.info("Deposited digest image %s to S3",
-                         digest.image.file)
+        self.logger.info("Deposited digest image %s to S3", digest.image.file)
         return True

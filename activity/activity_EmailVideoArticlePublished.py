@@ -13,7 +13,8 @@ class activity_EmailVideoArticlePublished(Activity):
 
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_EmailVideoArticlePublished, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "EmailVideoArticlePublished"
         self.pretty_name = "Email Video Article Published"
@@ -28,12 +29,12 @@ class activity_EmailVideoArticlePublished(Activity):
         self.templates = templatelib.Templates(settings, self.get_tmp_dir())
 
         # Email types, for sending previews of each template
-        self.email_template = 'video_article_publication'
+        self.email_template = "video_article_publication"
 
     def do_activity(self, data=None):
 
         if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+            self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         # get input data
         run = data.get("run")
@@ -52,36 +53,51 @@ class activity_EmailVideoArticlePublished(Activity):
         # do not send if poa
         if status == "poa":
             self.logger.info(
-                "PoA article %s no email to send in Email Video Article Published " % article_id)
+                "PoA article %s no email to send in Email Video Article Published "
+                % article_id
+            )
             self.emit_activity_end_message(article_id, version, run)
             return self.ACTIVITY_SUCCESS
 
         # do not send if silent-correction
         if run_type == "silent-correction":
             self.logger.info(
-                ("Silent correction of article %s " +
-                 "no email to send in Email Video Article Published ") % article_id)
+                (
+                    "Silent correction of article %s "
+                    + "no email to send in Email Video Article Published "
+                )
+                % article_id
+            )
             self.emit_activity_end_message(article_id, version, run)
             return self.ACTIVITY_SUCCESS
 
         # do not continue unless it is the first vor version
-        first_vor = lax_provider.article_first_by_status(article_id, version, status, self.settings)
+        first_vor = lax_provider.article_first_by_status(
+            article_id, version, status, self.settings
+        )
         if not first_vor:
             self.logger.info(
-                ("Not first VoR version of article %s " +
-                 "no email to send in Email Video Article Published ") % article_id)
+                (
+                    "Not first VoR version of article %s "
+                    + "no email to send in Email Video Article Published "
+                )
+                % article_id
+            )
             self.emit_activity_end_message(article_id, version, run)
             return self.ACTIVITY_SUCCESS
 
         # download JATS XML from the expanded bucket
         # check if video exists (from article structure)
         has_video = None
-        xml_file = download_jats(self.settings, expanded_folder, self.get_tmp_dir(), self.logger)
+        xml_file = download_jats(
+            self.settings, expanded_folder, self.get_tmp_dir(), self.logger
+        )
         if xml_file:
             has_video = xml_has_video(xml_file)
         if not has_video:
             self.logger.info(
-                "Article %s has no video in Email Video Article Published " % article_id)
+                "Article %s has no video in Email Video Article Published " % article_id
+            )
             self.emit_activity_end_message(article_id, version, run)
             return self.ACTIVITY_SUCCESS
         # video exists, get recipient(s) from settings
@@ -94,16 +110,18 @@ class activity_EmailVideoArticlePublished(Activity):
         templates_downloaded = self.download_templates()
         if not templates_downloaded:
             self.logger.error(
-                "Could not download email templates sending %s in Email Video Article Published " %
-                article_id)
+                "Could not download email templates sending %s in Email Video Article Published "
+                % article_id
+            )
             return self.ACTIVITY_PERMANENT_FAILURE
         # Good, we can send emails
         for recipient in recipients:
             send_status = self.send_email(email_type, recipient, article_object)
             if not send_status:
                 self.logger.info(
-                    "Failed to send email for article %s to %s in Email Video Article Published " %
-                    (article_id, recipient.get("e_mail")))
+                    "Failed to send email for article %s to %s in Email Video Article Published "
+                    % (article_id, recipient.get("e_mail"))
+                )
 
         self.emit_activity_end_message(article_id, version, run)
         return self.ACTIVITY_SUCCESS
@@ -114,7 +132,8 @@ class activity_EmailVideoArticlePublished(Activity):
 
         # Handle multiple recipients, if specified
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.email_video_recipient_email)
+            self.settings.email_video_recipient_email
+        )
 
         for recipient_email in recipient_email_list:
             feature_author = {}
@@ -142,13 +161,13 @@ class activity_EmailVideoArticlePublished(Activity):
         self.templates.copy_email_templates(self.settings.email_templates_path)
         if self.templates.email_templates_warmed is not True:
             if self.logger:
-                log_info = 'EmailVideoArticlePublished email templates did not warm successfully'
+                log_info = "EmailVideoArticlePublished email templates did not warm successfully"
                 self.logger.info(log_info)
             # Stop now! Return False if we do not have the necessary files
             return False
         else:
             if self.logger:
-                log_info = 'EmailVideoArticlePublished email templates warmed'
+                log_info = "EmailVideoArticlePublished email templates warmed"
                 self.logger.info(log_info)
             return True
 
@@ -160,42 +179,74 @@ class activity_EmailVideoArticlePublished(Activity):
 
         # First process the headers
         headers = templatelib.email_headers(
-            self.templates, email_type, recipient, article, email_format="html", logger=self.logger)
+            self.templates,
+            email_type,
+            recipient,
+            article,
+            email_format="html",
+            logger=self.logger,
+        )
         if not headers:
             return False
 
         # build the email body
         body = templatelib.email_body(
-            self.templates, email_type, recipient, article,
-            email_format=headers.get("format"), logger=self.logger)
+            self.templates,
+            email_type,
+            recipient,
+            article,
+            email_format=headers.get("format"),
+            logger=self.logger,
+        )
 
         try:
             # create the message
             message = email_provider.simple_message(
-                headers["sender_email"], recipient.get("e_mail"),
-                headers["subject"], body, subtype=headers.get("format"), logger=self.logger)
+                headers["sender_email"],
+                recipient.get("e_mail"),
+                headers["subject"],
+                body,
+                subtype=headers.get("format"),
+                logger=self.logger,
+            )
         except Exception as exception:
             self.logger.exception(
-                "Failed to build the email message in send_email: %s" % str(exception))
+                "Failed to build the email message in send_email: %s" % str(exception)
+            )
 
         try:
             # send the email message
-            log_info = ("Sending " + email_type + " type email" +
-                        " for article " + str(article.doi_id) +
-                        " to recipient_email " + str(recipient.get("e_mail")))
+            log_info = (
+                "Sending "
+                + email_type
+                + " type email"
+                + " for article "
+                + str(article.doi_id)
+                + " to recipient_email "
+                + str(recipient.get("e_mail"))
+            )
             self.logger.info(log_info)
 
             details = email_provider.smtp_send_messages(
-                self.settings, messages=[message], logger=self.logger)
+                self.settings, messages=[message], logger=self.logger
+            )
 
             if details.get("error") and int(details.get("error")) > 0:
                 self.logger.info(
-                    "Failed to send email %s for article %s to %s, details: %s " %
-                    (email_type, article.doi_id, recipient.get("e_mail"), str(details)))
+                    "Failed to send email %s for article %s to %s, details: %s "
+                    % (
+                        email_type,
+                        article.doi_id,
+                        recipient.get("e_mail"),
+                        str(details),
+                    )
+                )
                 return False
 
         except Exception as exception:
-            self.logger.exception("An exception occurred in send_email: %s" % str(exception))
+            self.logger.exception(
+                "An exception occurred in send_email: %s" % str(exception)
+            )
 
         return True
 

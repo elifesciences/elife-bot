@@ -12,11 +12,12 @@ from activity.objects import Activity
 LensArticle activity
 """
 
-class activity_LensArticle(Activity):
 
+class activity_LensArticle(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_LensArticle, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "LensArticle"
         self.version = "1"
@@ -24,7 +25,9 @@ class activity_LensArticle(Activity):
         self.default_task_schedule_to_close_timeout = 60 * 5
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
-        self.description = "Create a lens article index.html page for the particular article."
+        self.description = (
+            "Create a lens article index.html page for the particular article."
+        )
 
         # Templates provider
         self.templates = templatelib.Templates(settings, self.get_tmp_dir())
@@ -47,26 +50,34 @@ class activity_LensArticle(Activity):
         Do the work
         """
         if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+            self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         article_id = None
         # Support for both the starter method and the PostPerfectPublication method
         if data and "article_id" in data:
             article_id = data["article_id"]
 
-        self.article_xml_filename = self.article.download_article_xml_from_s3(doi_id=article_id)
+        self.article_xml_filename = self.article.download_article_xml_from_s3(
+            doi_id=article_id
+        )
 
         if not self.article_xml_filename:
             if self.logger:
-                self.logger.info('LensArticle article xml file not found for %s' % str(article_id))
+                self.logger.info(
+                    "LensArticle article xml file not found for %s" % str(article_id)
+                )
             return True
 
-        self.article.parse_article_file(self.get_tmp_dir() + os.sep + self.article_xml_filename)
+        self.article.parse_article_file(
+            self.get_tmp_dir() + os.sep + self.article_xml_filename
+        )
 
         # Check for PoA, we will not create lens article for
         if self.article.is_poa:
             if self.logger:
-                self.logger.info('LensArticle %s is PoA, not creating a lens page' % str(article_id))
+                self.logger.info(
+                    "LensArticle %s is PoA, not creating a lens page" % str(article_id)
+                )
             return True
 
         self.article_s3key = self.get_article_s3key(article_id)
@@ -77,14 +88,17 @@ class activity_LensArticle(Activity):
             from_dir=self.from_dir,
             article=self.article,
             cdn_bucket=self.cdn_bucket,
-            article_xml_filename=self.article_xml_filename)
+            article_xml_filename=self.article_xml_filename,
+        )
 
         # Write the document to disk first
         filename_plus_path = self.write_html_file(self.article_html, filename)
 
         # Now, set the S3 object to the contents of the filename
         # Connect to S3
-        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
         # Lookup bucket
         bucket_name = self.settings.lens_bucket
         bucket = s3_conn.get_bucket(bucket_name)
@@ -93,7 +107,7 @@ class activity_LensArticle(Activity):
         s3key.set_contents_from_filename(filename_plus_path, replace=True)
 
         if self.logger:
-            self.logger.info('LensArticle created for: %s' % self.article_s3key)
+            self.logger.info("LensArticle created for: %s" % self.article_s3key)
 
         return True
 
@@ -115,10 +129,9 @@ class activity_LensArticle(Activity):
         if from_dir is None:
             from_dir = self.from_dir
 
-        article_html = self.templates.get_lens_article_html(from_dir,
-                                                            article,
-                                                            cdn_bucket,
-                                                            article_xml_filename)
+        article_html = self.templates.get_lens_article_html(
+            from_dir, article, cdn_bucket, article_xml_filename
+        )
 
         return article_html
 
@@ -129,7 +142,7 @@ class activity_LensArticle(Activity):
 
         filename_plus_path = self.get_tmp_dir() + os.sep + filename
         mode = "w"
-        f = codecs.open(filename_plus_path, mode, encoding='utf8')
+        f = codecs.open(filename_plus_path, mode, encoding="utf8")
         f.write(article_html)
         f.close()
 

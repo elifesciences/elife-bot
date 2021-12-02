@@ -10,9 +10,11 @@ from activity.objects import Activity
 
 class activity_EmailDigest(Activity):
     "EmailDigest activity"
+
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_EmailDigest, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "EmailDigest"
         self.version = "1"
@@ -20,8 +22,10 @@ class activity_EmailDigest(Activity):
         self.default_task_schedule_to_close_timeout = 60 * 30
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 5
-        self.description = ("Download digest file input from the bucket, parse it, generate the " +
-                            "output and send it in an email to recipients.")
+        self.description = (
+            "Download digest file input from the bucket, parse it, generate the "
+            + "output and send it in an email to recipients."
+        )
 
         # Track some values
         self.input_file = None
@@ -43,15 +47,15 @@ class activity_EmailDigest(Activity):
 
         # Load the config
         self.digest_config = digest_provider.digest_config(
-            self.settings.digest_config_section,
-            self.settings.digest_config_file)
+            self.settings.digest_config_section, self.settings.digest_config_file
+        )
 
     def do_activity(self, data=None):
         """
         Activity, do the work
         """
         if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+            self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         self.make_activity_directories()
 
@@ -60,12 +64,20 @@ class activity_EmailDigest(Activity):
 
         # Download from S3
         self.input_file = download_helper.download_file_from_s3(
-            self.settings, real_filename, bucket_name, bucket_folder,
-            self.directories.get("INPUT_DIR"))
+            self.settings,
+            real_filename,
+            bucket_name,
+            bucket_folder,
+            self.directories.get("INPUT_DIR"),
+        )
 
         # Parse input and build digest
         self.build_status, self.digest = digest_provider.build_digest(
-            self.input_file, self.directories.get("TEMP_DIR"), self.logger, self.digest_config)
+            self.input_file,
+            self.directories.get("TEMP_DIR"),
+            self.logger,
+            self.digest_config,
+        )
 
         # Generate output
         self.generate_status, output_file = self.generate_output(self.digest)
@@ -74,7 +86,9 @@ class activity_EmailDigest(Activity):
             self.activity_status = True
 
         # Approve files for emailing
-        self.approve_status, error_messages = digest_provider.validate_digest(self.digest)
+        self.approve_status, error_messages = digest_provider.validate_digest(
+            self.digest
+        )
 
         if self.approve_status is True and self.generate_status is True:
             # Email file
@@ -95,15 +109,17 @@ class activity_EmailDigest(Activity):
         if not digest_content:
             return False, None
         file_name = output_file_name(digest_content, self.digest_config)
-        self.logger.info('EmailDigest output file_name: %s', file_name)
+        self.logger.info("EmailDigest output file_name: %s", file_name)
         full_file_name = self.output_path(
-            self.directories.get("OUTPUT_DIR"), str(file_name))
-        self.logger.info('EmailDigest output full_file_name: %s', full_file_name)
+            self.directories.get("OUTPUT_DIR"), str(file_name)
+        )
+        self.logger.info("EmailDigest output full_file_name: %s", full_file_name)
         try:
             output_file = output.digest_docx(digest_content, full_file_name)
         except UnicodeEncodeError as exception:
-            self.logger.exception("EmailDigest generate_output exception. Message: %s",
-                                  exception)
+            self.logger.exception(
+                "EmailDigest generate_output exception. Message: %s", exception
+            )
             return False, None
         return True, output_file
 
@@ -117,7 +133,8 @@ class activity_EmailDigest(Activity):
         sender_email = self.settings.digest_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.digest_docx_recipient_email)
+            self.settings.digest_docx_recipient_email
+        )
 
         connection = email_provider.smtp_connect(self.settings, self.logger)
         # send the emails
@@ -127,8 +144,9 @@ class activity_EmailDigest(Activity):
             email_provider.add_text(email_message, body)
             email_provider.add_attachment(email_message, output_file)
             # send the email
-            email_success = email_provider.smtp_send(connection, sender_email, recipient,
-                                                     email_message, self.logger)
+            email_success = email_provider.smtp_send(
+                connection, sender_email, recipient, email_message, self.logger
+            )
             if not email_success:
                 # for now any failure in sending a mail return False
                 success = False
@@ -149,9 +167,10 @@ def success_email_subject(digest_content):
     if not digest_content:
         return
     try:
-        doi = getattr(digest_content, 'doi')
+        doi = getattr(digest_content, "doi")
         msid = doi.split(".")[-1]
     except AttributeError:
         msid = None
-    return u'Digest: {author}_{msid:0>5}'.format(
-        author=digest_content.author, msid=str(msid))
+    return u"Digest: {author}_{msid:0>5}".format(
+        author=digest_content.author, msid=str(msid)
+    )

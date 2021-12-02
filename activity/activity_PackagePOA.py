@@ -22,9 +22,11 @@ from activity.objects import Activity
 
 class activity_PackagePOA(Activity):
     "PackagePOA activity"
+
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_PackagePOA, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "PackagePOA"
         self.version = "1"
@@ -35,15 +37,23 @@ class activity_PackagePOA(Activity):
         self.description = "Process POA zip file input, repackage, and save to S3."
 
         # Activity directories
-        self.directories = OrderedDict([
-            ("EJP_INPUT", os.path.join(self.get_tmp_dir(), "ejp_input")),
-            ("XML_OUTPUT", os.path.join(self.get_tmp_dir(), "generated_xml_output")),
-            ("CSV", os.path.join(self.get_tmp_dir(), "csv_data")),
-            ("CSV_TMP", os.path.join(self.get_tmp_dir(), "csv_data", "tmp")),
-            ("DECAPITATE_PDF", os.path.join(self.get_tmp_dir(), "decapitate_pdf_dir")),
-            ("POA_TMP", os.path.join(self.get_tmp_dir(), "tmp")),
-            ("OUTPUT", os.path.join(self.get_tmp_dir(), "output_dir"))
-        ])
+        self.directories = OrderedDict(
+            [
+                ("EJP_INPUT", os.path.join(self.get_tmp_dir(), "ejp_input")),
+                (
+                    "XML_OUTPUT",
+                    os.path.join(self.get_tmp_dir(), "generated_xml_output"),
+                ),
+                ("CSV", os.path.join(self.get_tmp_dir(), "csv_data")),
+                ("CSV_TMP", os.path.join(self.get_tmp_dir(), "csv_data", "tmp")),
+                (
+                    "DECAPITATE_PDF",
+                    os.path.join(self.get_tmp_dir(), "decapitate_pdf_dir"),
+                ),
+                ("POA_TMP", os.path.join(self.get_tmp_dir(), "tmp")),
+                ("OUTPUT", os.path.join(self.get_tmp_dir(), "output_dir")),
+            ]
+        )
 
         # Create an EJP provider to access S3 bucket holding CSV files
         self.ejp = ejplib.EJP(settings, self.get_tmp_dir())
@@ -73,7 +83,7 @@ class activity_PackagePOA(Activity):
         """
         Activity, do the work
         """
-        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         # Create output directories
         self.make_activity_directories()
@@ -87,7 +97,7 @@ class activity_PackagePOA(Activity):
         # Get the DOI from the zip file
         self.doi = get_doi_from_zip_file(self.poa_zip_filename)
         doi_id = utils.msid_from_doi(self.doi)
-        self.logger.info('DOI: %s' % doi_id)
+        self.logger.info("DOI: %s" % doi_id)
 
         # Approve the DOI for packaging
         self.approve_status = approve_for_packaging(doi_id)
@@ -101,9 +111,9 @@ class activity_PackagePOA(Activity):
 
             # Transform zip file
             self.process_status = self.process_poa_zipfile(self.poa_zip_filename)
-            self.logger.info('Process status: %s' % self.process_status)
+            self.logger.info("Process status: %s" % self.process_status)
             self.pdf_decap_status = self.check_pdf_decap_failure()
-            self.logger.info('PDF decapitation status: %s' % self.pdf_decap_status)
+            self.logger.info("PDF decapitation status: %s" % self.pdf_decap_status)
 
             # Set the DOI and generate XML
             self.download_latest_csv()
@@ -113,17 +123,19 @@ class activity_PackagePOA(Activity):
                 self.generate_xml(doi_id, pub_date, volume)
                 self.generate_xml_status = True
             except Exception as exception:
-                self.logger.exception('Exception in generate_xml: %s' % str(exception))
+                self.logger.exception("Exception in generate_xml: %s" % str(exception))
                 self.generate_xml_status = False
-            self.logger.info('XML generation status: %s' % self.generate_xml_status)
+            self.logger.info("XML generation status: %s" % self.generate_xml_status)
 
             # Copy finished files to S3 outbox
             self.copy_files_to_s3_outbox()
 
             # Set the activity status of this activity based on successes
-            self.activity_status = bool(self.process_status is True and
-                                        self.pdf_decap_status is True and
-                                        self.generate_xml_status is True)
+            self.activity_status = bool(
+                self.process_status is True
+                and self.pdf_decap_status is True
+                and self.generate_xml_status is True
+            )
 
         # Send email
         self.send_email()
@@ -141,7 +153,7 @@ class activity_PackagePOA(Activity):
 
     def clean_tmp_dir(self):
         "custom cleaning of temp directory in order to retain some files for debugging purposes"
-        keep_dirs = ['CSV', 'CSV_TMP']
+        keep_dirs = ["CSV", "CSV_TMP"]
         for dir_name, dir_path in self.directories.items():
             if dir_name in keep_dirs or not os.path.exists(dir_path):
                 continue
@@ -151,7 +163,8 @@ class activity_PackagePOA(Activity):
         # Get the date for the first version
         date_struct = None
         date_str = lax_provider.article_publication_date(
-            utils.pad_msid(doi_id), self.settings, self.logger)
+            utils.pad_msid(doi_id), self.settings, self.logger
+        )
 
         if date_str is not None:
             date_struct = time.strptime(date_str, "%Y%m%d000000")
@@ -174,7 +187,7 @@ class activity_PackagePOA(Activity):
         storage_resource_origin = orig_resource + document
         filename_plus_path = os.path.join(self.directories.get("EJP_INPUT"), document)
         try:
-            with open(filename_plus_path, 'wb') as open_file:
+            with open(filename_plus_path, "wb") as open_file:
                 storage.get_resource_to_file(storage_resource_origin, open_file)
         except IOError:
             return None
@@ -182,9 +195,9 @@ class activity_PackagePOA(Activity):
 
     def packagepoa_config(self, config_section):
         "parse the config values from the jatsgenerator config"
-        return poa_conf.parse_raw_config(poa_conf.raw_config(
-            config_section,
-            self.settings.packagepoa_config_file))
+        return poa_conf.parse_raw_config(
+            poa_conf.raw_config(config_section, self.settings.packagepoa_config_file)
+        )
 
     def process_poa_zipfile(self, poa_zip_filename):
         """
@@ -194,13 +207,12 @@ class activity_PackagePOA(Activity):
             return False
         poa_config = self.packagepoa_config(self.settings.packagepoa_config_section)
         # override the output directories
-        poa_config['output_dir'] = self.directories.get("OUTPUT")
-        poa_config['decapitate_pdf_dir'] = self.directories.get("DECAPITATE_PDF")
-        poa_config['tmp_dir'] = self.directories.get("POA_TMP")
+        poa_config["output_dir"] = self.directories.get("OUTPUT")
+        poa_config["decapitate_pdf_dir"] = self.directories.get("DECAPITATE_PDF")
+        poa_config["tmp_dir"] = self.directories.get("POA_TMP")
         try:
             transform.process_zipfile(
-                zipfile_name=poa_zip_filename,
-                poa_config=poa_config
+                zipfile_name=poa_zip_filename, poa_config=poa_config
             )
             return True
         except zipfile.BadZipfile:
@@ -236,7 +248,7 @@ class activity_PackagePOA(Activity):
             "poa_group_authors": "poa_group_authors.csv",
             "poa_datasets": "poa_datasets.csv",
             "poa_funding": "poa_funding.csv",
-            "poa_ethics": "poa_ethics.csv"
+            "poa_ethics": "poa_ethics.csv",
         }
 
         for file_type, filename in list(file_types.items()):
@@ -250,23 +262,31 @@ class activity_PackagePOA(Activity):
                 storage_resource_origin = orig_resource + s3_key_name
             except TypeError:
                 self.logger.info(
-                    'PackagePoA unable to download CSV file for {file_type}'.format(
+                    "PackagePoA unable to download CSV file for {file_type}".format(
                         file_type=file_type
-                    ))
+                    )
+                )
                 continue
             filename_plus_path = os.path.join(self.directories.get("CSV"), filename)
-            with open(filename_plus_path, 'wb') as open_file:
+            with open(filename_plus_path, "wb") as open_file:
                 storage.get_resource_to_file(storage_resource_origin, open_file)
             # log last modified date if available
             s3_key = storage.get_resource_as_key(storage_resource_origin)
-            self.logger.info('CSV file %s last_modified: %s' % (
-                storage_resource_origin, getattr(s3_key, 'last_modified', '[unknown]')))
+            self.logger.info(
+                "CSV file %s last_modified: %s"
+                % (
+                    storage_resource_origin,
+                    getattr(s3_key, "last_modified", "[unknown]"),
+                )
+            )
 
     def jatsgenerator_config(self, config_section):
         "parse the config values from the jatsgenerator config"
-        return jats_conf.parse_raw_config(jats_conf.raw_config(
-            config_section,
-            self.settings.jatsgenerator_config_file))
+        return jats_conf.parse_raw_config(
+            jats_conf.raw_config(
+                config_section, self.settings.jatsgenerator_config_file
+            )
+        )
 
     def generate_xml(self, article_id, pub_date=None, volume=None):
         """
@@ -311,15 +331,15 @@ class activity_PackagePOA(Activity):
                 article.volume = volume
 
             # Override the output_dir in the jatsgenerator config
-            jats_config['target_output_dir'] = self.directories.get("XML_OUTPUT")
+            jats_config["target_output_dir"] = self.directories.get("XML_OUTPUT")
 
             try:
-                generate.build_xml_to_disk(
-                    article_id, article, jats_config, True)
+                generate.build_xml_to_disk(article_id, article, jats_config, True)
             except ExpatError as exception:
                 self.logger.exception(
-                    'Exception in build_xml_to_disk for article_id %s: %s' %
-                    (article_id, str(exception)))
+                    "Exception in build_xml_to_disk for article_id %s: %s"
+                    % (article_id, str(exception))
+                )
                 raise
 
         # Copy to output_dir because we need it there
@@ -360,7 +380,9 @@ class activity_PackagePOA(Activity):
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
         s3_folder_name = self.outbox_folder
-        resource_dest = storage_provider + bucket_name + "/" + s3_folder_name + file_name
+        resource_dest = (
+            storage_provider + bucket_name + "/" + s3_folder_name + file_name
+        )
         storage.set_resource_from_filename(resource_dest, file_name_path)
         self.logger.info("Copied %s to %s", file_name_path, resource_dest)
 
@@ -376,17 +398,22 @@ class activity_PackagePOA(Activity):
         sender_email = self.settings.ses_poa_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.ses_poa_recipient_email)
+            self.settings.ses_poa_recipient_email
+        )
 
         for email in recipient_email_list:
             # send the email by SMTP
             message = email_provider.simple_message(
-                sender_email, email, subject, body, logger=self.logger)
+                sender_email, email, subject, body, logger=self.logger
+            )
 
             email_provider.smtp_send_messages(
-                self.settings, messages=[message], logger=self.logger)
-            self.logger.info('Email sending details: admin email, email %s, to %s' %
-                             ("PackagePOA", email))
+                self.settings, messages=[message], logger=self.logger
+            )
+            self.logger.info(
+                "Email sending details: admin email, email %s, to %s"
+                % ("PackagePOA", email)
+            )
 
         return True
 
@@ -394,14 +421,21 @@ class activity_PackagePOA(Activity):
         """
         Assemble the email subject
         """
-        date_format = '%Y-%m-%d %H:%M'
+        date_format = "%Y-%m-%d %H:%M"
         datetime_string = time.strftime(date_format, current_time)
 
         activity_status_text = utils.get_activity_status_text(self.activity_status)
 
         subject = (
-            self.name + " " + activity_status_text + " doi: " + str(self.doi) + ", " +
-            datetime_string + ", eLife SWF domain: " + self.settings.domain
+            self.name
+            + " "
+            + activity_status_text
+            + " doi: "
+            + str(self.doi)
+            + ", "
+            + datetime_string
+            + ", eLife SWF domain: "
+            + self.settings.domain
         )
 
         return subject
@@ -460,7 +494,7 @@ def get_doi_from_zip_file(filename=None):
         return None
     # Good, continue
     try:
-        with zipfile.ZipFile(filename, 'r') as current_zipfile:
+        with zipfile.ZipFile(filename, "r") as current_zipfile:
             return transform.get_doi_from_zipfile(current_zipfile)
     except zipfile.BadZipfile:
         return None

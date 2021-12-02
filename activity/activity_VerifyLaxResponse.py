@@ -12,10 +12,12 @@ activity_VerifyLaxResponse.py activity
 class ValidationException(RuntimeError):
     pass
 
+
 class activity_VerifyLaxResponse(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_VerifyLaxResponse, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "VerifyLaxResponse"
         self.pretty_name = "Verify Lax Response"
@@ -32,40 +34,69 @@ class activity_VerifyLaxResponse(Activity):
         Do the work
         """
         if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+            self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
-        article_id = data['article_id']
-        run = data['run']
-        version = data['version']
-        force = data['force']
+        article_id = data["article_id"]
+        run = data["run"]
+        version = data["version"]
+        force = data["force"]
         session = get_session(self.settings, data, run)
 
-        self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "start",
-                                "Starting verification of Lax response " + article_id)
+        self.emit_monitor_event(
+            self.settings,
+            article_id,
+            version,
+            run,
+            self.pretty_name,
+            "start",
+            "Starting verification of Lax response " + article_id,
+        )
 
         try:
-            if data['result'] == "ingested":
+            if data["result"] == "ingested":
                 if force is True:
-                    session.store_value('published', True)
+                    session.store_value("published", True)
                 else:
-                    session.store_value('published', False)
-                self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "end",
-                                        " Finished Verification. Lax has responded with result: ingested."
-                                        " Article: " + article_id)
+                    session.store_value("published", False)
+                self.emit_monitor_event(
+                    self.settings,
+                    article_id,
+                    version,
+                    run,
+                    self.pretty_name,
+                    "end",
+                    " Finished Verification. Lax has responded with result: ingested."
+                    " Article: " + article_id,
+                )
 
                 return self.ACTIVITY_SUCCESS
 
             message = message_from_lax(data)
-            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
-                                    "Lax has not ingested article " + article_id +
-                                    " result from lax:" + str(data['result']) + '; message from lax: ' + message)
+            self.emit_monitor_event(
+                self.settings,
+                article_id,
+                version,
+                run,
+                self.pretty_name,
+                "error",
+                "Lax has not ingested article "
+                + article_id
+                + " result from lax:"
+                + str(data["result"])
+                + "; message from lax: "
+                + message,
+            )
             return self.ACTIVITY_PERMANENT_FAILURE
 
         except Exception as e:
             self.logger.exception("Exception when Verifying Lax Response")
-            self.emit_monitor_event(self.settings, article_id, version, run, self.pretty_name, "error",
-                                    "Error when verifying lax response" + article_id +
-                                    " message:" + str(e))
+            self.emit_monitor_event(
+                self.settings,
+                article_id,
+                version,
+                run,
+                self.pretty_name,
+                "error",
+                "Error when verifying lax response" + article_id + " message:" + str(e),
+            )
             return self.ACTIVITY_PERMANENT_FAILURE
-
-

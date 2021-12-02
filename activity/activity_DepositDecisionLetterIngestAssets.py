@@ -13,7 +13,8 @@ DepositDecisionLetterIngestAssets.py activity
 class activity_DepositDecisionLetterIngestAssets(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_DepositDecisionLetterIngestAssets, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "DepositDecisionLetterIngestAssets"
         self.pretty_name = "Deposit Decision Letter Ingest Assets"
@@ -33,7 +34,7 @@ class activity_DepositDecisionLetterIngestAssets(Activity):
         # Local directory settings
         self.directories = {
             "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
-            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir")
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
         }
 
         # Track the success of some steps
@@ -45,11 +46,13 @@ class activity_DepositDecisionLetterIngestAssets(Activity):
         }
 
         # Load the config
-        self.letterparser_config = letterparser_provider.letterparser_config(self.settings)
+        self.letterparser_config = letterparser_provider.letterparser_config(
+            self.settings
+        )
 
     def do_activity(self, data=None):
         "do the work"
-        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         # Create output directories
         self.make_activity_directories()
@@ -63,57 +66,80 @@ class activity_DepositDecisionLetterIngestAssets(Activity):
         # Download from S3
         try:
             self.input_file = download_helper.download_file_from_s3(
-                self.settings, real_filename, bucket_name, bucket_folder,
-                self.directories.get("INPUT_DIR"))
+                self.settings,
+                real_filename,
+                bucket_name,
+                bucket_folder,
+                self.directories.get("INPUT_DIR"),
+            )
         except:
             self.logger.exception(
-                '%s failed to download input zip file from data %s' % (self.name, data))
+                "%s failed to download input zip file from data %s" % (self.name, data)
+            )
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # zip file to articles and assets
         try:
-            self.articles, self.asset_file_names, statuses, error_messages = (
-                letterparser_provider.process_zip(
-                    self.input_file,
-                    config=self.letterparser_config,
-                    temp_dir=self.directories.get("TEMP_DIR"),
-                    logger=self.logger))
+            (
+                self.articles,
+                self.asset_file_names,
+                statuses,
+                error_messages,
+            ) = letterparser_provider.process_zip(
+                self.input_file,
+                config=self.letterparser_config,
+                temp_dir=self.directories.get("TEMP_DIR"),
+                logger=self.logger,
+            )
         except:
             self.logger.exception(
-                '%s failed to process the zip file %s' % (self.name, self.input_file))
+                "%s failed to process the zip file %s" % (self.name, self.input_file)
+            )
             return self.ACTIVITY_PERMANENT_FAILURE
 
         self.set_statuses(statuses)
 
         # check if there are any assets if not return True
         if not self.asset_file_names:
-            self.logger.info("%s file %s has no assets to deposit" % (self.name, self.input_file))
+            self.logger.info(
+                "%s file %s has no assets to deposit" % (self.name, self.input_file)
+            )
             return self.ACTIVITY_SUCCESS
 
         self.logger.info(
-            "%s asset file names from %s: %s" % (self.name, self.input_file, self.asset_file_names))
+            "%s asset file names from %s: %s"
+            % (self.name, self.input_file, self.asset_file_names)
+        )
 
         # S3 bucket folder name
         try:
             manuscript = letterparser_provider.manuscript_from_articles(self.articles)
             bucket_folder_name = letterparser_provider.output_bucket_folder_name(
-                self.settings, manuscript)
+                self.settings, manuscript
+            )
         except:
             self.logger.exception(
-                '%s failed get manuscript and bucket_folder_name for input file %s' %
-                (self.name, self.input_file))
+                "%s failed get manuscript and bucket_folder_name for input file %s"
+                % (self.name, self.input_file)
+            )
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # deposit assets to the bucket
         try:
             deposit_assets_to_bucket(
-                self.settings, output_bucket_name, bucket_folder_name,
-                self.asset_file_names, self.logger)
+                self.settings,
+                output_bucket_name,
+                bucket_folder_name,
+                self.asset_file_names,
+                self.logger,
+            )
         except:
-            self.logger.exception('%s failed to upload an asset to the bucket' % self.name)
+            self.logger.exception(
+                "%s failed to upload an asset to the bucket" % self.name
+            )
             return self.ACTIVITY_PERMANENT_FAILURE
 
-        self.statuses['upload'] = True
+        self.statuses["upload"] = True
         self.log_statuses(self.input_file)
         return self.ACTIVITY_SUCCESS
 
@@ -125,17 +151,24 @@ class activity_DepositDecisionLetterIngestAssets(Activity):
     def log_statuses(self, input_file):
         "log the statuses value"
         self.logger.info(
-            "%s for input_file %s statuses: %s" % (self.name, str(input_file), self.statuses))
+            "%s for input_file %s statuses: %s"
+            % (self.name, str(input_file), self.statuses)
+        )
 
 
-def deposit_assets_to_bucket(settings, output_bucket, bucket_folder_name, asset_file_names, logger):
+def deposit_assets_to_bucket(
+    settings, output_bucket, bucket_folder_name, asset_file_names, logger
+):
     "deposit the assets to the output bucket"
     for asset_file_name in asset_file_names:
         file_name = article_processing.file_name_from_name(asset_file_name)
         dest_resource = download_helper.file_resource_origin(
-            settings.storage_provider, file_name, output_bucket, bucket_folder_name)
+            settings.storage_provider, file_name, output_bucket, bucket_folder_name
+        )
         storage = storage_context(settings)
-        logger.info("Depositing asset %s to S3 key %s" % (asset_file_name, dest_resource))
+        logger.info(
+            "Depositing asset %s to S3 key %s" % (asset_file_name, dest_resource)
+        )
         # set the bucket object resource from the local file
         storage.set_resource_from_filename(dest_resource, asset_file_name)
         logger.info("Deposited asset %s to S3" % asset_file_name)
