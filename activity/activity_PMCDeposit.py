@@ -122,6 +122,8 @@ class activity_PMCDeposit(Activity):
             self.logger.info(
                 "%s could not determine article retracted status for article id %s" %
                 (self.name, fid))
+            # Clean up disk
+            self.clean_tmp_dir()
             return self.ACTIVITY_TEMPORARY_FAILURE
 
         # FTP the zip
@@ -139,6 +141,8 @@ class activity_PMCDeposit(Activity):
                     subject = ftp_exception_email_subject(self.document)
                     send_ftp_exception_email(subject, message, self.settings, self.logger)
                     session.store_value('ftp_exception', 1)
+                # Clean up disk
+                self.clean_tmp_dir()
                 # return a temporary failure
                 return self.ACTIVITY_TEMPORARY_FAILURE
 
