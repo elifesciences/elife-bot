@@ -15,15 +15,15 @@ from provider.ftp import FTP
 from activity.objects import Activity
 
 
-JOURNAL = 'elife'
-ZIP_FILE_PREFIX = '%s-' % JOURNAL
+JOURNAL = "elife"
+ZIP_FILE_PREFIX = "%s-" % JOURNAL
 
 
 class activity_FTPArticle(Activity):
-
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_FTPArticle, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "FTPArticle"
         self.version = "1"
@@ -31,11 +31,14 @@ class activity_FTPArticle(Activity):
         self.default_task_schedule_to_close_timeout = 60 * 30
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 15
-        self.description = "Download VOR files and publish by FTP to some particular place."
+        self.description = (
+            "Download VOR files and publish by FTP to some particular place."
+        )
 
         # Bucket settings
-        self.archive_zip_bucket = (self.settings.publishing_buckets_prefix
-                                   + self.settings.archive_bucket)
+        self.archive_zip_bucket = (
+            self.settings.publishing_buckets_prefix + self.settings.archive_bucket
+        )
 
         # Local directory settings
         self.directories = {
@@ -71,7 +74,7 @@ class activity_FTPArticle(Activity):
         Activity, do the work
         """
         if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+            self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         # Data passed to this activity
         elife_id = data["data"]["elife_id"]
@@ -92,44 +95,51 @@ class activity_FTPArticle(Activity):
 
         # FTP to endpoint
         try:
-            zipfiles = glob.glob(self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.zip")
+            zipfiles = glob.glob(
+                self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.zip"
+            )
             if self.logger:
                 self.logger.info(
                     "FTPArticle running %s workflow for article %s, attempting to send files: %s"
-                    % (self.workflow, self.doi_id, zipfiles))
-            if workflow == 'HEFCE':
+                    % (self.workflow, self.doi_id, zipfiles)
+                )
+            if workflow == "HEFCE":
                 # self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR, passive=True)
                 # SFTP now
                 sub_dir = "{:05d}".format(int(elife_id))
                 self.sftp_to_endpoint(zipfiles, sub_dir)
-            if workflow == 'Cengage':
+            if workflow == "Cengage":
                 self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == 'WoS':
+            if workflow == "WoS":
                 self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == 'GoOA':
+            if workflow == "GoOA":
                 self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == 'CNPIEC':
+            if workflow == "CNPIEC":
                 self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == 'CNKI':
+            if workflow == "CNKI":
                 self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == 'CLOCKSS':
+            if workflow == "CLOCKSS":
                 self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == 'OVID':
+            if workflow == "OVID":
                 self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == 'Zendy':
+            if workflow == "Zendy":
                 self.sftp_to_endpoint(zipfiles)
-            if workflow == 'OASwitchboard':
+            if workflow == "OASwitchboard":
                 # send XML files only, unzipped
                 with zipfile.ZipFile(zipfiles[0], "r") as open_zip:
                     open_zip.extractall(self.directories.get("FTP_TO_SOMEWHERE_DIR"))
-                uploadfiles = glob.glob(self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.xml")
+                uploadfiles = glob.glob(
+                    self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.xml"
+                )
                 self.sftp_to_endpoint(uploadfiles)
 
         except:
             # Something went wrong, fail
             if self.logger:
-                self.logger.exception('exception in FTPArticle, data: %s' %
-                                      json.dumps(data, sort_keys=True, indent=4))
+                self.logger.exception(
+                    "exception in FTPArticle, data: %s"
+                    % json.dumps(data, sort_keys=True, indent=4)
+                )
             result = False
             self.clean_tmp_dir()
             return result
@@ -138,7 +148,8 @@ class activity_FTPArticle(Activity):
         if self.logger:
             self.logger.info(
                 "FTPArticle running %s workflow for article %s, finished sending files: %s"
-                % (self.workflow, self.doi_id, zipfiles))
+                % (self.workflow, self.doi_id, zipfiles)
+            )
         result = True
         self.clean_tmp_dir()
         return result
@@ -149,7 +160,7 @@ class activity_FTPArticle(Activity):
         workflow type specified
         """
 
-        if workflow == 'HEFCE':
+        if workflow == "HEFCE":
             self.FTP_URI = self.settings.HEFCE_FTP_URI
             self.FTP_USERNAME = self.settings.HEFCE_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.HEFCE_FTP_PASSWORD
@@ -164,55 +175,55 @@ class activity_FTPArticle(Activity):
             self.SFTP_PASSWORD = self.settings.HEFCE_SFTP_PASSWORD
             self.SFTP_CWD = self.settings.HEFCE_SFTP_CWD
 
-        if workflow == 'Cengage':
+        if workflow == "Cengage":
             self.FTP_URI = self.settings.CENGAGE_FTP_URI
             self.FTP_USERNAME = self.settings.CENGAGE_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.CENGAGE_FTP_PASSWORD
             self.FTP_CWD = self.settings.CENGAGE_FTP_CWD
 
-        if workflow == 'WoS':
+        if workflow == "WoS":
             self.FTP_URI = self.settings.WOS_FTP_URI
             self.FTP_USERNAME = self.settings.WOS_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.WOS_FTP_PASSWORD
             self.FTP_CWD = self.settings.WOS_FTP_CWD
 
-        if workflow == 'GoOA':
+        if workflow == "GoOA":
             self.FTP_URI = self.settings.GOOA_FTP_URI
             self.FTP_USERNAME = self.settings.GOOA_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.GOOA_FTP_PASSWORD
             self.FTP_CWD = self.settings.GOOA_FTP_CWD
 
-        if workflow == 'CNPIEC':
+        if workflow == "CNPIEC":
             self.FTP_URI = self.settings.CNPIEC_FTP_URI
             self.FTP_USERNAME = self.settings.CNPIEC_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.CNPIEC_FTP_PASSWORD
             self.FTP_CWD = self.settings.CNPIEC_FTP_CWD
 
-        if workflow == 'CNKI':
+        if workflow == "CNKI":
             self.FTP_URI = self.settings.CNKI_FTP_URI
             self.FTP_USERNAME = self.settings.CNKI_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.CNKI_FTP_PASSWORD
             self.FTP_CWD = self.settings.CNKI_FTP_CWD
 
-        if workflow == 'CLOCKSS':
+        if workflow == "CLOCKSS":
             self.FTP_URI = self.settings.CLOCKSS_FTP_URI
             self.FTP_USERNAME = self.settings.CLOCKSS_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.CLOCKSS_FTP_PASSWORD
             self.FTP_CWD = self.settings.CLOCKSS_FTP_CWD
 
-        if workflow == 'OVID':
+        if workflow == "OVID":
             self.FTP_URI = self.settings.OVID_FTP_URI
             self.FTP_USERNAME = self.settings.OVID_FTP_USERNAME
             self.FTP_PASSWORD = self.settings.OVID_FTP_PASSWORD
             self.FTP_CWD = self.settings.OVID_FTP_CWD
 
-        if workflow == 'Zendy':
+        if workflow == "Zendy":
             self.SFTP_URI = self.settings.ZENDY_SFTP_URI
             self.SFTP_USERNAME = self.settings.ZENDY_SFTP_USERNAME
             self.SFTP_PASSWORD = self.settings.ZENDY_SFTP_PASSWORD
             self.SFTP_CWD = self.settings.ZENDY_SFTP_CWD
 
-        if workflow == 'OASwitchboard':
+        if workflow == "OASwitchboard":
             self.SFTP_URI = self.settings.OASWITCHBOARD_SFTP_URI
             self.SFTP_USERNAME = self.settings.OASWITCHBOARD_SFTP_USERNAME
             self.SFTP_PASSWORD = self.settings.OASWITCHBOARD_SFTP_PASSWORD
@@ -230,14 +241,16 @@ class activity_FTPArticle(Activity):
         else:
             self.logger.info(
                 "FTPArticle running %s workflow for article %s, failed to package any zip files"
-                % (self.workflow, self.doi_id))
+                % (self.workflow, self.doi_id)
+            )
 
     def download_archive_zip_from_s3(self, doi_id):
         "download the latest archive zip for the article to be repackaged"
         # Connect to S3 and bucket
         bucket_name = self.archive_zip_bucket
-        s3_conn = S3Connection(self.settings.aws_access_key_id,
-                               self.settings.aws_secret_access_key)
+        s3_conn = S3Connection(
+            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        )
         bucket = s3_conn.lookup(bucket_name)
         s3_keys_in_bucket = s3lib.get_s3_keys_from_bucket(bucket=bucket)
 
@@ -274,13 +287,15 @@ class activity_FTPArticle(Activity):
             if self.logger:
                 self.logger.info(
                     "FTPArticle running %s workflow for article %s, downloaded archive zip %s"
-                    % (self.workflow, self.doi_id, filename))
+                    % (self.workflow, self.doi_id, filename)
+                )
             return True
 
         if self.logger:
             self.logger.info(
                 "FTPArticle running %s workflow for article %s, could not download an archive zip"
-                % (self.workflow, self.doi_id))
+                % (self.workflow, self.doi_id)
+            )
         return False
 
     def repackage_archive_zip_to_pmc_zip(self, doi_id):
@@ -291,28 +306,35 @@ class activity_FTPArticle(Activity):
         zip_renamed_files_dir = self.directories.get("RENAME_DIR")
         pmc_zip_output_dir = self.directories.get("INPUT_DIR")
         archive_zip_name = glob.glob(zip_input_dir + "/*.zip")[0]
-        with zipfile.ZipFile(archive_zip_name, 'r') as myzip:
+        with zipfile.ZipFile(archive_zip_name, "r") as myzip:
             myzip.extractall(zip_extracted_dir)
         # rename the files and profile the files
         file_name_map = article_processing.rename_files_remove_version_number(
-            files_dir=zip_extracted_dir,
-            output_dir=zip_renamed_files_dir
+            files_dir=zip_extracted_dir, output_dir=zip_renamed_files_dir
         )
         if self.logger:
-            self.logger.info("FTPArticle running %s workflow for article %s, file_name_map"
-                             % (self.workflow, self.doi_id))
+            self.logger.info(
+                "FTPArticle running %s workflow for article %s, file_name_map"
+                % (self.workflow, self.doi_id)
+            )
             self.logger.info(file_name_map)
         # convert the XML
         article_xml_file = glob.glob(zip_renamed_files_dir + "/*.xml")[0]
         article_processing.convert_xml(
-            xml_file=article_xml_file,
-            file_name_map=file_name_map)
+            xml_file=article_xml_file, file_name_map=file_name_map
+        )
         # rezip the files into PMC zip format
         soup = parser.parse_document(article_xml_file)
         volume = parser.volume(soup)
-        pmc_zip_file_name = article_processing.new_pmc_zip_filename(self.journal, volume, doi_id)
-        with zipfile.ZipFile(os.path.join(pmc_zip_output_dir, pmc_zip_file_name), 'w',
-                             zipfile.ZIP_DEFLATED, allowZip64=True) as new_zipfile:
+        pmc_zip_file_name = article_processing.new_pmc_zip_filename(
+            self.journal, volume, doi_id
+        )
+        with zipfile.ZipFile(
+            os.path.join(pmc_zip_output_dir, pmc_zip_file_name),
+            "w",
+            zipfile.ZIP_DEFLATED,
+            allowZip64=True,
+        ) as new_zipfile:
             dirfiles = article_processing.file_list(zip_renamed_files_dir)
             for dir_file in dirfiles:
                 filename = dir_file.split(os.sep)[-1]
@@ -345,15 +367,19 @@ class activity_FTPArticle(Activity):
         zipfiles = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")
         to_dir = self.directories.get("TMP_DIR")
         for filename in zipfiles:
-            with zipfile.ZipFile(filename, 'r') as open_zip_file:
+            with zipfile.ZipFile(filename, "r") as open_zip_file:
                 open_zip_file.extractall(to_dir)
 
         # Create the new zip
         zip_file_path = os.path.join(
             self.directories.get("ZIP_DIR"),
-            new_zip_file_name(doi_id, ZIP_FILE_PREFIX, zip_file_suffix(keep_file_types)))
-        with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED,
-                             allowZip64=True) as new_zipfile:
+            new_zip_file_name(
+                doi_id, ZIP_FILE_PREFIX, zip_file_suffix(keep_file_types)
+            ),
+        )
+        with zipfile.ZipFile(
+            zip_file_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True
+        ) as new_zipfile:
             # Add files
             for file_type in file_type_matches(keep_file_types):
                 files = glob.glob(to_dir + file_type)
@@ -367,8 +393,8 @@ class activity_FTPArticle(Activity):
 
         # Move the zip
         shutil.move(
-            zip_file_path,
-            self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep)
+            zip_file_path, self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep
+        )
 
     def move_pmc_zip(self):
         """Default, move all the zip files from TMP_DIR to FTP_OUTBOX"""
@@ -391,18 +417,20 @@ class activity_FTPArticle(Activity):
                 uri=self.FTP_URI,
                 username=self.FTP_USERNAME,
                 password=self.FTP_PASSWORD,
-                passive=passive
+                passive=passive,
             )
             self.logger.info("Connected to FTP server %s" % self.FTP_URI)
         except Exception as exception:
             self.logger.exception(
-                "Exception connecting to FTP server %s: %s" % (self.FTP_URI, exception))
+                "Exception connecting to FTP server %s: %s" % (self.FTP_URI, exception)
+            )
             raise
 
         for uploadfile in uploadfiles:
             try:
                 self.logger.info(
-                    "Uploading file %s to FTP server %s" % (uploadfile, self.FTP_URI))
+                    "Uploading file %s to FTP server %s" % (uploadfile, self.FTP_URI)
+                )
                 ftp_provider.ftp_cwd_mkd(ftp_instance, "/")
                 if self.FTP_CWD != "":
                     ftp_provider.ftp_cwd_mkd(ftp_instance, self.FTP_CWD)
@@ -411,11 +439,14 @@ class activity_FTPArticle(Activity):
                         ftp_provider.ftp_cwd_mkd(ftp_instance, sub_dir)
                 ftp_provider.ftp_upload(ftp_instance, uploadfile)
                 self.logger.info(
-                    "Completed uploading file %s to FTP server %s" % (uploadfile, self.FTP_URI))
+                    "Completed uploading file %s to FTP server %s"
+                    % (uploadfile, self.FTP_URI)
+                )
             except Exception as exception:
                 self.logger.exception(
-                    "Exception in uploading file %s by FTP in %s: %s" %
-                    (uploadfile, self.name, exception))
+                    "Exception in uploading file %s by FTP in %s: %s"
+                    % (uploadfile, self.name, exception)
+                )
                 ftp_provider.ftp_disconnect(ftp_instance)
                 raise
 
@@ -425,7 +456,9 @@ class activity_FTPArticle(Activity):
             self.logger.info("Disconnected from FTP server %s" % self.FTP_URI)
         except Exception as exception:
             self.logger.exception(
-                "Exception disconnecting from FTP server %s: %s" % (self.FTP_URI, exception))
+                "Exception disconnecting from FTP server %s: %s"
+                % (self.FTP_URI, exception)
+            )
             raise
 
     def sftp_to_endpoint(self, uploadfiles, sub_dir=None):
@@ -433,7 +466,9 @@ class activity_FTPArticle(Activity):
         Using the sftp provider module, connect to sftp server and transmit files
         """
         sftp = sftplib.SFTP(logger=self.logger)
-        sftp_client = sftp.sftp_connect(self.SFTP_URI, self.SFTP_USERNAME, self.SFTP_PASSWORD)
+        sftp_client = sftp.sftp_connect(
+            self.SFTP_URI, self.SFTP_USERNAME, self.SFTP_PASSWORD
+        )
 
         if sftp_client is not None:
             sftp.sftp_to_endpoint(sftp_client, uploadfiles, self.SFTP_CWD, sub_dir)
@@ -443,13 +478,13 @@ class activity_FTPArticle(Activity):
 
 def zip_file_suffix(file_types):
     """suffix for new zip file name"""
-    return '-%s.zip' % '-'.join(file_types)
+    return "-%s.zip" % "-".join(file_types)
 
 
 def new_zip_file_name(doi_id, prefix, suffix):
-    return '%s%s%s' % (prefix, str(doi_id).zfill(5), suffix)
+    return "%s%s%s" % (prefix, str(doi_id).zfill(5), suffix)
 
 
 def file_type_matches(file_types):
     """wildcard file name matches for the file types to include"""
-    return ['/*.%s' % file_type for file_type in file_types]
+    return ["/*.%s" % file_type for file_type in file_types]

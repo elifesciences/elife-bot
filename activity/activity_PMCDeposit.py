@@ -16,10 +16,10 @@ from activity.objects import Activity
 
 
 class activity_PMCDeposit(Activity):
-
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_PMCDeposit, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "PMCDeposit"
         self.version = "1"
@@ -27,15 +27,17 @@ class activity_PMCDeposit(Activity):
         self.default_task_schedule_to_close_timeout = 60 * 30
         self.default_task_schedule_to_start_timeout = 30
         self.default_task_start_to_close_timeout = 60 * 15
-        self.description = ("Download single zip file an article, repackage it, " +
-                            "send to PMC and notify them.")
+        self.description = (
+            "Download single zip file an article, repackage it, "
+            + "send to PMC and notify them."
+        )
 
         # Local directory settings
         self.directories = {
             "TMP_DIR": self.get_tmp_dir() + os.sep + "tmp_dir",
             "INPUT_DIR": self.get_tmp_dir() + os.sep + "input_dir",
             "ZIP_DIR": self.get_tmp_dir() + os.sep + "zip_dir",
-            "OUTPUT_DIR": self.get_tmp_dir() + os.sep + "output_dir"
+            "OUTPUT_DIR": self.get_tmp_dir() + os.sep + "output_dir",
         }
 
         # Bucket settings
@@ -52,9 +54,9 @@ class activity_PMCDeposit(Activity):
         """
         Activity, do the work
         """
-        self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+        self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
-        run = data['run']
+        run = data["run"]
         session = get_session(self.settings, data, run)
 
         # Data passed to this activity
@@ -67,32 +69,47 @@ class activity_PMCDeposit(Activity):
         download_status = self.download_files_from_s3(self.document)
 
         if not download_status:
-            self.logger.info('failed to download zip in PMCDeposit: ' + str(self.document))
+            self.logger.info(
+                "failed to download zip in PMCDeposit: " + str(self.document)
+            )
             # Clean up disk
             self.clean_tmp_dir()
             # Retry activity again
             return self.ACTIVITY_TEMPORARY_FAILURE
 
         # Unzip the input zip file contents
-        input_zip_file_name = os.path.join(self.directories.get("INPUT_DIR"), self.document)
-        unzip_article_files(input_zip_file_name, self.directories.get("TMP_DIR"), self.logger)
+        input_zip_file_name = os.path.join(
+            self.directories.get("INPUT_DIR"), self.document
+        )
+        unzip_article_files(
+            input_zip_file_name, self.directories.get("TMP_DIR"), self.logger
+        )
 
         # Profile the article
         journal = get_journal(self.document)
         xml_search_folders = [
             self.directories.get("TMP_DIR"),
-            self.directories.get("OUTPUT_DIR")]
+            self.directories.get("OUTPUT_DIR"),
+        ]
 
         fid, volume = profile_article(article_xml_file(xml_search_folders))
 
         # Rename the files
         file_name_map = article_processing.rename_files_remove_version_number(
-            self.directories.get("TMP_DIR"), self.directories.get("OUTPUT_DIR"), self.logger)
+            self.directories.get("TMP_DIR"),
+            self.directories.get("OUTPUT_DIR"),
+            self.logger,
+        )
 
-        (verified, renamed_list, not_renamed_list) = article_processing.verify_rename_files(
-            file_name_map)
+        (
+            verified,
+            renamed_list,
+            not_renamed_list,
+        ) = article_processing.verify_rename_files(file_name_map)
 
-        self.logger.info("verified %s: %s" % (self.directories.get("INPUT_DIR"), verified))
+        self.logger.info(
+            "verified %s: %s" % (self.directories.get("INPUT_DIR"), verified)
+        )
         self.logger.info("file_name_map: %s" % file_name_map)
         if renamed_list:
             self.logger.info("renamed: %s" % renamed_list)
@@ -103,7 +120,9 @@ class activity_PMCDeposit(Activity):
         alter_xml(article_xml_file(xml_search_folders), self.logger)
 
         # Convert the XML
-        article_processing.convert_xml(article_xml_file(xml_search_folders), file_name_map)
+        article_processing.convert_xml(
+            article_xml_file(xml_search_folders), file_name_map
+        )
 
         # Get the new zip file name
         # take into account the r1 r2 revision numbers when replacing an article
@@ -114,14 +133,18 @@ class activity_PMCDeposit(Activity):
         create_new_zip(zip_file_path, self.directories.get("OUTPUT_DIR"), self.logger)
 
         # check if the article is retracted
-        article_retracted_status = lax_provider.article_retracted_status(fid, self.settings)
+        article_retracted_status = lax_provider.article_retracted_status(
+            fid, self.settings
+        )
         self.logger.info(
-            "%s article_id %s article_retracted_status: %s" %
-            (self.name, fid, article_retracted_status))
+            "%s article_id %s article_retracted_status: %s"
+            % (self.name, fid, article_retracted_status)
+        )
         if article_retracted_status is None:
             self.logger.info(
-                "%s could not determine article retracted status for article id %s" %
-                (self.name, fid))
+                "%s could not determine article retracted status for article id %s"
+                % (self.name, fid)
+            )
             # Clean up disk
             self.clean_tmp_dir()
             return self.ACTIVITY_TEMPORARY_FAILURE
@@ -132,15 +155,18 @@ class activity_PMCDeposit(Activity):
             try:
                 ftp_status = self.ftp_to_endpoint(self.directories.get("ZIP_DIR"))
             except Exception as exception:
-                message = (
-                    "Exception in ftp_to_endpoint sending file %s: %s" %
-                    (self.zip_file_name, exception))
+                message = "Exception in ftp_to_endpoint sending file %s: %s" % (
+                    self.zip_file_name,
+                    exception,
+                )
                 self.logger.exception(message)
                 # send email once when an exception is raised
-                if not session.get_value('ftp_exception'):
+                if not session.get_value("ftp_exception"):
                     subject = ftp_exception_email_subject(self.document)
-                    send_ftp_exception_email(subject, message, self.settings, self.logger)
-                    session.store_value('ftp_exception', 1)
+                    send_ftp_exception_email(
+                        subject, message, self.settings, self.logger
+                    )
+                    session.store_value("ftp_exception", 1)
                 # Clean up disk
                 self.clean_tmp_dir()
                 # return a temporary failure
@@ -172,7 +198,7 @@ class activity_PMCDeposit(Activity):
                 uri=self.settings.PMC_FTP_URI,
                 username=self.settings.PMC_FTP_USERNAME,
                 password=self.settings.PMC_FTP_PASSWORD,
-                passive=passive
+                passive=passive,
             )
         except Exception as exception:
             self.logger.exception("Exception connecting to FTP server: %s" % exception)
@@ -186,9 +212,12 @@ class activity_PMCDeposit(Activity):
             ftp_provider.ftp_to_endpoint(
                 ftp_instance=ftp_instance,
                 uploadfiles=zipfiles,
-                sub_dir_list=[self.settings.PMC_FTP_CWD])
+                sub_dir_list=[self.settings.PMC_FTP_CWD],
+            )
         except Exception as exception:
-            self.logger.exception("Exception in transfer of files by FTP: %s" % exception)
+            self.logger.exception(
+                "Exception in transfer of files by FTP: %s" % exception
+            )
             ftp_provider.ftp_disconnect(ftp_instance)
             raise
 
@@ -196,26 +225,30 @@ class activity_PMCDeposit(Activity):
             # disconnect the FTP connection
             ftp_provider.ftp_disconnect(ftp_instance)
         except Exception as exception:
-            self.logger.exception("Exception disconnecting from FTP server: %s" % exception)
+            self.logger.exception(
+                "Exception disconnecting from FTP server: %s" % exception
+            )
             raise
 
         return True
 
     def download_files_from_s3(self, document):
         """download input zip document from the bucket"""
-        self.logger.info('downloading VoR file ' + document)
+        self.logger.info("downloading VoR file " + document)
         bucket_name = self.input_bucket
 
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
         orig_resource = storage_provider + bucket_name
 
-        file_name = document.split('/')[-1]
+        file_name = document.split("/")[-1]
         file_path = os.path.join(self.directories.get("INPUT_DIR"), file_name)
-        storage_resource_origin = orig_resource + '/' + document
+        storage_resource_origin = orig_resource + "/" + document
         try:
-            with open(file_path, 'wb') as open_file:
-                self.logger.info("Downloading %s to %s", (storage_resource_origin, file_path))
+            with open(file_path, "wb") as open_file:
+                self.logger.info(
+                    "Downloading %s to %s", (storage_resource_origin, file_path)
+                )
                 storage.get_resource_to_file(storage_resource_origin, open_file)
         except IOError:
             self.logger.exception("Failed to download file %s.", document)
@@ -233,8 +266,13 @@ class activity_PMCDeposit(Activity):
 
         for file_name in article_processing.file_list(self.directories.get("ZIP_DIR")):
             resource_dest = (
-                storage_provider + bucket_name + "/" + self.published_zip_folder + "/" +
-                article_processing.file_name_from_name(file_name))
+                storage_provider
+                + bucket_name
+                + "/"
+                + self.published_zip_folder
+                + "/"
+                + article_processing.file_name_from_name(file_name)
+            )
             storage.set_resource_from_filename(resource_dest, file_name)
 
     def zip_revision_number(self, fid):
@@ -244,7 +282,9 @@ class activity_PMCDeposit(Activity):
         """
         storage = storage_context(self.settings)
         storage_provider = self.settings.storage_provider + "://"
-        orig_resource = storage_provider + self.publish_bucket + "/" + self.published_zip_folder
+        orig_resource = (
+            storage_provider + self.publish_bucket + "/" + self.published_zip_folder
+        )
 
         s3_key_names = storage.list_resources(orig_resource)
 
@@ -258,7 +298,7 @@ def next_revision_number(fid, s3_key_names):
 
     if s3_key_name:
         # Found an existing PMC zip file, look for a revision number
-        revision_match = re.match(r'.*r(.*)\.zip$', s3_key_name)
+        revision_match = re.match(r".*r(.*)\.zip$", s3_key_name)
         if revision_match is None:
             # There is a zip but no revision number, use 1
             revision = 1
@@ -269,11 +309,11 @@ def next_revision_number(fid, s3_key_names):
 
 
 def unzip_article_files(zip_file_name, to_dir, logger):
-    """ If file extension is zip, then unzip contents """
-    if article_processing.file_extension(zip_file_name) == 'zip':
+    """If file extension is zip, then unzip contents"""
+    if article_processing.file_extension(zip_file_name) == "zip":
         # Unzip
         logger.info("going to unzip " + zip_file_name + " to " + to_dir)
-        with zipfile.ZipFile(zip_file_name, 'r') as open_file:
+        with zipfile.ZipFile(zip_file_name, "r") as open_file:
             open_file.extractall(to_dir)
 
 
@@ -281,7 +321,9 @@ def create_new_zip(zip_file_name, files_dir, logger):
 
     logger.info("creating new PMC zip file named " + zip_file_name)
 
-    with zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED, allowZip64=True) as new_zipfile:
+    with zipfile.ZipFile(
+        zip_file_name, "w", zipfile.ZIP_DEFLATED, allowZip64=True
+    ) as new_zipfile:
         dirfiles = article_processing.file_list(files_dir)
         for article_file_name in dirfiles:
             filename = article_file_name.split(os.sep)[-1]
@@ -289,7 +331,7 @@ def create_new_zip(zip_file_name, files_dir, logger):
 
 
 def get_journal(document):
-    """ get the journal name from the input zip file """
+    """get the journal name from the input zip file"""
     if document:
         info = ArticleInfo(article_processing.file_name_from_name(document))
         return info.journal
@@ -303,7 +345,7 @@ def article_xml_file(folders):
     for folder_name in folders:
         for file_name in article_processing.file_list(folder_name):
             info = ArticleInfo(article_processing.file_name_from_name(file_name))
-            if info.file_type == 'ArticleXML':
+            if info.file_type == "ArticleXML":
                 return file_name
     return None
 
@@ -311,11 +353,11 @@ def article_xml_file(folders):
 def new_zip_filename(journal, volume, fid, revision=None):
 
     filename = journal
-    filename = filename + '-' + str(volume).zfill(2)
-    filename = filename + '-' + str(fid).zfill(5)
+    filename = filename + "-" + str(volume).zfill(2)
+    filename = filename + "-" + str(fid).zfill(5)
     if revision:
-        filename = filename + '.r' + str(revision)
-    filename += '.zip'
+        filename = filename + ".r" + str(revision)
+    filename += ".zip"
     return filename
 
 
@@ -327,7 +369,7 @@ def profile_article(document):
     soup = parser.parse_document(document)
 
     # elife id / doi id / manuscript id
-    fid = parser.doi(soup).split('.')[-1]
+    fid = parser.doi(soup).split(".")[-1]
 
     # volume
     volume = parser.volume(soup)
@@ -337,7 +379,9 @@ def profile_article(document):
 
 def ftp_exception_email_subject(document):
     "email subject for sending an email"
-    return u'Exception raised sending article to PMC: {document}'.format(document=document)
+    return u"Exception raised sending article to PMC: {document}".format(
+        document=document
+    )
 
 
 def send_ftp_exception_email(subject, message, settings, logger):
@@ -348,14 +392,16 @@ def send_ftp_exception_email(subject, message, settings, logger):
     sender_email = settings.ftp_deposit_error_sender_email
 
     recipient_email_list = email_provider.list_email_recipients(
-        settings.ftp_deposit_error_recipient_email)
+        settings.ftp_deposit_error_recipient_email
+    )
 
     messages = email_provider.simple_messages(
-        sender_email, recipient_email_list, subject, body, logger=logger)
-    logger.info('Formatted %d email error messages' % len(messages))
+        sender_email, recipient_email_list, subject, body, logger=logger
+    )
+    logger.info("Formatted %d email error messages" % len(messages))
 
     details = email_provider.smtp_send_messages(settings, messages, logger)
-    logger.info('Email sending details: %s' % str(details))
+    logger.info("Email sending details: %s" % str(details))
 
 
 def alter_xml(xml_file, logger):

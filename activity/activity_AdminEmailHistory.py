@@ -13,10 +13,10 @@ AdminEmailHistory activity
 
 
 class activity_AdminEmailHistory(Activity):
-
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_AdminEmailHistory, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "AdminEmailHistory"
         self.version = "1"
@@ -34,29 +34,36 @@ class activity_AdminEmailHistory(Activity):
         AdminEmailHistory activity, do the work
         """
         if self.logger:
-            self.logger.info('data: %s' % json.dumps(data, sort_keys=True, indent=4))
+            self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         current_time = time.gmtime()
         current_timestamp = calendar.timegm(current_time)
 
-        workflow_count = self.get_workflow_count_by_closestatus(self.time_period, current_timestamp)
+        workflow_count = self.get_workflow_count_by_closestatus(
+            self.time_period, current_timestamp
+        )
         history_text = get_history_text(workflow_count)
         body = self.get_email_body(self.time_period, history_text, current_time)
         subject = self.get_email_subject(current_time, workflow_count)
         sender_email = self.settings.ses_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
-            self.settings.ses_admin_email)
+            self.settings.ses_admin_email
+        )
 
         for email in recipient_email_list:
             # send the email by SMTP
             message = email_provider.simple_message(
-                sender_email, email, subject, body, logger=self.logger)
+                sender_email, email, subject, body, logger=self.logger
+            )
 
             email_provider.smtp_send_messages(
-                self.settings, messages=[message], logger=self.logger)
-            self.logger.info('Email sending details: admin email, email %s, to %s' %
-                             ("AdminEmailHistory", email))
+                self.settings, messages=[message], logger=self.logger
+            )
+            self.logger.info(
+                "Email sending details: admin email, email %s, to %s"
+                % ("AdminEmailHistory", email)
+            )
 
         return True
 
@@ -64,7 +71,7 @@ class activity_AdminEmailHistory(Activity):
         """
         Assemble the email subject
         """
-        date_format = '%Y-%m-%d %H:%M'
+        date_format = "%Y-%m-%d %H:%M"
         datetime_string = time.strftime(date_format, current_time)
 
         history_text = ""
@@ -84,8 +91,13 @@ class activity_AdminEmailHistory(Activity):
             elif close_status == "TIMED_OUT":
                 history_text += " to:" + str(run_count)
 
-        subject = ("eLife SWF " + datetime_string + history_text
-                   + ", domain: " + self.settings.domain)
+        subject = (
+            "eLife SWF "
+            + datetime_string
+            + history_text
+            + ", domain: "
+            + self.settings.domain
+        )
 
         return subject
 
@@ -113,8 +125,14 @@ class activity_AdminEmailHistory(Activity):
         use the SWFMeta provider to count closed workflows
         """
 
-        close_status_list = ["COMPLETED", "FAILED", "CANCELED",
-                             "TERMINATED", "CONTINUED_AS_NEW", "TIMED_OUT"]
+        close_status_list = [
+            "COMPLETED",
+            "FAILED",
+            "CANCELED",
+            "TERMINATED",
+            "CONTINUED_AS_NEW",
+            "TIMED_OUT",
+        ]
 
         swfmeta = swfmetalib.SWFMeta(self.settings)
         swfmeta.connect()
@@ -129,8 +147,8 @@ class activity_AdminEmailHistory(Activity):
                 domain=self.settings.domain,
                 start_oldest_date=start_oldest_date_timestamp,
                 start_latest_date=start_latest_date_timestamp,
-                close_status=close_status
-                )
+                close_status=close_status,
+            )
             run_count = None
             try:
                 run_count = count["count"]

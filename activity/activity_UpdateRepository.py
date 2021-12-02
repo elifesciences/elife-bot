@@ -12,13 +12,16 @@ from activity.objects import Activity
 activity_UpdateRepository.py activity
 """
 
+
 class RetryException(RuntimeError):
     pass
+
 
 class activity_UpdateRepository(Activity):
     def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
         super(activity_UpdateRepository, self).__init__(
-            settings, logger, conn, token, activity_task)
+            settings, logger, conn, token, activity_task
+        )
 
         self.name = "UpdateRepository"
         self.pretty_name = "Update Repository"
@@ -31,95 +34,147 @@ class activity_UpdateRepository(Activity):
         self.logger = logger
 
     def do_activity(self, data=None):
-            self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
-                                    self.pretty_name, "start",
-                                    "Starting Updating repository for article " + data['article_id'])
+        self.emit_monitor_event(
+            self.settings,
+            data["article_id"],
+            data["version"],
+            data["run"],
+            self.pretty_name,
+            "start",
+            "Starting Updating repository for article " + data["article_id"],
+        )
 
-            # assert all Github settings have are not None when live
-            # if Github settings are null and we are testing, skip activity
-            if None in (self.settings.git_repo_path, self.settings.git_repo_name, self.settings.github_token):
-                import settings as settingsLib
-                if isinstance(self.settings(), settingsLib.live) or isinstance(self.settings(), settingsLib.prod) or \
-                        isinstance(self.settings(), settingsLib.end2end):
-                    self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
-                                            self.pretty_name, "error",
-                                            "Error Updating repository for article. Github settings are unavailable.")
-                    return self.ACTIVITY_PERMANENT_FAILURE
+        # assert all Github settings have are not None when live
+        # if Github settings are null and we are testing, skip activity
+        if None in (
+            self.settings.git_repo_path,
+            self.settings.git_repo_name,
+            self.settings.github_token,
+        ):
+            import settings as settingsLib
 
-                self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
-                                        self.pretty_name, "end",
-                                        "UpdateRepository got skipped as there are no Github "
-                                        "settings (Test enviroment).")
-                return True
-
-            try:
-
-                xml_file = provider.lax_provider.get_xml_file_name(self.settings,
-                                                            pad_msid(data['article_id']),
-                                                            self.settings.publishing_buckets_prefix +
-                                                            self.settings.ppp_cdn_bucket,
-                                                            data['version'])
-                s3_file_path = pad_msid(data['article_id']) + "/" + xml_file
-
-                storage = storage_context(self.settings)
-                bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
-
-                #download xml
-                with tempfile.TemporaryFile(mode='w+b') as tmp:
-                    storage_provider = self.settings.storage_provider + "://"
-                    published_path = storage_provider + self.settings.publishing_buckets_prefix + \
-                                        self.settings.ppp_cdn_bucket
-
-                    resource = published_path + "/" + s3_file_path
-
-                    storage.get_resource_to_file(resource, tmp)
-
-                    file_content = storage.get_resource_as_string(resource)
-
-                    message = self.update_github(
-                        self.settings.git_repo_path + xml_file, unicode_encode(file_content))
-                    self.logger.info(message)
-                    self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
-                                    self.pretty_name, "end",
-                                    "Finished Updating repository for article. Details: " + message)
-                    return True
-
-            except RetryException as exception:
-                self.logger.info(str(exception))
-                return self.ACTIVITY_TEMPORARY_FAILURE
-
-            except SSLError as exception:
-                # python 3 support for comparing exception message
-                strip_characters = "'(),"
-                exception_message = str(exception).lstrip(strip_characters).rstrip(strip_characters)
-                if exception_message == 'The read operation timed out':
-                    self.logger.info(str(exception))
-                    return self.ACTIVITY_TEMPORARY_FAILURE
-                else:
-                    self.logger.exception("Exception in do_activity")
-                    return self.ACTIVITY_PERMANENT_FAILURE
-
-            except Exception as e:
-                self.logger.exception("Exception in do_activity")
-                self.emit_monitor_event(self.settings, data['article_id'], data['version'], data['run'],
-                                        self.pretty_name, "error",
-                                        "Error Updating repository for article. Details: " + str(e))
+            if (
+                isinstance(self.settings(), settingsLib.live)
+                or isinstance(self.settings(), settingsLib.prod)
+                or isinstance(self.settings(), settingsLib.end2end)
+            ):
+                self.emit_monitor_event(
+                    self.settings,
+                    data["article_id"],
+                    data["version"],
+                    data["run"],
+                    self.pretty_name,
+                    "error",
+                    "Error Updating repository for article. Github settings are unavailable.",
+                )
                 return self.ACTIVITY_PERMANENT_FAILURE
 
+            self.emit_monitor_event(
+                self.settings,
+                data["article_id"],
+                data["version"],
+                data["run"],
+                self.pretty_name,
+                "end",
+                "UpdateRepository got skipped as there are no Github "
+                "settings (Test enviroment).",
+            )
+            return True
+
+        try:
+
+            xml_file = provider.lax_provider.get_xml_file_name(
+                self.settings,
+                pad_msid(data["article_id"]),
+                self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket,
+                data["version"],
+            )
+            s3_file_path = pad_msid(data["article_id"]) + "/" + xml_file
+
+            storage = storage_context(self.settings)
+            bucket_name = (
+                self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
+            )
+
+            # download xml
+            with tempfile.TemporaryFile(mode="w+b") as tmp:
+                storage_provider = self.settings.storage_provider + "://"
+                published_path = (
+                    storage_provider
+                    + self.settings.publishing_buckets_prefix
+                    + self.settings.ppp_cdn_bucket
+                )
+
+                resource = published_path + "/" + s3_file_path
+
+                storage.get_resource_to_file(resource, tmp)
+
+                file_content = storage.get_resource_as_string(resource)
+
+                message = self.update_github(
+                    self.settings.git_repo_path + xml_file, unicode_encode(file_content)
+                )
+                self.logger.info(message)
+                self.emit_monitor_event(
+                    self.settings,
+                    data["article_id"],
+                    data["version"],
+                    data["run"],
+                    self.pretty_name,
+                    "end",
+                    "Finished Updating repository for article. Details: " + message,
+                )
+                return True
+
+        except RetryException as exception:
+            self.logger.info(str(exception))
+            return self.ACTIVITY_TEMPORARY_FAILURE
+
+        except SSLError as exception:
+            # python 3 support for comparing exception message
+            strip_characters = "'(),"
+            exception_message = (
+                str(exception).lstrip(strip_characters).rstrip(strip_characters)
+            )
+            if exception_message == "The read operation timed out":
+                self.logger.info(str(exception))
+                return self.ACTIVITY_TEMPORARY_FAILURE
+            else:
+                self.logger.exception("Exception in do_activity")
+                return self.ACTIVITY_PERMANENT_FAILURE
+
+        except Exception as e:
+            self.logger.exception("Exception in do_activity")
+            self.emit_monitor_event(
+                self.settings,
+                data["article_id"],
+                data["version"],
+                data["run"],
+                self.pretty_name,
+                "error",
+                "Error Updating repository for article. Details: " + str(e),
+            )
+            return self.ACTIVITY_PERMANENT_FAILURE
 
     def update_github(self, repo_file, content):
 
         g = Github(self.settings.github_token)
-        user = g.get_user('elifesciences')
+        user = g.get_user("elifesciences")
         article_xml_repo = user.get_repo(self.settings.git_repo_name)
 
         try:
             xml_file = article_xml_repo.get_contents(repo_file)
         except GithubException as e:
             self.logger.info("GithubException - description: " + str(e))
-            self.logger.info("GithubException: file " + repo_file + " may not exist in github yet. We will try to add it in the repo.")
+            self.logger.info(
+                "GithubException: file "
+                + repo_file
+                + " may not exist in github yet. We will try to add it in the repo."
+            )
             try:
-                response = article_xml_repo.create_file(repo_file, "Creates XML", content)
+                response = article_xml_repo.create_file(
+                    repo_file, "Creates XML", content
+                )
             except GithubException as e:
                 self._retry_or_cancel(e)
             return "File " + repo_file + " successfully added. Commit: " + str(response)
@@ -129,16 +184,20 @@ class activity_UpdateRepository(Activity):
             raise
 
         try:
-            #check for changes first
+            # check for changes first
             if content == xml_file.decoded_content:
                 return "No changes in file " + repo_file
 
-            #there are changes
+            # there are changes
             try:
-                response = article_xml_repo.update_file(repo_file , "Updates xml", content, xml_file.sha)
+                response = article_xml_repo.update_file(
+                    repo_file, "Updates xml", content, xml_file.sha
+                )
             except GithubException as e:
                 self._retry_or_cancel(e)
-            return "File " + repo_file + " successfully updated. Commit: " + str(response)
+            return (
+                "File " + repo_file + " successfully updated. Commit: " + str(response)
+            )
 
         except Exception as e:
             self.logger.info("Exception: file " + repo_file + ". Error: " + str(e))
@@ -150,4 +209,3 @@ class activity_UpdateRepository(Activity):
             raise RetryException(str(e))
         else:
             raise e
-
