@@ -40,7 +40,8 @@ class workflow_SoftwareHeritageDeposit(Workflow):
                 define_workflow_step("GenerateSWHMetadata", data),
                 define_workflow_step("GenerateSWHReadme", data),
                 define_workflow_step(
-                    "PushSWHDeposit", data,
+                    "PushSWHDeposit",
+                    data,
                     heartbeat_timeout=60 * 45,
                     schedule_to_close_timeout=60 * 45,
                     schedule_to_start_timeout=60 * 5,

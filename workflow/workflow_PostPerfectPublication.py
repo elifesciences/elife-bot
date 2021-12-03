@@ -3,10 +3,18 @@ from workflow.helper import define_workflow_step, define_workflow_step_medium
 
 
 class workflow_PostPerfectPublication(Workflow):
-    def __init__(self, settings, logger, conn=None, token=None, decision=None,
-                 maximum_page_size=100):
+    def __init__(
+        self,
+        settings,
+        logger,
+        conn=None,
+        token=None,
+        decision=None,
+        maximum_page_size=100,
+    ):
         super(workflow_PostPerfectPublication, self).__init__(
-            settings, logger, conn, token, decision, maximum_page_size)
+            settings, logger, conn, token, decision, maximum_page_size
+        )
 
         # SWF Defaults
         self.name = "PostPerfectPublication"
@@ -23,31 +31,21 @@ class workflow_PostPerfectPublication(Workflow):
             "version": self.version,
             "task_list": self.settings.default_task_list,
             "input": data,
-
-            "start":
-                {
-                    "requirements": None
-                },
-
-            "steps":
-                [
-                    define_workflow_step("PingWorker", data),
-                    define_workflow_step("VerifyPublishResponse", data),
-                    define_workflow_step_medium("ArchiveArticle", data),
-                    define_workflow_step("LensArticle", data),
-                    define_workflow_step("ScheduleDownstream", data),
-                    define_workflow_step("UpdateRepository", data),
-                    define_workflow_step("EmailVideoArticlePublished", data),
-                    define_workflow_step("PublishDigest", data),
-                    define_workflow_step("CreateDigestMediumPost", data),
-                    define_workflow_step("GeneratePDFCovers", data),
-                    define_workflow_step("DepositDOAJ", data),
-                ],
-
-            "finish":
-                {
-                    "requirements": None
-                }
+            "start": {"requirements": None},
+            "steps": [
+                define_workflow_step("PingWorker", data),
+                define_workflow_step("VerifyPublishResponse", data),
+                define_workflow_step_medium("ArchiveArticle", data),
+                define_workflow_step("LensArticle", data),
+                define_workflow_step("ScheduleDownstream", data),
+                define_workflow_step("UpdateRepository", data),
+                define_workflow_step("EmailVideoArticlePublished", data),
+                define_workflow_step("PublishDigest", data),
+                define_workflow_step("CreateDigestMediumPost", data),
+                define_workflow_step("GeneratePDFCovers", data),
+                define_workflow_step("DepositDOAJ", data),
+            ],
+            "finish": {"requirements": None},
         }
 
         self.load_definition(workflow_definition)

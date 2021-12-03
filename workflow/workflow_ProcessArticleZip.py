@@ -3,10 +3,18 @@ from workflow.helper import define_workflow_step, define_workflow_step_short
 
 
 class workflow_ProcessArticleZip(Workflow):
-    def __init__(self, settings, logger, conn=None, token=None, decision=None,
-                 maximum_page_size=100):
+    def __init__(
+        self,
+        settings,
+        logger,
+        conn=None,
+        token=None,
+        decision=None,
+        maximum_page_size=100,
+    ):
         super(workflow_ProcessArticleZip, self).__init__(
-            settings, logger, conn, token, decision, maximum_page_size)
+            settings, logger, conn, token, decision, maximum_page_size
+        )
 
         # SWF Defaults
         self.name = "ProcessArticleZip"
@@ -24,26 +32,16 @@ class workflow_ProcessArticleZip(Workflow):
             "version": self.version,
             "task_list": self.settings.default_task_list,
             "input": data,
-
-            "start":
-                {
-                    "requirements": None
-                },
-
-            "steps":
-                [
-                    define_workflow_step("PingWorker", data),
-                    define_workflow_step_short("VerifyLaxResponse", data),
-                    define_workflow_step("ScheduleCrossref", data),
-                    define_workflow_step("ScheduleCrossrefPeerReview", data),
-                    define_workflow_step("IngestDigestToEndpoint", data),
-                    define_workflow_step("ReadyToPublish", data),
-                ],
-
-            "finish":
-                {
-                    "requirements": None
-                }
+            "start": {"requirements": None},
+            "steps": [
+                define_workflow_step("PingWorker", data),
+                define_workflow_step_short("VerifyLaxResponse", data),
+                define_workflow_step("ScheduleCrossref", data),
+                define_workflow_step("ScheduleCrossrefPeerReview", data),
+                define_workflow_step("IngestDigestToEndpoint", data),
+                define_workflow_step("ReadyToPublish", data),
+            ],
+            "finish": {"requirements": None},
         }
 
         self.load_definition(workflow_definition)
