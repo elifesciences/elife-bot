@@ -1,13 +1,24 @@
 from workflow.objects import Workflow
 from workflow.helper import (
-    define_workflow_step, define_workflow_step_short, define_workflow_step_medium)
+    define_workflow_step,
+    define_workflow_step_short,
+    define_workflow_step_medium,
+)
 
 
 class workflow_SilentCorrectionsIngest(Workflow):
-    def __init__(self, settings, logger, conn=None, token=None, decision=None,
-                 maximum_page_size=100):
+    def __init__(
+        self,
+        settings,
+        logger,
+        conn=None,
+        token=None,
+        decision=None,
+        maximum_page_size=100,
+    ):
         super(workflow_SilentCorrectionsIngest, self).__init__(
-            settings, logger, conn, token, decision, maximum_page_size)
+            settings, logger, conn, token, decision, maximum_page_size
+        )
 
         # SWF Defaults
         self.name = "SilentCorrectionsIngest"
@@ -25,37 +36,27 @@ class workflow_SilentCorrectionsIngest(Workflow):
             "version": self.version,
             "task_list": self.settings.default_task_list,
             "input": data,
-
-            "start":
-                {
-                    "requirements": None
-                },
-
-            "steps":
-                [
-                    define_workflow_step("PingWorker", data),
-                    define_workflow_step_medium("VersionLookup", data),
-                    define_workflow_step_medium("VersionDateLookup", data),
-                    define_workflow_step_medium("ExpandArticle", data),
-                    define_workflow_step("SendDashboardProperties", data),
-                    define_workflow_step_short("ApplyVersionNumber", data),
-                    define_workflow_step("ModifyArticleSubjects", data),
-                    define_workflow_step_medium("VerifyGlencoe", data),
-                    define_workflow_step_medium("ConvertImagesToJPG", data),
-                    define_workflow_step_medium("DepositIngestAssets", data),
-                    define_workflow_step_medium("CopyGlencoeStillImages", data),
-                    define_workflow_step("DepositAssets", data),
-                    define_workflow_step("InvalidateCdn", data),
-                    define_workflow_step_medium(
-                        "VerifyGlencoe", data,
-                        activity_id="VerifyGlencoeAgain"),
-                    define_workflow_step("IngestToLax", data),
-                ],
-
-            "finish":
-                {
-                    "requirements": None
-                }
+            "start": {"requirements": None},
+            "steps": [
+                define_workflow_step("PingWorker", data),
+                define_workflow_step_medium("VersionLookup", data),
+                define_workflow_step_medium("VersionDateLookup", data),
+                define_workflow_step_medium("ExpandArticle", data),
+                define_workflow_step("SendDashboardProperties", data),
+                define_workflow_step_short("ApplyVersionNumber", data),
+                define_workflow_step("ModifyArticleSubjects", data),
+                define_workflow_step_medium("VerifyGlencoe", data),
+                define_workflow_step_medium("ConvertImagesToJPG", data),
+                define_workflow_step_medium("DepositIngestAssets", data),
+                define_workflow_step_medium("CopyGlencoeStillImages", data),
+                define_workflow_step("DepositAssets", data),
+                define_workflow_step("InvalidateCdn", data),
+                define_workflow_step_medium(
+                    "VerifyGlencoe", data, activity_id="VerifyGlencoeAgain"
+                ),
+                define_workflow_step("IngestToLax", data),
+            ],
+            "finish": {"requirements": None},
         }
 
         self.load_definition(workflow_definition)

@@ -3,11 +3,18 @@ from workflow.helper import define_workflow_step
 
 
 class workflow_DepositDOAJ(Workflow):
-
-    def __init__(self, settings, logger, conn=None, token=None, decision=None,
-                 maximum_page_size=100):
+    def __init__(
+        self,
+        settings,
+        logger,
+        conn=None,
+        token=None,
+        decision=None,
+        maximum_page_size=100,
+    ):
         super(workflow_DepositDOAJ, self).__init__(
-            settings, logger, conn, token, decision, maximum_page_size)
+            settings, logger, conn, token, decision, maximum_page_size
+        )
 
         # SWF Defaults
         self.name = "DepositDOAJ"
@@ -25,22 +32,12 @@ class workflow_DepositDOAJ(Workflow):
             "version": self.version,
             "task_list": self.settings.default_task_list,
             "input": data,
-
-            "start":
-                {
-                    "requirements": None
-                },
-
-            "steps":
-                [
-                    define_workflow_step("PingWorker", data),
-                    define_workflow_step("DepositDOAJ", data),
-                ],
-
-            "finish":
-                {
-                    "requirements": None
-                }
+            "start": {"requirements": None},
+            "steps": [
+                define_workflow_step("PingWorker", data),
+                define_workflow_step("DepositDOAJ", data),
+            ],
+            "finish": {"requirements": None},
         }
 
         self.load_definition(workflow_definition)

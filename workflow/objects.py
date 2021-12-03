@@ -8,10 +8,19 @@ import time
 Amazon SWF workflow base class
 """
 
+
 class Workflow(object):
     # Base class for extending
-    def __init__(self, settings, logger, conn=None, token=None, decision=None,
-                 maximum_page_size=100, definition=None):
+    def __init__(
+        self,
+        settings,
+        logger,
+        conn=None,
+        token=None,
+        decision=None,
+        maximum_page_size=100,
+        definition=None,
+    ):
         self.settings = settings
         self.logger = logger
         self.conn = conn
@@ -63,8 +72,8 @@ class Workflow(object):
         d = Layer1Decisions()
         d.complete_workflow_execution()
         self.complete_decision(d)
-        #out = self.conn.respond_decision_task_completed(self.token,d._data)
-        #self.logger.info('respond_decision_task_completed returned %s' % out)
+        # out = self.conn.respond_decision_task_completed(self.token,d._data)
+        # self.logger.info('respond_decision_task_completed returned %s' % out)
 
     def complete_decision(self, d=None):
         """
@@ -73,7 +82,7 @@ class Workflow(object):
         if d is None:
             d = Layer1Decisions()
         out = self.conn.respond_decision_task_completed(self.token, d._data)
-        self.logger.info('respond_decision_task_completed returned %s' % out)
+        self.logger.info("respond_decision_task_completed returned %s" % out)
 
     def is_workflow_complete(self):
         """
@@ -86,14 +95,20 @@ class Workflow(object):
                 for p_activity in step:
                     activityType = p_activity["activity_type"]
                     activityID = p_activity["activity_id"]
-                    if self.activity_status(self.decision, activityType, activityID) is False:
+                    if (
+                        self.activity_status(self.decision, activityType, activityID)
+                        is False
+                    ):
                         return False
             else:
                 # A single activity
                 activityType = step["activity_type"]
                 activityID = step["activity_id"]
 
-                if self.activity_status(self.decision, activityType, activityID) is False:
+                if (
+                    self.activity_status(self.decision, activityType, activityID)
+                    is False
+                ):
                     return False
 
         return True
@@ -115,9 +130,15 @@ class Workflow(object):
                 for p_activity in step:
                     activityType = p_activity["activity_type"]
                     activityID = p_activity["activity_id"]
-                    if self.activity_status(self.decision, activityType, activityID) is False:
+                    if (
+                        self.activity_status(self.decision, activityType, activityID)
+                        is False
+                    ):
                         all_completed = False
-                    if self.activity_status(self.decision, activityType, activityID) is True:
+                    if (
+                        self.activity_status(self.decision, activityType, activityID)
+                        is True
+                    ):
                         none_started = False
                 if all_completed == False and none_started is True:
                     # A fresh step not started yet, add the activities
@@ -129,9 +150,12 @@ class Workflow(object):
                 activityType = step["activity_type"]
                 activityID = step["activity_id"]
 
-                if self.activity_status(self.decision, activityType, activityID) is False:
+                if (
+                    self.activity_status(self.decision, activityType, activityID)
+                    is False
+                ):
                     # Only add one activity at a time, for now
-                    #if(len(activities) == 0):
+                    # if(len(activities) == 0):
                     activities.append(step)
 
             # Return the activities not completed yet
@@ -151,7 +175,7 @@ class Workflow(object):
         task_list = str(self.definition["task_list"])
 
         activity_id = str(activity["activity_id"])
-        #activity_id = activity_id + '.' + self.get_time() + '.%s' % int(random.random() * 10000)
+        # activity_id = activity_id + '.' + self.get_time() + '.%s' % int(random.random() * 10000)
         activity_type = str(activity["activity_type"])
         version = str(activity["version"])
         heartbeat_timeout = str(activity["heartbeat_timeout"])
@@ -160,26 +184,28 @@ class Workflow(object):
         start_to_close_timeout = str(activity["start_to_close_timeout"])
         data = json.dumps(activity["input"])
 
-        self.logger.info('scheduling task: %s' % activity_id)
+        self.logger.info("scheduling task: %s" % activity_id)
         if d is None:
             d = Layer1Decisions()
-        d.schedule_activity_task(activity_id,           # Activity ID
-                                 activity_type,         # Activity Type
-                                 version,               # Activity Type Version
-                                 task_list,             # Task List
-                                 'control data',        # control
-                                 heartbeat_timeout,     # Heartbeat in seconds
-                                 schedule_to_close_timeout,    # schedule_to_close_timeout
-                                 schedule_to_start_timeout,    # schedule_to_start_timeout
-                                 start_to_close_timeout,       # start_to_close_timeout
-                                 data)                  # input: extra data to pass to activity
+        d.schedule_activity_task(
+            activity_id,  # Activity ID
+            activity_type,  # Activity Type
+            version,  # Activity Type Version
+            task_list,  # Task List
+            "control data",  # control
+            heartbeat_timeout,  # Heartbeat in seconds
+            schedule_to_close_timeout,  # schedule_to_close_timeout
+            schedule_to_start_timeout,  # schedule_to_start_timeout
+            start_to_close_timeout,  # start_to_close_timeout
+            data,
+        )  # input: extra data to pass to activity
         return d
 
     def get_time(self):
         """
         Return the current time in UTC for logging
         """
-        return datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+        return datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def activity_status(self, decision, activityType=None, activityID=None):
         """
@@ -198,23 +224,34 @@ class Workflow(object):
             # Find the all matching eventID for the activityType and/or activityID
             if activityType is not None and activityID is not None:
                 try:
-                    if(event["activityTaskScheduledEventAttributes"]["activityType"]["name"]
-                       == activityType
-                       and event["activityTaskScheduledEventAttributes"]["activityId"]
-                       == activityID):
+                    if (
+                        event["activityTaskScheduledEventAttributes"]["activityType"][
+                            "name"
+                        ]
+                        == activityType
+                        and event["activityTaskScheduledEventAttributes"]["activityId"]
+                        == activityID
+                    ):
                         eventId_list.append(event["eventId"])
                 except KeyError:
                     pass
             elif activityType is not None and activityID is None:
                 try:
-                    if(event["activityTaskScheduledEventAttributes"]["activityType"]["name"]
-                       == activityType):
+                    if (
+                        event["activityTaskScheduledEventAttributes"]["activityType"][
+                            "name"
+                        ]
+                        == activityType
+                    ):
                         eventId_list.append(event["eventId"])
                 except KeyError:
                     pass
             elif activityID is not None and activityType is None:
                 try:
-                    if event["activityTaskScheduledEventAttributes"]["activityId"] == activityID:
+                    if (
+                        event["activityTaskScheduledEventAttributes"]["activityId"]
+                        == activityID
+                    ):
                         eventId_list.append(event["eventId"])
                 except KeyError:
                     pass
@@ -227,7 +264,12 @@ class Workflow(object):
             for eventId in eventId_list:
                 # Find the first matching eventID for the activityType
                 try:
-                    if event["activityTaskCompletedEventAttributes"]["scheduledEventId"] == eventId:
+                    if (
+                        event["activityTaskCompletedEventAttributes"][
+                            "scheduledEventId"
+                        ]
+                        == eventId
+                    ):
                         # Found matching data, now check completion
                         if event["eventType"] == "ActivityTaskCompleted":
                             # Good!
@@ -264,12 +306,15 @@ class Workflow(object):
                 #  something has gone wrong and terminate the workflow execution with
                 #  extreme prejudice
                 d = Layer1Decisions()
-                reason = ("nextPageToken found, maximum_page_size of " +
-                          str(self.maximum_page_size) + " exceeded")
+                reason = (
+                    "nextPageToken found, maximum_page_size of "
+                    + str(self.maximum_page_size)
+                    + " exceeded"
+                )
                 d.fail_workflow_execution(reason)
                 out = self.conn.respond_decision_task_completed(self.token, d._data)
                 self.logger.info(reason)
-                self.logger.info('respond_decision_task_completed returned %s' % out)
+                self.logger.info("respond_decision_task_completed returned %s" % out)
                 self.token = None
                 return False
         except KeyError:
@@ -284,8 +329,11 @@ class Workflow(object):
         if self.decision is None:
             return None
         try:
-            input = json.loads(self.decision["events"][0]
-                               ["workflowExecutionStartedEventAttributes"]["input"])
+            input = json.loads(
+                self.decision["events"][0]["workflowExecutionStartedEventAttributes"][
+                    "input"
+                ]
+            )
         except KeyError:
             input = None
         return input
@@ -350,11 +398,18 @@ class Workflow(object):
         Describe workflow type from SWF, to confirm it exists
         Requires object to have an active connection to SWF using boto
         """
-        if self.conn is None or self.domain is None or self.name is None or self.version is None:
+        if (
+            self.conn is None
+            or self.domain is None
+            or self.name is None
+            or self.version is None
+        ):
             return None
 
         try:
-            response = self.conn.describe_workflow_type(self.domain, self.name, self.version)
+            response = self.conn.describe_workflow_type(
+                self.domain, self.name, self.version
+            )
         except boto.exception.SWFResponseError:
             response = None
 
@@ -365,7 +420,12 @@ class Workflow(object):
         Register the workflow type with SWF, if it does not already exist
         Requires object to have an active connection to SWF using boto
         """
-        if self.conn is None or self.domain is None or self.name is None or self.version is None:
+        if (
+            self.conn is None
+            or self.domain is None
+            or self.name is None
+            or self.version is None
+        ):
             return None
 
         if self.describe() is None:
@@ -377,5 +437,6 @@ class Workflow(object):
                 str(self.default_child_policy),
                 str(self.default_execution_start_to_close_timeout),
                 str(self.default_task_start_to_close_timeout),
-                str(self.description))
+                str(self.description),
+            )
             return response
