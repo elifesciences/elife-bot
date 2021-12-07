@@ -6,7 +6,8 @@ from mock import patch
 from ddt import ddt, data
 import activity.activity_CreateDigestMediumPost as activity_module
 from activity.activity_CreateDigestMediumPost import (
-    activity_CreateDigestMediumPost as activity_object)
+    activity_CreateDigestMediumPost as activity_object,
+)
 import provider.article as article
 import provider.lax_provider as lax_provider
 import provider.digest_provider as digest_provider
@@ -23,7 +24,7 @@ ACTIVITY_DATA = {
     "version": "1",
     "status": "vor",
     "expanded_folder": "digests",
-    "run_type": None
+    "run_type": None,
 }
 
 
@@ -38,7 +39,6 @@ def digest_activity_data(data, status=None, run_type=None):
 
 @ddt
 class TestCreateDigestMediumPost(unittest.TestCase):
-
     def setUp(self):
         fake_logger = FakeLogger()
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
@@ -47,132 +47,146 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
-    @patch.object(activity_module.email_provider, 'smtp_connect')
-    @patch('digestparser.medium_post.post_content')
-    @patch.object(lax_provider, 'article_first_by_status')
-    @patch.object(lax_provider, 'article_highest_version')
-    @patch.object(article_processing, 'storage_context')
-    @patch.object(article, 'storage_context')
-    @patch.object(digest_provider, 'storage_context')
-    @patch.object(activity_object, 'emit_monitor_event')
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch("digestparser.medium_post.post_content")
+    @patch.object(lax_provider, "article_first_by_status")
+    @patch.object(lax_provider, "article_highest_version")
+    @patch.object(article_processing, "storage_context")
+    @patch.object(article, "storage_context")
+    @patch.object(digest_provider, "storage_context")
+    @patch.object(activity_object, "emit_monitor_event")
     @data(
         {
             "comment": "approved for medium post",
             "bucket_resources": ["elife-15747-v2.xml"],
-            "bot_bucket_resources": ["digests/outbox/99999/digest-99999.docx",
-                                     "digests/outbox/99999/digest-99999.jpg"],
+            "bot_bucket_resources": [
+                "digests/outbox/99999/digest-99999.docx",
+                "digests/outbox/99999/digest-99999.jpg",
+            ],
             "first_vor": True,
-            "lax_highest_version": '1',
+            "lax_highest_version": "1",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_medium_content": read_fixture('medium_content_99999.py', 'digests')
+            "expected_medium_content": read_fixture(
+                "medium_content_99999.py", "digests"
+            ),
         },
         {
             "comment": "a digest with no image",
             "bucket_resources": ["elife-15747-v2.xml"],
             "bot_bucket_resources": ["digests/outbox/99999/digest-99999.docx"],
             "first_vor": True,
-            "lax_highest_version": '1',
+            "lax_highest_version": "1",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_medium_content": read_fixture('medium_content_99999_no_image.py', 'digests')
+            "expected_medium_content": read_fixture(
+                "medium_content_99999_no_image.py", "digests"
+            ),
         },
         {
             "comment": "not first vor",
             "bucket_resources": ["elife-15747-v2.xml"],
-            "bot_bucket_resources": ["digests/outbox/99999/digest-99999.docx",
-                                     "digests/outbox/99999/digest-99999.jpg"],
+            "bot_bucket_resources": [
+                "digests/outbox/99999/digest-99999.docx",
+                "digests/outbox/99999/digest-99999.jpg",
+            ],
             "first_vor": False,
-            "lax_highest_version": '1',
+            "lax_highest_version": "1",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
-            "expected_medium_content": None
+            "expected_medium_content": None,
         },
     )
-    def test_do_activity(self, test_data, fake_emit, fake_storage_context,
-                         fake_article_storage_context, fake_processing_storage_context,
-                         fake_highest_version, fake_first, fake_post_content,
-                         fake_email_smtp_connect):
+    def test_do_activity(
+        self,
+        test_data,
+        fake_emit,
+        fake_storage_context,
+        fake_article_storage_context,
+        fake_processing_storage_context,
+        fake_highest_version,
+        fake_first,
+        fake_post_content,
+        fake_email_smtp_connect,
+    ):
         # copy files into the input directory using the storage context
         fake_emit.return_value = None
-        activity_data = digest_activity_data(
-            ACTIVITY_DATA
-            )
+        activity_data = digest_activity_data(ACTIVITY_DATA)
         named_storage_context = FakeStorageContext()
-        if test_data.get('bucket_resources'):
-            named_storage_context.resources = test_data.get('bucket_resources')
+        if test_data.get("bucket_resources"):
+            named_storage_context.resources = test_data.get("bucket_resources")
         fake_article_storage_context.return_value = named_storage_context
         bot_storage_context = FakeStorageContext()
-        if test_data.get('bot_bucket_resources'):
-            bot_storage_context.resources = test_data.get('bot_bucket_resources')
+        if test_data.get("bot_bucket_resources"):
+            bot_storage_context.resources = test_data.get("bot_bucket_resources")
         fake_storage_context.return_value = bot_storage_context
         fake_processing_storage_context.return_value = FakeStorageContext()
         fake_post_content.return_value = None
-        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
         # lax mocking
-        fake_highest_version.return_value = test_data.get('lax_highest_version')
+        fake_highest_version.return_value = test_data.get("lax_highest_version")
         fake_first.return_value = test_data.get("first_vor")
         # do the activity
         result = self.activity.do_activity(activity_data)
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"))
-        self.assertEqual(self.activity.medium_content, test_data.get("expected_medium_content"))
+        self.assertEqual(
+            self.activity.medium_content, test_data.get("expected_medium_content")
+        )
 
-    @patch.object(digest_provider, 'docx_exists_in_s3')
-    @patch.object(activity_object, 'emit_monitor_event')
+    @patch.object(digest_provider, "docx_exists_in_s3")
+    @patch.object(activity_object, "emit_monitor_event")
     def test_do_activity_docx_does_not_exist(self, fake_emit, fake_docx_exists):
         fake_emit.return_value = None
         fake_docx_exists.return_value = None
-        activity_data = digest_activity_data(
-            ACTIVITY_DATA
-            )
+        activity_data = digest_activity_data(ACTIVITY_DATA)
         # do the activity
         result = self.activity.do_activity(activity_data)
         # check assertions
         self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
 
-    @patch.object(activity_object, 'emit_monitor_event')
+    @patch.object(activity_object, "emit_monitor_event")
     def test_do_activity_missing_credentials(self, fake_emit):
         # copy files into the input directory using the storage context
         fake_emit.return_value = None
-        activity_data = digest_activity_data(
-            ACTIVITY_DATA
-            )
-        self.activity.digest_config['medium_application_client_id'] = ''
+        activity_data = digest_activity_data(ACTIVITY_DATA)
+        self.activity.digest_config["medium_application_client_id"] = ""
         # do the activity
         result = self.activity.do_activity(activity_data)
         # check assertions
         self.assertEqual(result, activity_object.ACTIVITY_SUCCESS)
 
-    @patch.object(lax_provider, 'article_first_by_status')
-    @patch.object(lax_provider, 'article_highest_version')
+    @patch.object(lax_provider, "article_first_by_status")
+    @patch.object(lax_provider, "article_highest_version")
     @data(
         {
             "comment": "a poa",
-            "article_id": '00000',
+            "article_id": "00000",
             "status": "poa",
             "version": 3,
             "run_type": None,
-            "highest_version": '1',
+            "highest_version": "1",
             "first_vor": False,
-            "expected": False
+            "expected": False,
         },
         {
             "comment": "silent correction",
-            "article_id": '00000',
+            "article_id": "00000",
             "status": "vor",
             "version": 3,
             "run_type": "silent-correction",
-            "highest_version": '1',
+            "highest_version": "1",
             "first_vor": False,
-            "expected": False
+            "expected": False,
         },
         {
             "comment": "non-first vor",
-            "article_id": '00000',
+            "article_id": "00000",
             "status": "vor",
             "version": 3,
             "run_type": None,
-            "highest_version": '1',
+            "highest_version": "1",
             "first_vor": False,
-            "expected": False
+            "expected": False,
         },
     )
     def test_approve(self, test_data, fake_highest_version, fake_first):
@@ -183,30 +197,36 @@ class TestCreateDigestMediumPost(unittest.TestCase):
             test_data.get("article_id"),
             test_data.get("status"),
             test_data.get("version"),
-            test_data.get("run_type")
+            test_data.get("run_type"),
         )
-        self.assertEqual(status, test_data.get("expected"),
-                         "failed in {comment}".format(comment=test_data.get("comment")))
+        self.assertEqual(
+            status,
+            test_data.get("expected"),
+            "failed in {comment}".format(comment=test_data.get("comment")),
+        )
 
     def test_create_medium_content_empty(self):
         result = activity_module.post_medium_content(None, {}, FakeLogger())
         self.assertIsNone(result)
 
-    @patch('digestparser.medium_post.post_content')
+    @patch("digestparser.medium_post.post_content")
     def test_create_medium_content_exception(self, fake_post_content):
         fake_post_content.side_effect = Exception("Something went wrong!")
-        result = activity_module.post_medium_content('content', {}, FakeLogger())
+        result = activity_module.post_medium_content("content", {}, FakeLogger())
         self.assertFalse(result)
 
-    @patch.object(activity_module.email_provider, 'smtp_connect')
+    @patch.object(activity_module.email_provider, "smtp_connect")
     def test_email_notification(self, fake_email_smtp_connect):
-        fake_email_smtp_connect.return_value = FakeSMTPServer(self.activity.get_tmp_dir())
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
         return_value = self.activity.email_notification(99999)
         self.assertTrue(return_value)
         self.assertEqual(
             self.activity.logger.loginfo[-1],
-            "Email sending details: OrderedDict([('error', 0), ('success', 2)])")
+            "Email sending details: OrderedDict([('error', 0), ('success', 2)])",
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

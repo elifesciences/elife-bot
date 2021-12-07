@@ -9,23 +9,29 @@ import tests.activity.test_activity_data as test_data
 
 class FakeStorageContext:
     def list_resources(self, resource):
-        return ['elife-003530-fig1-v1-1022w.jpg',
-                'elife-003530-fig1-v1-80w.jpg',
-                'elife-003530-fig1-v1-1022w.gif',
-                'elife-003530-fig1-v1.jpg',
-                'elife-003530-fig1-v1.tif',
-                'elife-003530-fig1-v1-download.jpg',
-                'elife-003530-fig1-v1-download.xml']
+        return [
+            "elife-003530-fig1-v1-1022w.jpg",
+            "elife-003530-fig1-v1-80w.jpg",
+            "elife-003530-fig1-v1-1022w.gif",
+            "elife-003530-fig1-v1.jpg",
+            "elife-003530-fig1-v1.tif",
+            "elife-003530-fig1-v1-download.jpg",
+            "elife-003530-fig1-v1-download.xml",
+        ]
 
 
 class TestVerifyImageServer(unittest.TestCase):
     def setUp(self):
-        self.verifyimageserver = activity_VerifyImageServer(settings_mock, None, None, None, None)
+        self.verifyimageserver = activity_VerifyImageServer(
+            settings_mock, None, None, None, None
+        )
 
-    @patch('activity.activity_VerifyImageServer.storage_context')
-    @patch('activity.activity_VerifyImageServer.get_session')
-    @patch.object(activity_VerifyImageServer,'retrieve_endpoints_check')
-    def test_do_activity_success(self, fake_retrieve_endpoints_check, fake_session, fake_storage_context):
+    @patch("activity.activity_VerifyImageServer.storage_context")
+    @patch("activity.activity_VerifyImageServer.get_session")
+    @patch.object(activity_VerifyImageServer, "retrieve_endpoints_check")
+    def test_do_activity_success(
+        self, fake_retrieve_endpoints_check, fake_session, fake_storage_context
+    ):
         # Given
         data = test_data.data_example_before_publish
         fake_retrieve_endpoints_check.return_value = [(True, "test.path")]
@@ -38,10 +44,12 @@ class TestVerifyImageServer(unittest.TestCase):
         # Then
         self.assertEqual(result, self.verifyimageserver.ACTIVITY_SUCCESS)
 
-    @patch('activity.activity_VerifyImageServer.storage_context')
-    @patch('activity.activity_VerifyImageServer.get_session')
-    @patch.object(activity_VerifyImageServer,'retrieve_endpoints_check')
-    def test_do_activity_failure(self, fake_retrieve_endpoints_check, fake_session, fake_storage_context):
+    @patch("activity.activity_VerifyImageServer.storage_context")
+    @patch("activity.activity_VerifyImageServer.get_session")
+    @patch.object(activity_VerifyImageServer, "retrieve_endpoints_check")
+    def test_do_activity_failure(
+        self, fake_retrieve_endpoints_check, fake_session, fake_storage_context
+    ):
         # Given
         data = test_data.data_example_before_publish
         fake_retrieve_endpoints_check.return_value = [(False, "test.path")]
@@ -54,10 +62,12 @@ class TestVerifyImageServer(unittest.TestCase):
         # Then
         self.assertEqual(result, self.verifyimageserver.ACTIVITY_PERMANENT_FAILURE)
 
-    @patch('activity.activity_VerifyImageServer.storage_context')
-    @patch('activity.activity_VerifyImageServer.get_session')
-    @patch.object(activity_VerifyImageServer,'retrieve_endpoints_check')
-    def test_do_activity_error(self, fake_retrieve_endpoints_check, fake_session, fake_storage_context):
+    @patch("activity.activity_VerifyImageServer.storage_context")
+    @patch("activity.activity_VerifyImageServer.get_session")
+    @patch.object(activity_VerifyImageServer, "retrieve_endpoints_check")
+    def test_do_activity_error(
+        self, fake_retrieve_endpoints_check, fake_session, fake_storage_context
+    ):
         # Given
         data = test_data.data_example_before_publish
         fake_retrieve_endpoints_check.side_effect = Exception("Error!")
@@ -69,4 +79,3 @@ class TestVerifyImageServer(unittest.TestCase):
         result = self.verifyimageserver.do_activity(data)
         # Then
         self.assertEqual(result, self.verifyimageserver.ACTIVITY_PERMANENT_FAILURE)
-
