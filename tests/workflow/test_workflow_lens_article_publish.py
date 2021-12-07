@@ -7,7 +7,8 @@ from workflow.workflow_LensArticlePublish import workflow_LensArticlePublish
 class TestWorkflowLensArticlePublish(unittest.TestCase):
     def setUp(self):
         self.workflow = workflow_LensArticlePublish(
-            settings_mock, FakeLogger(), None, None, None, None)
+            settings_mock, FakeLogger(), None, None, None, None
+        )
 
     def test_init(self):
-        self.assertEqual(self.workflow.name, 'LensArticlePublish')
+        self.assertEqual(self.workflow.name, "LensArticlePublish")

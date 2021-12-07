@@ -7,7 +7,8 @@ from workflow.workflow_FTPArticle import workflow_FTPArticle
 class TestWorkflowFTPArticle(unittest.TestCase):
     def setUp(self):
         self.workflow = workflow_FTPArticle(
-            settings_mock, FakeLogger(), None, None, None, None)
+            settings_mock, FakeLogger(), None, None, None, None
+        )
 
     def test_init(self):
-        self.assertEqual(self.workflow.name, 'FTPArticle')
+        self.assertEqual(self.workflow.name, "FTPArticle")

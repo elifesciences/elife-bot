@@ -7,7 +7,8 @@ from workflow.workflow_SilentCorrectionsIngest import workflow_SilentCorrections
 class TestWorkflowSilentCorrectionsIngest(unittest.TestCase):
     def setUp(self):
         self.workflow = workflow_SilentCorrectionsIngest(
-            settings_mock, FakeLogger(), None, None, None, None)
+            settings_mock, FakeLogger(), None, None, None, None
+        )
 
     def test_init(self):
-        self.assertEqual(self.workflow.name, 'SilentCorrectionsIngest')
+        self.assertEqual(self.workflow.name, "SilentCorrectionsIngest")

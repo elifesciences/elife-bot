@@ -10,34 +10,48 @@ import tests.activity.settings_mock as settings_mock
 import tests.activity.test_activity_data as testdata
 from ddt import ddt, data, unpack
 
+
 class FakeKey:
     "just want a fake key object which can have a property set"
+
     def __init__(self):
         self.name = None
+
 
 @ddt
 class TestScheduleCrossref(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
-        self.activity = activity_ScheduleCrossref(settings_mock, fake_logger, None, None, None)
+        self.activity = activity_ScheduleCrossref(
+            settings_mock, fake_logger, None, None, None
+        )
 
     def tearDown(self):
         pass
 
-    @patch.object(activity_ScheduleCrossref, 'copy_article_xml_to_crossref_outbox')
-    @patch('activity.activity_ScheduleCrossref.get_article_xml_key')
-    @patch('activity.activity_ScheduleCrossref.S3Connection')
-    @patch('activity.activity_ScheduleCrossref.get_session')
-    @patch.object(activity_ScheduleCrossref, 'emit_monitor_event')
-    @patch.object(activity_ScheduleCrossref, 'set_monitor_property')
+    @patch.object(activity_ScheduleCrossref, "copy_article_xml_to_crossref_outbox")
+    @patch("activity.activity_ScheduleCrossref.get_article_xml_key")
+    @patch("activity.activity_ScheduleCrossref.S3Connection")
+    @patch("activity.activity_ScheduleCrossref.get_session")
+    @patch.object(activity_ScheduleCrossref, "emit_monitor_event")
+    @patch.object(activity_ScheduleCrossref, "set_monitor_property")
     @data(
-        ('key_name', 'elife-00353-v1.xml', True),
+        ("key_name", "elife-00353-v1.xml", True),
         (None, None, False),
-        )
+    )
     @unpack
-    def test_do_activity(self, xml_key, xml_filename, expected_result,
-                         mock_set_monitor_property, mock_emit_monitor_event, fake_session_mock,
-                         fake_s3_mock, fake_get_article_xml_key, fake_copy_article_xml):
+    def test_do_activity(
+        self,
+        xml_key,
+        xml_filename,
+        expected_result,
+        mock_set_monitor_property,
+        mock_emit_monitor_event,
+        fake_session_mock,
+        fake_s3_mock,
+        fake_get_article_xml_key,
+        fake_copy_article_xml,
+    ):
         fake_session_mock.return_value = FakeSession(testdata.session_example)
         fake_s3_mock.return_value = FakeS3Connection()
         fake_copy_article_xml = mock.MagicMock()
@@ -52,27 +66,33 @@ class TestScheduleCrossref(unittest.TestCase):
         result = self.activity.do_activity(testdata.ExpandArticle_data)
         self.assertEqual(result, expected_result)
 
-
-    @patch.object(lax_provider, 'article_highest_version')
-    @patch('activity.activity_ScheduleCrossref.get_session')
-    def test_do_activity_silent_correction(self, fake_session_mock, fake_highest_version):
+    @patch.object(lax_provider, "article_highest_version")
+    @patch("activity.activity_ScheduleCrossref.get_session")
+    def test_do_activity_silent_correction(
+        self, fake_session_mock, fake_highest_version
+    ):
         expected_result = True
         session_dict = copy.copy(testdata.session_example)
-        session_dict['run_type'] = 'silent-correction'
+        session_dict["run_type"] = "silent-correction"
         fake_session_mock.return_value = FakeSession(session_dict)
         fake_highest_version.return_value = 2
         result = self.activity.do_activity(testdata.ExpandArticle_data)
         self.assertEqual(result, expected_result)
 
     @data(
-        ('crossref/outbox/', 'elife-00353-v1.xml', 'crossref/outbox/elife-00353-v1.xml'),
-        ('crossref/outbox/', None, None),
-        )
+        (
+            "crossref/outbox/",
+            "elife-00353-v1.xml",
+            "crossref/outbox/elife-00353-v1.xml",
+        ),
+        ("crossref/outbox/", None, None),
+    )
     @unpack
     def test_outbox_new_key_name(self, prefix, xml_filename, expected_result):
         self.assertEqual(
-            self.activity.outbox_new_key_name(prefix, xml_filename), expected_result)
+            self.activity.outbox_new_key_name(prefix, xml_filename), expected_result
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

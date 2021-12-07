@@ -11,9 +11,9 @@ class TestRegister(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
 
-    @patch('boto.sqs.connection.SQSConnection.get_queue')
-    @patch('boto.sqs.connect_to_region')
-    @patch('boto.swf.layer1.Layer1')
+    @patch("boto.sqs.connection.SQSConnection.get_queue")
+    @patch("boto.sqs.connect_to_region")
+    @patch("boto.swf.layer1.Layer1")
     def test_start(self, fake_layer, fake_sqs_conn, mock_queue):
         directory = TempDirectory()
         fake_sqs_conn.return_value = FakeSQSConn(directory)

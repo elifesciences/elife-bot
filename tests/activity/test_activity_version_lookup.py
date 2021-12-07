@@ -22,14 +22,15 @@ def fake_execute_function():
 
 
 class TestVersionLookup(unittest.TestCase):
-
     def setUp(self):
-        self.versionlookup = activity_VersionLookup(settings_mock, None, None, None, None)
+        self.versionlookup = activity_VersionLookup(
+            settings_mock, None, None, None, None
+        )
         self.versionlookup.logger = MagicMock()
         self.versionlookup.set_monitor_property = MagicMock()
 
-    @patch('activity.activity_VersionLookup.get_session')
-    @patch('activity.activity_VersionLookup.execute_function')
+    @patch("activity.activity_VersionLookup.get_session")
+    @patch("activity.activity_VersionLookup.execute_function")
     def test_get_version_silent_corrections(self, fake_lookup_functions, fake_session):
         run_type = "silent-correction"
         named_session = FakeSession({})
@@ -38,62 +39,71 @@ class TestVersionLookup(unittest.TestCase):
         self.versionlookup.emit_monitor_event = MagicMock()
 
         result = self.versionlookup.do_activity(
-            data("article_highest_version", "elife-00353-vor-r1.zip", run_type))
+            data("article_highest_version", "elife-00353-vor-r1.zip", run_type)
+        )
 
         fake_lookup_functions.assert_called_with(
-            provider.lax_provider.article_highest_version, '00353', settings_mock)
+            provider.lax_provider.article_highest_version, "00353", settings_mock
+        )
         self.assertEqual(self.versionlookup.ACTIVITY_SUCCESS, result)
         # test the session for run_type
-        self.assertEqual(named_session.get_value('run_type'), run_type)
+        self.assertEqual(named_session.get_value("run_type"), run_type)
 
-    @patch('activity.activity_VersionLookup.get_session')
-    @patch('activity.activity_VersionLookup.execute_function')
-    def test_get_version_silent_corrections_version_in_zip(self, fake_lookup_functions,
-                                                           fake_session):
+    @patch("activity.activity_VersionLookup.get_session")
+    @patch("activity.activity_VersionLookup.execute_function")
+    def test_get_version_silent_corrections_version_in_zip(
+        self, fake_lookup_functions, fake_session
+    ):
         named_session = FakeSession({})
         fake_session.return_value = named_session
         self.versionlookup.emit_monitor_event = MagicMock()
 
         result = self.versionlookup.do_activity(
-            data("article_next_version", "elife-00353-vor-v1.zip"))
+            data("article_next_version", "elife-00353-vor-v1.zip")
+        )
 
         fake_lookup_functions.assert_not_called()
         self.assertEqual(self.versionlookup.ACTIVITY_SUCCESS, result)
         # test the session for run_type
-        self.assertEqual(named_session.get_value('run_type'), None)
+        self.assertEqual(named_session.get_value("run_type"), None)
 
-    @patch('activity.activity_VersionLookup.get_session')
-    @patch('activity.activity_VersionLookup.execute_function')
-    def test_get_version_normal_process_version_not_in_zip(self, fake_lookup_functions,
-                                                           fake_session):
+    @patch("activity.activity_VersionLookup.get_session")
+    @patch("activity.activity_VersionLookup.execute_function")
+    def test_get_version_normal_process_version_not_in_zip(
+        self, fake_lookup_functions, fake_session
+    ):
         fake_session.return_value = FakeSession({})
         fake_lookup_functions.return_value = "1"
         self.versionlookup.emit_monitor_event = MagicMock()
 
         result = self.versionlookup.do_activity(
-            data("article_next_version", "elife-00353-vor-r1.zip"))
+            data("article_next_version", "elife-00353-vor-r1.zip")
+        )
 
-        fake_lookup_functions.assert_called_with(provider.lax_provider.article_next_version,
-                                                 '00353', settings_mock)
+        fake_lookup_functions.assert_called_with(
+            provider.lax_provider.article_next_version, "00353", settings_mock
+        )
         self.assertEqual(self.versionlookup.ACTIVITY_SUCCESS, result)
 
-    @patch('activity.activity_VersionLookup.get_session')
-    @patch('activity.activity_VersionLookup.execute_function')
+    @patch("activity.activity_VersionLookup.get_session")
+    @patch("activity.activity_VersionLookup.execute_function")
     def test_get_version_normal_process(self, fake_lookup_functions, fake_session):
         fake_session.return_value = FakeSession({})
         self.versionlookup.emit_monitor_event = MagicMock()
 
         result = self.versionlookup.do_activity(
-            data("article_next_version", "elife-00353-vor-v1-20121213000000.zip"))
+            data("article_next_version", "elife-00353-vor-v1-20121213000000.zip")
+        )
 
         fake_lookup_functions.assert_not_called()
         self.assertEqual(self.versionlookup.ACTIVITY_SUCCESS, result)
 
-    @patch('activity.activity_VersionLookup.get_session')
-    @patch.object(activity_VersionLookup, 'emit_monitor_event')
-    @patch('activity.activity_VersionLookup.execute_function')
-    def test_get_version_error_timeout(self, fake_execute_function,
-                                       fake_emit_monitor, fake_session):
+    @patch("activity.activity_VersionLookup.get_session")
+    @patch.object(activity_VersionLookup, "emit_monitor_event")
+    @patch("activity.activity_VersionLookup.execute_function")
+    def test_get_version_error_timeout(
+        self, fake_execute_function, fake_emit_monitor, fake_session
+    ):
         fake_session.return_value = FakeSession({})
         self.versionlookup.logger = MagicMock()
         fake_execute_function.side_effect = Exception("Time out.")
@@ -104,11 +114,12 @@ class TestVersionLookup(unittest.TestCase):
         fake_emit_monitor.assert_not_called()
         self.assertEqual(self.versionlookup.ACTIVITY_PERMANENT_FAILURE, result)
 
-    @patch('activity.activity_VersionLookup.get_session')
-    @patch.object(activity_VersionLookup, 'emit_monitor_event')
-    @patch('activity.activity_VersionLookup.execute_function')
-    def test_get_version_error_protocol_error_message(self, fake_execute_function,
-                                                      fake_emit_monitor, fake_session):
+    @patch("activity.activity_VersionLookup.get_session")
+    @patch.object(activity_VersionLookup, "emit_monitor_event")
+    @patch("activity.activity_VersionLookup.execute_function")
+    def test_get_version_error_protocol_error_message(
+        self, fake_execute_function, fake_emit_monitor, fake_session
+    ):
         fake_session.return_value = FakeSession({})
         self.versionlookup.logger = MagicMock()
         fake_execute_function.side_effect = ConnectionError("Protocol Error message.")
@@ -120,5 +131,5 @@ class TestVersionLookup(unittest.TestCase):
         self.assertEqual(self.versionlookup.ACTIVITY_PERMANENT_FAILURE, result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

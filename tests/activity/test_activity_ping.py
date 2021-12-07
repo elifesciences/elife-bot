@@ -7,12 +7,14 @@ import tests.activity.settings_mock as settings_mock
 class TestPingWorker(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
-        self.activity = activity_PingWorker(settings_mock, fake_logger, None, None, None)
+        self.activity = activity_PingWorker(
+            settings_mock, fake_logger, None, None, None
+        )
 
     def test_do_activity(self):
         result = self.activity.do_activity()
         self.assertTrue(result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

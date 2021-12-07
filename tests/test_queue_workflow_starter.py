@@ -16,17 +16,12 @@ class TestQueueWorkflowStarter(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
 
-    @patch('tests.activity.classes_mock.FakeSQSQueue.get_messages')
-    @patch('queue_workflow_starter.get_queue')
-    @patch.object(boto.swf.layer1, 'Layer1')
+    @patch("tests.activity.classes_mock.FakeSQSQueue.get_messages")
+    @patch("queue_workflow_starter.get_queue")
+    @patch.object(boto.swf.layer1, "Layer1")
     def test_main(self, fake_boto_conn, mock_queue, mock_queue_read):
         directory = TempDirectory()
-        message_body = json.dumps(
-            {
-                'workflow_name': 'Ping',
-                'workflow_data': {}
-            }
-        )
+        message_body = json.dumps({"workflow_name": "Ping", "workflow_data": {}})
         mock_boto_connection = FakeBotoConnection()
         fake_boto_conn.return_value = mock_boto_connection
         mock_queue.return_value = FakeSQSQueue(directory)
@@ -36,103 +31,96 @@ class TestQueueWorkflowStarter(unittest.TestCase):
         queue_workflow_starter.main(settings_mock, FakeFlag())
         self.assertEqual(mock_boto_connection.start_called, True)
 
-    @patch.object(boto.swf.layer1, 'Layer1')
+    @patch.object(boto.swf.layer1, "Layer1")
     def test_process_message(self, fake_boto_conn):
         directory = TempDirectory()
         message_body = json.dumps(
-            {
-                'workflow_name': 'PubmedArticleDeposit',
-                'workflow_data': {}
-            }
+            {"workflow_name": "PubmedArticleDeposit", "workflow_data": {}}
         )
         mock_boto_connection = FakeBotoConnection()
         fake_boto_conn.return_value = mock_boto_connection
         fake_message = FakeSQSMessage(directory)
         fake_message.set_body(message_body)
-        queue_workflow_starter.process_message(settings_mock, FakeLogger(), fake_message)
+        queue_workflow_starter.process_message(
+            settings_mock, FakeLogger(), fake_message
+        )
         self.assertEqual(mock_boto_connection.start_called, True)
 
-    @patch.object(boto.swf.layer1, 'Layer1')
+    @patch.object(boto.swf.layer1, "Layer1")
     def test_process_message_no_data_processor(self, fake_boto_conn):
         directory = TempDirectory()
-        message_body = json.dumps(
-            {
-                'workflow_name': 'Ping',
-                'workflow_data': {}
-            }
-        )
+        message_body = json.dumps({"workflow_name": "Ping", "workflow_data": {}})
         mock_boto_connection = FakeBotoConnection()
         fake_boto_conn.return_value = mock_boto_connection
         fake_message = FakeSQSMessage(directory)
         fake_message.set_body(message_body)
-        queue_workflow_starter.process_message(settings_mock, FakeLogger(), fake_message)
+        queue_workflow_starter.process_message(
+            settings_mock, FakeLogger(), fake_message
+        )
         self.assertEqual(mock_boto_connection.start_called, True)
 
-    @patch.object(boto.swf.layer1, 'Layer1')
+    @patch.object(boto.swf.layer1, "Layer1")
     def test_process_message_fail_to_start_workflow(self, fake_boto_conn):
         directory = TempDirectory()
         message_body = json.dumps(
-            {
-                'workflow_name': 'not_a_real_workflow',
-                'workflow_data': {}
-            }
+            {"workflow_name": "not_a_real_workflow", "workflow_data": {}}
         )
         mock_boto_connection = FakeBotoConnection()
         fake_boto_conn.return_value = mock_boto_connection
         fake_message = FakeSQSMessage(directory)
         fake_message.set_body(message_body)
-        queue_workflow_starter.process_message(settings_mock, FakeLogger(), fake_message)
+        queue_workflow_starter.process_message(
+            settings_mock, FakeLogger(), fake_message
+        )
         self.assertEqual(mock_boto_connection.start_called, None)
 
     def test_process_data_ingestarticlezip(self):
         workflow_data = {
-            'event_name': '',
-            'event_time': '',
-            'bucket_name': '',
-            'file_name': '',
-            'file_etag': '',
-            'file_size': '',
+            "event_name": "",
+            "event_time": "",
+            "bucket_name": "",
+            "file_name": "",
+            "file_etag": "",
+            "file_size": "",
         }
         data = queue_workflow_starter.process_data_ingestarticlezip(workflow_data)
         s3_notification_dict = data.get("info").to_dict()
         self.assertEqual(sorted(s3_notification_dict), sorted(workflow_data))
-        self.assertIsNotNone(data.get('run'))
+        self.assertIsNotNone(data.get("run"))
 
     def test_process_data_postperfectpublication(self):
-        workflow_data = {
-            'some': 'data'
-        }
+        workflow_data = {"some": "data"}
         data = queue_workflow_starter.process_data_postperfectpublication(workflow_data)
-        self.assertEqual(sorted(data.get('info')), sorted(workflow_data))
+        self.assertEqual(sorted(data.get("info")), sorted(workflow_data))
 
     def test_process_data_ingestdigest(self):
         workflow_data = {
-            'event_name': '',
-            'event_time': '',
-            'bucket_name': '',
-            'file_name': '',
-            'file_etag': '',
-            'file_size': '',
+            "event_name": "",
+            "event_time": "",
+            "bucket_name": "",
+            "file_name": "",
+            "file_etag": "",
+            "file_size": "",
         }
         data = queue_workflow_starter.process_data_ingestdigest(workflow_data)
         s3_notification_dict = data.get("info").to_dict()
         self.assertEqual(sorted(s3_notification_dict), sorted(workflow_data))
-        self.assertIsNotNone(data.get('run'))
+        self.assertIsNotNone(data.get("run"))
 
     def test_process_data_ingestdecisionletter(self):
         workflow_data = {
-            'event_name': '',
-            'event_time': '',
-            'bucket_name': '',
-            'file_name': '',
-            'file_etag': '',
-            'file_size': '',
+            "event_name": "",
+            "event_time": "",
+            "bucket_name": "",
+            "file_name": "",
+            "file_etag": "",
+            "file_size": "",
         }
         data = queue_workflow_starter.process_data_ingestdecisionletter(workflow_data)
         s3_notification_dict = data.get("info").to_dict()
         self.assertEqual(sorted(s3_notification_dict), sorted(workflow_data))
-        self.assertIsNotNone(data.get('run'))
+        self.assertIsNotNone(data.get("run"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

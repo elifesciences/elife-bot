@@ -7,7 +7,8 @@ from workflow.workflow_PubRouterDeposit import workflow_PubRouterDeposit
 class TestWorkflowPubRouterDeposit(unittest.TestCase):
     def setUp(self):
         self.workflow = workflow_PubRouterDeposit(
-            settings_mock, FakeLogger(), None, None, None, None)
+            settings_mock, FakeLogger(), None, None, None, None
+        )
 
     def test_init(self):
-        self.assertEqual(self.workflow.name, 'PubRouterDeposit')
+        self.assertEqual(self.workflow.name, "PubRouterDeposit")
