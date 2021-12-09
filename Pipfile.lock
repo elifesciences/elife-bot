@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "a7e9883186c11c14e0789d99e814ff0ceb08cd15389f0b8ecb92820d5e300111"
+            "sha256": "3dccc9efa21a59d10088965e7759ec4dd4d92289f091d84fd553c41c78e930f8"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -244,7 +244,7 @@
                 "sha256:650be4ade900c2f6757e8db35eafa699f181930aaa39e9bc16ceb115adf5f0af"
             ],
             "index": "pypi",
-            "version": "==0.13.1"
+            "version": "==0.14"
         },
         "func-timeout": {
             "hashes": [
@@ -984,7 +984,7 @@
                 "sha256:4987c65554f7a2dbf30c18fd48778ef124af6fab771a377103da0585e2336ece",
                 "sha256:c4fdf4019605b6e5423637e01bc9fe4daef873709a7973e195ceba0a62bbc844"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4.0'",
             "version": "==1.26.7"
         },
         "wand": {
@@ -1108,7 +1108,7 @@
                 "sha256:650be4ade900c2f6757e8db35eafa699f181930aaa39e9bc16ceb115adf5f0af"
             ],
             "index": "pypi",
-            "version": "==0.13.1"
+            "version": "==0.14"
         },
         "importlib-metadata": {
             "hashes": [
