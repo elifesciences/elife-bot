@@ -24,18 +24,25 @@ if [ -n "$package" ]; then
     pip install -r requirements.txt
 
     # make Pipenv install exactly what we want (==).
-    sed --in-place --regexp-extended "s/$package = \".+\"/$package = \"==$version\"/" Pipfile
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sed --in-place --regexp-extended "s/$package = \".+\"/$package = \"==$version\"/" Pipfile
+    else
+        sed -i '' -E "s/$package = \".+\"/$package = \"==$version\"/" Pipfile
+    fi
+
     # the envvar is necessary otherwise Pipenv will use it's own .venv directory.
     VIRTUAL_ENV="venv" pipenv install --keep-outdated "$package==$version"
 
     # relax the constraint again (~=).
-    sed --in-place --regexp-extended "s/$package = \".+\"/$package = \"~=$version\"/" Pipfile
-
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sed --in-place --regexp-extended "s/$package = \".+\"/$package = \"~=$version\"/" Pipfile
+    else
+        sed -i '' -E "s/$package = \".+\"/$package = \"~=$version\"/" Pipfile
+    fi
 else
     # updates the Pipfile.lock file and then installs the newly updated dependencies.
     # the envvar is necessary otherwise Pipenv will use it's own .venv directory.
     VIRTUAL_ENV="venv" pipenv update --dev
-
 fi
 
 datestamp=$(date +"%Y-%m-%d") # long form to support linux + bsd
