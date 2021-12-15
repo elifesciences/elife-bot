@@ -51,7 +51,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             "expected_email_body_contains": [
                 "Warnings found in the log file for zip file",
                 (
-                    "WARNING elifecleaner:parse:check_ejp_zip: 30-01-2019-RA-eLife-45644.zip"
+                    "WARNING elifecleaner:parse:check_multi_page_figure_pdf: 30-01-2019-RA-eLife-45644.zip"
                     " multiple page PDF figure file:"
                 ),
             ],
@@ -101,7 +101,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         log_warnings = [
             line
             for line in log_contents.split("\n")
-            if "WARNING elifecleaner:parse:check_ejp_zip:" in line
+            if "WARNING elifecleaner:parse:check_multi_page_figure_pdf:" in line
         ]
         self.assertEqual(len(log_warnings), test_data.get("expected_log_warning_count"))
 
