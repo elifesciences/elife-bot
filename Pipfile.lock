@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c4f6df3604a71dc54c9a214249c9e90cf0def471b6c35efbd6564f55b94b57ae"
+            "sha256": "74e43d8bbab7708ff8b3e6429b440ef3b878eba2060397063afca22bda78395d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -228,7 +228,7 @@
                 "sha256:fe301a89ad8e2843c7131cfb00a493f0231b54c658001072c9c1dcddb0b4cf1a"
             ],
             "index": "pypi",
-            "version": "==0.8.0"
+            "version": "==0.8.1"
         },
         "elifecrossref": {
             "hashes": [
@@ -1100,7 +1100,7 @@
                 "sha256:fe301a89ad8e2843c7131cfb00a493f0231b54c658001072c9c1dcddb0b4cf1a"
             ],
             "index": "pypi",
-            "version": "==0.8.0"
+            "version": "==0.8.1"
         },
         "elifetools": {
             "hashes": [
