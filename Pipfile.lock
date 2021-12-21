@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4ef1c88af97180b9ac5ac35e593ba8f9be4d954e4e7f2b5a6d58e50ebc1eff22"
+            "sha256": "86816ef06a812907f41bde662052d91bce7a7e404cf189aeb17cdd6967908065"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -252,7 +252,7 @@
                 "sha256:ce7bda80e4e7b549abf223e06c8baff768d24318c36bdbfd9a3989cce2516403"
             ],
             "index": "pypi",
-            "version": "==0.14.0"
+            "version": "==0.15"
         },
         "func-timeout": {
             "hashes": [
@@ -976,7 +976,7 @@
                 "sha256:4ca091dea149f945ec56afb48dae714f21e8692ef22a395223bcd328961b6a0e",
                 "sha256:7f001e5ac290a0c0401508864c7ec868be4e701886d5b573a9528ed3973d9d3b"
             ],
-            "markers": "python_version < '3.8'",
+            "markers": "python_version < '3.10'",
             "version": "==4.0.1"
         },
         "urllib3": {
@@ -984,7 +984,7 @@
                 "sha256:4987c65554f7a2dbf30c18fd48778ef124af6fab771a377103da0585e2336ece",
                 "sha256:c4fdf4019605b6e5423637e01bc9fe4daef873709a7973e195ceba0a62bbc844"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4.0'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4'",
             "version": "==1.26.7"
         },
         "wand": {
@@ -1108,7 +1108,7 @@
                 "sha256:ce7bda80e4e7b549abf223e06c8baff768d24318c36bdbfd9a3989cce2516403"
             ],
             "index": "pypi",
-            "version": "==0.14.0"
+            "version": "==0.15"
         },
         "importlib-metadata": {
             "hashes": [
@@ -1375,7 +1375,7 @@
                 "sha256:4ca091dea149f945ec56afb48dae714f21e8692ef22a395223bcd328961b6a0e",
                 "sha256:7f001e5ac290a0c0401508864c7ec868be4e701886d5b573a9528ed3973d9d3b"
             ],
-            "markers": "python_version < '3.8'",
+            "markers": "python_version < '3.10'",
             "version": "==4.0.1"
         },
         "wand": {
