@@ -22,7 +22,7 @@ class starter_IngestAcceptedSubmission(Starter):
         )
         workflow_params["workflow_name"] = self.name
         workflow_params["workflow_version"] = "1"
-        workflow_params["execution_start_to_close_timeout"] = str(60 * 15)
+        workflow_params["execution_start_to_close_timeout"] = str(60 * 30)
 
         input_data = S3NotificationInfo.to_dict(info)
         input_data["run"] = run
