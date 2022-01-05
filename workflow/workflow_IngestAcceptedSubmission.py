@@ -1,5 +1,9 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step, define_workflow_step_short
+from workflow.helper import (
+    define_workflow_step,
+    define_workflow_step_short,
+    define_workflow_step_medium,
+)
 
 
 class workflow_IngestAcceptedSubmission(Workflow):
@@ -39,7 +43,7 @@ class workflow_IngestAcceptedSubmission(Workflow):
                 define_workflow_step("PingWorker", data),
                 define_workflow_step_short("ValidateAcceptedSubmission", data),
                 define_workflow_step_short("ScheduleCrossrefPendingPublication", data),
-                define_workflow_step_short("TransformAcceptedSubmission", data),
+                define_workflow_step_medium("TransformAcceptedSubmission", data),
             ],
             "finish": {"requirements": None},
         }
