@@ -52,7 +52,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
     @patch.object(lax_provider, "article_first_by_status")
     @patch.object(lax_provider, "article_highest_version")
     @patch.object(article_processing, "storage_context")
-    @patch.object(article, "storage_context")
+    @patch.object(lax_provider, "storage_context")
     @patch.object(digest_provider, "storage_context")
     @patch.object(activity_object, "emit_monitor_event")
     @data(
@@ -99,7 +99,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         test_data,
         fake_emit,
         fake_storage_context,
-        fake_article_storage_context,
+        fake_lax_provider_storage_context,
         fake_processing_storage_context,
         fake_highest_version,
         fake_first,
@@ -112,7 +112,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         named_storage_context = FakeStorageContext()
         if test_data.get("bucket_resources"):
             named_storage_context.resources = test_data.get("bucket_resources")
-        fake_article_storage_context.return_value = named_storage_context
+        fake_lax_provider_storage_context.return_value = named_storage_context
         bot_storage_context = FakeStorageContext()
         if test_data.get("bot_bucket_resources"):
             bot_storage_context.resources = test_data.get("bot_bucket_resources")

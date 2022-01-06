@@ -64,7 +64,7 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     @patch("activity.activity_IngestDigestToEndpoint.json_output.requests.get")
-    @patch.object(article, "storage_context")
+    @patch.object(lax_provider, "storage_context")
     @patch.object(article_processing, "storage_context")
     @patch.object(lax_provider, "article_first_by_status")
     @patch.object(lax_provider, "article_snippet")
@@ -132,7 +132,7 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         fake_article_snippet,
         fake_first,
         fake_processing_storage_context,
-        fake_article_storage_context,
+        fake_lax_provider_storage_context,
         fake_get,
     ):
         # copy files into the input directory using the storage context
@@ -140,7 +140,7 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         named_storage_context = FakeStorageContext()
         if test_data.get("bucket_resources"):
             named_storage_context.resources = test_data.get("bucket_resources")
-        fake_article_storage_context.return_value = named_storage_context
+        fake_lax_provider_storage_context.return_value = named_storage_context
         bot_storage_context = FakeStorageContext()
         if test_data.get("bot_bucket_resources"):
             bot_storage_context.resources = test_data.get("bot_bucket_resources")
