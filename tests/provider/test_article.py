@@ -11,24 +11,6 @@ class ObjectView(object):
         self.__dict__ = d
 
 
-BUCKET_FILES_MOCK_VERSION = [
-    "elife-06498-fig1-v1.tif",
-    "elife-06498-resp-fig1-v3-80w.gif",
-    "elife-06498-v1.xml",
-    "elife-06498-v2.pdf",
-    "elife-06498-v2.xml",
-    "elife-06498-v3-download.xml",
-]
-
-BUCKET_FILES_MOCK = [
-    "elife-06498-fig1-v1.tif",
-    "elife-06498-resp-fig1-v1-80w.gif",
-    "elife-06498-v1-download.xml",
-    "elife-06498-v1.xml",
-    "elife-06498-v1.pdf",
-]
-
-
 @ddt
 class TestProviderArticle(unittest.TestCase):
     def setUp(self):
@@ -55,18 +37,6 @@ class TestProviderArticle(unittest.TestCase):
         )
         result = self.articleprovider.download_article_xml_from_s3("08411")
         self.assertEqual(result, False)
-
-    @patch.object(article, "_get_bucket_files")
-    def test_get_xml_file_name_by_version(self, mock_get_bucket_files):
-        mock_get_bucket_files.return_value = BUCKET_FILES_MOCK_VERSION
-        result = self.articleprovider.get_xml_file_name(None, None, None, version="2")
-        self.assertEqual(result, "elife-06498-v2.xml")
-
-    @patch.object(article, "_get_bucket_files")
-    def test_get_xml_file_name_no_version(self, mock_get_bucket_files):
-        mock_get_bucket_files.return_value = BUCKET_FILES_MOCK
-        result = self.articleprovider.get_xml_file_name(None, None, None, version=None)
-        self.assertEqual(result, "elife-06498-v1.xml")
 
     def test_tweet_url(self):
         tweet_url = self.articleprovider.get_tweet_url("10.7554/eLife.08411")

@@ -5,7 +5,8 @@ import requests
 from dateutil.parser import parse
 import log
 from provider import utils
-from . import article
+from provider.article_structure import ArticleInfo
+from provider.storage_provider import storage_context
 
 
 identity = "process_%s" % os.getpid()
@@ -318,11 +319,19 @@ def prepare_action_message(
 
 
 def get_xml_file_name(settings, expanded_folder, xml_bucket, version=None):
-    Article = article.article()
-    xml_file_name = Article.get_xml_file_name(
-        settings, expanded_folder, xml_bucket, version
-    )
-    return xml_file_name
+    "s3 path to the article xml file in the expanded folder"
+    storage = storage_context(settings)
+    resource = settings.storage_provider + "://" + xml_bucket + "/" + expanded_folder
+    files_in_bucket = storage.list_resources(resource)
+    for filename in files_in_bucket:
+        info = ArticleInfo(filename)
+        if info.file_type == "ArticleXML":
+            if version is None:
+                return filename
+            v_number = "-v" + version + "."
+            if v_number in filename:
+                return filename
+    return None
 
 
 def lax_token(run, version, expanded_folder, status, force=False, run_type=None):

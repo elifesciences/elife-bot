@@ -6,7 +6,7 @@ import base64
 import json
 import tests.test_data as test_data
 from provider.lax_provider import ErrorCallingLaxException
-
+from tests.activity.classes_mock import FakeStorageContext
 from mock import mock, patch, MagicMock
 from ddt import ddt, data, unpack
 
@@ -505,5 +505,57 @@ class TestLaxProvider(unittest.TestCase):
         self.assertEqual(first, expected)
 
 
-if __name__ == "__main__":
-    unittest.main()
+BUCKET_FILES_MOCK_VERSION = [
+    "elife-06498-fig1-v1.tif",
+    "elife-06498-resp-fig1-v3-80w.gif",
+    "elife-06498-v1.xml",
+    "elife-06498-v2.pdf",
+    "elife-06498-v2.xml",
+    "elife-06498-v3-download.xml",
+]
+
+BUCKET_FILES_MOCK = [
+    "elife-06498-fig1-v1.tif",
+    "elife-06498-resp-fig1-v1-80w.gif",
+    "elife-06498-v1-download.xml",
+    "elife-06498-v1.xml",
+    "elife-06498-v1.pdf",
+]
+
+
+class TestGetXmlFileName(unittest.TestCase):
+    @patch.object(FakeStorageContext, "list_resources")
+    @patch("provider.lax_provider.storage_context")
+    def test_get_xml_file_name_by_version(
+        self, fake_storage_context, fake_list_resources
+    ):
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = BUCKET_FILES_MOCK_VERSION
+        result = lax_provider.get_xml_file_name(
+            settings_mock, "folder", "bucket", version="2"
+        )
+        self.assertEqual(result, "elife-06498-v2.xml")
+
+    @patch.object(FakeStorageContext, "list_resources")
+    @patch("provider.lax_provider.storage_context")
+    def test_get_xml_file_name_no_version(
+        self, fake_storage_context, fake_list_resources
+    ):
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = BUCKET_FILES_MOCK
+        result = lax_provider.get_xml_file_name(
+            settings_mock, "folder", "bucket", version=None
+        )
+        self.assertEqual(result, "elife-06498-v1.xml")
+
+    @patch.object(FakeStorageContext, "list_resources")
+    @patch("provider.lax_provider.storage_context")
+    def test_get_xml_file_name_no_bucket_files(
+        self, fake_storage_context, fake_list_resources
+    ):
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_list_resources.return_value = []
+        result = lax_provider.get_xml_file_name(
+            settings_mock, "folder", "bucket", version=None
+        )
+        self.assertEqual(result, None)

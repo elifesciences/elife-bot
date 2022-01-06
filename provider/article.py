@@ -6,7 +6,6 @@ from boto.s3.connection import S3Connection
 from elifetools import parseJATS as parser
 import provider.s3lib as s3lib
 from provider import outbox_provider
-from provider.article_structure import ArticleInfo
 from provider.storage_provider import storage_context
 from provider.utils import pad_msid, get_doi_url
 
@@ -483,24 +482,3 @@ class article:
             return True
         else:
             return False
-
-    @staticmethod
-    def _get_bucket_files(settings, expanded_folder_name, xml_bucket):
-        storage = storage_context(settings)
-        resource = (
-            settings.storage_provider + "://" + xml_bucket + "/" + expanded_folder_name
-        )
-        files_in_bucket = storage.list_resources(resource)
-        return files_in_bucket
-
-    def get_xml_file_name(self, settings, expanded_folder_name, xml_bucket, version):
-        files = self._get_bucket_files(settings, expanded_folder_name, xml_bucket)
-        for filename in files:
-            info = ArticleInfo(filename)
-            if info.file_type == "ArticleXML":
-                if version is None:
-                    return filename
-                v_number = "-v" + version + "."
-                if v_number in filename:
-                    return filename
-        return None
