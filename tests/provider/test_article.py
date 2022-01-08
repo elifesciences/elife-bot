@@ -195,12 +195,6 @@ class TestGetLensUrl(unittest.TestCase):
         self.assertEqual(lens_url, "https://lens.elifesciences.org/08411")
 
 
-class TestGetDoiId(unittest.TestCase):
-    def test_get_doi_id(self):
-        doi_id = provider_module.get_doi_id("10.7554/eLife.08411")
-        self.assertEqual(doi_id, "08411")
-
-
 @ddt
 class TestIdFromPoaS3KeyName(unittest.TestCase):
     @data(

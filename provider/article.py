@@ -7,7 +7,7 @@ from elifetools import parseJATS as parser
 import provider.s3lib as s3lib
 from provider import outbox_provider
 from provider.storage_provider import storage_context
-from provider.utils import pad_msid, get_doi_url
+from provider.utils import msid_from_doi, get_doi_url, pad_msid
 
 """
 Article data provider
@@ -76,7 +76,7 @@ class article:
             soup = parser.parse_document(document)
             self.doi = parser.doi(soup)
             if self.doi:
-                self.doi_id = get_doi_id(self.doi)
+                self.doi_id = pad_msid(msid_from_doi(self.doi))
                 self.doi_url = get_doi_url(self.doi)
                 self.lens_url = get_lens_url(self.doi)
                 self.tweet_url = get_tweet_url(self.doi)
@@ -183,7 +183,7 @@ class article:
         For an article DOI and workflow name, check if it ever went through that workflow
         """
 
-        doi_id = get_doi_id(doi)
+        doi_id = msid_from_doi(doi)
 
         if int(doi_id) in self.was_published_doi_ids(workflow):
             return True
@@ -366,20 +366,9 @@ def get_lens_url(doi):
     """
     Given a DOI, get the URL for the lens article
     """
-    doi_id = get_doi_id(doi)
+    doi_id = pad_msid(msid_from_doi(doi))
     lens_url = "https://lens.elifesciences.org/" + doi_id
     return lens_url
-
-
-def get_doi_id(doi):
-    """
-    Given a DOI, return the doi_id part of it
-    e.g. DOI 10.7554/eLife.00013
-    split on dot and the last list element is doi_id
-    """
-    x = doi.split(".")
-    doi_id = x[-1]
-    return doi_id
 
 
 def get_pdf_cover_link(pdf_cover_generator_url, doi_id, logger):
