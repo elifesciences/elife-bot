@@ -1,4 +1,5 @@
 import unittest
+import provider.article as provider_module
 from provider.article import article
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
@@ -37,24 +38,6 @@ class TestProviderArticle(unittest.TestCase):
         )
         result = self.articleprovider.download_article_xml_from_s3("08411")
         self.assertEqual(result, False)
-
-    def test_tweet_url(self):
-        tweet_url = self.articleprovider.get_tweet_url("10.7554/eLife.08411")
-        self.assertEqual(
-            tweet_url,
-            (
-                "http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org"
-                + "%2F10.7554%2FeLife.08411+%40eLife"
-            ),
-        )
-
-    def test_get_lens_url(self):
-        lens_url = self.articleprovider.get_lens_url("10.7554/eLife.08411")
-        self.assertEqual(lens_url, "https://lens.elifesciences.org/08411")
-
-    def test_get_doi_id(self):
-        doi_id = self.articleprovider.get_doi_id("10.7554/eLife.08411")
-        self.assertEqual(doi_id, "08411")
 
     @data(
         {
@@ -193,21 +176,33 @@ class TestProviderArticle(unittest.TestCase):
         parse_result = self.articleprovider.parse_article_file(filename)
         self.assertFalse(parse_result)
 
-    @data(
-        {
-            "s3_key_name": "pubmed/published/20140923/elife02104.xml",
-            "expected_doi_id": 2104,
-        },
-        {
-            "s3_key_name": "pubmed/published/20141224/elife04034.xml",
-            "expected_doi_id": 4034,
-        },
-    )
-    @unpack
-    def test_get_doi_id_from_s3_key_name(self, s3_key_name, expected_doi_id):
-        doi_id = self.articleprovider.get_doi_id_from_s3_key_name(s3_key_name)
-        self.assertEqual(doi_id, expected_doi_id)
 
+class TestTweetUrl(unittest.TestCase):
+    def test_tweet_url(self):
+        tweet_url = provider_module.get_tweet_url("10.7554/eLife.08411")
+        self.assertEqual(
+            tweet_url,
+            (
+                "http://twitter.com/intent/tweet?text=https%3A%2F%2Fdoi.org"
+                + "%2F10.7554%2FeLife.08411+%40eLife"
+            ),
+        )
+
+
+class TestGetLensUrl(unittest.TestCase):
+    def test_get_lens_url(self):
+        lens_url = provider_module.get_lens_url("10.7554/eLife.08411")
+        self.assertEqual(lens_url, "https://lens.elifesciences.org/08411")
+
+
+class TestGetDoiId(unittest.TestCase):
+    def test_get_doi_id(self):
+        doi_id = provider_module.get_doi_id("10.7554/eLife.08411")
+        self.assertEqual(doi_id, "08411")
+
+
+@ddt
+class TestIdFromPoaS3KeyName(unittest.TestCase):
     @data(
         {
             "s3_key_name": "published/20140508/elife_poa_e02419.xml",
@@ -224,9 +219,23 @@ class TestProviderArticle(unittest.TestCase):
     )
     @unpack
     def test_get_doi_id_from_poa_s3_key_name(self, s3_key_name, expected_doi_id):
-        doi_id = self.articleprovider.get_doi_id_from_poa_s3_key_name(s3_key_name)
+        doi_id = provider_module.get_doi_id_from_poa_s3_key_name(s3_key_name)
         self.assertEqual(doi_id, expected_doi_id)
 
 
-if __name__ == "__main__":
-    unittest.main()
+@ddt
+class TestIdFromS3KeyName(unittest.TestCase):
+    @data(
+        {
+            "s3_key_name": "pubmed/published/20140923/elife02104.xml",
+            "expected_doi_id": 2104,
+        },
+        {
+            "s3_key_name": "pubmed/published/20141224/elife04034.xml",
+            "expected_doi_id": 4034,
+        },
+    )
+    @unpack
+    def test_get_doi_id_from_s3_key_name(self, s3_key_name, expected_doi_id):
+        doi_id = provider_module.get_doi_id_from_s3_key_name(s3_key_name)
+        self.assertEqual(doi_id, expected_doi_id)

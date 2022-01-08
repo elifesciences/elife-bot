@@ -2,6 +2,7 @@ import email
 import os
 import shutil
 from digestparser.objects import Digest, Image
+from provider import utils
 from provider.article import article
 
 
@@ -43,7 +44,7 @@ def instantiate_article(article_type, doi, is_poa=None, was_ever_poa=None):
     article_object = article()
     article_object.article_type = article_type
     article_object.doi = doi
-    article_object.doi_id = article_object.get_doi_id(doi)
+    article_object.doi_id = utils.pad_msid(utils.msid_from_doi(doi))
     article_object.is_poa = is_poa
     article_object.was_ever_poa = was_ever_poa
     return article_object

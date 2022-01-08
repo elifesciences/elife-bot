@@ -68,8 +68,6 @@ class activity_GeneratePDFCovers(Activity):
                 "Starting check for generation of pdf cover.",
             )
 
-            article = articlelib.article()
-
             if (
                 not (hasattr(self.settings, "pdf_cover_generator"))
                 or (
@@ -95,7 +93,7 @@ class activity_GeneratePDFCovers(Activity):
                 )
                 return self.ACTIVITY_SUCCESS
 
-            pdf_cover = article.get_pdf_cover_link(
+            pdf_cover = articlelib.get_pdf_cover_link(
                 self.settings.pdf_cover_generator, article_id, self.logger
             )
 

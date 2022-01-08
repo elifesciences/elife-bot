@@ -76,10 +76,10 @@ class article:
             soup = parser.parse_document(document)
             self.doi = parser.doi(soup)
             if self.doi:
-                self.doi_id = self.get_doi_id(self.doi)
+                self.doi_id = get_doi_id(self.doi)
                 self.doi_url = get_doi_url(self.doi)
-                self.lens_url = self.get_lens_url(self.doi)
-                self.tweet_url = self.get_tweet_url(self.doi)
+                self.lens_url = get_lens_url(self.doi)
+                self.tweet_url = get_tweet_url(self.doi)
 
             self.pub_date = parser.pub_date(soup)
             self.pub_date_timestamp = parser.pub_date_timestamp(soup)
@@ -88,7 +88,7 @@ class article:
             self.article_type = parser.article_type(soup)
 
             self.authors = parser.authors(soup)
-            self.authors_string = self.get_authors_string(self.authors)
+            self.authors_string = get_authors_string(self.authors)
 
             self.related_articles = parser.related_article(soup)
 
@@ -171,59 +171,6 @@ class article:
 
         return self.tmp_dir
 
-    def get_tweet_url(self, doi):
-        """
-        Given a DOI, return a tweet URL
-        """
-        doi_url = get_doi_url(doi)
-        f = {"text": doi_url + " @eLife"}
-        return "http://twitter.com/intent/tweet?" + urllib.parse.urlencode(f)
-
-    def get_lens_url(self, doi):
-        """
-        Given a DOI, get the URL for the lens article
-        """
-        doi_id = self.get_doi_id(doi)
-        lens_url = "https://lens.elifesciences.org/" + doi_id
-        return lens_url
-
-    def get_doi_id(self, doi):
-        """
-        Given a DOI, return the doi_id part of it
-        e.g. DOI 10.7554/eLife.00013
-        split on dot and the last list element is doi_id
-        """
-        x = doi.split(".")
-        doi_id = x[-1]
-        return doi_id
-
-    def get_pdf_cover_link(self, pdf_cover_generator_url, doi_id, logger):
-
-        url = pdf_cover_generator_url + pad_msid(doi_id)
-        logger.info("URL for PDF Generator %s", url)
-        resp = requests.post(url)
-        logger.info("Response code for PDF Generator %s", str(resp.status_code))
-        assert (
-            resp.status_code != 404
-        ), "PDF cover not found. Format: %s - url requested: %s" % (format, url)
-        assert resp.status_code in [200, 202], (
-            "unhandled status code from PDF cover service: %s . "
-            "Format: %s - url requested: %s" % (resp.status_code, format, url)
-        )
-        data = resp.json()
-        logger.info("PDF Generator Response %s", str(data))
-        return data["formats"]
-
-    def get_pdf_cover_page(self, doi_id, settings, logger):
-        try:
-            assert hasattr(
-                settings, "pdf_cover_landing_page"
-            ), "pdf_cover_landing_page variable is missing from settings file!"
-            return settings.pdf_cover_landing_page + doi_id
-        except AssertionError as err:
-            logger.error(str(err))
-            return ""
-
     def set_related_insight_article(self, article_object):
         """
         If this article is type insight, then set the article
@@ -236,7 +183,7 @@ class article:
         For an article DOI and workflow name, check if it ever went through that workflow
         """
 
-        doi_id = self.get_doi_id(doi)
+        doi_id = get_doi_id(doi)
 
         if int(doi_id) in self.was_published_doi_ids(workflow):
             return True
@@ -314,10 +261,10 @@ class article:
 
         # Extract just the doi_id portion
         for s3_key_name in s3_key_names:
-            doi_id = self.get_doi_id_from_poa_s3_key_name(s3_key_name)
+            doi_id = get_doi_id_from_poa_s3_key_name(s3_key_name)
             if not doi_id:
                 # Try again as vor name
-                doi_id = self.get_doi_id_from_vor_s3_key_name(s3_key_name)
+                doi_id = get_doi_id_from_vor_s3_key_name(s3_key_name)
 
             if doi_id:
                 ids.append(doi_id)
@@ -370,66 +317,6 @@ class article:
 
         return s3_key_names
 
-    def get_doi_id_from_poa_s3_key_name(self, s3_key_name):
-        """
-        Extract just the integer doi_id value from the S3 key name
-        of the article XML file for a poa XML file
-        E.g.
-          published/20140508/elife_poa_e02419.xml = 2419
-          published/20140508/elife_poa_e02444v2.xml = 2444
-        """
-
-        doi_id = None
-        delimiter = "/"
-        file_name_prefix = "elife_poa_e"
-
-        doi_id = self.get_doi_id_from_s3_key_name(s3_key_name, file_name_prefix)
-
-        return doi_id
-
-    def get_doi_id_from_vor_s3_key_name(self, s3_key_name):
-        """
-        Extract just the integer doi_id value from the S3 key name
-        of the article XML file for a VOR XML file
-        E.g.
-          pub_router/published/20140508/elife02419.xml = 2419
-        """
-
-        doi_id = None
-        delimiter = "/"
-        file_name_prefix = "elife"
-
-        doi_id = self.get_doi_id_from_s3_key_name(s3_key_name, file_name_prefix)
-
-        return doi_id
-
-    def get_doi_id_from_s3_key_name(self, s3_key_name, file_name_prefix="elife"):
-        """
-        Extract just the integer doi_id value from the S3 key name
-        of the article XML file
-        E.g. when file_name_prefix is "elife_poa_e"
-          published/20140508/elife_poa_e02419.xml = 2419
-          published/20140508/elife_poa_e02444v2.xml = 2444
-        E.g. when file_name_prefix is "elife" (for VOR article XML files)
-          pubmed/published/20140508/elife02419.xml = 2419
-        """
-
-        doi_id = None
-        delimiter = "/"
-        try:
-            # Split on delimiter
-            file_name_with_extension = s3_key_name.split(delimiter)[-1]
-            # Remove file extension
-            file_name = file_name_with_extension.split(".")[0]
-            # Remove file name prefix
-            file_name_id = file_name.split(file_name_prefix)[-1]
-            # Get the numeric part of the file name
-            doi_id = int("".join(re.findall(r"^\d+", file_name_id)))
-        except:
-            doi_id = None
-
-        return doi_id
-
     def get_article_related_insight_doi(self):
         """
         Given an article object, depending on the article_type,
@@ -450,24 +337,6 @@ class article:
         # Default
         return None
 
-    def get_authors_string(self, authors):
-        """
-        Given a list of authors return a string for all the article authors
-        """
-
-        authors_string = ""
-        for author in authors:
-            if authors_string != "":
-                authors_string += ", "
-            if author.get("given-names"):
-                authors_string += author["given-names"] + " "
-            if author.get("surname"):
-                authors_string += author["surname"]
-            if author.get("collab"):
-                authors_string += author["collab"]
-
-        return authors_string
-
     def is_in_display_channel(self, display_channel):
         """
         Given a display channel to match, return True or False if
@@ -482,3 +351,143 @@ class article:
             return True
         else:
             return False
+
+
+def get_tweet_url(doi):
+    """
+    Given a DOI, return a tweet URL
+    """
+    doi_url = get_doi_url(doi)
+    f = {"text": doi_url + " @eLife"}
+    return "http://twitter.com/intent/tweet?" + urllib.parse.urlencode(f)
+
+
+def get_lens_url(doi):
+    """
+    Given a DOI, get the URL for the lens article
+    """
+    doi_id = get_doi_id(doi)
+    lens_url = "https://lens.elifesciences.org/" + doi_id
+    return lens_url
+
+
+def get_doi_id(doi):
+    """
+    Given a DOI, return the doi_id part of it
+    e.g. DOI 10.7554/eLife.00013
+    split on dot and the last list element is doi_id
+    """
+    x = doi.split(".")
+    doi_id = x[-1]
+    return doi_id
+
+
+def get_pdf_cover_link(pdf_cover_generator_url, doi_id, logger):
+
+    url = pdf_cover_generator_url + pad_msid(doi_id)
+    logger.info("URL for PDF Generator %s", url)
+    resp = requests.post(url)
+    logger.info("Response code for PDF Generator %s", str(resp.status_code))
+    assert (
+        resp.status_code != 404
+    ), "PDF cover not found. Format: %s - url requested: %s" % (format, url)
+    assert resp.status_code in [200, 202], (
+        "unhandled status code from PDF cover service: %s . "
+        "Format: %s - url requested: %s" % (resp.status_code, format, url)
+    )
+    data = resp.json()
+    logger.info("PDF Generator Response %s", str(data))
+    return data["formats"]
+
+
+def get_pdf_cover_page(doi_id, settings, logger):
+    try:
+        assert hasattr(
+            settings, "pdf_cover_landing_page"
+        ), "pdf_cover_landing_page variable is missing from settings file!"
+        return settings.pdf_cover_landing_page + doi_id
+    except AssertionError as err:
+        logger.error(str(err))
+        return ""
+
+
+def get_doi_id_from_s3_key_name(s3_key_name, file_name_prefix="elife"):
+    """
+    Extract just the integer doi_id value from the S3 key name
+    of the article XML file
+    E.g. when file_name_prefix is "elife_poa_e"
+        published/20140508/elife_poa_e02419.xml = 2419
+        published/20140508/elife_poa_e02444v2.xml = 2444
+    E.g. when file_name_prefix is "elife" (for VOR article XML files)
+        pubmed/published/20140508/elife02419.xml = 2419
+    """
+
+    doi_id = None
+    delimiter = "/"
+    try:
+        # Split on delimiter
+        file_name_with_extension = s3_key_name.split(delimiter)[-1]
+        # Remove file extension
+        file_name = file_name_with_extension.split(".")[0]
+        # Remove file name prefix
+        file_name_id = file_name.split(file_name_prefix)[-1]
+        # Get the numeric part of the file name
+        doi_id = int("".join(re.findall(r"^\d+", file_name_id)))
+    except:
+        doi_id = None
+
+    return doi_id
+
+
+def get_doi_id_from_poa_s3_key_name(s3_key_name):
+    """
+    Extract just the integer doi_id value from the S3 key name
+    of the article XML file for a poa XML file
+    E.g.
+        published/20140508/elife_poa_e02419.xml = 2419
+        published/20140508/elife_poa_e02444v2.xml = 2444
+    """
+
+    doi_id = None
+    delimiter = "/"
+    file_name_prefix = "elife_poa_e"
+
+    doi_id = get_doi_id_from_s3_key_name(s3_key_name, file_name_prefix)
+
+    return doi_id
+
+
+def get_doi_id_from_vor_s3_key_name(s3_key_name):
+    """
+    Extract just the integer doi_id value from the S3 key name
+    of the article XML file for a VOR XML file
+    E.g.
+        pub_router/published/20140508/elife02419.xml = 2419
+    """
+
+    doi_id = None
+    delimiter = "/"
+    file_name_prefix = "elife"
+
+    doi_id = get_doi_id_from_s3_key_name(s3_key_name, file_name_prefix)
+
+    return doi_id
+
+
+def get_authors_string(authors):
+    """
+    Given a list of authors return a string for all the article authors
+    """
+
+    authors_string = ""
+    for author in authors:
+        if authors_string != "":
+            authors_string += ", "
+        if author.get("given-names"):
+            authors_string += author["given-names"] + " "
+        if author.get("surname"):
+            authors_string += author["surname"]
+        if author.get("collab"):
+            authors_string += author["collab"]
+
+    return authors_string
