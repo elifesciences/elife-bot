@@ -9,7 +9,7 @@ from testfixtures import TempDirectory
 from mock import mock, patch
 from ddt import ddt, data, unpack
 from provider.templates import Templates
-from provider.article import article
+import provider.article as articlelib
 from provider.ejp import EJP
 import activity.activity_PublicationEmail as activity_module
 from activity.activity_PublicationEmail import activity_PublicationEmail
@@ -271,7 +271,7 @@ class TestPublicationEmail(unittest.TestCase):
 
             # Prime the related article property for when needed
             if pass_test_data.get("related_article"):
-                related_article = article()
+                related_article = articlelib.article()
                 related_article.parse_article_file(
                     pass_test_data.get("related_article")
                 )
@@ -497,7 +497,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         authors = fake_authors(self.activity, 13)
 
-        article_object = article()
+        article_object = articlelib.article()
         article_object.parse_article_file("tests/test_data/elife00013.xml")
         article_type = article_object.article_type
         feature_article = False
@@ -539,7 +539,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         authors = fake_authors(self.activity)
 
-        article_object = article()
+        article_object = articlelib.article()
         article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
         article_object.pdf_cover_link = (
             "https://localhost.org/download-your-cover/00353"
@@ -582,9 +582,9 @@ class TestPublicationEmail(unittest.TestCase):
 
     def test_get_pdf_cover_page(self):
 
-        article_object = article()
+        article_object = articlelib.article()
         article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
-        article_object.pdf_cover_link = article_object.get_pdf_cover_page(
+        article_object.pdf_cover_link = articlelib.get_pdf_cover_page(
             article_object.doi_id, self.activity.settings, self.activity.logger
         )
         self.assertEqual(
@@ -756,7 +756,7 @@ class TestArticleAuthors(unittest.TestCase):
             ),
         ]
 
-        article_object = article()
+        article_object = articlelib.article()
         article_object.authors = self.article_xml_authors
         article_object.display_channel = display_channel
 
@@ -777,7 +777,7 @@ class TestArticleAuthors(unittest.TestCase):
             },
         ]
 
-        article_object = article()
+        article_object = articlelib.article()
         article_object.authors = self.article_xml_authors
         article_object.display_channel = display_channel
 
@@ -948,7 +948,7 @@ class TestGetRelatedArticle(unittest.TestCase):
         """get related article from existing list of related articles"""
         doi = "10.7554/eLife.15747"
         expected_doi = doi
-        related_article = article()
+        related_article = articlelib.article()
         related_article.parse_article_file("tests/test_data/elife-15747-v2.xml")
         return_value = activity_module.get_related_article(
             settings_mock, TempDirectory(), doi, [related_article], FakeLogger(), ""
@@ -960,7 +960,7 @@ class TestGetRelatedArticle(unittest.TestCase):
         """get related article from creating a new article for the doi"""
         doi = "10.7554/eLife.15747"
         expected_doi = doi
-        article_object = article()
+        article_object = articlelib.article()
         article_object.parse_article_file("tests/test_data/elife-15747-v2.xml")
         fake_create_article.return_value = article_object
         related_articles = []
@@ -1079,7 +1079,7 @@ class TestAuthorsFromXML(unittest.TestCase):
         },
     )
     def test_authors_from_xml(self, test_data):
-        article_object = article()
+        article_object = articlelib.article()
         full_filename = os.path.join(
             "tests/files_source/publication_email/outbox", test_data.get("filename")
         )
