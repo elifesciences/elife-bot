@@ -8,6 +8,7 @@ python_version = "3.6"
 
 [packages]
 boto = "~=2.49"
+boto3 = "~=1.20"
 arrow = "~=1.2"
 requests = "~=2.26"
 beautifulsoup4 = "~=4.10"
