@@ -1,3 +1,4 @@
+swf_region = ""
 domain = ""
 default_task_list = ""
 

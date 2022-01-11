@@ -58,6 +58,7 @@ class exp:
     # end PPP settings
 
     # SWF queue settings
+    swf_region = "us-east-1"
     domain = "Publish.dev"
     default_task_list = "DefaultTaskList"
 
@@ -379,6 +380,7 @@ class dev:
     # end PPP settings
 
     # SWF queue settings
+    swf_region = "us-east-1"
     domain = "Publish.dev"
     default_task_list = "DefaultTaskList"
 
@@ -697,6 +699,7 @@ class live:
     # end PPP settings
 
     # SWF queue settings
+    swf_region = "us-east-1"
     domain = "Publish"
     default_task_list = "DefaultTaskList"
 
