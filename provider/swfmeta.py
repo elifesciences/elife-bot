@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from collections import OrderedDict
 import boto3
 
@@ -6,6 +6,11 @@ import boto3
 SWFMeta data provider
 Functions to provide meta data from SWF so code is not duplicated
 """
+
+
+def utctimestamp(dt):
+    "get a timestamp for utc timezone from a datetime object"
+    return dt.replace(tzinfo=timezone.utc).timestamp()
 
 
 class SWFMeta:
@@ -156,7 +161,7 @@ class SWFMeta:
         for days in days_list:
 
             start_oldest_date = datetime.utcfromtimestamp(
-                start_latest_date.timestamp() - int(60 * 60 * 24 * days)
+                utctimestamp(start_latest_date) - int(60 * 60 * 24 * days)
             )
 
             close_status = "COMPLETED"
@@ -174,7 +179,7 @@ class SWFMeta:
             # Find the latest run
             for execution in infos.get("executionInfos"):
                 # convert the returned datetime.datetime object to a numeric timestamp
-                execution_timestamp = execution["startTimestamp"].timestamp()
+                execution_timestamp = utctimestamp(execution["startTimestamp"])
                 if latest_start_timestamp is None:
                     latest_start_timestamp = execution_timestamp
                     continue
@@ -214,7 +219,7 @@ class SWFMeta:
         # Use full 90 day history if start_oldest_date is not supplied
         if oldest_date is None:
             oldest_date = datetime.utcfromtimestamp(
-                latest_date.timestamp() - (60 * 60 * 24 * 90)
+                utctimestamp(latest_date) - (60 * 60 * 24 * 90)
             )
 
         close_status = None
@@ -272,7 +277,7 @@ class SWFMeta:
         # use datetime() values for these
         latest_date = datetime.utcnow()
         oldest_date = datetime.utcfromtimestamp(
-            latest_date.timestamp() - (60 * 60 * 24 * 90)
+            utctimestamp(latest_date) - (60 * 60 * 24 * 90)
         )
 
         infos = self.get_open_workflow_executionInfos(

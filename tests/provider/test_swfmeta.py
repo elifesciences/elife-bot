@@ -101,7 +101,7 @@ class TestProviderSWFMeta(unittest.TestCase):
         mock_swf_client = FakeSWFClient()
         mock_swf_client.add_infos(self.base_completed_infos)
         fake_client.return_value = mock_swf_client
-        expected_timestamp = 1371047538.231
+        expected_timestamp = 1371022338.231
         latest_timestamp = (
             self.swfmeta.get_last_completed_workflow_execution_startTimestamp(
                 workflow_name="DepositCrossref"
