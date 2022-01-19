@@ -48,6 +48,7 @@ class TestCron(unittest.TestCase):
         )
         self.assertIsNone(cron.run_cron(settings_mock))
 
+    @patch("boto3.client")
     @patch("calendar.timegm")
     @patch(
         "provider.swfmeta.SWFMeta.get_last_completed_workflow_execution_startTimestamp"
@@ -61,9 +62,12 @@ class TestCron(unittest.TestCase):
             "expected": True,
         },
     )
-    def test_workflow_conditional_start(self, test_data, fake_timestamp, fake_timegm):
+    def test_workflow_conditional_start(
+        self, test_data, fake_timestamp, fake_timegm, fake_client
+    ):
         fake_timestamp.return_value = test_data.get("last_timestamp")
         fake_timegm.return_value = test_data.get("current_timestamp")
+        fake_client.return_value = True
         workflow_id = test_data.get("workflow_id")
         start_seconds = test_data.get("start_seconds")
         return_value = cron.workflow_conditional_start(

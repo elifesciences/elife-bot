@@ -1,181 +1,189 @@
 import unittest
-import os
+from collections import OrderedDict
+import copy
+import datetime
 import json
-from provider.swfmeta import SWFMeta
-import tests.settings_mock as settings_mock
-from testfixtures import tempdir
-from testfixtures import TempDirectory
-from mock import patch, MagicMock
+from mock import patch
+from provider.swfmeta import query_kwargs, SWFMeta
+from tests.classes_mock import FakeSWFClient
+from tests import read_fixture, settings_mock
 
 
-class FakeSWFConnection:
-    def __init__(self):
-        # infos is JSON format infos in SWF format for workflow executions
-        self.infos = []
-        self.infos_counter = 0
+class TestQueryKwargs(unittest.TestCase):
+    def test_query_kwargs_all(self):
+        "test all keyword arguments for test coverage"
+        kwargs = query_kwargs(
+            domain="domain",
+            workflow_id="workflow_id",
+            workflow_name="workflow_name",
+            workflow_version="workflow_version",
+            start_oldest_date=datetime.datetime(2013, 6, 12, 7, 34, 14, 235000),
+            start_latest_date=datetime.datetime(2013, 6, 12, 7, 34, 14, 235001),
+            close_status="close_status",
+            maximum_page_size="maximum_page_size",
+        )
+        expected = OrderedDict(
+            [
+                ("domain", "domain"),
+                (
+                    "startTimeFilter",
+                    {
+                        "oldestDate": datetime.datetime(2013, 6, 12, 7, 34, 14, 235000),
+                        "latestDate": datetime.datetime(2013, 6, 12, 7, 34, 14, 235001),
+                    },
+                ),
+                ("executionFilter", {"workflowId": "workflow_id"}),
+                (
+                    "typeFilter",
+                    {"name": "workflow_name", "version": "workflow_version"},
+                ),
+                ("maximumPageSize", "maximum_page_size"),
+            ]
+        )
+        self.assertEqual(kwargs, expected)
 
-    def connect(self):
-        pass
+    def test_query_kwargs_close_status(self):
+        "test close_status without a workflow_name or workflow_id"
+        kwargs = query_kwargs(
+            close_status="close_status",
+        )
 
-    def add_infos(self, infos):
-        "add an infos, to allow it to return more than one infos in succession"
-        self.infos.append(infos)
-
-    def list_open_workflow_executions(
-        self,
-        domain=None,
-        workflow_id=None,
-        workflow_name=None,
-        workflow_version=None,
-        oldest_date=None,
-        latest_date=None,
-        maximum_page_size=None,
-        next_page_token=None,
-    ):
-        """
-        return the infos for testing, when testing the next_page_token and
-        mocking the return values the final infos value needs not have a
-        nextPageToken otherwise it will loop forever in some swfmeta functions
-        """
-        if len(self.infos) > 1:
-            return_infos = self.infos[self.infos_counter]
-            if self.infos_counter + 1 < len(self.infos):
-                self.infos_counter = self.infos_counter + 1
-            else:
-                self.infos_counter = 0
-            return return_infos
-        else:
-            # reset the counter self.infos_counter then return
-            self.infos_counter = 0
-            return self.infos[self.infos_counter]
-
-    def list_closed_workflow_executions(
-        self,
-        domain=None,
-        workflow_id=None,
-        workflow_name=None,
-        workflow_version=None,
-        start_oldest_date=None,
-        start_latest_date=None,
-        close_status=None,
-        maximum_page_size=None,
-        next_page_token=None,
-    ):
-        "for testing piggy-back list_open_workflow_executions to return infos"
-        return self.list_open_workflow_executions()
+        expected = OrderedDict(
+            [("domain", None), ("closeStatusFilter", {"status": "close_status"})]
+        )
+        self.assertEqual(kwargs, expected)
 
 
 class TestProviderSWFMeta(unittest.TestCase):
     def setUp(self):
         self.swfmeta = SWFMeta(settings_mock)
-
-    def test_is_workflow_open(self):
-        "test whether a workflow is open on a test fixture JSON example open workflow executions"
-        with open("tests/test_data/open_workflow_executions.json", "r") as json_file:
-            infos = json.loads(json_file.read())
-            is_open = self.swfmeta.is_workflow_open(
-                infos=infos, workflow_name="DepositCrossref"
-            )
-            self.assertTrue(is_open)
-        # example where executionInfos list would be empty
-        infos = json.loads('{"executionInfos": []}')
-        is_open = self.swfmeta.is_workflow_open(
-            infos=infos, workflow_name="DepositCrossref"
+        self.empty_infos = json.loads('{"executionInfos": []}')
+        # deepcopy these to avoid strange side-effects
+        self.base_open_infos = copy.deepcopy(
+            read_fixture("open_workflow_executions.py")
         )
+        self.base_completed_infos = copy.deepcopy(
+            read_fixture("completed_workflow_executions.py")
+        )
+
+    @patch("boto3.client")
+    def test_is_workflow_open(self, fake_client):
+        "test whether a workflow is open on a test fixture JSON example open workflow executions"
+        mock_swf_client = FakeSWFClient()
+        mock_swf_client.add_infos(self.base_open_infos)
+        fake_client.return_value = mock_swf_client
+        is_open = self.swfmeta.is_workflow_open(workflow_name="DepositCrossref")
+        self.assertTrue(is_open)
+
+    @patch("boto3.client")
+    def test_is_workflow_open_empty_list(self, fake_client):
+        "test whether a workflow is open, example where executionInfos list would be empty"
+        mock_swf_client = FakeSWFClient()
+        mock_swf_client.add_infos(self.empty_infos)
+        fake_client.return_value = mock_swf_client
+        is_open = self.swfmeta.is_workflow_open(workflow_name="DepositCrossref")
         self.assertFalse(is_open)
 
-    def test_get_last_completed(self):
+    @patch("boto3.client")
+    def test_get_closed_workflow_execution_count(self, fake_client):
+        "test counting of closed executions"
+        mock_swf_client = FakeSWFClient()
+        mock_swf_client.add_infos(self.base_completed_infos)
+        fake_client.return_value = mock_swf_client
+        count = self.swfmeta.get_closed_workflow_execution_count(
+            workflow_name="DepositCrossref"
+        )
+        self.assertEqual(count, 43)
+
+    @patch("boto3.client")
+    def test_get_last_completed(self, fake_client):
         "test last completed workflow with a test fixture of closed workflow executions"
-        expected_timestamp = 1371047538.231
-        with open(
-            "tests/test_data/completed_workflow_executions.json", "r"
-        ) as json_file:
-            infos = json.loads(json_file.read())
-            latest_timestamp = (
-                self.swfmeta.get_last_completed_workflow_execution_startTimestamp(
-                    infos=infos, workflow_name="DepositCrossref"
-                )
+        mock_swf_client = FakeSWFClient()
+        mock_swf_client.add_infos(self.base_completed_infos)
+        fake_client.return_value = mock_swf_client
+        expected_timestamp = 1371022338.231
+        latest_timestamp = (
+            self.swfmeta.get_last_completed_workflow_execution_startTimestamp(
+                workflow_name="DepositCrossref"
             )
-            self.assertEqual(latest_timestamp, expected_timestamp)
+        )
+        self.assertEqual(latest_timestamp, expected_timestamp)
 
-    @patch("provider.swfmeta.SWFMeta.connect")
-    def test_get_open_workflow_executionInfos(self, mock_connect):
+    @patch("boto3.client")
+    def test_get_open_workflow_execution_infos(self, fake_client):
         "test getting open workflow executions"
-        # prepare some test data first
-        base_infos = None
-        next_page_token_infos = None
-        with open("tests/test_data/open_workflow_executions.json", "r") as json_file:
-            infos_data = json_file.read()
-            base_infos = json.loads(infos_data)
-            # also create the example with a nextPageToken
-            next_page_token_infos = json.loads(infos_data)
-            next_page_token_infos["nextPageToken"] = "a_next_page_token_for_testing"
-
-        # first test is without a next_page_token
-        mock_connect = FakeSWFConnection()
-        mock_connect.add_infos(base_infos)
-        self.swfmeta.conn = mock_connect
+        # test without a next_page_token
+        mock_swf_client = FakeSWFClient()
+        mock_swf_client.add_infos(self.base_open_infos)
+        fake_client.return_value = mock_swf_client
         infos = self.swfmeta.get_open_workflow_executionInfos(
             workflow_name="DepositCrossref"
         )
         self.assertIsNotNone(infos)
 
-        # second test is to add the data that has a nextPageToken to test pagination
-        mock_connect = FakeSWFConnection()
-        mock_connect.add_infos(next_page_token_infos)
-        mock_connect.add_infos(base_infos)
-        self.swfmeta.conn = mock_connect
+    @patch("boto3.client")
+    def test_get_open_workflow_next_token(self, fake_client):
+        "test getting open workflow executions"
+        # add a nextPageToken
+        next_page_token_infos = copy.deepcopy(self.base_open_infos)
+        next_page_token_infos["nextPageToken"] = "a_next_page_token_for_testing"
+
+        mock_swf_client = FakeSWFClient()
+        mock_swf_client.add_infos(next_page_token_infos)
+        mock_swf_client.add_infos(self.base_open_infos)
+        fake_client.return_value = mock_swf_client
+
         infos = self.swfmeta.get_open_workflow_executionInfos(
             workflow_name="DepositCrossref"
         )
         self.assertIsNotNone(infos)
+        self.assertEqual(len(infos["executionInfos"]), 2)
 
-    @patch("provider.swfmeta.SWFMeta.connect")
-    def test_get_closed_workflow_executionInfos(self, mock_connect):
+    @patch("boto3.client")
+    def test_get_closed_workflow_execution_infos(self, fake_client):
         "test getting closed workflow executions"
-        # prepare some test data first
-        base_infos = None
-        next_page_token_infos = None
-        with open(
-            "tests/test_data/completed_workflow_executions.json", "r"
-        ) as json_file:
-            infos_data = json_file.read()
-            base_infos = json.loads(infos_data)
-            # also create the example with a nextPageToken
-            next_page_token_infos = json.loads(infos_data)
-            next_page_token_infos["nextPageToken"] = "a_next_page_token_for_testing"
+        # test without a next_page_token
+        mock_swf_client = FakeSWFClient()
+        mock_swf_client.add_infos(self.base_completed_infos)
+        fake_client.return_value = mock_swf_client
 
-        # first test is without a next_page_token
-        mock_connect = FakeSWFConnection()
-        mock_connect.add_infos(base_infos)
-        self.swfmeta.conn = mock_connect
         infos = self.swfmeta.get_closed_workflow_executionInfos(
             workflow_name="DepositCrossref"
         )
         self.assertIsNotNone(infos)
         self.assertEqual(len(infos.get("executionInfos")), 43)
 
-        # second test is without a next_page_token and a close_status
-        mock_connect = FakeSWFConnection()
-        mock_connect.add_infos(base_infos)
-        self.swfmeta.conn = mock_connect
+    @patch("boto3.client")
+    def test_get_closed_workflow_by_close_status(self, fake_client):
+        "test getting closed workflow executions"
+        # test without a next_page_token
+        mock_swf_client = FakeSWFClient()
+        mock_swf_client.add_infos(self.base_completed_infos)
+        fake_client.return_value = mock_swf_client
+
         infos = self.swfmeta.get_closed_workflow_executionInfos(
             workflow_name="DepositCrossref", close_status="COMPLETED"
         )
         self.assertIsNotNone(infos)
         self.assertEqual(len(infos.get("executionInfos")), 25)
 
-        # third test is to add the data that has a nextPageToken to test pagination
-        mock_connect = FakeSWFConnection()
-        mock_connect.add_infos(next_page_token_infos)
-        mock_connect.add_infos(base_infos)
-        self.swfmeta.conn = mock_connect
+    @patch("boto3.client")
+    def test_get_closed_workflow_next_token(self, fake_client):
+        # create infos data where executionInfos list is trucated to the first item only
+        final_infos = copy.deepcopy(self.base_completed_infos)
+        final_infos["executionInfos"] = final_infos["executionInfos"][:1]
+        # also create the example with a nextPageToken
+        next_page_token_infos = copy.deepcopy(self.base_completed_infos)
+        next_page_token_infos["nextPageToken"] = "a_next_page_token_for_testing"
+
+        # test with a nextPageToken to test pagination
+        mock_swf_client = FakeSWFClient()
+        mock_swf_client.add_infos(next_page_token_infos)
+        mock_swf_client.add_infos(final_infos)
+        fake_client.return_value = mock_swf_client
+
         infos = self.swfmeta.get_closed_workflow_executionInfos(
             workflow_name="DepositCrossref", close_status="TERMINATED"
         )
         self.assertIsNotNone(infos)
         self.assertEqual(len(infos.get("executionInfos")), 15)
-
-
-if __name__ == "__main__":
-    unittest.main()
