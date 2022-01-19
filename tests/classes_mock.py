@@ -12,6 +12,74 @@ class FakeBotoConnection:
         self.start_called = True
 
 
+class FakeSWFClient:
+    def __init__(self, *args, **kwargs):
+        # infos is JSON format infos in SWF format for workflow executions
+        self.infos = []
+        self.infos_counter = 0
+
+    def add_infos(self, infos):
+        "add an infos, to allow it to return more than one infos in succession"
+        self.infos.append(infos)
+
+    def list_open_workflow_executions(
+        self,
+        domain=None,
+        startTimeFilter=None,
+        executionFilter=None,
+        typeFilter=None,
+        closeStatusFilter=None,
+        maximumPageSize=None,
+        nextPageToken=None,
+    ):
+        """
+        return the infos for testing, when testing the next_page_token and
+        mocking the return values the final infos value needs not have a
+        nextPageToken otherwise it will loop forever in some swfmeta functions
+        """
+        if len(self.infos) > 1:
+            return_infos = self.infos[self.infos_counter]
+            if self.infos_counter < len(self.infos) - 1:
+                self.infos_counter = self.infos_counter + 1
+            else:
+                self.infos_counter = 0
+            return return_infos
+        else:
+            # reset the counter self.infos_counter then return
+            self.infos_counter = 0
+            return self.infos[self.infos_counter]
+
+    def list_closed_workflow_executions(
+        self,
+        domain=None,
+        startTimeFilter=None,
+        executionFilter=None,
+        typeFilter=None,
+        closeStatusFilter=None,
+        maximumPageSize=None,
+        nextPageToken=None,
+    ):
+        "for testing piggy-back list_open_workflow_executions to return infos"
+        return self.list_open_workflow_executions()
+
+    def count_closed_workflow_executions(
+        self,
+        domain=None,
+        startTimeFilter=None,
+        executionFilter=None,
+        typeFilter=None,
+        closeStatusFilter=None,
+        maximumPageSize=None,
+        nextPageToken=None,
+    ):
+        "for testing return a count of infos"
+        count = 0
+        infos = self.list_open_workflow_executions()
+        if infos and infos.get("executionInfos"):
+            count = len(infos.get("executionInfos"))
+        return {"count": count, "truncated": False}
+
+
 class FakeLayer1:
     def respond_decision_task_completed(
         self, task_token, decisions=None, execution_context=None

@@ -1,7 +1,6 @@
-import calendar
-import time
-
-import boto.swf
+from datetime import datetime
+from collections import OrderedDict
+import boto3
 
 """
 SWFMeta data provider
@@ -13,20 +12,16 @@ class SWFMeta:
     def __init__(self, settings):
         self.settings = settings
 
-        self.conn = None
-
-        # Workflow execution history info
-        self.infos = None
-
-        # Workflow execution count
-        self.count = None
+        self.client = None
 
     def connect(self):
         # Simple connect
-        self.conn = boto.swf.layer1.Layer1(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        self.client = boto3.client(
+            "swf",
+            aws_access_key_id=self.settings.aws_access_key_id,
+            aws_secret_access_key=self.settings.aws_secret_access_key,
+            region_name=self.settings.swf_region,
         )
-        return self.conn
 
     def get_closed_workflow_execution_count(
         self,
@@ -44,25 +39,25 @@ class SWFMeta:
         Relies on boto.swf.count_closed_workflow_executions
         Note: Cannot send a workflow_name and close_status at the same time
         """
-        if self.conn is None:
+        if self.client is None:
             self.connect()
 
         if domain is None:
             domain = self.settings.domain
 
-        # Still need to handle the nextPageToken
-        count = self.conn.count_closed_workflow_executions(
-            domain=domain,
-            workflow_id=workflow_id,
-            workflow_name=workflow_name,
-            workflow_version=workflow_version,
-            start_oldest_date=start_oldest_date,
-            start_latest_date=start_latest_date,
-            close_status=close_status,
+        kwargs = query_kwargs(
+            domain,
+            workflow_id,
+            workflow_name,
+            workflow_version,
+            start_oldest_date,
+            start_latest_date,
+            close_status,
         )
 
-        self.count = count
-        return count
+        result = self.client.count_closed_workflow_executions(**kwargs)
+
+        return result.get("count")
 
     def get_closed_workflow_executionInfos(
         self,
@@ -81,7 +76,7 @@ class SWFMeta:
         Relies on boto.swf.list_closed_workflow_executions with some wrappers and
         handling of the nextPageToken if encountered
         """
-        if self.conn is None:
+        if self.client is None:
             self.connect()
 
         if domain is None:
@@ -91,56 +86,37 @@ class SWFMeta:
         #   {u'message': u'Cannot specify more than one exclusive filters in the
         #    same query: [WorkflowTypeFilter, CloseStatusFilter]
         #   ', u'__type': u'com.amazon.coral.validate#ValidationException'}
-        if (
-            workflow_name is not None or workflow_id is not None
-        ) and close_status is not None:
-            close_status_to_query = None
-        else:
-            close_status_to_query = close_status
 
-        # Still need to handle the nextPageToken
-        infos = self.conn.list_closed_workflow_executions(
-            domain=domain,
-            workflow_id=workflow_id,
-            workflow_name=workflow_name,
-            workflow_version=workflow_version,
-            start_oldest_date=start_oldest_date,
-            start_latest_date=start_latest_date,
-            close_status=close_status_to_query,
-            maximum_page_size=maximum_page_size,
+        kwargs = query_kwargs(
+            domain,
+            workflow_id,
+            workflow_name,
+            workflow_version,
+            start_oldest_date,
+            start_latest_date,
+            close_status,
+            maximum_page_size,
         )
 
+        infos = self.client.list_closed_workflow_executions(**kwargs)
+
+        # Still need to handle the nextPageToken
         # Check if there is no nextPageToken, if there is none
         #  return the result, nothing to page
-        next_page_token = None
-        try:
-            next_page_token = infos["nextPageToken"]
-        except KeyError:
-            next_page_token = None
+        next_page_token = infos.get("nextPageToken")
 
         # Continue, we have a nextPageToken. Assemble a full array of events by continually polling
         if next_page_token is not None:
             all_infos = infos["executionInfos"]
             while next_page_token is not None:
-                try:
-                    next_page_token = infos["nextPageToken"]
-                    if next_page_token is not None:
-                        infos = self.conn.list_closed_workflow_executions(
-                            domain=domain,
-                            workflow_id=workflow_id,
-                            workflow_name=workflow_name,
-                            workflow_version=workflow_version,
-                            start_oldest_date=start_oldest_date,
-                            start_latest_date=start_latest_date,
-                            close_status=close_status_to_query,
-                            maximum_page_size=maximum_page_size,
-                            next_page_token=next_page_token,
-                        )
+                kwargs["nextPageToken"] = next_page_token
 
-                    for execution in infos["executionInfos"]:
-                        all_infos.append(execution)
-                except KeyError:
-                    next_page_token = None
+                infos = self.client.list_closed_workflow_executions(**kwargs)
+
+                for execution_info in infos.get("executionInfos"):
+                    all_infos.append(execution_info)
+
+                next_page_token = infos.get("nextPageToken")
 
             # Finally, reset the original decision response with the full set of events
             infos["executionInfos"] = all_infos
@@ -149,16 +125,14 @@ class SWFMeta:
         if workflow_name is not None and close_status is not None:
             good_infos = []
             for execution in infos["executionInfos"]:
-                if execution["closeStatus"] == close_status:
+                if execution.get("closeStatus") == close_status:
                     good_infos.append(execution)
             infos["executionInfos"] = good_infos
 
-        self.infos = infos
         return infos
 
     def get_last_completed_workflow_execution_startTimestamp(
         self,
-        infos=None,
         domain=None,
         workflow_id=None,
         workflow_name=None,
@@ -172,46 +146,45 @@ class SWFMeta:
         first shorter periods of time as specified in days_list
         """
 
-        latest_startTimestamp = None
+        latest_start_timestamp = None
 
-        start_latest_date = calendar.timegm(time.gmtime())
+        start_latest_date = datetime.utcnow()
 
         # Number of days to check in successive calls to SWF history
         days_list = [0.25, 1, 7, 90]
 
-        # For automated tests, check if infos was supplied
-        test_mode = False
-        if infos is not None:
-            test_mode = True
-
         for days in days_list:
 
-            start_oldest_date = start_latest_date - int(60 * 60 * 24 * days)
+            start_oldest_date = datetime.utcfromtimestamp(
+                start_latest_date.timestamp() - int(60 * 60 * 24 * days)
+            )
+
             close_status = "COMPLETED"
 
-            if test_mode is False:
-                infos = self.get_closed_workflow_executionInfos(
-                    domain=domain,
-                    workflow_id=workflow_id,
-                    workflow_name=workflow_name,
-                    workflow_version=workflow_version,
-                    start_latest_date=start_latest_date,
-                    start_oldest_date=start_oldest_date,
-                    close_status=close_status,
-                )
+            infos = self.get_closed_workflow_executionInfos(
+                domain=domain,
+                workflow_id=workflow_id,
+                workflow_name=workflow_name,
+                workflow_version=workflow_version,
+                start_latest_date=start_latest_date,
+                start_oldest_date=start_oldest_date,
+                close_status=close_status,
+            )
 
             # Find the latest run
-            for execution in infos["executionInfos"]:
-                if latest_startTimestamp is None:
-                    latest_startTimestamp = execution["startTimestamp"]
+            for execution in infos.get("executionInfos"):
+                # convert the returned datetime.datetime object to a numeric timestamp
+                execution_timestamp = execution["startTimestamp"].timestamp()
+                if latest_start_timestamp is None:
+                    latest_start_timestamp = execution_timestamp
                     continue
-                if execution["startTimestamp"] > latest_startTimestamp:
-                    latest_startTimestamp = execution["startTimestamp"]
+                if execution_timestamp > latest_start_timestamp:
+                    latest_start_timestamp = execution_timestamp
             # Check if we found the last date
-            if latest_startTimestamp:
+            if latest_start_timestamp:
                 break
 
-        return latest_startTimestamp
+        return latest_start_timestamp
 
     def get_open_workflow_executionInfos(
         self,
@@ -229,7 +202,7 @@ class SWFMeta:
         Relies on boto.swf.list_open_workflow_executions with some wrappers and
         handling of the nextPageToken if encountered
         """
-        if self.conn is None:
+        if self.client is None:
             self.connect()
 
         if domain is None:
@@ -237,64 +210,52 @@ class SWFMeta:
 
         # Use now as the start_latest_date if not supplied
         if latest_date is None:
-            latest_date = calendar.timegm(time.gmtime())
+            latest_date = datetime.utcnow()
         # Use full 90 day history if start_oldest_date is not supplied
         if oldest_date is None:
-            oldest_date = latest_date - (60 * 60 * 24 * 90)
+            oldest_date = datetime.utcfromtimestamp(
+                latest_date.timestamp() - (60 * 60 * 24 * 90)
+            )
+
+        close_status = None
+        kwargs = query_kwargs(
+            domain,
+            workflow_id,
+            workflow_name,
+            workflow_version,
+            oldest_date,
+            latest_date,
+            close_status,
+            maximum_page_size,
+        )
 
         # Still need to handle the nextPageToken
-        infos = self.conn.list_open_workflow_executions(
-            domain=domain,
-            workflow_id=workflow_id,
-            workflow_name=workflow_name,
-            workflow_version=workflow_version,
-            oldest_date=oldest_date,
-            latest_date=latest_date,
-            maximum_page_size=maximum_page_size,
-        )
+        infos = self.client.list_open_workflow_executions(**kwargs)
 
         # Check if there is no nextPageToken, if there is none
         #  return the result, nothing to page
-        next_page_token = None
-        try:
-            next_page_token = infos["nextPageToken"]
-        except KeyError:
-            next_page_token = None
+        next_page_token = infos.get("nextPageToken")
 
         # Continue, we have a nextPageToken. Assemble a full array of events by continually polling
-        all_infos = None
         if next_page_token is not None:
             all_infos = infos["executionInfos"]
             while next_page_token is not None:
-                try:
-                    next_page_token = infos["nextPageToken"]
-                    if next_page_token is not None:
-                        infos = self.conn.list_open_workflow_executions(
-                            domain=domain,
-                            workflow_id=workflow_id,
-                            workflow_name=workflow_name,
-                            workflow_version=workflow_version,
-                            oldest_date=oldest_date,
-                            latest_date=latest_date,
-                            maximum_page_size=maximum_page_size,
-                            next_page_token=next_page_token,
-                        )
+                kwargs["nextPageToken"] = next_page_token
 
-                    for execution in infos["executionInfos"]:
-                        all_infos.append(execution)
-                except KeyError:
-                    next_page_token = None
+                infos = self.client.list_open_workflow_executions(**kwargs)
 
-        # Finally, reset the original decision response with the full set of events
-        if all_infos:
+                for execution_info in infos.get("executionInfos"):
+                    all_infos.append(execution_info)
+
+                next_page_token = infos.get("nextPageToken")
+
+            # Finally, reset the original decision response with the full set of events
             infos["executionInfos"] = all_infos
 
-        self.infos = infos
         return infos
 
     def is_workflow_open(
         self,
-        infos=None,
         domain=None,
         workflow_id=None,
         workflow_name=None,
@@ -308,23 +269,20 @@ class SWFMeta:
 
         is_open = None
 
-        latest_date = calendar.timegm(time.gmtime())
-        oldest_date = latest_date - (60 * 60 * 24 * 90)
+        # use datetime() values for these
+        latest_date = datetime.utcnow()
+        oldest_date = datetime.utcfromtimestamp(
+            latest_date.timestamp() - (60 * 60 * 24 * 90)
+        )
 
-        # For automated tests, check if infos was supplied
-        test_mode = False
-        if infos is not None:
-            test_mode = True
-
-        if test_mode is False:
-            infos = self.get_open_workflow_executionInfos(
-                domain=domain,
-                workflow_id=workflow_id,
-                workflow_name=workflow_name,
-                workflow_version=workflow_version,
-                latest_date=latest_date,
-                oldest_date=oldest_date,
-            )
+        infos = self.get_open_workflow_executionInfos(
+            domain=domain,
+            workflow_id=workflow_id,
+            workflow_name=workflow_name,
+            workflow_version=workflow_version,
+            latest_date=latest_date,
+            oldest_date=oldest_date,
+        )
 
         if len(infos["executionInfos"]) <= 0:
             is_open = False
@@ -334,3 +292,37 @@ class SWFMeta:
             is_open = True
 
         return is_open
+
+
+def query_kwargs(
+    domain=None,
+    workflow_id=None,
+    workflow_name=None,
+    workflow_version=None,
+    start_oldest_date=None,
+    start_latest_date=None,
+    close_status=None,
+    maximum_page_size=None,
+):
+    "arguments to use in queries of SWF metadata"
+    kwargs = OrderedDict()
+    kwargs["domain"] = domain
+    if start_oldest_date or start_latest_date:
+        kwargs["startTimeFilter"] = {}
+        if start_oldest_date:
+            kwargs["startTimeFilter"]["oldestDate"] = start_oldest_date
+        if start_latest_date:
+            kwargs["startTimeFilter"]["latestDate"] = start_latest_date
+    if workflow_id:
+        kwargs["executionFilter"] = {"workflowId": workflow_id}
+    if workflow_name or workflow_version:
+        kwargs["typeFilter"] = {}
+        if workflow_name:
+            kwargs["typeFilter"]["name"] = workflow_name
+        if workflow_version:
+            kwargs["typeFilter"]["version"] = workflow_version
+    if close_status is not None and (workflow_name is None and workflow_id is None):
+        kwargs["closeStatusFilter"] = {"status": close_status}
+    if maximum_page_size:
+        kwargs["maximumPageSize"] = maximum_page_size
+    return kwargs
