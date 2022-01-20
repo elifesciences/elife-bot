@@ -48,12 +48,11 @@ def start(settings):
         # Import the workflow libraries
         class_name = "workflow_" + workflow_name
         module_name = "workflow." + class_name
-        importlib.import_module(module_name)
-        full_path = "workflow." + class_name + "." + class_name
+        module_object = importlib.import_module(module_name)
+        workflow_class = getattr(module_object, class_name)
         # Create the workflow object
-        f = eval(full_path)
         logger = None
-        workflow_object = f(settings, logger, conn)
+        workflow_object = workflow_class(settings, logger, conn)
 
         # Now register it
         response = workflow_object.register()
@@ -126,12 +125,11 @@ def start(settings):
         # Import the activity libraries
         class_name = "activity_" + activity_name
         module_name = "activity." + class_name
-        importlib.import_module(module_name)
-        full_path = "activity." + class_name + "." + class_name
+        module_object = importlib.import_module(module_name)
+        activity_class = getattr(module_object, class_name)
         # Create the workflow object
-        f = eval(full_path)
         logger = None
-        activity_object = f(settings, logger, conn)
+        activity_object = activity_class(settings, logger, conn)
 
         # Now register it
         response = activity_object.register()
