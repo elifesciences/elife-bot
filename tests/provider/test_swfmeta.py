@@ -90,10 +90,11 @@ class TestProviderSWFMeta(unittest.TestCase):
         mock_swf_client = FakeSWFClient()
         mock_swf_client.add_infos(self.base_completed_infos)
         fake_client.return_value = mock_swf_client
-        count = self.swfmeta.get_closed_workflow_execution_count(
+        expected = {"count": 43, "truncated": False}
+        result = self.swfmeta.get_closed_workflow_execution_count(
             workflow_name="DepositCrossref"
         )
-        self.assertEqual(count, 43)
+        self.assertEqual(result, expected)
 
     @patch("boto3.client")
     def test_get_last_completed(self, fake_client):
