@@ -62,7 +62,7 @@ class SWFMeta:
 
         result = self.client.count_closed_workflow_executions(**kwargs)
 
-        return result.get("count")
+        return result
 
     def get_closed_workflow_executionInfos(
         self,
