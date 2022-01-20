@@ -1,7 +1,7 @@
 import json
 import calendar
 import time
-
+from datetime import datetime
 from activity.objects import Activity
 
 import provider.swfmeta as swfmetalib
@@ -137,16 +137,19 @@ class activity_AdminEmailHistory(Activity):
         swfmeta = swfmetalib.SWFMeta(self.settings)
         swfmeta.connect()
 
-        start_latest_date_timestamp = current_timestamp
-        start_oldest_date_timestamp = start_latest_date_timestamp - time_period
+        # convert timestamp to datetime objects
+        start_latest_date = datetime.utcfromtimestamp(current_timestamp)
+        start_oldest_date = datetime.utcfromtimestamp(
+            swfmetalib.utctimestamp(start_latest_date) - time_period
+        )
 
         workflow_count = {}
 
         for close_status in close_status_list:
             count = swfmeta.get_closed_workflow_execution_count(
                 domain=self.settings.domain,
-                start_oldest_date=start_oldest_date_timestamp,
-                start_latest_date=start_latest_date_timestamp,
+                start_oldest_date=start_oldest_date,
+                start_latest_date=start_latest_date,
                 close_status=close_status,
             )
             run_count = None
