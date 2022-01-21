@@ -20,13 +20,17 @@ class Activity(object):
     ACTIVITY_EXIT_WORKFLOW = "ActivityExitWorkflow"
 
     # Base class
-    def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
+    def __init__(
+        self, settings, logger, conn=None, token=None, activity_task=None, client=None
+    ):
         self.settings = settings
         self.logger = logger
         self.result = None
         self.conn = conn
         self.token = token
         self.activity_task = activity_task
+        # boto3 swf client
+        self.client = client
 
         # SWF Defaults, most are set in derived classes or at runtime
         try:
@@ -55,21 +59,23 @@ class Activity(object):
     def describe(self):
         """
         Describe activity type from SWF, to confirm it exists
-        Requires object to have an active connection to SWF using boto
+        Requires object to have an SWF client using boto3
         """
         if (
-            self.conn is None
+            self.client is None
             or self.domain is None
             or self.name is None
             or self.version is None
         ):
             return None
 
+        activity_type = {"name": self.name, "version": self.version}
+
         try:
-            response = self.conn.describe_activity_type(
-                self.domain, self.name, self.version
+            response = self.client.describe_activity_type(
+                domain=self.domain, activityType=activity_type
             )
-        except boto.exception.SWFResponseError:
+        except self.client.exceptions.UnknownResourceFault:
             response = None
 
         return response
@@ -77,10 +83,10 @@ class Activity(object):
     def register(self):
         """
         Register the activity type with SWF, if it does not already exist
-        Requires object to have an active connection to SWF using boto
+        Requires object to have an SWF client using boto3
         """
         if (
-            self.conn is None
+            self.client is None
             or self.domain is None
             or self.name is None
             or self.version is None
@@ -88,16 +94,22 @@ class Activity(object):
             return None
 
         if self.describe() is None:
-            response = self.conn.register_activity_type(
-                str(self.domain),
-                str(self.name),
-                str(self.version),
-                str(self.task_list),
-                str(self.default_task_heartbeat_timeout),
-                str(self.default_task_schedule_to_close_timeout),
-                str(self.default_task_schedule_to_start_timeout),
-                str(self.default_task_start_to_close_timeout),
-                str(self.description),
+            response = self.client.register_activity_type(
+                domain=str(self.domain),
+                name=str(self.name),
+                version=str(self.version),
+                description=str(self.description),
+                defaultTaskStartToCloseTimeout=str(
+                    self.default_task_start_to_close_timeout
+                ),
+                defaultTaskHeartbeatTimeout=str(self.default_task_heartbeat_timeout),
+                defaultTaskList={"name": str(self.task_list)},
+                defaultTaskScheduleToStartTimeout=str(
+                    self.default_task_schedule_to_start_timeout
+                ),
+                defaultTaskScheduleToCloseTimeout=str(
+                    self.default_task_schedule_to_close_timeout
+                ),
             )
 
             return response

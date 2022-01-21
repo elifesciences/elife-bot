@@ -14,9 +14,11 @@ REPAIR_XML = False
 class activity_ValidateAcceptedSubmission(Activity):
     "ValidateAcceptedSubmission activity"
 
-    def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
+    def __init__(
+        self, settings, logger, conn=None, token=None, activity_task=None, client=None
+    ):
         super(activity_ValidateAcceptedSubmission, self).__init__(
-            settings, logger, conn, token, activity_task
+            settings, logger, conn, token, activity_task, client=client
         )
 
         self.name = "ValidateAcceptedSubmission"

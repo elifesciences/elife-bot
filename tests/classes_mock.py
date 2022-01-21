@@ -12,11 +12,21 @@ class FakeBotoConnection:
         self.start_called = True
 
 
+class FakeSWFUnknownResourceFault(Exception):
+    pass
+
+
+class FakeSWFClientExceptions:
+    def __init__(self):
+        self.UnknownResourceFault = FakeSWFUnknownResourceFault()
+
+
 class FakeSWFClient:
     def __init__(self, *args, **kwargs):
         # infos is JSON format infos in SWF format for workflow executions
         self.infos = []
         self.infos_counter = 0
+        self.exceptions = FakeSWFClientExceptions()
 
     def add_infos(self, infos):
         "add an infos, to allow it to return more than one infos in succession"
@@ -78,6 +88,18 @@ class FakeSWFClient:
         if infos and infos.get("executionInfos"):
             count = len(infos.get("executionInfos"))
         return {"count": count, "truncated": False}
+
+    def describe_workflow_type(self, domain, workflowType):
+        pass
+
+    def register_workflow_type(self, **kwargs):
+        pass
+
+    def describe_activity_type(self, domain, activityType):
+        pass
+
+    def register_activity_type(self, **kwargs):
+        pass
 
 
 class FakeLayer1:

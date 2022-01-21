@@ -11,9 +11,10 @@ class workflow_PubmedArticleDeposit(Workflow):
         token=None,
         decision=None,
         maximum_page_size=100,
+        client=None,
     ):
         super(workflow_PubmedArticleDeposit, self).__init__(
-            settings, logger, conn, token, decision, maximum_page_size
+            settings, logger, conn, token, decision, maximum_page_size, client=client
         )
 
         # SWF Defaults

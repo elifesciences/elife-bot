@@ -1,6 +1,6 @@
 import json
 import importlib
-import boto.swf
+import boto3
 import workflow
 import activity
 from provider import utils
@@ -12,9 +12,12 @@ Amazon SWF register workflow or activity utility
 
 def start(settings):
 
-    # Simple connect
-    conn = boto.swf.layer1.Layer1(
-        settings.aws_access_key_id, settings.aws_secret_access_key
+    # Connect to SWF to get client
+    swf_client = boto3.client(
+        "swf",
+        aws_access_key_id=settings.aws_access_key_id,
+        aws_secret_access_key=settings.aws_secret_access_key,
+        region_name=settings.swf_region,
     )
 
     workflow_names = []
@@ -52,7 +55,7 @@ def start(settings):
         workflow_class = getattr(module_object, class_name)
         # Create the workflow object
         logger = None
-        workflow_object = workflow_class(settings, logger, conn)
+        workflow_object = workflow_class(settings, logger, client=swf_client)
 
         # Now register it
         response = workflow_object.register()
@@ -129,7 +132,7 @@ def start(settings):
         activity_class = getattr(module_object, class_name)
         # Create the workflow object
         logger = None
-        activity_object = activity_class(settings, logger, conn)
+        activity_object = activity_class(settings, logger, client=swf_client)
 
         # Now register it
         response = activity_object.register()
