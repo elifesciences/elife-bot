@@ -8,9 +8,11 @@ activity_VerifyPublishResponse.py activity
 
 
 class activity_VerifyPublishResponse(Activity):
-    def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
+    def __init__(
+        self, settings, logger, conn=None, token=None, activity_task=None, client=None
+    ):
         super(activity_VerifyPublishResponse, self).__init__(
-            settings, logger, conn, token, activity_task
+            settings, logger, conn, token, activity_task, client=client
         )
 
         self.name = "VerifyPublishResponse"

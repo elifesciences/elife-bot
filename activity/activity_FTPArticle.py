@@ -20,9 +20,11 @@ ZIP_FILE_PREFIX = "%s-" % JOURNAL
 
 
 class activity_FTPArticle(Activity):
-    def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
+    def __init__(
+        self, settings, logger, conn=None, token=None, activity_task=None, client=None
+    ):
         super(activity_FTPArticle, self).__init__(
-            settings, logger, conn, token, activity_task
+            settings, logger, conn, token, activity_task, client=client
         )
 
         self.name = "FTPArticle"

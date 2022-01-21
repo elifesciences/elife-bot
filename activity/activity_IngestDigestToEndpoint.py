@@ -10,9 +10,11 @@ from activity.objects import Activity
 
 
 class activity_IngestDigestToEndpoint(Activity):
-    def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
+    def __init__(
+        self, settings, logger, conn=None, token=None, activity_task=None, client=None
+    ):
         super(activity_IngestDigestToEndpoint, self).__init__(
-            settings, logger, conn, token, activity_task
+            settings, logger, conn, token, activity_task, client=client
         )
 
         self.name = "IngestDigestToEndpoint"

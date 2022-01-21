@@ -14,9 +14,11 @@ class ValidationException(RuntimeError):
 
 
 class activity_VerifyLaxResponse(Activity):
-    def __init__(self, settings, logger, conn=None, token=None, activity_task=None):
+    def __init__(
+        self, settings, logger, conn=None, token=None, activity_task=None, client=None
+    ):
         super(activity_VerifyLaxResponse, self).__init__(
-            settings, logger, conn, token, activity_task
+            settings, logger, conn, token, activity_task, client=client
         )
 
         self.name = "VerifyLaxResponse"
