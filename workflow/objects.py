@@ -1,5 +1,3 @@
-import boto.swf
-from boto.swf.layer1_decisions import Layer1Decisions
 import json
 import datetime
 import time
@@ -9,22 +7,102 @@ Amazon SWF workflow base class
 """
 
 
+class WorkflowLayer1Decisions:
+    "replaces boto2 Layer1Decisions functionality"
+
+    def __init__(self):
+        self.data = []
+
+    def fail_workflow_execution(self, reason=None):
+        self.data.append(
+            {
+                "decisionType": "FailWorkflowExecution",
+                "failWorkflowExecutionDecisionAttributes": {},
+            }
+        )
+        if reason:
+            self.data.append(
+                {
+                    "decisionType": "FailWorkflowExecution",
+                    "failWorkflowExecutionDecisionAttributes": {
+                        "reason": "%s" % reason
+                    },
+                }
+            )
+
+    def schedule_activity_task(self, **kwargs):
+        """example decision
+        {
+            "decisionType": "ScheduleActivityTask",
+            "scheduleActivityTaskDecisionAttributes": {
+                "activityId": "PingWorker",
+                "activityType": {"name": "PingWorker", "version": "1"},
+                "taskList": {"name": "DefaultTaskList"},
+                "control": "control data",
+                "heartbeatTimeout": "300",
+                "scheduleToCloseTimeout": "300",
+                "scheduleToStartTimeout": "300",
+                "startToCloseTimeout": "300",
+                "input": "null",
+            },
+        }
+        """
+        decision = {}
+        decision["decisionType"] = "ScheduleActivityTask"
+
+        attributes = {}
+        attributes["activityId"] = str(kwargs.get("activity_id"))
+        attributes["activityType"] = {
+            "name": str(kwargs.get("activity_type_name")),
+            "version": str(kwargs.get("activity_type_version")),
+        }
+        if kwargs.get("task_list"):
+            attributes["taskList"] = {"name": str(kwargs.get("task_list"))}
+
+        if kwargs.get("control"):
+            attributes["control"] = str(kwargs.get("control_data"))
+        if kwargs.get("heartbeat_timeout"):
+            attributes["heartbeatTimeout"] = str(kwargs.get("heartbeat_timeout"))
+        if kwargs.get("schedule_to_close_timeout"):
+            attributes["scheduleToCloseTimeout"] = str(
+                kwargs.get("schedule_to_close_timeout")
+            )
+        if kwargs.get("schedule_to_start_timeout"):
+            attributes["scheduleToStartTimeout"] = str(
+                kwargs.get("schedule_to_start_timeout")
+            )
+        if kwargs.get("start_to_close_timeout"):
+            attributes["startToCloseTimeout"] = str(
+                kwargs.get("start_to_close_timeout")
+            )
+        if kwargs.get("input"):
+            attributes["input"] = str(kwargs.get("input"))
+        decision["scheduleActivityTaskDecisionAttributes"] = attributes
+        self.data.append(decision)
+
+    def complete_workflow_execution(self):
+        self.data.append(
+            {
+                "decisionType": "CompleteWorkflowExecution",
+                "completeWorkflowExecutionDecisionAttributes": {},
+            }
+        )
+
+
 class Workflow(object):
     # Base class for extending
     def __init__(
         self,
         settings,
         logger,
-        conn=None,
+        client=None,
         token=None,
         decision=None,
         maximum_page_size=100,
         definition=None,
-        client=None,
     ):
         self.settings = settings
         self.logger = logger
-        self.conn = conn
         self.token = token
         self.decision = decision
         self.maximum_page_size = maximum_page_size
@@ -72,19 +150,21 @@ class Workflow(object):
         """
         Signal the workflow is completed to SWF
         """
-        d = Layer1Decisions()
-        d.complete_workflow_execution()
-        self.complete_decision(d)
-        # out = self.conn.respond_decision_task_completed(self.token,d._data)
-        # self.logger.info('respond_decision_task_completed returned %s' % out)
+        workflow_decisions = WorkflowLayer1Decisions()
+        workflow_decisions.complete_workflow_execution()
+        self.complete_decision(workflow_decisions)
+        # out = self.conn.respond_decision_task_completed(
+        #    taskToken=self.token, decisions=workflow_decisions.data
+        # )
+        # self.logger.info("respond_decision_task_completed returned %s" % out)
 
-    def complete_decision(self, d=None):
+    def complete_decision(self, workflow_decisions=None):
         """
         Signal a decision was made to SWF
         """
-        if d is None:
-            d = Layer1Decisions()
-        out = self.conn.respond_decision_task_completed(self.token, d._data)
+        out = self.client.respond_decision_task_completed(
+            taskToken=self.token, decisions=workflow_decisions.data
+        )
         self.logger.info("respond_decision_task_completed returned %s" % out)
 
     def is_workflow_complete(self):
@@ -167,11 +247,11 @@ class Workflow(object):
 
         return activities
 
-    def schedule_activity(self, activity, d=None):
+    def schedule_activity(self, activity, workflow_decisions=None):
         """
         Given a JSON representation for an activity,
-        schedule an activity task into the Layer1Decisions
-        object, then return it
+        format a ScheduleActivityTask decision
+        message and return it
         """
 
         # Cast all values to string
@@ -188,21 +268,22 @@ class Workflow(object):
         data = json.dumps(activity["input"])
 
         self.logger.info("scheduling task: %s" % activity_id)
-        if d is None:
-            d = Layer1Decisions()
-        d.schedule_activity_task(
-            activity_id,  # Activity ID
-            activity_type,  # Activity Type
-            version,  # Activity Type Version
-            task_list,  # Task List
-            "control data",  # control
-            heartbeat_timeout,  # Heartbeat in seconds
-            schedule_to_close_timeout,  # schedule_to_close_timeout
-            schedule_to_start_timeout,  # schedule_to_start_timeout
-            start_to_close_timeout,  # start_to_close_timeout
-            data,
-        )  # input: extra data to pass to activity
-        return d
+        if workflow_decisions is None:
+            workflow_decisions = WorkflowLayer1Decisions()
+        workflow_decisions.schedule_activity_task(
+            activity_id=activity_id,  # Activity ID
+            activity_type_name=activity_type,  # Activity Type
+            activity_type_version=version,  # Activity Type Version
+            task_list=task_list,  # Task List
+            control="control data",  # control
+            heartbeat_timeout=heartbeat_timeout,  # Heartbeat in seconds
+            schedule_to_close_timeout=schedule_to_close_timeout,  # schedule_to_close_timeout
+            schedule_to_start_timeout=schedule_to_start_timeout,  # schedule_to_start_timeout
+            start_to_close_timeout=start_to_close_timeout,  # start_to_close_timeout
+            input=data,  # input: extra data to pass to activity
+        )
+
+        return workflow_decisions
 
     def get_time(self):
         """
@@ -308,14 +389,16 @@ class Workflow(object):
                 #  If there is a nextPageToken
                 #  something has gone wrong and terminate the workflow execution with
                 #  extreme prejudice
-                d = Layer1Decisions()
+                workflow_decisions = WorkflowLayer1Decisions()
                 reason = (
                     "nextPageToken found, maximum_page_size of "
                     + str(self.maximum_page_size)
                     + " exceeded"
                 )
-                d.fail_workflow_execution(reason)
-                out = self.conn.respond_decision_task_completed(self.token, d._data)
+                workflow_decisions.fail_workflow_execution(reason)
+                out = self.client.respond_decision_task_completed(
+                    taskToken=self.token, decisions=workflow_decisions.data
+                )
                 self.logger.info(reason)
                 self.logger.info("respond_decision_task_completed returned %s" % out)
                 self.token = None
@@ -350,9 +433,9 @@ class Workflow(object):
             for event in decision["events"][::-1]:
                 if event["eventType"] == "WorkflowExecutionCancelRequested":
                     # terminate
-                    d = Layer1Decisions()
-                    d.fail_workflow_execution()
-                    self.complete_decision(d)
+                    workflow_decisions = WorkflowLayer1Decisions()
+                    workflow_decisions.fail_workflow_execution()
+                    self.complete_decision(workflow_decisions)
                     return
         except TypeError:
             pass
@@ -388,11 +471,13 @@ class Workflow(object):
                 self.rate_limit_failed_activity(self.decision)
                 # 2. Get the next activity
                 next_activities = self.get_next_activities()
-                d = None
+                workflow_decisions = None
                 for activity in next_activities:
                     # Schedule each activity
-                    d = self.schedule_activity(activity, d)
-                self.complete_decision(d)
+                    workflow_decisions = self.schedule_activity(
+                        activity, workflow_decisions
+                    )
+                self.complete_decision(workflow_decisions)
 
         return True
 

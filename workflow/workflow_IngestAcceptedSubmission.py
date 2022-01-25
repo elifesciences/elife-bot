@@ -11,14 +11,13 @@ class workflow_IngestAcceptedSubmission(Workflow):
         self,
         settings,
         logger,
-        conn=None,
+        client=None,
         token=None,
         decision=None,
         maximum_page_size=100,
-        client=None,
     ):
         super(workflow_IngestAcceptedSubmission, self).__init__(
-            settings, logger, conn, token, decision, maximum_page_size, client=client
+            settings, logger, client, token, decision, maximum_page_size
         )
 
         # SWF Defaults

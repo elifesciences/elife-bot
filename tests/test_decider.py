@@ -1,8 +1,8 @@
 import unittest
 import json
 from mock import patch
-from tests import settings_mock
-from tests.classes_mock import FakeFlag, FakeLayer1
+from tests import read_fixture, settings_mock
+from tests.classes_mock import FakeFlag, FakeSWFClient
 from tests.activity.classes_mock import FakeLogger
 import decider
 from workflow.workflow_Ping import workflow_Ping as workflow_object
@@ -10,9 +10,7 @@ from workflow.workflow_Ping import workflow_Ping as workflow_object
 
 class TestDecider(unittest.TestCase):
     def setUp(self):
-        self.decision_json = None
-        with open("tests/test_data/decision.json", "r") as open_file:
-            self.decision_json = json.loads(open_file.read())
+        self.decision_events = read_fixture("decision_events.py")
 
     def test_get_task_token(self):
         expected = (
@@ -21,7 +19,7 @@ class TestDecider(unittest.TestCase):
             + "a2Y1eEisq4Ax7pZ+ydKmYBFodCvt48BPFD48L7qtmh14rpF2ic8AuNakilIhG3IL5s/UX1gMLre39Rd03U"
             + "gK+0KuozCIfXwSU+wILRuSOaNB7cHDhiBFg12FSrUFXRHZVZr/qFhGXCEmLNjf/rOpNC1UoZwV"
         )
-        task_token = decider.get_task_token(self.decision_json)
+        task_token = decider.get_task_token(self.decision_events)
         self.assertEqual(task_token, expected)
 
     def test_get_task_token_failure(self):
@@ -30,28 +28,27 @@ class TestDecider(unittest.TestCase):
 
     def test_get_workflow_type(self):
         expected = "Sum"
-        workflow_type = decider.get_workflow_type(self.decision_json)
+        workflow_type = decider.get_workflow_type(self.decision_events)
         self.assertEqual(workflow_type, expected)
 
     def test_get_workflow_type_failure(self):
         workflow_type = decider.get_workflow_type({})
         self.assertIsNone(workflow_type)
 
-    @patch.object(FakeLayer1, "poll_for_decision_task")
+    @patch.object(FakeSWFClient, "poll_for_decision_task")
     def test_get_all_paged_events(self, fake_poll):
-        with open("tests/test_data/decision_nextPageToken.json", "r") as open_file:
-            decision_json = json.loads(open_file.read())
+        decision_events = read_fixture("decision_next_page_token.py")
         polled_decision_json = {"events": ["something"]}
-        fake_conn = FakeLayer1()
+        fake_client = FakeSWFClient()
         fake_poll.return_value = polled_decision_json
         decision = decider.get_all_paged_events(
-            decision_json, fake_conn, None, None, None, None
+            decision_events, fake_client, None, None, None, None
         )
         self.assertEqual(decision.get("events"), polled_decision_json.get("events"))
 
     def test_get_input(self):
         expected = {"data": [1, 3, 7, 11]}
-        decider_input = decider.get_input(self.decision_json)
+        decider_input = decider.get_input(self.decision_events)
         self.assertEqual(decider_input, expected)
 
     def test_get_input_failure(self):
@@ -89,15 +86,14 @@ class TestDeciderDecide(unittest.TestCase):
         self.logger = FakeLogger()
 
     @patch("logging.getLogger")
-    @patch.object(FakeLayer1, "poll_for_decision_task")
-    @patch("boto.swf.layer1.Layer1")
-    def test_decide(self, fake_conn, fake_poll, fake_get_logger):
-        """test will not be able to find workflow_Sum, which no longer exists"""
-        with open("tests/test_data/decision.json", "r") as open_file:
-            decision_json = json.loads(open_file.read())
+    @patch.object(FakeSWFClient, "poll_for_decision_task")
+    @patch("boto3.client")
+    def test_decide(self, fake_client, fake_poll, fake_get_logger):
+        "test will not be able to find workflow_Sum, which no longer exists"
+        decision_events = read_fixture("decision_events.py")
         fake_get_logger.return_value = self.logger
-        fake_conn.return_value = FakeLayer1()
-        fake_poll.return_value = decision_json
+        fake_client.return_value = FakeSWFClient()
+        fake_poll.return_value = decision_events
         # invoke decide
         decider.decide(settings_mock, self.flag)
         # make some assertions on log values
@@ -107,13 +103,13 @@ class TestDeciderDecide(unittest.TestCase):
         self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
 
     @patch("logging.getLogger")
-    @patch.object(FakeLayer1, "poll_for_decision_task")
-    @patch("boto.swf.layer1.Layer1")
-    def test_decide_started_event_id(self, fake_conn, fake_poll, fake_get_logger):
-        """test for coverage of when startedEventId is 0"""
+    @patch.object(FakeSWFClient, "poll_for_decision_task")
+    @patch("boto3.client")
+    def test_decide_started_event_id(self, fake_client, fake_poll, fake_get_logger):
+        "test for coverage of when startedEventId is 0"
         decision_json = {"startedEventId": 0}
         fake_get_logger.return_value = self.logger
-        fake_conn.return_value = FakeLayer1()
+        fake_client.return_value = FakeSWFClient()
         fake_poll.return_value = decision_json
         # invoke decide
         decider.decide(settings_mock, self.flag)
@@ -121,15 +117,14 @@ class TestDeciderDecide(unittest.TestCase):
         self.assertTrue("got decision:" in self.logger.logdebug)
 
     @patch("logging.getLogger")
-    @patch.object(FakeLayer1, "poll_for_decision_task")
-    @patch("boto.swf.layer1.Layer1")
-    def test_decide_ping(self, fake_conn, fake_poll, fake_get_logger):
-        """test based on cron_FiveMinute workflow with just a Ping activity"""
-        with open("tests/test_data/decision_ping.json", "r") as open_file:
-            decision_json = json.loads(open_file.read())
+    @patch.object(FakeSWFClient, "poll_for_decision_task")
+    @patch("boto3.client")
+    def test_decide_ping(self, fake_client, fake_poll, fake_get_logger):
+        "test based on cron_FiveMinute workflow with just a Ping activity"
+        decision_events = read_fixture("decision_ping.py")
         fake_get_logger.return_value = self.logger
-        fake_conn.return_value = FakeLayer1()
-        fake_poll.return_value = decision_json
+        fake_client.return_value = FakeSWFClient()
+        fake_poll.return_value = decision_events
         # invoke decide
         decider.decide(settings_mock, self.flag)
         # make some assertions on log values
@@ -138,18 +133,17 @@ class TestDeciderDecide(unittest.TestCase):
 
     @patch.object(workflow_object, "do_workflow")
     @patch("logging.getLogger")
-    @patch.object(FakeLayer1, "poll_for_decision_task")
-    @patch("boto.swf.layer1.Layer1")
+    @patch.object(FakeSWFClient, "poll_for_decision_task")
+    @patch("boto3.client")
     def test_decide_ping_workflow_exception(
-        self, fake_conn, fake_poll, fake_get_logger, fake_do_workflow
+        self, fake_client, fake_poll, fake_get_logger, fake_do_workflow
     ):
-        """test cron_FiveMinute workflow raising an exception"""
-        with open("tests/test_data/decision_ping.json", "r") as open_file:
-            decision_json = json.loads(open_file.read())
+        "test cron_FiveMinute workflow raising an exception"
+        decision_events = read_fixture("decision_ping.py")
         fake_do_workflow.side_effect = Exception("An exception")
         fake_get_logger.return_value = self.logger
-        fake_conn.return_value = FakeLayer1()
-        fake_poll.return_value = decision_json
+        fake_client.return_value = FakeSWFClient()
+        fake_poll.return_value = decision_events
         # invoke decide
         decider.decide(settings_mock, self.flag)
         # make assertions on error log
@@ -158,21 +152,19 @@ class TestDeciderDecide(unittest.TestCase):
 
 class TestTrimmedDecision(unittest.TestCase):
     def setUp(self):
-        self.decision_json = None
-        with open("tests/test_data/decision.json", "r") as open_file:
-            self.decision_json = json.loads(open_file.read())
+        self.decision_events = read_fixture("decision_events.py")
 
     def test_trimmed_decision(self):
-        decision_trimmed = decider.trimmed_decision(self.decision_json)
+        decision_trimmed = decider.trimmed_decision(self.decision_events)
         self.assertEqual(decision_trimmed.get("events"), [])
         # original is unchanged
-        self.assertEqual(len(self.decision_json.get("events")), 22)
+        self.assertEqual(len(self.decision_events.get("events")), 22)
 
     def test_trimmed_decision_debug(self):
-        decision_trimmed = decider.trimmed_decision(self.decision_json, True)
+        decision_trimmed = decider.trimmed_decision(self.decision_events, True)
         self.assertEqual(len(decision_trimmed.get("events")), 22)
         # original is unchanged
-        self.assertEqual(len(self.decision_json.get("events")), 22)
+        self.assertEqual(len(self.decision_events.get("events")), 22)
 
 
 if __name__ == "__main__":
