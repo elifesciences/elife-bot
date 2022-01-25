@@ -101,6 +101,12 @@ class FakeSWFClient:
     def register_activity_type(self, **kwargs):
         pass
 
+    def poll_for_decision_task(self, **kwargs):
+        pass
+
+    def respond_decision_task_completed(self, taskToken, decisions=None):
+        pass
+
 
 class FakeLayer1:
     def respond_decision_task_completed(

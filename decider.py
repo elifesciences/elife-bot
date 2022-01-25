@@ -2,7 +2,7 @@ import os
 import copy
 import json
 import importlib
-import boto.swf
+import boto3
 import newrelic.agent
 from provider import process, utils
 import log
@@ -19,8 +19,11 @@ def decide(settings, flag, debug=False):
     logger = log.logger(log_file, settings.setLevel, identity)
 
     # Simple connect
-    conn = boto.swf.layer1.Layer1(
-        settings.aws_access_key_id, settings.aws_secret_access_key
+    client = boto3.client(
+        "swf",
+        aws_access_key_id=settings.aws_access_key_id,
+        aws_secret_access_key=settings.aws_secret_access_key,
+        region_name=settings.swf_region,
     )
 
     token = None
@@ -31,14 +34,17 @@ def decide(settings, flag, debug=False):
         if token is None:
             logger.info("polling for decision...")
 
-            decision = conn.poll_for_decision_task(
-                settings.domain, settings.default_task_list, identity, maximum_page_size
+            decision = client.poll_for_decision_task(
+                domain=settings.domain,
+                taskList={"name": settings.default_task_list},
+                identity=identity,
+                maximumPageSize=maximum_page_size,
             )
 
             # Check for a nextPageToken and keep polling until all events are pulled
             decision = get_all_paged_events(
                 decision,
-                conn,
+                client,
                 settings.domain,
                 settings.default_task_list,
                 identity,
@@ -75,7 +81,7 @@ def decide(settings, flag, debug=False):
                         decision,
                         settings,
                         logger,
-                        conn,
+                        client,
                         token,
                         maximum_page_size,
                     )
@@ -87,7 +93,7 @@ def decide(settings, flag, debug=False):
 
 
 def process_workflow(
-    workflow_type, decision, settings, logger, conn, token, maximum_page_size
+    workflow_type, decision, settings, logger, client, token, maximum_page_size
 ):
     """for each decision token load the workflow and run it"""
     # for the workflowType attempt to do the work
@@ -106,7 +112,7 @@ def process_workflow(
                 workflow_name,
                 settings,
                 logger,
-                conn,
+                client,
                 token,
                 decision,
                 maximum_page_size,
@@ -132,7 +138,7 @@ def invoke_do_workflow(workflow_name, workflow_object, logger):
 
 def trimmed_decision(decision, debug=False):
     """trim data from a copy of decision prior to logging if not debug"""
-    decision_trimmed = copy.copy(decision)
+    decision_trimmed = copy.deepcopy(decision)
     if not debug:
         # removed to limit verbosity
         decision_trimmed["events"] = []
@@ -140,7 +146,7 @@ def trimmed_decision(decision, debug=False):
 
 
 def get_all_paged_events(
-    decision, conn, domain, task_list, identity, maximum_page_size
+    decision, client, domain, task_list, identity, maximum_page_size
 ):
     """
     Given a poll_for_decision_task response, check if there is a nextPageToken
@@ -164,8 +170,12 @@ def get_all_paged_events(
         try:
             next_page_token = decision["nextPageToken"]
             if next_page_token is not None:
-                decision = conn.poll_for_decision_task(
-                    domain, task_list, identity, maximum_page_size, next_page_token
+                decision = client.poll_for_decision_task(
+                    domain=domain,
+                    taskList={"name": task_list},
+                    identity=identity,
+                    nextPageToken=next_page_token,
+                    maximumPageSize=maximum_page_size,
                 )
                 for event in decision["events"]:
                     all_events.append(event)
@@ -238,7 +248,7 @@ def import_workflow_class(workflow_name):
 
 
 def get_workflow_object(
-    workflow_name, settings, logger, conn, token, decision, maximum_page_size
+    workflow_name, settings, logger, client, token, decision, maximum_page_size
 ):
     """
     Given a workflow_name, and if the module class is already
@@ -249,7 +259,7 @@ def get_workflow_object(
     workflow_class = getattr(module_object, workflow_name)
     # Create the object
     workflow_object = workflow_class(
-        settings, logger, conn, token, decision, maximum_page_size
+        settings, logger, client, token, decision, maximum_page_size
     )
     return workflow_object
 
