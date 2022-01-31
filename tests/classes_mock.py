@@ -107,6 +107,18 @@ class FakeSWFClient:
     def respond_decision_task_completed(self, taskToken, decisions=None):
         pass
 
+    def poll_for_activity_task(self, domain, task_list, identity=None):
+        pass
+
+    def respond_activity_task_failed(self, **kwargs):
+        pass
+
+    def respond_activity_task_completed(self, **kwargs):
+        pass
+
+    def request_cancel_workflow_execution(self, **kwargs):
+        pass
+
 
 class FakeLayer1:
     def respond_decision_task_completed(

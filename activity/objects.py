@@ -2,8 +2,6 @@ import shutil
 import datetime
 import os
 import re
-
-import boto.swf
 import dashboard_queue
 from provider import utils
 
@@ -20,13 +18,10 @@ class Activity(object):
     ACTIVITY_EXIT_WORKFLOW = "ActivityExitWorkflow"
 
     # Base class
-    def __init__(
-        self, settings, logger, conn=None, token=None, activity_task=None, client=None
-    ):
+    def __init__(self, settings, logger, client=None, token=None, activity_task=None):
         self.settings = settings
         self.logger = logger
         self.result = None
-        self.conn = conn
         self.token = token
         self.activity_task = activity_task
         # boto3 swf client

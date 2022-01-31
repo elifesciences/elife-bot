@@ -16,11 +16,9 @@ SendDashboardProperties.py activity
 
 
 class activity_SendDashboardProperties(Activity):
-    def __init__(
-        self, settings, logger, conn=None, token=None, activity_task=None, client=None
-    ):
+    def __init__(self, settings, logger, client=None, token=None, activity_task=None):
         super(activity_SendDashboardProperties, self).__init__(
-            settings, logger, conn, token, activity_task, client=client
+            settings, logger, client, token, activity_task
         )
 
         self.name = "SendDashboardProperties"
