@@ -1,7 +1,11 @@
 import unittest
 import json
+from mock import patch
 from tests import settings_mock
+from tests.classes_mock import FakeFlag, FakeSWFClient
+from tests.activity.classes_mock import FakeLogger
 import worker
+from activity.activity_PingWorker import activity_PingWorker as activity_class
 
 
 class TestWorker(unittest.TestCase):
@@ -50,7 +54,7 @@ class TestWorker(unittest.TestCase):
 
     def test_import_activity_class(self):
         activity_name = "activity_PingWorker"
-        result = worker.import_activity_class(activity_name, reload=False)
+        result = worker.import_activity_class(activity_name)
         self.assertTrue(result)
 
     def test_import_activity_class_failure(self):
@@ -60,11 +64,162 @@ class TestWorker(unittest.TestCase):
 
     def test_get_activity_object(self):
         activity_name = "activity_PingWorker"
-        worker.import_activity_class(activity_name, reload=False)
+        worker.import_activity_class(activity_name)
         activity_object = worker.get_activity_object(
             activity_name, settings_mock, None, None, None, None
         )
         self.assertEqual(activity_object.__class__.__name__, activity_name)
+
+
+class TestWorkerWork(unittest.TestCase):
+    def setUp(self):
+        self.flag = FakeFlag(0.001)
+        self.logger = FakeLogger()
+        with open("tests/test_data/activity.json", "r") as open_file:
+            self.activity_json = json.loads(open_file.read())
+
+    @patch("logging.getLogger")
+    @patch.object(FakeSWFClient, "poll_for_activity_task")
+    @patch("boto3.client")
+    def test_work_respond_failed(self, fake_client, fake_poll, fake_get_logger):
+        "test will not be able to find activity_Sum, which no longer exists"
+        fake_get_logger.return_value = self.logger
+        fake_client.return_value = FakeSWFClient()
+        fake_poll.return_value = self.activity_json
+        # invoke work
+        worker.work(settings_mock, self.flag)
+        # make some assertions on log values
+        self.assertTrue(
+            "error: could not load object activity_Sum" in str(self.logger.loginfo)
+        )
+        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
+
+    @patch("logging.getLogger")
+    @patch.object(FakeSWFClient, "poll_for_activity_task")
+    @patch("boto3.client")
+    def test_work_ping_respond_completed(self, fake_client, fake_poll, fake_get_logger):
+        "change the activity name to PingWorker which does exist"
+        fake_get_logger.return_value = self.logger
+        fake_client.return_value = FakeSWFClient()
+        self.activity_json["activityType"]["name"] = "PingWorker"
+        fake_poll.return_value = self.activity_json
+        # invoke work
+        worker.work(settings_mock, self.flag)
+        # make some assertions on log values
+        self.assertTrue(
+            "respond_activity_task_completed returned None" in str(self.logger.loginfo)
+        )
+        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
+
+    @patch.object(activity_class, "do_activity")
+    @patch("logging.getLogger")
+    @patch.object(FakeSWFClient, "poll_for_activity_task")
+    @patch("boto3.client")
+    def test_work_ping_respond_failed(
+        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
+    ):
+        "change the activity name to PingWorker and mock its return value"
+        activity_return_value = False
+        fake_get_logger.return_value = self.logger
+        fake_client.return_value = FakeSWFClient()
+        self.activity_json["activityType"]["name"] = "PingWorker"
+        fake_poll.return_value = self.activity_json
+        fake_do_activity.return_value = activity_return_value
+        # invoke work
+        worker.work(settings_mock, self.flag)
+        # make some assertions on log values
+        self.assertTrue(
+            "respond_activity_task_failed returned None" in str(self.logger.loginfo)
+        )
+        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
+
+    @patch.object(activity_class, "do_activity")
+    @patch("logging.getLogger")
+    @patch.object(FakeSWFClient, "poll_for_activity_task")
+    @patch("boto3.client")
+    def test_work_ping_respond_activity_success(
+        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
+    ):
+        "change the activity name to PingWorker and new style return value ACTIVITY_SUCCESS"
+        activity_return_value = activity_class.ACTIVITY_SUCCESS
+        fake_get_logger.return_value = self.logger
+        fake_client.return_value = FakeSWFClient()
+        self.activity_json["activityType"]["name"] = "PingWorker"
+        fake_poll.return_value = self.activity_json
+        fake_do_activity.return_value = activity_return_value
+        # invoke work
+        worker.work(settings_mock, self.flag)
+        # make some assertions on log values
+        self.assertTrue(
+            "respond_activity_task_completed returned None" in str(self.logger.loginfo)
+        )
+        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
+
+    @patch.object(activity_class, "do_activity")
+    @patch("logging.getLogger")
+    @patch.object(FakeSWFClient, "poll_for_activity_task")
+    @patch("boto3.client")
+    def test_work_ping_respond_activity_temporary_failure(
+        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
+    ):
+        "change the activity name to PingWorker and new style return value ACTIVITY_TEMPORARY_FAILURE"
+        activity_return_value = activity_class.ACTIVITY_TEMPORARY_FAILURE
+        fake_get_logger.return_value = self.logger
+        fake_client.return_value = FakeSWFClient()
+        self.activity_json["activityType"]["name"] = "PingWorker"
+        fake_poll.return_value = self.activity_json
+        fake_do_activity.return_value = activity_return_value
+        # invoke work
+        worker.work(settings_mock, self.flag)
+        # make some assertions on log values
+        self.assertTrue(
+            "respond_activity_task_failed returned None" in str(self.logger.loginfo)
+        )
+        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
+
+    @patch.object(activity_class, "do_activity")
+    @patch("logging.getLogger")
+    @patch.object(FakeSWFClient, "poll_for_activity_task")
+    @patch("boto3.client")
+    def test_work_ping_respond_activity_permanent_failure(
+        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
+    ):
+        "change the activity name to PingWorker and new style return value ACTIVITY_PERMANENT_FAILURE"
+        activity_return_value = activity_class.ACTIVITY_PERMANENT_FAILURE
+        fake_get_logger.return_value = self.logger
+        fake_client.return_value = FakeSWFClient()
+        self.activity_json["activityType"]["name"] = "PingWorker"
+        fake_poll.return_value = self.activity_json
+        fake_do_activity.return_value = activity_return_value
+        # invoke work
+        worker.work(settings_mock, self.flag)
+        # make some assertions on log values
+        self.assertTrue(
+            "request_cancel_workflow_execution None" in str(self.logger.loginfo)
+        )
+        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
+
+    @patch.object(activity_class, "do_activity")
+    @patch("logging.getLogger")
+    @patch.object(FakeSWFClient, "poll_for_activity_task")
+    @patch("boto3.client")
+    def test_work_ping_respond_activity_exit_workflow(
+        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
+    ):
+        "change the activity name to PingWorker and new style return value ACTIVITY_EXIT_WORKFLOW"
+        activity_return_value = activity_class.ACTIVITY_EXIT_WORKFLOW
+        fake_get_logger.return_value = self.logger
+        fake_client.return_value = FakeSWFClient()
+        self.activity_json["activityType"]["name"] = "PingWorker"
+        fake_poll.return_value = self.activity_json
+        fake_do_activity.return_value = activity_return_value
+        # invoke work
+        worker.work(settings_mock, self.flag)
+        # make some assertions on log values
+        self.assertTrue(
+            "request_cancel_workflow_execution None" in str(self.logger.loginfo)
+        )
+        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
 
 
 if __name__ == "__main__":
