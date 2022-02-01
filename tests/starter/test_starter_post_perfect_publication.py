@@ -5,7 +5,7 @@ from starter.starter_PostPerfectPublication import starter_PostPerfectPublicatio
 from starter.starter_helper import NullRequiredDataException
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
-from tests.classes_mock import FakeLayer1
+from tests.classes_mock import FakeSWFClient
 from tests.activity.classes_mock import FakeLogger
 
 
@@ -53,7 +53,7 @@ class TestStarterPostPerfectPublication(unittest.TestCase):
             info=test_data.data_invalid_lax,
         )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_post_perfect_publication_starter(self, fake_boto_conn):
-        fake_boto_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_post_perfect_publication_starter(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         self.starter.start(info=test_data.data_error_lax, settings=settings_mock)

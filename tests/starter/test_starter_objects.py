@@ -1,10 +1,10 @@
 import unittest
 from collections import OrderedDict
 from mock import patch
-from boto.swf.exceptions import SWFWorkflowExecutionAlreadyStartedError
+import botocore
 from starter.objects import Starter, default_workflow_params
 import tests.settings_mock as settings_mock
-from tests.classes_mock import FakeLayer1
+from tests.classes_mock import FakeSWFClient
 from tests.activity.classes_mock import FakeLogger
 
 
@@ -23,59 +23,86 @@ class TestStarterObject(unittest.TestCase):
     def setUp(self):
         self.logger = FakeLogger()
         self.starter = Starter(settings_mock, self.logger)
+        self.exception = botocore.exceptions.ClientError(
+            {"Error": {"Code": "WorkflowExecutionAlreadyStartedFault"}},
+            "operation_name",
+        )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_connect_to_swf(self, fake_conn):
-        fake_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_connect_to_swf(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         self.starter.connect_to_swf()
-        self.assertIsNotNone(self.starter.conn)
+        self.assertIsNotNone(self.starter.client)
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_start_workflow_execution(self, fake_conn):
-        fake_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_start_workflow_execution(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         workflow_params = {}
         self.starter.start_workflow_execution(workflow_params)
         self.assertEqual(self.logger.loginfo[-1], "got response: \nnull")
 
-    @patch.object(FakeLayer1, "start_workflow_execution")
-    @patch("boto.swf.layer1.Layer1")
-    def test_start_workflow_execution_exception(self, fake_conn, fake_start):
-        fake_conn.return_value = FakeLayer1()
-        fake_start.side_effect = SWFWorkflowExecutionAlreadyStartedError(
-            "message", None
-        )
+    @patch.object(FakeSWFClient, "start_workflow_execution")
+    @patch("boto3.client")
+    def test_start_workflow_execution_exception(self, fake_client, fake_start):
+        fake_client.return_value = FakeSWFClient()
+        fake_start.side_effect = self.exception
         workflow_params = {}
         self.starter.start_workflow_execution(workflow_params)
         self.assertEqual(
             self.logger.loginfo[-1],
             (
-                "SWFWorkflowExecutionAlreadyStartedError: "
+                "WorkflowExecutionAlreadyStartedFault: "
                 "There is already a running workflow with ID None"
             ),
         )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_start_swf_workflow_execution(self, fake_conn):
-        fake_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_start_swf_workflow_execution(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         workflow_params = {}
         self.starter.start_swf_workflow_execution(workflow_params)
         self.assertEqual(self.logger.loginfo[-1], "got response: \nnull")
 
-    @patch.object(FakeLayer1, "start_workflow_execution")
-    @patch("boto.swf.layer1.Layer1")
-    def test_start_swf_workflow_execution_exception(self, fake_conn, fake_start):
-        fake_conn.return_value = FakeLayer1()
-        fake_start.side_effect = SWFWorkflowExecutionAlreadyStartedError(
-            "message", None
-        )
+    @patch.object(FakeSWFClient, "start_workflow_execution")
+    @patch("boto3.client")
+    def test_start_swf_workflow_execution_exception(self, fake_client, fake_start):
+        fake_client.return_value = FakeSWFClient()
+        fake_start.side_effect = self.exception
         workflow_params = {}
-        with self.assertRaises(SWFWorkflowExecutionAlreadyStartedError):
+
+        with self.assertRaises(botocore.exceptions.ClientError):
             self.starter.start_swf_workflow_execution(workflow_params)
         self.assertEqual(
             self.logger.loginfo[-1],
             (
-                "SWFWorkflowExecutionAlreadyStartedError: "
+                "WorkflowExecutionAlreadyStartedFault: "
                 "There is already a running workflow with ID None"
+            ),
+        )
+
+    @patch.object(FakeSWFClient, "start_workflow_execution")
+    @patch("boto3.client")
+    def test_start_swf_workflow_execution_unhandled_exception(
+        self, fake_client, fake_start
+    ):
+        fake_client.return_value = FakeSWFClient()
+        fake_start.side_effect = botocore.exceptions.ClientError(
+            {"Error": {"Code": "UnknownResourceFault"}},
+            "operation_name",
+        )
+        # also test some workflow parameters for increased test coverage
+        workflow_params = {}
+        workflow_params["task_list"] = "task_list"
+        workflow_params["child_policy"] = "child_policy"
+        workflow_params["execution_start_to_close_timeout"] = "300"
+        workflow_params["input"] = "input"
+
+        with self.assertRaises(botocore.exceptions.ClientError):
+            self.starter.start_swf_workflow_execution(workflow_params)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            (
+                "Unhandled botocore.exceptions.ClientError exception for workflow with ID None"
             ),
         )
 

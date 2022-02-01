@@ -6,7 +6,7 @@ from S3utility.s3_notification_info import S3NotificationInfo
 from tests.activity.classes_mock import FakeLogger
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
-from tests.classes_mock import FakeLayer1
+from tests.classes_mock import FakeSWFClient
 
 
 RUN_EXAMPLE = u"1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
@@ -26,9 +26,9 @@ class TestStarterIngestArticleZip(unittest.TestCase):
             info={},
         )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_ingest_article_zip_starter(self, fake_boto_conn):
-        fake_boto_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_ingest_article_zip_starter(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         self.starter.start(
             settings=settings_mock,
             run=RUN_EXAMPLE,

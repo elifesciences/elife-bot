@@ -48,8 +48,6 @@ class starter_PackagePOA(Starter):
 
         self.start_workflow_execution(workflow_params)
 
-        self.connect_to_swf()
-
 
 if __name__ == "__main__":
 

@@ -4,7 +4,7 @@ from pytz import timezone
 from ddt import ddt, data
 from mock import patch
 import tests.settings_mock as settings_mock
-from tests.classes_mock import FakeLayer1
+from tests.classes_mock import FakeSWFClient
 import cron
 
 
@@ -75,8 +75,8 @@ class TestCron(unittest.TestCase):
         )
         self.assertEqual(return_value, test_data.get("expected"))
 
-    @patch.object(FakeLayer1, "start_workflow_execution")
-    @patch("boto.swf.layer1.Layer1")
+    @patch.object(FakeSWFClient, "start_workflow_execution")
+    @patch("boto3.client")
     @data(
         {"starter_name": "starter_AdminEmail", "workflow_id": "AdminEmail"},
         {
@@ -89,8 +89,8 @@ class TestCron(unittest.TestCase):
         },
         {"starter_name": "starter_PublishPOA", "workflow_id": "PublishPOA"},
     )
-    def test_start_workflow(self, test_data, fake_conn, fake_start):
-        fake_conn.return_value = FakeLayer1()
+    def test_start_workflow(self, test_data, fake_client, fake_start):
+        fake_client.return_value = FakeSWFClient()
         fake_start.return_value = {}
         starter_name = test_data.get("starter_name")
         workflow_id = test_data.get("workflow_id")

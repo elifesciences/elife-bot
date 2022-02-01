@@ -5,7 +5,7 @@ from starter.starter_SoftwareHeritageDeposit import starter_SoftwareHeritageDepo
 from starter.starter_helper import NullRequiredDataException
 from tests.activity.classes_mock import FakeLogger
 import tests.settings_mock as settings_mock
-from tests.classes_mock import FakeLayer1
+from tests.classes_mock import FakeSWFClient
 
 
 RUN_EXAMPLE = u"1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
@@ -41,9 +41,9 @@ class TestStarterSoftwareHeritageDeposit(unittest.TestCase):
             info=info,
         )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_ingest_decision_letter_starter_no_run_argument(self, fake_boto_conn):
-        fake_boto_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_software_heritage_start_no_run_argument(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         self.assertIsNone(
             self.starter.start(
                 settings=settings_mock,
@@ -52,9 +52,9 @@ class TestStarterSoftwareHeritageDeposit(unittest.TestCase):
             )
         )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_ingest_decision_letter_starter(self, fake_boto_conn):
-        fake_boto_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_software_heritage_start(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         self.assertIsNone(
             self.starter.start(
                 settings=settings_mock,
@@ -63,9 +63,9 @@ class TestStarterSoftwareHeritageDeposit(unittest.TestCase):
             )
         )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_start_workflow(self, fake_boto_conn):
-        fake_boto_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_start_workflow(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         self.assertIsNone(
             self.starter.start_workflow(
                 run=RUN_EXAMPLE,

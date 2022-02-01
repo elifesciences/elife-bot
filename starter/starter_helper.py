@@ -1,7 +1,7 @@
 import os
 import json
 import importlib
-import boto
+import boto3
 import log
 
 
@@ -88,29 +88,37 @@ def start_ping_marker(workflow_id, settings, logger):
     workflow_id = workflow_id
     workflow_name = "Ping"
     workflow_version = "1"
-    child_policy = None
     execution_start_to_close_timeout = None
     workflow_input = None
 
-    conn = boto.swf.layer1.Layer1(
-        settings.aws_access_key_id, settings.aws_secret_access_key
+    kwargs = {
+        "domain": settings.domain,
+        "workflowId": workflow_id,
+        "workflowType": {
+            "name": workflow_name,
+            "version": workflow_version,
+        },
+        "taskList": {"name": settings.default_task_list},
+    }
+    if workflow_input:
+        kwargs["input"] = workflow_input
+    if execution_start_to_close_timeout:
+        kwargs["executionStartToCloseTimeout"] = execution_start_to_close_timeout
+
+    client = boto3.client(
+        "swf",
+        aws_access_key_id=settings.aws_access_key_id,
+        aws_secret_access_key=settings.aws_secret_access_key,
+        region_name=settings.swf_region,
     )
     try:
-        conn.start_workflow_execution(
-            settings.domain,
-            workflow_id,
-            workflow_name,
-            workflow_version,
-            settings.default_task_list,
-            child_policy,
-            execution_start_to_close_timeout,
-            workflow_input,
-        )
+        # Try and start a workflow
+        client.start_workflow_execution(**kwargs)
 
-    except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
-        # There is already a running workflow with that ID, cannot start another
-        message = (
-            "SWFWorkflowExecutionAlreadyStartedError: There is already "
-            + "a running workflow with ID %s" % workflow_id
+    except Exception as exception:
+        message = "%s exception starting workflow %s: %s" % (
+            "starter_helper",
+            workflow_id,
+            str(exception),
         )
         logger.exception(message)

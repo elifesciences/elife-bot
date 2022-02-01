@@ -3,7 +3,7 @@ from collections import OrderedDict
 from mock import patch
 from starter.starter_SilentCorrectionsProcess import starter_SilentCorrectionsProcess
 from starter.starter_helper import NullRequiredDataException
-from tests.classes_mock import FakeLayer1
+from tests.classes_mock import FakeSWFClient
 from tests.activity.classes_mock import FakeLogger
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
@@ -55,7 +55,7 @@ class TestStarterSilentCorrectionsProcess(unittest.TestCase):
             **test_data.data_invalid_lax
         )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_process_article_zip_starter(self, fake_boto_conn):
-        fake_boto_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_process_article_zip_starter(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         self.starter.start(settings=settings_mock, **test_data.data_ingested_lax)

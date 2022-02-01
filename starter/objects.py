@@ -1,7 +1,8 @@
 import random
 import json
 from collections import OrderedDict
-import boto.swf
+import boto3
+import botocore
 import starter.starter_helper as helper
 
 
@@ -15,7 +16,7 @@ class Starter:
         self.settings = settings
         self.name = name
         self.logger = logger
-        self.conn = None
+        self.client = None
 
         # logging
         if not self.logger:
@@ -33,10 +34,12 @@ class Starter:
             )
 
     def connect_to_swf(self):
-        """connect to SWF"""
-        # Simple connect
-        self.conn = boto.swf.layer1.Layer1(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        "connect to SWF"
+        self.client = boto3.client(
+            "swf",
+            aws_access_key_id=self.settings.aws_access_key_id,
+            aws_secret_access_key=self.settings.aws_secret_access_key,
+            region_name=self.settings.swf_region,
         )
 
     def start_workflow_execution(self, workflow_params):
@@ -55,33 +58,50 @@ class Starter:
             self.logger.exception(message)
 
     def start_swf_workflow_execution(self, workflow_params):
-        if not self.conn:
+        if not self.client:
             self.connect_to_swf()
 
-        try:
-            response = self.conn.start_workflow_execution(
-                workflow_params.get("domain"),
-                workflow_params.get("workflow_id"),
-                workflow_params.get("workflow_name"),
-                workflow_params.get("workflow_version"),
-                task_list=workflow_params.get("task_list"),
-                child_policy=workflow_params.get("child_policy"),
-                execution_start_to_close_timeout=workflow_params.get(
-                    "execution_start_to_close_timeout"
-                ),
-                input=workflow_params.get("input"),
+        kwargs = {
+            "domain": workflow_params.get("domain"),
+            "workflowId": workflow_params.get("workflow_id"),
+            "workflowType": {
+                "name": workflow_params.get("workflow_name"),
+                "version": workflow_params.get("workflow_version"),
+            },
+        }
+        if workflow_params.get("task_list"):
+            kwargs["taskList"] = {"name": workflow_params.get("task_list")}
+        if workflow_params.get("child_policy"):
+            kwargs["childPolicy"] = workflow_params.get("child_policy")
+        if workflow_params.get("execution_start_to_close_timeout"):
+            kwargs["executionStartToCloseTimeout"] = workflow_params.get(
+                "execution_start_to_close_timeout"
             )
+        if workflow_params.get("input"):
+            kwargs["input"] = workflow_params.get("input")
 
+        try:
+            response = self.client.start_workflow_execution(**kwargs)
             self.logger.info(
                 "got response: \n%s", json.dumps(response, sort_keys=True, indent=4)
             )
 
-        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
+        except botocore.exceptions.ClientError as exception:
             # There is already a running workflow with that ID, cannot start another
-            message = (
-                "SWFWorkflowExecutionAlreadyStartedError: There is already "
-                + "a running workflow with ID %s" % workflow_params.get("workflow_id")
-            )
+            if (
+                exception.response["Error"]["Code"]
+                == "WorkflowExecutionAlreadyStartedFault"
+            ):
+                message = (
+                    "WorkflowExecutionAlreadyStartedFault: There is already "
+                    + "a running workflow with ID %s"
+                    % workflow_params.get("workflow_id")
+                )
+            else:
+                message = (
+                    "Unhandled botocore.exceptions.ClientError exception "
+                    + "for workflow with ID %s" % workflow_params.get("workflow_id")
+                )
             print(message)
             self.logger.info(message)
             raise

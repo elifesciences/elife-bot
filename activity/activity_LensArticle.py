@@ -1,4 +1,3 @@
-import boto.swf
 import json
 import os
 import codecs
