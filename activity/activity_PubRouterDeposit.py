@@ -3,7 +3,7 @@ import uuid
 import json
 import time
 import glob
-import boto.swf
+import boto3
 import boto.s3
 from boto.s3.connection import S3Connection
 
@@ -219,7 +219,6 @@ class activity_PubRouterDeposit(Activity):
         workflow_id = "FTPArticle_" + self.workflow + "_" + str(article.doi_id)
         workflow_name = "FTPArticle"
         workflow_version = "1"
-        child_policy = None
         # Allow workflow 120 minutes to finish
         execution_start_to_close_timeout = str(60 * 120)
 
@@ -231,33 +230,39 @@ class activity_PubRouterDeposit(Activity):
         input_json["data"] = data
         input_data = json.dumps(input_json)
 
+        kwargs = {
+            "domain": self.settings.domain,
+            "workflowId": workflow_id,
+            "workflowType": {
+                "name": workflow_name,
+                "version": workflow_version,
+            },
+            "taskList": {"name": self.settings.default_task_list},
+            "executionStartToCloseTimeout": execution_start_to_close_timeout,
+            "input": input_data,
+        }
+
         # Connect to SWF
-        conn = boto.swf.layer1.Layer1(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        client = boto3.client(
+            "swf",
+            aws_access_key_id=self.settings.aws_access_key_id,
+            aws_secret_access_key=self.settings.aws_secret_access_key,
+            region_name=self.settings.swf_region,
         )
 
         # Try and start a workflow
         try:
-            response = conn.start_workflow_execution(
-                self.settings.domain,
-                workflow_id,
-                workflow_name,
-                workflow_version,
-                self.settings.default_task_list,
-                child_policy,
-                execution_start_to_close_timeout,
-                input_data,
-            )
+            response = self.client.start_workflow_execution(**kwargs)
             starter_status = True
-        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
+        except Exception as exception:
             # There is already a running workflow with that ID, cannot start another
-            message = (
-                "SWFWorkflowExecutionAlreadyStartedError: "
-                + "There is already a running workflow with ID %s" % workflow_id
+            message = "%s exception starting workflow %s: %s" % (
+                self.name,
+                workflow_id,
+                str(exception),
             )
-            print(message)
             if self.logger:
-                self.logger.info(message)
+                self.logger.exception(message)
             starter_status = False
 
         return starter_status
@@ -298,7 +303,6 @@ class activity_PubRouterDeposit(Activity):
         workflow_id = "PMCDeposit_%s" % str(article.doi_id)
         workflow_name = "PMCDeposit"
         workflow_version = "1"
-        child_policy = None
         # Allow workflow 120 minutes to finish
         execution_start_to_close_timeout = None
 
@@ -311,33 +315,40 @@ class activity_PubRouterDeposit(Activity):
         input_json["data"] = data
         workflow_input = json.dumps(input_json)
 
+        kwargs = {
+            "domain": self.settings.domain,
+            "workflowId": workflow_id,
+            "workflowType": {
+                "name": workflow_name,
+                "version": workflow_version,
+            },
+            "taskList": {"name": self.settings.default_task_list},
+            "input": workflow_input,
+        }
+        if execution_start_to_close_timeout:
+            kwargs["executionStartToCloseTimeout"] = execution_start_to_close_timeout
+
         # Connect to SWF
-        conn = boto.swf.layer1.Layer1(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        client = boto3.client(
+            "swf",
+            aws_access_key_id=self.settings.aws_access_key_id,
+            aws_secret_access_key=self.settings.aws_secret_access_key,
+            region_name=self.settings.swf_region,
         )
 
         # Try and start a workflow
         try:
-            response = conn.start_workflow_execution(
-                self.settings.domain,
-                workflow_id,
-                workflow_name,
-                workflow_version,
-                self.settings.default_task_list,
-                child_policy,
-                execution_start_to_close_timeout,
-                workflow_input,
-            )
+            response = self.client.start_workflow_execution(**kwargs)
             starter_status = True
-        except boto.swf.exceptions.SWFWorkflowExecutionAlreadyStartedError:
+        except Exception as exception:
             # There is already a running workflow with that ID, cannot start another
-            message = (
-                "SWFWorkflowExecutionAlreadyStartedError: "
-                + "There is already a running workflow with ID %s" % workflow_id
+            message = "%s exception starting workflow %s: %s" % (
+                self.name,
+                workflow_id,
+                str(exception),
             )
-            print(message)
             if self.logger:
-                self.logger.info(message)
+                self.logger.exception(message)
             starter_status = False
 
         return starter_status

@@ -5,7 +5,7 @@ import starter.starter_CopyGlencoeStillImages as starter_module
 from starter.starter_CopyGlencoeStillImages import starter_CopyGlencoeStillImages
 from starter.starter_helper import NullRequiredDataException
 import tests.settings_mock as settings_mock
-from tests.classes_mock import FakeLayer1
+from tests.classes_mock import FakeSWFClient
 from tests.activity.classes_mock import FakeLogger
 
 
@@ -21,14 +21,14 @@ class TestStarterCopyGlencoeStillImages(unittest.TestCase):
             settings=settings_mock,
         )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_copy_glencoe_still_images_starter(self, fake_boto_conn):
-        fake_boto_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_copy_glencoe_still_images_starter(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         self.starter.start(settings=settings_mock, article_id="353")
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_main(self, fake_boto_conn):
-        fake_boto_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_main(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         env = "dev"
         doi_id = "7"
         testargs = ["starter_CopyGlencoeStillImages.py", "-e", env, "-a", doi_id, "-p"]

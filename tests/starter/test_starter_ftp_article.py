@@ -3,7 +3,7 @@ from collections import OrderedDict
 from mock import patch
 from starter.starter_FTPArticle import starter_FTPArticle
 from starter.starter_helper import NullRequiredDataException
-from tests.classes_mock import FakeLayer1
+from tests.classes_mock import FakeSWFClient
 from tests.activity.classes_mock import FakeLogger
 import tests.settings_mock as settings_mock
 
@@ -55,9 +55,9 @@ class TestStarterFTPArticle(unittest.TestCase):
             str(test_exception.exception), "Did not get a doi_id argument. Required."
         )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_start(self, fake_conn):
+    @patch("boto3.client")
+    def test_start(self, fake_client):
         workflow = "HEFCE"
         doi_id = 3
-        fake_conn.return_value = FakeLayer1()
+        fake_client.return_value = FakeSWFClient()
         self.assertIsNone(self.starter.start(settings_mock, workflow, doi_id))

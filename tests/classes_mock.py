@@ -4,29 +4,11 @@ import ftplib
 from datetime import datetime
 
 
-class FakeBotoConnection:
-    def __init__(self):
-        self.start_called = None
-
-    def start_workflow_execution(self, *args, **kwargs):
-        self.start_called = True
-
-
-class FakeSWFUnknownResourceFault(Exception):
-    pass
-
-
-class FakeSWFClientExceptions:
-    def __init__(self):
-        self.UnknownResourceFault = FakeSWFUnknownResourceFault()
-
-
 class FakeSWFClient:
     def __init__(self, *args, **kwargs):
         # infos is JSON format infos in SWF format for workflow executions
         self.infos = []
         self.infos_counter = 0
-        self.exceptions = FakeSWFClientExceptions()
 
     def add_infos(self, infos):
         "add an infos, to allow it to return more than one infos in succession"
@@ -119,82 +101,7 @@ class FakeSWFClient:
     def request_cancel_workflow_execution(self, **kwargs):
         pass
 
-
-class FakeLayer1:
-    def respond_decision_task_completed(
-        self, task_token, decisions=None, execution_context=None
-    ):
-        pass
-
-    def start_workflow_execution(
-        self,
-        domain,
-        workflow_id,
-        workflow_name,
-        workflow_version,
-        task_list=None,
-        child_policy=None,
-        execution_start_to_close_timeout=None,
-        input=None,
-        tag_list=None,
-        task_start_to_close_timeout=None,
-    ):
-        pass
-
-    def list_closed_workflow_executions(
-        self,
-        domain,
-        start_latest_date=None,
-        start_oldest_date=None,
-        close_latest_date=None,
-        close_oldest_date=None,
-        close_status=None,
-        tag=None,
-        workflow_id=None,
-        workflow_name=None,
-        workflow_version=None,
-        maximum_page_size=None,
-        next_page_token=None,
-        reverse_order=None,
-    ):
-        return {"executionInfos": []}
-
-    def describe_workflow_type(self, domain, workflow_name, workflow_version):
-        pass
-
-    def register_workflow_type(
-        self,
-        domain,
-        name,
-        version,
-        task_list=None,
-        default_child_policy=None,
-        default_execution_start_to_close_timeout=None,
-        default_task_start_to_close_timeout=None,
-        description=None,
-    ):
-        pass
-
-    def describe_activity_type(self, domain, activity_name, activity_version):
-        pass
-
-    def register_activity_type(
-        self,
-        domain,
-        name,
-        version,
-        task_list=None,
-        default_task_heartbeat_timeout=None,
-        default_task_schedule_to_close_timeout=None,
-        default_task_schedule_to_start_timeout=None,
-        default_task_start_to_close_timeout=None,
-        description=None,
-    ):
-        pass
-
-    def poll_for_decision_task(
-        domain, task_list, identity, maximum_page_size, next_page_token=None
-    ):
+    def start_workflow_execution(self, **kwargs):
         pass
 
 

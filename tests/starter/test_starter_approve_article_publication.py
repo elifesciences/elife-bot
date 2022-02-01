@@ -4,7 +4,7 @@ from collections import OrderedDict
 from mock import patch
 from starter.starter_ApproveArticlePublication import starter_ApproveArticlePublication
 from starter.starter_helper import NullRequiredDataException
-from tests.classes_mock import FakeLayer1
+from tests.classes_mock import FakeSWFClient
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
 from tests.activity.classes_mock import FakeLogger
@@ -54,9 +54,9 @@ class TestStarterApproveArticlePublication(unittest.TestCase):
             **invalid_data
         )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_approve_article_publication_starter(self, fake_boto_conn):
-        fake_boto_conn.return_value = FakeLayer1()
+    @patch("boto3.client")
+    def test_approve_article_publication_starter(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
         self.starter.start(
             settings=settings_mock, **test_data.ApprovePublication_data()
         )

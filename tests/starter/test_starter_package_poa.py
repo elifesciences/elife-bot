@@ -2,7 +2,7 @@ import unittest
 from mock import patch
 from starter.starter_helper import NullRequiredDataException
 from starter.starter_PackagePOA import starter_PackagePOA
-from tests.classes_mock import FakeLayer1
+from tests.classes_mock import FakeSWFClient
 from tests.activity.classes_mock import FakeLogger
 import tests.settings_mock as settings_mock
 
@@ -20,8 +20,8 @@ class TestStarterPackagePOA(unittest.TestCase):
             document=None,
         )
 
-    @patch("boto.swf.layer1.Layer1")
-    def test_start(self, fake_conn):
+    @patch("boto3.client")
+    def test_start(self, fake_client):
         document = "document"
-        fake_conn.return_value = FakeLayer1()
+        fake_client.return_value = FakeSWFClient()
         self.assertIsNone(self.starter.start(settings_mock, document))

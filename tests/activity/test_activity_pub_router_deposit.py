@@ -5,7 +5,7 @@ from provider import s3lib
 from provider.article import article
 import activity.activity_PubRouterDeposit as activity_module
 from activity.activity_PubRouterDeposit import activity_PubRouterDeposit
-from tests.classes_mock import FakeLayer1, FakeSMTPServer
+from tests.classes_mock import FakeSWFClient, FakeSMTPServer
 import tests.test_data as test_case_data
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
@@ -35,7 +35,7 @@ class TestPubRouterDeposit(unittest.TestCase):
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")
-    @patch("boto.swf.layer1.Layer1")
+    @patch("boto3.client")
     @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
@@ -48,7 +48,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_storage_context,
         fake_outbox_key_names,
         fake_archive_bucket_s3_keys,
-        fake_conn,
+        fake_client,
         fake_article_versions,
         fake_email_smtp_connect,
     ):
@@ -61,7 +61,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
         fake_outbox_key_names.return_value = ["elife00013.xml", "elife09169.xml"]
         fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
-        fake_conn.return_value = FakeLayer1()
+        fake_client.return_value = FakeSWFClient()
         fake_article_versions.return_value = (
             200,
             test_case_data.lax_article_versions_response_data,
@@ -71,7 +71,7 @@ class TestPubRouterDeposit(unittest.TestCase):
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")
-    @patch("boto.swf.layer1.Layer1")
+    @patch("boto3.client")
     @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
@@ -84,7 +84,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_storage_context,
         fake_outbox_key_names,
         fake_archive_bucket_s3_keys,
-        fake_conn,
+        fake_client,
         fake_article_versions,
         fake_email_smtp_connect,
     ):
@@ -97,7 +97,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
         fake_outbox_key_names.return_value = ["elife00013.xml", "elife09169.xml"]
         fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
-        fake_conn.return_value = FakeLayer1()
+        fake_client.return_value = FakeSWFClient()
         fake_article_versions.return_value = (
             200,
             [{}],
@@ -144,7 +144,7 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.was_ever_poa")
     @patch("provider.lax_provider.article_versions")
-    @patch("boto.swf.layer1.Layer1")
+    @patch("boto3.client")
     @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
@@ -157,7 +157,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_storage_context,
         fake_outbox_key_names,
         fake_archive_bucket_s3_keys,
-        fake_conn,
+        fake_client,
         fake_article_versions,
         fake_was_ever_poa,
         fake_email_smtp_connect,
@@ -176,7 +176,7 @@ class TestPubRouterDeposit(unittest.TestCase):
             200,
             test_case_data.lax_article_versions_response_data,
         )
-        fake_conn.return_value = FakeLayer1()
+        fake_client.return_value = FakeSWFClient()
         result = self.pubrouterdeposit.do_activity(activity_data)
         self.assertTrue(result)
 
