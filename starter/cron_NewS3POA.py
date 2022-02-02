@@ -1,3 +1,4 @@
+import boto
 from provider import utils
 import starter.starter_helper as helper
 from starter.objects import Starter
