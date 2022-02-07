@@ -1,19 +1,20 @@
-import boto.sqs
-import boto.sns
 import json
 import uuid
+import boto3
 from provider.utils import unicode_encode
 
 
 def send_message(message, settings):
 
-    conn = boto.sns.connect_to_region(
-        settings.sqs_region,
+    sns_client = boto3.client(
+        "sns",
         aws_access_key_id=settings.aws_access_key_id,
         aws_secret_access_key=settings.aws_secret_access_key,
+        region_name=settings.sqs_region,
     )
+
     payload = unicode_encode(json.dumps(message))
-    conn.publish(topic=settings.event_monitor_topic, message=payload)
+    sns_client.publish(TopicArn=settings.event_monitor_topic, Message=payload)
 
 
 def build_event_message(
