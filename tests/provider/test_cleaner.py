@@ -34,3 +34,29 @@ class TestCleanerProvider(unittest.TestCase):
                     "in pdf_page_count(), imagemagick may not be installed\n"
                 ),
             )
+
+
+class TestArticleIdFromZipFile(unittest.TestCase):
+    def test_article_id_from_zip_file(self):
+        "test common file name"
+        zip_file = "30-01-2019-RA-eLife-45644.zip"
+        expected = "45644"
+        self.assertEqual(cleaner.article_id_from_zip_file(zip_file), expected)
+
+    def test_article_id_from_zip_file_path(self):
+        "test if there are subfolders in the path"
+        zip_file = "folder1/folder2/30-01-2019-RA-eLife-45644.zip"
+        expected = "45644"
+        self.assertEqual(cleaner.article_id_from_zip_file(zip_file), expected)
+
+    def test_article_id_from_zip_file_revision_number(self):
+        "test file name with R1 in it"
+        zip_file = "30-01-2019-RA-eLife-45644R1.zip"
+        expected = "45644"
+        self.assertEqual(cleaner.article_id_from_zip_file(zip_file), expected)
+
+    def test_article_id_from_zip_file_unknown(self):
+        "test something which does not match the regular expression"
+        zip_file = "unknown.zip"
+        expected = "unknown.zip"
+        self.assertEqual(cleaner.article_id_from_zip_file(zip_file), expected)
