@@ -121,6 +121,7 @@ def start(settings):
     activity_names.append("GenerateSWHMetadata")
     activity_names.append("GenerateSWHReadme")
     activity_names.append("PushSWHDeposit")
+    activity_names.append("ExpandAcceptedSubmission")
     activity_names.append("ValidateAcceptedSubmission")
     activity_names.append("TransformAcceptedSubmission")
 
