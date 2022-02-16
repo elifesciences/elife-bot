@@ -23,7 +23,7 @@ class TestStarterPostPerfectPublication(unittest.TestCase):
                 ("workflow_name", "PostPerfectPublication"),
                 ("workflow_version", "1"),
                 ("child_policy", None),
-                ("execution_start_to_close_timeout", None),
+                ("execution_start_to_close_timeout", "600"),
                 (
                     "input",
                     (
