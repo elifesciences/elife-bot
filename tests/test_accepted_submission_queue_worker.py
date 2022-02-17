@@ -8,8 +8,8 @@ from queue_worker import get_starter_name
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.utils import bytes_decode
 from tests import settings_mock, test_data
-from tests.classes_mock import FakeFlag, FakeS3Event
-from tests.activity.classes_mock import FakeLogger, FakeSQSMessage, FakeSQSQueue
+from tests.classes_mock import FakeFlag
+from tests.activity.classes_mock import FakeLogger, FakeSQSClient, FakeSQSQueue
 
 
 TEST_BUCKET_NAME = "prod-elife-accepted-submission-cleaning"
@@ -21,23 +21,25 @@ class TestAcceptedSubmissionQueueWorker(unittest.TestCase):
         self.logger = FakeLogger()
         self.worker = AcceptedSubmissionQueueWorker(settings_mock, self.logger)
         # override the sleep value for faster testing
-        self.worker.sleep_seconds = 0.1
+        self.worker.sleep_seconds = 0.001
 
     def tearDown(self):
         TempDirectory.cleanup_all()
 
-    @patch("queue_worker.Message")
-    @patch("tests.activity.classes_mock.FakeSQSQueue.read")
-    @patch("accepted_submission_queue_worker.AcceptedSubmissionQueueWorker.queues")
-    def test_work(self, mock_queues, mock_queue_read, mock_sqs_message):
+    @patch("boto3.client")
+    def test_work(self, mock_sqs_client):
         "test the main method of the class"
         directory = TempDirectory()
-        # mock_sqs_connect = FakeSQSConn(directory)
-        mock_queues.return_value = FakeSQSQueue(directory), FakeSQSQueue(directory)
-        mock_sqs_message.return_value = FakeSQSMessage(directory)
         # create an S3 event message
-        s3_event = FakeS3Event(bucket_name=TEST_BUCKET_NAME)
-        mock_queue_read.return_value = s3_event
+        records = test_data.test_s3_event_records(bucket=TEST_BUCKET_NAME)
+        fake_queue_messages = [{"Messages": [{"Body": json.dumps(records)}]}]
+        # mock the SQS client and queues
+        fake_queues = {
+            settings_mock.accepted_submission_queue: FakeSQSQueue(
+                directory, fake_queue_messages
+            )
+        }
+        mock_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
         # create a fake green flag
         flag = FakeFlag()
         # invoke queue worker to work
