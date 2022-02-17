@@ -290,3 +290,29 @@ glencoe_metadata = {
         "size": 21300934,
     },
 }
+
+
+def test_s3_event_records(bucket=None, key=None):
+    "sample s3 notification records data"
+    if not bucket:
+        bucket = "continuumtest-elife-accepted-submission-cleaning"
+    if not key:
+        key = "02-09-2022-RA-eLife-99999.zip"
+    return {
+        "Records": [
+            {
+                "eventTime": "2022-02-09T01:43:07.709Z",
+                "eventName": "ObjectCreated:CompleteMultipartUpload",
+                "s3": {
+                    "bucket": {
+                        "name": bucket,
+                    },
+                    "object": {
+                        "key": key,
+                        "size": 19464507,
+                        "eTag": "28b76c025ab9bd3a967885302d413efa-3",
+                    },
+                },
+            }
+        ]
+    }

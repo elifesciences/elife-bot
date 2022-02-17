@@ -1,13 +1,12 @@
-from boto.sqs.message import Message
 import json
 from S3utility.s3_notification_info import S3NotificationInfo
 
 
-class S3SQSMessage(Message):
-    def __init__(self, queue=None, body="", xml_attrs=None):
-        Message.__init__(self, queue, body)
+class S3SQSMessage:
+    def __init__(self, body=""):
         self.payload = None
         self.notification_type = "S3Info"
+        self.set_body(body)
 
     def event_name(self):
         return self.payload["Records"][0]["eventName"]
@@ -39,4 +38,3 @@ class S3SQSMessage(Message):
             self.payload = json.loads(body)
         if body and "Records" in list(self.payload.keys()):
             self.notification_type = "S3Event"
-        super(Message, self).set_body(body)

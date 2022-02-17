@@ -13,7 +13,7 @@ s3_session_bucket = "origin_bucket"
 aws_access_key_id = ""
 aws_secret_access_key = ""
 
-workflow_starter_queue = ""
+workflow_starter_queue = "workflow_starter_queue"
 sqs_region = ""
 S3_monitor_queue = "incoming_queue"
 
@@ -29,7 +29,7 @@ bot_bucket = "bot_bucket"
 lens_bucket = "dest_bucket"
 poa_packaging_bucket = "poa_packaging_bucket"
 poa_bucket = "poa_bucket"
-poa_incoming_queue = ""
+poa_incoming_queue = "poa_incoming_queue"
 ses_poa_sender_email = ""
 ses_poa_recipient_email = ""
 

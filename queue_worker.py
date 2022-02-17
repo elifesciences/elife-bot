@@ -4,8 +4,7 @@ import os
 import re
 import yaml
 import newrelic.agent
-import boto.sqs
-from boto.sqs.message import Message
+import boto3
 from provider import process, utils
 import log
 from S3utility.s3_notification_info import S3NotificationInfo
@@ -25,7 +24,7 @@ class QueueWorker:
             self.logger = logger
         else:
             self.create_log()
-        self.conn = None
+        self.client = None
         self.sleep_seconds = 10
         self.input_queue_name = self.settings.S3_monitor_queue
         self.output_queue_name = self.settings.workflow_starter_queue
@@ -39,76 +38,96 @@ class QueueWorker:
 
     def connect(self):
         "connect to the queue service"
-        if not self.conn:
-            self.conn = boto.sqs.connect_to_region(
-                self.settings.sqs_region,
+        if not self.client:
+            self.client = boto3.client(
+                "sqs",
                 aws_access_key_id=self.settings.aws_access_key_id,
                 aws_secret_access_key=self.settings.aws_secret_access_key,
+                region_name=self.settings.sqs_region,
             )
 
     def queues(self):
         "get the queues"
         self.connect()
-        queue = self.conn.get_queue(self.input_queue_name)
-        queue.set_message_class(S3SQSMessage)
-        out_queue = self.conn.get_queue(self.output_queue_name)
-        return queue, out_queue
+        input_queue_url_response = self.client.get_queue_url(
+            QueueName=self.input_queue_name
+        )
+        input_queue_url = input_queue_url_response.get("QueueUrl")
+        output_queue_url_response = self.client.get_queue_url(
+            QueueName=self.output_queue_name
+        )
+        output_queue_url = output_queue_url_response.get("QueueUrl")
+        return input_queue_url, output_queue_url
 
     def work(self, flag):
         "read messages from the queue"
 
         # Simple connect to the queues
-        queue, out_queue = self.queues()
+        input_queue_url, output_queue_url = self.queues()
 
         rules = load_rules()
         application = newrelic.agent.application()
 
-        # Poll for an activity task indefinitely
-        if queue is not None:
+        # Poll for messages indefinitely
+        if input_queue_url:
             while flag.green():
 
                 self.logger.info("reading message")
-                queue_message = queue.read(30)
+                queue_messages = self.client.receive_message(
+                    QueueUrl=input_queue_url,
+                    MaxNumberOfMessages=1,
+                    VisibilityTimeout=30,
+                )
                 # TODO : check for more-than-once delivery
                 # ( Dynamo conditional write? http://tinyurl.com/of3tmop )
-
-                if queue_message is None:
+                if not queue_messages.get("Messages"):
                     self.logger.info("no messages available")
                 else:
                     with newrelic.agent.BackgroundTask(
                         application,
-                        name=queue_message.notification_type,
+                        name=self.identity,
                         group="%s.py" % self.identity,
                     ):
-                        self.logger.info("got message id: %s" % queue_message.id)
-                        if queue_message.notification_type == "S3Event":
-                            info = S3NotificationInfo.from_S3SQSMessage(queue_message)
-                            self.logger.info("S3NotificationInfo: %s", info.to_dict())
-                            workflow_name = get_starter_name(rules, info)
-                            if workflow_name is None:
-                                self.logger.error(
-                                    "Could not handle file %s in bucket %s"
-                                    % (info.file_name, info.bucket_name)
+                        for queue_message in queue_messages.get("Messages"):
+                            self.logger.info(
+                                "got message id: %s" % queue_message.get("MessageId")
+                            )
+                            s3_message = S3SQSMessage(queue_message.get("Body"))
+                            if s3_message.notification_type == "S3Event":
+                                info = S3NotificationInfo.from_S3SQSMessage(s3_message)
+                                self.logger.info(
+                                    "S3NotificationInfo: %s", info.to_dict()
                                 )
+
+                                workflow_name = get_starter_name(rules, info)
+                                if workflow_name is None:
+                                    self.logger.error(
+                                        "Could not handle file %s in bucket %s"
+                                        % (info.file_name, info.bucket_name)
+                                    )
+                                else:
+                                    # build message
+                                    message = {
+                                        "workflow_name": workflow_name,
+                                        "workflow_data": info.to_dict(),
+                                    }
+
+                                    # send workflow initiation message
+                                    self.client.send_message(
+                                        QueueUrl=output_queue_url,
+                                        MessageBody=json.dumps(message),
+                                    )
+
+                                # cancel incoming message
+                                self.logger.info("cancelling message")
+                                self.client.delete_message(
+                                    QueueUrl=input_queue_url,
+                                    ReceiptHandle=queue_message.get("ReceiptHandle"),
+                                )
+                                self.logger.info("message cancelled")
                             else:
-                                # build message
-                                message = {
-                                    "workflow_name": workflow_name,
-                                    "workflow_data": info.to_dict(),
-                                }
-
-                                # send workflow initiation message
-                                m = Message()
-                                m.set_body(json.dumps(message))
-                                out_queue.write(m)
-
-                            # cancel incoming message
-                            self.logger.info("cancelling message")
-                            queue.delete_message(queue_message)
-                            self.logger.info("message cancelled")
-                        else:
-                            # TODO : log
-                            pass
+                                # TODO : log
+                                pass
                 time.sleep(self.sleep_seconds)
 
             self.logger.info("graceful shutdown")
