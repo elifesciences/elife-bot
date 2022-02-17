@@ -57,6 +57,42 @@ class FakeSQSMessage:
         pass
 
 
+class FakeSQSClient:
+    def __init__(self, directory=None, queues=None):
+        self.dir = directory
+        self.queues = {}
+        if queues:
+            self.queues = queues
+
+    def get_queue_url(self, **kwargs):
+        "for testing the QueueName and QueueUrl can be the same value"
+        if kwargs.get("QueueName") and kwargs.get("QueueName") not in self.queues.keys():
+            self.queues[kwargs.get("QueueName")] = FakeSQSQueue(self.dir)
+        return {"QueueUrl": kwargs.get("QueueName")}
+
+    def receive_message(self, **kwargs):
+        queue_url_response = self.get_queue_url(QueueName=kwargs.get("QueueUrl"))
+        queue = self.queues.get(queue_url_response.get("QueueUrl"))
+        if queue and queue.messages:
+            return queue.messages[0]
+
+    def send_message(self, **kwargs):
+        # QueueUrl and MessageBody are accepted keyword arguments
+        queue_url_response = self.get_queue_url(QueueName=kwargs.get("QueueUrl"))
+        queue = self.queues.get(queue_url_response.get("QueueUrl"))
+        if queue:
+            queue.dir.write("fake_sqs_body", bytes(kwargs.get("MessageBody"), "utf-8"))
+
+    def delete_message(self, **kwargs):
+        "follow boto3 sqs client format, delete list item with matching ReceiptHandle value"
+        queue_url_response = self.get_queue_url(QueueName=kwargs.get("QueueUrl"))
+        queue = self.queues.get(queue_url_response.get("QueueUrl"))
+        if queue and queue.messages:
+            queue.messages[0]["Messages"] = [
+                q_message for q_message in queue.messages[0]["Messages"] if q_message.get("ReceiptHandle") != kwargs.get("ReceiptHandle")
+            ]
+
+
 class FakeSQSConn:
     def __init__(self, directory):
         self.dir = directory

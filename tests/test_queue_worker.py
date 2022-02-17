@@ -8,13 +8,8 @@ from queue_worker import load_rules, get_starter_name
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.utils import bytes_decode
 from tests import settings_mock, test_data
-from tests.classes_mock import FakeFlag, FakeS3Event
-from tests.activity.classes_mock import (
-    FakeLogger,
-    FakeSQSConn,
-    FakeSQSMessage,
-    FakeSQSQueue,
-)
+from tests.classes_mock import FakeFlag
+from tests.activity.classes_mock import FakeLogger, FakeSQSClient, FakeSQSQueue
 
 
 class TestQueueWorker(unittest.TestCase):
@@ -22,46 +17,58 @@ class TestQueueWorker(unittest.TestCase):
         self.logger = FakeLogger()
         self.worker = QueueWorker(settings_mock, self.logger)
         # override the sleep value for faster testing
-        self.worker.sleep_seconds = 0.1
+        self.worker.sleep_seconds = 0.001
 
     def tearDown(self):
         TempDirectory.cleanup_all()
 
-    @patch("queue_worker.Message")
-    @patch("tests.activity.classes_mock.FakeSQSQueue.read")
-    @patch("queue_worker.QueueWorker.queues")
-    def test_work(self, mock_queues, mock_queue_read, mock_sqs_message):
+    @patch("boto3.client")
+    def test_work(self, mock_sqs_client):
         "test the main method of the class"
         directory = TempDirectory()
-        # mock_sqs_connect = FakeSQSConn(directory)
-        mock_queues.return_value = FakeSQSQueue(directory), FakeSQSQueue(directory)
-        mock_sqs_message.return_value = FakeSQSMessage(directory)
         # create an S3 event message
-        s3_event = FakeS3Event()
-        mock_queue_read.return_value = s3_event
+        records = test_data.test_s3_event_records()
+        fake_queue_messages = [{"Messages": [{"Body": json.dumps(records)}]}]
+        # mock the SQS client and queues
+        fake_queues = {
+            settings_mock.S3_monitor_queue: FakeSQSQueue(directory, fake_queue_messages),
+            settings_mock.workflow_starter_queue: FakeSQSQueue(directory),
+        }
+        mock_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
+
+        # expected queue message
+        expected_starter_message = {
+            "workflow_name": "IngestAcceptedSubmission",
+            "workflow_data": {
+                "event_name": "ObjectCreated:CompleteMultipartUpload",
+                "event_time": "2022-02-09T01:43:07.709Z",
+                "bucket_name": "continuumtest-elife-accepted-submission-cleaning",
+                "file_name": "02-09-2022-RA-eLife-99999.zip",
+                "file_etag": "28b76c025ab9bd3a967885302d413efa-3",
+                "file_size": 19464507,
+            },
+        }
         # create a fake green flag
         flag = FakeFlag()
         # invoke queue worker to work
         self.worker.work(flag)
         # assertions, should have a message in the out_queue
         out_queue_message = json.loads(bytes_decode(directory.read("fake_sqs_body")))
-        self.assertEqual(out_queue_message, test_data.queue_worker_starter_message)
+        self.assertDictEqual(out_queue_message, expected_starter_message)
         self.assertEqual(self.worker.logger.loginfo[-1], "graceful shutdown")
 
-    @patch("queue_worker.Message")
-    @patch("tests.activity.classes_mock.FakeSQSQueue.read")
-    @patch("queue_worker.QueueWorker.queues")
-    def test_work_unknown_bucket(self, mock_queues, mock_queue_read, mock_sqs_message):
+    @patch("boto3.client")
+    def test_work_unknown_bucket(self, mock_sqs_client):
         "test work method with an unrecognised bucket name"
         directory = TempDirectory()
-
-        mock_queues.return_value = FakeSQSQueue(directory), FakeSQSQueue(directory)
-        mock_sqs_message.return_value = FakeSQSMessage(directory)
-        # create an S3 event message
-        s3_event = FakeS3Event()
-        # here override the bucket name
-        s3_event._bucket_name = "not_a_real_bucket"
-        mock_queue_read.return_value = s3_event
+        # create an S3 event message with a different bucket name
+        records = test_data.test_s3_event_records(bucket="not_a_real_bucket")
+        fake_queue_messages = [{"Messages": [{"Body": json.dumps(records)}]}]
+        # mock the SQS client and queues
+        fake_queues = {
+            settings_mock.S3_monitor_queue: FakeSQSQueue(directory, fake_queue_messages),
+        }
+        mock_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
         # create a fake green flag
         flag = FakeFlag()
         # invoke queue worker to work
@@ -71,13 +78,13 @@ class TestQueueWorker(unittest.TestCase):
         self.assertEqual(out_queue_list, [])
         self.assertEqual(self.worker.logger.loginfo[-1], "graceful shutdown")
 
-    @patch("tests.activity.classes_mock.FakeSQSQueue.read")
-    @patch("queue_worker.QueueWorker.queues")
-    def test_work_no_messages(self, mock_queues, mock_queue_read):
-        "test work method with an unrecognised bucket name"
+    @patch("tests.activity.classes_mock.FakeSQSClient.receive_message")
+    @patch("boto3.client")
+    def test_work_no_messages(self, mock_sqs_client, mock_receive):
+        "test empty receive_message return value"
         directory = TempDirectory()
-        mock_queues.return_value = FakeSQSQueue(directory), FakeSQSQueue(directory)
-        mock_queue_read.return_value = None
+        mock_sqs_client.return_value = FakeSQSClient(directory)
+        mock_receive.return_value = {}
         # create a fake green flag
         flag = FakeFlag()
         # invoke queue worker to work
@@ -88,8 +95,10 @@ class TestQueueWorker(unittest.TestCase):
         self.assertEqual(self.worker.logger.loginfo[3], "graceful shutdown")
 
     @patch("queue_worker.QueueWorker.queues")
-    def test_work_no_queue(self, mock_queues):
+    @patch("boto3.client")
+    def test_work_no_queue(self, mock_sqs_client, mock_queues):
         "test if queues are none"
+        mock_sqs_client.return_value = FakeSQSClient()
         mock_queues.return_value = None, None
         self.worker.queues()
         # create a fake green flag
@@ -97,15 +106,6 @@ class TestQueueWorker(unittest.TestCase):
         # invoke queue worker to work
         self.worker.work(flag)
         self.assertEqual(self.worker.logger.logerror, "error obtaining queue")
-
-    @patch("boto.sqs.connect_to_region")
-    def test_queues(self, fake_sqs_conn):
-        "test code which connects to queues for coverage using mocked objects"
-        # mock things
-        directory = TempDirectory()
-        fake_sqs_conn.return_value = FakeSQSConn(directory)
-        self.worker.queues()
-        self.assertIsNotNone(self.worker.conn)
 
 
 class TestQueueWorkerLogInit(unittest.TestCase):
