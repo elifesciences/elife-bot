@@ -5,7 +5,7 @@ import os
 import uuid
 import json
 import importlib
-import boto.sqs
+import boto3
 import newrelic.agent
 import log
 from S3utility.s3_notification_info import S3NotificationInfo
@@ -32,39 +32,50 @@ def main(settings, flag):
     identity = "queue_workflow_starter_%s" % os.getpid()
     logger = log.logger(log_file, settings.setLevel, identity=identity)
     # Simple connect
-    queue = get_queue(settings)
-
+    client = connect(settings)
+    # get the queue url
+    queue_url_response = client.get_queue_url(QueueName=settings.workflow_starter_queue)
+    queue_url = queue_url_response.get("QueueUrl")
     while flag.green():
-        messages = queue.get_messages(1, visibility_timeout=60, wait_time_seconds=20)
-        if messages:
+        messages = client.receive_message(
+            QueueUrl=queue_url,
+            MaxNumberOfMessages=1,
+            VisibilityTimeout=60,
+            WaitTimeSeconds=20,
+        )
+        if messages.get("Messages"):
             logger.info(str(len(messages)) + " message received")
-            logger.info("message contents: %s", messages[0].get_body())
-            process_message(settings, logger, messages[0])
+            message = messages.get("Messages")[0]
+            logger.info("message contents: %s", message.get("Body"))
+            process_message(settings, logger, message)
+            client.delete_message(
+                QueueUrl=queue_url,
+                ReceiptHandle=message.get("ReceiptHandle"),
+            )
         else:
             logger.debug("No messages received")
 
     logger.info("graceful shutdown")
 
 
-def get_queue(settings):
-    conn = boto.sqs.connect_to_region(
-        settings.sqs_region,
+def connect(settings):
+    "connect to the queue service"
+    return boto3.client(
+        "sqs",
         aws_access_key_id=settings.aws_access_key_id,
         aws_secret_access_key=settings.aws_secret_access_key,
+        region_name=settings.sqs_region,
     )
-    queue = conn.get_queue(settings.workflow_starter_queue)
-    return queue
 
 
 def process_message(settings, logger, message):
     try:
-        message_payload = json.loads(str(bytes_decode(message.get_body())))
+        message_payload = json.loads(str(bytes_decode(message.get("Body"))))
         name = message_payload.get("workflow_name")
         data = message_payload.get("workflow_data")
         start_workflow(settings, name, data)
     except Exception:
-        logger.exception("Exception while processing %s", message.get_body())
-    message.delete()
+        logger.exception("Exception while processing %s", message.get("Body"))
 
 
 @newrelic.agent.background_task(group="queue_workflow_starter.py")
