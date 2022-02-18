@@ -4,7 +4,7 @@ from mock import patch
 from testfixtures import TempDirectory
 from tests import settings_mock
 from tests.classes_mock import FakeFlag, FakeSWFClient
-from tests.activity.classes_mock import FakeSQSMessage, FakeSQSQueue, FakeLogger
+from tests.activity.classes_mock import FakeSQSClient, FakeSQSQueue, FakeLogger
 import queue_workflow_starter
 
 
@@ -15,35 +15,38 @@ class TestQueueWorkflowStarter(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
 
-    @patch("tests.activity.classes_mock.FakeSQSQueue.get_messages")
-    @patch("queue_workflow_starter.get_queue")
+    @patch("queue_workflow_starter.connect")
     @patch("boto3.client")
     @patch("log.logger")
-    def test_main(self, fake_logger, fake_client, mock_queue, mock_queue_read):
+    def test_main(self, fake_logger, fake_client, fake_sqs_client):
         directory = TempDirectory()
         message_body = json.dumps({"workflow_name": "Ping", "workflow_data": {}})
         fake_client.return_value = FakeSWFClient()
         mock_logger = FakeLogger()
         fake_logger.return_value = mock_logger
-        mock_queue.return_value = FakeSQSQueue(directory)
-        fake_message = FakeSQSMessage(directory)
-        fake_message.set_body(message_body)
-        mock_queue_read.return_value = [fake_message]
+
+        fake_queue_messages = [{"Messages": [{"Body": message_body}]}]
+        # mock the SQS client and queues
+        fake_queues = {
+            settings_mock.workflow_starter_queue: FakeSQSQueue(
+                directory, fake_queue_messages
+            ),
+        }
+        fake_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
+
         queue_workflow_starter.main(settings_mock, FakeFlag())
         self.assertTrue("Starting workflow: Ping_" in str(mock_logger.loginfo))
 
     @patch("boto3.client")
     @patch("log.logger")
     def test_process_message(self, fake_logger, fake_client):
-        directory = TempDirectory()
         message_body = json.dumps(
             {"workflow_name": "PubmedArticleDeposit", "workflow_data": {}}
         )
+        fake_message = {"Body": message_body}
         fake_client.return_value = FakeSWFClient()
         mock_logger = FakeLogger()
         fake_logger.return_value = mock_logger
-        fake_message = FakeSQSMessage(directory)
-        fake_message.set_body(message_body)
         queue_workflow_starter.process_message(
             settings_mock, FakeLogger(), fake_message
         )
@@ -54,13 +57,11 @@ class TestQueueWorkflowStarter(unittest.TestCase):
     @patch("boto3.client")
     @patch("log.logger")
     def test_process_message_no_data_processor(self, fake_logger, fake_client):
-        directory = TempDirectory()
         message_body = json.dumps({"workflow_name": "Ping", "workflow_data": {}})
+        fake_message = {"Body": message_body}
         fake_client.return_value = FakeSWFClient()
         mock_logger = FakeLogger()
         fake_logger.return_value = mock_logger
-        fake_message = FakeSQSMessage(directory)
-        fake_message.set_body(message_body)
         queue_workflow_starter.process_message(
             settings_mock, FakeLogger(), fake_message
         )
@@ -69,15 +70,13 @@ class TestQueueWorkflowStarter(unittest.TestCase):
     @patch("boto3.client")
     @patch("log.logger")
     def test_process_message_fail_to_start_workflow(self, fake_logger, fake_client):
-        directory = TempDirectory()
         message_body = json.dumps(
             {"workflow_name": "not_a_real_workflow", "workflow_data": {}}
         )
+        fake_message = {"Body": message_body}
         fake_client.return_value = FakeSWFClient()
         mock_logger = FakeLogger()
         fake_logger.return_value = mock_logger
-        fake_message = FakeSQSMessage(directory)
-        fake_message.set_body(message_body)
         queue_workflow_starter.process_message(
             settings_mock, FakeLogger(), fake_message
         )
