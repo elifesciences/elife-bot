@@ -9,8 +9,8 @@ from tests.classes_mock import FakeFlag
 from tests.activity.classes_mock import (
     FakeLogger,
     FakeResponse,
-    FakeSQSConn,
-    FakeSQSMessage,
+    FakeSQSClient,
+    FakeSQSQueue,
 )
 
 
@@ -36,12 +36,8 @@ class TestEraQueueWorker(unittest.TestCase):
         TempDirectory.cleanup_all()
 
     @patch("requests.head")
-    @patch("era_queue_worker.Message")
-    @patch("tests.activity.classes_mock.FakeSQSQueue.read")
-    @patch("boto.sqs.connect_to_region")
-    def test_work(
-        self, fake_sqs_conn, fake_queue_read, fake_sqs_message, mock_requests_head
-    ):
+    @patch("boto3.client")
+    def test_work(self, fake_sqs_client, mock_requests_head):
         "test the main method of the class"
         outgoing_message_expected = {
             "workflow_name": "SoftwareHeritageDeposit",
@@ -60,12 +56,17 @@ class TestEraQueueWorker(unittest.TestCase):
 
         # mock things
         directory = TempDirectory()
-        fake_sqs_conn.return_value = FakeSQSConn(directory)
-        fake_sqs_message.return_value = FakeSQSMessage(directory)
-
-        incoming_message = FakeSQSMessage(directory)
-        incoming_message.set_body(json.dumps(self.incoming_message_body_json))
-        fake_queue_read.return_value = incoming_message
+        fake_queue_messages = [
+            {"Messages": [{"Body": json.dumps(self.incoming_message_body_json)}]}
+        ]
+        # mock the SQS client and queues
+        fake_queues = {
+            settings_mock.era_incoming_queue: FakeSQSQueue(
+                directory, fake_queue_messages
+            ),
+            settings_mock.workflow_starter_queue: FakeSQSQueue(directory),
+        }
+        fake_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
 
         # status code 404 means it does not yet exist and it will be deposited
         mock_requests_head.return_value = FakeResponse(404)
@@ -80,26 +81,21 @@ class TestEraQueueWorker(unittest.TestCase):
         out_queue_message = json.loads(directory.read("fake_sqs_body"))
         self.assertEqual(out_queue_message, outgoing_message_expected)
 
-    @patch("era_queue_worker.Message")
-    @patch("tests.activity.classes_mock.FakeSQSQueue.read")
-    @patch("boto.sqs.connect_to_region")
-    def test_work_bad_message_body(
-        self, fake_sqs_conn, fake_queue_read, fake_sqs_message
-    ):
+    @patch("boto3.client")
+    def test_work_bad_message_body(self, fake_sqs_client):
         "test if the incoming message body cannot be parsed into JSON"
         message_body = '{"not": "good" "json": "this JSON has no commas"}'
-        # expected queue message will be similar to the incoming message,
-        # since it does not result in an outgoing message to the workflow starter queue
-        queue_message_expected = bytes(message_body, "utf8")
 
         # mock things
         directory = TempDirectory()
-        fake_sqs_conn.return_value = FakeSQSConn(directory)
-        fake_sqs_message.return_value = FakeSQSMessage(directory)
-
-        incoming_message = FakeSQSMessage(directory)
-        incoming_message.set_body(message_body)
-        fake_queue_read.return_value = incoming_message
+        fake_queue_messages = [{"Messages": [{"Body": message_body}]}]
+        # mock the SQS client and queues
+        fake_queues = {
+            settings_mock.era_incoming_queue: FakeSQSQueue(
+                directory, fake_queue_messages
+            ),
+        }
+        fake_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
 
         # create a fake green flag
         flag = FakeFlag()
@@ -107,15 +103,12 @@ class TestEraQueueWorker(unittest.TestCase):
         # invoke queue worker to work
         self.queue_worker.work(flag)
 
-        # assertions, there is no workflow starter message out_queue
-        out_queue_message = directory.read("fake_sqs_body")
-        self.assertEqual(out_queue_message, queue_message_expected)
-        # and exception is printed in the log
+        # assert exception is printed in the log
         self.assertEqual(
             self.logger.logexception,
             (
                 "Exception loading message body as JSON: "
-                + str(queue_message_expected)
+                + str(message_body)
                 + ": Expecting ',' delimiter: line 1 column 16 (char 15)"
             ),
         )
