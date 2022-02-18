@@ -82,7 +82,7 @@ doaj_url_link_pattern = "https://elifesciences.org/articles/{article_id}"
 doaj_endpoint = "https://doaj/api/v2/articles"
 doaj_api_key = ""
 
-era_incoming_queue = ""
+era_incoming_queue = "era_incoming_queue"
 
 software_heritage_api_get_origin_pattern = (
     "https://archive.swh.example.org/api/1/origin/{origin}/get/"

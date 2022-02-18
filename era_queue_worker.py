@@ -1,8 +1,7 @@
 import os
 import json
 import newrelic.agent
-import boto.sqs
-from boto.sqs.message import Message
+import boto3
 import log
 from provider import process, software_heritage, utils
 
@@ -25,7 +24,7 @@ class EraQueueWorker:
             self.logger = logger
         else:
             self.create_log()
-        self.conn = None
+        self.client = None
         self.wait_time_seconds = 10
 
     def create_log(self):
@@ -36,38 +35,48 @@ class EraQueueWorker:
 
     def connect(self):
         "connect to the queue service"
-        if not self.conn:
-            self.conn = boto.sqs.connect_to_region(
-                self.settings.sqs_region,
+        if not self.client:
+            self.client = boto3.client(
+                "sqs",
                 aws_access_key_id=self.settings.aws_access_key_id,
                 aws_secret_access_key=self.settings.aws_secret_access_key,
+                region_name=self.settings.sqs_region,
             )
 
     def queues(self):
         "get the queues"
         self.connect()
-        queue = self.conn.get_queue(self.settings.era_incoming_queue)
-        out_queue = self.conn.get_queue(self.settings.workflow_starter_queue)
-        return queue, out_queue
+        input_queue_url_response = self.client.get_queue_url(
+            QueueName=self.settings.era_incoming_queue
+        )
+        input_queue_url = input_queue_url_response.get("QueueUrl")
+        output_queue_url_response = self.client.get_queue_url(
+            QueueName=self.settings.workflow_starter_queue
+        )
+        output_queue_url = output_queue_url_response.get("QueueUrl")
+        return input_queue_url, output_queue_url
 
     def work(self, flag):
         "read messages from the queue"
 
         # Simple connect to the queues
-        queue, out_queue = self.queues()
+        input_queue_url, output_queue_url = self.queues()
 
         application = newrelic.agent.application()
 
         # Poll for an activity task indefinitely
-        if queue is not None:
+        if input_queue_url:
             while flag.green():
 
                 self.logger.info("reading message")
-                queue_message = queue.read(
-                    visibility_timeout=60, wait_time_seconds=self.wait_time_seconds
+                queue_messages = self.client.receive_message(
+                    QueueUrl=input_queue_url,
+                    MaxNumberOfMessages=1,
+                    VisibilityTimeout=60,
+                    WaitTimeSeconds=self.wait_time_seconds,
                 )
 
-                if queue_message is None:
+                if not queue_messages.get("Messages"):
                     self.logger.info("no messages available")
                 else:
                     with newrelic.agent.BackgroundTask(
@@ -75,65 +84,72 @@ class EraQueueWorker:
                         name=self.identity,
                         group="era_queue_worker.py",
                     ):
-                        self.logger.info("got message: %s", str(queue_message))
-
-                        message_body = queue_message.get_body()
-                        try:
-                            message_dict = json.loads(message_body)
-                        except json.decoder.JSONDecodeError as exception:
-                            self.logger.exception(
-                                "Exception loading message body as JSON: %s: %s"
-                                % (message_body, str(exception))
+                        for queue_message in queue_messages.get("Messages"):
+                            self.logger.info(
+                                "got message id: %s" % queue_message.get("MessageId")
                             )
-                            message_dict = {}
 
-                        # get values from the queue message
-                        article_id = message_dict.get("id")
-                        input_file = message_dict.get("download")
-                        display = message_dict.get("display")
-
-                        origin = software_heritage.display_to_origin(display)
-                        self.logger.info(
-                            'display value "%s" turned into origin value "%s"',
-                            display,
-                            origin,
-                        )
-
-                        # determine if a workflow should be started
-                        if origin:
-                            if self.approve_workflow_start(origin=origin):
-                                run = None
-                                info = {
-                                    "article_id": article_id,
-                                    "version": "1",
-                                    "workflow": "software_heritage",
-                                    "recipient": "software_heritage",
-                                    "input_file": input_file,
-                                    "data": {
-                                        "display": display,
-                                    },
-                                }
-                                workflow_data = {"run": run, "info": info}
-
-                                # build message
-                                message = {
-                                    "workflow_name": WORKFLOW_NAME,
-                                    "workflow_data": workflow_data,
-                                }
-                                self.logger.info(
-                                    "Starting a %s workflow for %s",
-                                    WORKFLOW_NAME,
-                                    display,
+                            message_body = queue_message.get("Body")
+                            try:
+                                message_dict = json.loads(message_body)
+                            except json.decoder.JSONDecodeError as exception:
+                                self.logger.exception(
+                                    "Exception loading message body as JSON: %s: %s"
+                                    % (message_body, str(exception))
                                 )
-                                # send workflow initiation message
-                                message_object = Message()
-                                message_object.set_body(json.dumps(message))
-                                out_queue.write(message_object)
+                                message_dict = {}
 
-                            # cancel incoming message
-                            self.logger.info("cancelling message")
-                            queue.delete_message(queue_message)
-                            self.logger.info("message cancelled")
+                            # get values from the queue message
+                            article_id = message_dict.get("id")
+                            input_file = message_dict.get("download")
+                            display = message_dict.get("display")
+
+                            origin = software_heritage.display_to_origin(display)
+                            self.logger.info(
+                                'display value "%s" turned into origin value "%s"',
+                                display,
+                                origin,
+                            )
+
+                            # determine if a workflow should be started
+                            if origin:
+                                if self.approve_workflow_start(origin=origin):
+                                    run = None
+                                    info = {
+                                        "article_id": article_id,
+                                        "version": "1",
+                                        "workflow": "software_heritage",
+                                        "recipient": "software_heritage",
+                                        "input_file": input_file,
+                                        "data": {
+                                            "display": display,
+                                        },
+                                    }
+                                    workflow_data = {"run": run, "info": info}
+
+                                    # build message
+                                    message = {
+                                        "workflow_name": WORKFLOW_NAME,
+                                        "workflow_data": workflow_data,
+                                    }
+                                    self.logger.info(
+                                        "Starting a %s workflow for %s",
+                                        WORKFLOW_NAME,
+                                        display,
+                                    )
+                                    # send workflow initiation message
+                                    self.client.send_message(
+                                        QueueUrl=output_queue_url,
+                                        MessageBody=json.dumps(message),
+                                    )
+
+                                # cancel incoming message
+                                self.logger.info("cancelling message")
+                                self.client.delete_message(
+                                    QueueUrl=input_queue_url,
+                                    ReceiptHandle=queue_message.get("ReceiptHandle"),
+                                )
+                                self.logger.info("message cancelled")
 
             self.logger.info("graceful shutdown")
 
