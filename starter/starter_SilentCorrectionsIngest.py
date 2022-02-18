@@ -26,6 +26,7 @@ class starter_SilentCorrectionsIngest(Starter):
         )
         workflow_params["workflow_name"] = self.name
         workflow_params["workflow_version"] = "1"
+        workflow_params["execution_start_to_close_timeout"] = str(60 * 60)
 
         input_data = S3NotificationInfo.to_dict(info)
         input_data["run"] = run

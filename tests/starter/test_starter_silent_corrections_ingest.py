@@ -26,7 +26,7 @@ class TestStarterSilentCorrectionsIngest(unittest.TestCase):
                 ("workflow_name", "SilentCorrectionsIngest"),
                 ("workflow_version", "1"),
                 ("child_policy", None),
-                ("execution_start_to_close_timeout", None),
+                ("execution_start_to_close_timeout", "3600"),
                 (
                     "input",
                     (
