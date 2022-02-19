@@ -2,6 +2,7 @@ import unittest
 import json
 from mock import patch
 from testfixtures import TempDirectory
+from provider import utils
 from tests import settings_mock
 from tests.classes_mock import FakeFlag, FakeSWFClient
 from tests.activity.classes_mock import FakeSQSClient, FakeSQSQueue, FakeLogger
@@ -42,6 +43,24 @@ class TestQueueWorkflowStarter(unittest.TestCase):
     def test_process_message(self, fake_logger, fake_client):
         message_body = json.dumps(
             {"workflow_name": "PubmedArticleDeposit", "workflow_data": {}}
+        )
+        fake_message = {"Body": message_body}
+        fake_client.return_value = FakeSWFClient()
+        mock_logger = FakeLogger()
+        fake_logger.return_value = mock_logger
+        queue_workflow_starter.process_message(
+            settings_mock, FakeLogger(), fake_message
+        )
+        self.assertTrue(
+            "Starting workflow: PubmedArticleDeposit" in str(mock_logger.loginfo)
+        )
+
+    @patch("boto3.client")
+    @patch("log.logger")
+    def test_process_message_encoded(self, fake_logger, fake_client):
+        "base64 encode the starter message like is sent by the dashboard queue"
+        message_body = utils.base64_encode_string(
+            json.dumps({"workflow_name": "PubmedArticleDeposit", "workflow_data": {}})
         )
         fake_message = {"Body": message_body}
         fake_client.return_value = FakeSWFClient()
