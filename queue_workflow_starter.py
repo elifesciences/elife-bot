@@ -44,7 +44,7 @@ def main(settings, flag):
             WaitTimeSeconds=20,
         )
         if messages.get("Messages"):
-            logger.info(str(len(messages)) + " message received")
+            logger.info(str(len(messages.get("Messages"))) + " message received")
             message = messages.get("Messages")[0]
             logger.info("message contents: %s", message.get("Body"))
             process_message(settings, logger, message)
@@ -69,8 +69,15 @@ def connect(settings):
 
 
 def process_message(settings, logger, message):
+    message_payload = {}
     try:
         message_payload = json.loads(str(bytes_decode(message.get("Body"))))
+    except json.decoder.JSONDecodeError:
+        # decode messages from the dashboard queue
+        decoded_body = utils.base64_decode_string(message.get("Body"))
+        message_payload = json.loads(decoded_body)
+
+    try:
         name = message_payload.get("workflow_name")
         data = message_payload.get("workflow_data")
         start_workflow(settings, name, data)
