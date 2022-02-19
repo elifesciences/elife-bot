@@ -13,6 +13,8 @@ s3_session_bucket = "origin_bucket"
 aws_access_key_id = ""
 aws_secret_access_key = ""
 
+lax_response_queue = "lax_response_queue"
+
 workflow_starter_queue = "workflow_starter_queue"
 sqs_region = ""
 S3_monitor_queue = "incoming_queue"
