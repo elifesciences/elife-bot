@@ -1,8 +1,13 @@
 import unittest
 import json
+from mock import patch
+from testfixtures import TempDirectory
 from lax_response_adapter import LaxResponseAdapter
-from mock import Mock
-from provider.utils import base64_encode_string
+from provider.utils import base64_encode_string, bytes_decode
+from tests import settings_mock
+from tests.classes_mock import FakeFlag
+from tests.activity.classes_mock import FakeLogger, FakeSQSClient, FakeSQSQueue
+
 
 FAKE_TOKEN = json.dumps(
     {
@@ -121,9 +126,31 @@ WORKFLOW_MESSAGE_EXPECTED_SILENT_INGEST = {
 
 class TestLaxResponseAdapter(unittest.TestCase):
     def setUp(self):
-        settings = Mock()
-        self.logger = Mock()
-        self.laxresponseadapter = LaxResponseAdapter(settings, self.logger)
+        self.logger = FakeLogger()
+        self.laxresponseadapter = LaxResponseAdapter(settings_mock, self.logger)
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch("boto3.client")
+    def test_listen(self, fake_client):
+        directory = TempDirectory()
+        fake_queue_messages = [{"Messages": [{"Body": FAKE_LAX_MESSAGE_269}]}]
+        # mock the SQS client and queues
+        fake_queues = {
+            settings_mock.lax_response_queue: FakeSQSQueue(
+                directory, fake_queue_messages
+            ),
+            settings_mock.workflow_starter_queue: FakeSQSQueue(directory),
+        }
+        fake_client.return_value = FakeSQSClient(directory, queues=fake_queues)
+        # create a fake green flag
+        flag = FakeFlag()
+        # invoke queue worker to work
+        self.laxresponseadapter.listen(flag)
+        # assertions, should have a message in the out_queue
+        out_queue_message = json.loads(bytes_decode(directory.read("fake_sqs_body")))
+        self.assertDictEqual(out_queue_message, WORKFLOW_MESSAGE_EXPECTED_269)
 
     def test_parse_message(self):
         expected_workflow_starter_message = self.laxresponseadapter.parse_message(

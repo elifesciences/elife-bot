@@ -1,6 +1,5 @@
 import json
-import boto.sqs
-from boto.sqs.message import Message
+import boto3
 from dateutil.parser import parse
 import newrelic.agent
 import log
@@ -23,30 +22,66 @@ class LaxResponseAdapter:
 
     def listen(self, flag):
         self.logger.info("started")
-        conn = boto.sqs.connect_to_region(
-            self._settings.sqs_region,
+        client = boto3.client(
+            "sqs",
             aws_access_key_id=self._settings.aws_access_key_id,
             aws_secret_access_key=self._settings.aws_secret_access_key,
+            region_name=self._settings.sqs_region,
         )
-        input_queue = conn.get_queue(self._settings.lax_response_queue)
-        output_queue = conn.get_queue(self._settings.workflow_starter_queue)
-        if input_queue is not None:
+        input_queue_url_response = client.get_queue_url(
+            QueueName=self._settings.lax_response_queue
+        )
+        input_queue_url = input_queue_url_response.get("QueueUrl")
+        output_queue_url_response = client.get_queue_url(
+            QueueName=self._settings.workflow_starter_queue
+        )
+        output_queue_url = output_queue_url_response.get("QueueUrl")
+
+        if input_queue_url is not None:
             while flag.green():
 
                 self.logger.debug("reading queue")
-                queue_message = input_queue.read(
-                    visibility_timeout=60, wait_time_seconds=20
+                queue_messages = client.receive_message(
+                    QueueUrl=input_queue_url,
+                    MaxNumberOfMessages=1,
+                    VisibilityTimeout=60,
+                    WaitTimeSeconds=20,
                 )
-                if queue_message is not None:
-                    self.logger.info("got message id: %s", queue_message.id)
+
+                if queue_messages.get("Messages"):
+                    queue_message = queue_messages.get("Messages")[0]
+                    self.logger.info(
+                        "got message id: %s", queue_message.get("MessageId")
+                    )
                     try:
-                        self.process_message(queue_message, output_queue)
-                        queue_message.delete()
+                        workflow_starter_message = self.process_message(queue_message)
+                        # send workflow initiation message
+                        self.logger.info(
+                            "sending workflow starter message: %s",
+                            workflow_starter_message,
+                        )
+                        client.send_message(
+                            QueueUrl=output_queue_url,
+                            MessageBody=json.dumps(workflow_starter_message),
+                        )
+                        self.logger.info(
+                            "deleting message id: %s", queue_message.get("MessageId")
+                        )
+                        client.delete_message(
+                            QueueUrl=input_queue_url,
+                            ReceiptHandle=queue_message.get("ReceiptHandle"),
+                        )
                     except ShortRetryException as e:
                         self.logger.info(
-                            "short retry: %s because of %s", queue_message.id, e
+                            "short retry: %s because of %s",
+                            queue_message.get("MessageId"),
+                            e,
                         )
-                        queue_message.change_visibility(visibility_timeout=10)
+                        client.change_message_visibility(
+                            QueueUrl=input_queue_url,
+                            ReceiptHandle=queue_message.get("ReceiptHandle"),
+                            VisibilityTimeout=10,
+                        )
 
             self.logger.info("graceful shutdown")
 
@@ -132,13 +167,9 @@ class LaxResponseAdapter:
             raise
 
     @newrelic.agent.background_task(group="lax_response_adapter.py")
-    def process_message(self, message, output_queue):
-        message_str = str(message.get_body())
-        workflow_starter_message = self.parse_message(message_str)
-
-        m = Message()
-        m.set_body(json.dumps(workflow_starter_message))
-        output_queue.write(m)
+    def process_message(self, message):
+        message_str = str(message.get("Body"))
+        return self.parse_message(message_str)
 
 
 if __name__ == "__main__":
