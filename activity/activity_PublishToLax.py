@@ -1,7 +1,5 @@
 import json
-from provider.execution_context import get_session
-import boto.sqs
-from boto.sqs.message import RawMessage
+import boto3
 import provider.lax_provider as lax_provider
 from provider.utils import base64_decode_string
 from activity.objects import Activity
@@ -67,17 +65,20 @@ class activity_PublishToLax(Activity):
                 run_type,
             )
             message_body = json.dumps(message)
-            self.logger.info("Sending message to lax: %s", message_body)
-            sqs_conn = boto.sqs.connect_to_region(
-                self.settings.sqs_region,
+            client = boto3.client(
+                "sqs",
                 aws_access_key_id=self.settings.aws_access_key_id,
                 aws_secret_access_key=self.settings.aws_secret_access_key,
+                region_name=self.settings.sqs_region,
             )
-            out_queue = sqs_conn.get_queue(self.settings.xml_info_queue)
-            m = RawMessage()
-            m.set_body(message_body)
-            out_queue.write(m)
-
+            queue_url_response = client.get_queue_url(
+                QueueName=self.settings.xml_info_queue
+            )
+            queue_url = queue_url_response.get("QueueUrl")
+            client.send_message(
+                QueueUrl=queue_url,
+                MessageBody=message_body,
+            )
             #########
 
         except Exception as exception:

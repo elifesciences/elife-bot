@@ -1,15 +1,7 @@
-import base64
-from requests.auth import HTTPBasicAuth
-import activity
 import json
-from boto.s3.key import Key
-from boto.s3.connection import S3Connection
+import boto3
+from provider import lax_provider
 from provider.execution_context import get_session
-import datetime
-import boto.sqs
-from boto.sqs.message import RawMessage
-import provider.lax_provider as lax_provider
-import requests
 from activity.objects import Activity
 
 """
@@ -156,13 +148,15 @@ class activity_IngestToLax(Activity):
     def write_message(self, connexion_settings, queue, message_data):
         message_body = json.dumps(message_data)
         self.logger.info("Sending message to lax: %s", message_body)
-        sqs_conn = boto.sqs.connect_to_region(
-            connexion_settings["sqs_region"],
+        client = boto3.client(
+            "sqs",
             aws_access_key_id=connexion_settings["aws_access_key_id"],
             aws_secret_access_key=connexion_settings["aws_secret_access_key"],
+            region_name=connexion_settings["sqs_region"],
         )
-
-        m = RawMessage()
-        m.set_body(message_body)
-        output_queue = sqs_conn.get_queue(queue)
-        output_queue.write(m)
+        queue_url_response = client.get_queue_url(QueueName=queue)
+        queue_url = queue_url_response.get("QueueUrl")
+        client.send_message(
+            QueueUrl=queue_url,
+            MessageBody=message_body,
+        )

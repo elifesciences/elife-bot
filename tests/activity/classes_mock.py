@@ -42,21 +42,6 @@ class FakeS3Connection:
         return self.get_bucket(mock_bucket_name)
 
 
-class FakeSQSMessage:
-    def __init__(self, directory):
-        self.dir = directory
-
-    def set_body(self, body):
-        # write bytes
-        self.dir.write("fake_sqs_body", bytes(body, "utf-8"))
-
-    def get_body(self):
-        return self.dir.read("fake_sqs_body")
-
-    def delete(self):
-        pass
-
-
 class FakeSQSClient:
     def __init__(self, directory=None, queues=None):
         self.dir = directory
@@ -93,40 +78,12 @@ class FakeSQSClient:
             ]
 
 
-class FakeSQSConn:
-    def __init__(self, directory):
-        self.dir = directory
-
-    def get_queue(self, queue):
-        return FakeSQSQueue(self.dir)  # self.get_object('FakeSQSQueue', self.dir)
-
-
 class FakeSQSQueue:
     def __init__(self, directory, messages=None):
         self.dir = directory
         self.messages = []
         if messages:
             self.messages = messages
-
-    # def write(self, body_dir):
-    #     self.dir.write("fake_sqs_queue_container", body_dir.read("fake_sqs_body"))
-    def write(self, message):
-        self.dir.write("fake_sqs_queue_container", message.dir.read("fake_sqs_body"))
-
-    def read(self, dir_name):
-        return self.dir.read(dir_name)
-
-    def get_messages(self, num_messages=1):
-        "for mocking return a list of messages"
-        return self.messages
-
-    def delete_message(self, message):
-        self.messages = [
-            q_message for q_message in self.messages if message != q_message
-        ]
-
-    def set_message_class(self, message_class):
-        pass
 
 
 class FakeFTP:
