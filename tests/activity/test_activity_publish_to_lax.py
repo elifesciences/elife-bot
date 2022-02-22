@@ -3,16 +3,15 @@ import copy
 import json
 from ddt import ddt, data
 from mock import patch
+from testfixtures import TempDirectory
 from provider.utils import base64_encode_string, base64_decode_string
 from activity.activity_PublishToLax import activity_PublishToLax as activity_object
-import tests.activity.settings_mock as settings_mock
+from tests.activity import settings_mock
 from tests.activity.classes_mock import (
     FakeLogger,
-    FakeSQSConn,
+    FakeSQSClient,
     FakeSQSQueue,
-    FakeSQSMessage,
 )
-from testfixtures import TempDirectory
 
 
 ACTIVITY_DATA = {
@@ -41,24 +40,24 @@ WORKFLOW_DATA = {
 }
 
 
-def workflow_data(data, run_type=None):
+def workflow_data(w_data, run_type=None):
     "format workflow data for different test scenarios"
-    workflow_data = copy.copy(data)
+    workflow_data_copy = copy.copy(w_data)
     if run_type:
-        workflow_data["run_type"] = run_type
-    return workflow_data
+        workflow_data_copy["run_type"] = run_type
+    return workflow_data_copy
 
 
-def activity_data(data, force=None, workflow_data=None):
+def activity_data(a_data, force=None, w_data=None):
     "format activity data for different test scenarios"
-    activity_data = copy.copy(data)
+    activity_data_copy = copy.copy(a_data)
     if force:
-        activity_data["force"] = force
-    if workflow_data:
-        activity_data["publication_data"] = base64_encode_string(
-            json.dumps(workflow_data)
+        activity_data_copy["force"] = force
+    if w_data:
+        activity_data_copy["publication_data"] = base64_encode_string(
+            json.dumps(w_data)
         )
-    return activity_data
+    return activity_data_copy
 
 
 @ddt
@@ -70,9 +69,7 @@ class TestPublishToLax(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
 
-    @patch("activity.activity_PublishToLax.RawMessage")
-    @patch("boto.sqs.connection.SQSConnection.get_queue")
-    @patch("boto.sqs.connect_to_region")
+    @patch("boto3.client")
     @patch("provider.lax_provider.get_xml_file_name")
     @patch.object(activity_object, "emit_monitor_event")
     @data(
@@ -95,14 +92,15 @@ class TestPublishToLax(unittest.TestCase):
         test_data,
         fake_emit,
         fake_file_name,
-        fake_sqs_conn,
-        fake_sqs_queue,
-        fake_sqs_message,
+        fake_sqs_client,
     ):
         directory = TempDirectory()
-        fake_sqs_conn.return_value = FakeSQSConn(directory)
-        fake_sqs_queue.return_value = FakeSQSQueue(directory)
-        fake_sqs_message.return_value = FakeSQSMessage(directory)
+        # mock the SQS client and queues
+        fake_queues = {
+            settings_mock.xml_info_queue: FakeSQSQueue(directory),
+        }
+        fake_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
+
         fake_file_name.return_value = "elife-00353-v1.xml"
         # format the activity data
         workflow_test_data = None

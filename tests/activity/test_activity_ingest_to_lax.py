@@ -1,18 +1,18 @@
 import unittest
+import json
 from ddt import ddt, data
 from mock import patch
+from testfixtures import TempDirectory
 import activity.activity_IngestToLax as activity_module
 from activity.activity_IngestToLax import activity_IngestToLax
-import tests.activity.settings_mock as settings_mock
+from tests.activity import settings_mock
 from tests.activity.classes_mock import (
     FakeLogger,
     FakeSession,
-    FakeSQSConn,
     FakeSQSQueue,
-    FakeSQSMessage,
+    FakeSQSClient,
 )
 from tests.activity import test_activity_data
-from testfixtures import TempDirectory
 
 
 data_example = {
@@ -40,32 +40,39 @@ class TestIngestToLax(unittest.TestCase):
         TempDirectory.cleanup_all()
 
     @data(data_example)
-    @patch("boto.sqs.connect_to_region")
-    @patch("boto.sqs.connection.SQSConnection.get_queue")
-    @patch.object(activity_module, "RawMessage")
-    @patch("provider.lax_provider.prepare_action_message")
+    @patch("boto3.client")
+    @patch("provider.lax_provider.get_xml_file_name")
     @patch.object(activity_module, "get_session")
     @patch.object(activity_IngestToLax, "emit_monitor_event")
     def test_do_activity_success(
         self,
-        data,
+        test_data,
         fake_emit_monitor,
         fake_session,
-        fake_action_message,
-        fake_sqs_message,
-        fake_sqs_queue,
-        fake_sqs_conn,
+        fake_xml_file_name,
+        fake_sqs_client,
     ):
         directory = TempDirectory()
-        fake_action_message.return_value = {"example_message": True}
+
+        # mock the SQS client and queues
+        fake_queues = {
+            settings_mock.xml_info_queue: FakeSQSQueue(directory),
+        }
+        fake_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
         fake_session.return_value = FakeSession(
             test_activity_data.data_example_before_publish
         )
-        fake_sqs_conn.return_value = FakeSQSConn(directory)
-        fake_sqs_queue.return_value = FakeSQSQueue(directory)
-        fake_sqs_message.return_value = FakeSQSMessage(directory)
-        return_value = self.ingesttolax.do_activity(data)
+        fake_xml_file_name.return_value = "elife-00353-v1.xml"
+
+        return_value = self.ingesttolax.do_activity(test_data)
         self.assertEqual(return_value, activity_IngestToLax.ACTIVITY_SUCCESS)
+        out_queue_message = json.loads(directory.read("fake_sqs_body"))
+        self.assertEqual(out_queue_message.get("action"), "ingest")
+        self.assertEqual(out_queue_message.get("id"), test_data.get("article_id"))
+        self.assertEqual(
+            out_queue_message.get("version"), int(test_data.get("version"))
+        )
+        self.assertEqual(out_queue_message.get("force"), False)
 
     @patch.object(activity_IngestToLax, "get_message_queue")
     @patch.object(activity_module, "get_session")
