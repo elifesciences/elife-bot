@@ -91,6 +91,8 @@ class activity_CopyDigestToOutbox(Activity):
         )
         storage = storage_context(self.settings)
         files_in_bucket = storage.list_resources(resource_path)
+        # remove the subfolder name from file names
+        files_in_bucket = [filename.rsplit("/", 1)[-1] for filename in files_in_bucket]
         for resource in files_in_bucket:
             orig_resource = resource_path + "/" + resource
             self.logger.info("Deleting %s from the outbox", orig_resource)

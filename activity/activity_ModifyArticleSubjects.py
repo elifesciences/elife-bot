@@ -167,6 +167,8 @@ class activity_ModifyArticleSubjects(Activity):
         storage_provider = self.settings.storage_provider + "://"
         orig_resource = storage_provider + bucket_name + "/" + bucket_folder_name
         files_in_bucket = storage.list_resources(orig_resource)
+        # remove the subfolder name from file names
+        files_in_bucket = [filename.rsplit("/", 1)[-1] for filename in files_in_bucket]
         article_xml_s3_key_name = None
         for filename in files_in_bucket:
             info = ArticleInfo(filename)

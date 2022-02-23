@@ -37,7 +37,6 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch("provider.lax_provider.article_versions")
     @patch("boto3.client")
     @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
-    @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(article, "was_ever_published")
     @patch.object(s3lib, "get_s3_keys_from_bucket")
@@ -46,7 +45,6 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_get_s3_keys,
         fake_was_ever_published,
         fake_storage_context,
-        fake_outbox_key_names,
         fake_archive_bucket_s3_keys,
         fake_client,
         fake_article_versions,
@@ -58,8 +56,9 @@ class TestPubRouterDeposit(unittest.TestCase):
         activity_data = {"data": {"workflow": "HEFCE"}}
         fake_was_ever_published.return_value = None
         fake_get_s3_keys.return_value = None
-        fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
-        fake_outbox_key_names.return_value = ["elife00013.xml", "elife09169.xml"]
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/test_data/", ["elife00013.xml", "elife09169.xml"]
+        )
         fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
         fake_client.return_value = FakeSWFClient()
         fake_article_versions.return_value = (
@@ -73,7 +72,6 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch("provider.lax_provider.article_versions")
     @patch("boto3.client")
     @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
-    @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(article, "was_ever_published")
     @patch.object(s3lib, "get_s3_keys_from_bucket")
@@ -82,7 +80,6 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_get_s3_keys,
         fake_was_ever_published,
         fake_storage_context,
-        fake_outbox_key_names,
         fake_archive_bucket_s3_keys,
         fake_client,
         fake_article_versions,
@@ -94,8 +91,9 @@ class TestPubRouterDeposit(unittest.TestCase):
         activity_data = {"data": {"workflow": "HEFCE"}}
         fake_was_ever_published.return_value = None
         fake_get_s3_keys.return_value = None
-        fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
-        fake_outbox_key_names.return_value = ["elife00013.xml", "elife09169.xml"]
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/test_data/", ["elife00013.xml", "elife09169.xml"]
+        )
         fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
         fake_client.return_value = FakeSWFClient()
         fake_article_versions.return_value = (
@@ -146,7 +144,6 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch("provider.lax_provider.article_versions")
     @patch("boto3.client")
     @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
-    @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(s3lib, "get_s3_keys_from_bucket")
     @data("PMC")
@@ -155,7 +152,6 @@ class TestPubRouterDeposit(unittest.TestCase):
         workflow_name,
         fake_get_s3_keys,
         fake_storage_context,
-        fake_outbox_key_names,
         fake_archive_bucket_s3_keys,
         fake_client,
         fake_article_versions,
@@ -167,8 +163,9 @@ class TestPubRouterDeposit(unittest.TestCase):
             self.pubrouterdeposit.get_tmp_dir()
         )
         activity_data = {"data": {"workflow": workflow_name}}
-        fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
-        fake_outbox_key_names.return_value = ["elife00013.xml"]
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/test_data/", ["elife00013.xml"]
+        )
         fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
         fake_was_ever_poa.return_value = False
         fake_get_s3_keys.return_value = False

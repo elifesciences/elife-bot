@@ -300,7 +300,10 @@ class activity_CopyGlencoeStillImages(Activity):
             + "/"
             + utils.pad_msid(article_id)
         )
-        return storage.list_resources(article_path_in_cdn)
+        files_in_bucket = storage.list_resources(article_path_in_cdn)
+        # remove the subfolder name from file names
+        files_in_bucket = [filename.rsplit("/", 1)[-1] for filename in files_in_bucket]
+        return files_in_bucket
 
     def validate_jpgs_against_cdn(self, cdn_all_files, cdn_still_jpgs):
         """checks that for each element of cdn_still_jpgs there are two files in the CDN.

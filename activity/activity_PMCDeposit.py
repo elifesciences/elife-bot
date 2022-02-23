@@ -287,7 +287,8 @@ class activity_PMCDeposit(Activity):
         )
 
         s3_key_names = storage.list_resources(orig_resource)
-
+        # remove the subfolder name from file names
+        s3_key_names = [filename.rsplit("/", 1)[-1] for filename in s3_key_names]
         return next_revision_number(fid, s3_key_names)
 
 

@@ -40,7 +40,6 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     @patch.object(lax_provider, "article_versions")
     @patch.object(activity_PubmedArticleDeposit, "sftp_files_to_endpoint")
     @patch("provider.outbox_provider.storage_context")
-    @patch.object(FakeStorageContext, "list_resources")
     @data(
         {
             "comment": "example PoA file will have an aheadofprint",
@@ -173,7 +172,6 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     def test_do_activity(
         self,
         test_data,
-        fake_list_resources,
         fake_storage_context,
         fake_sftp_files_to_endpoint,
         fake_article_versions,
@@ -185,8 +183,13 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         )
         fake_clean_tmp_dir.return_value = None
         # copy XML files into the input directory using the storage context
-        fake_storage_context.return_value = FakeStorageContext()
-        fake_list_resources.return_value = test_data.get("outbox_filenames")
+        resources = [
+            "pubmed/outbox/%s" % filename
+            for filename in test_data.get("outbox_filenames")
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/", resources
+        )
         # lax data overrides
         fake_article_versions.return_value = 200, test_data.get("article_versions_data")
         # ftp

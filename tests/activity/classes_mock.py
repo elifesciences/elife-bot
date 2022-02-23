@@ -118,7 +118,9 @@ class FakeStorageProviderConnection:
 
 
 class FakeStorageContext:
-    def __init__(self, directory=data.ExpandArticle_files_source_folder):
+    def __init__(
+        self, directory=data.ExpandArticle_files_source_folder, resources=None
+    ):
         "can instantiate specifying a data directory or use the default"
         self.dir = directory
         self.resources = [
@@ -126,6 +128,8 @@ class FakeStorageContext:
             "elife-00353-v1.pdf",
             "elife-00353-v1.xml",
         ]
+        if resources is not None:
+            self.resources = resources
 
     def get_bucket_and_key(self, resource):
         p = re.compile(r"(.*?)://(.*?)(/.*)")
