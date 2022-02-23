@@ -35,7 +35,6 @@ class TestDepositCrossref(unittest.TestCase):
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("requests.post")
-    @patch.object(FakeStorageContext, "list_resources")
     @patch("provider.outbox_provider.storage_context")
     @data(
         {
@@ -122,16 +121,15 @@ class TestDepositCrossref(unittest.TestCase):
         self,
         test_data,
         fake_storage_context,
-        fake_list_resources,
         fake_request,
         fake_email_smtp_connect,
     ):
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
-        # copy XML files into the input directory
-        fake_list_resources.return_value = test_data["article_xml_filenames"]
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/test_data/crossref/outbox/", test_data["article_xml_filenames"]
+        )
         # mock the POST to endpoint
         fake_request.return_value = FakeResponse(test_data.get("post_status_code"))
         # do the activity

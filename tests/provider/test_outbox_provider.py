@@ -32,11 +32,12 @@ class TestOutboxProvider(unittest.TestCase):
 
     @patch("provider.outbox_provider.storage_context")
     def test_get_outbox_s3_key_names(self, fake_storage_context):
-        fake_storage_context.return_value = FakeStorageContext(
-            "tests/test_data/crossref/outbox/"
-        )
         outbox_folder = "crossref/outbox/"
-        expected = [outbox_folder.rstrip("/") + "/" + "elife-00353-v1.xml"]
+        resources = ["%selife-00353-v1.xml" % outbox_folder]
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/test_data/%s" % outbox_folder, resources
+        )
+        expected = [outbox_folder + "elife-00353-v1.xml"]
         key_names = outbox_provider.get_outbox_s3_key_names(
             settings_mock, "", outbox_folder
         )
@@ -45,7 +46,9 @@ class TestOutboxProvider(unittest.TestCase):
 
     @patch("provider.outbox_provider.storage_context")
     def test_download_files_from_s3_outbox(self, fake_storage_context):
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/test_data/crossref/outbox/", ["elife-18753-v1.xml"]
+        )
         bucket_name = ""
         outbox_folder = ""
         key_names = outbox_provider.get_outbox_s3_key_names(
@@ -62,7 +65,9 @@ class TestOutboxProvider(unittest.TestCase):
         self, fake_storage_context, fake_get_resource
     ):
         """test IOError exception for coverage"""
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/test_data/crossref/outbox/", ["elife-18753-v1.xml"]
+        )
         fake_get_resource.side_effect = IOError
         bucket_name = ""
         outbox_folder = ""

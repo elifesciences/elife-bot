@@ -323,6 +323,8 @@ def get_xml_file_name(settings, expanded_folder, xml_bucket, version=None):
     storage = storage_context(settings)
     resource = settings.storage_provider + "://" + xml_bucket + "/" + expanded_folder
     files_in_bucket = storage.list_resources(resource)
+    # remove the subfolder name from file names
+    files_in_bucket = [filename.rsplit("/", 1)[-1] for filename in files_in_bucket]
     for filename in files_in_bucket:
         info = ArticleInfo(filename)
         if info.file_type == "ArticleXML":

@@ -44,7 +44,6 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("requests.head")
     @patch("requests.post")
-    @patch.object(FakeStorageContext, "list_resources")
     @patch("provider.outbox_provider.storage_context")
     @data(
         {
@@ -85,7 +84,6 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         self,
         test_data,
         fake_storage_context,
-        fake_list_resources,
         fake_post_request,
         fake_head_request,
         fake_email_smtp_connect,
@@ -97,12 +95,13 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
             self.activity.get_tmp_dir()
         )
         fake_get_client.return_value = True
-        fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/test_data/crossref_peer_review/outbox/",
+            test_data["article_xml_filenames"],
+        )
         rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
         client = FakeBigQueryClient(rows)
         fake_get_client.return_value = client
-        # copy XML files into the input directory
-        fake_list_resources.return_value = test_data["article_xml_filenames"]
         # mock the POST to endpoint
         fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))
         fake_head_request.return_value = FakeResponse(302)
@@ -154,12 +153,10 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("requests.head")
     @patch("requests.post")
-    @patch.object(FakeStorageContext, "list_resources")
     @patch("provider.outbox_provider.storage_context")
     def test_do_activity_crossref_exception(
         self,
         fake_storage_context,
-        fake_list_resources,
         fake_post_request,
         fake_head_request,
         fake_email_smtp_connect,
@@ -170,15 +167,16 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
             self.activity.get_tmp_dir()
         )
         fake_check_vor.return_value = True
-        fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/test_data/crossref_peer_review/outbox/",
+            [
+                "elife-15747-v2.xml",
+                "elife_poa_e03977.xml",
+            ],
+        )
         rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
         client = FakeBigQueryClient(rows)
         fake_get_client.return_value = client
-        # copy XML files into the input directory
-        fake_list_resources.return_value = [
-            "elife-15747-v2.xml",
-            "elife_poa_e03977.xml",
-        ]
 
         # raise an exception on a post
         fake_post_request.side_effect = Exception("")
@@ -188,24 +186,22 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
 
     @patch.object(bigquery, "get_client")
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch.object(FakeStorageContext, "list_resources")
     @patch("provider.outbox_provider.storage_context")
     def test_do_activity_no_good_one_bad(
         self,
         fake_storage_context,
-        fake_list_resources,
         fake_email_smtp_connect,
         fake_get_client,
     ):
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/test_data/crossref_peer_review/outbox/", ["bad.xml"]
+        )
         rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
         client = FakeBigQueryClient(rows)
         fake_get_client.return_value = client
-        # copy XML files into the input directory
-        fake_list_resources.return_value = ["bad.xml"]
 
         result = self.activity.do_activity()
         self.assertTrue(result)

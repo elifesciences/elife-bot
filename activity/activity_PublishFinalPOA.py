@@ -188,7 +188,8 @@ class activity_PublishFinalPOA(Activity):
         orig_resource = storage_provider + bucket_name + "/"
 
         s3_key_names = storage.list_resources(orig_resource)
-
+        # remove the subfolder name from file names
+        s3_key_names = [filename.rsplit("/", 1)[-1] for filename in s3_key_names]
         max_revision_number = 0
         for key_name in s3_key_names:
 

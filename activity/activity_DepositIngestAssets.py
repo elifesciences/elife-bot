@@ -60,7 +60,8 @@ class activity_DepositIngestAssets(Activity):
                 storage_provider + expanded_folder_bucket + "/" + expanded_folder_name
             )
             files_in_bucket = storage.list_resources(orig_resource)
-
+            # remove the subfolder name from file names
+            files_in_bucket = [filename.rsplit("/", 1)[-1] for filename in files_in_bucket]
             pre_ingest_assets = article_structure.pre_ingest_assets(files_in_bucket)
 
             for file_name in pre_ingest_assets:

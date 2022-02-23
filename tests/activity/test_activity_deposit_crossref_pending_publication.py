@@ -22,6 +22,7 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
             settings_mock, fake_logger, None, None, None
         )
         self.activity.make_activity_directories()
+        self.outbox_folder = "tests/test_data/crossref_pending_publication/outbox/"
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
@@ -37,12 +38,10 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
     @patch("provider.crossref.doi_exists")
     @patch("provider.crossref.doi_does_not_exist")
     @patch("requests.post")
-    @patch.object(FakeStorageContext, "list_resources")
     @patch("provider.outbox_provider.storage_context")
     def test_do_activity(
         self,
         fake_storage_context,
-        fake_list_resources,
         fake_post_request,
         fake_doi_does_not_exist,
         fake_doi_exists,
@@ -73,9 +72,10 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
-        # copy XML files into the input directory
-        fake_list_resources.return_value = test_data["article_xml_filenames"]
+        fake_storage_context.return_value = FakeStorageContext(
+            self.outbox_folder,
+            test_data["article_xml_filenames"],
+        )
         # mock the POST to endpoint
         fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))
         fake_doi_does_not_exist.return_value = True
@@ -127,12 +127,10 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
     @patch("provider.crossref.doi_exists")
     @patch("provider.crossref.doi_does_not_exist")
     @patch("requests.post")
-    @patch.object(FakeStorageContext, "list_resources")
     @patch("provider.outbox_provider.storage_context")
     def test_do_activity_crossref_exception(
         self,
         fake_storage_context,
-        fake_list_resources,
         fake_post_request,
         fake_doi_does_not_exist,
         fake_doi_exists,
@@ -141,9 +139,9 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
-        # copy XML files into the input directory
-        fake_list_resources.return_value = ["08-11-2020-FA-eLife-64719.xml"]
+        fake_storage_context.return_value = FakeStorageContext(
+            self.outbox_folder, ["08-11-2020-FA-eLife-64719.xml"]
+        )
 
         # raise an exception on a post
         fake_post_request.side_effect = Exception("")
@@ -155,30 +153,25 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         self.assertTrue(result)
 
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch.object(FakeStorageContext, "list_resources")
     @patch("provider.outbox_provider.storage_context")
     def test_do_activity_no_good_one_bad(
         self,
         fake_storage_context,
-        fake_list_resources,
         fake_email_smtp_connect,
     ):
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_storage_context.return_value = FakeStorageContext("tests/test_data/")
-        # copy XML files into the input directory
-        fake_list_resources.return_value = ["bad.xml"]
+        fake_storage_context.return_value = FakeStorageContext(
+            self.outbox_folder, ["bad.xml"]
+        )
 
         result = self.activity.do_activity()
         self.assertTrue(result)
 
     def test_get_article_objects(self):
         """test for parsing an XML file"""
-        xml_file_name = (
-            "tests/test_data/crossref_pending_publication/"
-            "outbox/08-11-2020-FA-eLife-64719.xml"
-        )
+        xml_file_name = "%s08-11-2020-FA-eLife-64719.xml" % self.outbox_folder
         article_object_map = self.activity.get_article_objects([xml_file_name])
         self.assertEqual(len(article_object_map), 1)
         article_object = article_object_map.get(xml_file_name)
