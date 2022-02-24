@@ -51,25 +51,25 @@ class TestSendDashboardEvents(unittest.TestCase):
         self.assertEqual(result, True)
 
         fake_emit_monitor_property.assert_any_call(
-            ANY, "353", "doi", u"10.7554/eLife.00353", "text", version="1"
+            ANY, "353", "doi", "10.7554/eLife.00353", "text", version="1"
         )
         fake_emit_monitor_property.assert_any_call(
-            ANY, "353", "title", u"A good life", "text", version="1"
+            ANY, "353", "title", "A good life", "text", version="1"
         )
         fake_emit_monitor_property.assert_any_call(
-            ANY, "353", "status", u"VOR", "text", version="1"
+            ANY, "353", "status", "VOR", "text", version="1"
         )
         fake_emit_monitor_property.assert_any_call(
-            ANY, "353", "publication-date", u"2012-12-13", "text", version="1"
+            ANY, "353", "publication-date", "2012-12-13", "text", version="1"
         )
         fake_emit_monitor_property.assert_any_call(
-            ANY, "353", "article-type", u"discussion", "text", version="1"
+            ANY, "353", "article-type", "discussion", "text", version="1"
         )
         fake_emit_monitor_property.assert_any_call(
-            ANY, "353", "corresponding-authors", u"Eve Marder", "text", version="1"
+            ANY, "353", "corresponding-authors", "Eve Marder", "text", version="1"
         )
         fake_emit_monitor_property.assert_any_call(
-            ANY, "353", "authors", u"Eve Marder", "text", version="1"
+            ANY, "353", "authors", "Eve Marder", "text", version="1"
         )
 
         fake_emit_monitor_event.assert_any_call(

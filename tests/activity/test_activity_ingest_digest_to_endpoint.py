@@ -94,7 +94,7 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
                 ]
             ),
             "expected_json_contains": [
-                u'"title": "Fishing for errors in the\u00a0tests"',
+                '"title": "Fishing for errors in the\u00a0tests"',
                 "Microbes live in us and on us",
                 '"stage": "preview"',
             ],

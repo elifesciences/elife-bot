@@ -70,7 +70,7 @@ class TestListEmailRecipients(unittest.TestCase):
 class TestEncodeFilename(unittest.TestCase):
     @data(
         "Bayés_35774.docx",
-        u"Bayés_35774.docx",
+        "Bayés_35774.docx",
         b"Bay\xc3\xa9s_35774.docx",
         bytes_decode(b"Bay\xc3\xa9s_35774.docx"),
         bytes_decode(b"Baye\xcc\x81s_35774.docx"),
@@ -80,7 +80,7 @@ class TestEncodeFilename(unittest.TestCase):
         expected = "Bayés_35774.docx"
         self.assertEqual(email_provider.encode_filename(filename), expected)
         # an alternate way to illustrate the string comparison
-        expected_also = unicode_encode(u"Bay\u00e9s_35774.docx")
+        expected_also = unicode_encode("Bay\u00e9s_35774.docx")
         self.assertEqual(email_provider.encode_filename(filename), expected_also)
 
 

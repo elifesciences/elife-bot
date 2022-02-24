@@ -51,7 +51,10 @@ class FakeSQSClient:
 
     def get_queue_url(self, **kwargs):
         "for testing the QueueName and QueueUrl can be the same value"
-        if kwargs.get("QueueName") and kwargs.get("QueueName") not in self.queues.keys():
+        if (
+            kwargs.get("QueueName")
+            and kwargs.get("QueueName") not in self.queues.keys()
+        ):
             self.queues[kwargs.get("QueueName")] = FakeSQSQueue(self.dir)
         return {"QueueUrl": kwargs.get("QueueName")}
 
@@ -74,7 +77,9 @@ class FakeSQSClient:
         queue = self.queues.get(queue_url_response.get("QueueUrl"))
         if queue and queue.messages:
             queue.messages[0]["Messages"] = [
-                q_message for q_message in queue.messages[0]["Messages"] if q_message.get("ReceiptHandle") != kwargs.get("ReceiptHandle")
+                q_message
+                for q_message in queue.messages[0]["Messages"]
+                if q_message.get("ReceiptHandle") != kwargs.get("ReceiptHandle")
             ]
 
 

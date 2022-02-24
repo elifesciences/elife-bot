@@ -8,7 +8,7 @@ import tests.settings_mock as settings_mock
 from tests.classes_mock import FakeSWFClient
 
 
-RUN_EXAMPLE = u"1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
+RUN_EXAMPLE = "1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
 
 INFO_EXAMPLE = {
     "article_id": "666",

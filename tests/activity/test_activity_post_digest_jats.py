@@ -45,7 +45,7 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_jats_status": True,
             "expected_post_status": True,
             "expected_email_status": True,
-            "expected_digest_doi": u"https://doi.org/10.7554/eLife.99999",
+            "expected_digest_doi": "https://doi.org/10.7554/eLife.99999",
         },
         {
             "comment": "digest zip file example",
@@ -57,7 +57,7 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_jats_status": True,
             "expected_post_status": True,
             "expected_email_status": True,
-            "expected_digest_doi": u"https://doi.org/10.7554/eLife.99999",
+            "expected_digest_doi": "https://doi.org/10.7554/eLife.99999",
         },
         {
             "comment": "digest file does not exist example",
@@ -90,7 +90,7 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_jats_status": True,
             "expected_post_status": True,
             "expected_email_status": True,
-            "expected_digest_doi": u"https://doi.org/10.7554/eLife.99997",
+            "expected_digest_doi": "https://doi.org/10.7554/eLife.99997",
         },
         {
             "comment": "digest bad post response",
@@ -102,7 +102,7 @@ class TestPostDigestJats(unittest.TestCase):
             "expected_jats_status": True,
             "expected_post_status": False,
             "expected_email_status": None,
-            "expected_digest_doi": u"https://doi.org/10.7554/eLife.99999",
+            "expected_digest_doi": "https://doi.org/10.7554/eLife.99999",
         },
         {
             "comment": "digest silent deposit example",

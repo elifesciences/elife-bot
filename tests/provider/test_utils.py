@@ -92,8 +92,8 @@ class TestUtils(unittest.TestCase):
     @unpack
     @data(
         (None, None, type(None)),
-        (u"", "", str),
-        (u"tmp/foldér", "tmp/foldér", str),
+        ("", "", str),
+        ("tmp/foldér", "tmp/foldér", str),
         (b"tmp/folde\xcc\x81r", "tmp/foldér", str),
     )
     def test_unicode_encode(self, value, expected, expected_type):

@@ -121,4 +121,4 @@ class activity_ValidateDigestInput(Activity):
 
 def error_email_subject(filename):
     "email subject for an error email"
-    return u"Error processing digest file: {filename}".format(filename=filename)
+    return "Error processing digest file: {filename}".format(filename=filename)

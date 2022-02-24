@@ -51,8 +51,8 @@ class TestEmailDigest(unittest.TestCase):
             "expected_generate_status": True,
             "expected_approve_status": True,
             "expected_email_status": True,
-            "expected_digest_doi": u"https://doi.org/10.7554/eLife.99999",
-            "expected_digest_image_file": u"IMAGE 99999.jpeg",
+            "expected_digest_doi": "https://doi.org/10.7554/eLife.99999",
+            "expected_digest_image_file": "IMAGE 99999.jpeg",
             "expected_output_dir_files": ["Anonymous_99999.docx"],
             "expected_email_count": 2,
             "expected_email_subject": "Subject: Digest: Anonymous_99999",
@@ -91,7 +91,7 @@ class TestEmailDigest(unittest.TestCase):
             "expected_generate_status": True,
             "expected_approve_status": True,
             "expected_email_status": True,
-            "expected_digest_doi": u"https://doi.org/10.7554/eLife.99997",
+            "expected_digest_doi": "https://doi.org/10.7554/eLife.99997",
             "expected_output_dir_files": ["González_99997.docx"],
             "expected_email_count": 2,
             "expected_email_subject": "Subject: =?utf-8?q?Digest=3A_Gonz=C3=A1lez=5F99997?=",
@@ -106,8 +106,8 @@ class TestEmailDigest(unittest.TestCase):
             "expected_generate_status": True,
             "expected_approve_status": True,
             "expected_email_status": True,
-            "expected_digest_doi": u"https://doi.org/10.7554/eLife.99999",
-            "expected_digest_image_file": u"IMAGE 99999.jpeg",
+            "expected_digest_doi": "https://doi.org/10.7554/eLife.99999",
+            "expected_digest_image_file": "IMAGE 99999.jpeg",
             "expected_output_dir_files": ["Anonymous_99999.docx"],
             "expected_email_count": 2,
             "expected_email_subject": "Subject: Digest: Anonymous_99999",
@@ -241,8 +241,8 @@ class TestEmailDigestFileName(unittest.TestCase):
 
     def test_output_file_name_unicode(self):
         "docx output file name with unicode author name"
-        digest_content = create_digest(u"Nö", "10.7554/eLife.99999")
-        expected = u"Nö_99999.docx"
+        digest_content = create_digest("Nö", "10.7554/eLife.99999")
+        expected = "Nö_99999.docx"
         file_name = activity_module.output_file_name(digest_content)
         self.assertEqual(file_name, expected)
 
@@ -264,15 +264,15 @@ class TestEmailDigestFileName(unittest.TestCase):
 class TestEmailSubject(unittest.TestCase):
     def test_success_email_subject(self):
         "email subject line with correct, unicode data"
-        digest_content = create_digest(u"Nö", "10.7554/eLife.99999")
-        expected = u"Digest: Nö_99999"
+        digest_content = create_digest("Nö", "10.7554/eLife.99999")
+        expected = "Digest: Nö_99999"
         subject = activity_module.success_email_subject(digest_content)
         self.assertEqual(subject, expected)
 
     def test_success_email_subject_no_doi(self):
         "email subject line when no doi attribute"
         digest_content = Digest()
-        expected = u"Digest: None_0None"
+        expected = "Digest: None_0None"
         file_name = activity_module.success_email_subject(digest_content)
         self.assertEqual(file_name, expected)
 

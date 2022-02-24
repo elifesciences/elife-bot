@@ -423,7 +423,7 @@ def related_from_lax(article_id, version, settings, logger=None, auth=True):
 
 def error_email_subject(article_id):
     "email subject for an error email"
-    return u"Error ingesting digest to endpoint: {article_id}".format(
+    return "Error ingesting digest to endpoint: {article_id}".format(
         article_id=article_id
     )
 

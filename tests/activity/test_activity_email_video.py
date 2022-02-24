@@ -201,9 +201,9 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
 
         expected_headers = {
             "format": "html",
-            u"email_type": u"video_article_publication",
-            u"sender_email": u"press@elifesciences.org",
-            u"subject": u"Features, article 00013 contains a video",
+            "email_type": "video_article_publication",
+            "sender_email": "press@elifesciences.org",
+            "subject": "Features, article 00013 contains a video",
         }
 
         body = self.activity.templates.get_email_headers(

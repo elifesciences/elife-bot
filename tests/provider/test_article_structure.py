@@ -350,32 +350,32 @@ class TestArticleStructure(unittest.TestCase):
         self.assertListEqual(article_structure.get_figures_pdfs(files), expected)
 
     @data(
-        u"elife-15224-fig1-figsupp1.tif",
-        u"elife-15224-resp-fig1.tif",
-        u"elife-15224-figures.pdf",
-        u"elife-15802-fig9-data3.docx",
-        u"elife-11792.mp4",
-        u"elife-00005-media1-code1.wrl",
+        "elife-15224-fig1-figsupp1.tif",
+        "elife-15224-resp-fig1.tif",
+        "elife-15224-figures.pdf",
+        "elife-15802-fig9-data3.docx",
+        "elife-11792.mp4",
+        "elife-00005-media1-code1.wrl",
     )
     def test_is_video_file_false(self, filename):
         result = article_structure.is_video_file(filename)
         self.assertFalse(result)
 
     @data(
-        u"elife-11792-media2.mp4",
-        u"elife-15224-fig1-figsupp1-media.tif",
-        u"elife-11792-video1.mp4",
-        u"elife-99999-resp-media1.avi",
-        u"elife-00005-media1.mov",
-        u"elife-00666-sa2-video1.mp4",
+        "elife-11792-media2.mp4",
+        "elife-15224-fig1-figsupp1-media.tif",
+        "elife-11792-video1.mp4",
+        "elife-99999-resp-media1.avi",
+        "elife-00005-media1.mov",
+        "elife-00666-sa2-video1.mp4",
     )
     def test_is_video_file_true(self, filename):
         result = article_structure.is_video_file(filename)
         self.assertTrue(result)
 
     @data(
-        (u"elife-15224-fig1-figsupp1.tif", u"elife-15224-fig1-figsupp1", u"tif"),
-        (u"elife-code1.tar.gz", u"elife-code1", u"tar.gz"),
+        ("elife-15224-fig1-figsupp1.tif", "elife-15224-fig1-figsupp1", "tif"),
+        ("elife-code1.tar.gz", "elife-code1", "tar.gz"),
     )
     @unpack
     def test_file_parts(self, filename, expected_prefix, expected_extension):
@@ -385,40 +385,40 @@ class TestArticleStructure(unittest.TestCase):
 
     def test_get_videos(self):
         files = [
-            u"elife-13273-fig1-v1.tif",
-            u"elife-13273-fig2-figsupp1-v1.tif",
-            u"elife-13273-fig2-figsupp2-v1.tif",
-            u"elife-13273-fig2-figsupp3-v1.tif",
-            u"elife-13273-fig2-v1.tif",
-            u"elife-13273-fig3-data1-v1.xlsx",
-            u"elife-13273-fig3-figsupp1-v1.tif",
-            u"elife-13273-fig3-figsupp2-v1.tif",
-            u"elife-13273-fig3-figsupp3-v1.tif",
-            u"elife-13273-fig3-figsupp4-v1.tif",
-            u"elife-13273-fig3-figsupp5-v1.tif",
-            u"elife-13273-fig3-v1.tif",
-            u"elife-13273-fig4-figsupp1-v1.tif",
-            u"elife-13273-fig4-v1.tif",
-            u"elife-13273-fig5-data1-v1.xlsx",
-            u"elife-13273-fig5-figsupp1-v1.tif",
-            u"elife-13273-fig5-v1.tif",
-            u"elife-13273-fig6-data1-v1.xlsx",
-            u"elife-13273-fig6-data2-v1.xlsx",
-            u"elife-13273-fig6-figsupp1-v1.tif",
-            u"elife-13273-fig6-figsupp2-v1.tif",
-            u"elife-13273-fig6-v1.tif",
-            u"elife-13273-fig7-v1.tif",
-            u"elife-13273-fig8-v1.tif",
-            u"elife-13273-fig9-v1.tif",
-            u"elife-13273-figures-v1.pdf",
-            u"elife-13273-media1.mp4",
-            u"elife-13273-v1.pdf",
-            u"elife-13273-v1.xml",
+            "elife-13273-fig1-v1.tif",
+            "elife-13273-fig2-figsupp1-v1.tif",
+            "elife-13273-fig2-figsupp2-v1.tif",
+            "elife-13273-fig2-figsupp3-v1.tif",
+            "elife-13273-fig2-v1.tif",
+            "elife-13273-fig3-data1-v1.xlsx",
+            "elife-13273-fig3-figsupp1-v1.tif",
+            "elife-13273-fig3-figsupp2-v1.tif",
+            "elife-13273-fig3-figsupp3-v1.tif",
+            "elife-13273-fig3-figsupp4-v1.tif",
+            "elife-13273-fig3-figsupp5-v1.tif",
+            "elife-13273-fig3-v1.tif",
+            "elife-13273-fig4-figsupp1-v1.tif",
+            "elife-13273-fig4-v1.tif",
+            "elife-13273-fig5-data1-v1.xlsx",
+            "elife-13273-fig5-figsupp1-v1.tif",
+            "elife-13273-fig5-v1.tif",
+            "elife-13273-fig6-data1-v1.xlsx",
+            "elife-13273-fig6-data2-v1.xlsx",
+            "elife-13273-fig6-figsupp1-v1.tif",
+            "elife-13273-fig6-figsupp2-v1.tif",
+            "elife-13273-fig6-v1.tif",
+            "elife-13273-fig7-v1.tif",
+            "elife-13273-fig8-v1.tif",
+            "elife-13273-fig9-v1.tif",
+            "elife-13273-figures-v1.pdf",
+            "elife-13273-media1.mp4",
+            "elife-13273-v1.pdf",
+            "elife-13273-v1.xml",
         ]
 
         result = article_structure.get_videos(files)
 
-        self.assertListEqual(result, [u"elife-13273-media1.mp4"])
+        self.assertListEqual(result, ["elife-13273-media1.mp4"])
 
     def test_pre_ingest_assets(self):
         files = [

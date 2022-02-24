@@ -160,6 +160,4 @@ class activity_ValidateDecisionLetterInput(Activity):
 
 def error_email_subject(filename):
     "email subject for an error email"
-    return u"Error processing decision letter file: {filename}".format(
-        filename=filename
-    )
+    return "Error processing decision letter file: {filename}".format(filename=filename)
