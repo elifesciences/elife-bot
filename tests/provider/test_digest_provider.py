@@ -270,7 +270,12 @@ class TestValidateDigest(unittest.TestCase):
         "approving good Digest content"
         digest_image = create_digest_image("Caption", "file.jpg")
         digest_content = create_digest(
-            "Anonymous", "10.7554/eLife.99999", ["text"], "Title", digest_image
+            "Anonymous",
+            "10.7554/eLife.99999",
+            ["text"],
+            "Title",
+            digest_image,
+            "Summary",
         )
         expected_status = True
         expected_error_messages = []
@@ -296,6 +301,7 @@ class TestValidateDigest(unittest.TestCase):
             "Digest DOI is missing",
             "Digest text is missing",
             "Digest title is missing",
+            "Digest summary is missing",
             "Digest image is missing",
             "Validating digest image raised an exception",
         ]
@@ -307,7 +313,7 @@ class TestValidateDigest(unittest.TestCase):
         "approving an empty Digest"
         digest_image = create_digest_image("Caption", "file.jpg")
         digest_content = create_digest(
-            None, "10.7554/eLife.99999", ["text"], "Title", digest_image
+            None, "10.7554/eLife.99999", ["text"], "Title", digest_image, "Summary"
         )
         expected_status = False
         expected_error_messages = ["Digest author is missing"]
@@ -319,7 +325,7 @@ class TestValidateDigest(unittest.TestCase):
         "approving an empty Digest"
         digest_image = create_digest_image("Caption", "file.jpg")
         digest_content = create_digest(
-            "Anonymous", None, ["text"], "Title", digest_image
+            "Anonymous", None, ["text"], "Title", digest_image, "Summary"
         )
         expected_status = False
         expected_error_messages = ["Digest DOI is missing"]
@@ -331,7 +337,7 @@ class TestValidateDigest(unittest.TestCase):
         "approving an empty Digest"
         digest_image = create_digest_image("Caption", "file.jpg")
         digest_content = create_digest(
-            "Anonymous", "10.7554/eLife.99999", None, "Title", digest_image
+            "Anonymous", "10.7554/eLife.99999", None, "Title", digest_image, "Summary"
         )
         expected_status = False
         expected_error_messages = ["Digest text is missing"]
@@ -343,7 +349,7 @@ class TestValidateDigest(unittest.TestCase):
         "approving an invalid Digest"
         digest_image = create_digest_image("Caption", "file.jpg")
         digest_content = create_digest(
-            "Anonymous", "10.7554/eLife.99999", ["text"], None, digest_image
+            "Anonymous", "10.7554/eLife.99999", ["text"], None, digest_image, "Summary"
         )
         expected_status = False
         expected_error_messages = ["Digest title is missing"]
@@ -354,7 +360,7 @@ class TestValidateDigest(unittest.TestCase):
     def test_validate_digest_digest_no_image(self):
         "approving an invalid Digest with no image"
         digest_content = create_digest(
-            "Anonymous", "10.7554/eLife.99999", ["text"], "Title", None
+            "Anonymous", "10.7554/eLife.99999", ["text"], "Title", None, "Summary"
         )
         expected_status = False
         expected_error_messages = [
@@ -369,7 +375,12 @@ class TestValidateDigest(unittest.TestCase):
         "approving an invalid Digest has an image with no caption"
         digest_image = create_digest_image(None, "file.jpg")
         digest_content = create_digest(
-            "Anonymous", "10.7554/eLife.99999", ["text"], "Title", digest_image
+            "Anonymous",
+            "10.7554/eLife.99999",
+            ["text"],
+            "Title",
+            digest_image,
+            "Summary",
         )
         expected_status = False
         expected_error_messages = ["Digest image caption is missing"]
@@ -382,7 +393,12 @@ class TestValidateDigest(unittest.TestCase):
         image_file = "file.unsupported"
         digest_image = create_digest_image("Caption", image_file)
         digest_content = create_digest(
-            "Anonymous", "10.7554/eLife.99999", ["text"], "Title", digest_image
+            "Anonymous",
+            "10.7554/eLife.99999",
+            ["text"],
+            "Title",
+            digest_image,
+            "Summary",
         )
         expected_status = False
         expected_error_messages = ["Digest image %s type is not supported" % image_file]

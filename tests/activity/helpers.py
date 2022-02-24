@@ -50,7 +50,9 @@ def instantiate_article(article_type, doi, is_poa=None, was_ever_poa=None):
     return article_object
 
 
-def create_digest(author=None, doi=None, text=None, title=None, image=None):
+def create_digest(
+    author=None, doi=None, text=None, title=None, image=None, summary=None
+):
     "for testing generate a Digest object an populate it"
     digest_content = Digest()
     digest_content.author = author
@@ -61,6 +63,8 @@ def create_digest(author=None, doi=None, text=None, title=None, image=None):
         digest_content.title = title
     if image:
         digest_content.image = image
+    if summary:
+        digest_content.summary = summary
     return digest_content
 
 
