@@ -31,7 +31,9 @@ class TestQueueWorker(unittest.TestCase):
         fake_queue_messages = [{"Messages": [{"Body": json.dumps(records)}]}]
         # mock the SQS client and queues
         fake_queues = {
-            settings_mock.S3_monitor_queue: FakeSQSQueue(directory, fake_queue_messages),
+            settings_mock.S3_monitor_queue: FakeSQSQueue(
+                directory, fake_queue_messages
+            ),
             settings_mock.workflow_starter_queue: FakeSQSQueue(directory),
         }
         mock_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
@@ -66,7 +68,9 @@ class TestQueueWorker(unittest.TestCase):
         fake_queue_messages = [{"Messages": [{"Body": json.dumps(records)}]}]
         # mock the SQS client and queues
         fake_queues = {
-            settings_mock.S3_monitor_queue: FakeSQSQueue(directory, fake_queue_messages),
+            settings_mock.S3_monitor_queue: FakeSQSQueue(
+                directory, fake_queue_messages
+            ),
         }
         mock_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
         # create a fake green flag

@@ -64,7 +64,9 @@ class activity_VerifyImageServer(Activity):
 
             files_in_bucket = storage.list_resources(images_resource)
             # remove the subfolder name from file names
-            files_in_bucket = [filename.rsplit("/", 1)[-1] for filename in files_in_bucket]
+            files_in_bucket = [
+                filename.rsplit("/", 1)[-1] for filename in files_in_bucket
+            ]
             original_figures = article_structure.get_figures_for_iiif(files_in_bucket)
 
             iiif_path_for_article = self.settings.iiif_resolver.replace(

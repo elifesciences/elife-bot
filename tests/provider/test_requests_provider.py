@@ -153,10 +153,10 @@ class TestRequestsProviderPost(unittest.TestCase):
 class TestEmailSubject(unittest.TestCase):
     def test_success_email_subject_msid_author(self):
         """email subject line with correct, unicode data"""
-        digest_content = helpers.create_digest(u"Nö", "10.7554/eLife.99999")
+        digest_content = helpers.create_digest("Nö", "10.7554/eLife.99999")
         identity = "Digest "
         msid = digest_provider.get_digest_msid(digest_content)
-        expected = u"Digest JATS posted for article 99999, author Nö"
+        expected = "Digest JATS posted for article 99999, author Nö"
         subject = requests_provider.success_email_subject_msid_author(
             identity, msid, digest_content.author
         )
@@ -167,7 +167,7 @@ class TestEmailSubject(unittest.TestCase):
         digest_content = Digest()
         identity = "Digest "
         msid = digest_provider.get_digest_msid(digest_content)
-        expected = u"Digest JATS posted for article 0None, author None"
+        expected = "Digest JATS posted for article 0None, author None"
         file_name = requests_provider.success_email_subject_msid_author(
             identity, msid, digest_content.author
         )
@@ -175,10 +175,10 @@ class TestEmailSubject(unittest.TestCase):
 
     def test_error_email_subject_msid_author(self):
         """error email subject"""
-        digest_content = helpers.create_digest(u"Nö", "10.7554/eLife.99999")
+        digest_content = helpers.create_digest("Nö", "10.7554/eLife.99999")
         identity = "digest"
         msid = digest_provider.get_digest_msid(digest_content)
-        expected = u"Error in digest JATS post for article 99999, author Nö"
+        expected = "Error in digest JATS post for article 99999, author Nö"
         subject = requests_provider.error_email_subject_msid_author(
             identity, msid, digest_content.author
         )
@@ -188,7 +188,7 @@ class TestEmailSubject(unittest.TestCase):
         """email subject line using doi"""
         doi = "10.7554/eLife.99999"
         identity = "Decision letter "
-        expected = u"Decision letter JATS posted for article 10.7554/eLife.99999"
+        expected = "Decision letter JATS posted for article 10.7554/eLife.99999"
         subject = requests_provider.success_email_subject_doi(identity, doi)
         self.assertEqual(subject, expected)
 
@@ -196,7 +196,7 @@ class TestEmailSubject(unittest.TestCase):
         """email subject line using doi"""
         doi = "10.7554/eLife.99999"
         identity = "decision letter"
-        expected = u"Error in decision letter JATS post for article 10.7554/eLife.99999"
+        expected = "Error in decision letter JATS post for article 10.7554/eLife.99999"
         subject = requests_provider.error_email_subject_doi(identity, doi)
         self.assertEqual(subject, expected)
 
@@ -204,14 +204,14 @@ class TestEmailSubject(unittest.TestCase):
 class TestEmailBody(unittest.TestCase):
     def test_success_email_body_content(self):
         """email body line with correct, unicode data"""
-        digest_content = helpers.create_digest(u"Nö", "10.7554/eLife.99999")
+        digest_content = helpers.create_digest("Nö", "10.7554/eLife.99999")
         digest_content.text = [
-            u"<i>First</i> paragraph.",
-            u"<b>First</b> > second, nö?.",
+            "<i>First</i> paragraph.",
+            "<b>First</b> > second, nö?.",
         ]
         jats_content = digest_provider.digest_jats(digest_content)
 
-        expected = u"""JATS content for article 10.7554/eLife.99999:
+        expected = """JATS content for article 10.7554/eLife.99999:
 
 <p><italic>First</italic> paragraph.</p><p><bold>First</bold> &gt; second, nö?.</p>
 
@@ -224,14 +224,14 @@ class TestEmailBody(unittest.TestCase):
     def test_error_email_body_content(self):
         """email error body"""
         error_message = "Exception blah blah blah"
-        digest_content = helpers.create_digest(u"Nö", "10.7554/eLife.99999")
+        digest_content = helpers.create_digest("Nö", "10.7554/eLife.99999")
         digest_content.text = [
-            u"<i>First</i> paragraph.",
-            u"<b>First</b> > second, nö?.",
+            "<i>First</i> paragraph.",
+            "<b>First</b> > second, nö?.",
         ]
         jats_content = digest_provider.digest_jats(digest_content)
 
-        expected = u"""Exception blah blah blah
+        expected = """Exception blah blah blah
 
 More details about the error may be found in the worker.log file
 

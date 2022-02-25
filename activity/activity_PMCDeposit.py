@@ -380,7 +380,7 @@ def profile_article(document):
 
 def ftp_exception_email_subject(document):
     "email subject for sending an email"
-    return u"Exception raised sending article to PMC: {document}".format(
+    return "Exception raised sending article to PMC: {document}".format(
         document=document
     )
 

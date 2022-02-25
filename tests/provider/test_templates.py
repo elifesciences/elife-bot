@@ -136,7 +136,7 @@ class TestProviderTemplates(unittest.TestCase):
     @data(
         (
             "tests/test_data/templates/",
-            u'<!DOCTYPE html>\n<html xmlns:mml="http://www.w3.org/1998/Math/MathML">\n<head>\n<title>Differential TAM receptor\u2013ligand\u2013phospholipid interactions delimit differential TAM bioactivities | eLife Lens</title>\n<script>\ndocument_url: "http://example.com/cdn-bucket/elife03385.xml"\n</script>\n</head>\n<body>\n</body>\n</html>',
+            '<!DOCTYPE html>\n<html xmlns:mml="http://www.w3.org/1998/Math/MathML">\n<head>\n<title>Differential TAM receptor\u2013ligand\u2013phospholipid interactions delimit differential TAM bioactivities | eLife Lens</title>\n<script>\ndocument_url: "http://example.com/cdn-bucket/elife03385.xml"\n</script>\n</head>\n<body>\n</body>\n</html>',
         ),
         ("", None),
     )

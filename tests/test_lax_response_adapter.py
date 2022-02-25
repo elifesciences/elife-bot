@@ -11,11 +11,11 @@ from tests.activity.classes_mock import FakeLogger, FakeSQSClient, FakeSQSQueue
 
 FAKE_TOKEN = json.dumps(
     {
-        u"status": u"vor",
-        u"expanded_folder": u"837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
-        u"version": u"1",
-        u"force": False,
-        u"run": u"a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "status": "vor",
+        "expanded_folder": "837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "version": "1",
+        "force": False,
+        "run": "a8bb05df-2df9-4fce-8f9f-219aca0b0148",
     }
 )
 
@@ -31,16 +31,16 @@ FAKE_LAX_MESSAGE = json.dumps(
 
 WORKFLOW_MESSAGE_EXPECTED = {
     "workflow_data": {
-        "article_id": u"837411455",
-        "expanded_folder": u"837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "article_id": "837411455",
+        "expanded_folder": "837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
         "message": None,
-        "requested_action": u"publish",
+        "requested_action": "publish",
         "force": False,
-        "result": u"published",
-        "run": u"a8bb05df-2df9-4fce-8f9f-219aca0b0148",
-        "status": u"vor",
+        "result": "published",
+        "run": "a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "status": "vor",
         "update_date": "2013-03-26T00:00:00Z",
-        "version": u"1",
+        "version": "1",
         "run_type": None,
     },
     "workflow_name": "PostPerfectPublication",
@@ -48,11 +48,11 @@ WORKFLOW_MESSAGE_EXPECTED = {
 
 FAKE_TOKEN_269 = json.dumps(
     {
-        u"status": u"vor",
-        u"expanded_folder": u"00269.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
-        u"version": u"1",
-        u"force": False,
-        u"run": u"a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "status": "vor",
+        "expanded_folder": "00269.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "version": "1",
+        "force": False,
+        "run": "a8bb05df-2df9-4fce-8f9f-219aca0b0148",
     }
 )
 
@@ -68,16 +68,16 @@ FAKE_LAX_MESSAGE_269 = json.dumps(
 
 WORKFLOW_MESSAGE_EXPECTED_269 = {
     "workflow_data": {
-        "article_id": u"269",
-        "expanded_folder": u"00269.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "article_id": "269",
+        "expanded_folder": "00269.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
         "message": None,
-        "requested_action": u"publish",
+        "requested_action": "publish",
         "force": False,
-        "result": u"published",
-        "run": u"a8bb05df-2df9-4fce-8f9f-219aca0b0148",
-        "status": u"vor",
+        "result": "published",
+        "run": "a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "status": "vor",
         "update_date": "2013-03-26T00:00:00Z",
-        "version": u"1",
+        "version": "1",
         "run_type": None,
     },
     "workflow_name": "PostPerfectPublication",
@@ -85,12 +85,12 @@ WORKFLOW_MESSAGE_EXPECTED_269 = {
 
 FAKE_SILENT_INGEST_TOKEN = json.dumps(
     {
-        u"status": u"vor",
-        u"run_type": "silent-correction",
-        u"expanded_folder": u"837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
-        u"version": u"1",
-        u"force": True,
-        u"run": u"a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "status": "vor",
+        "run_type": "silent-correction",
+        "expanded_folder": "837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "version": "1",
+        "force": True,
+        "run": "a8bb05df-2df9-4fce-8f9f-219aca0b0148",
     }
 )
 
@@ -108,16 +108,16 @@ FAKE_SILENT_INGEST_LAX_MESSAGE = json.dumps(
 
 WORKFLOW_MESSAGE_EXPECTED_SILENT_INGEST = {
     "workflow_data": {
-        "article_id": u"837411455",
-        "expanded_folder": u"837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "article_id": "837411455",
+        "expanded_folder": "837411455.1/a8bb05df-2df9-4fce-8f9f-219aca0b0148",
         "message": None,
-        "requested_action": u"ingest",
+        "requested_action": "ingest",
         "force": True,
-        "result": u"ingested",
-        "run": u"a8bb05df-2df9-4fce-8f9f-219aca0b0148",
-        "status": u"vor",
+        "result": "ingested",
+        "run": "a8bb05df-2df9-4fce-8f9f-219aca0b0148",
+        "status": "vor",
         "update_date": "2013-03-26T00:00:00Z",
-        "version": u"1",
+        "version": "1",
         "run_type": "silent-correction",
     },
     "workflow_name": "SilentCorrectionsProcess",

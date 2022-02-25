@@ -50,7 +50,7 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
             "expected_output_status": True,
             "expected_email_status": None,
             "expected_doi_0": "10.7554/eLife.39122.sa1",
-            "expected_digest_image_file": u"IMAGE 99999.jpeg",
+            "expected_digest_image_file": "IMAGE 99999.jpeg",
         },
         {
             "comment": "file does not exist example",

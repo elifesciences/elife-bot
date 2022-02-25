@@ -25,16 +25,16 @@ ACTIVITY_DATA = {
 
 WORKFLOW_DATA = {
     "workflow_data": {
-        "article_id": u"353",
-        "expanded_folder": u"00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
+        "article_id": "353",
+        "expanded_folder": "00353.1/bb2d37b8-e73c-43b3-a092-d555753316af",
         "message": None,
-        "requested_action": u"publish",
+        "requested_action": "publish",
         "force": False,
-        "result": u"published",
-        "run": u"bb2d37b8-e73c-43b3-a092-d555753316af",
-        "status": u"vor",
+        "result": "published",
+        "run": "bb2d37b8-e73c-43b3-a092-d555753316af",
+        "status": "vor",
         "update_date": "2013-03-26T00:00:00Z",
-        "version": u"1",
+        "version": "1",
         "run_type": None,
     }
 }

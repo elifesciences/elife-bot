@@ -70,6 +70,6 @@ class activity_DecisionLetterReceipt(Activity):
 
 def receipt_email_subject(filename):
     "email subject for a receipt email"
-    return u"Decision letter workflow completed! file: {filename}".format(
+    return "Decision letter workflow completed! file: {filename}".format(
         filename=filename
     )

@@ -56,7 +56,9 @@ class activity_ConvertImagesToJPG(Activity):
             storage = storage_context(self.settings)
             files_in_bucket = storage.list_resources(orig_resource)
             # remove the subfolder name from file names
-            files_in_bucket = [filename.rsplit("/", 1)[-1] for filename in files_in_bucket]
+            files_in_bucket = [
+                filename.rsplit("/", 1)[-1] for filename in files_in_bucket
+            ]
 
             figures = []
             figures += list(filter(article_structure.article_figure, files_in_bucket))

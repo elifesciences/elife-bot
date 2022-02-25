@@ -9,7 +9,7 @@ import tests.test_data as test_data
 from tests.classes_mock import FakeSWFClient
 from tests.activity.classes_mock import FakeLogger
 
-RUN_EXAMPLE = u"1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
+RUN_EXAMPLE = "1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
 
 
 class TestStarterSilentCorrectionsIngest(unittest.TestCase):

@@ -96,10 +96,10 @@ class TestDigestProvider(unittest.TestCase):
 
     @patch("requests.get")
     def test_get_digest_200(self, mock_requests_get):
-        expected_data = {"id": u"99999"}
+        expected_data = {"id": "99999"}
         response = MagicMock()
         response.status_code = 200
-        response.json.return_value = {"id": u"99999"}
+        response.json.return_value = {"id": "99999"}
         mock_requests_get.return_value = response
         data = digest_provider.get_digest("99999", settings_mock)
         self.assertEqual(data, expected_data)
@@ -126,10 +126,10 @@ class TestDigestProvider(unittest.TestCase):
 
     @patch("requests.get")
     def test_get_digest_preview(self, mock_requests_get):
-        expected_data = {"id": u"99999"}
+        expected_data = {"id": "99999"}
         response = MagicMock()
         response.status_code = 200
-        response.json.return_value = {"id": u"99999"}
+        response.json.return_value = {"id": "99999"}
         mock_requests_get.return_value = response
         data = digest_provider.get_digest_preview("99999", settings_mock)
         request_named_arguments = mock_requests_get.call_args_list[0][1]
@@ -230,7 +230,7 @@ class TestBuildDigest(unittest.TestCase):
         """test a digest zip with a unicode docx file name"""
         input_file = os.path.join("tests", "files_source", "DIGEST_35774.zip")
         expected_status = True
-        expected_author = u"Bayés"
+        expected_author = "Bayés"
         build_status, digest = digest_provider.build_digest(input_file, self.temp_dir)
         self.assertEqual(build_status, expected_status)
         self.assertEqual(digest.author, expected_author)

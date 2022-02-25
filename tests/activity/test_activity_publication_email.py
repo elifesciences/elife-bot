@@ -517,9 +517,9 @@ class TestPublicationEmail(unittest.TestCase):
 
         expected_headers = {
             "format": "html",
-            u"email_type": u"author_publication_email_VOR_no_POA",
-            u"sender_email": u"press@example.org",
-            u"subject": u"Authoré, Your eLife paper is now online",
+            "email_type": "author_publication_email_VOR_no_POA",
+            "sender_email": "press@example.org",
+            "subject": "Authoré, Your eLife paper is now online",
         }
 
         body = self.activity.templates.get_email_headers(

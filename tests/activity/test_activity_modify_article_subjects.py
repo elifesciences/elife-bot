@@ -19,7 +19,7 @@ session_example = {
     "expanded_folder": "modify_article_subjects",
 }
 
-test_csv_data = u"""DOI,subj-group-type,subject
+test_csv_data = """DOI,subj-group-type,subject
 10.7554/eLife.29353,heading,Subject 1
 10.7554/eLife.29353,heading,Subject 2, and more
 10.7554/eLife.99999,heading,Subject 1

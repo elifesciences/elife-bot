@@ -136,8 +136,8 @@ class TestProviderEJP(unittest.TestCase):
                 [
                     "13",
                     "3",
-                    u"Authoré",
-                    u"Trés",
+                    "Authoré",
+                    "Trés",
                     "Contributing Author",
                     "1",
                     "author13-03@example.com",
@@ -221,8 +221,8 @@ class TestProviderEJP(unittest.TestCase):
                 [
                     "13",
                     "3",
-                    u"Authoré",
-                    u"Trés",
+                    "Authoré",
+                    "Trés",
                     "Contributing Author",
                     "1",
                     "author13-03@example.com",

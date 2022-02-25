@@ -45,8 +45,8 @@ class TestValidateDigestInput(unittest.TestCase):
             "expected_build_status": True,
             "expected_valid_status": True,
             "expected_email_status": None,
-            "expected_digest_doi": u"https://doi.org/10.7554/eLife.99999",
-            "expected_digest_image_file": u"IMAGE 99999.jpeg",
+            "expected_digest_doi": "https://doi.org/10.7554/eLife.99999",
+            "expected_digest_image_file": "IMAGE 99999.jpeg",
         },
         {
             "comment": "digest file does not exist example",
@@ -79,7 +79,7 @@ class TestValidateDigestInput(unittest.TestCase):
             "expected_build_status": True,
             "expected_valid_status": True,
             "expected_email_status": None,
-            "expected_digest_doi": u"https://doi.org/10.7554/eLife.99997",
+            "expected_digest_doi": "https://doi.org/10.7554/eLife.99997",
         },
         {
             "comment": "docx file with unicode characters example",
@@ -88,7 +88,7 @@ class TestValidateDigestInput(unittest.TestCase):
             "expected_build_status": True,
             "expected_valid_status": True,
             "expected_email_status": None,
-            "expected_digest_doi": u"https://doi.org/10.7554/eLife.35774",
+            "expected_digest_doi": "https://doi.org/10.7554/eLife.35774",
         },
     )
     def test_do_activity(
@@ -182,8 +182,8 @@ class TestValidateDigestInput(unittest.TestCase):
 class TestEmailSubject(unittest.TestCase):
     def test_error_email_subject(self):
         "email subject for error emails with a unicode filename"
-        filename = u"DIGESTö 99999.zip"
-        expected = u"Error processing digest file: DIGESTö 99999.zip"
+        filename = "DIGESTö 99999.zip"
+        expected = "Error processing digest file: DIGESTö 99999.zip"
         subject = activity_module.error_email_subject(filename)
         self.assertEqual(subject, expected)
 

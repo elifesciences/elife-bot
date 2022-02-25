@@ -96,14 +96,14 @@ def post_to_endpoint(
 
 def success_email_subject_doi(identity, doi):
     """email subject for a success email"""
-    return u"{identity}JATS posted for article {doi}".format(
+    return "{identity}JATS posted for article {doi}".format(
         identity=identity, doi=str(doi)
     )
 
 
 def success_email_subject_msid_author(identity, msid, author):
     """email subject for a success email with msid and author values"""
-    return u"{identity}JATS posted for article {msid:0>5}, author {author}".format(
+    return "{identity}JATS posted for article {msid:0>5}, author {author}".format(
         identity=identity, msid=str(msid), author=author
     )
 
@@ -117,7 +117,7 @@ def success_email_body_content(doi, jats_content):
 
 def error_email_subject_doi(identity, doi):
     """email subject for an error email"""
-    return u"Error in {identity} JATS post for article {doi}".format(
+    return "Error in {identity} JATS post for article {doi}".format(
         identity=identity, doi=str(doi)
     )
 
@@ -125,7 +125,7 @@ def error_email_subject_doi(identity, doi):
 def error_email_subject_msid_author(identity, msid, author):
     """email subject for an error email with msid and author values"""
     return (
-        u"Error in {identity} JATS post for article {msid:0>5}, author {author}".format(
+        "Error in {identity} JATS post for article {msid:0>5}, author {author}".format(
             identity=identity, msid=str(msid), author=author
         )
     )

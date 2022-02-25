@@ -308,4 +308,4 @@ def post_medium_content(medium_content, digest_config, logger):
 
 def success_email_subject(article_id):
     "the email subject"
-    return u"Medium post created for Digest: {msid:0>5}".format(msid=str(article_id))
+    return "Medium post created for Digest: {msid:0>5}".format(msid=str(article_id))
