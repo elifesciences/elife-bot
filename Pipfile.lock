@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3e26b26c7e697e8afadb8ceb936847d0ef8fcdef365b6464b4b663db9739e17c"
+            "sha256": "03fe0d7a2a29827a8d27183c07c72f197ebf28e46557fe94061f62954b7a7274"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -248,7 +248,7 @@
                 "sha256:fe301a89ad8e2843c7131cfb00a493f0231b54c658001072c9c1dcddb0b4cf1a"
             ],
             "index": "pypi",
-            "version": "==0.9.1"
+            "version": "==0.10.0"
         },
         "elifecrossref": {
             "hashes": [
@@ -1118,7 +1118,7 @@
                 "sha256:fe301a89ad8e2843c7131cfb00a493f0231b54c658001072c9c1dcddb0b4cf1a"
             ],
             "index": "pypi",
-            "version": "==0.9.1"
+            "version": "==0.10.0"
         },
         "elifetools": {
             "hashes": [
@@ -1338,6 +1338,14 @@
             ],
             "index": "pypi",
             "version": "==5.0.2"
+        },
+        "setuptools": {
+            "hashes": [
+                "sha256:22c7348c6d2976a52632c67f7ab0cdf40147db7789f9aed18734643fe9cf3373",
+                "sha256:4ce92f1e1f8f01233ee9952c04f6b81d1e02939d6e1b488428154974a4d0783e"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==59.6.0"
         },
         "soupsieve": {
             "hashes": [

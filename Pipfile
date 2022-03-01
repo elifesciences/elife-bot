@@ -43,10 +43,10 @@ GitPython = "~=3.1"
 PyYAML = "~=5.4"
 Wand = "~=0.6"
 PyGithub = "~=1.55"
-elifecleaner = "~=0.9.1"
+elifecleaner = "~=0.10.0"
 
 [dev-packages]
-elifecleaner = "~=0.9.1"
+elifecleaner = "~=0.10.0"
 pylint = "~=2.11"
 testfixtures = "~=6.18"
 pytest = "~=6.2"
