@@ -1,4 +1,4 @@
-# file generated 2022-02-14 - see update-dependencies.sh
+# file generated 2022-03-01 - see update-dependencies.sh
 arrow==1.2.1
 astroid==2.9.3
 attrs==21.4.0
