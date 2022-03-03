@@ -66,4 +66,8 @@ def bucket_asset_file_name_map(settings, bucket_name, expanded_folder):
     storage_provider = settings.storage_provider + "://"
     orig_resource = storage_provider + bucket_name + "/" + expanded_folder
     s3_key_names = storage.list_resources(orig_resource)
-    return {key_name: orig_resource + "/" + key_name for key_name in s3_key_names}
+    # remove the expanded_folder from the s3_key_names
+    short_s3_key_names = [
+        key_name.replace(expanded_folder, "").lstrip("/") for key_name in s3_key_names
+    ]
+    return {key_name: orig_resource + "/" + key_name for key_name in short_s3_key_names}
