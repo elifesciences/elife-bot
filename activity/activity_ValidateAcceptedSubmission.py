@@ -79,6 +79,10 @@ class activity_ValidateAcceptedSubmission(Activity):
         expanded_folder = session.get_value("expanded_folder")
         input_filename = session.get_value("input_filename")
 
+        self.logger.info(
+            "%s, input_filename: %s, expanded_folder: %s" % (self.name, input_filename, expanded_folder)
+        )
+
         # get list of bucket objects from expanded folder
         asset_file_name_map = cleaner.bucket_asset_file_name_map(
             self.settings, self.settings.bot_bucket, expanded_folder
