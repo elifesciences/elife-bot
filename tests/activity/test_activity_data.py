@@ -39,6 +39,19 @@ bucket = {bucket_origin_file_name: xml_content_for_xml_key, bucket_dest_file_nam
 
 run_example = "1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
 
+# Accepted submission workflow
+
+accepted_session_example = {
+    "run": "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
+    "input_filename": "30-01-2019-RA-eLife-45644.zip",
+    "input_bucket_name": "elife-accepted-submission-cleaning",
+    "input_bucket_folder": "",
+    "expanded_folder": (
+        "expanded_submissions/45644/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/expanded_files"
+    ),
+    "article_id": "45644",
+}
+
 # ExpandArticle
 
 ExpandArticle_data = {

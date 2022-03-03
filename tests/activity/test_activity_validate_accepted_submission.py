@@ -2,9 +2,11 @@
 
 import os
 import glob
+import zipfile
 import unittest
 from xml.etree.ElementTree import ParseError
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
 from provider import cleaner
 import activity.activity_ValidateAcceptedSubmission as activity_module
@@ -12,16 +14,23 @@ from activity.activity_ValidateAcceptedSubmission import (
     activity_ValidateAcceptedSubmission as activity_object,
 )
 from tests.classes_mock import FakeSMTPServer
-from tests.activity import helpers
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 import tests.test_data as test_case_data
+from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
+from tests.activity import helpers, settings_mock, test_activity_data
 
 
 def input_data(file_name_to_change=""):
     activity_data = test_case_data.ingest_accepted_submission_data
     activity_data["file_name"] = file_name_to_change
     return activity_data
+
+
+def expanded_folder_resources(zip_file_path, directory):
+    "expand the zip file to the directory and return a list resources"
+    with zipfile.ZipFile(zip_file_path, "r") as open_zipfile:
+        open_zipfile.extractall(path=directory)
+        resources = open_zipfile.namelist()
+    return resources
 
 
 @ddt
@@ -31,11 +40,15 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch.object(activity_module.download_helper, "storage_context")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(activity_object, "clean_tmp_dir")
     @data(
         {
             "comment": "accepted submission zip file example",
@@ -51,26 +64,63 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             "expected_email_body_contains": [
                 "Warnings found in the log file for zip file",
                 (
-                    "WARNING elifecleaner:parse:check_multi_page_figure_pdf: 30-01-2019-RA-eLife-45644.zip"
+                    "WARNING elifecleaner:parse:check_multi_page_figure_pdf:"
+                    " 30-01-2019-RA-eLife-45644.zip"
                     " multiple page PDF figure file:"
                 ),
             ],
         },
     )
     def test_do_activity(
-        self, test_data, fake_download_storage_context, fake_email_smtp_connect
+        self,
+        test_data,
+        fake_clean_tmp_dir,
+        fake_cleaner_storage_context,
+        fake_email_smtp_connect,
+        fake_session,
+        fake_storage_context,
     ):
         # set REPAIR_XML value because test fixture is malformed XML
         activity_module.REPAIR_XML = True
+        directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
 
-        # copy files into the input directory using the storage context
-        fake_download_storage_context.return_value = FakeStorageContext()
+        # expanded bucket files
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            test_data.get("filename"),
+        )
+        directory.makedir(
+            test_activity_data.accepted_session_example.get("expanded_folder")
+        )
+        directory_s3_folder_path = os.path.join(
+            directory.path,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+        )
+
+        resources = expanded_folder_resources(zip_file_path, directory_s3_folder_path)
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
+        )
+        fake_session.return_value = FakeSession(
+            test_activity_data.accepted_session_example
         )
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         filename_used = input_data(test_data.get("filename")).get("file_name")
+        temp_dir_files = glob.glob(self.activity.directories.get("TEMP_DIR") + "/*/*")
+
+        xml_file_path = os.path.join(
+            self.activity.directories.get("TEMP_DIR"),
+            "30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml",
+        )
+        self.assertTrue(xml_file_path in temp_dir_files)
 
         # check assertions
         self.assertEqual(
@@ -96,7 +146,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         log_file_path = os.path.join(
             self.activity.get_tmp_dir(), self.activity.activity_log_file
         )
-        with open(log_file_path, "r") as open_file:
+        with open(log_file_path, "r", encoding="utf8") as open_file:
             log_contents = open_file.read()
         log_warnings = [
             line
@@ -112,7 +162,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             self.assertEqual(len(email_files), test_data.get("expected_email_count"))
             # can look at the first email for the subject and sender
             first_email_content = None
-            with open(email_files[0]) as open_file:
+            with open(email_files[0], "r", encoding="utf8") as open_file:
                 first_email_content = open_file.read()
             if first_email_content:
                 if test_data.get("expected_email_subject"):
@@ -133,18 +183,48 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         # reset REPAIR_XML value
         activity_module.REPAIR_XML = False
 
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch.object(cleaner, "check_ejp_zip")
-    @patch.object(activity_module.download_helper, "storage_context")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(cleaner, "check_files")
     def test_do_activity_exception_parseerror(
-        self, fake_download_storage_context, fake_check_ejp_zip, fake_email_smtp_connect
+        self,
+        fake_check_files,
+        fake_cleaner_storage_context,
+        fake_email_smtp_connect,
+        fake_session,
+        fake_storage_context,
     ):
-        # copy files into the input directory using the storage context
-        fake_download_storage_context.return_value = FakeStorageContext()
+        directory = TempDirectory()
+        # set REPAIR_XML value because test fixture is malformed XML
+        activity_module.REPAIR_XML = True
+
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_check_ejp_zip.side_effect = ParseError()
+        fake_session.return_value = FakeSession(
+            test_activity_data.accepted_session_example
+        )
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            "30-01-2019-RA-eLife-45644.zip",
+        )
+        directory.makedir(
+            test_activity_data.accepted_session_example.get("expanded_folder")
+        )
+        directory_s3_folder_path = os.path.join(
+            directory.path,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+        )
+        resources = expanded_folder_resources(zip_file_path, directory_s3_folder_path)
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_check_files.side_effect = ParseError()
         # do the activity
         result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
         self.assertEqual(result, True)
@@ -152,23 +232,53 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             self.activity.logger.logexception.startswith(
                 (
                     "ValidateAcceptedSubmission, XML ParseError exception"
-                    " in cleaner.check_ejp_zip for file"
+                    " in cleaner.check_files for file"
                 )
             )
         )
 
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch.object(cleaner, "check_ejp_zip")
-    @patch.object(activity_module.download_helper, "storage_context")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(cleaner, "check_files")
     def test_do_activity_exception_unknown(
-        self, fake_download_storage_context, fake_check_ejp_zip, fake_email_smtp_connect
+        self,
+        fake_check_files,
+        fake_cleaner_storage_context,
+        fake_email_smtp_connect,
+        fake_session,
+        fake_storage_context,
     ):
-        # copy files into the input directory using the storage context
-        fake_download_storage_context.return_value = FakeStorageContext()
+        directory = TempDirectory()
+        # set REPAIR_XML value because test fixture is malformed XML
+        activity_module.REPAIR_XML = True
+
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_check_ejp_zip.side_effect = Exception()
+        fake_session.return_value = FakeSession(
+            test_activity_data.accepted_session_example
+        )
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            "30-01-2019-RA-eLife-45644.zip",
+        )
+        directory.makedir(
+            test_activity_data.accepted_session_example.get("expanded_folder")
+        )
+        directory_s3_folder_path = os.path.join(
+            directory.path,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+        )
+        resources = expanded_folder_resources(zip_file_path, directory_s3_folder_path)
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_check_files.side_effect = Exception()
         # do the activity
         result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
@@ -176,7 +286,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             self.activity.logger.logexception.startswith(
                 (
                     "ValidateAcceptedSubmission, unhandled exception"
-                    " in cleaner.check_ejp_zip for file"
+                    " in cleaner.check_files for file"
                 )
             )
         )
