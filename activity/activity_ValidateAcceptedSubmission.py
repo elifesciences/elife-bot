@@ -244,7 +244,7 @@ def download_pdf_files_from_bucket(storage, files, asset_file_name_map, to_dir, 
         file_name = pdf_file.get("upload_file_nm")
         asset_key = asset_key_map[file_name]
         asset_resource = asset_file_name_map.get(asset_key)
-        file_path = os.path.join(to_dir, file_name)
+        file_path = os.path.join(to_dir, asset_key)
         logger.info("Downloading PDF file from %s to %s" % (asset_resource, file_path))
         # create folders if they do not exist
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
