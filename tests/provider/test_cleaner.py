@@ -6,6 +6,8 @@ from mock import patch
 from testfixtures import TempDirectory
 import wand
 from provider import cleaner
+from tests import settings_mock
+from tests.activity.classes_mock import FakeStorageContext
 
 
 class TestCleanerProvider(unittest.TestCase):
@@ -129,3 +131,23 @@ class TestFilesByExtension(unittest.TestCase):
         expected = [OrderedDict([("upload_file_nm", "30-01-2019-RA-eLife-45644.pdf")])]
         filtered_files = cleaner.files_by_extension(files, "pdf")
         self.assertEqual(filtered_files, expected)
+
+
+class TestBucketAssetFileNameMap(unittest.TestCase):
+    @patch.object(FakeStorageContext, "list_resources")
+    @patch.object(cleaner, "storage_context")
+    def test_bucket_asset_file_name_map(
+        self, fake_storage_context, fake_list_resources
+    ):
+        fake_storage_context.return_value = FakeStorageContext()
+        bucket_name = "bucket"
+        expanded_folder = "expanded_folder/folder/99999/run/expanded_files"
+        fake_list_resources.return_value = ["%s/article/article.xml" % expanded_folder]
+        expected = {
+            "article/article.xml": "s3://%s/%s/article/article.xml"
+            % (bucket_name, expanded_folder)
+        }
+        asset_file_name_map = cleaner.bucket_asset_file_name_map(
+            settings_mock, bucket_name, expanded_folder
+        )
+        self.assertEqual(asset_file_name_map, expected)
