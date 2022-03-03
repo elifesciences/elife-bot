@@ -3,8 +3,9 @@ import json
 import shutil
 import time
 from xml.etree.ElementTree import ParseError
-from S3utility.s3_notification_info import parse_activity_data
-from provider import cleaner, download_helper, email_provider, utils
+from provider.execution_context import get_session
+from provider.storage_provider import storage_context
+from provider import cleaner, email_provider
 from activity.objects import Activity
 
 
@@ -51,7 +52,13 @@ class activity_ValidateAcceptedSubmission(Activity):
             "%s data: %s" % (self.name, json.dumps(data, sort_keys=True, indent=4))
         )
 
+        run = data["run"]
+        session = get_session(self.settings, data, run)
+
         self.make_activity_directories()
+
+        # configure the S3 bucket storage library
+        storage = storage_context(self.settings)
 
         # configure log files for the cleaner provider
         cleaner_log_handers = []
@@ -69,49 +76,69 @@ class activity_ValidateAcceptedSubmission(Activity):
             )
         )
 
-        # parse the input data
-        real_filename, bucket_name, bucket_folder = parse_activity_data(data)
+        expanded_folder = session.get_value("expanded_folder")
+        input_filename = session.get_value("input_filename")
+
+        # get list of bucket objects from expanded folder
+        asset_file_name_map = cleaner.bucket_asset_file_name_map(
+            self.settings, self.settings.bot_bucket, expanded_folder
+        )
         self.logger.info(
-            "%s, real_filename: %s, bucket_name: %s, bucket_folder: %s"
-            % (self.name, real_filename, bucket_name, bucket_folder)
+            "%s, asset_file_name_map: %s" % (self.name, asset_file_name_map)
         )
 
-        # Download from S3
-        self.input_file = download_helper.download_file_from_s3(
-            self.settings,
-            real_filename,
-            bucket_name,
-            bucket_folder,
-            self.directories.get("INPUT_DIR"),
+        # find S3 object for article XML and download it
+        xml_file_path = download_xml_file_from_bucket(
+            storage,
+            asset_file_name_map,
+            self.directories.get("TEMP_DIR"),
+            self.logger,
         )
 
-        self.logger.info("%s, downloaded file to %s" % (self.name, self.input_file))
-
-        # unzip the file and validate
+        # reset the REPAIR_XML constant
         original_repair_xml = cleaner.parse.REPAIR_XML
         cleaner.parse.REPAIR_XML = REPAIR_XML
+
+        # get list of files from the article XML
+        files = cleaner.file_list(xml_file_path)
+        self.logger.info("%s, files: %s" % (self.name, files))
+
+        # download the PDF files so their pages can be counted
+        download_pdf_files_from_bucket(
+            storage,
+            files,
+            asset_file_name_map,
+            self.directories.get("TEMP_DIR"),
+            self.logger,
+        )
+
+        # validate the file contents
         try:
-            self.statuses["valid"] = cleaner.check_ejp_zip(
-                self.input_file, self.directories.get("TEMP_DIR")
+            self.statuses["valid"] = cleaner.check_files(
+                files, asset_file_name_map, input_filename
             )
         except ParseError:
             log_message = (
-                "%s, XML ParseError exception in cleaner.check_ejp_zip for file %s"
-                % (self.name, self.input_file)
+                "%s, XML ParseError exception in cleaner.check_files for file %s"
+                % (self.name, input_filename)
             )
             self.logger.exception(log_message)
             # Send error email
-            self.statuses["email"] = self.email_error_report(real_filename, log_message)
-            self.log_statuses(self.input_file)
+            self.statuses["email"] = self.email_error_report(
+                input_filename, log_message
+            )
+            self.log_statuses(input_filename)
         except Exception:
             log_message = (
-                "%s, unhandled exception in cleaner.check_ejp_zip for file %s"
-                % (self.name, self.input_file)
+                "%s, unhandled exception in cleaner.check_files for file %s"
+                % (self.name, input_filename)
             )
             self.logger.exception(log_message)
             # Send error email
-            self.statuses["email"] = self.email_error_report(real_filename, log_message)
-            self.log_statuses(self.input_file)
+            self.statuses["email"] = self.email_error_report(
+                input_filename, log_message
+            )
+            self.log_statuses(input_filename)
             return self.ACTIVITY_PERMANENT_FAILURE
         finally:
             # remove the log handlers
@@ -122,19 +149,19 @@ class activity_ValidateAcceptedSubmission(Activity):
 
         # Send an email if the log has warnings
         log_contents = ""
-        with open(log_file_path, "r") as open_file:
+        with open(log_file_path, "r", encoding="utf8") as open_file:
             log_contents = open_file.read()
         if "WARNING" in log_contents:
             # Send error email
             error_messages = (
-                "Warnings found in the log file for zip file %s\n\n" % real_filename
+                "Warnings found in the log file for zip file %s\n\n" % input_filename
             )
             error_messages += log_contents
             self.statuses["email"] = self.email_error_report(
-                real_filename, error_messages
+                input_filename, error_messages
             )
 
-        self.log_statuses(self.input_file)
+        self.log_statuses(input_filename)
 
         # Clean up disk
         self.clean_tmp_dir()
@@ -182,6 +209,42 @@ class activity_ValidateAcceptedSubmission(Activity):
 
 def error_email_subject(filename):
     "email subject for an error email"
-    return u"Error validating accepted submission file: {filename}".format(
+    return "Error validating accepted submission file: {filename}".format(
         filename=filename
     )
+
+
+def download_xml_file_from_bucket(storage, asset_file_name_map, to_dir, logger):
+    "download article XML file from the S3 bucket expanded folder to the local disk"
+    xml_file_asset = cleaner.article_xml_asset(asset_file_name_map)
+    asset_key, asset_resource = xml_file_asset
+    xml_file_path = os.path.join(to_dir, asset_key)
+    logger.info("Downloading XML file from %s to %s" % (asset_resource, xml_file_path))
+    # create folders if they do not exist
+    os.makedirs(os.path.dirname(xml_file_path), exist_ok=True)
+    with open(xml_file_path, "wb") as open_file:
+        storage.get_resource_to_file(asset_resource, open_file)
+        # rewrite asset_file_name_map to the local value
+        asset_file_name_map[asset_key] = xml_file_path
+    return xml_file_path
+
+
+def download_pdf_files_from_bucket(storage, files, asset_file_name_map, to_dir, logger):
+    "download PDF files from the S3 bucket expanded folder to the local disk"
+    pdf_files = cleaner.files_by_extension(files, "pdf")
+
+    # map values without folder names in order to later match XML files names to zip file path
+    asset_key_map = {key.rsplit("/", 1)[-1]: key for key in asset_file_name_map}
+
+    for pdf_file in pdf_files:
+        file_name = pdf_file.get("upload_file_nm")
+        asset_key = asset_key_map[file_name]
+        asset_resource = asset_file_name_map.get(asset_key)
+        file_path = os.path.join(to_dir, file_name)
+        logger.info("Downloading PDF file from %s to %s" % (asset_resource, file_path))
+        # create folders if they do not exist
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "wb") as open_file:
+            storage.get_resource_to_file(asset_resource, open_file)
+        # rewrite asset_file_name_map to the local value
+        asset_file_name_map[asset_key] = file_path

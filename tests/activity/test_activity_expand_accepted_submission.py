@@ -80,16 +80,7 @@ class TestExpandAcceptedSubmission(unittest.TestCase):
             "Table 2source data 1.xlsx",
             "transparent_reporting_Sakalauskaite.docx",
         ]
-        expected_session_dict = {
-            "run": "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
-            "input_filename": "30-01-2019-RA-eLife-45644.zip",
-            "input_bucket_name": "elife-accepted-submission-cleaning",
-            "input_bucket_folder": "",
-            "expanded_folder": (
-                "expanded_submissions/45644/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/expanded_files"
-            ),
-            "article_id": "45644",
-        }
+        expected_session_dict = testdata.accepted_session_example
         # do the activity
         success = self.activity.do_activity(
             test_case_data.ingest_accepted_submission_data

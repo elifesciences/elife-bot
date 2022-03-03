@@ -1,5 +1,7 @@
 import os
 import unittest
+from collections import OrderedDict
+import zipfile
 from mock import patch
 from testfixtures import TempDirectory
 import wand
@@ -60,3 +62,70 @@ class TestArticleIdFromZipFile(unittest.TestCase):
         zip_file = "unknown.zip"
         expected = "unknown.zip"
         self.assertEqual(cleaner.article_id_from_zip_file(zip_file), expected)
+
+
+class TestArticleXmlAsset(unittest.TestCase):
+    def test_article_xml_asset(self):
+        xml_file = "article/article.xml"
+        xml_path = "tmp/article/article.xml"
+        asset_file_name_map = {
+            xml_file: xml_path,
+            "article/article.pdf": "tmp/article/article.pdf",
+        }
+        expected = (xml_file, xml_path)
+        self.assertEqual(cleaner.article_xml_asset(asset_file_name_map), expected)
+
+    def test_article_xml_asset_none(self):
+        asset_file_name_map = {}
+        expected = None
+        self.assertEqual(cleaner.article_xml_asset(asset_file_name_map), expected)
+
+
+class TestFileList(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_file_list(self):
+        "extract the XML file from a zip file to parse it and get the file_list"
+        directory = TempDirectory()
+        zip_file_path = os.path.join(
+            "tests", "files_source", "30-01-2019-RA-eLife-45644.zip"
+        )
+        xml_file_name = "30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml"
+        with zipfile.ZipFile(zip_file_path, "r") as open_zip:
+            open_zip.extract(xml_file_name, directory.path)
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        files = cleaner.file_list(xml_file_path)
+        self.assertEqual(len(files), 41)
+        self.assertEqual(
+            files[0],
+            OrderedDict(
+                [
+                    ("file_type", "merged_pdf"),
+                    ("id", "1128853"),
+                    ("upload_file_nm", "30-01-2019-RA-eLife-45644.pdf"),
+                    ("custom_meta", []),
+                ]
+            ),
+        )
+
+
+class TestFilesByExtension(unittest.TestCase):
+    def test_files_by_extension(self):
+        "filter the list based on the file name extension"
+        # an abbreviated files list for testing
+        files = [
+            OrderedDict(
+                [
+                    ("upload_file_nm", "30-01-2019-RA-eLife-45644.pdf"),
+                ],
+            ),
+            OrderedDict(
+                [
+                    ("upload_file_nm", "30-01-2019-RA-eLife-45644.xml"),
+                ],
+            ),
+        ]
+        expected = [OrderedDict([("upload_file_nm", "30-01-2019-RA-eLife-45644.pdf")])]
+        filtered_files = cleaner.files_by_extension(files, "pdf")
+        self.assertEqual(filtered_files, expected)
