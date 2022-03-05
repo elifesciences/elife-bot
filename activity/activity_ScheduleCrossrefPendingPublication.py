@@ -1,10 +1,7 @@
 import json
 import os
-from xml.parsers.expat import ExpatError
-from elifecleaner import parse, zip_lib
-from elifetools import xmlio
-from S3utility.s3_notification_info import parse_activity_data
-from provider import article_processing, download_helper, outbox_provider
+from provider import cleaner, outbox_provider
+from provider.execution_context import get_session
 from activity.objects import Activity
 
 
@@ -47,57 +44,43 @@ class activity_ScheduleCrossrefPendingPublication(Activity):
 
         self.make_activity_directories()
 
-        # data is an S3 bucket notification message for an accepted submission zip file
-        real_filename, bucket_name, bucket_folder = parse_activity_data(data)
-        self.logger.info(
-            "%s, real_filename: %s, bucket_name: %s, bucket_folder: %s"
-            % (self.name, real_filename, bucket_name, bucket_folder)
+        run = data["run"]
+        session = get_session(self.settings, data, run)
+
+        expanded_folder = session.get_value("expanded_folder")
+        self.logger.info("%s, expanded_folder: %s" % (self.name, expanded_folder))
+
+        # get list of bucket objects from expanded folder
+        asset_file_name_map = cleaner.bucket_asset_file_name_map(
+            self.settings, self.settings.bot_bucket, expanded_folder
         )
 
-        # Download from S3
-        self.input_file = download_helper.download_file_from_s3(
+        # find S3 object for article XML and download it
+        xml_file_path = cleaner.download_xml_file_from_bucket(
             self.settings,
-            real_filename,
-            bucket_name,
-            bucket_folder,
+            asset_file_name_map,
             self.directories.get("INPUT_DIR"),
+            self.logger,
         )
 
-        self.logger.info("%s, downloaded file to %s" % (self.name, self.input_file))
-
-        # unzip the file, repair the XML, and save to disk
-        asset_file_name_map = zip_lib.unzip_zip(
-            self.input_file, self.directories.get("TEMP_DIR")
-        )
-        xml_asset_details = parse.article_xml_asset(asset_file_name_map)
-        input_xml_path = xml_asset_details[1]
-        root = parse.parse_article_xml(input_xml_path)
-
-        # convert ElementTree root to an XML string
-        try:
-            xml_string = xmlio.output_root(root, None, None)
-        except ExpatError:
-            log_message = (
-                "%s, XML ExpatError exception in xmlio.output_root for file %s"
-                % (self.name, input_xml_path)
-            )
-            self.logger.exception(log_message)
-            return self.ACTIVITY_PERMANENT_FAILURE
-
-        # todo!! save to disk
-        output_file_name = article_processing.file_name_from_name(input_xml_path)
-        output_file_path = os.path.join(
-            self.directories.get("TEMP_DIR"), output_file_name
-        )
-        with open(output_file_path, "w", encoding="utf-8") as open_file:
-            open_file.write(xml_string)
+        self.logger.info("%s, downloaded XML file to %s" % (self.name, xml_file_path))
 
         # upload to the outbox folder
         outbox_provider.upload_files_to_s3_folder(
             self.settings,
             self.settings.poa_packaging_bucket,
             self.crossref_outbox_folder,
-            [output_file_path],
+            [xml_file_path],
+        )
+
+        self.logger.info(
+            ("%s, uploaded %s to S3 bucket %s, folder %s")
+            % (
+                self.name,
+                xml_file_path,
+                self.settings.poa_packaging_bucket,
+                self.crossref_outbox_folder,
+            )
         )
 
         # Clean up disk

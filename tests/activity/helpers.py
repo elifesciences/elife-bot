@@ -1,6 +1,7 @@
 import email
 import os
 import shutil
+import zipfile
 from digestparser.objects import Digest, Image
 from provider import utils
 from provider.article import article
@@ -86,3 +87,11 @@ def body_from_multipart_email_string(email_string):
         for payload in email_message.get_payload():
             body = payload.get_payload(decode=True)
     return body
+
+
+def expanded_folder_resources(zip_file_path, directory):
+    "expand the zip file to the directory and return a list resources"
+    with zipfile.ZipFile(zip_file_path, "r") as open_zipfile:
+        open_zipfile.extractall(path=directory)
+        resources = open_zipfile.namelist()
+    return resources

@@ -80,7 +80,8 @@ class activity_ValidateAcceptedSubmission(Activity):
         input_filename = session.get_value("input_filename")
 
         self.logger.info(
-            "%s, input_filename: %s, expanded_folder: %s" % (self.name, input_filename, expanded_folder)
+            "%s, input_filename: %s, expanded_folder: %s"
+            % (self.name, input_filename, expanded_folder)
         )
 
         # get list of bucket objects from expanded folder
@@ -92,8 +93,8 @@ class activity_ValidateAcceptedSubmission(Activity):
         )
 
         # find S3 object for article XML and download it
-        xml_file_path = download_xml_file_from_bucket(
-            storage,
+        xml_file_path = cleaner.download_xml_file_from_bucket(
+            self.settings,
             asset_file_name_map,
             self.directories.get("TEMP_DIR"),
             self.logger,
@@ -216,21 +217,6 @@ def error_email_subject(filename):
     return "Error validating accepted submission file: {filename}".format(
         filename=filename
     )
-
-
-def download_xml_file_from_bucket(storage, asset_file_name_map, to_dir, logger):
-    "download article XML file from the S3 bucket expanded folder to the local disk"
-    xml_file_asset = cleaner.article_xml_asset(asset_file_name_map)
-    asset_key, asset_resource = xml_file_asset
-    xml_file_path = os.path.join(to_dir, asset_key)
-    logger.info("Downloading XML file from %s to %s" % (asset_resource, xml_file_path))
-    # create folders if they do not exist
-    os.makedirs(os.path.dirname(xml_file_path), exist_ok=True)
-    with open(xml_file_path, "wb") as open_file:
-        storage.get_resource_to_file(asset_resource, open_file)
-        # rewrite asset_file_name_map to the local value
-        asset_file_name_map[asset_key] = xml_file_path
-    return xml_file_path
 
 
 def download_pdf_files_from_bucket(storage, files, asset_file_name_map, to_dir, logger):

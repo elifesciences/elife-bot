@@ -1,18 +1,18 @@
 # coding=utf-8
 
+import os
 import unittest
-from xml.parsers.expat import ExpatError
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
-from elifetools import xmlio
+from provider import cleaner
 import activity.activity_ScheduleCrossrefPendingPublication as activity_module
 from activity.activity_ScheduleCrossrefPendingPublication import (
     activity_ScheduleCrossrefPendingPublication as activity_object,
 )
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
 import tests.test_data as test_case_data
-from tests.activity import helpers, settings_mock
-import tests.activity.test_activity_data as testdata
+from tests.activity import helpers, settings_mock, test_activity_data
 
 
 def input_data(file_name_to_change=""):
@@ -28,15 +28,17 @@ class TestScheduleCrossrefPendingPublication(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
         # clean out the bucket destination folder
         helpers.delete_files_in_folder(
-            testdata.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
         )
 
     @patch("provider.outbox_provider.storage_context")
-    @patch.object(activity_module.download_helper, "storage_context")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(activity_module, "get_session")
     @data(
         {
             "comment": "accepted submission zip file example",
@@ -45,11 +47,37 @@ class TestScheduleCrossrefPendingPublication(unittest.TestCase):
         },
     )
     def test_do_activity(
-        self, test_data, fake_download_storage_context, fake_storage_context
+        self,
+        test_data,
+        fake_session,
+        fake_cleaner_storage_context,
+        fake_outbox_storage_context,
     ):
+        directory = TempDirectory()
+        # expanded bucket files
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            test_data.get("filename"),
+        )
+        directory.makedir(
+            test_activity_data.accepted_session_example.get("expanded_folder")
+        )
+        directory_s3_folder_path = os.path.join(
+            directory.path,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+        )
+        resources = helpers.expanded_folder_resources(
+            zip_file_path, directory_s3_folder_path
+        )
+
         # copy files into the input directory using the storage context
-        fake_download_storage_context.return_value = FakeStorageContext()
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources=resources
+        )
+        fake_outbox_storage_context.return_value = FakeStorageContext()
+        fake_session.return_value = FakeSession(
+            test_activity_data.accepted_session_example
+        )
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         filename_used = input_data(test_data.get("filename")).get("file_name")
@@ -67,25 +95,4 @@ class TestScheduleCrossrefPendingPublication(unittest.TestCase):
                 input_file=self.activity.input_file,
                 filename=filename_used,
             ),
-        )
-
-    @patch.object(xmlio, "output_root")
-    @patch.object(activity_module.download_helper, "storage_context")
-    def test_do_activity_exception_parseerror(
-        self, fake_download_storage_context, fake_output_root
-    ):
-        # copy files into the input directory using the storage context
-        fake_download_storage_context.return_value = FakeStorageContext()
-
-        fake_output_root.side_effect = ExpatError()
-        # do the activity
-        result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
-        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
-        self.assertTrue(
-            self.activity.logger.logexception.startswith(
-                (
-                    "ScheduleCrossrefPendingPublication, XML ExpatError exception"
-                    " in xmlio.output_root for file"
-                )
-            )
         )

@@ -1,3 +1,4 @@
+import os
 import logging
 import re
 from elifecleaner import LOGGER, configure_logging, parse, transform, zip_lib
@@ -71,3 +72,19 @@ def bucket_asset_file_name_map(settings, bucket_name, expanded_folder):
         key_name.replace(expanded_folder, "").lstrip("/") for key_name in s3_key_names
     ]
     return {key_name: orig_resource + "/" + key_name for key_name in short_s3_key_names}
+
+
+def download_xml_file_from_bucket(settings, asset_file_name_map, to_dir, logger):
+    "download article XML file from the S3 bucket expanded folder to the local disk"
+    storage = storage_context(settings)
+    xml_file_asset = article_xml_asset(asset_file_name_map)
+    asset_key, asset_resource = xml_file_asset
+    xml_file_path = os.path.join(to_dir, asset_key)
+    logger.info("Downloading XML file from %s to %s" % (asset_resource, xml_file_path))
+    # create folders if they do not exist
+    os.makedirs(os.path.dirname(xml_file_path), exist_ok=True)
+    with open(xml_file_path, "wb") as open_file:
+        storage.get_resource_to_file(asset_resource, open_file)
+        # rewrite asset_file_name_map to the local value
+        asset_file_name_map[asset_key] = xml_file_path
+    return xml_file_path
