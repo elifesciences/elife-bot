@@ -2,7 +2,6 @@
 
 import os
 import glob
-import zipfile
 import unittest
 from xml.etree.ElementTree import ParseError
 from mock import patch
@@ -23,14 +22,6 @@ def input_data(file_name_to_change=""):
     activity_data = test_case_data.ingest_accepted_submission_data
     activity_data["file_name"] = file_name_to_change
     return activity_data
-
-
-def expanded_folder_resources(zip_file_path, directory):
-    "expand the zip file to the directory and return a list resources"
-    with zipfile.ZipFile(zip_file_path, "r") as open_zipfile:
-        open_zipfile.extractall(path=directory)
-        resources = open_zipfile.namelist()
-    return resources
 
 
 @ddt
@@ -98,7 +89,9 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             test_activity_data.accepted_session_example.get("expanded_folder"),
         )
 
-        resources = expanded_folder_resources(zip_file_path, directory_s3_folder_path)
+        resources = helpers.expanded_folder_resources(
+            zip_file_path, directory_s3_folder_path
+        )
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, resources
         )
@@ -217,7 +210,9 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             directory.path,
             test_activity_data.accepted_session_example.get("expanded_folder"),
         )
-        resources = expanded_folder_resources(zip_file_path, directory_s3_folder_path)
+        resources = helpers.expanded_folder_resources(
+            zip_file_path, directory_s3_folder_path
+        )
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, resources
         )
@@ -271,7 +266,9 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             directory.path,
             test_activity_data.accepted_session_example.get("expanded_folder"),
         )
-        resources = expanded_folder_resources(zip_file_path, directory_s3_folder_path)
+        resources = helpers.expanded_folder_resources(
+            zip_file_path, directory_s3_folder_path
+        )
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, resources
         )
