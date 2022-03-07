@@ -332,6 +332,7 @@ class exp:
         "life@example.org",
     ]
     accepted_submission_queue = ""
+    accepted_submission_output_recipient_email = "e@example.org"
 
 
 class dev:
@@ -650,6 +651,7 @@ class dev:
         "life@example.org",
     ]
     accepted_submission_queue = ""
+    accepted_submission_output_recipient_email = "e@example.org"
 
 
 class live:
@@ -973,6 +975,7 @@ class live:
         "life@example.org",
     ]
     accepted_submission_queue = "cleaning-queue"
+    accepted_submission_output_recipient_email = "e@example.org"
 
 
 def get_settings(ENV="dev"):
