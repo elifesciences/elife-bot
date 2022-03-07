@@ -124,6 +124,7 @@ def start(settings):
     activity_names.append("ExpandAcceptedSubmission")
     activity_names.append("ValidateAcceptedSubmission")
     activity_names.append("TransformAcceptedSubmission")
+    activity_names.append("EmailAcceptedSubmissionOutput")
 
     for activity_name in activity_names:
         # Import the activity libraries
