@@ -1,8 +1,10 @@
 import unittest
+from testfixtures import TempDirectory
 import provider.article as provider_module
 from provider.article import article
 import tests.settings_mock as settings_mock
 import tests.test_data as test_data
+from tests.activity.classes_mock import FakeStorageContext
 from mock import patch
 from ddt import ddt, data, unpack
 
@@ -193,6 +195,29 @@ class TestGetLensUrl(unittest.TestCase):
     def test_get_lens_url(self):
         lens_url = provider_module.get_lens_url("10.7554/eLife.08411")
         self.assertEqual(lens_url, "https://lens.elifesciences.org/08411")
+
+
+class TestArticleWasEverPublished(unittest.TestCase):
+    def setUp(self):
+        self.articleprovider = article(settings_mock)
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch("provider.article.storage_context")
+    def test_was_ever_published(self, fake_storage_context):
+        directory = TempDirectory()
+        workflow = "HEFCE"
+        resources = [
+            "pub_router/published/20220308/elife_poa_e02444v2.xml",
+            "pub_router/published/20220308/elife02419.xml",
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        self.assertTrue(self.articleprovider.was_ever_published("2444", workflow))
+        self.assertTrue(self.articleprovider.was_ever_published("2419", workflow))
+        self.assertFalse(self.articleprovider.was_ever_published("666", workflow))
 
 
 @ddt
