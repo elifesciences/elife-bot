@@ -2,7 +2,6 @@ import os
 import re
 import urllib
 import requests
-from boto.s3.connection import S3Connection
 from elifetools import parseJATS as parser
 import provider.s3lib as s3lib
 from provider import outbox_provider
@@ -187,16 +186,13 @@ class article:
 
         if int(doi_id) in self.was_published_doi_ids(workflow):
             return True
-        else:
-            return False
 
-    def was_published_doi_ids(
-        self, workflow, force=False, folder_names=None, s3_key_names=None
-    ):
+        return False
+
+    def was_published_doi_ids(self, workflow, force=False):
         """
-        Connect to the S3 bucket, and from the files in the published folder,
+        Get a list of S3 objects in the published folder,
         get a list of .xml files, and then parse out the article id
-          folder_names and s3_key_names is only supplied for when running automated tests
         """
         # Return from cached values if not force
         if force is False and self.doi_ids is not None:
@@ -215,7 +211,7 @@ class article:
         bucket_name = self.settings.poa_packaging_bucket
 
         doi_ids = self.doi_ids_from_published_folder(
-            bucket_name, published_folder, file_extensions, folder_names, s3_key_names
+            bucket_name, published_folder, file_extensions
         )
 
         # Cache it
@@ -229,35 +225,28 @@ class article:
         bucket_name,
         published_folder,
         file_extensions,
-        folder_names=None,
-        s3_key_names=None,
     ):
         """
-        Connect to the S3 bucket, and from the files in the published folder,
+        List objects in the S3 bucket published folder,
         get a list of files by file extensions, and then parse out the article id
-          folder_names and s3_key_names is only supplied for when running automated tests
         """
         ids = []
 
-        if folder_names is None:
-            # Get the folder names from live s3 bucket if no test data supplied
-            folder_names = self.get_folder_names_from_bucket(
-                bucket_name=bucket_name, prefix=published_folder
+        storage = storage_context(self.settings)
+        published_folder_resource = (
+            self.settings.storage_provider
+            + "://"
+            + bucket_name
+            + "/"
+            + published_folder.rstrip("/")
+        )
+        s3_key_names = storage.list_resources(published_folder_resource)
+
+        # Filter by file_extension
+        if file_extensions is not None:
+            s3_key_names = s3lib.filter_list_by_file_extensions(
+                s3_key_names, file_extensions
             )
-
-        if s3_key_names is None:
-            # Get the s3 key names from live s3 bucket if no test data supplied
-            s3_key_names = []
-            for folder_name in folder_names:
-
-                key_names = self.get_s3_key_names_from_bucket(
-                    bucket_name=bucket_name,
-                    prefix=folder_name,
-                    file_extensions=file_extensions,
-                )
-
-                for key_name in key_names:
-                    s3_key_names.append(key_name)
 
         # Extract just the doi_id portion
         for s3_key_name in s3_key_names:
@@ -274,48 +263,6 @@ class article:
         ids.sort()
 
         return ids
-
-    def get_folder_names_from_bucket(self, bucket_name, prefix):
-        """
-        Use live s3 bucket connection to get the folder names
-        from the bucket. This is so functions that rely on the data
-        can use test data when running automated tests
-        """
-        folder_names = None
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = s3_conn.lookup(bucket_name)
-
-        # Step one, get all the subfolder names
-        folder_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket, key_type="prefix", prefix=prefix
-        )
-
-        return folder_names
-
-    def get_s3_key_names_from_bucket(self, bucket_name, prefix, file_extensions):
-        """
-        Use live s3 bucket connection to get the s3 key names
-        from the bucket. This is so functions that rely on the data
-        can use test data when running automated tests
-        """
-        s3_key_names = None
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = s3_conn.lookup(bucket_name)
-
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket,
-            key_type="key",
-            prefix=prefix,
-            file_extensions=file_extensions,
-        )
-
-        return s3_key_names
 
     def get_article_related_insight_doi(self):
         """
