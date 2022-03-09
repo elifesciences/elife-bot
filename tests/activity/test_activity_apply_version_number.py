@@ -2,11 +2,12 @@ import unittest
 import shutil
 from mock import patch
 from ddt import ddt, data, unpack
+from activity import activity_ApplyVersionNumber as activity_module
 from activity.activity_ApplyVersionNumber import activity_ApplyVersionNumber
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeSession
+from tests.activity import helpers, settings_mock
+from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
 import tests.activity.test_activity_data as test_data
-import tests.activity.helpers as helpers
+
 
 example_key_names = [
     "15224.1/fec8dcd1-76df-4921-93de-4bf8b8ab70eb/elife-15224-fig1-figsupp1.tif",
@@ -110,16 +111,35 @@ example_file_name_map_with_version = {
 
 
 @ddt
-class MyTestCase(unittest.TestCase):
+class TestApplyVersionNumber(unittest.TestCase):
     def setUp(self):
         self.applyversionnumber = activity_ApplyVersionNumber(
-            settings_mock, None, None, None, None
+            settings_mock, FakeLogger(), None, None, None
         )
         self.test_dest_folder = "tests/files_dest_ApplyVersionNumber"
         helpers.create_folder(self.test_dest_folder)
 
     def tearDown(self):
         helpers.delete_folder(self.test_dest_folder, True)
+        helpers.delete_files_in_folder(
+            test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
+
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_ApplyVersionNumber, "emit_monitor_event")
+    @patch("activity.activity_ApplyVersionNumber.get_session")
+    def test_do_activity(
+        self, mock_session, fake_emit_monitor_event, fake_storage_context
+    ):
+        # mocks
+        mock_session.return_value = FakeSession(test_data.session_example)
+        fake_emit_monitor_event.return_value = True
+        fake_storage_context.return_value = FakeStorageContext()
+        activity_data = test_data.ApplyVersionNumber_data_no_renaming
+        # do_activity
+        result = self.applyversionnumber.do_activity(activity_data)
+        # assertions
+        self.assertEqual(result, self.applyversionnumber.ACTIVITY_SUCCESS)
 
     @patch.object(activity_ApplyVersionNumber, "emit_monitor_event")
     @patch("activity.activity_ApplyVersionNumber.get_session")
@@ -131,17 +151,17 @@ class MyTestCase(unittest.TestCase):
         session_example = session_example.copy()
         del session_example["version"]
         mock_session.return_value = FakeSession(session_example)
-        data = test_data.ApplyVersionNumber_data_no_renaming
+        activity_data = test_data.ApplyVersionNumber_data_no_renaming
 
         # when
-        result = self.applyversionnumber.do_activity(data)
+        result = self.applyversionnumber.do_activity(activity_data)
 
         # then
         fake_emit_monitor_event.assert_called_with(
             settings_mock,
             session_example["article_id"],
             None,
-            data["run"],
+            activity_data["run"],
             self.applyversionnumber.pretty_name,
             "error",
             "Error in applying version number to files for "
@@ -149,12 +169,6 @@ class MyTestCase(unittest.TestCase):
             + " message: No version available",
         )
         self.assertEqual(result, self.applyversionnumber.ACTIVITY_PERMANENT_FAILURE)
-
-    def test_find_xml_filename_in_map(self):
-        new_name = self.applyversionnumber.find_xml_filename_in_map(
-            example_file_name_map
-        )
-        self.assertEqual(new_name, "elife-15224-v1.xml")
 
     @unpack
     @data(
@@ -172,34 +186,6 @@ class MyTestCase(unittest.TestCase):
     def test_build_file_name_map(self, key_names, version, expected):
         result = self.applyversionnumber.build_file_name_map(key_names, version)
         self.assertDictEqual(result, expected)
-
-    @unpack
-    @data(
-        {"file": "elife-15224.xml", "version": "1", "expected": "elife-15224-v1.xml"},
-        {
-            "file": "elife-code1.tar.gz",
-            "version": "1",
-            "expected": "elife-code1-v1.tar.gz",
-        },
-        {
-            "file": "elife-15224-v1.xml",
-            "version": "1",
-            "expected": "elife-15224-v1.xml",
-        },
-        {
-            "file": "elife-15224-v1.xml",
-            "version": "2",
-            "expected": "elife-15224-v2.xml",
-        },
-        {
-            "file": "elife-code1-v1.tar.gz",
-            "version": "2",
-            "expected": "elife-code1-v2.tar.gz",
-        },
-    )
-    def test_new_filename(self, file, version, expected):
-        result = self.applyversionnumber.new_filename(file, version)
-        self.assertEqual(result, expected)
 
     @unpack
     @data(
@@ -229,10 +215,12 @@ class MyTestCase(unittest.TestCase):
         self.applyversionnumber.rewrite_xml_file(file, example_file_name_map)
 
         # then
-        with open("tests/files_dest_ApplyVersionNumber/" + file, "r") as result_file:
+        with open(
+            "tests/files_dest_ApplyVersionNumber/" + file, "r", encoding="utf8"
+        ) as result_file:
             result_file_content = result_file.read()
         with open(
-            "tests/files_source/ApplyVersionNumber/" + expected, "r"
+            "tests/files_source/ApplyVersionNumber/" + expected, "r", encoding="utf8"
         ) as expected_file:
             expected_file_content = expected_file.read()
         self.assertEqual(result_file_content, expected_file_content)
@@ -257,15 +245,52 @@ class MyTestCase(unittest.TestCase):
 
         # then
         with open(
-            "tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml", "r"
+            "tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml",
+            "r",
+            encoding="utf8",
         ) as result_file:
             result_file_content = result_file.read()
         with open(
-            "tests/files_source/ApplyVersionNumber/elife-15224-v1-rewritten.xml", "r"
+            "tests/files_source/ApplyVersionNumber/elife-15224-v1-rewritten.xml",
+            "r",
+            encoding="utf8",
         ) as expected_file:
             expected_file_content = expected_file.read()
         self.assertEqual(result_file_content, expected_file_content)
 
 
-if __name__ == "__main__":
-    unittest.main()
+@ddt
+class TestNewFilename(unittest.TestCase):
+    @unpack
+    @data(
+        {"file": "elife-15224.xml", "version": "1", "expected": "elife-15224-v1.xml"},
+        {
+            "file": "elife-code1.tar.gz",
+            "version": "1",
+            "expected": "elife-code1-v1.tar.gz",
+        },
+        {
+            "file": "elife-15224-v1.xml",
+            "version": "1",
+            "expected": "elife-15224-v1.xml",
+        },
+        {
+            "file": "elife-15224-v1.xml",
+            "version": "2",
+            "expected": "elife-15224-v2.xml",
+        },
+        {
+            "file": "elife-code1-v1.tar.gz",
+            "version": "2",
+            "expected": "elife-code1-v2.tar.gz",
+        },
+    )
+    def test_new_filename(self, file, version, expected):
+        result = activity_module.new_filename(file, version)
+        self.assertEqual(result, expected)
+
+
+class TestFindXmlFilenameInMap(unittest.TestCase):
+    def test_find_xml_filename_in_map(self):
+        new_name = activity_module.find_xml_filename_in_map(example_file_name_map)
+        self.assertEqual(new_name, "elife-15224-v1.xml")
