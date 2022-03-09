@@ -2,14 +2,11 @@ import json
 import os
 import re
 from os import path
-import boto.s3
-from boto.s3.key import Key
-from boto.s3.connection import S3Connection
+from elifetools import xmlio
 from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 import provider.article_structure as article_structure
-import provider.s3lib as s3lib
-from elifetools import xmlio
+from provider.storage_provider import storage_context
 from activity.objects import Activity
 
 """
@@ -57,8 +54,8 @@ class activity_ApplyVersionNumber(Activity):
                 "start",
                 "Starting applying version number to files for " + article_id,
             )
-        except Exception as e:
-            self.logger.exception(str(e))
+        except Exception as exception:
+            self.logger.exception(str(exception))
             return self.ACTIVITY_PERMANENT_FAILURE
 
         try:
@@ -125,18 +122,17 @@ class activity_ApplyVersionNumber(Activity):
         and apply the renamed file names to the article XML file
         """
 
-        # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id,
-            self.settings.aws_secret_access_key,
-            host=self.settings.s3_hostname,
+        storage = storage_context(self.settings)
+        bucket_resource = (
+            self.settings.storage_provider
+            + "://"
+            + self.expanded_bucket_name
+            + "/"
+            + bucket_folder_name
         )
-        bucket = s3_conn.lookup(self.expanded_bucket_name)
 
         # bucket object list
-        s3_key_names = s3lib.get_s3_key_names_from_bucket(
-            bucket=bucket, prefix=bucket_folder_name + "/"
-        )
+        s3_key_names = storage.list_resources(bucket_resource)
 
         # Get the old name to new name map
         file_name_map = self.build_file_name_map(s3_key_names, version)
@@ -150,23 +146,33 @@ class activity_ApplyVersionNumber(Activity):
 
         # rename_s3_objects(old_name_new_name_dict)
         self.rename_s3_objects(
-            bucket, self.expanded_bucket_name, bucket_folder_name, file_name_map
+            self.expanded_bucket_name, bucket_folder_name, file_name_map
         )
 
         # rewrite_and_upload_article_xml()
-        xml_filename = self.find_xml_filename_in_map(file_name_map)
-        self.download_file_from_bucket(bucket, bucket_folder_name, xml_filename)
+        xml_filename = find_xml_filename_in_map(file_name_map)
+        self.download_file_from_bucket(
+            self.expanded_bucket_name, bucket_folder_name, xml_filename
+        )
         self.rewrite_xml_file(xml_filename, file_name_map)
-        self.upload_file_to_bucket(bucket, bucket_folder_name, xml_filename)
+        self.upload_file_to_bucket(
+            self.expanded_bucket_name, bucket_folder_name, xml_filename
+        )
 
-    def download_file_from_bucket(self, bucket, bucket_folder_name, filename):
-
-        key_name = bucket_folder_name + "/" + filename
-        key = Key(bucket)
-        key.key = key_name
-        local_file = self.open_file_from_tmp_dir(filename, mode="wb")
-        key.get_contents_to_file(local_file)
-        local_file.close()
+    def download_file_from_bucket(self, bucket_name, bucket_folder_name, filename):
+        storage = storage_context(self.settings)
+        file_resource_origin = (
+            self.settings.storage_provider
+            + "://"
+            + bucket_name
+            + "/"
+            + bucket_folder_name
+            + "/"
+            + filename
+        )
+        local_filename = path.join(self.get_tmp_dir(), filename)
+        with open(local_filename, "wb") as open_file:
+            storage.get_resource_to_file(file_resource_origin, open_file)
 
     def rewrite_xml_file(self, xml_filename, file_name_map):
 
@@ -189,17 +195,22 @@ class activity_ApplyVersionNumber(Activity):
             doctype_dict=doctype_dict,
             processing_instructions=processing_instructions,
         )
-        f = open(local_xml_filename, "wb")
-        f.write(reparsed_string)
-        f.close()
+        with open(local_xml_filename, "wb") as open_file:
+            open_file.write(reparsed_string)
 
-    def upload_file_to_bucket(self, bucket, bucket_folder_name, filename):
-
+    def upload_file_to_bucket(self, bucket_name, bucket_folder_name, filename):
+        storage = storage_context(self.settings)
+        file_resource = (
+            self.settings.storage_provider
+            + "://"
+            + bucket_name
+            + "/"
+            + bucket_folder_name
+            + "/"
+            + filename
+        )
         local_filename = path.join(self.get_tmp_dir(), filename)
-        key_name = bucket_folder_name + "/" + filename
-        key = Key(bucket)
-        key.key = key_name
-        key.set_contents_from_filename(local_filename)
+        storage.set_resource_from_filename(file_resource, local_filename)
 
     def build_file_name_map(self, s3_key_names, version):
 
@@ -212,7 +223,7 @@ class activity_ApplyVersionNumber(Activity):
             file_name_map[filename] = None
 
             if article_structure.is_video_file(filename) is False:
-                renamed_filename = self.new_filename(filename, version)
+                renamed_filename = new_filename(filename, version)
             else:
                 # Keep video files named the same
                 renamed_filename = filename
@@ -225,37 +236,43 @@ class activity_ApplyVersionNumber(Activity):
 
         return file_name_map
 
-    def new_filename(self, old_filename, version):
-        if re.search(
-            r"-v([0-9])[\.]", old_filename
-        ):  # is version already in file name?
-            new_filename = re.sub(
-                r"-v([0-9])[\.]", "-v" + str(version) + ".", old_filename
-            )
-        else:
-            (file_prefix, file_extension) = article_structure.file_parts(old_filename)
-            new_filename = file_prefix + "-v" + str(version) + "." + file_extension
-        return new_filename
-
-    def rename_s3_objects(self, bucket, bucket_name, bucket_folder_name, file_name_map):
-        # Rename S3 bucket objects directly
+    def rename_s3_objects(self, bucket_name, bucket_folder_name, file_name_map):
+        # Rename S3 bucket objects by copying them and then deleting the old objects
+        storage = storage_context(self.settings)
+        resource_prefix = (
+            self.settings.storage_provider
+            + "://"
+            + bucket_name
+            + "/"
+            + bucket_folder_name
+        )
         for old_name, new_name in list(file_name_map.items()):
             # Do not need to rename if the old and new name are the same
             if old_name == new_name:
                 continue
 
             if new_name is not None:
-                old_s3_key = bucket_folder_name + "/" + old_name
-                new_s3_key = bucket_folder_name + "/" + new_name
+                old_s3_resource = resource_prefix + "/" + old_name
+                new_s3_resource = resource_prefix + "/" + new_name
 
                 # copy old key to new key
-                key = bucket.copy_key(new_s3_key, bucket_name, old_s3_key)
-                if isinstance(key, boto.s3.key.Key):
-                    # delete old key
-                    old_key = bucket.delete_key(old_s3_key)
+                storage.copy_resource(old_s3_resource, new_s3_resource)
+                # delete old key
+                storage.delete_resource(old_s3_resource)
 
-    def find_xml_filename_in_map(self, file_name_map):
-        for old_name, new_name in list(file_name_map.items()):
-            info = ArticleInfo(new_name)
-            if info.file_type == "ArticleXML":
-                return new_name
+
+def new_filename(old_filename, version):
+    if re.search(r"-v([0-9])[\.]", old_filename):  # is version already in file name?
+        new_filename = re.sub(r"-v([0-9])[\.]", "-v" + str(version) + ".", old_filename)
+    else:
+        (file_prefix, file_extension) = article_structure.file_parts(old_filename)
+        new_filename = file_prefix + "-v" + str(version) + "." + file_extension
+    return new_filename
+
+
+def find_xml_filename_in_map(file_name_map):
+    for old_name, new_name in list(file_name_map.items()):
+        info = ArticleInfo(new_name)
+        if info.file_type == "ArticleXML":
+            return new_name
+    return None
