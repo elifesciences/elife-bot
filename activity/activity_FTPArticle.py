@@ -4,12 +4,9 @@ import zipfile
 import glob
 import shutil
 import re
-
 from elifetools import parseJATS as parser
-
-from boto.s3.connection import S3Connection
-
-from provider import article_processing, s3lib
+from provider import article_processing
+from provider.storage_provider import storage_context
 import provider.sftp as sftplib
 from provider.ftp import FTP
 from activity.objects import Activity
@@ -248,11 +245,9 @@ class activity_FTPArticle(Activity):
         "download the latest archive zip for the article to be repackaged"
         # Connect to S3 and bucket
         bucket_name = self.archive_zip_bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = s3_conn.lookup(bucket_name)
-        s3_keys_in_bucket = s3lib.get_s3_keys_from_bucket(bucket=bucket)
+        storage = storage_context(self.settings)
+        bucket_resource = self.settings.storage_provider + "://" + bucket_name + "/"
+        s3_keys_in_bucket = storage.list_resources(bucket_resource, return_keys=True)
 
         s3_keys = []
         for key in s3_keys_in_bucket:
@@ -278,12 +273,13 @@ class activity_FTPArticle(Activity):
 
         if s3_key_name:
             # download it to disk
-            s3_key = bucket.get_key(s3_key_name)
-            filename = s3_key_name.split("/")[-1]
+            filename = s3_key_name.rsplit("/", 1)[-1]
             filename_plus_path = os.path.join(self.directories.get("TMP_DIR"), filename)
-            mode = "wb"
-            with open(filename_plus_path, mode) as open_file:
-                s3_key.get_contents_to_file(open_file)
+            file_resource_origin = (
+                self.settings.storage_provider + "://" + bucket_name + "/" + filename
+            )
+            with open(filename_plus_path, "wb") as open_file:
+                storage.get_resource_to_file(file_resource_origin, open_file)
             if self.logger:
                 self.logger.info(
                     "FTPArticle running %s workflow for article %s, downloaded archive zip %s"

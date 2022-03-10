@@ -175,7 +175,7 @@ class FakeStorageContext:
         with open(file_name, "wb") as open_file:
             open_file.write(data)
 
-    def list_resources(self, resource):
+    def list_resources(self, resource, return_keys=False):
         return self.resources
 
     def copy_resource(self, origin, destination, additional_dict_metadata=None):
