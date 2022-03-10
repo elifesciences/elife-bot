@@ -1,67 +1,9 @@
 import re
-import boto.s3
 
 
 """
 Functions for reuse concerning Amazon s3 and buckets
 """
-
-
-def get_s3_key_names_from_bucket(
-    bucket,
-    key_type="key",
-    prefix=None,
-    delimiter="/",
-    headers=None,
-    file_extensions=None,
-):
-    """
-    Given a connected boto bucket object, and optional parameters,
-    from the prefix (folder name), get the s3 key names for
-    key_type objects, optionally that match a particular
-    list of file extensions
-    key_type = "key" then look for s3 objects
-    key_type = "prefix" then look for folders (also s3 objects of a different type)
-    """
-    s3_keys = get_s3_keys_from_bucket(
-        bucket, key_type, prefix, delimiter, headers, file_extensions
-    )
-    s3_key_names = []
-    # Convert to key names instead of objects to make it testable later
-    for key in s3_keys:
-        s3_key_names.append(key.name)
-
-    # Filter by file_extension
-    if file_extensions is not None:
-        s3_key_names = filter_list_by_file_extensions(s3_key_names, file_extensions)
-
-    return s3_key_names
-
-
-def get_s3_keys_from_bucket(
-    bucket,
-    key_type="key",
-    prefix=None,
-    delimiter="/",
-    headers=None,
-    file_extensions=None,
-):
-
-    s3_keys = []
-
-    # Get a list of S3 objects
-    bucketList = bucket.list(prefix=prefix, delimiter=delimiter, headers=headers)
-
-    for item in bucketList:
-        # Can loop through each item and search for objects
-        if key_type == "key":
-            if isinstance(item, boto.s3.key.Key):
-                s3_keys.append(item)
-        elif key_type == "prefix":
-            if isinstance(item, boto.s3.prefix.Prefix):
-                s3_keys.append(item)
-
-    return s3_keys
 
 
 def filter_list_by_file_extensions(s3_key_names, file_extensions):

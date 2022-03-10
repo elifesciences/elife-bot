@@ -1,7 +1,6 @@
 import unittest
 from mock import patch
 from ddt import ddt, data
-from provider import s3lib
 from provider.article import article
 import activity.activity_PubRouterDeposit as activity_module
 from activity.activity_PubRouterDeposit import activity_PubRouterDeposit
@@ -47,10 +46,8 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(article, "was_ever_published")
-    @patch.object(s3lib, "get_s3_keys_from_bucket")
     def test_do_activity(
         self,
-        fake_get_s3_keys,
         fake_was_ever_published,
         fake_storage_context,
         fake_archive_bucket_s3_keys,
@@ -63,7 +60,6 @@ class TestPubRouterDeposit(unittest.TestCase):
         )
         activity_data = {"data": {"workflow": "HEFCE"}}
         fake_was_ever_published.return_value = None
-        fake_get_s3_keys.return_value = None
         fake_storage_context.return_value = FakeStorageContext(
             "tests/test_data/", ["elife00013.xml", "elife09169.xml"]
         )
@@ -82,10 +78,8 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(article, "was_ever_published")
-    @patch.object(s3lib, "get_s3_keys_from_bucket")
     def test_do_activity_not_published(
         self,
-        fake_get_s3_keys,
         fake_was_ever_published,
         fake_storage_context,
         fake_archive_bucket_s3_keys,
@@ -98,7 +92,6 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(tmp_dir)
         activity_data = {"data": {"workflow": "HEFCE"}}
         fake_was_ever_published.return_value = None
-        fake_get_s3_keys.return_value = None
         fake_storage_context.return_value = FakeStorageContext(
             "tests/test_data/", ["elife00013.xml", "elife09169.xml"]
         )
@@ -153,12 +146,10 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch("boto3.client")
     @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
     @patch("provider.outbox_provider.storage_context")
-    @patch.object(s3lib, "get_s3_keys_from_bucket")
     @data("PMC")
     def test_do_activity_pmc(
         self,
         workflow_name,
-        fake_get_s3_keys,
         fake_storage_context,
         fake_archive_bucket_s3_keys,
         fake_client,
@@ -176,7 +167,6 @@ class TestPubRouterDeposit(unittest.TestCase):
         )
         fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
         fake_was_ever_poa.return_value = False
-        fake_get_s3_keys.return_value = False
         fake_article_versions.return_value = (
             200,
             test_case_data.lax_article_versions_response_data,
