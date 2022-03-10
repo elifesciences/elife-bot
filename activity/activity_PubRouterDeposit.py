@@ -4,16 +4,13 @@ import json
 import time
 import glob
 import boto3
-import boto.s3
-from boto.s3.connection import S3Connection
-
 import provider.article as articlelib
+from provider.storage_provider import storage_context
 from provider import (
     article_processing,
     email_provider,
     lax_provider,
     outbox_provider,
-    s3lib,
     utils,
 )
 
@@ -274,12 +271,9 @@ class activity_PubRouterDeposit(Activity):
         bucket_name = self.archive_bucket
 
         # Connect to S3 and bucket
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = s3_conn.lookup(bucket_name)
-
-        s3_keys_in_bucket = s3lib.get_s3_keys_from_bucket(bucket=bucket)
+        storage = storage_context(self.settings)
+        bucket_resource = self.settings.storage_provider + "://" + bucket_name + "/"
+        s3_keys_in_bucket = storage.list_resources(bucket_resource, return_keys=True)
 
         s3_keys = []
         for key in s3_keys_in_bucket:
