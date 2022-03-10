@@ -4,13 +4,21 @@ import unittest
 import json
 import os
 import arrow
-from provider.ejp import EJP
-import tests.settings_mock as settings_mock
 from testfixtures import tempdir
 from testfixtures import TempDirectory
-from mock import patch, MagicMock
+from mock import patch
 from ddt import ddt, data, unpack
-from tests.activity.classes_mock import FakeBucket, FakeKey
+from provider.ejp import EJP
+from tests import settings_mock
+from tests.activity.classes_mock import FakeStorageContext
+
+
+class FakeKey:
+    "just want a fake key object which can have properties set"
+
+    def __init__(self, name=None, last_modified=None):
+        self.name = name
+        self.last_modified = last_modified
 
 
 @ddt
@@ -279,9 +287,8 @@ class TestProviderEJP(unittest.TestCase):
         self.assertEqual(column_headings, self.editor_column_headings)
         self.assertEqual(authors, expected_editors)
 
-    @patch.object(FakeBucket, "get_key")
     @patch.object(arrow, "utcnow")
-    @patch("provider.ejp.EJP.get_bucket")
+    @patch("provider.ejp.storage_context")
     @data(
         (
             "author",
@@ -322,13 +329,19 @@ class TestProviderEJP(unittest.TestCase):
         self,
         file_type,
         expected_s3_key_name,
-        fake_get_bucket,
+        fake_storage_context,
         fake_utcnow,
-        fake_get_key,
     ):
         """test finding latest CSV file names by their expected file name"""
-        fake_get_bucket.return_value = FakeBucket()
-        fake_get_key.return_value = FakeKey(name=expected_s3_key_name)
+        # add file to the mock bucket folder
+        with open(
+            os.path.join(self.directory.path, expected_s3_key_name), "wb"
+        ) as open_file:
+            open_file.write(b"test")
+        resources = [expected_s3_key_name]
+        fake_storage_context.return_value = FakeStorageContext(
+            self.directory.path, resources
+        )
         fake_utcnow.return_value = arrow.arrow.Arrow(2019, 6, 10)
         # call the function
         s3_key_name = self.ejp.find_latest_s3_file_name(file_type)
@@ -394,6 +407,32 @@ class TestProviderEJP(unittest.TestCase):
         s3_key_name = self.ejp.find_latest_s3_file_name(file_type)
         # assert results
         self.assertEqual(s3_key_name, expected_s3_key_name)
+
+    @patch("provider.ejp.storage_context")
+    def test_ejp_bucket_file_list(self, fake_storage_context):
+        bucket_list_file_new = os.path.join(
+            "tests", "test_data", "ejp_bucket_list_new.json"
+        )
+        ejp_bucket_file_list = []
+        with open(bucket_list_file_new, "r") as open_file:
+            ejp_bucket_file_list += json.loads(open_file.read())
+        resources = [
+            FakeKey(s3_file.get("name"), s3_file.get("last_modified"))
+            for s3_file in ejp_bucket_file_list
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            self.directory.path, resources
+        )
+        bucket_list = self.ejp.ejp_bucket_file_list()
+        self.assertEqual(len(bucket_list), 32)
+        self.assertEqual(
+            bucket_list[0],
+            {
+                "name": "ejp_query_tool_query_id_15a)_Accepted_Paper_Details_2019_05_31_eLife.csv",
+                "last_modified": "2019-05-31T00:00:00.000Z",
+                "last_modified_timestamp": 1559260800,
+            },
+        )
 
 
 if __name__ == "__main__":

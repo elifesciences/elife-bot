@@ -6,10 +6,8 @@ import re
 import os
 import sys
 import io
-
 from ejpcsvparser.utils import entity_to_unicode
-import boto.s3
-from boto.s3.connection import S3Connection
+from provider.storage_provider import storage_context
 from provider import utils
 
 """
@@ -31,52 +29,9 @@ class EJP:
         if self.settings is not None:
             self.bucket_name = self.settings.ejp_bucket
 
-        # S3 connection
-        self.s3_conn = None
-
         # Some EJP file types we expect
         self.author_default_filename = "authors.csv"
         self.editor_default_filename = "editors.csv"
-
-    def connect(self):
-        """
-        Connect to S3 using the settings
-        """
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        self.s3_conn = s3_conn
-        return self.s3_conn
-
-    def get_bucket(self, bucket_name=None):
-        """
-        Using the S3 connection, lookup the bucket
-        """
-        if self.s3_conn is None:
-            s3_conn = self.connect()
-        else:
-            s3_conn = self.s3_conn
-
-        if bucket_name is None:
-            # Use the object bucket_name if not provided
-            bucket_name = self.bucket_name
-
-        # Lookup the bucket
-        bucket = s3_conn.lookup(bucket_name)
-
-        return bucket
-
-    def get_s3key(self, s3_key_name, bucket=None):
-        """
-        Get the S3 key from the bucket
-        If the bucket is not provided, use the object bucket
-        """
-        if bucket is None:
-            bucket = self.get_bucket()
-
-        s3key = bucket.get_key(s3_key_name)
-
-        return s3key
 
     def write_content_to_file(self, filename, content, mode="wb"):
         "write the content to a file in the tmp_dir"
@@ -149,9 +104,16 @@ class EJP:
         if local_document is None:
             # No document? Find it on S3, save the content to
             #  the tmp_dir
+            storage = storage_context(self.settings)
             s3_key_name = self.find_latest_s3_file_name(file_type="author")
-            s3_key = self.get_s3key(s3_key_name)
-            contents = s3_key.get_contents_as_string()
+            s3_resource = (
+                self.settings.storage_provider
+                + "://"
+                + self.bucket_name
+                + "/"
+                + s3_key_name
+            )
+            contents = storage.get_resource_as_string(s3_resource)
             document = self.write_content_to_file(
                 self.author_default_filename, contents
             )
@@ -261,9 +223,16 @@ class EJP:
         editors = []
         # Check for the document
         if local_document is None:
+            storage = storage_context(self.settings)
             s3_key_name = self.find_latest_s3_file_name(file_type="editor")
-            s3_key = self.get_s3key(s3_key_name)
-            contents = s3_key.get_contents_as_string()
+            s3_resource = (
+                self.settings.storage_provider
+                + "://"
+                + self.bucket_name
+                + "/"
+                + s3_key_name
+            )
+            contents = storage.get_resource_as_string(s3_resource)
             document = self.write_content_to_file(
                 self.editor_default_filename, contents
             )
@@ -342,10 +311,16 @@ class EJP:
         # remove backslashes from regular expression fragments
         clean_fn_fragment = fn_fragment[file_type].replace("\\", "")
         file_name_to_match = "%s_%s_eLife.csv" % (clean_fn_fragment, date_string)
-        bucket = self.get_bucket(self.settings.ejp_bucket)
-        s3_key = bucket.get_key(file_name_to_match)
-        if s3_key:
-            return s3_key.name
+        storage = storage_context(self.settings)
+        s3_resource = (
+            self.settings.storage_provider
+            + "://"
+            + self.bucket_name
+            + "/"
+            + file_name_to_match
+        )
+        if storage.resource_exists(s3_resource):
+            return file_name_to_match
 
     def latest_s3_file_name_by_modified_date(self, fn_fragment, file_type, file_list):
         if file_list is None:
@@ -376,11 +351,10 @@ class EJP:
         extract interesting values and collapse into JSON
         so we can test it later
         """
-
-        bucket = self.get_bucket(self.settings.ejp_bucket)
-
+        storage = storage_context(self.settings)
+        resource = self.settings.storage_provider + "://" + self.bucket_name + "/"
         # List bucket contents
-        (keys, folders) = self.get_keys_and_folders(bucket)
+        keys = storage.list_resources(resource, return_keys=True)
 
         attr_list = ["name", "last_modified"]
         file_list = []
@@ -391,7 +365,7 @@ class EJP:
 
             for attr_name in attr_list:
 
-                raw_value = eval("key." + attr_name)
+                raw_value = getattr(key, attr_name, None)
                 if raw_value:
                     string_value = str(raw_value)
                     item_attrs[attr_name] = string_value
@@ -417,30 +391,6 @@ class EJP:
             file_list = None
 
         return file_list
-
-    def get_keys_and_folders(self, bucket, prefix=None, delimiter="/", headers=None):
-        # Get "keys" and "folders" from the bucket, with optional
-        # prefix for the "folder" of interest
-        # default delimiter is '/'
-
-        if bucket is None:
-            return None
-
-        folders = []
-        keys = []
-
-        bucketList = bucket.list(prefix=prefix, delimiter=delimiter, headers=headers)
-
-        for item in bucketList:
-            if isinstance(item, boto.s3.prefix.Prefix):
-                # Can loop through each prefix and search for objects
-                folders.append(item)
-                # print 'Prefix: ' + item.name
-            elif isinstance(item, boto.s3.key.Key):
-                keys.append(item)
-                # print 'Key: ' + item.name
-
-        return keys, folders
 
     def get_tmp_dir(self):
         """
