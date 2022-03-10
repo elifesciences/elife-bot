@@ -6,7 +6,7 @@ import shutil
 import smtplib
 from collections import OrderedDict
 from testfixtures import TempDirectory
-from mock import mock, patch
+from mock import patch
 from ddt import ddt, data, unpack
 from provider.templates import Templates
 import provider.article as articlelib
@@ -206,7 +206,7 @@ class TestPublicationEmail(unittest.TestCase):
                 "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
                 "input_data": {},
                 "article_xml_filenames": ["elife-32991-v2.xml"],
-                "article_id": "23065",
+                "article_id": "32991",
                 "activity_success": True,
                 "admin_email_content_contains": [
                     "Parsed https://doi.org/10.7554/eLife.32991",
@@ -230,8 +230,7 @@ class TestPublicationEmail(unittest.TestCase):
     @patch("provider.article.article.download_article_xml_from_s3")
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")
-    @patch.object(EJP, "get_s3key")
-    @patch.object(EJP, "find_latest_s3_file_name")
+    @patch.object(EJP, "get_authors")
     @patch.object(FakeStorageContext, "list_resources")
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
@@ -240,8 +239,7 @@ class TestPublicationEmail(unittest.TestCase):
         fake_storage_context,
         fake_outbox_key_names,
         fake_list_resources,
-        fake_find_latest_s3_file_name,
-        fake_ejp_get_s3key,
+        fake_ejp_get_authors,
         fake_article_versions,
         fake_email_smtp_connect,
         fake_download_xml,
@@ -255,19 +253,42 @@ class TestPublicationEmail(unittest.TestCase):
         fake_download_xml.return_value = False
 
         # Basic fake data for all activity passes
-        fake_ejp_get_s3key.return_value = fake_get_s3key(
-            directory,
-            self.activity.get_tmp_dir(),
-            "authors.csv",
-            "tests/test_data/ejp_author_file.csv",
+        ejp_article_13_authors = (
+            [
+                "ms_no",
+                "author_seq",
+                "first_nm",
+                "last_nm",
+                "author_type_cde",
+                "dual_corr_author_ind",
+                "e_mail",
+                "primary_org",
+            ],
+            [
+                [
+                    "13",
+                    "1",
+                    "Author",
+                    "Uno",
+                    "Contributing Author",
+                    "",
+                    "author13-01@example.com",
+                    "University ",
+                ]
+            ],
         )
-        fake_find_latest_s3_file_name.return_value = mock.MagicMock()
+
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
 
         # do_activity
         for pass_test_data in self.do_activity_passes:
+
+            if pass_test_data.get("article_id") != "32991":
+                fake_ejp_get_authors.return_value = ejp_article_13_authors
+            else:
+                fake_ejp_get_authors.return_value = (None, None)
 
             # Prime the related article property for when needed
             if pass_test_data.get("related_article"):
