@@ -6,8 +6,16 @@ from mock import patch, MagicMock
 from ddt import ddt, data, unpack
 import activity.activity_FTPArticle as activity_module
 from activity.activity_FTPArticle import activity_FTPArticle
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeFTP, FakeLogger
+from tests.activity.classes_mock import FakeFTP, FakeLogger, FakeStorageContext
+from tests.activity import settings_mock, test_activity_data
+
+
+class FakeKey:
+    "just want a fake key object which can have properties set"
+
+    def __init__(self, name=None, last_modified=None):
+        self.name = name
+        self.last_modified = last_modified
 
 
 @ddt
@@ -80,6 +88,27 @@ class TestFTPArticle(unittest.TestCase):
         # Cause an exception by setting elife_id as non numeric for now
         activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
+
+    @patch.object(activity_module, "storage_context")
+    def test_download_archive_zip_from_s3(self, fake_storage_context):
+        self.activity.make_activity_directories()
+        # create mock Key object with name and last_modified value
+        doi_id = "353"
+        zip_file_name = "elife-00353-vor-v1-20121213000000.zip"
+        resources = [FakeKey(zip_file_name, "2019-05-31T00:00:00.000Z")]
+        fake_storage_context.return_value = FakeStorageContext(
+            test_activity_data.ExpandArticle_files_source_folder, resources
+        )
+        self.assertEqual(self.activity.download_archive_zip_from_s3(doi_id), True)
+        self.assertEqual(
+            self.activity.logger.loginfo[1],
+            ("Latest archive zip for status vor, doi id %s, is s3 key name %s")
+            % (doi_id, zip_file_name),
+        )
+        self.assertEqual(
+            os.listdir(self.activity.directories.get("TMP_DIR")),
+            [zip_file_name],
+        )
 
     @data(
         (

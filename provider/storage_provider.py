@@ -103,7 +103,7 @@ class S3StorageContext:
         fp = open(file_path, mode="rb")
         return fp
 
-    def list_resources(self, folder):
+    def list_resources(self, folder, return_keys=False):
         bucket, s3_key = self.s3_storage_objects(folder)
         folder = s3_key[1:] if s3_key[:1] == "/" else s3_key
         if not folder:
@@ -112,6 +112,10 @@ class S3StorageContext:
         else:
             # list files from the folder and its subfolders and return full object path
             bucketlist = bucket.list(prefix=folder + "/")
+        if return_keys:
+            # return a list of key objects
+            return bucketlist
+        # by default return a list of key names only
         return [key.name for key in bucketlist]
 
     def copy_resource(
