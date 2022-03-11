@@ -1,5 +1,4 @@
 from ssl import SSLError
-from boto.s3.connection import S3Connection
 import tempfile
 from github import Github
 from github import GithubException
