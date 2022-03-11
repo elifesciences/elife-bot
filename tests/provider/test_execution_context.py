@@ -1,27 +1,31 @@
 import unittest
-import json
 from mock import patch
-from provider.utils import unicode_encode
+from testfixtures import TempDirectory
 from provider.execution_context import S3Session
-from tests.activity.classes_mock import FakeS3Connection
+from tests.activity.classes_mock import FakeStorageContext
 from tests import settings_mock
 
 
 class TestS3Session(unittest.TestCase):
-    @patch("provider.execution_context.S3Session.get_full_key")
-    @patch("boto.s3.key.Key.get_contents_as_string")
-    @patch("provider.execution_context.S3Connection")
-    def test_get_value(
-        self, fake_s3_connection, fake_get_contents_as_string, fake_get_full_key
-    ):
-        session_value = b'{"foo": "bar"}'
-        expected = json.loads(unicode_encode(session_value))
-        fake_get_full_key.return_value = None
-        fake_s3_connection.return_value = FakeS3Connection()
-        fake_get_contents_as_string.return_value = session_value
-        s3_session_object = S3Session(settings_mock, None, None)
-        self.assertEqual(s3_session_object.get_value(None), expected)
+    def tearDown(self):
+        TempDirectory.cleanup_all()
 
+    @patch("provider.execution_context.storage_context")
+    def test_get_value(self, fake_storage_context):
+        directory = TempDirectory()
+        session_key = "session_key"
+        test_value = {"foo": "bar"}
+        fake_storage_context.return_value = FakeStorageContext(directory.path, [])
+        s3_session_object = S3Session(settings_mock, test_value, session_key)
+        self.assertEqual(s3_session_object.get_value("foo"), test_value.get("foo"))
 
-if __name__ == "__main__":
-    unittest.main()
+    @patch("provider.execution_context.storage_context")
+    def test_store_value(self, fake_storage_context):
+        directory = TempDirectory()
+        session_key = "session_key"
+        key = "foo"
+        value = "bar"
+        fake_storage_context.return_value = FakeStorageContext(directory.path, [])
+        s3_session_object = S3Session(settings_mock, None, session_key)
+        s3_session_object.store_value(key, value)
+        self.assertEqual(s3_session_object.get_value(key), value)

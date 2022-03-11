@@ -1,10 +1,8 @@
-from boto.s3.connection import S3Connection
-from boto.s3.key import Key
-from boto.exception import S3ResponseError
 from pydoc import locate
 import json
 import redis
 from provider.utils import unicode_encode
+from provider.storage_provider import storage_context
 
 
 def get_session(settings, input_data, session_key):
@@ -78,32 +76,34 @@ class RedisSession:
 class S3Session:
     def __init__(self, settings, input_data, session_key):
 
+        self.storage = storage_context(settings)
+        self.storage_provider = settings.storage_provider + "://"
+        self.bucket_name = settings.s3_session_bucket
         self.input_data = input_data
-        self.conn = S3Connection(
-            settings.aws_access_key_id, settings.aws_secret_access_key
-        )
-        self.bucket = self.conn.get_bucket(settings.s3_session_bucket)
         self.session_key = session_key
 
     def store_value(self, key, value):
 
         value = json.dumps(value)
-        s3_key = Key(self.bucket)
-        s3_key.key = self.get_full_key(key)
-        s3_key.set_contents_from_string(str(value))
+        full_key = self.get_full_key(key)
+        s3_resource = self.get_s3_resource(full_key)
+        self.storage.set_resource_from_string(s3_resource, str(value))
 
     def get_value(self, key):
 
-        s3_key = Key(self.bucket)
-        s3_key.key = self.get_full_key(key)
+        full_key = self.get_full_key(key)
+        s3_resource = self.get_s3_resource(full_key)
         value = None
         try:
-            value = s3_key.get_contents_as_string()
+            value = self.storage.get_resource_as_string(s3_resource)
             value = json.loads(unicode_encode(value))
-        except S3ResponseError:
+        except:
             if self.input_data is not None and key in self.input_data:
                 value = self.input_data[key]
         return value
+
+    def get_s3_resource(self, full_key):
+        return self.storage_provider + self.bucket_name + "/" + full_key
 
     def get_full_key(self, key):
         return self.session_key + "/" + key

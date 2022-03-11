@@ -162,18 +162,28 @@ class FakeStorageContext:
             filelike.write(fsrc.read())
 
     def get_resource_as_string(self, origin):
+        bucket_name, s3_key = self.get_bucket_and_key(origin)
+        file_name = os.path.join(self.dir, s3_key.rsplit("/", 1)[-1])
+        if os.path.exists(file_name):
+            with open(file_name, "rb") as fsrc:
+                return fsrc.read()
+        # default used by verify glencoe tests
         return '<mock><media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="wmv" mimetype="video" xlink:href="elife-00569-media1.wmv"></media></mock>'
 
     def set_resource_from_filename(self, resource, file_name):
         "resource name can be different than the file name"
-        to_file_name = resource.split("/")[-1]
+        to_file_name = resource.rsplit("/", 1)[-1]
         dest = data.ExpandArticle_files_dest_folder + "/" + to_file_name
         copy(file_name, dest)
 
     def set_resource_from_string(self, resource, data, content_type=None):
-        file_name = os.path.join(self.dir, resource.split("/")[-1])
+        bucket_name, s3_key = self.get_bucket_and_key(resource)
+        file_name = os.path.join(self.dir, s3_key.rsplit("/", 1)[-1])
         with open(file_name, "wb") as open_file:
-            open_file.write(data)
+            try:
+                open_file.write(data)
+            except TypeError:
+                open_file.write(bytes(data, encoding="utf8"))
 
     def list_resources(self, resource, return_keys=False):
         return self.resources
