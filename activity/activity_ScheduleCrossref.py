@@ -1,9 +1,7 @@
 import json
-
-from boto.s3.connection import S3Connection
 from provider import lax_provider, outbox_provider
 from provider.execution_context import get_session
-from provider.article_structure import get_article_xml_key
+from provider.storage_provider import storage_context
 from activity.objects import Activity
 
 """
@@ -39,10 +37,10 @@ class activity_ScheduleCrossref(Activity):
         if self.logger:
             self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
-        self.expanded_bucket_name = (
+        expanded_bucket_name = (
             self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
         )
-        self.crossref_bucket_name = self.settings.poa_packaging_bucket
+        outbox_bucket_name = self.settings.poa_packaging_bucket
 
         run = data["run"]
         session = get_session(self.settings, data, run)
@@ -66,11 +64,6 @@ class activity_ScheduleCrossref(Activity):
                 )
                 return True
 
-        conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        bucket = conn.get_bucket(self.expanded_bucket_name)
-
         self.emit_monitor_event(
             self.settings,
             article_id,
@@ -82,17 +75,19 @@ class activity_ScheduleCrossref(Activity):
         )
 
         try:
-            (xml_key, xml_filename) = get_article_xml_key(bucket, expanded_folder_name)
-
-            # Rename the XML file to match what is used already
-            new_key_name = self.outbox_new_key_name(
-                prefix=self.crossref_outbox_folder, xml_filename=xml_filename
+            xml_file_name = lax_provider.get_xml_file_name(
+                self.settings, expanded_folder_name, expanded_bucket_name
             )
 
-            self.copy_article_xml_to_crossref_outbox(
+            xml_key_name = expanded_folder_name + "/" + xml_file_name
+
+            new_key_name = self.crossref_outbox_folder + xml_file_name
+
+            self.copy_article_xml_to_outbox(
+                dest_bucket_name=outbox_bucket_name,
                 new_key_name=new_key_name,
-                source_bucket_name=self.expanded_bucket_name,
-                old_key_name=xml_key.name,
+                source_bucket_name=expanded_bucket_name,
+                old_key_name=xml_key_name,
             )
 
             self.emit_monitor_event(
@@ -128,22 +123,15 @@ class activity_ScheduleCrossref(Activity):
 
         return True
 
-    def outbox_new_key_name(self, prefix, xml_filename):
-        "key name for where on S3 to place the XML file"
-        try:
-            return prefix + xml_filename
-        except TypeError:
-            return None
-
-    def copy_article_xml_to_crossref_outbox(
-        self, new_key_name, source_bucket_name, old_key_name
+    def copy_article_xml_to_outbox(
+        self, dest_bucket_name, new_key_name, source_bucket_name, old_key_name
     ):
-        """
-        Used for uploading to the crossref outbox, for now
-        """
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        "copy the XML file to an S3 outbox folder, for now"
+        storage = storage_context(self.settings)
+        storage_provider = self.settings.storage_provider + "://"
+        orig_resource = storage_provider + source_bucket_name + "/" + old_key_name
+        dest_resource = storage_provider + dest_bucket_name + "/" + new_key_name
+        self.logger.info(
+            "%s Copying %s to %s " % (self.name, orig_resource, dest_resource)
         )
-        bucket = s3_conn.lookup(self.crossref_bucket_name)
-
-        key = bucket.copy_key(new_key_name, source_bucket_name, old_key_name)
+        storage.copy_resource(orig_resource, dest_resource)
