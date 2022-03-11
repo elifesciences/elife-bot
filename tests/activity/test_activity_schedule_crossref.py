@@ -1,14 +1,17 @@
 import unittest
 import copy
-from activity.activity_ScheduleCrossref import activity_ScheduleCrossref
-from mock import mock, patch
-from provider import lax_provider
-from tests.activity.classes_mock import FakeSession
-from tests.activity.classes_mock import FakeS3Connection
-from tests.activity.classes_mock import FakeLogger
-import tests.activity.settings_mock as settings_mock
-import tests.activity.test_activity_data as testdata
 from ddt import ddt, data, unpack
+from mock import patch
+import activity.activity_ScheduleCrossref as activity_module
+from activity.activity_ScheduleCrossref import activity_ScheduleCrossref
+from provider import lax_provider
+from tests.activity.classes_mock import (
+    FakeLogger,
+    FakeSession,
+    FakeStorageContext,
+)
+from tests.activity import helpers, settings_mock
+import tests.activity.test_activity_data as testdata
 
 
 class FakeKey:
@@ -27,42 +30,37 @@ class TestScheduleCrossref(unittest.TestCase):
         )
 
     def tearDown(self):
-        pass
+        helpers.delete_files_in_folder(
+            testdata.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
-    @patch.object(activity_ScheduleCrossref, "copy_article_xml_to_crossref_outbox")
-    @patch("activity.activity_ScheduleCrossref.get_article_xml_key")
-    @patch("activity.activity_ScheduleCrossref.S3Connection")
+    @patch("provider.lax_provider.get_xml_file_name")
     @patch("activity.activity_ScheduleCrossref.get_session")
+    @patch.object(activity_module, "storage_context")
     @patch.object(activity_ScheduleCrossref, "emit_monitor_event")
     @patch.object(activity_ScheduleCrossref, "set_monitor_property")
     @data(
-        ("key_name", "elife-00353-v1.xml", True),
-        (None, None, False),
+        ("elife-00353-v1.xml", True),
+        (None, False),
     )
     @unpack
     def test_do_activity(
         self,
-        xml_key,
         xml_filename,
         expected_result,
         mock_set_monitor_property,
         mock_emit_monitor_event,
+        fake_storage_context,
         fake_session_mock,
-        fake_s3_mock,
-        fake_get_article_xml_key,
-        fake_copy_article_xml,
+        fake_get_xml_file_name,
     ):
+        mock_emit_monitor_event.return_value = True
+        mock_set_monitor_property.return_value = True
         fake_session_mock.return_value = FakeSession(testdata.session_example)
-        fake_s3_mock.return_value = FakeS3Connection()
-        fake_copy_article_xml = mock.MagicMock()
-        # create a fake Key if specified
-        if xml_key:
-            fake_key = FakeKey()
-            fake_key.name = xml_key
-        else:
-            fake_key = None
-        fake_get_article_xml_key.return_value = (fake_key, xml_filename)
-
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_get_xml_file_name.return_value = None
+        if xml_filename:
+            fake_get_xml_file_name.return_value = xml_filename
         result = self.activity.do_activity(testdata.ExpandArticle_data)
         self.assertEqual(result, expected_result)
 
@@ -78,21 +76,3 @@ class TestScheduleCrossref(unittest.TestCase):
         fake_highest_version.return_value = 2
         result = self.activity.do_activity(testdata.ExpandArticle_data)
         self.assertEqual(result, expected_result)
-
-    @data(
-        (
-            "crossref/outbox/",
-            "elife-00353-v1.xml",
-            "crossref/outbox/elife-00353-v1.xml",
-        ),
-        ("crossref/outbox/", None, None),
-    )
-    @unpack
-    def test_outbox_new_key_name(self, prefix, xml_filename, expected_result):
-        self.assertEqual(
-            self.activity.outbox_new_key_name(prefix, xml_filename), expected_result
-        )
-
-
-if __name__ == "__main__":
-    unittest.main()
