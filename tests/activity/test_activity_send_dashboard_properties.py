@@ -1,13 +1,12 @@
 import unittest
-import os
 from mock import patch, ANY
 from testfixtures import TempDirectory
+from activity import activity_SendDashboardProperties as activity_module
 from activity.activity_SendDashboardProperties import activity_SendDashboardProperties
-import tests.activity.settings_mock as settings_mock
+from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import (
     FakeSession,
-    FakeS3Connection,
-    FakeKey,
+    FakeStorageContext,
     FakeLogger,
 )
 import tests.activity.test_activity_data as test_data
@@ -24,51 +23,50 @@ class TestSendDashboardEvents(unittest.TestCase):
     def tearDown(self):
         self.directory.cleanup()
         TempDirectory.cleanup_all()
+        helpers.delete_files_in_folder(
+            test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
+    @patch("provider.lax_provider.get_xml_file_name")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
     @patch.object(activity_SendDashboardProperties, "emit_monitor_event")
-    @patch("activity.activity_SendDashboardProperties.get_article_xml_key")
-    @patch("activity.activity_SendDashboardProperties.S3Connection")
-    @patch("activity.activity_SendDashboardProperties.get_session")
     @patch.object(activity_SendDashboardProperties, "set_monitor_property")
     def test_do_activity(
         self,
-        fake_emit_monitor_property,
-        fake_session,
-        fake_s3_mock,
-        fake_get_article_xml_key,
+        fake_set_monitor_property,
         fake_emit_monitor_event,
+        fake_session,
+        fake_storage_context,
+        fake_get_xml_file_name,
     ):
 
         fake_session.return_value = FakeSession(test_data.session_example)
-        fake_s3_mock.return_value = FakeS3Connection()
-        fake_get_article_xml_key.return_value = (
-            FakeKey(self.directory),
-            test_data.bucket_origin_file_name,
-        )
-
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_get_xml_file_name.return_value = "elife-00353-v1.xml"
         result = self.send_dashboard_properties.do_activity(test_data.dashboard_data)
 
         self.assertEqual(result, True)
 
-        fake_emit_monitor_property.assert_any_call(
+        fake_set_monitor_property.assert_any_call(
             ANY, "353", "doi", "10.7554/eLife.00353", "text", version="1"
         )
-        fake_emit_monitor_property.assert_any_call(
+        fake_set_monitor_property.assert_any_call(
             ANY, "353", "title", "A good life", "text", version="1"
         )
-        fake_emit_monitor_property.assert_any_call(
+        fake_set_monitor_property.assert_any_call(
             ANY, "353", "status", "VOR", "text", version="1"
         )
-        fake_emit_monitor_property.assert_any_call(
+        fake_set_monitor_property.assert_any_call(
             ANY, "353", "publication-date", "2012-12-13", "text", version="1"
         )
-        fake_emit_monitor_property.assert_any_call(
+        fake_set_monitor_property.assert_any_call(
             ANY, "353", "article-type", "discussion", "text", version="1"
         )
-        fake_emit_monitor_property.assert_any_call(
+        fake_set_monitor_property.assert_any_call(
             ANY, "353", "corresponding-authors", "Eve Marder", "text", version="1"
         )
-        fake_emit_monitor_property.assert_any_call(
+        fake_set_monitor_property.assert_any_call(
             ANY, "353", "authors", "Eve Marder", "text", version="1"
         )
 
@@ -91,23 +89,25 @@ class TestSendDashboardEvents(unittest.TestCase):
             "Article properties sent to dashboard for article  353",
         )
 
+    @patch("provider.lax_provider.get_xml_file_name")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
     @patch.object(activity_SendDashboardProperties, "emit_monitor_event")
-    @patch("activity.activity_SendDashboardProperties.get_article_xml_key")
-    @patch("activity.activity_SendDashboardProperties.S3Connection")
-    @patch("activity.activity_SendDashboardProperties.get_session")
     @patch.object(activity_SendDashboardProperties, "set_monitor_property")
     def test_do_activity_failure_no_xml(
         self,
-        fake_emit_monitor_property,
-        fake_session,
-        fake_s3_mock,
-        fake_get_article_xml_key,
+        fake_set_monitor_property,
         fake_emit_monitor_event,
+        fake_session,
+        fake_storage_context,
+        fake_get_xml_file_name,
     ):
         "test if no XML file is supplied, will fail"
+        fake_set_monitor_property.return_value = True
+        fake_emit_monitor_event.return_value = True
         fake_session.return_value = FakeSession(test_data.session_example)
-        fake_s3_mock.return_value = FakeS3Connection()
-        fake_get_article_xml_key.return_value = None, None
+        fake_storage_context.return_value = FakeStorageContext()
+        fake_get_xml_file_name.return_value = None
 
         result = self.send_dashboard_properties.do_activity(test_data.dashboard_data)
 
@@ -115,38 +115,30 @@ class TestSendDashboardEvents(unittest.TestCase):
             result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE
         )
 
+    @patch("provider.lax_provider.get_xml_file_name")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
     @patch.object(activity_SendDashboardProperties, "emit_monitor_event")
-    @patch("activity.activity_SendDashboardProperties.get_article_xml_key")
-    @patch("activity.activity_SendDashboardProperties.S3Connection")
-    @patch("activity.activity_SendDashboardProperties.get_session")
     @patch.object(activity_SendDashboardProperties, "set_monitor_property")
     def test_do_activity_failure_invalid_xml(
         self,
-        fake_emit_monitor_property,
-        fake_session,
-        fake_s3_mock,
-        fake_get_article_xml_key,
+        fake_set_monitor_property,
         fake_emit_monitor_event,
+        fake_session,
+        fake_storage_context,
+        fake_get_xml_file_name,
     ):
         "test if XML fails to parse, here an incorrect pub_date, will fail"
+        fake_set_monitor_property.return_value = True
+        fake_emit_monitor_event.return_value = True
         fake_session.return_value = FakeSession(test_data.session_example)
-        fake_s3_mock.return_value = FakeS3Connection()
-        with open(
-            os.path.join("tests", "files_source", "elife-00353-v1_bad_pub_date.xml"),
-            "rb",
-        ) as open_file:
-            fake_key = FakeKey(self.directory, "elife-00353-v1.xml", open_file.read())
-            fake_get_article_xml_key.return_value = (
-                fake_key,
-                test_data.bucket_origin_file_name,
-            )
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/files_source", ["elife-00353-v1_bad_pub_date.xml"]
+        )
+        fake_get_xml_file_name.return_value = "elife-00353-v1_bad_pub_date.xml"
 
         result = self.send_dashboard_properties.do_activity(test_data.dashboard_data)
 
         self.assertEqual(
             result, self.send_dashboard_properties.ACTIVITY_PERMANENT_FAILURE
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
