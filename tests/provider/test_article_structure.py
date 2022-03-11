@@ -5,8 +5,6 @@ from ddt import ddt, data, unpack
 from testfixtures import TempDirectory
 from provider.article_structure import ArticleInfo
 import provider.article_structure as article_structure
-from tests.activity.classes_mock import FakeBucket
-from tests.activity.classes_mock import FakeKey
 
 
 @ddt
@@ -444,42 +442,6 @@ class TestArticleStructure(unittest.TestCase):
         self.assertEqual(
             sorted(article_structure.pre_ingest_assets(files)), sorted(expected)
         )
-
-    @patch.object(FakeBucket, "list")
-    @data(
-        (
-            [
-                "test/elife-00666-video2.jpg",
-                "test/elife-00666-v1.xml",
-                "test/elife-00666-supp3-v1.xml",
-            ],
-            "test/elife-00666-v1.xml",
-            "elife-00666-v1.xml",
-        ),
-        (["test/elife-00666-video2.jpg"], None, None),
-    )
-    @unpack
-    def test_get_article_xml_key(
-        self, bucket_list, expected_key_name, expected_filename, fake_bucket_list
-    ):
-        directory = TempDirectory()
-        # Build a list of key objects for the bucket list return value
-        bucket_key_list = []
-        for key_name in bucket_list:
-            fake_key = FakeKey(directory)
-            fake_key.key = fake_key
-            fake_key.name = key_name
-            bucket_key_list.append(fake_key)
-        # Create the fake bucket
-        fake_bucket = FakeBucket()
-        fake_bucket_list.return_value = bucket_key_list
-        (key, filename) = article_structure.get_article_xml_key(fake_bucket, "")
-        if key:
-            result_key_name = key.name
-        else:
-            result_key_name = key
-        self.assertEqual(result_key_name, expected_key_name)
-        self.assertEqual(filename, expected_filename)
 
 
 if __name__ == "__main__":

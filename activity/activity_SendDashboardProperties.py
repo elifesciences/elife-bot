@@ -1,13 +1,9 @@
 import json
-import re
 import time
-from datetime import datetime
 from elifetools import parseJATS as parser
-from boto.s3.connection import S3Connection
 from provider.execution_context import get_session
-from provider.article_structure import ArticleInfo
-from provider.article_structure import get_article_xml_key
-from provider import utils
+from provider import lax_provider, utils
+from provider.storage_provider import storage_context
 from activity.objects import Activity
 
 """
@@ -64,14 +60,11 @@ class activity_SendDashboardProperties(Activity):
                 self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
             )
 
-            conn = S3Connection(
-                self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+            xml_file_name = lax_provider.get_xml_file_name(
+                self.settings, expanded_folder_name, expanded_folder_bucket
             )
-            bucket = conn.get_bucket(expanded_folder_bucket)
 
-            bucket_folder_name = expanded_folder_name
-            (xml_key, xml_filename) = get_article_xml_key(bucket, bucket_folder_name)
-            if xml_key is None:
+            if xml_file_name is None:
                 error_message = "Article XML path not found"
                 self.logger.error("%s for article_id %s" % (error_message, article_id))
                 self.emit_monitor_event(
@@ -87,8 +80,19 @@ class activity_SendDashboardProperties(Activity):
                     + error_message,
                 )
                 return self.ACTIVITY_PERMANENT_FAILURE
+            storage = storage_context(self.settings)
+            s3_resource = (
+                self.settings.storage_provider
+                + "://"
+                + expanded_folder_bucket
+                + "/"
+                + expanded_folder_name
+                + "/"
+                + xml_file_name
+            )
 
-            xml = xml_key.get_contents_as_string()
+            xml = storage.get_resource_as_string(s3_resource)
+
             soup = parser.parse_xml(xml)
 
             self.set_dashboard_properties(soup, article_id, version)
