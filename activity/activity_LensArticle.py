@@ -1,8 +1,7 @@
 import json
 import os
 import codecs
-from boto.s3.connection import S3Connection
-from boto.s3.key import Key
+from provider.storage_provider import storage_context
 import provider.templates as templatelib
 import provider.article as articlelib
 from activity.objects import Activity
@@ -94,16 +93,15 @@ class activity_LensArticle(Activity):
         filename_plus_path = self.write_html_file(self.article_html, filename)
 
         # Now, set the S3 object to the contents of the filename
-        # Connect to S3
-        s3_conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
+        storage = storage_context(self.settings)
+        s3_resource = (
+            self.settings.storage_provider
+            + "://"
+            + self.settings.lens_bucket
+            + "/"
+            + self.article_s3key
         )
-        # Lookup bucket
-        bucket_name = self.settings.lens_bucket
-        bucket = s3_conn.get_bucket(bucket_name)
-        s3key = Key(bucket)
-        s3key.key = self.article_s3key
-        s3key.set_contents_from_filename(filename_plus_path, replace=True)
+        storage.set_resource_from_filename(s3_resource, filename_plus_path)
 
         if self.logger:
             self.logger.info("LensArticle created for: %s" % self.article_s3key)
@@ -115,7 +113,7 @@ class activity_LensArticle(Activity):
         Given an eLife article DOI ID (5 digits) assemble the
         S3 key name for where to save the article index.html page
         """
-        article_s3key = "/" + str(article_id).zfill(5) + "/index.html"
+        article_s3key = str(article_id).zfill(5) + "/index.html"
 
         return article_s3key
 
@@ -141,8 +139,7 @@ class activity_LensArticle(Activity):
 
         filename_plus_path = self.get_tmp_dir() + os.sep + filename
         mode = "w"
-        f = codecs.open(filename_plus_path, mode, encoding="utf8")
-        f.write(article_html)
-        f.close()
+        with codecs.open(filename_plus_path, mode, encoding="utf8") as open_file:
+            open_file.write(article_html)
 
         return filename_plus_path
