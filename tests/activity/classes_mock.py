@@ -28,20 +28,6 @@ class FakeSession:
         return execution_id + "__" + key
 
 
-class FakeS3Connection:
-    def __init__(self):
-        self.buckets_dict = {
-            "origin_bucket": data.bucket_origin_file_name,
-            "dest_bucket": data.bucket_dest_file_name,
-        }
-
-    def get_bucket(self, mock_bucket_name):
-        return self.buckets_dict[mock_bucket_name]
-
-    def lookup(self, mock_bucket_name):
-        return self.get_bucket(mock_bucket_name)
-
-
 class FakeSQSClient:
     def __init__(self, directory=None, queues=None):
         self.dir = directory
