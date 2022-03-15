@@ -10,15 +10,7 @@ from mock import patch
 from ddt import ddt, data, unpack
 from provider.ejp import EJP
 from tests import settings_mock
-from tests.activity.classes_mock import FakeStorageContext
-
-
-class FakeKey:
-    "just want a fake key object which can have properties set"
-
-    def __init__(self, name=None, last_modified=None):
-        self.name = name
-        self.last_modified = last_modified
+from tests.activity.classes_mock import FakeKey, FakeStorageContext
 
 
 @ddt
@@ -416,10 +408,7 @@ class TestProviderEJP(unittest.TestCase):
         ejp_bucket_file_list = []
         with open(bucket_list_file_new, "r") as open_file:
             ejp_bucket_file_list += json.loads(open_file.read())
-        resources = [
-            FakeKey(s3_file.get("name"), s3_file.get("last_modified"))
-            for s3_file in ejp_bucket_file_list
-        ]
+        resources = [FakeKey(**s3_file) for s3_file in ejp_bucket_file_list]
         fake_storage_context.return_value = FakeStorageContext(
             self.directory.path, resources
         )

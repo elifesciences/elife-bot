@@ -28,20 +28,6 @@ class FakeSession:
         return execution_id + "__" + key
 
 
-class FakeS3Connection:
-    def __init__(self):
-        self.buckets_dict = {
-            "origin_bucket": data.bucket_origin_file_name,
-            "dest_bucket": data.bucket_dest_file_name,
-        }
-
-    def get_bucket(self, mock_bucket_name):
-        return self.buckets_dict[mock_bucket_name]
-
-    def lookup(self, mock_bucket_name):
-        return self.get_bucket(mock_bucket_name)
-
-
 class FakeSQSClient:
     def __init__(self, directory=None, queues=None):
         self.dir = directory
@@ -147,7 +133,7 @@ class FakeStorageContext:
     def get_resource_as_key(self, resource):
         bucket, s3_key = self.get_bucket_and_key(resource)
         attributes = {"last_modified": "2021-01-01T00:00:01.000Z"}
-        return FakeKey(None, s3_key, **attributes)
+        return FakeKey(**attributes)
 
     def resource_exists(self, resource):
         "check if a key exists"
@@ -239,54 +225,15 @@ class FakeResponse:
 
 
 class FakeKey:
-    def __init__(self, directory=None, destination=None, source=None, **kwargs):
-        self.d = directory
-        if destination is None:
-            destination = data.bucket_origin_file_name
-        if source is None:
-            source = data.xml_content_for_xml_key
-
-        if directory and destination and source:
-            self.d.write(destination, source)
-
-        self.destination = destination
-
-        # set object attributes from remaining keyword arguments
+    def __init__(self, **kwargs):
+        # set object attributes from keyword arguments
         for key, value in kwargs.items():
             setattr(self, key, value)
-
-    def get_contents_as_string(self):
-        return self.d.read(self.destination)
-
-    def set_contents_from_string(self, json_output):
-        self.d.write(self.destination, json_output)
-
-    def set_contents_from_filename(self, filename, replace=None):
-        file_destination = str(self.destination) + filename.split("/")[-1]
-        with open(filename, "rb") as fp:
-            self.d.write(file_destination, fp.read())
-
-    def check_file_contents(self, directory, file):
-        return directory.read(file)
-
-    def cleanup_fake_directories(self):
-        self.d.cleanup()
 
 
 class FakeFileInfo:
     def __init__(self):
         self.key = None
-
-
-class FakeBucket:
-    def get_key(
-        self, key
-    ):  # key will be u'00353.1/7d5fa403-cba9-486c-8273-3078a98a0b98/elife-00353-fig1-v1.tif' for example
-        return key
-
-    def list(self, prefix="", delimiter="", headers=""):
-        "stub for mocking"
-        pass
 
 
 class FakeLogger:

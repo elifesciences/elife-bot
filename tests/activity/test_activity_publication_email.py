@@ -17,7 +17,7 @@ import tests.test_data as test_data
 from tests.classes_mock import FakeSMTPServer
 import tests.activity.helpers as helpers
 import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeKey, FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 
 
 LAX_ARTICLE_VERSIONS_RESPONSE_DATA_1 = test_data.lax_article_versions_response_data[:1]
@@ -1107,17 +1107,6 @@ class TestAuthorsFromXML(unittest.TestCase):
         article_object.parse_article_file(full_filename)
         authors = activity_module.authors_from_xml(article_object)
         self.assertEqual(authors, test_data.get("expected"))
-
-
-def fake_get_s3key(directory, to_dir, document, source_doc):
-    """
-    EJP data do two things, copy the CSV file to where it should be
-    and also set the fake S3 key object
-    """
-    dest_doc = os.path.join(to_dir, document)
-    shutil.copy(source_doc, dest_doc)
-    with open(source_doc, "rb") as open_file:
-        return FakeKey(directory, document, open_file.read())
 
 
 if __name__ == "__main__":
