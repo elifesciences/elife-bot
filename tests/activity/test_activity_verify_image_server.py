@@ -1,15 +1,17 @@
 import unittest
 from mock import patch, MagicMock
-from ddt import ddt, data
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeSession
+from tests.activity import helpers, settings_mock
+from tests.activity.classes_mock import FakeSession, FakeStorageContext
 from activity.activity_VerifyImageServer import activity_VerifyImageServer
 import tests.activity.test_activity_data as test_data
 
 
-class FakeStorageContext:
-    def list_resources(self, resource):
-        return [
+class TestVerifyImageServer(unittest.TestCase):
+    def setUp(self):
+        self.verifyimageserver = activity_VerifyImageServer(
+            settings_mock, None, None, None, None
+        )
+        self.resources = [
             "elife-003530-fig1-v1-1022w.jpg",
             "elife-003530-fig1-v1-80w.jpg",
             "elife-003530-fig1-v1-1022w.gif",
@@ -19,11 +21,9 @@ class FakeStorageContext:
             "elife-003530-fig1-v1-download.xml",
         ]
 
-
-class TestVerifyImageServer(unittest.TestCase):
-    def setUp(self):
-        self.verifyimageserver = activity_VerifyImageServer(
-            settings_mock, None, None, None, None
+    def tearDown(self):
+        helpers.delete_files_in_folder(
+            test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
         )
 
     @patch("activity.activity_VerifyImageServer.storage_context")
@@ -36,7 +36,9 @@ class TestVerifyImageServer(unittest.TestCase):
         data = test_data.data_example_before_publish
         fake_retrieve_endpoints_check.return_value = [(True, "test.path")]
         fake_session.return_value = FakeSession(test_data.session_example)
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            test_data.ExpandArticle_files_dest_folder, self.resources
+        )
         self.verifyimageserver.emit_monitor_event = MagicMock()
         self.verifyimageserver.logger = MagicMock()
         # When
@@ -54,7 +56,9 @@ class TestVerifyImageServer(unittest.TestCase):
         data = test_data.data_example_before_publish
         fake_retrieve_endpoints_check.return_value = [(False, "test.path")]
         fake_session.return_value = FakeSession(test_data.session_example)
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            test_data.ExpandArticle_files_dest_folder, self.resources
+        )
         self.verifyimageserver.emit_monitor_event = MagicMock()
         self.verifyimageserver.logger = MagicMock()
         # When
@@ -72,7 +76,9 @@ class TestVerifyImageServer(unittest.TestCase):
         data = test_data.data_example_before_publish
         fake_retrieve_endpoints_check.side_effect = Exception("Error!")
         fake_session.return_value = FakeSession(test_data.session_example)
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            test_data.ExpandArticle_files_dest_folder, self.resources
+        )
         self.verifyimageserver.emit_monitor_event = MagicMock()
         self.verifyimageserver.logger = MagicMock()
         # When
