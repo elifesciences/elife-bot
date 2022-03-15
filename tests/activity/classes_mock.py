@@ -236,17 +236,6 @@ class FakeFileInfo:
         self.key = None
 
 
-class FakeBucket:
-    def get_key(
-        self, key
-    ):  # key will be u'00353.1/7d5fa403-cba9-486c-8273-3078a98a0b98/elife-00353-fig1-v1.tif' for example
-        return key
-
-    def list(self, prefix="", delimiter="", headers=""):
-        "stub for mocking"
-        pass
-
-
 class FakeLogger:
     def __init__(self):
         self.logdebug = "First logger debug"
