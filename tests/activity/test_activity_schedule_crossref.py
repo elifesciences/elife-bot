@@ -14,13 +14,6 @@ from tests.activity import helpers, settings_mock
 import tests.activity.test_activity_data as testdata
 
 
-class FakeKey:
-    "just want a fake key object which can have a property set"
-
-    def __init__(self):
-        self.name = None
-
-
 @ddt
 class TestScheduleCrossref(unittest.TestCase):
     def setUp(self):

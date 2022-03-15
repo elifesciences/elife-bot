@@ -6,7 +6,7 @@ import activity.activity_PubRouterDeposit as activity_module
 from activity.activity_PubRouterDeposit import activity_PubRouterDeposit
 from tests.classes_mock import FakeSWFClient, FakeSMTPServer
 import tests.test_data as test_case_data
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+from tests.activity.classes_mock import FakeKey, FakeLogger, FakeStorageContext
 from tests.activity import settings_mock, test_activity_data
 
 
@@ -20,14 +20,6 @@ ARCHIVE_ZIP_BUCKET_S3_KEYS = [
         "last_modified": "2020-02-05T09:04:11.000Z",
     },
 ]
-
-
-class FakeKey:
-    "just want a fake key object which can have properties set"
-
-    def __init__(self, name=None, last_modified=None):
-        self.name = name
-        self.last_modified = last_modified
 
 
 @ddt
@@ -180,7 +172,9 @@ class TestPubRouterDeposit(unittest.TestCase):
         # create mock Key object with name and last_modified value
         zip_file_name = "elife-00353-vor-v1-20121213000000.zip"
         last_modified = "2019-05-31T00:00:00.000Z"
-        resources = [FakeKey(zip_file_name, "2019-05-31T00:00:00.000Z")]
+        resources = [
+            FakeKey(name=zip_file_name, last_modified="2019-05-31T00:00:00.000Z")
+        ]
         fake_storage_context.return_value = FakeStorageContext(
             test_activity_data.ExpandArticle_files_source_folder, resources
         )
