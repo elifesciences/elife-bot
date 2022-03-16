@@ -84,7 +84,7 @@ class S3StorageContext:
         "return dict of object attributes"
         bucket_name, s3_key = self.s3_storage_objects(resource)
         client = self.get_client_from_cache()
-        return client.get_object_attributes(Bucket=bucket_name, Key=s3_key.lstrip("/"))
+        return client.head_object(Bucket=bucket_name, Key=s3_key.lstrip("/"))
 
     def set_resource_from_filename(self, resource, file, metadata=None):
         "create object from file data, metadata can include ContentType key"
