@@ -1,5 +1,4 @@
 import calendar
-import time
 from operator import itemgetter
 import csv
 import re
@@ -356,32 +355,18 @@ class EJP:
         # List bucket contents
         keys = storage.list_resources(resource, return_keys=True)
 
-        attr_list = ["name", "last_modified"]
         file_list = []
 
         for key in keys:
-
             item_attrs = {}
-
-            for attr_name in attr_list:
-
-                raw_value = getattr(key, attr_name, None)
-                if raw_value:
-                    string_value = str(raw_value)
-                    item_attrs[attr_name] = string_value
-
-                try:
-                    if item_attrs["last_modified"]:
-                        # Parse last_modified into a timestamp for easy computations
-                        date_format = utils.DATE_TIME_FORMAT
-                        date_str = time.strptime(
-                            item_attrs["last_modified"], date_format
-                        )
-                        timestamp = calendar.timegm(date_str)
-                        item_attrs["last_modified_timestamp"] = timestamp
-                except KeyError:
-                    pass
-
+            item_attrs["name"] = key.get("Key")
+            item_attrs["last_modified"] = key.get("LastModified").strftime(
+                utils.DATE_TIME_FORMAT
+            )
+            # Convert last_modified into a timestamp for easy computations
+            item_attrs["last_modified_timestamp"] = calendar.timegm(
+                key.get("LastModified").timetuple()
+            )
             # Finally, add to the file list
             if len(item_attrs) > 0:
                 file_list.append(item_attrs)

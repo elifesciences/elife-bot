@@ -5,6 +5,7 @@ from shutil import copy
 import shutil
 import re
 import os
+from datetime import datetime
 from mock import MagicMock
 
 
@@ -130,10 +131,9 @@ class FakeStorageContext:
         s3_key = match.group(3)
         return bucket_name, s3_key
 
-    def get_resource_as_key(self, resource):
-        bucket, s3_key = self.get_bucket_and_key(resource)
-        attributes = {"last_modified": "2021-01-01T00:00:01.000Z"}
-        return FakeKey(**attributes)
+    def get_resource_attributes(self, resource):
+        attributes = {"LastModified": datetime(2021, 1, 1, 0, 0, 1)}
+        return attributes
 
     def resource_exists(self, resource):
         "check if a key exists"
@@ -156,7 +156,7 @@ class FakeStorageContext:
         # default used by verify glencoe tests
         return '<mock><media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="wmv" mimetype="video" xlink:href="elife-00569-media1.wmv"></media></mock>'
 
-    def set_resource_from_filename(self, resource, file_name):
+    def set_resource_from_filename(self, resource, file_name, metadata=None):
         "resource name can be different than the file name"
         to_file_name = resource.rsplit("/", 1)[-1]
         dest = data.ExpandArticle_files_dest_folder + "/" + to_file_name
@@ -182,12 +182,6 @@ class FakeStorageContext:
         file_name = data.ExpandArticle_files_dest_folder + "/" + resource.split("/")[-1]
         if os.path.exists(file_name):
             os.remove(file_name)
-
-    def get_resource_to_file_pointer(self, resource, file_path):
-        return None
-
-    # def set_contents_from_filename(self, storage_object, key, path):
-    #     copyfile(file, "tests\\" + storage_object + key)
 
 
 def fake_get_tmp_dir(path=None):
@@ -222,13 +216,6 @@ class FakeResponse:
 
     def json(self):
         return self.response_json
-
-
-class FakeKey:
-    def __init__(self, **kwargs):
-        # set object attributes from keyword arguments
-        for key, value in kwargs.items():
-            setattr(self, key, value)
 
 
 class FakeFileInfo:

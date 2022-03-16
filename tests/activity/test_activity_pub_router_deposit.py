@@ -1,4 +1,5 @@
 import unittest
+import datetime
 from mock import patch
 from ddt import ddt, data
 from provider.article import article
@@ -6,18 +7,18 @@ import activity.activity_PubRouterDeposit as activity_module
 from activity.activity_PubRouterDeposit import activity_PubRouterDeposit
 from tests.classes_mock import FakeSWFClient, FakeSMTPServer
 import tests.test_data as test_case_data
-from tests.activity.classes_mock import FakeKey, FakeLogger, FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 from tests.activity import settings_mock, test_activity_data
 
 
 ARCHIVE_ZIP_BUCKET_S3_KEYS = [
     {
-        "name": "elife-00013-vor-v1-20121015000000.zip",
-        "last_modified": "2016-02-05T09:04:11.000Z",
+        "Key": "elife-00013-vor-v1-20121015000000.zip",
+        "LastModified": datetime.datetime(2016, 2, 5, 9, 4, 11),
     },
     {
-        "name": "elife-09169-vor-v1-20150608000000.zip",
-        "last_modified": "2020-02-05T09:04:11.000Z",
+        "Key": "elife-09169-vor-v1-20150608000000.zip",
+        "LastModified": datetime.datetime(2020, 2, 5, 9, 4, 11),
     },
 ]
 
@@ -35,14 +36,14 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")
     @patch("boto3.client")
-    @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
+    @patch.object(activity_module, "storage_context")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(article, "was_ever_published")
     def test_do_activity(
         self,
         fake_was_ever_published,
+        fake_outbox_storage_context,
         fake_storage_context,
-        fake_archive_bucket_s3_keys,
         fake_client,
         fake_article_versions,
         fake_email_smtp_connect,
@@ -52,10 +53,13 @@ class TestPubRouterDeposit(unittest.TestCase):
         )
         activity_data = {"data": {"workflow": "HEFCE"}}
         fake_was_ever_published.return_value = None
-        fake_storage_context.return_value = FakeStorageContext(
+        fake_outbox_storage_context.return_value = FakeStorageContext(
             "tests/test_data/", ["elife00013.xml", "elife09169.xml"]
         )
-        fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
+        fake_storage_context.return_value = FakeStorageContext(
+            test_activity_data.ExpandArticle_files_source_folder,
+            ARCHIVE_ZIP_BUCKET_S3_KEYS,
+        )
         fake_client.return_value = FakeSWFClient()
         fake_article_versions.return_value = (
             200,
@@ -67,14 +71,14 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")
     @patch("boto3.client")
-    @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
+    @patch.object(activity_module, "storage_context")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(article, "was_ever_published")
     def test_do_activity_not_published(
         self,
         fake_was_ever_published,
+        fake_outbox_storage_context,
         fake_storage_context,
-        fake_archive_bucket_s3_keys,
         fake_client,
         fake_article_versions,
         fake_email_smtp_connect,
@@ -84,10 +88,13 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(tmp_dir)
         activity_data = {"data": {"workflow": "HEFCE"}}
         fake_was_ever_published.return_value = None
-        fake_storage_context.return_value = FakeStorageContext(
+        fake_outbox_storage_context.return_value = FakeStorageContext(
             "tests/test_data/", ["elife00013.xml", "elife09169.xml"]
         )
-        fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
+        fake_storage_context.return_value = FakeStorageContext(
+            test_activity_data.ExpandArticle_files_source_folder,
+            ARCHIVE_ZIP_BUCKET_S3_KEYS,
+        )
         fake_client.return_value = FakeSWFClient()
         fake_article_versions.return_value = (
             200,
@@ -136,14 +143,14 @@ class TestPubRouterDeposit(unittest.TestCase):
     @patch("provider.lax_provider.was_ever_poa")
     @patch("provider.lax_provider.article_versions")
     @patch("boto3.client")
-    @patch.object(activity_PubRouterDeposit, "get_archive_bucket_s3_keys")
+    @patch.object(activity_module, "storage_context")
     @patch("provider.outbox_provider.storage_context")
     @data("PMC")
     def test_do_activity_pmc(
         self,
         workflow_name,
+        fake_outbox_storage_context,
         fake_storage_context,
-        fake_archive_bucket_s3_keys,
         fake_client,
         fake_article_versions,
         fake_was_ever_poa,
@@ -154,10 +161,13 @@ class TestPubRouterDeposit(unittest.TestCase):
             self.pubrouterdeposit.get_tmp_dir()
         )
         activity_data = {"data": {"workflow": workflow_name}}
-        fake_storage_context.return_value = FakeStorageContext(
+        fake_outbox_storage_context.return_value = FakeStorageContext(
             "tests/test_data/", ["elife00013.xml"]
         )
-        fake_archive_bucket_s3_keys.return_value = ARCHIVE_ZIP_BUCKET_S3_KEYS
+        fake_storage_context.return_value = FakeStorageContext(
+            test_activity_data.ExpandArticle_files_source_folder,
+            ARCHIVE_ZIP_BUCKET_S3_KEYS,
+        )
         fake_was_ever_poa.return_value = False
         fake_article_versions.return_value = (
             200,
@@ -173,7 +183,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         zip_file_name = "elife-00353-vor-v1-20121213000000.zip"
         last_modified = "2019-05-31T00:00:00.000Z"
         resources = [
-            FakeKey(name=zip_file_name, last_modified="2019-05-31T00:00:00.000Z")
+            {"Key": zip_file_name, "LastModified": datetime.datetime(2019, 5, 31)}
         ]
         fake_storage_context.return_value = FakeStorageContext(
             test_activity_data.ExpandArticle_files_source_folder, resources

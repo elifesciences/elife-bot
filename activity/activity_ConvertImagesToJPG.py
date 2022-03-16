@@ -74,9 +74,8 @@ class activity_ConvertImagesToJPG(Activity):
                 figure_resource = orig_resource + "/" + file_name
 
                 file_path = self.get_tmp_dir() + os.sep + file_name
-                file_pointer = storage.get_resource_to_file_pointer(
-                    figure_resource, file_path
-                )
+                with open(file_path, "wb") as open_file:
+                    storage.get_resource_to_file(figure_resource, open_file)
 
                 cdn_bucket_name = (
                     self.settings.publishing_buckets_prefix
@@ -92,14 +91,15 @@ class activity_ConvertImagesToJPG(Activity):
 
                 publish_locations = [cdn_resource_path]
 
-                image_conversion.generate_images(
-                    self.settings,
-                    formats,
-                    file_pointer,
-                    article_structure.ArticleInfo(file_name),
-                    publish_locations,
-                    self.logger,
-                )
+                with open(file_path, "rb") as file_pointer:
+                    image_conversion.generate_images(
+                        self.settings,
+                        formats,
+                        file_pointer,
+                        article_structure.ArticleInfo(file_name),
+                        publish_locations,
+                        self.logger,
+                    )
 
             self.emit_monitor_event(
                 self.settings,
