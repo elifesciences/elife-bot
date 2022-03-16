@@ -41,8 +41,8 @@ def store_in_publish_locations(settings, filename, image, publish_locations, dow
         for resource in publish_locations:
             image.seek(0)
             content_type, encoding = guess_type(filename)
-            storage.set_resource_from_filename(
-                resource + filename, image, metadata={"ContentType": content_type}
+            storage.set_resource_from_string(
+                resource + filename, image, content_type=content_type
             )
 
             if download:
