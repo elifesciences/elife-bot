@@ -5,7 +5,7 @@ import glob
 import shutil
 import re
 from elifetools import parseJATS as parser
-from provider import article_processing
+from provider import article_processing, utils
 from provider.storage_provider import storage_context
 import provider.sftp as sftplib
 from provider.ftp import FTP
@@ -251,7 +251,14 @@ class activity_FTPArticle(Activity):
 
         s3_keys = []
         for key in s3_keys_in_bucket:
-            s3_keys.append({"name": key.name, "last_modified": key.last_modified})
+            s3_keys.append(
+                {
+                    "name": key.get("Key"),
+                    "last_modified": key.get("LastModified").strftime(
+                        utils.DATE_TIME_FORMAT
+                    ),
+                }
+            )
 
         for status in ["vor", "poa"]:
             s3_key_name = article_processing.latest_archive_zip_revision(

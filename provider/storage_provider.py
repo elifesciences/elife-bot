@@ -1,7 +1,6 @@
-import os
 import re
-from boto.s3.key import Key
-from boto.s3.connection import S3Connection
+from io import BytesIO
+import boto3
 import log
 
 
@@ -19,162 +18,167 @@ class S3StorageContext:
     def __init__(self, settings):
 
         self.context = {}
-        self.context["buckets"] = {}
         self.settings = settings
+
+    def get_client(self):
+        return boto3.client(
+            "s3",
+            aws_access_key_id=self.settings.aws_access_key_id,
+            aws_secret_access_key=self.settings.aws_secret_access_key,
+        )
+
+    def get_client_from_cache(self):
+        if "client" in self.context:
+            client = self.context["client"]
+        else:
+            client = self.get_client()
+            self.context["client"] = client
+        return client
 
     # Resource format expected s3://my-bucket/my/path/abc.zip
     def s3_storage_objects(self, resource):
-        p = re.compile(r"(.*?)://(.*?)(/.*)")
-        match = p.match(resource)
+        pattern = re.compile(r"(.*?)://(.*?)(/.*)")
+        match = pattern.match(resource)
         protocol = match.group(1)
         if protocol != "s3":
-            # another implementation of this same 'interface' could handle different resource types without
+            # another implementation of this same 'interface'
+            # could handle different resource types without
             # changing the external api
             raise UnsupportedResourceType()
         bucket_name = match.group(2)
         s3_key = match.group(3)
-        bucket = self.get_bucket_from_cache(bucket_name)
-        return bucket, s3_key
+        return bucket_name, s3_key
 
     def resource_exists(self, resource):
-        "check if a key exists in the bucket"
-        bucket, s3_key = self.s3_storage_objects(resource)
-        key = Key(bucket)
-        key.key = s3_key
-        return key.exists()
-
-    def get_resource_as_key(self, resource):
-        bucket, s3_key = self.s3_storage_objects(resource)
-        return bucket.get_key(s3_key)
-
-    def get_resource_to_file(self, resource, file):
-        bucket, s3_key = self.s3_storage_objects(resource)
-        key = Key(bucket)
-        key.key = s3_key
-        key.get_contents_to_file(file)
+        "check if an object exists in the bucket"
+        bucket_name, s3_key = self.s3_storage_objects(resource)
+        if not s3_key:
+            return None
+        client = self.get_client_from_cache()
+        try:
+            client.head_object(Bucket=bucket_name, Key=s3_key.lstrip("/"))
+        except (client.exceptions.ClientError, client.exceptions.NoSuchKey):
+            # if response is 403 or 404, or the key does not exist
+            return False
+        return True
 
     def get_resource_as_string(self, resource):
-        bucket, s3_key = self.s3_storage_objects(resource)
-        key = Key(bucket)
-        key.key = s3_key
-        return key.get_contents_as_string()
+        "return resource object as bytes"
+        bucket_name, s3_key = self.s3_storage_objects(resource)
+        object_buffer = BytesIO()
+        client = self.get_client_from_cache()
+        client.download_fileobj(
+            Bucket=bucket_name, Key=s3_key.lstrip("/"), Fileobj=object_buffer
+        )
+        return object_buffer.getvalue()
 
-    def set_resource_from_filename(self, resource, file):
-        bucket, s3_key = self.s3_storage_objects(resource)
-        key = Key(bucket)
-        key.key = s3_key
-        key.set_contents_from_filename(file)
+    def get_resource_to_file(self, resource, file):
+        "save resource object data to file pointer"
+        bucket_name, s3_key = self.s3_storage_objects(resource)
+        client = self.get_client_from_cache()
+        client.download_fileobj(
+            Bucket=bucket_name, Key=s3_key.lstrip("/"), Fileobj=file
+        )
 
-    def set_resource_from_file(self, resource, file, metadata=None):
-        bucket, s3_key = self.s3_storage_objects(resource)
-        key = Key(bucket)
-        key.key = s3_key
+    def get_resource_attributes(self, resource):
+        "return dict of object attributes"
+        bucket_name, s3_key = self.s3_storage_objects(resource)
+        client = self.get_client_from_cache()
+        return client.get_object_attributes(Bucket=bucket_name, Key=s3_key.lstrip("/"))
 
-        if metadata is not None:
-            for mdk in metadata:
-                key.metadata[mdk] = metadata[mdk]
-
-        key.set_contents_from_file(file)
+    def set_resource_from_filename(self, resource, file, metadata=None):
+        "create object from file data, metadata can include ContentType key"
+        bucket_name, s3_key = self.s3_storage_objects(resource)
+        if metadata is None:
+            metadata = {}
+        client = self.get_client_from_cache()
+        client.upload_file(
+            Filename=file,
+            Bucket=bucket_name,
+            Key=s3_key.lstrip("/"),
+            ExtraArgs=metadata,
+        )
 
     def set_resource_from_string(self, resource, data, content_type=None):
-        bucket, s3_key = self.s3_storage_objects(resource)
-        key = Key(bucket)
-        key.key = s3_key
-        if content_type != None:
-            key.content_type = content_type
-
-        key.set_contents_from_string(data)
-
-    def get_resource_to_file_pointer(self, resource, file_path):
-        bucket, s3_key = self.s3_storage_objects(resource)
-        key = Key(bucket)
-        key.key = s3_key
-
-        fp = open(file_path, mode="wb")
-
-        key.get_file(fp)
-        fp.close()
-
-        assert key.size == os.path.getsize(file_path), (
-            "The file size of the local cached copy does not correspond to the original size on S3 of %s. "
-            "This points to a corrupted download, check what's in %s"
-            % (key.name, file_path)
-        )
-        fp = open(file_path, mode="rb")
-        return fp
+        "create object and save data there"
+        bucket_name, s3_key = self.s3_storage_objects(resource)
+        client = self.get_client_from_cache()
+        kwargs = {
+            "Body": data,
+            "Bucket": bucket_name,
+            "Key": s3_key.lstrip("/"),
+        }
+        if content_type:
+            kwargs["ContentType"] = content_type
+        client.put_object(**kwargs)
+        # todo!!! optionally compare response etag to string MD5 to confirm it copied entirely
 
     def list_resources(self, folder, return_keys=False):
-        bucket, s3_key = self.s3_storage_objects(folder)
+        "list all bucket objects for the folder"
+        bucket_name, s3_key = self.s3_storage_objects(folder)
         folder = s3_key[1:] if s3_key[:1] == "/" else s3_key
-        if not folder:
-            # get a list of all bucket contents if no folder is specified
-            bucketlist = bucket.list()
-        else:
-            # list files from the folder and its subfolders and return full object path
-            bucketlist = bucket.list(prefix=folder + "/")
+        max_keys = 1000
+        bucket_contents = []
+
+        client = self.get_client_from_cache()
+        # set IsTruncated in a pre-response prior to the while loop
+        response = {"IsTruncated": True}
+        while response.get("IsTruncated") is True:
+            kwargs = {
+                "Bucket": bucket_name,
+                "MaxKeys": max_keys,
+            }
+            if folder:
+                kwargs["Prefix"] = folder
+            # handle the continuation token
+            if response.get("NextContinuationToken"):
+                kwargs["ContinuationToken"] = response.get("NextContinuationToken")
+            elif response.get("ContinuationToken"):
+                del kwargs["ContinuationToken"]
+            # get max list of objects from the client
+            response = client.list_objects_v2(**kwargs)
+            if response.get("Contents"):
+                # add the Contents list to the full list of objects
+                bucket_contents += response.get("Contents")
         if return_keys:
-            # return a list of key objects
-            return bucketlist
+            # return a dict of object data
+            return bucket_contents
         # by default return a list of key names only
-        return [key.name for key in bucketlist]
+        return [key_dict.get("Key") for key_dict in bucket_contents]
 
     def copy_resource(
         self, orig_resource, dest_resource, additional_dict_metadata=None
     ):
-        orig_bucket, orig_s3_key = self.s3_storage_objects(orig_resource)
+        orig_bucket_name, orig_s3_key = self.s3_storage_objects(orig_resource)
+        dest_bucket_name, dest_s3_key = self.s3_storage_objects(dest_resource)
+        client = self.get_client_from_cache()
+
+        copy_source = {
+            "Bucket": orig_bucket_name,
+            "Key": orig_s3_key.lstrip("/"),
+        }
+
+        kwargs = {
+            "CopySource": copy_source,
+            "Bucket": dest_bucket_name,
+            "Key": dest_s3_key.lstrip("/"),
+        }
 
         if additional_dict_metadata is not None:
-            metadata = {}
-            for mdk in additional_dict_metadata:
-                metadata[mdk] = additional_dict_metadata[mdk]
-        else:
-            metadata = None
+            kwargs["MetadataDirective"] = "REPLACE"
+            if additional_dict_metadata.get("Content-Type"):
+                kwargs["ContentType"] = additional_dict_metadata.get("Content-Type")
+            if additional_dict_metadata.get("Content-Disposition"):
+                kwargs["ContentDisposition"] = additional_dict_metadata.get(
+                    "Content-Disposition"
+                )
 
-        dest_bucket, dest_s3_key = self.s3_storage_objects(dest_resource)
-
-        dest_key = dest_bucket.get_key(dest_s3_key, validate=True)
-        if dest_key is None:
-            dest_key = dest_bucket.new_key(dest_s3_key)
-            dest_key.set_contents_from_string("")
-
-        dest_bucket.copy_key(
-            dest_key.name[1:], orig_bucket.name, orig_s3_key[1:], metadata=metadata
-        )
+        client.copy_object(**kwargs)
 
     def delete_resource(self, resource):
-        bucket, s3_key = self.s3_storage_objects(resource)
-        bucket.delete_key(s3_key)
-
-    def get_bucket_from_cache(self, bucket_name):
-
-        if bucket_name in self.context["buckets"]:
-            bucket = self.context["buckets"][bucket_name]
-        else:
-            bucket = self.get_bucket(bucket_name)
-            self.context["buckets"][bucket_name] = bucket
-        return bucket
-
-    def get_bucket(self, bucket_name):
-
-        conn = self.get_connection_from_cache()
-        bucket = conn.get_bucket(bucket_name)
-        return bucket
-
-    def get_connection_from_cache(self):
-
-        if "connection" in self.context:
-            connection = self.context["connection"]
-        else:
-            connection = self.get_connection()
-            self.context["connection"] = connection
-        return connection
-
-    def get_connection(self):
-
-        conn = S3Connection(
-            self.settings.aws_access_key_id, self.settings.aws_secret_access_key
-        )
-        return conn
+        bucket_name, s3_key = self.s3_storage_objects(resource)
+        client = self.get_client_from_cache()
+        client.delete_object(Bucket=bucket_name, Key=s3_key.lstrip("/"))
 
 
 class UnsupportedResourceType(Exception):  # TODO

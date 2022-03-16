@@ -271,12 +271,17 @@ class activity_PackagePOA(Activity):
             with open(filename_plus_path, "wb") as open_file:
                 storage.get_resource_to_file(storage_resource_origin, open_file)
             # log last modified date if available
-            s3_key = storage.get_resource_as_key(storage_resource_origin)
+            s3_key_attributes = storage.get_resource_attributes(storage_resource_origin)
+            last_modified_string = "[unknown]"
+            if s3_key_attributes.get("LastModified"):
+                last_modified_string = s3_key_attributes.get("LastModified").strftime(
+                    utils.DATE_TIME_FORMAT
+                )
             self.logger.info(
                 "CSV file %s last_modified: %s"
                 % (
                     storage_resource_origin,
-                    getattr(s3_key, "last_modified", "[unknown]"),
+                    last_modified_string,
                 )
             )
 

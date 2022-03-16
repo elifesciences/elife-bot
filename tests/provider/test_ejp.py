@@ -3,14 +3,16 @@
 import unittest
 import json
 import os
+import datetime
 import arrow
 from testfixtures import tempdir
 from testfixtures import TempDirectory
 from mock import patch
 from ddt import ddt, data, unpack
+from provider import utils
 from provider.ejp import EJP
 from tests import settings_mock
-from tests.activity.classes_mock import FakeKey, FakeStorageContext
+from tests.activity.classes_mock import FakeStorageContext
 
 
 @ddt
@@ -408,7 +410,16 @@ class TestProviderEJP(unittest.TestCase):
         ejp_bucket_file_list = []
         with open(bucket_list_file_new, "r") as open_file:
             ejp_bucket_file_list += json.loads(open_file.read())
-        resources = [FakeKey(**s3_file) for s3_file in ejp_bucket_file_list]
+        resources = [
+            {
+                "Key": s3_file.get("name"),
+                "LastModified": datetime.datetime.strptime(
+                    s3_file.get("last_modified"), utils.DATE_TIME_FORMAT
+                ),
+            }
+            for s3_file in ejp_bucket_file_list
+        ]
+
         fake_storage_context.return_value = FakeStorageContext(
             self.directory.path, resources
         )

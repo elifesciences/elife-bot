@@ -277,7 +277,14 @@ class activity_PubRouterDeposit(Activity):
 
         s3_keys = []
         for key in s3_keys_in_bucket:
-            s3_keys.append({"name": key.name, "last_modified": key.last_modified})
+            s3_keys.append(
+                {
+                    "name": key.get("Key"),
+                    "last_modified": key.get("LastModified").strftime(
+                        utils.DATE_TIME_FORMAT
+                    ),
+                }
+            )
         return s3_keys
 
     def get_latest_archive_zip_name(self, article):

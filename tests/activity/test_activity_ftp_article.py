@@ -2,11 +2,12 @@ import unittest
 import shutil
 import os
 import zipfile
+import datetime
 from mock import patch, MagicMock
 from ddt import ddt, data, unpack
 import activity.activity_FTPArticle as activity_module
 from activity.activity_FTPArticle import activity_FTPArticle
-from tests.activity.classes_mock import FakeFTP, FakeKey, FakeLogger, FakeStorageContext
+from tests.activity.classes_mock import FakeFTP, FakeLogger, FakeStorageContext
 from tests.activity import settings_mock, test_activity_data
 
 
@@ -88,7 +89,7 @@ class TestFTPArticle(unittest.TestCase):
         doi_id = "353"
         zip_file_name = "elife-00353-vor-v1-20121213000000.zip"
         resources = [
-            FakeKey(name=zip_file_name, last_modified="2019-05-31T00:00:00.000Z")
+            {"Key": zip_file_name, "LastModified": datetime.datetime(2019, 5, 31)}
         ]
         fake_storage_context.return_value = FakeStorageContext(
             test_activity_data.ExpandArticle_files_source_folder, resources
