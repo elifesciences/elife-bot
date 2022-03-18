@@ -169,14 +169,6 @@ class activity_ExpandArticle(Activity):
 
         return True
 
-    def get_next_version(self, article_id):
-        version = lax_provider.article_highest_version(article_id, self.settings)
-        if isinstance(version, int) and version >= 1:
-            version = str(version + 1)
-        if version is None:
-            return "-1"
-        return version
-
     def check_filenames(self, filenames):
         xml_found = False
         for filename in filenames:
