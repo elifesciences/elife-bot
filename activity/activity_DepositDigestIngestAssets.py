@@ -112,6 +112,9 @@ class activity_DepositDigestIngestAssets(Activity):
         storage = storage_context(self.settings)
         self.logger.info("Depositing digest image to S3 key %s", self.dest_resource)
         # set the bucket object resource from the local file
-        storage.set_resource_from_filename(self.dest_resource, digest.image.file)
+        metadata = {"ContentType": utils.content_type_from_file_name(digest.image.file)}
+        storage.set_resource_from_filename(
+            self.dest_resource, digest.image.file, metadata
+        )
         self.logger.info("Deposited digest image %s to S3", digest.image.file)
         return True

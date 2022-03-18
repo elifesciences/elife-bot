@@ -3,6 +3,7 @@ import os
 import csv
 from collections import OrderedDict
 from elifetools import parseJATS as parser
+from provider import utils
 from provider.storage_provider import storage_context
 from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
@@ -327,4 +328,5 @@ class activity_ModifyArticleSubjects(Activity):
             + "/"
             + s3_key_name
         )
-        storage.set_resource_from_filename(resource_dest, article_xml_file)
+        metadata = {"ContentType": utils.content_type_from_file_name(s3_key_name)}
+        storage.set_resource_from_filename(resource_dest, article_xml_file, metadata)
