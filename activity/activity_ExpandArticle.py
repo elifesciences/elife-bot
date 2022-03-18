@@ -130,7 +130,10 @@ class activity_ExpandArticle(Activity):
                     + "/"
                     + dest_path
                 )
-                storage.set_resource_from_filename(storage_resource_dest, source_path)
+                metadata = {"ContentType": utils.content_type_from_file_name(filename)}
+                storage.set_resource_from_filename(
+                    storage_resource_dest, source_path, metadata
+                )
 
             self.clean_tmp_dir()
 
