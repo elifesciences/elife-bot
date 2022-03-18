@@ -101,7 +101,8 @@ class activity_LensArticle(Activity):
             + "/"
             + self.article_s3key
         )
-        storage.set_resource_from_filename(s3_resource, filename_plus_path)
+        metadata = {"ContentType": "text/html"}
+        storage.set_resource_from_filename(s3_resource, filename_plus_path, metadata)
 
         if self.logger:
             self.logger.info("LensArticle created for: %s" % self.article_s3key)

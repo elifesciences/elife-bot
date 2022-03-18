@@ -89,15 +89,15 @@ class S3StorageContext:
     def set_resource_from_filename(self, resource, file, metadata=None):
         "create object from file data, metadata can include ContentType key"
         bucket_name, s3_key = self.s3_storage_objects(resource)
-        if metadata is None:
-            metadata = {}
+        kwargs = {
+            "Filename": file,
+            "Bucket": bucket_name,
+            "Key": s3_key.lstrip("/"),
+        }
+        if metadata:
+            kwargs["ExtraArgs"] = metadata
         client = self.get_client_from_cache()
-        client.upload_file(
-            Filename=file,
-            Bucket=bucket_name,
-            Key=s3_key.lstrip("/"),
-            ExtraArgs=metadata,
-        )
+        client.upload_file(**kwargs)
 
     def set_resource_from_string(self, resource, data, content_type=None):
         "create object and save data there"
