@@ -3,6 +3,7 @@ import urllib
 import base64
 from argparse import ArgumentParser
 import arrow
+from mimetypes import guess_type
 
 
 S3_DATE_FORMAT = "%Y%m%d%H%M%S"
@@ -222,3 +223,14 @@ def get_settings(env):
     import settings as settings_lib
 
     return settings_lib.get_settings(env)
+
+
+def content_type_from_file_name(file_name):
+    "for setting Content-Type headers on S3 objects, for example"
+    if file_name is None:
+        return None
+    content_type, encoding = guess_type(file_name)
+    if content_type is None:
+        return "binary/octet-stream"
+    else:
+        return content_type

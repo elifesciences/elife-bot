@@ -1,6 +1,5 @@
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from mimetypes import guess_type
 from provider import article_structure, utils
 from activity.objects import Activity
 
@@ -106,7 +105,7 @@ class activity_DepositAssets(Activity):
 
                 file_name_no_extension, extension = file_name.rsplit(".", 1)
                 if extension not in no_download_extensions:
-                    content_type = self.content_type_from_file_name(file_name)
+                    content_type = utils.content_type_from_file_name(file_name)
                     dict_metadata = {
                         "Content-Disposition": str(
                             "Content-Disposition: attachment; filename="
@@ -151,15 +150,6 @@ class activity_DepositAssets(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
         return self.ACTIVITY_SUCCESS
-
-    def content_type_from_file_name(self, file_name):
-        if file_name is None:
-            return None
-        content_type, encoding = guess_type(file_name)
-        if content_type is None:
-            return "binary/octet-stream"
-        else:
-            return content_type
 
     def get_no_download_extensions(self, no_download_extensions):
         return [x.strip() for x in no_download_extensions.split(",")]

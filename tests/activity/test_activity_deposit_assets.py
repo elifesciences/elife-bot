@@ -37,18 +37,6 @@ class TestDepositAssets(unittest.TestCase):
         result = self.depositassets.get_no_download_extensions(input)
         self.assertListEqual(result, expected)
 
-    @unpack
-    @data(
-        (None, None),
-        ("image.jpg", "image/jpeg"),
-        ("/folder/file.test.pdf", "application/pdf"),
-        ("/folder/weird_file.wdl", "binary/octet-stream"),
-        ("a_file", "binary/octet-stream"),
-    )
-    def test_content_type_from_file_name(self, input, expected):
-        result = self.depositassets.content_type_from_file_name(input)
-        self.assertEqual(result, expected)
-
     @patch("activity.activity_DepositAssets.get_session")
     @patch("activity.activity_DepositAssets.storage_context")
     @patch.object(activity_DepositAssets, "emit_monitor_event")
