@@ -234,5 +234,20 @@ class TestConsoleStartEnvWorkflowDoiId(unittest.TestCase):
             self.assertEqual(utils.console_start_env_workflow_doi_id(), expected)
 
 
+@ddt
+class TestContentTypeFromFileName(unittest.TestCase):
+    @unpack
+    @data(
+        (None, None),
+        ("image.jpg", "image/jpeg"),
+        ("/folder/file.test.pdf", "application/pdf"),
+        ("/folder/weird_file.wdl", "binary/octet-stream"),
+        ("a_file", "binary/octet-stream"),
+    )
+    def test_content_type_from_file_name(self, input, expected):
+        result = utils.content_type_from_file_name(input)
+        self.assertEqual(result, expected)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -3,6 +3,7 @@ import os
 import re
 from os import path
 from elifetools import xmlio
+from provider import utils
 from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
 import provider.article_structure as article_structure
@@ -210,7 +211,8 @@ class activity_ApplyVersionNumber(Activity):
             + filename
         )
         local_filename = path.join(self.get_tmp_dir(), filename)
-        storage.set_resource_from_filename(file_resource, local_filename)
+        metadata = {"ContentType": utils.content_type_from_file_name(filename)}
+        storage.set_resource_from_filename(file_resource, local_filename, metadata)
 
     def build_file_name_map(self, s3_key_names, version):
 

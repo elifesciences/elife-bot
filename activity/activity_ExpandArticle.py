@@ -130,7 +130,10 @@ class activity_ExpandArticle(Activity):
                     + "/"
                     + dest_path
                 )
-                storage.set_resource_from_filename(storage_resource_dest, source_path)
+                metadata = {"ContentType": utils.content_type_from_file_name(filename)}
+                storage.set_resource_from_filename(
+                    storage_resource_dest, source_path, metadata
+                )
 
             self.clean_tmp_dir()
 
@@ -165,14 +168,6 @@ class activity_ExpandArticle(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
         return True
-
-    def get_next_version(self, article_id):
-        version = lax_provider.article_highest_version(article_id, self.settings)
-        if isinstance(version, int) and version >= 1:
-            version = str(version + 1)
-        if version is None:
-            return "-1"
-        return version
 
     def check_filenames(self, filenames):
         xml_found = False
