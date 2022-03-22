@@ -1,10 +1,9 @@
-# file generated 2022-03-07 - see update-dependencies.sh
+# file generated 2022-03-21 - see update-dependencies.sh
 arrow==1.2.1
 astroid==2.9.3
 attrs==21.4.0
 bcrypt==3.2.0
 beautifulsoup4==4.10.0
-boto==2.49.0
 boto3==1.20.32
 botocore==1.23.32
 cachetools==4.2.4
