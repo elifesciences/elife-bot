@@ -154,7 +154,7 @@ class activity_ValidateAcceptedSubmission(Activity):
         # Send an email if the log has warnings
         with open(log_file_path, "r", encoding="utf8") as open_file:
             log_contents = open_file.read()
-        if "WARNING" in log_contents:
+        if "ERROR" in log_contents or "WARNING" in log_contents:
             # Send error email
             error_messages = (
                 "Warnings found in the log file for zip file %s\n\n" % input_filename
