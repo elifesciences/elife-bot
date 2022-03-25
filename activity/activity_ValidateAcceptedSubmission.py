@@ -105,7 +105,19 @@ class activity_ValidateAcceptedSubmission(Activity):
         cleaner.parse.REPAIR_XML = REPAIR_XML
 
         # get list of files from the article XML
-        files = cleaner.file_list(xml_file_path)
+        try:
+            files = cleaner.file_list(xml_file_path)
+        except ParseError:
+            log_message = (
+                "%s, XML ParseError exception in cleaner.file_list for file %s"
+                % (self.name, input_filename)
+            )
+            self.logger.exception(log_message)
+            files = []
+        finally:
+            # reset the parsing library flag
+            cleaner.parse.REPAIR_XML = original_repair_xml
+
         self.logger.info("%s, files: %s" % (self.name, files))
 
         # download the PDF files so their pages can be counted
@@ -122,38 +134,19 @@ class activity_ValidateAcceptedSubmission(Activity):
             self.statuses["valid"] = cleaner.check_files(
                 files, asset_file_name_map, input_filename
             )
-        except ParseError:
-            log_message = (
-                "%s, XML ParseError exception in cleaner.check_files for file %s"
-                % (self.name, input_filename)
-            )
-            self.logger.exception(log_message)
-            # Send error email
-            self.statuses["email"] = self.email_error_report(
-                input_filename, log_message
-            )
-            self.log_statuses(input_filename)
         except Exception:
             log_message = (
                 "%s, unhandled exception in cleaner.check_files for file %s"
                 % (self.name, input_filename)
             )
             self.logger.exception(log_message)
-            # Send error email
-            self.statuses["email"] = self.email_error_report(
-                input_filename, log_message
-            )
             self.log_statuses(input_filename)
-            return self.ACTIVITY_PERMANENT_FAILURE
         finally:
             # remove the log handlers
             for log_handler in cleaner_log_handers:
                 cleaner.log_remove_handler(log_handler)
-            # reset the parsing library flag
-            cleaner.parse.REPAIR_XML = original_repair_xml
 
         # Send an email if the log has warnings
-        log_contents = ""
         with open(log_file_path, "r", encoding="utf8") as open_file:
             log_contents = open_file.read()
         if "WARNING" in log_contents:

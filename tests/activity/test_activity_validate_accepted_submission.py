@@ -180,10 +180,10 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(cleaner, "storage_context")
-    @patch.object(cleaner, "check_files")
+    @patch.object(cleaner, "file_list")
     def test_do_activity_exception_parseerror(
         self,
-        fake_check_files,
+        fake_file_list,
         fake_cleaner_storage_context,
         fake_email_smtp_connect,
         fake_session,
@@ -219,7 +219,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_cleaner_storage_context.return_value = FakeStorageContext(
             directory.path, resources
         )
-        fake_check_files.side_effect = ParseError()
+        fake_file_list.side_effect = ParseError()
         # do the activity
         result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
         self.assertEqual(result, True)
@@ -227,7 +227,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             self.activity.logger.logexception.startswith(
                 (
                     "ValidateAcceptedSubmission, XML ParseError exception"
-                    " in cleaner.check_files for file"
+                    " in cleaner.file_list for file"
                 )
             )
         )
@@ -278,7 +278,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_check_files.side_effect = Exception()
         # do the activity
         result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
-        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+        self.assertEqual(result, True)
         self.assertTrue(
             self.activity.logger.logexception.startswith(
                 (
