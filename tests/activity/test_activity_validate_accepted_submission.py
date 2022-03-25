@@ -227,10 +227,20 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             self.activity.logger.logexception.startswith(
                 (
                     "ValidateAcceptedSubmission, XML ParseError exception"
-                    " in cleaner.file_list for file"
+                    " in cleaner.file_list parsing XML file"
+                    " 30-01-2019-RA-eLife-45644.xml for file"
                 )
             )
         )
+        log_file_path = os.path.join(
+            self.activity.get_tmp_dir(), self.activity.activity_log_file
+        )
+        with open(log_file_path, "r", encoding="utf8") as open_file:
+            log_contents = open_file.read()
+        log_errors = [
+            line for line in log_contents.split("\n") if "ERROR elifecleaner:" in line
+        ]
+        self.assertEqual(len(log_errors), 1)
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")

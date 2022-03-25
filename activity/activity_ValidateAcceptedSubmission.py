@@ -5,7 +5,7 @@ import time
 from xml.etree.ElementTree import ParseError
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import cleaner, email_provider
+from provider import article_processing, cleaner, email_provider
 from activity.objects import Activity
 
 
@@ -109,10 +109,15 @@ class activity_ValidateAcceptedSubmission(Activity):
             files = cleaner.file_list(xml_file_path)
         except ParseError:
             log_message = (
-                "%s, XML ParseError exception in cleaner.file_list for file %s"
-                % (self.name, input_filename)
+                "%s, XML ParseError exception in cleaner.file_list"
+                " parsing XML file %s for file %s"
+            ) % (
+                self.name,
+                article_processing.file_name_from_name(xml_file_path),
+                input_filename,
             )
             self.logger.exception(log_message)
+            cleaner.LOGGER.exception(log_message)
             files = []
         finally:
             # reset the parsing library flag
