@@ -61,20 +61,10 @@ class activity_ValidateAcceptedSubmission(Activity):
         storage = storage_context(self.settings)
 
         # configure log files for the cleaner provider
-        cleaner_log_handers = []
-        format_string = (
-            "%(asctime)s %(levelname)s %(name)s:%(module)s:%(funcName)s: %(message)s"
-        )
-        # log to a common log file
-        cleaner_log_handers.append(cleaner.log_to_file(format_string=format_string))
-        # log file for this activity only
-        log_file_path = os.path.join(self.get_tmp_dir(), self.activity_log_file)
-        cleaner_log_handers.append(
-            cleaner.log_to_file(
-                log_file_path,
-                format_string=format_string,
-            )
-        )
+        log_file_path = os.path.join(
+            self.get_tmp_dir(), self.activity_log_file
+        )  # log file for this activity only
+        cleaner_log_handers = cleaner.configure_activity_log_handlers(log_file_path)
 
         expanded_folder = session.get_value("expanded_folder")
         input_filename = session.get_value("input_filename")
