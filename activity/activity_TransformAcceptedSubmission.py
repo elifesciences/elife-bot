@@ -51,20 +51,10 @@ class activity_TransformAcceptedSubmission(Activity):
         self.make_activity_directories()
 
         # configure log files for the cleaner provider
-        cleaner_log_handers = []
-        format_string = (
-            "%(asctime)s %(levelname)s %(name)s:%(module)s:%(funcName)s: %(message)s"
-        )
-        # log to a common log file
-        cleaner_log_handers.append(cleaner.log_to_file(format_string=format_string))
-        # log file for this activity only
-        log_file_path = os.path.join(self.get_tmp_dir(), self.activity_log_file)
-        cleaner_log_handers.append(
-            cleaner.log_to_file(
-                log_file_path,
-                format_string=format_string,
-            )
-        )
+        log_file_path = os.path.join(
+            self.get_tmp_dir(), self.activity_log_file
+        )  # log file for this activity only
+        cleaner_log_handers = cleaner.configure_activity_log_handlers(log_file_path)
 
         # parse the input data
         real_filename, bucket_name, bucket_folder = parse_activity_data(data)

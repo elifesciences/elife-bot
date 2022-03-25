@@ -5,6 +5,9 @@ from elifecleaner import LOGGER, configure_logging, parse, transform, zip_lib
 from provider.storage_provider import storage_context
 
 LOG_FILENAME = "elifecleaner.log"
+LOG_FORMAT_STRING = (
+    "%(asctime)s %(levelname)s %(name)s:%(module)s:%(funcName)s: %(message)s"
+)
 
 
 def article_id_from_zip_file(zip_file):
@@ -21,6 +24,21 @@ def log_to_file(filename=None, level=logging.INFO, format_string=None):
     if not filename:
         filename = LOG_FILENAME
     return configure_logging(filename, level, format_string)
+
+
+def configure_activity_log_handlers(log_file_path):
+    "for a workflow activity configure where to log messages"
+    cleaner_log_handers = []
+    # log to a common log file
+    cleaner_log_handers.append(log_to_file(format_string=LOG_FORMAT_STRING))
+
+    cleaner_log_handers.append(
+        log_to_file(
+            log_file_path,
+            format_string=LOG_FORMAT_STRING,
+        )
+    )
+    return cleaner_log_handers
 
 
 def log_remove_handler(handler):
