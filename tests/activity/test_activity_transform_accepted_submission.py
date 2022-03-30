@@ -122,15 +122,15 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             )
         )
         self.assertTrue(
-            log_infos[4].endswith("30-01-2019-RA-eLife-45644.zip rewriting xml tags")
+            log_infos[5].endswith("30-01-2019-RA-eLife-45644.zip rewriting xml tags")
         )
         self.assertTrue(
-            log_infos[5].endswith(
+            log_infos[7].endswith(
                 "30-01-2019-RA-eLife-45644.zip article_type research-article, display_channel ['Research Article']"
             )
         )
         self.assertTrue(
-            log_infos[6].endswith(
+            log_infos[8].endswith(
                 (
                     "30-01-2019-RA-eLife-45644.zip writing xml to file "
                     "%s/30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml"
@@ -139,7 +139,7 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             )
         )
         self.assertTrue(
-            log_infos[7].endswith(
+            log_infos[9].endswith(
                 (
                     "30-01-2019-RA-eLife-45644.zip writing new zip file "
                     "%s/30-01-2019-RA-eLife-45644.zip"
