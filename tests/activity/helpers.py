@@ -95,3 +95,14 @@ def expanded_folder_resources(zip_file_path, directory):
         open_zipfile.extractall(path=directory)
         resources = open_zipfile.namelist()
     return resources
+
+
+def expanded_folder_bucket_resources(directory, expanded_folder, zip_file_path):
+    "populate the TempDirectory with files from zip_filename to mock a bucket folder in tests"
+    directory.makedir(expanded_folder)
+    directory_s3_folder_path = os.path.join(
+        directory.path,
+        expanded_folder,
+    )
+    resources = expanded_folder_resources(zip_file_path, directory_s3_folder_path)
+    return resources
