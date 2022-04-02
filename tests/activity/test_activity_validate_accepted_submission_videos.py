@@ -108,16 +108,10 @@ class TestValidateAcceptedSubmissionVideos(unittest.TestCase):
             test_activity_data.ExpandArticle_files_source_folder,
             test_data.get("filename"),
         )
-        directory.makedir(
-            test_activity_data.accepted_session_example.get("expanded_folder")
-        )
-        directory_s3_folder_path = os.path.join(
-            directory.path,
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
             test_activity_data.accepted_session_example.get("expanded_folder"),
-        )
-
-        resources = helpers.expanded_folder_resources(
-            zip_file_path, directory_s3_folder_path
+            zip_file_path,
         )
         fake_cleaner_storage_context.return_value = FakeStorageContext(
             directory.path, resources
@@ -192,15 +186,10 @@ class TestValidateAcceptedSubmissionVideos(unittest.TestCase):
             test_activity_data.ExpandArticle_files_source_folder,
             zip_file,
         )
-        directory.makedir(
-            test_activity_data.accepted_session_example.get("expanded_folder")
-        )
-        directory_s3_folder_path = os.path.join(
-            directory.path,
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
             test_activity_data.accepted_session_example.get("expanded_folder"),
-        )
-        resources = helpers.expanded_folder_resources(
-            zip_file_path, directory_s3_folder_path
+            zip_file_path,
         )
         fake_cleaner_storage_context.return_value = FakeStorageContext(
             directory.path, resources
