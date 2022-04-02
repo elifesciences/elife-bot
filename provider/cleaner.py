@@ -97,12 +97,29 @@ def download_xml_file_from_bucket(settings, asset_file_name_map, to_dir, logger)
     storage = storage_context(settings)
     xml_file_asset = article_xml_asset(asset_file_name_map)
     asset_key, asset_resource = xml_file_asset
-    xml_file_path = os.path.join(to_dir, asset_key)
-    logger.info("Downloading XML file from %s to %s" % (asset_resource, xml_file_path))
-    # create folders if they do not exist
-    os.makedirs(os.path.dirname(xml_file_path), exist_ok=True)
-    with open(xml_file_path, "wb") as open_file:
-        storage.get_resource_to_file(asset_resource, open_file)
+    xml_file_list = [{"upload_file_nm": asset_key.rsplit("/", 1)[-1]}]
+    download_asset_files_from_bucket(
+        storage, xml_file_list, asset_file_name_map, to_dir, logger
+    )
+    return asset_file_name_map.get(asset_key)
+
+
+def download_asset_files_from_bucket(
+    storage, asset_file_list, asset_file_name_map, to_dir, logger
+):
+    "download files from the S3 bucket expanded folder to the local disk"
+    # map values without folder names in order to later match XML files names to zip file path
+    asset_key_map = {key.rsplit("/", 1)[-1]: key for key in asset_file_name_map}
+
+    for s3_file in asset_file_list:
+        file_name = s3_file.get("upload_file_nm")
+        asset_key = asset_key_map[file_name]
+        asset_resource = asset_file_name_map.get(asset_key)
+        file_path = os.path.join(to_dir, asset_key)
+        logger.info("Downloading file from %s to %s" % (asset_resource, file_path))
+        # create folders if they do not exist
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "wb") as open_file:
+            storage.get_resource_to_file(asset_resource, open_file)
         # rewrite asset_file_name_map to the local value
-        asset_file_name_map[asset_key] = xml_file_path
-    return xml_file_path
+        asset_file_name_map[asset_key] = file_path
