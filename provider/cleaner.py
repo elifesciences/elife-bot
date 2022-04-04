@@ -63,6 +63,12 @@ def file_list(xml_file_path):
     return parse.file_list(root)
 
 
+def code_file_list(xml_file_path):
+    "get a list of code from the XML"
+    root = parse_article_xml(xml_file_path)
+    return transform.code_file_list(root)
+
+
 def files_by_extension(files, extension="pdf"):
     return [
         file_detail
@@ -77,6 +83,14 @@ def check_files(files, asset_file_name_map, identifier):
 
 def transform_ejp_zip(zip_file, tmp_dir, output_dir):
     return transform.transform_ejp_zip(zip_file, tmp_dir, output_dir)
+
+
+def transform_ejp_files(asset_file_name_map, output_dir, identifier):
+    return transform.transform_ejp_files(asset_file_name_map, output_dir, identifier)
+
+
+def rezip(asset_file_name_map, output_dir, zip_file_name):
+    return transform.rezip(asset_file_name_map, output_dir, zip_file_name)
 
 
 def bucket_asset_file_name_map(settings, bucket_name, expanded_folder):
