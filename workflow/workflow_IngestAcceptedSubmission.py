@@ -46,6 +46,7 @@ class workflow_IngestAcceptedSubmission(Workflow):
                 define_workflow_step_short("ScheduleCrossrefPendingPublication", data),
                 define_workflow_step_short("ValidateAcceptedSubmissionVideos", data),
                 define_workflow_step_medium("TransformAcceptedSubmission", data),
+                define_workflow_step_medium("OutputAcceptedSubmission", data),
                 define_workflow_step_short("EmailAcceptedSubmissionOutput", data),
             ],
             "finish": {"requirements": None},

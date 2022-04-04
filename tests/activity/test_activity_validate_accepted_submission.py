@@ -32,8 +32,8 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
-        # clean the temporary directory
-        self.activity.clean_tmp_dir()
+        # clean the temporary directory, including the cleaner.log file
+        helpers.delete_files_in_folder(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")

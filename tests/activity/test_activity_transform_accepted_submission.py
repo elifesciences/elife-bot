@@ -2,16 +2,16 @@
 
 import os
 import unittest
+from xml.etree.ElementTree import ParseError
 from mock import patch
+from testfixtures import TempDirectory
 from provider import cleaner
 import activity.activity_TransformAcceptedSubmission as activity_module
 from activity.activity_TransformAcceptedSubmission import (
     activity_TransformAcceptedSubmission as activity_object,
 )
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext
-import tests.activity.helpers as helpers
-import tests.activity.test_activity_data as activity_test_data
+from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
+from tests.activity import helpers, settings_mock, test_activity_data
 import tests.test_data as test_case_data
 
 
@@ -27,26 +27,52 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
-        # clean the temporary directory
-        self.activity.clean_tmp_dir()
+        TempDirectory.cleanup_all()
+        # clean the temporary directory, including the cleaner.log file
+        helpers.delete_files_in_folder(self.activity.get_tmp_dir())
         # clean folder used by storage context
         helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
         )
 
+    @patch.object(activity_module, "get_session")
+    @patch.object(cleaner, "storage_context")
     @patch.object(activity_module, "storage_context")
-    @patch.object(activity_module.download_helper, "storage_context")
-    def test_do_activity(self, fake_download_storage_context, fake_storage_context):
+    def test_do_activity(
+        self, fake_storage_context, fake_cleaner_storage_context, fake_session
+    ):
         test_data = {
             "comment": "accepted submission zip file example",
             "filename": "30-01-2019-RA-eLife-45644.zip",
             "expected_result": True,
             "expected_transform_status": True,
         }
+        directory = TempDirectory()
+        # set REPAIR_XML value because test fixture is malformed XML
+        activity_module.REPAIR_XML = True
 
         # copy files into the input directory using the storage context
-        fake_download_storage_context.return_value = FakeStorageContext()
-        fake_storage_context.return_value = FakeStorageContext()
+        # expanded bucket files
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            test_data.get("filename"),
+        )
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            zip_file_path,
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+
+        # mock the session
+        fake_session.return_value = FakeSession(
+            test_activity_data.accepted_session_example
+        )
 
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
@@ -62,7 +88,7 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             ).format(
                 comment=test_data.get("comment"),
                 result=result,
-                input_file=self.activity.input_file,
+                input_file=test_data.get("filename"),
                 filename=filename_used,
             ),
         )
@@ -76,7 +102,7 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
         log_file_path = os.path.join(
             self.activity.get_tmp_dir(), self.activity.activity_log_file
         )
-        with open(log_file_path, "r") as open_file:
+        with open(log_file_path, "r", encoding="utf8") as open_file:
             log_contents = open_file.read()
         log_infos = [
             line
@@ -84,89 +110,181 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             if "INFO elifecleaner:transform:" in line
         ]
         # check output bucket folder contents
-        self.assertTrue(
-            "30-01-2019-RA-eLife-45644.zip"
-            in os.listdir(activity_test_data.ExpandArticle_files_dest_folder)
+        output_bucket_list = [
+            file_name
+            for file_name in os.listdir(
+                test_activity_data.ExpandArticle_files_dest_folder
+            )
+            if file_name != ".gitkeep"
+        ]
+        self.assertEqual(
+            sorted(output_bucket_list),
+            ["30-01-2019-RA-eLife-45644.xml", "Figure 5source code 1.c.zip"],
         )
 
         # compare some log file values,
         # these assertions can be removed if any are too hard to manage
         self.assertTrue(
-            log_infos[0].endswith("30-01-2019-RA-eLife-45644.zip starting to transform")
-        )
-        self.assertTrue(
-            log_infos[1].endswith(
+            log_infos[0].endswith(
                 "30-01-2019-RA-eLife-45644.zip code_file_name: Figure 5source code 1.c"
             )
         )
         self.assertTrue(
-            log_infos[2].endswith(
+            log_infos[1].endswith(
                 (
                     "30-01-2019-RA-eLife-45644.zip from_file: "
                     'ArticleZipFile("Figure 5source code 1.c", '
                     '"30-01-2019-RA-eLife-45644/Figure 5source code 1.c", '
                     '"%s/30-01-2019-RA-eLife-45644/Figure 5source code 1.c")'
                 )
-                % self.activity.directories.get("TEMP_DIR")
+                % self.activity.directories.get("INPUT_DIR")
             )
         )
         self.assertTrue(
-            log_infos[3].endswith(
+            log_infos[2].endswith(
                 (
                     "30-01-2019-RA-eLife-45644.zip to_file: "
                     'ArticleZipFile("Figure 5source code 1.c.zip", '
                     '"30-01-2019-RA-eLife-45644/Figure 5source code 1.c.zip", '
                     '"%s/Figure 5source code 1.c.zip")'
                 )
-                % self.activity.directories.get("OUTPUT_DIR")
-            )
-        )
-        self.assertTrue(
-            log_infos[5].endswith("30-01-2019-RA-eLife-45644.zip rewriting xml tags")
-        )
-        self.assertTrue(
-            log_infos[7].endswith(
-                "30-01-2019-RA-eLife-45644.zip article_type research-article, display_channel ['Research Article']"
-            )
-        )
-        self.assertTrue(
-            log_infos[8].endswith(
-                (
-                    "30-01-2019-RA-eLife-45644.zip writing xml to file "
-                    "%s/30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml"
-                )
                 % self.activity.directories.get("TEMP_DIR")
             )
         )
         self.assertTrue(
-            log_infos[9].endswith(
+            log_infos[4].endswith("30-01-2019-RA-eLife-45644.zip rewriting xml tags")
+        )
+        self.assertTrue(
+            log_infos[5].endswith(
                 (
-                    "30-01-2019-RA-eLife-45644.zip writing new zip file "
-                    "%s/30-01-2019-RA-eLife-45644.zip"
+                    "30-01-2019-RA-eLife-45644.zip writing xml to file "
+                    "%s/30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml"
                 )
-                % self.activity.directories.get("OUTPUT_DIR")
+                % self.activity.directories.get("INPUT_DIR")
+            )
+        )
+        self.assertTrue(
+            log_infos[6].endswith(
+                (
+                    "30-01-2019-RA-eLife-45644.zip article_type research-article, "
+                    "display_channel ['Research Article']"
+                )
+            )
+        )
+        self.assertTrue(
+            log_infos[7].endswith(
+                (
+                    "30-01-2019-RA-eLife-45644.zip writing xml to file "
+                    "%s/30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml"
+                )
+                % self.activity.directories.get("INPUT_DIR")
             )
         )
 
-    @patch.object(cleaner, "transform_ejp_zip")
-    @patch.object(activity_module.download_helper, "storage_context")
-    def test_do_activity_exception_unknown(
-        self, fake_download_storage_context, fake_transform_ejp_zip
-    ):
-        # copy files into the input directory using the storage context
-        fake_download_storage_context.return_value = FakeStorageContext()
+        # check the zipped code file name is in the XML file
+        xml_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_dest_folder,
+            "30-01-2019-RA-eLife-45644.xml",
+        )
+        with open(xml_file_path, "r", encoding="utf8") as open_file:
+            xml_contents = open_file.read()
+        self.assertTrue("Figure 5source code 1.c.zip" in xml_contents)
 
-        fake_transform_ejp_zip.side_effect = Exception()
+    @patch.object(activity_module, "get_session")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(cleaner, "code_file_list")
+    def test_do_activity_parse_exception(
+        self,
+        fake_code_file_list,
+        fake_cleaner_storage_context,
+        fake_session,
+    ):
+        directory = TempDirectory()
+        # set REPAIR_XML value because test fixture is malformed XML
+        activity_module.REPAIR_XML = True
+        filename_base = "30-01-2019-RA-eLife-45644"
+        zip_filename = "%s.zip" % filename_base
+        xml_filename = "%s.xml" % filename_base
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            zip_filename,
+        )
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            zip_file_path,
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+
+        # mock the session
+        fake_session.return_value = FakeSession(
+            test_activity_data.accepted_session_example
+        )
+
+        fake_code_file_list.side_effect = ParseError()
         # do the activity
-        result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
-        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+        result = self.activity.do_activity(input_data(zip_filename))
+        self.assertEqual(result, True)
+        self.assertEqual(
+            self.activity.logger.logexception,
+            (
+                (
+                    "TransformAcceptedSubmission, XML ParseError exception in "
+                    "download_code_files_from_bucket parsing XML file %s for file %s"
+                )
+                % (xml_filename, zip_filename)
+            ),
+        )
+
+    @patch.object(activity_module, "get_session")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(cleaner, "transform_ejp_files")
+    @patch.object(activity_module, "storage_context")
+    def test_do_activity_transform_exception(
+        self,
+        fake_storage_context,
+        fake_transform_ejp_files,
+        fake_cleaner_storage_context,
+        fake_session,
+    ):
+        directory = TempDirectory()
+        # set REPAIR_XML value because test fixture is malformed XML
+        activity_module.REPAIR_XML = True
+
+        zip_filename = "30-01-2019-RA-eLife-45644.zip"
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            zip_filename,
+        )
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            zip_file_path,
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        # mock the session
+        fake_session.return_value = FakeSession(
+            test_activity_data.accepted_session_example
+        )
+
+        fake_transform_ejp_files.side_effect = Exception()
+        # do the activity
+        result = self.activity.do_activity(input_data(zip_filename))
+        self.assertEqual(result, True)
         self.assertEqual(
             self.activity.logger.logexception,
             (
                 (
                     "TransformAcceptedSubmission, unhandled exception in "
-                    "cleaner.transform_ejp_zip for file %s/30-01-2019-RA-eLife-45644.zip"
+                    "cleaner.transform_ejp_files for file %s"
                 )
-                % self.activity.directories.get("INPUT_DIR")
+                % zip_filename
             ),
         )
