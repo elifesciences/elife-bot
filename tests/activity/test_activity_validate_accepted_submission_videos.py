@@ -2,6 +2,7 @@
 
 import os
 import glob
+import copy
 import unittest
 from xml.etree.ElementTree import ParseError
 from mock import patch
@@ -29,11 +30,11 @@ def input_data(file_name_to_change=""):
 
 
 def session_data(filename=None, article_id=None):
-    s_data = test_activity_data.accepted_session_example
+    s_data = copy.copy(test_activity_data.accepted_session_example)
     if filename:
         s_data["input_filename"] = filename
     if article_id:
-        s_data["article_id"] = filename
+        s_data["article_id"] = article_id
     return s_data
 
 
