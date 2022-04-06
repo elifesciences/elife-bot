@@ -33,7 +33,7 @@ def session_data(filename=None, article_id=None):
     if filename:
         s_data["input_filename"] = filename
     if article_id:
-        s_data["article_id"] = filename
+        s_data["article_id"] = article_id
     return s_data
 
 
