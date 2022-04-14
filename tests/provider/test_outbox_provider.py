@@ -81,15 +81,18 @@ class TestOutboxProvider(unittest.TestCase):
 
     @patch("provider.outbox_provider.storage_context")
     def test_clean_outbox(self, fake_storage_context):
-        fake_storage_context.return_value = FakeStorageContext(self.directory)
-        # copy two files in for cleaning
-        shutil.copy(self.good_xml_file, self.directory.path)
-        shutil.copy(self.bad_xml_file, self.directory.path)
-        # add outbox_folder name and one file to the list of published file names
+        fake_storage_context.return_value = FakeStorageContext(self.directory.path)
         bucket_name = "bucket"
-        outbox_folder = "crossref/outbox/"
         to_folder = "crossref/published/"
-        published_file_names = [outbox_folder, self.good_xml_file]
+        outbox_folder = "crossref/outbox/"
+        outbox_folder_directory = os.path.join(self.directory.path, outbox_folder)
+        # create folders if they do not exist
+        os.makedirs(os.path.dirname(outbox_folder_directory), exist_ok=True)
+        # copy two files in for cleaning
+        shutil.copy(self.good_xml_file, outbox_folder_directory)
+        shutil.copy(self.bad_xml_file, outbox_folder_directory)
+        # add one file to the list of published file names
+        published_file_names = [self.good_xml_file]
         # clean outbox
         outbox_provider.clean_outbox(
             settings_mock, bucket_name, outbox_folder, to_folder, published_file_names

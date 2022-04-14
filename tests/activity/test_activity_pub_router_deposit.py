@@ -2,13 +2,14 @@ import unittest
 import datetime
 from mock import patch
 from ddt import ddt, data
+from testfixtures import TempDirectory
 from provider.article import article
 import activity.activity_PubRouterDeposit as activity_module
 from activity.activity_PubRouterDeposit import activity_PubRouterDeposit
 from tests.classes_mock import FakeSWFClient, FakeSMTPServer
 import tests.test_data as test_case_data
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
-from tests.activity import settings_mock, test_activity_data
+from tests.activity import helpers, settings_mock, test_activity_data
 
 
 ARCHIVE_ZIP_BUCKET_S3_KEYS = [
@@ -31,6 +32,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         )
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.pubrouterdeposit.clean_tmp_dir()
 
     @patch.object(activity_module.email_provider, "smtp_connect")
@@ -48,13 +50,20 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_article_versions,
         fake_email_smtp_connect,
     ):
+        directory = TempDirectory()
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.pubrouterdeposit.get_tmp_dir()
         )
         activity_data = {"data": {"workflow": "HEFCE"}}
         fake_was_ever_published.return_value = None
+        resources = helpers.populate_storage(
+            from_dir="tests/test_data/",
+            to_dir=directory.path,
+            filenames=["elife00013.xml", "elife09169.xml"],
+            sub_dir="pub_router/outbox",
+        )
         fake_outbox_storage_context.return_value = FakeStorageContext(
-            "tests/test_data/", ["elife00013.xml", "elife09169.xml"]
+            directory.path, resources
         )
         fake_storage_context.return_value = FakeStorageContext(
             test_activity_data.ExpandArticle_files_source_folder,
@@ -84,12 +93,19 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_email_smtp_connect,
     ):
         "test not_published logic by mocking Lax does not have version data"
+        directory = TempDirectory()
         tmp_dir = self.pubrouterdeposit.get_tmp_dir()
         fake_email_smtp_connect.return_value = FakeSMTPServer(tmp_dir)
         activity_data = {"data": {"workflow": "HEFCE"}}
         fake_was_ever_published.return_value = None
+        resources = helpers.populate_storage(
+            from_dir="tests/test_data/",
+            to_dir=directory.path,
+            filenames=["elife00013.xml", "elife09169.xml"],
+            sub_dir="pub_router/outbox",
+        )
         fake_outbox_storage_context.return_value = FakeStorageContext(
-            "tests/test_data/", ["elife00013.xml", "elife09169.xml"]
+            directory.path, resources
         )
         fake_storage_context.return_value = FakeStorageContext(
             test_activity_data.ExpandArticle_files_source_folder,
@@ -157,12 +173,19 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_email_smtp_connect,
     ):
         "test for PMC runs which start a different workflow"
+        directory = TempDirectory()
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.pubrouterdeposit.get_tmp_dir()
         )
         activity_data = {"data": {"workflow": workflow_name}}
+        resources = helpers.populate_storage(
+            from_dir="tests/test_data/",
+            to_dir=directory.path,
+            filenames=["elife00013.xml"],
+            sub_dir="pmc/outbox",
+        )
         fake_outbox_storage_context.return_value = FakeStorageContext(
-            "tests/test_data/", ["elife00013.xml"]
+            directory.path, resources
         )
         fake_storage_context.return_value = FakeStorageContext(
             test_activity_data.ExpandArticle_files_source_folder,

@@ -2,6 +2,7 @@ import os
 import time
 import unittest
 from mock import patch
+from testfixtures import TempDirectory
 from elifearticle.article import Article
 from provider import crossref
 import activity.activity_DepositCrossrefPendingPublication as activity_module
@@ -25,6 +26,7 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         self.outbox_folder = "tests/test_data/crossref_pending_publication/outbox/"
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder(
             activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
@@ -69,12 +71,19 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
                 "</pending_publication>",
             ],
         }
+        directory = TempDirectory()
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
+        resources = helpers.populate_storage(
+            from_dir=self.outbox_folder,
+            to_dir=directory.path,
+            filenames=test_data["article_xml_filenames"],
+            sub_dir="crossref_pending_publication/outbox",
+        )
         fake_storage_context.return_value = FakeStorageContext(
-            self.outbox_folder,
-            test_data["article_xml_filenames"],
+            directory.path,
+            resources,
         )
         # mock the POST to endpoint
         fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))

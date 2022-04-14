@@ -233,6 +233,7 @@ class TestPublishFinalPOA(unittest.TestCase):
         }
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.poa.clean_tmp_dir()
         helpers.delete_files_in_folder(
             activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
@@ -251,7 +252,6 @@ class TestPublishFinalPOA(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_publication_date")
     @patch.object(activity_PublishFinalPOA, "next_revision_number")
-    @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_PublishFinalPOA, "clean_tmp_dir")
@@ -260,7 +260,6 @@ class TestPublishFinalPOA(unittest.TestCase):
         fake_clean_tmp_dir,
         fake_storage_context,
         fake_provider_storage_context,
-        fake_outbox_key_names,
         fake_next_revision_number,
         fake_get_pub_date_str_from_lax,
         fake_email_smtp_connect,
@@ -268,17 +267,23 @@ class TestPublishFinalPOA(unittest.TestCase):
 
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
         fake_clean_tmp_dir.return_value = None
-        fake_provider_storage_context.return_value = FakeStorageContext(
-            "tests/test_data/poa/outbox"
-        )
+
         fake_storage_context.return_value = FakeStorageContext()
         fake_next_revision_number.return_value = 1
         # fake_upload_files_to_s3.return_value = True
         fake_get_pub_date_str_from_lax.return_value = "20160704000000"
 
         for test_data in self.do_activity_passes:
-
-            fake_outbox_key_names.return_value = test_data["outbox_file_list"]
+            directory = TempDirectory()
+            resources = helpers.populate_storage(
+                from_dir="tests/test_data/poa/outbox/",
+                to_dir=directory.path,
+                filenames=test_data.get("outbox_file_list"),
+                sub_dir="outbox",
+            )
+            fake_provider_storage_context.return_value = FakeStorageContext(
+                directory.path, resources
+            )
 
             param_data = None
             success = self.poa.do_activity(param_data)
@@ -338,6 +343,7 @@ class TestPublishFinalPOA(unittest.TestCase):
             self.remove_files_from_tmp_dir_subfolders()
 
             # Reset variables
+            TempDirectory.cleanup_all()
             self.poa.activity_status = None
             self.poa.approve_status = None
             self.poa.publish_status = None
