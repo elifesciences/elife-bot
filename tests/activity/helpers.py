@@ -106,3 +106,17 @@ def expanded_folder_bucket_resources(directory, expanded_folder, zip_file_path):
     )
     resources = expanded_folder_resources(zip_file_path, directory_s3_folder_path)
     return resources
+
+
+def populate_storage(from_dir, to_dir, filenames, sub_dir=""):
+    "copy filesnames from from_dir to to_dir into the sub_dir for test bucket resources"
+    resources = []
+    for filename in filenames:
+        from_filename = os.path.join(from_dir, filename)
+        to_resource = os.path.join(sub_dir, filename)
+        to_filename = os.path.join(to_dir, to_resource)
+        resources.append(to_resource)
+        # create folders if they do not exist
+        os.makedirs(os.path.dirname(to_filename), exist_ok=True)
+        shutil.copy(from_filename, to_filename)
+    return resources

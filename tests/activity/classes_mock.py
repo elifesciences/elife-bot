@@ -175,11 +175,21 @@ class FakeStorageContext:
         return self.resources
 
     def copy_resource(self, origin, destination, additional_dict_metadata=None):
-        pass
+        origin_bucket_name, s3_key = self.get_bucket_and_key(origin)
+        origin_file_name = s3_key.lstrip("/")
+        destination_bucket_name, s3_key = self.get_bucket_and_key(destination)
+        destination_file_name = s3_key.lstrip("/")
+        if origin_bucket_name == destination_bucket_name:
+            origin_path = os.path.join(self.dir, origin_file_name)
+            destination_path = os.path.join(self.dir, destination_file_name)
+            # create folders if they do not exist
+            os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+            copy(origin_path, destination_path)
 
     def delete_resource(self, resource):
-        # delete from the destination folder
-        file_name = data.ExpandArticle_files_dest_folder + "/" + resource.split("/")[-1]
+        "delete from the destination folder"
+        bucket_name, s3_key = self.get_bucket_and_key(resource)
+        file_name = self.dir + "/" + s3_key
         if os.path.exists(file_name):
             os.remove(file_name)
 

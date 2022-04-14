@@ -2,6 +2,7 @@ import os
 import unittest
 from mock import patch
 from ddt import ddt, data
+from testfixtures import TempDirectory
 from elifearticle.article import Article, Contributor
 from provider import bigquery, crossref, lax_provider
 import activity.activity_DepositCrossrefPeerReview as activity_module
@@ -30,6 +31,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         self.activity.make_activity_directories()
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder(
             activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
@@ -90,14 +92,21 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         fake_check_vor,
         fake_get_client,
     ):
+        directory = TempDirectory()
         fake_check_vor.return_value = True
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
         fake_get_client.return_value = True
+        resources = helpers.populate_storage(
+            from_dir="tests/test_data/crossref_peer_review/outbox/",
+            to_dir=directory.path,
+            filenames=test_data["article_xml_filenames"],
+            sub_dir="crossref_peer_review/outbox",
+        )
         fake_storage_context.return_value = FakeStorageContext(
-            "tests/test_data/crossref_peer_review/outbox/",
-            test_data["article_xml_filenames"],
+            directory.path,
+            resources,
         )
         rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
         client = FakeBigQueryClient(rows)

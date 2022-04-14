@@ -5,16 +5,15 @@ import shutil
 from collections import OrderedDict
 from ddt import ddt, data
 from mock import patch
+from testfixtures import TempDirectory
 import activity.activity_PubmedArticleDeposit as activity_module
 from activity.activity_PubmedArticleDeposit import activity_PubmedArticleDeposit
 from provider import lax_provider, sftp
 from tests.classes_mock import FakeSMTPServer
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger
-from tests.activity.classes_mock import FakeStorageContext
+from tests.activity import helpers, settings_mock
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 import tests.activity.test_activity_data as activity_test_data
 import tests.test_data as test_case_data
-import tests.activity.helpers as helpers
 
 
 @ddt
@@ -26,6 +25,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         )
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder(
             activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
@@ -178,17 +178,20 @@ class TestPubmedArticleDeposit(unittest.TestCase):
         fake_email_smtp_connect,
         fake_clean_tmp_dir,
     ):
+        directory = TempDirectory()
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
         fake_clean_tmp_dir.return_value = None
         # copy XML files into the input directory using the storage context
-        resources = [
-            "pubmed/outbox/%s" % filename
-            for filename in test_data.get("outbox_filenames")
-        ]
+        resources = helpers.populate_storage(
+            from_dir="tests/files_source/pubmed/outbox",
+            to_dir=directory.path,
+            filenames=test_data.get("outbox_filenames"),
+            sub_dir="pubmed/outbox",
+        )
         fake_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/", resources
+            directory.path, resources
         )
         # lax data overrides
         fake_article_versions.return_value = 200, test_data.get("article_versions_data")

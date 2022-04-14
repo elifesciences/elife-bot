@@ -4,6 +4,7 @@ import os
 import unittest
 from mock import patch
 from ddt import ddt, data
+from testfixtures import TempDirectory
 from digestparser.objects import Digest
 from provider import digest_provider, download_helper
 from activity.activity_CopyDigestToOutbox import (
@@ -23,11 +24,11 @@ def input_data(file_name_to_change=None):
     return activity_data
 
 
-def populate_outbox(resources):
+def populate_outbox(resources, to_dir):
     "populate the bucket with outbox files to later be deleted"
     for resource in resources:
         file_name = resource.split("/")[-1]
-        file_path = testdata.ExpandArticle_files_dest_folder + "/" + file_name
+        file_path = to_dir + "/" + file_name
         with open(file_path, "a"):
             os.utime(file_path, None)
 
@@ -39,6 +40,7 @@ class TestCopyDigestToOutbox(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
         # clean out the bucket destination folder
@@ -53,7 +55,7 @@ class TestCopyDigestToOutbox(unittest.TestCase):
         {
             "comment": "digest docx file example",
             "filename": "DIGEST+99999.docx",
-            "bucket_resources": ["s3://bucket/DIGEST 99999_alternate.docx"],
+            "bucket_resources": ["DIGEST 99999_alternate.docx"],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_file_list": ["digest-99999.docx"],
         },
@@ -61,8 +63,8 @@ class TestCopyDigestToOutbox(unittest.TestCase):
             "comment": "digest zip file example",
             "filename": "DIGEST+99999.zip",
             "bucket_resources": [
-                "s3://bucket/IMAGE 99999.jpg",
-                "s3://bucket/DIGEST 99999_old.docx",
+                "IMAGE 99999.jpg",
+                "DIGEST 99999_old.docx",
             ],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_file_list": ["digest-99999.docx", "digest-99999.jpeg"],
@@ -89,14 +91,14 @@ class TestCopyDigestToOutbox(unittest.TestCase):
         fake_provider_storage_context,
         fake_download_storage_context,
     ):
+        directory = TempDirectory()
         # copy files into the input directory using the storage context
-        named_fake_storage_context = FakeStorageContext()
-        named_fake_storage_context.resources = test_data.get("bucket_resources")
-        fake_storage_context.return_value = named_fake_storage_context
+        populate_outbox(test_data.get("bucket_resources"), directory.path)
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, test_data.get("bucket_resources")
+        )
         fake_provider_storage_context.return_value = FakeStorageContext()
         fake_download_storage_context.return_value = FakeStorageContext()
-        # populate the fake resources
-        populate_outbox(test_data.get("bucket_resources"))
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         # check assertions

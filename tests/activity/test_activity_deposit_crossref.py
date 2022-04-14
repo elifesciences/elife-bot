@@ -3,6 +3,7 @@ import os
 import unittest
 from mock import patch
 from ddt import ddt, data
+from testfixtures import TempDirectory
 from provider import crossref
 import activity.activity_DepositCrossref as activity_module
 from activity.activity_DepositCrossref import activity_DepositCrossref
@@ -24,6 +25,7 @@ class TestDepositCrossref(unittest.TestCase):
         self.activity.make_activity_directories()
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder(
             activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
@@ -124,11 +126,19 @@ class TestDepositCrossref(unittest.TestCase):
         fake_request,
         fake_email_smtp_connect,
     ):
+        directory = TempDirectory()
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
+        # populate the bucket resources and copy them to the temp directory
+        resources = helpers.populate_storage(
+            from_dir="tests/test_data/crossref/outbox",
+            to_dir=directory.path,
+            filenames=test_data["article_xml_filenames"],
+            sub_dir="crossref/outbox",
+        )
         fake_storage_context.return_value = FakeStorageContext(
-            "tests/test_data/crossref/outbox/", test_data["article_xml_filenames"]
+            directory.path, resources
         )
         # mock the POST to endpoint
         fake_request.return_value = FakeResponse(test_data.get("post_status_code"))
