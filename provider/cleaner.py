@@ -1,7 +1,8 @@
 import os
 import logging
 import re
-from elifecleaner import LOGGER, configure_logging, parse, transform, zip_lib
+from elifecleaner import LOGGER, configure_logging, parse, transform, video, zip_lib
+from elifecleaner.transform import ArticleZipFile
 from provider.storage_provider import storage_context
 
 LOG_FILENAME = "elifecleaner.log"
@@ -91,6 +92,14 @@ def transform_ejp_files(asset_file_name_map, output_dir, identifier):
 
 def rezip(asset_file_name_map, output_dir, zip_file_name):
     return transform.rezip(asset_file_name_map, output_dir, zip_file_name)
+
+
+def video_data_from_files(files, article_id):
+    return video.video_data_from_files(files, article_id)
+
+
+def xml_rewrite_file_tags(xml_file_path, file_transformations, identifier):
+    transform.xml_rewrite_file_tags(xml_file_path, file_transformations, identifier)
 
 
 def bucket_asset_file_name_map(settings, bucket_name, expanded_folder):
