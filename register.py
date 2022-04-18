@@ -126,6 +126,7 @@ def start(settings):
     activity_names.append("TransformAcceptedSubmission")
     activity_names.append("EmailAcceptedSubmissionOutput")
     activity_names.append("ValidateAcceptedSubmissionVideos")
+    activity_names.append("RenameAcceptedSubmissionVideos")
     activity_names.append("OutputAcceptedSubmission")
 
     for activity_name in activity_names:
