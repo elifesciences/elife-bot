@@ -11,9 +11,8 @@ from activity.activity_DepositCrossrefPendingPublication import (
 )
 from tests.classes_mock import FakeSMTPServer
 from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
-import tests.activity.settings_mock as settings_mock
+from tests.activity import helpers, settings_mock
 import tests.activity.test_activity_data as activity_test_data
-import tests.activity.helpers as helpers
 
 
 class TestDepositCrossrefPendingPublication(unittest.TestCase):
@@ -28,9 +27,6 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
-        helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     def tmp_dir(self):
         "return the tmp dir name for the activity"
@@ -82,8 +78,7 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
             sub_dir="crossref_pending_publication/outbox",
         )
         fake_storage_context.return_value = FakeStorageContext(
-            directory.path,
-            resources,
+            directory.path, resources, dest_folder=directory.path
         )
         # mock the POST to endpoint
         fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))

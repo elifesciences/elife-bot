@@ -16,9 +16,8 @@ from tests.classes_mock import (
     FakeBigQueryRowIterator,
 )
 from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
-import tests.activity.settings_mock as settings_mock
+from tests.activity import helpers, settings_mock
 import tests.activity.test_activity_data as activity_test_data
-import tests.activity.helpers as helpers
 
 
 @ddt
@@ -33,9 +32,6 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
-        helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     def tmp_dir(self):
         "return the tmp dir name for the activity"
@@ -105,8 +101,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
             sub_dir="crossref_peer_review/outbox",
         )
         fake_storage_context.return_value = FakeStorageContext(
-            directory.path,
-            resources,
+            directory.path, resources, dest_folder=directory.path
         )
         rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
         client = FakeBigQueryClient(rows)

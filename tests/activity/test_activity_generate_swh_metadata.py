@@ -2,19 +2,19 @@ import os
 import shutil
 import unittest
 from mock import patch
+from testfixtures import TempDirectory
 import activity.activity_GenerateSWHMetadata as activity_module
 from activity.activity_GenerateSWHMetadata import (
     activity_GenerateSWHMetadata as activity_object,
 )
 from provider.article import article
-import tests.activity.settings_mock as settings_mock
+from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import (
     FakeLogger,
     FakeStorageContext,
     FakeSession,
 )
 import tests.activity.test_activity_data as testdata
-import tests.activity.helpers as helpers
 
 
 def fake_download_xml(filename, to_dir):
@@ -35,10 +35,8 @@ class TestGenerateSWHMetadata(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         helpers.delete_files_in_folder("tests/tmp", filter_out=[".keepme"])
-        helpers.delete_files_in_folder(
-            testdata.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     @patch.object(article, "download_article_xml_from_s3")
     @patch.object(activity_module, "get_session")
@@ -46,9 +44,10 @@ class TestGenerateSWHMetadata(unittest.TestCase):
     def test_do_activity(
         self, mock_storage_context, mock_session, fake_download_article_xml
     ):
+        directory = TempDirectory()
         article_xml_file = "elife-30274-v2.xml"
         mock_storage_context.return_value = FakeStorageContext(
-            testdata.ExpandArticle_files_dest_folder
+            directory.path, dest_folder=directory.path
         )
         mock_session.return_value = FakeSession(
             testdata.SoftwareHeritageDeposit_session_example
@@ -63,16 +62,14 @@ class TestGenerateSWHMetadata(unittest.TestCase):
         self.assertEqual(return_value, self.activity.ACTIVITY_SUCCESS)
 
         # look at the metadata XML file contents
-        files = os.listdir(testdata.ExpandArticle_files_dest_folder)
+        files = os.listdir(directory.path)
         xml_files = [
             file_name
             for file_name in files
             if file_name != ".gitkeep" and file_name.endswith(".xml")
         ]
         metadata_file = xml_files[0]
-        with open(
-            os.path.join(testdata.ExpandArticle_files_dest_folder, metadata_file), "rb"
-        ) as open_file:
+        with open(os.path.join(directory.path, metadata_file), "rb") as open_file:
             metadata_xml = open_file.read()
             self.assertTrue(
                 b"<title>Replication Study: Transcriptional amplification in tumor cells with elevated c-Myc</title>"

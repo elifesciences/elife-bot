@@ -31,10 +31,6 @@ class TestScheduleCrossrefPendingPublication(unittest.TestCase):
         TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
-        # clean out the bucket destination folder
-        helpers.delete_files_in_folder(
-            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     @patch("provider.outbox_provider.storage_context")
     @patch.object(cleaner, "storage_context")
@@ -69,7 +65,9 @@ class TestScheduleCrossrefPendingPublication(unittest.TestCase):
         fake_cleaner_storage_context.return_value = FakeStorageContext(
             directory.path, resources=resources
         )
-        fake_outbox_storage_context.return_value = FakeStorageContext()
+        fake_outbox_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
         fake_session.return_value = FakeSession(
             test_activity_data.accepted_session_example
         )

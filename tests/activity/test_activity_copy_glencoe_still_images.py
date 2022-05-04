@@ -1,10 +1,9 @@
 import unittest
 from mock import patch, MagicMock
+from testfixtures import TempDirectory
 from activity.activity_CopyGlencoeStillImages import activity_CopyGlencoeStillImages
-import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeSession, FakeStorageContext, FakeLogger
-import tests.activity.test_activity_data as test_activity_data
-import tests.activity.helpers as helpers
+from tests.activity import settings_mock, test_activity_data
 
 
 class TestCopyGlencoeStillImages(unittest.TestCase):
@@ -15,9 +14,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
         self.copyglencoestillimages.logger = FakeLogger()
 
     def tearDown(self):
-        helpers.delete_files_in_folder(
-            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
+        TempDirectory.cleanup_all()
 
     @patch("provider.article_processing.storage_context")
     @patch("provider.lax_provider.get_xml_file_name")
@@ -309,8 +306,9 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
     def test_store_file_according_to_the_current_article_id_whatever_is_the_filename_on_glencoe(
         self, fake_storage_context, fake_requests_get
     ):
+        directory = TempDirectory()
         fake_storage_context.return_value = FakeStorageContext(
-            test_activity_data.ExpandArticle_files_dest_folder
+            directory.path, dest_folder=directory.path
         )
         fake_requests_get.return_value = MagicMock()
         fake_requests_get.return_value.status_code = 200

@@ -3,17 +3,16 @@
 import os
 import unittest
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
 from provider import download_helper, letterparser_provider
 from activity.activity_DepositDecisionLetterIngestAssets import (
     activity_DepositDecisionLetterIngestAssets as activity_object,
 )
-import tests.activity.settings_mock as settings_mock
+from tests.activity import settings_mock
 from tests.activity.classes_mock import FakeLogger
 import tests.test_data as test_case_data
 from tests.activity.classes_mock import FakeStorageContext
-import tests.activity.test_activity_data as testdata
-import tests.activity.helpers as helpers
 
 
 def input_data(file_name_to_change=""):
@@ -31,12 +30,9 @@ class TestDepositDecisionLetterIngestAssets(unittest.TestCase):
         )
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
-        # clean out the bucket destination folder
-        helpers.delete_files_in_folder(
-            testdata.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     @patch.object(download_helper, "storage_context")
     @patch("activity.activity_DepositDecisionLetterIngestAssets.storage_context")
@@ -44,6 +40,7 @@ class TestDepositDecisionLetterIngestAssets(unittest.TestCase):
         {
             "comment": "decision letter zip file example",
             "filename": "elife-39122.zip",
+            "bucket_folder_name": "elife39122",
             "expected_result": activity_object.ACTIVITY_SUCCESS,
             "expected_asset_file_names": [
                 "elife-39122-sa2-fig1.jpg",
@@ -58,8 +55,11 @@ class TestDepositDecisionLetterIngestAssets(unittest.TestCase):
     def test_do_activity(
         self, test_data, fake_storage_context, fake_download_storage_context
     ):
+        directory = TempDirectory()
         # copy XML files into the input directory using the storage context
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
         fake_download_storage_context.return_value = FakeStorageContext()
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
@@ -82,7 +82,10 @@ class TestDepositDecisionLetterIngestAssets(unittest.TestCase):
         )
 
         # Check destination folder as a list
-        files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
+        outbox_bucket_folder = os.path.join(
+            directory.path, test_data.get("bucket_folder_name")
+        )
+        files = sorted(os.listdir(outbox_bucket_folder))
         compare_files = [file_name for file_name in files if file_name != ".gitkeep"]
         self.assertEqual(
             compare_files,

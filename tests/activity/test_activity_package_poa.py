@@ -5,13 +5,12 @@ import shutil
 import glob
 from xml.parsers.expat import ExpatError
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data, unpack
 from packagepoa import transform
-import provider.lax_provider as lax_provider
-import tests.activity.settings_mock as settings_mock
+from provider import lax_provider
+from tests.activity import settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
-import tests.activity.test_activity_data as activity_test_data
-import tests.activity.helpers as helpers
 from tests.classes_mock import FakeSMTPServer
 import activity.activity_PackagePOA as activity_module
 from activity.activity_PackagePOA import activity_PackagePOA
@@ -33,10 +32,8 @@ class TestPackagePOA(unittest.TestCase):
         self.test_data_dir = "tests/test_data/poa"
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.poa.clean_tmp_dir()
-        helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     def fake_download_latest_csv(self):
         csv_files = glob.glob(self.test_data_dir + "/*.csv")
@@ -217,13 +214,14 @@ class TestPackagePOA(unittest.TestCase):
         fake_storage_context,
         fake_email_smtp_connect,
     ):
+        directory = TempDirectory()
         # make directories first
         self.poa.make_activity_directories()
         # mock things
         fake_copy_pdf_to_output_dir.return_value = None
         fake_clean_tmp_dir.return_value = None
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
-        test_outbox_folder = activity_test_data.ExpandArticle_files_dest_folder
+        bucket_outbox_folder = os.path.join(directory.path, "outbox")
         bucket_list_file = os.path.join(
             "tests", "test_data", "ejp_bucket_list_new.json"
         )
@@ -233,7 +231,7 @@ class TestPackagePOA(unittest.TestCase):
             )
         fake_by_convention.return_value = None
         fake_storage_context.return_value = FakeStorageContext(
-            directory=self.test_data_dir
+            directory=self.test_data_dir, dest_folder=directory.path
         )
         if "pub_date" in test_data and test_data["pub_date"]:
             fake_article_publication_date.return_value = test_data["pub_date"]
@@ -285,7 +283,7 @@ class TestPackagePOA(unittest.TestCase):
         # count the outbox files except the hidden .gitkeep file
         if test_data.get("expected_outbox_count"):
             self.boolean_assertion(
-                len(outbox_files(test_outbox_folder)),
+                len(outbox_files(bucket_outbox_folder)),
                 test_data.get("expected_outbox_count"),
                 test_data.get("scenario"),
             )
@@ -350,6 +348,7 @@ class TestPackagePOA(unittest.TestCase):
         fake_email_smtp_connect,
         fake_generate_xml,
     ):
+        directory = TempDirectory()
         # make directories first
         self.poa.make_activity_directories()
         # mock things
@@ -357,7 +356,7 @@ class TestPackagePOA(unittest.TestCase):
         fake_copy_pdf_to_output_dir.return_value = None
         fake_clean_tmp_dir.return_value = None
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
-        test_outbox_folder = activity_test_data.ExpandArticle_files_dest_folder
+        bucket_outbox_folder = os.path.join(directory.path, "outbox")
         bucket_list_file = os.path.join(
             "tests", "test_data", "ejp_bucket_list_new.json"
         )
@@ -367,7 +366,7 @@ class TestPackagePOA(unittest.TestCase):
                 open_file.read().decode()
             )
         fake_storage_context.return_value = FakeStorageContext(
-            directory=self.test_data_dir
+            directory=self.test_data_dir, dest_folder=directory.path
         )
         fake_article_publication_date.return_value = None
 
@@ -396,7 +395,7 @@ class TestPackagePOA(unittest.TestCase):
         # count the outbox files except the hidden .gitkeep file
         if test_data.get("expected_outbox_count"):
             self.boolean_assertion(
-                len(outbox_files(test_outbox_folder)),
+                len(outbox_files(bucket_outbox_folder)),
                 test_data.get("expected_outbox_count"),
                 test_data.get("scenario"),
             )

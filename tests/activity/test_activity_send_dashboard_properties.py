@@ -3,7 +3,7 @@ from mock import patch, ANY
 from testfixtures import TempDirectory
 from activity import activity_SendDashboardProperties as activity_module
 from activity.activity_SendDashboardProperties import activity_SendDashboardProperties
-from tests.activity import helpers, settings_mock
+from tests.activity import settings_mock
 from tests.activity.classes_mock import (
     FakeSession,
     FakeStorageContext,
@@ -23,9 +23,6 @@ class TestSendDashboardEvents(unittest.TestCase):
     def tearDown(self):
         self.directory.cleanup()
         TempDirectory.cleanup_all()
-        helpers.delete_files_in_folder(
-            test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     @patch("provider.lax_provider.get_xml_file_name")
     @patch.object(activity_module, "storage_context")

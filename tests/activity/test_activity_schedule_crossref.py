@@ -10,7 +10,7 @@ from tests.activity.classes_mock import (
     FakeSession,
     FakeStorageContext,
 )
-from tests.activity import helpers, settings_mock
+from tests.activity import settings_mock
 import tests.activity.test_activity_data as testdata
 
 
@@ -23,9 +23,7 @@ class TestScheduleCrossref(unittest.TestCase):
         )
 
     def tearDown(self):
-        helpers.delete_files_in_folder(
-            testdata.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
+        pass
 
     @patch("provider.lax_provider.get_xml_file_name")
     @patch("activity.activity_ScheduleCrossref.get_session")

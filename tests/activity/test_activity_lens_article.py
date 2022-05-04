@@ -2,10 +2,11 @@ import unittest
 import os
 import shutil
 from mock import patch
+from testfixtures import TempDirectory
 from activity.activity_LensArticle import activity_LensArticle
 from provider.article import article
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
-from tests.activity import helpers, settings_mock, test_activity_data
+from tests.activity import settings_mock
 
 
 def fake_download_xml(filename, to_dir):
@@ -28,14 +29,13 @@ class TestLensArticle(unittest.TestCase):
         )
 
     def tearDown(self):
-        helpers.delete_files_in_folder(
-            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
 
     @patch("activity.activity_LensArticle.storage_context")
     @patch.object(article, "download_article_xml_from_s3")
     def test_do_activity(self, fake_download_article_xml, fake_storage_context):
+        directory = TempDirectory()
         input_data = {"article_id": "353"}
         article_xml_file = "elife-00353-v1.xml"
         article_s3key = "00353/index.html"
@@ -46,7 +46,9 @@ class TestLensArticle(unittest.TestCase):
         fake_download_article_xml.return_value = fake_download_xml(
             article_xml_file, self.activity.get_tmp_dir()
         )
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
 
         success = self.activity.do_activity(input_data)
         self.assertEqual(success, True)
