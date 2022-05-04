@@ -7,7 +7,7 @@ from ddt import ddt, data, unpack
 from testfixtures import TempDirectory
 import activity.activity_PMCDeposit as activity_module
 from activity.activity_PMCDeposit import activity_PMCDeposit
-import tests.activity.settings_mock as settings_mock
+from tests.activity import settings_mock
 from tests.classes_mock import FakeSMTPServer
 from tests.activity.classes_mock import (
     FakeLogger,
@@ -15,8 +15,6 @@ from tests.activity.classes_mock import (
     FakeStorageContext,
     FakeFTP,
 )
-import tests.activity.test_activity_data as activity_test_data
-import tests.activity.helpers as helpers
 
 
 @ddt
@@ -130,10 +128,8 @@ class TestPMCDeposit(unittest.TestCase):
         )
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
-        helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     def zip_file_list(self, zip_file_name):
         file_list = None
@@ -157,14 +153,14 @@ class TestPMCDeposit(unittest.TestCase):
         mock_article_related,
         fake_clean_tmp_dir,
     ):
-
+        directory = TempDirectory()
         fake_ftp.return_value = FakeFTP()
         fake_clean_tmp_dir.return_value = None
 
         for test_data in self.do_activity_passes:
 
             fake_storage_context.return_value = FakeStorageContext(
-                directory=self.test_data_dir
+                directory=self.test_data_dir, dest_folder=directory.path
             )
             fake_list_resources.return_value = test_data["pmc_zip_key_names"]
             mock_article_related.return_value = 200, test_data["related_article_json"]

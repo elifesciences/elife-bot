@@ -13,7 +13,6 @@ from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
 from tests.classes_mock import FakeSMTPServer
 from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
-import tests.activity.test_activity_data as activity_test_data
 
 
 class TestPublishFinalPOA(unittest.TestCase):
@@ -235,9 +234,6 @@ class TestPublishFinalPOA(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
         self.poa.clean_tmp_dir()
-        helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     def remove_files_from_tmp_dir_subfolders(self):
         """
@@ -268,13 +264,15 @@ class TestPublishFinalPOA(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
         fake_clean_tmp_dir.return_value = None
 
-        fake_storage_context.return_value = FakeStorageContext()
         fake_next_revision_number.return_value = 1
         # fake_upload_files_to_s3.return_value = True
         fake_get_pub_date_str_from_lax.return_value = "20160704000000"
 
         for test_data in self.do_activity_passes:
             directory = TempDirectory()
+            fake_storage_context.return_value = FakeStorageContext(
+                dest_folder=directory.path
+            )
             resources = helpers.populate_storage(
                 from_dir="tests/test_data/poa/outbox/",
                 to_dir=directory.path,

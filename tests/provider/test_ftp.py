@@ -6,8 +6,6 @@ from testfixtures import TempDirectory
 from provider import ftp as ftp_provider
 from tests.classes_mock import FakeFTPServer
 from tests.activity.classes_mock import FakeLogger
-import tests.activity.test_activity_data as testdata
-from tests.activity import helpers
 
 
 class TestFtpConnect(unittest.TestCase):
@@ -45,9 +43,8 @@ class TestFtpProvider(unittest.TestCase):
     def setUp(self):
         patcher = patch("ftplib.FTP")
         fake_ftp_server = patcher.start()
-        fake_ftp_server.return_value = FakeFTPServer(
-            testdata.ExpandArticle_files_dest_folder
-        )
+        self.directory = TempDirectory()
+        fake_ftp_server.return_value = FakeFTPServer(self.directory.path)
         self.logger = FakeLogger()
         self.ftp_instance = ftp_provider.FTP(self.logger)
         self.host = "ftp.example.org"
@@ -55,10 +52,6 @@ class TestFtpProvider(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
-        helpers.delete_directories_in_folder(testdata.ExpandArticle_files_dest_folder)
-        helpers.delete_files_in_folder(
-            testdata.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     def test_ftp_disconnect(self):
         self.assertIsNone(self.ftp_instance.ftp_disconnect(self.ftp_connection))
@@ -72,7 +65,7 @@ class TestFtpProvider(unittest.TestCase):
         directory = TempDirectory()
         filename = directory.write("test_file.txt", "test file", encoding="utf8")
         self.ftp_instance.ftp_upload(self.ftp_connection, filename)
-        uploaded_files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
+        uploaded_files = sorted(os.listdir(self.directory.path))
         self.assertTrue(filename.split("/")[-1] in uploaded_files)
         self.assertEqual(
             self.ftp_instance.logger.loginfo[-1],
@@ -85,7 +78,7 @@ class TestFtpProvider(unittest.TestCase):
         directory = TempDirectory()
         filename = directory.write("article.xml", b"<root />")
         self.ftp_instance.ftp_upload(self.ftp_connection, filename)
-        uploaded_files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
+        uploaded_files = sorted(os.listdir(self.directory.path))
         self.assertTrue(filename.split("/")[-1] in uploaded_files)
         self.assertEqual(
             self.ftp_instance.logger.loginfo[-1],
@@ -101,15 +94,15 @@ class TestFtpProvider(unittest.TestCase):
             self.ftp_instance.logger.logexception,
             'Exception when changing working directory to "test" at host ftp.example.org',
         )
-        uploaded_files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
+        uploaded_files = sorted(os.listdir(self.directory.path))
         self.assertTrue(sub_dir in uploaded_files)
 
     def test_ftp_cwd_mkd_folder_exists(self):
         sub_dir = "test"
         # create the folder so it already exists
-        os.mkdir(os.path.join(testdata.ExpandArticle_files_dest_folder, sub_dir))
+        os.mkdir(os.path.join(self.directory.path, sub_dir))
         self.assertIsNone(self.ftp_instance.ftp_cwd_mkd(self.ftp_connection, sub_dir))
-        uploaded_files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
+        uploaded_files = sorted(os.listdir(self.directory.path))
         self.assertTrue(sub_dir in uploaded_files)
 
     @patch.object(FakeFTPServer, "mkd")
@@ -128,7 +121,7 @@ class TestFtpProvider(unittest.TestCase):
         directory = TempDirectory()
         filename = directory.write("article.xml", b"<root />")
         self.ftp_instance.ftp_to_endpoint(self.ftp_connection, [filename], [sub_dir])
-        folder_name = os.path.join(testdata.ExpandArticle_files_dest_folder, sub_dir)
+        folder_name = os.path.join(self.directory.path, sub_dir)
         uploaded_files = sorted(os.listdir(folder_name))
         self.assertTrue(
             filename.split("/")[-1] in uploaded_files,

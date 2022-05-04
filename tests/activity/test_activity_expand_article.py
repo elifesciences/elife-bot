@@ -1,13 +1,12 @@
 import os
 import unittest
 from mock import mock, patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
 from activity.activity_ExpandArticle import activity_ExpandArticle
-import tests.activity.settings_mock as settings_mock
-import tests.activity.classes_mock as classes_mock
+from tests.activity import classes_mock, helpers, settings_mock
 from tests.activity.classes_mock import FakeStorageContext, FakeSession
 import tests.activity.test_activity_data as testdata
-import tests.activity.helpers as helpers
 
 
 @ddt
@@ -19,16 +18,17 @@ class TestExpandArticle(unittest.TestCase):
         self.create_temp_folder(testdata.ExpandArticle_path)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         helpers.delete_files_in_folder("tests/tmp", filter_out=[".keepme"])
-        helpers.delete_files_in_folder(
-            testdata.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     @patch.object(activity_ExpandArticle, "get_tmp_dir")
     @patch("activity.activity_ExpandArticle.get_session")
     @patch("activity.activity_ExpandArticle.storage_context")
     def test_do_activity(self, mock_storage_context, mock_session, mock_get_tmp_dir):
-        mock_storage_context.return_value = FakeStorageContext()
+        directory = TempDirectory()
+        mock_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
         mock_session.return_value = FakeSession(testdata.session_example)
         mock_get_tmp_dir.return_value = classes_mock.fake_get_tmp_dir(
             testdata.ExpandArticle_path
@@ -42,8 +42,11 @@ class TestExpandArticle(unittest.TestCase):
         self.assertEqual(True, success)
 
         # Check destination folder as a list
-        files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
-        # self.assertListEqual(testdata.ExpandArticle_files_dest_expected, files)
+        bucket_folder_path = os.path.join(
+            directory.path,
+            testdata.session_example.get("expanded_folder"),
+        )
+        files = sorted(os.listdir(bucket_folder_path))
 
         index = 0
         compare_files = [file_name for file_name in files if file_name != ".gitkeep"]
@@ -51,7 +54,7 @@ class TestExpandArticle(unittest.TestCase):
             self.assertEqual(
                 testdata.ExpandArticle_files_dest_bytes_expected[index]["name"], file
             )
-            statinfo = os.stat(testdata.ExpandArticle_files_dest_folder + "/" + file)
+            statinfo = os.stat(bucket_folder_path + "/" + file)
             self.assertEqual(
                 testdata.ExpandArticle_files_dest_bytes_expected[index]["bytes"],
                 statinfo.st_size,

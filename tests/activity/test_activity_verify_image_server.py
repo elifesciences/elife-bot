@@ -1,6 +1,7 @@
 import unittest
 from mock import patch, MagicMock
-from tests.activity import helpers, settings_mock
+from testfixtures import TempDirectory
+from tests.activity import settings_mock
 from tests.activity.classes_mock import FakeSession, FakeStorageContext
 from activity.activity_VerifyImageServer import activity_VerifyImageServer
 import tests.activity.test_activity_data as test_data
@@ -22,9 +23,7 @@ class TestVerifyImageServer(unittest.TestCase):
         ]
 
     def tearDown(self):
-        helpers.delete_files_in_folder(
-            test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
+        TempDirectory.cleanup_all()
 
     @patch("activity.activity_VerifyImageServer.storage_context")
     @patch("activity.activity_VerifyImageServer.get_session")
@@ -32,12 +31,13 @@ class TestVerifyImageServer(unittest.TestCase):
     def test_do_activity_success(
         self, fake_retrieve_endpoints_check, fake_session, fake_storage_context
     ):
+        directory = TempDirectory()
         # Given
         data = test_data.data_example_before_publish
         fake_retrieve_endpoints_check.return_value = [(True, "test.path")]
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext(
-            test_data.ExpandArticle_files_dest_folder, self.resources
+            directory.path, self.resources
         )
         self.verifyimageserver.emit_monitor_event = MagicMock()
         self.verifyimageserver.logger = MagicMock()
@@ -52,12 +52,13 @@ class TestVerifyImageServer(unittest.TestCase):
     def test_do_activity_failure(
         self, fake_retrieve_endpoints_check, fake_session, fake_storage_context
     ):
+        directory = TempDirectory()
         # Given
         data = test_data.data_example_before_publish
         fake_retrieve_endpoints_check.return_value = [(False, "test.path")]
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext(
-            test_data.ExpandArticle_files_dest_folder, self.resources
+            directory.path, self.resources
         )
         self.verifyimageserver.emit_monitor_event = MagicMock()
         self.verifyimageserver.logger = MagicMock()
@@ -72,12 +73,13 @@ class TestVerifyImageServer(unittest.TestCase):
     def test_do_activity_error(
         self, fake_retrieve_endpoints_check, fake_session, fake_storage_context
     ):
+        directory = TempDirectory()
         # Given
         data = test_data.data_example_before_publish
         fake_retrieve_endpoints_check.side_effect = Exception("Error!")
         fake_session.return_value = FakeSession(test_data.session_example)
         fake_storage_context.return_value = FakeStorageContext(
-            test_data.ExpandArticle_files_dest_folder, self.resources
+            directory.path, self.resources
         )
         self.verifyimageserver.emit_monitor_event = MagicMock()
         self.verifyimageserver.logger = MagicMock()

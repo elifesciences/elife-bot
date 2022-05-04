@@ -2,12 +2,12 @@ import os
 import unittest
 import zipfile
 from mock import mock, patch
+from testfixtures import TempDirectory
 import activity.activity_ArchiveArticle as activity_module
 from activity.activity_ArchiveArticle import activity_ArchiveArticle as activity_object
-import tests.activity.settings_mock as settings_mock
+from tests.activity import settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 import tests.activity.test_activity_data as activity_test_data
-import tests.activity.helpers as helpers
 
 
 def outbox_files(folder):
@@ -32,9 +32,7 @@ class TestArchiveArticle(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
-        helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
+        TempDirectory.cleanup_all()
 
     def zip_assertions(self, zip_file_path, expected_zip_file_name, expected_zip_files):
         zip_file_name = None
@@ -58,8 +56,11 @@ class TestArchiveArticle(unittest.TestCase):
             "elife-00353-v1.xml",
             "elife-00353-v1.pdf",
         ]
-        test_destination_folder = activity_test_data.ExpandArticle_files_dest_folder
-        fake_storage_context.return_value = FakeStorageContext()
+        directory = TempDirectory()
+        test_destination_folder = directory.path
+        fake_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
         self.activity.emit_monitor_event = mock.MagicMock()
 
         success = self.activity.do_activity(

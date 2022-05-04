@@ -111,7 +111,10 @@ class FakeStorageProviderConnection:
 
 class FakeStorageContext:
     def __init__(
-        self, directory=data.ExpandArticle_files_source_folder, resources=None
+        self,
+        directory=data.ExpandArticle_files_source_folder,
+        resources=None,
+        dest_folder=data.ExpandArticle_files_dest_folder,
     ):
         "can instantiate specifying a data directory or use the default"
         self.dir = directory
@@ -122,6 +125,7 @@ class FakeStorageContext:
         ]
         if resources is not None:
             self.resources = resources
+        self.dest_folder = dest_folder
 
     def get_bucket_and_key(self, resource):
         p = re.compile(r"(.*?)://(.*?)(/.*)")
@@ -158,9 +162,12 @@ class FakeStorageContext:
 
     def set_resource_from_filename(self, resource, file_name, metadata=None):
         "resource name can be different than the file name"
-        to_file_name = resource.rsplit("/", 1)[-1]
-        dest = data.ExpandArticle_files_dest_folder + "/" + to_file_name
-        copy(file_name, dest)
+        bucket_name, s3_key = self.get_bucket_and_key(resource)
+        origin_file_name = s3_key.lstrip("/")
+        destination_path = os.path.join(self.dest_folder, origin_file_name)
+        # create folders if they do not exist
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+        copy(file_name, destination_path)
 
     def set_resource_from_string(self, resource, data, content_type=None):
         bucket_name, s3_key = self.get_bucket_and_key(resource)

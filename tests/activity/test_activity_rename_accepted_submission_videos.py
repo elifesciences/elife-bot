@@ -104,7 +104,7 @@ class TestRenameAcceptedSubmissionVideos(unittest.TestCase):
             zip_file_path,
         )
         fake_storage_context.return_value = FakeStorageContext(
-            directory.path, resources
+            directory.path, resources, dest_folder=directory.path
         )
         fake_cleaner_storage_context.return_value = FakeStorageContext(
             directory.path, resources

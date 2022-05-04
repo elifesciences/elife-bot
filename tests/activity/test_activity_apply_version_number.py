@@ -1,10 +1,12 @@
+import os
 import unittest
 import shutil
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data, unpack
 from activity import activity_ApplyVersionNumber as activity_module
 from activity.activity_ApplyVersionNumber import activity_ApplyVersionNumber
-from tests.activity import helpers, settings_mock
+from tests.activity import settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
 import tests.activity.test_activity_data as test_data
 
@@ -116,14 +118,9 @@ class TestApplyVersionNumber(unittest.TestCase):
         self.applyversionnumber = activity_ApplyVersionNumber(
             settings_mock, FakeLogger(), None, None, None
         )
-        self.test_dest_folder = "tests/files_dest_ApplyVersionNumber"
-        helpers.create_folder(self.test_dest_folder)
 
     def tearDown(self):
-        helpers.delete_folder(self.test_dest_folder, True)
-        helpers.delete_files_in_folder(
-            test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
+        TempDirectory.cleanup_all()
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_ApplyVersionNumber, "emit_monitor_event")
@@ -131,10 +128,13 @@ class TestApplyVersionNumber(unittest.TestCase):
     def test_do_activity(
         self, mock_session, fake_emit_monitor_event, fake_storage_context
     ):
+        directory = TempDirectory()
         # mocks
         mock_session.return_value = FakeSession(test_data.session_example)
         fake_emit_monitor_event.return_value = True
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
         activity_data = test_data.ApplyVersionNumber_data_no_renaming
         # do_activity
         result = self.applyversionnumber.do_activity(activity_data)
@@ -200,24 +200,18 @@ class TestApplyVersionNumber(unittest.TestCase):
         },
     )
     def test_rewrite_xml_file(self, file, expected):
-        # Patch here in order to use ddt data
-        patcher = patch("activity.activity_ApplyVersionNumber.path.join")
-        mock_path_join = patcher.start()
-
+        file_dest_path = os.path.join(self.applyversionnumber.get_tmp_dir(), file)
         # given
         shutil.copy(
             "tests/files_source/ApplyVersionNumber/" + file,
-            "tests/files_dest_ApplyVersionNumber/" + file,
+            file_dest_path,
         )
-        mock_path_join.return_value = "tests/files_dest_ApplyVersionNumber/" + file
 
         # when
         self.applyversionnumber.rewrite_xml_file(file, example_file_name_map)
 
         # then
-        with open(
-            "tests/files_dest_ApplyVersionNumber/" + file, "r", encoding="utf8"
-        ) as result_file:
+        with open(file_dest_path, "r", encoding="utf8") as result_file:
             result_file_content = result_file.read()
         with open(
             "tests/files_source/ApplyVersionNumber/" + expected, "r", encoding="utf8"
@@ -225,17 +219,14 @@ class TestApplyVersionNumber(unittest.TestCase):
             expected_file_content = expected_file.read()
         self.assertEqual(result_file_content, expected_file_content)
 
-        patcher.stop()
-
-    @patch("activity.activity_ApplyVersionNumber.path.join")
-    def test_rewrite_xml_file_no_changes(self, mock_path_join):
+    def test_rewrite_xml_file_no_changes(self):
+        file_dest_path = os.path.join(
+            self.applyversionnumber.get_tmp_dir(), "elife-15224-v1.xml"
+        )
         # given
         shutil.copy(
             "tests/files_source/ApplyVersionNumber/elife-15224-v1-rewritten.xml",
-            "tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml",
-        )
-        mock_path_join.return_value = (
-            "tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml"
+            file_dest_path,
         )
 
         # when
@@ -245,7 +236,7 @@ class TestApplyVersionNumber(unittest.TestCase):
 
         # then
         with open(
-            "tests/files_dest_ApplyVersionNumber/elife-15224-v1.xml",
+            file_dest_path,
             "r",
             encoding="utf8",
         ) as result_file:

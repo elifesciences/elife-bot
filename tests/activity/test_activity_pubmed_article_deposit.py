@@ -12,7 +12,6 @@ from provider import lax_provider, sftp
 from tests.classes_mock import FakeSMTPServer
 from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
-import tests.activity.test_activity_data as activity_test_data
 import tests.test_data as test_case_data
 
 
@@ -27,9 +26,6 @@ class TestPubmedArticleDeposit(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
-        helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     def tmp_dir(self):
         "return the tmp dir name for the activity"
@@ -191,7 +187,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             sub_dir="pubmed/outbox",
         )
         fake_storage_context.return_value = FakeStorageContext(
-            directory.path, resources
+            directory.path, resources, dest_folder=directory.path
         )
         # lax data overrides
         fake_article_versions.return_value = 200, test_data.get("article_versions_data")
@@ -347,9 +343,6 @@ class TestPubmedGeneratePubmedXml(unittest.TestCase):
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
-        helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     @patch.object(lax_provider, "article_versions")
     def test_generate_pubmed_xml(self, fake_article_versions):
@@ -464,9 +457,7 @@ class TestPubmedGeneratePubmedXml(unittest.TestCase):
 @ddt
 class TestPubmedParseArticleXml(unittest.TestCase):
     def tearDown(self):
-        helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
+        TempDirectory.cleanup_all()
 
     @data(
         {
@@ -485,12 +476,13 @@ class TestPubmedParseArticleXml(unittest.TestCase):
         },
     )
     def test_parse_article_xml(self, test_data):
+        directory = TempDirectory()
         fake_logger = FakeLogger()
         source_doc = "tests/files_source/pubmed/outbox/" + test_data.get("article_xml")
         article = activity_module.parse_article_xml(
             source_doc,
             {},
-            activity_test_data.ExpandArticle_files_dest_folder,
+            directory.path,
             fake_logger,
         )
         if test_data.get("expected_article") is None:

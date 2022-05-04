@@ -3,13 +3,13 @@ import shutil
 import os
 from io import StringIO
 from collections import OrderedDict
-from ddt import ddt, data, unpack
-from activity.activity_ModifyArticleSubjects import activity_ModifyArticleSubjects
 from mock import patch
+from ddt import ddt, data, unpack
+from testfixtures import TempDirectory
+from activity.activity_ModifyArticleSubjects import activity_ModifyArticleSubjects
 from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
+from tests.activity import helpers, settings_mock
 import tests.activity.test_activity_data as test_data
-import tests.activity.settings_mock as settings_mock
-import tests.activity.helpers as helpers
 
 
 session_example = {
@@ -36,14 +36,12 @@ class TestModifyArticleSubjects(unittest.TestCase):
         self.test_files_dir_name = "tests/files_source/modify_article_subjects/"
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.clean_directories()
 
     def clean_directories(self):
         self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder("tests/tmp", filter_out=[".keepme"])
-        helpers.delete_files_in_folder(
-            test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     def copy_test_file(self, file_name):
         "copy a file from the test files directory to the activity tmp dir"
@@ -85,8 +83,11 @@ class TestModifyArticleSubjects(unittest.TestCase):
         fake_storage_context,
     ):
         "test do_activity"
+        directory = TempDirectory()
         fake_session.return_value = FakeSession(session_example)
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
         resources = []
         for resource in test_scenario_data.get("resources"):
             resources.append(os.path.join(self.test_files_dir_name, resource))
@@ -372,7 +373,10 @@ class TestModifyArticleSubjects(unittest.TestCase):
 
     @patch("activity.activity_ModifyArticleSubjects.storage_context")
     def test_upload_file_to_bucket(self, fake_storage_context):
-        fake_storage_context.return_value = FakeStorageContext()
+        directory = TempDirectory()
+        fake_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
         xml_file_name = "elife-29353-v1.xml"
         expanded_bucket_name = "bucket"
         expanded_folder_name = "modify_article_subjects"
@@ -383,7 +387,8 @@ class TestModifyArticleSubjects(unittest.TestCase):
             expanded_bucket_name, expanded_folder_name, article_xml_file
         )
         # check the result
-        files = sorted(os.listdir(test_data.ExpandArticle_files_dest_folder))
+        bucket_folder_path = os.path.join(directory.path, expanded_folder_name)
+        files = sorted(os.listdir(bucket_folder_path))
         self.assertTrue(
             xml_file_name in files,
             "{xml_file_name} not found in the destination directory".format(

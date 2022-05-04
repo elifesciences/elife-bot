@@ -7,7 +7,7 @@ import activity.activity_PushSWHDeposit as activity_module
 from activity.activity_PushSWHDeposit import (
     activity_PushSWHDeposit as activity_object,
 )
-import tests.activity.settings_mock as settings_mock
+from tests.activity import settings_mock
 from tests.activity.classes_mock import (
     FakeLogger,
     FakeResponse,
@@ -15,7 +15,6 @@ from tests.activity.classes_mock import (
     FakeSession,
 )
 import tests.activity.test_activity_data as testdata
-import tests.activity.helpers as helpers
 
 
 class TestPushSWHDeposit(unittest.TestCase):
@@ -27,9 +26,6 @@ class TestPushSWHDeposit(unittest.TestCase):
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
-        helpers.delete_files_in_folder(
-            testdata.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     @patch("requests.post")
     @patch.object(activity_module, "get_session")

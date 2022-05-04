@@ -2,17 +2,15 @@
 
 import unittest
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
 import activity.activity_GenerateDecisionLetterJATS as activity_module
 from activity.activity_GenerateDecisionLetterJATS import (
     activity_GenerateDecisionLetterJATS as activity_object,
 )
-import tests.activity.settings_mock as settings_mock
-from tests.activity.classes_mock import FakeLogger
+from tests.activity import settings_mock
 import tests.test_data as test_case_data
-from tests.activity.classes_mock import FakeSession, FakeStorageContext
-import tests.activity.test_activity_data as test_activity_data
-import tests.activity.helpers as helpers
+from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
 
 
 def input_data(file_name_to_change=""):
@@ -28,11 +26,9 @@ class TestGenerateDecisionLetterJATS(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
-        helpers.delete_files_in_folder(
-            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
@@ -52,12 +48,13 @@ class TestGenerateDecisionLetterJATS(unittest.TestCase):
         fake_storage_context,
         mock_session,
     ):
+        directory = TempDirectory()
         activity_input_data = input_data(test_data.get("filename"))
         # copy XML files into the input directory using the storage context
         fake_download_storage_context.return_value = FakeStorageContext()
         # activity storage context
         fake_storage_context.return_value = FakeStorageContext(
-            test_activity_data.ExpandArticle_files_dest_folder
+            directory.path, dest_folder=directory.path
         )
         # mock the session
         fake_session = FakeSession({})

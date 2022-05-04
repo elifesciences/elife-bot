@@ -1,30 +1,25 @@
 import os
 import unittest
-from mock import mock, patch
-from ddt import ddt, data
+from mock import patch
+from testfixtures import TempDirectory
 from activity import activity_ExpandAcceptedSubmission as activity_module
 from activity.activity_ExpandAcceptedSubmission import (
     activity_ExpandAcceptedSubmission as activity_class,
 )
-import tests.activity.settings_mock as settings_mock
-import tests.activity.classes_mock as classes_mock
+from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext, FakeSession
 import tests.activity.test_activity_data as testdata
 import tests.test_data as test_case_data
-import tests.activity.helpers as helpers
 
 
-@ddt
 class TestExpandAcceptedSubmission(unittest.TestCase):
     def setUp(self):
         self.logger = FakeLogger()
         self.activity = activity_class(settings_mock, self.logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         helpers.delete_files_in_folder("tests/tmp", filter_out=[".keepme"])
-        helpers.delete_files_in_folder(
-            testdata.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
@@ -32,8 +27,11 @@ class TestExpandAcceptedSubmission(unittest.TestCase):
     def test_do_activity(
         self, fake_download_storage_context, fake_storage_context, fake_session
     ):
+        directory = TempDirectory()
         fake_download_storage_context.return_value = FakeStorageContext()
-        fake_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
         mock_session = FakeSession({})
         fake_session.return_value = mock_session
         expected_files = [
@@ -89,7 +87,12 @@ class TestExpandAcceptedSubmission(unittest.TestCase):
         # assert activity return value
         self.assertEqual(True, success)
         # Check destination folder files
-        files = sorted(os.listdir(testdata.ExpandArticle_files_dest_folder))
+        bucket_folder_path = os.path.join(
+            directory.path,
+            testdata.accepted_session_example.get("expanded_folder"),
+            "30-01-2019-RA-eLife-45644",
+        )
+        files = sorted(os.listdir(bucket_folder_path))
         compare_files = [file_name for file_name in files if file_name != ".gitkeep"]
         self.assertEqual(sorted(compare_files), sorted(expected_files))
         # check session data

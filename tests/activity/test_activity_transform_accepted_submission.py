@@ -30,10 +30,6 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
         TempDirectory.cleanup_all()
         # clean the temporary directory, including the cleaner.log file
         helpers.delete_files_in_folder(self.activity.get_tmp_dir())
-        # clean folder used by storage context
-        helpers.delete_files_in_folder(
-            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -62,8 +58,10 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             test_activity_data.accepted_session_example.get("expanded_folder"),
             zip_file_path,
         )
+        dest_folder = os.path.join(directory.path, "files_dest")
+        os.mkdir(dest_folder)
         fake_storage_context.return_value = FakeStorageContext(
-            directory.path, resources
+            directory.path, resources, dest_folder=dest_folder
         )
         fake_cleaner_storage_context.return_value = FakeStorageContext(
             directory.path, resources
@@ -110,11 +108,14 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             if "INFO elifecleaner:transform:" in line
         ]
         # check output bucket folder contents
+        bucket_folder_path = os.path.join(
+            dest_folder,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            "30-01-2019-RA-eLife-45644",
+        )
         output_bucket_list = [
             file_name
-            for file_name in os.listdir(
-                test_activity_data.ExpandArticle_files_dest_folder
-            )
+            for file_name in os.listdir(bucket_folder_path)
             if file_name != ".gitkeep"
         ]
         self.assertEqual(
@@ -183,7 +184,7 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
 
         # check the zipped code file name is in the XML file
         xml_file_path = os.path.join(
-            test_activity_data.ExpandArticle_files_dest_folder,
+            bucket_folder_path,
             "30-01-2019-RA-eLife-45644.xml",
         )
         with open(xml_file_path, "r", encoding="utf8") as open_file:

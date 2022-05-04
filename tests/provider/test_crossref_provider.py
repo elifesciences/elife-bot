@@ -4,12 +4,10 @@ from collections import OrderedDict
 from mock import patch
 from testfixtures import TempDirectory
 from elifearticle.article import ArticleDate
-import provider.crossref as crossref
-import tests.settings_mock as settings_mock
+from provider import crossref
+from tests import settings_mock
 import tests.test_data as test_case_data
 from tests.activity.classes_mock import FakeLogger, FakeResponse
-import tests.activity.helpers as helpers
-import tests.activity.test_activity_data as activity_test_data
 
 
 def expected_http_detail(file_name, status_code):
@@ -28,9 +26,6 @@ class TestCrossrefProvider(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
-        helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     def test_elifecrossref_config(self):
         """test reading the crossref config file"""

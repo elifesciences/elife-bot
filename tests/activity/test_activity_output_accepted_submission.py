@@ -30,10 +30,6 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
         TempDirectory.cleanup_all()
         # clean the temporary directory, including the cleaner.log file
         helpers.delete_files_in_folder(self.activity.get_tmp_dir())
-        # clean folder used by storage context
-        helpers.delete_files_in_folder(
-            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -59,8 +55,10 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
             test_activity_data.accepted_session_example.get("expanded_folder"),
             zip_file_path,
         )
+        dest_folder = os.path.join(directory.path, "files_dest")
+        os.mkdir(dest_folder)
         fake_storage_context.return_value = FakeStorageContext(
-            directory.path, resources
+            directory.path, resources, dest_folder=dest_folder
         )
         fake_cleaner_storage_context.return_value = FakeStorageContext(
             directory.path, resources
@@ -99,9 +97,7 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
         # check output bucket folder contents
         output_bucket_list = [
             file_name
-            for file_name in os.listdir(
-                test_activity_data.ExpandArticle_files_dest_folder
-            )
+            for file_name in os.listdir(dest_folder)
             if file_name != ".gitkeep"
         ]
         self.assertEqual(
@@ -110,7 +106,7 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
         )
         # check the contents of the zip file
         zip_file_path = os.path.join(
-            test_activity_data.ExpandArticle_files_dest_folder,
+            dest_folder,
             test_data.get("filename"),
         )
         with zipfile.ZipFile(zip_file_path, "r") as open_zipfile:
