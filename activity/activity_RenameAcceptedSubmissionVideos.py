@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 from xml.etree.ElementTree import ParseError
+from elifecleaner.transform import ArticleZipFile
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import cleaner
@@ -131,9 +132,9 @@ class activity_RenameAcceptedSubmissionVideos(Activity):
         file_transformations = []
         for video_data in generated_video_data:
             from_file_name = video_data.get("upload_file_nm")
-            from_file = cleaner.ArticleZipFile(from_file_name)
+            from_file = ArticleZipFile(from_file_name)
             to_file_name = video_data.get("video_filename")
-            to_file = cleaner.ArticleZipFile(to_file_name)
+            to_file = ArticleZipFile(to_file_name)
             file_transformations.append((from_file, to_file))
         self.logger.info(
             "%s, %s file_transformations: %s"
