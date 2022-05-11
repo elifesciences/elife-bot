@@ -77,7 +77,7 @@ email_video_recipient_email = "features_team@example.org"
 
 xml_info_queue = "test-elife-xml-info"
 
-video_url = ""
+video_url = "https://videometadata/"
 
 crossref_url = ""
 crossref_login_id = ""
@@ -229,3 +229,9 @@ accepted_submission_validate_error_recipient_email = [
     "life@example.org",
 ]
 accepted_submission_output_recipient_email = "typesetter@example.org"
+
+# Glencoe video deposit FTP settings
+GLENCOE_FTP_URI = "glencoe.localhost"
+GLENCOE_FTP_USERNAME = "user"
+GLENCOE_FTP_PASSWORD = "pass"
+GLENCOE_FTP_CWD = "folder"
