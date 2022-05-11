@@ -334,6 +334,12 @@ class exp:
     accepted_submission_queue = ""
     accepted_submission_output_recipient_email = "e@example.org"
 
+    # Glencoe video deposit FTP settings
+    GLENCOE_FTP_URI = ""
+    GLENCOE_FTP_USERNAME = ""
+    GLENCOE_FTP_PASSWORD = ""
+    GLENCOE_FTP_CWD = ""
+
 
 class dev:
     # AWS settings
@@ -652,6 +658,12 @@ class dev:
     ]
     accepted_submission_queue = ""
     accepted_submission_output_recipient_email = "e@example.org"
+
+    # Glencoe video deposit FTP settings
+    GLENCOE_FTP_URI = ""
+    GLENCOE_FTP_USERNAME = ""
+    GLENCOE_FTP_PASSWORD = ""
+    GLENCOE_FTP_CWD = ""
 
 
 class live:
@@ -976,6 +988,12 @@ class live:
     ]
     accepted_submission_queue = "cleaning-queue"
     accepted_submission_output_recipient_email = "e@example.org"
+
+    # Glencoe video deposit FTP settings
+    GLENCOE_FTP_URI = ""
+    GLENCOE_FTP_USERNAME = ""
+    GLENCOE_FTP_PASSWORD = ""
+    GLENCOE_FTP_CWD = ""
 
 
 def get_settings(ENV="dev"):

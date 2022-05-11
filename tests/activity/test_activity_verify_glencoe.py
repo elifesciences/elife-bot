@@ -111,7 +111,7 @@ class TestVerifyGlencoe(unittest.TestCase):
             self.verifyglencoe.pretty_name,
             "error",
             "Glencoe video is not available for article 7777777701234; message: "
-            "article has no videos - url requested: 10.7554/eLife.01234",
+            "article has no videos - url requested: https://videometadata/10.7554/eLife.01234",
         )
         self.assertEqual(result, self.verifyglencoe.ACTIVITY_TEMPORARY_FAILURE)
 
@@ -146,7 +146,7 @@ class TestVerifyGlencoe(unittest.TestCase):
             "error",
             "Glencoe video is not available for article 353; message: "
             "unhandled status code from Glencoe: 500 - "
-            "url requested: 10.7554/eLife.00353",
+            "url requested: https://videometadata/10.7554/eLife.00353",
         )
         self.assertEqual(result, self.verifyglencoe.ACTIVITY_TEMPORARY_FAILURE)
 

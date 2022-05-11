@@ -1,8 +1,15 @@
 import os
 import logging
 import re
-from elifecleaner import LOGGER, configure_logging, parse, transform, video, zip_lib
-from elifecleaner.transform import ArticleZipFile
+from elifecleaner import (
+    LOGGER,
+    configure_logging,
+    parse,
+    transform,
+    video,
+    video_xml,
+    zip_lib,
+)
 from provider.storage_provider import storage_context
 
 LOG_FILENAME = "elifecleaner.log"
@@ -70,6 +77,16 @@ def code_file_list(xml_file_path):
     return transform.code_file_list(root)
 
 
+def video_file_list(xml_file_path):
+    "get a list of video files from the XML"
+    files = file_list(xml_file_path)
+    return video.video_file_list(files)
+
+
+def glencoe_xml(xml_file_path, video_data, pretty=True, indent=""):
+    return video_xml.glencoe_xml(xml_file_path, video_data, pretty, indent)
+
+
 def files_by_extension(files, extension="pdf"):
     return [
         file_detail
@@ -100,6 +117,10 @@ def video_data_from_files(files, article_id):
 
 def xml_rewrite_file_tags(xml_file_path, file_transformations, identifier):
     transform.xml_rewrite_file_tags(xml_file_path, file_transformations, identifier)
+
+
+def write_xml_file(root, xml_asset_path, identifier):
+    transform.write_xml_file(root, xml_asset_path, identifier)
 
 
 def bucket_asset_file_name_map(settings, bucket_name, expanded_folder):
@@ -146,3 +167,26 @@ def download_asset_files_from_bucket(
             storage.get_resource_to_file(asset_resource, open_file)
         # rewrite asset_file_name_map to the local value
         asset_file_name_map[asset_key] = file_path
+
+
+class SettingsException(RuntimeError):
+    "exception to raise if settings are missing or blank"
+
+
+def verify_settings(settings, settings_required, activity_name, identifier):
+    "check for missing or blank settings values"
+    for settings_name in settings_required:
+        if not hasattr(settings, settings_name):
+            message = "%s, %s settings credential %s is missing" % (
+                activity_name,
+                identifier,
+                settings_name,
+            )
+            raise SettingsException(message)
+        if not getattr(settings, settings_name):
+            message = "%s, %s settings credential %s is blank" % (
+                activity_name,
+                identifier,
+                settings_name,
+            )
+            raise SettingsException(message)
