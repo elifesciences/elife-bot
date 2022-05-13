@@ -193,6 +193,23 @@ class TestConditionalStarts(unittest.TestCase):
 
     @data(
         {
+            "comment": "06:25 UTC",
+            "date_time": "1970-01-01 06:25:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "cron_NewS3POA",
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "cron_NewS3POA",
+            ],
+        },
+    )
+    def test_conditional_starts_06_25_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
             "comment": "10:45 UTC",
             "date_time": "1970-01-01 10:45:00 UTC",
             "expected_starter_names": [
@@ -216,10 +233,12 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "2019-08-19 11:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
+                "cron_NewS3POA",
                 "starter_DepositCrossrefPeerReview",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
+                "cron_NewS3POA",
                 "DepositCrossrefPeerReview",
             ],
         },
@@ -233,10 +252,12 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "2019-10-27 12:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
+                "cron_NewS3POA",
                 "starter_DepositCrossrefPeerReview",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
+                "cron_NewS3POA",
                 "DepositCrossrefPeerReview",
             ],
         },
