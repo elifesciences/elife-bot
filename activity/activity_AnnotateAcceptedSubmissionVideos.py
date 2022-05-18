@@ -191,11 +191,19 @@ class activity_AnnotateAcceptedSubmissionVideos(Activity):
             cleaner.parse.REPAIR_XML = original_repair_xml
 
         if root:
-            # for each video_id, get the glencoe video metadata
-            annotate_xml(
-                root, xml_file_path, generated_video_data, gc_data, input_filename
-            )
-            self.statuses["annotate"] = True
+            try:
+                # for each video_id, get the glencoe video metadata
+                annotate_xml(
+                    root, xml_file_path, generated_video_data, gc_data, input_filename
+                )
+                self.statuses["annotate"] = True
+            except:
+                log_message = "%s, exception in annotate_xml %s for file %s" % (
+                    self.name,
+                    xml_file_path,
+                    input_filename,
+                )
+                self.logger.exception(log_message)
 
         # upload the modified XML file to the expanded folder
         if self.statuses.get("annotate"):
@@ -243,9 +251,8 @@ class activity_AnnotateAcceptedSubmissionVideos(Activity):
                 continue
             shutil.rmtree(dir_path)
 
-def annotate_xml(
-    root, xml_file_path, generated_video_data, gc_data, input_filename
-):
+
+def annotate_xml(root, xml_file_path, generated_video_data, gc_data, input_filename):
     # for each video_id, get the glencoe video metadata
     for video_data in generated_video_data:
         video_id = video_data.get("video_id")
