@@ -506,6 +506,70 @@ class TestAnnotateVideosAnnotateVideosNone(unittest.TestCase):
         self.assertEqual(self.activity.logger.loginfo[-1], expected_loginfo)
 
 
+class TestAnnotateAcceptedSubmissionAnnotateXmlException(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_object(settings_mock, fake_logger, None, None, None)
+        filename = "28-09-2020-RA-eLife-63532.zip"
+        article_id = "63532"
+        # expanded bucket files
+        self.directory = TempDirectory()
+
+        self.workflow_session_data = session_data(
+            filename=filename,
+            article_id=article_id,
+            annotate_videos=True,
+        )
+
+        # expanded bucket files
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            filename,
+        )
+        self.resources = expanded_folder_renamed_video_resources(
+            self.directory,
+            self.workflow_session_data.get("expanded_folder"),
+            zip_file_path,
+        )
+        self.dest_folder = os.path.join(
+            self.directory.path, self.workflow_session_data.get("expanded_folder")
+        )
+        self.input_data = input_data(filename)
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "annotate_xml")
+    @patch.object(glencoe_check, "metadata")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(activity_module, "get_session")
+    def test_do_activity_annotate_xml_exception(
+        self,
+        fake_session,
+        fake_cleaner_storage_context,
+        fake_metadata,
+        fake_annotate_xml,
+        fake_storage_context,
+    ):
+        fake_storage_context.return_value = FakeStorageContext(
+            self.directory.path, self.resources
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            self.directory.path, self.resources
+        )
+        fake_session.return_value = FakeSession(self.workflow_session_data)
+        fake_metadata.return_value = {}
+        fake_annotate_xml.side_effect = Exception("An exception")
+        result = self.activity.do_activity(self.input_data)
+        self.assertEqual(result, True)
+        self.assertTrue(
+            self.activity.logger.logexception.startswith(
+                "AnnotateAcceptedSubmissionVideos, exception in annotate_xml"
+            )
+        )
+
+
 class TestAnnotateVideosNoCredentials(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
