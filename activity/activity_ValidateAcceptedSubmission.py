@@ -154,6 +154,15 @@ class activity_ValidateAcceptedSubmission(Activity):
                 input_filename, error_messages
             )
 
+        # add the log_contents to the session variable
+        cleaner_log = session.get_value("cleaner_log")
+        if cleaner_log is None:
+            cleaner_log = log_contents
+        else:
+            print("hello!!")
+            cleaner_log += log_contents
+        session.store_value("cleaner_log", cleaner_log)
+
         self.log_statuses(input_filename)
 
         # Clean up disk
