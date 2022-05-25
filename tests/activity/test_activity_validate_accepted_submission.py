@@ -29,11 +29,15 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
+        # instantiate the session here so it can be wiped clean between test runs
+        self.session = FakeSession(test_activity_data.accepted_session_example)
 
     def tearDown(self):
         TempDirectory.cleanup_all()
         # clean the temporary directory, including the cleaner.log file
         helpers.delete_files_in_folder(self.activity.get_tmp_dir())
+        # reset the session value
+        self.session.store_value("cleaner_log", None)
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
@@ -95,9 +99,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_session.return_value = FakeSession(
-            test_activity_data.accepted_session_example
-        )
+        fake_session.return_value = self.session
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         filename_used = input_data(test_data.get("filename")).get("file_name")
@@ -167,6 +169,9 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
                     ):
                         self.assertTrue(expected_to_contain in str(body))
 
+        # check session cleaner_log contains content
+        self.assertTrue("elifecleaner:parse:" in self.session.get_value("cleaner_log"))
+
         # reset REPAIR_XML value
         activity_module.REPAIR_XML = False
 
@@ -190,9 +195,9 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_session.return_value = FakeSession(
-            test_activity_data.accepted_session_example
-        )
+        # set a non-None session value to test string concatenation
+        self.session.store_value("cleaner_log", "")
+        fake_session.return_value = self.session
         zip_file_path = os.path.join(
             test_activity_data.ExpandArticle_files_source_folder,
             "30-01-2019-RA-eLife-45644.zip",
@@ -251,9 +256,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_session.return_value = FakeSession(
-            test_activity_data.accepted_session_example
-        )
+        fake_session.return_value = self.session
         zip_file_path = os.path.join(
             test_activity_data.ExpandArticle_files_source_folder,
             "30-01-2019-RA-eLife-45644.zip",
