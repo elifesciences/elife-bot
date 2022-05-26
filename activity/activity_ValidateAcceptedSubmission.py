@@ -1,11 +1,10 @@
 import os
 import json
 import shutil
-import time
 from xml.etree.ElementTree import ParseError
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import article_processing, cleaner, email_provider
+from provider import article_processing, cleaner
 from activity.objects import Activity
 
 
@@ -141,25 +140,15 @@ class activity_ValidateAcceptedSubmission(Activity):
             for log_handler in cleaner_log_handers:
                 cleaner.log_remove_handler(log_handler)
 
-        # Send an email if the log has warnings
+        # read the cleaner log contents
         with open(log_file_path, "r", encoding="utf8") as open_file:
             log_contents = open_file.read()
-        if "ERROR" in log_contents or "WARNING" in log_contents:
-            # Send error email
-            error_messages = (
-                "Warnings found in the log file for zip file %s\n\n" % input_filename
-            )
-            error_messages += log_contents
-            self.statuses["email"] = self.email_error_report(
-                input_filename, error_messages
-            )
 
         # add the log_contents to the session variable
         cleaner_log = session.get_value("cleaner_log")
         if cleaner_log is None:
             cleaner_log = log_contents
         else:
-            print("hello!!")
             cleaner_log += log_contents
         session.store_value("cleaner_log", cleaner_log)
 
@@ -184,36 +173,6 @@ class activity_ValidateAcceptedSubmission(Activity):
             if dir_name in keep_dirs or not os.path.exists(dir_path):
                 continue
             shutil.rmtree(dir_path)
-
-    def email_error_report(self, filename, error_messages):
-        "send an email on error"
-        datetime_string = time.strftime("%Y-%m-%d %H:%M", time.gmtime())
-        body = email_provider.simple_email_body(datetime_string, error_messages)
-        subject = error_email_subject(filename)
-        sender_email = self.settings.accepted_submission_sender_email
-
-        recipient_email_list = email_provider.list_email_recipients(
-            self.settings.accepted_submission_validate_error_recipient_email
-        )
-
-        connection = email_provider.smtp_connect(self.settings, self.logger)
-        # send the emails
-        for recipient in recipient_email_list:
-            # create the email
-            email_message = email_provider.message(subject, sender_email, recipient)
-            email_provider.add_text(email_message, body)
-            # send the email
-            email_provider.smtp_send(
-                connection, sender_email, recipient, email_message, self.logger
-            )
-        return True
-
-
-def error_email_subject(filename):
-    "email subject for an error email"
-    return "Error validating accepted submission file: {filename}".format(
-        filename=filename
-    )
 
 
 def download_pdf_files_from_bucket(storage, files, asset_file_name_map, to_dir, logger):

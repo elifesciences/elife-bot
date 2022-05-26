@@ -36,9 +36,17 @@ class activity_EmailAcceptedSubmissionOutput(Activity):
         session = get_session(self.settings, data, run)
 
         input_filename = session.get_value("input_filename")
+        cleaner_log = session.get_value("cleaner_log")
 
+        # format the email body content
+        body_content = ""
+        if cleaner_log:
+            body_content = "Warnings found in the log file for zip file %s\n\n%s" % (
+                input_filename,
+                cleaner_log,
+            )
         # Send email
-        self.email_status = self.send_email(input_filename)
+        self.email_status = self.send_email(input_filename, body_content)
 
         # return a value based on the email_status
         if self.email_status is True:
@@ -46,12 +54,12 @@ class activity_EmailAcceptedSubmissionOutput(Activity):
 
         return self.ACTIVITY_PERMANENT_FAILURE
 
-    def send_email(self, output_file):
+    def send_email(self, output_file, body_content):
         "email the message to the recipients"
         success = True
 
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
-        body = email_provider.simple_email_body(datetime_string)
+        body = email_provider.simple_email_body(datetime_string, body_content)
         subject = accepted_submission_email_subject(output_file)
         sender_email = self.settings.accepted_submission_sender_email
 

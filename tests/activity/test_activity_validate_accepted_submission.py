@@ -12,7 +12,6 @@ import activity.activity_ValidateAcceptedSubmission as activity_module
 from activity.activity_ValidateAcceptedSubmission import (
     activity_ValidateAcceptedSubmission as activity_object,
 )
-from tests.classes_mock import FakeSMTPServer
 import tests.test_data as test_case_data
 from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
 from tests.activity import helpers, settings_mock, test_activity_data
@@ -41,7 +40,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
-    @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(cleaner, "storage_context")
     @patch.object(activity_object, "clean_tmp_dir")
     @data(
@@ -51,19 +49,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             "expected_result": True,
             "expected_valid_status": True,
             "expected_log_warning_count": 2,
-            "expected_email_count": 2,
-            "expected_email_subject": (
-                "Error validating accepted submission file: 30-01-2019-RA-eLife-45644.zip"
-            ),
-            "expected_email_from": "sender@example.org",
-            "expected_email_body_contains": [
-                "Warnings found in the log file for zip file",
-                (
-                    "WARNING elifecleaner:parse:check_multi_page_figure_pdf:"
-                    " 30-01-2019-RA-eLife-45644.zip"
-                    " multiple page PDF figure file:"
-                ),
-            ],
         },
     )
     def test_do_activity(
@@ -71,7 +56,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         test_data,
         fake_clean_tmp_dir,
         fake_cleaner_storage_context,
-        fake_email_smtp_connect,
         fake_session,
         fake_storage_context,
     ):
@@ -95,9 +79,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         )
         fake_cleaner_storage_context.return_value = FakeStorageContext(
             directory.path, resources
-        )
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
         )
         fake_session.return_value = self.session
         # do the activity
@@ -144,31 +125,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         ]
         self.assertEqual(len(log_warnings), test_data.get("expected_log_warning_count"))
 
-        # check email files and contents
-        email_files_filter = os.path.join(self.activity.get_tmp_dir(), "*.eml")
-        email_files = glob.glob(email_files_filter)
-        if "expected_email_count" in test_data:
-            self.assertEqual(len(email_files), test_data.get("expected_email_count"))
-            # can look at the first email for the subject and sender
-            first_email_content = None
-            with open(email_files[0], "r", encoding="utf8") as open_file:
-                first_email_content = open_file.read()
-            if first_email_content:
-                if test_data.get("expected_email_subject"):
-                    self.assertTrue(
-                        test_data.get("expected_email_subject") in first_email_content
-                    )
-                if test_data.get("expected_email_from"):
-                    self.assertTrue(
-                        test_data.get("expected_email_from") in first_email_content
-                    )
-                if test_data.get("expected_email_body_contains"):
-                    body = helpers.body_from_multipart_email_string(first_email_content)
-                    for expected_to_contain in test_data.get(
-                        "expected_email_body_contains"
-                    ):
-                        self.assertTrue(expected_to_contain in str(body))
-
         # check session cleaner_log contains content
         self.assertTrue("elifecleaner:parse:" in self.session.get_value("cleaner_log"))
 
@@ -177,14 +133,12 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
-    @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(cleaner, "storage_context")
     @patch.object(cleaner, "file_list")
     def test_do_activity_exception_parseerror(
         self,
         fake_file_list,
         fake_cleaner_storage_context,
-        fake_email_smtp_connect,
         fake_session,
         fake_storage_context,
     ):
@@ -192,9 +146,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         # set REPAIR_XML value because test fixture is malformed XML
         activity_module.REPAIR_XML = True
 
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
         # set a non-None session value to test string concatenation
         self.session.store_value("cleaner_log", "")
         fake_session.return_value = self.session
@@ -238,14 +189,12 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
-    @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(cleaner, "storage_context")
     @patch.object(cleaner, "check_files")
     def test_do_activity_exception_unknown(
         self,
         fake_check_files,
         fake_cleaner_storage_context,
-        fake_email_smtp_connect,
         fake_session,
         fake_storage_context,
     ):
@@ -253,9 +202,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         # set REPAIR_XML value because test fixture is malformed XML
         activity_module.REPAIR_XML = True
 
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
         fake_session.return_value = self.session
         zip_file_path = os.path.join(
             test_activity_data.ExpandArticle_files_source_folder,

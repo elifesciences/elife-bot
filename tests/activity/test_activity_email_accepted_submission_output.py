@@ -1,3 +1,4 @@
+import copy
 import os
 import glob
 import unittest
@@ -10,7 +11,7 @@ from activity.activity_EmailAcceptedSubmissionOutput import (
 import tests.test_data as test_case_data
 from tests.classes_mock import FakeSMTPServer
 from tests.activity.classes_mock import FakeLogger, FakeSession
-from tests.activity import settings_mock, test_activity_data
+from tests.activity import helpers, settings_mock, test_activity_data
 
 
 @ddt
@@ -35,6 +36,7 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
                 "Subject: eLife accepted submission: 30-01-2019-RA-eLife-45644.zip"
             ),
             "expected_email_from": "From: sender@example.org",
+            "expected_email_body": b"cleaner log content",
         },
     )
     def test_do_activity(
@@ -43,9 +45,10 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
         fake_email_smtp_connect,
         fake_session,
     ):
-        fake_session.return_value = FakeSession(
-            test_activity_data.accepted_session_example
-        )
+        session = FakeSession(copy.copy(test_activity_data.accepted_session_example))
+        # add some cleaner_log content
+        session.store_value("cleaner_log", test_data.get("expected_email_body"))
+        fake_session.return_value = session
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
@@ -90,9 +93,8 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
                         test_data.get("expected_email_from") in first_email_content
                     )
                 if test_data.get("expected_email_body"):
-                    self.assertTrue(
-                        test_data.get("expected_email_body") in first_email_content
-                    )
+                    body = helpers.body_from_multipart_email_string(first_email_content)
+                    self.assertTrue(test_data.get("expected_email_body") in body)
 
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module.email_provider, "smtp_send")
