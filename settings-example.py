@@ -327,10 +327,6 @@ class exp:
         "exp-elife-bot-accepted-submission-cleaning-output"
     )
     accepted_submission_sender_email = "sender@example.org"
-    accepted_submission_validate_error_recipient_email = [
-        "e@example.org",
-        "life@example.org",
-    ]
     accepted_submission_queue = ""
     accepted_submission_output_recipient_email = "e@example.org"
 
@@ -652,10 +648,6 @@ class dev:
         "dev-elife-bot-accepted-submission-cleaning-output"
     )
     accepted_submission_sender_email = "sender@example.org"
-    accepted_submission_validate_error_recipient_email = [
-        "e@example.org",
-        "life@example.org",
-    ]
     accepted_submission_queue = ""
     accepted_submission_output_recipient_email = "e@example.org"
 
@@ -982,10 +974,6 @@ class live:
         "live-elife-bot-accepted-submission-cleaning-output"
     )
     accepted_submission_sender_email = "sender@example.org"
-    accepted_submission_validate_error_recipient_email = [
-        "e@example.org",
-        "life@example.org",
-    ]
     accepted_submission_queue = "cleaning-queue"
     accepted_submission_output_recipient_email = "e@example.org"
 
