@@ -224,10 +224,6 @@ software_heritage_api_get_origin_pattern = (
 # Accepted submission workflow
 accepted_submission_output_bucket = "accepted-submission-cleaning-output"
 accepted_submission_sender_email = "sender@example.org"
-accepted_submission_validate_error_recipient_email = [
-    "e@example.org",
-    "life@example.org",
-]
 accepted_submission_output_recipient_email = "typesetter@example.org"
 
 # Glencoe video deposit FTP settings
