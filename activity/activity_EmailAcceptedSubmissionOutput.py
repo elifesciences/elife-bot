@@ -1,7 +1,7 @@
 import json
 import time
 from provider.execution_context import get_session
-from provider import email_provider, utils
+from provider import cleaner, email_provider, utils
 from activity.objects import Activity
 
 
@@ -40,10 +40,11 @@ class activity_EmailAcceptedSubmissionOutput(Activity):
 
         # format the email body content
         body_content = ""
-        if cleaner_log:
+        comments = cleaner.production_comments(cleaner_log)
+        if comments:
             body_content = "Warnings found in the log file for zip file %s\n\n%s" % (
                 input_filename,
-                cleaner_log,
+                "\n".join(comments),
             )
         # Send email
         self.email_status = self.send_email(input_filename, body_content)

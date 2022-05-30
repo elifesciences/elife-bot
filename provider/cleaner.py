@@ -10,6 +10,7 @@ from elifecleaner import (
     video_xml,
     zip_lib,
 )
+from provider import utils
 from provider.storage_provider import storage_context
 
 LOG_FILENAME = "elifecleaner.log"
@@ -190,3 +191,33 @@ def verify_settings(settings, settings_required, activity_name, identifier):
                 settings_name,
             )
             raise SettingsException(message)
+
+
+MULTI_PAGE_FIGURE_PDF_COMMENTS = (
+    'Exeter: "%s" is a PDF file made up of more than one page. '
+    "Please check if there are images on numerous pages. "
+    "If that's the case, please add the following author query: "
+    '"Please provide this figure in a single-page format. '
+    "If this would render the figure unreadable, "
+    'please provide this as separate figures or figure supplements."'
+)
+
+
+def production_comments(log_content):
+    "format log messages into production comment messages"
+    comments = []
+    log_messages = utils.unicode_encode(log_content).split("\n") if log_content else []
+    warning_match_pattern = re.compile(r"WARNING elifecleaner:parse:(.*?): (.*)")
+    for message in log_messages:
+        message_parts = warning_match_pattern.search(message)
+        if not message_parts:
+            continue
+        message_type = message_parts.group(1)
+        message_content = message_parts.group(2)
+        if message_type == "check_multi_page_figure_pdf":
+            pdf_file_name = message_content.rsplit("/", 1)[-1]
+            comments.append(MULTI_PAGE_FIGURE_PDF_COMMENTS % pdf_file_name)
+        else:
+            # by default add the message as written
+            comments.append(message_content)
+    return comments

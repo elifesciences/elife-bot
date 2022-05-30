@@ -36,7 +36,7 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
                 "Subject: eLife accepted submission: 30-01-2019-RA-eLife-45644.zip"
             ),
             "expected_email_from": "From: sender@example.org",
-            "expected_email_body": b"cleaner log content",
+            "expected_email_body": b"Warnings found in the log file",
         },
     )
     def test_do_activity(
@@ -47,7 +47,14 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
     ):
         session = FakeSession(copy.copy(test_activity_data.accepted_session_example))
         # add some cleaner_log content
-        session.store_value("cleaner_log", test_data.get("expected_email_body"))
+        session.store_value(
+            "cleaner_log",
+            (
+                b"2022-03-31 11:11:39,706 WARNING elifecleaner:parse:check_multi_page_figure_pdf: "
+                b"12-08-2021-RA-eLife-73010.zip multiple page PDF figure file: "
+                b"12-08-2021-RA-eLife-73010/Figure 1.pdf"
+            ),
+        )
         fake_session.return_value = session
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
