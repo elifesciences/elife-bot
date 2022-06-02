@@ -130,6 +130,7 @@ def start(settings):
     activity_names.append("RenameAcceptedSubmissionVideos")
     activity_names.append("DepositAcceptedSubmissionVideos")
     activity_names.append("AnnotateAcceptedSubmissionVideos")
+    activity_names.append("AddCommentsToAcceptedSubmissionXml")
     activity_names.append("OutputAcceptedSubmission")
 
     for activity_name in activity_names:
