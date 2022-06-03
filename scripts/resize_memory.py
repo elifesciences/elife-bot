@@ -4,7 +4,7 @@ from collections import namedtuple
 
 source = "scripts/elife-03318-fig2.tif"
 format_spec = {"source": "tif", "format": "jpg", "download": "yes"}
-fp = open(source)
+fp = open(source, "rb")
 Info = namedtuple("Info", ["filename"])
 info = Info("dummy.jpg")
 before = memory.current()
