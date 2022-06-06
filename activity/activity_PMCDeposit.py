@@ -354,8 +354,8 @@ def article_xml_file(folders):
 def new_zip_filename(journal, volume, fid, revision=None):
 
     filename = journal
-    filename = filename + "-" + str(volume).zfill(2)
-    filename = filename + "-" + str(fid).zfill(5)
+    filename = filename + "-" + utils.pad_volume(volume)
+    filename = filename + "-" + utils.pad_msid(fid)
     if revision:
         filename = filename + ".r" + str(revision)
     filename += ".zip"

@@ -1,4 +1,5 @@
 import re
+from provider import utils
 
 
 """
@@ -36,7 +37,7 @@ def latest_pmc_zip_revision(doi_id, s3_key_names):
 
     name_matches = []
     for key_name in s3_key_names:
-        name_match = "-" + str(doi_id).zfill(5)
+        name_match = "-" + utils.pad_msid(doi_id)
         if name_match in key_name:
             name_matches.append(key_name)
 

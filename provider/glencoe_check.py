@@ -1,7 +1,7 @@
 import sys
 import re
 import requests
-from provider.utils import unicode_encode
+from provider.utils import pad_msid, unicode_encode
 
 
 """
@@ -57,8 +57,7 @@ def validate_sources(gc_data):
 
 
 def metadata(msid, settings):
-    padded_msid = str(msid).zfill(5)
-    doi = "10.7554/eLife." + padded_msid
+    doi = "10.7554/eLife." + pad_msid(msid)
     url = settings.video_url + doi
 
     resp = requests.get(url)
@@ -82,10 +81,6 @@ def has_videos(xml_str):
     if re.search(r'<media[^>]*mimetype="video".*?>', unicode_encode(xml_str)):
         return True
     return False
-
-
-def pad_msid(msid):
-    return str(int(msid)).zfill(5)
 
 
 def check_msid(msid):

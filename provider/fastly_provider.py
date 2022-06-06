@@ -1,4 +1,5 @@
 import requests
+from provider import utils
 
 
 class FastlyApi:
@@ -32,7 +33,9 @@ def purge(article_id, version, settings):
     api = FastlyApi(settings.fastly_api_key)
     for service_id in settings.fastly_service_ids:
         for key in KEYS:
-            surrogate_key = key.format(article_id=article_id.zfill(5), version=version)
+            surrogate_key = key.format(
+                article_id=utils.pad_msid(article_id), version=version
+            )
             responses.append(api.purge(surrogate_key, service_id))
 
     return responses

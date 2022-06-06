@@ -1,6 +1,7 @@
 import json
 import os
 import codecs
+from provider import utils
 from provider.storage_provider import storage_context
 import provider.templates as templatelib
 import provider.article as articlelib
@@ -114,7 +115,7 @@ class activity_LensArticle(Activity):
         Given an eLife article DOI ID (5 digits) assemble the
         S3 key name for where to save the article index.html page
         """
-        article_s3key = str(article_id).zfill(5) + "/index.html"
+        article_s3key = utils.pad_msid(article_id) + "/index.html"
 
         return article_s3key
 
