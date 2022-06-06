@@ -88,7 +88,17 @@ class activity_FTPArticle(Activity):
         self.download_files_from_s3(elife_id, workflow)
 
         # Set FTP settings
-        self.set_ftp_settings(elife_id, workflow)
+        try:
+            self.set_ftp_settings(elife_id, workflow)
+        except:
+            # Something went wrong, fail
+            if self.logger:
+                self.logger.exception(
+                    "exception in FTPArticle when invoking set_ftp_settings(), data: %s"
+                    % json.dumps(data, sort_keys=True, indent=4)
+                )
+            self.clean_tmp_dir()
+            return False
 
         # FTP to endpoint
         try:
@@ -163,7 +173,7 @@ class activity_FTPArticle(Activity):
             self.FTP_PASSWORD = self.settings.HEFCE_FTP_PASSWORD
             self.FTP_CWD = self.settings.HEFCE_FTP_CWD
             # Subfolders to create when FTPing
-            self.FTP_SUBDIR.append(str(doi_id).zfill(5))
+            self.FTP_SUBDIR.append(utils.pad_msid(doi_id))
 
             # SFTP settings
 
@@ -485,7 +495,7 @@ def zip_file_suffix(file_types):
 
 
 def new_zip_file_name(doi_id, prefix, suffix):
-    return "%s%s%s" % (prefix, str(doi_id).zfill(5), suffix)
+    return "%s%s%s" % (prefix, utils.pad_msid(doi_id), suffix)
 
 
 def file_type_matches(file_types):

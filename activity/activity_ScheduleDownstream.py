@@ -1,7 +1,7 @@
 import json
 from collections import OrderedDict
 from provider.storage_provider import storage_context
-from provider import lax_provider, outbox_provider
+from provider import lax_provider, outbox_provider, utils
 from activity.objects import Activity
 
 """
@@ -121,7 +121,7 @@ class activity_ScheduleDownstream(Activity):
         """
         # Rename the XML file to match what is used already
         new_key_name = new_outbox_xml_name(
-            prefix=prefix, journal="elife", article_id=str(article_id).zfill(5)
+            prefix=prefix, journal="elife", article_id=utils.pad_msid(article_id)
         )
 
         self.copy_article_xml_to_outbox(
