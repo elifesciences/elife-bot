@@ -1,6 +1,4 @@
-import os
 import unittest
-import shutil
 from mock import patch
 from testfixtures import TempDirectory
 from ddt import ddt, data, unpack
@@ -169,85 +167,6 @@ class TestApplyVersionNumber(unittest.TestCase):
             + " message: No version available",
         )
         self.assertEqual(result, self.applyversionnumber.ACTIVITY_PERMANENT_FAILURE)
-
-    @unpack
-    @data(
-        {
-            "key_names": example_key_names,
-            "version": "1",
-            "expected": example_file_name_map,
-        },
-        {
-            "key_names": example_key_names_with_version,
-            "version": "2",
-            "expected": example_file_name_map_with_version,
-        },
-    )
-    def test_build_file_name_map(self, key_names, version, expected):
-        result = self.applyversionnumber.build_file_name_map(key_names, version)
-        self.assertDictEqual(result, expected)
-
-    @unpack
-    @data(
-        {"file": "elife-15224-v1.xml", "expected": "elife-15224-v1-rewritten.xml"},
-        {
-            "file": "simple-jats-doctype-1.1d3.xml",
-            "expected": "simple-jats-doctype-1.1d3.xml",
-        },
-        {
-            "file": "simple-jats-doctype-1.1.xml",
-            "expected": "simple-jats-doctype-1.1.xml",
-        },
-    )
-    def test_rewrite_xml_file(self, file, expected):
-        file_dest_path = os.path.join(self.applyversionnumber.get_tmp_dir(), file)
-        # given
-        shutil.copy(
-            "tests/files_source/ApplyVersionNumber/" + file,
-            file_dest_path,
-        )
-
-        # when
-        self.applyversionnumber.rewrite_xml_file(file, example_file_name_map)
-
-        # then
-        with open(file_dest_path, "r", encoding="utf8") as result_file:
-            result_file_content = result_file.read()
-        with open(
-            "tests/files_source/ApplyVersionNumber/" + expected, "r", encoding="utf8"
-        ) as expected_file:
-            expected_file_content = expected_file.read()
-        self.assertEqual(result_file_content, expected_file_content)
-
-    def test_rewrite_xml_file_no_changes(self):
-        file_dest_path = os.path.join(
-            self.applyversionnumber.get_tmp_dir(), "elife-15224-v1.xml"
-        )
-        # given
-        shutil.copy(
-            "tests/files_source/ApplyVersionNumber/elife-15224-v1-rewritten.xml",
-            file_dest_path,
-        )
-
-        # when
-        self.applyversionnumber.rewrite_xml_file(
-            "elife-15224-v1.xml", example_file_name_map
-        )
-
-        # then
-        with open(
-            file_dest_path,
-            "r",
-            encoding="utf8",
-        ) as result_file:
-            result_file_content = result_file.read()
-        with open(
-            "tests/files_source/ApplyVersionNumber/elife-15224-v1-rewritten.xml",
-            "r",
-            encoding="utf8",
-        ) as expected_file:
-            expected_file_content = expected_file.read()
-        self.assertEqual(result_file_content, expected_file_content)
 
 
 @ddt

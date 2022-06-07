@@ -2,11 +2,9 @@ import json
 import os
 import re
 from os import path
-from elifetools import xmlio
-from provider import utils
+from provider import article_structure, article_processing, utils
 from provider.execution_context import get_session
 from provider.article_structure import ArticleInfo
-import provider.article_structure as article_structure
 from provider.storage_provider import storage_context
 from activity.objects import Activity
 
@@ -155,7 +153,9 @@ class activity_ApplyVersionNumber(Activity):
         self.download_file_from_bucket(
             self.expanded_bucket_name, bucket_folder_name, xml_filename
         )
-        self.rewrite_xml_file(xml_filename, file_name_map)
+        article_processing.convert_xml(
+            path.join(self.get_tmp_dir(), xml_filename), file_name_map
+        )
         self.upload_file_to_bucket(
             self.expanded_bucket_name, bucket_folder_name, xml_filename
         )
@@ -174,30 +174,6 @@ class activity_ApplyVersionNumber(Activity):
         local_filename = path.join(self.get_tmp_dir(), filename)
         with open(local_filename, "wb") as open_file:
             storage.get_resource_to_file(file_resource_origin, open_file)
-
-    def rewrite_xml_file(self, xml_filename, file_name_map):
-
-        local_xml_filename = path.join(self.get_tmp_dir(), xml_filename)
-
-        xmlio.register_xmlns()
-        root, doctype_dict, processing_instructions = xmlio.parse(
-            local_xml_filename,
-            return_doctype_dict=True,
-            return_processing_instructions=True,
-        )
-
-        # Convert xlink href values
-        total = xmlio.convert_xlink_href(root, file_name_map)
-
-        # Start the file output
-        reparsed_string = xmlio.output(
-            root,
-            output_type=None,
-            doctype_dict=doctype_dict,
-            processing_instructions=processing_instructions,
-        )
-        with open(local_xml_filename, "wb") as open_file:
-            open_file.write(reparsed_string)
 
     def upload_file_to_bucket(self, bucket_name, bucket_folder_name, filename):
         storage = storage_context(self.settings)
