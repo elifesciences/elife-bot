@@ -1,4 +1,4 @@
-# file generated 2022-05-30 - see update-dependencies.sh
+# file generated 2022-06-08 - see update-dependencies.sh
 arrow==1.2.2
 astroid==2.11.5
 attrs==21.4.0
@@ -43,7 +43,7 @@ jatsgenerator==0.1.2
 Jinja2==3.0.3
 jmespath==0.10.0
 lazy-object-proxy==1.7.1
-letterparser==0.9.0
+letterparser==0.10.0
 lxml==4.8.0
 MarkupSafe==2.0.1
 mccabe==0.7.0
