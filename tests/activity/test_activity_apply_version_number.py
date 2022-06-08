@@ -1,3 +1,5 @@
+import os
+import shutil
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
@@ -113,8 +115,9 @@ example_file_name_map_with_version = {
 @ddt
 class TestApplyVersionNumber(unittest.TestCase):
     def setUp(self):
+        self.logger = FakeLogger()
         self.applyversionnumber = activity_ApplyVersionNumber(
-            settings_mock, FakeLogger(), None, None, None
+            settings_mock, self.logger, None, None, None
         )
 
     def tearDown(self):
@@ -146,6 +149,7 @@ class TestApplyVersionNumber(unittest.TestCase):
         self, session_example, mock_session, fake_emit_monitor_event
     ):
         # given
+        fake_emit_monitor_event.return_value = True
         session_example = session_example.copy()
         del session_example["version"]
         mock_session.return_value = FakeSession(session_example)
@@ -167,6 +171,42 @@ class TestApplyVersionNumber(unittest.TestCase):
             + " message: No version available",
         )
         self.assertEqual(result, self.applyversionnumber.ACTIVITY_PERMANENT_FAILURE)
+
+    @patch.object(activity_ApplyVersionNumber, "emit_monitor_event")
+    @patch("activity.activity_ApplyVersionNumber.get_session")
+    def test_do_activity_session_exception(self, mock_session, fake_emit_monitor_event):
+        # given
+        fake_emit_monitor_event.return_value = True
+        activity_data = test_data.ApplyVersionNumber_data_no_renaming
+        exception_message = "An exception"
+        mock_session.side_effect = Exception(exception_message)
+
+        # when
+        result = self.applyversionnumber.do_activity(activity_data)
+
+        # then
+        self.assertEqual(result, self.applyversionnumber.ACTIVITY_PERMANENT_FAILURE)
+        self.assertEqual(self.logger.logexception, exception_message)
+
+    @patch.object(activity_ApplyVersionNumber, "emit_monitor_event")
+    @patch("activity.activity_ApplyVersionNumber.get_session")
+    @patch.object(activity_ApplyVersionNumber, "rename_article_s3_objects")
+    def test_do_activity_rename_exception(
+        self, fake_rename, mock_session, fake_emit_monitor_event
+    ):
+        # given
+        fake_emit_monitor_event.return_value = True
+        mock_session.return_value = FakeSession(test_data.session_example)
+        activity_data = test_data.ApplyVersionNumber_data_no_renaming
+        exception_message = "An exception"
+        fake_rename.side_effect = Exception(exception_message)
+
+        # when
+        result = self.applyversionnumber.do_activity(activity_data)
+
+        # then
+        self.assertEqual(result, self.applyversionnumber.ACTIVITY_PERMANENT_FAILURE)
+        self.assertEqual(self.logger.logexception, exception_message)
 
 
 @ddt
@@ -200,7 +240,70 @@ class TestNewFilename(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
+class TestRenameS3Objects(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_ApplyVersionNumber(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch.object(activity_module, "storage_context")
+    def test_rename_s3_objects(self, fake_storage_context):
+        "test with S3 object names not containing version numbers"
+        directory = TempDirectory()
+        # copy renamed files to the temp directory
+        for key_name in test_data.key_names:
+            new_name = os.path.join(directory.path, key_name.replace("-v1", ""))
+            os.makedirs(os.path.dirname(new_name), exist_ok=True)
+            shutil.copy(
+                os.path.join(test_data.ExpandArticle_files_source_folder, key_name),
+                new_name,
+            )
+        # mocks
+        fake_storage_context.return_value = FakeStorageContext(
+            directory=directory.path, dest_folder=directory.path
+        )
+        # test data
+        bucket_name = (
+            settings_mock.publishing_buckets_prefix + settings_mock.expanded_bucket
+        )
+        bucket_folder_name = test_data.session_example.get("expanded_folder")
+        file_name_map = {"elife-00353-fig1.tif": "elife-00353-fig1-v99.tif"}
+        # invoke the function
+        self.activity.rename_s3_objects(bucket_name, bucket_folder_name, file_name_map)
+        # assertions
+        expanded_folder_list = os.listdir(
+            os.path.join(directory.path, bucket_folder_name)
+        )
+        self.assertTrue("elife-00353-fig1-v99.tif" in expanded_folder_list)
+
+
+class TestBuildFileNameMap(unittest.TestCase):
+    def test_build_file_name_map(self):
+        new_map = activity_module.build_file_name_map(
+            example_key_names, 1, FakeLogger()
+        )
+        self.assertDictEqual(new_map, example_file_name_map)
+
+    @patch.object(activity_module, "new_filename")
+    def test_build_file_name_map_no_renamed(self, fake_new_filename):
+        "test if there is no renamed file for a file"
+        logger = FakeLogger()
+        fake_new_filename.return_value = None
+        activity_module.build_file_name_map(example_key_names, 1, logger)
+        self.assertEqual(
+            logger.loginfo[-1],
+            "there is no renamed file for elife-15224-media1-code1.wrl",
+        )
+
+
 class TestFindXmlFilenameInMap(unittest.TestCase):
     def test_find_xml_filename_in_map(self):
         new_name = activity_module.find_xml_filename_in_map(example_file_name_map)
         self.assertEqual(new_name, "elife-15224-v1.xml")
+
+    def test_find_xml_filename_in_map_empty(self):
+        new_name = activity_module.find_xml_filename_in_map({})
+        self.assertIsNone(new_name)

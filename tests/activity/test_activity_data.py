@@ -30,9 +30,9 @@ data_example_before_publish = {
 }
 
 key_names = [
-    "00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-fig1-v1.tif",
-    "00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.pdf",
-    "00353.1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-00353-v1.xml",
+    "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-fig1-v1.tif",
+    "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.pdf",
+    "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.xml",
 ]
 
 bucket = {bucket_origin_file_name: xml_content_for_xml_key, bucket_dest_file_name: ""}

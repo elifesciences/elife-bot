@@ -31,6 +31,8 @@ class activity_ApplyVersionNumber(Activity):
         )
         self.logger = logger
 
+        self.expanded_bucket_name = None
+
     def do_activity(self, data=None):
 
         try:
@@ -134,7 +136,7 @@ class activity_ApplyVersionNumber(Activity):
         s3_key_names = storage.list_resources(bucket_resource)
 
         # Get the old name to new name map
-        file_name_map = self.build_file_name_map(s3_key_names, version)
+        file_name_map = build_file_name_map(s3_key_names, version, self.logger)
 
         # log file names for reference
         if self.logger:
@@ -190,30 +192,6 @@ class activity_ApplyVersionNumber(Activity):
         metadata = {"ContentType": utils.content_type_from_file_name(filename)}
         storage.set_resource_from_filename(file_resource, local_filename, metadata)
 
-    def build_file_name_map(self, s3_key_names, version):
-
-        file_name_map = {}
-
-        for key_name in s3_key_names:
-            filename = key_name.split("/")[-1]
-
-            # Get the new file name
-            file_name_map[filename] = None
-
-            if article_structure.is_video_file(filename) is False:
-                renamed_filename = new_filename(filename, version)
-            else:
-                # Keep video files named the same
-                renamed_filename = filename
-
-            if renamed_filename:
-                file_name_map[filename] = renamed_filename
-            else:
-                if self.logger:
-                    self.logger.info("there is no renamed file for " + filename)
-
-        return file_name_map
-
     def rename_s3_objects(self, bucket_name, bucket_folder_name, file_name_map):
         # Rename S3 bucket objects by copying them and then deleting the old objects
         storage = storage_context(self.settings)
@@ -241,16 +219,41 @@ class activity_ApplyVersionNumber(Activity):
 
 def new_filename(old_filename, version):
     if re.search(r"-v([0-9])[\.]", old_filename):  # is version already in file name?
-        new_filename = re.sub(r"-v([0-9])[\.]", "-v" + str(version) + ".", old_filename)
+        new_file = re.sub(r"-v([0-9])[\.]", "-v" + str(version) + ".", old_filename)
     else:
         (file_prefix, file_extension) = article_structure.file_parts(old_filename)
-        new_filename = file_prefix + "-v" + str(version) + "." + file_extension
-    return new_filename
+        new_file = file_prefix + "-v" + str(version) + "." + file_extension
+    return new_file
+
+
+def build_file_name_map(s3_key_names, version, logger=None):
+
+    file_name_map = {}
+
+    for key_name in s3_key_names:
+        filename = key_name.split("/")[-1]
+
+        # Get the new file name
+        file_name_map[filename] = None
+
+        if article_structure.is_video_file(filename) is False:
+            renamed_filename = new_filename(filename, version)
+        else:
+            # Keep video files named the same
+            renamed_filename = filename
+
+        if renamed_filename:
+            file_name_map[filename] = renamed_filename
+        else:
+            if logger:
+                logger.info("there is no renamed file for " + filename)
+
+    return file_name_map
 
 
 def find_xml_filename_in_map(file_name_map):
-    for old_name, new_name in list(file_name_map.items()):
-        info = ArticleInfo(new_name)
+    for old_name in file_name_map.keys():
+        info = ArticleInfo(file_name_map.get(old_name))
         if info.file_type == "ArticleXML":
-            return new_name
+            return file_name_map.get(old_name)
     return None
