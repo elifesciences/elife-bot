@@ -95,9 +95,8 @@ def convert_xml(xml_file, file_name_map):
         processing_instructions=processing_instructions,
     )
 
-    f = open(xml_file, "wb")
-    f.write(reparsed_string)
-    f.close()
+    with open(xml_file, "wb") as open_file:
+        open_file.write(reparsed_string)
 
 
 def verify_rename_files(file_name_map):
