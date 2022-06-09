@@ -280,8 +280,8 @@ def get_tweet_url(doi):
     Given a DOI, return a tweet URL
     """
     doi_url = get_doi_url(doi)
-    f = {"text": doi_url + " @eLife"}
-    return "http://twitter.com/intent/tweet?" + urllib.parse.urlencode(f)
+    params = {"text": doi_url + " @eLife"}
+    return "http://twitter.com/intent/tweet?" + urllib.parse.urlencode(params)
 
 
 def get_lens_url(doi):
