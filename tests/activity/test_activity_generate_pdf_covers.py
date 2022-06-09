@@ -1,8 +1,7 @@
 import unittest
 import json
 from mock import patch
-import provider.article as articlelib
-from provider import lax_provider
+from provider import lax_provider, pdf_cover_page
 from activity.activity_GeneratePDFCovers import activity_GeneratePDFCovers
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeResponse
@@ -67,7 +66,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
         json.dumps(self.fake_logger.logerror)
 
     @patch.object(lax_provider, "article_snippet")
-    @patch.object(articlelib, "get_pdf_cover_link")
+    @patch.object(pdf_cover_page, "get_pdf_cover_link")
     @patch.object(activity_GeneratePDFCovers, "emit_monitor_event")
     def test_do_activity_error_wrong_result_from_covers(
         self, fake_monitor_event, fake_article_pdf_cover_link, fake_snippet
@@ -84,7 +83,7 @@ class TestGeneratePDFCovers(unittest.TestCase):
         json.dumps(self.fake_logger.logerror)
 
     @patch.object(lax_provider, "article_snippet")
-    @patch.object(articlelib, "get_pdf_cover_link")
+    @patch.object(pdf_cover_page, "get_pdf_cover_link")
     @patch.object(activity_GeneratePDFCovers, "emit_monitor_event")
     def test_do_activity_get_pdf_exception(
         self, fake_monitor_event, fake_article_pdf_cover_link, fake_snippet
