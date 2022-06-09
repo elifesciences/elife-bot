@@ -3,8 +3,8 @@ import re
 import urllib
 import requests
 from elifetools import parseJATS as parser
-import provider.s3lib as s3lib
-from provider import outbox_provider
+from provider import outbox_provider, s3lib
+from provider.lax_provider import article_highest_version
 from provider.storage_provider import storage_context
 from provider.utils import msid_from_doi, get_doi_url, pad_msid
 
@@ -21,13 +21,15 @@ def create_article(settings, tmp_dir, doi_id=None):
     """
 
     # Instantiate a new article object
-    article_object = article(settings, tmp_dir)
+    article_object = article(settings)
 
     if doi_id:
         # Get and parse the article XML for data
         # Convert the doi_id to 5 digit string in case it was an integer
         doi_id = pad_msid(doi_id)
-        article_xml_filename = article_object.download_article_xml_from_s3(doi_id)
+        article_xml_filename = article_object.download_article_xml_from_s3(
+            tmp_dir, doi_id
+        )
         try:
             article_object.parse_article_file(
                 os.path.join(tmp_dir, article_xml_filename)
@@ -40,12 +42,8 @@ def create_article(settings, tmp_dir, doi_id=None):
 
 
 class article:
-    def __init__(self, settings=None, tmp_dir=None):
+    def __init__(self, settings=None):
         self.settings = settings
-        self.tmp_dir = tmp_dir
-
-        # Default tmp_dir if not specified
-        self.tmp_dir_default = "article_provider"
 
         # Some defaults
         self.related_insight_article = None
@@ -101,12 +99,11 @@ class article:
         except:
             return False
 
-    def download_article_xml_from_s3(self, doi_id=None):
+    def download_article_xml_from_s3(self, to_dir, doi_id=None):
         """
         Return the article data for use in templates
         """
 
-        download_dir = "s3_download"
         xml_filename = None
         # Check for the document
 
@@ -116,9 +113,6 @@ class article:
         article_id = doi_id
         # Get the highest published version from lax
         try:
-            # hack: work around circular dependency between lax_provider.py and article.py
-            from provider.lax_provider import article_highest_version
-
             version = article_highest_version(article_id, self.settings)
             if not isinstance(version, int):
                 return False
@@ -145,30 +139,14 @@ class article:
             + ".xml"
         )
         xml_filename = xml_file_url.split("/")[-1]
-
-        r = requests.get(xml_file_url)
-        if r.status_code == 200:
-            filename_plus_path = self.get_tmp_dir() + os.sep + xml_filename
-            f = open(filename_plus_path, "wb")
-            f.write(r.content)
-            f.close()
+        response = requests.get(xml_file_url)
+        if response.status_code == 200:
+            filename_plus_path = to_dir + os.sep + xml_filename
+            with open(filename_plus_path, "wb") as open_file:
+                open_file.write(response.content)
             return xml_filename
-        else:
-            return False
 
-        return xml_filename
-
-    def get_tmp_dir(self):
-        """
-        Get the temporary file directory, but if not set
-        then make the directory
-        """
-        if self.tmp_dir:
-            return self.tmp_dir
-        else:
-            self.tmp_dir = self.tmp_dir_default
-
-        return self.tmp_dir
+        return False
 
     def set_related_insight_article(self, article_object):
         """
@@ -294,10 +272,7 @@ class article:
             # Display channel was never set
             return None
 
-        if display_channel in self.display_channel:
-            return True
-        else:
-            return False
+        return bool(display_channel in self.display_channel)
 
 
 def get_tweet_url(doi):
@@ -385,7 +360,6 @@ def get_doi_id_from_poa_s3_key_name(s3_key_name):
     """
 
     doi_id = None
-    delimiter = "/"
     file_name_prefix = "elife_poa_e"
 
     doi_id = get_doi_id_from_s3_key_name(s3_key_name, file_name_prefix)
@@ -402,7 +376,6 @@ def get_doi_id_from_vor_s3_key_name(s3_key_name):
     """
 
     doi_id = None
-    delimiter = "/"
     file_name_prefix = "elife"
 
     doi_id = get_doi_id_from_s3_key_name(s3_key_name, file_name_prefix)

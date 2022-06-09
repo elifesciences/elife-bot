@@ -1,17 +1,11 @@
 import unittest
+from mock import patch
+from ddt import ddt, data, unpack
 from testfixtures import TempDirectory
 import provider.article as provider_module
 from provider.article import article
-import tests.settings_mock as settings_mock
-import tests.test_data as test_data
-from tests.activity.classes_mock import FakeStorageContext
-from mock import patch
-from ddt import ddt, data, unpack
-
-
-class ObjectView(object):
-    def __init__(self, d):
-        self.__dict__ = d
+from tests import settings_mock, test_data
+from tests.activity.classes_mock import FakeResponse, FakeStorageContext
 
 
 @ddt
@@ -19,26 +13,85 @@ class TestProviderArticle(unittest.TestCase):
     def setUp(self):
         self.articleprovider = article(settings_mock)
 
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch("requests.get")
+    @patch("provider.lax_provider.article_versions")
+    def test_download_article_xml_from_s3(self, mock_article_versions, fake_get):
+        directory = TempDirectory()
+        mock_article_versions.return_value = (
+            200,
+            test_data.lax_article_versions_response_data,
+        )
+        fake_get.return_value = FakeResponse(200, content=b"<root/>")
+        xml_filename = self.articleprovider.download_article_xml_from_s3(
+            directory.path, "08411"
+        )
+        self.assertEqual(xml_filename, "elife-08411-v3.xml")
+
+    @patch("requests.get")
+    @patch("provider.lax_provider.article_versions")
+    def test_download_article_xml_from_s3_get_request_404(
+        self, mock_article_versions, fake_get
+    ):
+        directory = TempDirectory()
+        mock_article_versions.return_value = (
+            200,
+            test_data.lax_article_versions_response_data,
+        )
+        fake_get.return_value = FakeResponse(404, content=b"<root/>")
+        xml_filename = self.articleprovider.download_article_xml_from_s3(
+            directory.path, "08411"
+        )
+        self.assertEqual(xml_filename, False)
+
     @patch("provider.lax_provider.article_versions")
     def test_download_article_xml_from_s3_error_article_version_500(
         self, mock_article_versions
     ):
+        directory = TempDirectory()
         mock_article_versions.return_value = (
             500,
             test_data.lax_article_versions_response_data,
         )
-        result = self.articleprovider.download_article_xml_from_s3("08411")
+        result = self.articleprovider.download_article_xml_from_s3(
+            directory.path, "08411"
+        )
         self.assertEqual(result, False)
 
     @patch("provider.lax_provider.article_versions")
     def test_download_article_xml_from_s3_error_article_version_404(
         self, mock_article_versions
     ):
+        directory = TempDirectory()
         mock_article_versions.return_value = (
             404,
             test_data.lax_article_versions_response_data,
         )
-        result = self.articleprovider.download_article_xml_from_s3("08411")
+        result = self.articleprovider.download_article_xml_from_s3(
+            directory.path, "08411"
+        )
+        self.assertEqual(result, False)
+
+    @patch("provider.article.article_highest_version")
+    def test_download_article_xml_from_s3_version_0(self, fake_article_highest_version):
+        directory = TempDirectory()
+        fake_article_highest_version.return_value = 0
+        result = self.articleprovider.download_article_xml_from_s3(
+            directory.path, "08411"
+        )
+        self.assertEqual(result, False)
+
+    @patch("provider.article.article_highest_version")
+    def test_download_article_xml_from_s3_lax_exception(
+        self, fake_article_highest_version
+    ):
+        directory = TempDirectory()
+        fake_article_highest_version.side_effect = Exception("An exception")
+        result = self.articleprovider.download_article_xml_from_s3(
+            directory.path, "08411"
+        )
         self.assertEqual(result, False)
 
     @data(
@@ -177,6 +230,9 @@ class TestProviderArticle(unittest.TestCase):
         filename = None
         parse_result = self.articleprovider.parse_article_file(filename)
         self.assertFalse(parse_result)
+
+    def test_is_in_display_channel(self):
+        self.assertIsNone(self.articleprovider.is_in_display_channel("test"))
 
 
 class TestTweetUrl(unittest.TestCase):

@@ -32,7 +32,7 @@ class activity_LensArticle(Activity):
         self.templates = templatelib.Templates(settings, self.get_tmp_dir())
 
         # article data provider
-        self.article = articlelib.article(settings, self.get_tmp_dir())
+        self.article = articlelib.article(settings)
 
         # Default templates directory
         self.from_dir = "template"
@@ -57,7 +57,7 @@ class activity_LensArticle(Activity):
             article_id = data["article_id"]
 
         self.article_xml_filename = self.article.download_article_xml_from_s3(
-            doi_id=article_id
+            self.get_tmp_dir(), doi_id=article_id
         )
 
         if not self.article_xml_filename:
