@@ -144,7 +144,7 @@ class TestProviderTemplates(unittest.TestCase):
     def test_lens_article_html(self, from_dir, expected_content):
         article_xml_filename = "elife03385.xml"
         article_xml_path = "tests/test_data/" + article_xml_filename
-        article_object = article(settings_mock, tmp_dir=self.directory.path)
+        article_object = article(settings_mock)
         article_object.parse_article_file(article_xml_path)
         cdn_bucket = "cdn-bucket"
         content = self.templates.get_lens_article_html(

@@ -1,5 +1,4 @@
-import provider.article as articlelib
-from provider import lax_provider
+from provider import lax_provider, pdf_cover_page
 from activity.objects import Activity
 
 """
@@ -93,7 +92,7 @@ class activity_GeneratePDFCovers(Activity):
                 )
                 return self.ACTIVITY_SUCCESS
 
-            pdf_cover = articlelib.get_pdf_cover_link(
+            pdf_cover = pdf_cover_page.get_pdf_cover_link(
                 self.settings.pdf_cover_generator, article_id, self.logger
             )
 

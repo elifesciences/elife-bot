@@ -65,9 +65,9 @@ class activity_GenerateSWHReadme(Activity):
 
         # download article XML file
         try:
-            bot_article = articlelib.article(self.settings, self.get_tmp_dir())
+            bot_article = articlelib.article(self.settings)
             article_xml_filename = bot_article.download_article_xml_from_s3(
-                utils.pad_msid(article_id)
+                self.get_tmp_dir(), utils.pad_msid(article_id)
             )
             self.logger.info(
                 "Downloaded article XML for %s to %s"

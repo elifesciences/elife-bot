@@ -147,7 +147,7 @@ class activity_EmailVideoArticlePublished(Activity):
         Given a list of article XML filenames,
         parse the files and add the article object to our article map
         """
-        article_object = articlelib.article(self.settings, self.get_tmp_dir())
+        article_object = articlelib.article(self.settings)
         article_object.parse_article_file(xml_file)
         if self.logger:
             self.logger.info("Parsed %s" % article_object.doi_url)

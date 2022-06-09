@@ -9,6 +9,7 @@ from provider import (
     email_provider,
     lax_provider,
     outbox_provider,
+    pdf_cover_page,
     templates,
     utils,
 )
@@ -246,7 +247,7 @@ class activity_PublicationEmail(Activity):
 
             article = articlelib.create_article(self.settings, self.get_tmp_dir)
             article.parse_article_file(article_xml_filename)
-            article.pdf_cover_link = articlelib.get_pdf_cover_page(
+            article.pdf_cover_link = pdf_cover_page.get_pdf_cover_page(
                 article.doi_id, self.settings, self.logger
             )
             log_info = "Parsed " + article.doi_url

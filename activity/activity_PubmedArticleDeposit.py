@@ -37,7 +37,7 @@ class activity_PubmedArticleDeposit(Activity):
         self.date_stamp = utils.set_datestamp()
 
         # Instantiate a new article object to provide some helper functions
-        self.article = articlelib.article(self.settings, self.get_tmp_dir())
+        self.article = articlelib.article(self.settings)
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket

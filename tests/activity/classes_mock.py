@@ -223,10 +223,10 @@ class FakeRequest:
 
 
 class FakeResponse:
-    def __init__(self, status_code, response_json=None, text=""):
+    def __init__(self, status_code, response_json=None, text="", content=None):
         self.status_code = status_code
         self.response_json = response_json
-        self.content = None
+        self.content = content
         self.text = text
         self.request = FakeRequest()
         self.headers = {}

@@ -8,6 +8,7 @@ from collections import OrderedDict
 from testfixtures import TempDirectory
 from mock import patch
 from ddt import ddt, data, unpack
+from provider import pdf_cover_page
 from provider.templates import Templates
 import provider.article as articlelib
 from provider.ejp import EJP
@@ -605,7 +606,7 @@ class TestPublicationEmail(unittest.TestCase):
 
         article_object = articlelib.article()
         article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
-        article_object.pdf_cover_link = articlelib.get_pdf_cover_page(
+        article_object.pdf_cover_link = pdf_cover_page.get_pdf_cover_page(
             article_object.doi_id, self.activity.settings, self.activity.logger
         )
         self.assertEqual(
