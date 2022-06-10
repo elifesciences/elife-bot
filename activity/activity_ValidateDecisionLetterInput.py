@@ -100,16 +100,17 @@ class activity_ValidateDecisionLetterInput(Activity):
 
         self.set_statuses(statuses)
 
-        # part 2 articles to XML
-        self.xml_string, statuses = letterparser_provider.process_articles_to_xml(
-            self.articles, self.directories.get("TEMP_DIR"), self.logger
-        )
-
-        self.set_statuses(statuses)
-
         # Additional error messages
         if not self.statuses.get("unzip"):
             error_messages.append("Unable to unzip decision letter")
+
+        if self.articles:
+            # part 2 articles to XML
+            self.xml_string, statuses = letterparser_provider.process_articles_to_xml(
+                self.articles, self.directories.get("TEMP_DIR"), self.logger
+            )
+
+            self.set_statuses(statuses)
 
         if not self.statuses.get("valid") or not self.statuses.get("output"):
             # Send error email

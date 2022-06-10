@@ -2,7 +2,6 @@
 
 import os
 import glob
-import email
 import unittest
 from collections import OrderedDict
 from mock import patch
@@ -11,11 +10,10 @@ import activity.activity_ValidateDecisionLetterInput as activity_module
 from activity.activity_ValidateDecisionLetterInput import (
     activity_ValidateDecisionLetterInput as activity_object,
 )
-import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 import tests.test_data as test_case_data
 from tests.classes_mock import FakeSMTPServer
-from tests.activity import helpers
+from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import FakeStorageContext
 
 
@@ -131,7 +129,7 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
             self.assertEqual(len(email_files), test_data.get("expected_email_count"))
             # can look at the first email for the subject and sender
             first_email_content = None
-            with open(email_files[0]) as open_file:
+            with open(email_files[0], encoding="utf8") as open_file:
                 first_email_content = open_file.read()
             if first_email_content:
                 if test_data.get("expected_email_subject"):
@@ -145,6 +143,21 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
                 if test_data.get("expected_email_body"):
                     body = helpers.body_from_multipart_email_string(first_email_content)
                     self.assertTrue(test_data.get("expected_email_body") in str(body))
+
+    @patch.object(activity_module.letterparser_provider.zip_lib, "unzip_zip")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(activity_module.download_helper, "storage_context")
+    def test_do_activity_unzip_false(
+        self, fake_download_storage_context, fake_email_smtp_connect, fake_unzip_zip
+    ):
+        "test if the unzip status is not True"
+        fake_download_storage_context.return_value = FakeStorageContext()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
+        fake_unzip_zip.side_effect = Exception("An exception")
+        result = self.activity.do_activity(input_data("elife-39122.zip"))
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
 
 class TestEmailSubject(unittest.TestCase):
