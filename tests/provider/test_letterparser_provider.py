@@ -101,6 +101,20 @@ class TestValidateArticles(unittest.TestCase):
         self.assertTrue(len(error_messages) == 0)
 
 
+class TestValidateCharacters(unittest.TestCase):
+    def test_validate_characters(self):
+        "test for potentially problematic characters in XML"
+        xml_string = "𝒜\u2028"
+        expected_error_message = (
+            "Detected potentially incompatible characters in the JATS XML\n\n"
+            "\u2028 (LINE SEPARATOR)\n"
+            "𝒜 (MATHEMATICAL SCRIPT CAPITAL A)\n"
+        )
+        statuses, error_message = letterparser_provider.validate_characters(xml_string)
+        self.assertFalse(statuses.get("chars"))
+        self.assertEqual(error_message, expected_error_message)
+
+
 class TestCheckInput(unittest.TestCase):
     def setUp(self):
         self.temp_directory = TempDirectory()
