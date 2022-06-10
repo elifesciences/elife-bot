@@ -7,7 +7,11 @@ import docker
 from elifetools import parseJATS as parser
 from letterparser import generate, parse, zip_lib
 from letterparser.conf import raw_config, parse_raw_config
-from letterparser.utils import manuscript_from_file_name
+from letterparser.utils import (
+    manuscript_from_file_name,
+    detect_problem_characters,
+    unicode_char_name,
+)
 from provider.article_processing import file_name_from_name
 import log
 
@@ -186,6 +190,23 @@ def validate_articles(articles, logger=LOGGER):
                 logger.info(error_message)
 
     return valid, error_messages
+
+
+def validate_characters(xml_string):
+    "detect problematic characters in the XML"
+    error_message = ""
+    statuses = {"chars": True}
+    valid = True
+    chars = detect_problem_characters(xml_string)
+    if chars:
+        statuses["chars"] = False
+        # compose the error message
+        error_message = (
+            "Detected potentially incompatible characters in the JATS XML\n\n"
+        )
+        for char in chars:
+            error_message += "%s (%s)\n" % (char, unicode_char_name(char))
+    return statuses, error_message
 
 
 def generate_root(articles, root_tag="root", temp_dir="tmp", logger=LOGGER):

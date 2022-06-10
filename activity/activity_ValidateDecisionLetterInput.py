@@ -44,6 +44,7 @@ class activity_ValidateDecisionLetterInput(Activity):
             "valid": None,
             "generate": None,
             "output": None,
+            "chars": None,
             "email": None,
         }
 
@@ -112,7 +113,19 @@ class activity_ValidateDecisionLetterInput(Activity):
 
             self.set_statuses(statuses)
 
-        if not self.statuses.get("valid") or not self.statuses.get("output"):
+            # check characters
+            statuses, chars_error_messages = letterparser_provider.validate_characters(
+                self.xml_string
+            )
+            self.set_statuses(statuses)
+            if not statuses.get("chars"):
+                error_messages.append(chars_error_messages)
+
+        if (
+            not self.statuses.get("valid")
+            or not self.statuses.get("output")
+            or not self.statuses.get("chars")
+        ):
             # Send error email
             self.statuses["email"] = self.email_error_report(
                 real_filename, error_messages
