@@ -120,6 +120,8 @@ class activity_ValidateDecisionLetterInput(Activity):
             self.set_statuses(statuses)
             if not statuses.get("chars"):
                 error_messages.append(chars_error_messages)
+                # also add the JATS XML to the output
+                error_messages.append("\n%s" % self.xml_string)
 
         if (
             not self.statuses.get("valid")
@@ -127,9 +129,8 @@ class activity_ValidateDecisionLetterInput(Activity):
             or not self.statuses.get("chars")
         ):
             # Send error email
-            self.statuses["email"] = self.email_error_report(
-                real_filename, error_messages
-            )
+            email_body = "".join(error_messages)
+            self.statuses["email"] = self.email_error_report(real_filename, email_body)
             self.log_statuses(self.input_file)
             return self.ACTIVITY_PERMANENT_FAILURE
 
@@ -148,10 +149,10 @@ class activity_ValidateDecisionLetterInput(Activity):
             % (self.name, str(input_file), self.statuses)
         )
 
-    def email_error_report(self, filename, error_messages):
+    def email_error_report(self, filename, email_body):
         "send an email on error"
         datetime_string = time.strftime("%Y-%m-%d %H:%M", time.gmtime())
-        body = email_provider.simple_email_body(datetime_string, error_messages)
+        body = email_provider.simple_email_body(datetime_string, email_body)
         subject = error_email_subject(filename)
         sender_email = self.settings.decision_letter_sender_email
 
