@@ -173,7 +173,7 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_output_xml.return_value = True, "<article><p>\u2028</p></article>"
+        fake_output_xml.return_value = True, b"<article><p>\xe2\x80\xa8</p></article>"
         result = self.activity.do_activity(input_data("elife-39122.zip"))
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
         # check email files and contents
@@ -189,7 +189,6 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
                 "Error processing decision letter file: " in first_email_content
             )
             body = helpers.body_from_multipart_email_string(first_email_content)
-            print(body)
             self.assertTrue(
                 (
                     b"Detected potentially incompatible characters in the JATS XML\n\n"
