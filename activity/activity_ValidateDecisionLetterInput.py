@@ -2,7 +2,7 @@ import os
 import json
 import time
 from S3utility.s3_notification_info import parse_activity_data
-from provider import download_helper, email_provider, letterparser_provider
+from provider import download_helper, email_provider, letterparser_provider, utils
 from activity.objects import Activity
 
 
@@ -121,7 +121,7 @@ class activity_ValidateDecisionLetterInput(Activity):
             if not statuses.get("chars"):
                 error_messages.append(chars_error_messages)
                 # also add the JATS XML to the output
-                error_messages.append("\n%s" % self.xml_string)
+                error_messages.append("\n%s" % utils.bytes_decode(self.xml_string))
 
         if (
             not self.statuses.get("valid")
