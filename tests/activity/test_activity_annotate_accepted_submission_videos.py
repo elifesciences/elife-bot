@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import os
+import sys
 import glob
 import copy
 import shutil
@@ -187,9 +188,13 @@ class TestAnnotateAcceptedSubmissionVideos(unittest.TestCase):
             "expected_get_status": True,
             "expected_annotate_status": True,
             "expected_upload_xml_status": True,
-            "expected_xml": [
+            "expected_xml_pre_python_38": [
                 '<file file-type="video" glencoe-jpg="https://static-movie-usa.glencoesoftware.com/jpg/10.7554/202/c0f4d0de3cd6bcc603bf3ef7a9435a8475709023/elife-63532-video1.jpg" glencoe-mp4="https://static-movie-usa.glencoesoftware.com/mp4/10.7554/202/c0f4d0de3cd6bcc603bf3ef7a9435a8475709023/elife-63532-video1.mp4" id="video1">',
                 '<file file-type="video" glencoe-jpg="https://static-movie-usa.glencoesoftware.com/jpg/10.7554/202/c0f4d0de3cd6bcc603bf3ef7a9435a8475709023/elife-63532-video2.jpg" glencoe-mp4="https://static-movie-usa.glencoesoftware.com/mp4/10.7554/202/c0f4d0de3cd6bcc603bf3ef7a9435a8475709023/elife-63532-video2.mp4" id="video2">',
+            ],
+            "expected_xml": [
+                '<file file-type="video" id="video1" glencoe-mp4="https://static-movie-usa.glencoesoftware.com/mp4/10.7554/202/c0f4d0de3cd6bcc603bf3ef7a9435a8475709023/elife-63532-video1.mp4" glencoe-jpg="https://static-movie-usa.glencoesoftware.com/jpg/10.7554/202/c0f4d0de3cd6bcc603bf3ef7a9435a8475709023/elife-63532-video1.jpg">',
+                '<file file-type="video" id="video2" glencoe-mp4="https://static-movie-usa.glencoesoftware.com/mp4/10.7554/202/c0f4d0de3cd6bcc603bf3ef7a9435a8475709023/elife-63532-video2.mp4" glencoe-jpg="https://static-movie-usa.glencoesoftware.com/jpg/10.7554/202/c0f4d0de3cd6bcc603bf3ef7a9435a8475709023/elife-63532-video2.jpg">',
             ],
         },
         {
@@ -291,15 +296,21 @@ class TestAnnotateAcceptedSubmissionVideos(unittest.TestCase):
             )
             self.assertTrue(xml_file_path in expanded_folder_files)
 
-        if xml_file_path and test_data.get("expected_xml"):
+        # XML output tag attribute order will differ in pre Python 3.8
+        if sys.version_info < (3, 8):
+            expected_xml_name = "expected_xml_pre_python_38"
+        else:
+            expected_xml_name = "expected_xml"
+
+        if xml_file_path and test_data.get(expected_xml_name):
             # assert XML file was modified
             with open(xml_file_path, "r", encoding="utf-8") as open_file:
                 xml_string = open_file.read()
-            for expected_xml in test_data.get("expected_xml"):
-                self.assertTrue(
-                    expected_xml in xml_string,
-                    "%s not found in xml_string" % expected_xml,
-                )
+                for expected_xml in test_data.get(expected_xml_name):
+                    self.assertTrue(
+                        expected_xml in xml_string,
+                        "%s not found in xml_string" % expected_xml,
+                    )
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")

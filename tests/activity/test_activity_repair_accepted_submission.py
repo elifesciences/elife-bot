@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import os
+import sys
 import glob
 import unittest
 from xml.etree.ElementTree import ParseError
@@ -136,13 +137,22 @@ class TestRepairAcceptedSubmission(unittest.TestCase):
             bucket_folder_path, "%s.xml" % zip_file_base
         )
         with open(repaired_xml_file_path, "r", encoding="utf-8") as open_file:
-            self.assertEqual(
-                (
-                    '<?xml version="1.0" ?><article article-type="research-article"'
-                    ' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
-                ),
-                open_file.readline(),
-            )
+            if sys.version_info < (3, 8):
+                self.assertEqual(
+                    (
+                        '<?xml version="1.0" ?><article article-type="research-article"'
+                        ' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
+                    ),
+                    open_file.readline(),
+                )
+            else:
+                self.assertEqual(
+                    (
+                        '<?xml version="1.0" ?><article xmlns:xlink="http://www.w3.org/1999/xlink"'
+                        ' article-type="research-article">\n'
+                    ),
+                    open_file.readline(),
+                )
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
