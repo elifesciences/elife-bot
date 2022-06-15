@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import unittest
 import zipfile
@@ -361,7 +362,15 @@ class TestAlterXML(unittest.TestCase):
         activity_module.alter_xml(test_file, self.logger)
         with open(source_file, "r") as open_file:
             with open(test_file, "r") as open_output_file:
-                self.assertEqual(open_file.read(), open_output_file.read())
+                altered_xml = open_output_file.read()
+                expected = open_file.read()
+                # in Python 3.8 or newer the XML attributes will be a different order
+                if sys.version_info >= (3, 8):
+                    expected = expected.replace(
+                        '<article article-type="discussion" dtd-version="1.1d3" xmlns:xlink="http://www.w3.org/1999/xlink">',
+                        '<article xmlns:xlink="http://www.w3.org/1999/xlink" article-type="discussion" dtd-version="1.1d3">',
+                    )
+                self.assertEqual(altered_xml, expected)
 
     def test_alter_xml(self):
         "test an example XML"
@@ -377,16 +386,30 @@ class TestAlterXML(unittest.TestCase):
 </article>"""
             % xml_declaration
         )
-        expected = (
-            """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+        if sys.version_info < (3, 8):
+            expected = (
+                """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
 <sub-article>
 <front-stub>
 <ext-link ext-link-type="uri" id="sa0ro1" xlink:href="https://sciety.org/articles/activity/10.1101/2021.02.28.433255"/>
 </front-stub>
 </sub-article>
 </article>"""
-            % xml_declaration
-        )
+                % xml_declaration
+            )
+        else:
+            # ext-link-type attribute will be last in Python 3.8 or newer
+            expected = (
+                """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+<sub-article>
+<front-stub>
+<ext-link id="sa0ro1" xlink:href="https://sciety.org/articles/activity/10.1101/2021.02.28.433255" ext-link-type="uri"/>
+</front-stub>
+</sub-article>
+</article>"""
+                % xml_declaration
+            )
+
         filename = "elife-99999-v1.xml"
         test_file = os.path.join(directory.path, filename)
         with open(test_file, "w") as open_file:
