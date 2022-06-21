@@ -12,6 +12,11 @@ activity_UpdateRepository.py activity
 """
 
 
+def settings_environment(settings_object):
+    "get the environment name from the settings object class name"
+    return type(settings_object()).__name__
+
+
 class RetryException(RuntimeError):
     pass
 
@@ -50,13 +55,8 @@ class activity_UpdateRepository(Activity):
             self.settings.git_repo_name,
             self.settings.github_token,
         ):
-            import settings as settingsLib
-
-            if (
-                isinstance(self.settings(), settingsLib.live)
-                or isinstance(self.settings(), settingsLib.prod)
-                or isinstance(self.settings(), settingsLib.end2end)
-            ):
+            environment = settings_environment(self.settings)
+            if environment in ["live", "prod", "end2end"]:
                 self.emit_monitor_event(
                     self.settings,
                     data["article_id"],
@@ -204,7 +204,7 @@ class activity_UpdateRepository(Activity):
 
     def _retry_or_cancel(self, e):
         if e.status == 409:
-            self.logger.warning("Retrying because of exception: %s", e)
+            self.logger.warning("Retrying because of exception: %s" % e)
             raise RetryException(str(e))
         else:
             raise e
