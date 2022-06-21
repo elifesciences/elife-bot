@@ -12,6 +12,11 @@ activity_UpdateRepository.py activity
 """
 
 
+def settings_environment(settings_object):
+    "get the environment name from the settings object class name"
+    return type(settings_object()).__name__
+
+
 class RetryException(RuntimeError):
     pass
 
@@ -50,13 +55,8 @@ class activity_UpdateRepository(Activity):
             self.settings.git_repo_name,
             self.settings.github_token,
         ):
-            import settings as settingsLib
-
-            if (
-                isinstance(self.settings(), settingsLib.live)
-                or isinstance(self.settings(), settingsLib.prod)
-                or isinstance(self.settings(), settingsLib.end2end)
-            ):
+            environment = settings_environment(self.settings)
+            if environment in ["live", "prod", "end2end"]:
                 self.emit_monitor_event(
                     self.settings,
                     data["article_id"],
@@ -98,11 +98,7 @@ class activity_UpdateRepository(Activity):
             # download xml
             with tempfile.TemporaryFile(mode="w+b") as tmp:
                 storage_provider = self.settings.storage_provider + "://"
-                published_path = (
-                    storage_provider
-                    + self.settings.publishing_buckets_prefix
-                    + self.settings.ppp_cdn_bucket
-                )
+                published_path = storage_provider + bucket_name
 
                 resource = published_path + "/" + s3_file_path
 
@@ -138,11 +134,11 @@ class activity_UpdateRepository(Activity):
             if exception_message == "The read operation timed out":
                 self.logger.info(str(exception))
                 return self.ACTIVITY_TEMPORARY_FAILURE
-            else:
-                self.logger.exception("Exception in do_activity")
-                return self.ACTIVITY_PERMANENT_FAILURE
 
-        except Exception as e:
+            self.logger.exception("Exception in do_activity")
+            return self.ACTIVITY_PERMANENT_FAILURE
+
+        except Exception as exception:
             self.logger.exception("Exception in do_activity")
             self.emit_monitor_event(
                 self.settings,
@@ -151,20 +147,20 @@ class activity_UpdateRepository(Activity):
                 data["run"],
                 self.pretty_name,
                 "error",
-                "Error Updating repository for article. Details: " + str(e),
+                "Error Updating repository for article. Details: " + str(exception),
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
     def update_github(self, repo_file, content):
 
-        g = Github(self.settings.github_token)
-        user = g.get_user("elifesciences")
+        github_object = Github(self.settings.github_token)
+        user = github_object.get_user("elifesciences")
         article_xml_repo = user.get_repo(self.settings.git_repo_name)
 
         try:
             xml_file = article_xml_repo.get_contents(repo_file)
-        except GithubException as e:
-            self.logger.info("GithubException - description: " + str(e))
+        except GithubException as exception:
+            self.logger.info("GithubException - description: " + str(exception))
             self.logger.info(
                 "GithubException: file "
                 + repo_file
@@ -174,12 +170,14 @@ class activity_UpdateRepository(Activity):
                 response = article_xml_repo.create_file(
                     repo_file, "Creates XML", content
                 )
-            except GithubException as e:
-                self._retry_or_cancel(e)
+            except GithubException as inner_exception:
+                self._retry_or_cancel(inner_exception)
             return "File " + repo_file + " successfully added. Commit: " + str(response)
 
-        except Exception as e:
-            self.logger.info("Exception: file " + repo_file + ". Error: " + str(e))
+        except Exception as exception:
+            self.logger.info(
+                "Exception: file " + repo_file + ". Error: " + str(exception)
+            )
             raise
 
         try:
@@ -192,19 +190,21 @@ class activity_UpdateRepository(Activity):
                 response = article_xml_repo.update_file(
                     repo_file, "Updates xml", content, xml_file.sha
                 )
-            except GithubException as e:
-                self._retry_or_cancel(e)
+            except GithubException as exception:
+                self._retry_or_cancel(exception)
             return (
                 "File " + repo_file + " successfully updated. Commit: " + str(response)
             )
 
-        except Exception as e:
-            self.logger.info("Exception: file " + repo_file + ". Error: " + str(e))
+        except Exception as exception:
+            self.logger.info(
+                "Exception: file " + repo_file + ". Error: " + str(exception)
+            )
             raise
 
-    def _retry_or_cancel(self, e):
-        if e.status == 409:
-            self.logger.warning("Retrying because of exception: %s", e)
-            raise RetryException(str(e))
-        else:
-            raise e
+    def _retry_or_cancel(self, exception):
+        if exception.status == 409:
+            self.logger.warning("Retrying because of exception: %s" % exception)
+            raise RetryException(str(exception))
+
+        raise exception
