@@ -1,5 +1,4 @@
 import os
-import sys
 import unittest
 from mock import patch
 from ddt import ddt, data
@@ -57,26 +56,6 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
             "expected_email_status": True,
             "expected_activity_status": True,
             "expected_file_count": 1,
-            "expected_crossref_xml_contains_pre_python_38": [
-                '<peer_review stage="pre-publication" type="editor-report">',
-                "<title>Decision letter: Community-level cohesion without cooperation</title>",
-                "<review_date>",
-                "<month>05</month>",
-                "<month>06</month>",
-                "<ai:license_ref>http://creativecommons.org/licenses/by/4.0/</ai:license_ref>",
-                '<person_name contributor_role="editor" sequence="first">',
-                "<surname>Bergstrom</surname>",
-                (
-                    '<rel:inter_work_relation identifier-type="doi" relationship-type="isReviewOf">'
-                    + "10.7554/eLife.15747</rel:inter_work_relation>"
-                ),
-                "<doi>10.7554/eLife.15747.010</doi>",
-                "<resource>https://elifesciences.org/articles/15747#SA1</resource>",
-                '<peer_review stage="pre-publication" type="author-comment">',
-                "<title>Author response: Community-level cohesion without cooperation</title>",
-                "<doi>10.7554/eLife.15747.011</doi>",
-                "<resource>https://elifesciences.org/articles/15747#SA2</resource>",
-            ],
             "expected_crossref_xml_contains": [
                 '<peer_review stage="pre-publication" type="editor-report">',
                 "<title>Decision letter: Community-level cohesion without cooperation</title>",
@@ -87,7 +66,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 '<person_name contributor_role="editor" sequence="first">',
                 "<surname>Bergstrom</surname>",
                 (
-                    '<rel:inter_work_relation relationship-type="isReviewOf" identifier-type="doi">'
+                    '<rel:inter_work_relation identifier-type="doi" relationship-type="isReviewOf">'
                     + "10.7554/eLife.15747</rel:inter_work_relation>"
                 ),
                 "<doi>10.7554/eLife.15747.010</doi>",
@@ -159,20 +138,14 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         file_count = len(os.listdir(self.tmp_dir()))
         self.assertEqual(file_count, test_data.get("expected_file_count"))
 
-        # XML output tag attribute order will differ in pre Python 3.8
-        if sys.version_info < (3, 8):
-            expected_xml_name = "expected_crossref_xml_contains_pre_python_38"
-        else:
-            expected_xml_name = "expected_crossref_xml_contains"
-
-        if file_count > 0 and test_data.get(expected_xml_name):
+        if file_count > 0 and test_data.get("expected_crossref_xml_contains"):
             # Open the first crossref XML and check some of its contents
             crossref_xml_filename_path = os.path.join(
                 self.tmp_dir(), os.listdir(self.tmp_dir())[0]
             )
             with open(crossref_xml_filename_path, "rb") as open_file:
                 crossref_xml = open_file.read().decode("utf8")
-                for expected in test_data.get(expected_xml_name):
+                for expected in test_data.get("expected_crossref_xml_contains"):
                     self.assertTrue(
                         expected in crossref_xml,
                         "{expected} not found in crossref_xml {path}".format(
