@@ -173,7 +173,7 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             )
         )
         self.assertTrue(
-            log_infos[7].endswith(
+            log_infos[8].endswith(
                 (
                     "30-01-2019-RA-eLife-45644.zip writing xml to file "
                     "%s/30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml"
