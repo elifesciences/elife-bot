@@ -118,7 +118,7 @@ class activity_AddCommentsToAcceptedSubmissionXml(Activity):
 
         if root:
             try:
-                # todo!!!!
+                # add to the XML in production-comments tag
                 add_comments_to_xml(root, xml_file_path, comments, input_filename)
                 self.statuses["add"] = True
             except:
@@ -186,7 +186,9 @@ def add_comments_to_xml(root, xml_file_path, comments, input_filename):
     # find or create the production comments tag
     production_comments_tag = article_meta_tag.find("./production-comments")
     if not production_comments_tag:
-        production_comments_tag = SubElement(custom_meta_group_tag, "production-comments")
+        production_comments_tag = SubElement(
+            custom_meta_group_tag, "production-comments"
+        )
     # add each comment to a new p tag
     for comment in comments:
         p_tag = SubElement(production_comments_tag, "p")

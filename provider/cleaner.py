@@ -202,6 +202,14 @@ MULTI_PAGE_FIGURE_PDF_COMMENTS = (
     'please provide this as separate figures or figure supplements."'
 )
 
+WELLCOME_FUNDING_COMMENTS = (
+    "Exeter: funding message text updated. "
+    "Please add the following author query under the funding statement: "
+    "We have updated the funding statement based on your Wellcome funding "
+    "to include Wellcome's open access policy statement. "
+    "Please confirm whether the revised wording is acceptable."
+)
+
 
 def production_comments(log_content):
     "format log messages into production comment messages"
@@ -220,4 +228,20 @@ def production_comments(log_content):
         else:
             # by default add the message as written
             comments.append(message_content)
+    # add messages related to transform INFO log content
+    transform_info_match_pattern = re.compile(
+        r"INFO elifecleaner:transform:(.*?): (.*)"
+    )
+    for message in log_messages:
+        message_parts = transform_info_match_pattern.search(message)
+        if not message_parts:
+            continue
+        message_type = message_parts.group(1)
+        message_content = message_parts.group(2)
+        if (
+            message_type == "transform_xml_funding"
+            and "adding the WELLCOME_FUNDING_STATEMENT to the funding-statement"
+            in message_content
+        ):
+            comments.append(WELLCOME_FUNDING_COMMENTS)
     return comments

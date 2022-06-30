@@ -162,13 +162,15 @@ class TestProductionComments(unittest.TestCase):
             "2022-03-31 11:11:39,706 WARNING elifecleaner:parse:check_multi_page_figure_pdf: 12-08-2021-RA-eLife-73010.zip multiple page PDF figure file: 12-08-2021-RA-eLife-73010/Figure 1.pdf\n"
             "2022-03-17 11:10:06,722 WARNING elifecleaner:parse:check_missing_files: 20-12-2021-FA-eLife-76559.zip does not contain a file in the manifest: manuscript.tex\n"
             "2022-03-17 11:10:06,722 WARNING elifecleaner:parse:check_extra_files: 20-12-2021-FA-eLife-76559.zip has file not listed in the manifest: 76559 correct version.tex\n"
-            "2022-02-22 13:10:15,942 WARNING elifecleaner:parse:check_missing_files_by_name: 22-02-2022-CR-eLife-78088.zip has file missing from expected numeric sequence: Figure 3"
+            "2022-02-22 13:10:15,942 WARNING elifecleaner:parse:check_missing_files_by_name: 22-02-2022-CR-eLife-78088.zip has file missing from expected numeric sequence: Figure 3\n"
+            "2022-06-29 13:10:15,942 INFO elifecleaner:transform:transform_xml_funding: 22-02-2022-CR-eLife-78088.zip adding the WELLCOME_FUNDING_STATEMENT to the funding-statement"
         )
         expected = [
             'Exeter: "Figure 1.pdf" is a PDF file made up of more than one page. Please check if there are images on numerous pages. If that\'s the case, please add the following author query: "Please provide this figure in a single-page format. If this would render the figure unreadable, please provide this as separate figures or figure supplements."',
             "20-12-2021-FA-eLife-76559.zip does not contain a file in the manifest: manuscript.tex",
             "20-12-2021-FA-eLife-76559.zip has file not listed in the manifest: 76559 correct version.tex",
             "22-02-2022-CR-eLife-78088.zip has file missing from expected numeric sequence: Figure 3",
+            cleaner.WELLCOME_FUNDING_COMMENTS,
         ]
 
         comments = cleaner.production_comments(cleaner_log)
