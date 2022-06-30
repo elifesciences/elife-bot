@@ -84,30 +84,10 @@ class EJP:
 
         return (column_headings, author_rows)
 
-    def get_authors(self, doi_id=None, corresponding=None):
-        """
-        Get a list of authors for an article
-          If doi_id is None, return all authors
-          If corresponding is
-            True, return corresponding authors
-            False, return all but corresponding authors
-            None, return all authors
-        """
-        authors = []
+    def author_detail_list(self, document, doi_id=None, corresponding=None):
+        "get author details from the document as a list"
 
-        # Find the document on S3, save the content to
-        #  the tmp_dir
-        storage = storage_context(self.settings)
-        s3_key_name = self.find_latest_s3_file_name(file_type="author")
-        s3_resource = (
-            self.settings.storage_provider
-            + "://"
-            + self.bucket_name
-            + "/"
-            + s3_key_name
-        )
-        contents = storage.get_resource_as_string(s3_resource)
-        document = self.write_content_to_file(self.author_default_filename, contents)
+        authors = []
 
         # Parse the author file
         (column_headings, author_rows) = self.parse_author_file(document)
@@ -145,6 +125,32 @@ class EJP:
             authors = None
 
         return (column_headings, authors)
+
+    def get_authors(self, doi_id=None, corresponding=None):
+        """
+        Get a list of authors for an article
+          If doi_id is None, return all authors
+          If corresponding is
+            True, return corresponding authors
+            False, return all but corresponding authors
+            None, return all authors
+        """
+
+        # Find the document on S3, save the content to
+        #  the tmp_dir
+        storage = storage_context(self.settings)
+        s3_key_name = self.find_latest_s3_file_name(file_type="author")
+        s3_resource = (
+            self.settings.storage_provider
+            + "://"
+            + self.bucket_name
+            + "/"
+            + s3_key_name
+        )
+        contents = storage.get_resource_as_string(s3_resource)
+        document = self.write_content_to_file(self.author_default_filename, contents)
+
+        return self.author_detail_list(document, doi_id, corresponding)
 
     def is_corresponding_author(self, author_type_cde, dual_corr_author_ind):
         """
