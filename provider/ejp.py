@@ -85,7 +85,7 @@ class EJP:
 
         return (column_headings, author_rows)
 
-    def get_authors(self, doi_id=None, corresponding=None, local_document=None):
+    def get_authors(self, doi_id=None, corresponding=None):
         """
         Get a list of authors for an article
           If doi_id is None, return all authors
@@ -93,32 +93,22 @@ class EJP:
             True, return corresponding authors
             False, return all but corresponding authors
             None, return all authors
-          If document is None, find the most recent authors file
         """
         authors = []
-        # Check for the document
-        if local_document is None:
-            # No document? Find it on S3, save the content to
-            #  the tmp_dir
-            storage = storage_context(self.settings)
-            s3_key_name = self.find_latest_s3_file_name(file_type="author")
-            s3_resource = (
-                self.settings.storage_provider
-                + "://"
-                + self.bucket_name
-                + "/"
-                + s3_key_name
-            )
-            contents = storage.get_resource_as_string(s3_resource)
-            document = self.write_content_to_file(
-                self.author_default_filename, contents
-            )
-        else:
-            # copy the document to the tmp_dir if provided
-            with open(local_document, "rb") as fp:
-                document = self.write_content_to_file(
-                    self.author_default_filename, fp.read()
-                )
+
+        # Find the document on S3, save the content to
+        #  the tmp_dir
+        storage = storage_context(self.settings)
+        s3_key_name = self.find_latest_s3_file_name(file_type="author")
+        s3_resource = (
+            self.settings.storage_provider
+            + "://"
+            + self.bucket_name
+            + "/"
+            + s3_key_name
+        )
+        contents = storage.get_resource_as_string(s3_resource)
+        document = self.write_content_to_file(self.author_default_filename, contents)
 
         # Parse the author file
         (column_headings, author_rows) = self.parse_author_file(document)

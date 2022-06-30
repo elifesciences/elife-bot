@@ -3,6 +3,7 @@
 import unittest
 import json
 import os
+import shutil
 import datetime
 import arrow
 from testfixtures import tempdir
@@ -63,7 +64,8 @@ class TestProviderEJP(unittest.TestCase):
         # assert results
         self.assertEqual(column_headings, self.author_column_headings)
 
-    @tempdir()
+    @patch("provider.ejp.storage_context")
+    @patch("provider.ejp.EJP.find_latest_s3_file_name")
     @data(
         (
             3,
@@ -242,12 +244,30 @@ class TestProviderEJP(unittest.TestCase):
         ),
     )
     @unpack
-    def test_get_authors(self, doi_id, corresponding, expected_authors):
-        author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
-        # call the function
-        (column_headings, authors) = self.ejp.get_authors(
-            doi_id, corresponding, author_csv_file
+    def test_get_authors(
+        self,
+        doi_id,
+        corresponding,
+        expected_authors,
+        fake_find_latest,
+        fake_storage_context,
+    ):
+        author_csv_s3_object = (
+            "ejp_query_tool_query_id_15a)_Accepted_Paper_Details_2019_06_10_eLife.csv"
         )
+        fake_find_latest.return_value = author_csv_s3_object
+        # copy the sample csv file to the temp directory
+        s3_key_name = os.path.join(self.directory.path, author_csv_s3_object)
+        shutil.copy(
+            os.path.join("tests", "test_data", "ejp_author_file.csv"), s3_key_name
+        )
+        # populate the storage provider with the CSV file
+        resources = [s3_key_name]
+        fake_storage_context.return_value = FakeStorageContext(
+            self.directory.path, resources
+        )
+        # call the function
+        (column_headings, authors) = self.ejp.get_authors(doi_id, corresponding)
         # assert results
         self.assertEqual(column_headings, self.author_column_headings)
         self.assertEqual(authors, expected_authors)
