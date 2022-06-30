@@ -8,7 +8,7 @@ from collections import OrderedDict
 from testfixtures import TempDirectory
 from mock import patch
 from ddt import ddt, data, unpack
-from provider import pdf_cover_page
+from provider import ejp, pdf_cover_page
 from provider.templates import Templates
 import provider.article as articlelib
 from provider.ejp import EJP
@@ -38,8 +38,7 @@ LAX_ARTICLE_VERSIONS_RESPONSE_DATA_4 = test_data.lax_article_versions_response_d
 
 def fake_authors(activity_object, article_id=3):
     # parse author csv file or create test fixture data
-    ejp_object = EJP(None, None)
-    column_headings, authors = ejp_object.author_detail_list(
+    column_headings, authors = ejp.author_detail_list(
         "tests/test_data/ejp_author_file.csv", article_id
     )
     return activity_object.get_author_list(column_headings, authors, article_id)
