@@ -16,12 +16,9 @@ Connects to S3, discovers, downloads, and parses files exported by EJP
 
 
 class EJP:
-    def __init__(self, settings=None, tmp_dir=None):
+    def __init__(self, settings, tmp_dir):
         self.settings = settings
         self.tmp_dir = tmp_dir
-
-        # Default tmp_dir if not specified
-        self.tmp_dir_default = "ejp_provider"
 
         # Default S3 bucket name
         self.bucket_name = None
@@ -37,7 +34,7 @@ class EJP:
         document = None
         # set the document path
         try:
-            document_path = os.path.join(self.get_tmp_dir(), filename)
+            document_path = os.path.join(self.tmp_dir, filename)
         except TypeError:
             document_path = None
         # write the content to the file
@@ -376,15 +373,3 @@ class EJP:
             file_list = None
 
         return file_list
-
-    def get_tmp_dir(self):
-        """
-        Get the temporary file directory, but if not set
-        then make the directory
-        """
-        if self.tmp_dir:
-            return self.tmp_dir
-        else:
-            self.tmp_dir = self.tmp_dir_default
-
-        return self.tmp_dir
