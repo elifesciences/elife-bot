@@ -531,20 +531,21 @@ class activity_PublicationEmail(Activity):
 
         return True
 
-    def get_authors(self, doi_id=None, corresponding=None, local_document=None):
+    def get_authors(self, doi_id=None):
         """
         Using the EJP data provider, get the column headings
         and author data, and reassemble into a list of authors
-        document is only provided when running tests, otherwise just specify the doi_id
+        for the article with doi_id
         """
-        author_list = []
+
         # EJP data provider
         ejp_object = ejp.EJP(self.settings, self.get_tmp_dir())
 
-        (column_headings, authors) = ejp_object.get_authors(
-            doi_id=doi_id, corresponding=corresponding, local_document=local_document
-        )
+        (column_headings, authors) = ejp_object.get_authors(doi_id=doi_id)
+        return self.get_author_list(column_headings, authors, doi_id)
 
+    def get_author_list(self, column_headings, authors, doi_id):
+        author_list = []
         # Authors will be none if there is not data
         if authors is None:
             log_info = "No authors found for article doi id " + str(doi_id)
