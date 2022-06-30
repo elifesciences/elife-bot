@@ -27,7 +27,6 @@ class EJP:
 
         # Some EJP file types we expect
         self.author_default_filename = "authors.csv"
-        self.editor_default_filename = "editors.csv"
 
     def write_content_to_file(self, filename, content, mode="wb"):
         "write the content to a file in the tmp_dir"
