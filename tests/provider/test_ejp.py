@@ -10,7 +10,7 @@ from testfixtures import tempdir
 from testfixtures import TempDirectory
 from mock import patch
 from ddt import ddt, data, unpack
-from provider import utils
+from provider import ejp, utils
 from provider.ejp import EJP
 from tests import settings_mock
 from tests.activity.classes_mock import FakeStorageContext
@@ -30,7 +30,6 @@ class TestProviderEJP(unittest.TestCase):
             "dual_corr_author_ind",
             "e_mail",
         ]
-        self.editor_column_headings = ["ms_no", "first_nm", "last_nm", "e_mail"]
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -57,13 +56,6 @@ class TestProviderEJP(unittest.TestCase):
             if exception_raised:
                 self.assertRaises(exception_raised)
 
-    def test_parse_author_file(self):
-        author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
-        # call the function
-        (column_headings, authors) = self.ejp.parse_author_file(author_csv_file)
-        # assert results
-        self.assertEqual(column_headings, self.author_column_headings)
-
     @patch("provider.ejp.storage_context")
     @patch("provider.ejp.EJP.find_latest_s3_file_name")
     @data(
@@ -88,15 +80,6 @@ class TestProviderEJP(unittest.TestCase):
                     "Contributing Author",
                     " ",
                     "author02@example.org",
-                ],
-                [
-                    "3",
-                    "3",
-                    "Author",
-                    "Three",
-                    "Corresponding Author",
-                    " ",
-                    "author03@example.com",
                 ],
             ],
         ),
@@ -136,24 +119,6 @@ class TestProviderEJP(unittest.TestCase):
                     "Contributing Author",
                     " ",
                     "author13-02@example.com",
-                ],
-                [
-                    "13",
-                    "3",
-                    "Authoré",
-                    "Trés",
-                    "Contributing Author",
-                    "1",
-                    "author13-03@example.com",
-                ],
-                [
-                    "13",
-                    "4",
-                    "Author",
-                    "Cuatro",
-                    "Corresponding Author",
-                    " ",
-                    "author13-04@example.com",
                 ],
             ],
         ),
@@ -377,7 +342,7 @@ class TestProviderEJP(unittest.TestCase):
         )
         # mock things
         ejp_bucket_file_list = []
-        with open(bucket_list_file_new, "r") as open_file:
+        with open(bucket_list_file_new, "r", encoding="utf-8") as open_file:
             ejp_bucket_file_list += json.loads(open_file.read())
         fake_ejp_bucket_file_list.return_value = ejp_bucket_file_list
         # call the function
@@ -391,7 +356,7 @@ class TestProviderEJP(unittest.TestCase):
             "tests", "test_data", "ejp_bucket_list_new.json"
         )
         ejp_bucket_file_list = []
-        with open(bucket_list_file_new, "r") as open_file:
+        with open(bucket_list_file_new, "r", encoding="utf-8") as open_file:
             ejp_bucket_file_list += json.loads(open_file.read())
         resources = [
             {
@@ -418,5 +383,47 @@ class TestProviderEJP(unittest.TestCase):
         )
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestAuthorDetailList(unittest.TestCase):
+    def setUp(self):
+        self.author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
+
+    def test_author_detail_list(self):
+        corresponding = None
+        column_headings, authors = ejp.author_detail_list(
+            self.author_csv_file, 13, corresponding
+        )
+        self.assertEqual(len(authors), 4)
+
+    def test_author_detail_list_corresponding_true(self):
+        corresponding = True
+        author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
+        column_headings, authors = ejp.author_detail_list(
+            self.author_csv_file, 13, corresponding
+        )
+        self.assertEqual(len(authors), 2)
+
+    def test_author_detail_list_corresponding_false(self):
+        corresponding = False
+        author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
+        column_headings, authors = ejp.author_detail_list(
+            self.author_csv_file, 13, corresponding
+        )
+        self.assertEqual(len(authors), 2)
+
+
+class TestParseAuthorFile(unittest.TestCase):
+    def test_parse_author_file(self):
+        author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
+        expected = [
+            "ms_no",
+            "author_seq",
+            "first_nm",
+            "last_nm",
+            "author_type_cde",
+            "dual_corr_author_ind",
+            "e_mail",
+        ]
+        # call the function
+        (column_headings, authors) = ejp.parse_author_file(author_csv_file)
+        # assert results
+        self.assertEqual(column_headings, expected)
