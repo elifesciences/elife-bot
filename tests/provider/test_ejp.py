@@ -252,45 +252,12 @@ class TestProviderEJP(unittest.TestCase):
         self.assertEqual(column_headings, self.author_column_headings)
         self.assertEqual(authors, expected_authors)
 
-    def test_parse_editor_file(self):
-        author_csv_file = os.path.join("tests", "test_data", "ejp_editor_file.csv")
-        # call the function
-        (column_headings, authors) = self.ejp.parse_editor_file(author_csv_file)
-        # assert results
-        self.assertEqual(column_headings, self.editor_column_headings)
-
-    @tempdir()
-    @data(
-        (3, [["3", "Editor", "One", "ed_one@example.com"]]),
-        ("00003", [["3", "Editor", "One", "ed_one@example.com"]]),
-        (666, None),
-        (
-            None,
-            [
-                ["3", "Editor", "One", "ed_one@example.com"],
-                ["13", "Editor", "Uno", "ed_uno@example.com"],
-            ],
-        ),
-    )
-    @unpack
-    def test_get_editors(self, doi_id, expected_editors):
-        editor_csv_file = os.path.join("tests", "test_data", "ejp_editor_file.csv")
-        # call the function
-        (column_headings, authors) = self.ejp.get_editors(doi_id, editor_csv_file)
-        # assert results
-        self.assertEqual(column_headings, self.editor_column_headings)
-        self.assertEqual(authors, expected_editors)
-
     @patch.object(arrow, "utcnow")
     @patch("provider.ejp.storage_context")
     @data(
         (
             "author",
             "ejp_query_tool_query_id_15a)_Accepted_Paper_Details_2019_06_10_eLife.csv",
-        ),
-        (
-            "editor",
-            "ejp_query_tool_query_id_15b)_Accepted_Paper_Details_2019_06_10_eLife.csv",
         ),
         (
             "poa_manuscript",
@@ -348,10 +315,6 @@ class TestProviderEJP(unittest.TestCase):
         (
             "author",
             "ejp_query_tool_query_id_15a)_Accepted_Paper_Details_2019_06_10_eLife.csv",
-        ),
-        (
-            "editor",
-            "ejp_query_tool_query_id_15b)_Accepted_Paper_Details_2019_06_10_eLife.csv",
         ),
         (
             "poa_manuscript",

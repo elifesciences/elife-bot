@@ -172,93 +172,6 @@ class EJP:
 
         return is_corr
 
-    def parse_editor_file(self, document):
-        """
-        Given a filename to an editor file, parse it
-        """
-        (column_headings, editor_rows) = self.parse_editor_data(document)
-        return (column_headings, editor_rows)
-
-    def parse_editor_data(self, document):
-        """
-        Given editor data - CSV with header rows - parse
-        it and return an object representation
-        """
-
-        column_headings = None
-        editor_rows = []
-
-        # open the file and parse it
-        if sys.version_info[0] < 3:
-            handle = open(document, "rb")
-        else:
-            # https://docs.python.org/3/library/functions.html#open
-            handle = io.open(
-                document, "r", newline="", encoding="utf-8", errors="surrogateescape"
-            )
-        with handle as csvfile:
-            filereader = csv.reader(csvfile)
-            for row in filereader:
-                # For now throw out header rows
-                if filereader.line_num <= 3:
-                    pass
-                elif filereader.line_num == 4:
-                    # Column headers
-                    column_headings = row
-                else:
-                    editor_rows.append(row)
-
-        return (column_headings, editor_rows)
-
-    def get_editors(self, doi_id=None, local_document=None):
-        """
-        Get a list of editors for an article
-          If doi_id is None, return all editors
-          If document is None, find the most recent editors file
-        """
-        editors = []
-        # Check for the document
-        if local_document is None:
-            storage = storage_context(self.settings)
-            s3_key_name = self.find_latest_s3_file_name(file_type="editor")
-            s3_resource = (
-                self.settings.storage_provider
-                + "://"
-                + self.bucket_name
-                + "/"
-                + s3_key_name
-            )
-            contents = storage.get_resource_as_string(s3_resource)
-            document = self.write_content_to_file(
-                self.editor_default_filename, contents
-            )
-        else:
-            # copy the document to the tmp_dir if provided
-            with open(local_document, "rb") as fp:
-                document = self.write_content_to_file(
-                    self.editor_default_filename, fp.read()
-                )
-
-        # Parse the file
-        (column_headings, editor_rows) = self.parse_editor_file(document)
-
-        if editor_rows:
-            for a in editor_rows:
-                add = True
-                # Check doi_id column value
-                if doi_id is not None:
-                    if int(doi_id) != int(a[0]):
-                        add = False
-
-                # Finish up, add the author if we should
-                if add is True:
-                    editors.append(a)
-
-        if len(editors) <= 0:
-            editors = None
-
-        return (column_headings, editors)
-
     def find_latest_s3_file_name(self, file_type, file_list=None):
         """
         Given the file_type, find the name of the S3 key for the object
@@ -273,7 +186,6 @@ class EJP:
         #  with regular expression search
         fn_fragment = {}
         fn_fragment["author"] = r"ejp_query_tool_query_id_15a\)_Accepted_Paper_Details"
-        fn_fragment["editor"] = r"ejp_query_tool_query_id_15b\)_Accepted_Paper_Details"
         fn_fragment["poa_manuscript"] = "ejp_query_tool_query_id_POA_Manuscript"
         fn_fragment["poa_author"] = "ejp_query_tool_query_id_POA_Author"
         fn_fragment["poa_license"] = "ejp_query_tool_query_id_POA_License"
