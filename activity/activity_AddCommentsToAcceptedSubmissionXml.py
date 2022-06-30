@@ -118,7 +118,7 @@ class activity_AddCommentsToAcceptedSubmissionXml(Activity):
 
         if root:
             try:
-                # todo!!!!
+                # add to the XML in production-comments tag
                 add_comments_to_xml(root, xml_file_path, comments, input_filename)
                 self.statuses["add"] = True
             except:
