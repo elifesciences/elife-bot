@@ -90,11 +90,13 @@ class activity_ValidateAcceptedSubmissionVideos(Activity):
         original_repair_xml = cleaner.parse.REPAIR_XML
         cleaner.parse.REPAIR_XML = REPAIR_XML
 
-        # get list of files from the article XML
-        files = []
+        # get list of video files from the article XML
+        video_files = []
         try:
-            files = cleaner.file_list(xml_file_path)
-            self.logger.info("%s, %s files: %s" % (self.name, input_filename, files))
+            video_files = cleaner.video_file_list(xml_file_path)
+            self.logger.info(
+                "%s, %s video_files: %s" % (self.name, input_filename, video_files)
+            )
         except ParseError:
             log_message = "%s, XML ParseError exception parsing file %s for file %s" % (
                 self.name,
@@ -108,16 +110,6 @@ class activity_ValidateAcceptedSubmissionVideos(Activity):
             cleaner.parse.REPAIR_XML = original_repair_xml
 
         ###### start validation checks
-
-        # check if there are any video files in the XML
-        video_files = [
-            file_data for file_data in files if file_data.get("file_type") == "video"
-        ]
-
-        # todo!!! add more validation checks to video files as applicable
-        self.logger.info(
-            "%s, %s video_files: %s" % (self.name, input_filename, video_files)
-        )
         if video_files:
             self.statuses["valid"] = True
 
