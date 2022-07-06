@@ -1,9 +1,10 @@
 import os
 import json
 import shutil
+import time
 from xml.etree.ElementTree import ParseError
 from provider.execution_context import get_session
-from provider import cleaner, glencoe_check
+from provider import cleaner, email_provider, glencoe_check, utils
 from activity.objects import Activity
 
 
@@ -40,7 +41,7 @@ class activity_ValidateAcceptedSubmissionVideos(Activity):
         }
 
         # Track the success of some steps
-        self.statuses = {"valid": None, "deposit_videos": None}
+        self.statuses = {"valid": None, "deposit_videos": None, "email_status": None}
 
     def do_activity(self, data=None):
         """
@@ -90,11 +91,13 @@ class activity_ValidateAcceptedSubmissionVideos(Activity):
         original_repair_xml = cleaner.parse.REPAIR_XML
         cleaner.parse.REPAIR_XML = REPAIR_XML
 
-        # get list of files from the article XML
-        files = []
+        # get list of video files from the article XML
+        video_files = []
         try:
-            files = cleaner.file_list(xml_file_path)
-            self.logger.info("%s, %s files: %s" % (self.name, input_filename, files))
+            video_files = cleaner.video_file_list(xml_file_path)
+            self.logger.info(
+                "%s, %s video_files: %s" % (self.name, input_filename, video_files)
+            )
         except ParseError:
             log_message = "%s, XML ParseError exception parsing file %s for file %s" % (
                 self.name,
@@ -108,21 +111,57 @@ class activity_ValidateAcceptedSubmissionVideos(Activity):
             cleaner.parse.REPAIR_XML = original_repair_xml
 
         ###### start validation checks
-
-        # check if there are any video files in the XML
-        video_files = [
-            file_data for file_data in files if file_data.get("file_type") == "video"
-        ]
-
-        # todo!!! add more validation checks to video files as applicable
-        self.logger.info(
-            "%s, %s video_files: %s" % (self.name, input_filename, video_files)
-        )
         if video_files:
-            self.statuses["valid"] = True
+            error_email_body = ""
+            # generate video data from video_files
+            generated_video_data = []
+            try:
+                generated_video_data = cleaner.video_data_from_files(
+                    video_files, article_id
+                )
+            except Exception:
+                log_message = (
+                    "%s, exception invoking video_data_from_files() for file %s"
+                    % (
+                        self.name,
+                        input_filename,
+                    )
+                )
+                self.logger.exception(log_message)
+                error_email_body += log_message
+            # validate the video data
+            if generated_video_data:
+                validation_messages = validate_video_data(
+                    generated_video_data, input_filename, self.name, self.logger
+                )
+                error_email_body += validation_messages
+            if error_email_body:
+                self.statuses["valid"] = False
+
+            # set validation status if not already set
+            if self.statuses.get("valid") is None:
+                self.statuses["valid"] = True
+
+        if self.statuses.get("valid") is False:
+            # videos failed validation
+            # send an email
+            body_content = error_email_body_content(
+                error_email_body,
+                input_filename,
+                self.name,
+                video_files,
+                generated_video_data,
+            )
+            self.statuses["email_status"] = self.send_error_email(
+                input_filename, body_content
+            )
+            self.log_statuses(input_filename)
+            return self.ACTIVITY_PERMANENT_FAILURE
+
+        ###### end of validation checks
 
         # check for existing video metadata if there are videos
-        if self.statuses["valid"]:
+        if self.statuses.get("valid"):
             no_video_metadata = None
             try:
                 gc_data = glencoe_check.metadata(
@@ -144,10 +183,8 @@ class activity_ValidateAcceptedSubmissionVideos(Activity):
             self.statuses["deposit_videos"] = no_video_metadata
 
         # set session value
-        if self.statuses["deposit_videos"] is not None:
+        if self.statuses.get("deposit_videos") is not None:
             session.store_value("deposit_videos", self.statuses["deposit_videos"])
-
-        ###### end of validation checks
 
         # remove the log handlers
         for log_handler in cleaner_log_handers:
@@ -174,3 +211,109 @@ class activity_ValidateAcceptedSubmissionVideos(Activity):
             if dir_name in keep_dirs or not os.path.exists(dir_path):
                 continue
             shutil.rmtree(dir_path)
+
+    def send_error_email(self, output_file, body_content):
+        "email the message to the recipients"
+        success = True
+
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
+        body = email_provider.simple_email_body(datetime_string, body_content)
+        subject = error_email_subject(output_file)
+        sender_email = self.settings.accepted_submission_sender_email
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.accepted_submission_validate_error_recipient_email
+        )
+
+        connection = email_provider.smtp_connect(self.settings, self.logger)
+        # send the emails
+        for recipient in recipient_email_list:
+            # create the email
+            email_message = email_provider.message(subject, sender_email, recipient)
+            email_provider.add_text(email_message, body)
+            # send the email
+            email_success = email_provider.smtp_send(
+                connection, sender_email, recipient, email_message, self.logger
+            )
+            if not email_success:
+                # for now any failure in sending a mail return False
+                success = False
+        return success
+
+
+def error_email_subject(output_file):
+    "the email subject"
+    return "Error validating videos in accepted submission file: %s" % output_file
+
+
+def error_email_body_content(
+    error_email_body, input_filename, activity_name, video_files, generated_video_data
+):
+    "body content of the error email for validating accepted submission video data"
+    header = (
+        (
+            "Validation messages were generated in the %s "
+            "workflow activity when processing input file %s\n\n"
+            "Log messages:\n\n"
+        )
+    ) % (activity_name, input_filename)
+    body_content = header + error_email_body
+    body_content += "\n\nVideo file data from the XML:\n\n%s" % json.dumps(
+        video_files, indent=4
+    )
+    body_content += "\n\nVideo data generated:\n\n%s" % json.dumps(
+        generated_video_data, indent=4
+    )
+    return body_content
+
+
+def validate_video_data(generated_video_data, input_filename, activity_name, logger):
+    "run validation checks on the generated video data"
+    validation_messages = ""
+
+    # check if any video data has incomplete data
+    for video_data in generated_video_data:
+        if not video_data.get("video_id"):
+            log_message = (
+                '%s, %s video file name "%s" generated a video_id value of %s'
+                % (
+                    activity_name,
+                    input_filename,
+                    video_data.get("upload_file_nm"),
+                    video_data.get("video_id"),
+                )
+            )
+            logger.info(log_message)
+            validation_messages += log_message
+        if not video_data.get("video_filename"):
+            log_message = (
+                '%s, %s video file name "%s" generated a video_filename value of %s'
+                % (
+                    activity_name,
+                    input_filename,
+                    video_data.get("upload_file_nm"),
+                    video_data.get("video_filename"),
+                )
+            )
+            logger.info(log_message)
+            validation_messages += log_message
+    # check if there are any duplicate names generated
+    video_id_list = [video_data.get("video_id") for video_data in generated_video_data]
+    video_filename_list = [
+        video_data.get("video_filename") for video_data in generated_video_data
+    ]
+    unique_video_ids = list(
+        {str(video_data.get("video_id")) for video_data in generated_video_data}
+    )
+    unique_video_filenames = list(
+        {str(video_data.get("video_filename")) for video_data in generated_video_data}
+    )
+    if len(video_id_list) != len(unique_video_ids) or len(video_filename_list) != len(
+        unique_video_filenames
+    ):
+        log_message = "%s, %s duplicate video_id or video_filename generated" % (
+            activity_name,
+            input_filename,
+        )
+        logger.info(log_message)
+        validation_messages += log_message
+    return validation_messages

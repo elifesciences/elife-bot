@@ -20,6 +20,7 @@ from tests.activity.classes_mock import (
     FakeSession,
     FakeStorageContext,
 )
+from tests.classes_mock import FakeSMTPServer
 from tests.activity import helpers, settings_mock, test_activity_data
 
 
@@ -204,3 +205,164 @@ class TestValidateAcceptedSubmissionVideos(unittest.TestCase):
             "parsing file %s for file %s"
         ) % (xml_file_path, zip_file)
         self.assertEqual(self.activity.logger.logexception, expected_logexception)
+
+    @patch.object(activity_module, "get_session")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(cleaner, "video_data_from_files")
+    def test_do_activity_video_data_exception(
+        self,
+        fake_video_data_from_files,
+        fake_email_smtp_connect,
+        fake_cleaner_storage_context,
+        fake_session,
+    ):
+        "test if there is an exception generating video_data_from_files"
+        directory = TempDirectory()
+        zip_file = "28-09-2020-RA-eLife-63532.zip"
+        article_id = zip_file.rsplit("-", 1)[-1].rstrip(".zip")
+
+        fake_session.return_value = FakeSession(session_data(zip_file, article_id))
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            zip_file,
+        )
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            zip_file_path,
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
+        fake_video_data_from_files.side_effect = Exception("An exception")
+        # do the activity
+        result = self.activity.do_activity(input_data(zip_file))
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+        # assertions
+        expected_logexception = (
+            (
+                "ValidateAcceptedSubmissionVideos, exception invoking "
+                "video_data_from_files() for file %s"
+            )
+        ) % zip_file
+        self.assertEqual(self.activity.logger.logexception, expected_logexception)
+
+        expected_email_count = 1
+        expected_email_subject = (
+            "Error validating videos in accepted submission file: %s" % zip_file
+        )
+        expected_email_from = "From: sender@example.org"
+        expected_email_body_contains = (
+            b"Validation messages were generated in the ValidateAcceptedSubmissionVideos "
+            b"workflow activity when processing input file %s"
+            % bytes(zip_file, encoding="utf-8")
+        )
+        # check email files and contents
+        email_files_filter = os.path.join(directory.path, "*.eml")
+        email_files = glob.glob(email_files_filter)
+
+        # assert number of emails sent
+        self.assertEqual(len(email_files), expected_email_count)
+
+        # can look at the first email for the subject and sender
+        first_email_content = None
+        with open(email_files[0], "r", encoding="utf8") as open_file:
+            first_email_content = open_file.read()
+        if first_email_content:
+
+            self.assertTrue(expected_email_subject in first_email_content)
+
+            self.assertTrue(expected_email_from in first_email_content)
+
+            body = helpers.body_from_multipart_email_string(first_email_content)
+            self.assertTrue(expected_email_body_contains in body)
+
+
+class TestValidateVideoData(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.activity_name = "ValidateAcceptedSubmissionVideos"
+        self.zip_file = "28-09-2020-RA-eLife-63532.zip"
+
+    def test_validate_video_data_video_id_blank(self):
+        "test if there is a blank video_id property in the generated video data"
+        generated_video_data = [
+            {
+                "upload_file_nm": "Video 1 AVI.avi",
+                "video_id": None,
+                "video_filename": "elife-63532-video1.avi",
+            }
+        ]
+        expected_validation_messages = (
+            (
+                "ValidateAcceptedSubmissionVideos, %s video file name "
+                '"%s" generated a video_id value of %s'
+            )
+        ) % (
+            self.zip_file,
+            generated_video_data[0].get("upload_file_nm"),
+            generated_video_data[0].get("video_id"),
+        )
+        # invoke the function
+        validation_messages = activity_module.validate_video_data(
+            generated_video_data, self.zip_file, self.activity_name, self.logger
+        )
+        # assertions
+        self.assertEqual(validation_messages, expected_validation_messages)
+        self.assertEqual(self.logger.loginfo[-1], expected_validation_messages)
+
+    def test_validate_video_data_video_filename_blank(self):
+        "test if there is a blank video_filename property in the generated video data"
+        generated_video_data = [
+            {
+                "upload_file_nm": "Video 1 AVI.avi",
+                "video_id": "video1",
+                "video_filename": None,
+            }
+        ]
+        expected_validation_messages = (
+            (
+                "ValidateAcceptedSubmissionVideos, %s video file name "
+                '"%s" generated a video_filename value of %s'
+            )
+        ) % (
+            self.zip_file,
+            generated_video_data[0].get("upload_file_nm"),
+            generated_video_data[0].get("video_filename"),
+        )
+
+        # invoke the function
+        validation_messages = activity_module.validate_video_data(
+            generated_video_data, self.zip_file, self.activity_name, self.logger
+        )
+        # assertions
+        self.assertEqual(validation_messages, expected_validation_messages)
+        self.assertEqual(self.logger.loginfo[-1], expected_validation_messages)
+
+    def test_validate_video_data_duplicates(self):
+        "test if there is a duplicate video_id or video_filename"
+        generated_video_data = [
+            {
+                "upload_file_nm": "Video 1 AVI.avi",
+                "video_id": "video1",
+                "video_filename": "elife-63532-video1.avi",
+            },
+            {
+                "upload_file_nm": "Video 1b AVI.avi",
+                "video_id": "video1",
+                "video_filename": "elife-63532-video1.avi",
+            },
+        ]
+        expected_validation_messages = (
+            "ValidateAcceptedSubmissionVideos, %s duplicate video_id or video_filename generated"
+        ) % (self.zip_file,)
+
+        # invoke the function
+        validation_messages = activity_module.validate_video_data(
+            generated_video_data, self.zip_file, self.activity_name, self.logger
+        )
+        # assertions
+        self.assertEqual(validation_messages, expected_validation_messages)
+        self.assertEqual(self.logger.loginfo[-1], expected_validation_messages)
