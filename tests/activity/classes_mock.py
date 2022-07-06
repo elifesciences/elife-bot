@@ -5,6 +5,7 @@ from shutil import copy
 import shutil
 import re
 import os
+from io import BytesIO
 from datetime import datetime
 from mock import MagicMock
 
@@ -176,7 +177,10 @@ class FakeStorageContext:
             try:
                 open_file.write(data)
             except TypeError:
-                open_file.write(bytes(data, encoding="utf8"))
+                if isinstance(data, BytesIO):
+                    open_file.write(data.read())
+                else:
+                    open_file.write(bytes(data, encoding="utf8"))
 
     def list_resources(self, resource, return_keys=False):
         return self.resources
