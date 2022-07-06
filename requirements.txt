@@ -1,4 +1,4 @@
-# file generated 2022-07-04 - see update-dependencies.sh
+# file generated 2022-07-06 - see update-dependencies.sh
 arrow==1.2.2
 astroid==2.11.5
 attrs==21.4.0
@@ -44,7 +44,7 @@ Jinja2==3.0.3
 jmespath==0.10.0
 lazy-object-proxy==1.7.1
 letterparser==0.11.0
-lxml==4.8.0
+lxml==4.9.1
 MarkupSafe==2.0.1
 mccabe==0.7.0
 medium @ git+https://github.com/Medium/medium-sdk-python.git@bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6
