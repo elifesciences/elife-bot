@@ -219,36 +219,8 @@ class TestPublicationEmail(unittest.TestCase):
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
-
-    def tearDown(self):
-        self.activity.clean_tmp_dir()
-
-    @patch.object(activity_module, "get_related_article")
-    @patch("provider.article.article.download_article_xml_from_s3")
-    @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch("provider.lax_provider.article_versions")
-    @patch.object(EJP, "get_authors")
-    @patch.object(FakeStorageContext, "list_resources")
-    @patch("provider.outbox_provider.get_outbox_s3_key_names")
-    @patch("provider.outbox_provider.storage_context")
-    def test_do_activity(
-        self,
-        fake_storage_context,
-        fake_outbox_key_names,
-        fake_list_resources,
-        fake_ejp_get_authors,
-        fake_article_versions,
-        fake_email_smtp_connect,
-        fake_download_xml,
-        fake_get_related_article,
-    ):
-        fake_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/publication_email/outbox/"
-        )
-        fake_download_xml.return_value = False
-
         # Basic fake data for all activity passes
-        ejp_article_13_authors = (
+        self.ejp_article_13_authors = (
             [
                 "ms_no",
                 "author_seq",
@@ -273,6 +245,28 @@ class TestPublicationEmail(unittest.TestCase):
             ],
         )
 
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    @patch.object(activity_module, "get_related_article")
+    @patch("provider.article.article.download_article_xml_from_s3")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch("provider.lax_provider.article_versions")
+    @patch.object(EJP, "get_authors")
+    @patch("provider.outbox_provider.get_outbox_s3_key_names")
+    @patch("provider.outbox_provider.storage_context")
+    def test_do_activity(
+        self,
+        fake_storage_context,
+        fake_outbox_key_names,
+        fake_ejp_get_authors,
+        fake_article_versions,
+        fake_email_smtp_connect,
+        fake_download_xml,
+        fake_get_related_article,
+    ):
+        fake_download_xml.return_value = False
+
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
@@ -280,8 +274,15 @@ class TestPublicationEmail(unittest.TestCase):
         # do_activity
         for pass_test_data in DO_ACTIVITY_PASSES:
 
+            fake_outbox_key_names.return_value = pass_test_data["article_xml_filenames"]
+
+            fake_storage_context.return_value = FakeStorageContext(
+                "tests/files_source/publication_email/outbox/",
+                resources=pass_test_data["article_xml_filenames"],
+            )
+
             if pass_test_data.get("article_id") != "32991":
-                fake_ejp_get_authors.return_value = ejp_article_13_authors
+                fake_ejp_get_authors.return_value = self.ejp_article_13_authors
             else:
                 fake_ejp_get_authors.return_value = (None, None)
 
@@ -299,9 +300,6 @@ class TestPublicationEmail(unittest.TestCase):
                 200,
                 pass_test_data.get("lax_article_versions_response_data"),
             )
-
-            fake_outbox_key_names.return_value = pass_test_data["article_xml_filenames"]
-            fake_list_resources.return_value = pass_test_data["article_xml_filenames"]
 
             success = self.activity.do_activity(pass_test_data["input_data"])
 
