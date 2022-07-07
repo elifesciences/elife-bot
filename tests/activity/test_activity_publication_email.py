@@ -2,7 +2,6 @@
 
 import os
 import unittest
-import shutil
 import smtplib
 from collections import OrderedDict
 from testfixtures import TempDirectory
@@ -14,10 +13,9 @@ import provider.article as articlelib
 from provider.ejp import EJP
 import activity.activity_PublicationEmail as activity_module
 from activity.activity_PublicationEmail import activity_PublicationEmail
-import tests.test_data as test_data
+from tests import test_data
 from tests.classes_mock import FakeSMTPServer
-import tests.activity.helpers as helpers
-import tests.activity.settings_mock as settings_mock
+from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 
 
@@ -35,6 +33,174 @@ LAX_ARTICLE_VERSIONS_RESPONSE_DATA_4 = test_data.lax_article_versions_response_d
     }
 ]
 
+DO_ACTIVITY_PASSES = []
+
+DO_ACTIVITY_PASSES.append(
+    {
+        "comment": "normal article with dict input_data",
+        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+        "input_data": {},
+        "article_xml_filenames": ["elife00013.xml"],
+        "article_id": "13",
+        "activity_success": True,
+        "admin_email_content_contains": [
+            "Parsed https://doi.org/10.7554/eLife.00013",
+            "Total prepared articles: 1",
+            (
+                "Sending author_publication_email_VOR_after_POA type email "
+                "for article 00013 to recipient_email author13-01@example.com"
+            ),
+        ],
+    }
+)
+
+DO_ACTIVITY_PASSES.append(
+    {
+        "comment": "normal article with input_data None",
+        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+        "input_data": None,
+        "article_xml_filenames": ["elife03385.xml"],
+        "article_id": "3385",
+        "activity_success": True,
+        "admin_email_content_contains": [
+            "Parsed https://doi.org/10.7554/eLife.03385",
+            "Total prepared articles: 1",
+        ],
+    }
+)
+
+DO_ACTIVITY_PASSES.append(
+    {
+        "comment": "basic PoA article",
+        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_1,
+        "input_data": None,
+        "article_xml_filenames": ["elife_poa_e03977.xml"],
+        "article_id": "3977",
+        "activity_success": True,
+        "admin_email_content_contains": [
+            "Parsed https://doi.org/10.7554/eLife.03977",
+            "Total prepared articles: 1",
+        ],
+    }
+)
+
+DO_ACTIVITY_PASSES.append(
+    {
+        "comment": "Cannot build article",
+        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+        "input_data": None,
+        "article_xml_filenames": ["does_not_exist.xml"],
+        "article_id": None,
+        "activity_success": "ActivityPermanentFailure",
+        "admin_email_content_contains": ["PublicationEmail email templates warmed"],
+    }
+)
+
+DO_ACTIVITY_PASSES.append(
+    {
+        "comment": "article-commentary with a related article",
+        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+        "input_data": {},
+        "article_xml_filenames": ["elife-18753-v1.xml"],
+        "related_article": "tests/test_data/elife-15747-v2.xml",
+        "article_id": "18753",
+        "activity_success": True,
+        "admin_email_content_contains": [
+            "Parsed https://doi.org/10.7554/eLife.18753",
+            "Total prepared articles: 1",
+        ],
+    }
+)
+
+DO_ACTIVITY_PASSES.append(
+    {
+        "comment": "article-commentary, related article cannot be found",
+        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+        "input_data": {},
+        "article_xml_filenames": ["elife-18753-v1.xml"],
+        "related_article": None,
+        "article_id": "18753",
+        "activity_success": True,
+        "admin_email_content_contains": [
+            "Parsed https://doi.org/10.7554/eLife.18753",
+            "Could not build the article related to insight 10.7554/eLife.18753",
+            "Total prepared articles: 0",
+        ],
+    }
+)
+
+DO_ACTIVITY_PASSES.append(
+    {
+        "comment": "article-commentary plus its matching insight",
+        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+        "input_data": {},
+        "article_xml_filenames": ["elife-18753-v1.xml", "elife-15747-v2.xml"],
+        "article_id": "18753",
+        "activity_success": True,
+        "admin_email_content_contains": [
+            "Parsed https://doi.org/10.7554/eLife.18753",
+            "Parsed https://doi.org/10.7554/eLife.15747",
+            "Total parsed articles: 2",
+            "Total approved articles: 2",
+            "Total prepared articles: 1",
+        ],
+    }
+)
+
+DO_ACTIVITY_PASSES.append(
+    {
+        "comment": "feature article",
+        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+        "input_data": {},
+        "article_xml_filenames": ["elife-00353-v1.xml"],
+        "article_id": "353",
+        "activity_success": True,
+        "admin_email_content_contains": [
+            "Parsed https://doi.org/10.7554/eLife.00353",
+            "Total prepared articles: 1",
+        ],
+    }
+)
+
+DO_ACTIVITY_PASSES.append(
+    {
+        "comment": "article-commentary with no related-article tag",
+        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+        "input_data": {},
+        "article_xml_filenames": ["elife-23065-v1.xml"],
+        "article_id": "23065",
+        "activity_success": True,
+        "admin_email_content_contains": [
+            "Parsed https://doi.org/10.7554/eLife.23065",
+            "Could not build the article related to insight 10.7554/eLife.23065",
+            "Total approved articles: 1",
+            "Total prepared articles: 0",
+        ],
+    }
+)
+
+DO_ACTIVITY_PASSES.append(
+    {
+        "comment": "recipients from the article XML file",
+        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+        "input_data": {},
+        "article_xml_filenames": ["elife-32991-v2.xml"],
+        "article_id": "32991",
+        "activity_success": True,
+        "admin_email_content_contains": [
+            "Parsed https://doi.org/10.7554/eLife.32991",
+            "Total approved articles: 1",
+            "Total prepared articles: 1",
+            "No authors found for article doi id 32991",
+            (
+                "Sending author_publication_email_VOR_after_POA type email for "
+                "article 32991 to recipient_email alhonore@hotmail.com"
+            ),
+            "Adding alhonore@hotmail.com from additional",
+        ],
+    }
+)
+
 
 def fake_authors(activity_object, article_id=3):
     # parse author csv file or create test fixture data
@@ -44,189 +210,17 @@ def fake_authors(activity_object, article_id=3):
     return activity_object.get_author_list(column_headings, authors, article_id)
 
 
-@ddt
 class TestPublicationEmail(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
         # reduce the sleep time to speed up test runs
-        activity_module.SLEEP_SECONDS = 0.1
+        activity_module.SLEEP_SECONDS = 0.001
         activity_module.MAX_EMAILS_PER_SECOND = 1000
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
 
-        self.do_activity_passes = []
-
-        self.do_activity_passes.append(
-            {
-                "comment": "normal article with dict input_data",
-                "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-                "input_data": {},
-                "article_xml_filenames": ["elife00013.xml"],
-                "article_id": "13",
-                "activity_success": True,
-                "admin_email_content_contains": [
-                    "Parsed https://doi.org/10.7554/eLife.00013",
-                    "Total prepared articles: 1",
-                    (
-                        "Sending author_publication_email_VOR_after_POA type email "
-                        "for article 00013 to recipient_email author13-01@example.com"
-                    ),
-                ],
-            }
-        )
-
-        self.do_activity_passes.append(
-            {
-                "comment": "normal article with input_data None",
-                "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-                "input_data": None,
-                "article_xml_filenames": ["elife03385.xml"],
-                "article_id": "3385",
-                "activity_success": True,
-                "admin_email_content_contains": [
-                    "Parsed https://doi.org/10.7554/eLife.03385",
-                    "Total prepared articles: 1",
-                ],
-            }
-        )
-
-        self.do_activity_passes.append(
-            {
-                "comment": "basic PoA article",
-                "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_1,
-                "input_data": None,
-                "article_xml_filenames": ["elife_poa_e03977.xml"],
-                "article_id": "3977",
-                "activity_success": True,
-                "admin_email_content_contains": [
-                    "Parsed https://doi.org/10.7554/eLife.03977",
-                    "Total prepared articles: 1",
-                ],
-            }
-        )
-
-        self.do_activity_passes.append(
-            {
-                "comment": "Cannot build article",
-                "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-                "input_data": None,
-                "article_xml_filenames": ["does_not_exist.xml"],
-                "article_id": None,
-                "activity_success": self.activity.ACTIVITY_PERMANENT_FAILURE,
-                "admin_email_content_contains": [
-                    "PublicationEmail email templates warmed"
-                ],
-            }
-        )
-
-        self.do_activity_passes.append(
-            {
-                "comment": "article-commentary with a related article",
-                "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-                "input_data": {},
-                "article_xml_filenames": ["elife-18753-v1.xml"],
-                "related_article": "tests/test_data/elife-15747-v2.xml",
-                "article_id": "18753",
-                "activity_success": True,
-                "admin_email_content_contains": [
-                    "Parsed https://doi.org/10.7554/eLife.18753",
-                    "Total prepared articles: 1",
-                ],
-            }
-        )
-
-        self.do_activity_passes.append(
-            {
-                "comment": "article-commentary, related article cannot be found",
-                "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-                "input_data": {},
-                "article_xml_filenames": ["elife-18753-v1.xml"],
-                "related_article": None,
-                "article_id": "18753",
-                "activity_success": True,
-                "admin_email_content_contains": [
-                    "Parsed https://doi.org/10.7554/eLife.18753",
-                    "Could not build the article related to insight 10.7554/eLife.18753",
-                    "Total prepared articles: 0",
-                ],
-            }
-        )
-
-        self.do_activity_passes.append(
-            {
-                "comment": "article-commentary plus its matching insight",
-                "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-                "input_data": {},
-                "article_xml_filenames": ["elife-18753-v1.xml", "elife-15747-v2.xml"],
-                "article_id": "18753",
-                "activity_success": True,
-                "admin_email_content_contains": [
-                    "Parsed https://doi.org/10.7554/eLife.18753",
-                    "Parsed https://doi.org/10.7554/eLife.15747",
-                    "Total parsed articles: 2",
-                    "Total approved articles: 2",
-                    "Total prepared articles: 1",
-                ],
-            }
-        )
-
-        self.do_activity_passes.append(
-            {
-                "comment": "feature article",
-                "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-                "input_data": {},
-                "article_xml_filenames": ["elife-00353-v1.xml"],
-                "article_id": "353",
-                "activity_success": True,
-                "admin_email_content_contains": [
-                    "Parsed https://doi.org/10.7554/eLife.00353",
-                    "Total prepared articles: 1",
-                ],
-            }
-        )
-
-        self.do_activity_passes.append(
-            {
-                "comment": "article-commentary with no related-article tag",
-                "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-                "input_data": {},
-                "article_xml_filenames": ["elife-23065-v1.xml"],
-                "article_id": "23065",
-                "activity_success": True,
-                "admin_email_content_contains": [
-                    "Parsed https://doi.org/10.7554/eLife.23065",
-                    "Could not build the article related to insight 10.7554/eLife.23065",
-                    "Total approved articles: 1",
-                    "Total prepared articles: 0",
-                ],
-            }
-        )
-
-        self.do_activity_passes.append(
-            {
-                "comment": "recipients from the article XML file",
-                "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-                "input_data": {},
-                "article_xml_filenames": ["elife-32991-v2.xml"],
-                "article_id": "32991",
-                "activity_success": True,
-                "admin_email_content_contains": [
-                    "Parsed https://doi.org/10.7554/eLife.32991",
-                    "Total approved articles: 1",
-                    "Total prepared articles: 1",
-                    "No authors found for article doi id 32991",
-                    (
-                        "Sending author_publication_email_VOR_after_POA type email for "
-                        "article 32991 to recipient_email alhonore@hotmail.com"
-                    ),
-                    "Adding alhonore@hotmail.com from additional",
-                ],
-            }
-        )
-
     def tearDown(self):
-        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module, "get_related_article")
@@ -248,8 +242,6 @@ class TestPublicationEmail(unittest.TestCase):
         fake_download_xml,
         fake_get_related_article,
     ):
-
-        directory = TempDirectory()
         fake_storage_context.return_value = FakeStorageContext(
             "tests/files_source/publication_email/outbox/"
         )
@@ -286,7 +278,7 @@ class TestPublicationEmail(unittest.TestCase):
         )
 
         # do_activity
-        for pass_test_data in self.do_activity_passes:
+        for pass_test_data in DO_ACTIVITY_PASSES:
 
             if pass_test_data.get("article_id") != "32991":
                 fake_ejp_get_authors.return_value = ejp_article_13_authors
@@ -420,6 +412,15 @@ class TestPublicationEmail(unittest.TestCase):
             "PublicationEmail email templates did not warm successfully",
         )
 
+
+@ddt
+class TestProcessArticles(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, fake_logger, None, None, None
+        )
+
     @patch("provider.article.article.download_article_xml_from_s3")
     @patch("provider.lax_provider.article_versions")
     @data(
@@ -477,6 +478,15 @@ class TestPublicationEmail(unittest.TestCase):
             "failed expected_map check in {comment}".format(comment=comment),
         )
 
+
+@ddt
+class TestChooseEmailType(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, fake_logger, None, None, None
+        )
+
     @data(
         (
             "article-commentary",
@@ -512,6 +522,14 @@ class TestPublicationEmail(unittest.TestCase):
             article_type, is_poa, was_ever_poa, feature_article
         )
         self.assertEqual(email_type, expected_email_type)
+
+
+class TestGetEmailHeaders(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, fake_logger, None, None, None
+        )
 
     def test_template_get_email_headers_00013(self):
 
@@ -554,6 +572,14 @@ class TestPublicationEmail(unittest.TestCase):
         )
 
         self.assertEqual(body, expected_headers)
+
+
+class TestGetEmailBody(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, fake_logger, None, None, None
+        )
 
     def test_template_get_email_body_00353(self):
 
@@ -604,6 +630,14 @@ class TestPublicationEmail(unittest.TestCase):
 
         self.assertEqual(body, expected_body)
 
+
+class TestGetPdfCoverPage(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, fake_logger, None, None, None
+        )
+
     def test_get_pdf_cover_page(self):
 
         article_object = articlelib.article()
@@ -614,6 +648,16 @@ class TestPublicationEmail(unittest.TestCase):
         self.assertEqual(
             article_object.pdf_cover_link,
             "https://localhost.org/download-your-cover/00353",
+        )
+
+
+class TestSendEmail(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        activity_module.SLEEP_SECONDS = 0.001
+        activity_module.MAX_EMAILS_PER_SECOND = 1000
+        self.activity = activity_PublicationEmail(
+            settings_mock, fake_logger, None, None, None
         )
 
     @patch.object(activity_PublicationEmail, "send_author_email")
@@ -695,7 +739,10 @@ class TestPublicationEmail(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.logexception,
             (
-                "Sending by SMTP reached smtplib.SMTPDataError, will sleep %s seconds and then try again: %s"
+                (
+                    "Sending by SMTP reached smtplib.SMTPDataError, will sleep "
+                    "%s seconds and then try again: %s"
+                )
                 % (activity_module.SLEEP_SECONDS, str(smtp_exception))
             ),
         )
@@ -703,6 +750,14 @@ class TestPublicationEmail(unittest.TestCase):
             self.activity.logger.loginfo[-1],
             ("Email sending details: result None, tries 3, article %s, email %s, to %s")
             % (doi_id, headers.get("email_type"), author.get("e_mail")),
+        )
+
+
+class TestApproveArticles(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, fake_logger, None, None, None
         )
 
     @patch("provider.lax_provider.article_versions")
@@ -1044,19 +1099,19 @@ class TestS3KeyNamesToClean(unittest.TestCase):
             "expected": ["outbox/1.xml", "outbox/2.xml"],
         },
     )
-    def test_s3_key_names_to_clean(self, test_data):
+    def test_s3_key_names_to_clean(self, test_case_data):
         """get related article from existing list of related articles"""
         s3_key_names = activity_module.s3_key_names_to_clean(
             "outbox/",
-            test_data.get("prepared"),
-            test_data.get("xml_file_to_doi_map"),
-            test_data.get("do_not_remove"),
-            test_data.get("do_remove"),
+            test_case_data.get("prepared"),
+            test_case_data.get("xml_file_to_doi_map"),
+            test_case_data.get("do_not_remove"),
+            test_case_data.get("do_remove"),
         )
         self.assertEqual(
             s3_key_names,
-            test_data.get("expected"),
-            "failed check in {comment}".format(comment=test_data.get("comment")),
+            test_case_data.get("expected"),
+            "failed check in {comment}".format(comment=test_case_data.get("comment")),
         )
 
 
@@ -1102,15 +1157,12 @@ class TestAuthorsFromXML(unittest.TestCase):
             ],
         },
     )
-    def test_authors_from_xml(self, test_data):
+    def test_authors_from_xml(self, test_case_data):
         article_object = articlelib.article()
         full_filename = os.path.join(
-            "tests/files_source/publication_email/outbox", test_data.get("filename")
+            "tests/files_source/publication_email/outbox",
+            test_case_data.get("filename"),
         )
         article_object.parse_article_file(full_filename)
         authors = activity_module.authors_from_xml(article_object)
-        self.assertEqual(authors, test_data.get("expected"))
-
-
-if __name__ == "__main__":
-    unittest.main()
+        self.assertEqual(authors, test_case_data.get("expected"))
