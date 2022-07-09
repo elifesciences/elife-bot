@@ -411,6 +411,60 @@ class TestPublicationEmail(unittest.TestCase):
         )
 
 
+class TestSendEmailsForArticles(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, self.logger, None, None, None
+        )
+        # abbreviated author data for testing
+        self.authors = [
+            {
+                "e_mail": "author13-01@example.com",
+            }
+        ]
+        articles, xml_file_to_doi_map = self.activity.parse_article_xml(
+            ["tests/files_source/publication_email/outbox/elife00013.xml"]
+        )
+        self.articles = articles
+
+    @patch.object(activity_PublicationEmail, "article_authors_by_article_type")
+    def test_send_emails_for_articles_no_recipients(
+        self,
+        fake_article_authors,
+    ):
+        "test if there are no recipients"
+        fake_article_authors.return_value = []
+        # invoke the function
+        self.activity.send_emails_for_articles(self.articles)
+        # assertions
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "Leaving article in the outbox because we cannot find its authors: 10.7554/eLife.00013",
+        )
+
+    @patch.object(activity_PublicationEmail, "send_email")
+    @patch.object(activity_PublicationEmail, "article_authors_by_article_type")
+    def test_send_emails_for_articles_send_email_false(
+        self,
+        fake_article_authors,
+        fake_send_email,
+    ):
+        "test if sending an email to an author returns False"
+        fake_send_email.return_value = False
+        fake_article_authors.return_value = self.authors
+        # invoke the function
+        self.activity.send_emails_for_articles(self.articles)
+        # assertions
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            (
+                "Failed to send email for article 10.7554/eLife.00013 to recipient "
+                "{'e_mail': 'author13-01@example.com'}"
+            ),
+        )
+
+
 @ddt
 class TestProcessArticles(unittest.TestCase):
     def setUp(self):

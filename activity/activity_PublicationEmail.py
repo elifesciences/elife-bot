@@ -347,7 +347,12 @@ class activity_PublicationEmail(Activity):
                         self.settings.ses_bcc_recipient_email,
                     )
                     if result is False:
-                        self.log_cannot_find_authors(article.doi)
+                        log_info = (
+                            "Failed to send email for article %s to recipient %s"
+                            % (article.doi, recipient_author)
+                        )
+                        self.admin_email_content += "\n" + log_info
+                        self.logger.info(log_info)
 
     def article_authors_by_article_type(self, article):
         """get article authors depending on the article type"""
