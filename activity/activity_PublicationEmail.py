@@ -28,6 +28,18 @@ SLEEP_SECONDS = 5
 SENDING_RETRY = 3
 
 
+class EmailRecipientException(RuntimeError):
+    "exception to raise if an email recipient is incomplete"
+
+
+class EmailTemplateException(RuntimeError):
+    "exception to raise if an email template cannot be rendered"
+
+
+class EmailSendException(RuntimeError):
+    "exception to raise if sending an email cannot be completed"
+
+
 class activity_PublicationEmail(Activity):
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
         super(activity_PublicationEmail, self).__init__(
@@ -338,16 +350,22 @@ class activity_PublicationEmail(Activity):
             else:
                 # Good, we can send emails
                 for recipient_author in recipient_authors:
-                    result = self.send_email(
-                        email_type,
-                        article.doi_id,
-                        recipient_author,
-                        article,
-                        authors,
-                        self.settings.ses_bcc_recipient_email,
-                    )
-                    if result is False:
-                        self.log_cannot_find_authors(article.doi)
+                    try:
+                        self.send_email(
+                            email_type,
+                            article.doi_id,
+                            recipient_author,
+                            article,
+                            authors,
+                            self.settings.ses_bcc_recipient_email,
+                        )
+                    except Exception:
+                        log_info = (
+                            "Failed to send email for article %s to recipient %s"
+                            % (article.doi, recipient_author)
+                        )
+                        self.admin_email_content += "\n" + log_info
+                        self.logger.info(log_info)
 
     def article_authors_by_article_type(self, article):
         """get article authors depending on the article type"""
@@ -414,25 +432,27 @@ class activity_PublicationEmail(Activity):
         """
 
         if author is None:
-            return False
+            log_message = "author is None"
+            self.logger.exception(log_message)
+            raise EmailRecipientException(log_message)
         if not author.get("e_mail") or str(author.get("e_mail")).strip() == "":
-            return False
+            log_message = "author has no e_mail"
+            self.logger.exception(log_message)
+            raise EmailRecipientException(log_message)
 
         # First process the headers
         try:
             headers = self.templates.get_email_headers(
                 email_type=email_type, author=author, article=article, format="html"
             )
-        except:
-            headers = None
-
-        if not headers:
-            log_info = (
+        except Exception as exception:
+            log_message = (
                 "Failed to load email headers for: doi_id: %s email_type: %s recipient_email: %s"
                 % (str(elife_id), str(email_type), str(author.get("e_mail")))
             )
-            self.admin_email_content += "\n" + log_info
-            return False
+            self.admin_email_content += "\n" + log_message
+            self.logger.exception(log_message)
+            raise EmailTemplateException(log_message) from exception
 
         try:
             # Now we can actually queue the email to be sent
@@ -461,9 +481,10 @@ class activity_PublicationEmail(Activity):
                 bcc=bcc,
             )
 
-            return True
-        except Exception:
-            self.logger.exception("An error has occurred on send_email method")
+        except Exception as exception:
+            log_message = "An error has occurred on send_email method"
+            self.logger.exception(log_message)
+            raise EmailSendException(log_message) from exception
 
     def send_author_email(
         self,
