@@ -12,7 +12,12 @@ from provider.templates import Templates
 import provider.article as articlelib
 from provider.ejp import EJP
 import activity.activity_PublicationEmail as activity_module
-from activity.activity_PublicationEmail import activity_PublicationEmail
+from activity.activity_PublicationEmail import (
+    activity_PublicationEmail,
+    EmailRecipientException,
+    EmailSendException,
+    EmailTemplateException,
+)
 from tests import test_data
 from tests.classes_mock import FakeSMTPServer
 from tests.activity import helpers, settings_mock
@@ -445,13 +450,13 @@ class TestSendEmailsForArticles(unittest.TestCase):
 
     @patch.object(activity_PublicationEmail, "send_email")
     @patch.object(activity_PublicationEmail, "article_authors_by_article_type")
-    def test_send_emails_for_articles_send_email_false(
+    def test_send_emails_for_articles_send_email_recipient_exception(
         self,
         fake_article_authors,
         fake_send_email,
     ):
-        "test if sending an email to an author returns False"
-        fake_send_email.return_value = False
+        "test if and email recipient raises and exception"
+        fake_send_email.side_effect = EmailRecipientException("An exception")
         fake_article_authors.return_value = self.authors
         # invoke the function
         self.activity.send_emails_for_articles(self.articles)
@@ -462,6 +467,54 @@ class TestSendEmailsForArticles(unittest.TestCase):
                 "Failed to send email for article 10.7554/eLife.00013 to recipient "
                 "{'e_mail': 'author13-01@example.com'}"
             ),
+        )
+
+    @patch.object(Templates, "get_email_headers")
+    @patch.object(activity_PublicationEmail, "article_authors_by_article_type")
+    def test_send_emails_for_articles_send_email_template_exception(
+        self,
+        fake_article_authors,
+        fake_get_email_headers,
+    ):
+        "test if rendering template headers raises an exception"
+        fake_get_email_headers.side_effect = EmailTemplateException("An exception")
+        fake_article_authors.return_value = self.authors
+        # invoke the function
+        self.activity.send_emails_for_articles(self.articles)
+        # assertions
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            (
+                "Failed to send email for article 10.7554/eLife.00013 to recipient "
+                "{'e_mail': 'author13-01@example.com'}"
+            ),
+        )
+
+    @patch.object(activity_PublicationEmail, "send_author_email")
+    @patch.object(Templates, "get_email_headers")
+    @patch.object(activity_PublicationEmail, "article_authors_by_article_type")
+    def test_send_emails_for_articles_send_email_exception(
+        self,
+        fake_article_authors,
+        fake_get_email_headers,
+        fake_send_author_email,
+    ):
+        "test if sending an email raises an exception"
+        fake_send_author_email.side_effect = EmailSendException("An exception")
+        fake_get_email_headers.return_value = True
+        fake_article_authors.return_value = self.authors
+        # invoke the function
+        self.activity.send_emails_for_articles(self.articles)
+        # assertions
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            (
+                "Failed to send email for article 10.7554/eLife.00013 to recipient "
+                "{'e_mail': 'author13-01@example.com'}"
+            ),
+        )
+        self.assertEqual(
+            self.logger.logexception, "An error has occurred on send_email method"
         )
 
 
@@ -726,8 +779,8 @@ class TestSendEmail(unittest.TestCase):
         failed_authors.append({"e_mail": None})
 
         for failed_author in failed_authors:
-            result = self.activity.send_email(None, None, failed_author, None, None)
-            self.assertEqual(result, False)
+            with self.assertRaises(EmailRecipientException) as exception:
+                self.activity.send_email(None, None, failed_author, None, None)
 
     @patch("provider.templates.Templates.get_email_body")
     @patch.object(activity_module.email_provider, "smtp_connect")
