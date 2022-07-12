@@ -154,8 +154,8 @@ class TestBucketAssetFileNameMap(unittest.TestCase):
 
 
 class TestProductionComments(unittest.TestCase):
-    def test_production_comments(self):
-        cleaner_log = (
+    def setUp(self):
+        self.cleaner_log = (
             "2022-03-31 11:11:39,632 INFO elifecleaner:parse:check_multi_page_figure_pdf: "
             "12-08-2021-RA-eLife-73010.zip using pdfimages to check PDF figure file: 12-08-2021-RA-eLife-73010/Figure 1.pdf\n"
             "2022-03-31 11:11:39,705 INFO elifecleaner:parse:check_multi_page_figure_pdf: 12-08-2021-RA-eLife-73010.zip pdfimages found images on pages {1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14} in PDF figure file: 12-08-2021-RA-eLife-73010/Figure 1.pdf\n"
@@ -163,8 +163,25 @@ class TestProductionComments(unittest.TestCase):
             "2022-03-17 11:10:06,722 WARNING elifecleaner:parse:check_missing_files: 20-12-2021-FA-eLife-76559.zip does not contain a file in the manifest: manuscript.tex\n"
             "2022-03-17 11:10:06,722 WARNING elifecleaner:parse:check_extra_files: 20-12-2021-FA-eLife-76559.zip has file not listed in the manifest: 76559 correct version.tex\n"
             "2022-02-22 13:10:15,942 WARNING elifecleaner:parse:check_missing_files_by_name: 22-02-2022-CR-eLife-78088.zip has file missing from expected numeric sequence: Figure 3\n"
+            "2022-02-22 13:10:15,942 WARNING elifecleaner:parse:check_art_file: 22-02-2022-CR-eLife-78088.zip could not find a word or latex article file in the package\n"
             "2022-06-29 13:10:15,942 INFO elifecleaner:transform:transform_xml_funding: 22-02-2022-CR-eLife-78088.zip adding the WELLCOME_FUNDING_STATEMENT to the funding-statement"
         )
+
+    def test_production_comments(self):
+        expected = [
+            'Exeter: "Figure 1.pdf" is a PDF file made up of more than one page. Please check if there are images on numerous pages. If that\'s the case, please add the following author query: "Please provide this figure in a single-page format. If this would render the figure unreadable, please provide this as separate figures or figure supplements."',
+            "20-12-2021-FA-eLife-76559.zip does not contain a file in the manifest: manuscript.tex",
+            "20-12-2021-FA-eLife-76559.zip has file not listed in the manifest: 76559 correct version.tex",
+            "22-02-2022-CR-eLife-78088.zip has file missing from expected numeric sequence: Figure 3",
+            "22-02-2022-CR-eLife-78088.zip could not find a word or latex article file in the package",
+            cleaner.WELLCOME_FUNDING_COMMENTS,
+        ]
+
+        comments = cleaner.production_comments(self.cleaner_log)
+        self.assertEqual(comments, expected)
+
+    def test_production_comments_for_xml(self):
+        "will not include the check_art_file log message in the XML comments returned"
         expected = [
             'Exeter: "Figure 1.pdf" is a PDF file made up of more than one page. Please check if there are images on numerous pages. If that\'s the case, please add the following author query: "Please provide this figure in a single-page format. If this would render the figure unreadable, please provide this as separate figures or figure supplements."',
             "20-12-2021-FA-eLife-76559.zip does not contain a file in the manifest: manuscript.tex",
@@ -173,5 +190,5 @@ class TestProductionComments(unittest.TestCase):
             cleaner.WELLCOME_FUNDING_COMMENTS,
         ]
 
-        comments = cleaner.production_comments(cleaner_log)
+        comments = cleaner.production_comments_for_xml(self.cleaner_log)
         self.assertEqual(comments, expected)

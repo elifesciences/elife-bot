@@ -245,3 +245,14 @@ def production_comments(log_content):
         ):
             comments.append(WELLCOME_FUNDING_COMMENTS)
     return comments
+
+
+def production_comments_for_xml(log_content):
+    "filter the log_content for those to go into the XML production-comments tag"
+    log_messages = utils.unicode_encode(log_content).split("\n") if log_content else []
+    filtered_messages = [
+        line
+        for line in log_messages
+        if "WARNING elifecleaner:parse:check_art_file:" not in line
+    ]
+    return production_comments("\n".join(filtered_messages))
