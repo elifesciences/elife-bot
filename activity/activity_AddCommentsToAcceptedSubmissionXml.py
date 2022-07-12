@@ -61,7 +61,7 @@ class activity_AddCommentsToAcceptedSubmissionXml(Activity):
         )
 
         # generate the production comments to see if there are any
-        comments = cleaner.production_comments(cleaner_log)
+        comments = cleaner.production_comments_for_xml(cleaner_log)
         if not comments:
             self.logger.info(
                 "%s, %s production_comments is %s, activity returning True"
