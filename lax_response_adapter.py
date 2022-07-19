@@ -7,8 +7,8 @@ from provider import process
 from provider import utils
 
 
-identity = log.identity("lax_response_adapter")
-logger = log.logger("lax_response_adapter.log", "INFO", identity)
+IDENTITY = log.identity("lax_response_adapter")
+LOGGER = log.logger("lax_response_adapter.log", "INFO", IDENTITY)
 
 
 class ShortRetryException(RuntimeError):
@@ -71,11 +71,11 @@ class LaxResponseAdapter:
                             QueueUrl=input_queue_url,
                             ReceiptHandle=queue_message.get("ReceiptHandle"),
                         )
-                    except ShortRetryException as e:
+                    except ShortRetryException as exception:
                         self.logger.info(
                             "short retry: %s because of %s",
                             queue_message.get("MessageId"),
-                            e,
+                            exception,
                         )
                         client.change_message_visibility(
                             QueueUrl=input_queue_url,
@@ -162,8 +162,8 @@ class LaxResponseAdapter:
                 self.logger.info("calling workflow PostPerfectPublication")
 
             return workflow_starter_message
-        except Exception as e:
-            self.logger.error("Error parsing Lax message. Message: " + str(e))
+        except Exception as exception:
+            self.logger.error("Error parsing Lax message. Message: " + str(exception))
             raise
 
     @newrelic.agent.background_task(group="lax_response_adapter.py")
@@ -175,5 +175,5 @@ class LaxResponseAdapter:
 if __name__ == "__main__":
     ENV = utils.console_start_env()
     SETTINGS = utils.get_settings(ENV)
-    lax_response_adapter = LaxResponseAdapter(SETTINGS, logger)
+    lax_response_adapter = LaxResponseAdapter(SETTINGS, LOGGER)
     process.monitor_interrupt(lambda flag: lax_response_adapter.listen(flag))
