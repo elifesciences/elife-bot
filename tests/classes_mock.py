@@ -215,3 +215,23 @@ class FakeFTPServer:
             new_dir = os.path.join(self.cwd_dir, folder_name.lstrip("/"))
             os.mkdir(new_dir)
             self.cwd_dir = new_dir
+
+
+class FakeStrictRedis:
+    "class to mock redis.StrictRedis in tests"
+
+    def __init__(self):
+        self._session_hashes = {}
+
+    def expire(self, *args):
+        pass
+
+    def hget(self, session_hash, key):
+        if not self._session_hashes.get(session_hash):
+            return None
+        return self._session_hashes.get(session_hash).get(key)
+
+    def hset(self, session_hash, key, value):
+        if not self._session_hashes.get(session_hash):
+            self._session_hashes[session_hash] = {}
+        self._session_hashes[session_hash][key] = str(value)

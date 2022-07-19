@@ -15,8 +15,7 @@ def get_session(settings, input_data, session_key):
 
 
 class FileSession:
-
-    # TODO : replace with better implementation - e.g. use Redis/Elasticache
+    "not recommended for production, use S3 session ideally, or Redis session"
 
     def __init__(self, settings, input_data, session_key):
 
@@ -27,15 +26,23 @@ class FileSession:
     def store_value(self, key, value):
 
         value = json.dumps(value)
-        f = open(self.settings.workflow_context_path + self.get_full_key(key), "w")
-        f.write(value)
+        with open(
+            self.settings.workflow_context_path + self.get_full_key(key),
+            "w",
+            encoding="utf-8",
+        ) as open_file:
+            open_file.write(value)
 
     def get_value(self, key):
 
         value = None
         try:
-            f = open(self.settings.workflow_context_path + self.get_full_key(key), "r")
-            value = json.loads(f.readline())
+            with open(
+                self.settings.workflow_context_path + self.get_full_key(key),
+                "r",
+                encoding="utf-8",
+            ) as open_file:
+                value = json.loads(open_file.readline())
         except:
             if self.input_data is not None and key in self.input_data:
                 value = self.input_data[key]
@@ -52,21 +59,21 @@ class RedisSession:
         self.input_data = input_data
         self.expire_key = settings.redis_expire_key
         self.session_key = session_key
-        self.r = redis.StrictRedis(
+        self.redis_client = redis.StrictRedis(
             host=settings.redis_host, port=settings.redis_port, db=settings.redis_db
         )
 
     def store_value(self, key, value):
 
         value = json.dumps(value)
-        self.r.hset(self.session_key, key, value)
-        self.r.expire(self.session_key, self.expire_key)
+        self.redis_client.hset(self.session_key, key, value)
+        self.redis_client.expire(self.session_key, self.expire_key)
 
     def get_value(self, key):
 
-        value = self.r.hget(self.session_key, key)
+        value = self.redis_client.hget(self.session_key, key)
         if value is None:
-            if key in self.input_data:
+            if self.input_data is not None and key in self.input_data:
                 value = self.input_data[key]
         else:
             value = json.loads(value)
