@@ -66,7 +66,7 @@ class RedisSession:
 
         value = self.r.hget(self.session_key, key)
         if value is None:
-            if key in self.input_data:
+            if self.input_data is not None and key in self.input_data:
                 value = self.input_data[key]
         else:
             value = json.loads(value)
