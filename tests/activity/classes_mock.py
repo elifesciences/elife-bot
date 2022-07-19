@@ -70,6 +70,9 @@ class FakeSQSClient:
                 if q_message.get("ReceiptHandle") != kwargs.get("ReceiptHandle")
             ]
 
+    def change_message_visibility(self, **kwargs):
+        pass
+
 
 class FakeSQSQueue:
     def __init__(self, directory, messages=None):
