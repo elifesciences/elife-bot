@@ -2,6 +2,7 @@ import unittest
 import json
 from mock import patch
 from testfixtures import TempDirectory
+import lax_response_adapter
 from lax_response_adapter import LaxResponseAdapter, ShortRetryException
 from provider.utils import base64_encode_string, bytes_decode
 from tests import settings_mock, test_data
@@ -206,26 +207,33 @@ class TestLaxResponseAdapter(unittest.TestCase):
         # assertions
         self.assertEqual(self.logger.logerror, "Could not obtain queue, exiting")
 
+
+class TestParseToken(unittest.TestCase):
     def test_parse_token_exception(self):
         "exception will be raised trying utils.base64_decode_string on None"
-        result = self.laxresponseadapter.parse_token(None)
+        result = lax_response_adapter.parse_token(None)
         self.assertEqual(result.get("run"), None)
 
+
+class TestParseMessage(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
     def test_parse_message(self):
-        workflow_starter_message = self.laxresponseadapter.parse_message(
-            FAKE_LAX_MESSAGE
+        workflow_starter_message = lax_response_adapter.parse_message(
+            FAKE_LAX_MESSAGE, self.logger
         )
         self.assertDictEqual(workflow_starter_message, WORKFLOW_MESSAGE_EXPECTED)
 
     def test_parse_message_269(self):
-        workflow_starter_message = self.laxresponseadapter.parse_message(
-            FAKE_LAX_MESSAGE_269
+        workflow_starter_message = lax_response_adapter.parse_message(
+            FAKE_LAX_MESSAGE_269, self.logger
         )
         self.assertDictEqual(workflow_starter_message, WORKFLOW_MESSAGE_EXPECTED_269)
 
     def test_parse_message_silent_ingest(self):
-        workflow_starter_message = self.laxresponseadapter.parse_message(
-            FAKE_SILENT_INGEST_LAX_MESSAGE
+        workflow_starter_message = lax_response_adapter.parse_message(
+            FAKE_SILENT_INGEST_LAX_MESSAGE, self.logger
         )
         self.assertDictEqual(
             workflow_starter_message, WORKFLOW_MESSAGE_EXPECTED_SILENT_INGEST
@@ -259,14 +267,18 @@ class TestLaxResponseAdapter(unittest.TestCase):
                 "run_type": None,
             },
         }
-        workflow_starter_message = self.laxresponseadapter.parse_message(fake_message)
+        workflow_starter_message = lax_response_adapter.parse_message(
+            fake_message, self.logger
+        )
         self.assertDictEqual(workflow_starter_message, expected)
 
-    @patch.object(LaxResponseAdapter, "parse_token")
+    @patch.object(lax_response_adapter, "parse_token")
     def test_parse_message_exception(self, fake_parse_token):
         fake_parse_token.side_effect = Exception("An exception")
         with self.assertRaises(Exception):
-            self.laxresponseadapter.parse_message(FAKE_SILENT_INGEST_LAX_MESSAGE)
+            lax_response_adapter.parse_message(
+                FAKE_SILENT_INGEST_LAX_MESSAGE, self.logger
+            )
         self.assertEqual(
             self.logger.logerror, "Error parsing Lax message. Message: An exception"
         )
