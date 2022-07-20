@@ -8,6 +8,17 @@ import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger
 
 
+class TestActivityInit(unittest.TestCase):
+    "tests instantiating an object"
+
+    def test_activity_init_with_no_settings(self):
+        "test an activity object where some settings are blank"
+        test_settings = object
+        activity_object = Activity(test_settings, None, None, None, None)
+        self.assertEqual(activity_object.domain, None)
+        self.assertEqual(activity_object.task_list, None)
+
+
 class TestActivity(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()

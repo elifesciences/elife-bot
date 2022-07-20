@@ -30,12 +30,12 @@ class Activity(object):
         # SWF Defaults, most are set in derived classes or at runtime
         try:
             self.domain = self.settings.domain
-        except KeyError:
+        except AttributeError:
             self.domain = None
 
         try:
             self.task_list = self.settings.default_task_list
-        except KeyError:
+        except AttributeError:
             self.task_list = None
 
         self.name = None
