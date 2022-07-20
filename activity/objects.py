@@ -3,6 +3,7 @@ import datetime
 import os
 import re
 import dashboard_queue
+import botocore
 from provider import utils
 
 """
@@ -70,7 +71,7 @@ class Activity(object):
             response = self.client.describe_activity_type(
                 domain=self.domain, activityType=activity_type
             )
-        except self.client.exceptions.UnknownResourceFault:
+        except botocore.exceptions.ClientError as exception:
             response = None
 
         return response
