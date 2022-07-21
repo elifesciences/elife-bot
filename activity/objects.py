@@ -11,7 +11,7 @@ Amazon SWF activity base class
 """
 
 
-class Activity(object):
+class Activity:
 
     ACTIVITY_SUCCESS = "ActivitySuccess"
     ACTIVITY_TEMPORARY_FAILURE = "ActivityTemporaryFailure"
@@ -71,7 +71,7 @@ class Activity(object):
             response = self.client.describe_activity_type(
                 domain=self.domain, activityType=activity_type
             )
-        except botocore.exceptions.ClientError as exception:
+        except botocore.exceptions.ClientError:
             response = None
 
         return response
@@ -197,8 +197,8 @@ class Activity(object):
         """
         if self.tmp_dir:
             return self.tmp_dir
-        else:
-            self.make_tmp_dir()
+
+        self.make_tmp_dir()
 
         return self.tmp_dir
 
@@ -247,6 +247,7 @@ class Activity(object):
                 "Exception emitting %s message. Details: %s"
                 % (str(status), str(exception))
             )
+        return None
 
     def message_activity_name(self):
         "the name for the activity to use in emit messages"
