@@ -223,20 +223,6 @@ class Activity(object):
                 raise
         return True
 
-    def open_file_from_tmp_dir(self, filename, mode="r"):
-        """
-        Read the file from the tmp_dir
-        """
-        tmp_dir = self.get_tmp_dir()
-
-        if tmp_dir:
-            full_filename = tmp_dir + os.sep + filename
-        else:
-            full_filename = filename
-
-        f = open(full_filename, mode)
-        return f
-
     def clean_tmp_dir(self):
 
         tmp_dir = self.get_tmp_dir()
