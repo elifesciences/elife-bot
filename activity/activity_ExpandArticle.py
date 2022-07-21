@@ -92,9 +92,6 @@ class activity_ExpandArticle(Activity):
         try:
             # download zip to temp folder
             tmp = self.get_tmp_dir()
-            local_zip_file = self.open_file_from_tmp_dir(
-                filename_last_element, mode="wb"
-            )
             storage_resource_origin = (
                 self.settings.storage_provider
                 + "://"
@@ -102,8 +99,8 @@ class activity_ExpandArticle(Activity):
                 + "/"
                 + info.file_name
             )
-            storage.get_resource_to_file(storage_resource_origin, local_zip_file)
-            local_zip_file.close()
+            with open(os.path.join(tmp, filename_last_element), "wb") as local_zip_file:
+                storage.get_resource_to_file(storage_resource_origin, local_zip_file)
 
             # extract zip contents
             folder_name = path.join(article_version_id, run)

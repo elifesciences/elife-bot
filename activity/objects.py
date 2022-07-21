@@ -2,6 +2,7 @@ import shutil
 import datetime
 import os
 import re
+import botocore
 import dashboard_queue
 from provider import utils
 
@@ -10,7 +11,7 @@ Amazon SWF activity base class
 """
 
 
-class Activity(object):
+class Activity:
 
     ACTIVITY_SUCCESS = "ActivitySuccess"
     ACTIVITY_TEMPORARY_FAILURE = "ActivityTemporaryFailure"
@@ -30,12 +31,12 @@ class Activity(object):
         # SWF Defaults, most are set in derived classes or at runtime
         try:
             self.domain = self.settings.domain
-        except KeyError:
+        except AttributeError:
             self.domain = None
 
         try:
             self.task_list = self.settings.default_task_list
-        except KeyError:
+        except AttributeError:
             self.task_list = None
 
         self.name = None
@@ -70,7 +71,7 @@ class Activity(object):
             response = self.client.describe_activity_type(
                 domain=self.domain, activityType=activity_type
             )
-        except self.client.exceptions.UnknownResourceFault:
+        except botocore.exceptions.ClientError:
             response = None
 
         return response
@@ -196,8 +197,8 @@ class Activity(object):
         """
         if self.tmp_dir:
             return self.tmp_dir
-        else:
-            self.make_tmp_dir()
+
+        self.make_tmp_dir()
 
         return self.tmp_dir
 
@@ -221,20 +222,6 @@ class Activity(object):
                 self.logger.exception(str(exception))
                 raise
         return True
-
-    def open_file_from_tmp_dir(self, filename, mode="r"):
-        """
-        Read the file from the tmp_dir
-        """
-        tmp_dir = self.get_tmp_dir()
-
-        if tmp_dir:
-            full_filename = tmp_dir + os.sep + filename
-        else:
-            full_filename = filename
-
-        f = open(full_filename, mode)
-        return f
 
     def clean_tmp_dir(self):
 
@@ -260,6 +247,7 @@ class Activity(object):
                 "Exception emitting %s message. Details: %s"
                 % (str(status), str(exception))
             )
+        return None
 
     def message_activity_name(self):
         "the name for the activity to use in emit messages"

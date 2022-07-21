@@ -78,7 +78,8 @@ class FakeSWFClient:
         pass
 
     def describe_activity_type(self, domain, activityType):
-        pass
+        "return a partial fake response for when testing"
+        return {"typeInfo": "..."}
 
     def register_activity_type(self, **kwargs):
         pass
