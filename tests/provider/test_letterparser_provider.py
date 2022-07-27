@@ -16,14 +16,18 @@ class TestLetterParserProvider(unittest.TestCase):
         self.file_name = "tests/fixtures/letterparser/sections.docx"
         self.blank_config = {}
 
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
     def test_letterparser_config(self):
-        """test reading the letterparser config file"""
+        "test reading the letterparser config file"
         config = letterparser_provider.letterparser_config(settings_mock)
         self.assertEqual(config.get("docker_image"), "elifesciences/pandoc:2.9.1.1")
 
     def test_parse_file(self):
         """test parsing docx file with pandoc which may be called via Docker"""
         # blank config will use pandoc executable if present, otherwise via Docker image default
+        directory = TempDirectory()
         expected = (
             "<p><bold>Preamble\n"
             "</bold></p>\n"
@@ -34,7 +38,7 @@ class TestLetterParserProvider(unittest.TestCase):
             "<p>Author response ....</p>\n"
         )
 
-        output = letterparser_provider.parse_file(self.file_name, self.blank_config)
+        output = letterparser_provider.parse_file(self.file_name, self.blank_config, directory.path)
         self.assertEqual(
             output, expected, "Docker pandoc output not equal, is Docker running?"
         )

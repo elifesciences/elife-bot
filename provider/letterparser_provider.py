@@ -37,9 +37,9 @@ def letterparser_config(settings):
     )
 
 
-def parse_file(file_name, config):
+def parse_file(file_name, config, temp_dir="tmp"):
     try:
-        return parse.parse_file(file_name, config)
+        return parse.parse_file(file_name, config, temp_dir)
     except docker.errors.APIError:
         LOGGER.info("Error connecting to docker")
         raise
