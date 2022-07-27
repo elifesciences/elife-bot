@@ -4,6 +4,7 @@ import unittest
 import os
 import copy
 from mock import patch, MagicMock
+from testfixtures import TempDirectory
 from digestparser.objects import Digest, Image
 import provider.digest_provider as digest_provider
 from provider.digest_provider import (
@@ -223,15 +224,16 @@ class TestDigestProvider(unittest.TestCase):
 
 
 class TestBuildDigest(unittest.TestCase):
-    def setUp(self):
-        self.temp_dir = os.path.join("tests/tmp")
+    def tearDown(self):
+        TempDirectory.cleanup_all()
 
     def test_digest_unicode(self):
         """test a digest zip with a unicode docx file name"""
+        directory = TempDirectory()
         input_file = os.path.join("tests", "files_source", "DIGEST_35774.zip")
         expected_status = True
         expected_author = "Bayés"
-        build_status, digest = digest_provider.build_digest(input_file, self.temp_dir)
+        build_status, digest = digest_provider.build_digest(input_file, directory.path)
         self.assertEqual(build_status, expected_status)
         self.assertEqual(digest.author, expected_author)
 
