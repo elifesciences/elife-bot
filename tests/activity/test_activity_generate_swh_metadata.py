@@ -37,6 +37,7 @@ class TestGenerateSWHMetadata(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
         helpers.delete_files_in_folder("tests/tmp", filter_out=[".keepme"])
+        self.activity.clean_tmp_dir()
 
     @patch.object(article, "download_article_xml_from_s3")
     @patch.object(activity_module, "get_session")

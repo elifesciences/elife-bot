@@ -17,6 +17,9 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
         fake_logger = FakeLogger()
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
     @patch("provider.lax_provider.article_highest_version")
     @patch("provider.lax_provider.storage_context")
     @patch.object(activity_module, "storage_context")

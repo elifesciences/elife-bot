@@ -15,6 +15,9 @@ class TestAdminEmailHistory(unittest.TestCase):
         fake_logger = FakeLogger()
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
     @patch.object(swfmetalib.SWFMeta, "connect")
     @patch.object(swfmetalib.SWFMeta, "get_closed_workflow_execution_count")
     @patch.object(activity_module.email_provider, "smtp_connect")

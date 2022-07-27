@@ -284,6 +284,9 @@ class TestFtpToEndpoint(unittest.TestCase):
         )
         self.test_data_dir = "tests/test_data/pmc/"
 
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
     @patch.object(activity_module.FTP, "ftp_connect")
     def test_ftp_to_endpoint_connect_exception(self, fake_ftp_connect):
         fake_ftp_connect.side_effect = Exception("An exception")

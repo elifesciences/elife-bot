@@ -3,6 +3,7 @@
 import os
 import glob
 import copy
+import shutil
 import unittest
 from xml.etree.ElementTree import ParseError
 from mock import patch
@@ -47,8 +48,8 @@ class TestValidateAcceptedSubmissionVideos(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
-        # clean the temporary directory
-        self.activity.clean_tmp_dir()
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch("provider.glencoe_check.requests.get")
     @patch.object(activity_module, "get_session")

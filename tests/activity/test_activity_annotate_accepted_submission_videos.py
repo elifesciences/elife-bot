@@ -169,8 +169,8 @@ class TestAnnotateAcceptedSubmissionVideos(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
-        # clean the temporary directory
-        self.activity.clean_tmp_dir()
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
@@ -395,6 +395,8 @@ class TestAnnotateAcceptedSubmissionVideosGlencoeExceptions(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "storage_context")
     @patch.object(glencoe_check, "metadata")
@@ -549,6 +551,8 @@ class TestAnnotateAcceptedSubmissionAnnotateXmlException(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "annotate_xml")
@@ -626,6 +630,8 @@ class TestAnnotateVideosBlankCredentials(unittest.TestCase):
     def tearDown(self):
         # restore settings value
         self.activity.settings.video_url = self.video_url
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "get_session")
     def test_do_activity_annotate_videos_blank_credentials(

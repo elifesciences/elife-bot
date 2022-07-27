@@ -433,6 +433,9 @@ class TestSendEmailsForArticles(unittest.TestCase):
         )
         self.articles = articles
 
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
     @patch.object(activity_PublicationEmail, "article_authors_by_article_type")
     def test_send_emails_for_articles_no_recipients(
         self,
@@ -526,6 +529,9 @@ class TestProcessArticles(unittest.TestCase):
             settings_mock, fake_logger, None, None, None
         )
 
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
     @patch("provider.article.article.download_article_xml_from_s3")
     @patch("provider.lax_provider.article_versions")
     @data(
@@ -592,6 +598,9 @@ class TestChooseEmailType(unittest.TestCase):
             settings_mock, fake_logger, None, None, None
         )
 
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
     @data(
         (
             "article-commentary",
@@ -635,6 +644,9 @@ class TestGetEmailHeaders(unittest.TestCase):
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     def test_template_get_email_headers_00013(self):
 
@@ -685,6 +697,9 @@ class TestGetEmailBody(unittest.TestCase):
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     def test_template_get_email_body_00353(self):
 
@@ -743,6 +758,9 @@ class TestGetPdfCoverPage(unittest.TestCase):
             settings_mock, fake_logger, None, None, None
         )
 
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
     def test_get_pdf_cover_page(self):
 
         article_object = articlelib.article()
@@ -764,6 +782,9 @@ class TestSendEmail(unittest.TestCase):
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     @patch.object(activity_PublicationEmail, "send_author_email")
     def test_send_email_bad_authors(self, fake_send_author_email):
@@ -865,6 +886,9 @@ class TestApproveArticles(unittest.TestCase):
             settings_mock, fake_logger, None, None, None
         )
 
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
     @patch("provider.lax_provider.article_versions")
     def test_removes_articles_based_on_article_type(self, fake_article_versions):
         "test removing articles based on article type"
@@ -918,6 +942,9 @@ class TestArticleAuthors(unittest.TestCase):
                 "email": ["article_csv_author@example.org"],
             }
         ]
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     @patch.object(activity_PublicationEmail, "get_authors")
     def test_article_authors(self, fake_get_authors):
@@ -976,6 +1003,9 @@ class TestChooseRecipientAuthors(unittest.TestCase):
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     @data(
         (
@@ -1087,6 +1117,9 @@ class TestMergeRecipients(unittest.TestCase):
                 ]
             )
         ]
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     def test_merge_recipients_empty(self):
         list_one = None

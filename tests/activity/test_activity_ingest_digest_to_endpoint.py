@@ -552,6 +552,10 @@ class TestIngestDigestToEndpointGenerate(unittest.TestCase):
         self.logger = FakeLogger()
         self.activity = activity_object(settings_mock, self.logger, None, None, None)
 
+    def tearDown(self):
+        # clean the temporary directory
+        self.activity.clean_tmp_dir()
+
     @patch.object(activity_object, "digest_json")
     def test_digest_json_exception(self, fake_digest_json):
         fake_digest_json.side_effect = Exception("Digest content exception")
@@ -584,6 +588,10 @@ class TestIngestDigestToEndpointDigestJson(unittest.TestCase):
     def setUp(self):
         self.logger = FakeLogger()
         self.activity = activity_object(settings_mock, self.logger, None, None, None)
+
+    def tearDown(self):
+        # clean the temporary directory
+        self.activity.clean_tmp_dir()
 
     @patch("activity.activity_IngestDigestToEndpoint.json_output.requests.get")
     @data(
@@ -648,6 +656,10 @@ class TestIngestDigestToEndpointSession(unittest.TestCase):
         self.logger = FakeLogger()
         self.activity = activity_object(settings_mock, self.logger, None, None, None)
 
+    def tearDown(self):
+        # clean the temporary directory
+        self.activity.clean_tmp_dir()
+
     def test_session_data_none_data(self):
         "test no data supplied"
         session_data = self.activity.session_data(None)
@@ -663,6 +675,10 @@ class TestIngestDigestToEndpointEmit(unittest.TestCase):
     def setUp(self):
         self.logger = FakeLogger()
         self.activity = activity_object(settings_mock, self.logger, None, None, None)
+
+    def tearDown(self):
+        # clean the temporary directory
+        self.activity.clean_tmp_dir()
 
     def test_emit_start_message_none_data(self):
         "test missing data run attribute"
@@ -706,6 +722,10 @@ class TestIngestDigestToEndpointPreview(unittest.TestCase):
         self.logger = FakeLogger()
         self.activity = activity_object(settings_mock, self.logger, None, None, None)
 
+    def tearDown(self):
+        # clean the temporary directory
+        self.activity.clean_tmp_dir()
+
     def test_digest_preview_link(self):
         "digest preview url from settings value and article_id"
         article_id = "353"
@@ -719,6 +739,10 @@ class TestIngestDigestToEndpointApprove(unittest.TestCase):
     def setUp(self):
         self.logger = FakeLogger()
         self.activity = activity_object(settings_mock, self.logger, None, None, None)
+
+    def tearDown(self):
+        # clean the temporary directory
+        self.activity.clean_tmp_dir()
 
     @patch.object(digest_provider, "docx_exists_in_s3")
     @patch.object(lax_provider, "article_status_version_map")

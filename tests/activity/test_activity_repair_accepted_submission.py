@@ -3,6 +3,7 @@
 import os
 import sys
 import glob
+import shutil
 import unittest
 from xml.etree.ElementTree import ParseError
 from mock import patch
@@ -32,8 +33,8 @@ class TestRepairAcceptedSubmission(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
-        # clean the temporary directory, including the cleaner.log file
-        helpers.delete_files_in_folder(self.activity.get_tmp_dir())
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")

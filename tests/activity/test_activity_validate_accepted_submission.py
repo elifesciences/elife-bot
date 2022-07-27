@@ -2,6 +2,7 @@
 
 import os
 import glob
+import shutil
 import unittest
 from xml.etree.ElementTree import ParseError
 from mock import patch
@@ -33,8 +34,8 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
-        # clean the temporary directory, including the cleaner.log file
-        helpers.delete_files_in_folder(self.activity.get_tmp_dir())
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
         # reset the session value
         self.session.store_value("cleaner_log", None)
 
