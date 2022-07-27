@@ -1,5 +1,6 @@
 import json
 import importlib
+import os
 import boto3
 import workflow
 import activity
@@ -145,6 +146,10 @@ def start(settings):
 
         # Now register it
         response = activity_object.register()
+
+        # clean up temporary directory
+        activity_object.clean_tmp_dir()
+        os.rmdir(activity_object.get_tmp_dir())
 
         print(("got response: \n%s" % json.dumps(response, sort_keys=True, indent=4)))
 
