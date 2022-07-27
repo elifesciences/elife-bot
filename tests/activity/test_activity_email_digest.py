@@ -238,6 +238,8 @@ class TestEmailDigestFileName(unittest.TestCase):
             digest_content, activity.digest_config
         )
         self.assertEqual(file_name, expected)
+        # clean the temporary directory
+        activity.clean_tmp_dir()
 
     def test_output_file_name_unicode(self):
         "docx output file name with unicode author name"

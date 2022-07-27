@@ -122,6 +122,7 @@ class TestApplyVersionNumber(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
+        self.applyversionnumber.clean_tmp_dir()
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_ApplyVersionNumber, "emit_monitor_event")

@@ -33,6 +33,7 @@ class TestArchiveArticle(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
+        self.activity.clean_tmp_dir()
 
     def zip_assertions(self, zip_file_path, expected_zip_file_name, expected_zip_files):
         zip_file_name = None

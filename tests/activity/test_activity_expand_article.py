@@ -19,7 +19,9 @@ class TestExpandArticle(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
+        helpers.delete_directories_in_folder("tests/tmp")
         helpers.delete_files_in_folder("tests/tmp", filter_out=[".keepme"])
+        self.expandarticle.clean_tmp_dir()
 
     @patch.object(activity_ExpandArticle, "get_tmp_dir")
     @patch("activity.activity_ExpandArticle.get_session")

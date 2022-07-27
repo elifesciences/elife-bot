@@ -33,7 +33,8 @@ class TestPackagePOA(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
-        self.poa.clean_tmp_dir()
+        # clean the temporary directory completely
+        shutil.rmtree(self.poa.get_tmp_dir())
 
     def fake_download_latest_csv(self):
         csv_files = glob.glob(self.test_data_dir + "/*.csv")

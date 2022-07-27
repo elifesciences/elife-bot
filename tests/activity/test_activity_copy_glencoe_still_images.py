@@ -15,6 +15,7 @@ class TestCopyGlencoeStillImages(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
+        self.copyglencoestillimages.clean_tmp_dir()
 
     @patch("provider.article_processing.storage_context")
     @patch("provider.lax_provider.get_xml_file_name")

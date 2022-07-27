@@ -158,6 +158,10 @@ class TestPostDecisionLetterBadSettings(unittest.TestCase):
         )
         self.input_data = input_data("elife-39122.zip")
 
+    def tearDown(self):
+        # clean the temporary directory
+        self.activity.clean_tmp_dir()
+
     @patch.object(activity_module, "get_session")
     def test_do_activity_missing_endpoint(self, mock_session):
         expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE

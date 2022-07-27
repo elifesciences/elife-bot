@@ -3,6 +3,7 @@
 import os
 import glob
 import copy
+import shutil
 import unittest
 from xml.etree import ElementTree
 from xml.etree.ElementTree import ParseError
@@ -48,8 +49,8 @@ class TestAddCommentsToAcceptedSubmissionXml(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
-        # clean the temporary directory
-        self.activity.clean_tmp_dir()
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
@@ -242,6 +243,8 @@ class TestAddXmlException(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "add_comments_to_xml")

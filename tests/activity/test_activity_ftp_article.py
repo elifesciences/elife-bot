@@ -211,6 +211,9 @@ class TestFTPArticleFTPToEndpoint(unittest.TestCase):
         self.uploadfiles = ["zipfile.zip"]
         self.sub_dir_list = ["subfolder", "subsubfolder"]
 
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
     @patch.object(FakeFTP, "ftp_connect")
     @patch("activity.activity_FTPArticle.FTP")
     def test_ftp_connect_exception(self, fake_ftp, fake_ftp_connect):

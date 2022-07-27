@@ -2,6 +2,7 @@
 
 import os
 import unittest
+import shutil
 import zipfile
 from mock import patch
 from testfixtures import TempDirectory
@@ -28,8 +29,8 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
-        # clean the temporary directory, including the cleaner.log file
-        helpers.delete_files_in_folder(self.activity.get_tmp_dir())
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")

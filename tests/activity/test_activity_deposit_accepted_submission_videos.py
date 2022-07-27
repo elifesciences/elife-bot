@@ -85,8 +85,8 @@ class TestDepositAcceptedSubmissionVideos(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
-        # clean the temporary directory
-        self.activity.clean_tmp_dir()
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
@@ -302,6 +302,8 @@ class TestDepositAcceptedSubmissionVideosFtpExceptions(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "storage_context")
     @patch.object(FakeFTP, "ftp_connect")
@@ -440,6 +442,10 @@ class TestDepositVideosDepositVideosNone(unittest.TestCase):
         fake_logger = FakeLogger()
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
+    def tearDown(self):
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
+
     @patch.object(activity_module, "get_session")
     def test_do_activity_deposit_videos_none(
         self,
@@ -472,6 +478,8 @@ class TestDepositVideosNoCredentials(unittest.TestCase):
     def tearDown(self):
         # restore settings value
         self.activity.settings.GLENCOE_FTP_URI = self.glencoe_ftp_uri
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "get_session")
     def test_do_activity_deposit_videos_no_credentials(
@@ -506,6 +514,8 @@ class TestDepositVideosBlankCredentials(unittest.TestCase):
     def tearDown(self):
         # restore settings value
         self.activity.settings.GLENCOE_FTP_URI = self.glencoe_ftp_uri
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
 
     @patch.object(activity_module, "get_session")
     def test_do_activity_deposit_videos_blank_credentials(
