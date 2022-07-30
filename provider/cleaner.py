@@ -244,6 +244,17 @@ def production_comments(log_content):
             in message_content
         ):
             comments.append(WELLCOME_FUNDING_COMMENTS)
+    # add messages related to parse INFO log content
+    parse_info_match_pattern = re.compile(r"INFO elifecleaner:parse:(.*?): (.*)")
+    for message in log_messages:
+        message_parts = parse_info_match_pattern.search(message)
+        if not message_parts:
+            continue
+        message_type = message_parts.group(1)
+        message_content = message_parts.group(2)
+        if message_type == "parse_article_xml":
+            comments.append(message_content)
+
     return comments
 
 
@@ -254,5 +265,6 @@ def production_comments_for_xml(log_content):
         line
         for line in log_messages
         if "WARNING elifecleaner:parse:check_art_file:" not in line
+        and "INFO elifecleaner:parse:parse_article_xml:" not in line
     ]
     return production_comments("\n".join(filtered_messages))

@@ -83,6 +83,32 @@ class TestArticleXmlAsset(unittest.TestCase):
         self.assertEqual(cleaner.article_xml_asset(asset_file_name_map), expected)
 
 
+class TestParseArticleXml(unittest.TestCase):
+    def setUp(self):
+        self.directory = TempDirectory()
+        self.logfile = os.path.join(self.directory.path, "elifecleaner.log")
+        cleaner.log_to_file(self.logfile)
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_parse_article_xml(self):
+        xml_file_path = os.path.join(self.directory.path, "test.xml")
+        with open(xml_file_path, "w") as open_file:
+            open_file.write(
+                "<article><title>To &#x001D;nd odd entities.</title></article>"
+            )
+        cleaner.parse_article_xml(xml_file_path)
+        with open(self.logfile, "r") as open_file:
+            self.assertEqual(
+                open_file.readline(),
+                (
+                    "INFO elifecleaner:parse:parse_article_xml: Replacing character entities "
+                    "in the XML string: ['&#x001D;']\n"
+                ),
+            )
+
+
 class TestFileList(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -164,7 +190,8 @@ class TestProductionComments(unittest.TestCase):
             "2022-03-17 11:10:06,722 WARNING elifecleaner:parse:check_extra_files: 20-12-2021-FA-eLife-76559.zip has file not listed in the manifest: 76559 correct version.tex\n"
             "2022-02-22 13:10:15,942 WARNING elifecleaner:parse:check_missing_files_by_name: 22-02-2022-CR-eLife-78088.zip has file missing from expected numeric sequence: Figure 3\n"
             "2022-02-22 13:10:15,942 WARNING elifecleaner:parse:check_art_file: 22-02-2022-CR-eLife-78088.zip could not find a word or latex article file in the package\n"
-            "2022-06-29 13:10:15,942 INFO elifecleaner:transform:transform_xml_funding: 22-02-2022-CR-eLife-78088.zip adding the WELLCOME_FUNDING_STATEMENT to the funding-statement"
+            "2022-06-29 13:10:15,942 INFO elifecleaner:transform:transform_xml_funding: 22-02-2022-CR-eLife-78088.zip adding the WELLCOME_FUNDING_STATEMENT to the funding-statement\n"
+            "2022-06-29 13:10:15,942 INFO elifecleaner:parse:parse_article_xml: Replacing character entities in the XML string: ['&#x001D;']"
         )
 
     def test_production_comments(self):
@@ -175,6 +202,7 @@ class TestProductionComments(unittest.TestCase):
             "22-02-2022-CR-eLife-78088.zip has file missing from expected numeric sequence: Figure 3",
             "22-02-2022-CR-eLife-78088.zip could not find a word or latex article file in the package",
             cleaner.WELLCOME_FUNDING_COMMENTS,
+            "Replacing character entities in the XML string: ['&#x001D;']",
         ]
 
         comments = cleaner.production_comments(self.cleaner_log)
