@@ -102,8 +102,8 @@ def check_msid(msid):
     # check if rightmost digits match the kitchen_sink_id
     if int(str(msid)[-10:]) == kitchen_sink_id:
         return str(msid)[-10:]
-    if msid > 100000:
-        return pad_msid(msid)[-5:]
+    if msid > 1000000: # 1M, previously 100k
+        return pad_msid(str(msid)[-6:])
     return pad_msid(msid)
 
 
