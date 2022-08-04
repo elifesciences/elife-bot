@@ -4,12 +4,6 @@ import boto3
 import log
 
 
-def StorageContext(*args):
-    logger = log.logger("deprecated.log", "INFO", __name__, loggerName=__name__)
-    logger.warning("provider.storage_provider.StorageContext() is deprecated")
-    return S3StorageContext(args[0])
-
-
 def storage_context(*args):
     return S3StorageContext(*args)
 
