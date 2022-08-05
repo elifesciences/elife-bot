@@ -1,6 +1,7 @@
 import re
 from io import BytesIO
 import boto3
+import botocore
 import log
 
 
@@ -51,7 +52,7 @@ class S3StorageContext:
         client = self.get_client_from_cache()
         try:
             client.head_object(Bucket=bucket_name, Key=s3_key.lstrip("/"))
-        except (client.exceptions.ClientError, client.exceptions.NoSuchKey):
+        except botocore.exceptions.ClientError:
             # if response is 403 or 404, or the key does not exist
             return False
         return True
