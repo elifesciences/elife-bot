@@ -6,9 +6,9 @@ from tests.test_data import glencoe_metadata
 class TestGlencoeCheck(unittest.TestCase):
     def test_check_msid_long_id(self):
         cases = [
-            # the last six digits are extracted
-            ("7777777777777", "777777"),
-            ("7777777701234", "701234"),
+            # the last five digits are extracted
+            ("7777777777777", "77777"),
+            ("7777777001234", "01234"),
 
             # `pad_msid` is called on the substring and leading zeros are truncated to 5 at most.
             ("7000000001234", "01234"),
@@ -26,7 +26,7 @@ class TestGlencoeCheck(unittest.TestCase):
             (123, "00123"),
             (12345, "12345"),
             (123456, "123456"),
-            (111222333, "222333"), # (last six digits extracted)
+            (111222333, "22333"), # (last five digits extracted)
         ]
         for given, expected in cases:
             self.assertEqual(glencoe_check.check_msid(given), expected)
