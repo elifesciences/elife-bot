@@ -5,20 +5,31 @@ from tests.test_data import glencoe_metadata
 
 class TestGlencoeCheck(unittest.TestCase):
     def test_check_msid_long_id(self):
-        result = glencoe_check.check_msid("7777777701234")
-        self.assertEqual("01234", result)
+        cases = [
+            # the last five digits are extracted
+            ("7777777777777", "77777"),
+            ("7777777001234", "01234"),
 
-    def test_check_msid_kitchen_sink(self):
-        result = glencoe_check.check_msid("91234567890")
-        self.assertEqual("1234567890", result)
+            # `pad_msid` is called on the substring and leading zeros are truncated to 5 at most.
+            ("7000000001234", "01234"),
 
-    def test_check_msdi_proper_id(self):
-        result = glencoe_check.check_msid("01234")
-        self.assertEqual("01234", result)
+            # five digit MSIDs are preserved
+            ("01234", "01234"),
 
-    def test_check_msdi_short_id(self):
-        result = glencoe_check.check_msid("34")
-        self.assertEqual("00034", result)
+            # unpadded MSIDs are padded
+            ("34", "00034"),
+
+            # the kitchen sink is a special case
+            ("91234567890", "1234567890"),
+
+            # regular integers are handled
+            (123, "00123"),
+            (12345, "12345"),
+            (123456, "123456"),
+            (111222333, "22333"), # (last five digits extracted)
+        ]
+        for given, expected in cases:
+            self.assertEqual(glencoe_check.check_msid(given), expected)
 
     def test_jpg_href_values(self):
         result = glencoe_check.jpg_href_values(glencoe_metadata)
