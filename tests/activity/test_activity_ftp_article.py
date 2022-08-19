@@ -82,6 +82,16 @@ class TestFTPArticle(unittest.TestCase):
         activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
 
+
+class TestDownloadArchiveZip(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
     @patch.object(activity_module, "storage_context")
     def test_download_archive_zip_from_s3(self, fake_storage_context):
         self.activity.make_activity_directories()
@@ -104,6 +114,17 @@ class TestFTPArticle(unittest.TestCase):
             os.listdir(self.activity.directories.get("TMP_DIR")),
             [zip_file_name],
         )
+
+
+@ddt
+class TestMoveOrPackagePmcZip(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     @data(
         (
@@ -161,6 +182,16 @@ class TestFTPArticle(unittest.TestCase):
             self.assertEqual(
                 sorted(zip_file.namelist()), sorted(expected_zip_file_contents)
             )
+
+
+class TestRepackageArchiveZip(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     def test_repackage_archive_zip_to_pmc_zip(self):
         input_zip_file_path = (
@@ -283,7 +314,3 @@ class TestFileTypeMatches(unittest.TestCase):
     @unpack
     def test_file_type_matches(self, file_types, expected):
         self.assertEqual(activity_module.file_type_matches(file_types), expected)
-
-
-if __name__ == "__main__":
-    unittest.main()
