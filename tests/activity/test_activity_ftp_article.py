@@ -3,7 +3,7 @@ import shutil
 import os
 import zipfile
 import datetime
-from mock import patch, MagicMock
+from mock import patch
 from ddt import ddt, data, unpack
 import activity.activity_FTPArticle as activity_module
 from activity.activity_FTPArticle import activity_FTPArticle
@@ -50,7 +50,7 @@ class TestFTPArticle(unittest.TestCase):
         fake_download_archive_zip_from_s3,
         fake_repackage_pmc_zip,
     ):
-        fake_sftp_to_endpoint = MagicMock()
+        fake_sftp_to_endpoint.return_value = True
         fake_ftp.return_value = FakeFTP()
         fake_download_archive_zip_from_s3.return_value = archive_zip_return_value
         fake_repackage_pmc_zip.return_value = True
@@ -75,9 +75,9 @@ class TestFTPArticle(unittest.TestCase):
         fake_ftp,
         fake_download_files_from_s3,
     ):
-        fake_sftp_to_endpoint = MagicMock()
+        fake_sftp_to_endpoint.return_value = True
         fake_ftp.return_value = FakeFTP()
-        fake_download_files_from_s3 = MagicMock()
+        fake_download_files_from_s3.return_value = True
         # Cause an exception by setting elife_id as non numeric for now
         activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
@@ -168,7 +168,7 @@ class TestMoveOrPackagePmcZip(unittest.TestCase):
         # copy in some sample data
         dest_input_zip_file_path = os.path.join(
             self.activity.directories.get("INPUT_DIR"),
-            input_zip_file_path.split("/")[-1],
+            input_zip_file_path.rsplit("/", 1)[-1],
         )
         shutil.copy(input_zip_file_path, dest_input_zip_file_path)
         # call the activity function
@@ -215,7 +215,7 @@ class TestRepackageArchiveZip(unittest.TestCase):
         ]
         # copy in some sample data
         dest_input_zip_file_path = os.path.join(
-            self.activity.directories.get("TMP_DIR"), input_zip_file_path.split("/")[-1]
+            self.activity.directories.get("TMP_DIR"), input_zip_file_path.rsplit("/", 1)[-1]
         )
         shutil.copy(input_zip_file_path, dest_input_zip_file_path)
         self.activity.repackage_archive_zip_to_pmc_zip(doi_id)
