@@ -3,8 +3,9 @@ import shutil
 import os
 import zipfile
 import datetime
-from mock import patch
+from mock import MagicMock, patch
 from ddt import ddt, data, unpack
+from provider.sftp import SFTP
 import activity.activity_FTPArticle as activity_module
 from activity.activity_FTPArticle import activity_FTPArticle
 from tests.activity.classes_mock import FakeFTP, FakeLogger, FakeStorageContext
@@ -290,6 +291,46 @@ class TestFTPArticleFTPToEndpoint(unittest.TestCase):
             self.activity.logger.logexception,
             "Exception disconnecting from FTP server ftp.example.org: An exception",
         )
+
+
+class TestSFTPToEndpoint(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+        self.activity.SFTP_URI = "ftp.example.org"
+        self.activity.SFTP_USERNAME = ""
+        self.activity.SFTP_PASSWORD = ""
+        self.activity.SFTP_CWD = "folder"
+        self.uploadfiles = ["zipfile.zip"]
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    @patch.object(SFTP, "disconnect")
+    @patch.object(SFTP, "sftp_to_endpoint")
+    @patch.object(SFTP, "sftp_connect")
+    def test_sftp_connect(
+        self, fake_sftp_connect, fake_sftp_to_endpoint, fake_disconnect
+    ):
+        fake_sftp_connect.return_value = MagicMock()
+        fake_sftp_to_endpoint.return_value = True
+        fake_disconnect.return_value = MagicMock()
+        self.activity.sftp_to_endpoint(self.uploadfiles)
+        fake_sftp_connect.assert_called_with(
+            self.activity.SFTP_URI,
+            self.activity.SFTP_USERNAME,
+            self.activity.SFTP_PASSWORD,
+        )
+        fake_disconnect.assert_called_with()
+
+    @patch.object(SFTP, "sftp_to_endpoint")
+    @patch.object(SFTP, "sftp_connect")
+    def test_sftp_to_endpoint(self, fake_sftp_connect, fake_sftp_to_endpoint):
+        fake_sftp_connect.return_value = True
+        fake_sftp_to_endpoint.return_value = MagicMock()
+        self.activity.sftp_to_endpoint(self.uploadfiles)
+        fake_sftp_to_endpoint.assert_called_with(True, ["zipfile.zip"], "folder", None)
 
 
 @ddt
