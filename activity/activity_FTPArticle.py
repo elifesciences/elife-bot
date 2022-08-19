@@ -248,7 +248,7 @@ class activity_FTPArticle(Activity):
         else:
             self.logger.info(
                 "FTPArticle running %s workflow for article %s, failed to package any zip files"
-                % (self.workflow, self.doi_id)
+                % (workflow, doi_id)
             )
 
     def download_archive_zip_from_s3(self, doi_id):

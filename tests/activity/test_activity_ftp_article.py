@@ -93,6 +93,35 @@ class TestFTPArticle(unittest.TestCase):
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
 
 
+class TestDownloadFilesFromS3(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    @patch.object(activity_FTPArticle, "repackage_archive_zip_to_pmc_zip")
+    @patch.object(activity_FTPArticle, "download_archive_zip_from_s3")
+    def test_download_files_from_s3_failure(
+        self, fake_download_archive_zip, fake_repackage_archive_zip
+    ):
+        fake_download_archive_zip.return_value = True
+        fake_repackage_archive_zip.return_value = False
+        doi_id = "353"
+        workflow = "HEFCE"
+        # invoke the method being tested
+        self.activity.download_files_from_s3(doi_id, workflow)
+        self.assertEqual(
+            self.activity.logger.loginfo[-1],
+            (
+                "FTPArticle running %s workflow for article %s, failed to package any zip files"
+            )
+            % (workflow, doi_id),
+        )
+
+
 class TestDownloadArchiveZip(unittest.TestCase):
     def setUp(self):
         self.activity = activity_FTPArticle(
