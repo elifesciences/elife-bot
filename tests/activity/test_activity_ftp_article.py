@@ -60,24 +60,33 @@ class TestFTPArticle(unittest.TestCase):
         self.assertEqual(self.activity.SFTP_URI, expected_sftp_uri)
 
     @patch.object(activity_FTPArticle, "download_files_from_s3")
-    @patch("activity.activity_FTPArticle.FTP")
     @patch.object(activity_FTPArticle, "sftp_to_endpoint")
-    @data(
-        ("HEFCE", "non_numeric_raises_exception", False),
-    )
-    @unpack
     def test_do_activity_failure(
         self,
-        workflow,
-        elife_id,
-        expected_result,
         fake_sftp_to_endpoint,
-        fake_ftp,
         fake_download_files_from_s3,
     ):
         fake_sftp_to_endpoint.return_value = True
-        fake_ftp.return_value = FakeFTP()
         fake_download_files_from_s3.return_value = True
+        workflow = "HEFCE"
+        elife_id = "non_numeric_raises_exception"
+        expected_result = False
+        # Cause an exception by setting elife_id as non numeric for now
+        activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
+        self.assertEqual(self.activity.do_activity(activity_data), expected_result)
+
+    @patch.object(activity_FTPArticle, "download_files_from_s3")
+    @patch.object(activity_FTPArticle, "sftp_to_endpoint")
+    def test_do_activity_exception(
+        self,
+        fake_sftp_to_endpoint,
+        fake_download_files_from_s3,
+    ):
+        fake_sftp_to_endpoint.side_effect = Exception("An exception")
+        fake_download_files_from_s3.return_value = True
+        workflow = "HEFCE"
+        elife_id = "19405"
+        expected_result = False
         # Cause an exception by setting elife_id as non numeric for now
         activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
