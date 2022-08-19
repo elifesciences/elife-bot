@@ -224,7 +224,8 @@ class TestRepackageArchiveZip(unittest.TestCase):
         ]
         # copy in some sample data
         dest_input_zip_file_path = os.path.join(
-            self.activity.directories.get("TMP_DIR"), input_zip_file_path.rsplit("/", 1)[-1]
+            self.activity.directories.get("TMP_DIR"),
+            input_zip_file_path.rsplit("/", 1)[-1],
         )
         shutil.copy(input_zip_file_path, dest_input_zip_file_path)
         self.activity.repackage_archive_zip_to_pmc_zip(doi_id)
