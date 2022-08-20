@@ -154,9 +154,25 @@ class TestDownloadArchiveZip(unittest.TestCase):
             [zip_file_name],
         )
 
+    @patch.object(activity_module, "storage_context")
+    def test_download_archive_zip_from_s3_no_key_found(self, fake_storage_context):
+        self.activity.make_activity_directories()
+        # create mock Key object with name and last_modified value
+        doi_id = "353"
+        resources = []
+        fake_storage_context.return_value = FakeStorageContext(
+            test_activity_data.ExpandArticle_files_source_folder, resources
+        )
+        self.assertEqual(self.activity.download_archive_zip_from_s3(doi_id), False)
+        self.assertEqual(
+            self.activity.logger.loginfo[1],
+            ("For archive zip for status vor, doi id %s, no s3 key name was found")
+            % doi_id,
+        )
+
 
 @ddt
-class TestMoveOrPackagePmcZip(unittest.TestCase):
+class TestMoveOrRepackagePmcZip(unittest.TestCase):
     def setUp(self):
         self.activity = activity_FTPArticle(
             settings_mock, FakeLogger(), None, None, None
@@ -217,6 +233,47 @@ class TestMoveOrPackagePmcZip(unittest.TestCase):
         self.assertTrue(expected_zip_file in os.listdir(ftp_outbox_dir))
         with zipfile.ZipFile(
             os.path.join(ftp_outbox_dir, expected_zip_file)
+        ) as zip_file:
+            self.assertEqual(
+                sorted(zip_file.namelist()), sorted(expected_zip_file_contents)
+            )
+
+
+class TestRepackagePmcZip(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    def test_repackage_pmc_zip(
+        self,
+    ):
+        doi_id = 19405
+        zip_file_list = ["test.pdf", "test.xml", "test-code.pdf"]
+        keep_file_types = ["pdf", "xml"]
+        expected_zip_file = "elife-19405-pdf-xml.zip"
+        expected_zip_file_contents = ["test.pdf", "test.xml"]
+        # create activity directories
+        self.activity.make_activity_directories()
+        # create a sample intput zip file
+        input_zip_file_path = os.path.join(
+            self.activity.directories.get("INPUT_DIR"), "test.zip"
+        )
+        with zipfile.ZipFile(
+            input_zip_file_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True
+        ) as zip_file:
+            for filename in zip_file_list:
+                zip_file.writestr(filename, "")
+
+        # call the activity function
+        self.activity.repackage_pmc_zip(doi_id, keep_file_types)
+        with zipfile.ZipFile(
+            os.path.join(
+                self.activity.directories.get("FTP_TO_SOMEWHERE_DIR"), expected_zip_file
+            )
         ) as zip_file:
             self.assertEqual(
                 sorted(zip_file.namelist()), sorted(expected_zip_file_contents)

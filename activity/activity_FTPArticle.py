@@ -397,12 +397,15 @@ class activity_FTPArticle(Activity):
             for file_type in file_type_matches(keep_file_types):
                 files = glob.glob(to_dir + file_type)
                 for to_dir_file in files:
+                    add_file = True
                     # Ignore some files that are PDF we do not want to include
                     for ignore in ignore_name_fragments:
                         if ignore in to_dir_file:
-                            continue
-                    filename = to_dir_file.split(os.sep)[-1]
-                    new_zipfile.write(to_dir_file, filename)
+                            add_file = False
+                            break
+                    if add_file:
+                        filename = to_dir_file.split(os.sep)[-1]
+                        new_zipfile.write(to_dir_file, filename)
 
         # Move the zip
         shutil.move(
