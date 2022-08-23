@@ -2,6 +2,7 @@ import os
 import copy
 import json
 import importlib
+from botocore.config import Config
 import boto3
 import newrelic.agent
 from provider import process, utils
@@ -24,6 +25,7 @@ def decide(settings, flag, debug=False):
         aws_access_key_id=settings.aws_access_key_id,
         aws_secret_access_key=settings.aws_secret_access_key,
         region_name=settings.swf_region,
+        config=Config(connect_timeout=50, read_timeout=70),
     )
 
     token = None
