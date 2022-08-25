@@ -52,13 +52,14 @@ class activity_FTPArticle(Activity):
         self.FTP_USERNAME = None
         self.FTP_PASSWORD = None
         self.FTP_CWD = None
-        self.FTP_SUBDIR = []
+        self.FTP_SUBDIR_LIST = []
 
         # SFTP settings
         self.SFTP_URI = None
         self.SFTP_USERNAME = None
         self.SFTP_PASSWORD = None
         self.SFTP_CWD = None
+        self.SFTP_SUBDIR = None
 
         # journal
         self.journal = JOURNAL
@@ -111,24 +112,35 @@ class activity_FTPArticle(Activity):
                     % (self.workflow, self.doi_id, zipfiles)
                 )
             if workflow == "HEFCE":
-                # self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR, passive=True)
-                # SFTP now
-                sub_dir = "{:05d}".format(int(elife_id))
-                self.sftp_to_endpoint(zipfiles, sub_dir)
+                self.sftp_to_endpoint(zipfiles, self.SFTP_SUBDIR)
             if workflow == "Cengage":
-                self.ftp_to_endpoint(zipfiles, passive=True)
+                self.ftp_to_endpoint(
+                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
+                )
             if workflow == "WoS":
-                self.ftp_to_endpoint(zipfiles, passive=True)
+                self.ftp_to_endpoint(
+                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
+                )
             if workflow == "GoOA":
-                self.ftp_to_endpoint(zipfiles, passive=True)
+                self.ftp_to_endpoint(
+                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
+                )
             if workflow == "CNPIEC":
-                self.ftp_to_endpoint(zipfiles, passive=True)
+                self.ftp_to_endpoint(
+                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
+                )
             if workflow == "CNKI":
-                self.ftp_to_endpoint(zipfiles, passive=True)
+                self.ftp_to_endpoint(
+                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
+                )
             if workflow == "CLOCKSS":
-                self.ftp_to_endpoint(zipfiles, passive=True)
+                self.ftp_to_endpoint(
+                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
+                )
             if workflow == "OVID":
-                self.ftp_to_endpoint(zipfiles, passive=True)
+                self.ftp_to_endpoint(
+                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
+                )
             if workflow == "Zendy":
                 self.sftp_to_endpoint(zipfiles)
             if workflow == "OASwitchboard":
@@ -166,75 +178,10 @@ class activity_FTPArticle(Activity):
         Set the outgoing FTP server settings based on the
         workflow type specified
         """
-
-        if workflow == "HEFCE":
-            self.FTP_URI = self.settings.HEFCE_FTP_URI
-            self.FTP_USERNAME = self.settings.HEFCE_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.HEFCE_FTP_PASSWORD
-            self.FTP_CWD = self.settings.HEFCE_FTP_CWD
-            # Subfolders to create when FTPing
-            self.FTP_SUBDIR.append(utils.pad_msid(doi_id))
-
-            # SFTP settings
-
-            self.SFTP_URI = self.settings.HEFCE_SFTP_URI
-            self.SFTP_USERNAME = self.settings.HEFCE_SFTP_USERNAME
-            self.SFTP_PASSWORD = self.settings.HEFCE_SFTP_PASSWORD
-            self.SFTP_CWD = self.settings.HEFCE_SFTP_CWD
-
-        if workflow == "Cengage":
-            self.FTP_URI = self.settings.CENGAGE_FTP_URI
-            self.FTP_USERNAME = self.settings.CENGAGE_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.CENGAGE_FTP_PASSWORD
-            self.FTP_CWD = self.settings.CENGAGE_FTP_CWD
-
-        if workflow == "WoS":
-            self.FTP_URI = self.settings.WOS_FTP_URI
-            self.FTP_USERNAME = self.settings.WOS_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.WOS_FTP_PASSWORD
-            self.FTP_CWD = self.settings.WOS_FTP_CWD
-
-        if workflow == "GoOA":
-            self.FTP_URI = self.settings.GOOA_FTP_URI
-            self.FTP_USERNAME = self.settings.GOOA_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.GOOA_FTP_PASSWORD
-            self.FTP_CWD = self.settings.GOOA_FTP_CWD
-
-        if workflow == "CNPIEC":
-            self.FTP_URI = self.settings.CNPIEC_FTP_URI
-            self.FTP_USERNAME = self.settings.CNPIEC_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.CNPIEC_FTP_PASSWORD
-            self.FTP_CWD = self.settings.CNPIEC_FTP_CWD
-
-        if workflow == "CNKI":
-            self.FTP_URI = self.settings.CNKI_FTP_URI
-            self.FTP_USERNAME = self.settings.CNKI_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.CNKI_FTP_PASSWORD
-            self.FTP_CWD = self.settings.CNKI_FTP_CWD
-
-        if workflow == "CLOCKSS":
-            self.FTP_URI = self.settings.CLOCKSS_FTP_URI
-            self.FTP_USERNAME = self.settings.CLOCKSS_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.CLOCKSS_FTP_PASSWORD
-            self.FTP_CWD = self.settings.CLOCKSS_FTP_CWD
-
-        if workflow == "OVID":
-            self.FTP_URI = self.settings.OVID_FTP_URI
-            self.FTP_USERNAME = self.settings.OVID_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.OVID_FTP_PASSWORD
-            self.FTP_CWD = self.settings.OVID_FTP_CWD
-
-        if workflow == "Zendy":
-            self.SFTP_URI = self.settings.ZENDY_SFTP_URI
-            self.SFTP_USERNAME = self.settings.ZENDY_SFTP_USERNAME
-            self.SFTP_PASSWORD = self.settings.ZENDY_SFTP_PASSWORD
-            self.SFTP_CWD = self.settings.ZENDY_SFTP_CWD
-
-        if workflow == "OASwitchboard":
-            self.SFTP_URI = self.settings.OASWITCHBOARD_SFTP_URI
-            self.SFTP_USERNAME = self.settings.OASWITCHBOARD_SFTP_USERNAME
-            self.SFTP_PASSWORD = self.settings.OASWITCHBOARD_SFTP_PASSWORD
-            self.SFTP_CWD = self.settings.OASWITCHBOARD_SFTP_CWD
+        # temporary transitional method to support using class properties as credentials
+        credentials = collect_credentials(self.settings, doi_id, workflow)
+        for key, value in credentials.items():
+            setattr(self, key, value)
 
     def download_files_from_s3(self, doi_id, workflow):
 
@@ -504,3 +451,79 @@ def new_zip_file_name(doi_id, prefix, suffix):
 def file_type_matches(file_types):
     """wildcard file name matches for the file types to include"""
     return ["/*.%s" % file_type for file_type in file_types]
+
+
+def collect_credentials(settings, doi_id, workflow):
+    "Set the FTP and SFTP server settings based on the workflow type and article doi_id"
+
+    credentials = {}
+
+    if workflow == "HEFCE":
+        credentials["FTP_URI"] = settings.HEFCE_FTP_URI
+        credentials["FTP_USERNAME"] = settings.HEFCE_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.HEFCE_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.HEFCE_FTP_CWD
+        credentials["FTP_SUBDIR_LIST"] = [utils.pad_msid(doi_id)]
+
+        # SFTP settings
+        credentials["SFTP_URI"] = settings.HEFCE_SFTP_URI
+        credentials["SFTP_USERNAME"] = settings.HEFCE_SFTP_USERNAME
+        credentials["SFTP_PASSWORD"] = settings.HEFCE_SFTP_PASSWORD
+        credentials["SFTP_CWD"] = settings.HEFCE_SFTP_CWD
+        credentials["SFTP_SUBDIR"] = utils.pad_msid(doi_id)
+
+    if workflow == "Cengage":
+        credentials["FTP_URI"] = settings.CENGAGE_FTP_URI
+        credentials["FTP_USERNAME"] = settings.CENGAGE_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.CENGAGE_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.CENGAGE_FTP_CWD
+
+    if workflow == "WoS":
+        credentials["FTP_URI"] = settings.WOS_FTP_URI
+        credentials["FTP_USERNAME"] = settings.WOS_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.WOS_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.WOS_FTP_CWD
+
+    if workflow == "GoOA":
+        credentials["FTP_URI"] = settings.GOOA_FTP_URI
+        credentials["FTP_USERNAME"] = settings.GOOA_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.GOOA_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.GOOA_FTP_CWD
+
+    if workflow == "CNPIEC":
+        credentials["FTP_URI"] = settings.CNPIEC_FTP_URI
+        credentials["FTP_USERNAME"] = settings.CNPIEC_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.CNPIEC_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.CNPIEC_FTP_CWD
+
+    if workflow == "CNKI":
+        credentials["FTP_URI"] = settings.CNKI_FTP_URI
+        credentials["FTP_USERNAME"] = settings.CNKI_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.CNKI_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.CNKI_FTP_CWD
+
+    if workflow == "CLOCKSS":
+        credentials["FTP_URI"] = settings.CLOCKSS_FTP_URI
+        credentials["FTP_USERNAME"] = settings.CLOCKSS_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.CLOCKSS_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.CLOCKSS_FTP_CWD
+
+    if workflow == "OVID":
+        credentials["FTP_URI"] = settings.OVID_FTP_URI
+        credentials["FTP_USERNAME"] = settings.OVID_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.OVID_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.OVID_FTP_CWD
+
+    if workflow == "Zendy":
+        credentials["SFTP_URI"] = settings.ZENDY_SFTP_URI
+        credentials["SFTP_USERNAME"] = settings.ZENDY_SFTP_USERNAME
+        credentials["SFTP_PASSWORD"] = settings.ZENDY_SFTP_PASSWORD
+        credentials["SFTP_CWD"] = settings.ZENDY_SFTP_CWD
+
+    if workflow == "OASwitchboard":
+        credentials["SFTP_URI"] = settings.OASWITCHBOARD_SFTP_URI
+        credentials["SFTP_USERNAME"] = settings.OASWITCHBOARD_SFTP_USERNAME
+        credentials["SFTP_PASSWORD"] = settings.OASWITCHBOARD_SFTP_PASSWORD
+        credentials["SFTP_CWD"] = settings.OASWITCHBOARD_SFTP_CWD
+
+    return credentials
