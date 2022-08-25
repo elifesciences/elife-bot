@@ -254,6 +254,16 @@ def production_comments(log_content):
         message_content = message_parts.group(2)
         if message_type == "parse_article_xml":
             comments.append(message_content)
+    # add messages related to video duplicate detection and renaming
+    video_info_match_pattern = re.compile(r"INFO elifecleaner:video:(.*?): (.*)")
+    for message in log_messages:
+        message_parts = video_info_match_pattern.search(message)
+        if not message_parts:
+            continue
+        message_type = message_parts.group(1)
+        message_content = message_parts.group(2)
+        if message_type in ["all_terms_map", "renumber", "renumber_term_map"]:
+            comments.append(message_content)
 
     return comments
 
@@ -266,5 +276,6 @@ def production_comments_for_xml(log_content):
         for line in log_messages
         if "WARNING elifecleaner:parse:check_art_file:" not in line
         and "INFO elifecleaner:parse:parse_article_xml:" not in line
+        and "INFO elifecleaner:video:" not in line
     ]
     return production_comments("\n".join(filtered_messages))

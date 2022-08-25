@@ -191,7 +191,10 @@ class TestProductionComments(unittest.TestCase):
             "2022-02-22 13:10:15,942 WARNING elifecleaner:parse:check_missing_files_by_name: 22-02-2022-CR-eLife-78088.zip has file missing from expected numeric sequence: Figure 3\n"
             "2022-02-22 13:10:15,942 WARNING elifecleaner:parse:check_art_file: 22-02-2022-CR-eLife-78088.zip could not find a word or latex article file in the package\n"
             "2022-06-29 13:10:15,942 INFO elifecleaner:transform:transform_xml_funding: 22-02-2022-CR-eLife-78088.zip adding the WELLCOME_FUNDING_STATEMENT to the funding-statement\n"
-            "2022-06-29 13:10:15,942 INFO elifecleaner:parse:parse_article_xml: Replacing character entities in the XML string: ['&#x001D;']"
+            "2022-06-29 13:10:15,942 INFO elifecleaner:parse:parse_article_xml: Replacing character entities in the XML string: ['&#x001D;']\n"
+            "2022-06-29 13:10:15,942 INFO elifecleaner:video:all_terms_map: found duplicate video term values\n"
+            "2022-06-29 13:10:15,942 INFO elifecleaner:video:renumber: duplicate values: ['fig1video2']\n"
+            "2022-06-29 13:10:15,942 INFO elifecleaner:video:renumber_term_map: replacing number 2 with 3 for term Supplementary Video 2.mp4\n"
         )
 
     def test_production_comments(self):
@@ -203,6 +206,9 @@ class TestProductionComments(unittest.TestCase):
             "22-02-2022-CR-eLife-78088.zip could not find a word or latex article file in the package",
             cleaner.WELLCOME_FUNDING_COMMENTS,
             "Replacing character entities in the XML string: ['&#x001D;']",
+            "found duplicate video term values",
+            "duplicate values: ['fig1video2']",
+            "replacing number 2 with 3 for term Supplementary Video 2.mp4",
         ]
 
         comments = cleaner.production_comments(self.cleaner_log)
