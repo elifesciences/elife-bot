@@ -3,12 +3,26 @@ import shutil
 import os
 import zipfile
 import datetime
-from mock import patch, MagicMock
+from mock import MagicMock, patch
 from ddt import ddt, data, unpack
+from provider.sftp import SFTP
 import activity.activity_FTPArticle as activity_module
 from activity.activity_FTPArticle import activity_FTPArticle
 from tests.activity.classes_mock import FakeFTP, FakeLogger, FakeStorageContext
 from tests.activity import settings_mock, test_activity_data
+
+
+class FakeSFTP:
+    "mock the provider.sftp.SFTP class for when testing"
+
+    def sftp_connect(self, *args):
+        return True
+
+    def sftp_to_endpoint(self, *args):
+        return True
+
+    def disconnect(self):
+        return True
 
 
 @ddt
@@ -24,18 +38,19 @@ class TestFTPArticle(unittest.TestCase):
     @patch.object(activity_FTPArticle, "repackage_archive_zip_to_pmc_zip")
     @patch.object(activity_FTPArticle, "download_archive_zip_from_s3")
     @patch("activity.activity_FTPArticle.FTP")
-    @patch.object(activity_FTPArticle, "sftp_to_endpoint")
+    @patch("activity.activity_FTPArticle.SFTP")
     @data(
-        ("HEFCE", True, "hefce_ftp.localhost", "hefce_sftp.localhost", True),
-        ("Cengage", True, "cengage.localhost", None, True),
-        ("GoOA", True, "gooa.localhost", None, True),
-        ("WoS", True, "wos.localhost", None, True),
-        ("CNPIEC", True, "cnpiec.localhost", None, True),
-        ("CNKI", True, "cnki.localhost", None, True),
-        ("CLOCKSS", True, "clockss.localhost", None, True),
-        ("OVID", True, "ovid.localhost", None, True),
-        ("Zendy", True, None, "zendy.localhost", True),
-        ("OASwitchboard", True, None, "oaswitchboard.localhost", True),
+        ("HEFCE", True, "hefce_ftp.localhost", "hefce_sftp.localhost", 1, True),
+        ("Cengage", True, "cengage.localhost", None, 1, True),
+        ("GoOA", True, "gooa.localhost", None, 1, True),
+        ("WoS", True, "wos.localhost", None, 1, True),
+        ("CNPIEC", True, "cnpiec.localhost", None, 1, True),
+        ("CNKI", True, "cnki.localhost", None, 1, True),
+        ("CLOCKSS", True, "clockss.localhost", None, 1, True),
+        ("OVID", True, "ovid.localhost", None, 1, True),
+        ("Zendy", True, None, "zendy.localhost", 1, True),
+        ("OASwitchboard", True, None, "oaswitchboard.localhost", 1, True),
+        ("__unknown__", False, None, None, 0, False),
     )
     @unpack
     def test_do_activity(
@@ -44,13 +59,14 @@ class TestFTPArticle(unittest.TestCase):
         archive_zip_return_value,
         expected_ftp_uri,
         expected_sftp_uri,
+        expected_sending_started_messages,
         expected_result,
-        fake_sftp_to_endpoint,
+        fake_sftp,
         fake_ftp,
         fake_download_archive_zip_from_s3,
         fake_repackage_pmc_zip,
     ):
-        fake_sftp_to_endpoint = MagicMock()
+        fake_sftp.return_value = FakeSFTP()
         fake_ftp.return_value = FakeFTP()
         fake_download_archive_zip_from_s3.return_value = archive_zip_return_value
         fake_repackage_pmc_zip.return_value = True
@@ -58,29 +74,89 @@ class TestFTPArticle(unittest.TestCase):
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
         self.assertEqual(self.activity.FTP_URI, expected_ftp_uri)
         self.assertEqual(self.activity.SFTP_URI, expected_sftp_uri)
+        # check log for started ftp_to_endpoint() or started sftp_to_endpoint()
+        log_sending_started_messages = [
+            message
+            for message in self.activity.logger.loginfo
+            if "started ftp_to_endpoint()" in message
+            or "started sftp_to_endpoint()" in message
+        ]
+        self.assertEqual(
+            len(log_sending_started_messages),
+            expected_sending_started_messages,
+            "info log did not contain started message for workflow %s" % workflow,
+        )
 
     @patch.object(activity_FTPArticle, "download_files_from_s3")
-    @patch("activity.activity_FTPArticle.FTP")
     @patch.object(activity_FTPArticle, "sftp_to_endpoint")
-    @data(
-        ("HEFCE", "non_numeric_raises_exception", False),
-    )
-    @unpack
     def test_do_activity_failure(
         self,
-        workflow,
-        elife_id,
-        expected_result,
         fake_sftp_to_endpoint,
-        fake_ftp,
         fake_download_files_from_s3,
     ):
-        fake_sftp_to_endpoint = MagicMock()
-        fake_ftp.return_value = FakeFTP()
-        fake_download_files_from_s3 = MagicMock()
+        fake_sftp_to_endpoint.return_value = True
+        fake_download_files_from_s3.return_value = True
+        workflow = "HEFCE"
+        elife_id = "non_numeric_raises_exception"
+        expected_result = False
         # Cause an exception by setting elife_id as non numeric for now
         activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
+
+    @patch.object(activity_FTPArticle, "download_files_from_s3")
+    @patch.object(activity_FTPArticle, "sftp_to_endpoint")
+    def test_do_activity_exception(
+        self,
+        fake_sftp_to_endpoint,
+        fake_download_files_from_s3,
+    ):
+        fake_sftp_to_endpoint.side_effect = Exception("An exception")
+        fake_download_files_from_s3.return_value = True
+        workflow = "HEFCE"
+        elife_id = "19405"
+        expected_result = False
+        # Cause an exception by setting elife_id as non numeric for now
+        activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
+        self.assertEqual(self.activity.do_activity(activity_data), expected_result)
+
+
+class TestDownloadFilesFromS3(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    @patch.object(activity_FTPArticle, "repackage_archive_zip_to_pmc_zip")
+    @patch.object(activity_FTPArticle, "download_archive_zip_from_s3")
+    def test_download_files_from_s3_failure(
+        self, fake_download_archive_zip, fake_repackage_archive_zip
+    ):
+        fake_download_archive_zip.return_value = True
+        fake_repackage_archive_zip.return_value = False
+        doi_id = "353"
+        workflow = "HEFCE"
+        # invoke the method being tested
+        self.activity.download_files_from_s3(doi_id, workflow)
+        self.assertEqual(
+            self.activity.logger.loginfo[-1],
+            (
+                "FTPArticle running %s workflow for article %s, failed to package any zip files"
+            )
+            % (workflow, doi_id),
+        )
+
+
+class TestDownloadArchiveZip(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     @patch.object(activity_module, "storage_context")
     def test_download_archive_zip_from_s3(self, fake_storage_context):
@@ -104,6 +180,33 @@ class TestFTPArticle(unittest.TestCase):
             os.listdir(self.activity.directories.get("TMP_DIR")),
             [zip_file_name],
         )
+
+    @patch.object(activity_module, "storage_context")
+    def test_download_archive_zip_from_s3_no_key_found(self, fake_storage_context):
+        self.activity.make_activity_directories()
+        # create mock Key object with name and last_modified value
+        doi_id = "353"
+        resources = []
+        fake_storage_context.return_value = FakeStorageContext(
+            test_activity_data.ExpandArticle_files_source_folder, resources
+        )
+        self.assertEqual(self.activity.download_archive_zip_from_s3(doi_id), False)
+        self.assertEqual(
+            self.activity.logger.loginfo[1],
+            ("For archive zip for status vor, doi id %s, no s3 key name was found")
+            % doi_id,
+        )
+
+
+@ddt
+class TestMoveOrRepackagePmcZip(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     @data(
         (
@@ -147,7 +250,7 @@ class TestFTPArticle(unittest.TestCase):
         # copy in some sample data
         dest_input_zip_file_path = os.path.join(
             self.activity.directories.get("INPUT_DIR"),
-            input_zip_file_path.split("/")[-1],
+            input_zip_file_path.rsplit("/", 1)[-1],
         )
         shutil.copy(input_zip_file_path, dest_input_zip_file_path)
         # call the activity function
@@ -161,6 +264,57 @@ class TestFTPArticle(unittest.TestCase):
             self.assertEqual(
                 sorted(zip_file.namelist()), sorted(expected_zip_file_contents)
             )
+
+
+class TestRepackagePmcZip(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    def test_repackage_pmc_zip(
+        self,
+    ):
+        doi_id = 19405
+        zip_file_list = ["test.pdf", "test.xml", "test-code.pdf"]
+        keep_file_types = ["pdf", "xml"]
+        expected_zip_file = "elife-19405-pdf-xml.zip"
+        expected_zip_file_contents = ["test.pdf", "test.xml"]
+        # create activity directories
+        self.activity.make_activity_directories()
+        # create a sample intput zip file
+        input_zip_file_path = os.path.join(
+            self.activity.directories.get("INPUT_DIR"), "test.zip"
+        )
+        with zipfile.ZipFile(
+            input_zip_file_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True
+        ) as zip_file:
+            for filename in zip_file_list:
+                zip_file.writestr(filename, "")
+
+        # call the activity function
+        self.activity.repackage_pmc_zip(doi_id, keep_file_types)
+        with zipfile.ZipFile(
+            os.path.join(
+                self.activity.directories.get("FTP_TO_SOMEWHERE_DIR"), expected_zip_file
+            )
+        ) as zip_file:
+            self.assertEqual(
+                sorted(zip_file.namelist()), sorted(expected_zip_file_contents)
+            )
+
+
+class TestRepackageArchiveZip(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     def test_repackage_archive_zip_to_pmc_zip(self):
         input_zip_file_path = (
@@ -184,7 +338,8 @@ class TestFTPArticle(unittest.TestCase):
         ]
         # copy in some sample data
         dest_input_zip_file_path = os.path.join(
-            self.activity.directories.get("TMP_DIR"), input_zip_file_path.split("/")[-1]
+            self.activity.directories.get("TMP_DIR"),
+            input_zip_file_path.rsplit("/", 1)[-1],
         )
         shutil.copy(input_zip_file_path, dest_input_zip_file_path)
         self.activity.repackage_archive_zip_to_pmc_zip(doi_id)
@@ -251,6 +406,46 @@ class TestFTPArticleFTPToEndpoint(unittest.TestCase):
         )
 
 
+class TestSFTPToEndpoint(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+        self.activity.SFTP_URI = "ftp.example.org"
+        self.activity.SFTP_USERNAME = ""
+        self.activity.SFTP_PASSWORD = ""
+        self.activity.SFTP_CWD = "folder"
+        self.uploadfiles = ["zipfile.zip"]
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    @patch.object(SFTP, "disconnect")
+    @patch.object(SFTP, "sftp_to_endpoint")
+    @patch.object(SFTP, "sftp_connect")
+    def test_sftp_connect(
+        self, fake_sftp_connect, fake_sftp_to_endpoint, fake_disconnect
+    ):
+        fake_sftp_connect.return_value = MagicMock()
+        fake_sftp_to_endpoint.return_value = True
+        fake_disconnect.return_value = MagicMock()
+        self.activity.sftp_to_endpoint(self.uploadfiles)
+        fake_sftp_connect.assert_called_with(
+            self.activity.SFTP_URI,
+            self.activity.SFTP_USERNAME,
+            self.activity.SFTP_PASSWORD,
+        )
+        fake_disconnect.assert_called_with()
+
+    @patch.object(SFTP, "sftp_to_endpoint")
+    @patch.object(SFTP, "sftp_connect")
+    def test_sftp_to_endpoint(self, fake_sftp_connect, fake_sftp_to_endpoint):
+        fake_sftp_connect.return_value = True
+        fake_sftp_to_endpoint.return_value = MagicMock()
+        self.activity.sftp_to_endpoint(self.uploadfiles)
+        fake_sftp_to_endpoint.assert_called_with(True, ["zipfile.zip"], "folder", None)
+
+
 @ddt
 class TestZipFileSuffix(unittest.TestCase):
     @data(
@@ -283,7 +478,3 @@ class TestFileTypeMatches(unittest.TestCase):
     @unpack
     def test_file_type_matches(self, file_types, expected):
         self.assertEqual(activity_module.file_type_matches(file_types), expected)
-
-
-if __name__ == "__main__":
-    unittest.main()

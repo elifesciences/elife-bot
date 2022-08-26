@@ -7,7 +7,7 @@ import re
 from elifetools import parseJATS as parser
 from provider import article_processing, utils
 from provider.storage_provider import storage_context
-import provider.sftp as sftplib
+from provider.sftp import SFTP
 from provider.ftp import FTP
 from activity.objects import Activity
 
@@ -52,13 +52,14 @@ class activity_FTPArticle(Activity):
         self.FTP_USERNAME = None
         self.FTP_PASSWORD = None
         self.FTP_CWD = None
-        self.FTP_SUBDIR = []
+        self.FTP_SUBDIR_LIST = []
 
         # SFTP settings
         self.SFTP_URI = None
         self.SFTP_USERNAME = None
         self.SFTP_PASSWORD = None
         self.SFTP_CWD = None
+        self.SFTP_SUBDIR = None
 
         # journal
         self.journal = JOURNAL
@@ -87,7 +88,7 @@ class activity_FTPArticle(Activity):
         # Download the S3 objects
         self.download_files_from_s3(elife_id, workflow)
 
-        # Set FTP settings
+        # Set FTP or SFTP settings
         try:
             self.set_ftp_settings(elife_id, workflow)
         except:
@@ -100,45 +101,44 @@ class activity_FTPArticle(Activity):
             self.clean_tmp_dir()
             return False
 
-        # FTP to endpoint
+        # send files to endpoint
         try:
-            zipfiles = glob.glob(
+            uploadfiles = glob.glob(
                 self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.zip"
             )
             if self.logger:
                 self.logger.info(
                     "FTPArticle running %s workflow for article %s, attempting to send files: %s"
-                    % (self.workflow, self.doi_id, zipfiles)
+                    % (self.workflow, self.doi_id, uploadfiles)
                 )
-            if workflow == "HEFCE":
-                # self.ftp_to_endpoint(zipfiles, self.FTP_SUBDIR, passive=True)
-                # SFTP now
-                sub_dir = "{:05d}".format(int(elife_id))
-                self.sftp_to_endpoint(zipfiles, sub_dir)
-            if workflow == "Cengage":
-                self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == "WoS":
-                self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == "GoOA":
-                self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == "CNPIEC":
-                self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == "CNKI":
-                self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == "CLOCKSS":
-                self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == "OVID":
-                self.ftp_to_endpoint(zipfiles, passive=True)
-            if workflow == "Zendy":
-                self.sftp_to_endpoint(zipfiles)
-            if workflow == "OASwitchboard":
-                # send XML files only, unzipped
-                with zipfile.ZipFile(zipfiles[0], "r") as open_zip:
+
+            details = sending_details(workflow)
+
+            if details.get("send_unzipped_files"):
+                # send the contents of the zip file unzipped
+                first_zip_file = uploadfiles[0]
+                with zipfile.ZipFile(first_zip_file, "r") as open_zip:
                     open_zip.extractall(self.directories.get("FTP_TO_SOMEWHERE_DIR"))
-                uploadfiles = glob.glob(
-                    self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.xml"
+                uploadfiles = [
+                    path
+                    for path in glob.glob(
+                        self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*"
+                    )
+                    if path != first_zip_file
+                ]
+
+            # send by ftp or sftp
+            if details.get("send_by_protocol") == "ftp":
+                self.ftp_to_endpoint(
+                    uploadfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
                 )
-                self.sftp_to_endpoint(uploadfiles)
+            elif details.get("send_by_protocol") == "sftp":
+                self.sftp_to_endpoint(uploadfiles, self.SFTP_SUBDIR)
+            else:
+                # undefined protocol
+                raise Exception(
+                    "send_by_protocol was %s" % details.get("send_by_protocol")
+                )
 
         except:
             # Something went wrong, fail
@@ -155,7 +155,7 @@ class activity_FTPArticle(Activity):
         if self.logger:
             self.logger.info(
                 "FTPArticle running %s workflow for article %s, finished sending files: %s"
-                % (self.workflow, self.doi_id, zipfiles)
+                % (self.workflow, self.doi_id, uploadfiles)
             )
         result = True
         self.clean_tmp_dir()
@@ -166,80 +166,16 @@ class activity_FTPArticle(Activity):
         Set the outgoing FTP server settings based on the
         workflow type specified
         """
-
-        if workflow == "HEFCE":
-            self.FTP_URI = self.settings.HEFCE_FTP_URI
-            self.FTP_USERNAME = self.settings.HEFCE_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.HEFCE_FTP_PASSWORD
-            self.FTP_CWD = self.settings.HEFCE_FTP_CWD
-            # Subfolders to create when FTPing
-            self.FTP_SUBDIR.append(utils.pad_msid(doi_id))
-
-            # SFTP settings
-
-            self.SFTP_URI = self.settings.HEFCE_SFTP_URI
-            self.SFTP_USERNAME = self.settings.HEFCE_SFTP_USERNAME
-            self.SFTP_PASSWORD = self.settings.HEFCE_SFTP_PASSWORD
-            self.SFTP_CWD = self.settings.HEFCE_SFTP_CWD
-
-        if workflow == "Cengage":
-            self.FTP_URI = self.settings.CENGAGE_FTP_URI
-            self.FTP_USERNAME = self.settings.CENGAGE_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.CENGAGE_FTP_PASSWORD
-            self.FTP_CWD = self.settings.CENGAGE_FTP_CWD
-
-        if workflow == "WoS":
-            self.FTP_URI = self.settings.WOS_FTP_URI
-            self.FTP_USERNAME = self.settings.WOS_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.WOS_FTP_PASSWORD
-            self.FTP_CWD = self.settings.WOS_FTP_CWD
-
-        if workflow == "GoOA":
-            self.FTP_URI = self.settings.GOOA_FTP_URI
-            self.FTP_USERNAME = self.settings.GOOA_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.GOOA_FTP_PASSWORD
-            self.FTP_CWD = self.settings.GOOA_FTP_CWD
-
-        if workflow == "CNPIEC":
-            self.FTP_URI = self.settings.CNPIEC_FTP_URI
-            self.FTP_USERNAME = self.settings.CNPIEC_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.CNPIEC_FTP_PASSWORD
-            self.FTP_CWD = self.settings.CNPIEC_FTP_CWD
-
-        if workflow == "CNKI":
-            self.FTP_URI = self.settings.CNKI_FTP_URI
-            self.FTP_USERNAME = self.settings.CNKI_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.CNKI_FTP_PASSWORD
-            self.FTP_CWD = self.settings.CNKI_FTP_CWD
-
-        if workflow == "CLOCKSS":
-            self.FTP_URI = self.settings.CLOCKSS_FTP_URI
-            self.FTP_USERNAME = self.settings.CLOCKSS_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.CLOCKSS_FTP_PASSWORD
-            self.FTP_CWD = self.settings.CLOCKSS_FTP_CWD
-
-        if workflow == "OVID":
-            self.FTP_URI = self.settings.OVID_FTP_URI
-            self.FTP_USERNAME = self.settings.OVID_FTP_USERNAME
-            self.FTP_PASSWORD = self.settings.OVID_FTP_PASSWORD
-            self.FTP_CWD = self.settings.OVID_FTP_CWD
-
-        if workflow == "Zendy":
-            self.SFTP_URI = self.settings.ZENDY_SFTP_URI
-            self.SFTP_USERNAME = self.settings.ZENDY_SFTP_USERNAME
-            self.SFTP_PASSWORD = self.settings.ZENDY_SFTP_PASSWORD
-            self.SFTP_CWD = self.settings.ZENDY_SFTP_CWD
-
-        if workflow == "OASwitchboard":
-            self.SFTP_URI = self.settings.OASWITCHBOARD_SFTP_URI
-            self.SFTP_USERNAME = self.settings.OASWITCHBOARD_SFTP_USERNAME
-            self.SFTP_PASSWORD = self.settings.OASWITCHBOARD_SFTP_PASSWORD
-            self.SFTP_CWD = self.settings.OASWITCHBOARD_SFTP_CWD
+        # temporary transitional method to support using class properties as credentials
+        credentials = collect_credentials(self.settings, doi_id, workflow)
+        for key, value in credentials.items():
+            setattr(self, key, value)
 
     def download_files_from_s3(self, doi_id, workflow):
 
         # download and convert the archive zip
         archive_zip_downloaded = self.download_archive_zip_from_s3(doi_id)
+        archive_zip_repackaged = None
         if archive_zip_downloaded:
             archive_zip_repackaged = self.repackage_archive_zip_to_pmc_zip(doi_id)
 
@@ -248,7 +184,7 @@ class activity_FTPArticle(Activity):
         else:
             self.logger.info(
                 "FTPArticle running %s workflow for article %s, failed to package any zip files"
-                % (self.workflow, self.doi_id)
+                % (workflow, doi_id)
             )
 
     def download_archive_zip_from_s3(self, doi_id):
@@ -397,12 +333,15 @@ class activity_FTPArticle(Activity):
             for file_type in file_type_matches(keep_file_types):
                 files = glob.glob(to_dir + file_type)
                 for to_dir_file in files:
+                    add_file = True
                     # Ignore some files that are PDF we do not want to include
                     for ignore in ignore_name_fragments:
                         if ignore in to_dir_file:
-                            continue
-                    filename = to_dir_file.split(os.sep)[-1]
-                    new_zipfile.write(to_dir_file, filename)
+                            add_file = False
+                            break
+                    if add_file:
+                        filename = to_dir_file.split(os.sep)[-1]
+                        new_zipfile.write(to_dir_file, filename)
 
         # Move the zip
         shutil.move(
@@ -424,6 +363,7 @@ class activity_FTPArticle(Activity):
 
     def ftp_to_endpoint(self, uploadfiles, sub_dir_list=None, passive=True):
         "FTP files to endpoint"
+        self.logger.info("%s started ftp_to_endpoint()" % self.name)
         try:
             ftp_provider = FTP(self.logger)
             ftp_instance = ftp_provider.ftp_connect(
@@ -473,12 +413,14 @@ class activity_FTPArticle(Activity):
                 % (self.FTP_URI, exception)
             )
             raise
+        self.logger.info("%s finished ftp_to_endpoint()" % self.name)
 
     def sftp_to_endpoint(self, uploadfiles, sub_dir=None):
         """
         Using the sftp provider module, connect to sftp server and transmit files
         """
-        sftp = sftplib.SFTP(logger=self.logger)
+        self.logger.info("%s started sftp_to_endpoint()" % self.name)
+        sftp = SFTP(logger=self.logger)
         sftp_client = sftp.sftp_connect(
             self.SFTP_URI, self.SFTP_USERNAME, self.SFTP_PASSWORD
         )
@@ -487,6 +429,7 @@ class activity_FTPArticle(Activity):
             sftp.sftp_to_endpoint(sftp_client, uploadfiles, self.SFTP_CWD, sub_dir)
 
         sftp.disconnect()
+        self.logger.info("%s finished sftp_to_endpoint()" % self.name)
 
 
 def zip_file_suffix(file_types):
@@ -501,3 +444,112 @@ def new_zip_file_name(doi_id, prefix, suffix):
 def file_type_matches(file_types):
     """wildcard file name matches for the file types to include"""
     return ["/*.%s" % file_type for file_type in file_types]
+
+
+def collect_credentials(settings, doi_id, workflow):
+    "Set the FTP and SFTP server settings based on the workflow type and article doi_id"
+
+    credentials = {}
+
+    if workflow == "HEFCE":
+        credentials["FTP_URI"] = settings.HEFCE_FTP_URI
+        credentials["FTP_USERNAME"] = settings.HEFCE_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.HEFCE_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.HEFCE_FTP_CWD
+        credentials["FTP_SUBDIR_LIST"] = [utils.pad_msid(doi_id)]
+
+        # SFTP settings
+        credentials["SFTP_URI"] = settings.HEFCE_SFTP_URI
+        credentials["SFTP_USERNAME"] = settings.HEFCE_SFTP_USERNAME
+        credentials["SFTP_PASSWORD"] = settings.HEFCE_SFTP_PASSWORD
+        credentials["SFTP_CWD"] = settings.HEFCE_SFTP_CWD
+        credentials["SFTP_SUBDIR"] = utils.pad_msid(doi_id)
+
+    if workflow == "Cengage":
+        credentials["FTP_URI"] = settings.CENGAGE_FTP_URI
+        credentials["FTP_USERNAME"] = settings.CENGAGE_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.CENGAGE_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.CENGAGE_FTP_CWD
+
+    if workflow == "WoS":
+        credentials["FTP_URI"] = settings.WOS_FTP_URI
+        credentials["FTP_USERNAME"] = settings.WOS_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.WOS_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.WOS_FTP_CWD
+
+    if workflow == "GoOA":
+        credentials["FTP_URI"] = settings.GOOA_FTP_URI
+        credentials["FTP_USERNAME"] = settings.GOOA_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.GOOA_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.GOOA_FTP_CWD
+
+    if workflow == "CNPIEC":
+        credentials["FTP_URI"] = settings.CNPIEC_FTP_URI
+        credentials["FTP_USERNAME"] = settings.CNPIEC_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.CNPIEC_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.CNPIEC_FTP_CWD
+
+    if workflow == "CNKI":
+        credentials["FTP_URI"] = settings.CNKI_FTP_URI
+        credentials["FTP_USERNAME"] = settings.CNKI_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.CNKI_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.CNKI_FTP_CWD
+
+    if workflow == "CLOCKSS":
+        credentials["FTP_URI"] = settings.CLOCKSS_FTP_URI
+        credentials["FTP_USERNAME"] = settings.CLOCKSS_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.CLOCKSS_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.CLOCKSS_FTP_CWD
+
+    if workflow == "OVID":
+        credentials["FTP_URI"] = settings.OVID_FTP_URI
+        credentials["FTP_USERNAME"] = settings.OVID_FTP_USERNAME
+        credentials["FTP_PASSWORD"] = settings.OVID_FTP_PASSWORD
+        credentials["FTP_CWD"] = settings.OVID_FTP_CWD
+
+    if workflow == "Zendy":
+        credentials["SFTP_URI"] = settings.ZENDY_SFTP_URI
+        credentials["SFTP_USERNAME"] = settings.ZENDY_SFTP_USERNAME
+        credentials["SFTP_PASSWORD"] = settings.ZENDY_SFTP_PASSWORD
+        credentials["SFTP_CWD"] = settings.ZENDY_SFTP_CWD
+
+    if workflow == "OASwitchboard":
+        credentials["SFTP_URI"] = settings.OASWITCHBOARD_SFTP_URI
+        credentials["SFTP_USERNAME"] = settings.OASWITCHBOARD_SFTP_USERNAME
+        credentials["SFTP_PASSWORD"] = settings.OASWITCHBOARD_SFTP_PASSWORD
+        credentials["SFTP_CWD"] = settings.OASWITCHBOARD_SFTP_CWD
+
+    return credentials
+
+
+def sending_details(workflow):
+    "set the details for which files to send by which protocol for each workflow type"
+
+    details = {}
+
+    # default to sending zipped files
+    details["send_unzipped_files"] = False
+
+    if workflow == "HEFCE":
+        details["send_by_protocol"] = "sftp"
+    if workflow == "Cengage":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "WoS":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "GoOA":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "CNPIEC":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "CNKI":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "CLOCKSS":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "OVID":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "Zendy":
+        details["send_by_protocol"] = "sftp"
+    if workflow == "OASwitchboard":
+        details["send_unzipped_files"] = True
+        details["send_by_protocol"] = "sftp"
+
+    return details
