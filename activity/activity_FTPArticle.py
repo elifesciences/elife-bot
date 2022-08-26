@@ -7,7 +7,7 @@ import re
 from elifetools import parseJATS as parser
 from provider import article_processing, utils
 from provider.storage_provider import storage_context
-import provider.sftp as sftplib
+from provider.sftp import SFTP
 from provider.ftp import FTP
 from activity.objects import Activity
 
@@ -374,6 +374,7 @@ class activity_FTPArticle(Activity):
 
     def ftp_to_endpoint(self, uploadfiles, sub_dir_list=None, passive=True):
         "FTP files to endpoint"
+        self.logger.info("%s started ftp_to_endpoint()" % self.name)
         try:
             ftp_provider = FTP(self.logger)
             ftp_instance = ftp_provider.ftp_connect(
@@ -423,12 +424,14 @@ class activity_FTPArticle(Activity):
                 % (self.FTP_URI, exception)
             )
             raise
+        self.logger.info("%s finished ftp_to_endpoint()" % self.name)
 
     def sftp_to_endpoint(self, uploadfiles, sub_dir=None):
         """
         Using the sftp provider module, connect to sftp server and transmit files
         """
-        sftp = sftplib.SFTP(logger=self.logger)
+        self.logger.info("%s started sftp_to_endpoint()" % self.name)
+        sftp = SFTP(logger=self.logger)
         sftp_client = sftp.sftp_connect(
             self.SFTP_URI, self.SFTP_USERNAME, self.SFTP_PASSWORD
         )
@@ -437,6 +440,7 @@ class activity_FTPArticle(Activity):
             sftp.sftp_to_endpoint(sftp_client, uploadfiles, self.SFTP_CWD, sub_dir)
 
         sftp.disconnect()
+        self.logger.info("%s finished sftp_to_endpoint()" % self.name)
 
 
 def zip_file_suffix(file_types):

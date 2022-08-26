@@ -12,6 +12,19 @@ from tests.activity.classes_mock import FakeFTP, FakeLogger, FakeStorageContext
 from tests.activity import settings_mock, test_activity_data
 
 
+class FakeSFTP:
+    "mock the provider.sftp.SFTP class for when testing"
+
+    def sftp_connect(self, *args):
+        return True
+
+    def sftp_to_endpoint(self, *args):
+        return True
+
+    def disconnect(self):
+        return True
+
+
 @ddt
 class TestFTPArticle(unittest.TestCase):
     def setUp(self):
@@ -25,7 +38,7 @@ class TestFTPArticle(unittest.TestCase):
     @patch.object(activity_FTPArticle, "repackage_archive_zip_to_pmc_zip")
     @patch.object(activity_FTPArticle, "download_archive_zip_from_s3")
     @patch("activity.activity_FTPArticle.FTP")
-    @patch.object(activity_FTPArticle, "sftp_to_endpoint")
+    @patch("activity.activity_FTPArticle.SFTP")
     @data(
         ("HEFCE", True, "hefce_ftp.localhost", "hefce_sftp.localhost", True),
         ("Cengage", True, "cengage.localhost", None, True),
@@ -46,12 +59,12 @@ class TestFTPArticle(unittest.TestCase):
         expected_ftp_uri,
         expected_sftp_uri,
         expected_result,
-        fake_sftp_to_endpoint,
+        fake_sftp,
         fake_ftp,
         fake_download_archive_zip_from_s3,
         fake_repackage_pmc_zip,
     ):
-        fake_sftp_to_endpoint.return_value = True
+        fake_sftp.return_value = FakeSFTP()
         fake_ftp.return_value = FakeFTP()
         fake_download_archive_zip_from_s3.return_value = archive_zip_return_value
         fake_repackage_pmc_zip.return_value = True
@@ -59,6 +72,18 @@ class TestFTPArticle(unittest.TestCase):
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
         self.assertEqual(self.activity.FTP_URI, expected_ftp_uri)
         self.assertEqual(self.activity.SFTP_URI, expected_sftp_uri)
+        # check log for started ftp_to_endpoint() or started sftp_to_endpoint()
+        log_sending_started_messages = [
+            message
+            for message in self.activity.logger.loginfo
+            if "started ftp_to_endpoint()" in message
+            or "started sftp_to_endpoint()" in message
+        ]
+        self.assertEqual(
+            len(log_sending_started_messages),
+            1,
+            "info log did not contain started message for workflow %s" % workflow,
+        )
 
     @patch.object(activity_FTPArticle, "download_files_from_s3")
     @patch.object(activity_FTPArticle, "sftp_to_endpoint")
