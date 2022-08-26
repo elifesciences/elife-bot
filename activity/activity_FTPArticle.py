@@ -88,7 +88,7 @@ class activity_FTPArticle(Activity):
         # Download the S3 objects
         self.download_files_from_s3(elife_id, workflow)
 
-        # Set FTP settings
+        # Set FTP or SFTP settings
         try:
             self.set_ftp_settings(elife_id, workflow)
         except:
@@ -101,56 +101,44 @@ class activity_FTPArticle(Activity):
             self.clean_tmp_dir()
             return False
 
-        # FTP to endpoint
+        # send files to endpoint
         try:
-            zipfiles = glob.glob(
+            uploadfiles = glob.glob(
                 self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.zip"
             )
             if self.logger:
                 self.logger.info(
                     "FTPArticle running %s workflow for article %s, attempting to send files: %s"
-                    % (self.workflow, self.doi_id, zipfiles)
+                    % (self.workflow, self.doi_id, uploadfiles)
                 )
-            if workflow == "HEFCE":
-                self.sftp_to_endpoint(zipfiles, self.SFTP_SUBDIR)
-            if workflow == "Cengage":
-                self.ftp_to_endpoint(
-                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
-                )
-            if workflow == "WoS":
-                self.ftp_to_endpoint(
-                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
-                )
-            if workflow == "GoOA":
-                self.ftp_to_endpoint(
-                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
-                )
-            if workflow == "CNPIEC":
-                self.ftp_to_endpoint(
-                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
-                )
-            if workflow == "CNKI":
-                self.ftp_to_endpoint(
-                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
-                )
-            if workflow == "CLOCKSS":
-                self.ftp_to_endpoint(
-                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
-                )
-            if workflow == "OVID":
-                self.ftp_to_endpoint(
-                    zipfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
-                )
-            if workflow == "Zendy":
-                self.sftp_to_endpoint(zipfiles)
-            if workflow == "OASwitchboard":
-                # send XML files only, unzipped
-                with zipfile.ZipFile(zipfiles[0], "r") as open_zip:
+
+            details = sending_details(workflow)
+
+            if details.get("send_unzipped_files"):
+                # send the contents of the zip file unzipped
+                first_zip_file = uploadfiles[0]
+                with zipfile.ZipFile(first_zip_file, "r") as open_zip:
                     open_zip.extractall(self.directories.get("FTP_TO_SOMEWHERE_DIR"))
-                uploadfiles = glob.glob(
-                    self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.xml"
+                uploadfiles = [
+                    path
+                    for path in glob.glob(
+                        self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*"
+                    )
+                    if path != first_zip_file
+                ]
+
+            # send by ftp or sftp
+            if details.get("send_by_protocol") == "ftp":
+                self.ftp_to_endpoint(
+                    uploadfiles, sub_dir_list=self.FTP_SUBDIR_LIST, passive=True
                 )
-                self.sftp_to_endpoint(uploadfiles)
+            elif details.get("send_by_protocol") == "sftp":
+                self.sftp_to_endpoint(uploadfiles, self.SFTP_SUBDIR)
+            else:
+                # undefined protocol
+                raise Exception(
+                    "send_by_protocol was %s" % details.get("send_by_protocol")
+                )
 
         except:
             # Something went wrong, fail
@@ -167,7 +155,7 @@ class activity_FTPArticle(Activity):
         if self.logger:
             self.logger.info(
                 "FTPArticle running %s workflow for article %s, finished sending files: %s"
-                % (self.workflow, self.doi_id, zipfiles)
+                % (self.workflow, self.doi_id, uploadfiles)
             )
         result = True
         self.clean_tmp_dir()
@@ -187,6 +175,7 @@ class activity_FTPArticle(Activity):
 
         # download and convert the archive zip
         archive_zip_downloaded = self.download_archive_zip_from_s3(doi_id)
+        archive_zip_repackaged = None
         if archive_zip_downloaded:
             archive_zip_repackaged = self.repackage_archive_zip_to_pmc_zip(doi_id)
 
@@ -531,3 +520,36 @@ def collect_credentials(settings, doi_id, workflow):
         credentials["SFTP_CWD"] = settings.OASWITCHBOARD_SFTP_CWD
 
     return credentials
+
+
+def sending_details(workflow):
+    "set the details for which files to send by which protocol for each workflow type"
+
+    details = {}
+
+    # default to sending zipped files
+    details["send_unzipped_files"] = False
+
+    if workflow == "HEFCE":
+        details["send_by_protocol"] = "sftp"
+    if workflow == "Cengage":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "WoS":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "GoOA":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "CNPIEC":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "CNKI":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "CLOCKSS":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "OVID":
+        details["send_by_protocol"] = "ftp"
+    if workflow == "Zendy":
+        details["send_by_protocol"] = "sftp"
+    if workflow == "OASwitchboard":
+        details["send_unzipped_files"] = True
+        details["send_by_protocol"] = "sftp"
+
+    return details

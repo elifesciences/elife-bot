@@ -40,16 +40,17 @@ class TestFTPArticle(unittest.TestCase):
     @patch("activity.activity_FTPArticle.FTP")
     @patch("activity.activity_FTPArticle.SFTP")
     @data(
-        ("HEFCE", True, "hefce_ftp.localhost", "hefce_sftp.localhost", True),
-        ("Cengage", True, "cengage.localhost", None, True),
-        ("GoOA", True, "gooa.localhost", None, True),
-        ("WoS", True, "wos.localhost", None, True),
-        ("CNPIEC", True, "cnpiec.localhost", None, True),
-        ("CNKI", True, "cnki.localhost", None, True),
-        ("CLOCKSS", True, "clockss.localhost", None, True),
-        ("OVID", True, "ovid.localhost", None, True),
-        ("Zendy", True, None, "zendy.localhost", True),
-        ("OASwitchboard", True, None, "oaswitchboard.localhost", True),
+        ("HEFCE", True, "hefce_ftp.localhost", "hefce_sftp.localhost", 1, True),
+        ("Cengage", True, "cengage.localhost", None, 1, True),
+        ("GoOA", True, "gooa.localhost", None, 1, True),
+        ("WoS", True, "wos.localhost", None, 1, True),
+        ("CNPIEC", True, "cnpiec.localhost", None, 1, True),
+        ("CNKI", True, "cnki.localhost", None, 1, True),
+        ("CLOCKSS", True, "clockss.localhost", None, 1, True),
+        ("OVID", True, "ovid.localhost", None, 1, True),
+        ("Zendy", True, None, "zendy.localhost", 1, True),
+        ("OASwitchboard", True, None, "oaswitchboard.localhost", 1, True),
+        ("__unknown__", False, None, None, 0, False),
     )
     @unpack
     def test_do_activity(
@@ -58,6 +59,7 @@ class TestFTPArticle(unittest.TestCase):
         archive_zip_return_value,
         expected_ftp_uri,
         expected_sftp_uri,
+        expected_sending_started_messages,
         expected_result,
         fake_sftp,
         fake_ftp,
@@ -81,7 +83,7 @@ class TestFTPArticle(unittest.TestCase):
         ]
         self.assertEqual(
             len(log_sending_started_messages),
-            1,
+            expected_sending_started_messages,
             "info log did not contain started message for workflow %s" % workflow,
         )
 
