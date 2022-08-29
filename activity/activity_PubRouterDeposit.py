@@ -378,27 +378,11 @@ class activity_PubRouterDeposit(Activity):
 
         return articles
 
-    def create_article(self, doi_id=None):
-        """
-        Instantiate an article object and optionally populate it with
-        data for the doi_id (int) supplied
-        """
+    def create_article(self):
+        "Instantiate an article object"
 
         # Instantiate a new article object
-        article = articlelib.article(self.settings)
-
-        if doi_id:
-            # Get and parse the article XML for data
-            # Convert the doi_id to 5 digit string in case it was an integer
-            if isinstance(doi_id, int):
-                doi_id = utils.pad_msid(doi_id)
-            article_xml_filename = article.download_article_xml_from_s3(
-                self.get_tmp_dir(), doi_id
-            )
-            article.parse_article_file(
-                self.get_tmp_dir() + os.sep + article_xml_filename
-            )
-        return article
+        return articlelib.article(self.settings)
 
     def approve_articles(self, articles, workflow):
         """
