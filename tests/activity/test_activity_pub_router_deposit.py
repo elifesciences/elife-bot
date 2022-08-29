@@ -380,11 +380,20 @@ class TestGetFriendlyEmailRecipients(unittest.TestCase):
         "CNKI",
         "CLOCKSS",
         "OVID",
+        "Zendy",
+        "OASwitchboard",
     )
     def test_workflow_specific_values(self, workflow):
         "test functions that look at the workflow name"
         self.assertIsNotNone(
             self.pubrouterdeposit.get_friendly_email_recipients(workflow)
+        )
+
+    def test_recipients_string(self):
+        "test when the recipients is just a string and not a list"
+        self.pubrouterdeposit.settings.HEFCE_EMAIL = "email@example.org"
+        self.assertIsNotNone(
+            self.pubrouterdeposit.get_friendly_email_recipients("HEFCE")
         )
 
 
