@@ -200,6 +200,13 @@ class TestPubRouterDeposit(unittest.TestCase):
         result = self.pubrouterdeposit.do_activity(activity_data)
         self.assertTrue(result)
 
+
+class TestGetArchiveBucketS3Keys(unittest.TestCase):
+    def setUp(self):
+        self.pubrouterdeposit = activity_PubRouterDeposit(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
     @patch.object(activity_module, "storage_context")
     def test_get_archive_bucket_s3_keys(self, fake_storage_context):
         # create mock Key object with name and last_modified value
@@ -215,6 +222,25 @@ class TestPubRouterDeposit(unittest.TestCase):
         s3_keys = self.pubrouterdeposit.get_archive_bucket_s3_keys()
         self.assertEqual(s3_keys, expected)
 
+
+@ddt
+class TestApproveArticles(unittest.TestCase):
+    def setUp(self):
+        self.pubrouterdeposit = activity_PubRouterDeposit(
+            settings_mock, FakeLogger(), None, None, None
+        )
+        test_article = article()
+        test_article.doi = "10.7554/eLife.00666"
+        test_article.doi_id = "00666"
+        test_article.article_type = "research-article"
+        test_article.display_channel = ["Research Article"]
+        test_article.is_poa = True
+        self.articles = [test_article]
+
+    @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
+    @patch("provider.article.article.was_ever_published")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
     @data(
         "HEFCE",
         "Cengage",
@@ -223,6 +249,137 @@ class TestPubRouterDeposit(unittest.TestCase):
         "CNPIEC",
         "CNKI",
         "CLOCKSS",
+        "OVID",
+        "OASwitchboard",
+    )
+    def test_approve_articles(
+        self,
+        workflow_name,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_was_ever_published,
+        fake_get_latest_archive_zip_name,
+    ):
+        fake_was_ever_poa.return_value = True
+        fake_was_ever_published.return_value = False
+        fake_get_latest_archive_zip_name.return_value = "test.zip"
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+
+        expected_approved_article_dois = ["10.7554/eLife.00666"]
+        expected_remove_doi_list = []
+        approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
+            self.articles, workflow_name
+        )
+        # self.assertTrue(False)
+        approved_article_dois = [article.doi for article in approved_articles]
+        self.assertEqual(approved_article_dois, expected_approved_article_dois)
+        self.assertEqual(remove_doi_list, expected_remove_doi_list)
+
+    @patch("provider.article.article.was_ever_published")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    def test_approve_articles_oaswitchboard(
+        self,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_was_ever_published,
+    ):
+        "test when OASwitchboard is not approved"
+        workflow_name = "OASwitchboard"
+        fake_was_ever_poa.return_value = True
+        fake_was_ever_published.return_value = True
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+        # article test data that will not be sent to OASwitchboard
+        self.articles[0].article_type = None
+        expected_approved_article_dois = []
+        expected_remove_doi_list = ["10.7554/eLife.00666"]
+        approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
+            self.articles, workflow_name
+        )
+        approved_article_dois = [article.doi for article in approved_articles]
+        self.assertEqual(approved_article_dois, expected_approved_article_dois)
+        self.assertEqual(remove_doi_list, expected_remove_doi_list)
+
+    @patch("provider.article.article.was_ever_published")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    def test_approve_articles_was_ever_published(
+        self,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_was_ever_published,
+    ):
+        "test when was_ever_published is True for coverage adding the article to the remove list"
+        workflow_name = "HEFCE"
+        fake_was_ever_poa.return_value = True
+        fake_was_ever_published.return_value = True
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+        expected_approved_article_dois = []
+        expected_remove_doi_list = ["10.7554/eLife.00666"]
+        approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
+            self.articles, workflow_name
+        )
+        approved_article_dois = [article.doi for article in approved_articles]
+        self.assertEqual(approved_article_dois, expected_approved_article_dois)
+        self.assertEqual(remove_doi_list, expected_remove_doi_list)
+
+    @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
+    @patch("provider.article.article.was_ever_published")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    def test_approve_articles_archive_zip_does_not_exist(
+        self,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_was_ever_published,
+        fake_get_latest_archive_zip_name,
+    ):
+        "test when was_ever_published is False for coverage"
+        workflow_name = "HEFCE"
+        fake_was_ever_poa.return_value = True
+        fake_was_ever_published.return_value = False
+        fake_get_latest_archive_zip_name.return_value = None
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+        # article test data that will not be sent to OASwitchboard
+        self.articles[0].article_type = None
+        expected_approved_article_dois = []
+        expected_remove_doi_list = ["10.7554/eLife.00666"]
+        approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
+            self.articles, workflow_name
+        )
+        approved_article_dois = [article.doi for article in approved_articles]
+        self.assertEqual(approved_article_dois, expected_approved_article_dois)
+        self.assertEqual(remove_doi_list, expected_remove_doi_list)
+
+
+@ddt
+class TestGetFriendlyEmailRecipients(unittest.TestCase):
+    def setUp(self):
+        self.pubrouterdeposit = activity_PubRouterDeposit(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    @data(
+        "HEFCE",
+        "Cengage",
+        "GoOA",
+        "WoS",
+        "CNPIEC",
+        "CNKI",
+        "CLOCKSS",
+        "OVID",
     )
     def test_workflow_specific_values(self, workflow):
         "test functions that look at the workflow name"
