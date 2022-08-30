@@ -200,6 +200,55 @@ class TestPubRouterDeposit(unittest.TestCase):
         result = self.pubrouterdeposit.do_activity(activity_data)
         self.assertTrue(result)
 
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(activity_PubRouterDeposit, "start_pmc_deposit_workflow")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    @patch.object(activity_module, "storage_context")
+    @patch("provider.outbox_provider.storage_context")
+    @data("PMC")
+    def test_do_activity_pmc_starter_failure(
+        self,
+        workflow_name,
+        fake_outbox_storage_context,
+        fake_storage_context,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_start,
+        fake_email_smtp_connect,
+    ):
+        "test for the the PMC starter function returns False"
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.pubrouterdeposit.get_tmp_dir()
+        )
+        activity_data = {"data": {"workflow": workflow_name}}
+        resources = helpers.populate_storage(
+            from_dir="tests/test_data/",
+            to_dir=directory.path,
+            filenames=["elife00013.xml"],
+            sub_dir="pmc/outbox",
+        )
+        fake_outbox_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            test_activity_data.ExpandArticle_files_source_folder,
+            ARCHIVE_ZIP_BUCKET_S3_KEYS,
+        )
+        fake_was_ever_poa.return_value = False
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+        fake_start.return_value = False
+        result = self.pubrouterdeposit.do_activity(activity_data)
+        self.assertTrue(result)
+        self.assertTrue(
+            "PubRouterDeposit PMC FAILED to start a workflow for article: 10.7554/eLife.00013"
+            in self.pubrouterdeposit.logger.loginfo
+        )
+
 
 class TestStartFtpArticleWorkflow(unittest.TestCase):
     def setUp(self):
