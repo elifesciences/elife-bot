@@ -201,6 +201,36 @@ class TestPubRouterDeposit(unittest.TestCase):
         self.assertTrue(result)
 
 
+class TestStartFtpArticleWorkflow(unittest.TestCase):
+    def setUp(self):
+        self.pubrouterdeposit = activity_PubRouterDeposit(
+            settings_mock, FakeLogger(), None, None, None
+        )
+        self.pubrouterdeposit.workflow = "HEFCE"
+        self.article = article()
+        self.article.doi_id = "00666"
+
+    @patch("boto3.client")
+    def test_start_ftp_article_workflow(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
+        result = self.pubrouterdeposit.start_ftp_article_workflow(self.article)
+        self.assertEqual(result, True)
+
+    @patch.object(FakeSWFClient, "start_workflow_execution")
+    @patch("boto3.client")
+    def test_start_ftp_article_workflow_exception(self, fake_client, fake_start):
+        fake_client.return_value = FakeSWFClient()
+        exception_message = "An exception"
+        fake_start.side_effect = Exception(exception_message)
+        result = self.pubrouterdeposit.start_ftp_article_workflow(self.article)
+        self.assertEqual(result, False)
+        self.assertEqual(
+            self.pubrouterdeposit.logger.logexception,
+            "PubRouterDeposit exception starting workflow FTPArticle_%s_%s: %s"
+            % (self.pubrouterdeposit.workflow, self.article.doi_id, exception_message),
+        )
+
+
 class TestGetArchiveBucketS3Keys(unittest.TestCase):
     def setUp(self):
         self.pubrouterdeposit = activity_PubRouterDeposit(
@@ -221,6 +251,36 @@ class TestGetArchiveBucketS3Keys(unittest.TestCase):
         expected = [{"name": zip_file_name, "last_modified": last_modified}]
         s3_keys = self.pubrouterdeposit.get_archive_bucket_s3_keys()
         self.assertEqual(s3_keys, expected)
+
+
+class TestStartPmcDepositWorkflow(unittest.TestCase):
+    def setUp(self):
+        self.pubrouterdeposit = activity_PubRouterDeposit(
+            settings_mock, FakeLogger(), None, None, None
+        )
+        self.pubrouterdeposit.workflow = "HEFCE"
+        self.article = article()
+        self.article.doi_id = "00666"
+
+    @patch("boto3.client")
+    def test_start_pmc_deposit_workflow(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
+        result = self.pubrouterdeposit.start_pmc_deposit_workflow(self.article, "", "")
+        self.assertEqual(result, True)
+
+    @patch.object(FakeSWFClient, "start_workflow_execution")
+    @patch("boto3.client")
+    def test_start_pmc_deposit_workflow_exception(self, fake_client, fake_start):
+        fake_client.return_value = FakeSWFClient()
+        exception_message = "An exception"
+        fake_start.side_effect = Exception(exception_message)
+        result = self.pubrouterdeposit.start_pmc_deposit_workflow(self.article, "", "")
+        self.assertEqual(result, False)
+        self.assertEqual(
+            self.pubrouterdeposit.logger.logexception,
+            "PubRouterDeposit exception starting workflow PMCDeposit_%s: %s"
+            % (self.article.doi_id, exception_message),
+        )
 
 
 @ddt

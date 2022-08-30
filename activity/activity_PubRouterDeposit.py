@@ -249,7 +249,7 @@ class activity_PubRouterDeposit(Activity):
 
         # Try and start a workflow
         try:
-            response = self.client.start_workflow_execution(**kwargs)
+            response = client.start_workflow_execution(**kwargs)
             starter_status = True
         except Exception as exception:
             # There is already a running workflow with that ID, cannot start another
@@ -339,7 +339,7 @@ class activity_PubRouterDeposit(Activity):
 
         # Try and start a workflow
         try:
-            response = self.client.start_workflow_execution(**kwargs)
+            response = client.start_workflow_execution(**kwargs)
             starter_status = True
         except Exception as exception:
             # There is already a running workflow with that ID, cannot start another
