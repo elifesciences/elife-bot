@@ -475,11 +475,6 @@ class TestApproveArticles(unittest.TestCase):
 
 @ddt
 class TestGetFriendlyEmailRecipients(unittest.TestCase):
-    def setUp(self):
-        self.pubrouterdeposit = activity_PubRouterDeposit(
-            settings_mock, FakeLogger(), None, None, None
-        )
-
     @data(
         "HEFCE",
         "Cengage",
@@ -495,14 +490,18 @@ class TestGetFriendlyEmailRecipients(unittest.TestCase):
     def test_workflow_specific_values(self, workflow):
         "test functions that look at the workflow name"
         self.assertIsNotNone(
-            self.pubrouterdeposit.get_friendly_email_recipients(workflow)
+            activity_module.get_friendly_email_recipients(settings_mock, workflow)
         )
 
     def test_recipients_string(self):
         "test when the recipients is just a string and not a list"
-        self.pubrouterdeposit.settings.HEFCE_EMAIL = "email@example.org"
+
+        class TestSettings:
+            HEFCE_EMAIL = "email@example.org"
+
+        test_settings = TestSettings()
         self.assertIsNotNone(
-            self.pubrouterdeposit.get_friendly_email_recipients("HEFCE")
+            activity_module.get_friendly_email_recipients(test_settings, "HEFCE")
         )
 
 

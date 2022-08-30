@@ -535,7 +535,7 @@ class activity_PubRouterDeposit(Activity):
         sender_email = self.settings.ses_poa_sender_email
 
         # Get pub router recipients
-        recipient_email_list = self.get_friendly_email_recipients(workflow)
+        recipient_email_list = get_friendly_email_recipients(self.settings, workflow)
 
         # Add admin email recipients
         recipient_email_list += email_provider.list_email_recipients(
@@ -558,42 +558,43 @@ class activity_PubRouterDeposit(Activity):
 
         return True
 
-    def get_friendly_email_recipients(self, workflow):
 
-        recipient_email_list = []
+def get_friendly_email_recipients(settings, workflow):
 
-        recipients = None
-        try:
-            # Get the email recipient list
-            if workflow == "HEFCE":
-                recipients = self.settings.HEFCE_EMAIL
-            elif workflow == "Cengage":
-                recipients = self.settings.CENGAGE_EMAIL
-            elif workflow == "GoOA":
-                recipients = self.settings.GOOA_EMAIL
-            elif workflow == "WoS":
-                recipients = self.settings.WOS_EMAIL
-            elif workflow == "CNPIEC":
-                recipients = self.settings.CNPIEC_EMAIL
-            elif workflow == "CNKI":
-                recipients = self.settings.CNKI_EMAIL
-            elif workflow == "CLOCKSS":
-                recipients = self.settings.CLOCKSS_EMAIL
-            elif workflow == "OVID":
-                recipients = self.settings.OVID_EMAIL
-            elif workflow == "Zendy":
-                recipients = self.settings.ZENDY_EMAIL
-            elif workflow == "OASwitchboard":
-                recipients = self.settings.OASWITCHBOARD_EMAIL
-        except:
-            pass
+    recipient_email_list = []
 
-        if recipients and type(recipients) == list:
-            recipient_email_list = recipients
-        elif recipients:
-            recipient_email_list.append(recipients)
+    recipients = None
+    try:
+        # Get the email recipient list
+        if workflow == "HEFCE":
+            recipients = settings.HEFCE_EMAIL
+        elif workflow == "Cengage":
+            recipients = settings.CENGAGE_EMAIL
+        elif workflow == "GoOA":
+            recipients = settings.GOOA_EMAIL
+        elif workflow == "WoS":
+            recipients = settings.WOS_EMAIL
+        elif workflow == "CNPIEC":
+            recipients = settings.CNPIEC_EMAIL
+        elif workflow == "CNKI":
+            recipients = settings.CNKI_EMAIL
+        elif workflow == "CLOCKSS":
+            recipients = settings.CLOCKSS_EMAIL
+        elif workflow == "OVID":
+            recipients = settings.OVID_EMAIL
+        elif workflow == "Zendy":
+            recipients = settings.ZENDY_EMAIL
+        elif workflow == "OASwitchboard":
+            recipients = settings.OASWITCHBOARD_EMAIL
+    except:
+        pass
 
-        return recipient_email_list
+    if recipients and type(recipients) == list:
+        recipient_email_list = recipients
+    elif recipients:
+        recipient_email_list.append(recipients)
+
+    return recipient_email_list
 
 
 def get_friendly_email_subject(current_time, workflow):
