@@ -420,7 +420,7 @@ class activity_PubRouterDeposit(Activity):
                     remove_doi_list.append(article.doi)
 
         # Check article type for OA Switchboard recipient
-        if workflow == "OASwitchboard":
+        if check_approve_by_article_type(workflow):
             for article in articles:
                 if not approve_for_oa_switchboard(article):
                     if self.logger:
@@ -434,7 +434,7 @@ class activity_PubRouterDeposit(Activity):
                         remove_doi_list.append(article.doi)
 
         # Check if article is a resupply
-        if workflow not in ["CLOCKSS", "OVID", "PMC", "Zendy"]:
+        if check_approve_by_was_ever_published(workflow):
             for article in articles:
                 was_ever_published = blank_article.was_ever_published(
                     article.doi, workflow
@@ -451,7 +451,7 @@ class activity_PubRouterDeposit(Activity):
                         remove_doi_list.append(article.doi)
 
         # Check a vor archive zip file exists
-        if workflow not in ["OVID", "Zendy"]:
+        if check_approve_by_archive_zip_exists(workflow):
             for article in articles:
                 # Get the file name of the most recent archive zip from the archive bucket
                 zip_file_name = self.get_latest_archive_zip_name(article)
@@ -559,6 +559,21 @@ class activity_PubRouterDeposit(Activity):
         return True
 
 
+def check_approve_by_article_type(workflow):
+    "whether to check the OASwitchboard status when approving an article to send"
+    return bool(workflow == "OASwitchboard")
+
+
+def check_approve_by_was_ever_published(workflow):
+    "whether to check the article has been sent previously when approving an article to send"
+    return bool(workflow not in ["CLOCKSS", "OVID", "PMC", "Zendy"])
+
+
+def check_approve_by_archive_zip_exists(workflow):
+    "whether to check if a VoR article zip exists when approving an article to send"
+    return bool(workflow not in ["OVID", "Zendy"])
+
+
 def get_friendly_email_recipients(settings, workflow):
 
     recipient_email_list = []
@@ -634,7 +649,7 @@ def get_friendly_email_body(current_time, approved_articles):
 
 
 def approve_for_oa_switchboard(article):
-    "check article tyep and display channel to only sent particular types of articles"
+    "check article type and display channel to only sent particular types of articles"
     allowed_article_type = "research-article"
     allowed_display_channel_values = [
         "Research Advance",
