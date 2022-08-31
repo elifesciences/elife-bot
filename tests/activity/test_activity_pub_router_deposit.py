@@ -351,15 +351,17 @@ class TestApproveArticles(unittest.TestCase):
     @patch("provider.lax_provider.was_ever_poa")
     @patch("provider.lax_provider.article_versions")
     @data(
-        "HEFCE",
         "Cengage",
-        "GoOA",
-        "WoS",
-        "CNPIEC",
-        "CNKI",
         "CLOCKSS",
-        "OVID",
+        "CNKI",
+        "CNPIEC",
+        "GoOA",
+        "HEFCE",
         "OASwitchboard",
+        "OVID",
+        "PMC",
+        "WoS",
+        "Zendy",
     )
     def test_approve_articles(
         self,
@@ -391,15 +393,18 @@ class TestApproveArticles(unittest.TestCase):
     @patch("provider.article.article.was_ever_published")
     @patch("provider.lax_provider.was_ever_poa")
     @patch("provider.lax_provider.article_versions")
+    @data(
+        "OASwitchboard",
+    )
     def test_approve_articles_oaswitchboard(
         self,
+        workflow_name,
         fake_article_versions,
         fake_was_ever_poa,
         fake_was_ever_published,
         fake_get_latest_archive_zip_name,
     ):
         "test when OASwitchboard is not approved"
-        workflow_name = "OASwitchboard"
         fake_was_ever_poa.return_value = True
         fake_was_ever_published.return_value = False
         fake_get_latest_archive_zip_name.return_value = "test.zip"
@@ -422,15 +427,25 @@ class TestApproveArticles(unittest.TestCase):
     @patch("provider.article.article.was_ever_published")
     @patch("provider.lax_provider.was_ever_poa")
     @patch("provider.lax_provider.article_versions")
+    @data(
+        "Cengage",
+        "CNKI",
+        "CNPIEC",
+        "GoOA",
+        "HEFCE",
+        "OASwitchboard",
+        "WoS",
+    )
     def test_approve_articles_was_ever_published(
         self,
+        workflow_name,
         fake_article_versions,
         fake_was_ever_poa,
         fake_was_ever_published,
         fake_get_latest_archive_zip_name,
     ):
         "test when was_ever_published is True for coverage adding the article to the remove list"
-        workflow_name = "HEFCE"
+
         fake_was_ever_poa.return_value = True
         fake_was_ever_published.return_value = True
         fake_get_latest_archive_zip_name.return_value = "test.zip"
@@ -451,15 +466,26 @@ class TestApproveArticles(unittest.TestCase):
     @patch("provider.article.article.was_ever_published")
     @patch("provider.lax_provider.was_ever_poa")
     @patch("provider.lax_provider.article_versions")
+    @data(
+        "Cengage",
+        "CLOCKSS",
+        "CNKI",
+        "CNPIEC",
+        "GoOA",
+        "HEFCE",
+        "OASwitchboard",
+        "PMC",
+        "WoS",
+    )
     def test_approve_articles_archive_zip_does_not_exist(
         self,
+        workflow_name,
         fake_article_versions,
         fake_was_ever_poa,
         fake_was_ever_published,
         fake_get_latest_archive_zip_name,
     ):
         "test when was_ever_published is False for coverage"
-        workflow_name = "HEFCE"
         fake_was_ever_poa.return_value = True
         fake_was_ever_published.return_value = False
         fake_get_latest_archive_zip_name.return_value = None
