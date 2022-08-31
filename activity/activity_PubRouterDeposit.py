@@ -604,7 +604,7 @@ def get_friendly_email_recipients(settings, workflow):
     except:
         pass
 
-    if recipients and type(recipients) == list:
+    if recipients and isinstance(recipients, list):
         recipient_email_list = recipients
     elif recipients:
         recipient_email_list.append(recipients)
