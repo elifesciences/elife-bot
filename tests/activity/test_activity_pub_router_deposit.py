@@ -308,8 +308,19 @@ class TestStartPmcDepositWorkflow(unittest.TestCase):
             settings_mock, FakeLogger(), None, None, None
         )
         self.pubrouterdeposit.workflow = "HEFCE"
+        # test overriding the workflow timeout
+        self.workflow_timeout_original = (
+            activity_module.PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
+        )
+        activity_module.PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = 1
         self.article = article()
         self.article.doi_id = "00666"
+
+    def tearDown(self):
+        # reset the workflow timeout value
+        activity_module.PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = (
+            self.workflow_timeout_original
+        )
 
     @patch("boto3.client")
     def test_start_pmc_deposit_workflow(self, fake_client):

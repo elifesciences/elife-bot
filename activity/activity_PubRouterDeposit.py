@@ -20,6 +20,13 @@ from activity.objects import Activity
 PubRouterDeposit activity
 """
 
+# override the default workflow timeout for PMCDeposit workflows if needed
+PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = None
+
+# override the default workflow timeout for FTPDeposit workflows if needed
+# Allow workflow 120 minutes to finish
+FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = str(60 * 120)
+
 
 class activity_PubRouterDeposit(Activity):
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
@@ -216,8 +223,6 @@ class activity_PubRouterDeposit(Activity):
         workflow_id = "FTPArticle_" + self.workflow + "_" + str(article.doi_id)
         workflow_name = "FTPArticle"
         workflow_version = "1"
-        # Allow workflow 120 minutes to finish
-        execution_start_to_close_timeout = str(60 * 120)
 
         # Input data
         data = {}
@@ -235,9 +240,10 @@ class activity_PubRouterDeposit(Activity):
                 "version": workflow_version,
             },
             "taskList": {"name": self.settings.default_task_list},
-            "executionStartToCloseTimeout": execution_start_to_close_timeout,
             "input": input_data,
         }
+        if FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT:
+            kwargs["executionStartToCloseTimeout"] = FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
 
         # Connect to SWF
         client = boto3.client(
@@ -304,8 +310,6 @@ class activity_PubRouterDeposit(Activity):
         workflow_id = "PMCDeposit_%s" % str(article.doi_id)
         workflow_name = "PMCDeposit"
         workflow_version = "1"
-        # Allow workflow 120 minutes to finish
-        execution_start_to_close_timeout = None
 
         # Input data
         data = {}
@@ -326,8 +330,8 @@ class activity_PubRouterDeposit(Activity):
             "taskList": {"name": self.settings.default_task_list},
             "input": workflow_input,
         }
-        if execution_start_to_close_timeout:
-            kwargs["executionStartToCloseTimeout"] = execution_start_to_close_timeout
+        if PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT:
+            kwargs["executionStartToCloseTimeout"] = PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
 
         # Connect to SWF
         client = boto3.client(
