@@ -387,6 +387,7 @@ class TestApproveArticles(unittest.TestCase):
         self.assertEqual(approved_article_dois, expected_approved_article_dois)
         self.assertEqual(remove_doi_list, expected_remove_doi_list)
 
+    @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
     @patch("provider.article.article.was_ever_published")
     @patch("provider.lax_provider.was_ever_poa")
     @patch("provider.lax_provider.article_versions")
@@ -395,11 +396,13 @@ class TestApproveArticles(unittest.TestCase):
         fake_article_versions,
         fake_was_ever_poa,
         fake_was_ever_published,
+        fake_get_latest_archive_zip_name,
     ):
         "test when OASwitchboard is not approved"
         workflow_name = "OASwitchboard"
         fake_was_ever_poa.return_value = True
-        fake_was_ever_published.return_value = True
+        fake_was_ever_published.return_value = False
+        fake_get_latest_archive_zip_name.return_value = "test.zip"
         fake_article_versions.return_value = (
             200,
             test_case_data.lax_article_versions_response_data,
@@ -415,6 +418,7 @@ class TestApproveArticles(unittest.TestCase):
         self.assertEqual(approved_article_dois, expected_approved_article_dois)
         self.assertEqual(remove_doi_list, expected_remove_doi_list)
 
+    @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
     @patch("provider.article.article.was_ever_published")
     @patch("provider.lax_provider.was_ever_poa")
     @patch("provider.lax_provider.article_versions")
@@ -423,11 +427,13 @@ class TestApproveArticles(unittest.TestCase):
         fake_article_versions,
         fake_was_ever_poa,
         fake_was_ever_published,
+        fake_get_latest_archive_zip_name,
     ):
         "test when was_ever_published is True for coverage adding the article to the remove list"
         workflow_name = "HEFCE"
         fake_was_ever_poa.return_value = True
         fake_was_ever_published.return_value = True
+        fake_get_latest_archive_zip_name.return_value = "test.zip"
         fake_article_versions.return_value = (
             200,
             test_case_data.lax_article_versions_response_data,
