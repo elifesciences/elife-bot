@@ -20,6 +20,13 @@ from activity.objects import Activity
 PubRouterDeposit activity
 """
 
+# override the default workflow timeout for PMCDeposit workflows if needed
+PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = None
+
+# override the default workflow timeout for FTPDeposit workflows if needed
+# Allow workflow 120 minutes to finish
+FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = str(60 * 120)
+
 
 class activity_PubRouterDeposit(Activity):
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
@@ -216,8 +223,6 @@ class activity_PubRouterDeposit(Activity):
         workflow_id = "FTPArticle_" + self.workflow + "_" + str(article.doi_id)
         workflow_name = "FTPArticle"
         workflow_version = "1"
-        # Allow workflow 120 minutes to finish
-        execution_start_to_close_timeout = str(60 * 120)
 
         # Input data
         data = {}
@@ -235,9 +240,10 @@ class activity_PubRouterDeposit(Activity):
                 "version": workflow_version,
             },
             "taskList": {"name": self.settings.default_task_list},
-            "executionStartToCloseTimeout": execution_start_to_close_timeout,
             "input": input_data,
         }
+        if FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT:
+            kwargs["executionStartToCloseTimeout"] = FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
 
         # Connect to SWF
         client = boto3.client(
@@ -249,7 +255,7 @@ class activity_PubRouterDeposit(Activity):
 
         # Try and start a workflow
         try:
-            response = self.client.start_workflow_execution(**kwargs)
+            response = client.start_workflow_execution(**kwargs)
             starter_status = True
         except Exception as exception:
             # There is already a running workflow with that ID, cannot start another
@@ -304,8 +310,6 @@ class activity_PubRouterDeposit(Activity):
         workflow_id = "PMCDeposit_%s" % str(article.doi_id)
         workflow_name = "PMCDeposit"
         workflow_version = "1"
-        # Allow workflow 120 minutes to finish
-        execution_start_to_close_timeout = None
 
         # Input data
         data = {}
@@ -326,8 +330,8 @@ class activity_PubRouterDeposit(Activity):
             "taskList": {"name": self.settings.default_task_list},
             "input": workflow_input,
         }
-        if execution_start_to_close_timeout:
-            kwargs["executionStartToCloseTimeout"] = execution_start_to_close_timeout
+        if PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT:
+            kwargs["executionStartToCloseTimeout"] = PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
 
         # Connect to SWF
         client = boto3.client(
@@ -339,7 +343,7 @@ class activity_PubRouterDeposit(Activity):
 
         # Try and start a workflow
         try:
-            response = self.client.start_workflow_execution(**kwargs)
+            response = client.start_workflow_execution(**kwargs)
             starter_status = True
         except Exception as exception:
             # There is already a running workflow with that ID, cannot start another
@@ -378,27 +382,11 @@ class activity_PubRouterDeposit(Activity):
 
         return articles
 
-    def create_article(self, doi_id=None):
-        """
-        Instantiate an article object and optionally populate it with
-        data for the doi_id (int) supplied
-        """
+    def create_article(self):
+        "Instantiate an article object"
 
         # Instantiate a new article object
-        article = articlelib.article(self.settings)
-
-        if doi_id:
-            # Get and parse the article XML for data
-            # Convert the doi_id to 5 digit string in case it was an integer
-            if isinstance(doi_id, int):
-                doi_id = utils.pad_msid(doi_id)
-            article_xml_filename = article.download_article_xml_from_s3(
-                self.get_tmp_dir(), doi_id
-            )
-            article.parse_article_file(
-                self.get_tmp_dir() + os.sep + article_xml_filename
-            )
-        return article
+        return articlelib.article(self.settings)
 
     def approve_articles(self, articles, workflow):
         """
@@ -436,7 +424,7 @@ class activity_PubRouterDeposit(Activity):
                     remove_doi_list.append(article.doi)
 
         # Check article type for OA Switchboard recipient
-        if workflow == "OASwitchboard":
+        if check_approve_by_article_type(workflow):
             for article in articles:
                 if not approve_for_oa_switchboard(article):
                     if self.logger:
@@ -450,7 +438,7 @@ class activity_PubRouterDeposit(Activity):
                         remove_doi_list.append(article.doi)
 
         # Check if article is a resupply
-        if workflow not in ["CLOCKSS", "OVID", "PMC", "Zendy"]:
+        if check_approve_by_was_ever_published(workflow):
             for article in articles:
                 was_ever_published = blank_article.was_ever_published(
                     article.doi, workflow
@@ -467,7 +455,7 @@ class activity_PubRouterDeposit(Activity):
                         remove_doi_list.append(article.doi)
 
         # Check a vor archive zip file exists
-        if workflow not in ["OVID", "Zendy"]:
+        if check_approve_by_archive_zip_exists(workflow):
             for article in articles:
                 # Get the file name of the most recent archive zip from the archive bucket
                 zip_file_name = self.get_latest_archive_zip_name(article)
@@ -551,7 +539,7 @@ class activity_PubRouterDeposit(Activity):
         sender_email = self.settings.ses_poa_sender_email
 
         # Get pub router recipients
-        recipient_email_list = self.get_friendly_email_recipients(workflow)
+        recipient_email_list = get_friendly_email_recipients(self.settings, workflow)
 
         # Add admin email recipients
         recipient_email_list += email_provider.list_email_recipients(
@@ -574,42 +562,58 @@ class activity_PubRouterDeposit(Activity):
 
         return True
 
-    def get_friendly_email_recipients(self, workflow):
 
-        recipient_email_list = []
+def check_approve_by_article_type(workflow):
+    "whether to check the OASwitchboard status when approving an article to send"
+    return bool(workflow == "OASwitchboard")
 
-        recipients = None
-        try:
-            # Get the email recipient list
-            if workflow == "HEFCE":
-                recipients = self.settings.HEFCE_EMAIL
-            elif workflow == "Cengage":
-                recipients = self.settings.CENGAGE_EMAIL
-            elif workflow == "GoOA":
-                recipients = self.settings.GOOA_EMAIL
-            elif workflow == "WoS":
-                recipients = self.settings.WOS_EMAIL
-            elif workflow == "CNPIEC":
-                recipients = self.settings.CNPIEC_EMAIL
-            elif workflow == "CNKI":
-                recipients = self.settings.CNKI_EMAIL
-            elif workflow == "CLOCKSS":
-                recipients = self.settings.CLOCKSS_EMAIL
-            elif workflow == "OVID":
-                recipients = self.settings.OVID_EMAIL
-            elif workflow == "Zendy":
-                recipients = self.settings.ZENDY_EMAIL
-            elif workflow == "OASwitchboard":
-                recipients = self.settings.OASWITCHBOARD_EMAIL
-        except:
-            pass
 
-        if recipients and type(recipients) == list:
-            recipient_email_list = recipients
-        elif recipients:
-            recipient_email_list.append(recipients)
+def check_approve_by_was_ever_published(workflow):
+    "whether to check the article has been sent previously when approving an article to send"
+    return bool(workflow not in ["CLOCKSS", "OVID", "PMC", "Zendy"])
 
-        return recipient_email_list
+
+def check_approve_by_archive_zip_exists(workflow):
+    "whether to check if a VoR article zip exists when approving an article to send"
+    return bool(workflow not in ["OVID", "Zendy"])
+
+
+def get_friendly_email_recipients(settings, workflow):
+
+    recipient_email_list = []
+
+    recipients = None
+    try:
+        # Get the email recipient list
+        if workflow == "HEFCE":
+            recipients = settings.HEFCE_EMAIL
+        elif workflow == "Cengage":
+            recipients = settings.CENGAGE_EMAIL
+        elif workflow == "GoOA":
+            recipients = settings.GOOA_EMAIL
+        elif workflow == "WoS":
+            recipients = settings.WOS_EMAIL
+        elif workflow == "CNPIEC":
+            recipients = settings.CNPIEC_EMAIL
+        elif workflow == "CNKI":
+            recipients = settings.CNKI_EMAIL
+        elif workflow == "CLOCKSS":
+            recipients = settings.CLOCKSS_EMAIL
+        elif workflow == "OVID":
+            recipients = settings.OVID_EMAIL
+        elif workflow == "Zendy":
+            recipients = settings.ZENDY_EMAIL
+        elif workflow == "OASwitchboard":
+            recipients = settings.OASWITCHBOARD_EMAIL
+    except:
+        pass
+
+    if recipients and isinstance(recipients, list):
+        recipient_email_list = recipients
+    elif recipients:
+        recipient_email_list.append(recipients)
+
+    return recipient_email_list
 
 
 def get_friendly_email_subject(current_time, workflow):
@@ -649,7 +653,7 @@ def get_friendly_email_body(current_time, approved_articles):
 
 
 def approve_for_oa_switchboard(article):
-    "check article tyep and display channel to only sent particular types of articles"
+    "check article type and display channel to only sent particular types of articles"
     allowed_article_type = "research-article"
     allowed_display_channel_values = [
         "Research Advance",

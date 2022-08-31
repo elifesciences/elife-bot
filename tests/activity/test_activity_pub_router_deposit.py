@@ -200,6 +200,92 @@ class TestPubRouterDeposit(unittest.TestCase):
         result = self.pubrouterdeposit.do_activity(activity_data)
         self.assertTrue(result)
 
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(activity_PubRouterDeposit, "start_pmc_deposit_workflow")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    @patch.object(activity_module, "storage_context")
+    @patch("provider.outbox_provider.storage_context")
+    @data("PMC")
+    def test_do_activity_pmc_starter_failure(
+        self,
+        workflow_name,
+        fake_outbox_storage_context,
+        fake_storage_context,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_start,
+        fake_email_smtp_connect,
+    ):
+        "test for the the PMC starter function returns False"
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.pubrouterdeposit.get_tmp_dir()
+        )
+        activity_data = {"data": {"workflow": workflow_name}}
+        resources = helpers.populate_storage(
+            from_dir="tests/test_data/",
+            to_dir=directory.path,
+            filenames=["elife00013.xml"],
+            sub_dir="pmc/outbox",
+        )
+        fake_outbox_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            test_activity_data.ExpandArticle_files_source_folder,
+            ARCHIVE_ZIP_BUCKET_S3_KEYS,
+        )
+        fake_was_ever_poa.return_value = False
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+        fake_start.return_value = False
+        result = self.pubrouterdeposit.do_activity(activity_data)
+        self.assertTrue(result)
+        self.assertTrue(
+            "PubRouterDeposit PMC FAILED to start a workflow for article: 10.7554/eLife.00013"
+            in self.pubrouterdeposit.logger.loginfo
+        )
+
+
+class TestStartFtpArticleWorkflow(unittest.TestCase):
+    def setUp(self):
+        self.pubrouterdeposit = activity_PubRouterDeposit(
+            settings_mock, FakeLogger(), None, None, None
+        )
+        self.pubrouterdeposit.workflow = "HEFCE"
+        self.article = article()
+        self.article.doi_id = "00666"
+
+    @patch("boto3.client")
+    def test_start_ftp_article_workflow(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
+        result = self.pubrouterdeposit.start_ftp_article_workflow(self.article)
+        self.assertEqual(result, True)
+
+    @patch.object(FakeSWFClient, "start_workflow_execution")
+    @patch("boto3.client")
+    def test_start_ftp_article_workflow_exception(self, fake_client, fake_start):
+        fake_client.return_value = FakeSWFClient()
+        exception_message = "An exception"
+        fake_start.side_effect = Exception(exception_message)
+        result = self.pubrouterdeposit.start_ftp_article_workflow(self.article)
+        self.assertEqual(result, False)
+        self.assertEqual(
+            self.pubrouterdeposit.logger.logexception,
+            "PubRouterDeposit exception starting workflow FTPArticle_%s_%s: %s"
+            % (self.pubrouterdeposit.workflow, self.article.doi_id, exception_message),
+        )
+
+
+class TestGetArchiveBucketS3Keys(unittest.TestCase):
+    def setUp(self):
+        self.pubrouterdeposit = activity_PubRouterDeposit(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
     @patch.object(activity_module, "storage_context")
     def test_get_archive_bucket_s3_keys(self, fake_storage_context):
         # create mock Key object with name and last_modified value
@@ -215,6 +301,223 @@ class TestPubRouterDeposit(unittest.TestCase):
         s3_keys = self.pubrouterdeposit.get_archive_bucket_s3_keys()
         self.assertEqual(s3_keys, expected)
 
+
+class TestStartPmcDepositWorkflow(unittest.TestCase):
+    def setUp(self):
+        self.pubrouterdeposit = activity_PubRouterDeposit(
+            settings_mock, FakeLogger(), None, None, None
+        )
+        self.pubrouterdeposit.workflow = "HEFCE"
+        # test overriding the workflow timeout
+        self.workflow_timeout_original = (
+            activity_module.PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
+        )
+        activity_module.PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = 1
+        self.article = article()
+        self.article.doi_id = "00666"
+
+    def tearDown(self):
+        # reset the workflow timeout value
+        activity_module.PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = (
+            self.workflow_timeout_original
+        )
+
+    @patch("boto3.client")
+    def test_start_pmc_deposit_workflow(self, fake_client):
+        fake_client.return_value = FakeSWFClient()
+        result = self.pubrouterdeposit.start_pmc_deposit_workflow(self.article, "", "")
+        self.assertEqual(result, True)
+
+    @patch.object(FakeSWFClient, "start_workflow_execution")
+    @patch("boto3.client")
+    def test_start_pmc_deposit_workflow_exception(self, fake_client, fake_start):
+        fake_client.return_value = FakeSWFClient()
+        exception_message = "An exception"
+        fake_start.side_effect = Exception(exception_message)
+        result = self.pubrouterdeposit.start_pmc_deposit_workflow(self.article, "", "")
+        self.assertEqual(result, False)
+        self.assertEqual(
+            self.pubrouterdeposit.logger.logexception,
+            "PubRouterDeposit exception starting workflow PMCDeposit_%s: %s"
+            % (self.article.doi_id, exception_message),
+        )
+
+
+@ddt
+class TestApproveArticles(unittest.TestCase):
+    def setUp(self):
+        self.pubrouterdeposit = activity_PubRouterDeposit(
+            settings_mock, FakeLogger(), None, None, None
+        )
+        test_article = article()
+        test_article.doi = "10.7554/eLife.00666"
+        test_article.doi_id = "00666"
+        test_article.article_type = "research-article"
+        test_article.display_channel = ["Research Article"]
+        test_article.is_poa = True
+        self.articles = [test_article]
+
+    @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
+    @patch("provider.article.article.was_ever_published")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    @data(
+        "Cengage",
+        "CLOCKSS",
+        "CNKI",
+        "CNPIEC",
+        "GoOA",
+        "HEFCE",
+        "OASwitchboard",
+        "OVID",
+        "PMC",
+        "WoS",
+        "Zendy",
+    )
+    def test_approve_articles(
+        self,
+        workflow_name,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_was_ever_published,
+        fake_get_latest_archive_zip_name,
+    ):
+        fake_was_ever_poa.return_value = True
+        fake_was_ever_published.return_value = False
+        fake_get_latest_archive_zip_name.return_value = "test.zip"
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+
+        expected_approved_article_dois = ["10.7554/eLife.00666"]
+        expected_remove_doi_list = []
+        approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
+            self.articles, workflow_name
+        )
+        # self.assertTrue(False)
+        approved_article_dois = [article.doi for article in approved_articles]
+        self.assertEqual(approved_article_dois, expected_approved_article_dois)
+        self.assertEqual(remove_doi_list, expected_remove_doi_list)
+
+    @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
+    @patch("provider.article.article.was_ever_published")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    @data(
+        "OASwitchboard",
+    )
+    def test_approve_articles_oaswitchboard(
+        self,
+        workflow_name,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_was_ever_published,
+        fake_get_latest_archive_zip_name,
+    ):
+        "test when OASwitchboard is not approved"
+        fake_was_ever_poa.return_value = True
+        fake_was_ever_published.return_value = False
+        fake_get_latest_archive_zip_name.return_value = "test.zip"
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+        # article test data that will not be sent to OASwitchboard
+        self.articles[0].article_type = None
+        expected_approved_article_dois = []
+        expected_remove_doi_list = ["10.7554/eLife.00666"]
+        approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
+            self.articles, workflow_name
+        )
+        approved_article_dois = [article.doi for article in approved_articles]
+        self.assertEqual(approved_article_dois, expected_approved_article_dois)
+        self.assertEqual(remove_doi_list, expected_remove_doi_list)
+
+    @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
+    @patch("provider.article.article.was_ever_published")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    @data(
+        "Cengage",
+        "CNKI",
+        "CNPIEC",
+        "GoOA",
+        "HEFCE",
+        "OASwitchboard",
+        "WoS",
+    )
+    def test_approve_articles_was_ever_published(
+        self,
+        workflow_name,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_was_ever_published,
+        fake_get_latest_archive_zip_name,
+    ):
+        "test when was_ever_published is True for coverage adding the article to the remove list"
+
+        fake_was_ever_poa.return_value = True
+        fake_was_ever_published.return_value = True
+        fake_get_latest_archive_zip_name.return_value = "test.zip"
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+        expected_approved_article_dois = []
+        expected_remove_doi_list = ["10.7554/eLife.00666"]
+        approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
+            self.articles, workflow_name
+        )
+        approved_article_dois = [article.doi for article in approved_articles]
+        self.assertEqual(approved_article_dois, expected_approved_article_dois)
+        self.assertEqual(remove_doi_list, expected_remove_doi_list)
+
+    @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
+    @patch("provider.article.article.was_ever_published")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    @data(
+        "Cengage",
+        "CLOCKSS",
+        "CNKI",
+        "CNPIEC",
+        "GoOA",
+        "HEFCE",
+        "OASwitchboard",
+        "PMC",
+        "WoS",
+    )
+    def test_approve_articles_archive_zip_does_not_exist(
+        self,
+        workflow_name,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_was_ever_published,
+        fake_get_latest_archive_zip_name,
+    ):
+        "test when was_ever_published is False for coverage"
+        fake_was_ever_poa.return_value = True
+        fake_was_ever_published.return_value = False
+        fake_get_latest_archive_zip_name.return_value = None
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+        # article test data that will not be sent to OASwitchboard
+        self.articles[0].article_type = None
+        expected_approved_article_dois = []
+        expected_remove_doi_list = ["10.7554/eLife.00666"]
+        approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
+            self.articles, workflow_name
+        )
+        approved_article_dois = [article.doi for article in approved_articles]
+        self.assertEqual(approved_article_dois, expected_approved_article_dois)
+        self.assertEqual(remove_doi_list, expected_remove_doi_list)
+
+
+@ddt
+class TestGetFriendlyEmailRecipients(unittest.TestCase):
     @data(
         "HEFCE",
         "Cengage",
@@ -223,11 +526,25 @@ class TestPubRouterDeposit(unittest.TestCase):
         "CNPIEC",
         "CNKI",
         "CLOCKSS",
+        "OVID",
+        "Zendy",
+        "OASwitchboard",
     )
     def test_workflow_specific_values(self, workflow):
         "test functions that look at the workflow name"
         self.assertIsNotNone(
-            self.pubrouterdeposit.get_friendly_email_recipients(workflow)
+            activity_module.get_friendly_email_recipients(settings_mock, workflow)
+        )
+
+    def test_recipients_string(self):
+        "test when the recipients is just a string and not a list"
+
+        class TestSettings:
+            HEFCE_EMAIL = "email@example.org"
+
+        test_settings = TestSettings()
+        self.assertIsNotNone(
+            activity_module.get_friendly_email_recipients(test_settings, "HEFCE")
         )
 
 
