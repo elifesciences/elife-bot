@@ -163,6 +163,8 @@ class activity_DepositCrossref(Activity):
             )
             # Check for a version number
             crossref.set_article_version(article, self.settings)
+            # set Contributor orcid_authenticated values to True
+            crossref.contributor_orcid_authenticated(article, True)
         return article_object_map
 
     def approve_for_publishing(self):

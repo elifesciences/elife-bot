@@ -206,6 +206,9 @@ class activity_DepositCrossrefPeerReview(Activity):
                 # dedupe contributors
                 dedupe_contributors(sub_article)
 
+                # set Contributor orcid_authenticated values to True
+                crossref.contributor_orcid_authenticated(sub_article, True)
+
         return article_object_map
 
     def get_manuscript_object(self, doi):
