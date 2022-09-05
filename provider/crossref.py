@@ -52,6 +52,14 @@ def article_xml_list_parse(article_xml_files, bad_xml_files, tmp_dir=None):
     return article_object_map
 
 
+def contributor_orcid_authenticated(article, orcid_authenticated):
+    "set the orcid_authenticated attribute of contributor objects in the article"
+    for contributor in article.contributors:
+        if hasattr(contributor, "orcid_authenticated"):
+            contributor.orcid_authenticated = orcid_authenticated
+    return article
+
+
 def set_article_pub_date(article, crossref_config, settings, logger):
     """if there is no pub date then set it from lax data"""
     # Check for a pub date

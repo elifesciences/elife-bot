@@ -3,7 +3,7 @@ import unittest
 from collections import OrderedDict
 from mock import patch
 from testfixtures import TempDirectory
-from elifearticle.article import ArticleDate
+from elifearticle.article import Article, ArticleDate, Contributor
 from provider import crossref
 from tests import settings_mock
 import tests.test_data as test_case_data
@@ -49,6 +49,14 @@ class TestCrossrefProvider(unittest.TestCase):
         # one good article in the map, one bad xml file in the bad_xml_files list
         self.assertEqual(len(article_object_map), 1)
         self.assertEqual(len(bad_xml_files), 1)
+
+    def test_contributor_orcid_authenticated(self):
+        "test setting Contributor orcid_authenticated attribute"
+        article = Article()
+        contributor = Contributor("author", "Surname", "Given")
+        article.add_contributor(contributor)
+        article = crossref.contributor_orcid_authenticated(article, True)
+        self.assertEqual(article.contributors[0].orcid_authenticated, True)
 
     @patch("provider.lax_provider.article_versions")
     def test_set_article_pub_date(self, mock_article_versions):

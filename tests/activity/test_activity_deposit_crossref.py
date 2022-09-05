@@ -52,6 +52,7 @@ class TestDepositCrossref(unittest.TestCase):
                     '<publication_date media_type="online"><month>06</month><day>16</day>'
                     + "<year>2016</year></publication_date>"
                 ),
+                '<ORCID authenticated="true">http://orcid.org/0000-0002-9558-1121</ORCID>',
                 '<item_number item_number_type="article_number">e15747</item_number>',
                 (
                     '<citation key="bib13"><journal_title>BMC Biology</journal_title>'

@@ -69,6 +69,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                     '<rel:inter_work_relation identifier-type="doi" relationship-type="isReviewOf">'
                     + "10.7554/eLife.15747</rel:inter_work_relation>"
                 ),
+                '<ORCID authenticated="true">http://orcid.org/0000-0002-9558-1121</ORCID>',
                 "<doi>10.7554/eLife.15747.010</doi>",
                 "<resource>https://elifesciences.org/articles/15747#SA1</resource>",
                 '<peer_review stage="pre-publication" type="author-comment">',
