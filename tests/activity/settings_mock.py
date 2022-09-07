@@ -42,7 +42,7 @@ lax_article_related = "https://test/eLife.{article_id}/related"
 verify_ssl = False
 lax_auth_key = "an_auth_key"
 
-PMC_FTP_URI = ""
+PMC_FTP_URI = "pmc.localhost"
 PMC_FTP_USERNAME = ""
 PMC_FTP_PASSWORD = ""
 PMC_FTP_CWD = ""

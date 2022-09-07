@@ -85,9 +85,6 @@ class activity_FTPArticle(Activity):
         # Create output directories
         self.make_activity_directories()
 
-        # Download the S3 objects
-        self.download_files_from_s3(elife_id, workflow)
-
         # Set FTP or SFTP settings
         try:
             self.set_ftp_settings(elife_id, workflow)
@@ -101,6 +98,28 @@ class activity_FTPArticle(Activity):
             self.clean_tmp_dir()
             return False
 
+        # additional sending details
+        details = sending_details(workflow)
+
+        # Check the settings for suitability to send
+        if details.get("send_by_protocol") == "ftp" and not self.FTP_URI:
+            self.logger.info(
+                "%s FTP_URI value is blank, cannot send files for workflow %s",
+                self.name,
+                workflow,
+            )
+            return self.ACTIVITY_PERMANENT_FAILURE
+        if details.get("send_by_protocol") == "sftp" and not self.SFTP_URI:
+            self.logger.info(
+                "%s SFTP_URI value is blank, cannot send files for workflow %s",
+                self.name,
+                workflow,
+            )
+            return self.ACTIVITY_PERMANENT_FAILURE
+
+        # Download the S3 objects
+        self.download_files_from_s3(elife_id, workflow)
+
         # send files to endpoint
         try:
             uploadfiles = glob.glob(
@@ -111,8 +130,6 @@ class activity_FTPArticle(Activity):
                     "FTPArticle running %s workflow for article %s, attempting to send files: %s"
                     % (self.workflow, self.doi_id, uploadfiles)
                 )
-
-            details = sending_details(workflow)
 
             if details.get("send_unzipped_files"):
                 # send the contents of the zip file unzipped

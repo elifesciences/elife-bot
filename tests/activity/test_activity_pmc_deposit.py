@@ -190,6 +190,23 @@ class TestPMCDeposit(unittest.TestCase):
     @patch.object(FakeStorageContext, "list_resources")
     @patch.object(activity_PMCDeposit, "ftp_to_endpoint")
     @patch("activity.activity_PMCDeposit.storage_context")
+    def test_do_activity_no_settings_uri(
+        self,
+        fake_storage_context,
+        fake_ftp_to_endpoint,
+        fake_list_resources,
+        mock_article_related,
+    ):
+        "test for when the PMC_FTP_URI is blank"
+        self.activity.settings.PMC_FTP_URI = ""
+        test_data = self.do_activity_passes[1]
+        result = self.activity.do_activity(test_data["input_data"])
+        self.assertEqual(self.activity.ACTIVITY_PERMANENT_FAILURE, result)
+
+    @patch("provider.lax_provider.article_related")
+    @patch.object(FakeStorageContext, "list_resources")
+    @patch.object(activity_PMCDeposit, "ftp_to_endpoint")
+    @patch("activity.activity_PMCDeposit.storage_context")
     def test_do_activity_lax_failure(
         self,
         fake_storage_context,

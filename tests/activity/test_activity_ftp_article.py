@@ -87,6 +87,28 @@ class TestFTPArticle(unittest.TestCase):
             "info log did not contain started message for workflow %s" % workflow,
         )
 
+    def test_do_activity_no_ftp_uri(
+        self,
+    ):
+        "test for when the FTP_URI is blank"
+        self.activity.settings.CENGAGE_FTP_URI = ""
+        workflow = "Cengage"
+        elife_id = "19405"
+        expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
+        activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
+        self.assertEqual(self.activity.do_activity(activity_data), expected_result)
+
+    def test_do_activity_no_sftp_uri(
+        self,
+    ):
+        "test for when the SFTP_URI is blank"
+        self.activity.settings.HEFCE_SFTP_URI = ""
+        workflow = "HEFCE"
+        elife_id = "19405"
+        expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
+        activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
+        self.assertEqual(self.activity.do_activity(activity_data), expected_result)
+
     @patch.object(activity_FTPArticle, "download_files_from_s3")
     @patch.object(activity_FTPArticle, "sftp_to_endpoint")
     def test_do_activity_failure(
