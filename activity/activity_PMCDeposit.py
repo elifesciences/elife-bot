@@ -65,6 +65,13 @@ class activity_PMCDeposit(Activity):
         # Create output directories
         self.make_activity_directories(list(self.directories.values()))
 
+        # Check the settings for suitability to send
+        if not self.settings.PMC_FTP_URI:
+            self.logger.info(
+                "%s settings PMC_FTP_URI value is blank, cannot send files", self.name
+            )
+            return self.ACTIVITY_PERMANENT_FAILURE
+
         # Download the S3 objects
         download_status = self.download_files_from_s3(self.document)
 
