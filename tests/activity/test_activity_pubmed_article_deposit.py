@@ -310,7 +310,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             self.activity.sftp_files_to_endpoint("", "")
         self.assertEqual(
             self.activity.logger.logexception,
-            "Failed to connect to SFTP endpoint : SFTP connect exception",
+            "Failed to connect to SFTP endpoint pubmed.localhost: SFTP connect exception",
         )
 
     @patch.object(sftp.SFTP, "sftp_to_endpoint")
@@ -326,6 +326,25 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             self.activity.logger.logexception,
             "Failed to upload files by SFTP to PubMed: SFTP transfer exception",
         )
+
+
+class TestPubmedArticleDepositNoSftpUri(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PubmedArticleDeposit(
+            settings_mock, fake_logger, None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    def test_do_activity_no_sftp_uri(self):
+        "test for if endpoint URI is blank"
+        self.activity.settings.PUBMED_SFTP_URI = ""
+        # do the activity
+        result = self.activity.do_activity()
+        # check assertions
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
 
 class TestPubmedGeneratePubmedXml(unittest.TestCase):
