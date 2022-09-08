@@ -70,6 +70,13 @@ class activity_PubmedArticleDeposit(Activity):
 
         self.make_activity_directories()
 
+        # Check the settings for suitability to send
+        if not self.settings.PUBMED_SFTP_URI:
+            self.logger.info(
+                "%s PUBMED_SFTP_URI value is blank, cannot deposit articles", self.name
+            )
+            return self.ACTIVITY_PERMANENT_FAILURE
+
         # Get a list of outbox file names always
         self.outbox_s3_key_names = outbox_provider.get_outbox_s3_key_names(
             self.settings, self.publish_bucket, self.outbox_folder

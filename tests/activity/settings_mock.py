@@ -164,7 +164,7 @@ git_repo_name = "elife-article-xml-ci"
 git_repo_path = "articles/"
 github_token = "1234567890abcdef"
 
-PUBMED_SFTP_URI = ""
+PUBMED_SFTP_URI = "pubmed.localhost"
 PUBMED_SFTP_USERNAME = ""
 PUBMED_SFTP_PASSWORD = ""
 PUBMED_SFTP_CWD = ""
