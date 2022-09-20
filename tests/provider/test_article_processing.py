@@ -270,7 +270,7 @@ class TestRepackageArchiveZip(unittest.TestCase):
         )
         self.assertEqual(
             logger.loginfo[3],
-            ("renamed: %s" % list(expected_file_name_map.keys())),
+            ("renamed: %s" % sorted(list(expected_file_name_map.keys()))),
         )
 
 

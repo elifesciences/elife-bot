@@ -228,9 +228,9 @@ def repackage_archive_zip_to_pmc_zip(
     )
     logger.info("file_name_map: %s" % file_name_map)
     if renamed_list:
-        logger.info("renamed: %s" % renamed_list)
+        logger.info("renamed: %s" % sorted(renamed_list))
     if not_renamed_list:
-        logger.info("not renamed: %s" % not_renamed_list)
+        logger.info("not renamed: %s" % sorted(not_renamed_list))
     # convert the XML
     article_xml_file = glob.glob(zip_renamed_files_dir + "/*.xml")[0]
     if alter_xml:
