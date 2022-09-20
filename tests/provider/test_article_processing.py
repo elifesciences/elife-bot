@@ -266,7 +266,7 @@ class TestRepackageArchiveZip(unittest.TestCase):
         )
         self.assertEqual(
             logger.loginfo[2],
-            ("file_name_map: %s" % expected_file_name_map),
+            ("file_name_map: %s" % sorted(expected_file_name_map)),
         )
         self.assertEqual(
             logger.loginfo[3],
