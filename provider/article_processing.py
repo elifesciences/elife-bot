@@ -65,7 +65,7 @@ def rename_files_remove_version_number(files_dir, output_dir, logger=None):
     """Rename files to not include the version number, if present"""
 
     # Get a list of all files
-    dirfiles = file_list(files_dir)
+    dirfiles = sorted(file_list(files_dir))
 
     file_name_map = stripped_file_name_map(dirfiles, logger)
 
@@ -226,7 +226,7 @@ def repackage_archive_zip_to_pmc_zip(
         "repackage_archive_zip_to_pmc_zip() verified renamed files from %s: %s"
         % (input_zip_file_path.rsplit(os.sep, 1)[-1], verified)
     )
-    logger.info("file_name_map: %s" % sorted(file_name_map))
+    logger.info("file_name_map: %s" % file_name_map)
     if renamed_list:
         logger.info("renamed: %s" % sorted(renamed_list))
     if not_renamed_list:

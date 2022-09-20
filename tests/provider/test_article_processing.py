@@ -229,10 +229,10 @@ class TestRepackageArchiveZip(unittest.TestCase):
         expected_article_xml_string = b"elife-19405.pdf"
         expected_file_name_map = OrderedDict(
             [
-                ("elife-19405-v1.pdf", "elife-19405.pdf"),
-                ("elife-19405-inf1-v1.tif", "elife-19405-inf1.tif"),
-                ("elife-19405-v1.xml", "elife-19405.xml"),
                 ("elife-19405-fig1-v1.tif", "elife-19405-fig1.tif"),
+                ("elife-19405-inf1-v1.tif", "elife-19405-inf1.tif"),
+                ("elife-19405-v1.pdf", "elife-19405.pdf"),
+                ("elife-19405-v1.xml", "elife-19405.xml"),
             ]
         )
         expected_pmc_zip_file_contents = expected_file_name_map.values()
@@ -266,7 +266,7 @@ class TestRepackageArchiveZip(unittest.TestCase):
         )
         self.assertEqual(
             logger.loginfo[2],
-            ("file_name_map: %s" % sorted(expected_file_name_map)),
+            ("file_name_map: %s" % expected_file_name_map),
         )
         self.assertEqual(
             logger.loginfo[3],
