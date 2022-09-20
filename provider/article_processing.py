@@ -1,5 +1,7 @@
 import os
 import shutil
+import zipfile
+import glob
 from collections import OrderedDict
 import dateutil.parser
 from elifetools import xmlio
@@ -186,3 +188,96 @@ def download_jats(settings, expanded_folder_name, to_dir, logger):
             % (str(expanded_folder_name), str(exception))
         )
     return jats_file
+
+
+def unzip_article_xml(input_zip_file_path, output_dir):
+    "unzip the article XML file from an article zip file"
+    article_xml_path = None
+    with zipfile.ZipFile(input_zip_file_path, "r") as open_zipfile:
+        for zipfile_info in open_zipfile.infolist():
+            if zipfile_info.filename.endswith(".xml"):
+                info = ArticleInfo(file_name_from_name(zipfile_info.filename))
+                if info.file_type == "ArticleXML":
+                    article_xml_path = open_zipfile.extract(zipfile_info, output_dir)
+                    break
+    return article_xml_path
+
+
+def repackage_archive_zip_to_pmc_zip(
+    input_zip_file_path, new_zip_file_path, temp_dir, logger, alter_xml=False
+):
+    "repackage the zip file  to a PMC zip format"
+    # make temporary directories
+    zip_extracted_dir = os.path.join(temp_dir, "junk_dir")
+    os.makedirs(zip_extracted_dir, exist_ok=True)
+    zip_renamed_files_dir = os.path.join(temp_dir, "rename_dir")
+    os.makedirs(zip_renamed_files_dir, exist_ok=True)
+    # unzip contents
+    archive_zip_name = input_zip_file_path
+    with zipfile.ZipFile(archive_zip_name, "r") as myzip:
+        myzip.extractall(zip_extracted_dir)
+    # rename the files and profile the files
+    file_name_map = rename_files_remove_version_number(
+        files_dir=zip_extracted_dir, output_dir=zip_renamed_files_dir
+    )
+    # verify file names
+    (verified, renamed_list, not_renamed_list) = verify_rename_files(file_name_map)
+    logger.info(
+        "repackage_archive_zip_to_pmc_zip() verified renamed files from %s: %s"
+        % (input_zip_file_path.rsplit(os.sep, 1)[-1], verified)
+    )
+    logger.info("file_name_map: %s" % sorted(file_name_map))
+    if renamed_list:
+        logger.info("renamed: %s" % sorted(renamed_list))
+    if not_renamed_list:
+        logger.info("not renamed: %s" % sorted(not_renamed_list))
+    # convert the XML
+    article_xml_file = glob.glob(zip_renamed_files_dir + "/*.xml")[0]
+    if alter_xml:
+        # Temporary XML rewrite of related-object tag
+        alter_xml_related_object(article_xml_file, logger)
+    convert_xml(xml_file=article_xml_file, file_name_map=file_name_map)
+    # rezip the files into PMC zip format
+    logger.info("creating new PMC zip file named " + new_zip_file_path)
+    with zipfile.ZipFile(
+        new_zip_file_path,
+        "w",
+        zipfile.ZIP_DEFLATED,
+        allowZip64=True,
+    ) as new_zipfile:
+        dirfiles = file_list(zip_renamed_files_dir)
+        for dir_file in dirfiles:
+            filename = dir_file.split(os.sep)[-1]
+            new_zipfile.write(dir_file, filename)
+    return True
+
+
+def alter_xml_related_object(xml_file, logger):
+    "modify the related-object tag in the article XML file"
+    # Register namespaces
+    xmlio.register_xmlns()
+
+    root, doctype_dict, processing_instructions = xmlio.parse(
+        xml_file, return_doctype_dict=True, return_processing_instructions=True
+    )
+
+    # Convert related-object tag
+    for xml_tag in root.findall("./sub-article/front-stub/related-object"):
+        logger.info("Converting related-object tag to ext-link tag in sub-article")
+        xml_tag.tag = "ext-link"
+        xml_tag.set("ext-link-type", "uri")
+        # delete attributes
+        for attribute_name in ["link-type", "object-id", "object-id-type"]:
+            if xml_tag.attrib.get(attribute_name):
+                del xml_tag.attrib[attribute_name]
+
+    # Start the file output
+    reparsed_string = xmlio.output(
+        root,
+        output_type=None,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions,
+    )
+
+    with open(xml_file, "wb") as open_file:
+        open_file.write(reparsed_string)

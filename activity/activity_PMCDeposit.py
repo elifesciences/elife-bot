@@ -4,7 +4,6 @@ import json
 import zipfile
 import re
 import glob
-from elifetools import xmlio
 from elifetools import parseJATS as parser
 import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo
@@ -38,6 +37,7 @@ class activity_PMCDeposit(Activity):
             "INPUT_DIR": self.get_tmp_dir() + os.sep + "input_dir",
             "ZIP_DIR": self.get_tmp_dir() + os.sep + "zip_dir",
             "OUTPUT_DIR": self.get_tmp_dir() + os.sep + "output_dir",
+            "JUNK_DIR": os.path.join(self.get_tmp_dir(), "junk_dir"),
         }
 
         # Bucket settings
@@ -94,50 +94,29 @@ class activity_PMCDeposit(Activity):
 
         # Profile the article
         journal = get_journal(self.document)
-        xml_search_folders = [
-            self.directories.get("TMP_DIR"),
-            self.directories.get("OUTPUT_DIR"),
-        ]
-
-        fid, volume = profile_article(article_xml_file(xml_search_folders))
-
-        # Rename the files
-        file_name_map = article_processing.rename_files_remove_version_number(
-            self.directories.get("TMP_DIR"),
-            self.directories.get("OUTPUT_DIR"),
-            self.logger,
+        article_xml_file = article_processing.unzip_article_xml(
+            input_zip_file_name, self.directories.get("JUNK_DIR")
         )
-
-        (
-            verified,
-            renamed_list,
-            not_renamed_list,
-        ) = article_processing.verify_rename_files(file_name_map)
-
-        self.logger.info(
-            "verified %s: %s" % (self.directories.get("INPUT_DIR"), verified)
-        )
-        self.logger.info("file_name_map: %s" % file_name_map)
-        if renamed_list:
-            self.logger.info("renamed: %s" % renamed_list)
-        if not_renamed_list:
-            self.logger.info("not renamed: %s" % not_renamed_list)
-
-        # Temporary XML rewrite of related-object tag
-        alter_xml(article_xml_file(xml_search_folders), self.logger)
-
-        # Convert the XML
-        article_processing.convert_xml(
-            article_xml_file(xml_search_folders), file_name_map
-        )
-
+        fid, volume = profile_article(article_xml_file)
         # Get the new zip file name
         # take into account the r1 r2 revision numbers when replacing an article
         revision = self.zip_revision_number(fid)
-        self.zip_file_name = new_zip_filename(journal, volume, fid, revision)
+        self.zip_file_name = article_processing.new_pmc_zip_filename(
+            journal, volume, fid, revision
+        )
         self.logger.info("new PMC zip file name: " + str(self.zip_file_name))
-        zip_file_path = self.directories.get("ZIP_DIR") + os.sep + self.zip_file_name
-        create_new_zip(zip_file_path, self.directories.get("OUTPUT_DIR"), self.logger)
+        zip_file_path = os.path.join(
+            self.directories.get("ZIP_DIR"), self.zip_file_name
+        )
+
+        # repackage the archive zip into PMC zip format
+        archive_zip_repackaged = article_processing.repackage_archive_zip_to_pmc_zip(
+            input_zip_file_name,
+            zip_file_path,
+            self.directories.get("TMP_DIR"),
+            self.logger,
+            alter_xml=True,
+        )
 
         # check if the article is retracted
         article_retracted_status = lax_provider.article_retracted_status(
@@ -158,7 +137,11 @@ class activity_PMCDeposit(Activity):
 
         # FTP the zip
         ftp_status = None
-        if verified and self.zip_file_name and not article_retracted_status:
+        if (
+            archive_zip_repackaged
+            and self.zip_file_name
+            and not article_retracted_status
+        ):
             try:
                 ftp_status = self.ftp_to_endpoint(self.directories.get("ZIP_DIR"))
             except Exception as exception:
@@ -186,7 +169,7 @@ class activity_PMCDeposit(Activity):
         if article_retracted_status:
             result = True
         else:
-            result = bool(verified and ftp_status)
+            result = bool(archive_zip_repackaged and ftp_status)
 
         # Clean up disk
         self.clean_tmp_dir()
@@ -325,48 +308,12 @@ def unzip_article_files(zip_file_name, to_dir, logger):
             open_file.extractall(to_dir)
 
 
-def create_new_zip(zip_file_name, files_dir, logger):
-
-    logger.info("creating new PMC zip file named " + zip_file_name)
-
-    with zipfile.ZipFile(
-        zip_file_name, "w", zipfile.ZIP_DEFLATED, allowZip64=True
-    ) as new_zipfile:
-        dirfiles = article_processing.file_list(files_dir)
-        for article_file_name in dirfiles:
-            filename = article_file_name.split(os.sep)[-1]
-            new_zipfile.write(article_file_name, filename)
-
-
 def get_journal(document):
     """get the journal name from the input zip file"""
     if document:
         info = ArticleInfo(article_processing.file_name_from_name(document))
         return info.journal
     return None
-
-
-def article_xml_file(folders):
-    """
-    Directories the XML file might be in depending on the step
-    """
-    for folder_name in folders:
-        for file_name in article_processing.file_list(folder_name):
-            info = ArticleInfo(article_processing.file_name_from_name(file_name))
-            if info.file_type == "ArticleXML":
-                return file_name
-    return None
-
-
-def new_zip_filename(journal, volume, fid, revision=None):
-
-    filename = journal
-    filename = filename + "-" + utils.pad_volume(volume)
-    filename = filename + "-" + utils.pad_msid(fid)
-    if revision:
-        filename = filename + ".r" + str(revision)
-    filename += ".zip"
-    return filename
 
 
 def profile_article(document):
@@ -410,34 +357,3 @@ def send_ftp_exception_email(subject, message, settings, logger):
 
     details = email_provider.smtp_send_messages(settings, messages, logger)
     logger.info("Email sending details: %s" % str(details))
-
-
-def alter_xml(xml_file, logger):
-    # Register namespaces
-    xmlio.register_xmlns()
-
-    root, doctype_dict, processing_instructions = xmlio.parse(
-        xml_file, return_doctype_dict=True, return_processing_instructions=True
-    )
-
-    # Convert related-object tag
-    for xml_tag in root.findall("./sub-article/front-stub/related-object"):
-        logger.info("Converting related-object tag to ext-link tag in sub-article")
-        xml_tag.tag = "ext-link"
-        xml_tag.set("ext-link-type", "uri")
-        # delete attributes
-        for attribute_name in ["link-type", "object-id", "object-id-type"]:
-            if xml_tag.attrib.get(attribute_name):
-                del xml_tag.attrib[attribute_name]
-
-    # Start the file output
-    reparsed_string = xmlio.output(
-        root,
-        output_type=None,
-        doctype_dict=doctype_dict,
-        processing_instructions=processing_instructions,
-    )
-
-    f = open(xml_file, "wb")
-    f.write(reparsed_string)
-    f.close()

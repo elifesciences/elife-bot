@@ -345,7 +345,9 @@ class TestRepackageArchiveZip(unittest.TestCase):
         doi_id = 19405
         # create activity directories
         self.activity.make_activity_directories()
-        zip_renamed_files_dir = self.activity.directories.get("RENAME_DIR")
+        zip_renamed_files_dir = os.path.join(
+            self.activity.directories.get("TMP_DIR"), "rename_dir"
+        )
         pmc_zip_output_dir = self.activity.directories.get("INPUT_DIR")
         expected_pmc_zip_file = os.path.join(pmc_zip_output_dir, "elife-05-19405.zip")
         expected_article_xml_file = os.path.join(
