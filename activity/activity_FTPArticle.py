@@ -43,7 +43,6 @@ class activity_FTPArticle(Activity):
             "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
             "ZIP_DIR": os.path.join(self.get_tmp_dir(), "zip_dir"),
             "FTP_TO_SOMEWHERE_DIR": os.path.join(self.get_tmp_dir(), "ftp_outbox"),
-            "RENAME_DIR": os.path.join(self.get_tmp_dir(), "renamed_files"),
             "JUNK_DIR": os.path.join(self.get_tmp_dir(), "junk_dir"),
         }
 
@@ -268,44 +267,23 @@ class activity_FTPArticle(Activity):
         "repackage the zip file in the TMP_DIR to a PMC zip format"
         # unzip contents
         zip_input_dir = self.directories.get("TMP_DIR")
-        zip_extracted_dir = self.directories.get("JUNK_DIR")
-        zip_renamed_files_dir = self.directories.get("RENAME_DIR")
-        pmc_zip_output_dir = self.directories.get("INPUT_DIR")
         archive_zip_name = glob.glob(zip_input_dir + "/*.zip")[0]
-        with zipfile.ZipFile(archive_zip_name, "r") as myzip:
-            myzip.extractall(zip_extracted_dir)
-        # rename the files and profile the files
-        file_name_map = article_processing.rename_files_remove_version_number(
-            files_dir=zip_extracted_dir, output_dir=zip_renamed_files_dir
+        # generate the output PMC zip file name
+        article_xml_file = article_processing.unzip_article_xml(
+            archive_zip_name, self.directories.get("JUNK_DIR")
         )
-        if self.logger:
-            self.logger.info(
-                "FTPArticle running %s workflow for article %s, file_name_map"
-                % (self.workflow, self.doi_id)
-            )
-            self.logger.info(file_name_map)
-        # convert the XML
-        article_xml_file = glob.glob(zip_renamed_files_dir + "/*.xml")[0]
-        article_processing.convert_xml(
-            xml_file=article_xml_file, file_name_map=file_name_map
-        )
-        # rezip the files into PMC zip format
         soup = parser.parse_document(article_xml_file)
         volume = parser.volume(soup)
         pmc_zip_file_name = article_processing.new_pmc_zip_filename(
             self.journal, volume, doi_id
         )
-        with zipfile.ZipFile(
-            os.path.join(pmc_zip_output_dir, pmc_zip_file_name),
-            "w",
-            zipfile.ZIP_DEFLATED,
-            allowZip64=True,
-        ) as new_zipfile:
-            dirfiles = article_processing.file_list(zip_renamed_files_dir)
-            for dir_file in dirfiles:
-                filename = dir_file.split(os.sep)[-1]
-                new_zipfile.write(dir_file, filename)
-        return True
+        pmc_zip_file_path = os.path.join(
+            self.directories.get("INPUT_DIR"), pmc_zip_file_name
+        )
+        # repackage the zip file
+        return article_processing.repackage_archive_zip_to_pmc_zip(
+            archive_zip_name, pmc_zip_file_path, zip_input_dir, self.logger
+        )
 
     def move_or_repackage_pmc_zip(self, doi_id, workflow):
         """

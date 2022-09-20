@@ -1,10 +1,8 @@
 import os
-import sys
-import shutil
 import unittest
 import zipfile
 from mock import patch
-from ddt import ddt, data, unpack
+from ddt import ddt
 from testfixtures import TempDirectory
 import activity.activity_PMCDeposit as activity_module
 from activity.activity_PMCDeposit import activity_PMCDeposit
@@ -344,100 +342,4 @@ class TestFtpToEndpoint(unittest.TestCase):
         self.assertEqual(
             str(self.activity.logger.logexception),
             ("Exception disconnecting from FTP server: An exception"),
-        )
-
-
-@ddt
-class TestArticleXMLFile(unittest.TestCase):
-    @patch("provider.article_processing.file_list")
-    @data(
-        (["folder_name/elife-36842-v2.xml"], "folder_name/elife-36842-v2.xml"),
-        (
-            ["folder_name/elife-36842-supp9-v2.xml", "folder_name/elife-36842-v2.xml"],
-            "folder_name/elife-36842-v2.xml",
-        ),
-        (["folder_name/not-an-xml-file.txt"], None),
-    )
-    @unpack
-    def test_article_xml_file(self, list_of_files, expected, fake_file_list):
-        fake_file_list.return_value = list_of_files
-        xml_search_folders = ["folder_name"]
-        self.assertEqual(activity_module.article_xml_file(xml_search_folders), expected)
-
-
-class TestAlterXML(unittest.TestCase):
-    def setUp(self):
-        self.logger = FakeLogger()
-
-    def tearDown(self):
-        TempDirectory.cleanup_all()
-
-    def test_alter_xml_unchanged(self):
-        "test altering a file where no changes will be made, output is the same as input"
-        directory = TempDirectory()
-        filename = "elife-00353-v1.xml"
-        source_file = "tests/files_source/%s" % filename
-        test_file = os.path.join(directory.path, filename)
-        shutil.copy(source_file, test_file)
-        activity_module.alter_xml(test_file, self.logger)
-        with open(source_file, "r") as open_file:
-            with open(test_file, "r") as open_output_file:
-                altered_xml = open_output_file.read()
-                expected = open_file.read()
-                # in Python 3.8 or newer the XML attributes will be a different order
-                if sys.version_info >= (3, 8):
-                    expected = expected.replace(
-                        '<article article-type="discussion" dtd-version="1.1d3" xmlns:xlink="http://www.w3.org/1999/xlink">',
-                        '<article xmlns:xlink="http://www.w3.org/1999/xlink" article-type="discussion" dtd-version="1.1d3">',
-                    )
-                self.assertEqual(altered_xml, expected)
-
-    def test_alter_xml(self):
-        "test an example XML"
-        directory = TempDirectory()
-        xml_declaration = """<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD with MathML3 v1.2 20190208//EN"  "JATS-archivearticle1-mathml3.dtd">"""
-        xml_string = (
-            """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
-<sub-article>
-<front-stub>
-<related-object id="sa0ro1" link-type="continued-by" object-id="10.1101/2021.02.28.433255" object-id-type="id" xlink:href="https://sciety.org/articles/activity/10.1101/2021.02.28.433255"/>
-</front-stub>
-</sub-article>
-</article>"""
-            % xml_declaration
-        )
-        if sys.version_info < (3, 8):
-            expected = (
-                """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
-<sub-article>
-<front-stub>
-<ext-link ext-link-type="uri" id="sa0ro1" xlink:href="https://sciety.org/articles/activity/10.1101/2021.02.28.433255"/>
-</front-stub>
-</sub-article>
-</article>"""
-                % xml_declaration
-            )
-        else:
-            # ext-link-type attribute will be last in Python 3.8 or newer
-            expected = (
-                """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
-<sub-article>
-<front-stub>
-<ext-link id="sa0ro1" xlink:href="https://sciety.org/articles/activity/10.1101/2021.02.28.433255" ext-link-type="uri"/>
-</front-stub>
-</sub-article>
-</article>"""
-                % xml_declaration
-            )
-
-        filename = "elife-99999-v1.xml"
-        test_file = os.path.join(directory.path, filename)
-        with open(test_file, "w") as open_file:
-            open_file.write(xml_string)
-        activity_module.alter_xml(test_file, self.logger)
-        with open(test_file, "r") as open_file:
-            self.assertEqual(open_file.read(), expected)
-        self.assertEqual(
-            self.logger.loginfo[-1],
-            "Converting related-object tag to ext-link tag in sub-article",
         )

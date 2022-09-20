@@ -1,11 +1,14 @@
 import unittest
+import shutil
 import os
+import sys
 import zipfile
 from collections import OrderedDict
 from ddt import ddt, data, unpack
 from testfixtures import tempdir
 from testfixtures import TempDirectory
 import provider.article_processing as article_processing
+from tests.activity.classes_mock import FakeLogger
 
 
 @ddt
@@ -188,6 +191,164 @@ class TestArticleProcessing(unittest.TestCase):
         self.assertEqual(
             article_processing.new_pmc_zip_filename(journal, volume, fid, revision),
             expected,
+        )
+
+
+class TestRepackageArchiveZip(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_repackage_archive_zip_to_pmc_zip(self):
+        directory = TempDirectory()
+        logger = FakeLogger()
+        input_zip_file_path = (
+            "tests/test_data/pmc/elife-19405-vor-v1-20160802113816.zip"
+        )
+        journal = "elife"
+        volume = 5
+        doi_id = 19405
+        new_zip_file_name = article_processing.new_pmc_zip_filename(
+            journal, volume, doi_id
+        )
+
+        # make the input_dir and output_dir for the tests
+        input_dir = os.path.join(directory.path, "input_dir")
+        os.makedirs(input_dir, exist_ok=True)
+        output_dir = os.path.join(directory.path, "output_dir")
+        os.makedirs(output_dir, exist_ok=True)
+
+        new_zip_file_path = os.path.join(output_dir, new_zip_file_name)
+
+        temp_dir = os.path.join(directory.path, "temp_dir")
+        zip_renamed_files_dir = os.path.join(temp_dir, "rename_dir")
+
+        expected_pmc_zip_file = os.path.join(output_dir, new_zip_file_name)
+        expected_article_xml_file = os.path.join(
+            zip_renamed_files_dir, "elife-19405.xml"
+        )
+        expected_article_xml_string = b"elife-19405.pdf"
+        expected_file_name_map = OrderedDict(
+            [
+                ("elife-19405-v1.pdf", "elife-19405.pdf"),
+                ("elife-19405-inf1-v1.tif", "elife-19405-inf1.tif"),
+                ("elife-19405-v1.xml", "elife-19405.xml"),
+                ("elife-19405-fig1-v1.tif", "elife-19405-fig1.tif"),
+            ]
+        )
+        expected_pmc_zip_file_contents = expected_file_name_map.values()
+        # copy in some sample data
+        dest_input_zip_file_path = os.path.join(
+            input_dir,
+            input_zip_file_path.rsplit("/", 1)[-1],
+        )
+        shutil.copy(input_zip_file_path, dest_input_zip_file_path)
+        article_processing.repackage_archive_zip_to_pmc_zip(
+            input_zip_file_path, new_zip_file_path, temp_dir, logger
+        )
+        # now can check the results
+        self.assertTrue(os.path.exists(expected_pmc_zip_file))
+        self.assertTrue(os.path.exists(expected_article_xml_file))
+        with open(expected_article_xml_file, "rb") as open_file:
+            # check for a renamed file in the XML contents
+            self.assertTrue(expected_article_xml_string in open_file.read())
+        with zipfile.ZipFile(expected_pmc_zip_file) as zip_file:
+            # check pmc zip file contents
+            self.assertEqual(
+                sorted(zip_file.namelist()), sorted(expected_pmc_zip_file_contents)
+            )
+        # check for log messages
+        self.assertEqual(
+            logger.loginfo[1],
+            (
+                "repackage_archive_zip_to_pmc_zip() verified renamed files from %s: True"
+                % input_zip_file_path.rsplit("/", 1)[-1]
+            ),
+        )
+        self.assertEqual(
+            logger.loginfo[2],
+            ("file_name_map: %s" % expected_file_name_map),
+        )
+        self.assertEqual(
+            logger.loginfo[3],
+            ("renamed: %s" % list(expected_file_name_map.keys())),
+        )
+
+
+class TestAlterXML(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_alter_xml_unchanged(self):
+        "test altering a file where no changes will be made, output is the same as input"
+        directory = TempDirectory()
+        filename = "elife-00353-v1.xml"
+        source_file = "tests/files_source/%s" % filename
+        test_file = os.path.join(directory.path, filename)
+        shutil.copy(source_file, test_file)
+        article_processing.alter_xml_related_object(test_file, self.logger)
+        with open(source_file, "r", encoding="utf-8") as open_file:
+            with open(test_file, "r", encoding="utf-8") as open_output_file:
+                altered_xml = open_output_file.read()
+                expected = open_file.read()
+                # in Python 3.8 or newer the XML attributes will be a different order
+                if sys.version_info >= (3, 8):
+                    expected = expected.replace(
+                        '<article article-type="discussion" dtd-version="1.1d3" xmlns:xlink="http://www.w3.org/1999/xlink">',
+                        '<article xmlns:xlink="http://www.w3.org/1999/xlink" article-type="discussion" dtd-version="1.1d3">',
+                    )
+                self.assertEqual(altered_xml, expected)
+
+    def test_alter_xml(self):
+        "test an example XML"
+        directory = TempDirectory()
+        xml_declaration = """<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD with MathML3 v1.2 20190208//EN"  "JATS-archivearticle1-mathml3.dtd">"""
+        xml_string = (
+            """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+<sub-article>
+<front-stub>
+<related-object id="sa0ro1" link-type="continued-by" object-id="10.1101/2021.02.28.433255" object-id-type="id" xlink:href="https://sciety.org/articles/activity/10.1101/2021.02.28.433255"/>
+</front-stub>
+</sub-article>
+</article>"""
+            % xml_declaration
+        )
+        if sys.version_info < (3, 8):
+            expected = (
+                """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+<sub-article>
+<front-stub>
+<ext-link ext-link-type="uri" id="sa0ro1" xlink:href="https://sciety.org/articles/activity/10.1101/2021.02.28.433255"/>
+</front-stub>
+</sub-article>
+</article>"""
+                % xml_declaration
+            )
+        else:
+            # ext-link-type attribute will be last in Python 3.8 or newer
+            expected = (
+                """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+<sub-article>
+<front-stub>
+<ext-link id="sa0ro1" xlink:href="https://sciety.org/articles/activity/10.1101/2021.02.28.433255" ext-link-type="uri"/>
+</front-stub>
+</sub-article>
+</article>"""
+                % xml_declaration
+            )
+
+        filename = "elife-99999-v1.xml"
+        test_file = os.path.join(directory.path, filename)
+        with open(test_file, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        article_processing.alter_xml_related_object(test_file, self.logger)
+        with open(test_file, "r", encoding="utf-8") as open_file:
+            self.assertEqual(open_file.read(), expected)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "Converting related-object tag to ext-link tag in sub-article",
         )
 
 
