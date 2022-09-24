@@ -36,7 +36,7 @@ digestparser = "~=0.1"
 medium = {git = "https://github.com/Medium/medium-sdk-python.git", ref = "bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6"}
 psutil = "~=5.8"
 pytz = "*"
-google-cloud-bigquery = "~=2.28"
+google-cloud-bigquery = "~=3.3.2"
 Jinja2 = "~=3.0"
 GitPython = "~=3.1"
 PyYAML = "~=5.4"
