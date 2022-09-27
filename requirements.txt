@@ -1,4 +1,4 @@
-# file generated 2022-09-26 - see update-dependencies.sh
+# file generated 2022-09-27 - see update-dependencies.sh
 arrow==1.2.3
 astroid==2.12.10
 attrs==22.1.0
@@ -40,7 +40,7 @@ idna==3.4
 importlib-metadata==4.8.3
 iniconfig==1.1.1
 isort==5.10.1
-jatsgenerator==0.3.0
+jatsgenerator==0.4.0
 Jinja2==3.1.2
 jmespath==1.0.1
 lazy-object-proxy==1.7.1
