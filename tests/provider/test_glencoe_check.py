@@ -9,24 +9,19 @@ class TestGlencoeCheck(unittest.TestCase):
             # the last five digits are extracted
             ("7777777777777", "77777"),
             ("7777777001234", "01234"),
-
             # `pad_msid` is called on the substring and leading zeros are truncated to 5 at most.
             ("7000000001234", "01234"),
-
             # five digit MSIDs are preserved
             ("01234", "01234"),
-
             # unpadded MSIDs are padded
             ("34", "00034"),
-
             # the kitchen sink is a special case
             ("91234567890", "1234567890"),
-
             # regular integers are handled
             (123, "00123"),
             (12345, "12345"),
             (123456, "123456"),
-            (111222333, "22333"), # (last five digits extracted)
+            (111222333, "22333"),  # (last five digits extracted)
         ]
         for given, expected in cases:
             self.assertEqual(glencoe_check.check_msid(given), expected)

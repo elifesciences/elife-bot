@@ -250,7 +250,9 @@ class activity_PubRouterDeposit(Activity):
             "input": input_data,
         }
         if FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT:
-            kwargs["executionStartToCloseTimeout"] = FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
+            kwargs[
+                "executionStartToCloseTimeout"
+            ] = FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
 
         # Connect to SWF
         client = boto3.client(

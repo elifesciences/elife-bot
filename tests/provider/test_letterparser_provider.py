@@ -38,7 +38,9 @@ class TestLetterParserProvider(unittest.TestCase):
             "<p>Author response ....</p>\n"
         )
 
-        output = letterparser_provider.parse_file(self.file_name, self.blank_config, directory.path)
+        output = letterparser_provider.parse_file(
+            self.file_name, self.blank_config, directory.path
+        )
         self.assertEqual(
             output, expected, "Docker pandoc output not equal, is Docker running?"
         )
