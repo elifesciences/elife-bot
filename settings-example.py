@@ -337,6 +337,8 @@ class exp:
     GLENCOE_FTP_PASSWORD = ""
     GLENCOE_FTP_CWD = ""
 
+    downstream_recipients_yaml = "downstreamRecipients.yaml"
+
 
 class dev:
     # AWS settings
@@ -658,6 +660,8 @@ class dev:
     GLENCOE_FTP_USERNAME = ""
     GLENCOE_FTP_PASSWORD = ""
     GLENCOE_FTP_CWD = ""
+
+    downstream_recipients_yaml = "downstreamRecipients.yaml"
 
 
 class live:
@@ -985,6 +989,8 @@ class live:
     GLENCOE_FTP_USERNAME = ""
     GLENCOE_FTP_PASSWORD = ""
     GLENCOE_FTP_CWD = ""
+
+    downstream_recipients_yaml = "downstreamRecipients.yaml"
 
 
 def get_settings(ENV="dev"):

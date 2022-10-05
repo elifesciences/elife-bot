@@ -3,7 +3,7 @@ import re
 import urllib
 import requests
 from elifetools import parseJATS as parser
-from provider import outbox_provider, s3lib
+from provider import downstream, outbox_provider, s3lib
 from provider.lax_provider import article_highest_version
 from provider.storage_provider import storage_context
 from provider.utils import msid_from_doi, get_doi_url, pad_msid
@@ -178,8 +178,13 @@ class article:
 
         doi_ids = []
 
+        rules = downstream.load_config(self.settings)
+        downstream_workflow_map = downstream.workflow_s3_bucket_folder_map(rules)
+
         # workflow e.g. "HEFCE"
-        workflow_folder = outbox_provider.workflow_foldername(workflow)
+        workflow_folder = outbox_provider.workflow_foldername(
+            workflow, downstream_workflow_map
+        )
         # published_folder e.g. "pub_router/published/""
         published_folder = outbox_provider.published_folder(workflow_folder)
 

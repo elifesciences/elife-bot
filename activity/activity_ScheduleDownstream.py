@@ -1,7 +1,7 @@
 import json
 from collections import OrderedDict
 from provider.storage_provider import storage_context
-from provider import lax_provider, outbox_provider, utils
+from provider import downstream, lax_provider, outbox_provider, utils
 from activity.objects import Activity
 
 """
@@ -62,12 +62,14 @@ class activity_ScheduleDownstream(Activity):
             article_id, version, status, self.settings
         )
 
+        rules = downstream.load_config(self.settings)
+
         try:
             xml_file_name = lax_provider.get_xml_file_name(
                 self.settings, expanded_folder_name, expanded_bucket_name, version
             )
             xml_key_name = expanded_folder_name + "/" + xml_file_name
-            outbox_list = choose_outboxes(status, first_by_status, run_type)
+            outbox_list = choose_outboxes(status, first_by_status, rules, run_type)
 
             for outbox in outbox_list:
                 self.rename_and_copy_to_outbox(
@@ -145,31 +147,43 @@ class activity_ScheduleDownstream(Activity):
         storage.copy_resource(orig_resource, dest_resource)
 
 
-def choose_outboxes(status, first_by_status, run_type=None):
+def workflow_outbox(downstream_workflow_map, workflow_name):
+    "get the outbox folder for the workflow name from the map"
+    return outbox_provider.outbox_folder(
+        outbox_provider.workflow_foldername(workflow_name, downstream_workflow_map)
+    )
+
+
+def choose_outboxes(status, first_by_status, rules, run_type=None):
     outbox_list = []
+    downstream_workflow_map = downstream.workflow_s3_bucket_folder_map(rules)
 
     if run_type != "silent-correction":
         if first_by_status:
-            outbox_list.append(outbox_provider.outbox_folder("publication_email"))
+            outbox_list.append(
+                workflow_outbox(downstream_workflow_map, "PublicationEmail")
+            )
             if status == "vor":
-                outbox_list.append(outbox_provider.outbox_folder("oaswitchboard"))
-        outbox_list.append(outbox_provider.outbox_folder("pubmed"))
+                outbox_list.append(
+                    workflow_outbox(downstream_workflow_map, "OASwitchboard")
+                )
+        outbox_list.append(workflow_outbox(downstream_workflow_map, "Pubmed"))
 
-    outbox_list.append(outbox_provider.outbox_folder("ovid"))
-    outbox_list.append(outbox_provider.outbox_folder("zendy"))
+    outbox_list.append(workflow_outbox(downstream_workflow_map, "OVID"))
+    outbox_list.append(workflow_outbox(downstream_workflow_map, "Zendy"))
 
     if status == "poa":
         pass
 
     elif status == "vor":
-        outbox_list.append(outbox_provider.outbox_folder("pmc"))
-        outbox_list.append(outbox_provider.outbox_folder("pub_router"))
-        outbox_list.append(outbox_provider.outbox_folder("cengage"))
-        outbox_list.append(outbox_provider.outbox_folder("gooa"))
-        outbox_list.append(outbox_provider.outbox_folder("wos"))
-        outbox_list.append(outbox_provider.outbox_folder("cnpiec"))
-        outbox_list.append(outbox_provider.outbox_folder("cnki"))
-        outbox_list.append(outbox_provider.outbox_folder("clockss"))
+        outbox_list.append(workflow_outbox(downstream_workflow_map, "PMC"))
+        outbox_list.append(workflow_outbox(downstream_workflow_map, "HEFCE"))
+        outbox_list.append(workflow_outbox(downstream_workflow_map, "Cengage"))
+        outbox_list.append(workflow_outbox(downstream_workflow_map, "GoOA"))
+        outbox_list.append(workflow_outbox(downstream_workflow_map, "WoS"))
+        outbox_list.append(workflow_outbox(downstream_workflow_map, "CNPIEC"))
+        outbox_list.append(workflow_outbox(downstream_workflow_map, "CNKI"))
+        outbox_list.append(workflow_outbox(downstream_workflow_map, "CLOCKSS"))
     return outbox_list
 
 

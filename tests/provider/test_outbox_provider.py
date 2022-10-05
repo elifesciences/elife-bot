@@ -3,7 +3,7 @@ import shutil
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
-from provider import outbox_provider
+from provider import downstream, outbox_provider
 import tests.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 
@@ -115,34 +115,80 @@ class TestOutboxProvider(unittest.TestCase):
         self.assertEqual(uploaded_files, expected)
 
 
+# get workflow map from the YAML file specified in the settings_mock test settings
+DOWNSTREAM_WORKFLOW_MAP = downstream.workflow_s3_bucket_folder_map(
+    downstream.load_config(settings_mock)
+)
+# list of workflows to test for good coverage
+DOWNSTREAM_WORKFLOWS = [
+    "Cengage",
+    "CLOCKSS",
+    "CNKI",
+    "CNPIEC",
+    "DepositCrossref",
+    "DepositCrossrefPeerReview",
+    "DepositCrossrefPendingPublication",
+    "GoOA",
+    "HEFCE",
+    "OASwitchboard",
+    "OVID",
+    "PMC",
+    "PublicationEmail",
+    "Pubmed",
+    "WoS",
+    "Zendy",
+]
+
+
+class TestGetWorkflowFoldername(unittest.TestCase):
+    def test_workflow_foldername(self):
+        for workflow in DOWNSTREAM_WORKFLOWS:
+            foldername = outbox_provider.workflow_foldername(
+                workflow, DOWNSTREAM_WORKFLOW_MAP
+            )
+            self.assertIsNotNone(outbox_provider.outbox_folder(foldername))
+
+    def test_workflow_foldername_undefined(self):
+        foldername = None
+        self.assertIsNone(
+            outbox_provider.workflow_foldername(foldername, DOWNSTREAM_WORKFLOW_MAP)
+        )
+
+
 class TestGetOutboxFolder(unittest.TestCase):
     def test_outbox_folder(self):
-        for workflow in outbox_provider.DOWNSTREAM_WORKFLOW_MAP:
-            foldername = outbox_provider.workflow_foldername(workflow)
+        for workflow in DOWNSTREAM_WORKFLOWS:
+            foldername = outbox_provider.workflow_foldername(
+                workflow, DOWNSTREAM_WORKFLOW_MAP
+            )
             self.assertIsNotNone(outbox_provider.outbox_folder(foldername))
 
     def test_outbox_folder_undefined(self):
-        foldername = "foo"
+        foldername = None
         self.assertIsNone(outbox_provider.outbox_folder(foldername))
 
 
 class TestGetPublishedFolder(unittest.TestCase):
     def test_published_folder(self):
-        for workflow in outbox_provider.DOWNSTREAM_WORKFLOW_MAP:
-            foldername = outbox_provider.workflow_foldername(workflow)
+        for workflow in DOWNSTREAM_WORKFLOWS:
+            foldername = outbox_provider.workflow_foldername(
+                workflow, DOWNSTREAM_WORKFLOW_MAP
+            )
             self.assertIsNotNone(outbox_provider.published_folder(foldername))
 
     def test_published_folder_undefined(self):
-        foldername = "foo"
+        foldername = ""
         self.assertIsNone(outbox_provider.published_folder(foldername))
 
 
 class TestGetNotPublishedFolder(unittest.TestCase):
     def test_not_published_folder(self):
-        for workflow in outbox_provider.DOWNSTREAM_WORKFLOW_MAP:
-            foldername = outbox_provider.workflow_foldername(workflow)
+        for workflow in DOWNSTREAM_WORKFLOWS:
+            foldername = outbox_provider.workflow_foldername(
+                workflow, DOWNSTREAM_WORKFLOW_MAP
+            )
             self.assertIsNotNone(outbox_provider.not_published_folder(foldername))
 
     def test_not_published_folder_undefined(self):
-        foldername = "foo"
+        foldername = None
         self.assertIsNone(outbox_provider.not_published_folder(foldername))

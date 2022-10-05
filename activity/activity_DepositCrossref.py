@@ -3,7 +3,7 @@ import json
 import time
 import glob
 from activity.objects import Activity
-from provider import crossref, email_provider, outbox_provider, utils
+from provider import crossref, downstream, email_provider, outbox_provider, utils
 
 """
 DepositCrossref activity
@@ -35,8 +35,12 @@ class activity_DepositCrossref(Activity):
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
-        self.outbox_folder = outbox_provider.outbox_folder("crossref")
-        self.published_folder = outbox_provider.published_folder("crossref")
+        self.outbox_folder = outbox_provider.outbox_folder(
+            self.s3_bucket_folder(self.name)
+        )
+        self.published_folder = outbox_provider.published_folder(
+            self.s3_bucket_folder(self.name)
+        )
 
         # Track the success of some steps
         self.statuses = {}

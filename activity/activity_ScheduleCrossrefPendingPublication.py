@@ -1,6 +1,6 @@
 import json
 import os
-from provider import cleaner, outbox_provider
+from provider import cleaner, downstream, outbox_provider
 from provider.execution_context import get_session
 from activity.objects import Activity
 
@@ -29,7 +29,7 @@ class activity_ScheduleCrossrefPendingPublication(Activity):
 
         # For copying to S3 bucket outbox
         self.crossref_outbox_folder = outbox_provider.outbox_folder(
-            "crossref_pending_publication"
+            self.s3_bucket_folder("DepositCrossrefPendingPublication")
         )
 
         # Local directory settings

@@ -1,0 +1,81 @@
+# Details for workflows which send article data to downstream recipients
+# Includes workflows which rely on S3 bucket outbox folders
+# Key names starting with "settings_" are the variable name in settings.py holding the value
+
+# non-FTPArticle workflows
+DepositCrossref:
+  activity_name: DepositCrossref
+  s3_bucket_folder: crossref
+
+DepositCrossrefPeerReview:
+  activity_name: DepositCrossrefPeerReview
+  s3_bucket_folder: crossref_peer_review
+
+DepositCrossrefPendingPublication:
+  activity_name: DepositCrossrefPendingPublication
+  s3_bucket_folder: crossref_pending_publication
+
+PMC:
+  activity_name: PMCDeposit
+  s3_bucket_folder: pmc
+
+PublicationEmail:
+  activity_name: PublicationEmail
+  s3_bucket_folder: publication_email
+
+Pubmed:
+  activity_name: PubmedArticleDeposit
+  s3_bucket_folder: pubmed
+
+
+# FTPArticle workflows
+Cengage:
+  activity_name: FTPArticle
+  s3_bucket_folder: cengage
+  settings_friendly_email_recipients: CENGAGE_EMAIL
+
+CLOCKSS:
+  activity_name: FTPArticle
+  s3_bucket_folder: clockss
+  settings_friendly_email_recipients: CLOCKSS_EMAIL
+
+CNKI:
+  activity_name: FTPArticle
+  s3_bucket_folder: cnki
+  settings_friendly_email_recipients: CNKI_EMAIL
+
+CNPIEC:
+  activity_name: FTPArticle
+  s3_bucket_folder: cnpiec
+  settings_friendly_email_recipients: CNPIEC_EMAIL
+
+GoOA:
+  activity_name: FTPArticle
+  s3_bucket_folder: gooa
+  settings_friendly_email_recipients: GOOA_EMAIL
+
+HEFCE:
+  activity_name: FTPArticle
+  s3_bucket_folder: pub_router
+  settings_friendly_email_recipients: HEFCE_EMAIL
+
+OASwitchboard:
+  activity_name: FTPArticle
+  s3_bucket_folder: oaswitchboard
+  settings_friendly_email_recipients: OASWITCHBOARD_EMAIL
+
+OVID:
+  activity_name: FTPArticle
+  s3_bucket_folder: ovid
+  settings_friendly_email_recipients: OVID_EMAIL
+
+WoS:
+  activity_name: FTPArticle
+  s3_bucket_folder: wos
+  settings_friendly_email_recipients: WOS_EMAIL
+
+Zendy:
+  activity_name: FTPArticle
+  s3_bucket_folder: zendy
+  settings_friendly_email_recipients: ZENDY_EMAIL
+

@@ -32,7 +32,9 @@ class FakeGithubRepository:
     ):
         pass
 
-    def create_file(self, path, message, content, branch=None, committer=None, author=None):
+    def create_file(
+        self, path, message, content, branch=None, committer=None, author=None
+    ):
         pass
 
 

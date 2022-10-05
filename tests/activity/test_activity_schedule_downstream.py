@@ -4,7 +4,7 @@ import activity.activity_ScheduleDownstream as activity_module
 from activity.activity_ScheduleDownstream import (
     activity_ScheduleDownstream as activity_object,
 )
-from provider import lax_provider
+from provider import downstream, lax_provider
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 import tests.activity.test_activity_data as activity_test_data
@@ -47,16 +47,21 @@ class TestScheduleDownstream(unittest.TestCase):
         # check assertions
         self.assertEqual(result, expected_result)
 
+
+class TestChooseOutboxes(unittest.TestCase):
+    def setUp(self):
+        self.rules = downstream.load_config(settings_mock)
+
     def test_choose_outboxes_poa_first(self):
         """first poa version"""
-        outbox_list = activity_module.choose_outboxes("poa", True)
+        outbox_list = activity_module.choose_outboxes("poa", True, self.rules)
         self.assertTrue("pubmed/outbox/" in outbox_list)
         self.assertTrue("publication_email/outbox/" in outbox_list)
         self.assertFalse("pmc/outbox/" in outbox_list)
 
     def test_choose_outboxes_poa_not_first(self):
         """poa but not the first poa"""
-        outbox_list = activity_module.choose_outboxes("poa", False)
+        outbox_list = activity_module.choose_outboxes("poa", False, self.rules)
         self.assertTrue("pubmed/outbox/" in outbox_list)
         # do not send to pmc
         self.assertFalse("pmc/outbox/" in outbox_list)
@@ -65,7 +70,7 @@ class TestScheduleDownstream(unittest.TestCase):
 
     def test_choose_outboxes_vor_first(self):
         """first vor version"""
-        outbox_list = activity_module.choose_outboxes("vor", True)
+        outbox_list = activity_module.choose_outboxes("vor", True, self.rules)
         self.assertTrue("pmc/outbox/" in outbox_list)
         self.assertTrue("pubmed/outbox/" in outbox_list)
         self.assertTrue("publication_email/outbox/" in outbox_list)
@@ -73,7 +78,7 @@ class TestScheduleDownstream(unittest.TestCase):
 
     def test_choose_outboxes_vor_not_first(self):
         """vor but not the first vor"""
-        outbox_list = activity_module.choose_outboxes("vor", False)
+        outbox_list = activity_module.choose_outboxes("vor", False, self.rules)
         self.assertTrue("pmc/outbox/" in outbox_list)
         self.assertTrue("pubmed/outbox/" in outbox_list)
         self.assertTrue("pub_router/outbox/" in outbox_list)
@@ -81,7 +86,9 @@ class TestScheduleDownstream(unittest.TestCase):
         self.assertFalse("publication_email/outbox/" in outbox_list)
 
     def test_choose_outboxes_vor_silent_first(self):
-        outbox_list = activity_module.choose_outboxes("vor", True, "silent-correction")
+        outbox_list = activity_module.choose_outboxes(
+            "vor", True, self.rules, "silent-correction"
+        )
         self.assertTrue("pmc/outbox/" in outbox_list)
         # do not send publication_email
         self.assertFalse("publication_email/outbox/" in outbox_list)

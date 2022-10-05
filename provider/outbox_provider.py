@@ -1,30 +1,6 @@
 import os
-from collections import OrderedDict
 from provider import article_processing
 from provider.storage_provider import storage_context
-
-
-# map of workflow name to s3 folder which holds outbox and other related folders
-DOWNSTREAM_WORKFLOW_MAP = OrderedDict(
-    [
-        ("Cengage", "cengage"),
-        ("CLOCKSS", "clockss"),
-        ("CNKI", "cnki"),
-        ("CNPIEC", "cnpiec"),
-        ("crossref", "crossref"),
-        ("crossref_peer_review", "crossref_peer_review"),
-        ("crossref_pending_publication", "crossref_pending_publication"),
-        ("GoOA", "gooa"),
-        ("HEFCE", "pub_router"),
-        ("OASwitchboard", "oaswitchboard"),
-        ("OVID", "ovid"),
-        ("PMC", "pmc"),
-        ("publication_email", "publication_email"),
-        ("pubmed", "pubmed"),
-        ("WoS", "wos"),
-        ("Zendy", "zendy"),
-    ]
-)
 
 
 def get_to_folder_name(folder_name, date_stamp):
@@ -124,27 +100,29 @@ def upload_files_to_s3_folder(settings, bucket_name, to_folder, file_names):
         storage.set_resource_from_filename(resource_dest, file_name)
 
 
-def workflow_foldername(workflow):
+def workflow_foldername(workflow, downstream_workflow_map):
     "from workflow name return the s3 folder name"
-    return DOWNSTREAM_WORKFLOW_MAP.get(workflow)
+    if workflow not in downstream_workflow_map.keys():
+        return None
+    return downstream_workflow_map.get(workflow)
 
 
 def outbox_folder(foldername):
     "from s3 folder name return the outbox folder name"
-    if foldername not in DOWNSTREAM_WORKFLOW_MAP.values():
+    if not foldername:
         return None
     return "%s/outbox/" % foldername
 
 
 def published_folder(foldername):
     "from s3 folder name return the published folder name"
-    if foldername not in DOWNSTREAM_WORKFLOW_MAP.values():
+    if not foldername:
         return None
     return "%s/published/" % foldername
 
 
 def not_published_folder(foldername):
     "from s3 folder name return the not published folder name"
-    if foldername not in DOWNSTREAM_WORKFLOW_MAP.values():
+    if not foldername:
         return None
     return "%s/not_published/" % foldername

@@ -7,7 +7,7 @@ from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
 import provider.article as articlelib
 from provider.sftp import SFTP
-from provider import email_provider, lax_provider, outbox_provider, utils
+from provider import downstream, email_provider, lax_provider, outbox_provider, utils
 from activity.objects import Activity
 
 
@@ -41,8 +41,13 @@ class activity_PubmedArticleDeposit(Activity):
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
-        self.outbox_folder = outbox_provider.outbox_folder("pubmed")
-        self.published_folder = outbox_provider.published_folder("pubmed")
+        downstream_workflow_name = "Pubmed"
+        self.outbox_folder = outbox_provider.outbox_folder(
+            self.s3_bucket_folder(downstream_workflow_name)
+        )
+        self.published_folder = outbox_provider.published_folder(
+            self.s3_bucket_folder(downstream_workflow_name)
+        )
 
         # Track the success of some steps
         self.statuses = OrderedDict(

@@ -1,5 +1,5 @@
 import json
-from provider import lax_provider, outbox_provider
+from provider import downstream, lax_provider, outbox_provider
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -27,7 +27,9 @@ class activity_ScheduleCrossref(Activity):
         self.logger = logger
 
         # For copying to crossref outbox from here for now
-        self.crossref_outbox_folder = outbox_provider.outbox_folder("crossref")
+        self.crossref_outbox_folder = outbox_provider.outbox_folder(
+            self.s3_bucket_folder("DepositCrossref")
+        )
 
     def do_activity(self, data=None):
 
