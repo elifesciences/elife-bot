@@ -1,7 +1,7 @@
 import unittest
 import datetime
 from mock import patch
-from ddt import ddt, data
+from ddt import ddt, data, unpack
 from testfixtures import TempDirectory
 from provider.article import article
 import activity.activity_PubRouterDeposit as activity_module
@@ -518,28 +518,47 @@ class TestApproveArticles(unittest.TestCase):
 
 @ddt
 class TestGetFriendlyEmailRecipients(unittest.TestCase):
+    @unpack
     @data(
-        "HEFCE",
-        "Cengage",
-        "GoOA",
-        "WoS",
-        "CNPIEC",
-        "CNKI",
-        "CLOCKSS",
-        "OVID",
-        "Zendy",
-        "OASwitchboard",
+        {"workflow": "HEFCE", "settings_name": "HEFCE_EMAIL"},
+        {"workflow": "Cengage", "settings_name": "CENGAGE_EMAIL"},
+        {"workflow": "GoOA", "settings_name": "GOOA_EMAIL"},
+        {"workflow": "CNPIEC", "settings_name": "CNPIEC_EMAIL"},
+        {"workflow": "CNKI", "settings_name": "CNKI_EMAIL"},
+        {"workflow": "CLOCKSS", "settings_name": "CLOCKSS_EMAIL"},
+        {"workflow": "OVID", "settings_name": "OVID_EMAIL"},
+        {"workflow": "Zendy", "settings_name": "ZENDY_EMAIL"},
+        {"workflow": "OASwitchboard", "settings_name": "OASWITCHBOARD_EMAIL"},
     )
-    def test_workflow_specific_values(self, workflow):
+    def test_workflow_specific_values(self, workflow, settings_name):
         "test functions that look at the workflow name"
-        self.assertIsNotNone(
-            activity_module.get_friendly_email_recipients(settings_mock, workflow)
+        recipient_email_list = activity_module.get_friendly_email_recipients(
+            settings_mock, workflow
+        )
+        settings_value = getattr(settings_mock, settings_name, None)
+        # determine the expect value from the settings
+        if isinstance(settings_value, list):
+            expected = settings_value
+        else:
+            # return value for blank strings from the function is an empty list
+            expected = [settings_value] if settings_value else []
+        # test assertion
+        self.assertEqual(recipient_email_list, expected)
+
+    def test_workflow_does_not_exist(self):
+        "test functions that look at the workflow name"
+        workflow = "foo"
+        expected = []
+        self.assertEqual(
+            activity_module.get_friendly_email_recipients(settings_mock, workflow),
+            expected,
         )
 
     def test_recipients_string(self):
         "test when the recipients is just a string and not a list"
 
         class TestSettings:
+            downstream_recipients_yaml = "tests/downstreamRecipients.yaml"
             HEFCE_EMAIL = "email@example.org"
 
         test_settings = TestSettings()

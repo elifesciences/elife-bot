@@ -8,6 +8,7 @@ from activity.objects import Activity
 from provider import (
     bigquery,
     crossref,
+    downstream,
     email_provider,
     lax_provider,
     outbox_provider,
@@ -40,8 +41,12 @@ class activity_DepositCrossrefPeerReview(Activity):
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
-        self.outbox_folder = outbox_provider.outbox_folder("crossref_peer_review")
-        self.published_folder = outbox_provider.published_folder("crossref_peer_review")
+        self.outbox_folder = outbox_provider.outbox_folder(
+            self.s3_bucket_folder(self.name)
+        )
+        self.published_folder = outbox_provider.published_folder(
+            self.s3_bucket_folder(self.name)
+        )
 
         # Track the success of some steps
         self.statuses = {}

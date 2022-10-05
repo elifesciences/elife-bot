@@ -6,6 +6,7 @@ from collections import OrderedDict
 from activity.objects import Activity
 from provider import (
     crossref,
+    downstream,
     email_provider,
     outbox_provider,
     utils,
@@ -41,13 +42,13 @@ class activity_DepositCrossrefPendingPublication(Activity):
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
         self.outbox_folder = outbox_provider.outbox_folder(
-            "crossref_pending_publication"
+            self.s3_bucket_folder(self.name)
         )
         self.published_folder = outbox_provider.published_folder(
-            "crossref_pending_publication"
+            self.s3_bucket_folder(self.name)
         )
         self.not_published_folder = outbox_provider.not_published_folder(
-            "crossref_pending_publication"
+            self.s3_bucket_folder(self.name)
         )
 
         # Track the success of some steps

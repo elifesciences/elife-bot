@@ -8,6 +8,7 @@ import provider.article as articlelib
 from provider.storage_provider import storage_context
 from provider import (
     article_processing,
+    downstream,
     email_provider,
     lax_provider,
     outbox_provider,
@@ -93,10 +94,16 @@ class activity_PubRouterDeposit(Activity):
             self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         self.workflow = data["data"]["workflow"]
-        workflow_folder = outbox_provider.workflow_foldername(self.workflow)
-        outbox_folder = outbox_provider.outbox_folder(workflow_folder)
-        published_folder = outbox_provider.published_folder(workflow_folder)
-        not_published_folder = outbox_provider.not_published_folder(workflow_folder)
+
+        outbox_folder = outbox_provider.outbox_folder(
+            self.s3_bucket_folder(self.workflow)
+        )
+        published_folder = outbox_provider.published_folder(
+            self.s3_bucket_folder(self.workflow)
+        )
+        not_published_folder = outbox_provider.not_published_folder(
+            self.s3_bucket_folder(self.workflow)
+        )
 
         if outbox_folder is None or published_folder is None:
             # Total fail
@@ -331,7 +338,9 @@ class activity_PubRouterDeposit(Activity):
             "input": workflow_input,
         }
         if PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT:
-            kwargs["executionStartToCloseTimeout"] = PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
+            kwargs[
+                "executionStartToCloseTimeout"
+            ] = PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
 
         # Connect to SWF
         client = boto3.client(
@@ -579,34 +588,19 @@ def check_approve_by_archive_zip_exists(workflow):
 
 
 def get_friendly_email_recipients(settings, workflow):
-
+    "get recipients of the friendly email from the settings via YAML rules"
     recipient_email_list = []
 
-    recipients = None
-    try:
-        # Get the email recipient list
-        if workflow == "HEFCE":
-            recipients = settings.HEFCE_EMAIL
-        elif workflow == "Cengage":
-            recipients = settings.CENGAGE_EMAIL
-        elif workflow == "GoOA":
-            recipients = settings.GOOA_EMAIL
-        elif workflow == "WoS":
-            recipients = settings.WOS_EMAIL
-        elif workflow == "CNPIEC":
-            recipients = settings.CNPIEC_EMAIL
-        elif workflow == "CNKI":
-            recipients = settings.CNKI_EMAIL
-        elif workflow == "CLOCKSS":
-            recipients = settings.CLOCKSS_EMAIL
-        elif workflow == "OVID":
-            recipients = settings.OVID_EMAIL
-        elif workflow == "Zendy":
-            recipients = settings.ZENDY_EMAIL
-        elif workflow == "OASwitchboard":
-            recipients = settings.OASWITCHBOARD_EMAIL
-    except:
-        pass
+    rules = downstream.load_config(settings)
+    workflow_rules = rules.get(workflow)
+    # get the name of the settings value from the rules
+    settings_name = (
+        workflow_rules.get("settings_friendly_email_recipients", None)
+        if workflow_rules
+        else None
+    )
+    # Get the email recipient list
+    recipients = getattr(settings, settings_name, None) if settings_name else None
 
     if recipients and isinstance(recipients, list):
         recipient_email_list = recipients

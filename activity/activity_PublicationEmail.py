@@ -5,6 +5,7 @@ import glob
 import smtplib
 from collections import OrderedDict
 from provider import (
+    downstream,
     ejp,
     email_provider,
     lax_provider,
@@ -59,8 +60,12 @@ class activity_PublicationEmail(Activity):
 
         # Bucket for outgoing files
         self.publish_bucket = settings.poa_packaging_bucket
-        self.outbox_folder = outbox_provider.outbox_folder("publication_email")
-        self.published_folder = outbox_provider.published_folder("publication_email")
+        self.outbox_folder = outbox_provider.outbox_folder(
+            self.s3_bucket_folder(self.name)
+        )
+        self.published_folder = outbox_provider.published_folder(
+            self.s3_bucket_folder(self.name)
+        )
 
         # Track XML files selected for publication
         self.insight_articles_to_remove_from_outbox = []

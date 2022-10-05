@@ -1,6 +1,6 @@
 import json
 
-from provider import crossref, lax_provider, outbox_provider, utils
+from provider import crossref, downstream, lax_provider, outbox_provider, utils
 from provider.article_processing import download_jats
 from provider.storage_provider import storage_context
 from provider.execution_context import get_session
@@ -27,7 +27,7 @@ class activity_ScheduleCrossrefPeerReview(Activity):
 
         # For copying to S3 bucket outbox
         self.crossref_outbox_folder = outbox_provider.outbox_folder(
-            "crossref_peer_review"
+            self.s3_bucket_folder("DepositCrossrefPeerReview")
         )
 
     def do_activity(self, data=None):
