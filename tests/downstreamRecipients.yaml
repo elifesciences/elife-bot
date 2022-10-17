@@ -32,50 +32,104 @@ Pubmed:
 Cengage:
   activity_name: FTPArticle
   s3_bucket_folder: cengage
+  send_by_protocol: ftp
   settings_friendly_email_recipients: CENGAGE_EMAIL
+  settings_ftp_uri: CENGAGE_FTP_URI
+  settings_ftp_username: CENGAGE_FTP_USERNAME
+  settings_ftp_password: CENGAGE_FTP_PASSWORD
+  settings_ftp_cwd: CENGAGE_FTP_CWD
 
 CLOCKSS:
   activity_name: FTPArticle
   s3_bucket_folder: clockss
+  send_by_protocol: ftp
   settings_friendly_email_recipients: CLOCKSS_EMAIL
+  settings_ftp_uri: CLOCKSS_FTP_URI
+  settings_ftp_username: CLOCKSS_FTP_USERNAME
+  settings_ftp_password: CLOCKSS_FTP_PASSWORD
+  settings_ftp_cwd: CLOCKSS_FTP_CWD
 
 CNKI:
   activity_name: FTPArticle
   s3_bucket_folder: cnki
+  send_by_protocol: ftp
   settings_friendly_email_recipients: CNKI_EMAIL
+  settings_ftp_uri: CNKI_FTP_URI
+  settings_ftp_username: CNKI_FTP_USERNAME
+  settings_ftp_password: CNKI_FTP_PASSWORD
+  settings_ftp_cwd: CNKI_FTP_CWD
 
 CNPIEC:
   activity_name: FTPArticle
   s3_bucket_folder: cnpiec
+  send_by_protocol: ftp
   settings_friendly_email_recipients: CNPIEC_EMAIL
+  settings_ftp_uri: CNPIEC_FTP_URI
+  settings_ftp_username: CNPIEC_FTP_USERNAME
+  settings_ftp_password: CNPIEC_FTP_PASSWORD
+  settings_ftp_cwd: CNPIEC_FTP_CWD
 
 GoOA:
   activity_name: FTPArticle
   s3_bucket_folder: gooa
+  send_by_protocol: ftp
   settings_friendly_email_recipients: GOOA_EMAIL
+  settings_ftp_uri: GOOA_FTP_URI
+  settings_ftp_username: GOOA_FTP_USERNAME
+  settings_ftp_password: GOOA_FTP_PASSWORD
+  settings_ftp_cwd: GOOA_FTP_CWD
 
 HEFCE:
   activity_name: FTPArticle
   s3_bucket_folder: pub_router
+  send_by_protocol: sftp
   settings_friendly_email_recipients: HEFCE_EMAIL
+  settings_ftp_uri: HEFCE_FTP_URI
+  settings_ftp_username: HEFCE_FTP_USERNAME
+  settings_ftp_password: HEFCE_FTP_PASSWORD
+  settings_ftp_cwd: HEFCE_FTP_CWD
+  settings_sftp_uri: HEFCE_SFTP_URI
+  settings_sftp_username: HEFCE_SFTP_USERNAME
+  settings_sftp_password: HEFCE_SFTP_PASSWORD
+  settings_sftp_cwd: HEFCE_SFTP_CWD
 
 OASwitchboard:
   activity_name: FTPArticle
   s3_bucket_folder: oaswitchboard
+  send_by_protocol: sftp
+  send_unzipped_files: true
   settings_friendly_email_recipients: OASWITCHBOARD_EMAIL
+  settings_sftp_uri: OASWITCHBOARD_SFTP_URI
+  settings_sftp_username: OASWITCHBOARD_SFTP_USERNAME
+  settings_sftp_password: OASWITCHBOARD_SFTP_PASSWORD
+  settings_sftp_cwd: OASWITCHBOARD_SFTP_CWD
 
 OVID:
   activity_name: FTPArticle
   s3_bucket_folder: ovid
+  send_by_protocol: ftp
   settings_friendly_email_recipients: OVID_EMAIL
+  settings_ftp_uri: OVID_FTP_URI
+  settings_ftp_username: OVID_FTP_USERNAME
+  settings_ftp_password: OVID_FTP_PASSWORD
+  settings_ftp_cwd: OVID_FTP_CWD
 
 WoS:
   activity_name: FTPArticle
   s3_bucket_folder: wos
+  send_by_protocol: ftp
   settings_friendly_email_recipients: WOS_EMAIL
+  settings_ftp_uri: WOS_FTP_URI
+  settings_ftp_username: WOS_FTP_USERNAME
+  settings_ftp_password: WOS_FTP_PASSWORD
+  settings_ftp_cwd: WOS_FTP_CWD
 
 Zendy:
   activity_name: FTPArticle
   s3_bucket_folder: zendy
+  send_by_protocol: sftp
   settings_friendly_email_recipients: ZENDY_EMAIL
-
+  settings_sftp_uri: ZENDY_SFTP_URI
+  settings_sftp_username: ZENDY_SFTP_USERNAME
+  settings_sftp_password: ZENDY_SFTP_PASSWORD
+  settings_sftp_cwd: ZENDY_SFTP_CWD
