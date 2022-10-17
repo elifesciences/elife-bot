@@ -5,7 +5,7 @@ import glob
 import shutil
 import re
 from elifetools import parseJATS as parser
-from provider import article_processing, utils
+from provider import article_processing, downstream, utils
 from provider.storage_provider import storage_context
 from provider.sftp import SFTP
 from provider.ftp import FTP
@@ -98,7 +98,7 @@ class activity_FTPArticle(Activity):
             return False
 
         # additional sending details
-        details = sending_details(workflow)
+        details = sending_details(self.settings, workflow)
 
         # Check the settings for suitability to send
         if details.get("send_by_protocol") == "ftp" and not self.FTP_URI:
@@ -130,7 +130,7 @@ class activity_FTPArticle(Activity):
                     % (self.workflow, self.doi_id, uploadfiles)
                 )
 
-            if details.get("send_unzipped_files"):
+            if details.get("send_unzipped_files") is True:
                 # send the contents of the zip file unzipped
                 first_zip_file = uploadfiles[0]
                 with zipfile.ZipFile(first_zip_file, "r") as open_zip:
@@ -446,105 +446,50 @@ def collect_credentials(settings, doi_id, workflow):
 
     credentials = {}
 
+    rules = downstream.load_config(settings)
+    workflow_rules = rules.get(workflow)
+
+    rule_name_credentials_name_map = {
+        "settings_ftp_uri": "FTP_URI",
+        "settings_ftp_username": "FTP_USERNAME",
+        "settings_ftp_password": "FTP_PASSWORD",
+        "settings_ftp_cwd": "FTP_CWD",
+        "settings_sftp_uri": "SFTP_URI",
+        "settings_sftp_username": "SFTP_USERNAME",
+        "settings_sftp_password": "SFTP_PASSWORD",
+        "settings_sftp_cwd": "SFTP_CWD",
+    }
+
+    for rule_name, credentials_name in rule_name_credentials_name_map.items():
+        settings_name = workflow_rules.get(rule_name, None) if workflow_rules else None
+        # get the value from settings
+        credentials[credentials_name] = (
+            getattr(settings, settings_name, None) if settings_name else None
+        )
+
+    # extra credentials
     if workflow == "HEFCE":
-        credentials["FTP_URI"] = settings.HEFCE_FTP_URI
-        credentials["FTP_USERNAME"] = settings.HEFCE_FTP_USERNAME
-        credentials["FTP_PASSWORD"] = settings.HEFCE_FTP_PASSWORD
-        credentials["FTP_CWD"] = settings.HEFCE_FTP_CWD
         credentials["FTP_SUBDIR_LIST"] = [utils.pad_msid(doi_id)]
 
         # SFTP settings
-        credentials["SFTP_URI"] = settings.HEFCE_SFTP_URI
-        credentials["SFTP_USERNAME"] = settings.HEFCE_SFTP_USERNAME
-        credentials["SFTP_PASSWORD"] = settings.HEFCE_SFTP_PASSWORD
-        credentials["SFTP_CWD"] = settings.HEFCE_SFTP_CWD
         credentials["SFTP_SUBDIR"] = utils.pad_msid(doi_id)
-
-    if workflow == "Cengage":
-        credentials["FTP_URI"] = settings.CENGAGE_FTP_URI
-        credentials["FTP_USERNAME"] = settings.CENGAGE_FTP_USERNAME
-        credentials["FTP_PASSWORD"] = settings.CENGAGE_FTP_PASSWORD
-        credentials["FTP_CWD"] = settings.CENGAGE_FTP_CWD
-
-    if workflow == "WoS":
-        credentials["FTP_URI"] = settings.WOS_FTP_URI
-        credentials["FTP_USERNAME"] = settings.WOS_FTP_USERNAME
-        credentials["FTP_PASSWORD"] = settings.WOS_FTP_PASSWORD
-        credentials["FTP_CWD"] = settings.WOS_FTP_CWD
-
-    if workflow == "GoOA":
-        credentials["FTP_URI"] = settings.GOOA_FTP_URI
-        credentials["FTP_USERNAME"] = settings.GOOA_FTP_USERNAME
-        credentials["FTP_PASSWORD"] = settings.GOOA_FTP_PASSWORD
-        credentials["FTP_CWD"] = settings.GOOA_FTP_CWD
-
-    if workflow == "CNPIEC":
-        credentials["FTP_URI"] = settings.CNPIEC_FTP_URI
-        credentials["FTP_USERNAME"] = settings.CNPIEC_FTP_USERNAME
-        credentials["FTP_PASSWORD"] = settings.CNPIEC_FTP_PASSWORD
-        credentials["FTP_CWD"] = settings.CNPIEC_FTP_CWD
-
-    if workflow == "CNKI":
-        credentials["FTP_URI"] = settings.CNKI_FTP_URI
-        credentials["FTP_USERNAME"] = settings.CNKI_FTP_USERNAME
-        credentials["FTP_PASSWORD"] = settings.CNKI_FTP_PASSWORD
-        credentials["FTP_CWD"] = settings.CNKI_FTP_CWD
-
-    if workflow == "CLOCKSS":
-        credentials["FTP_URI"] = settings.CLOCKSS_FTP_URI
-        credentials["FTP_USERNAME"] = settings.CLOCKSS_FTP_USERNAME
-        credentials["FTP_PASSWORD"] = settings.CLOCKSS_FTP_PASSWORD
-        credentials["FTP_CWD"] = settings.CLOCKSS_FTP_CWD
-
-    if workflow == "OVID":
-        credentials["FTP_URI"] = settings.OVID_FTP_URI
-        credentials["FTP_USERNAME"] = settings.OVID_FTP_USERNAME
-        credentials["FTP_PASSWORD"] = settings.OVID_FTP_PASSWORD
-        credentials["FTP_CWD"] = settings.OVID_FTP_CWD
-
-    if workflow == "Zendy":
-        credentials["SFTP_URI"] = settings.ZENDY_SFTP_URI
-        credentials["SFTP_USERNAME"] = settings.ZENDY_SFTP_USERNAME
-        credentials["SFTP_PASSWORD"] = settings.ZENDY_SFTP_PASSWORD
-        credentials["SFTP_CWD"] = settings.ZENDY_SFTP_CWD
-
-    if workflow == "OASwitchboard":
-        credentials["SFTP_URI"] = settings.OASWITCHBOARD_SFTP_URI
-        credentials["SFTP_USERNAME"] = settings.OASWITCHBOARD_SFTP_USERNAME
-        credentials["SFTP_PASSWORD"] = settings.OASWITCHBOARD_SFTP_PASSWORD
-        credentials["SFTP_CWD"] = settings.OASWITCHBOARD_SFTP_CWD
 
     return credentials
 
 
-def sending_details(workflow):
+def sending_details(settings, workflow):
     "set the details for which files to send by which protocol for each workflow type"
 
     details = {}
 
-    # default to sending zipped files
-    details["send_unzipped_files"] = False
+    rules = downstream.load_config(settings)
+    workflow_rules = rules.get(workflow)
 
-    if workflow == "HEFCE":
-        details["send_by_protocol"] = "sftp"
-    if workflow == "Cengage":
-        details["send_by_protocol"] = "ftp"
-    if workflow == "WoS":
-        details["send_by_protocol"] = "ftp"
-    if workflow == "GoOA":
-        details["send_by_protocol"] = "ftp"
-    if workflow == "CNPIEC":
-        details["send_by_protocol"] = "ftp"
-    if workflow == "CNKI":
-        details["send_by_protocol"] = "ftp"
-    if workflow == "CLOCKSS":
-        details["send_by_protocol"] = "ftp"
-    if workflow == "OVID":
-        details["send_by_protocol"] = "ftp"
-    if workflow == "Zendy":
-        details["send_by_protocol"] = "sftp"
-    if workflow == "OASwitchboard":
-        details["send_unzipped_files"] = True
-        details["send_by_protocol"] = "sftp"
+    if workflow_rules:
+        details["send_by_protocol"] = workflow_rules.get("send_by_protocol")
+        # default to sending zipped files
+        details["send_unzipped_files"] = workflow_rules.get(
+            "send_unzipped_files", False
+        )
 
     return details
