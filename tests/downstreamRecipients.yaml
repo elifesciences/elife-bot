@@ -33,6 +33,9 @@ Cengage:
   activity_name: FTPArticle
   s3_bucket_folder: cengage
   send_by_protocol: ftp
+  send_file_types:
+    - xml
+    - pdf
   settings_friendly_email_recipients: CENGAGE_EMAIL
   settings_ftp_uri: CENGAGE_FTP_URI
   settings_ftp_username: CENGAGE_FTP_USERNAME
@@ -53,6 +56,8 @@ CNKI:
   activity_name: FTPArticle
   s3_bucket_folder: cnki
   send_by_protocol: ftp
+  send_file_types:
+    - xml
   settings_friendly_email_recipients: CNKI_EMAIL
   settings_ftp_uri: CNKI_FTP_URI
   settings_ftp_username: CNKI_FTP_USERNAME
@@ -97,6 +102,8 @@ OASwitchboard:
   activity_name: FTPArticle
   s3_bucket_folder: oaswitchboard
   send_by_protocol: sftp
+  send_file_types:
+    - xml
   send_unzipped_files: true
   settings_friendly_email_recipients: OASWITCHBOARD_EMAIL
   settings_sftp_uri: OASWITCHBOARD_SFTP_URI
@@ -118,6 +125,9 @@ WoS:
   activity_name: FTPArticle
   s3_bucket_folder: wos
   send_by_protocol: ftp
+  send_file_types:
+    - xml
+    - pdf
   settings_friendly_email_recipients: WOS_EMAIL
   settings_ftp_uri: WOS_FTP_URI
   settings_ftp_username: WOS_FTP_USERNAME

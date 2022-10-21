@@ -292,14 +292,15 @@ class activity_FTPArticle(Activity):
         move the entire zip to the ftp folder if we want to send the full article pacakge
         """
 
+        # additional sending details
+        details = sending_details(self.settings, workflow)
+
         # Repackage or move the zip depending on the workflow type
-        if workflow in ["Cengage", "WoS", "CNKI", "OASwitchboard"]:
-            if workflow in ["CNKI", "OASwitchboard"]:
-                file_types = ["xml"]
-            else:
-                file_types = ["xml", "pdf"]
-            self.repackage_pmc_zip(doi_id, file_types)
+        if details.get("send_file_types"):
+            # only send the particular file types
+            self.repackage_pmc_zip(doi_id, details.get("send_file_types"))
         else:
+            # by default send all files
             self.move_pmc_zip()
 
     def repackage_pmc_zip(self, doi_id, keep_file_types):
@@ -491,5 +492,6 @@ def sending_details(settings, workflow):
         details["send_unzipped_files"] = workflow_rules.get(
             "send_unzipped_files", False
         )
+        details["send_file_types"] = workflow_rules.get("send_file_types")
 
     return details
