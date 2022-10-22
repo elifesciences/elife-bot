@@ -18,21 +18,40 @@ DepositCrossrefPendingPublication:
 PMC:
   activity_name: PMCDeposit
   s3_bucket_folder: pmc
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - vor
 
 PublicationEmail:
   activity_name: PublicationEmail
   s3_bucket_folder: publication_email
+  schedule_downstream: true
+  schedule_first_version_only: true
+  schedule_article_types:
+    - poa
+    - vor
 
 Pubmed:
   activity_name: PubmedArticleDeposit
   s3_bucket_folder: pubmed
-
+  schedule_downstream: true
+  schedule_article_types:
+    - poa
+    - vor
 
 # FTPArticle workflows
 Cengage:
   activity_name: FTPArticle
   s3_bucket_folder: cengage
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - vor
   send_by_protocol: ftp
+  send_file_types:
+    - xml
+    - pdf
   settings_friendly_email_recipients: CENGAGE_EMAIL
   settings_ftp_uri: CENGAGE_FTP_URI
   settings_ftp_username: CENGAGE_FTP_USERNAME
@@ -42,6 +61,10 @@ Cengage:
 CLOCKSS:
   activity_name: FTPArticle
   s3_bucket_folder: clockss
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - vor
   send_by_protocol: ftp
   settings_friendly_email_recipients: CLOCKSS_EMAIL
   settings_ftp_uri: CLOCKSS_FTP_URI
@@ -52,7 +75,13 @@ CLOCKSS:
 CNKI:
   activity_name: FTPArticle
   s3_bucket_folder: cnki
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - vor
   send_by_protocol: ftp
+  send_file_types:
+    - xml
   settings_friendly_email_recipients: CNKI_EMAIL
   settings_ftp_uri: CNKI_FTP_URI
   settings_ftp_username: CNKI_FTP_USERNAME
@@ -62,6 +91,10 @@ CNKI:
 CNPIEC:
   activity_name: FTPArticle
   s3_bucket_folder: cnpiec
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - vor
   send_by_protocol: ftp
   settings_friendly_email_recipients: CNPIEC_EMAIL
   settings_ftp_uri: CNPIEC_FTP_URI
@@ -72,6 +105,10 @@ CNPIEC:
 GoOA:
   activity_name: FTPArticle
   s3_bucket_folder: gooa
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - vor
   send_by_protocol: ftp
   settings_friendly_email_recipients: GOOA_EMAIL
   settings_ftp_uri: GOOA_FTP_URI
@@ -82,6 +119,10 @@ GoOA:
 HEFCE:
   activity_name: FTPArticle
   s3_bucket_folder: pub_router
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - vor
   send_by_protocol: sftp
   settings_friendly_email_recipients: HEFCE_EMAIL
   settings_ftp_uri: HEFCE_FTP_URI
@@ -96,7 +137,13 @@ HEFCE:
 OASwitchboard:
   activity_name: FTPArticle
   s3_bucket_folder: oaswitchboard
+  schedule_downstream: true
+  schedule_first_version_only: true
+  schedule_article_types:
+    - vor
   send_by_protocol: sftp
+  send_file_types:
+    - xml
   send_unzipped_files: true
   settings_friendly_email_recipients: OASWITCHBOARD_EMAIL
   settings_sftp_uri: OASWITCHBOARD_SFTP_URI
@@ -107,6 +154,11 @@ OASwitchboard:
 OVID:
   activity_name: FTPArticle
   s3_bucket_folder: ovid
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - poa
+    - vor
   send_by_protocol: ftp
   settings_friendly_email_recipients: OVID_EMAIL
   settings_ftp_uri: OVID_FTP_URI
@@ -117,7 +169,14 @@ OVID:
 WoS:
   activity_name: FTPArticle
   s3_bucket_folder: wos
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - vor
   send_by_protocol: ftp
+  send_file_types:
+    - xml
+    - pdf
   settings_friendly_email_recipients: WOS_EMAIL
   settings_ftp_uri: WOS_FTP_URI
   settings_ftp_username: WOS_FTP_USERNAME
@@ -127,6 +186,11 @@ WoS:
 Zendy:
   activity_name: FTPArticle
   s3_bucket_folder: zendy
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - poa
+    - vor
   send_by_protocol: sftp
   settings_friendly_email_recipients: ZENDY_EMAIL
   settings_sftp_uri: ZENDY_SFTP_URI

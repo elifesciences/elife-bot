@@ -156,34 +156,37 @@ def workflow_outbox(downstream_workflow_map, workflow_name):
 
 def choose_outboxes(status, first_by_status, rules, run_type=None):
     outbox_list = []
+
+    if not rules:
+        return outbox_list
+
     downstream_workflow_map = downstream.workflow_s3_bucket_folder_map(rules)
 
-    if run_type != "silent-correction":
-        if first_by_status:
-            outbox_list.append(
-                workflow_outbox(downstream_workflow_map, "PublicationEmail")
-            )
-            if status == "vor":
-                outbox_list.append(
-                    workflow_outbox(downstream_workflow_map, "OASwitchboard")
-                )
-        outbox_list.append(workflow_outbox(downstream_workflow_map, "Pubmed"))
+    for workflow in rules.keys():
+        workflow_rules = rules.get(workflow)
+        # check if the workflow should be scheduled by this activity
+        if not workflow_rules:
+            # no rules to check
+            continue
+        if not workflow_rules.get("schedule_downstream"):
+            # do not assess for sending by this activity
+            continue
 
-    outbox_list.append(workflow_outbox(downstream_workflow_map, "OVID"))
-    outbox_list.append(workflow_outbox(downstream_workflow_map, "Zendy"))
+        if run_type == "silent-correction" and not workflow_rules.get(
+            "schedule_silent_correction"
+        ):
+            # do not send
+            continue
 
-    if status == "poa":
-        pass
+        if not first_by_status and workflow_rules.get("schedule_first_version_only"):
+            # do not send
+            continue
 
-    elif status == "vor":
-        outbox_list.append(workflow_outbox(downstream_workflow_map, "PMC"))
-        outbox_list.append(workflow_outbox(downstream_workflow_map, "HEFCE"))
-        outbox_list.append(workflow_outbox(downstream_workflow_map, "Cengage"))
-        outbox_list.append(workflow_outbox(downstream_workflow_map, "GoOA"))
-        outbox_list.append(workflow_outbox(downstream_workflow_map, "WoS"))
-        outbox_list.append(workflow_outbox(downstream_workflow_map, "CNPIEC"))
-        outbox_list.append(workflow_outbox(downstream_workflow_map, "CNKI"))
-        outbox_list.append(workflow_outbox(downstream_workflow_map, "CLOCKSS"))
+        if workflow_rules.get("schedule_article_types"):
+            if status in workflow_rules.get("schedule_article_types", []):
+                # add it to the outbox
+                outbox_list.append(workflow_outbox(downstream_workflow_map, workflow))
+
     return outbox_list
 
 
