@@ -23,7 +23,7 @@ elifearticle==0.11.0
 elifecleaner==0.20.0
 elifecrossref==0.18.0
 elifepubmed==0.5.0
-elifetools==0.25.0
+elifetools==0.26.0
 func-timeout==4.3.5
 gitdb==4.0.9
 GitPython==3.1.27
