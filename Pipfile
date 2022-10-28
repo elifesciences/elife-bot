@@ -48,5 +48,5 @@ elifecleaner = "~=0.20.0"
 [dev-packages]
 pylint = "~=2.11"
 testfixtures = "~=6.18"
-pytest = "~=6.2"
+pytest = "~=7.2"
 mock = "~=4.0"
