@@ -1,4 +1,4 @@
-# file generated 2022-10-28 - see update-dependencies.sh
+# file generated 2022-11-01 - see update-dependencies.sh
 arrow==1.2.3
 astroid==2.12.12
 attrs==22.1.0
@@ -17,6 +17,7 @@ Deprecated==1.2.13
 digestparser==0.1.2
 dill==0.3.6
 docker==5.0.3
+docmaptools==0.2.0
 ejpcsvparser==0.1.2
 elifearticle==0.11.0
 elifecleaner==0.20.0
