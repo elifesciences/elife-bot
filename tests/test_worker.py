@@ -1,6 +1,7 @@
 import unittest
 import json
 from mock import patch
+import botocore
 from tests import settings_mock
 from tests.classes_mock import FakeFlag, FakeSWFClient
 from tests.activity.classes_mock import FakeLogger
@@ -221,6 +222,147 @@ class TestWorkerWork(unittest.TestCase):
         )
         self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
 
+    @patch.object(activity_class, "do_activity")
+    @patch("logging.getLogger")
+    @patch.object(FakeSWFClient, "poll_for_activity_task")
+    @patch("boto3.client")
+    def test_work_ping_respond_exception(
+        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
+    ):
+        "test an exception raised by the activity"
+        fake_get_logger.return_value = self.logger
+        fake_client.return_value = FakeSWFClient()
+        self.activity_json["activityType"]["name"] = "PingWorker"
+        fake_poll.return_value = self.activity_json
+        fake_do_activity.side_effect = Exception("An exception")
+        # invoke work
+        worker.work(settings_mock, self.flag)
+        # make some assertions on log values
+        self.assertEqual(self.logger.logerror, "error executing activity %s")
+        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
 
-if __name__ == "__main__":
-    unittest.main()
+
+class TestRespondCompleted(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.token = "token"
+        self.message = "message"
+
+    def test_respond_completed(self):
+        client = FakeSWFClient()
+        worker.respond_completed(
+            client,
+            self.logger,
+            self.token,
+            self.message,
+        )
+        self.assertEqual(
+            self.logger.loginfo[-1], "respond_activity_task_completed returned None"
+        )
+
+    @patch.object(FakeSWFClient, "respond_activity_task_completed")
+    def test_respond_completed_exception(self, fake_request):
+        client = FakeSWFClient()
+        exception_error_code = "UnknownResourceFault"
+        exception_operation_name = "operation_name"
+        fake_request.side_effect = botocore.exceptions.ClientError(
+            {"Error": {"Code": exception_error_code}},
+            exception_operation_name,
+        )
+        worker.respond_completed(
+            client,
+            self.logger,
+            self.token,
+            self.message,
+        )
+        self.assertEqual(
+            self.logger.logexception,
+            "SWF client exception: An error occurred (%s) when calling the %s operation: Unknown"
+            % (exception_error_code, exception_operation_name),
+        )
+
+
+class TestRespondFailed(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.token = "token"
+        self.details = "details"
+        self.reason = "reason"
+
+    def test_respond_failed(self):
+        client = FakeSWFClient()
+        worker.respond_failed(
+            client,
+            self.logger,
+            self.token,
+            self.details,
+            self.reason,
+        )
+        self.assertEqual(
+            self.logger.loginfo[-1], "respond_activity_task_failed returned None"
+        )
+
+    @patch.object(FakeSWFClient, "respond_activity_task_failed")
+    def test_respond_failed_exception(self, fake_request):
+        client = FakeSWFClient()
+        exception_error_code = "UnknownResourceFault"
+        exception_operation_name = "operation_name"
+        fake_request.side_effect = botocore.exceptions.ClientError(
+            {"Error": {"Code": exception_error_code}},
+            exception_operation_name,
+        )
+        worker.respond_failed(
+            client,
+            self.logger,
+            self.token,
+            self.details,
+            self.reason,
+        )
+        self.assertEqual(
+            self.logger.logexception,
+            "SWF client exception: An error occurred (%s) when calling the %s operation: Unknown"
+            % (exception_error_code, exception_operation_name),
+        )
+
+
+class TestSignalFailWorkflow(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.domain = "domain"
+        self.workflow_id = "workflow_id"
+        self.run_id = "run_id"
+
+    def test_signal_fail_workflow(self):
+        client = FakeSWFClient()
+        worker.signal_fail_workflow(
+            client,
+            self.logger,
+            self.domain,
+            self.workflow_id,
+            self.run_id,
+        )
+        self.assertEqual(
+            self.logger.loginfo[-1], "request_cancel_workflow_execution None"
+        )
+
+    @patch.object(FakeSWFClient, "request_cancel_workflow_execution")
+    def test_signal_fail_workflow_exception(self, fake_request):
+        client = FakeSWFClient()
+        exception_error_code = "UnknownResourceFault"
+        exception_operation_name = "operation_name"
+        fake_request.side_effect = botocore.exceptions.ClientError(
+            {"Error": {"Code": exception_error_code}},
+            exception_operation_name,
+        )
+        worker.signal_fail_workflow(
+            client,
+            self.logger,
+            self.domain,
+            self.workflow_id,
+            self.run_id,
+        )
+        self.assertEqual(
+            self.logger.logexception,
+            "SWF client exception: An error occurred (%s) when calling the %s operation: Unknown"
+            % (exception_error_code, exception_operation_name),
+        )

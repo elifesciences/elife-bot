@@ -1,6 +1,7 @@
 import json
 import os
 import importlib
+import botocore
 from botocore.config import Config
 import boto3
 import newrelic.agent
@@ -235,12 +236,7 @@ def get_activity_object(activity_name, settings, logger, client, token, activity
 
 
 def _log_swf_response_error(logger, exception):
-    logger.exception(
-        "SWF client exception: status %s, reason %s, body %s",
-        exception.status,
-        exception.reason,
-        exception.body,
-    )
+    logger.exception("SWF client exception: %s" % str(exception))
 
 
 def respond_completed(client, logger, token, message):
@@ -254,10 +250,7 @@ def respond_completed(client, logger, token, message):
             taskToken=token, result=str(message)
         )
         logger.info("respond_activity_task_completed returned %s" % out)
-    except (
-        client.exceptions.OperationNotPermittedFault,
-        client.exceptions.UnknownResourceFault,
-    ) as exception:
+    except botocore.exceptions.ClientError as exception:
         _log_swf_response_error(logger, exception)
 
 
@@ -272,10 +265,7 @@ def respond_failed(client, logger, token, details, reason):
             taskToken=token, details=str(details), reason=str(reason)
         )
         logger.info("respond_activity_task_failed returned %s" % out)
-    except (
-        client.exceptions.OperationNotPermittedFault,
-        client.exceptions.UnknownResourceFault,
-    ) as exception:
+    except botocore.exceptions.ClientError as exception:
         _log_swf_response_error(logger, exception)
 
 
@@ -291,10 +281,7 @@ def signal_fail_workflow(client, logger, domain, workflow_id, run_id):
             domain=domain, workflowId=workflow_id, runId=run_id
         )
         logger.info("request_cancel_workflow_execution %s" % out)
-    except (
-        client.exceptions.OperationNotPermittedFault,
-        client.exceptions.UnknownResourceFault,
-    ) as exception:
+    except botocore.exceptions.ClientError as exception:
         _log_swf_response_error(logger, exception)
 
 
