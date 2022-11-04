@@ -3,6 +3,7 @@ import datetime
 from mock import patch
 from ddt import ddt, data, unpack
 from testfixtures import TempDirectory
+from provider import downstream
 from provider.article import article
 import activity.activity_PubRouterDeposit as activity_module
 from activity.activity_PubRouterDeposit import activity_PubRouterDeposit
@@ -356,6 +357,7 @@ class TestApproveArticles(unittest.TestCase):
         test_article.display_channel = ["Research Article"]
         test_article.is_poa = True
         self.articles = [test_article]
+        self.rules = downstream.load_config(settings_mock)
 
     @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
     @patch("provider.article.article.was_ever_published")
@@ -393,7 +395,7 @@ class TestApproveArticles(unittest.TestCase):
         expected_approved_article_dois = ["10.7554/eLife.00666"]
         expected_remove_doi_list = []
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
-            self.articles, workflow_name
+            self.articles, workflow_name, self.rules.get(workflow_name)
         )
         # self.assertTrue(False)
         approved_article_dois = [article.doi for article in approved_articles]
@@ -428,7 +430,7 @@ class TestApproveArticles(unittest.TestCase):
         expected_approved_article_dois = []
         expected_remove_doi_list = ["10.7554/eLife.00666"]
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
-            self.articles, workflow_name
+            self.articles, workflow_name, self.rules.get(workflow_name)
         )
         approved_article_dois = [article.doi for article in approved_articles]
         self.assertEqual(approved_article_dois, expected_approved_article_dois)
@@ -467,7 +469,7 @@ class TestApproveArticles(unittest.TestCase):
         expected_approved_article_dois = []
         expected_remove_doi_list = ["10.7554/eLife.00666"]
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
-            self.articles, workflow_name
+            self.articles, workflow_name, self.rules.get(workflow_name)
         )
         approved_article_dois = [article.doi for article in approved_articles]
         self.assertEqual(approved_article_dois, expected_approved_article_dois)
@@ -509,7 +511,7 @@ class TestApproveArticles(unittest.TestCase):
         expected_approved_article_dois = []
         expected_remove_doi_list = ["10.7554/eLife.00666"]
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
-            self.articles, workflow_name
+            self.articles, workflow_name, self.rules.get(workflow_name)
         )
         approved_article_dois = [article.doi for article in approved_articles]
         self.assertEqual(approved_article_dois, expected_approved_article_dois)

@@ -22,6 +22,9 @@ PMC:
   schedule_silent_correction: true
   schedule_article_types:
     - vor
+  send_once_only: false
+  send_article_types:
+    - vor
 
 PublicationEmail:
   activity_name: PublicationEmail
@@ -49,6 +52,9 @@ Cengage:
   schedule_article_types:
     - vor
   send_by_protocol: ftp
+  send_once_only: true
+  send_article_types:
+    - vor
   send_file_types:
     - xml
     - pdf
@@ -66,6 +72,9 @@ CLOCKSS:
   schedule_article_types:
     - vor
   send_by_protocol: ftp
+  send_once_only: false
+  send_article_types:
+    - vor
   settings_friendly_email_recipients: CLOCKSS_EMAIL
   settings_ftp_uri: CLOCKSS_FTP_URI
   settings_ftp_username: CLOCKSS_FTP_USERNAME
@@ -80,6 +89,9 @@ CNKI:
   schedule_article_types:
     - vor
   send_by_protocol: ftp
+  send_once_only: true
+  send_article_types:
+    - vor
   send_file_types:
     - xml
   settings_friendly_email_recipients: CNKI_EMAIL
@@ -96,6 +108,9 @@ CNPIEC:
   schedule_article_types:
     - vor
   send_by_protocol: ftp
+  send_once_only: true
+  send_article_types:
+    - vor
   settings_friendly_email_recipients: CNPIEC_EMAIL
   settings_ftp_uri: CNPIEC_FTP_URI
   settings_ftp_username: CNPIEC_FTP_USERNAME
@@ -110,6 +125,9 @@ GoOA:
   schedule_article_types:
     - vor
   send_by_protocol: ftp
+  send_once_only: true
+  send_article_types:
+    - vor
   settings_friendly_email_recipients: GOOA_EMAIL
   settings_ftp_uri: GOOA_FTP_URI
   settings_ftp_username: GOOA_FTP_USERNAME
@@ -124,6 +142,9 @@ HEFCE:
   schedule_article_types:
     - vor
   send_by_protocol: sftp
+  send_once_only: true
+  send_article_types:
+    - vor
   settings_friendly_email_recipients: HEFCE_EMAIL
   settings_ftp_uri: HEFCE_FTP_URI
   settings_ftp_username: HEFCE_FTP_USERNAME
@@ -142,6 +163,9 @@ OASwitchboard:
   schedule_article_types:
     - vor
   send_by_protocol: sftp
+  send_once_only: true
+  send_article_types:
+    - vor
   send_file_types:
     - xml
   send_unzipped_files: true
@@ -160,6 +184,10 @@ OVID:
     - poa
     - vor
   send_by_protocol: ftp
+  send_once_only: false
+  send_article_types:
+    - poa
+    - vor
   settings_friendly_email_recipients: OVID_EMAIL
   settings_ftp_uri: OVID_FTP_URI
   settings_ftp_username: OVID_FTP_USERNAME
@@ -174,6 +202,9 @@ WoS:
   schedule_article_types:
     - vor
   send_by_protocol: ftp
+  send_once_only: true
+  send_article_types:
+    - vor
   send_file_types:
     - xml
     - pdf
@@ -192,6 +223,10 @@ Zendy:
     - poa
     - vor
   send_by_protocol: sftp
+  send_once_only: false
+  send_article_types:
+    - poa
+    - vor
   settings_friendly_email_recipients: ZENDY_EMAIL
   settings_sftp_uri: ZENDY_SFTP_URI
   settings_sftp_username: ZENDY_SFTP_USERNAME
