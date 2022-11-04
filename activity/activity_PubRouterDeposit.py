@@ -125,22 +125,26 @@ class activity_PubRouterDeposit(Activity):
         # Get a list of archive zip keys from the bucket for using in approve_articles
         self.archive_bucket_s3_keys = self.get_archive_bucket_s3_keys()
 
+        # workflow rules
+        rules = downstream.load_config(self.settings)
+        workflow_rules = rules.get(self.workflow)
+
         # Parse the XML
         self.articles = self.parse_article_xml(self.article_xml_filenames)
         # Approve the articles to be sent
         self.articles_approved, remove_doi_list = self.approve_articles(
-            self.articles, self.workflow
+            self.articles, self.workflow, workflow_rules
         )
 
         for article in self.articles_approved:
             # Start a workflow for each article this is approved to publish
-            if self.workflow == "PMC":
+            if workflow_rules.get("activity_name") == "PMCDeposit":
                 zip_file_name = self.get_latest_archive_zip_name(article)
                 starter_status = self.start_pmc_deposit_workflow(
                     article,
                     zip_file_name,
                 )
-            else:
+            elif workflow_rules.get("activity_name") == "FTPArticle":
                 starter_status = self.start_ftp_article_workflow(article)
 
             if starter_status is True:
@@ -399,7 +403,7 @@ class activity_PubRouterDeposit(Activity):
         # Instantiate a new article object
         return articlelib.article(self.settings)
 
-    def approve_articles(self, articles, workflow):
+    def approve_articles(self, articles, workflow, workflow_rules):
         """
         Given a list of article objects, approve them for processing
         """
@@ -449,7 +453,7 @@ class activity_PubRouterDeposit(Activity):
                         remove_doi_list.append(article.doi)
 
         # Check if article is a resupply
-        if check_approve_by_was_ever_published(workflow):
+        if workflow_rules.get("send_once_only"):
             for article in articles:
                 was_ever_published = blank_article.was_ever_published(
                     article.doi, workflow
@@ -465,15 +469,15 @@ class activity_PubRouterDeposit(Activity):
                     if article.doi not in remove_doi_list:
                         remove_doi_list.append(article.doi)
 
-        # Check a vor archive zip file exists
-        if check_approve_by_archive_zip_exists(workflow):
+        # Check a vor archive zip file exists if only vor type is sent to the recipient
+        if workflow_rules.get("send_article_types") == ["vor"]:
             for article in articles:
                 # Get the file name of the most recent archive zip from the archive bucket
                 zip_file_name = self.get_latest_archive_zip_name(article)
                 if not zip_file_name:
                     if self.logger:
                         log_info = (
-                            "Removing because there is no archive zip to send "
+                            "Removing because there is no VOR archive zip to send "
                             + article.doi
                         )
                         self.admin_email_content += "\n" + log_info
@@ -577,16 +581,6 @@ class activity_PubRouterDeposit(Activity):
 def check_approve_by_article_type(workflow):
     "whether to check the OASwitchboard status when approving an article to send"
     return bool(workflow == "OASwitchboard")
-
-
-def check_approve_by_was_ever_published(workflow):
-    "whether to check the article has been sent previously when approving an article to send"
-    return bool(workflow not in ["CLOCKSS", "OVID", "PMC", "Zendy"])
-
-
-def check_approve_by_archive_zip_exists(workflow):
-    "whether to check if a VoR article zip exists when approving an article to send"
-    return bool(workflow not in ["OVID", "Zendy"])
 
 
 def get_friendly_email_recipients(settings, workflow):
