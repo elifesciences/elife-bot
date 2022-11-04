@@ -12,7 +12,7 @@ from activity.activity_PingWorker import activity_PingWorker as activity_class
 class TestWorker(unittest.TestCase):
     def setUp(self):
         self.activity_json = None
-        with open("tests/test_data/activity.json", "r") as open_file:
+        with open("tests/test_data/activity.json", "r", encoding="utf-8") as open_file:
             self.activity_json = json.loads(open_file.read())
 
     def test_get_task_token(self):
@@ -76,7 +76,7 @@ class TestWorkerWork(unittest.TestCase):
     def setUp(self):
         self.flag = FakeFlag(0.001)
         self.logger = FakeLogger()
-        with open("tests/test_data/activity.json", "r") as open_file:
+        with open("tests/test_data/activity.json", "r", encoding="utf-8") as open_file:
             self.activity_json = json.loads(open_file.read())
 
     @patch("logging.getLogger")
@@ -112,134 +112,89 @@ class TestWorkerWork(unittest.TestCase):
         )
         self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
 
-    @patch.object(activity_class, "do_activity")
-    @patch("logging.getLogger")
-    @patch.object(FakeSWFClient, "poll_for_activity_task")
-    @patch("boto3.client")
-    def test_work_ping_respond_failed(
-        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
-    ):
-        "change the activity name to PingWorker and mock its return value"
-        activity_return_value = False
-        fake_get_logger.return_value = self.logger
-        fake_client.return_value = FakeSWFClient()
-        self.activity_json["activityType"]["name"] = "PingWorker"
-        fake_poll.return_value = self.activity_json
-        fake_do_activity.return_value = activity_return_value
-        # invoke work
-        worker.work(settings_mock, self.flag)
-        # make some assertions on log values
-        self.assertTrue(
-            "respond_activity_task_failed returned None" in str(self.logger.loginfo)
-        )
-        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
 
-    @patch.object(activity_class, "do_activity")
-    @patch("logging.getLogger")
-    @patch.object(FakeSWFClient, "poll_for_activity_task")
-    @patch("boto3.client")
-    def test_work_ping_respond_activity_success(
-        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
-    ):
-        "change the activity name to PingWorker and new style return value ACTIVITY_SUCCESS"
-        activity_return_value = activity_class.ACTIVITY_SUCCESS
-        fake_get_logger.return_value = self.logger
-        fake_client.return_value = FakeSWFClient()
+class TestProcessActivity(unittest.TestCase):
+    def setUp(self):
+        self.flag = FakeFlag(0.001)
+        self.logger = FakeLogger()
+        with open("tests/test_data/activity.json", "r", encoding="utf-8") as open_file:
+            self.activity_json = json.loads(open_file.read())
+        # change the activity name to PingWorker and mock its return value
         self.activity_json["activityType"]["name"] = "PingWorker"
-        fake_poll.return_value = self.activity_json
-        fake_do_activity.return_value = activity_return_value
-        # invoke work
-        worker.work(settings_mock, self.flag)
+        self.token = "token"
+
+    def test_process_activity(self):
+        "typical situation"
+        # invoke process_activity
+        worker.process_activity(
+            self.activity_json, settings_mock, self.logger, FakeSWFClient(), self.token
+        )
         # make some assertions on log values
         self.assertTrue(
             "respond_activity_task_completed returned None" in str(self.logger.loginfo)
         )
-        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
 
     @patch.object(activity_class, "do_activity")
-    @patch("logging.getLogger")
-    @patch.object(FakeSWFClient, "poll_for_activity_task")
-    @patch("boto3.client")
-    def test_work_ping_respond_activity_temporary_failure(
-        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
+    def test_process_activity_respond_activity_success(self, fake_do_activity):
+        "change the activity eturn value ACTIVITY_SUCCESS"
+        fake_do_activity.return_value = activity_class.ACTIVITY_SUCCESS
+        worker.process_activity(
+            self.activity_json, settings_mock, self.logger, FakeSWFClient(), self.token
+        )
+        # make some assertions on log values
+        self.assertTrue(
+            "respond_activity_task_completed returned None" in str(self.logger.loginfo)
+        )
+
+    @patch.object(activity_class, "do_activity")
+    def test_process_activity_respond_activity_temporary_failure(
+        self, fake_do_activity
     ):
-        "change the activity name to PingWorker and new style return value ACTIVITY_TEMPORARY_FAILURE"
-        activity_return_value = activity_class.ACTIVITY_TEMPORARY_FAILURE
-        fake_get_logger.return_value = self.logger
-        fake_client.return_value = FakeSWFClient()
-        self.activity_json["activityType"]["name"] = "PingWorker"
-        fake_poll.return_value = self.activity_json
-        fake_do_activity.return_value = activity_return_value
-        # invoke work
-        worker.work(settings_mock, self.flag)
+        "change the activity eturn value ACTIVITY_TEMPORARY_FAILURE"
+        fake_do_activity.return_value = activity_class.ACTIVITY_TEMPORARY_FAILURE
+        worker.process_activity(
+            self.activity_json, settings_mock, self.logger, FakeSWFClient(), self.token
+        )
         # make some assertions on log values
         self.assertTrue(
             "respond_activity_task_failed returned None" in str(self.logger.loginfo)
         )
-        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
 
     @patch.object(activity_class, "do_activity")
-    @patch("logging.getLogger")
-    @patch.object(FakeSWFClient, "poll_for_activity_task")
-    @patch("boto3.client")
-    def test_work_ping_respond_activity_permanent_failure(
-        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
+    def test_process_activity_respond_activity_permanent_failure(
+        self, fake_do_activity
     ):
-        "change the activity name to PingWorker and new style return value ACTIVITY_PERMANENT_FAILURE"
-        activity_return_value = activity_class.ACTIVITY_PERMANENT_FAILURE
-        fake_get_logger.return_value = self.logger
-        fake_client.return_value = FakeSWFClient()
-        self.activity_json["activityType"]["name"] = "PingWorker"
-        fake_poll.return_value = self.activity_json
-        fake_do_activity.return_value = activity_return_value
-        # invoke work
-        worker.work(settings_mock, self.flag)
+        "change the activity eturn value ACTIVITY_PERMANENT_FAILURE"
+        fake_do_activity.return_value = activity_class.ACTIVITY_PERMANENT_FAILURE
+        worker.process_activity(
+            self.activity_json, settings_mock, self.logger, FakeSWFClient(), self.token
+        )
         # make some assertions on log values
         self.assertTrue(
             "request_cancel_workflow_execution None" in str(self.logger.loginfo)
         )
-        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
 
     @patch.object(activity_class, "do_activity")
-    @patch("logging.getLogger")
-    @patch.object(FakeSWFClient, "poll_for_activity_task")
-    @patch("boto3.client")
-    def test_work_ping_respond_activity_exit_workflow(
-        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
-    ):
-        "change the activity name to PingWorker and new style return value ACTIVITY_EXIT_WORKFLOW"
-        activity_return_value = activity_class.ACTIVITY_EXIT_WORKFLOW
-        fake_get_logger.return_value = self.logger
-        fake_client.return_value = FakeSWFClient()
-        self.activity_json["activityType"]["name"] = "PingWorker"
-        fake_poll.return_value = self.activity_json
-        fake_do_activity.return_value = activity_return_value
-        # invoke work
-        worker.work(settings_mock, self.flag)
+    def test_process_activity_respond_activity_exit_workflow(self, fake_do_activity):
+        "change the activity eturn value ACTIVITY_EXIT_WORKFLOW"
+        fake_do_activity.return_value = activity_class.ACTIVITY_EXIT_WORKFLOW
+        worker.process_activity(
+            self.activity_json, settings_mock, self.logger, FakeSWFClient(), self.token
+        )
         # make some assertions on log values
         self.assertTrue(
             "request_cancel_workflow_execution None" in str(self.logger.loginfo)
         )
-        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
 
     @patch.object(activity_class, "do_activity")
-    @patch("logging.getLogger")
-    @patch.object(FakeSWFClient, "poll_for_activity_task")
-    @patch("boto3.client")
-    def test_work_ping_respond_exception(
-        self, fake_client, fake_poll, fake_get_logger, fake_do_activity
-    ):
+    def test_process_activity_exception(self, fake_do_activity):
         "test an exception raised by the activity"
-        fake_get_logger.return_value = self.logger
-        fake_client.return_value = FakeSWFClient()
-        self.activity_json["activityType"]["name"] = "PingWorker"
-        fake_poll.return_value = self.activity_json
         fake_do_activity.side_effect = Exception("An exception")
-        # invoke work
-        worker.work(settings_mock, self.flag)
+        worker.process_activity(
+            self.activity_json, settings_mock, self.logger, FakeSWFClient(), self.token
+        )
         # make some assertions on log values
         self.assertEqual(self.logger.logerror, "error executing activity %s")
-        self.assertEqual(self.logger.loginfo[-1], "graceful shutdown")
 
 
 class TestRespondCompleted(unittest.TestCase):
