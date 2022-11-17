@@ -114,6 +114,27 @@ class activity_ValidateAcceptedSubmission(Activity):
 
         self.logger.info("%s, files: %s" % (self.name, files))
 
+        # check PRC status and store in the session
+        try:
+            prc_status = cleaner.is_prc(xml_file_path, input_filename)
+        except ParseError:
+            log_message = (
+                "%s, XML ParseError exception in cleaner.is_prc"
+                " parsing XML file %s for file %s"
+            ) % (
+                self.name,
+                article_processing.file_name_from_name(xml_file_path),
+                input_filename,
+            )
+            self.logger.exception(log_message)
+            cleaner.LOGGER.exception(log_message)
+            prc_status = None
+        finally:
+            # reset the parsing library flag
+            cleaner.parse.REPAIR_XML = original_repair_xml
+
+        session.store_value("prc_status", prc_status)
+
         # download the PDF files so their pages can be counted
         download_pdf_files_from_bucket(
             storage,
