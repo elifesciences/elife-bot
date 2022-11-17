@@ -129,7 +129,7 @@ class activity_ValidateAcceptedSubmission(Activity):
             )
             self.logger.exception(log_message)
             cleaner.LOGGER.exception(log_message)
-            files = []
+            prc_status = None
         finally:
             # reset the parsing library flag
             cleaner.parse.REPAIR_XML = original_repair_xml
