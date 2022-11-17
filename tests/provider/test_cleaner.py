@@ -138,6 +138,46 @@ class TestFileList(unittest.TestCase):
         )
 
 
+class TestIsPrc(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_is_prc(self):
+        "the standard test fixture is not PRC"
+        directory = TempDirectory()
+        zip_file_name = "30-01-2019-RA-eLife-45644.zip"
+        zip_file_path = os.path.join("tests", "files_source", zip_file_name)
+        xml_file_name = "30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml"
+        with zipfile.ZipFile(zip_file_path, "r") as open_zip:
+            open_zip.extract(xml_file_name, directory.path)
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        result = cleaner.is_prc(xml_file_path, zip_file_name)
+        self.assertEqual(result, False)
+
+    def test_is_prc_by_zip_file(self):
+        "test a zip file name for PRC status"
+        zip_file_name = "30-01-2019-RP-RA-eLife-45644.zip"
+        xml_file_path = None
+        result = cleaner.is_prc(xml_file_path, zip_file_name)
+        self.assertEqual(result, True)
+
+    def test_is_prc_by_xml(self):
+        "test when the XML indicates it is PRC status"
+        directory = TempDirectory()
+        zip_file_name = "test.zip"
+        xml_file_name = "test.xml"
+        xml_string = (
+            "<article><front><journal-meta>"
+            '<journal-id journal-id-type="publisher-id">foo</journal-id><issn>2050-084X</issn>'
+            "</journal-meta></front></article>"
+        )
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w") as open_file:
+            open_file.write(xml_string)
+        result = cleaner.is_prc(xml_file_path, zip_file_name)
+        self.assertEqual(result, True)
+
+
 class TestFilesByExtension(unittest.TestCase):
     def test_files_by_extension(self):
         "filter the list based on the file name extension"

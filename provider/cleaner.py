@@ -5,6 +5,7 @@ from elifecleaner import (
     LOGGER,
     configure_logging,
     parse,
+    prc,
     transform,
     video,
     video_xml,
@@ -106,6 +107,16 @@ def transform_ejp_zip(zip_file, tmp_dir, output_dir):
 
 def transform_ejp_files(asset_file_name_map, output_dir, identifier):
     return transform.transform_ejp_files(asset_file_name_map, output_dir, identifier)
+
+
+def is_prc(xml_file_path, zip_file_name):
+    "is this a PRC article"
+    # first can check the zip file name
+    if "-RP" in zip_file_name:
+        return True
+    # next, check the XML for the status
+    root = parse_article_xml(xml_file_path)
+    return prc.is_xml_prc(root)
 
 
 def rezip(asset_file_name_map, output_dir, zip_file_name):

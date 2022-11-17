@@ -126,6 +126,9 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         ]
         self.assertEqual(len(log_warnings), test_data.get("expected_log_warning_count"))
 
+        # check session prc value
+        self.assertEqual(self.session.get_value("prc_status"), False)
+
         # check session cleaner_log contains content
         self.assertTrue("elifecleaner:parse:" in self.session.get_value("cleaner_log"))
 
@@ -174,6 +177,62 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
                 (
                     "ValidateAcceptedSubmission, XML ParseError exception"
                     " in cleaner.file_list parsing XML file"
+                    " 30-01-2019-RA-eLife-45644.xml for file"
+                )
+            )
+        )
+        log_file_path = os.path.join(
+            self.activity.get_tmp_dir(), self.activity.activity_log_file
+        )
+        with open(log_file_path, "r", encoding="utf8") as open_file:
+            log_contents = open_file.read()
+        log_errors = [
+            line for line in log_contents.split("\n") if "ERROR elifecleaner:" in line
+        ]
+        self.assertEqual(len(log_errors), 1)
+
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(cleaner, "is_prc")
+    def test_do_activity_is_prc_exception(
+        self,
+        fake_is_prc,
+        fake_cleaner_storage_context,
+        fake_session,
+        fake_storage_context,
+    ):
+        directory = TempDirectory()
+        # set REPAIR_XML value because test fixture is malformed XML
+        activity_module.REPAIR_XML = True
+
+        # set a non-None session value to test string concatenation
+        self.session.store_value("cleaner_log", "")
+        fake_session.return_value = self.session
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            "30-01-2019-RA-eLife-45644.zip",
+        )
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            zip_file_path,
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_is_prc.side_effect = ParseError()
+        # do the activity
+        result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
+        self.assertEqual(result, True)
+        self.assertTrue(
+            self.activity.logger.logexception.startswith(
+                (
+                    "ValidateAcceptedSubmission, XML ParseError exception"
+                    " in cleaner.is_prc parsing XML file"
                     " 30-01-2019-RA-eLife-45644.xml for file"
                 )
             )
