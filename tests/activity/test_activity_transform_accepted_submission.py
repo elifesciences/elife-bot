@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import os
+import copy
 import shutil
 import unittest
 from xml.etree.ElementTree import ParseError
@@ -191,6 +192,133 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
         with open(xml_file_path, "r", encoding="utf8") as open_file:
             xml_contents = open_file.read()
         self.assertTrue("Figure 5source code 1.c.zip" in xml_contents)
+        self.assertTrue("<elocation-id>e45644</elocation-id>" in xml_contents)
+
+    @patch.object(activity_module, "get_session")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(activity_module, "storage_context")
+    def test_do_activity_prc_status(
+        self, fake_storage_context, fake_cleaner_storage_context, fake_session
+    ):
+        test_data = {
+            "comment": "accepted submission zip file example",
+            "filename": "30-01-2019-RA-eLife-45644.zip",
+            "expected_result": True,
+            "expected_transform_status": True,
+        }
+        session_data = copy.copy(test_activity_data.accepted_session_example)
+        session_data["prc_status"] = True
+        directory = TempDirectory()
+        # set REPAIR_XML value because test fixture is malformed XML
+        activity_module.REPAIR_XML = True
+
+        # copy files into the input directory using the storage context
+        # expanded bucket files
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            test_data.get("filename"),
+        )
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            zip_file_path,
+        )
+        dest_folder = os.path.join(directory.path, "files_dest")
+        os.mkdir(dest_folder)
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=dest_folder
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+
+        # mock the session
+        fake_session.return_value = FakeSession(session_data)
+
+        # do the activity
+        result = self.activity.do_activity(input_data(test_data.get("filename")))
+        filename_used = input_data(test_data.get("filename")).get("file_name")
+
+        # check assertions
+        self.assertEqual(
+            result,
+            test_data.get("expected_result"),
+            (
+                "failed in {comment}, got {result}, filename {filename}, "
+                + "input_file {input_file}"
+            ).format(
+                comment=test_data.get("comment"),
+                result=result,
+                input_file=test_data.get("filename"),
+                filename=filename_used,
+            ),
+        )
+
+        self.assertEqual(
+            self.activity.statuses.get("transform"),
+            test_data.get("expected_transform_status"),
+            "failed in {comment}".format(comment=test_data.get("comment")),
+        )
+
+        log_file_path = os.path.join(
+            self.activity.get_tmp_dir(), self.activity.activity_log_file
+        )
+        with open(log_file_path, "r", encoding="utf8") as open_file:
+            log_contents = open_file.read()
+
+        log_infos = [
+            line
+            for line in log_contents.split("\n")
+            if "INFO elifecleaner:prc:" in line
+        ]
+        # check output bucket folder contents
+        bucket_folder_path = os.path.join(
+            dest_folder,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            "30-01-2019-RA-eLife-45644",
+        )
+        # compare some log file values,
+        # these assertions can be removed if any are too hard to manage
+        self.assertTrue(
+            log_infos[0].endswith(
+                ("replacing journal-id tag text of type nlm-ta to elife")
+            )
+        )
+        self.assertTrue(
+            log_infos[1].endswith(
+                ("replacing journal-id tag text of type hwp to eLife")
+            )
+        )
+        self.assertTrue(
+            log_infos[2].endswith(
+                ("replacing journal-id tag text of type publisher-id to eLife")
+            )
+        )
+        self.assertTrue(
+            log_infos[3].endswith(("changing elocation-id value e45644 to RP45644"))
+        )
+
+        # check the zipped code file name is in the XML file
+        xml_file_path = os.path.join(
+            bucket_folder_path,
+            "30-01-2019-RA-eLife-45644.xml",
+        )
+        with open(xml_file_path, "r", encoding="utf8") as open_file:
+            xml_contents = open_file.read()
+
+        self.assertTrue(
+            '<journal-id journal-id-type="publisher-id">eLife</journal-id>'
+            in xml_contents
+        )
+        self.assertTrue("<elocation-id>RP45644</elocation-id>" in xml_contents)
+        self.assertTrue(
+            (
+                '<custom-meta specific-use="meta-only">'
+                "<meta-name>publishing-route</meta-name><meta-value>prc</meta-value>"
+                "</custom-meta>"
+            )
+            in xml_contents
+        )
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")

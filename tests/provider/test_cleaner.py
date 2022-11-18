@@ -178,6 +178,54 @@ class TestIsPrc(unittest.TestCase):
         self.assertEqual(result, True)
 
 
+class TestTransformPrc(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_transform_prc(self):
+        "test modifying the XML for a PRC article"
+        directory = TempDirectory()
+        zip_file_name = "test.zip"
+        xml_file_name = "test.xml"
+        xml_string = (
+            "<article>"
+            "<front>"
+            "<journal-meta>"
+            '<journal-id journal-id-type="publisher-id">foo</journal-id>'
+            "<issn>2050-084X</issn>"
+            "</journal-meta>"
+            "<article-meta>"
+            "<elocation-id>e1234567890</elocation-id>"
+            "</article-meta>"
+            "</front>"
+            "</article>"
+        )
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w") as open_file:
+            open_file.write(xml_string)
+        # invoke the function
+        cleaner.transform_prc(xml_file_path, zip_file_name)
+        # check output
+        with open(xml_file_path, "r") as open_file:
+            xml_contents = open_file.read()
+        self.assertTrue(
+            '<journal-id journal-id-type="publisher-id">eLife</journal-id>'
+            in xml_contents
+        )
+        self.assertTrue("<elocation-id>RP1234567890</elocation-id>" in xml_contents)
+        self.assertTrue(
+            (
+                "<custom-meta-group>"
+                '<custom-meta specific-use="meta-only">'
+                "<meta-name>publishing-route</meta-name>"
+                "<meta-value>prc</meta-value>"
+                "</custom-meta>"
+                "</custom-meta-group>"
+            )
+            in xml_contents
+        )
+
+
 class TestFilesByExtension(unittest.TestCase):
     def test_files_by_extension(self):
         "filter the list based on the file name extension"
