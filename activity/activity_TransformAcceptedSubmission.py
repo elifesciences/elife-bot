@@ -120,6 +120,10 @@ class activity_TransformAcceptedSubmission(Activity):
             # reset the parsing library flag
             cleaner.parse.REPAIR_XML = original_repair_xml
 
+        # PRC XML changes
+        if session.get_value("prc_status"):
+            cleaner.transform_prc(xml_file_path, input_filename)
+
         # transform the zip file
         if self.statuses.get("download"):
             self.logger.info(

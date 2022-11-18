@@ -119,6 +119,16 @@ def is_prc(xml_file_path, zip_file_name):
     return prc.is_xml_prc(root)
 
 
+def transform_prc(xml_file_path, identifier):
+    "transform PRC article XML"
+    # next, check the XML for the status
+    root = parse_article_xml(xml_file_path)
+    prc.transform_journal_id_tags(root, identifier)
+    prc.add_prc_custom_meta_tags(root, identifier)
+    prc.transform_elocation_id(root, identifier=identifier)
+    write_xml_file(root, xml_file_path, identifier)
+
+
 def rezip(asset_file_name_map, output_dir, zip_file_name):
     return transform.rezip(asset_file_name_map, output_dir, zip_file_name)
 
