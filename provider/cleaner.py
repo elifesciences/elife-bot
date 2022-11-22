@@ -19,6 +19,9 @@ LOG_FORMAT_STRING = (
     "%(asctime)s %(levelname)s %(name)s:%(module)s:%(funcName)s: %(message)s"
 )
 
+# November 2022 temporary config whether to send emails for PRC article ingestions
+PRC_INGEST_SEND_EMAIL = False
+
 
 def article_id_from_zip_file(zip_file):
     "try to get an article id numeric string from a zip file name"
