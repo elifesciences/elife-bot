@@ -1,4 +1,4 @@
-# file generated 2022-11-18 - see update-dependencies.sh
+# file generated 2022-11-23 - see update-dependencies.sh
 arrow==1.2.3
 astroid==2.12.12
 attrs==22.1.0
@@ -19,7 +19,7 @@ dill==0.3.6
 docker==5.0.3
 ejpcsvparser==0.2.0
 elifearticle==0.11.0
-elifecleaner==0.23.0
+elifecleaner==0.24.0
 elifecrossref==0.18.0
 elifepubmed==0.5.0
 elifetools==0.27.0
