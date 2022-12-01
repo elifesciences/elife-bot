@@ -1,6 +1,7 @@
 import os
 import logging
 import re
+import requests
 from elifecleaner import (
     LOGGER,
     configure_logging,
@@ -138,6 +139,31 @@ def rezip(asset_file_name_map, output_dir, zip_file_name):
 
 def video_data_from_files(files, article_id):
     return video.video_data_from_files(files, article_id)
+
+
+def preprint_url(xml_file_path):
+    "get the URL of the preprint from an XML file"
+    root = parse_article_xml(xml_file_path)
+    return parse.preprint_url(root)
+
+
+def sciety_docmap_url(settings, doi):
+    "URL of the preprint docmap at Sciety"
+    sciety_docmap_url_pattern = getattr(settings, "sciety_docmap_url_pattern", None)
+    return (
+        sciety_docmap_url_pattern.format(doi=doi) if sciety_docmap_url_pattern else None
+    )
+
+
+def url_exists(url, logger):
+    "check if URL exists and is successful status code"
+    exists = False
+    response = requests.head(url)
+    if 200 <= response.status_code < 400:
+        exists = True
+    elif response.status_code >= 400:
+        logger.info("Status code for %s was %s" % (url, response.status_code))
+    return exists
 
 
 def xml_rewrite_file_tags(xml_file_path, file_transformations, identifier):

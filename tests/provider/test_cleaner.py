@@ -7,7 +7,7 @@ from testfixtures import TempDirectory
 import wand
 from provider import cleaner
 from tests import settings_mock
-from tests.activity.classes_mock import FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
 
 
 class TestCleanerProvider(unittest.TestCase):
@@ -223,6 +223,93 @@ class TestTransformPrc(unittest.TestCase):
                 "</custom-meta-group>"
             )
             in xml_contents
+        )
+
+
+class TestPreprintUrl(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_preprint_url(self):
+        "test modifying the XML for a PRC article"
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+
+        xml_string = (
+            "<article>"
+            "<front>"
+            "<article-meta>"
+            '<fn-group content-type="article-history">'
+            "<title>Preprint</title>"
+            '<fn fn-type="other"/>'
+            '<ext-link ext-link-type="url" xlink:href="https://doi.org/10.1101/2021.06.02.446694"/>'
+            "</fn-group>"
+            "</article-meta>"
+            "</front>"
+            "</article>"
+        )
+        expected = "https://doi.org/10.1101/2021.06.02.446694"
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w") as open_file:
+            open_file.write(xml_string)
+        # invoke the function
+        result = cleaner.preprint_url(xml_file_path)
+        # check output
+        self.assertEqual(result, expected)
+
+    def test_preprint_url_none(self):
+        "test not finding a preprint_url"
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+        xml_string = "<article />"
+        expected = None
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w") as open_file:
+            open_file.write(xml_string)
+        # invoke the function
+        result = cleaner.preprint_url(xml_file_path)
+        # check output
+        self.assertEqual(result, expected)
+
+
+class TestScietyDocmapUrl(unittest.TestCase):
+    def test_sciety_docmap_url(self):
+        doi = "10.1101/2021.06.02.446694"
+        result = cleaner.sciety_docmap_url(settings_mock, doi)
+        expected = "https://sciety.example.org/path/%s.docmap.json" % doi
+        self.assertEqual(result, expected)
+
+    def test_sciety_docmap_url_no_settings(self):
+        class FakeSettings:
+            pass
+
+        doi = "10.1101/2021.06.02.446694"
+        result = cleaner.sciety_docmap_url(FakeSettings(), doi)
+        expected = None
+        self.assertEqual(result, expected)
+
+
+class TestUrlExists(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.url = "https://example.org/"
+
+    @patch("requests.head")
+    def test_url_exists_200(self, mock_requests_head):
+        status_code = 200
+        mock_requests_head.return_value = FakeResponse(status_code)
+        result = cleaner.url_exists(self.url, self.logger)
+        self.assertEqual(result, True)
+
+    @patch("requests.head")
+    def test_url_exists_404(self, mock_requests_head):
+        status_code = 404
+        mock_requests_head.return_value = FakeResponse(status_code)
+        result = cleaner.url_exists(self.url, self.logger)
+        self.assertEqual(result, False)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "Status code for %s was %s" % (self.url, status_code),
         )
 
 

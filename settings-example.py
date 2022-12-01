@@ -339,6 +339,8 @@ class exp:
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
 
+    sciety_docmap_url_pattern = "https://sciety.example.org/path/{doi}.docmap.json"
+
 
 class dev:
     # AWS settings
@@ -662,6 +664,8 @@ class dev:
     GLENCOE_FTP_CWD = ""
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
+
+    sciety_docmap_url_pattern = "https://sciety.example.org/path/{doi}.docmap.json"
 
 
 class live:
@@ -991,6 +995,8 @@ class live:
     GLENCOE_FTP_CWD = ""
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
+
+    sciety_docmap_url_pattern = "https://sciety.example.org/path/{doi}.docmap.json"
 
 
 def get_settings(ENV="dev"):

@@ -93,3 +93,5 @@ software_heritage_api_get_origin_pattern = (
 accepted_submission_queue = "cleaning_queue"
 
 downstream_recipients_yaml = "tests/downstreamRecipients.yaml"
+
+sciety_docmap_url_pattern = "https://sciety.example.org/path/{doi}.docmap.json"
