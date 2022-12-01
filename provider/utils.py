@@ -4,6 +4,7 @@ import base64
 from argparse import ArgumentParser
 import arrow
 from mimetypes import guess_type
+from elifetools import utils as etoolsutils
 
 
 S3_DATE_FORMAT = "%Y%m%d%H%M%S"
@@ -122,6 +123,11 @@ def get_doi_url(doi):
     Given a DOI, get the URL for the DOI
     """
     return "https://doi.org/%s" % doi
+
+
+def doi_uri_to_doi(doi_url):
+    "get the DOI portion of a DOI URL"
+    return etoolsutils.doi_uri_to_doi(doi_url)
 
 
 CONSOLE_ARGUMENT_MAP = {

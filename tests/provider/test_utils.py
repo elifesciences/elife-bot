@@ -118,6 +118,11 @@ class TestUtils(unittest.TestCase):
         doi_url = utils.get_doi_url("10.7554/eLife.08411")
         self.assertEqual(doi_url, "https://doi.org/10.7554/eLife.08411")
 
+    def test_doi_uri_to_doi(self):
+        doi = "10.1101/2021.06.02.446694"
+        doi_url = "https://doi.org/%s" % doi
+        self.assertEqual(utils.doi_uri_to_doi(doi_url), doi)
+
 
 class TestConsoleStart(unittest.TestCase):
     def test_console_start(self):
