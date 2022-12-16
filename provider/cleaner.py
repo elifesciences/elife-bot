@@ -7,6 +7,7 @@ from elifecleaner import (
     configure_logging,
     parse,
     prc,
+    sub_article,
     transform,
     video,
     video_xml,
@@ -155,6 +156,10 @@ def sciety_docmap_url(settings, doi):
     )
 
 
+def add_sub_article_xml(docmap_string, article_xml):
+    return sub_article.add_sub_article_xml(docmap_string, article_xml)
+
+
 def url_exists(url, logger):
     "check if URL exists and is successful status code"
     exists = False
@@ -164,6 +169,25 @@ def url_exists(url, logger):
     elif response.status_code >= 400:
         logger.info("Status code for %s was %s" % (url, response.status_code))
     return exists
+
+
+def get_docmap(url):
+    "GET request for the docmap json"
+    response = requests.get(url)
+    LOGGER.info("Request to docmaps API: GET %s", url)
+    LOGGER.info(
+        "Response from docmaps API: %s\n%s", response.status_code, response.content
+    )
+    status_code = response.status_code
+    if status_code not in [200]:
+        raise Exception(
+            "Error looking up docmap URL "
+            + url
+            + " in digest API: %s\n%s" % (status_code, response.content)
+        )
+
+    if status_code == 200:
+        return response.content
 
 
 def xml_rewrite_file_tags(xml_file_path, file_transformations, identifier):

@@ -313,6 +313,27 @@ class TestUrlExists(unittest.TestCase):
         )
 
 
+class TestGetDocmap(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.url = "https://example.org/"
+
+    @patch("requests.get")
+    def test_get_docmap_200(self, mock_requests_get):
+        content = b"test"
+        status_code = 200
+        mock_requests_get.return_value = FakeResponse(status_code, content=content)
+        result = cleaner.get_docmap(self.url)
+        self.assertEqual(result, content)
+
+    @patch("requests.get")
+    def test_get_docmap_404(self, mock_requests_get):
+        status_code = 404
+        mock_requests_get.return_value = FakeResponse(status_code)
+        with self.assertRaises(Exception):
+            cleaner.get_docmap(self.url)
+
+
 class TestFilesByExtension(unittest.TestCase):
     def test_files_by_extension(self):
         "filter the list based on the file name extension"
