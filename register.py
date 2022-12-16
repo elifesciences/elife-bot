@@ -133,6 +133,7 @@ def start(settings):
     activity_names.append("AnnotateAcceptedSubmissionVideos")
     activity_names.append("AddCommentsToAcceptedSubmissionXml")
     activity_names.append("OutputAcceptedSubmission")
+    activity_names.append("AcceptedSubmissionPeerReviews")
 
     for activity_name in activity_names:
         # Import the activity libraries
