@@ -204,7 +204,7 @@ def unzip_article_xml(input_zip_file_path, output_dir):
 
 
 def repackage_archive_zip_to_pmc_zip(
-    input_zip_file_path, new_zip_file_path, temp_dir, logger, alter_xml=False
+    input_zip_file_path, new_zip_file_path, temp_dir, logger, alter_xml=False, remove_version_doi=False
 ):
     "repackage the zip file  to a PMC zip format"
     # make temporary directories
@@ -236,6 +236,9 @@ def repackage_archive_zip_to_pmc_zip(
     if alter_xml:
         # Temporary XML rewrite of related-object tag
         alter_xml_related_object(article_xml_file, logger)
+    if remove_version_doi:
+        # Temporary XML rewrite of related-object tag
+        remove_version_doi_tag(article_xml_file, logger)
     convert_xml(xml_file=article_xml_file, file_name_map=file_name_map)
     # rezip the files into PMC zip format
     logger.info("creating new PMC zip file named " + new_zip_file_path)
@@ -270,6 +273,35 @@ def alter_xml_related_object(xml_file, logger):
         for attribute_name in ["link-type", "object-id", "object-id-type"]:
             if xml_tag.attrib.get(attribute_name):
                 del xml_tag.attrib[attribute_name]
+
+    # Start the file output
+    reparsed_string = xmlio.output(
+        root,
+        output_type=None,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions,
+    )
+
+    with open(xml_file, "wb") as open_file:
+        open_file.write(reparsed_string)
+
+
+def remove_version_doi_tag(xml_file, logger):
+    "remove the version DOI article-id tag from the article XML file"
+    # Register namespaces
+    xmlio.register_xmlns()
+
+    root, doctype_dict, processing_instructions = xmlio.parse(
+        xml_file, return_doctype_dict=True, return_processing_instructions=True
+    )
+
+    # Convert related-object tag
+    article_meta_tag = root.find("./front/article-meta")
+    if article_meta_tag:
+        for xml_tag in article_meta_tag.findall('article-id[@pub-id-type="doi"]'):
+            if xml_tag.get("specific-use") and xml_tag.get("specific-use") == "version":
+                logger.info("Removing version DOI article-id tag")
+                article_meta_tag.remove(xml_tag)
 
     # Start the file output
     reparsed_string = xmlio.output(
