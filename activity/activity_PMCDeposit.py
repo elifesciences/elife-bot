@@ -9,7 +9,7 @@ import provider.s3lib as s3lib
 from provider.article_structure import ArticleInfo
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import article_processing, email_provider, lax_provider, utils
+from provider import article_processing, downstream, email_provider, lax_provider, utils
 from provider.ftp import FTP
 from activity.objects import Activity
 
@@ -109,6 +109,9 @@ class activity_PMCDeposit(Activity):
             self.directories.get("ZIP_DIR"), self.zip_file_name
         )
 
+        rules = downstream.load_config(self.settings)
+        workflow_rules = rules.get("PMC")
+
         # repackage the archive zip into PMC zip format
         archive_zip_repackaged = article_processing.repackage_archive_zip_to_pmc_zip(
             input_zip_file_name,
@@ -116,6 +119,7 @@ class activity_PMCDeposit(Activity):
             self.directories.get("TMP_DIR"),
             self.logger,
             alter_xml=True,
+            remove_version_doi=workflow_rules.get("remove_version_doi"),
         )
 
         # check if the article is retracted

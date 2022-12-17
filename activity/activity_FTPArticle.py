@@ -192,8 +192,11 @@ class activity_FTPArticle(Activity):
         # download and convert the archive zip
         archive_zip_downloaded = self.download_archive_zip_from_s3(doi_id)
         archive_zip_repackaged = None
+        details = sending_details(self.settings, workflow)
         if archive_zip_downloaded:
-            archive_zip_repackaged = self.repackage_archive_zip_to_pmc_zip(doi_id)
+            archive_zip_repackaged = self.repackage_archive_zip_to_pmc_zip(
+                doi_id, details.get("remove_version_doi")
+            )
 
         if archive_zip_repackaged:
             self.move_or_repackage_pmc_zip(doi_id, workflow)
@@ -263,7 +266,7 @@ class activity_FTPArticle(Activity):
             )
         return False
 
-    def repackage_archive_zip_to_pmc_zip(self, doi_id):
+    def repackage_archive_zip_to_pmc_zip(self, doi_id, remove_version_doi=None):
         "repackage the zip file in the TMP_DIR to a PMC zip format"
         # unzip contents
         zip_input_dir = self.directories.get("TMP_DIR")
@@ -282,7 +285,11 @@ class activity_FTPArticle(Activity):
         )
         # repackage the zip file
         return article_processing.repackage_archive_zip_to_pmc_zip(
-            archive_zip_name, pmc_zip_file_path, zip_input_dir, self.logger
+            archive_zip_name,
+            pmc_zip_file_path,
+            zip_input_dir,
+            self.logger,
+            remove_version_doi=remove_version_doi,
         )
 
     def move_or_repackage_pmc_zip(self, doi_id, workflow):
@@ -493,5 +500,6 @@ def sending_details(settings, workflow):
             "send_unzipped_files", False
         )
         details["send_file_types"] = workflow_rules.get("send_file_types")
+        details["remove_version_doi"] = workflow_rules.get("remove_version_doi")
 
     return details

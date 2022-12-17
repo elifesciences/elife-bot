@@ -243,7 +243,12 @@ class TestRepackageArchiveZip(unittest.TestCase):
         )
         shutil.copy(input_zip_file_path, dest_input_zip_file_path)
         article_processing.repackage_archive_zip_to_pmc_zip(
-            input_zip_file_path, new_zip_file_path, temp_dir, logger
+            input_zip_file_path,
+            new_zip_file_path,
+            temp_dir,
+            logger,
+            alter_xml=True,
+            remove_version_doi=True,
         )
         # now can check the results
         self.assertTrue(os.path.exists(expected_pmc_zip_file))
@@ -349,6 +354,75 @@ class TestAlterXML(unittest.TestCase):
         self.assertEqual(
             self.logger.loginfo[-1],
             "Converting related-object tag to ext-link tag in sub-article",
+        )
+
+
+class TestRemoveVersionDoiTag(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_remove_version_doi_tag_unchanged(self):
+        "test altering a file where no changes will be made, output is the same as input"
+        directory = TempDirectory()
+        filename = "elife-00353-v1.xml"
+        source_file = "tests/files_source/%s" % filename
+        test_file = os.path.join(directory.path, filename)
+        shutil.copy(source_file, test_file)
+        article_processing.remove_version_doi_tag(test_file, self.logger)
+        with open(source_file, "r", encoding="utf-8") as open_file:
+            with open(test_file, "r", encoding="utf-8") as open_output_file:
+                altered_xml = open_output_file.read()
+                expected = open_file.read()
+                # in Python 3.8 or newer the XML attributes will be a different order
+                if sys.version_info >= (3, 8):
+                    expected = expected.replace(
+                        '<article article-type="discussion" dtd-version="1.1d3" xmlns:xlink="http://www.w3.org/1999/xlink">',
+                        '<article xmlns:xlink="http://www.w3.org/1999/xlink" article-type="discussion" dtd-version="1.1d3">',
+                    )
+                self.assertEqual(altered_xml, expected)
+
+    def test_remove_version_doi_tag(self):
+        "test an example XML"
+        directory = TempDirectory()
+        xml_declaration = """<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD with MathML3 v1.2 20190208//EN"  "JATS-archivearticle1-mathml3.dtd">"""
+        xml_string = (
+            """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+<front>
+<article-meta>
+<article-id pub-id-type="publisher-id">1234567890</article-id>
+<article-id pub-id-type="doi">10.7554/eLife.1234567890</article-id>
+<article-id pub-id-type="doi" specific-use="version">10.7554/eLife.1234567890.4</article-id>
+</article-meta>
+</front>
+</article>"""
+            % xml_declaration
+        )
+
+        expected = (
+            """%s<article>
+<front>
+<article-meta>
+<article-id pub-id-type="publisher-id">1234567890</article-id>
+<article-id pub-id-type="doi">10.7554/eLife.1234567890</article-id>
+</article-meta>
+</front>
+</article>"""
+            % xml_declaration
+        )
+
+        filename = "elife-99999-v1.xml"
+        test_file = os.path.join(directory.path, filename)
+        with open(test_file, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        article_processing.remove_version_doi_tag(test_file, self.logger)
+        with open(test_file, "r", encoding="utf-8") as open_file:
+            self.assertEqual(open_file.read(), expected)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "Removing version DOI article-id tag",
         )
 
 
