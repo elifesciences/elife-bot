@@ -25,6 +25,7 @@ PMC:
   send_once_only: false
   send_article_types:
     - vor
+  remove_version_doi: true
 
 PublicationEmail:
   activity_name: PublicationEmail
@@ -58,6 +59,7 @@ Cengage:
   send_file_types:
     - xml
     - pdf
+  remove_version_doi: true
   settings_friendly_email_recipients: CENGAGE_EMAIL
   settings_ftp_uri: CENGAGE_FTP_URI
   settings_ftp_username: CENGAGE_FTP_USERNAME
@@ -145,6 +147,7 @@ HEFCE:
   send_once_only: true
   send_article_types:
     - vor
+  remove_version_doi: true
   settings_friendly_email_recipients: HEFCE_EMAIL
   settings_ftp_uri: HEFCE_FTP_URI
   settings_ftp_username: HEFCE_FTP_USERNAME
@@ -208,6 +211,7 @@ WoS:
   send_file_types:
     - xml
     - pdf
+  remove_version_doi: true
   settings_friendly_email_recipients: WOS_EMAIL
   settings_ftp_uri: WOS_FTP_URI
   settings_ftp_username: WOS_FTP_USERNAME
