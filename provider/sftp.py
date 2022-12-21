@@ -13,13 +13,14 @@ class SFTP:
         self.logger = logger
         self.transport = None
 
-    def sftp_connect(self, uri, username, password, port=22):
+    def sftp_connect(self, uri, username, password):
         """
         Connect to SFTP server without a host key
         """
         # print "trying to SFTP now"
 
-        self.transport = paramiko.Transport((uri, port))
+        # note: use the syntax host:port in the uri
+        self.transport = paramiko.Transport(uri)
 
         try:
             self.transport.connect(hostkey=None, username=username, password=password)

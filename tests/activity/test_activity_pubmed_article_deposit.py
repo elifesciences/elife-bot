@@ -310,7 +310,7 @@ class TestPubmedArticleDeposit(unittest.TestCase):
             self.activity.sftp_files_to_endpoint("", "")
         self.assertEqual(
             self.activity.logger.logexception,
-            "Failed to connect to SFTP endpoint pubmed.localhost: SFTP connect exception",
+            "Failed to connect to SFTP endpoint pubmed.localhost:22: SFTP connect exception",
         )
 
     @patch.object(sftp.SFTP, "sftp_to_endpoint")

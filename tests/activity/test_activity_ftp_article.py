@@ -40,7 +40,7 @@ class TestFTPArticle(unittest.TestCase):
     @patch("activity.activity_FTPArticle.FTP")
     @patch("activity.activity_FTPArticle.SFTP")
     @data(
-        ("HEFCE", True, "hefce_ftp.localhost", "hefce_sftp.localhost", 1, True),
+        ("HEFCE", True, "hefce_ftp.localhost", "hefce_sftp.localhost:22", 1, True),
         ("Cengage", True, "cengage.localhost", None, 1, True),
         ("GoOA", True, "gooa.localhost", None, 1, True),
         ("WoS", True, "wos.localhost", None, 1, True),
@@ -48,8 +48,8 @@ class TestFTPArticle(unittest.TestCase):
         ("CNKI", True, "cnki.localhost", None, 1, True),
         ("CLOCKSS", True, "clockss.localhost", None, 1, True),
         ("OVID", True, "ovid.localhost", None, 1, True),
-        ("Zendy", True, None, "zendy.localhost", 1, True),
-        ("OASwitchboard", True, None, "oaswitchboard.localhost", 1, True),
+        ("Zendy", True, None, "zendy.localhost:22", 1, True),
+        ("OASwitchboard", True, None, "oaswitchboard.localhost:22", 1, True),
         ("__unknown__", False, None, None, 0, False),
     )
     @unpack
