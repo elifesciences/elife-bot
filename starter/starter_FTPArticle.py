@@ -18,6 +18,7 @@ WORKFLOW_NAMES = [
     "OVID",
     "Zendy",
     "OASwitchboard",
+    "Scilit",
 ]
 
 
