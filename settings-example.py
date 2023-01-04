@@ -262,6 +262,13 @@ class exp:
     OASWITCHBOARD_SFTP_CWD = ""
     OASWITCHBOARD_EMAIL = ""
 
+    # Scilit SFTP settings
+    SCILIT_SFTP_URI = ""
+    SCILIT_SFTP_USERNAME = ""
+    SCILIT_SFTP_PASSWORD = ""
+    SCILIT_SFTP_CWD = ""
+    SCILIT_EMAIL = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -592,6 +599,13 @@ class dev:
     OASWITCHBOARD_SFTP_CWD = ""
     OASWITCHBOARD_EMAIL = ""
 
+    # Scilit SFTP settings
+    SCILIT_SFTP_URI = ""
+    SCILIT_SFTP_USERNAME = ""
+    SCILIT_SFTP_PASSWORD = ""
+    SCILIT_SFTP_CWD = ""
+    SCILIT_EMAIL = ""
+
     # Logging
     setLevel = "INFO"
 
@@ -918,6 +932,13 @@ class live:
     OASWITCHBOARD_SFTP_PASSWORD = ""
     OASWITCHBOARD_SFTP_CWD = ""
     OASWITCHBOARD_EMAIL = ""
+
+    # Scilit SFTP settings
+    SCILIT_SFTP_URI = ""
+    SCILIT_SFTP_USERNAME = ""
+    SCILIT_SFTP_PASSWORD = ""
+    SCILIT_SFTP_CWD = ""
+    SCILIT_EMAIL = ""
 
     # Logging
     setLevel = "INFO"

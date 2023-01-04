@@ -195,7 +195,9 @@ class activity_FTPArticle(Activity):
         details = sending_details(self.settings, workflow)
         if archive_zip_downloaded:
             archive_zip_repackaged = self.repackage_archive_zip_to_pmc_zip(
-                doi_id, details.get("remove_version_doi")
+                doi_id,
+                details.get("remove_version_doi"),
+                details.get("retain_version_number"),
             )
 
         if archive_zip_repackaged:
@@ -266,7 +268,12 @@ class activity_FTPArticle(Activity):
             )
         return False
 
-    def repackage_archive_zip_to_pmc_zip(self, doi_id, remove_version_doi=None):
+    def repackage_archive_zip_to_pmc_zip(
+        self,
+        doi_id,
+        remove_version_doi=None,
+        retain_version_number=False,
+    ):
         "repackage the zip file in the TMP_DIR to a PMC zip format"
         # unzip contents
         zip_input_dir = self.directories.get("TMP_DIR")
@@ -290,6 +297,7 @@ class activity_FTPArticle(Activity):
             zip_input_dir,
             self.logger,
             remove_version_doi=remove_version_doi,
+            retain_version_number=retain_version_number,
         )
 
     def move_or_repackage_pmc_zip(self, doi_id, workflow):
@@ -501,5 +509,6 @@ def sending_details(settings, workflow):
         )
         details["send_file_types"] = workflow_rules.get("send_file_types")
         details["remove_version_doi"] = workflow_rules.get("remove_version_doi")
+        details["retain_version_number"] = workflow_rules.get("retain_version_number")
 
     return details

@@ -160,6 +160,12 @@ OASWITCHBOARD_SFTP_PASSWORD = ""
 OASWITCHBOARD_SFTP_CWD = ""
 OASWITCHBOARD_EMAIL = ""
 
+SCILIT_SFTP_URI = "scilit.localhost:22"
+SCILIT_SFTP_USERNAME = ""
+SCILIT_SFTP_PASSWORD = ""
+SCILIT_SFTP_CWD = ""
+SCILIT_EMAIL = ""
+
 git_repo_name = "elife-article-xml-ci"
 git_repo_path = "articles/"
 github_token = "1234567890abcdef"

@@ -204,7 +204,13 @@ def unzip_article_xml(input_zip_file_path, output_dir):
 
 
 def repackage_archive_zip_to_pmc_zip(
-    input_zip_file_path, new_zip_file_path, temp_dir, logger, alter_xml=False, remove_version_doi=False
+    input_zip_file_path,
+    new_zip_file_path,
+    temp_dir,
+    logger,
+    alter_xml=False,
+    remove_version_doi=False,
+    retain_version_number=False,
 ):
     "repackage the zip file  to a PMC zip format"
     # make temporary directories
@@ -216,23 +222,41 @@ def repackage_archive_zip_to_pmc_zip(
     archive_zip_name = input_zip_file_path
     with zipfile.ZipFile(archive_zip_name, "r") as myzip:
         myzip.extractall(zip_extracted_dir)
-    # rename the files and profile the files
-    file_name_map = rename_files_remove_version_number(
-        files_dir=zip_extracted_dir, output_dir=zip_renamed_files_dir
-    )
-    # verify file names
-    (verified, renamed_list, not_renamed_list) = verify_rename_files(file_name_map)
-    logger.info(
-        "repackage_archive_zip_to_pmc_zip() verified renamed files from %s: %s"
-        % (input_zip_file_path.rsplit(os.sep, 1)[-1], verified)
-    )
+
+    if retain_version_number:
+        # do not change the file names
+        logger.info(
+            "not removing version number in files from %s"
+            % (input_zip_file_path.rsplit(os.sep, 1)[-1])
+        )
+        expanded_files_dir = zip_extracted_dir
+        # create file name map with unchanged file names
+        dirfiles = sorted(file_list(expanded_files_dir))
+        file_name_map = OrderedDict()
+        for df in dirfiles:
+            filename = df.split(os.sep)[-1]
+            file_name_map[filename] = filename
+    else:
+        # rename the files and profile the files
+        file_name_map = rename_files_remove_version_number(
+            files_dir=zip_extracted_dir, output_dir=zip_renamed_files_dir
+        )
+        # verify file names
+        (verified, renamed_list, not_renamed_list) = verify_rename_files(file_name_map)
+        logger.info(
+            "repackage_archive_zip_to_pmc_zip() verified renamed files from %s: %s"
+            % (input_zip_file_path.rsplit(os.sep, 1)[-1], verified)
+        )
+        if renamed_list:
+            logger.info("renamed: %s" % sorted(renamed_list))
+        if not_renamed_list:
+            logger.info("not renamed: %s" % sorted(not_renamed_list))
+        expanded_files_dir = zip_renamed_files_dir
+
     logger.info("file_name_map: %s" % file_name_map)
-    if renamed_list:
-        logger.info("renamed: %s" % sorted(renamed_list))
-    if not_renamed_list:
-        logger.info("not renamed: %s" % sorted(not_renamed_list))
+
     # convert the XML
-    article_xml_file = glob.glob(zip_renamed_files_dir + "/*.xml")[0]
+    article_xml_file = glob.glob(expanded_files_dir + "/*.xml")[0]
     if alter_xml:
         # Temporary XML rewrite of related-object tag
         alter_xml_related_object(article_xml_file, logger)
@@ -248,7 +272,7 @@ def repackage_archive_zip_to_pmc_zip(
         zipfile.ZIP_DEFLATED,
         allowZip64=True,
     ) as new_zipfile:
-        dirfiles = file_list(zip_renamed_files_dir)
+        dirfiles = file_list(expanded_files_dir)
         for dir_file in dirfiles:
             filename = dir_file.split(os.sep)[-1]
             new_zipfile.write(dir_file, filename)
