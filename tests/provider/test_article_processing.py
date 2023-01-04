@@ -271,11 +271,89 @@ class TestRepackageArchiveZip(unittest.TestCase):
         )
         self.assertEqual(
             logger.loginfo[2],
-            ("file_name_map: %s" % expected_file_name_map),
+            ("renamed: %s" % sorted(list(expected_file_name_map.keys()))),
         )
         self.assertEqual(
             logger.loginfo[3],
-            ("renamed: %s" % sorted(list(expected_file_name_map.keys()))),
+            ("file_name_map: %s" % expected_file_name_map),
+        )
+
+    def test_retain_version_number(self):
+        "test not removing version number from file names"
+        directory = TempDirectory()
+        logger = FakeLogger()
+        input_zip_file_path = (
+            "tests/test_data/pmc/elife-19405-vor-v1-20160802113816.zip"
+        )
+        journal = "elife"
+        volume = 5
+        doi_id = 19405
+        new_zip_file_name = article_processing.new_pmc_zip_filename(
+            journal, volume, doi_id
+        )
+
+        # make the input_dir and output_dir for the tests
+        input_dir = os.path.join(directory.path, "input_dir")
+        os.makedirs(input_dir, exist_ok=True)
+        output_dir = os.path.join(directory.path, "output_dir")
+        os.makedirs(output_dir, exist_ok=True)
+
+        new_zip_file_path = os.path.join(output_dir, new_zip_file_name)
+
+        temp_dir = os.path.join(directory.path, "temp_dir")
+        expanded_files_dir = os.path.join(temp_dir, "junk_dir")
+
+        expected_pmc_zip_file = os.path.join(output_dir, new_zip_file_name)
+        expected_article_xml_file = os.path.join(
+            expanded_files_dir, "elife-19405-v1.xml"
+        )
+        expected_article_xml_string = b"elife-19405-v1.pdf"
+        expected_file_name_map = OrderedDict(
+            [
+                ("elife-19405-fig1-v1.tif", "elife-19405-fig1-v1.tif"),
+                ("elife-19405-inf1-v1.tif", "elife-19405-inf1-v1.tif"),
+                ("elife-19405-v1.pdf", "elife-19405-v1.pdf"),
+                ("elife-19405-v1.xml", "elife-19405-v1.xml"),
+            ]
+        )
+        expected_pmc_zip_file_contents = expected_file_name_map.values()
+        # copy in some sample data
+        dest_input_zip_file_path = os.path.join(
+            input_dir,
+            input_zip_file_path.rsplit("/", 1)[-1],
+        )
+        shutil.copy(input_zip_file_path, dest_input_zip_file_path)
+        article_processing.repackage_archive_zip_to_pmc_zip(
+            input_zip_file_path,
+            new_zip_file_path,
+            temp_dir,
+            logger,
+            alter_xml=True,
+            remove_version_doi=True,
+            retain_version_number=True,
+        )
+        # now can check the results
+        self.assertTrue(os.path.exists(expanded_files_dir))
+        self.assertTrue(os.path.exists(expected_article_xml_file))
+        with open(expected_article_xml_file, "rb") as open_file:
+            # check for a renamed file in the XML contents
+            self.assertTrue(expected_article_xml_string in open_file.read())
+        with zipfile.ZipFile(expected_pmc_zip_file) as zip_file:
+            # check pmc zip file contents
+            self.assertEqual(
+                sorted(zip_file.namelist()), sorted(expected_pmc_zip_file_contents)
+            )
+        # check for log messages
+        self.assertEqual(
+            logger.loginfo[1],
+            (
+                "not removing version number in files from %s"
+                % input_zip_file_path.rsplit("/", 1)[-1]
+            ),
+        )
+        self.assertEqual(
+            logger.loginfo[2],
+            ("file_name_map: %s" % expected_file_name_map),
         )
 
 

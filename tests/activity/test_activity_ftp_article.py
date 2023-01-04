@@ -50,6 +50,7 @@ class TestFTPArticle(unittest.TestCase):
         ("OVID", True, "ovid.localhost", None, 1, True),
         ("Zendy", True, None, "zendy.localhost:22", 1, True),
         ("OASwitchboard", True, None, "oaswitchboard.localhost:22", 1, True),
+        ("Scilit", True, None, "scilit.localhost:22", 1, True),
         ("__unknown__", False, None, None, 0, False),
     )
     @unpack
