@@ -250,6 +250,9 @@ Scilit:
   send_article_types:
     - poa
     - vor
+  send_file_types:
+    - xml
+  send_unzipped_files: true
   remove_version_doi: true
   retain_version_number: true
   settings_friendly_email_recipients: SCILIT_EMAIL
