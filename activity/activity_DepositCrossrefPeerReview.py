@@ -184,11 +184,15 @@ class activity_DepositCrossrefPeerReview(Activity):
 
             for sub_article in article.review_articles:
                 # add editor / reviewer / senior_editor records from the parent article if missing
-                if sub_article.article_type not in ["editor-report", "reply"]:
+                if sub_article.article_type not in [
+                    "editor-report",
+                    "referee-report",
+                    "reply",
+                ]:
                     self.add_editors(article, sub_article)
 
                 # set missing ORCID values for editors
-                if sub_article.article_type != "reply":
+                if sub_article.article_type not in ["referee-report", "reply"]:
                     self.set_editor_orcid(sub_article, manuscript_object)
 
                 # add review_date
