@@ -7,6 +7,10 @@ DepositCrossref:
   activity_name: DepositCrossref
   s3_bucket_folder: crossref
 
+DepositCrossrefMinimal:
+  activity_name: DepositCrossrefMinimal
+  s3_bucket_folder: crossref_minimal
+
 DepositCrossrefPeerReview:
   activity_name: DepositCrossrefPeerReview
   s3_bucket_folder: crossref_peer_review

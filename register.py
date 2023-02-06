@@ -90,6 +90,7 @@ def start(settings):
     activity_names.append("PackagePOA")
     activity_names.append("PublishFinalPOA")
     activity_names.append("DepositCrossref")
+    activity_names.append("DepositCrossrefMinimal")
     activity_names.append("DepositCrossrefPeerReview")
     activity_names.append("DepositCrossrefPendingPublication")
     activity_names.append("PubmedArticleDeposit")

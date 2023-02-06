@@ -1,8 +1,10 @@
+import os
 import time
 import unittest
 from collections import OrderedDict
 from mock import patch
 from testfixtures import TempDirectory
+from elifecrossref import generate
 from elifearticle.article import Article, ArticleDate, Contributor
 from provider import crossref
 from tests import settings_mock
@@ -226,6 +228,93 @@ class TestCrossrefProvider(unittest.TestCase):
         self.assertTrue(result)
         self.assertEqual(len(good_xml_files), 1)
         self.assertEqual(len(bad_xml_files), 1)
+
+
+class TestBuildCrossrefXml(unittest.TestCase):
+    def setUp(self):
+        self.directory = TempDirectory()
+        self.good_xml_file = "tests/test_data/crossref/outbox/elife-18753-v1.xml"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_build_crossref_xml(self):
+        articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
+        article_object_map = OrderedDict([(self.good_xml_file, articles[0])])
+        good_xml_files = []
+        bad_xml_files = []
+        crossref_config = crossref.elifecrossref_config(settings_mock)
+        result = crossref.build_crossref_xml(
+            article_object_map, crossref_config, good_xml_files, bad_xml_files
+        )
+        self.assertTrue(result)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(len(good_xml_files), 1)
+        self.assertEqual(len(bad_xml_files), 0)
+
+    @patch.object(generate, "build_crossref_xml")
+    def test_build_crossref_xml_exception(self, mock_build):
+        "raise an exception when building object"
+        mock_build.side_effect = Exception("An exception")
+        articles = crossref.parse_article_xml([self.good_xml_file], self.directory.path)
+        article_object_map = OrderedDict([(self.good_xml_file, articles[0])])
+        good_xml_files = []
+        bad_xml_files = []
+        crossref_config = crossref.elifecrossref_config(settings_mock)
+        result = crossref.build_crossref_xml(
+            article_object_map, crossref_config, good_xml_files, bad_xml_files
+        )
+        self.assertEqual(len(result), 0)
+        self.assertEqual(len(good_xml_files), 0)
+        self.assertEqual(len(bad_xml_files), 1)
+
+
+class TestRemoveRelProgramTag(unittest.TestCase):
+    def setUp(self):
+        self.directory = TempDirectory()
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_remove_rel_program_tag(self):
+        xml_file = "tests/test_data/crossref_minimal/outbox/elife-1234567890-v99.xml"
+        articles = crossref.parse_article_xml([xml_file], self.directory.path)
+        article_object_map = OrderedDict([(xml_file, articles[0])])
+        crossref_config = crossref.elifecrossref_config(settings_mock)
+        object_list = crossref.build_crossref_xml(
+            article_object_map, crossref_config, [], []
+        )
+        crossref_xml_object = object_list[0]
+        # check rel:program is in XML prior to the function invocation
+        self.assertTrue("<rel:program" in crossref_xml_object.output_xml())
+        # invoke function
+        crossref.remove_rel_program_tag(crossref_xml_object)
+        # assert rel:program is now gone
+        self.assertTrue("<rel:program" not in crossref_xml_object.output_xml())
+
+
+class TestCrossrefXmlToDisk(unittest.TestCase):
+    def setUp(self):
+        self.directory = TempDirectory()
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_crossref_xml_to_disk(self):
+        xml_file = "tests/test_data/crossref_minimal/outbox/elife-1234567890-v99.xml"
+        articles = crossref.parse_article_xml([xml_file], self.directory.path)
+        article_object_map = OrderedDict([(xml_file, articles[0])])
+        crossref_config = crossref.elifecrossref_config(settings_mock)
+        object_list = crossref.build_crossref_xml(
+            article_object_map, crossref_config, [], []
+        )
+        crossref_xml_object = object_list[0]
+        # invoke function
+        crossref.crossref_xml_to_disk(crossref_xml_object, self.directory.path)
+        # assertion
+        file_list = os.listdir(self.directory.path)
+        self.assertEqual(len(file_list), 1)
+        self.assertTrue(file_list[0].endswith(".xml"))
 
 
 class TestDoiExists(unittest.TestCase):
