@@ -1,3 +1,4 @@
+import os
 import time
 from collections import OrderedDict
 import requests
@@ -188,6 +189,52 @@ def generate_crossref_xml_to_disk(
             bad_xml_files.append(xml_file)
     # Any files generated is a sucess, even if one failed
     return True
+
+
+def build_crossref_xml(
+    article_object_map,
+    crossref_config,
+    good_xml_files,
+    bad_xml_files,
+    submission_type="journal",
+):
+    "from the article object build CrossrefXML objects"
+    object_list = []
+    for xml_file, article in list(article_object_map.items()):
+        try:
+            # Will write the XML to the TMP_DIR
+            object_list.append(
+                generate.build_crossref_xml(
+                    [article],
+                    crossref_config,
+                    submission_type=submission_type,
+                )
+            )
+            # Add filename to the list of good files
+            good_xml_files.append(xml_file)
+        except:
+            # Add the file to the list of bad files
+            bad_xml_files.append(xml_file)
+    # Any files generated is a sucess, even if one failed
+    return object_list
+
+
+def remove_rel_program_tag(c_xml):
+    "remove rel:program tag from CrossrefXML object XML root"
+    namespaces = {"rel": "http://www.crossref.org/relations.xsd"}
+    journal_article_tag = c_xml.root.find("./body/journal/journal_article", namespaces)
+    rel_program_tag = journal_article_tag.find("rel:program")
+    if rel_program_tag:
+        journal_article_tag.remove(rel_program_tag)
+
+
+def crossref_xml_to_disk(c_xml, output_dir, pretty=False, indent=""):
+    "generate XML string from the CrossrefXML object and write it to the disk"
+    xml_string = c_xml.output_xml(pretty=pretty, indent=indent)
+    # Write to file
+    filename = os.path.join(output_dir, "%s.xml" % c_xml.batch_id)
+    with open(filename, "wb") as open_file:
+        open_file.write(xml_string.encode("utf-8"))
 
 
 def doi_exists(doi, logger):
