@@ -100,8 +100,8 @@ class activity_DepositCrossrefMinimal(Activity):
         self.statuses["generate"] = True
 
         for c_xml in crossref_object_list:
-            # remove relations program tag
-            crossref.remove_rel_program_tag(c_xml)
+            # remove child tags tags from the relations program tag
+            crossref.clear_rel_program_tag(c_xml)
 
             # also change the batch id
             c_xml.batch_id = c_xml.batch_id.replace(

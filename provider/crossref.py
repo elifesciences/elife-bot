@@ -219,13 +219,15 @@ def build_crossref_xml(
     return object_list
 
 
-def remove_rel_program_tag(c_xml):
-    "remove rel:program tag from CrossrefXML object XML root"
+def clear_rel_program_tag(c_xml):
+    "remove child tags in the rel:program tag from CrossrefXML object XML root"
     namespaces = {"rel": "http://www.crossref.org/relations.xsd"}
     journal_article_tag = c_xml.root.find("./body/journal/journal_article", namespaces)
     rel_program_tag = journal_article_tag.find("rel:program")
     if rel_program_tag:
-        journal_article_tag.remove(rel_program_tag)
+        child_tags = rel_program_tag.findall("*")
+        for sub_tag in child_tags:
+            rel_program_tag.remove(sub_tag)
 
 
 def crossref_xml_to_disk(c_xml, output_dir, pretty=False, indent=""):

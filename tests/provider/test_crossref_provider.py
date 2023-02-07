@@ -269,14 +269,14 @@ class TestBuildCrossrefXml(unittest.TestCase):
         self.assertEqual(len(bad_xml_files), 1)
 
 
-class TestRemoveRelProgramTag(unittest.TestCase):
+class TestClearRelProgramTag(unittest.TestCase):
     def setUp(self):
         self.directory = TempDirectory()
 
     def tearDown(self):
         TempDirectory.cleanup_all()
 
-    def test_remove_rel_program_tag(self):
+    def test_clear_rel_program_tag(self):
         xml_file = "tests/test_data/crossref_minimal/outbox/elife-1234567890-v99.xml"
         articles = crossref.parse_article_xml([xml_file], self.directory.path)
         article_object_map = OrderedDict([(xml_file, articles[0])])
@@ -287,10 +287,13 @@ class TestRemoveRelProgramTag(unittest.TestCase):
         crossref_xml_object = object_list[0]
         # check rel:program is in XML prior to the function invocation
         self.assertTrue("<rel:program" in crossref_xml_object.output_xml())
+        self.assertTrue("<rel:related_item>" in crossref_xml_object.output_xml())
         # invoke function
-        crossref.remove_rel_program_tag(crossref_xml_object)
-        # assert rel:program is now gone
-        self.assertTrue("<rel:program" not in crossref_xml_object.output_xml())
+        crossref.clear_rel_program_tag(crossref_xml_object)
+        # assert rel:program tag is empty
+        self.assertTrue("<rel:program/>" in crossref_xml_object.output_xml())
+        # assert rel:program child tag is not present
+        self.assertTrue("<rel:related_item>" not in crossref_xml_object.output_xml())
 
 
 class TestCrossrefXmlToDisk(unittest.TestCase):
