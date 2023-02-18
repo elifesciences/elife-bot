@@ -72,6 +72,38 @@ class TestDepositCrossref(unittest.TestCase):
             ],
         },
         {
+            "comment": "Article 1234567890",
+            "article_xml_filenames": ["elife-1234567890-v99.xml"],
+            "post_status_code": 200,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": True,
+            "expected_outbox_status": True,
+            "expected_email_status": True,
+            "expected_activity_status": True,
+            "expected_file_count": 2,
+            "expected_crossref_xml_contains": [
+                "<doi>10.7554/eLife.1234567890</doi>",
+                (
+                    '<rel:intra_work_relation identifier-type="doi" relationship-type="hasPreprint">10.1101/2021.11.09.467796</rel:intra_work_relation>'
+                ),
+                (
+                    '<rel:intra_work_relation identifier-type="doi" relationship-type="isSameAs">10.7554/eLife.1234567890.4</rel:intra_work_relation>'
+                ),
+            ],
+            "expected_email_count": 1,
+            "expected_email_subject": "DepositCrossref Success! files: 1,",
+            "expected_email_from": "From: sender@example.org",
+            "expected_email_body_contains": [
+                r"DepositCrossref status:\n\nSuccess!\n\nactivity_status: True",
+                r"Published files generated crossref XML: \nelife-1234567890-v99.xml",
+                "elife-crossref-1234567890-",
+                "elife-crossref-version-1234567890-",
+                "HTTP status: 200",
+            ],
+        },
+        {
             "comment": "Multiple files to deposit",
             "article_xml_filenames": [
                 "elife-18753-v1.xml",
@@ -169,7 +201,7 @@ class TestDepositCrossref(unittest.TestCase):
         if file_count > 0 and test_data.get("expected_crossref_xml_contains"):
             # Open the first crossref XML and check some of its contents
             crossref_xml_filename_path = os.path.join(
-                self.tmp_dir(), os.listdir(self.tmp_dir())[0]
+                self.tmp_dir(), sorted(os.listdir(self.tmp_dir()))[0]
             )
             with open(crossref_xml_filename_path, "rb") as open_file:
                 crossref_xml = open_file.read().decode("utf8")

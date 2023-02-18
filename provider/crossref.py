@@ -1,9 +1,10 @@
 import os
 import time
 from collections import OrderedDict
+from xml.etree.ElementTree import SubElement
 import requests
 from elifearticle.article import ArticleDate
-from elifecrossref import generate
+from elifecrossref import generate, related
 from elifecrossref.conf import raw_config, parse_raw_config
 from provider import lax_provider, utils
 
@@ -219,15 +220,40 @@ def build_crossref_xml(
     return object_list
 
 
+def add_rel_program_tag(root):
+    "add a rel:program tag to a Crossref deposit ElementTree root, if missing"
+    if not find_rel_program_tag(root):
+        namespaces = {"rel": "http://www.crossref.org/relations.xsd"}
+        journal_article_tag = root.find("./body/journal/journal_article", namespaces)
+        if not journal_article_tag:
+            SubElement(journal_article_tag, "rel:program")
+
+
+def find_rel_program_tag(root):
+    "find the rel:program tag from Crossref deposit ElementTree root"
+    namespaces = {"rel": "http://www.crossref.org/relations.xsd"}
+    journal_article_tag = root.find("./body/journal/journal_article", namespaces)
+    return journal_article_tag.find("rel:program")
+
+
 def clear_rel_program_tag(c_xml):
     "remove child tags in the rel:program tag from CrossrefXML object XML root"
-    namespaces = {"rel": "http://www.crossref.org/relations.xsd"}
-    journal_article_tag = c_xml.root.find("./body/journal/journal_article", namespaces)
-    rel_program_tag = journal_article_tag.find("rel:program")
+    rel_program_tag = find_rel_program_tag(c_xml.root)
     if rel_program_tag:
         child_tags = rel_program_tag.findall("*")
         for sub_tag in child_tags:
             rel_program_tag.remove(sub_tag)
+
+
+def add_is_same_as_tag(rel_program_tag, doi):
+    "add doi as intra_work_relation isSameAs tag to the rel:program tag"
+    related.set_related_item_work_relation(
+        rel_program_tag,
+        "intra_work_relation",
+        "isSameAs",
+        "doi",
+        doi,
+    )
 
 
 def crossref_xml_to_disk(c_xml, output_dir, pretty=False, indent=""):
