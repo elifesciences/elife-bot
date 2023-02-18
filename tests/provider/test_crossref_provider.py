@@ -2,6 +2,7 @@ import os
 import time
 import unittest
 from collections import OrderedDict
+from xml.etree import ElementTree
 from mock import patch
 from testfixtures import TempDirectory
 from elifecrossref import generate
@@ -269,6 +270,40 @@ class TestBuildCrossrefXml(unittest.TestCase):
         self.assertEqual(len(bad_xml_files), 1)
 
 
+class TestAddRelProgramTag(unittest.TestCase):
+    def setUp(self):
+        ElementTree.register_namespace("rel", "http://www.crossref.org/relations.xsd")
+        self.xml_header = (
+            b'<doi_batch xmlns:rel="http://www.crossref.org/relations.xsd">'
+            b"<body><journal><journal_article>"
+        )
+        self.xml_footer = b"</journal_article></journal></body></doi_batch>"
+
+    def test_add_rel_program_tag(self):
+        "test adding rel:program tag to journal_article tag"
+        xml_string = self.xml_header + self.xml_footer
+        root = ElementTree.fromstring(xml_string)
+        # check rel:program is in XML prior to the function invocation
+        self.assertTrue(b"<rel:program" not in ElementTree.tostring(root))
+        # invoke function
+        crossref.add_rel_program_tag(root)
+        # assert rel:program tag is present
+        self.assertTrue(b"<rel:program />" in ElementTree.tostring(root))
+
+    def test_add_rel_program_tag_already_present(self):
+        "test adding rel:program tag if it is already there"
+        xml_string = self.xml_header + b"<rel:program/>" + self.xml_footer
+        root = ElementTree.fromstring(xml_string)
+        # check rel:program is in XML prior to the function invocation
+        self.assertTrue(b"<rel:program" in ElementTree.tostring(root))
+        # invoke function
+        crossref.add_rel_program_tag(root)
+        # assert rel:program tag is present
+        self.assertTrue(b"<rel:program />" in ElementTree.tostring(root))
+        # assert only one tag is present
+        self.assertEqual(ElementTree.tostring(root).count(b"<rel:program />"), 1)
+
+
 class TestClearRelProgramTag(unittest.TestCase):
     def setUp(self):
         self.directory = TempDirectory()
@@ -294,6 +329,27 @@ class TestClearRelProgramTag(unittest.TestCase):
         self.assertTrue("<rel:program/>" in crossref_xml_object.output_xml())
         # assert rel:program child tag is not present
         self.assertTrue("<rel:related_item>" not in crossref_xml_object.output_xml())
+
+
+class TestAddIsSameAsTag(unittest.TestCase):
+    def setUp(self):
+        ElementTree.register_namespace("rel", "http://www.crossref.org/relations.xsd")
+
+    def test_add_is_same_as_tag(self):
+        xml_string = b'<rel:program xmlns:rel="http://www.crossref.org/relations.xsd"/>'
+        root = ElementTree.fromstring(xml_string)
+        doi = "10.7554/eLife.1234567890"
+        expected = (
+            b'<rel:program xmlns:rel="http://www.crossref.org/relations.xsd">'
+            b'<rel:intra_work_relation identifier-type="doi" relationship-type="isSameAs">'
+            b"10.7554/eLife.1234567890"
+            b"</rel:intra_work_relation>"
+            b"</rel:program>"
+        )
+        # invoke function
+        crossref.add_is_same_as_tag(root, doi)
+        # assert
+        self.assertEqual(ElementTree.tostring(root), expected)
 
 
 class TestCrossrefXmlToDisk(unittest.TestCase):
