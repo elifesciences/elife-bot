@@ -271,9 +271,15 @@ class TestArticleWasEverPublished(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, resources
         )
-        self.assertTrue(self.articleprovider.was_ever_published("2444", workflow))
-        self.assertTrue(self.articleprovider.was_ever_published("2419", workflow))
-        self.assertFalse(self.articleprovider.was_ever_published("666", workflow))
+        self.assertTrue(
+            self.articleprovider.was_ever_published("10.7554/eLife.2444", workflow)
+        )
+        self.assertTrue(
+            self.articleprovider.was_ever_published("10.7554/eLife.2419", workflow)
+        )
+        self.assertFalse(
+            self.articleprovider.was_ever_published("10.7554/eLife.666", workflow)
+        )
 
 
 @ddt

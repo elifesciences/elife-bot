@@ -48,10 +48,35 @@ class TestUtils(unittest.TestCase):
     def test_article_status(self, value, expected):
         self.assertEqual(utils.article_status(value), expected)
 
-    @unpack
-    @data((None, None), ("10.7554/eLife.00003", 3), ("not_a_doi", None))
-    def test_msid_from_doi(self, value, expected):
-        self.assertEqual(utils.msid_from_doi(value), expected)
+    def test_msid_from_doi(self):
+        cases = [
+            ("10.7554/eLife.09560", 9560),
+            # component
+            ("10.7554/eLife.09560.sa0", 9560),
+            # versioned
+            ("10.7554/eLife.09560.1", 9560),
+            ("10.7554/eLife.09560.1.sa0", 9560),
+            # testing msid
+            ("10.7554/eLife.97832421234567890", 97832421234567890),
+            # case insensitive
+            ("10.7554/ELIFE.09560", 9560),
+            # URL format
+            ("https://doi.org/10.7554/eLife.09560.1.sa0", 9560),
+            # unlikely cases
+            ("10.7554/eLife.0", 0),
+            ("10.7554/eLife.0.1", 0),
+            ("10.7554/eLife.0.1.2.3.4", 0),
+            # no match cases
+            (None, None),
+            ("", None),
+            ([], None),
+            ({}, None),
+            ("not_a_doi", None),
+        ]
+        for given, expected in cases:
+            self.assertEqual(
+                utils.msid_from_doi(given), expected, "failed case %r" % given
+            )
 
     @unpack
     @data(
