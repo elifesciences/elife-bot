@@ -42,6 +42,7 @@ def msid_from_doi(doi):
     if len(match_list) > 0:
         return int(match_list[0])
 
+
 def volume_from_year(year, start_year=2011):
     "calculate the volume from the year, default start_year value for elife journal"
     try:
