@@ -32,7 +32,7 @@ newrelic = "*"
 pyfunctional = "~=1.4"
 func-timeout = "~=4.3"
 python-docx = "~=0.8"
-digestparser = "~=0.1"
+digestparser = "~=0.2.0"
 medium = {git = "https://github.com/Medium/medium-sdk-python.git", ref = "bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6"}
 psutil = "~=5.8"
 pytz = "*"

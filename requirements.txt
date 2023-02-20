@@ -1,4 +1,4 @@
-# file generated 2023-02-14 - see update-dependencies.sh
+# file generated 2023-02-20 - see update-dependencies.sh
 arrow==1.2.3
 astroid==2.14.1
 attrs==22.2.0
@@ -14,7 +14,7 @@ configparser==5.3.0
 cryptography==39.0.1
 ddt==1.6.0
 Deprecated==1.2.13
-digestparser==0.1.2
+digestparser==0.2.0
 dill==0.3.6
 docker==5.0.3
 docmaptools==0.3.0
