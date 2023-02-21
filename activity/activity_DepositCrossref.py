@@ -139,16 +139,21 @@ class activity_DepositCrossref(Activity):
 
         for article, c_xml in list(crossref_object_map.items()):
             # set related item tags
-            if article.version_doi:
+            if article.version_doi or article.publication_history:
                 # add rel:program tag if not present
                 crossref.add_rel_program_tag(c_xml.root)
                 # find the rel:program tag
                 rel_program_tag = crossref.find_rel_program_tag(c_xml.root)
 
-                # add intra_work_relation isSameAs tag
-                crossref.add_is_same_as_tag(rel_program_tag, article.version_doi)
+                if article.version_doi:
+                    # add intra_work_relation isSameAs tag
+                    crossref.add_is_same_as_tag(rel_program_tag, article.version_doi)
 
-            # todo!!! add rel:intra_work_relation isVersionOf tags
+                for event_object in article.publication_history:
+                    if event_object.event_type == "reviewed-preprint":
+                        crossref.add_is_version_of_tag(
+                            rel_program_tag, event_object.doi
+                        )
 
         # output CrossrefXML objects to XML files
         for article, c_xml in list(crossref_object_map.items()):

@@ -247,10 +247,23 @@ def clear_rel_program_tag(c_xml):
 
 def add_is_same_as_tag(rel_program_tag, doi):
     "add doi as intra_work_relation isSameAs tag to the rel:program tag"
+    related_item_tag = SubElement(rel_program_tag, "rel:related_item")
     related.set_related_item_work_relation(
-        rel_program_tag,
+        related_item_tag,
         "intra_work_relation",
         "isSameAs",
+        "doi",
+        doi,
+    )
+
+
+def add_is_version_of_tag(rel_program_tag, doi):
+    "add doi as intra_work_relation isVersionOf tag to the rel:program tag"
+    related_item_tag = SubElement(rel_program_tag, "rel:related_item")
+    related.set_related_item_work_relation(
+        related_item_tag,
+        "intra_work_relation",
+        "isVersionOf",
         "doi",
         doi,
     )

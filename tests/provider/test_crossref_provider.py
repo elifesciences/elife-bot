@@ -341,13 +341,38 @@ class TestAddIsSameAsTag(unittest.TestCase):
         doi = "10.7554/eLife.1234567890"
         expected = (
             b'<rel:program xmlns:rel="http://www.crossref.org/relations.xsd">'
+            b"<rel:related_item>"
             b'<rel:intra_work_relation identifier-type="doi" relationship-type="isSameAs">'
             b"10.7554/eLife.1234567890"
             b"</rel:intra_work_relation>"
+            b"</rel:related_item>"
             b"</rel:program>"
         )
         # invoke function
         crossref.add_is_same_as_tag(root, doi)
+        # assert
+        self.assertEqual(ElementTree.tostring(root), expected)
+
+
+class TestAddIsVersionOfTag(unittest.TestCase):
+    def setUp(self):
+        ElementTree.register_namespace("rel", "http://www.crossref.org/relations.xsd")
+
+    def test_add_is_version_of_tag(self):
+        xml_string = b'<rel:program xmlns:rel="http://www.crossref.org/relations.xsd"/>'
+        root = ElementTree.fromstring(xml_string)
+        doi = "10.7554/eLife.1234567890"
+        expected = (
+            b'<rel:program xmlns:rel="http://www.crossref.org/relations.xsd">'
+            b"<rel:related_item>"
+            b'<rel:intra_work_relation identifier-type="doi" relationship-type="isVersionOf">'
+            b"10.7554/eLife.1234567890"
+            b"</rel:intra_work_relation>"
+            b"</rel:related_item>"
+            b"</rel:program>"
+        )
+        # invoke function
+        crossref.add_is_version_of_tag(root, doi)
         # assert
         self.assertEqual(ElementTree.tostring(root), expected)
 
