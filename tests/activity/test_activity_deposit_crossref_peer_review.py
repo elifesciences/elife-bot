@@ -77,7 +77,42 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 "<doi>10.7554/eLife.15747.011</doi>",
                 "<resource>https://elifesciences.org/articles/15747#SA2</resource>",
             ],
-        }
+        },
+        {
+            "comment": "Article 1234567890",
+            "article_xml_filenames": ["elife-1234567890-v2.xml"],
+            "post_status_code": 200,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": True,
+            "expected_outbox_status": True,
+            "expected_email_status": True,
+            "expected_activity_status": True,
+            "expected_file_count": 1,
+            "expected_crossref_xml_contains": [
+                "<ai:license_ref>http://creativecommons.org/licenses/by/4.0/</ai:license_ref>",
+                "<title>eLife assessment: eLife kitchen sink 3.0</title>",
+                "<title>Reviewer #1 (public review): eLife kitchen sink 3.0</title>",
+                "<title>Reviewer #2 (public review): eLife kitchen sink 3.0</title>",
+                "<title>Reviewer #3 (public review): eLife kitchen sink 3.0</title>",
+                "<title>Consensus public review: eLife kitchen sink 3.0</title>",
+                "<title>Joint public review: eLife kitchen sink 3.0</title>",
+                "<title>Recommendations for authors: eLife kitchen sink 3.0</title>",
+                "<title>Author response: eLife kitchen sink 3.0</title>",
+                (
+                    '<rel:inter_work_relation identifier-type="doi" relationship-type="isReviewOf">'
+                    + "10.7554/eLife.1234567890</rel:inter_work_relation>"
+                ),
+                '<anonymous contributor_role="author" sequence="first"/>',
+                '<peer_review stage="pre-publication" type="editor-report">',
+                '<peer_review stage="pre-publication" type="referee-report">',
+                '<peer_review stage="pre-publication" type="author-comment">',
+                "<doi>10.7554/eLife.1234567890.4.sa0</doi>",
+                "<resource>https://elifesciences.org/articles/1234567890#sa0</resource>",
+                '<institution_id type="ror">https://ror.org/01an7q238</institution_id>',
+            ],
+        },
     )
     def test_do_activity(
         self,

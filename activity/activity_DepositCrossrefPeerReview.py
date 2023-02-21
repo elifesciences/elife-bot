@@ -204,7 +204,10 @@ class activity_DepositCrossrefPeerReview(Activity):
                     review_date_object = ArticleDate("review_date", date_struct)
                     sub_article.add_date(review_date_object)
                 # set author response author contrib values
-                if sub_article.article_type == "reply" and not sub_article.contributors:
+                if (
+                    sub_article.article_type in ["author-comment", "reply"]
+                    and not sub_article.contributors
+                ):
                     sub_article.contributors = [
                         contrib
                         for contrib in article.contributors
@@ -243,8 +246,8 @@ class activity_DepositCrossrefPeerReview(Activity):
                 # append it
                 sub_article.contributors.append(contrib)
                 self.logger.info(
-                    "Added %s %s from parent article to decision letter"
-                    % (contrib.contrib_type, contrib.surname)
+                    "Added %s %s from parent article to %s"
+                    % (contrib.contrib_type, contrib.surname, sub_article.article_type)
                 )
 
     def set_editor_orcid(self, sub_article, manuscript_object):
