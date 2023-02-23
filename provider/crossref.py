@@ -220,6 +220,15 @@ def build_crossref_xml(
     return object_list
 
 
+def set_version_doi_on_review_articles(article_object_map):
+    "for peer review deposits set the related article of each review article to be the version_doi"
+    for xml_file, article in list(article_object_map.items()):
+        if article.version_doi:
+            for review_article in article.review_articles:
+                for related_article in review_article.related_articles:
+                    related_article.doi = article.version_doi
+
+
 def add_rel_program_tag(root):
     "add a rel:program tag to a Crossref deposit ElementTree root, if missing"
     if not find_rel_program_tag(root):

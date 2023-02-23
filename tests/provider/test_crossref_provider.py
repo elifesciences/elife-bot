@@ -270,6 +270,36 @@ class TestBuildCrossrefXml(unittest.TestCase):
         self.assertEqual(len(bad_xml_files), 1)
 
 
+class TestSetVersionDoiOnReviewArticles(unittest.TestCase):
+    def test_set_version_doi(self):
+        # prepare sample data, simulates parsing a more complicated XML file
+        xml_file_name = "article.xml"
+        doi = "10.7554/eLife.1234567890"
+        version_doi = "10.7554/eLife.1234567890.4"
+        parent_article = Article(doi)
+        parent_article.version_doi = version_doi
+        review_article_1 = Article("%s.sa0" % version_doi)
+        review_article_1.related_articles = [parent_article]
+        review_article_2 = Article("%s.sa1" % version_doi)
+        review_article_2.related_articles = [parent_article]
+        parent_article.review_articles = [review_article_1, review_article_2]
+        article_map = {xml_file_name: parent_article}
+        # invoke the function
+        crossref.set_version_doi_on_review_articles(article_map)
+        # assert the DOI of the related_article of a review article is the version_doi
+        self.assertEqual(
+            article_map[xml_file_name].review_articles[0].related_articles[0].doi,
+            version_doi,
+        )
+
+    def test_set_version_doi_empty_map(self):
+        "example if a blank map is supplied"
+        article_map = {}
+        expected = {}
+        crossref.set_version_doi_on_review_articles(article_map)
+        self.assertEqual(article_map, expected)
+
+
 class TestAddRelProgramTag(unittest.TestCase):
     def setUp(self):
         ElementTree.register_namespace("rel", "http://www.crossref.org/relations.xsd")

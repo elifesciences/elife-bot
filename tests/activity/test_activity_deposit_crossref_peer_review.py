@@ -102,7 +102,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 "<title>Author response: eLife kitchen sink 3.0</title>",
                 (
                     '<rel:inter_work_relation identifier-type="doi" relationship-type="isReviewOf">'
-                    + "10.7554/eLife.1234567890</rel:inter_work_relation>"
+                    + "10.7554/eLife.1234567890.4</rel:inter_work_relation>"
                 ),
                 '<anonymous contributor_role="author" sequence="first"/>',
                 '<peer_review stage="pre-publication" type="editor-report">',
