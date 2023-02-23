@@ -435,6 +435,97 @@ class TestAlterXML(unittest.TestCase):
         )
 
 
+class TestConvertHistoryEventTags(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_convert_history_event_tags_unchanged(self):
+        "test altering a file where no changes will be made, output is the same as input"
+        directory = TempDirectory()
+        filename = "elife-00353-v1.xml"
+        source_file = "tests/files_source/%s" % filename
+        test_file = os.path.join(directory.path, filename)
+        shutil.copy(source_file, test_file)
+        article_processing.convert_history_event_tags(test_file, self.logger)
+        with open(source_file, "r", encoding="utf-8") as open_file:
+            with open(test_file, "r", encoding="utf-8") as open_output_file:
+                altered_xml = open_output_file.read()
+                expected = open_file.read()
+                # in Python 3.8 or newer the XML attributes will be a different order
+                if sys.version_info >= (3, 8):
+                    expected = expected.replace(
+                        '<article article-type="discussion" dtd-version="1.1d3" xmlns:xlink="http://www.w3.org/1999/xlink">',
+                        '<article xmlns:xlink="http://www.w3.org/1999/xlink" article-type="discussion" dtd-version="1.1d3">',
+                    )
+                self.assertEqual(altered_xml, expected)
+
+    def test_convert_history_event_tags(self):
+        "test an example XML"
+        directory = TempDirectory()
+        xml_declaration = """<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD with MathML3 v1.2 20190208//EN"  "JATS-archivearticle1-mathml3.dtd">"""
+        xml_pub_history = """<pub-history>
+<event>
+<self-uri content-type="preprint" xlink:href="https://doi.org/10.1101/2021.11.09.467796"/>   
+</event>
+<event>
+<self-uri content-type="reviewed-preprint" xlink:href="https://doi.org/10.7554/eLife.1234567890.1"/>   
+</event>
+<event>
+<self-uri content-type="reviewed-preprint" xlink:href="https://doi.org/10.7554/eLife.1234567890.2"/>   
+</event>
+<event>
+<self-uri content-type="reviewed-preprint" xlink:href="https://doi.org/10.7554/eLife.1234567890.3"/>   
+</event>
+</pub-history>"""
+
+        xml_string = """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+<front>
+<article-meta>
+%s
+</article-meta>
+</front>
+</article>""" % (
+            xml_declaration,
+            xml_pub_history,
+        )
+
+        # in test output the tags will not be separated by whitespace
+        related_article_xml = (
+            '<related-article ext-link-type="doi" id="ra1" related-article-type="preprint" xlink:href="10.1101/2021.11.09.467796"/>'
+            '<related-article ext-link-type="doi" id="ra2" related-article-type="preprint" xlink:href="10.7554/eLife.1234567890.1"/>'
+            '<related-article ext-link-type="doi" id="ra3" related-article-type="preprint" xlink:href="10.7554/eLife.1234567890.2"/>'
+            '<related-article ext-link-type="doi" id="ra4" related-article-type="preprint" xlink:href="10.7554/eLife.1234567890.3"/>'
+        )
+
+        expected = """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+<front>
+<article-meta>
+%s
+%s</article-meta>
+</front>
+</article>""" % (
+            xml_declaration,
+            xml_pub_history,
+            related_article_xml,
+        )
+
+        filename = "elife-99999-v1.xml"
+        test_file = os.path.join(directory.path, filename)
+        with open(test_file, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        article_processing.convert_history_event_tags(test_file, self.logger)
+        with open(test_file, "r", encoding="utf-8") as open_file:
+            self.assertEqual(open_file.read(), expected)
+        self.assertTrue(
+            self.logger.loginfo[-1].startswith(
+                "Adding a related-article tag for event self-uri"
+            ),
+        )
+
+
 class TestRemoveVersionDoiTag(unittest.TestCase):
     def setUp(self):
         self.logger = FakeLogger()
