@@ -120,6 +120,7 @@ class activity_PMCDeposit(Activity):
             self.logger,
             alter_xml=True,
             remove_version_doi=workflow_rules.get("remove_version_doi"),
+            convert_history_events=True,
         )
 
         # check if the article is retracted

@@ -3,6 +3,7 @@ import shutil
 import zipfile
 import glob
 from collections import OrderedDict
+from xml.etree.ElementTree import SubElement
 import dateutil.parser
 from elifetools import xmlio
 from provider import utils, lax_provider
@@ -211,6 +212,7 @@ def repackage_archive_zip_to_pmc_zip(
     alter_xml=False,
     remove_version_doi=False,
     retain_version_number=False,
+    convert_history_events=False,
 ):
     "repackage the zip file  to a PMC zip format"
     # make temporary directories
@@ -261,8 +263,11 @@ def repackage_archive_zip_to_pmc_zip(
         # Temporary XML rewrite of related-object tag
         alter_xml_related_object(article_xml_file, logger)
     if remove_version_doi:
-        # Temporary XML rewrite of related-object tag
+        # remove the version DOI article-id tag
         remove_version_doi_tag(article_xml_file, logger)
+    if convert_history_events:
+        # add related-article tags for each history event
+        convert_history_event_tags(article_xml_file, logger)
     convert_xml(xml_file=article_xml_file, file_name_map=file_name_map)
     # rezip the files into PMC zip format
     logger.info("creating new PMC zip file named " + new_zip_file_path)
@@ -327,6 +332,55 @@ def remove_version_doi_tag(xml_file, logger):
                 logger.info("Removing version DOI article-id tag")
                 article_meta_tag.remove(xml_tag)
 
+    # Start the file output
+    reparsed_string = xmlio.output(
+        root,
+        output_type=None,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions,
+    )
+
+    with open(xml_file, "wb") as open_file:
+        open_file.write(reparsed_string)
+
+
+def convert_history_event_tags(xml_file, logger):
+    "for each preprint event tag in pub-history add a related-article tag"
+    # Register namespaces
+    xmlio.register_xmlns()
+
+    root, doctype_dict, processing_instructions = xmlio.parse(
+        xml_file, return_doctype_dict=True, return_processing_instructions=True
+    )
+
+    #
+    article_meta_tag = root.find("./front/article-meta")
+    if article_meta_tag:
+        event_index = 1
+        for event_tag in article_meta_tag.findall("pub-history/event"):
+            for self_uri_tag in event_tag.findall("self-uri"):
+                if self_uri_tag.get("content-type") in [
+                    "preprint",
+                    "reviewed-preprint",
+                ] and self_uri_tag.get("{http://www.w3.org/1999/xlink}href"):
+                    # add a related-article tag
+                    logger.info(
+                        "Adding a related-article tag for event self-uri %s"
+                        % self_uri_tag.get("{http://www.w3.org/1999/xlink}href")
+                    )
+                    related_article_tag = SubElement(
+                        article_meta_tag, "related-article"
+                    )
+                    related_article_tag.set("ext-link-type", "doi")
+                    related_article_tag.set("id", "ra%s" % event_index)
+                    related_article_tag.set("related-article-type", "preprint")
+                    related_article_tag.set(
+                        "{http://www.w3.org/1999/xlink}href",
+                        utils.doi_uri_to_doi(
+                            self_uri_tag.get("{http://www.w3.org/1999/xlink}href")
+                        ),
+                    )
+                    event_index += 1
     # Start the file output
     reparsed_string = xmlio.output(
         root,
