@@ -92,6 +92,9 @@ class activity_DepositCrossrefPeerReview(Activity):
             article_object_map, self.settings, self.logger
         )
 
+        # use the version_doi as the related article to each review article
+        crossref.set_version_doi_on_review_articles(generate_article_object_map)
+
         # Generate crossref XML
         self.statuses["generate"] = crossref.generate_crossref_xml_to_disk(
             generate_article_object_map,
