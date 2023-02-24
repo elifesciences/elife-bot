@@ -372,7 +372,7 @@ def convert_history_event_tags(xml_file, logger):
                         article_meta_tag, "related-article"
                     )
                     related_article_tag.set("ext-link-type", "doi")
-                    related_article_tag.set("id", "ra%s" % event_index)
+                    related_article_tag.set("id", "hra%s" % event_index)
                     related_article_tag.set("related-article-type", "preprint")
                     related_article_tag.set(
                         "{http://www.w3.org/1999/xlink}href",

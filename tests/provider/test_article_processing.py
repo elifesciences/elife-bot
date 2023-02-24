@@ -484,6 +484,7 @@ class TestConvertHistoryEventTags(unittest.TestCase):
         xml_string = """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
 <front>
 <article-meta>
+<related-article ext-link-type="doi" id="ra1" related-article-type="article-reference" xlink:href="10.7554/eLife.00666"/>
 %s
 </article-meta>
 </front>
@@ -494,15 +495,16 @@ class TestConvertHistoryEventTags(unittest.TestCase):
 
         # in test output the tags will not be separated by whitespace
         related_article_xml = (
-            '<related-article ext-link-type="doi" id="ra1" related-article-type="preprint" xlink:href="10.1101/2021.11.09.467796"/>'
-            '<related-article ext-link-type="doi" id="ra2" related-article-type="preprint" xlink:href="10.7554/eLife.1234567890.1"/>'
-            '<related-article ext-link-type="doi" id="ra3" related-article-type="preprint" xlink:href="10.7554/eLife.1234567890.2"/>'
-            '<related-article ext-link-type="doi" id="ra4" related-article-type="preprint" xlink:href="10.7554/eLife.1234567890.3"/>'
+            '<related-article ext-link-type="doi" id="hra1" related-article-type="preprint" xlink:href="10.1101/2021.11.09.467796"/>'
+            '<related-article ext-link-type="doi" id="hra2" related-article-type="preprint" xlink:href="10.7554/eLife.1234567890.1"/>'
+            '<related-article ext-link-type="doi" id="hra3" related-article-type="preprint" xlink:href="10.7554/eLife.1234567890.2"/>'
+            '<related-article ext-link-type="doi" id="hra4" related-article-type="preprint" xlink:href="10.7554/eLife.1234567890.3"/>'
         )
 
         expected = """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
 <front>
 <article-meta>
+<related-article ext-link-type="doi" id="ra1" related-article-type="article-reference" xlink:href="10.7554/eLife.00666"/>
 %s
 %s</article-meta>
 </front>
