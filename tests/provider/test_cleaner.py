@@ -1,4 +1,5 @@
 import os
+import json
 import unittest
 from collections import OrderedDict
 import zipfile
@@ -272,19 +273,19 @@ class TestPreprintUrl(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-class TestScietyDocmapUrl(unittest.TestCase):
-    def test_sciety_docmap_url(self):
+class TestDocmapUrl(unittest.TestCase):
+    def test_docmap_url(self):
         doi = "10.1101/2021.06.02.446694"
-        result = cleaner.sciety_docmap_url(settings_mock, doi)
-        expected = "https://sciety.example.org/path/%s.docmap.json" % doi
+        result = cleaner.docmap_url(settings_mock, doi)
+        expected = "https://example.org/path/get-by-id?preprint_doi=%s" % doi
         self.assertEqual(result, expected)
 
-    def test_sciety_docmap_url_no_settings(self):
+    def test_docmap_url_no_settings(self):
         class FakeSettings:
             pass
 
         doi = "10.1101/2021.06.02.446694"
-        result = cleaner.sciety_docmap_url(FakeSettings(), doi)
+        result = cleaner.docmap_url(FakeSettings(), doi)
         expected = None
         self.assertEqual(result, expected)
 
@@ -332,6 +333,53 @@ class TestGetDocmap(unittest.TestCase):
         mock_requests_get.return_value = FakeResponse(status_code)
         with self.assertRaises(Exception):
             cleaner.get_docmap(self.url)
+
+
+class TestGetDocmapByAccountId(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.url = "https://example.org/"
+
+    @patch("requests.get")
+    def test_get_docmap_by_account_id_blank(self, mock_requests_get):
+        "test for non-list JSON returned"
+        content = b""
+        status_code = 200
+        expected = None
+        mock_requests_get.return_value = FakeResponse(status_code, content=content)
+        result = cleaner.get_docmap_by_account_id(
+            self.url, settings_mock.docmap_account_id
+        )
+        self.assertEqual(result, expected)
+
+    @patch("requests.get")
+    def test_get_docmap_by_account_id_empty(self, mock_requests_get):
+        "test for non-list JSON returned"
+        content = b"{}"
+        status_code = 200
+        mock_requests_get.return_value = FakeResponse(status_code, content=content)
+        result = cleaner.get_docmap_by_account_id(
+            self.url, settings_mock.docmap_account_id
+        )
+        self.assertEqual(result, content)
+
+    @patch("requests.get")
+    def test_get_docmap_by_account_id_list_content(self, mock_requests_get):
+        "test for when a list of values is returned"
+        elife_docmap = {
+            "publisher": {"account": {"id": "https://sciety.org/groups/elife"}}
+        }
+        non_elife_docmap = {"publisher": {"account": {"id": "https://example.org"}}}
+        content = b"[%s, %s]" % (
+            json.dumps(non_elife_docmap).encode("utf-8"),
+            json.dumps(elife_docmap).encode("utf-8"),
+        )
+        status_code = 200
+        mock_requests_get.return_value = FakeResponse(status_code, content=content)
+        result = cleaner.get_docmap_by_account_id(
+            self.url, settings_mock.docmap_account_id
+        )
+        self.assertEqual(result, json.dumps(elife_docmap))
 
 
 class TestFilesByExtension(unittest.TestCase):

@@ -346,7 +346,8 @@ class exp:
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
 
-    sciety_docmap_url_pattern = "https://sciety.example.org/path/{doi}.docmap.json"
+    docmap_url_pattern = "https://example.org/path/get-by-id?preprint_doi={doi}"
+    docmap_account_id = "https://sciety.org/groups/elife"
 
 
 class dev:
@@ -679,7 +680,8 @@ class dev:
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
 
-    sciety_docmap_url_pattern = "https://sciety.example.org/path/{doi}.docmap.json"
+    docmap_url_pattern = "https://example.org/path/get-by-id?preprint_doi={doi}"
+    docmap_account_id = "https://sciety.org/groups/elife"
 
 
 class live:
@@ -1017,7 +1019,8 @@ class live:
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
 
-    sciety_docmap_url_pattern = "https://sciety.example.org/path/{doi}.docmap.json"
+    docmap_url_pattern = "https://example.org/path/get-by-id?preprint_doi={doi}"
+    docmap_account_id = "https://sciety.org/groups/elife"
 
 
 def get_settings(ENV="dev"):

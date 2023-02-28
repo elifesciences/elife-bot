@@ -103,16 +103,18 @@ class activity_AcceptedSubmissionPeerReviews(Activity):
         preprint_doi = utils.doi_uri_to_doi(preprint_url)
         self.logger.info("%s, preprint_doi: %s" % (self.name, preprint_doi))
 
-        # generate Sciety URL
-        sciety_url = cleaner.sciety_docmap_url(self.settings, preprint_doi)
-        self.logger.info("%s, sciety_url: %s" % (self.name, sciety_url))
+        # generate docmap URL
+        docmap_url = cleaner.docmap_url(self.settings, preprint_doi)
+        self.logger.info("%s, docmap_url: %s" % (self.name, docmap_url))
 
         # get docmap json
         self.logger.info(
             "%s, getting docmap_string for input_filename: %s"
             % (self.name, input_filename)
         )
-        docmap_string = cleaner.get_docmap(sciety_url)
+        docmap_string = cleaner.get_docmap_by_account_id(
+            docmap_url, self.settings.docmap_account_id
+        )
         self.statuses["docmap_string"] = True
 
         # get sub-article data from docmap
