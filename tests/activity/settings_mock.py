@@ -241,4 +241,5 @@ GLENCOE_FTP_CWD = "folder"
 
 downstream_recipients_yaml = "tests/downstreamRecipients.yaml"
 
-sciety_docmap_url_pattern = "https://sciety.example.org/path/{doi}.docmap.json"
+docmap_url_pattern = "https://example.org/path/get-by-id?preprint_doi={doi}"
+docmap_account_id = "https://sciety.org/groups/elife"

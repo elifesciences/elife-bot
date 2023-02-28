@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 import re
 import requests
@@ -148,12 +149,10 @@ def preprint_url(xml_file_path):
     return parse.preprint_url(root)
 
 
-def sciety_docmap_url(settings, doi):
+def docmap_url(settings, doi):
     "URL of the preprint docmap at Sciety"
-    sciety_docmap_url_pattern = getattr(settings, "sciety_docmap_url_pattern", None)
-    return (
-        sciety_docmap_url_pattern.format(doi=doi) if sciety_docmap_url_pattern else None
-    )
+    docmap_url_pattern = getattr(settings, "docmap_url_pattern", None)
+    return docmap_url_pattern.format(doi=doi) if docmap_url_pattern else None
 
 
 def add_sub_article_xml(docmap_string, article_xml):
@@ -188,6 +187,29 @@ def get_docmap(url):
 
     if status_code == 200:
         return response.content
+
+
+def get_docmap_by_account_id(url, account_id):
+    "GET request for the docmap json and return the eLife docmap if a list is returned"
+    content = get_docmap(url)
+    if content:
+        LOGGER.info("Parsing docmap content as JSON for URL %s", url)
+        content_json = json.loads(content)
+        if not isinstance(content_json, list):
+            LOGGER.info("Only one document returned for URL %s", url)
+            return content
+        for list_item in content_json:
+            LOGGER.info(
+                "Multiple docmaps returned for URL %s, filtering by account_id %s",
+                url,
+                account_id,
+            )
+            sciety_id = list_item.get("publisher", {}).get("account", {}).get("id")
+            if sciety_id and sciety_id == account_id:
+                LOGGER.info(
+                    "Found docmap for account_id %s from URL %s", account_id, url
+                )
+                return json.dumps(list_item)
 
 
 def xml_rewrite_file_tags(xml_file_path, file_transformations, identifier):

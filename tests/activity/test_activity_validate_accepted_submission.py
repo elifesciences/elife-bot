@@ -391,8 +391,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             self.activity.logger.loginfo[-2],
             (
                 "ValidateAcceptedSubmission, Request for a docmap was not successful for "
-                "Sciety URL https://sciety.example.org/path/%s.docmap.json"
-                % preprint_doi
+                "URL https://example.org/path/get-by-id?preprint_doi=%s" % preprint_doi
             ),
         )
 
