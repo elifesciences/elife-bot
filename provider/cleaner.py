@@ -162,7 +162,7 @@ def add_sub_article_xml(docmap_string, article_xml):
 def url_exists(url, logger):
     "check if URL exists and is successful status code"
     exists = False
-    response = requests.head(url)
+    response = requests.get(url)
     if 200 <= response.status_code < 400:
         exists = True
     elif response.status_code >= 400:

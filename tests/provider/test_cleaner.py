@@ -295,17 +295,17 @@ class TestUrlExists(unittest.TestCase):
         self.logger = FakeLogger()
         self.url = "https://example.org/"
 
-    @patch("requests.head")
-    def test_url_exists_200(self, mock_requests_head):
+    @patch("requests.get")
+    def test_url_exists_200(self, mock_requests_get):
         status_code = 200
-        mock_requests_head.return_value = FakeResponse(status_code)
+        mock_requests_get.return_value = FakeResponse(status_code)
         result = cleaner.url_exists(self.url, self.logger)
         self.assertEqual(result, True)
 
-    @patch("requests.head")
-    def test_url_exists_404(self, mock_requests_head):
+    @patch("requests.get")
+    def test_url_exists_404(self, mock_requests_get):
         status_code = 404
-        mock_requests_head.return_value = FakeResponse(status_code)
+        mock_requests_get.return_value = FakeResponse(status_code)
         result = cleaner.url_exists(self.url, self.logger)
         self.assertEqual(result, False)
         self.assertEqual(
