@@ -3,7 +3,7 @@ import shutil
 import zipfile
 import glob
 from collections import OrderedDict
-from xml.etree.ElementTree import SubElement
+from xml.etree.ElementTree import Element
 import dateutil.parser
 from elifetools import xmlio
 from provider import utils, lax_provider
@@ -368,9 +368,7 @@ def convert_history_event_tags(xml_file, logger):
                         "Adding a related-article tag for event self-uri %s"
                         % self_uri_tag.get("{http://www.w3.org/1999/xlink}href")
                     )
-                    related_article_tag = SubElement(
-                        article_meta_tag, "related-article"
-                    )
+                    related_article_tag = Element("related-article")
                     related_article_tag.set("ext-link-type", "doi")
                     related_article_tag.set("id", "hra%s" % event_index)
                     related_article_tag.set("related-article-type", "preprint")
@@ -380,7 +378,22 @@ def convert_history_event_tags(xml_file, logger):
                             self_uri_tag.get("{http://www.w3.org/1999/xlink}href")
                         ),
                     )
+                    # find the index of the abstract tag for where to insert the tag
+                    abstract_tag_index = 0
+                    for tag_index, meta_tag in enumerate(
+                        article_meta_tag.iterfind("*")
+                    ):
+                        if meta_tag.tag == "abstract":
+                            abstract_tag_index = tag_index
+                            logger.info(
+                                "Found abstract tag at index %s" % abstract_tag_index
+                            )
+                            break
+                    # insert the tag directly prior to the abstract tag
+                    article_meta_tag.insert(abstract_tag_index, related_article_tag)
+
                     event_index += 1
+
     # Start the file output
     reparsed_string = xmlio.output(
         root,
