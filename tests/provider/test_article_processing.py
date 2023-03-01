@@ -486,6 +486,7 @@ class TestConvertHistoryEventTags(unittest.TestCase):
 <article-meta>
 <related-article ext-link-type="doi" id="ra1" related-article-type="article-reference" xlink:href="10.7554/eLife.00666"/>
 %s
+<abstract>An abstract.</abstract>
 </article-meta>
 </front>
 </article>""" % (
@@ -506,7 +507,8 @@ class TestConvertHistoryEventTags(unittest.TestCase):
 <article-meta>
 <related-article ext-link-type="doi" id="ra1" related-article-type="article-reference" xlink:href="10.7554/eLife.00666"/>
 %s
-%s</article-meta>
+%s<abstract>An abstract.</abstract>
+</article-meta>
 </front>
 </article>""" % (
             xml_declaration,
@@ -522,9 +524,12 @@ class TestConvertHistoryEventTags(unittest.TestCase):
         with open(test_file, "r", encoding="utf-8") as open_file:
             self.assertEqual(open_file.read(), expected)
         self.assertTrue(
-            self.logger.loginfo[-1].startswith(
+            self.logger.loginfo[1].startswith(
                 "Adding a related-article tag for event self-uri"
             ),
+        )
+        self.assertTrue(
+            self.logger.loginfo[2].startswith("Found abstract tag at index 2"),
         )
 
 
