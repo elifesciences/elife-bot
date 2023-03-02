@@ -127,9 +127,17 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
     @patch.object(activity_module, "get_session")
-    def test_do_activity_do_not_send_prc_email(self, fake_session):
+    @patch.object(activity_module.email_provider, "smtp_send")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    def test_do_activity_do_not_send_prc_email(
+        self, fake_email_smtp_connect, fake_smtp_send, fake_session
+    ):
         "test for temporary setting to not send an email for PRC article ingestion"
-        expected_email_status = None
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
+        fake_smtp_send.return_value = True
+        expected_email_status = True
         session_data = copy.copy(test_activity_data.accepted_session_example)
         session_data["prc_status"] = True
         fake_session.return_value = FakeSession(session_data)
