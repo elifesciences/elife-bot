@@ -23,7 +23,7 @@ LOG_FORMAT_STRING = (
 )
 
 # November 2022 temporary config whether to send emails for PRC article ingestions
-PRC_INGEST_SEND_EMAIL = False
+PRC_INGEST_SEND_EMAIL = True
 
 
 def article_id_from_zip_file(zip_file):
