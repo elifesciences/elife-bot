@@ -2,6 +2,8 @@ import os
 import json
 import logging
 import re
+from urllib.parse import urlparse
+from xml.etree.ElementTree import SubElement
 import requests
 from elifecleaner import (
     LOGGER,
@@ -16,6 +18,7 @@ from elifecleaner import (
 )
 from provider import utils
 from provider.storage_provider import storage_context
+from provider.article_processing import file_extension
 
 LOG_FILENAME = "elifecleaner.log"
 LOG_FORMAT_STRING = (
@@ -24,6 +27,8 @@ LOG_FORMAT_STRING = (
 
 # November 2022 temporary config whether to send emails for PRC article ingestions
 PRC_INGEST_SEND_EMAIL = True
+
+REQUESTS_TIMEOUT = 10
 
 
 def article_id_from_zip_file(zip_file):
@@ -149,6 +154,120 @@ def preprint_url(xml_file_path):
     return parse.preprint_url(root)
 
 
+def inline_graphic_tags(xml_file_path):
+    "get the inline-graphic tags from an XML file"
+    root = parse_article_xml(xml_file_path)
+    tags = []
+    # find tags in the XML
+    for inline_graphic_tag in root.findall(".//inline-graphic"):
+        tags.append(inline_graphic_tag)
+    return tags
+
+
+def tag_xlink_href(tag):
+    "return a the xlink:href attribute"
+    return tag.get("{http://www.w3.org/1999/xlink}href", None)
+
+
+def tag_xlink_hrefs(tags):
+    "return a list of xlink:href tag attributes"
+    return [tag_xlink_href(tag) for tag in tags if tag_xlink_href(tag)]
+
+
+def change_inline_graphic_xlink_hrefs(xml_file_path, href_to_file_name_map, identifier):
+    "replace xlink:href values of inline-graphic tags with new values"
+    # parse XML file
+    root = parse_article_xml(xml_file_path)
+
+    for href, new_file_name in href_to_file_name_map.items():
+        for inline_graphic_tag in root.findall(
+            ".//inline-graphic[@{http://www.w3.org/1999/xlink}href='%s']" % href
+        ):
+            if tag_xlink_href(inline_graphic_tag) == href:
+                inline_graphic_tag.set(
+                    "{http://www.w3.org/1999/xlink}href", new_file_name
+                )
+    # write XML file to disk
+    write_xml_file(root, xml_file_path, identifier)
+
+
+def external_hrefs(href_list):
+    "return a list of xlink:href tag attributes which point to an external source"
+    return [
+        href
+        for href in href_list
+        if href and (href.startswith("https://") or href.startswith("http://"))
+    ]
+
+
+IMAGE_HOSTNAME_LIST = ["i.imgur.com"]
+
+
+def filter_hrefs_by_hostname(href_list):
+    "return href values with allowed domain names"
+    return [
+        href
+        for href in href_list
+        if href
+        and urlparse(href).hostname
+        and urlparse(href).hostname in IMAGE_HOSTNAME_LIST
+    ]
+
+
+IMAGE_FILE_EXTENSION_LIST = ["gif", "jpg", "png"]
+
+
+def filter_hrefs_by_file_extension(href_list):
+    "return href values with allowed file extension"
+    return [
+        href
+        for href in href_list
+        if href
+        and file_extension(href)
+        and file_extension(href).lower() in IMAGE_FILE_EXTENSION_LIST
+    ]
+
+
+def approved_inline_graphic_hrefs(href_list):
+    "return a list of inline-graphic href values to download"
+    # filter by hostname and file extension
+    return filter_hrefs_by_file_extension(
+        filter_hrefs_by_hostname(external_hrefs(href_list))
+    )
+
+
+def add_file_tag(parent, file_details):
+    "add file tag to the parent tag"
+    file_tag = SubElement(parent, "file")
+    if file_details.get("file_type"):
+        file_tag.set("file-type", file_details.get("file_type"))
+    if file_details.get("upload_file_nm"):
+        upload_file_nm_tag = SubElement(file_tag, "upload_file_nm")
+        upload_file_nm_tag.text = file_details.get("upload_file_nm")
+
+
+def add_file_tags(root, file_detail_list):
+    "add file tags to the XML root"
+    # find the files tag
+    parent = root.find(".//article-meta/files")
+    # if files tag not found, add it
+    if not parent:
+        article_meta_tag = root.find(".//article-meta")
+        if article_meta_tag is not None:
+            parent = SubElement(article_meta_tag, "files")
+    for file_details in file_detail_list:
+        add_file_tag(parent, file_details)
+
+
+def add_file_tags_to_xml(xml_file_path, file_detail_list, identifier):
+    "add file tags to the XML file"
+    # parse XML file
+    root = parse_article_xml(xml_file_path)
+    add_file_tags(root, file_detail_list)
+    # write XML file to disk
+    write_xml_file(root, xml_file_path, identifier)
+
+
 def docmap_url(settings, doi):
     "URL of the preprint docmap at Sciety"
     docmap_url_pattern = getattr(settings, "docmap_url_pattern", None)
@@ -162,7 +281,7 @@ def add_sub_article_xml(docmap_string, article_xml):
 def url_exists(url, logger):
     "check if URL exists and is successful status code"
     exists = False
-    response = requests.get(url)
+    response = requests.get(url, timeout=REQUESTS_TIMEOUT)
     if 200 <= response.status_code < 400:
         exists = True
     elif response.status_code >= 400:
@@ -172,7 +291,7 @@ def url_exists(url, logger):
 
 def get_docmap(url):
     "GET request for the docmap json"
-    response = requests.get(url)
+    response = requests.get(url, timeout=REQUESTS_TIMEOUT)
     LOGGER.info("Request to docmaps API: GET %s", url)
     LOGGER.info(
         "Response from docmaps API: %s\n%s", response.status_code, response.content
@@ -187,6 +306,7 @@ def get_docmap(url):
 
     if status_code == 200:
         return response.content
+    return None
 
 
 def get_docmap_by_account_id(url, account_id):
@@ -359,6 +479,18 @@ def production_comments(log_content):
         message_type = message_parts.group(1)
         message_content = message_parts.group(2)
         if message_type in ["all_terms_map", "renumber", "renumber_term_map"]:
+            comments.append(message_content)
+    # add messages from downloading inline-graphic files
+    video_info_match_pattern = re.compile(
+        r"WARNING elifecleaner:activity_AcceptedSubmissionPeerReviewImages:(.*?): (.*)"
+    )
+    for message in log_messages:
+        message_parts = video_info_match_pattern.search(message)
+        if not message_parts:
+            continue
+        message_type = message_parts.group(1)
+        message_content = message_parts.group(2)
+        if message_type in ["do_activity"]:
             comments.append(message_content)
 
     return comments

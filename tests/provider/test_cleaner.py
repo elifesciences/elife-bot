@@ -1,6 +1,7 @@
 import os
 import json
 import unittest
+from xml.etree import ElementTree
 from collections import OrderedDict
 import zipfile
 from mock import patch
@@ -273,6 +274,248 @@ class TestPreprintUrl(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
+class TestInlineGraphicTags(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_inline_graphic_tags(self):
+        "test modifying the XML for a PRC article"
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+
+        xml_string = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<sub-article>"
+            "<body><p>"
+            '<inline-graphic xlink:href="https://example.org/image1.jpg" />'
+            '<inline-graphic xlink:href="https://example.org/image2.jpg" />'
+            "</p></body>"
+            "</sub-article>"
+            "</article>"
+        )
+        expected_result_len = 2
+        expected_tag_0_string = (
+            '<inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'xlink:href="https://example.org/image1.jpg" />'
+        )
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w") as open_file:
+            open_file.write(xml_string)
+        # invoke the function
+        result = cleaner.inline_graphic_tags(xml_file_path)
+        # check output
+        self.assertEqual(len(result), expected_result_len)
+        self.assertEqual(
+            ElementTree.tostring(result[0]).decode("utf8"), expected_tag_0_string
+        )
+
+    def test_inline_graphic_tags_none(self):
+        "test not finding a preprint_url"
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+        xml_string = "<article />"
+        expected = []
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w") as open_file:
+            open_file.write(xml_string)
+        # invoke the function
+        result = cleaner.inline_graphic_tags(xml_file_path)
+        # check output
+        self.assertEqual(result, expected)
+
+
+class TestTagXlinkHref(unittest.TestCase):
+    def test_tag_xlink_href(self):
+        xlink_href = "https://example.org/image1.jpg"
+        tag = ElementTree.fromstring(
+            '<inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="%s" />'
+            % xlink_href
+        )
+        self.assertEqual(cleaner.tag_xlink_href(tag), xlink_href)
+
+    def test_tag_xlink_href_bad_namespace(self):
+        "test a tag with an incorrect namespace"
+        tag = ElementTree.fromstring(
+            '<inline-graphic href="https://example.org/image1.jpg" />'
+        )
+        self.assertEqual(cleaner.tag_xlink_href(tag), None)
+
+    def test_tag_xlink_href_none(self):
+        "test a tag with no xlink:href"
+        tag = ElementTree.fromstring("<inline-graphic />")
+        self.assertEqual(cleaner.tag_xlink_href(tag), None)
+
+
+class TestTagXlinkHrefs(unittest.TestCase):
+    def test_tag_xlink_hrefs(self):
+        xlink_href = "https://example.org/image1.jpg"
+        tag1 = ElementTree.fromstring(
+            '<inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="%s" />'
+            % xlink_href
+        )
+        tag2 = ElementTree.fromstring(
+            '<inline-graphic href="https://example.org/image1.jpg" />'
+        )
+        tag3 = ElementTree.fromstring("<inline-graphic />")
+        tags = [tag1, tag2, tag3]
+        self.assertEqual(cleaner.tag_xlink_hrefs(tags), [xlink_href])
+
+
+class TestChangeInlineGraphicXlinkHrefs(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_change_inline_graphic_xlink_hrefs(self):
+        "test modifying the XML for a PRC article"
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+        identifier = "30-01-2019-RA-eLife-45644.zip"
+        href_to_file_name_map = {"https://example.org/test.jpg": "test.jpg"}
+        xml_string = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            '<inline-graphic xlink:href="https://example.org/test.jpg" />'
+            "</article>"
+        )
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        # invoke
+        cleaner.change_inline_graphic_xlink_hrefs(
+            xml_file_path, href_to_file_name_map, identifier
+        )
+        # check output
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
+            xml_contents = open_file.read()
+        self.assertTrue(('<inline-graphic xlink:href="test.jpg"/>') in xml_contents)
+
+
+class TestExternalHrefs(unittest.TestCase):
+    def test_tag_xlink_hrefs_external(self):
+        external_xlink_href = "https://example.org/image1.jpg"
+        href_list = [external_xlink_href, None, "local.jpg"]
+        self.assertEqual(cleaner.external_hrefs(href_list), [external_xlink_href])
+
+
+class TestFilterHrefsByHostname(unittest.TestCase):
+    def test_filter_hrefs_by_hostname(self):
+        "test filtering approved href values by hostname"
+        href_list = [
+            "https://i.imgur.com/vc4GR10.Png",
+            "https://example.org/image1.jpg",
+            None,
+            "local.jpg",
+            "https://i.imgur.com/vc4GR10.tif",
+        ]
+        expected = [
+            "https://i.imgur.com/vc4GR10.Png",
+            "https://i.imgur.com/vc4GR10.tif",
+        ]
+        self.assertEqual(cleaner.filter_hrefs_by_hostname(href_list), expected)
+
+
+class TestFilterHrefsByFileExtension(unittest.TestCase):
+    def test_filter_hrefs_by_file_extension(self):
+        "test filtering href values file type"
+        href_list = [
+            "https://i.imgur.com/vc4GR10.Png",
+            "https://example.org/image1.jpg",
+            None,
+            "local.jpg",
+            "https://i.imgur.com/vc4GR10.tif",
+        ]
+        expected = [
+            "https://i.imgur.com/vc4GR10.Png",
+            "https://example.org/image1.jpg",
+            "local.jpg",
+        ]
+        self.assertEqual(cleaner.filter_hrefs_by_file_extension(href_list), expected)
+
+
+class TestApprovedInlineGraphicHrefs(unittest.TestCase):
+    def test_approved_inline_graphic_hrefs(self):
+        "test filtering approved href values by external domain and file type"
+        good_xlink_href = "https://i.imgur.com/vc4GR10.Png"
+        href_list = [
+            good_xlink_href,
+            "https://example.org/image1.jpg",
+            None,
+            "local.jpg",
+            "https://i.imgur.com/vc4GR10.tif",
+        ]
+        expected = [good_xlink_href]
+        self.assertEqual(cleaner.approved_inline_graphic_hrefs(href_list), expected)
+
+
+class TestAddFileTagsToXml(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_add_file_tags_to_xml(self):
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+        identifier = "30-01-2019-RA-eLife-45644.zip"
+        xml_string = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<article-meta>"
+            "<files>"
+            "<file/>"
+            "</files>"
+            "</article-meta>"
+            "</article>"
+        )
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        file_details_list = [
+            {"file_type": "figure", "upload_file_nm": "elife-45644-inf1.png"}
+        ]
+        # invoke
+        cleaner.add_file_tags_to_xml(xml_file_path, file_details_list, identifier)
+        # check output
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
+            xml_contents = open_file.read()
+        self.assertTrue(
+            (
+                '<file file-type="figure">'
+                "<upload_file_nm>elife-45644-inf1.png</upload_file_nm>"
+                "</file>"
+            )
+            in xml_contents
+        )
+
+    def test_add_file_tags_missing_files_tag(self):
+        "test case where the XML does not have a files tag"
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+        identifier = "30-01-2019-RA-eLife-45644.zip"
+        xml_string = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<article-meta/>"
+            "</article>"
+        )
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        file_details_list = [
+            {"file_type": "figure", "upload_file_nm": "elife-45644-inf1.png"}
+        ]
+        # invoke
+        cleaner.add_file_tags_to_xml(xml_file_path, file_details_list, identifier)
+        # check output
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
+            xml_contents = open_file.read()
+        self.assertTrue(
+            (
+                "<files>"
+                '<file file-type="figure">'
+                "<upload_file_nm>elife-45644-inf1.png</upload_file_nm>"
+                "</file>"
+                "</files>"
+            )
+            in xml_contents
+        )
+
+
 class TestDocmapUrl(unittest.TestCase):
     def test_docmap_url(self):
         doi = "10.1101/2021.06.02.446694"
@@ -439,6 +682,7 @@ class TestProductionComments(unittest.TestCase):
             "2022-06-29 13:10:15,942 INFO elifecleaner:video:all_terms_map: found duplicate video term values\n"
             "2022-06-29 13:10:15,942 INFO elifecleaner:video:renumber: duplicate values: ['fig1video2']\n"
             "2022-06-29 13:10:15,942 INFO elifecleaner:video:renumber_term_map: replacing number 2 with 3 for term Supplementary Video 2.mp4\n"
+            "2023-03-20 16:36:08,542 WARNING elifecleaner:activity_AcceptedSubmissionPeerReviewImages:do_activity: https://example.org/fake.jpg peer review image href was not approved for downloading"
         )
 
     def test_production_comments(self):
@@ -453,6 +697,7 @@ class TestProductionComments(unittest.TestCase):
             "found duplicate video term values",
             "duplicate values: ['fig1video2']",
             "replacing number 2 with 3 for term Supplementary Video 2.mp4",
+            "https://example.org/fake.jpg peer review image href was not approved for downloading",
         ]
 
         comments = cleaner.production_comments(self.cleaner_log)
@@ -466,6 +711,7 @@ class TestProductionComments(unittest.TestCase):
             "20-12-2021-FA-eLife-76559.zip has file not listed in the manifest: 76559 correct version.tex",
             "22-02-2022-CR-eLife-78088.zip has file missing from expected numeric sequence: Figure 3",
             cleaner.WELLCOME_FUNDING_COMMENTS,
+            "https://example.org/fake.jpg peer review image href was not approved for downloading",
         ]
 
         comments = cleaner.production_comments_for_xml(self.cleaner_log)
