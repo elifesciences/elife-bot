@@ -46,6 +46,17 @@ class activity_EmailAcceptedSubmissionOutput(Activity):
             )
             return True
 
+        # March 2023 also do not send emails for any particular test files
+        if (
+            session.get_value("prc_status")
+            and input_filename in cleaner.PRC_INGEST_IGNORE_SEND_EMAIL
+        ):
+            self.logger.info(
+                "%s, %s is in the PRC_INGEST_IGNORE_SEND_EMAIL list so no email will be sent"
+                % (self.name, input_filename)
+            )
+            return True
+
         # format the email body content
         body_content = ""
         comments = cleaner.production_comments(cleaner_log)

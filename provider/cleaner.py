@@ -28,6 +28,13 @@ LOG_FORMAT_STRING = (
 # November 2022 temporary config whether to send emails for PRC article ingestions
 PRC_INGEST_SEND_EMAIL = True
 
+# March 2023 temporary config to not send emails for particular test files
+PRC_INGEST_IGNORE_SEND_EMAIL = [
+    "02-28-2023-RA-RP-eLife-84747.zip",
+    "18-05-2021-RA-RP-eLife-70493.zip",
+    "22-04-2022-RA-RP-eLife-79713.zip",
+]
+
 REQUESTS_TIMEOUT = 10
 
 
