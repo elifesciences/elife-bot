@@ -379,7 +379,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
             directory.path, resources
         )
         fake_is_prc.return_value = True
-        preprint_doi = "10.1101/2021.06.02.446694"
+        preprint_doi = "10.1101/2021.06.02.999999"
         fake_preprint_url.return_value = "https://doi.org/%s" % preprint_doi
         fake_url_exists.return_value = False
         fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)

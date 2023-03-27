@@ -518,7 +518,7 @@ class TestAddFileTagsToXml(unittest.TestCase):
 
 class TestDocmapUrl(unittest.TestCase):
     def test_docmap_url(self):
-        doi = "10.1101/2021.06.02.446694"
+        doi = "10.1101/2021.06.02.999999"
         result = cleaner.docmap_url(settings_mock, doi)
         expected = "https://example.org/path/get-by-id?preprint_doi=%s" % doi
         self.assertEqual(result, expected)
@@ -527,7 +527,7 @@ class TestDocmapUrl(unittest.TestCase):
         class FakeSettings:
             pass
 
-        doi = "10.1101/2021.06.02.446694"
+        doi = "10.1101/2021.06.02.999999"
         result = cleaner.docmap_url(FakeSettings(), doi)
         expected = None
         self.assertEqual(result, expected)
