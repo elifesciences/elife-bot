@@ -200,6 +200,9 @@ class activity_AcceptedSubmissionPeerReviewImages(Activity):
             file_details = {"file_type": "figure", "upload_file_nm": new_file_name}
             file_details_list.append(file_details)
 
+            # increment the file name counter
+            file_name_count += 1
+
         # upload images to the bucket expanded files folder
         for upload_key, file_name in image_asset_file_name_map.items():
             s3_resource = (
