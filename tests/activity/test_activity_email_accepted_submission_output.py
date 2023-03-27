@@ -148,6 +148,29 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
         self.assertEqual(result, True)
         self.assertEqual(self.activity.email_status, expected_email_status)
 
+    @patch.object(activity_module, "get_session")
+    @patch.object(activity_module.email_provider, "smtp_send")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    def test_do_activity_do_not_send_email_for_input_file(
+        self, fake_email_smtp_connect, fake_smtp_send, fake_session
+    ):
+        "test for temporary setting not to send an email for particular input file names"
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
+        fake_smtp_send.return_value = True
+        expected_email_status = None
+        session_data = copy.copy(test_activity_data.accepted_session_example)
+        session_data["prc_status"] = True
+        session_data["input_filename"] = "02-28-2023-RA-RP-eLife-84747.zip"
+        fake_session.return_value = FakeSession(session_data)
+        # do the activity
+        result = self.activity.do_activity(
+            test_case_data.ingest_accepted_submission_data
+        )
+        self.assertEqual(result, True)
+        self.assertEqual(self.activity.email_status, expected_email_status)
+
 
 class TestEmailSubject(unittest.TestCase):
     def test_accepted_submission_email_subject(self):

@@ -136,6 +136,7 @@ def start(settings):
     activity_names.append("AddCommentsToAcceptedSubmissionXml")
     activity_names.append("OutputAcceptedSubmission")
     activity_names.append("AcceptedSubmissionPeerReviews")
+    activity_names.append("AcceptedSubmissionPeerReviewImages")
 
     for activity_name in activity_names:
         # Import the activity libraries
