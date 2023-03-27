@@ -94,6 +94,7 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
                 "<sub-article>"
                 '<inline-graphic xlink:href="local.jpg" />'
                 '<inline-graphic xlink:href="https://i.imgur.com/vc4GR10.png" />'
+                '<inline-graphic xlink:href="https://i.imgur.com/FFeuydR.jpg" />'
                 "</sub-article>"
             ),
             "status_code": 200,
@@ -106,6 +107,20 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
                     "AcceptedSubmissionPeerReviewImages, downloaded href "
                     "https://i.imgur.com/vc4GR10.png to"
                 )
+            ],
+            "expected_xml_contains": [
+                (
+                    '<file file-type="figure">'
+                    "<upload_file_nm>elife-45644-inf1.png</upload_file_nm>"
+                    "</file>"
+                    '<file file-type="figure">'
+                    "<upload_file_nm>elife-45644-inf2.jpg</upload_file_nm>"
+                    "</file></files>"
+                ),
+                (
+                    '<inline-graphic xlink:href="elife-45644-inf1.png"/>'
+                    '<inline-graphic xlink:href="elife-45644-inf2.jpg"/>'
+                ),
             ],
         },
         {
