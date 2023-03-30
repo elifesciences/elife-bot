@@ -532,6 +532,63 @@ class TestConvertHistoryEventTags(unittest.TestCase):
             self.logger.loginfo[2].startswith("Found abstract tag at index 2"),
         )
 
+    def test_convert_history_event_tags_edge_cases(self):
+        "edge cases for if a DOI or a URI is in the self-uri tag"
+        directory = TempDirectory()
+        xml_declaration = """<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD with MathML3 v1.2 20190208//EN"  "JATS-archivearticle1-mathml3.dtd">"""
+        xml_pub_history = """<pub-history>
+<event>
+<self-uri content-type="preprint" xlink:href="https://example.org/10.1101/2021.11.09.467796"/>   
+</event>
+<event>
+<self-uri content-type="reviewed-preprint" xlink:href="10.7554/eLife.1234567890.1"/>   
+</event>
+<event>
+<self-uri content-type="reviewed-preprint" xlink:href="https://doi.org/10.7554/eLife.1234567890.2"/>   
+</event>
+</pub-history>"""
+
+        xml_string = """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+<front>
+<article-meta>
+<related-article ext-link-type="doi" id="ra1" related-article-type="article-reference" xlink:href="10.7554/eLife.00666"/>
+%s
+<abstract>An abstract.</abstract>
+</article-meta>
+</front>
+</article>""" % (
+            xml_declaration,
+            xml_pub_history,
+        )
+
+        # in test output the tags will not be separated by whitespace
+        related_article_xml = (
+            '<related-article ext-link-type="doi" id="hra1" related-article-type="preprint" xlink:href="10.7554/eLife.1234567890.1"/>'
+            '<related-article ext-link-type="doi" id="hra2" related-article-type="preprint" xlink:href="10.7554/eLife.1234567890.2"/>'
+        )
+
+        expected = """%s<article xmlns:xlink="http://www.w3.org/1999/xlink">
+<front>
+<article-meta>
+<related-article ext-link-type="doi" id="ra1" related-article-type="article-reference" xlink:href="10.7554/eLife.00666"/>
+%s
+%s<abstract>An abstract.</abstract>
+</article-meta>
+</front>
+</article>""" % (
+            xml_declaration,
+            xml_pub_history,
+            related_article_xml,
+        )
+
+        filename = "elife-99999-v1.xml"
+        test_file = os.path.join(directory.path, filename)
+        with open(test_file, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        article_processing.convert_history_event_tags(test_file, self.logger)
+        with open(test_file, "r", encoding="utf-8") as open_file:
+            self.assertEqual(open_file.read(), expected)
+
 
 class TestRemoveVersionDoiTag(unittest.TestCase):
     def setUp(self):
