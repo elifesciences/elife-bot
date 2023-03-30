@@ -364,6 +364,12 @@ def convert_history_event_tags(xml_file, logger):
                     "reviewed-preprint",
                 ] and self_uri_tag.get("{http://www.w3.org/1999/xlink}href"):
                     # add a related-article tag
+                    doi_value = utils.doi_uri_to_doi(
+                        self_uri_tag.get("{http://www.w3.org/1999/xlink}href")
+                    )
+                    if "http://" in doi_value or "https://" in doi_value:
+                        # the value is not a DOI, do not add a related-article tag for it
+                        continue
                     logger.info(
                         "Adding a related-article tag for event self-uri %s"
                         % self_uri_tag.get("{http://www.w3.org/1999/xlink}href")
@@ -373,10 +379,7 @@ def convert_history_event_tags(xml_file, logger):
                     related_article_tag.set("id", "hra%s" % event_index)
                     related_article_tag.set("related-article-type", "preprint")
                     related_article_tag.set(
-                        "{http://www.w3.org/1999/xlink}href",
-                        utils.doi_uri_to_doi(
-                            self_uri_tag.get("{http://www.w3.org/1999/xlink}href")
-                        ),
+                        "{http://www.w3.org/1999/xlink}href", doi_value
                     )
                     # find the index of the abstract tag for where to insert the tag
                     abstract_tag_index = 0
