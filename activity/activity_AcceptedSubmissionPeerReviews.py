@@ -125,6 +125,9 @@ class activity_AcceptedSubmissionPeerReviews(Activity):
         xml_root = cleaner.add_sub_article_xml(docmap_string, xml_file_path)
         self.statuses["xml_root"] = True
 
+        # remove ext-link tag if it wraps an inline-graphic tag
+        cleaner.clean_inline_graphic_tags(xml_root)
+
         # write the XML root to disk
         cleaner.write_xml_file(xml_root, xml_file_path, input_filename)
 
