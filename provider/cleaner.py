@@ -297,6 +297,26 @@ def add_sub_article_xml(docmap_string, article_xml):
     return sub_article.add_sub_article_xml(docmap_string, article_xml)
 
 
+def clean_inline_graphic_tags(root):
+    "remove ext-link tags if they wrap an inline-graphic tag"
+    for parent_tag in root.findall(".//ext-link/inline-graphic/../.."):
+        # method is to move the child tags and text up a level, then ext-link tag can be removed
+        index_delta = 0
+        for index, tag in enumerate(parent_tag.findall("*")):
+            if tag.tag == "ext-link":
+                # move the child tags to the same place as the ext-link tag
+                child_tag = None
+                for child_tag in tag.findall("*"):
+                    parent_tag.insert(index + index_delta, child_tag)
+                    # because removing a tag alters the tag index, keep track of the index changes
+                    index_delta += 1
+                # add the tail if present
+                if child_tag is not None and tag.tail:
+                    child_tag.tail = tag.tail
+                # finish up by removing the ext-link tag
+                parent_tag.remove(tag)
+
+
 def url_exists(url, logger):
     "check if URL exists and is successful status code"
     exists = False

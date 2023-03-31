@@ -533,6 +533,76 @@ class TestDocmapUrl(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
+class TestCleanInlineGraphicTags(unittest.TestCase):
+    def test_clean_simple(self):
+        "simple test example for clean_inline_graphic_tags"
+        xml_string = (
+            '<body xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<p>"
+            '<ext-link xlink:href="https://example.org/">'
+            '<inline-graphic xlink:href="https://example.org/" />'
+            "</ext-link>"
+            "</p>"
+            "</body>"
+        )
+        root = ElementTree.fromstring(xml_string)
+        expected = (
+            '<body xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<p>"
+            '<inline-graphic xlink:href="https://example.org/" />'
+            "</p>"
+            "</body>"
+        )
+        cleaner.clean_inline_graphic_tags(root)
+        self.assertEqual(ElementTree.tostring(root).decode("utf8"), expected)
+
+    def test_clean_multiple(self):
+        "test cleaning multiple inline-graphic tags plus a tag tail value"
+        xml_string = (
+            '<body xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<p><bold>A</bold> couple "
+            '<ext-link xlink:href="https://example.org/">'
+            '<inline-graphic xlink:href="https://example.org/1" /> and '
+            "<italic>also</italic> "
+            '<inline-graphic xlink:href="https://example.org/2" />'
+            "</ext-link> inline graphics."
+            '<ext-link xlink:href="https://example.org/another">'
+            '<inline-graphic xlink:href="https://example.org/another" />'
+            "</ext-link>"
+            "</p>"
+            "</body>"
+        )
+        root = ElementTree.fromstring(xml_string)
+        expected = (
+            '<body xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<p><bold>A</bold> couple "
+            '<inline-graphic xlink:href="https://example.org/1" /> and '
+            "<italic>also</italic> "
+            '<inline-graphic xlink:href="https://example.org/2" />'
+            " inline graphics."
+            '<inline-graphic xlink:href="https://example.org/another" />'
+            "</p>"
+            "</body>"
+        )
+        cleaner.clean_inline_graphic_tags(root)
+        self.assertEqual(ElementTree.tostring(root).decode("utf8"), expected)
+
+    def test_clean_no_changes(self):
+        "test if the ext-link tag is not a parent of the inline-graphic tag"
+        xml_string = (
+            '<body xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<p>"
+            '<ext-link xlink:href="https://example.org/" />'
+            '<inline-graphic xlink:href="https://example.org/" />'
+            "</p>"
+            "</body>"
+        )
+        root = ElementTree.fromstring(xml_string)
+        expected = xml_string
+        cleaner.clean_inline_graphic_tags(root)
+        self.assertEqual(ElementTree.tostring(root).decode("utf8"), expected)
+
+
 class TestUrlExists(unittest.TestCase):
     def setUp(self):
         self.logger = FakeLogger()
