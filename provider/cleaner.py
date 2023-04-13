@@ -7,6 +7,7 @@ from xml.etree.ElementTree import SubElement
 import requests
 from elifecleaner import (
     LOGGER,
+    assessment_terms,
     configure_logging,
     parse,
     prc,
@@ -293,7 +294,10 @@ def docmap_url(settings, doi):
     return docmap_url_pattern.format(doi=doi) if docmap_url_pattern else None
 
 
-def add_sub_article_xml(docmap_string, article_xml):
+def add_sub_article_xml(docmap_string, article_xml, terms_yaml=None):
+    if terms_yaml:
+        # set the path to the YAML file containing assessment terms data
+        assessment_terms.ASSESSMENT_TERMS_YAML = terms_yaml
     return sub_article.add_sub_article_xml(docmap_string, article_xml)
 
 
