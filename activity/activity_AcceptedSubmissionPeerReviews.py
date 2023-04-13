@@ -122,7 +122,8 @@ class activity_AcceptedSubmissionPeerReviews(Activity):
             "%s, generating xml_root including sub-article tags for input_filename: %s"
             % (self.name, input_filename)
         )
-        xml_root = cleaner.add_sub_article_xml(docmap_string, xml_file_path)
+        terms_yaml = getattr(self.settings, "assessment_terms_yaml", None)
+        xml_root = cleaner.add_sub_article_xml(docmap_string, xml_file_path, terms_yaml)
         self.statuses["xml_root"] = True
 
         # remove ext-link tag if it wraps an inline-graphic tag

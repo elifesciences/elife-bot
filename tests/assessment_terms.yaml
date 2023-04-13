@@ -1,0 +1,68 @@
+Compelling:
+  group:
+    evidence-strength
+  terms:
+    - compelling
+
+Convincing:
+  group:
+    evidence-strength
+  terms:
+    - convincing
+    - convincingly
+
+Exceptional:
+  group:
+    evidence-strength
+  terms:
+    - exceptional
+
+Fundamental:
+  group:
+    claim-importance
+  terms:
+    - fundamental
+
+Important:
+  group:
+    claim-importance
+  terms:
+    - important
+
+Inadequate:
+  group:
+    evidence-strength
+  terms:
+    - inadequate
+    - inadequately
+
+Incomplete:
+  group:
+    evidence-strength
+  terms:
+    - incomplete
+    - incompletely
+
+Landmark:
+  group:
+    claim-importance
+  terms:
+    - landmark
+
+Solid:
+  group:
+    evidence-strength
+  terms:
+    - solid
+
+Useful:
+  group:
+    claim-importance
+  terms:
+    - useful
+
+Valuable:
+  group:
+    claim-importance
+  terms:
+    - valuable
