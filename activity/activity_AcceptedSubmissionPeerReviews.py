@@ -96,15 +96,8 @@ class activity_AcceptedSubmissionPeerReviews(Activity):
             self.logger,
         )
 
-        # get the preprint URL from the session
-        preprint_url = session.get_value("preprint_url")
-
-        # get the DOI from the URL
-        preprint_doi = utils.doi_uri_to_doi(preprint_url)
-        self.logger.info("%s, preprint_doi: %s" % (self.name, preprint_doi))
-
         # generate docmap URL
-        docmap_url = cleaner.docmap_url(self.settings, preprint_doi)
+        docmap_url = cleaner.docmap_url(self.settings, session.get_value("article_id"))
         self.logger.info("%s, docmap_url: %s" % (self.name, docmap_url))
 
         # get docmap json

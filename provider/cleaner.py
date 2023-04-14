@@ -42,7 +42,7 @@ SCIETY_DOCMAP_URL_PATTERN = (
 )
 
 # March 2023 for testing an article which appears in Sciety docmaps but not in Data Hub docmaps
-SCIETY_TEST_PREPRINT_DOI_LIST = ["10.1101/2021.06.02.446694"]
+SCIETY_TEST_PREPRINT_DICT = {"70493": "10.1101/2021.06.02.446694"}
 
 REQUESTS_TIMEOUT = 10
 
@@ -284,14 +284,17 @@ def add_file_tags_to_xml(xml_file_path, file_detail_list, identifier):
     write_xml_file(root, xml_file_path, identifier)
 
 
-def docmap_url(settings, doi):
-    "URL of the preprint docmap at Sciety"
+def docmap_url(settings, article_id):
+    "URL of the preprint docmap endpoint"
     # temporarily use a different docmap for a test test article
-    if doi in SCIETY_TEST_PREPRINT_DOI_LIST:
-        docmap_url_pattern = SCIETY_DOCMAP_URL_PATTERN
-    else:
-        docmap_url_pattern = getattr(settings, "docmap_url_pattern", None)
-    return docmap_url_pattern.format(doi=doi) if docmap_url_pattern else None
+    if article_id in SCIETY_TEST_PREPRINT_DICT.keys():
+        return SCIETY_DOCMAP_URL_PATTERN.format(
+            doi=SCIETY_TEST_PREPRINT_DICT.get(article_id)
+        )
+    docmap_url_pattern = getattr(settings, "docmap_url_pattern", None)
+    return (
+        docmap_url_pattern.format(article_id=article_id) if docmap_url_pattern else None
+    )
 
 
 def add_sub_article_xml(docmap_string, article_xml, terms_yaml=None):

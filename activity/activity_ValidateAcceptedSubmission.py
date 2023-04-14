@@ -161,11 +161,10 @@ class activity_ValidateAcceptedSubmission(Activity):
                 self.logger.info("%s, %s" % (self.name, log_message))
                 error_email_body += "%s\n" % log_message
             else:
-                # get the DOI from the URL
-                preprint_doi = utils.doi_uri_to_doi(preprint_url)
-
                 # check docmap URL exists, if fails then fail the workflow
-                docmap_url = cleaner.docmap_url(self.settings, preprint_doi)
+                docmap_url = cleaner.docmap_url(
+                    self.settings, session.get_value("article_id")
+                )
                 if not cleaner.url_exists(docmap_url, self.logger):
                     log_message = (
                         "Request for a docmap was not successful for URL %s"
