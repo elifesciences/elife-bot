@@ -1,0 +1,438 @@
+{
+  "@context": "https://w3id.org/docmaps/context.jsonld",
+  "type": "docmap",
+  "id": "https://data-hub-api.elifesciences.org/enhanced-preprints/docmaps/v1/by-publisher/elife/get-by-manuscript-id?manuscript_id=85111",
+  "created": "2022-11-28T11:30:05+00:00",
+  "updated": "2022-11-28T11:30:05+00:00",
+  "publisher": {
+    "account": {
+      "id": "https://sciety.org/groups/elife",
+      "service": "https://sciety.org"
+    },
+    "homepage": "https://elifesciences.org/",
+    "id": "https://elifesciences.org/",
+    "logo": "https://sciety.org/static/groups/elife--b560187e-f2fb-4ff9-a861-a204f3fc0fb0.png",
+    "name": "eLife"
+  },
+  "first-step": "_:b0",
+  "steps": {
+    "_:b0": {
+      "actions": [
+        {
+          "participants": [],
+          "outputs": [
+            {
+              "type": "preprint",
+              "doi": "10.1101/2022.11.08.515698",
+              "url": "https://www.biorxiv.org/content/10.1101/2022.11.08.515698v2",
+              "published": "2022-11-22",
+              "versionIdentifier": "2",
+              "_tdmPath": "s3://transfers-elife/biorxiv_Current_Content/November_2022/23_Nov_22_Batch_1444/b0f4d90b-6c92-1014-9a2e-aae015926ab4.meca"
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "item": {
+            "type": "preprint",
+            "doi": "10.1101/2022.11.08.515698",
+            "versionIdentifier": "2"
+          },
+          "status": "manuscript-published"
+        }
+      ],
+      "inputs": [],
+      "next-step": "_:b1"
+    },
+    "_:b1": {
+      "actions": [
+        {
+          "participants": [],
+          "outputs": [
+            {
+              "identifier": "85111",
+              "versionIdentifier": "1",
+              "type": "preprint",
+              "doi": "10.7554/eLife.85111.1"
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "item": {
+            "type": "preprint",
+            "doi": "10.1101/2022.11.08.515698",
+            "versionIdentifier": "2"
+          },
+          "status": "under-review",
+          "happened": "2022-11-28T11:30:05+00:00"
+        },
+        {
+          "item": {
+            "type": "preprint",
+            "doi": "10.7554/eLife.85111.1",
+            "versionIdentifier": "1"
+          },
+          "status": "draft"
+        }
+      ],
+      "inputs": [
+        {
+          "type": "preprint",
+          "doi": "10.1101/2022.11.08.515698",
+          "url": "https://www.biorxiv.org/content/10.1101/2022.11.08.515698v2",
+          "versionIdentifier": "2"
+        }
+      ],
+      "next-step": "_:b2",
+      "previous-step": "_:b0"
+    },
+    "_:b2": {
+      "actions": [
+        {
+          "participants": [],
+          "outputs": [
+            {
+              "type": "reply",
+              "published": "2023-01-23T14:34:42.571948+00:00",
+              "doi": "10.7554/eLife.85111.1.sa1",
+              "url": "https://doi.org/10.7554/eLife.85111.1.sa1",
+              "content": [
+                {
+                  "type": "web-page",
+                  "url": "https://hypothes.is/a/EzFzxJsrEe28DyfQK4aPhg"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/articles/activity/10.1101/2022.11.08.515698#hypothesis:EzFzxJsrEe28DyfQK4aPhg"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/evaluations/hypothesis:EzFzxJsrEe28DyfQK4aPhg/content"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "participants": [
+            {
+              "actor": {
+                "name": "anonymous",
+                "type": "person"
+              },
+              "role": "peer-reviewer"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "review-article",
+              "published": "2023-01-23T14:34:43.676466+00:00",
+              "doi": "10.7554/eLife.85111.1.sa2",
+              "url": "https://doi.org/10.7554/eLife.85111.1.sa2",
+              "content": [
+                {
+                  "type": "web-page",
+                  "url": "https://hypothes.is/a/E9MOvpsrEe2w6nds1t6xxQ"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/articles/activity/10.1101/2022.11.08.515698#hypothesis:E9MOvpsrEe2w6nds1t6xxQ"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/evaluations/hypothesis:E9MOvpsrEe2w6nds1t6xxQ/content"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "participants": [
+            {
+              "actor": {
+                "name": "anonymous",
+                "type": "person"
+              },
+              "role": "peer-reviewer"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "review-article",
+              "published": "2023-01-23T14:34:44.369019+00:00",
+              "doi": "10.7554/eLife.85111.1.sa3",
+              "url": "https://doi.org/10.7554/eLife.85111.1.sa3",
+              "content": [
+                {
+                  "type": "web-page",
+                  "url": "https://hypothes.is/a/FD5EmpsrEe28RaOWOszMEw"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/articles/activity/10.1101/2022.11.08.515698#hypothesis:FD5EmpsrEe28RaOWOszMEw"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/evaluations/hypothesis:FD5EmpsrEe28RaOWOszMEw/content"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "participants": [
+            {
+              "actor": {
+                "name": "Brice Bathellier",
+                "type": "person",
+                "_relatesToOrganization": "CNRS, France"
+              },
+              "role": "editor"
+            },
+            {
+              "actor": {
+                "name": "Kate Wassum",
+                "type": "person",
+                "_relatesToOrganization": "University of California, Los Angeles, United States of America"
+              },
+              "role": "senior-editor"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "evaluation-summary",
+              "published": "2023-01-23T14:34:45.299882+00:00",
+              "doi": "10.7554/eLife.85111.1.sa4",
+              "url": "https://doi.org/10.7554/eLife.85111.1.sa4",
+              "content": [
+                {
+                  "type": "web-page",
+                  "url": "https://hypothes.is/a/FMwbnpsrEe2mVPtbQf2X2w"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/articles/activity/10.1101/2022.11.08.515698#hypothesis:FMwbnpsrEe2mVPtbQf2X2w"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/evaluations/hypothesis:FMwbnpsrEe2mVPtbQf2X2w/content"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "item": {
+            "type": "preprint",
+            "doi": "10.1101/2022.11.08.515698",
+            "versionIdentifier": "2"
+          },
+          "status": "peer-reviewed"
+        }
+      ],
+      "inputs": [
+        {
+          "type": "preprint",
+          "doi": "10.1101/2022.11.08.515698",
+          "url": "https://www.biorxiv.org/content/10.1101/2022.11.08.515698v2",
+          "versionIdentifier": "2"
+        }
+      ],
+      "next-step": "_:b3",
+      "previous-step": "_:b1"
+    },
+    "_:b3": {
+      "actions": [
+        {
+          "participants": [],
+          "outputs": [
+            {
+              "type": "preprint",
+              "doi": "10.1101/2022.11.08.515698",
+              "url": "https://www.biorxiv.org/content/10.1101/2022.11.08.515698v3",
+              "published": "2023-03-20",
+              "versionIdentifier": "3",
+              "_tdmPath": "s3://transfers-elife/biorxiv_Current_Content/March_2023/21_Mar_23_Batch_1557/e7c056c2-6c16-1014-98e5-b5f7d8af8b03.meca"
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "item": {
+            "type": "preprint",
+            "doi": "10.1101/2022.11.08.515698",
+            "versionIdentifier": "3"
+          },
+          "status": "manuscript-published"
+        }
+      ],
+      "inputs": [],
+      "next-step": "_:b4",
+      "previous-step": "_:b2"
+    },
+    "_:b4": {
+      "actions": [
+        {
+          "participants": [],
+          "outputs": [
+            {
+              "type": "preprint",
+              "identifier": "85111",
+              "versionIdentifier": "2",
+              "doi": "10.7554/eLife.85111.2"
+            }
+          ]
+        },
+        {
+          "participants": [
+            {
+              "actor": {
+                "name": "anonymous",
+                "type": "person"
+              },
+              "role": "peer-reviewer"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "review-article",
+              "published": "2023-04-14T13:42:24.130023+00:00",
+              "doi": "10.7554/eLife.85111.2.sa1",
+              "url": "https://doi.org/10.7554/eLife.85111.2.sa1",
+              "content": [
+                {
+                  "type": "web-page",
+                  "url": "https://hypothes.is/a/L_wlTNrKEe25pKupBGTeqA"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/articles/activity/10.1101/2022.11.08.515698#hypothesis:L_wlTNrKEe25pKupBGTeqA"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/evaluations/hypothesis:L_wlTNrKEe25pKupBGTeqA/content"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "participants": [
+            {
+              "actor": {
+                "name": "anonymous",
+                "type": "person"
+              },
+              "role": "peer-reviewer"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "review-article",
+              "published": "2023-04-14T13:42:24.975810+00:00",
+              "doi": "10.7554/eLife.85111.2.sa2",
+              "url": "https://doi.org/10.7554/eLife.85111.2.sa2",
+              "content": [
+                {
+                  "type": "web-page",
+                  "url": "https://hypothes.is/a/MHuA2trKEe2NmT9GM4xGlw"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/articles/activity/10.1101/2022.11.08.515698#hypothesis:MHuA2trKEe2NmT9GM4xGlw"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/evaluations/hypothesis:MHuA2trKEe2NmT9GM4xGlw/content"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "participants": [
+            {
+              "actor": {
+                "name": "Brice Bathellier",
+                "type": "person",
+                "_relatesToOrganization": "CNRS, France"
+              },
+              "role": "editor"
+            },
+            {
+              "actor": {
+                "name": "Kate Wassum",
+                "type": "person",
+                "_relatesToOrganization": "University of California, Los Angeles, United States of America"
+              },
+              "role": "senior-editor"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "evaluation-summary",
+              "published": "2023-04-14T13:42:25.781585+00:00",
+              "doi": "10.7554/eLife.85111.2.sa3",
+              "url": "https://doi.org/10.7554/eLife.85111.2.sa3",
+              "content": [
+                {
+                  "type": "web-page",
+                  "url": "https://hypothes.is/a/MPYp6NrKEe2anmsrxlBg-w"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/articles/activity/10.1101/2022.11.08.515698#hypothesis:MPYp6NrKEe2anmsrxlBg-w"
+                },
+                {
+                  "type": "web-page",
+                  "url": "https://sciety.org/evaluations/hypothesis:MPYp6NrKEe2anmsrxlBg-w/content"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "item": {
+            "type": "preprint",
+            "doi": "10.7554/eLife.85111.2",
+            "versionIdentifier": "2"
+          },
+          "status": "revised"
+        }
+      ],
+      "inputs": [
+        {
+          "type": "preprint",
+          "doi": "10.1101/2022.11.08.515698",
+          "url": "https://www.biorxiv.org/content/10.1101/2022.11.08.515698v3",
+          "versionIdentifier": "3"
+        },
+        {
+          "type": "author-response",
+          "doi": "10.7554/eLife.85111.1.sa1"
+        },
+        {
+          "type": "review-article",
+          "doi": "10.7554/eLife.85111.1.sa2"
+        },
+        {
+          "type": "review-article",
+          "doi": "10.7554/eLife.85111.1.sa3"
+        },
+        {
+          "type": "evaluation-summary",
+          "doi": "10.7554/eLife.85111.1.sa4"
+        }
+      ],
+      "previous-step": "_:b3"
+    }
+  }
+}
