@@ -125,7 +125,7 @@ class activity_AcceptedSubmissionPeerReviewImages(Activity):
         if approved_hrefs and external_hrefs != approved_hrefs:
             not_approved_hrefs = sorted(set(external_hrefs) - set(approved_hrefs))
             for href in [href for href in external_hrefs if href in not_approved_hrefs]:
-                cleaner.LOGGER.info(
+                cleaner.LOGGER.warning(
                     "%s peer review image href was not approved for downloading", href
                 )
 
@@ -142,7 +142,7 @@ class activity_AcceptedSubmissionPeerReviewImages(Activity):
             for href in [
                 href for href in approved_hrefs if href in not_downloaded_hrefs
             ]:
-                cleaner.LOGGER.info(
+                cleaner.LOGGER.warning(
                     "%s peer review image href was not downloaded successfully", href
                 )
 
