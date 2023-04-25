@@ -520,7 +520,10 @@ class TestDocmapUrl(unittest.TestCase):
     def test_docmap_url(self):
         article_id = "1234567890"
         result = cleaner.docmap_url(settings_mock, article_id)
-        expected = "https://example.org/path/get-by-manuscript-id?manuscript_id=%s" % article_id
+        expected = (
+            "https://example.org/path/get-by-manuscript-id?manuscript_id=%s"
+            % article_id
+        )
         self.assertEqual(result, expected)
 
     def test_docmap_url_no_settings(self):
@@ -758,7 +761,8 @@ class TestProductionComments(unittest.TestCase):
             "2022-06-29 13:10:15,942 INFO elifecleaner:video:all_terms_map: found duplicate video term values\n"
             "2022-06-29 13:10:15,942 INFO elifecleaner:video:renumber: duplicate values: ['fig1video2']\n"
             "2022-06-29 13:10:15,942 INFO elifecleaner:video:renumber_term_map: replacing number 2 with 3 for term Supplementary Video 2.mp4\n"
-            "2023-03-20 16:36:08,542 WARNING elifecleaner:activity_AcceptedSubmissionPeerReviewImages:do_activity: https://example.org/fake.jpg peer review image href was not approved for downloading"
+            "2023-03-20 16:36:08,542 WARNING elifecleaner:activity_AcceptedSubmissionPeerReviewImages:do_activity: https://example.org/fake.jpg peer review image href was not approved for downloading\n"
+            "2023-04-21 17:10:15,942 WARNING elifecleaner:activity_AcceptedSubmissionVersionDoi:do_activity: 22-02-2022-CR-eLife-78088.zip A version DOI was not added to the XML\n"
         )
 
     def test_production_comments(self):
@@ -774,6 +778,7 @@ class TestProductionComments(unittest.TestCase):
             "duplicate values: ['fig1video2']",
             "replacing number 2 with 3 for term Supplementary Video 2.mp4",
             "https://example.org/fake.jpg peer review image href was not approved for downloading",
+            "22-02-2022-CR-eLife-78088.zip A version DOI was not added to the XML",
         ]
 
         comments = cleaner.production_comments(self.cleaner_log)

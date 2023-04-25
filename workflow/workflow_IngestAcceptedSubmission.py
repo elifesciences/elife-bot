@@ -50,6 +50,7 @@ class workflow_IngestAcceptedSubmission(Workflow):
                 define_workflow_step_short("DepositAcceptedSubmissionVideos", data),
                 define_workflow_step_short("AnnotateAcceptedSubmissionVideos", data),
                 define_workflow_step_medium("TransformAcceptedSubmission", data),
+                define_workflow_step_short("AcceptedSubmissionVersionDoi", data),
                 define_workflow_step_medium("AcceptedSubmissionPeerReviews", data),
                 define_workflow_step_medium("AcceptedSubmissionPeerReviewImages", data),
                 define_workflow_step_short("AddCommentsToAcceptedSubmissionXml", data),

@@ -378,6 +378,18 @@ def get_docmap_by_account_id(url, account_id):
                 return json.dumps(list_item)
 
 
+def version_doi_from_docmap(docmap_string, input_filename):
+    return prc.version_doi_from_docmap(docmap_string, input_filename)
+
+
+def next_version_doi(version_doi, input_filename):
+    return prc.next_version_doi(version_doi, input_filename)
+
+
+def add_version_doi(xml_root, version_doi, input_filename):
+    return prc.add_version_doi(xml_root, version_doi, input_filename)
+
+
 def xml_rewrite_file_tags(xml_file_path, file_transformations, identifier):
     transform.xml_rewrite_file_tags(xml_file_path, file_transformations, identifier)
 
@@ -538,6 +550,20 @@ def production_comments(log_content):
         message_content = message_parts.group(2)
         if message_type in ["do_activity"]:
             comments.append(message_content)
+    # add messages from adding version DOI
+    version_doi_match_pattern = re.compile(
+        r"WARNING elifecleaner:activity_AcceptedSubmissionVersionDoi:(.*?): (.*)"
+    )
+    for message in log_messages:
+        message_parts = version_doi_match_pattern.search(message)
+        if not message_parts:
+            continue
+        message_type = message_parts.group(1)
+        message_content = message_parts.group(2)
+        if message_type in [
+            "do_activity",
+        ]:
+            comments.append(message_content)
 
     return comments
 
@@ -551,5 +577,6 @@ def production_comments_for_xml(log_content):
         if "WARNING elifecleaner:parse:check_art_file:" not in line
         and "INFO elifecleaner:parse:parse_article_xml:" not in line
         and "INFO elifecleaner:video:" not in line
+        and "WARNING elifecleaner:activity_AcceptedSubmissionVersionDoi:" not in line
     ]
     return production_comments("\n".join(filtered_messages))
