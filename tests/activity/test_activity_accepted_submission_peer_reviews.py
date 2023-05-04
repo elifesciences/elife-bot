@@ -91,6 +91,28 @@ class TestAcceptedSubmissionPeerReviews(unittest.TestCase):
             test_activity_data.accepted_session_example.get("expanded_folder"),
             zip_file_path,
         )
+
+        # add version DOI article-id to the XML file
+        version_doi = "10.7554/eLife.45644.2"
+        version_doi_xml = (
+            '<article-id pub-id-type="doi" specific-use="version">'
+            "%s</article-id>" % version_doi
+        )
+        sub_folder = test_data.get("filename").rsplit(".", 1)[0]
+        xml_path = os.path.join(
+            directory.path,
+            self.session.get_value("expanded_folder"),
+            sub_folder,
+            "%s.xml" % sub_folder,
+        )
+        with open(xml_path, "r", encoding="utf-8") as open_file:
+            xml_string = open_file.read()
+        with open(xml_path, "w", encoding="utf-8") as open_file:
+            xml_string = xml_string.replace(
+                "<article-meta>", "<article-meta>%s" % version_doi_xml
+            )
+            open_file.write(xml_string)
+
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, resources, dest_folder=directory.path
         )
@@ -117,6 +139,12 @@ class TestAcceptedSubmissionPeerReviews(unittest.TestCase):
             xml_content = open_file.read()
         # assert found number of sub-article tags in the XML
         self.assertTrue(xml_content.count("<sub-article") == 5)
+
+        # assert peer review DOI value
+        self.assertTrue(
+            '<article-id pub-id-type="doi">%s.sa0</article-id>' % version_doi
+            in xml_content
+        )
 
         self.assertEqual(
             self.activity.statuses.get("docmap_string"),
