@@ -24,6 +24,16 @@ def elifecrossref_config(settings):
     )
 
 
+def elifecrossref_preprint_config(settings):
+    "parse the preprint config values from the elifecrossref config"
+    return parse_raw_config(
+        raw_config(
+            settings.elifecrossref_preprint_config_section,
+            settings.elifecrossref_config_file,
+        )
+    )
+
+
 def parse_article_xml(article_xml_files, tmp_dir=None):
     """Given a list of article XML files, parse into objects"""
     override_tmp_dir(tmp_dir)

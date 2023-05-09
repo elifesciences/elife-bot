@@ -93,6 +93,7 @@ no_download_extensions = "tif"
 
 elifecrossref_config_file = "tests/activity/crossref.cfg"
 elifecrossref_config_section = "elife"
+elifecrossref_preprint_config_section = "elife_preprint"
 
 jatsgenerator_config_file = "tests/activity/jatsgenerator.cfg"
 jatsgenerator_config_section = "elife"

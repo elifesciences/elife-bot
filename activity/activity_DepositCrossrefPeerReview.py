@@ -85,6 +85,7 @@ class activity_DepositCrossrefPeerReview(Activity):
         article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
 
         crossref_config = crossref.elifecrossref_config(self.settings)
+        crossref_preprint_config = crossref.elifecrossref_preprint_config(self.settings)
 
         article_object_map = self.get_article_objects(article_xml_files)
 
@@ -95,10 +96,30 @@ class activity_DepositCrossrefPeerReview(Activity):
         # use the version_doi as the related article to each review article
         crossref.set_version_doi_on_review_articles(generate_article_object_map)
 
-        # Generate crossref XML
+        # split up based on journal article or preprint article
+        journal_article_object_map = OrderedDict()
+        preprint_article_object_map = OrderedDict()
+        for xml_file, article in list(generate_article_object_map.items()):
+            if article.article_type == "preprint":
+                preprint_article_object_map[xml_file] = article
+            else:
+                journal_article_object_map[xml_file] = article
+
+        # Generate crossref XML for journal articles
         self.statuses["generate"] = crossref.generate_crossref_xml_to_disk(
-            generate_article_object_map,
+            journal_article_object_map,
             crossref_config,
+            self.good_xml_files,
+            self.bad_xml_files,
+            submission_type="peer_review",
+            pretty=True,
+            indent="    ",
+        )
+
+        # Generate crossref XML for preprint articles using a different config
+        self.statuses["generate"] = crossref.generate_crossref_xml_to_disk(
+            preprint_article_object_map,
+            crossref_preprint_config,
             self.good_xml_files,
             self.bad_xml_files,
             submission_type="peer_review",
