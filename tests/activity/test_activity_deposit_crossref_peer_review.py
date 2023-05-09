@@ -113,6 +113,38 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 '<institution_id type="ror">https://ror.org/01an7q238</institution_id>',
             ],
         },
+        {
+            "comment": "Preprint article",
+            "article_xml_filenames": ["elife-preprint-84364-v2.xml"],
+            "post_status_code": 200,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": True,
+            "expected_outbox_status": True,
+            "expected_email_status": True,
+            "expected_activity_status": True,
+            "expected_file_count": 1,
+            "expected_crossref_xml_contains": [
+                "<doi_batch_id>elife-crossref-preprint-peer_review-84364-",
+                "<ai:license_ref>http://creativecommons.org/licenses/by/4.0/</ai:license_ref>",
+                "<title>eLife assessment: Opto-RhoGEFs: an optimized optogenetic toolbox to reversibly control Rho GTPase activity on a global to subcellular scale, enabling precise control over vascular endothelial barrier strength</title>",
+                "<title>Reviewer #1 (Public Review): Opto-RhoGEFs: an optimized optogenetic toolbox to reversibly control Rho GTPase activity on a global to subcellular scale, enabling precise control over vascular endothelial barrier strength</title>",
+                "<title>Reviewer #2 (Public Review): Opto-RhoGEFs: an optimized optogenetic toolbox to reversibly control Rho GTPase activity on a global to subcellular scale, enabling precise control over vascular endothelial barrier strength</title>",
+                "<title>Reviewer #3 (Public Review): Opto-RhoGEFs: an optimized optogenetic toolbox to reversibly control Rho GTPase activity on a global to subcellular scale, enabling precise control over vascular endothelial barrier strength</title>",
+                "<title>Author response: Opto-RhoGEFs: an optimized optogenetic toolbox to reversibly control Rho GTPase activity on a global to subcellular scale, enabling precise control over vascular endothelial barrier strength</title>",
+                (
+                    '<rel:inter_work_relation identifier-type="doi" relationship-type="isReviewOf">'
+                    + "10.7554/eLife.84364.2</rel:inter_work_relation>"
+                ),
+                '<anonymous contributor_role="author" sequence="first"/>',
+                '<peer_review stage="pre-publication" type="editor-report">',
+                '<peer_review stage="pre-publication" type="referee-report">',
+                '<peer_review stage="pre-publication" type="author-comment">',
+                "<doi>10.7554/eLife.84364.2.sa0</doi>",
+                "<resource>https://elifesciences.org/reviewed-preprints/84364/reviews#sa0</resource>",
+            ],
+        },
     )
     def test_do_activity(
         self,
@@ -172,7 +204,9 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
             )
         # Count crossref XML file in the tmp directory
         file_count = len(os.listdir(self.tmp_dir()))
-        self.assertEqual(file_count, test_data.get("expected_file_count"))
+        self.assertEqual(
+            file_count, test_data.get("expected_file_count"), test_data.get("comment")
+        )
 
         if file_count > 0 and test_data.get("expected_crossref_xml_contains"):
             # Open the first crossref XML and check some of its contents
