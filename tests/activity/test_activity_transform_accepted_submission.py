@@ -295,7 +295,17 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             )
         )
         self.assertTrue(
-            log_infos[3].endswith(("changing elocation-id value e45644 to RP45644"))
+            log_infos[3].endswith(("replacing journal-title tag text to eLife"))
+        )
+        self.assertTrue(
+            log_infos[4].endswith(
+                (
+                    "replacing publisher-name tag text to eLife Sciences Publications, Ltd"
+                )
+            )
+        )
+        self.assertTrue(
+            log_infos[5].endswith(("changing elocation-id value e45644 to RP45644"))
         )
 
         # check the zipped code file name is in the XML file
