@@ -194,7 +194,13 @@ class TestTransformPrc(unittest.TestCase):
             "<front>"
             "<journal-meta>"
             '<journal-id journal-id-type="publisher-id">foo</journal-id>'
+            "<journal-title-group>"
+            "<journal-title>eLife Reviewed Preprints </journal-title>"
+            "</journal-title-group>"
             "<issn>2050-084X</issn>"
+            "<publisher>"
+            "<publisher-name>elife-rp Sciences Publications, Ltd</publisher-name>"
+            "</publisher>"
             "</journal-meta>"
             "<article-meta>"
             "<elocation-id>e1234567890</elocation-id>"
@@ -212,6 +218,11 @@ class TestTransformPrc(unittest.TestCase):
             xml_contents = open_file.read()
         self.assertTrue(
             '<journal-id journal-id-type="publisher-id">eLife</journal-id>'
+            in xml_contents
+        )
+        self.assertTrue("<journal-title>eLife</journal-title>" in xml_contents)
+        self.assertTrue(
+            "<publisher-name>eLife Sciences Publications, Ltd</publisher-name>"
             in xml_contents
         )
         self.assertTrue("<elocation-id>RP1234567890</elocation-id>" in xml_contents)

@@ -151,6 +151,8 @@ def transform_prc(xml_file_path, identifier):
     # next, check the XML for the status
     root = parse_article_xml(xml_file_path)
     prc.transform_journal_id_tags(root, identifier)
+    prc.transform_journal_title_tag(root, identifier)
+    prc.transform_publisher_name_tag(root, identifier)
     prc.add_prc_custom_meta_tags(root, identifier)
     prc.transform_elocation_id(root, identifier=identifier)
     write_xml_file(root, xml_file_path, identifier)
