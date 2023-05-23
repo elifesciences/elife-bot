@@ -9,7 +9,7 @@ python_version = "3.8"
 [packages]
 boto3 = "~=1.20"
 arrow = "~=1.2"
-requests = "~=2.26"
+requests = "~=2.31"
 beautifulsoup4 = "~=4.10"
 lxml = "~=4.9"
 python-slugify = "~=5.0"
