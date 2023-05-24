@@ -60,6 +60,7 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
             "expected_docmap_string_status": True,
             "expected_hrefs_status": None,
             "expected_external_hrefs_status": None,
+            "expected_upload_xml_status": None,
             "expected_activity_log_contains": [
                 (
                     "AcceptedSubmissionPeerReviewImages, no inline-graphic tags in "
@@ -80,6 +81,7 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
             "expected_docmap_string_status": True,
             "expected_hrefs_status": True,
             "expected_external_hrefs_status": None,
+            "expected_upload_xml_status": None,
             "expected_activity_log_contains": [
                 (
                     "AcceptedSubmissionPeerReviewImages, no inline-graphic tags with "
@@ -102,6 +104,7 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
             "expected_docmap_string_status": True,
             "expected_hrefs_status": True,
             "expected_external_hrefs_status": True,
+            "expected_upload_xml_status": True,
             "expected_activity_log_contains": [
                 (
                     "AcceptedSubmissionPeerReviewImages, downloaded href "
@@ -139,6 +142,7 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
             "expected_docmap_string_status": True,
             "expected_hrefs_status": True,
             "expected_external_hrefs_status": True,
+            "expected_upload_xml_status": True,
             "expected_cleaner_log_contains": [
                 (
                     "https://example.org/fake.jpg peer review image href "
@@ -160,6 +164,7 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
             "expected_docmap_string_status": True,
             "expected_hrefs_status": True,
             "expected_external_hrefs_status": True,
+            "expected_upload_xml_status": True,
             "expected_bucket_upload_folder_contents": [
                 "30-01-2019-RA-eLife-45644.xml",
                 "elife-45644-inf1.png",
@@ -195,6 +200,7 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
             "expected_docmap_string_status": True,
             "expected_hrefs_status": True,
             "expected_external_hrefs_status": True,
+            "expected_upload_xml_status": None,
             "expected_bucket_upload_folder_contents": [],
             "expected_activity_log_contains": [
                 (
@@ -298,6 +304,12 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
             "failed in {comment}".format(comment=test_data.get("comment")),
         )
 
+        self.assertEqual(
+            self.activity.statuses.get("upload_xml"),
+            test_data.get("expected_upload_xml_status"),
+            "failed in {comment}".format(comment=test_data.get("comment")),
+        )
+
         # assertion on activity log contents
         if test_data.get("expected_activity_log_contains"):
             for fragment in test_data.get("expected_activity_log_contains"):
@@ -318,6 +330,14 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
                     fragment in log_contents,
                     "failed in {comment}".format(comment=test_data.get("comment")),
                 )
+
+        # assertion on the session cleaner log content
+        if test_data.get("expected_upload_xml_status"):
+            session_log = self.session.get_value("cleaner_log")
+            self.assertIsNotNone(
+                session_log,
+                "failed in {comment}".format(comment=test_data.get("comment")),
+            )
 
         # check output bucket folder contents
         if "expected_bucket_upload_folder_contents" in test_data:

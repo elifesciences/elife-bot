@@ -88,10 +88,10 @@ class TestRepairAcceptedSubmission(unittest.TestCase):
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         filename_used = input_data(test_data.get("filename")).get("file_name")
-        temp_dir_files = glob.glob(self.activity.directories.get("INPUT_DIR") + "/*/*")
+        temp_dir_files = glob.glob(self.activity.directories.get("TEMP_DIR") + "/*/*")
 
         xml_file_path = os.path.join(
-            self.activity.directories.get("INPUT_DIR"),
+            self.activity.directories.get("TEMP_DIR"),
             zip_file_base,
             "%s.xml" % zip_file_base,
         )
@@ -171,7 +171,7 @@ class TestRepairAcceptedSubmission(unittest.TestCase):
         zip_file = "%s.zip" % zip_file_base
         xml_file = "%s/%s.xml" % (zip_file_base, zip_file_base)
         xml_file_path = os.path.join(
-            self.activity.directories.get("INPUT_DIR"),
+            self.activity.directories.get("TEMP_DIR"),
             xml_file,
         )
         fake_session.return_value = FakeSession(

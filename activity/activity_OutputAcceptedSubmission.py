@@ -4,10 +4,10 @@ import shutil
 from provider import article_processing, cleaner
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from activity.objects import Activity
+from activity.objects import AcceptedBaseActivity
 
 
-class activity_OutputAcceptedSubmission(Activity):
+class activity_OutputAcceptedSubmission(AcceptedBaseActivity):
     "OutputAcceptedSubmission activity"
 
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
@@ -25,9 +25,6 @@ class activity_OutputAcceptedSubmission(Activity):
             "Download files from a bucket folder, zip them, "
             "and copy to the output bucket."
         )
-
-        # Track some values
-        self.input_file = None
 
         # Local directory settings
         self.directories = {
@@ -47,29 +44,17 @@ class activity_OutputAcceptedSubmission(Activity):
             "%s data: %s" % (self.name, json.dumps(data, sort_keys=True, indent=4))
         )
 
-        run = data["run"]
-        session = get_session(self.settings, data, run)
+        session = get_session(self.settings, data, data["run"])
+
+        expanded_folder, input_filename, article_id = self.read_session(session)
 
         self.make_activity_directories()
 
         # configure the S3 bucket storage library
         storage = storage_context(self.settings)
 
-        expanded_folder = session.get_value("expanded_folder")
-        input_filename = session.get_value("input_filename")
-
-        self.logger.info(
-            "%s, input_filename: %s, expanded_folder: %s"
-            % (self.name, input_filename, expanded_folder)
-        )
-
         # get list of bucket objects from expanded folder
-        asset_file_name_map = cleaner.bucket_asset_file_name_map(
-            self.settings, self.settings.bot_bucket, expanded_folder
-        )
-        self.logger.info(
-            "%s, asset_file_name_map: %s" % (self.name, asset_file_name_map)
-        )
+        asset_file_name_map = self.bucket_asset_file_name_map(expanded_folder)
 
         # download the all files from the bucket expanded folder
         try:
@@ -110,21 +95,6 @@ class activity_OutputAcceptedSubmission(Activity):
         self.clean_tmp_dir()
 
         return True
-
-    def log_statuses(self, input_file):
-        "log the statuses value"
-        self.logger.info(
-            "%s for input_file %s statuses: %s"
-            % (self.name, str(input_file), self.statuses)
-        )
-
-    def clean_tmp_dir(self):
-        "custom cleaning of temp directory in order to retain some files for debugging purposes"
-        keep_dirs = []
-        for dir_name, dir_path in self.directories.items():
-            if dir_name in keep_dirs or not os.path.exists(dir_path):
-                continue
-            shutil.rmtree(dir_path)
 
     def upload_zip(self, output_bucket_name, file_name_path):
         "upload the zip to the bucket"

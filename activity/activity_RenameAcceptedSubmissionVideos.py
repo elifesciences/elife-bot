@@ -6,13 +6,13 @@ from elifecleaner.transform import ArticleZipFile
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import cleaner
-from activity.objects import Activity
+from activity.objects import AcceptedBaseActivity
 
 
 REPAIR_XML = False
 
 
-class activity_RenameAcceptedSubmissionVideos(Activity):
+class activity_RenameAcceptedSubmissionVideos(AcceptedBaseActivity):
     "RenameAcceptedSubmissionVideos activity"
 
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
@@ -31,10 +31,6 @@ class activity_RenameAcceptedSubmissionVideos(Activity):
             " and in the XML file."
         )
 
-        # Track some values
-        self.input_file = None
-        self.activity_log_file = "cleaner.log"
-
         # Local directory settings
         self.directories = {
             "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
@@ -52,12 +48,10 @@ class activity_RenameAcceptedSubmissionVideos(Activity):
             "%s data: %s" % (self.name, json.dumps(data, sort_keys=True, indent=4))
         )
 
-        run = data["run"]
-        session = get_session(self.settings, data, run)
+        session = get_session(self.settings, data, data["run"])
 
-        expanded_folder = session.get_value("expanded_folder")
-        input_filename = session.get_value("input_filename")
-        article_id = session.get_value("article_id")
+        expanded_folder, input_filename, article_id = self.read_session(session)
+
         deposit_videos = session.get_value("deposit_videos")
 
         if not deposit_videos:
@@ -73,10 +67,7 @@ class activity_RenameAcceptedSubmissionVideos(Activity):
         storage = storage_context(self.settings)
 
         # configure log files for the cleaner provider
-        log_file_path = os.path.join(
-            self.get_tmp_dir(), self.activity_log_file
-        )  # log file for this activity only
-        cleaner_log_handers = cleaner.configure_activity_log_handlers(log_file_path)
+        self.start_cleaner_log()
 
         self.logger.info(
             "%s, input_filename: %s, expanded_folder: %s"
@@ -84,19 +75,10 @@ class activity_RenameAcceptedSubmissionVideos(Activity):
         )
 
         # get list of bucket objects from expanded folder
-        asset_file_name_map = cleaner.bucket_asset_file_name_map(
-            self.settings, self.settings.bot_bucket, expanded_folder
-        )
-        self.logger.info(
-            "%s, asset_file_name_map: %s" % (self.name, asset_file_name_map)
-        )
+        asset_file_name_map = self.bucket_asset_file_name_map(expanded_folder)
+
         # find S3 object for article XML and download it
-        xml_file_path = cleaner.download_xml_file_from_bucket(
-            self.settings,
-            asset_file_name_map,
-            self.directories.get("TEMP_DIR"),
-            self.logger,
-        )
+        xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
 
         # get the file list from the XML
         # reset the REPAIR_XML constant
@@ -204,27 +186,11 @@ class activity_RenameAcceptedSubmissionVideos(Activity):
 
         # upload the modified XML file to the expanded folder
         if self.statuses.get("rename_videos"):
-            upload_key = cleaner.article_xml_asset(asset_file_name_map)[0]
-            s3_resource = (
-                self.settings.storage_provider
-                + "://"
-                + self.settings.bot_bucket
-                + "/"
-                + expanded_folder
-                + "/"
-                + upload_key
+            self.upload_xml_file_to_bucket(
+                asset_file_name_map, expanded_folder, storage
             )
-            local_file_path = asset_file_name_map.get(upload_key)
-            storage.set_resource_from_filename(s3_resource, local_file_path)
-            self.logger.info(
-                "%s, uploaded %s to S3 object: %s"
-                % (self.name, local_file_path, s3_resource)
-            )
-            self.statuses["upload_xml"] = True
 
-        # remove the log handlers
-        for log_handler in cleaner_log_handers:
-            cleaner.log_remove_handler(log_handler)
+        self.end_cleaner_log(session)
 
         self.log_statuses(input_filename)
 
@@ -232,18 +198,3 @@ class activity_RenameAcceptedSubmissionVideos(Activity):
         self.clean_tmp_dir()
 
         return True
-
-    def log_statuses(self, input_file):
-        "log the statuses value"
-        self.logger.info(
-            "%s for input_file %s statuses: %s"
-            % (self.name, str(input_file), self.statuses)
-        )
-
-    def clean_tmp_dir(self):
-        "custom cleaning of temp directory in order to retain some files for debugging purposes"
-        keep_dirs = []
-        for dir_name, dir_path in self.directories.items():
-            if dir_name in keep_dirs or not os.path.exists(dir_path):
-                continue
-            shutil.rmtree(dir_path)

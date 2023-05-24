@@ -4,10 +4,10 @@ from S3utility.s3_notification_info import parse_activity_data
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import cleaner, download_helper
-from activity.objects import Activity
+from activity.objects import AcceptedBaseActivity
 
 
-class activity_ExpandAcceptedSubmission(Activity):
+class activity_ExpandAcceptedSubmission(AcceptedBaseActivity):
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
         super(activity_ExpandAcceptedSubmission, self).__init__(
             settings, logger, client, token, activity_task
