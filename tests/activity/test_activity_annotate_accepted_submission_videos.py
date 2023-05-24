@@ -330,7 +330,7 @@ class TestAnnotateAcceptedSubmissionVideos(unittest.TestCase):
         zip_file = "%s.zip" % zip_file_base
         xml_file = "%s/%s.xml" % (zip_file_base, zip_file_base)
         xml_file_path = os.path.join(
-            self.activity.directories.get("INPUT_DIR"),
+            self.activity.directories.get("TEMP_DIR"),
             xml_file,
         )
         # video get metadata response

@@ -163,7 +163,7 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
                     "30-01-2019-RA-eLife-45644.zip writing xml to file "
                     "%s/30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml"
                 )
-                % self.activity.directories.get("INPUT_DIR")
+                % self.activity.directories.get("TEMP_DIR")
             )
         )
         self.assertTrue(
@@ -180,7 +180,7 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
                     "30-01-2019-RA-eLife-45644.zip writing xml to file "
                     "%s/30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml"
                 )
-                % self.activity.directories.get("INPUT_DIR")
+                % self.activity.directories.get("TEMP_DIR")
             )
         )
 

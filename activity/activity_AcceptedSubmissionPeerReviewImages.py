@@ -7,7 +7,7 @@ from provider.article_processing import file_extension
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import cleaner, utils
-from activity.objects import Activity
+from activity.objects import AcceptedBaseActivity
 
 
 REPAIR_XML = False
@@ -17,7 +17,7 @@ FILE_NAME_FORMAT = "elife-%s-inf%s.%s"
 REQUESTS_TIMEOUT = 10
 
 
-class activity_AcceptedSubmissionPeerReviewImages(Activity):
+class activity_AcceptedSubmissionPeerReviewImages(AcceptedBaseActivity):
     "AcceptedSubmissionPeerReviewImages activity"
 
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
@@ -36,10 +36,6 @@ class activity_AcceptedSubmissionPeerReviewImages(Activity):
             " and modify the accepted submission XML."
         )
 
-        # Track some values
-        self.input_file = None
-        self.activity_log_file = "cleaner.log"
-
         # Local directory settings
         self.directories = {
             "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
@@ -57,8 +53,7 @@ class activity_AcceptedSubmissionPeerReviewImages(Activity):
             "%s data: %s" % (self.name, json.dumps(data, sort_keys=True, indent=4))
         )
 
-        run = data["run"]
-        session = get_session(self.settings, data, run)
+        session = get_session(self.settings, data, data["run"])
 
         self.make_activity_directories()
 
@@ -66,35 +61,15 @@ class activity_AcceptedSubmissionPeerReviewImages(Activity):
         storage = storage_context(self.settings)
 
         # configure log files for the cleaner provider
-        log_file_path = os.path.join(
-            self.get_tmp_dir(), self.activity_log_file
-        )  # log file for this activity only
-        cleaner_log_handers = cleaner.configure_activity_log_handlers(log_file_path)
+        self.start_cleaner_log()
 
-        expanded_folder = session.get_value("expanded_folder")
-        input_filename = session.get_value("input_filename")
-        article_id = session.get_value("article_id")
-
-        self.logger.info(
-            "%s, input_filename: %s, expanded_folder: %s"
-            % (self.name, input_filename, expanded_folder)
-        )
+        expanded_folder, input_filename, article_id = self.read_session(session)
 
         # get list of bucket objects from expanded folder
-        asset_file_name_map = cleaner.bucket_asset_file_name_map(
-            self.settings, self.settings.bot_bucket, expanded_folder
-        )
-        self.logger.info(
-            "%s, asset_file_name_map: %s" % (self.name, asset_file_name_map)
-        )
+        asset_file_name_map = self.bucket_asset_file_name_map(expanded_folder)
 
         # find S3 object for article XML and download it
-        xml_file_path = cleaner.download_xml_file_from_bucket(
-            self.settings,
-            asset_file_name_map,
-            self.directories.get("TEMP_DIR"),
-            self.logger,
-        )
+        xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
 
         # search XML file for graphic tags
         inline_graphic_tags = cleaner.inline_graphic_tags(xml_file_path)
@@ -230,39 +205,9 @@ class activity_AcceptedSubmissionPeerReviewImages(Activity):
         )
 
         # upload the XML to the bucket
-        upload_key = cleaner.article_xml_asset(asset_file_name_map)[0]
-        s3_resource = (
-            self.settings.storage_provider
-            + "://"
-            + self.settings.bot_bucket
-            + "/"
-            + expanded_folder
-            + "/"
-            + upload_key
-        )
-        local_file_path = asset_file_name_map.get(upload_key)
-        storage.set_resource_from_filename(s3_resource, local_file_path)
-        self.logger.info(
-            "%s, uploaded %s to S3 object: %s"
-            % (self.name, local_file_path, s3_resource)
-        )
-        self.statuses["upload_xml"] = True
+        self.upload_xml_file_to_bucket(asset_file_name_map, expanded_folder, storage)
 
-        # remove the log handlers
-        for log_handler in cleaner_log_handers:
-            cleaner.log_remove_handler(log_handler)
-
-        # read the cleaner log contents
-        with open(log_file_path, "r", encoding="utf8") as open_file:
-            log_contents = open_file.read()
-
-        # add the log_contents to the session variable
-        cleaner_log = session.get_value("cleaner_log")
-        if cleaner_log is None:
-            cleaner_log = log_contents
-        else:
-            cleaner_log += log_contents
-        session.store_value("cleaner_log", cleaner_log)
+        self.end_cleaner_log(session)
 
         self.log_statuses(input_filename)
 
@@ -270,21 +215,6 @@ class activity_AcceptedSubmissionPeerReviewImages(Activity):
         self.clean_tmp_dir()
 
         return True
-
-    def log_statuses(self, input_file):
-        "log the statuses value"
-        self.logger.info(
-            "%s for input_file %s statuses: %s"
-            % (self.name, str(input_file), self.statuses)
-        )
-
-    def clean_tmp_dir(self):
-        "custom cleaning of temp directory in order to retain some files for debugging purposes"
-        keep_dirs = []
-        for dir_name, dir_path in self.directories.items():
-            if dir_name in keep_dirs or not os.path.exists(dir_path):
-                continue
-            shutil.rmtree(dir_path)
 
 
 def download_images(href_list, to_dir, activity_name, logger):

@@ -2,10 +2,10 @@ import json
 import time
 from provider.execution_context import get_session
 from provider import cleaner, email_provider, utils
-from activity.objects import Activity
+from activity.objects import AcceptedBaseActivity
 
 
-class activity_EmailAcceptedSubmissionOutput(Activity):
+class activity_EmailAcceptedSubmissionOutput(AcceptedBaseActivity):
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
         super(activity_EmailAcceptedSubmissionOutput, self).__init__(
             settings, logger, client, token, activity_task
@@ -32,11 +32,9 @@ class activity_EmailAcceptedSubmissionOutput(Activity):
         if self.logger:
             self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
-        run = data["run"]
-        session = get_session(self.settings, data, run)
+        session = get_session(self.settings, data, data["run"])
 
-        input_filename = session.get_value("input_filename")
-        cleaner_log = session.get_value("cleaner_log")
+        expanded_folder, input_filename, article_id = self.read_session(session)
 
         # November 2022 temporary logic to not send email for PRC article ingest
         if session.get_value("prc_status") and not cleaner.PRC_INGEST_SEND_EMAIL:
@@ -56,6 +54,8 @@ class activity_EmailAcceptedSubmissionOutput(Activity):
                 % (self.name, input_filename)
             )
             return True
+
+        cleaner_log = session.get_value("cleaner_log")
 
         # format the email body content
         body_content = ""

@@ -4,7 +4,7 @@ import os
 import re
 import botocore
 import dashboard_queue
-from provider import downstream, outbox_provider, utils
+from provider import cleaner, downstream, outbox_provider, utils
 
 """
 Amazon SWF activity base class
@@ -307,3 +307,109 @@ class Activity:
         return outbox_provider.workflow_foldername(
             workflow_name, downstream_workflow_map
         )
+
+
+class AcceptedBaseActivity(Activity):
+    def __init__(self, settings, logger, client=None, token=None, activity_task=None):
+        super().__init__(settings, logger, client, token, activity_task)
+        # Track some values
+        self.input_file = None
+        self.activity_log_file = "cleaner.log"
+        self.log_file_path = None
+        self.cleaner_log_handers = []
+        # stubs
+        self.directories = {}
+        self.statuses = {}
+
+    def read_session(self, session):
+        "basic session values"
+        expanded_folder = session.get_value("expanded_folder")
+        input_filename = session.get_value("input_filename")
+        article_id = session.get_value("article_id")
+
+        self.logger.info(
+            "%s, input_filename: %s, expanded_folder: %s"
+            % (self.name, input_filename, expanded_folder)
+        )
+        return expanded_folder, input_filename, article_id
+
+    def bucket_asset_file_name_map(self, expanded_folder):
+        "get list of bucket objects from expanded folder"
+        asset_file_name_map = cleaner.bucket_asset_file_name_map(
+            self.settings, self.settings.bot_bucket, expanded_folder
+        )
+        self.logger.info(
+            "%s, asset_file_name_map: %s" % (self.name, asset_file_name_map)
+        )
+        return asset_file_name_map
+
+    def download_xml_file_from_bucket(self, asset_file_name_map):
+        "find S3 object for article XML and download it"
+        xml_file_path = cleaner.download_xml_file_from_bucket(
+            self.settings,
+            asset_file_name_map,
+            self.directories.get("TEMP_DIR"),
+            self.logger,
+        )
+        return xml_file_path
+
+    def upload_xml_file_to_bucket(self, asset_file_name_map, expanded_folder, storage):
+        "upload the XML to the bucket"
+        upload_key = cleaner.article_xml_asset(asset_file_name_map)[0]
+        s3_resource = (
+            self.settings.storage_provider
+            + "://"
+            + self.settings.bot_bucket
+            + "/"
+            + expanded_folder
+            + "/"
+            + upload_key
+        )
+        local_file_path = asset_file_name_map.get(upload_key)
+        storage.set_resource_from_filename(s3_resource, local_file_path)
+        self.logger.info(
+            "%s, uploaded %s to S3 object: %s"
+            % (self.name, local_file_path, s3_resource)
+        )
+        self.statuses["upload_xml"] = True
+
+    def start_cleaner_log(self):
+        "configure the cleaner provider log file handler"
+        self.log_file_path = os.path.join(self.get_tmp_dir(), self.activity_log_file)
+        if self.log_file_path not in self.cleaner_log_handers:
+            self.cleaner_log_handers = cleaner.configure_activity_log_handlers(
+                self.log_file_path
+            )
+
+    def end_cleaner_log(self, session):
+        "close cleaner provider log file handler and save the contents to the session"
+        # remove the log handlers
+        for log_handler in self.cleaner_log_handers:
+            cleaner.log_remove_handler(log_handler)
+
+        # read the cleaner log contents
+        with open(self.log_file_path, "r", encoding="utf8") as open_file:
+            log_contents = open_file.read()
+
+        # add the log_contents to the session variable
+        cleaner_log = session.get_value("cleaner_log")
+        if cleaner_log is None:
+            cleaner_log = log_contents
+        else:
+            cleaner_log += log_contents
+        session.store_value("cleaner_log", cleaner_log)
+
+    def log_statuses(self, input_file):
+        "log the statuses value"
+        self.logger.info(
+            "%s for input_file %s statuses: %s"
+            % (self.name, str(input_file), self.statuses)
+        )
+
+    def clean_tmp_dir(self):
+        "custom cleaning of temp directory in order to retain some files for debugging purposes"
+        keep_dirs = []
+        for dir_name, dir_path in self.directories.items():
+            if dir_name in keep_dirs or not os.path.exists(dir_path):
+                continue
+            shutil.rmtree(dir_path)

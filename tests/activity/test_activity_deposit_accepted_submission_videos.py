@@ -167,11 +167,11 @@ class TestDepositAcceptedSubmissionVideos(unittest.TestCase):
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         filename_used = input_data(test_data.get("filename")).get("file_name")
-        input_dir_files = glob.glob(self.activity.directories.get("INPUT_DIR") + "/*/*")
+        input_dir_files = glob.glob(self.activity.directories.get("TEMP_DIR") + "/*/*")
 
         if test_data.get("expected_xml_file_path"):
             xml_file_path = os.path.join(
-                self.activity.directories.get("INPUT_DIR"),
+                self.activity.directories.get("TEMP_DIR"),
                 test_data.get("expected_xml_file_path"),
             )
             self.assertTrue(xml_file_path in input_dir_files)
@@ -246,7 +246,7 @@ class TestDepositAcceptedSubmissionVideos(unittest.TestCase):
         zip_file = "%s.zip" % zip_file_base
         xml_file = "%s/%s.xml" % (zip_file_base, zip_file_base)
         xml_file_path = os.path.join(
-            self.activity.directories.get("INPUT_DIR"),
+            self.activity.directories.get("TEMP_DIR"),
             xml_file,
         )
 
