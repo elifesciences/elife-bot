@@ -87,7 +87,9 @@ class activity_DepositCrossrefPeerReview(Activity):
         crossref_config = crossref.elifecrossref_config(self.settings)
         crossref_preprint_config = crossref.elifecrossref_preprint_config(self.settings)
 
-        article_object_map = self.get_article_objects(article_xml_files)
+        article_object_map = self.get_article_objects(
+            article_xml_files, crossref_config
+        )
 
         generate_article_object_map = prune_article_object_map(
             article_object_map, self.settings, self.logger
@@ -195,7 +197,7 @@ class activity_DepositCrossrefPeerReview(Activity):
 
         return True
 
-    def get_article_objects(self, article_xml_files):
+    def get_article_objects(self, article_xml_files, crossref_config=None):
         """turn XML into article objects and populate their data"""
         # parse XML files into the basic article object map to start with
         article_object_map = crossref.article_xml_list_parse(
@@ -220,9 +222,25 @@ class activity_DepositCrossrefPeerReview(Activity):
                     self.set_editor_orcid(sub_article, manuscript_object)
 
                 # add review_date
-                review_date = bigquery.get_review_date(
-                    manuscript_object, sub_article.article_type
-                )
+                review_date = None
+
+                if article.elocation_id and article.elocation_id.startswith("RP"):
+                    # PRC article
+                    if crossref_config and crossref_config.get("pub_date_types"):
+                        # use the article pub date
+                        pub_date = crossref.article_first_pub_date(
+                            crossref_config, article
+                        )
+                        if pub_date is not None:
+                            review_date_struct = pub_date.date
+                            review_date = time.strftime(
+                                utils.PUB_DATE_FORMAT, pub_date.date
+                            )
+                if not review_date:
+                    # get the review_date from bigquery if it is not already set
+                    review_date = bigquery.get_review_date(
+                        manuscript_object, sub_article.article_type
+                    )
                 if review_date:
                     date_struct = time.strptime(review_date, utils.PUB_DATE_FORMAT)
                     review_date_object = ArticleDate("review_date", date_struct)

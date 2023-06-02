@@ -145,6 +145,41 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 "<resource>https://elifesciences.org/reviewed-preprints/84364/reviews#sa0</resource>",
             ],
         },
+        {
+            "comment": "Article 15747",
+            "article_xml_filenames": ["elife-86628-v1.xml"],
+            "post_status_code": 200,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": True,
+            "expected_outbox_status": True,
+            "expected_email_status": True,
+            "expected_activity_status": True,
+            "expected_file_count": 1,
+            "expected_crossref_xml_contains": [
+                '<peer_review stage="pre-publication" type="editor-report">',
+                "<title>eLife assessment: Optical tools for visualizing and controlling human GLP-1 receptor activation with high spatiotemporal resolution</title>",
+                "<review_date>",
+                "<month>06</month>",
+                "<day>02</day>",
+                "<ai:license_ref>http://creativecommons.org/licenses/by/4.0/</ai:license_ref>",
+                (
+                    '<rel:inter_work_relation identifier-type="doi" relationship-type="isReviewOf">'
+                    + "10.7554/eLife.86628.3</rel:inter_work_relation>"
+                ),
+                "<doi>10.7554/eLife.86628.3.sa0</doi>",
+                "<resource>https://elifesciences.org/articles/86628#sa0</resource>",
+                '<peer_review stage="pre-publication" type="referee-report">',
+                "<title>Public Review: Optical tools for visualizing and controlling human GLP-1 receptor activation with high spatiotemporal resolution</title>",
+                "<doi>10.7554/eLife.86628.3.sa1</doi>",
+                "<resource>https://elifesciences.org/articles/86628#sa1</resource>",
+                '<peer_review stage="pre-publication" type="author-comment">',
+                "<title>Author Response: Optical tools for visualizing and controlling human GLP-1 receptor activation with high spatiotemporal resolution</title>",
+                "<doi>10.7554/eLife.86628.3.sa2</doi>",
+                "<resource>https://elifesciences.org/articles/86628#sa2</resource>",
+            ],
+        },
     )
     def test_do_activity(
         self,
