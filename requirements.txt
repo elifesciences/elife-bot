@@ -1,19 +1,19 @@
-# file generated 2023-05-23 - see update-dependencies.sh
+# file generated 2023-06-02 - see update-dependencies.sh
 arrow==1.2.3
 astroid==2.15.5
 async-timeout==4.0.2
 bcrypt==4.0.1
 beautifulsoup4==4.12.2
-boto3==1.26.138
-botocore==1.29.138
-cachetools==5.3.0
+boto3==1.26.146
+botocore==1.29.146
+cachetools==5.3.1
 certifi==2023.5.7
 cffi==1.15.1
 charset-normalizer==3.1.0
 configparser==5.3.0
-cryptography==40.0.2
+cryptography==41.0.1
 ddt==1.6.0
-Deprecated==1.2.13
+Deprecated==1.2.14
 digestparser==0.2.0
 dill==0.3.6
 docker==5.0.3
@@ -29,15 +29,15 @@ func-timeout==4.3.5
 gitdb==4.0.10
 GitPython==3.1.31
 google-api-core==2.11.0
-google-auth==2.18.1
+google-auth==2.19.1
 google-cloud-bigquery==3.3.6
-google-cloud-bigquery-storage==2.19.1
+google-cloud-bigquery-storage==2.20.0
 google-cloud-core==2.3.2
 google-crc32c==1.5.0
 google-resumable-media==2.5.0
 googleapis-common-protos==1.59.0
-grpcio==1.55.0
-grpcio-status==1.55.0
+grpcio==1.54.2
+grpcio-status==1.54.2
 idna==3.4
 iniconfig==2.0.0
 isort==5.12.0
@@ -47,7 +47,7 @@ jmespath==1.0.1
 lazy-object-proxy==1.9.0
 letterparser==0.14.0
 lxml==4.9.2
-MarkupSafe==2.1.2
+MarkupSafe==2.1.3
 mccabe==0.7.0
 medium @ git+https://github.com/Medium/medium-sdk-python.git@bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6
 mock==4.0.3
@@ -59,7 +59,7 @@ paramiko==2.12.0
 platformdirs==3.5.1
 pluggy==1.0.0
 proto-plus==1.22.2
-protobuf==4.23.1
+protobuf==4.23.2
 psutil==5.9.5
 pyarrow==10.0.1
 pyasn1==0.5.0
@@ -90,7 +90,7 @@ testfixtures==6.18.5
 text-unidecode==1.3
 tomli==2.0.1
 tomlkit==0.11.8
-typing_extensions==4.6.0
+typing_extensions==4.6.3
 urllib3==1.26.16
 Wand==0.6.11
 websocket-client==1.5.2
