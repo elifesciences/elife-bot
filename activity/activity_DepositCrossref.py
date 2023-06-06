@@ -4,6 +4,7 @@ from collections import OrderedDict
 import json
 import time
 import glob
+from elifearticle.article import Preprint
 from activity.objects import Activity
 from provider import crossref, downstream, email_provider, outbox_provider, utils
 
@@ -232,6 +233,20 @@ class activity_DepositCrossref(Activity):
             crossref.set_article_version(article, self.settings)
             # set Contributor orcid_authenticated values to True
             crossref.contributor_orcid_authenticated(article, True)
+
+            # set the preprint to a different value for PRC articles
+            if article.publication_history:
+                event_list = [
+                    event_object
+                    for event_object in article.publication_history
+                    if event_object.event_type == "reviewed-preprint"
+                ]
+                if event_list:
+                    event_object = event_list[-1]
+                    preprint_object = Preprint()
+                    preprint_object.doi = event_object.doi
+                    article.preprint = preprint_object
+
         return article_object_map
 
     def approve_for_publishing(self):
