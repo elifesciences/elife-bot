@@ -125,64 +125,15 @@ class activity_RenameAcceptedSubmissionVideos(AcceptedBaseActivity):
 
         # rewrite the XML file with the renamed video files
         if file_transformations:
-            try:
-                cleaner.xml_rewrite_file_tags(
-                    xml_file_path, file_transformations, input_filename
-                )
-                self.logger.info(
-                    "%s, %s file_transformations rewriting XML completed"
-                    % (self.name, input_filename)
-                )
-                self.statuses["modify_xml"] = True
-            except:
-                log_message = (
-                    "%s, exception invoking xml_rewrite_file_tags for file %s"
-                    % (
-                        self.name,
-                        input_filename,
-                    )
-                )
-                self.logger.exception(log_message)
+            self.statuses["modify_xml"] = self.rewrite_file_tags(
+                xml_file_path, file_transformations, input_filename
+            )
 
         # rename the video files in the expanded folder
         if self.statuses.get("modify_xml"):
-            # map values without folder names to match them later
-            asset_key_map = {key.rsplit("/", 1)[-1]: key for key in asset_file_name_map}
-            resource_prefix = (
-                self.settings.storage_provider
-                + "://"
-                + self.settings.bot_bucket
-                + "/"
-                + expanded_folder
+            self.statuses["rename_videos"] = self.rename_expanded_folder_files(
+                asset_file_name_map, expanded_folder, file_transformations, storage
             )
-            for file_transform in file_transformations:
-                old_s3_resource = (
-                    resource_prefix
-                    + "/"
-                    + asset_key_map.get(file_transform[0].xml_name)
-                )
-                # get the subfolder of the old resource to prepend to the new resource
-                new_resource_subfolder = old_s3_resource.rsplit(resource_prefix, 1)[
-                    -1
-                ].rsplit("/", 1)[0]
-                new_s3_resource = (
-                    resource_prefix
-                    + new_resource_subfolder
-                    + "/"
-                    + file_transform[1].xml_name
-                )
-                # copy old key to new key
-                self.logger.info(
-                    "%s, copying old S3 key %s to %s"
-                    % (self.name, old_s3_resource, new_s3_resource)
-                )
-                storage.copy_resource(old_s3_resource, new_s3_resource)
-                # delete old key
-                self.logger.info(
-                    "%s, deleting old S3 key %s" % (self.name, old_s3_resource)
-                )
-                storage.delete_resource(old_s3_resource)
-            self.statuses["rename_videos"] = True
 
         # upload the modified XML file to the expanded folder
         if self.statuses.get("rename_videos"):

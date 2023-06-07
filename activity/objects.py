@@ -413,3 +413,66 @@ class AcceptedBaseActivity(Activity):
             if dir_name in keep_dirs or not os.path.exists(dir_path):
                 continue
             shutil.rmtree(dir_path)
+
+    def rewrite_file_tags(self, xml_file_path, file_transformations, input_filename):
+        "modify the XML file tags"
+        if file_transformations:
+            try:
+                cleaner.xml_rewrite_file_tags(
+                    xml_file_path, file_transformations, input_filename
+                )
+                self.logger.info(
+                    "%s, %s file_transformations rewriting XML completed"
+                    % (self.name, input_filename)
+                )
+                return True
+            except:
+                log_message = (
+                    "%s, exception invoking xml_rewrite_file_tags for file %s"
+                    % (
+                        self.name,
+                        input_filename,
+                    )
+                )
+                self.logger.exception(log_message)
+        return None
+
+    def rename_expanded_folder_files(
+        self, asset_file_name_map, expanded_folder, file_transformations, storage
+    ):
+        "rename objects in the S3 bucket expanded folder"
+        # map values without folder names to match them later
+        asset_key_map = {key.rsplit("/", 1)[-1]: key for key in asset_file_name_map}
+        resource_prefix = (
+            self.settings.storage_provider
+            + "://"
+            + self.settings.bot_bucket
+            + "/"
+            + expanded_folder
+        )
+        for file_transform in file_transformations:
+            old_s3_resource = (
+                resource_prefix + "/" + asset_key_map.get(file_transform[0].xml_name)
+            )
+            # get the subfolder of the old resource to prepend to the new resource
+            new_resource_subfolder = old_s3_resource.rsplit(resource_prefix, 1)[
+                -1
+            ].rsplit("/", 1)[0]
+            new_s3_resource = (
+                resource_prefix
+                + new_resource_subfolder
+                + "/"
+                + file_transform[1].xml_name
+            )
+            # copy old key to new key
+            self.logger.info(
+                "%s, copying old S3 key %s to %s"
+                % (self.name, old_s3_resource, new_s3_resource)
+            )
+            storage.copy_resource(old_s3_resource, new_s3_resource)
+            # delete old key
+            self.logger.info(
+                "%s, deleting old S3 key %s" % (self.name, old_s3_resource)
+            )
+            storage.delete_resource(old_s3_resource)
+        return True
