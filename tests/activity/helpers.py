@@ -2,8 +2,9 @@ import email
 import os
 import shutil
 import zipfile
+from testfixtures import TempDirectory
 from digestparser.objects import Digest, Image
-from provider import utils
+from provider import cleaner, utils
 from provider.article import article
 
 
@@ -89,6 +90,49 @@ def body_from_multipart_email_string(email_string):
     return body
 
 
+def add_files_to_accepted_zip(zip_file_path, output_dir, file_details):
+    "add files to a copy of an accepted submission zip file fixture"
+    # create a temporary directory for zip repackaging
+    zip_temp_dir = os.path.join(output_dir, "zip_temp_dir")
+    os.mkdir(zip_temp_dir)
+
+    zip_file_name = zip_file_path.rsplit(os.sep, 1)[-1]
+    new_zip_file_path = os.path.join(output_dir, zip_file_name)
+    new_zip_file_name = new_zip_file_path.rsplit(os.sep, 1)[-1]
+
+    # extract the contenst of the original zip
+    with zipfile.ZipFile(zip_file_path) as open_zip:
+        open_zip.extractall(zip_temp_dir)
+
+    # zip file subfolder name and XML file path
+    zip_sub_folder = new_zip_file_name.replace(".zip", "")
+    zip_xml_file_path = "%s/%s.xml" % (zip_sub_folder, zip_sub_folder)
+
+    # copy files to the zip sub folder
+    for details in file_details:
+        shutil.copy(
+            details.get("file_path"),
+            os.path.join(zip_temp_dir, zip_sub_folder, details.get("upload_file_nm")),
+        )
+
+    # modify the XML
+    xml_path = os.path.join(zip_temp_dir, zip_xml_file_path)
+    for details in file_details:
+        # add file tag to the XML
+        cleaner.add_file_tags_to_xml(xml_path, [details], identifier=zip_file_name)
+
+    # create a new zip file, add the files from the folder to it
+    with zipfile.ZipFile(new_zip_file_path, "w") as open_zip:
+        for file_name in os.listdir(os.path.join(zip_temp_dir, zip_sub_folder)):
+            file_path = "%s/%s" % (zip_sub_folder, file_name)
+            open_zip.write(os.path.join(zip_temp_dir, file_path), file_path)
+
+    # clean up the temporary directory
+    shutil.rmtree(zip_temp_dir)
+
+    return new_zip_file_path
+
+
 def expanded_folder_resources(zip_file_path, directory):
     "expand the zip file to the directory and return a list resources"
     with zipfile.ZipFile(zip_file_path, "r") as open_zipfile:
@@ -99,7 +143,8 @@ def expanded_folder_resources(zip_file_path, directory):
 
 def expanded_folder_bucket_resources(directory, expanded_folder, zip_file_path):
     "populate the TempDirectory with files from zip_filename to mock a bucket folder in tests"
-    directory.makedir(expanded_folder)
+    if not os.path.exists(os.path.join(directory.path, expanded_folder)):
+        directory.makedir(expanded_folder)
     directory_s3_folder_path = os.path.join(
         directory.path,
         expanded_folder,

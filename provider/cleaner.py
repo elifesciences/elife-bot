@@ -9,6 +9,7 @@ from elifecleaner import (
     LOGGER,
     assessment_terms,
     configure_logging,
+    fig,
     parse,
     prc,
     sub_article,
@@ -252,6 +253,21 @@ def approved_inline_graphic_hrefs(href_list):
     return filter_hrefs_by_file_extension(
         filter_hrefs_by_hostname(external_hrefs(href_list))
     )
+
+
+def inline_graphic_hrefs(sub_article_root, identifier):
+    "return a list of inline-graphic tag xlink:href values"
+    return fig.inline_graphic_hrefs(sub_article_root, identifier)
+
+
+def graphic_hrefs(sub_article_root, identifier):
+    "return a list of graphic tag xlink:href values"
+    return fig.graphic_hrefs(sub_article_root, identifier)
+
+
+def transform_fig(sub_article_root, identifier):
+    "transform inline-graphic tags into fig tags"
+    return fig.transform_fig(sub_article_root, identifier)
 
 
 def add_file_tag(parent, file_details):

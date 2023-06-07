@@ -137,6 +137,7 @@ def start(settings):
     activity_names.append("OutputAcceptedSubmission")
     activity_names.append("AcceptedSubmissionPeerReviews")
     activity_names.append("AcceptedSubmissionPeerReviewImages")
+    activity_names.append("AcceptedSubmissionPeerReviewFigs")
     activity_names.append("AcceptedSubmissionVersionDoi")
 
     for activity_name in activity_names:
