@@ -36,8 +36,6 @@ class workflow_SilentCorrectionsProcess(Workflow):
             "steps": [
                 define_workflow_step("PingWorker", data),
                 define_workflow_step("VerifyLaxResponse", data),
-                define_workflow_step("ScheduleCrossref", data),
-                define_workflow_step("ScheduleCrossrefPeerReview", data),
                 define_workflow_step("IngestDigestToEndpoint", data),
                 define_workflow_step("PublishToLax", data),
             ],

@@ -36,9 +36,6 @@ class workflow_ProcessArticleZip(Workflow):
             "steps": [
                 define_workflow_step("PingWorker", data),
                 define_workflow_step_short("VerifyLaxResponse", data),
-                define_workflow_step("ScheduleCrossref", data),
-                define_workflow_step("ScheduleCrossrefMinimal", data),
-                define_workflow_step("ScheduleCrossrefPeerReview", data),
                 define_workflow_step("IngestDigestToEndpoint", data),
                 define_workflow_step("ReadyToPublish", data),
             ],
