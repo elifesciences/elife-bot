@@ -1,4 +1,4 @@
-# file generated 2023-06-20 - see update-dependencies.sh
+# file generated 2023-06-21 - see update-dependencies.sh
 arrow==1.2.3
 astroid==2.15.5
 async-timeout==4.0.2
@@ -17,7 +17,7 @@ Deprecated==1.2.14
 digestparser==0.2.0
 dill==0.3.6
 docker==5.0.3
-docmaptools==0.11.0
+docmaptools==0.11.1
 ejpcsvparser==0.2.0
 elifearticle==0.15.0
 elifecleaner==0.42.0
