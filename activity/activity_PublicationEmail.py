@@ -583,7 +583,13 @@ class activity_PublicationEmail(Activity):
             i = 0
             recipient_author = {}
             for value in author:
-                heading = column_headings[i]
+                try:
+                    heading = column_headings[i]
+                except IndexError:
+                    log_info = "Missing column_headings for article doi id " + str(
+                        doi_id
+                    )
+                    continue
                 recipient_author[heading] = value
                 i = i + 1
             # Special: convert the dict to an object for use in templates
