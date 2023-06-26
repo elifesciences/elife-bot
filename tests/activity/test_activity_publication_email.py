@@ -996,6 +996,73 @@ class TestArticleAuthors(unittest.TestCase):
         self.assertEqual(all_authors, expected)
 
 
+class TestGetAuthorList(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, fake_logger, None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    def test_get_author_list(self):
+        "test getting authors for a research article"
+        column_headings = [
+            "ms_no",
+            "author_seq",
+            "first_nm",
+            "last_nm",
+            "author_type_cde",
+            "dual_corr_author_ind",
+            "e_mail",
+        ]
+        authors = [
+            [
+                "3",
+                "1",
+                "Author",
+                "One",
+                "Contributing Author",
+                " ",
+                "author01@example.com",
+            ]
+        ]
+        doi_id = "3"
+        expected = [
+            {
+                "ms_no": "3",
+                "author_seq": "1",
+                "first_nm": "Author",
+                "last_nm": "One",
+                "author_type_cde": "Contributing Author",
+                "dual_corr_author_ind": " ",
+                "e_mail": "author01@example.com",
+            }
+        ]
+        author_list = self.activity.get_author_list(column_headings, authors, doi_id)
+        self.assertEqual(author_list, expected)
+
+    def test_get_author_list_exception(self):
+        "test for when column heading data is missing"
+        column_headings = []
+        authors = [
+            [
+                "3",
+                "1",
+                "Author",
+                "One",
+                "Contributing Author",
+                " ",
+                "author01@example.com",
+            ]
+        ]
+        doi_id = "3"
+        expected = [{}]
+        author_list = self.activity.get_author_list(column_headings, authors, doi_id)
+        self.assertEqual(author_list, expected)
+
+
 @ddt
 class TestChooseRecipientAuthors(unittest.TestCase):
     def setUp(self):
