@@ -1,0 +1,58 @@
+import json
+import requests
+
+
+REQUESTS_TIMEOUT = 15
+
+DEFAULT_OPTIONS_JSON = {
+    "math_inline_delimiters": ["$", "$"],
+    "rm_spaces": True,
+    "formats": "text, data, html, latex_styled",
+    "data_options": {
+        "include_mathml": True,
+        "include_latex": True,
+    },
+}
+
+
+def mathpix_post_request(
+    url,
+    app_id,
+    app_key,
+    file_path,
+    options_json=None,
+    verify_ssl=False,
+    logger=None,
+):
+    "POST JSON data to Mathpix API endpoint"
+
+    if options_json is None:
+        # use the default options
+        options_json = DEFAULT_OPTIONS_JSON
+
+    headers = {"app_id": app_id, "app_key": app_key}
+    data = {"options_json": json.dumps(options_json)}
+    with open(file_path, "rb") as open_file:
+        files = ({"file": open_file},)
+        response = requests.post(
+            url,
+            files=files,
+            data=data,
+            verify=verify_ssl,
+            headers=headers,
+            timeout=REQUESTS_TIMEOUT,
+        )
+    if logger:
+        logger.info("Post file %s to Mathpix API: POST %s\n" % (file_path, url))
+        logger.info(
+            "Response from Mathpix API: %s\n%s"
+            % (response.status_code, response.content)
+        )
+    status_code = response.status_code
+    if not 300 > status_code >= 200:
+        raise Exception(
+            "Error in mathpix_post_request %s to Mathpix API: %s\n%s"
+            % (file_path, status_code, response.content)
+        )
+
+    return response

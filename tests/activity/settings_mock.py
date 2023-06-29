@@ -246,3 +246,8 @@ docmap_url_pattern = "https://example.org/path/get-by-manuscript-id?manuscript_i
 docmap_account_id = "https://sciety.org/groups/elife"
 
 assessment_terms_yaml = "tests/assessment_terms.yaml"
+
+# Mathpix settings
+mathpix_endpoint = "https://api.mathpix.com.example.org/v3/text"
+mathpix_app_id = "elife-bot"
+mathpix_app_key = "key"

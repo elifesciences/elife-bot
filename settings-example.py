@@ -1031,6 +1031,11 @@ class live:
 
     assessment_terms_yaml = "assessment_terms.yaml"
 
+    # Mathpix settings
+    mathpix_endpoint = "https://api.mathpix.com.example.org/v3/text"
+    mathpix_app_id = "elife-bot"
+    mathpix_app_key = "key"
+
 
 def get_settings(ENV="dev"):
     """
