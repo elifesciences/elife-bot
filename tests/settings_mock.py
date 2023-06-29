@@ -96,3 +96,8 @@ downstream_recipients_yaml = "tests/downstreamRecipients.yaml"
 
 docmap_url_pattern = "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
 docmap_account_id = "https://sciety.org/groups/elife"
+
+# Mathpix settings
+mathpix_endpoint = "https://api.mathpix.com.example.org/v3/text"
+mathpix_app_id = "elife-bot"
+mathpix_app_key = "key"

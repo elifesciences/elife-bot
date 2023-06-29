@@ -437,6 +437,26 @@ class AcceptedBaseActivity(Activity):
                 self.logger.exception(log_message)
         return None
 
+    def remove_file_tags(self, xml_root, file_name_list, input_filename):
+        "remove XML file tags"
+        files_tag = xml_root.find("./front/article-meta/files")
+        if files_tag:
+            for file_tag in files_tag.findall("file"):
+                file_nm_tag = file_tag.find("upload_file_nm")
+                if (
+                    file_nm_tag is not None
+                    and file_nm_tag.text
+                    and file_nm_tag.text in file_name_list
+                ):
+                    self.logger.info(
+                        "removing file tag for %s in file %s"
+                        % (file_nm_tag.text, input_filename)
+                    )
+                    files_tag.remove(file_tag)
+
+            return True
+        return None
+
     def rename_expanded_folder_files(
         self, asset_file_name_map, expanded_folder, file_transformations, storage
     ):
@@ -476,3 +496,23 @@ class AcceptedBaseActivity(Activity):
             )
             storage.delete_resource(old_s3_resource)
         return True
+
+    def delete_expanded_folder_files(
+        self, asset_file_name_map, expanded_folder, file_name_list, storage
+    ):
+        "delete objects from the S3 bucket expanded folder"
+        asset_key_map = {key.rsplit("/", 1)[-1]: key for key in asset_file_name_map}
+        resource_prefix = (
+            self.settings.storage_provider
+            + "://"
+            + self.settings.bot_bucket
+            + "/"
+            + expanded_folder
+        )
+        for file_name in file_name_list:
+            old_s3_resource = resource_prefix + "/" + asset_key_map.get(file_name)
+            # delete old key
+            self.logger.info(
+                "%s, deleting old S3 key %s" % (self.name, old_s3_resource)
+            )
+            storage.delete_resource(old_s3_resource)

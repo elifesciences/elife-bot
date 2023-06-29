@@ -173,6 +173,11 @@ def preprint_url(xml_file_path):
     return parse.preprint_url(root)
 
 
+def is_p_inline_graphic(tag, sub_article_id, p_tag_index, identifier):
+    "see if a p tag contains only an inline-graphic tag"
+    return fig.is_p_inline_graphic(tag, sub_article_id, p_tag_index, identifier)
+
+
 def inline_graphic_tags(xml_file_path):
     "get the inline-graphic tags from an XML file"
     root = parse_article_xml(xml_file_path)
@@ -268,6 +273,11 @@ def graphic_hrefs(sub_article_root, identifier):
 def transform_fig(sub_article_root, identifier):
     "transform inline-graphic tags into fig tags"
     return fig.transform_fig(sub_article_root, identifier)
+
+
+def remove_tag_attributes(tag):
+    "remove attributes from the tag"
+    fig.remove_tag_attributes(tag)
 
 
 def add_file_tag(parent, file_details):
