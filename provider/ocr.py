@@ -33,7 +33,7 @@ def mathpix_post_request(
     headers = {"app_id": app_id, "app_key": app_key}
     data = {"options_json": json.dumps(options_json)}
     with open(file_path, "rb") as open_file:
-        files = ({"file": open_file},)
+        files = {"file": open_file}
         response = requests.post(
             url,
             files=files,
