@@ -1,4 +1,4 @@
-# file generated 2023-07-05 - see update-dependencies.sh
+# file generated 2023-07-07 - see update-dependencies.sh
 arrow==1.2.3
 astroid==2.15.5
 async-timeout==4.0.2
@@ -20,7 +20,7 @@ docker==5.0.3
 docmaptools==0.12.0
 ejpcsvparser==0.2.0
 elifearticle==0.15.0
-elifecleaner==0.43.0
+elifecleaner==0.44.0
 elifecrossref==0.19.0
 elifepubmed==0.5.1
 elifetools==0.32.0
