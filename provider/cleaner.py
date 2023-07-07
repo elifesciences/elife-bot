@@ -406,6 +406,18 @@ def get_docmap_by_account_id(url, account_id):
                 return json.dumps(list_item)
 
 
+def review_date_from_docmap(docmap_string, input_filename):
+    return prc.review_date_from_docmap(docmap_string, input_filename)
+
+
+def date_struct_from_string(date_string):
+    return prc.date_struct_from_string(date_string)
+
+
+def add_history_date(root, date_type, date_struct, identifier):
+    return prc.add_history_date(root, date_type, date_struct, identifier)
+
+
 def version_doi_from_docmap(docmap_string, input_filename):
     return prc.version_doi_from_docmap(docmap_string, input_filename)
 
