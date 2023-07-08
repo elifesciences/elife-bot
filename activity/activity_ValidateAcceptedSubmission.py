@@ -135,19 +135,17 @@ class activity_ValidateAcceptedSubmission(AcceptedBaseActivity):
             if not preprint_url:
                 log_message = "Preprint URL was not found in the article XML"
                 self.logger.info("%s, %s" % (self.name, log_message))
-                error_email_body += "%s\n" % log_message
-            else:
-                # check docmap URL exists, if fails then fail the workflow
-                docmap_url = cleaner.docmap_url(
-                    self.settings, session.get_value("article_id")
+
+            # check docmap URL exists, if fails then fail the workflow
+            docmap_url = cleaner.docmap_url(
+                self.settings, session.get_value("article_id")
+            )
+            if not cleaner.url_exists(docmap_url, self.logger):
+                log_message = (
+                    "Request for a docmap was not successful for URL %s" % docmap_url
                 )
-                if not cleaner.url_exists(docmap_url, self.logger):
-                    log_message = (
-                        "Request for a docmap was not successful for URL %s"
-                        % docmap_url
-                    )
-                    self.logger.info("%s, %s" % (self.name, log_message))
-                    error_email_body += "%s\n" % log_message
+                self.logger.info("%s, %s" % (self.name, log_message))
+                error_email_body += "%s\n" % log_message
 
             if error_email_body:
                 body_content = error_email_body_content(

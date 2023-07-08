@@ -400,12 +400,14 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
+    @patch.object(cleaner, "url_exists")
     @patch.object(cleaner, "preprint_url")
     @patch.object(cleaner, "is_prc")
     def test_do_activity_prc_no_preprint_url(
         self,
         fake_is_prc,
         fake_preprint_url,
+        fake_url_exists,
         fake_cleaner_storage_context,
         fake_session,
         fake_storage_context,
@@ -435,15 +437,11 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         )
         fake_is_prc.return_value = True
         fake_preprint_url.return_value = None
+        fake_url_exists.return_value = True
         fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # do the activity
         result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
-        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
-        # assertions for activity log
-        self.assertEqual(
-            self.activity.logger.loginfo[-2],
-            "ValidateAcceptedSubmission, Preprint URL was not found in the article XML",
-        )
+        self.assertEqual(result, True)
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
