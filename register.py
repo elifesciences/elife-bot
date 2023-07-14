@@ -93,6 +93,7 @@ def start(settings):
     activity_names.append("DepositCrossrefMinimal")
     activity_names.append("DepositCrossrefPeerReview")
     activity_names.append("DepositCrossrefPendingPublication")
+    activity_names.append("DepositCrossrefPostedContent")
     activity_names.append("PubmedArticleDeposit")
     activity_names.append("PublicationEmail")
     activity_names.append("FTPArticle")
