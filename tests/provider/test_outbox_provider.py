@@ -128,6 +128,7 @@ DOWNSTREAM_WORKFLOWS = [
     "DepositCrossref",
     "DepositCrossrefPeerReview",
     "DepositCrossrefPendingPublication",
+    "DepositCrossrefPostedContent",
     "GoOA",
     "HEFCE",
     "OASwitchboard",

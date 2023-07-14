@@ -19,6 +19,10 @@ DepositCrossrefPendingPublication:
   activity_name: DepositCrossrefPendingPublication
   s3_bucket_folder: crossref_pending_publication
 
+DepositCrossrefPostedContent:
+  activity_name: DepositCrossrefPostedContent
+  s3_bucket_folder: crossref_posted_content
+
 PMC:
   activity_name: PMCDeposit
   s3_bucket_folder: pmc

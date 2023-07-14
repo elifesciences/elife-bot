@@ -36,6 +36,7 @@ class workflow_DepositCrossref(Workflow):
             "steps": [
                 define_workflow_step("PingWorker", data),
                 define_workflow_step_medium("DepositCrossrefMinimal", data),
+                define_workflow_step_medium("DepositCrossrefPostedContent", data),
                 define_workflow_step_medium("DepositCrossref", data),
                 define_workflow_step_medium("DepositCrossrefPeerReview", data),
             ],
