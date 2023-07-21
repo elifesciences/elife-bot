@@ -28,6 +28,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
             settings_mock, fake_logger, None, None, None
         )
         self.activity.make_activity_directories()
+        self.activity_data = {"sleep_seconds": 0.001}
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -213,7 +214,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))
         fake_head_request.return_value = FakeResponse(302)
         # do the activity
-        result = self.activity.do_activity()
+        result = self.activity.do_activity(self.activity_data)
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"))
         # check statuses assertions
@@ -291,7 +292,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         # raise an exception on a post
         fake_post_request.side_effect = Exception("")
         fake_head_request.return_value = FakeResponse(302)
-        result = self.activity.do_activity()
+        result = self.activity.do_activity(self.activity_data)
         self.assertTrue(result)
 
     @patch.object(bigquery, "get_client")
@@ -313,7 +314,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         client = FakeBigQueryClient(rows)
         fake_get_client.return_value = client
 
-        result = self.activity.do_activity()
+        result = self.activity.do_activity(self.activity_data)
         self.assertTrue(result)
 
     @patch.object(activity_DepositCrossrefPeerReview, "get_manuscript_object")

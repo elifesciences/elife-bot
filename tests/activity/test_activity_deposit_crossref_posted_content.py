@@ -22,6 +22,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         )
         self.activity.make_activity_directories()
         self.outbox_folder = "tests/test_data/crossref_posted_content/outbox/"
+        self.activity_data = {"sleep_seconds": 0.001}
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -82,7 +83,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         # mock the POST to endpoint
         fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))
         # do the activity
-        result = self.activity.do_activity()
+        result = self.activity.do_activity(self.activity_data)
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"))
         # check statuses assertions
@@ -148,7 +149,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         fake_post_request.return_value = FakeResponse(200)
         fake_post_request.return_value = True
         fake_post_request.return_value = FakeResponse(200)
-        result = self.activity.do_activity()
+        result = self.activity.do_activity(self.activity_data)
         self.assertTrue(result)
 
     @patch.object(activity_module.email_provider, "smtp_connect")
@@ -174,7 +175,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         fake_post_request.side_effect = Exception("")
         fake_post_request.return_value = True
         fake_post_request.return_value = FakeResponse(200)
-        result = self.activity.do_activity()
+        result = self.activity.do_activity(self.activity_data)
         self.assertTrue(result)
 
     @patch.object(activity_module.email_provider, "smtp_connect")
@@ -191,7 +192,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
             self.outbox_folder, ["bad.xml"]
         )
 
-        result = self.activity.do_activity()
+        result = self.activity.do_activity(self.activity_data)
         self.assertTrue(result)
 
     def test_get_article_objects(self):

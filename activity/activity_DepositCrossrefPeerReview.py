@@ -195,6 +195,14 @@ class activity_DepositCrossrefPeerReview(Activity):
 
         self.logger.info("%s statuses: %s" % (self.name, self.statuses))
 
+        # sleep if there was a deposit
+        if self.good_xml_files and data and data.get("sleep_seconds"):
+            self.logger.info(
+                "%s sleeping %s seconds after the deposit"
+                % (self.name, data.get("sleep_seconds"))
+            )
+            time.sleep(data.get("sleep_seconds"))
+
         return True
 
     def get_article_objects(self, article_xml_files, crossref_config=None):
