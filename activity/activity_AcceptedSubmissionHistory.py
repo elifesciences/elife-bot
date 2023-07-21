@@ -93,6 +93,7 @@ class activity_AcceptedSubmissionHistory(AcceptedBaseActivity):
         )
 
         # add log messages if an external href is not approved to download
+        xml_root = None
         if not review_date_string:
             cleaner.LOGGER.warning(
                 "%s A sent-for-review date was not added to the XML", input_filename
@@ -109,6 +110,14 @@ class activity_AcceptedSubmissionHistory(AcceptedBaseActivity):
                 )
 
                 self.statuses["xml_root"] = True
+
+        # add pub-history tag
+        history_data = cleaner.docmap_preprint_history_from_docmap(docmap_string)
+        if history_data:
+            if xml_root is None:
+                xml_root = cleaner.parse_article_xml(xml_file_path)
+            xml_root = cleaner.add_pub_history(xml_root, history_data, input_filename)
+            self.statuses["xml_root"] = True
 
         if self.statuses.get("xml_root"):
             # write the XML root to disk

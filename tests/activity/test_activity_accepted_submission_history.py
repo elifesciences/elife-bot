@@ -128,6 +128,22 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
             )
             == 1
         )
+        # assert pub-history is present in the XML
+        self.assertTrue(
+            xml_content.count(
+                (
+                    "<pub-history>"
+                    "<event>"
+                    '<date date-type="preprint">'
+                    "<day>22</day><month>11</month><year>2022</year>"
+                    "</date>"
+                    '<self-uri content-type="preprint">https://doi.org/10.1101/2022.11.08.515698</self-uri>'
+                    "</event>"
+                    "</pub-history>"
+                )
+            )
+            == 1
+        )
 
         self.assertEqual(
             self.activity.statuses.get("docmap_string"),
