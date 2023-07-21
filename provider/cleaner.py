@@ -5,6 +5,7 @@ import re
 from urllib.parse import urlparse
 from xml.etree.ElementTree import SubElement
 import requests
+from docmaptools import parse as docmap_parse
 from elifecleaner import (
     LOGGER,
     assessment_terms,
@@ -416,6 +417,15 @@ def date_struct_from_string(date_string):
 
 def add_history_date(root, date_type, date_struct, identifier):
     return prc.add_history_date(root, date_type, date_struct, identifier)
+
+
+def docmap_preprint_history_from_docmap(docmap_string):
+    d_json = docmap_parse.docmap_json(docmap_string)
+    return docmap_parse.docmap_preprint_history(d_json)
+
+
+def add_pub_history(root, history_data, identifier):
+    return prc.add_pub_history(root, history_data, identifier)
 
 
 def version_doi_from_docmap(docmap_string, input_filename):
