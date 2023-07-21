@@ -21,6 +21,7 @@ class TestDepositCrossref(unittest.TestCase):
             settings_mock, fake_logger, None, None, None
         )
         self.activity.make_activity_directories()
+        self.activity_data = {"sleep_seconds": 0.001}
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -174,7 +175,7 @@ class TestDepositCrossref(unittest.TestCase):
         # mock the POST to endpoint
         fake_request.return_value = FakeResponse(test_data.get("post_status_code"))
         # do the activity
-        result = self.activity.do_activity()
+        result = self.activity.do_activity(self.activity_data)
         # check assertions
         self.assertEqual(result, test_data.get("expected_result"))
         # check statuses assertions

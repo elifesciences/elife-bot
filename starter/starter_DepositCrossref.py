@@ -1,9 +1,13 @@
+import json
 from starter.objects import Starter, default_workflow_params
 from provider import utils
 
 """
 Amazon SWF DepositCrossref starter
 """
+
+# seconds to sleep after a workflow activity deposits to Crossref for eventual consistency
+SLEEP_SECONDS = 30
 
 
 class starter_DepositCrossref(Starter):
@@ -17,6 +21,10 @@ class starter_DepositCrossref(Starter):
         workflow_params["workflow_id"] = self.name
         workflow_params["workflow_name"] = self.name
         workflow_params["workflow_version"] = "1"
+        info = {
+            "sleep_seconds": SLEEP_SECONDS,
+        }
+        workflow_params["input"] = json.dumps(info, default=lambda ob: None)
         return workflow_params
 
     def start(self, settings):
