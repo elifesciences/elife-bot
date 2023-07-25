@@ -36,14 +36,6 @@ class activity_EmailAcceptedSubmissionOutput(AcceptedBaseActivity):
 
         expanded_folder, input_filename, article_id = self.read_session(session)
 
-        # November 2022 temporary logic to not send email for PRC article ingest
-        if session.get_value("prc_status") and not cleaner.PRC_INGEST_SEND_EMAIL:
-            self.logger.info(
-                "%s for %s, PRC_INGEST_SEND_EMAIL is False so no email will be sent"
-                % (self.name, input_filename)
-            )
-            return True
-
         # March 2023 also do not send emails for any particular test files
         if (
             session.get_value("prc_status")
