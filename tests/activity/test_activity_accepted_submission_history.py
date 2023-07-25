@@ -138,7 +138,7 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
                     '<date date-type="preprint" iso-8601-date="2022-11-22">'
                     "<day>22</day><month>11</month><year>2022</year>"
                     "</date>"
-                    '<self-uri content-type="preprint">https://doi.org/10.1101/2022.11.08.515698</self-uri>'
+                    '<self-uri content-type="preprint" xlink:href="https://doi.org/10.1101/2022.11.08.515698"/>'
                     "</event>"
                     "</pub-history>"
                 )
