@@ -28,9 +28,6 @@ LOG_FORMAT_STRING = (
     "%(asctime)s %(levelname)s %(name)s:%(module)s:%(funcName)s: %(message)s"
 )
 
-# November 2022 temporary config whether to send emails for PRC article ingestions
-PRC_INGEST_SEND_EMAIL = True
-
 # March 2023 temporary config to not send emails for particular test files
 PRC_INGEST_IGNORE_SEND_EMAIL = [
     "02-28-2023-RA-RP-eLife-84747.zip",
