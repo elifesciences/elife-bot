@@ -2,6 +2,7 @@
 
 import os
 import copy
+import json
 import shutil
 import unittest
 from xml.etree.ElementTree import ParseError
@@ -14,6 +15,7 @@ from activity.activity_TransformAcceptedSubmission import (
 )
 from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
 from tests.activity import helpers, settings_mock, test_activity_data
+from tests import read_fixture
 import tests.test_data as test_case_data
 
 
@@ -196,9 +198,14 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
+    @patch.object(cleaner, "get_docmap")
     @patch.object(activity_module, "storage_context")
     def test_do_activity_prc_status(
-        self, fake_storage_context, fake_cleaner_storage_context, fake_session
+        self,
+        fake_storage_context,
+        fake_get_docmap,
+        fake_cleaner_storage_context,
+        fake_session,
     ):
         test_data = {
             "comment": "accepted submission zip file example",
@@ -234,6 +241,8 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
 
         # mock the session
         fake_session.return_value = FakeSession(session_data)
+
+        fake_get_docmap.return_value = read_fixture("2021.06.02.446694.docmap.json")
 
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
@@ -329,6 +338,7 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             )
             in xml_contents
         )
+        self.assertTrue("<volume>0</volume>" in xml_contents)
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -427,4 +437,92 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
                 )
                 % zip_filename
             ),
+        )
+
+
+class TestSetVolumeTag(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.directory = TempDirectory()
+        self.activity = activity_object(settings_mock, fake_logger, None, None, None)
+        self.article_id = "84364"
+        self.input_filename = "test.zip"
+        self.xml_file_path = os.path.join(self.directory.path, "test.xml")
+        self.xml_string = (
+            "<article>"
+            "<front>"
+            "<article-meta>"
+            "<volume>0</volume>"
+            "</article-meta>"
+            "</front>"
+            "</article>"
+        )
+        with open(self.xml_file_path, "w") as open_file:
+            open_file.write(self.xml_string)
+        self.docmap_json = {
+            "first-step": "_:b0",
+            "steps": {
+                "_:b0": {
+                    "actions": [
+                        {
+                            "participants": [],
+                            "outputs": [
+                                {
+                                    "type": "preprint",
+                                    "identifier": "84364",
+                                    "doi": "10.7554/eLife.84364.1",
+                                    "versionIdentifier": "1",
+                                    "license": "http://creativecommons.org/licenses/by/4.0/",
+                                    "published": "2023-02-13T14:00:00+00:00",
+                                }
+                            ],
+                        }
+                    ]
+                }
+            },
+        }
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
+
+    @patch.object(cleaner, "get_docmap")
+    def test_set_volume_tag(self, fake_get_docmap):
+        "test getting volume from the docmap and setting volume XML tag text"
+        fake_get_docmap.return_value = json.dumps(self.docmap_json)
+        expected_volume = 12
+        # invoke
+        self.activity.set_volume_tag(
+            self.article_id, self.xml_file_path, self.input_filename
+        )
+        # assert
+        with open(self.xml_file_path, "r") as open_file:
+            xml_string = open_file.read()
+        self.assertTrue("<volume>%s</volume>" % expected_volume in xml_string)
+        self.assertEqual(
+            self.activity.logger.loginfo[-1],
+            "TransformAcceptedSubmission, from article %s docmap got volume value: %s"
+            % (self.article_id, expected_volume),
+        )
+
+    @patch.object(cleaner, "get_docmap")
+    def test_no_volume_tag(self, fake_get_docmap):
+        "test if there is no volume tag in the XML"
+        fake_get_docmap.return_value = json.dumps(self.docmap_json)
+        # remove volume tag from the file fixture
+        with open(self.xml_file_path, "w") as open_file:
+            open_file.write(self.xml_string.replace("<volume>0</volume>", ""))
+        # invoke
+        self.activity.set_volume_tag(
+            self.article_id, self.xml_file_path, self.input_filename
+        )
+        # assert
+        with open(self.xml_file_path, "r") as open_file:
+            xml_string = open_file.read()
+        self.assertTrue("<volume>" not in xml_string)
+        self.assertEqual(
+            self.activity.logger.loginfo[-1],
+            "TransformAcceptedSubmission, no volume XML tag found for article %s"
+            % self.article_id,
         )
