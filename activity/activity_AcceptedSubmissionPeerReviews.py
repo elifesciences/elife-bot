@@ -72,18 +72,8 @@ class activity_AcceptedSubmissionPeerReviews(AcceptedBaseActivity):
         # find S3 object for article XML and download it
         xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
 
-        # generate docmap URL
-        docmap_url = cleaner.docmap_url(self.settings, article_id)
-        self.logger.info("%s, docmap_url: %s" % (self.name, docmap_url))
-
-        # get docmap json
-        self.logger.info(
-            "%s, getting docmap_string for input_filename: %s"
-            % (self.name, input_filename)
-        )
-        docmap_string = cleaner.get_docmap_by_account_id(
-            docmap_url, self.settings.docmap_account_id
-        )
+        # get docmap as a string
+        docmap_string = self.get_docmap_string(article_id, input_filename)
         self.statuses["docmap_string"] = True
 
         # get sub-article data from docmap
