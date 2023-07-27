@@ -100,6 +100,8 @@ class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
         # PRC XML changes
         if session.get_value("prc_status"):
             cleaner.transform_prc(xml_file_path, input_filename)
+            # set the volume tag value
+            self.set_volume_tag(article_id, xml_file_path, input_filename)
 
         # transform the zip file
         if self.statuses.get("download"):
@@ -184,6 +186,32 @@ class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
         self.clean_tmp_dir()
 
         return True
+
+    def set_volume_tag(self, article_id, xml_file_path, input_filename):
+        "from the docmap calculate the volume value and set the volume XML tag text"
+        # get docmap as a string
+        docmap_string = self.get_docmap_string(article_id, input_filename)
+        # get volume from the docmap
+        volume = cleaner.volume_from_docmap(docmap_string, input_filename)
+        self.logger.info(
+            "%s, from article %s docmap got volume value: %s",
+            self.name,
+            article_id,
+            volume,
+        )
+        if volume:
+            # modify the volume tag text
+            root = cleaner.parse_article_xml(xml_file_path)
+            volume_tag = root.find("front/article-meta/volume")
+            if volume_tag is not None:
+                volume_tag.text = str(volume)
+                cleaner.write_xml_file(root, xml_file_path, input_filename)
+            else:
+                self.logger.info(
+                    "%s, no volume XML tag found for article %s",
+                    self.name,
+                    article_id,
+                )
 
 
 def download_code_files_from_bucket(
