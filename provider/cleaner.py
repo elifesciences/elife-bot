@@ -425,6 +425,10 @@ def add_pub_history(root, history_data, identifier):
     return prc.add_pub_history(root, history_data, identifier)
 
 
+def volume_from_docmap(docmap_string, input_filename):
+    return prc.volume_from_docmap(docmap_string, input_filename)
+
+
 def version_doi_from_docmap(docmap_string, input_filename):
     return prc.version_doi_from_docmap(docmap_string, input_filename)
 
