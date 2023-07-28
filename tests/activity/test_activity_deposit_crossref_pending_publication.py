@@ -56,7 +56,7 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
             "expected_outbox_status": True,
             "expected_email_status": True,
             "expected_activity_status": True,
-            "expected_file_count": 1,
+            "expected_file_count": 2,
             "expected_crossref_xml_contains": [
                 "<pending_publication>",
                 "<acceptance_date>",
@@ -115,7 +115,7 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         if file_count > 0 and test_data.get("expected_crossref_xml_contains"):
             # Open the first crossref XML and check some of its contents
             crossref_xml_filename_path = os.path.join(
-                self.tmp_dir(), os.listdir(self.tmp_dir())[0]
+                self.tmp_dir(), sorted(os.listdir(self.tmp_dir()))[0]
             )
             with open(crossref_xml_filename_path, "rb") as open_file:
                 crossref_xml = open_file.read().decode("utf8")
@@ -126,6 +126,38 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
                             expected=expected, path=crossref_xml_filename_path
                         ),
                     )
+
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch("provider.crossref.doi_exists")
+    @patch("provider.crossref.doi_does_not_exist")
+    @patch("provider.outbox_provider.storage_context")
+    def test_do_activity_doi_exists(
+        self,
+        fake_storage_context,
+        fake_doi_does_not_exist,
+        fake_doi_exists,
+        fake_email_smtp_connect,
+    ):
+        "test for when the DOI already exists"
+        directory = TempDirectory()
+        resources = helpers.populate_storage(
+            from_dir=self.outbox_folder,
+            to_dir=directory.path,
+            filenames=["08-11-2020-FA-eLife-64719.xml"],
+            sub_dir="crossref_pending_publication/outbox",
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_doi_does_not_exist.return_value = False
+        fake_doi_exists.return_value = True
+
+        result = self.activity.do_activity()
+        self.assertTrue(result)
+        self.assertTrue(
+            "Moving files from outbox folder to the not_published folder"
+            in self.activity.logger.loginfo
+        )
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.crossref.doi_exists")
