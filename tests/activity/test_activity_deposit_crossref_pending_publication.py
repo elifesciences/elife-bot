@@ -56,7 +56,7 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
             "expected_outbox_status": True,
             "expected_email_status": True,
             "expected_activity_status": True,
-            "expected_file_count": 1,
+            "expected_file_count": 2,
             "expected_crossref_xml_contains": [
                 "<pending_publication>",
                 "<acceptance_date>",
@@ -115,7 +115,7 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         if file_count > 0 and test_data.get("expected_crossref_xml_contains"):
             # Open the first crossref XML and check some of its contents
             crossref_xml_filename_path = os.path.join(
-                self.tmp_dir(), os.listdir(self.tmp_dir())[0]
+                self.tmp_dir(), sorted(os.listdir(self.tmp_dir()))[0]
             )
             with open(crossref_xml_filename_path, "rb") as open_file:
                 crossref_xml = open_file.read().decode("utf8")

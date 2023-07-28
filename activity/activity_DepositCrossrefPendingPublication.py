@@ -1,4 +1,5 @@
 import os
+import copy
 import json
 import time
 import glob
@@ -99,16 +100,62 @@ class activity_DepositCrossrefPendingPublication(Activity):
         # change article title values
         generate_article_object_map = article_title_rewrite(generate_article_object_map)
 
-        # Generate crossref XML
-        self.statuses["generate"] = crossref.generate_crossref_xml_to_disk(
-            generate_article_object_map,
-            crossref_config,
-            self.good_xml_files,
-            self.bad_xml_files,
-            submission_type="pending_publication",
-            pretty=True,
-            indent="    ",
-        )
+        # build Crossref deposit objects
+        crossref_object_map = OrderedDict()
+        for xml_file, article in list(generate_article_object_map.items()):
+            crossref_object_list = crossref.build_crossref_xml(
+                {xml_file: article},
+                crossref_config,
+                self.good_xml_files,
+                self.bad_xml_files,
+                submission_type="pending_publication",
+            )
+            if crossref_object_list[0]:
+                crossref_object_map[article] = crossref_object_list[0]
+
+        # duplicate and modify the article for a version_doi deposit, set a different batch_id
+        for xml_file, article in list(generate_article_object_map.items()):
+            if article.version_doi:
+                # track a separate list of good and bad files later to be collated
+                good_xml_files = []
+                bad_xml_files = []
+                article_version = copy.copy(article)
+                article_version.doi = article_version.version_doi
+                article_version.version_doi = None
+                # generate CrossrefXML
+                crossref_object_list = crossref.build_crossref_xml(
+                    {xml_file: article_version},
+                    crossref_config,
+                    good_xml_files,
+                    bad_xml_files,
+                    submission_type="pending_publication",
+                )
+                # collate good and bad files
+                self.good_xml_files = list(
+                    set(self.good_xml_files).union(set(good_xml_files))
+                )
+                self.bad_xml_files = list(
+                    set(self.bad_xml_files).union(set(bad_xml_files))
+                )
+                # add the CrossrefXML
+                if crossref_object_list[0]:
+                    # change the batch_id
+                    crossref_object_list[0].batch_id = crossref_object_list[
+                        0
+                    ].batch_id.replace(
+                        "elife-crossref-pending_publication-",
+                        "elife-crossref-pending_publication-version-",
+                    )
+                    crossref_object_map[article_version] = crossref_object_list[0]
+
+        # generate status will be True if no unhandled exception was raised
+        self.statuses["generate"] = True
+
+        # output CrossrefXML objects to XML files
+        for article, c_xml in list(crossref_object_map.items()):
+            crossref.crossref_xml_to_disk(
+                c_xml, self.directories.get("TMP_DIR"), pretty=True
+            )
 
         # Approve files for publishing
         self.statuses["approve"] = self.approve_for_publishing()
