@@ -1,17 +1,17 @@
-# file generated 2023-07-27 - see update-dependencies.sh
+# file generated 2023-08-02 - see update-dependencies.sh
 arrow==1.2.3
 astroid==2.15.6
 async-timeout==4.0.2
 bcrypt==4.0.1
 beautifulsoup4==4.12.2
-boto3==1.28.10
-botocore==1.31.10
+boto3==1.28.17
+botocore==1.31.17
 cachetools==5.3.1
 certifi==2023.7.22
 cffi==1.15.1
 charset-normalizer==3.2.0
 configparser==5.3.0
-cryptography==41.0.2
+cryptography==41.0.3
 ddt==1.6.0
 Deprecated==1.2.14
 digestparser==0.2.0
@@ -35,7 +35,7 @@ google-cloud-bigquery-storage==2.22.0
 google-cloud-core==2.3.3
 google-crc32c==1.5.0
 google-resumable-media==2.5.0
-googleapis-common-protos==1.59.1
+googleapis-common-protos==1.60.0
 grpcio==1.56.2
 grpcio-status==1.56.2
 idna==3.4
@@ -51,12 +51,12 @@ MarkupSafe==2.1.3
 mccabe==0.7.0
 medium @ git+https://github.com/Medium/medium-sdk-python.git@bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6
 mock==4.0.3
-newrelic==8.8.1
+newrelic==8.9.0
 numpy==1.24.4
 packagepoa==0.3.0
 packaging==21.3
 paramiko==2.12.0
-platformdirs==3.9.1
+platformdirs==3.10.0
 pluggy==1.2.0
 proto-plus==1.22.3
 protobuf==4.23.4
@@ -68,10 +68,10 @@ pycparser==2.21
 pyfunctional==1.4.3
 PyGithub==1.59.0
 PyJWT==2.8.0
-pylint==2.17.4
+pylint==2.17.5
 PyNaCl==1.5.0
 pypandoc==1.11
-pyparsing==3.1.0
+pyparsing==3.1.1
 pytest==7.4.0
 python-dateutil==2.8.2
 python-docx==0.8.11
@@ -89,7 +89,7 @@ tabulate==0.9.0
 testfixtures==6.18.5
 text-unidecode==1.3
 tomli==2.0.1
-tomlkit==0.11.8
+tomlkit==0.12.1
 typing_extensions==4.7.1
 urllib3==1.26.16
 Wand==0.6.11
