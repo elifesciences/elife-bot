@@ -2,7 +2,7 @@ from ssl import SSLError
 import tempfile
 from github import Github
 from github import GithubException
-from provider.utils import pad_msid, unicode_encode
+from provider.utils import pad_msid, settings_environment, unicode_encode
 import provider.lax_provider
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -10,11 +10,6 @@ from activity.objects import Activity
 """
 activity_UpdateRepository.py activity
 """
-
-
-def settings_environment(settings_object):
-    "get the environment name from the settings object class name"
-    return type(settings_object()).__name__
 
 
 class RetryException(RuntimeError):

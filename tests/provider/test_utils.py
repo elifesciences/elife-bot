@@ -149,6 +149,26 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(utils.doi_uri_to_doi(doi_url), doi)
 
 
+class TestSettingsEnvironment(unittest.TestCase):
+    "test for utils.settings_environment()"
+
+    def test_settings_environment(self):
+        "test returning settings class name"
+
+        class ci:
+            "mock settings object for testing"
+            pass
+
+        settings_object = ci
+        result = utils.settings_environment(ci)
+        self.assertEqual(result, "ci")
+
+    def test_not_callable(self):
+        "test if settings is not a class"
+        result = utils.settings_environment(None)
+        self.assertEqual(result, None)
+
+
 class TestConsoleStart(unittest.TestCase):
     def test_console_start(self):
         env = "foo"
