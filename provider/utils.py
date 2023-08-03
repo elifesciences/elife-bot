@@ -169,6 +169,13 @@ CONSOLE_ARGUMENT_MAP = {
 }
 
 
+def settings_environment(settings_object):
+    "get the environment name from the settings object class name"
+    if not callable(settings_object):
+        return None
+    return type(settings_object()).__name__
+
+
 def add_console_argument(parser, argument_name):
     details = CONSOLE_ARGUMENT_MAP.get(argument_name)
     if details:

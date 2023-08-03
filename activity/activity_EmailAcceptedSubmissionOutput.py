@@ -72,7 +72,7 @@ class activity_EmailAcceptedSubmissionOutput(AcceptedBaseActivity):
 
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
         body = email_provider.simple_email_body(datetime_string, body_content)
-        subject = accepted_submission_email_subject(output_file)
+        subject = accepted_submission_email_subject(output_file, self.settings)
         sender_email = self.settings.accepted_submission_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
@@ -95,6 +95,9 @@ class activity_EmailAcceptedSubmissionOutput(AcceptedBaseActivity):
         return success
 
 
-def accepted_submission_email_subject(output_file):
+def accepted_submission_email_subject(output_file, settings=None):
     "the email subject"
-    return "eLife accepted submission: %s" % output_file
+    subject_prefix = ""
+    if utils.settings_environment(settings) == "continuumtest":
+        subject_prefix = "TEST "
+    return "%seLife accepted submission: %s" % (subject_prefix, output_file)

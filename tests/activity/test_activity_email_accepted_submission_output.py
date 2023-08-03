@@ -175,6 +175,29 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
 class TestEmailSubject(unittest.TestCase):
     def test_accepted_submission_email_subject(self):
         "email subject line with correct output_file value"
+
+        class continuumtest:
+            "mock settings object for testing"
+            pass
+
+        output_file = "file.zip"
+        expected = "TEST eLife accepted submission: %s" % output_file
+        subject = activity_module.accepted_submission_email_subject(
+            output_file, continuumtest
+        )
+        self.assertEqual(subject, expected)
+
+    def test_no_settings_class_name(self):
+        "test if the settings is not a class"
+        output_file = "file.zip"
+        expected = "eLife accepted submission: %s" % output_file
+        subject = activity_module.accepted_submission_email_subject(
+            output_file, settings_mock
+        )
+        self.assertEqual(subject, expected)
+
+    def test_settings_none(self):
+        "test if settings is not passed as an argument"
         output_file = "file.zip"
         expected = "eLife accepted submission: %s" % output_file
         subject = activity_module.accepted_submission_email_subject(output_file)

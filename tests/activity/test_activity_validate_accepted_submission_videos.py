@@ -367,3 +367,37 @@ class TestValidateVideoData(unittest.TestCase):
         # assertions
         self.assertEqual(validation_messages, expected_validation_messages)
         self.assertEqual(self.logger.loginfo[-1], expected_validation_messages)
+
+
+class TestErrorEmailSubject(unittest.TestCase):
+    def test_error_email_subject(self):
+        "email subject line with correct output_file value"
+
+        class continuumtest:
+            "mock settings object for testing"
+            pass
+
+        output_file = "file.zip"
+        expected = (
+            "TEST Error validating videos in accepted submission file: %s" % output_file
+        )
+        subject = activity_module.error_email_subject(output_file, continuumtest)
+        self.assertEqual(subject, expected)
+
+    def test_no_settings_class_name(self):
+        "test if the settings is not a class"
+        output_file = "file.zip"
+        expected = (
+            "Error validating videos in accepted submission file: %s" % output_file
+        )
+        subject = activity_module.error_email_subject(output_file, settings_mock)
+        self.assertEqual(subject, expected)
+
+    def test_settings_none(self):
+        "test if settings is not passed as an argument"
+        output_file = "file.zip"
+        expected = (
+            "Error validating videos in accepted submission file: %s" % output_file
+        )
+        subject = activity_module.error_email_subject(output_file)
+        self.assertEqual(subject, expected)

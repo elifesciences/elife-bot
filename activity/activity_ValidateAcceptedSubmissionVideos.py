@@ -176,7 +176,7 @@ class activity_ValidateAcceptedSubmissionVideos(AcceptedBaseActivity):
 
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
         body = email_provider.simple_email_body(datetime_string, body_content)
-        subject = error_email_subject(output_file)
+        subject = error_email_subject(output_file, self.settings)
         sender_email = self.settings.accepted_submission_sender_email
         recipient_email_list = email_provider.list_email_recipients(
             self.settings.accepted_submission_validate_error_recipient_email
@@ -198,9 +198,15 @@ class activity_ValidateAcceptedSubmissionVideos(AcceptedBaseActivity):
         return success
 
 
-def error_email_subject(output_file):
+def error_email_subject(output_file, settings=None):
     "the email subject"
-    return "Error validating videos in accepted submission file: %s" % output_file
+    subject_prefix = ""
+    if utils.settings_environment(settings) == "continuumtest":
+        subject_prefix = "TEST "
+    return "%sError validating videos in accepted submission file: %s" % (
+        subject_prefix,
+        output_file,
+    )
 
 
 def error_email_body_content(
