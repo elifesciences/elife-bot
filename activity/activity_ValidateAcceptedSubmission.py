@@ -70,6 +70,28 @@ class activity_ValidateAcceptedSubmission(AcceptedBaseActivity):
         original_repair_xml = cleaner.parse.REPAIR_XML
         cleaner.parse.REPAIR_XML = REPAIR_XML
 
+        # first check if XML can be parsed
+        try:
+            cleaner.parse_article_xml(xml_file_path)
+        except ParseError:
+            log_message = (
+                "%s, XML ParseError exception" " parsing XML file %s for file %s"
+            ) % (
+                self.name,
+                article_processing.file_name_from_name(xml_file_path),
+                input_filename,
+            )
+            self.logger.exception(log_message)
+            cleaner.LOGGER.exception(log_message)
+            body_content = error_email_body_content(
+                log_message,
+                input_filename,
+                self.name,
+            )
+            self.statuses["email"] = self.send_error_email(input_filename, body_content)
+            self.log_statuses(input_filename)
+            return self.ACTIVITY_PERMANENT_FAILURE
+
         # check PRC status and store in the session
         try:
             prc_status = cleaner.is_prc(xml_file_path, input_filename)
