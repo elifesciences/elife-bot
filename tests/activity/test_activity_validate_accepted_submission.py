@@ -500,6 +500,56 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         ]
         self.assertEqual(len(log_errors), 1)
 
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(cleaner, "parse_article_xml")
+    def test_do_activity_xml_parsing_exception(
+        self,
+        fake_parse_article_xml,
+        fake_cleaner_storage_context,
+        fake_session,
+        fake_storage_context,
+        fake_email_smtp_connect,
+    ):
+        directory = TempDirectory()
+        # set REPAIR_XML value because test fixture is malformed XML
+        activity_module.REPAIR_XML = True
+
+        # set a non-None session value to test string concatenation
+        self.session.store_value("cleaner_log", "")
+        fake_session.return_value = self.session
+        zip_file_path = os.path.join(
+            test_activity_data.ExpandArticle_files_source_folder,
+            "30-01-2019-RA-eLife-45644.zip",
+        )
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            zip_file_path,
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_parse_article_xml.side_effect = ParseError()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
+        # do the activity
+        result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
+        self.assertTrue(
+            self.activity.logger.logexception.startswith(
+                (
+                    "ValidateAcceptedSubmission, XML ParseError exception"
+                    " parsing XML file"
+                    " 30-01-2019-RA-eLife-45644.xml for file"
+                )
+            )
+        )
+
 
 class TestErrorEmailSubject(unittest.TestCase):
     def test_error_email_subject(self):
