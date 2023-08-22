@@ -9,6 +9,7 @@ from docmaptools import parse as docmap_parse
 from elifecleaner import (
     LOGGER,
     assessment_terms,
+    block,
     configure_logging,
     fig,
     parse,
@@ -173,7 +174,7 @@ def preprint_url(xml_file_path):
 
 def is_p_inline_graphic(tag, sub_article_id, p_tag_index, identifier):
     "see if a p tag contains only an inline-graphic tag"
-    return fig.is_p_inline_graphic(tag, sub_article_id, p_tag_index, identifier)
+    return block.is_p_inline_graphic(tag, sub_article_id, p_tag_index, identifier)
 
 
 def inline_graphic_tags(xml_file_path):
