@@ -20,7 +20,7 @@ docker==5.0.3
 docmaptools==0.16.0
 ejpcsvparser==0.2.0
 elifearticle==0.15.0
-elifecleaner==0.53.0
+elifecleaner==0.54.0
 elifecrossref==0.19.0
 elifepubmed==0.5.1
 elifetools==0.32.0
