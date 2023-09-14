@@ -131,16 +131,16 @@ def conditional_starts(current_datetime):
             )
 
         # CNKI deposits once per day 23:00 UTC
-        # if current_time.tm_hour == 23:
-        #    conditional_start_list.append(
-        #        OrderedDict(
-        #            [
-        #                ("starter_name", "starter_PubRouterDeposit"),
-        #                ("workflow_id", "PubRouterDeposit_CNKI"),
-        #                ("start_seconds", 60 * 31),
-        #            ]
-        #        )
-        #    )
+        if current_time.tm_hour == 23:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_PubRouterDeposit"),
+                        ("workflow_id", "PubRouterDeposit_CNKI"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
 
     elif current_time.tm_min >= 15 and current_time.tm_min <= 19:
         # Jobs to start at quarter past the hour
