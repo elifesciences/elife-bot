@@ -2,7 +2,6 @@ import logging
 from logging import handlers
 import os
 import random
-import newrelic.agent
 
 
 def logger(logFile=None, setLevel="INFO", identity="", loggerName="elife-bot"):
@@ -22,16 +21,9 @@ def logger(logFile=None, setLevel="INFO", identity="", loggerName="elife-bot"):
     )
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
-    logger.addHandler(NewRelicHandler())
     logger.setLevel(eval("logging." + setLevel))
     return logger
 
 
 def identity(process_name):
     return "%s_%s" % (process_name, int(random.random() * 1000))
-
-
-class NewRelicHandler(logging.Handler):
-    def emit(self, record):
-        if record.levelno >= logging.ERROR:
-            newrelic.agent.notice_error()

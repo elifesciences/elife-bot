@@ -4,7 +4,6 @@ import json
 import importlib
 from botocore.config import Config
 import boto3
-import newrelic.agent
 from provider import process, utils
 import log
 import workflow
@@ -29,7 +28,6 @@ def decide(settings, flag, debug=False):
     )
 
     token = None
-    application = newrelic.agent.application()
 
     # Poll for a decision task
     while flag.green():
@@ -75,18 +73,15 @@ def decide(settings, flag, debug=False):
 
             if token is not None:
                 workflow_type = get_workflow_type(decision)
-                with newrelic.agent.BackgroundTask(
-                    application, name=workflow_type, group="decider.py"
-                ):
-                    process_workflow(
-                        workflow_type,
-                        decision,
-                        settings,
-                        logger,
-                        client,
-                        token,
-                        maximum_page_size,
-                    )
+                process_workflow(
+                    workflow_type,
+                    decision,
+                    settings,
+                    logger,
+                    client,
+                    token,
+                    maximum_page_size,
+                )
 
         # Reset and loop
         token = None

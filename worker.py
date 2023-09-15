@@ -4,7 +4,6 @@ import importlib
 import botocore
 from botocore.config import Config
 import boto3
-import newrelic.agent
 import log
 from provider import process, utils
 import activity
@@ -31,7 +30,6 @@ def work(settings, flag):
     )
 
     token = None
-    application = newrelic.agent.application()
 
     # Poll for an activity task indefinitely
     while flag.green():
@@ -56,19 +54,13 @@ def work(settings, flag):
                 activityType = get_activityType(activity_task)
                 if activityType is not None:
                     logger.info("activityType: %s", activityType)
-
-                    with newrelic.agent.BackgroundTask(
-                        application,
-                        name=get_activity_name(activityType),
-                        group="worker.py",
-                    ):
-                        process_activity(
-                            activity_task,
-                            settings,
-                            logger,
-                            client,
-                            token,
-                        )
+                    process_activity(
+                        activity_task,
+                        settings,
+                        logger,
+                        client,
+                        token,
+                    )
 
         # Reset and loop
         token = None

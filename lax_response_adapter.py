@@ -1,7 +1,6 @@
 import json
 import boto3
 from dateutil.parser import parse
-import newrelic.agent
 import log
 from provider import process
 from provider import utils
@@ -88,7 +87,6 @@ class LaxResponseAdapter:
         else:
             self.logger.error("Could not obtain queue, exiting")
 
-    @newrelic.agent.background_task(group="lax_response_adapter.py")
     def process_message(self, message):
         message_str = str(message.get("Body"))
         return parse_message(message_str, self.logger)
