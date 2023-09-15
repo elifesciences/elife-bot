@@ -9,7 +9,6 @@ from pytz import timezone
 import log
 import provider.swfmeta as swfmetalib
 from provider import utils
-import newrelic.agent
 
 """
 SWF cron
@@ -414,6 +413,4 @@ def start_workflow(settings, starter_name, workflow_id=None):
 if __name__ == "__main__":
     ENV = utils.console_start_env()
     SETTINGS = utils.get_settings(ENV)
-    application = newrelic.agent.register_application(timeout=10.0)
-    with newrelic.agent.BackgroundTask(application, name="run_cron", group="cron.py"):
-        run_cron(settings=SETTINGS)
+    run_cron(settings=SETTINGS)

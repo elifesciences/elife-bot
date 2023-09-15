@@ -3,7 +3,6 @@ ftp-credentials.txt
 /*.bak
 /*.log
 /*.log.*.gz
-/newrelic.ini
 *.pyc
 *.swp
 settings.py

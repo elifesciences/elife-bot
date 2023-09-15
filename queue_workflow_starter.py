@@ -6,7 +6,6 @@ import uuid
 import json
 import importlib
 import boto3
-import newrelic.agent
 import log
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider import process, utils
@@ -85,7 +84,6 @@ def process_message(settings, logger, message):
         logger.exception("Exception while processing %s", message.get("Body"))
 
 
-@newrelic.agent.background_task(group="queue_workflow_starter.py")
 def start_workflow(settings, workflow_name, workflow_data):
     data_processor = workflow_data_processors.get(workflow_name)
     workflow_name = "starter_" + workflow_name

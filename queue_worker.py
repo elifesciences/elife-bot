@@ -3,7 +3,6 @@ import json
 import os
 import re
 import yaml
-import newrelic.agent
 import boto3
 from provider import process, utils
 import log
@@ -66,7 +65,6 @@ class QueueWorker:
         input_queue_url, output_queue_url = self.queues()
 
         rules = load_rules()
-        application = newrelic.agent.application()
 
         # Poll for messages indefinitely
         if input_queue_url:
@@ -83,51 +81,46 @@ class QueueWorker:
                 if not queue_messages.get("Messages"):
                     self.logger.info("no messages available")
                 else:
-                    with newrelic.agent.BackgroundTask(
-                        application,
-                        name=self.identity,
-                        group="%s.py" % self.identity,
-                    ):
-                        for queue_message in queue_messages.get("Messages"):
+                    for queue_message in queue_messages.get("Messages"):
+                        self.logger.info(
+                            "got message id: %s" % queue_message.get("MessageId")
+                        )
+                        s3_message = S3SQSMessage(queue_message.get("Body"))
+                        if s3_message.notification_type == "S3Event":
+                            info = S3NotificationInfo.from_S3SQSMessage(s3_message)
                             self.logger.info(
-                                "got message id: %s" % queue_message.get("MessageId")
+                                "S3NotificationInfo: %s", info.to_dict()
                             )
-                            s3_message = S3SQSMessage(queue_message.get("Body"))
-                            if s3_message.notification_type == "S3Event":
-                                info = S3NotificationInfo.from_S3SQSMessage(s3_message)
-                                self.logger.info(
-                                    "S3NotificationInfo: %s", info.to_dict()
+
+                            workflow_name = get_starter_name(rules, info)
+                            if workflow_name is None:
+                                self.logger.error(
+                                    "Could not handle file %s in bucket %s"
+                                    % (info.file_name, info.bucket_name)
                                 )
-
-                                workflow_name = get_starter_name(rules, info)
-                                if workflow_name is None:
-                                    self.logger.error(
-                                        "Could not handle file %s in bucket %s"
-                                        % (info.file_name, info.bucket_name)
-                                    )
-                                else:
-                                    # build message
-                                    message = {
-                                        "workflow_name": workflow_name,
-                                        "workflow_data": info.to_dict(),
-                                    }
-
-                                    # send workflow initiation message
-                                    self.client.send_message(
-                                        QueueUrl=output_queue_url,
-                                        MessageBody=json.dumps(message),
-                                    )
-
-                                # cancel incoming message
-                                self.logger.info("cancelling message")
-                                self.client.delete_message(
-                                    QueueUrl=input_queue_url,
-                                    ReceiptHandle=queue_message.get("ReceiptHandle"),
-                                )
-                                self.logger.info("message cancelled")
                             else:
-                                # TODO : log
-                                pass
+                                # build message
+                                message = {
+                                    "workflow_name": workflow_name,
+                                    "workflow_data": info.to_dict(),
+                                }
+
+                                # send workflow initiation message
+                                self.client.send_message(
+                                    QueueUrl=output_queue_url,
+                                    MessageBody=json.dumps(message),
+                                )
+
+                            # cancel incoming message
+                            self.logger.info("cancelling message")
+                            self.client.delete_message(
+                                QueueUrl=input_queue_url,
+                                ReceiptHandle=queue_message.get("ReceiptHandle"),
+                            )
+                            self.logger.info("message cancelled")
+                        else:
+                            # TODO : log
+                            pass
                 time.sleep(self.sleep_seconds)
 
             self.logger.info("graceful shutdown")
