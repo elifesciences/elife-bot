@@ -96,78 +96,64 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
 
         self.logger.info("%s, files: %s" % (self.name, files))
 
-        # search XML file for graphic tags
-        if not cleaner.inline_graphic_tags(xml_file_path):
+        # search XML file for inline graphic tags or graphic tags in table-wrap
+        inline_graphic_tags = cleaner.inline_graphic_tags(xml_file_path)
+        table_wrap_graphic_tags = cleaner.table_wrap_graphic_tags(xml_file_path)
+
+        # continue only if there are tags found
+        if inline_graphic_tags or table_wrap_graphic_tags:
+            self.statuses["hrefs"] = True
+        else:
             self.logger.info(
-                "%s, no inline-graphic tags in %s" % (self.name, input_filename)
+                "%s, no inline-graphic or table-wrap graphic tags in %s"
+                % (self.name, input_filename)
             )
             self.end_cleaner_log(session)
             return True
 
-        self.statuses["hrefs"] = True
-
         xml_root = cleaner.parse_article_xml(xml_file_path)
 
-        # download each inline graphic image to disk
-        inline_graphic_hrefs = []
-        for inline_graphic_tag in xml_root.iterfind(".//inline-graphic"):
-            href = cleaner.tag_xlink_href(inline_graphic_tag)
-            inline_graphic_hrefs.append(href)
-
-        inline_graphic_files = [
-            file_detail
-            for file_detail in files
-            if file_detail.get("upload_file_nm") in inline_graphic_hrefs
-        ]
-
-        cleaner.download_asset_files_from_bucket(
-            storage,
-            inline_graphic_files,
-            asset_file_name_map,
-            self.directories.get("TEMP_DIR"),
-            self.logger,
+        # convert inline-graphic files to maths formulae
+        # download inline graphic files from the bucket
+        inline_graphic_file_to_path_map = self.download_graphics(
+            inline_graphic_tags, files, storage, asset_file_name_map
+        )
+        self.logger.info(
+            "%s, downloaded inline-grpahic files %s for %s"
+            % (self.name, list(inline_graphic_file_to_path_map.keys()), input_filename)
+        )
+        file_to_approved_math_data_map = self.process_inline_graphics(
+            xml_root,
+            inline_graphic_file_to_path_map,
+            input_filename,
         )
 
-        # create a map of upload_file_nm to local file path
-        file_to_path_map = {}
-        for file_detail in inline_graphic_files:
-            for asset_key, asset_path in asset_file_name_map.items():
-                if file_detail.get("upload_file_nm") and asset_key.endswith(
-                    file_detail.get("upload_file_nm")
-                ):
-                    file_to_path_map[file_detail.get("upload_file_nm")] = asset_path
-
-        # request math formula from the external service
-        file_to_data_map = ocr_files(
-            file_to_path_map, self.settings, self.logger, input_filename
+        # convert table-wrap graphic to table
+        # download graphic files from the bucket
+        graphic_file_to_path_map = self.download_graphics(
+            table_wrap_graphic_tags, files, storage, asset_file_name_map
+        )
+        file_to_approved_table_data_map = self.process_table_wrap_graphics(
+            xml_root,
+            graphic_file_to_path_map,
+            input_filename,
         )
 
-        # a map of which files to change to math equations
-        file_to_approved_math_data_map = {
-            key: value for key, value in file_to_data_map.items() if value.get("data")
-        }
-
-        # replace inline-graphic tags with maths formulae
-        transform_inline_graphic_tags(
-            xml_root, file_to_approved_math_data_map, self.logger, input_filename
+        # remove converted files from the XML and bucket
+        approved_file_name_list = list(file_to_approved_math_data_map.keys()) + list(
+            file_to_approved_table_data_map.keys()
         )
 
-        # for each inline graphic replaced, remove the file tag
-        if file_to_approved_math_data_map:
-            file_name_list = file_to_approved_math_data_map.keys()
-            self.statuses["modify_xml"] = self.remove_file_tags(
-                xml_root, file_name_list, input_filename
+        if self.statuses["modify_xml"]:
+            # remove file tags from the XML
+            self.remove_file_tags(xml_root, approved_file_name_list, input_filename)
+            # delete converted graphic files from the expanded folder
+            self.delete_expanded_folder_files(
+                asset_file_name_map, expanded_folder, approved_file_name_list, storage
             )
 
         # write the XML root to disk
         cleaner.write_xml_file(xml_root, xml_file_path, input_filename)
-
-        # for each inline-graphic replaced, delete it from the expanded folder
-        if self.statuses["modify_xml"]:
-            file_name_list = file_to_approved_math_data_map.keys()
-            self.delete_expanded_folder_files(
-                asset_file_name_map, expanded_folder, file_name_list, storage
-            )
 
         # upload the XML to the bucket
         if self.statuses["modify_xml"]:
@@ -184,8 +170,130 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
 
         return True
 
+    def download_graphics(self, tags, files, storage, asset_file_name_map):
+        # download each image file to disk
+        hrefs = []
+        for tag in tags:
+            href = cleaner.tag_xlink_href(tag)
+            hrefs.append(href)
 
-def ocr_files(file_to_path_map, settings, logger, identifier):
+        image_files = [
+            file_detail
+            for file_detail in files
+            if file_detail.get("upload_file_nm") in hrefs
+        ]
+
+        cleaner.download_asset_files_from_bucket(
+            storage,
+            image_files,
+            asset_file_name_map,
+            self.directories.get("TEMP_DIR"),
+            self.logger,
+        )
+
+        # create a map of upload_file_nm to local file path
+        file_to_path_map = {}
+        for file_detail in image_files:
+            for asset_key, asset_path in asset_file_name_map.items():
+                if file_detail.get("upload_file_nm") and asset_key.endswith(
+                    file_detail.get("upload_file_nm")
+                ):
+                    file_to_path_map[file_detail.get("upload_file_nm")] = asset_path
+        return file_to_path_map
+
+    def inline_graphics_to_xml(self, xml_root, file_to_data_map, input_filename):
+        "convert inline-graphic tags to mathml"
+        # a map of which files to change to math equations
+        file_to_approved_math_data_map = {
+            key: value for key, value in file_to_data_map.items() if value.get("data")
+        }
+
+        # replace inline-graphic tags with maths formulae
+        transform_inline_graphic_tags(
+            xml_root, file_to_approved_math_data_map, self.logger, input_filename
+        )
+
+        # for each inline graphic replaced, remove the file tag
+        if file_to_approved_math_data_map:
+            file_name_list = file_to_approved_math_data_map.keys()
+            self.statuses["modify_xml"] = self.remove_file_tags(
+                xml_root, file_name_list, input_filename
+            )
+        return file_to_approved_math_data_map
+
+    def process_inline_graphics(
+        self,
+        xml_root,
+        inline_graphic_file_to_path_map,
+        input_filename,
+    ):
+        "replace inline-graphic tags with mathml"
+        # OCR inline graphics to maths formulae from the external service
+        inline_graphic_file_to_data_map = ocr_files(
+            inline_graphic_file_to_path_map,
+            "math",
+            self.settings,
+            self.logger,
+            input_filename,
+        )
+        self.logger.info(
+            "%s, got mathml data from OCR of %s inline-graphic files: %s"
+            % (self.name, input_filename, list(inline_graphic_file_to_data_map.keys()))
+        )
+        file_to_approved_math_data_map = self.inline_graphics_to_xml(
+            xml_root, inline_graphic_file_to_data_map, input_filename
+        )
+        return file_to_approved_math_data_map
+
+    def table_graphics_to_xml(self, xml_root, file_to_data_map, input_filename):
+        "convert graphic tags to mathml"
+        # a map of which files to change to math equations
+        file_to_approved_table_data_map = {
+            key: value
+            for key, value in file_to_data_map.items()
+            if value and value.get("data")
+        }
+
+        # replace graphic tags with table XML
+        transform_table_graphic_tags(
+            xml_root, file_to_approved_table_data_map, self.logger, input_filename
+        )
+
+        # for each graphic replaced, remove the file tag
+        if file_to_approved_table_data_map:
+            file_name_list = file_to_approved_table_data_map.keys()
+            self.statuses["modify_xml"] = self.remove_file_tags(
+                xml_root, file_name_list, input_filename
+            )
+
+        return file_to_approved_table_data_map
+
+    def process_table_wrap_graphics(
+        self,
+        xml_root,
+        graphic_file_to_path_map,
+        input_filename,
+    ):
+        "convert table-wrap graphic tags to table XML"
+        # OCR inline graphics to table data from the external service
+        graphic_file_to_data_map = ocr_files(
+            graphic_file_to_path_map,
+            "table",
+            self.settings,
+            self.logger,
+            input_filename,
+        )
+        self.logger.info(
+            "%s, got TSV data from OCR of %s graphic files: %s"
+            % (self.name, input_filename, list(graphic_file_to_data_map.keys()))
+        )
+        file_to_approved_math_data_map = self.table_graphics_to_xml(
+            xml_root, graphic_file_to_data_map, input_filename
+        )
+        return file_to_approved_math_data_map
+
+
+def ocr_files(file_to_path_map, options_type, settings, logger, identifier):
     "post request to an endpoint for each file and return data"
     file_to_data_map = {}
     for file_name, file_path in file_to_path_map.items():
@@ -193,14 +301,22 @@ def ocr_files(file_to_path_map, settings, logger, identifier):
             "OCR file from %s: file_name %s, file_path %s"
             % (identifier, file_name, file_path)
         )
-
         try:
-            response = ocr.mathpix_post_request(
-                url=settings.mathpix_endpoint,
-                app_id=settings.mathpix_app_id,
-                app_key=settings.mathpix_app_key,
-                file_path=file_path,
-            )
+            if options_type == "table":
+                response = ocr.mathpix_table_post_request(
+                    url=settings.mathpix_endpoint,
+                    app_id=settings.mathpix_app_id,
+                    app_key=settings.mathpix_app_key,
+                    file_path=file_path,
+                )
+            else:
+                response = ocr.mathpix_post_request(
+                    url=settings.mathpix_endpoint,
+                    app_id=settings.mathpix_app_id,
+                    app_key=settings.mathpix_app_key,
+                    file_path=file_path,
+                )
+
         except Exception as exception:
             logger.exception(
                 "Exception posting to Mathpix API endpoint, file_name %s: %s"
@@ -273,3 +389,40 @@ def transform_inline_graphic_tags(xml_root, file_to_math_data_map, logger, ident
                     # add latex if available
                     if latex_data and latex_data.get("value"):
                         math_tag.set("alttext", latex_data.get("value"))
+
+
+def transform_table_graphic_tags(xml_root, file_to_table_data_map, logger, identifier):
+    "replace graphic tags with table XML"
+    for graphic_tag_parent in xml_root.iterfind(".//graphic/.."):
+        for tag_index, graphic_tag in enumerate(graphic_tag_parent.iterfind("*")):
+            if graphic_tag.tag == "graphic":
+                href = cleaner.tag_xlink_href(graphic_tag)
+                if href in file_to_table_data_map.keys():
+                    # convert TSV to XML, then replace table tag
+                    table_data = file_to_table_data_map.get(href).get("data")
+                    tsv_string = None
+                    for table_data_row in table_data:
+                        if table_data_row.get("type") == "tsv":
+                            tsv_string = table_data_row.get("value")
+                            break
+                    table_rows = None
+                    if tsv_string:
+                        table_rows = cleaner.tsv_to_list(tsv_string)
+                    else:
+                        log_message = (
+                            "transform_table_graphic_tags found no tsv_string"
+                            " for href %s in file %s"
+                        ) % (
+                            href,
+                            identifier,
+                        )
+                        logger.info(log_message)
+                        continue
+                    # populate a table tag
+                    table_tag = None
+                    if table_rows:
+                        table_tag = cleaner.list_to_table_xml(table_rows)
+                    # replace the grpahic tag with the table tag
+                    if table_tag is not None:
+                        graphic_tag_parent.insert(tag_index, table_tag)
+                        graphic_tag_parent.remove(graphic_tag)

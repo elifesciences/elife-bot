@@ -1,16 +1,17 @@
 # coding=utf-8
 
 import copy
+import importlib
 import os
 import glob
 import shutil
 import unittest
 from xml.etree import ElementTree
 from xml.etree.ElementTree import ParseError
-from mock import patch
+from mock import Mock, patch
 from testfixtures import TempDirectory
 from ddt import ddt, data
-from provider import cleaner
+from provider import cleaner, ocr
 import activity.activity_AcceptedSubmissionPeerReviewOcr as activity_module
 from activity.activity_AcceptedSubmissionPeerReviewOcr import (
     activity_AcceptedSubmissionPeerReviewOcr as activity_object,
@@ -59,6 +60,15 @@ EXAMPLE_RESPONSE_JSON = {
 
 EQUATION_DATA = EXAMPLE_RESPONSE_JSON.get("data")
 
+EXAMPLE_TABLE_RESPONSE_JSON = {
+    "data": [
+        {
+            "type": "tsv",
+            "value": "Column 1\tColumn 2\nRow 1 Cell 1\tRow 1 Cell 2",
+        },
+    ],
+}
+
 
 OCR_FILES_DATA = {
     "sa1-inf1.jpg": {
@@ -70,7 +80,27 @@ OCR_FILES_DATA = {
     "sa2-inf1.jpg": {
         "data": [],
     },
+    "sa2-inf2.jpg": {
+        "data": EXAMPLE_TABLE_RESPONSE_JSON.get("data"),
+    },
 }
+
+
+def mock_mathpix_post_request(
+    url=None,
+    app_id=None,
+    app_key=None,
+    file_path=None,
+    options_json=None,
+    verify_ssl=False,
+    logger=None,
+):
+    "return a FakeResponse containing the response data based on the file_name"
+    response = FakeResponse(201)
+    file_name = file_path.rsplit(os.sep, 1)[-1]
+    if file_name and file_name in OCR_FILES_DATA:
+        response.response_json = OCR_FILES_DATA.get(file_name)
+    return response
 
 
 @ddt
@@ -89,10 +119,11 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
         shutil.rmtree(self.activity.get_tmp_dir())
         # reset the session value
         self.session.store_value("cleaner_log", None)
+        # reload the module which had MagicMock applied to revert the mock
+        importlib.reload(ocr)
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
-    @patch.object(activity_module, "ocr_files")
     @patch.object(cleaner, "storage_context")
     @patch.object(activity_object, "clean_tmp_dir")
     @data(
@@ -106,7 +137,8 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
             "expected_upload_xml_status": None,
             "expected_activity_log_contains": [
                 (
-                    "AcceptedSubmissionPeerReviewOcr, no inline-graphic tags in "
+                    "AcceptedSubmissionPeerReviewOcr, no inline-graphic "
+                    "or table-wrap graphic tags in "
                     "30-01-2019-RA-eLife-45644.zip"
                 )
             ],
@@ -125,10 +157,32 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
                 '<sub-article id="sa2">'
                 "<body>"
                 '<p>Next can be an image containing no formula <inline-graphic xlink:href="sa2-inf1.jpg"/>.</p>'
+                '<table-wrap id="sa2table1">'
+                "<label>Review table 1.</label>"
+                "<caption>"
+                "<title>Table title.</title>"
+                "<p>This is the caption for this table that describes what it contains.</p>"
+                "</caption>"
+                '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-inf2.jpg" />'
+                "</table-wrap>"
+                '<table-wrap id="sa2table2">'
+                "<label>Review table 2.</label>"
+                "<caption>"
+                "<title>Table title.</title>"
+                "<p>Example to test if no TSV is returned.</p>"
+                "</caption>"
+                '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-inf3.jpg" />'
+                "</table-wrap>"
                 "</body>"
                 "</sub-article>"
             ),
-            "image_names": ["sa1-inf1.jpg", "sa1-inf2.jpg", "sa2-inf1.jpg"],
+            "image_names": [
+                "sa1-inf1.jpg",
+                "sa1-inf2.jpg",
+                "sa2-inf1.jpg",
+                "sa2-inf2.jpg",
+                "sa2-inf3.jpg",
+            ],
             "expected_result": True,
             "expected_docmap_string_status": True,
             "expected_hrefs_status": True,
@@ -187,12 +241,44 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
                     '<sub-article id="sa2">'
                     "<body>"
                     '<p>Next can be an image containing no formula <inline-graphic xlink:href="sa2-inf1.jpg"/>.</p>'
+                    '<table-wrap id="sa2table1">'
+                    "<label>Review table 1.</label>"
+                    "<caption>"
+                    "<title>Table title.</title>"
+                    "<p>This is the caption for this table that describes what it contains.</p>"
+                    "</caption>"
+                    "<table>"
+                    "<thead>"
+                    "<tr>"
+                    "<th>Column 1</th>"
+                    "<th>Column 2</th>"
+                    "</tr>"
+                    "</thead>"
+                    "<tbody>"
+                    "<tr>"
+                    "<td>Row 1 Cell 1</td>"
+                    "<td>Row 1 Cell 2</td>"
+                    "</tr>"
+                    "</tbody>"
+                    "</table>"
+                    "</table-wrap>"
+                    '<table-wrap id="sa2table2">'
+                    "<label>Review table 2.</label>"
+                    "<caption>"
+                    "<title>Table title.</title>"
+                    "<p>Example to test if no TSV is returned.</p>"
+                    "</caption>"
+                    '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-inf3.jpg"/>'
+                    "</table-wrap>"
                     "</body>"
                     "</sub-article>"
                 ),
                 (
                     '<file file-type="figure">'
                     "<upload_file_nm>sa2-inf1.jpg</upload_file_nm>"
+                    "</file>"
+                    '<file file-type="figure">'
+                    "<upload_file_nm>sa2-inf3.jpg</upload_file_nm>"
                     "</file>"
                     "</files>"
                 ),
@@ -204,10 +290,24 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
             "expected_bucket_upload_folder_contents": [
                 "30-01-2019-RA-eLife-45644.xml",
                 "sa2-inf1.jpg",
+                "sa2-inf3.jpg",
             ],
             "expected_bucket_upload_folder_not_contents": [
                 "sa1-inf1.jpg",
                 "sa1-inf2.jpg",
+                "sa2-inf2.jpg",
+            ],
+            "expected_activity_log_contains": [
+                (
+                    "AcceptedSubmissionPeerReviewOcr, got mathml data from OCR of"
+                    " 30-01-2019-RA-eLife-45644.zip inline-graphic files:"
+                    " ['sa1-inf1.jpg', 'sa1-inf2.jpg', 'sa2-inf1.jpg']"
+                ),
+                (
+                    "AcceptedSubmissionPeerReviewOcr, got TSV data from OCR of"
+                    " 30-01-2019-RA-eLife-45644.zip graphic files:"
+                    " ['sa2-inf2.jpg', 'sa2-inf3.jpg']"
+                ),
             ],
         },
     )
@@ -216,7 +316,6 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
         test_data,
         fake_clean_tmp_dir,
         fake_cleaner_storage_context,
-        fake_ocr_files,
         fake_session,
         fake_storage_context,
     ):
@@ -232,8 +331,13 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
         file_details = []
         if test_data.get("image_names"):
             for image_name in test_data.get("image_names"):
+                file_path = os.path.join(directory.path, image_name)
+                shutil.copyfile(
+                    "tests/files_source/digests/outbox/99999/digest-99999.jpg",
+                    file_path,
+                )
                 details = {
-                    "file_path": "tests/files_source/digests/outbox/99999/digest-99999.jpg",
+                    "file_path": file_path,
                     "file_type": "figure",
                     "upload_file_nm": image_name,
                 }
@@ -274,7 +378,9 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
             directory.path, resources, dest_folder=directory.path
         )
         fake_session.return_value = self.session
-        fake_ocr_files.return_value = OCR_FILES_DATA
+
+        # mock the Mathpix API requests with a mock function
+        ocr.mathpix_post_request = Mock(side_effect=mock_mathpix_post_request)
 
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
@@ -479,9 +585,10 @@ class TestOcrFiles(unittest.TestCase):
         self.file_to_path_map = {self.file_name: self.file_path}
         self.identifier = "test.zip"
 
-    @patch("requests.post")
+    @patch("provider.ocr.requests.post")
     def test_ocr_files(self, fake_request):
         "test a request to the ocr endpoint but mocking the requests.post"
+        options_type = "math"
         response_json = {}
         response_status = 200
         response = FakeResponse(response_status)
@@ -490,7 +597,32 @@ class TestOcrFiles(unittest.TestCase):
         expected_result = {self.file_name: response_json}
         # invoke
         result = activity_module.ocr_files(
-            self.file_to_path_map, settings_mock, self.logger, self.identifier
+            self.file_to_path_map,
+            options_type,
+            settings_mock,
+            self.logger,
+            self.identifier,
+        )
+        # assert
+        self.assertDictEqual(result, expected_result)
+
+    @patch("requests.post")
+    def test_table_ocr_files(self, fake_request):
+        "test the options_type table"
+        options_type = "table"
+        response_json = {"data": [{"type": "tsv", "value": ""}]}
+        response_status = 200
+        response = FakeResponse(response_status, response_json)
+        # response.response_json = response_json
+        fake_request.return_value = response
+        expected_result = {self.file_name: response_json}
+        # invoke
+        result = activity_module.ocr_files(
+            self.file_to_path_map,
+            options_type,
+            settings_mock,
+            self.logger,
+            self.identifier,
         )
         # assert
         self.assertDictEqual(result, expected_result)
@@ -498,6 +630,7 @@ class TestOcrFiles(unittest.TestCase):
     @patch("requests.post")
     def test_failure_status_code(self, fake_request):
         "test exception catching of a non-success status code response"
+        options_type = "math"
         response_json = {}
         response_status = 500
         response = FakeResponse(response_status)
@@ -511,7 +644,11 @@ class TestOcrFiles(unittest.TestCase):
         )
         # invoke
         result = activity_module.ocr_files(
-            self.file_to_path_map, settings_mock, self.logger, self.identifier
+            self.file_to_path_map,
+            options_type,
+            settings_mock,
+            self.logger,
+            self.identifier,
         )
         # assert
         self.assertDictEqual(result, expected_result)
@@ -677,6 +814,99 @@ class TestTransformInlineGraphicTags(unittest.TestCase):
         file_to_math_data_map = {}
         expected = b"<sub-article />"
         activity_module.transform_inline_graphic_tags(
+            xml_root, file_to_math_data_map, self.logger, self.identifier
+        )
+        self.assertEqual(ElementTree.tostring(xml_root), expected)
+
+
+class TestTransformTableGraphicTags(unittest.TestCase):
+    "test transform_table_graphic_tags()"
+
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.identifier = "test.zip"
+
+    def test_table(self):
+        "test transforming graphic tag into table"
+        xml_string = (
+            '<sub-article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            '<table-wrap id="sa2table1">'
+            "<label>Review table 1.</label>"
+            "<caption>"
+            "<title>Table title.</title>"
+            "<p>This is the caption for this table that describes what it contains.</p>"
+            "</caption>"
+            '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-inf2.jpg" />'
+            "</table-wrap>"
+            "</sub-article>"
+        )
+        xml_root = ElementTree.fromstring(xml_string)
+        file_to_math_data_map = {"sa2-inf2.jpg": EXAMPLE_TABLE_RESPONSE_JSON}
+        expected = (
+            b"<sub-article>"
+            b'<table-wrap id="sa2table1">'
+            b"<label>Review table 1.</label>"
+            b"<caption>"
+            b"<title>Table title.</title>"
+            b"<p>This is the caption for this table that describes what it contains.</p>"
+            b"</caption>"
+            b"<table>"
+            b"<thead>"
+            b"<tr>"
+            b"<th>Column 1</th>"
+            b"<th>Column 2</th>"
+            b"</tr>"
+            b"</thead>"
+            b"<tbody>"
+            b"<tr>"
+            b"<td>Row 1 Cell 1</td>"
+            b"<td>Row 1 Cell 2</td>"
+            b"</tr>"
+            b"</tbody>"
+            b"</table>"
+            b"</table-wrap>"
+            b"</sub-article>"
+        )
+        activity_module.transform_table_graphic_tags(
+            xml_root, file_to_math_data_map, self.logger, self.identifier
+        )
+        self.assertEqual(ElementTree.tostring(xml_root), expected)
+
+    def test_no_tsv(self):
+        "test if no TSV data is returned"
+        file_name = "sa2-inf2.jpg"
+        xml_string = (
+            '<sub-article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            '<table-wrap id="sa2table1">'
+            "<label>Review table 1.</label>"
+            "<caption>"
+            "<title>Table title.</title>"
+            "<p>This is the caption for this table that describes what it contains.</p>"
+            "</caption>"
+            '<graphic mimetype="image" mime-subtype="jpg" xlink:href="%s" />'
+            "</table-wrap>"
+            "</sub-article>" % file_name
+        )
+        xml_root = ElementTree.fromstring(xml_string)
+        file_to_math_data_map = {file_name: {"data": []}}
+        expected = bytes(xml_string, encoding="utf-8")
+        activity_module.transform_table_graphic_tags(
+            xml_root, file_to_math_data_map, self.logger, self.identifier
+        )
+        self.assertEqual(ElementTree.tostring(xml_root), expected)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "transform_table_graphic_tags found no tsv_string for href %s in file %s"
+            % (file_name, self.identifier),
+        )
+
+    def test_empty_inputs(self):
+        "test minimal XML and minimal inputs"
+        xml_string = "<sub-article/>"
+        xml_root = ElementTree.fromstring(xml_string)
+        file_to_math_data_map = {}
+        expected = b"<sub-article />"
+        activity_module.transform_table_graphic_tags(
             xml_root, file_to_math_data_map, self.logger, self.identifier
         )
         self.assertEqual(ElementTree.tostring(xml_root), expected)

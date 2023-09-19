@@ -15,6 +15,7 @@ from elifecleaner import (
     parse,
     prc,
     sub_article,
+    table,
     transform,
     video,
     video_xml,
@@ -187,6 +188,15 @@ def inline_graphic_tags(xml_file_path):
     return tags
 
 
+def table_wrap_graphic_tags(xml_file_path):
+    "find graphic tags which are inside table-wrap tags"
+    root = parse_article_xml(xml_file_path)
+    tags = []
+    for graphic_tag in root.findall(".//table-wrap/graphic"):
+        tags.append(graphic_tag)
+    return tags
+
+
 def tag_xlink_href(tag):
     "return a the xlink:href attribute"
     return tag.get("{http://www.w3.org/1999/xlink}href", None)
@@ -274,6 +284,21 @@ def transform_fig(sub_article_root, identifier):
     return fig.transform_fig(sub_article_root, identifier)
 
 
+def transform_table(sub_article_root, identifier):
+    "transform inline-graphic tags into table-wrap tags"
+    return table.transform_table(sub_article_root, identifier)
+
+
+def tsv_to_list(tsv_string):
+    "parse TSV string into lists of rows"
+    return table.tsv_to_list(tsv_string)
+
+
+def list_to_table_xml(table_rows):
+    "create a table Element tag from the table rows"
+    return table.list_to_table_xml(table_rows)
+
+
 def remove_tag_attributes(tag):
     "remove attributes from the tag"
     fig.remove_tag_attributes(tag)
@@ -322,6 +347,11 @@ def docmap_url(settings, article_id):
     return (
         docmap_url_pattern.format(article_id=article_id) if docmap_url_pattern else None
     )
+
+
+def sub_article_data(docmap_string, article):
+    # add sub-article data from the docmap and get requests to the article object
+    return sub_article.sub_article_data(docmap_string, article)
 
 
 def add_sub_article_xml(docmap_string, article_xml, terms_yaml=None):
