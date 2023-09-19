@@ -14,6 +14,38 @@ DEFAULT_OPTIONS_JSON = {
     },
 }
 
+TABLE_OPTIONS_JSON = {
+    "math_inline_delimiters": ["$", "$"],
+    "rm_spaces": True,
+    "formats": "data",
+    "data_options": {
+        "include_table_html": True,
+        "include_tsv": True,
+    },
+    "enable_tables_fallback": True,
+}
+
+
+def mathpix_table_post_request(
+    url,
+    app_id,
+    app_key,
+    file_path,
+    options_json=None,
+    verify_ssl=False,
+    logger=None,
+):
+    "POST to Mathpix API endpoint using table options"
+    return mathpix_post_request(
+        url,
+        app_id,
+        app_key,
+        file_path,
+        options_json=TABLE_OPTIONS_JSON,
+        verify_ssl=verify_ssl,
+        logger=logger,
+    )
+
 
 def mathpix_post_request(
     url,

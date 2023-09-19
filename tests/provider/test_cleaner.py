@@ -335,6 +335,58 @@ class TestInlineGraphicTags(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
+class TestTableWrapGraphicTags(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_table_wrap_graphic_tags(self):
+        "test finding graphic tags inside table-wrap tags"
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+
+        xml_string = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<sub-article>"
+            "<body><p>"
+            '<graphic xlink:href="https://example.org/image1.jpg" />'
+            "<table-wrap>"
+            '<graphic xlink:href="https://example.org/image2.jpg" />'
+            "</table-wrap>"
+            "</p></body>"
+            "</sub-article>"
+            "</article>"
+        )
+        expected_result_len = 1
+        expected_tag_0_string = (
+            '<graphic xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'xlink:href="https://example.org/image2.jpg" />'
+        )
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w") as open_file:
+            open_file.write(xml_string)
+        # invoke the function
+        result = cleaner.table_wrap_graphic_tags(xml_file_path)
+        # check output
+        self.assertEqual(len(result), expected_result_len)
+        self.assertEqual(
+            ElementTree.tostring(result[0]).decode("utf8"), expected_tag_0_string
+        )
+
+    def test_table_wrap_graphic_tags_none(self):
+        "test if there are no graphic tags"
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+        xml_string = "<article />"
+        expected = []
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w") as open_file:
+            open_file.write(xml_string)
+        # invoke the function
+        result = cleaner.table_wrap_graphic_tags(xml_file_path)
+        # check output
+        self.assertEqual(result, expected)
+
+
 class TestTagXlinkHref(unittest.TestCase):
     def test_tag_xlink_href(self):
         xlink_href = "https://example.org/image1.jpg"
