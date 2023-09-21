@@ -40,3 +40,32 @@ ARTICLE_RESULT_15747 = Row(
         "Reviewers_And_Editors": 4,
     },
 )
+
+ARTICLE_RESULT_84364 = Row(
+    (
+        (
+            "84364",
+            "10.7554/eLife.84364",
+            datetime.datetime(2023, 2, 13, 11, 31, 1, tzinfo=UTC),
+            datetime.datetime(2023, 2, 10, 6, 28, 43, tzinfo=UTC),
+            [
+                {
+                    "Title": "Dr.",
+                    "Last_Name": "Eisen",
+                    "Middle_Name": "B",
+                    "Role": "Reviewing Editor",
+                    "ORCID": "test-orcid",
+                    "First_Name": "Michael",
+                    "Person_ID": "1013",
+                },
+            ],
+        )
+    ),
+    {
+        "Manuscript_ID": 0,
+        "DOI": 1,
+        "Review_Comment_UTC_Timestamp": 2,
+        "Author_Response_UTC_Timestamp": 3,
+        "Reviewers_And_Editors": 4,
+    },
+)
