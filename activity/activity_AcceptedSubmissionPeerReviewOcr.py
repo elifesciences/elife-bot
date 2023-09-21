@@ -119,7 +119,7 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
             inline_graphic_tags, files, storage, asset_file_name_map
         )
         self.logger.info(
-            "%s, downloaded inline-grpahic files %s for %s"
+            "%s, downloaded inline-graphic files %s for %s"
             % (self.name, list(inline_graphic_file_to_path_map.keys()), input_filename)
         )
         file_to_approved_math_data_map = self.process_inline_graphics(
@@ -132,6 +132,10 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
         # download graphic files from the bucket
         graphic_file_to_path_map = self.download_graphics(
             table_wrap_graphic_tags, files, storage, asset_file_name_map
+        )
+        self.logger.info(
+            "%s, downloaded table-wrap graphic files %s for %s"
+            % (self.name, list(graphic_file_to_path_map.keys()), input_filename)
         )
         file_to_approved_table_data_map = self.process_table_wrap_graphics(
             xml_root,
