@@ -140,6 +140,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 ),
                 '<anonymous contributor_role="author" sequence="first"/>',
                 '<peer_review stage="pre-publication" type="editor-report">',
+                '<ORCID authenticated="true">https://orcid.org/test-orcid</ORCID>',
                 '<peer_review stage="pre-publication" type="referee-report">',
                 '<peer_review stage="pre-publication" type="author-comment">',
                 "<doi>10.7554/eLife.84364.2.sa0</doi>",
@@ -197,7 +198,6 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
-        fake_get_client.return_value = True
         resources = helpers.populate_storage(
             from_dir="tests/test_data/crossref_peer_review/outbox/",
             to_dir=directory.path,
@@ -207,9 +207,14 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, resources, dest_folder=directory.path
         )
-        rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
+
+        if "elife-preprint-84364-v2.xml" in test_data["article_xml_filenames"]:
+            rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_84364])
+        else:
+            rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
         client = FakeBigQueryClient(rows)
         fake_get_client.return_value = client
+
         # mock the POST to endpoint
         fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))
         fake_head_request.return_value = FakeResponse(302)

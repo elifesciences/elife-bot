@@ -64,7 +64,9 @@
             </pub-history>
             <permissions>
                 <license xlink:href="http://creativecommons.org/licenses/by/4.0/">
-                    <ali:license_ref>http://creativecommons.org/licenses/by/4.0/</ali:license_ref>
+                    <license-p>
+                        <ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/4.0/"/>
+                    </license-p>
                 </license>
             </permissions>
             <abstract>
