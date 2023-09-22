@@ -250,6 +250,9 @@ class activity_DepositCrossrefPendingPublication(Activity):
 
         self.logger.info("%s statuses: %s" % (self.name, self.statuses))
 
+        # Clean up disk
+        self.clean_tmp_dir()
+
         return True
 
     def get_article_objects(self, article_xml_files):
