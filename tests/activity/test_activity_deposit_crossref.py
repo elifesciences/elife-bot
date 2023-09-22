@@ -34,6 +34,7 @@ class TestDepositCrossref(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("requests.post")
     @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_DepositCrossref, "clean_tmp_dir")
     @data(
         {
             "comment": "Article 15747",
@@ -154,11 +155,13 @@ class TestDepositCrossref(unittest.TestCase):
     def test_do_activity(
         self,
         test_data,
+        fake_clean_tmp_dir,
         fake_storage_context,
         fake_request,
         fake_email_smtp_connect,
     ):
         directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )

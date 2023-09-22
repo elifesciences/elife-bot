@@ -37,8 +37,10 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
     @patch("provider.crossref.doi_does_not_exist")
     @patch("requests.post")
     @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_DepositCrossrefPendingPublication, "clean_tmp_dir")
     def test_do_activity(
         self,
+        fake_clean_tmp_dir,
         fake_storage_context,
         fake_post_request,
         fake_doi_does_not_exist,
@@ -68,6 +70,7 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
             ],
         }
         directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )

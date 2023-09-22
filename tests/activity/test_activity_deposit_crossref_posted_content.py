@@ -36,8 +36,10 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
     @patch.object(lax_provider, "article_status_version_map")
     @patch("requests.post")
     @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_DepositCrossrefPostedContent, "clean_tmp_dir")
     def test_do_activity(
         self,
+        fake_clean_tmp_dir,
         fake_storage_context,
         fake_post_request,
         fake_version_map,
@@ -67,6 +69,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
             ],
         }
         directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )

@@ -203,6 +203,9 @@ class activity_DepositCrossrefPeerReview(Activity):
             )
             time.sleep(data.get("sleep_seconds"))
 
+        # Clean up disk
+        self.clean_tmp_dir()
+
         return True
 
     def get_article_objects(self, article_xml_files, crossref_config=None):
