@@ -173,9 +173,6 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
         fake_session,
     ):
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
-
         zip_filename = "30-01-2019-RA-eLife-45644.zip"
         zip_file_path = os.path.join(
             test_activity_data.ExpandArticle_files_source_folder,

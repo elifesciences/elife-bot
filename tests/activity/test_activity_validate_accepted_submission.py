@@ -61,8 +61,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_session,
         fake_storage_context,
     ):
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
 
@@ -133,9 +131,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         # check session cleaner_log contains content
         self.assertTrue("elifecleaner:parse:" in self.session.get_value("cleaner_log"))
 
-        # reset REPAIR_XML value
-        activity_module.REPAIR_XML = False
-
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -148,8 +143,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_storage_context,
     ):
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
 
         # set a non-None session value to test string concatenation
         self.session.store_value("cleaner_log", "")
@@ -204,8 +197,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_storage_context,
     ):
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
 
         # set a non-None session value to test string concatenation
         self.session.store_value("cleaner_log", "")
@@ -260,8 +251,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_storage_context,
     ):
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
 
         fake_session.return_value = self.session
         zip_file_path = os.path.join(
@@ -310,8 +299,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_email_smtp_connect,
     ):
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
 
         # set a non-None session value to test string concatenation
         self.session.store_value("cleaner_log", "")
@@ -357,8 +344,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_email_smtp_connect,
     ):
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
 
         # set a non-None session value to test string concatenation
         self.session.store_value("cleaner_log", "")
@@ -414,8 +399,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_email_smtp_connect,
     ):
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
 
         # set a non-None session value to test string concatenation
         self.session.store_value("cleaner_log", "")
@@ -455,8 +438,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_storage_context,
     ):
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
 
         # set a non-None session value to test string concatenation
         self.session.store_value("cleaner_log", "")
@@ -514,8 +495,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_email_smtp_connect,
     ):
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
 
         # set a non-None session value to test string concatenation
         self.session.store_value("cleaner_log", "")

@@ -76,8 +76,6 @@ class TestAcceptedSubmissionPeerReviews(unittest.TestCase):
         fake_session,
         fake_storage_context,
     ):
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
 
@@ -174,9 +172,6 @@ class TestAcceptedSubmissionPeerReviews(unittest.TestCase):
             "elifecleaner:sub_article:add_sub_article_xml: Parsing article XML into root Element"
             in log_contents
         )
-
-        # reset REPAIR_XML value
-        activity_module.REPAIR_XML = False
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")

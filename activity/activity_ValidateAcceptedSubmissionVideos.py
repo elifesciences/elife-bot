@@ -8,9 +8,6 @@ from provider import cleaner, email_provider, glencoe_check, utils
 from activity.objects import AcceptedBaseActivity
 
 
-REPAIR_XML = False
-
-
 class activity_ValidateAcceptedSubmissionVideos(AcceptedBaseActivity):
     "ValidateAcceptedSubmissionVideos activity"
 
@@ -62,10 +59,6 @@ class activity_ValidateAcceptedSubmissionVideos(AcceptedBaseActivity):
         # find S3 object for article XML and download it
         xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
 
-        # reset the REPAIR_XML constant
-        original_repair_xml = cleaner.parse.REPAIR_XML
-        cleaner.parse.REPAIR_XML = REPAIR_XML
-
         # get list of video files from the article XML
         video_files = []
         try:
@@ -81,9 +74,6 @@ class activity_ValidateAcceptedSubmissionVideos(AcceptedBaseActivity):
             )
             self.logger.exception(log_message)
             self.log_statuses(input_filename)
-        finally:
-            # reset the parsing library flag
-            cleaner.parse.REPAIR_XML = original_repair_xml
 
         ###### start validation checks
         if video_files:

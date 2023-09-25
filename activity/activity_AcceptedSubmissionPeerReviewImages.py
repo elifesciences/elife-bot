@@ -10,8 +10,6 @@ from provider import cleaner, utils
 from activity.objects import AcceptedBaseActivity
 
 
-REPAIR_XML = False
-
 FILE_NAME_FORMAT = "elife-%s-inf%s.%s"
 
 REQUESTS_TIMEOUT = 10

@@ -25,6 +25,8 @@ from provider import utils
 from provider.storage_provider import storage_context
 from provider.article_processing import file_extension
 
+REPAIR_XML = False
+
 LOG_FILENAME = "elifecleaner.log"
 LOG_FORMAT_STRING = (
     "%(asctime)s %(levelname)s %(name)s:%(module)s:%(funcName)s: %(message)s"
@@ -92,6 +94,9 @@ def article_xml_asset(asset_file_name_map):
 
 
 def parse_article_xml(xml_file_path):
+    # set the REPAIR_XML value
+    parse.REPAIR_XML = REPAIR_XML
+    # parse the XML file
     return parse.parse_article_xml(xml_file_path)
 
 

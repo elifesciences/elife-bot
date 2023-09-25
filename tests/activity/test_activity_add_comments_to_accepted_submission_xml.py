@@ -103,8 +103,6 @@ class TestAddCommentsToAcceptedSubmissionXml(unittest.TestCase):
         fake_storage_context,
         fake_session,
     ):
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
 
@@ -184,9 +182,6 @@ class TestAddCommentsToAcceptedSubmissionXml(unittest.TestCase):
                     "%s not found in xml_string" % expected_xml,
                 )
 
-        # reset REPAIR_XML value
-        activity_module.REPAIR_XML = False
-
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
     @patch.object(cleaner, "parse_article_xml")
@@ -257,9 +252,6 @@ class TestAddXmlException(unittest.TestCase):
         fake_add_comments_to_xml,
         fake_storage_context,
     ):
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
-
         directory = TempDirectory()
         filename = "30-01-2019-RA-eLife-45644.zip"
         article_id = "45644"
@@ -296,9 +288,6 @@ class TestAddXmlException(unittest.TestCase):
                 "AddCommentsToAcceptedSubmissionXml, exception in add_comments_to_xml"
             )
         )
-
-        # reset REPAIR_XML value
-        activity_module.REPAIR_XML = False
 
 
 class TestAddCommentsToXml(unittest.TestCase):

@@ -319,8 +319,6 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
         fake_session,
         fake_storage_context,
     ):
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
 
@@ -485,9 +483,6 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
                     bucket_file not in output_bucket_list,
                     "%s unexpectedly found in bucket upload folder" % bucket_file,
                 )
-
-        # reset REPAIR_XML value
-        activity_module.REPAIR_XML = False
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")

@@ -9,9 +9,6 @@ from provider import article_processing, cleaner, email_provider, utils
 from activity.objects import AcceptedBaseActivity
 
 
-REPAIR_XML = False
-
-
 class activity_ValidateAcceptedSubmission(AcceptedBaseActivity):
     "ValidateAcceptedSubmission activity"
 
@@ -65,10 +62,6 @@ class activity_ValidateAcceptedSubmission(AcceptedBaseActivity):
 
         # find S3 object for article XML and download it
         xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
-
-        # reset the REPAIR_XML constant
-        original_repair_xml = cleaner.parse.REPAIR_XML
-        cleaner.parse.REPAIR_XML = REPAIR_XML
 
         # first check if XML can be parsed
         try:
@@ -145,9 +138,6 @@ class activity_ValidateAcceptedSubmission(AcceptedBaseActivity):
             files = []
 
         self.logger.info("%s, files: %s" % (self.name, files))
-
-        # reset the parsing library flag
-        cleaner.parse.REPAIR_XML = original_repair_xml
 
         # check whether PRC preprint data is present
         if prc_status:

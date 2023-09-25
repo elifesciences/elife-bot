@@ -48,9 +48,6 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             "expected_transform_status": True,
         }
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
-
         # copy files into the input directory using the storage context
         # expanded bucket files
         zip_file_path = os.path.join(
@@ -216,8 +213,6 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
         session_data = copy.copy(test_activity_data.accepted_session_example)
         session_data["prc_status"] = True
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
 
         # copy files into the input directory using the storage context
         # expanded bucket files
@@ -350,8 +345,6 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
         fake_session,
     ):
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
         filename_base = "30-01-2019-RA-eLife-45644"
         zip_filename = "%s.zip" % filename_base
         xml_filename = "%s.xml" % filename_base
@@ -400,9 +393,6 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
         fake_session,
     ):
         directory = TempDirectory()
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
-
         zip_filename = "30-01-2019-RA-eLife-45644.zip"
         zip_file_path = os.path.join(
             test_activity_data.ExpandArticle_files_source_folder,

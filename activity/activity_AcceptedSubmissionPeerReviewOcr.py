@@ -8,9 +8,6 @@ from provider import article_processing, cleaner, ocr
 from activity.objects import AcceptedBaseActivity
 
 
-REPAIR_XML = False
-
-
 class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
     "AcceptedSubmissionPeerReviewOcr activity"
 

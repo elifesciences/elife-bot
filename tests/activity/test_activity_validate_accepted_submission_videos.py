@@ -101,8 +101,6 @@ class TestValidateAcceptedSubmissionVideos(unittest.TestCase):
         fake_session,
         fake_get,
     ):
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
 
@@ -160,9 +158,6 @@ class TestValidateAcceptedSubmissionVideos(unittest.TestCase):
             test_data.get("expected_deposit_videos_status"),
             "failed in {comment}".format(comment=test_data.get("comment")),
         )
-
-        # reset REPAIR_XML value
-        activity_module.REPAIR_XML = False
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")

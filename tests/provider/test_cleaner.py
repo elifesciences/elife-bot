@@ -2,6 +2,7 @@ import os
 import json
 import unittest
 from xml.etree import ElementTree
+from xml.etree.ElementTree import ParseError
 from collections import OrderedDict
 import zipfile
 from mock import patch
@@ -109,6 +110,34 @@ class TestParseArticleXml(unittest.TestCase):
                     "in the XML string: ['&#x001D;']\n"
                 ),
             )
+
+    def test_malformed_xml(self):
+        "test XML missing a namespace will raise an exception"
+        xml_file_path = os.path.join(self.directory.path, "test.xml")
+        with open(xml_file_path, "w") as open_file:
+            open_file.write(
+                "<article><title>To &#x001D;nd odd entities.</title>"
+                '<p>A <ext-link xlink:href="https://example.org/">link</ext-link>.</article>'
+            )
+        with self.assertRaises(ParseError):
+            cleaner.parse_article_xml(xml_file_path)
+        with open(self.logfile, "r") as open_file:
+            log_contents = open_file.read()
+        log_lines = [line for line in log_contents.split("\n")]
+        self.assertEqual(
+            log_lines[0],
+            (
+                "INFO elifecleaner:parse:parse_article_xml: Replacing character entities "
+                "in the XML string: ['&#x001D;']"
+            ),
+        )
+        self.assertEqual(
+            log_lines[1],
+            (
+                "ERROR elifecleaner:parse:parse_article_xml: "
+                "ParseError raised because REPAIR_XML flag is False"
+            ),
+        )
 
 
 class TestFileList(unittest.TestCase):
@@ -249,7 +278,7 @@ class TestPreprintUrl(unittest.TestCase):
         xml_file_name = "test.xml"
 
         xml_string = (
-            "<article>"
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
             "<front>"
             "<article-meta>"
             '<fn-group content-type="article-history">'
