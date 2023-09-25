@@ -162,8 +162,6 @@ class TestAcceptedSubmissionPeerReviewTables(unittest.TestCase):
         fake_session,
         fake_storage_context,
     ):
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
 
@@ -297,6 +295,3 @@ class TestAcceptedSubmissionPeerReviewTables(unittest.TestCase):
                     bucket_file in output_bucket_list,
                     "%s not found in bucket upload folder" % bucket_file,
                 )
-
-        # reset REPAIR_XML value
-        activity_module.REPAIR_XML = False

@@ -9,8 +9,6 @@ from provider.storage_provider import storage_context
 from activity.objects import AcceptedBaseActivity
 
 
-REPAIR_XML = False
-
 # session variable name to store the number of attempts
 SESSION_ATTEMPT_COUNTER_NAME = "video_metadata_attempt_count"
 
@@ -145,11 +143,6 @@ class activity_AnnotateAcceptedSubmissionVideos(AcceptedBaseActivity):
                 )
                 return True
 
-        # read the XML
-        # reset the REPAIR_XML constant
-        original_repair_xml = cleaner.parse.REPAIR_XML
-        cleaner.parse.REPAIR_XML = REPAIR_XML
-
         # parse XML
         try:
             root = cleaner.parse_article_xml(xml_file_path)
@@ -168,9 +161,6 @@ class activity_AnnotateAcceptedSubmissionVideos(AcceptedBaseActivity):
             root = None
 
             generated_video_data = []
-        finally:
-            # reset the parsing library flag
-            cleaner.parse.REPAIR_XML = original_repair_xml
 
         if root:
             try:

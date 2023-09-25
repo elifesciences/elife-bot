@@ -8,9 +8,6 @@ from provider.storage_provider import storage_context
 from activity.objects import AcceptedBaseActivity
 
 
-REPAIR_XML = False
-
-
 class activity_AddCommentsToAcceptedSubmissionXml(AcceptedBaseActivity):
     "AddCommentsToAcceptedSubmissionXml activity"
 
@@ -78,11 +75,6 @@ class activity_AddCommentsToAcceptedSubmissionXml(AcceptedBaseActivity):
         # find S3 object for article XML and download it
         xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
 
-        # read the XML
-        # reset the REPAIR_XML constant
-        original_repair_xml = cleaner.parse.REPAIR_XML
-        cleaner.parse.REPAIR_XML = REPAIR_XML
-
         # parse XML
         try:
             root = cleaner.parse_article_xml(xml_file_path)
@@ -95,9 +87,6 @@ class activity_AddCommentsToAcceptedSubmissionXml(AcceptedBaseActivity):
             )
             self.logger.exception(log_message)
             root = None
-        finally:
-            # reset the parsing library flag
-            cleaner.parse.REPAIR_XML = original_repair_xml
 
         if root:
             try:

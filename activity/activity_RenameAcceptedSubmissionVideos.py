@@ -9,9 +9,6 @@ from provider import cleaner
 from activity.objects import AcceptedBaseActivity
 
 
-REPAIR_XML = False
-
-
 class activity_RenameAcceptedSubmissionVideos(AcceptedBaseActivity):
     "RenameAcceptedSubmissionVideos activity"
 
@@ -80,11 +77,6 @@ class activity_RenameAcceptedSubmissionVideos(AcceptedBaseActivity):
         # find S3 object for article XML and download it
         xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
 
-        # get the file list from the XML
-        # reset the REPAIR_XML constant
-        original_repair_xml = cleaner.parse.REPAIR_XML
-        cleaner.parse.REPAIR_XML = REPAIR_XML
-
         # get list of files from the article XML
         files = []
         try:
@@ -97,9 +89,6 @@ class activity_RenameAcceptedSubmissionVideos(AcceptedBaseActivity):
                 input_filename,
             )
             self.logger.exception(log_message)
-        finally:
-            # reset the parsing library flag
-            cleaner.parse.REPAIR_XML = original_repair_xml
 
         # generate new file names for the videos
         generated_video_data = []

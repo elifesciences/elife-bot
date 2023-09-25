@@ -77,8 +77,6 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
         fake_session,
         fake_storage_context,
     ):
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
 
@@ -177,9 +175,6 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
             in log_contents
         )
 
-        # reset REPAIR_XML value
-        activity_module.REPAIR_XML = False
-
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -206,8 +201,6 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
         fake_session,
         fake_storage_context,
     ):
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
 
@@ -260,9 +253,6 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
             % test_data.get("filename")
             in log_contents
         )
-
-        # reset REPAIR_XML value
-        activity_module.REPAIR_XML = False
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")

@@ -8,9 +8,6 @@ from provider import article_processing, cleaner
 from activity.objects import AcceptedBaseActivity
 
 
-REPAIR_XML = True
-
-
 class activity_RepairAcceptedSubmission(AcceptedBaseActivity):
     "RepairAcceptedSubmission activity"
 
@@ -65,10 +62,6 @@ class activity_RepairAcceptedSubmission(AcceptedBaseActivity):
         # find S3 object for article XML and download it
         xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
 
-        # reset the REPAIR_XML constant
-        original_repair_xml = cleaner.parse.REPAIR_XML
-        cleaner.parse.REPAIR_XML = REPAIR_XML
-
         # parse XML
         try:
             root = cleaner.parse_article_xml(xml_file_path)
@@ -82,9 +75,6 @@ class activity_RepairAcceptedSubmission(AcceptedBaseActivity):
             )
             self.logger.exception(log_message)
             root = None
-        finally:
-            # reset the parsing library flag
-            cleaner.parse.REPAIR_XML = original_repair_xml
 
         # write the repaired XML to disk
         if self.statuses.get("repair_xml"):

@@ -225,8 +225,6 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
         fake_session,
         fake_storage_context,
     ):
-        # set REPAIR_XML value because test fixture is malformed XML
-        activity_module.REPAIR_XML = True
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
 
@@ -355,6 +353,3 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
                 sorted(output_bucket_list),
                 sorted(test_data.get("expected_bucket_upload_folder_contents")),
             )
-
-        # reset REPAIR_XML value
-        activity_module.REPAIR_XML = False

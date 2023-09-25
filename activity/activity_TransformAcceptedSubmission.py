@@ -8,9 +8,6 @@ from provider.storage_provider import storage_context
 from activity.objects import AcceptedBaseActivity
 
 
-REPAIR_XML = False
-
-
 class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
     "TransformAcceptedSubmission activity"
 
@@ -67,10 +64,6 @@ class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
         # find S3 object for article XML and download it
         xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
 
-        # reset the REPAIR_XML constant
-        original_repair_xml = cleaner.parse.REPAIR_XML
-        cleaner.parse.REPAIR_XML = REPAIR_XML
-
         # download the code files so they can be modified
         try:
             download_code_files_from_bucket(
@@ -93,9 +86,6 @@ class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
             self.logger.exception(log_message)
             cleaner.LOGGER.exception(log_message)
             self.statuses["download"] = False
-        finally:
-            # reset the parsing library flag
-            cleaner.parse.REPAIR_XML = original_repair_xml
 
         # PRC XML changes
         if session.get_value("prc_status"):

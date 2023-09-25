@@ -12,8 +12,6 @@ from provider.ftp import FTP
 from activity.objects import AcceptedBaseActivity
 
 
-REPAIR_XML = False
-
 FILE_NAME_PREFIX = "elife_videos_"
 
 # session variable name to store the number of attempts
@@ -104,11 +102,6 @@ class activity_DepositAcceptedSubmissionVideos(AcceptedBaseActivity):
         # find S3 object for article XML and download it
         xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
 
-        # get the file list from the XML
-        # reset the REPAIR_XML constant
-        original_repair_xml = cleaner.parse.REPAIR_XML
-        cleaner.parse.REPAIR_XML = REPAIR_XML
-
         # get a list of video files from the XML
         try:
             video_files = cleaner.video_file_list(xml_file_path)
@@ -126,9 +119,6 @@ class activity_DepositAcceptedSubmissionVideos(AcceptedBaseActivity):
             )
             self.logger.exception(log_message)
             video_files = []
-        finally:
-            # reset the parsing library flag
-            cleaner.parse.REPAIR_XML = original_repair_xml
 
         # download video files from the bucket folder
         if video_files:

@@ -7,9 +7,6 @@ from provider import cleaner, utils
 from activity.objects import AcceptedBaseActivity
 
 
-REPAIR_XML = False
-
-
 class activity_AcceptedSubmissionPeerReviews(AcceptedBaseActivity):
     "AcceptedSubmissionPeerReviews activity"
 
