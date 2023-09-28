@@ -452,7 +452,8 @@ class TestSetVolumeTag(unittest.TestCase):
         self.docmap_json = {
             "first-step": "_:b0",
             "steps": {
-                "_:b0": {
+                "_:b0": {"next-step": "_:b1"},
+                "_:b1": {
                     "actions": [
                         {
                             "participants": [],
@@ -464,11 +465,20 @@ class TestSetVolumeTag(unittest.TestCase):
                                     "versionIdentifier": "1",
                                     "license": "http://creativecommons.org/licenses/by/4.0/",
                                     "published": "2023-02-13T14:00:00+00:00",
+                                    "partOf": {
+                                        "type": "manuscript",
+                                        "doi": "10.7554/eLife.84364",
+                                        "identifier": "84364",
+                                        "subjectDisciplines": ["Cell Biology"],
+                                        "published": "2023-02-13T14:00:00+00:00",
+                                        "volumeIdentifier": "12",
+                                        "electronicArticleIdentifier": "RP84364",
+                                    },
                                 }
                             ],
                         }
                     ]
-                }
+                },
             },
         }
 
