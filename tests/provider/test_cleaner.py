@@ -131,13 +131,14 @@ class TestParseArticleXml(unittest.TestCase):
                 "in the XML string: ['&#x001D;']"
             ),
         )
-        self.assertEqual(
-            log_lines[1],
-            (
-                "ERROR elifecleaner:parse:parse_article_xml: "
-                "ParseError raised because REPAIR_XML flag is False"
-            ),
-        )
+        # if REPAIR_XML = False
+        # self.assertEqual(
+        #    log_lines[1],
+        #    (
+        #        "ERROR elifecleaner:parse:parse_article_xml: "
+        #        "ParseError raised because REPAIR_XML flag is False"
+        #    ),
+        # )
 
 
 class TestFileList(unittest.TestCase):
