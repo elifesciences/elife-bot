@@ -25,7 +25,7 @@ from provider import utils
 from provider.storage_provider import storage_context
 from provider.article_processing import file_extension
 
-REPAIR_XML = False
+REPAIR_XML = True
 
 LOG_FILENAME = "elifecleaner.log"
 LOG_FORMAT_STRING = (
