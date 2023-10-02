@@ -352,6 +352,11 @@ class exp:
 
     assessment_terms_yaml = "assessment_terms.yaml"
 
+    # Mathpix settings
+    mathpix_endpoint = ""
+    mathpix_app_id = "elife-bot"
+    mathpix_app_key = ""
+
 
 class dev:
     # AWS settings
@@ -688,6 +693,11 @@ class dev:
     docmap_account_id = "https://sciety.org/groups/elife"
 
     assessment_terms_yaml = "assessment_terms.yaml"
+
+    # Mathpix settings
+    mathpix_endpoint = ""
+    mathpix_app_id = "elife-bot"
+    mathpix_app_key = ""
 
 
 class live:
