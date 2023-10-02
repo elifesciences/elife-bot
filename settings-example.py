@@ -347,7 +347,9 @@ class exp:
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
 
-    docmap_url_pattern = "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
+    docmap_url_pattern = (
+        "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
+    )
     docmap_account_id = "https://sciety.org/groups/elife"
 
     assessment_terms_yaml = "assessment_terms.yaml"
@@ -689,7 +691,9 @@ class dev:
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
 
-    docmap_url_pattern = "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
+    docmap_url_pattern = (
+        "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
+    )
     docmap_account_id = "https://sciety.org/groups/elife"
 
     assessment_terms_yaml = "assessment_terms.yaml"
@@ -1036,7 +1040,9 @@ class live:
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
 
-    docmap_url_pattern = "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
+    docmap_url_pattern = (
+        "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
+    )
     docmap_account_id = "https://sciety.org/groups/elife"
 
     assessment_terms_yaml = "assessment_terms.yaml"
