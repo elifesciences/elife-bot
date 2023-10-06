@@ -19,7 +19,7 @@ dill==0.3.7
 docker==5.0.3
 docmaptools==0.17.0
 ejpcsvparser==0.2.0
-elifearticle==0.16.0
+elifearticle==0.17.0
 elifecleaner==0.56.0
 elifecrossref==0.22.0
 elifepubmed==0.6.0
