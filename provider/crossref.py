@@ -288,6 +288,18 @@ def add_is_version_of_tag(rel_program_tag, doi):
     )
 
 
+def add_has_preprint_tag(rel_program_tag, doi):
+    "add doi as intra_work_relation hasPreprint tag to the rel:program tag"
+    related_item_tag = SubElement(rel_program_tag, "rel:related_item")
+    related.set_related_item_work_relation(
+        related_item_tag,
+        "intra_work_relation",
+        "hasPreprint",
+        "doi",
+        doi,
+    )
+
+
 def crossref_xml_to_disk(c_xml, output_dir, pretty=False, indent=""):
     "generate XML string from the CrossrefXML object and write it to the disk"
     xml_string = c_xml.output_xml(pretty=pretty, indent=indent)
