@@ -91,6 +91,9 @@ class TestDepositCrossref(unittest.TestCase):
                     '<rel:related_item><rel:intra_work_relation identifier-type="doi" relationship-type="hasPreprint">10.7554/eLife.1234567890.3</rel:intra_work_relation>'
                 ),
                 (
+                    '<rel:related_item><rel:intra_work_relation identifier-type="doi" relationship-type="hasPreprint">10.1101/2021.11.09.467796</rel:intra_work_relation></rel:related_item>'
+                ),
+                (
                     '<rel:related_item><rel:intra_work_relation identifier-type="doi" relationship-type="isSameAs">10.7554/eLife.1234567890.4</rel:intra_work_relation>'
                 ),
                 (

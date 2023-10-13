@@ -155,6 +155,12 @@ class activity_DepositCrossref(Activity):
                         crossref.add_is_version_of_tag(
                             rel_program_tag, event_object.doi
                         )
+                    elif (
+                        event_object.event_type == "preprint"
+                        and event_object.doi != article.preprint
+                    ):
+                        # add a hasPreprint tag for the original preprint DOI
+                        crossref.add_has_preprint_tag(rel_program_tag, event_object.doi)
 
         # output CrossrefXML objects to XML files
         for article, c_xml in list(crossref_object_map.items()):
