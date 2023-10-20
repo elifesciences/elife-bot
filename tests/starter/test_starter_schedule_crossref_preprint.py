@@ -6,7 +6,7 @@ from starter.starter_ScheduleCrossrefPreprint import (
     starter_ScheduleCrossrefPreprint as starter_object,
 )
 from starter.starter_helper import NullRequiredDataException
-import tests import settings_mock
+from tests import settings_mock
 from tests.classes_mock import FakeSWFClient
 from tests.activity.classes_mock import FakeLogger
 
