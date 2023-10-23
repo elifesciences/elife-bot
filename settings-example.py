@@ -359,6 +359,9 @@ class exp:
     mathpix_app_id = "elife-bot"
     mathpix_app_key = ""
 
+    # EPP settings
+    epp_data_bucket = "epp_bucket"
+
 
 class dev:
     # AWS settings
@@ -702,6 +705,9 @@ class dev:
     mathpix_endpoint = ""
     mathpix_app_id = "elife-bot"
     mathpix_app_key = ""
+
+    # EPP settings
+    epp_data_bucket = "epp_bucket"
 
 
 class live:
@@ -1051,6 +1057,9 @@ class live:
     mathpix_endpoint = "https://api.mathpix.com.example.org/v3/text"
     mathpix_app_id = "elife-bot"
     mathpix_app_key = "key"
+
+    # EPP settings
+    epp_data_bucket = "epp_bucket"
 
 
 def get_settings(ENV="dev"):

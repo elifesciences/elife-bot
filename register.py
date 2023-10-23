@@ -47,6 +47,7 @@ def start(settings):
     workflow_names.append("DepositDOAJ")
     workflow_names.append("SoftwareHeritageDeposit")
     workflow_names.append("IngestAcceptedSubmission")
+    workflow_names.append("ScheduleCrossrefPreprint")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries
@@ -103,6 +104,7 @@ def start(settings):
     activity_names.append("ScheduleCrossrefMinimal")
     activity_names.append("ScheduleCrossrefPeerReview")
     activity_names.append("ScheduleCrossrefPendingPublication")
+    activity_names.append("ScheduleCrossrefPreprint")
     activity_names.append("ScheduleDownstream")
     activity_names.append("ModifyArticleSubjects")
     activity_names.append("EmailDigest")

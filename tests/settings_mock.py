@@ -73,6 +73,9 @@ elifepubmed_config_section = "elife"
 elifecrossref_config_file = "tests/activity/crossref.cfg"
 elifecrossref_config_section = "elife"
 
+jatsgenerator_config_file = "tests/activity/jatsgenerator.cfg"
+jatsgenerator_config_section = "elife"
+
 big_query_project_id = ""
 
 letterparser_config_file = "tests/activity/letterparser.cfg"
