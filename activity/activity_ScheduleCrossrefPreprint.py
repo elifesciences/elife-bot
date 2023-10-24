@@ -96,10 +96,11 @@ class activity_ScheduleCrossrefPreprint(Activity):
 
         try:
             article = preprint.build_article(
-                article_id, docmap_string, article_xml_path
+                article_id, docmap_string, article_xml_path, version
             )
-        except Exception:
-            # todo!!! handle if article could not be built
+        except Exception as exception:
+            # handle if article could not be built
+            self.logger.exception(exception)
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # continue if article could be populated
