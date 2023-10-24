@@ -47,7 +47,7 @@ def build_article(article_id, docmap_string, article_xml_path, version=None):
             event_doi, event_version = history_event.get("doi").rsplit(".", 1)
             if (history_event.get("type") in ["preprint", "reviewed-preprint"]
                 and event_doi == doi
-                and event_version > version):
+                and int(event_version) > int(version)):
                 continue
         # look for the posted_date
         if (
@@ -99,8 +99,7 @@ def build_article(article_id, docmap_string, article_xml_path, version=None):
     article.ref_list = preprint_article.ref_list
 
     # sub-article data from docmap and Sciety web content
-    external_data = cleaner.sub_article_data(docmap_string, article, version_doi)
-    print("external_data: %s" % external_data)
+    external_data = cleaner.sub_article_data(docmap_string, article, version_doi, generate_dois=False)
     # populate sub-article contributor values
     for index, data_item in enumerate(external_data):
         # 1. assessment
