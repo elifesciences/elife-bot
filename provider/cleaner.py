@@ -354,9 +354,9 @@ def docmap_url(settings, article_id):
     )
 
 
-def sub_article_data(docmap_string, article, version_doi=None):
+def sub_article_data(docmap_string, article, version_doi=None, generate_dois=True):
     # add sub-article data from the docmap and get requests to the article object
-    return sub_article.sub_article_data(docmap_string, article, version_doi)
+    return sub_article.sub_article_data(docmap_string, article, version_doi, generate_dois)
 
 
 def add_sub_article_xml(docmap_string, article_xml, terms_yaml=None):
