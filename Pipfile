@@ -49,6 +49,3 @@ pylint = "~=2.11"
 testfixtures = "~=6.18"
 pytest = "~=7.2"
 mock = "~=4.0"
-# for profiling memory usage.
-# not semver. 1.5.17 introduces 'ai powered suggestions' and extra noise to data viewer
-scalene = "<=1.5.16"
