@@ -5,7 +5,8 @@ from argparse import ArgumentParser
 import arrow
 from mimetypes import guess_type
 from elifetools import utils as etoolsutils
-
+import boto3
+from functools import partial
 
 S3_DATE_FORMAT = "%Y%m%d%H%M%S"
 PUB_DATE_FORMAT = "%Y-%m-%d"
@@ -234,11 +235,38 @@ def console_start_env_workflow_doi_id():
     return args.env, args.doi_id, args.workflow
 
 
+def create_aws_connection(service, service_creation_kwargs):
+    assert isinstance(service, str), "`service` must be a string"
+    assert isinstance(service_creation_kwargs, dict), "`service_creation_kwargs` must be a dictionary"
+
+    assert service == "s3", "`service` must equal 's3' for now"
+
+    return boto3.client(service, **service_creation_kwargs)
+
+
+def get_aws_connection(service_conn_map, service, service_creation_kwargs):
+    "centralised access to AWS service connections"
+    assert isinstance(service_conn_map, dict), "`service_conn_map` must be a dictionary"
+    assert isinstance(service, str), "`service` must be a string"
+    assert isinstance(service_creation_kwargs, dict), "`service_createion_kwargs` must be a dictionary"
+
+    if service in service_conn_map:
+        return service_conn_map[service]
+
+    map_key = service # perhaps incorporate `service_creation_kwargs` in future
+    service_conn_map[map_key] = create_aws_connection(service, service_creation_kwargs)
+    return service_conn_map[map_key]
+
+
 def get_settings(env):
     """for runtime importing of settings module"""
     import settings as settings_lib
+    settings_inst = settings_lib.get_settings(env)
 
-    return settings_lib.get_settings(env)
+    settings_inst._aws_conn_map = {}
+    settings_inst.aws_conn = partial(get_aws_connection, settings_inst._aws_conn_map)
+
+    return settings_inst
 
 
 def content_type_from_file_name(file_name):
