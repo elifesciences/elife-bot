@@ -52,6 +52,7 @@ class workflow_IngestAcceptedSubmission(Workflow):
                 define_workflow_step_medium("TransformAcceptedSubmission", data),
                 define_workflow_step_short("AcceptedSubmissionVersionDoi", data),
                 define_workflow_step_short("AcceptedSubmissionHistory", data),
+                define_workflow_step_short("AcceptedSubmissionStrikingImages", data),
                 define_workflow_step_medium("AcceptedSubmissionPeerReviews", data),
                 define_workflow_step_medium("AcceptedSubmissionPeerReviewImages", data),
                 define_workflow_step_short("AcceptedSubmissionPeerReviewFigs", data),

@@ -254,3 +254,6 @@ mathpix_app_key = "key"
 
 # EPP settings
 epp_data_bucket = "epp_bucket"
+
+# Striking images bucket
+striking_images_bucket = "striking_images_bucket"

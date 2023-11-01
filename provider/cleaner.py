@@ -118,6 +118,29 @@ def video_file_list(xml_file_path):
     return video.video_file_list(files)
 
 
+def cover_art_file_list(xml_file_path):
+    "get a list of cover_art from the XML"
+    root = parse_article_xml(xml_file_path)
+    return transform.cover_art_file_list(root)
+
+
+def transform_cover_art_files(
+    xml_file_path, asset_file_name_map, file_transformations, identifier
+):
+    "rename cover art files"
+    return transform.transform_cover_art_files(
+        xml_file_path, asset_file_name_map, file_transformations, identifier
+    )
+
+
+def cover_art_file_transformations(
+    cover_art_files, asset_file_name_map, article_id, identifier
+):
+    return transform.cover_art_file_transformations(
+        cover_art_files, asset_file_name_map, article_id, identifier
+    )
+
+
 def glencoe_xml(xml_file_path, video_data, pretty=True, indent=""):
     return video_xml.glencoe_xml(xml_file_path, video_data, pretty, indent)
 
@@ -356,7 +379,9 @@ def docmap_url(settings, article_id):
 
 def sub_article_data(docmap_string, article, version_doi=None, generate_dois=True):
     # add sub-article data from the docmap and get requests to the article object
-    return sub_article.sub_article_data(docmap_string, article, version_doi, generate_dois)
+    return sub_article.sub_article_data(
+        docmap_string, article, version_doi, generate_dois
+    )
 
 
 def add_sub_article_xml(docmap_string, article_xml, terms_yaml=None):
