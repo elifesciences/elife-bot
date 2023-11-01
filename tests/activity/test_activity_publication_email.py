@@ -20,8 +20,8 @@ from activity.activity_PublicationEmail import (
 )
 from tests import test_data
 from tests.classes_mock import FakeSMTPServer
-from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+from tests.activity import helpers, settings_mock, test_activity_data
 
 
 LAX_ARTICLE_VERSIONS_RESPONSE_DATA_1 = test_data.lax_article_versions_response_data[:1]
@@ -252,6 +252,9 @@ class TestPublicationEmail(unittest.TestCase):
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
+        helpers.delete_files_in_folder(
+            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     @patch.object(activity_module, "get_related_article")
     @patch("provider.article.article.download_article_xml_from_s3")

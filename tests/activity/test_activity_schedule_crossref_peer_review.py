@@ -7,7 +7,7 @@ import activity.activity_ScheduleCrossrefPeerReview as activity_module
 from activity.activity_ScheduleCrossrefPeerReview import (
     activity_ScheduleCrossrefPeerReview as activity_object,
 )
-import tests.activity.settings_mock as settings_mock
+from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
 import tests.activity.test_activity_data as activity_test_data
 
@@ -19,6 +19,9 @@ class TestScheduleCrossrefPeerReview(unittest.TestCase):
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
+        helpers.delete_files_in_folder(
+            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     @patch("provider.lax_provider.article_highest_version")
     @patch("provider.lax_provider.storage_context")

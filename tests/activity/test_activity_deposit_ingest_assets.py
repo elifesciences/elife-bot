@@ -1,7 +1,7 @@
 import unittest
 from mock import patch
 from activity.activity_DepositIngestAssets import activity_DepositIngestAssets
-import tests.activity.settings_mock as settings_mock
+from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import FakeStorageContext, FakeSession, FakeLogger
 import tests.activity.test_activity_data as test_activity_data
 
@@ -10,6 +10,11 @@ class TestDepositIngestAssets(unittest.TestCase):
     def setUp(self):
         self.activity = activity_DepositIngestAssets(
             settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        helpers.delete_files_in_folder(
+            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
         )
 
     @patch("activity.activity_DepositIngestAssets.get_session")

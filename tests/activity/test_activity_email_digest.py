@@ -8,7 +8,7 @@ from ddt import ddt, data
 from digestparser.objects import Digest
 import activity.activity_EmailDigest as activity_module
 from activity.activity_EmailDigest import activity_EmailDigest as activity_object
-import tests.activity.settings_mock as settings_mock
+from tests.activity import helpers, settings_mock, test_activity_data
 from tests.activity.classes_mock import FakeLogger
 from tests.activity.helpers import create_digest
 import tests.test_data as test_case_data
@@ -37,6 +37,9 @@ class TestEmailDigest(unittest.TestCase):
     def tearDown(self):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
+        helpers.delete_files_in_folder(
+            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(activity_module.download_helper, "storage_context")

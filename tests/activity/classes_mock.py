@@ -193,12 +193,11 @@ class FakeStorageContext:
         origin_file_name = s3_key.lstrip("/")
         destination_bucket_name, s3_key = self.get_bucket_and_key(destination)
         destination_file_name = s3_key.lstrip("/")
-        if origin_bucket_name == destination_bucket_name:
-            origin_path = os.path.join(self.dir, origin_file_name)
-            destination_path = os.path.join(self.dir, destination_file_name)
-            # create folders if they do not exist
-            os.makedirs(os.path.dirname(destination_path), exist_ok=True)
-            copy(origin_path, destination_path)
+        origin_path = os.path.join(self.dir, origin_file_name)
+        destination_path = os.path.join(self.dest_folder, destination_file_name)
+        # create folders if they do not exist
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+        copy(origin_path, destination_path)
 
     def delete_resource(self, resource):
         "delete from the destination folder"
