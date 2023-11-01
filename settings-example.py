@@ -362,6 +362,9 @@ class exp:
     # EPP settings
     epp_data_bucket = "epp_bucket"
 
+    # Striking images bucket
+    striking_images_bucket = "striking_images_bucket"
+
 
 class dev:
     # AWS settings
@@ -708,6 +711,9 @@ class dev:
 
     # EPP settings
     epp_data_bucket = "epp_bucket"
+
+    # Striking images bucket
+    striking_images_bucket = "striking_images_bucket"
 
 
 class live:
@@ -1060,6 +1066,9 @@ class live:
 
     # EPP settings
     epp_data_bucket = "epp_bucket"
+
+    # Striking images bucket
+    striking_images_bucket = "striking_images_bucket"
 
 
 def get_settings(ENV="dev"):

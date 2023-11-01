@@ -145,6 +145,7 @@ def start(settings):
     activity_names.append("AcceptedSubmissionPeerReviewOcr")
     activity_names.append("AcceptedSubmissionVersionDoi")
     activity_names.append("AcceptedSubmissionHistory")
+    activity_names.append("AcceptedSubmissionStrikingImages")
 
     for activity_name in activity_names:
         # Import the activity libraries
