@@ -25,8 +25,11 @@ def delete_files_in_folder(folder, filter_out=[]):
     for file_name in file_list:
         if file_name in filter_out:
             continue
-        if os.path.isfile(folder + "/" + file_name):
-            os.remove(folder + "/" + file_name)
+        path = folder + "/" + file_name
+        if os.path.isfile(path):
+            os.remove(path)
+        elif os.path.isdir(path):
+            delete_folder(path, recursively=True)
 
 
 def delete_directories_in_folder(folder):

@@ -1,3 +1,4 @@
+import copy
 import os
 import unittest
 from mock import mock, patch
@@ -40,7 +41,11 @@ class TestExpandArticle(unittest.TestCase):
         self.expandarticle.set_monitor_property = mock.MagicMock()
         self.expandarticle.logger = mock.MagicMock()
 
-        success = self.expandarticle.do_activity(testdata.ExpandArticle_data)
+        # reset the run of the data otherwise it rewrites the session test fixture
+        input_data = copy.copy(testdata.ExpandArticle_data)
+        input_data["run"] = "cf9c7e86-7355-4bb4-b48e-0bc284221251"
+
+        success = self.expandarticle.do_activity(input_data)
         self.assertEqual(True, success)
 
         # Check destination folder as a list

@@ -11,8 +11,8 @@ from ddt import ddt, data, unpack
 import activity.activity_PublishFinalPOA as activity_module
 from activity.activity_PublishFinalPOA import activity_PublishFinalPOA
 from tests.classes_mock import FakeSMTPServer
-from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+from tests.activity import helpers, settings_mock, test_activity_data
 
 
 class TestPublishFinalPOA(unittest.TestCase):
@@ -234,6 +234,9 @@ class TestPublishFinalPOA(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
         self.poa.clean_tmp_dir()
+        helpers.delete_files_in_folder(
+            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     def remove_files_from_tmp_dir_subfolders(self):
         """

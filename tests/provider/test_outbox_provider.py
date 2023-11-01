@@ -4,8 +4,9 @@ import unittest
 from mock import patch
 from testfixtures import TempDirectory
 from provider import downstream, outbox_provider
-import tests.settings_mock as settings_mock
+from tests import settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+from tests.activity import helpers, test_activity_data
 
 
 class TestOutboxProvider(unittest.TestCase):
@@ -16,6 +17,9 @@ class TestOutboxProvider(unittest.TestCase):
 
     def tearDown(self):
         TempDirectory.cleanup_all()
+        helpers.delete_files_in_folder(
+            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     def test_get_to_folder_name(self):
         folder_name = ""
@@ -59,7 +63,7 @@ class TestOutboxProvider(unittest.TestCase):
     def test_download_files_from_s3_outbox_failure(
         self, fake_storage_context, fake_get_resource
     ):
-        """test IOError exception for coverage"""
+        "test IOError exception for coverage"
         fake_storage_context.return_value = FakeStorageContext(
             "tests/test_data/crossref/outbox/", ["elife-18753-v1.xml"]
         )

@@ -1,5 +1,6 @@
 import unittest
 from mock import mock, patch
+from testfixtures import TempDirectory
 import activity.activity_ScheduleDownstream as activity_module
 from activity.activity_ScheduleDownstream import (
     activity_ScheduleDownstream as activity_object,
@@ -15,15 +16,23 @@ class TestScheduleDownstream(unittest.TestCase):
         fake_logger = FakeLogger()
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
     @patch("provider.lax_provider.article_first_by_status")
     @patch.object(lax_provider, "storage_context")
     @patch.object(activity_module, "storage_context")
     def test_do_activity(
         self, fake_activity_storage_context, fake_storage_context, fake_first
     ):
+        directory = TempDirectory()
         expected_result = True
-        fake_storage_context.return_value = FakeStorageContext()
-        fake_activity_storage_context.return_value = FakeStorageContext()
+        fake_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
+        fake_activity_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
         fake_first.return_value = True
         self.activity.emit_monitor_event = mock.MagicMock()
         # do the activity
@@ -63,7 +72,7 @@ class TestChooseOutboxes(unittest.TestCase):
         self.assertEqual(outbox_list, [])
 
     def test_choose_outboxes_poa_first(self):
-        """first poa version"""
+        "first poa version"
         outbox_list = activity_module.choose_outboxes("poa", True, self.rules)
         # schedule the following
         for folder_name in [
@@ -96,7 +105,7 @@ class TestChooseOutboxes(unittest.TestCase):
             )
 
     def test_choose_outboxes_poa_not_first(self):
-        """poa but not the first poa"""
+        "poa but not the first poa"
         outbox_list = activity_module.choose_outboxes("poa", False, self.rules)
         # schedule the following
         for folder_name in [
@@ -128,7 +137,7 @@ class TestChooseOutboxes(unittest.TestCase):
             )
 
     def test_choose_outboxes_vor_first(self):
-        """first vor version"""
+        "first vor version"
         outbox_list = activity_module.choose_outboxes("vor", True, self.rules)
         # schedule the following
         for folder_name in [
@@ -152,7 +161,7 @@ class TestChooseOutboxes(unittest.TestCase):
             )
 
     def test_choose_outboxes_vor_not_first(self):
-        """vor but not the first vor"""
+        "vor but not the first vor"
         outbox_list = activity_module.choose_outboxes("vor", False, self.rules)
         # schedule the following
         for folder_name in [
@@ -216,7 +225,7 @@ class TestChooseOutboxes(unittest.TestCase):
             )
 
     def test_choose_outboxes_vor_silent_not_first(self):
-        """silent correction vor but not the first vor"""
+        "silent correction vor but not the first vor"
         outbox_list = activity_module.choose_outboxes(
             "vor", False, self.rules, "silent-correction"
         )

@@ -35,6 +35,9 @@ class TestPubRouterDeposit(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
         self.pubrouterdeposit.clean_tmp_dir()
+        helpers.delete_files_in_folder(
+            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")

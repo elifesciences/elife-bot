@@ -2,7 +2,7 @@ import unittest
 from ddt import ddt, data, unpack
 from mock import patch
 from activity.activity_DepositAssets import activity_DepositAssets
-import tests.activity.settings_mock as settings_mock
+from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import FakeStorageContext, FakeSession, FakeLogger
 import tests.activity.test_activity_data as test_activity_data
 
@@ -27,6 +27,11 @@ class TestDepositAssets(unittest.TestCase):
             settings_mock, None, None, None, None
         )
         self.depositassets.logger = FakeLogger()
+
+    def tearDown(self):
+        helpers.delete_files_in_folder(
+            test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
+        )
 
     @unpack
     @data(
