@@ -255,7 +255,6 @@ class TestTransformPrc(unittest.TestCase):
             "<publisher-name>eLife Sciences Publications, Ltd</publisher-name>"
             in xml_contents
         )
-        self.assertTrue("<elocation-id>RP1234567890</elocation-id>" in xml_contents)
         self.assertTrue(
             (
                 "<custom-meta-group>"

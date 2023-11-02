@@ -90,8 +90,15 @@ class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
         # PRC XML changes
         if session.get_value("prc_status"):
             cleaner.transform_prc(xml_file_path, input_filename)
+            docmap_string = self.get_docmap_string(article_id, input_filename)
             # set the volume tag value
-            self.set_volume_tag(article_id, xml_file_path, input_filename)
+            self.set_volume_tag(
+                article_id, xml_file_path, input_filename, docmap_string
+            )
+            # set the elocation-id tag value
+            self.set_elocation_id_tag(
+                article_id, xml_file_path, input_filename, docmap_string
+            )
 
         # transform the zip file
         if self.statuses.get("download"):
@@ -177,10 +184,8 @@ class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
 
         return True
 
-    def set_volume_tag(self, article_id, xml_file_path, input_filename):
+    def set_volume_tag(self, article_id, xml_file_path, input_filename, docmap_string):
         "from the docmap calculate the volume value and set the volume XML tag text"
-        # get docmap as a string
-        docmap_string = self.get_docmap_string(article_id, input_filename)
         # get volume from the docmap
         volume = cleaner.volume_from_docmap(docmap_string, input_filename)
         self.logger.info(
@@ -199,6 +204,32 @@ class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
             else:
                 self.logger.info(
                     "%s, no volume XML tag found for article %s",
+                    self.name,
+                    article_id,
+                )
+
+    def set_elocation_id_tag(
+        self, article_id, xml_file_path, input_filename, docmap_string
+    ):
+        "from the docmap get the elocation-id value and set the elocation-id XML tag text"
+        # get volume from the docmap
+        elocation_id = cleaner.elocation_id_from_docmap(docmap_string, input_filename)
+        self.logger.info(
+            "%s, from article %s docmap got elocation_id value: %s",
+            self.name,
+            article_id,
+            elocation_id,
+        )
+        if elocation_id:
+            # modify the volume tag text
+            root = cleaner.parse_article_xml(xml_file_path)
+            elocation_id_tag = root.find("front/article-meta/elocation-id")
+            if elocation_id_tag is not None:
+                elocation_id_tag.text = elocation_id
+                cleaner.write_xml_file(root, xml_file_path, input_filename)
+            else:
+                self.logger.info(
+                    "%s, no elocation-id XML tag found for article %s",
                     self.name,
                     article_id,
                 )
