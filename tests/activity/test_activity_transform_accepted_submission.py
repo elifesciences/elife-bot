@@ -237,7 +237,11 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
         # mock the session
         fake_session.return_value = FakeSession(session_data)
 
-        fake_get_docmap.return_value = read_fixture("2021.06.02.446694.docmap.json")
+        docmap_content = json.dumps(
+            read_fixture("sample_docmap_for_84364.json").decode("utf-8")
+        )
+        docmap_content = docmap_content.replace("RP84364", "RP45644")
+        fake_get_docmap.return_value = json.loads(docmap_content)
 
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
@@ -308,9 +312,6 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
                 )
             )
         )
-        self.assertTrue(
-            log_infos[5].endswith(("changing elocation-id value e45644 to RP45644"))
-        )
 
         # check the zipped code file name is in the XML file
         xml_file_path = os.path.join(
@@ -333,7 +334,7 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             )
             in xml_contents
         )
-        self.assertTrue("<volume>0</volume>" in xml_contents)
+        self.assertTrue("<volume>12</volume>" in xml_contents)
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -430,6 +431,40 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
         )
 
 
+DOCMAP_JSON = {
+    "first-step": "_:b0",
+    "steps": {
+        "_:b0": {"next-step": "_:b1"},
+        "_:b1": {
+            "actions": [
+                {
+                    "participants": [],
+                    "outputs": [
+                        {
+                            "type": "preprint",
+                            "identifier": "84364",
+                            "doi": "10.7554/eLife.84364.1",
+                            "versionIdentifier": "1",
+                            "license": "http://creativecommons.org/licenses/by/4.0/",
+                            "published": "2023-02-13T14:00:00+00:00",
+                            "partOf": {
+                                "type": "manuscript",
+                                "doi": "10.7554/eLife.84364",
+                                "identifier": "84364",
+                                "subjectDisciplines": ["Cell Biology"],
+                                "published": "2023-02-13T14:00:00+00:00",
+                                "volumeIdentifier": "12",
+                                "electronicArticleIdentifier": "RP84364",
+                            },
+                        }
+                    ],
+                }
+            ]
+        },
+    },
+}
+
+
 class TestSetVolumeTag(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
@@ -449,52 +484,21 @@ class TestSetVolumeTag(unittest.TestCase):
         )
         with open(self.xml_file_path, "w") as open_file:
             open_file.write(self.xml_string)
-        self.docmap_json = {
-            "first-step": "_:b0",
-            "steps": {
-                "_:b0": {"next-step": "_:b1"},
-                "_:b1": {
-                    "actions": [
-                        {
-                            "participants": [],
-                            "outputs": [
-                                {
-                                    "type": "preprint",
-                                    "identifier": "84364",
-                                    "doi": "10.7554/eLife.84364.1",
-                                    "versionIdentifier": "1",
-                                    "license": "http://creativecommons.org/licenses/by/4.0/",
-                                    "published": "2023-02-13T14:00:00+00:00",
-                                    "partOf": {
-                                        "type": "manuscript",
-                                        "doi": "10.7554/eLife.84364",
-                                        "identifier": "84364",
-                                        "subjectDisciplines": ["Cell Biology"],
-                                        "published": "2023-02-13T14:00:00+00:00",
-                                        "volumeIdentifier": "12",
-                                        "electronicArticleIdentifier": "RP84364",
-                                    },
-                                }
-                            ],
-                        }
-                    ]
-                },
-            },
-        }
 
     def tearDown(self):
         TempDirectory.cleanup_all()
         # clean the temporary directory completely
         shutil.rmtree(self.activity.get_tmp_dir())
 
-    @patch.object(cleaner, "get_docmap")
-    def test_set_volume_tag(self, fake_get_docmap):
+    def test_set_volume_tag(self):
         "test getting volume from the docmap and setting volume XML tag text"
-        fake_get_docmap.return_value = json.dumps(self.docmap_json)
         expected_volume = 12
         # invoke
         self.activity.set_volume_tag(
-            self.article_id, self.xml_file_path, self.input_filename
+            self.article_id,
+            self.xml_file_path,
+            self.input_filename,
+            json.dumps(DOCMAP_JSON),
         )
         # assert
         with open(self.xml_file_path, "r") as open_file:
@@ -506,16 +510,17 @@ class TestSetVolumeTag(unittest.TestCase):
             % (self.article_id, expected_volume),
         )
 
-    @patch.object(cleaner, "get_docmap")
-    def test_no_volume_tag(self, fake_get_docmap):
+    def test_no_volume_tag(self):
         "test if there is no volume tag in the XML"
-        fake_get_docmap.return_value = json.dumps(self.docmap_json)
         # remove volume tag from the file fixture
         with open(self.xml_file_path, "w") as open_file:
             open_file.write(self.xml_string.replace("<volume>0</volume>", ""))
         # invoke
         self.activity.set_volume_tag(
-            self.article_id, self.xml_file_path, self.input_filename
+            self.article_id,
+            self.xml_file_path,
+            self.input_filename,
+            json.dumps(DOCMAP_JSON),
         )
         # assert
         with open(self.xml_file_path, "r") as open_file:
@@ -524,5 +529,77 @@ class TestSetVolumeTag(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.loginfo[-1],
             "TransformAcceptedSubmission, no volume XML tag found for article %s"
+            % self.article_id,
+        )
+
+
+class TestSetElocationIdTag(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.directory = TempDirectory()
+        self.activity = activity_object(settings_mock, fake_logger, None, None, None)
+        self.article_id = "84364"
+        self.input_filename = "test.zip"
+        self.xml_file_path = os.path.join(self.directory.path, "test.xml")
+        self.xml_string = (
+            "<article>"
+            "<front>"
+            "<article-meta>"
+            "<elocation-id>e84364</elocation-id>"
+            "</article-meta>"
+            "</front>"
+            "</article>"
+        )
+        with open(self.xml_file_path, "w") as open_file:
+            open_file.write(self.xml_string)
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+        # clean the temporary directory completely
+        shutil.rmtree(self.activity.get_tmp_dir())
+
+    def test_set_elocation_id_tag(self):
+        "test getting elocation_id from the docmap and setting elocation_id XML tag text"
+        expected_elocation_id = "RP84364"
+        # invoke
+        self.activity.set_elocation_id_tag(
+            self.article_id,
+            self.xml_file_path,
+            self.input_filename,
+            json.dumps(DOCMAP_JSON),
+        )
+        # assert
+        with open(self.xml_file_path, "r") as open_file:
+            xml_string = open_file.read()
+        self.assertTrue(
+            "<elocation-id>%s</elocation-id>" % expected_elocation_id in xml_string
+        )
+        self.assertEqual(
+            self.activity.logger.loginfo[-1],
+            "TransformAcceptedSubmission, from article %s docmap got elocation_id value: %s"
+            % (self.article_id, expected_elocation_id),
+        )
+
+    def test_no_elocation_id_tag(self):
+        "test if there is no elocation_id tag in the XML"
+        # remove elocation_id tag from the file fixture
+        with open(self.xml_file_path, "w") as open_file:
+            open_file.write(
+                self.xml_string.replace("<elocation-id>e84364</elocation-id>", "")
+            )
+        # invoke
+        self.activity.set_elocation_id_tag(
+            self.article_id,
+            self.xml_file_path,
+            self.input_filename,
+            json.dumps(DOCMAP_JSON),
+        )
+        # assert
+        with open(self.xml_file_path, "r") as open_file:
+            xml_string = open_file.read()
+        self.assertTrue("<elocation-id>" not in xml_string)
+        self.assertEqual(
+            self.activity.logger.loginfo[-1],
+            "TransformAcceptedSubmission, no elocation-id XML tag found for article %s"
             % self.article_id,
         )

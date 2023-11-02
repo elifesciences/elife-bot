@@ -183,7 +183,6 @@ def transform_prc(xml_file_path, identifier):
     prc.transform_journal_title_tag(root, identifier)
     prc.transform_publisher_name_tag(root, identifier)
     prc.add_prc_custom_meta_tags(root, identifier)
-    prc.transform_elocation_id(root, identifier=identifier)
     write_xml_file(root, xml_file_path, identifier)
 
 
@@ -488,6 +487,10 @@ def add_pub_history(root, history_data, identifier):
 
 def volume_from_docmap(docmap_string, input_filename):
     return prc.volume_from_docmap(docmap_string, input_filename)
+
+
+def elocation_id_from_docmap(docmap_string, input_filename):
+    return prc.elocation_id_from_docmap(docmap_string, input_filename)
 
 
 def version_doi_from_docmap(docmap_string, input_filename):
