@@ -3,8 +3,16 @@ elifeUpdatePipeline(
         lock('elife-bot--ci') {
             // ensure elife-bot--ci is on master
             builderDeployRevision 'elife-bot--ci', commit
-            // on the elife-bot--ci instance, activate venv, run the 'update single dependency' script
-            builderCmd "elife-bot--ci", "./update-dependencies.sh ${params.package} ${params.tag}", "/opt/elife-bot", true
+            if (params.package && params.tag) {
+                // on the elife-bot--ci instance, activate venv, run the 'update single dependency' script
+                builderCmd "elife-bot--ci", "./update-dependencies.sh ${params.package} ${params.tag}", "/opt/elife-bot", true
+            } else {
+                if (params.package || params.tag) {
+                    error "specify both 'package' and 'tag' build parameters or neither"
+                    return
+                }
+                builderCmd "elife-bot--ci", "./update-dependencies.sh", "/opt/elife-bot", true
+            }
             // rsync remote elife-bot to a ... local elife-bot?
             builderSync "ci--bot.elife.internal", "/opt/elife-bot/"
             // add the modified files
@@ -12,7 +20,11 @@ elifeUpdatePipeline(
         }
     },
     {
-        return "Dependency `${params.package}` pinned to `${params.tag}`"
+        if (params.package && params.tag) {
+            return "Dependency `${params.package}` pinned to `${params.tag}`"
+        } else {
+            return "Dependency update"
+        }
     },
     "update_${params.package}/"
 )
