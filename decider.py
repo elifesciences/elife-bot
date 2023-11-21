@@ -5,7 +5,7 @@ import importlib
 from botocore.config import Config
 import boto3
 from provider import process, utils
-import log
+from log import create_log
 import workflow
 
 
@@ -16,7 +16,7 @@ def decide(settings, flag, debug=False):
     # Log
     identity = "decider_%s" % os.getpid()
     log_file = "decider.log"
-    logger = log.logger(log_file, settings.setLevel, identity)
+    logger = create_log(log_file, settings.setLevel, identity)
 
     # Simple connect
     client = boto3.client(
