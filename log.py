@@ -27,3 +27,8 @@ def logger(logFile=None, setLevel="INFO", identity="", loggerName="elife-bot"):
 
 def identity(process_name):
     return "%s_%s" % (process_name, int(random.random() * 1000))
+
+
+def create_log(log_file, set_level, identity):
+    "create a log file"
+    return logger(log_file, set_level, identity)

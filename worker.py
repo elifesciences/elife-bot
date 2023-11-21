@@ -4,7 +4,7 @@ import importlib
 import botocore
 from botocore.config import Config
 import boto3
-import log
+from log import create_log
 from provider import process, utils
 import activity
 from activity.objects import Activity
@@ -18,7 +18,8 @@ Amazon SWF worker
 def work(settings, flag):
     # Log
     identity = "worker_%s" % os.getpid()
-    logger = log.logger("worker.log", settings.setLevel, identity)
+
+    logger = create_log("worker.log", settings.setLevel, identity)
 
     # Simple connect
     client = boto3.client(
