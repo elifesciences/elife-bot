@@ -17,8 +17,8 @@ class TestStarterSilentCorrectionsProcess(unittest.TestCase):
     def test_get_workflow_params(self):
         expected = OrderedDict(
             [
-                ("domain", ""),
-                ("task_list", ""),
+                ("domain", "test_domain"),
+                ("task_list", "test_task_list"),
                 ("workflow_id", "SilentCorrectionsProcess_353.1"),
                 ("workflow_name", "SilentCorrectionsProcess"),
                 ("workflow_version", "1"),

@@ -111,8 +111,8 @@ class TestDefaultWorkflowParams(unittest.TestCase):
     def test_default_workflow_params(self):
         expected = OrderedDict(
             [
-                ("domain", ""),
-                ("task_list", ""),
+                ("domain", "test_domain"),
+                ("task_list", "test_task_list"),
                 ("workflow_id", None),
                 ("workflow_name", None),
                 ("workflow_version", None),
