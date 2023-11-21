@@ -24,7 +24,6 @@ class TestStarterHelper(unittest.TestCase):
         {"execution_data": test_data.data_published_website, "execution": "website"},
     )
     def test_set_workflow_information_lax(self, execution_data, execution):
-
         (
             workflow_id,
             workflow_name,

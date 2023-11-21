@@ -17,8 +17,8 @@ class TestStarterPostPerfectPublication(unittest.TestCase):
     def test_get_workflow_params(self):
         expected = OrderedDict(
             [
-                ("domain", ""),
-                ("task_list", ""),
+                ("domain", "test_domain"),
+                ("task_list", "test_task_list"),
                 ("workflow_id", "PostPerfectPublication_353.1.lax"),
                 ("workflow_name", "PostPerfectPublication"),
                 ("workflow_version", "1"),

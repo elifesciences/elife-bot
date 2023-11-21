@@ -16,8 +16,8 @@ class TestStarterLensArticlePublish(unittest.TestCase):
     def test_get_workflow_params(self):
         expected = OrderedDict(
             [
-                ("domain", ""),
-                ("task_list", ""),
+                ("domain", "test_domain"),
+                ("task_list", "test_task_list"),
                 ("workflow_id", "LensArticlePublish_666"),
                 ("workflow_name", "LensArticlePublish"),
                 ("workflow_version", "1"),

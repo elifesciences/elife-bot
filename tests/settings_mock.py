@@ -1,6 +1,6 @@
 swf_region = ""
-domain = ""
-default_task_list = ""
+domain = "test_domain"
+default_task_list = "test_task_list"
 
 storage_provider = "s3"
 expanded_bucket = "origin_bucket"
@@ -10,8 +10,8 @@ production_bucket = "production_bucket"
 
 s3_session_bucket = "origin_bucket"
 
-aws_access_key_id = ""
-aws_secret_access_key = ""
+aws_access_key_id = "test_key_id"
+aws_secret_access_key = "test_access_key"
 
 lax_response_queue = "lax_response_queue"
 
