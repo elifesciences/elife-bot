@@ -1,4 +1,4 @@
-swf_region = ""
+swf_region = "antarctica"
 domain = "test_domain"
 default_task_list = "test_task_list"
 
