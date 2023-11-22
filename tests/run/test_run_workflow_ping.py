@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 import os
 import unittest
 from mock import patch
@@ -33,7 +33,7 @@ class TestRunWorkflowPing(unittest.TestCase):
     def test_run(self, fake_worker_log, fake_decider_log):
         "test running an SWF workflow execution using moto"
         # get the workflow name and steps
-        workflow_object = workflow_class(settings_mock, None, None, None, None, None)
+        workflow_object = workflow_class(settings=settings_mock, logger=None)
         workflow_type = workflow_object.definition.get("name")
         workflow_steps = workflow_object.definition.get("steps")
 
@@ -87,13 +87,17 @@ class TestRunWorkflowPing(unittest.TestCase):
         executions_response = self.test_client.list_closed_workflow_executions(
             domain=settings_mock.domain,
             startTimeFilter={
-                "oldestDate": datetime(2023, 1, 1),
-                "latestDate": datetime(2025, 1, 1),
+                "oldestDate": (
+                    datetime.datetime.utcnow() - datetime.timedelta(days=365)
+                ),
+                "latestDate": (
+                    datetime.datetime.utcnow() + datetime.timedelta(days=365)
+                ),
             },
         )
-        self.assertTrue(len(executions_response.get("executionInfos")), 1)
+        self.assertEqual(len(executions_response.get("executionInfos")), 1)
 
-        self.assertTrue(
-            str(worker_logger.loginfo).count("respond_activity_task_completed returned")
-            == len(workflow_steps)
+        message_count = str(worker_logger.loginfo).count(
+            "respond_activity_task_completed returned"
         )
+        self.assertEqual(message_count, len(workflow_steps))
