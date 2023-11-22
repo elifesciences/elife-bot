@@ -49,4 +49,4 @@ pylint = "~=2.11"
 testfixtures = "~=6.18"
 pytest = "~=7.2"
 mock = "~=4.0"
-moto = "~=4.2.9"
+moto = {extras = ["s3", "sns", "sqs", "swf"], version = "~=4.2"}
