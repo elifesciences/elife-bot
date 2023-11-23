@@ -76,9 +76,13 @@ class activity_ScheduleCrossrefPreprint(Activity):
             return self.ACTIVITY_SUCCESS
 
         # get preprint server XML from a bucket
-        real_filename = "%s-v%s.xml" % (article_id, version)
+        real_filename = preprint.PREPRINT_XML_FILE_NAME_PATTERN.format(
+            article_id=article_id, version=version
+        )
         bucket_name = self.settings.epp_data_bucket
-        bucket_folder = "data/%s/v%s" % (article_id, version)
+        bucket_folder = preprint.PREPRINT_XML_PATH_PATTERN.format(
+            article_id=article_id, version=version
+        )
         article_xml_path = download_helper.download_file_from_s3(
             self.settings,
             real_filename,

@@ -8,6 +8,12 @@ from provider import cleaner, utils
 
 CONFIG_SECTION = "elife_preprint"
 
+# path in the bucket to find preprint XML
+PREPRINT_XML_PATH_PATTERN = "data/{article_id}/v{version}"
+
+# file name of the preprint XML in the bucket
+PREPRINT_XML_FILE_NAME_PATTERN = "{article_id}-v{version}.xml"
+
 
 class PrepringArticleException(Exception):
     pass
@@ -45,9 +51,11 @@ def build_article(article_id, docmap_string, article_xml_path, version=None):
         # only add events equal to or less than the version value
         if history_event.get("doi"):
             event_doi, event_version = history_event.get("doi").rsplit(".", 1)
-            if (history_event.get("type") in ["preprint", "reviewed-preprint"]
+            if (
+                history_event.get("type") in ["preprint", "reviewed-preprint"]
                 and event_doi == doi
-                and int(event_version) > int(version)):
+                and int(event_version) > int(version)
+            ):
                 continue
         # look for the posted_date
         if (
@@ -99,7 +107,9 @@ def build_article(article_id, docmap_string, article_xml_path, version=None):
     article.ref_list = preprint_article.ref_list
 
     # sub-article data from docmap and Sciety web content
-    external_data = cleaner.sub_article_data(docmap_string, article, version_doi, generate_dois=False)
+    external_data = cleaner.sub_article_data(
+        docmap_string, article, version_doi, generate_dois=False
+    )
     # populate sub-article contributor values
     for index, data_item in enumerate(external_data):
         # 1. assessment
