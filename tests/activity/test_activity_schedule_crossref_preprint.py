@@ -280,7 +280,6 @@ class TestSettingsValidation(unittest.TestCase):
         }
 
     def tearDown(self):
-
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
