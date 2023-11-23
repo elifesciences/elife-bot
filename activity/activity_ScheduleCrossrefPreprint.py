@@ -39,7 +39,6 @@ class activity_ScheduleCrossrefPreprint(Activity):
         }
 
     def do_activity(self, data=None):
-
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
         self.make_activity_directories()
