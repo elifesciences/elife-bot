@@ -31,9 +31,9 @@ class TestBigQueryProvider(unittest.TestCase):
     def test_article_query(self):
         expected = (
             "SELECT * FROM `elife-data-pipeline.prod.mv_Production_Manuscript_Crossref_Deposit` "
-            'WHERE DOI = "10.7554/eLife.00666" '
+            "WHERE DOI = @doi"
         )
-        query = bigquery.article_query("10.7554/eLife.00666")
+        query = bigquery.article_query()
         self.assertEqual(query, expected)
 
     def test_article_data(self):
@@ -75,6 +75,9 @@ class TestBigQueryProvider(unittest.TestCase):
             bigquery.get_review_date(manuscript, "editor-report"), "2016-05-31"
         )
         self.assertEqual(bigquery.get_review_date(manuscript, "reply"), "2016-06-10")
+        self.assertEqual(
+            bigquery.get_review_date(manuscript, "referee-report"), "2016-05-31"
+        )
 
     def test_get_review_date_no_author_response_datetime(self):
         manuscript = bigquery.Manuscript()

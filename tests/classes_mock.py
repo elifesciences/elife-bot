@@ -145,7 +145,7 @@ class FakeBigQueryClient:
     def __init__(self, result):
         self.result = result
 
-    def query(self, query):
+    def query(self, query, job_config=None):
         return FakeBigQueryJob(self.result)
 
 

@@ -1,4 +1,4 @@
-from google.cloud.bigquery import Client
+from google.cloud.bigquery import Client, QueryJobConfig, ScalarQueryParameter
 from google.auth.exceptions import DefaultCredentialsError
 
 
@@ -79,15 +79,20 @@ def get_client(settings, logger):
         raise
 
 
-def article_query(doi):
-    return ("SELECT * " "FROM `{view_name}` " 'WHERE DOI = "{doi}" ').format(
-        view_name=BIG_QUERY_VIEW_NAME, doi=doi
+def article_query():
+    return ("SELECT * " "FROM `{view_name}` WHERE DOI = @doi").format(
+        view_name=BIG_QUERY_VIEW_NAME
     )
 
 
 def article_data(client, doi):
-    query = article_query(doi)
-    query_job = client.query(query)  # API request
+    query = article_query()
+    job_config = QueryJobConfig(
+        query_parameters=[
+            ScalarQueryParameter("doi", "STRING", doi),
+        ]
+    )
+    query_job = client.query(query, job_config=job_config)  # API request
     return query_job.result()  # Waits for query to finish
 
 
