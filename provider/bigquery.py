@@ -138,12 +138,12 @@ def get_review_date(manuscript_object, article_type):
     elif article_type in ["author-comment", "reply"]:
         if manuscript_object.author_response_datetime:
             return date_to_string(manuscript_object.author_response_datetime)
-        elif manuscript_object.decision_letter_datetime:
+        if manuscript_object.decision_letter_datetime:
             return date_to_string(manuscript_object.decision_letter_datetime)
     elif article_type == "referee-report":
         if manuscript_object.referee_report_datetime:
             return date_to_string(manuscript_object.referee_report_datetime)
-        elif manuscript_object.decision_letter_datetime:
+        if manuscript_object.decision_letter_datetime:
             return date_to_string(manuscript_object.decision_letter_datetime)
     return None
 

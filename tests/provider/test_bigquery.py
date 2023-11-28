@@ -1,7 +1,6 @@
 import unittest
 import datetime
 from mock import patch
-from google.oauth2.service_account import Credentials
 from google.cloud.bigquery import Client
 from google.cloud._helpers import UTC
 from google.auth.exceptions import DefaultCredentialsError
