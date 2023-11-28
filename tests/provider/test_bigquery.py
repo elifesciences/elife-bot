@@ -8,7 +8,7 @@ from google.auth.exceptions import DefaultCredentialsError
 from provider import bigquery
 from tests.activity.classes_mock import FakeLogger
 from tests.classes_mock import FakeBigQueryClient, FakeBigQueryRowIterator
-from tests import bigquery_test_data, settings_mock
+from tests import bigquery_test_data, bigquery_preprint_test_data, settings_mock
 
 
 class TestBigQueryProvider(unittest.TestCase):
@@ -97,6 +97,79 @@ class TestBigQueryProvider(unittest.TestCase):
         self.assertEqual(bigquery.get_review_date(None, None), None)
 
 
+class TestPreprintArticleQuery(unittest.TestCase):
+    def test_preprint_article_query(self):
+        "test preprint_article_query()"
+        date_string = "2023-11-28"
+        day_interval = 7
+        query = bigquery.preprint_article_query(date_string, day_interval)
+        expected = (
+            "SELECT * FROM "
+            "`elife-data-pipeline.prod.v_latest_reviewed_preprint_publication_date` "
+            "WHERE `publication_date` between DATE_SUB(@date_string, INTERVAL @day_interval DAY) "
+            "AND @date_string "
+            "ORDER BY publication_date DESC"
+        )
+        self.assertEqual(query, expected)
+
+    def test_no_arguments(self):
+        "test preprint_article_query() with no arguments supplied"
+        query = bigquery.preprint_article_query()
+        expected = (
+            "SELECT * FROM "
+            "`elife-data-pipeline.prod.v_latest_reviewed_preprint_publication_date` "
+            " ORDER BY publication_date DESC"
+        )
+        self.assertEqual(query, expected)
+
+
+class TestPreprintArticleResult(unittest.TestCase):
+    "tests for bigquery.preprint_article_result()"
+
+    def test_preprint_article_result(self):
+        "test preprint_article_result()"
+        rows = FakeBigQueryRowIterator(
+            bigquery_preprint_test_data.PREPRINT_QUERY_RESULT
+        )
+        client = FakeBigQueryClient(rows)
+        # run the query
+        result = bigquery.preprint_article_result(client)
+        # check the result
+        rows = list(result)
+
+        self.assertEqual(rows[0].elife_doi, "10.7554/eLife.92362")
+        self.assertEqual(rows[0].elife_doi_version, 1)
+        self.assertEqual(rows[0].publication_date, datetime.date(2023, 11, 22))
+        self.assertEqual(rows[0].utc_publication_time, datetime.time(14, 0))
+
+        self.assertEqual(rows[1].elife_doi, "10.7554/eLife.87445")
+        self.assertEqual(rows[1].elife_doi_version, 2)
+        self.assertEqual(rows[1].publication_date, datetime.date(2023, 11, 22))
+        self.assertEqual(rows[1].utc_publication_time, datetime.time(14, 0))
+
+
+class TestPreprintObjects(unittest.TestCase):
+    "tests for bigquery.preprint_objects()"
+
+    def test_preprint_article_result(self):
+        "test preprint_article_result()"
+        result = FakeBigQueryRowIterator(
+            bigquery_preprint_test_data.PREPRINT_QUERY_RESULT
+        )
+        preprints = bigquery.preprint_objects(result)
+
+        # assertions
+        self.assertEqual(preprints[0].doi, "10.7554/eLife.92362")
+        self.assertEqual(preprints[0].version, 1)
+        self.assertEqual(preprints[0].publication_date, datetime.date(2023, 11, 22))
+        self.assertEqual(preprints[0].utc_publication_time, datetime.time(14, 0))
+
+        self.assertEqual(preprints[1].doi, "10.7554/eLife.87445")
+        self.assertEqual(preprints[1].version, 2)
+        self.assertEqual(preprints[1].publication_date, datetime.date(2023, 11, 22))
+        self.assertEqual(preprints[1].utc_publication_time, datetime.time(14, 0))
+
+
 class TestManuscript(unittest.TestCase):
     def test_manuscript_init(self):
         """instantiate a Manuscript object from row data"""
@@ -149,3 +222,20 @@ class TestReviewer(unittest.TestCase):
         """empty row data"""
         reviewer = bigquery.Reviewer()
         self.assertIsNone(reviewer.populate_from_dict(None))
+
+
+class TestPreprint(unittest.TestCase):
+    def test_preprint_init(self):
+        "instantiate a Preprint object from row data"
+        preprint = bigquery.Preprint(
+            bigquery_preprint_test_data.PREPRINT_QUERY_RESULT[0]
+        )
+        self.assertEqual(preprint.doi, "10.7554/eLife.92362")
+        self.assertEqual(preprint.version, 1)
+        self.assertEqual(preprint.publication_date, datetime.date(2023, 11, 22))
+        self.assertEqual(preprint.utc_publication_time, datetime.time(14, 0))
+
+    def test_preprint_populate_from_dict_none(self):
+        "empty row data"
+        preprint = bigquery.Preprint()
+        self.assertIsNone(preprint.populate_from_dict(None))
