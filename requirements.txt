@@ -1,17 +1,17 @@
-# file generated 2023-11-22 - see update-dependencies.sh
+# file generated 2023-11-29 - see update-dependencies.sh
 arrow==1.3.0
 astroid==2.15.8
 async-timeout==4.0.3
-bcrypt==4.0.1
+bcrypt==4.1.1
 beautifulsoup4==4.12.2
-boto3==1.29.5
-botocore==1.32.5
+boto3==1.33.2
+botocore==1.33.2
 cachetools==5.3.2
 certifi==2023.11.17
 cffi==1.16.0
 charset-normalizer==3.3.2
 configparser==5.3.0
-cryptography==41.0.5
+cryptography==41.0.7
 ddt==1.7.0
 Deprecated==1.2.14
 digestparser==0.2.0
@@ -37,7 +37,7 @@ google-resumable-media==2.6.0
 googleapis-common-protos==1.61.0
 grpcio==1.59.3
 grpcio-status==1.59.3
-idna==3.4
+idna==3.6
 iniconfig==2.0.0
 isort==5.12.0
 jatsgenerator==0.8.0
@@ -50,7 +50,7 @@ MarkupSafe==2.1.3
 mccabe==0.7.0
 medium @ git+https://github.com/Medium/medium-sdk-python.git@bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6
 mock==4.0.3
-moto==4.2.9
+moto==4.2.10
 packagepoa==0.3.0
 packaging==23.2
 paramiko==2.12.0
@@ -79,7 +79,7 @@ redis==4.6.0
 requests==2.31.0
 responses==0.24.1
 rsa==4.9
-s3transfer==0.7.0
+s3transfer==0.8.1
 six==1.16.0
 smmap==5.0.1
 soupsieve==2.5
