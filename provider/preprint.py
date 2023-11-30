@@ -14,8 +14,11 @@ PREPRINT_XML_PATH_PATTERN = "data/{article_id}/v{version}"
 # file name of the preprint XML in the bucket
 PREPRINT_XML_FILE_NAME_PATTERN = "{article_id}-v{version}.xml"
 
+# DOI prefix to confirm version DOI value
+DOI_PREFIX = "10.7554"
 
-class PrepringArticleException(Exception):
+
+class PreprintArticleException(Exception):
     pass
 
 
@@ -27,6 +30,19 @@ def jatsgenerator_config(config_section, config_file):
 def build_article(article_id, docmap_string, article_xml_path, version=None):
     "collect data from docmap and preprint XML to populate an Article object"
     newest_version_doi = cleaner.version_doi_from_docmap(docmap_string, article_id)
+
+    if not newest_version_doi:
+        raise PreprintArticleException(
+            "Could not find a newest_version_doi for article_id %s" % article_id
+        )
+        return None
+
+    if not newest_version_doi.startswith(DOI_PREFIX):
+        raise PreprintArticleException(
+            "newest_version_doi %s for article_id %s has an incorrect prefix"
+            % (newest_version_doi, article_id)
+        )
+        return None
 
     if version:
         # build an XML file for a specific version, using docmap data for that preprint version
@@ -74,7 +90,7 @@ def build_article(article_id, docmap_string, article_xml_path, version=None):
             article.publication_history.append(preprint_event)
     if not posted_date_string:
         # no posted date found
-        raise PrepringArticleException(
+        raise PreprintArticleException(
             "Could not find a date in the history events for article_id %s" % article_id
         )
     # add posted_date to the Article
