@@ -236,7 +236,9 @@ class TestBuildArticle(unittest.TestCase):
         version = 1
         docmap_string = read_fixture("sample_docmap_for_84364.json")
         article_xml_path = "tests/files_source/epp/data/84364/v2/84364-v2.xml"
-        article = preprint.build_article(article_id, docmap_string, article_xml_path, version)
+        article = preprint.build_article(
+            article_id, docmap_string, article_xml_path, version
+        )
         # assertions
         self.assertEqual(article.doi, "10.7554/eLife.84364")
         self.assertEqual(article.version_doi, "10.7554/eLife.84364.1")
