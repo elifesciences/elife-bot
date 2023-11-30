@@ -236,7 +236,9 @@ class TestBuildArticle(unittest.TestCase):
         version = 1
         docmap_string = read_fixture("sample_docmap_for_84364.json")
         article_xml_path = "tests/files_source/epp/data/84364/v2/84364-v2.xml"
-        article = preprint.build_article(article_id, docmap_string, article_xml_path, version)
+        article = preprint.build_article(
+            article_id, docmap_string, article_xml_path, version
+        )
         # assertions
         self.assertEqual(article.doi, "10.7554/eLife.84364")
         self.assertEqual(article.version_doi, "10.7554/eLife.84364.1")
@@ -268,10 +270,8 @@ class TestBuildArticle(unittest.TestCase):
             b'"published": "2023-06-14T14:00:00+00:00",', b""
         )
         article_xml_path = "tests/files_source/epp/data/84364/v2/84364-v2.xml"
-        with self.assertRaises(preprint.PrepringArticleException) as test_exception:
-            preprint.build_article(
-                article_id, docmap_string, article_xml_path
-            )
+        with self.assertRaises(preprint.PreprintArticleException) as test_exception:
+            preprint.build_article(article_id, docmap_string, article_xml_path)
         self.assertEqual(
             str(test_exception.exception),
             (
@@ -279,6 +279,20 @@ class TestBuildArticle(unittest.TestCase):
                 % article_id
             ),
         )
+
+    @patch.object(cleaner, "version_doi_from_docmap")
+    def test_no_version_doi(self, fake_version_doi):
+        fake_version_doi.return_value = None
+        with self.assertRaises(preprint.PreprintArticleException) as test_exception:
+            result = preprint.build_article(None, None, None)
+            self.assertEqual(result, None)
+
+    @patch.object(cleaner, "version_doi_from_docmap")
+    def test_incorrect_version_doi(self, fake_version_doi):
+        fake_version_doi.return_value = "10.999999/unwanted.doi"
+        with self.assertRaises(preprint.PreprintArticleException) as test_exception:
+            result = preprint.build_article(None, None, None)
+            self.assertEqual(result, None)
 
 
 class TestXmlFilename(unittest.TestCase):
