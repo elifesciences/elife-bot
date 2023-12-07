@@ -1,6 +1,6 @@
 import json
 import os
-from provider import download_helper, outbox_provider, preprint
+from provider import outbox_provider, preprint
 from provider.execution_context import get_session
 from activity.objects import Activity
 
@@ -75,19 +75,8 @@ class activity_ScheduleCrossrefPreprint(Activity):
             return self.ACTIVITY_SUCCESS
 
         # get preprint server XML from a bucket
-        real_filename = preprint.PREPRINT_XML_FILE_NAME_PATTERN.format(
-            article_id=article_id, version=version
-        )
-        bucket_name = self.settings.epp_data_bucket
-        bucket_folder = preprint.PREPRINT_XML_PATH_PATTERN.format(
-            article_id=article_id, version=version
-        )
-        article_xml_path = download_helper.download_file_from_s3(
-            self.settings,
-            real_filename,
-            bucket_name,
-            bucket_folder,
-            self.directories.get("TEMP_DIR"),
+        article_xml_path = preprint.download_original_preprint_xml(
+            self.settings, self.directories.get("TEMP_DIR"), article_id, version
         )
 
         # generate preprint XML from data sources
