@@ -525,7 +525,7 @@ class TestDownloadOriginalPreprintXml(unittest.TestCase):
     @patch.object(download_helper, "storage_context")
     def test_download_original_preprint_xml(self, fake_download_storage_context):
         directory = TempDirectory()
-        article_id = 87445
+        article_id = 84364
         version = 2
         file_name = "%s-v%s.xml" % (article_id, version)
         fake_download_storage_context.return_value = FakeStorageContext(
