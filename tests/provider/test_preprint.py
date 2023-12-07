@@ -1,9 +1,11 @@
 # coding=utf-8
 
+import os
 import time
 import unittest
 from xml.etree.ElementTree import Element
 from mock import patch
+from testfixtures import TempDirectory
 from elifearticle.article import (
     Affiliation,
     Article,
@@ -14,7 +16,8 @@ from elifearticle.article import (
     Role,
 )
 from tests import read_fixture, settings_mock
-from provider import cleaner, preprint
+from tests.activity.classes_mock import FakeStorageContext
+from provider import cleaner, download_helper, preprint
 
 
 def anonymous_contributor(contrib_type="author"):
@@ -513,3 +516,23 @@ class TestPreprintXml(unittest.TestCase):
         # print(bytes.decode(result))
         for fragment in expected_fragments:
             self.assertTrue(fragment in result, "%s not found in result" % fragment)
+
+
+class TestDownloadOriginalPreprintXml(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch.object(download_helper, "storage_context")
+    def test_download_original_preprint_xml(self, fake_download_storage_context):
+        directory = TempDirectory()
+        article_id = 87445
+        version = 2
+        file_name = "%s-v%s.xml" % (article_id, version)
+        fake_download_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/epp", [file_name]
+        )
+        result = preprint.download_original_preprint_xml(
+            settings_mock, directory.path, article_id, version
+        )
+        self.assertEqual(result.rsplit(os.sep, 1)[-1], file_name)
+        self.assertEqual(os.listdir(directory.path), [file_name])

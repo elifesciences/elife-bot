@@ -3,7 +3,7 @@ from elifearticle.parse import build_article_from_xml
 from elifearticle.article import Article, ArticleDate, Contributor, Event, License
 from jatsgenerator import generate
 from jatsgenerator.conf import raw_config, parse_raw_config
-from provider import cleaner, utils
+from provider import cleaner, download_helper, utils
 
 
 CONFIG_SECTION = "elife_preprint"
@@ -174,3 +174,23 @@ def preprint_xml(article, settings):
     article_xml = generate.ArticleXML(article, jats_config, add_comment)
     xml_string = article_xml.output_xml(pretty=True, indent="")
     return xml_string
+
+
+def download_original_preprint_xml(settings, to_dir, article_id, version):
+    "download the preprint server version of the XML"
+    # get preprint server XML from a bucket
+    real_filename = PREPRINT_XML_FILE_NAME_PATTERN.format(
+        article_id=article_id, version=version
+    )
+    bucket_name = settings.epp_data_bucket
+    bucket_folder = PREPRINT_XML_PATH_PATTERN.format(
+        article_id=article_id, version=version
+    )
+    article_xml_path = download_helper.download_file_from_s3(
+        settings,
+        real_filename,
+        bucket_name,
+        bucket_folder,
+        to_dir,
+    )
+    return article_xml_path
