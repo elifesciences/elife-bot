@@ -476,6 +476,11 @@ def add_history_date(root, date_type, date_struct, identifier):
     return prc.add_history_date(root, date_type, date_struct, identifier)
 
 
+def docmap_preprint(docmap_string):
+    d_json = docmap_parse.docmap_json(docmap_string)
+    return docmap_parse.docmap_preprint(d_json)
+
+
 def docmap_preprint_history_from_docmap(docmap_string):
     d_json = docmap_parse.docmap_json(docmap_string)
     return docmap_parse.docmap_preprint_history(d_json)

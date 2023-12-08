@@ -201,10 +201,11 @@ class TestBuildArticle(unittest.TestCase):
         )
         self.assertTrue(
             article.abstract.startswith(
-                "<p>The inner layer of blood vessels consists of endothelial cells,"
+                "The inner layer of blood vessels consists of endothelial cells,"
             )
         )
         self.assertEqual(len(article.contributors), 6)
+        self.assertEqual(len(article.contributors[0].affiliations), 1)
         self.assertEqual(len(article.ref_list), 77)
         # review_articles
         self.assertEqual(len(article.review_articles), 5)
@@ -216,6 +217,8 @@ class TestBuildArticle(unittest.TestCase):
         self.assertEqual(article.review_articles[0].title, "eLife assessment")
         self.assertEqual(len(article.review_articles[0].contributors), 1)
         self.assertEqual(article.review_articles[0].contributors[0].surname, "Eisen")
+
+        self.assertEqual(len(article.related_articles), 1)
 
         self.assertEqual(article.review_articles[1].article_type, "referee-report")
         self.assertEqual(article.review_articles[1].doi, "10.7554/eLife.84364.2.sa3")
