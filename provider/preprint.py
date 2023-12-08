@@ -1,6 +1,13 @@
 "functions for generating preprint XML"
 from elifearticle.parse import build_article_from_xml
-from elifearticle.article import Article, ArticleDate, Contributor, Event, License
+from elifearticle.article import (
+    Article,
+    ArticleDate,
+    Contributor,
+    Event,
+    License,
+    Preprint,
+)
 from jatsgenerator import generate
 from jatsgenerator.conf import raw_config, parse_raw_config
 from provider import cleaner, download_helper, utils
@@ -112,15 +119,31 @@ def build_article(article_id, docmap_string, article_xml_path, version=None):
             article.license = license_object
 
     # copy metadata from an article XML file
-    preprint_article, error_count = build_article_from_xml(article_xml_path)
+    preprint_article, error_count = build_article_from_xml(
+        article_xml_path, detail="full"
+    )
     # title
     article.title = preprint_article.title
     # abstract
-    article.abstract = preprint_article.abstract
+    abstract = None
+    if preprint_article.abstract:
+        abstract = (
+            preprint_article.abstract.replace("<p>", " ")
+            .replace("</p>", " ")
+            .lstrip()
+            .rstrip()
+        )
+    article.abstract = abstract
     # contributors
     article.contributors = preprint_article.contributors
     # references
     article.ref_list = preprint_article.ref_list
+    # preprint DOI
+    original_preprint_doi = cleaner.docmap_preprint(docmap_string)
+    if original_preprint_doi:
+        related_preprint_1 = Preprint()
+        related_preprint_1.doi = original_preprint_doi
+        article.related_articles = [related_preprint_1]
 
     # sub-article data from docmap and Sciety web content
     external_data = cleaner.sub_article_data(
