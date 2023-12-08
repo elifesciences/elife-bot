@@ -49,6 +49,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         {
             "comment": "Article 15747",
             "article_xml_filenames": ["elife-15747-v2.xml", "elife_poa_e03977.xml"],
+            "vor_exists": True,
             "post_status_code": 200,
             "expected_result": True,
             "expected_approve_status": True,
@@ -83,6 +84,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         {
             "comment": "Article 1234567890",
             "article_xml_filenames": ["elife-1234567890-v2.xml"],
+            "vor_exists": True,
             "post_status_code": 200,
             "expected_result": True,
             "expected_approve_status": True,
@@ -118,6 +120,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         {
             "comment": "Preprint article",
             "article_xml_filenames": ["elife-preprint-84364-v2.xml"],
+            "vor_exists": False,
             "post_status_code": 200,
             "expected_result": True,
             "expected_approve_status": True,
@@ -151,6 +154,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         {
             "comment": "Article 15747",
             "article_xml_filenames": ["elife-86628-v1.xml"],
+            "vor_exists": True,
             "post_status_code": 200,
             "expected_result": True,
             "expected_approve_status": True,
@@ -197,7 +201,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
     ):
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
-        fake_check_vor.return_value = True
+        fake_check_vor.return_value = test_data.get("vor_exists")
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
