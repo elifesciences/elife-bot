@@ -406,7 +406,8 @@ def prune_article_object_map(article_object_map, settings, logger):
             good = check_doi_exists(article, logger)
         # check VoR is published
         if good:
-            good = check_vor_is_published(article, settings, logger)
+            if article.article_type != "preprint":
+                good = check_vor_is_published(article, settings, logger)
 
         # finally if still good, add it to the map of good articles
         if good:
