@@ -48,6 +48,7 @@ def start(settings):
     workflow_names.append("SoftwareHeritageDeposit")
     workflow_names.append("IngestAcceptedSubmission")
     workflow_names.append("ScheduleCrossrefPreprint")
+    workflow_names.append("FindNewPreprints")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries
@@ -146,6 +147,7 @@ def start(settings):
     activity_names.append("AcceptedSubmissionVersionDoi")
     activity_names.append("AcceptedSubmissionHistory")
     activity_names.append("AcceptedSubmissionStrikingImages")
+    activity_names.append("FindNewPreprints")
 
     for activity_name in activity_names:
         # Import the activity libraries
