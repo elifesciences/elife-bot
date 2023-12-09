@@ -88,7 +88,7 @@ class activity_DepositCrossrefPeerReview(Activity):
         crossref_preprint_config = crossref.elifecrossref_preprint_config(self.settings)
 
         article_object_map = self.get_article_objects(
-            article_xml_files, crossref_config
+            article_xml_files, crossref_config, crossref_preprint_config
         )
 
         generate_article_object_map = prune_article_object_map(
@@ -208,7 +208,9 @@ class activity_DepositCrossrefPeerReview(Activity):
 
         return True
 
-    def get_article_objects(self, article_xml_files, crossref_config=None):
+    def get_article_objects(
+        self, article_xml_files, crossref_config=None, crossref_preprint_config=None
+    ):
         """turn XML into article objects and populate their data"""
         # parse XML files into the basic article object map to start with
         article_object_map = crossref.article_xml_list_parse(
@@ -216,6 +218,10 @@ class activity_DepositCrossrefPeerReview(Activity):
         )
         # continue with setting more article data
         for article in list(article_object_map.values()):
+            if article.article_type == "preprint":
+                use_config = crossref_preprint_config
+            else:
+                use_config = crossref_config
             # populate Manuscript object
             manuscript_object = self.get_manuscript_object(article.doi)
 
@@ -237,11 +243,9 @@ class activity_DepositCrossrefPeerReview(Activity):
 
                 if article.elocation_id and article.elocation_id.startswith("RP"):
                     # PRC article
-                    if crossref_config and crossref_config.get("pub_date_types"):
+                    if use_config and use_config.get("pub_date_types"):
                         # use the article pub date
-                        pub_date = crossref.article_first_pub_date(
-                            crossref_config, article
-                        )
+                        pub_date = crossref.article_first_pub_date(use_config, article)
                         if pub_date is not None:
                             review_date_struct = pub_date.date
                             review_date = time.strftime(

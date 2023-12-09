@@ -149,6 +149,19 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 '<peer_review stage="pre-publication" type="author-comment">',
                 "<doi>10.7554/eLife.84364.2.sa0</doi>",
                 "<resource>https://elifesciences.org/reviewed-preprints/84364/reviews</resource>",
+                (
+                    "<titles>\n"
+                    "                <title>"
+                    "Author response: Opto-RhoGEFs: an optimized optogenetic toolbox to "
+                    "reversibly control Rho GTPase activity on a global to subcellular "
+                    "scale, enabling precise control over vascular endothelial barrier strength"
+                    "</title>\n"
+                    "            </titles>\n"
+                    "            <review_date>\n"
+                    "                <month>02</month>\n"
+                    "                <day>13</day>\n"
+                    "                <year>2023</year>"
+                ),
             ],
         },
         {
