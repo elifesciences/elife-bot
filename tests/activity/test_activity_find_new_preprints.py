@@ -46,6 +46,7 @@ class TestFindNewPreprints(unittest.TestCase):
             "expected_result": True,
             "expected_generate_status": True,
             "expected_upload_status": True,
+            "expected_activity_status": True,
             "expected_email_status": True,
             "expected_file_count": 1,
             "expected_bucket_files": ["elife-preprint-87445-v2.xml"],
@@ -60,6 +61,7 @@ class TestFindNewPreprints(unittest.TestCase):
             "expected_result": True,
             "expected_generate_status": None,
             "expected_upload_status": None,
+            "expected_activity_status": None,
             "expected_email_status": None,
             "expected_file_count": 0,
             "expected_bucket_files": [],
@@ -114,8 +116,9 @@ class TestFindNewPreprints(unittest.TestCase):
         # check statuses assertions
         for status_name in [
             "generate",
-            "email",
+            "upload",
             "activity",
+            "email",
         ]:
             status_value = self.activity.statuses.get(status_name)
             expected = test_data.get("expected_" + status_name + "_status")
