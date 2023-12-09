@@ -130,6 +130,9 @@ class activity_FindNewPreprints(Activity):
             )
             self.statuses["upload"] = True
 
+        # determine the success of the activity
+        self.statuses["activity"] = self.statuses["generate"]
+
         # send email only if new XML files were generated
         if self.statuses["generate"]:
             self.statuses["email"] = self.send_admin_email(new_xml_filenames)
