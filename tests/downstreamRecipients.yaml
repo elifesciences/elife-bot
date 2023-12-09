@@ -23,6 +23,10 @@ DepositCrossrefPostedContent:
   activity_name: DepositCrossrefPostedContent
   s3_bucket_folder: crossref_posted_content
 
+FindNewPreprints:
+  activity_name: FindNewPreprints
+  s3_bucket_folder: preprint
+
 PMC:
   activity_name: PMCDeposit
   s3_bucket_folder: pmc
