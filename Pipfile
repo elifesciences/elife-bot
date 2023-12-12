@@ -45,6 +45,7 @@ PyGithub = "~=1.55"
 elifecleaner = "~=0.61.0"
 
 [dev-packages]
+memray = "==1.11.0"
 pylint = "~=2.11"
 testfixtures = "~=6.18"
 pytest = "~=7.2"
