@@ -416,6 +416,7 @@ def start_workflow(settings, starter_name, workflow_id=None):
         "starter_DepositCrossrefPeerReview",
         "starter_DepositCrossrefPendingPublication",
         "starter_PubmedArticleDeposit",
+        "starter_FindNewPreprints",
     ]:
         starter_object.start(settings=settings)
 
