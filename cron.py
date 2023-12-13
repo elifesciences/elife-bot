@@ -207,6 +207,17 @@ def conditional_starts(current_datetime):
                 )
             )
 
+        # Check for new preprints at 20 minutes past the hour
+        conditional_start_list.append(
+            OrderedDict(
+                [
+                    ("starter_name", "starter_FindNewPreprints"),
+                    ("workflow_id", "FindNewPreprints"),
+                    ("start_seconds", 60 * 31),
+                ]
+            )
+        )
+
     elif current_time.tm_min >= 30 and current_time.tm_min <= 44:
         # Jobs to start at the half past to quarter to the hour
         LOGGER.info("half past to quarter to the hour")
