@@ -88,6 +88,7 @@ class TestCron(unittest.TestCase):
             "workflow_id": "PubRouterDeposit_HEFCE",
         },
         {"starter_name": "starter_PublishPOA", "workflow_id": "PublishPOA"},
+        {"starter_name": "starter_FindNewPreprints", "workflow_id": "FindNewPreprints"},
     )
     def test_start_workflow(self, test_data, fake_client, fake_start):
         fake_client.return_value = FakeSWFClient()
@@ -182,11 +183,13 @@ class TestConditionalStarts(unittest.TestCase):
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
                 "cron_NewS3POA",
+                "starter_FindNewPreprints",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
                 "cron_NewS3POA",
+                "FindNewPreprints",
             ],
         },
     )
@@ -201,11 +204,13 @@ class TestConditionalStarts(unittest.TestCase):
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
                 "cron_NewS3POA",
+                "starter_FindNewPreprints",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
                 "cron_NewS3POA",
+                "FindNewPreprints",
             ],
         },
     )

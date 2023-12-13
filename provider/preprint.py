@@ -138,12 +138,6 @@ def build_article(article_id, docmap_string, article_xml_path, version=None):
     article.contributors = preprint_article.contributors
     # references
     article.ref_list = preprint_article.ref_list
-    # preprint DOI
-    original_preprint_doi = cleaner.docmap_preprint(docmap_string)
-    if original_preprint_doi:
-        related_preprint_1 = Preprint()
-        related_preprint_1.doi = original_preprint_doi
-        article.related_articles = [related_preprint_1]
 
     # sub-article data from docmap and Sciety web content
     external_data = cleaner.sub_article_data(

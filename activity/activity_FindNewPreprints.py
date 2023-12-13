@@ -56,6 +56,13 @@ class activity_FindNewPreprints(Activity):
         "Activity, do the work" ""
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
+        # check for required settings
+        if not self.settings.epp_data_bucket:
+            self.logger.info(
+                "epp_data_bucket in settings is blank, skipping %s." % self.name
+            )
+            return True
+
         # Create output directories
         self.make_activity_directories()
 

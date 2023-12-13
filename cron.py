@@ -22,7 +22,6 @@ LOGGER = log.logger("cron.log", "INFO", IDENTITY)
 
 
 def run_cron(settings):
-
     current_datetime = get_current_datetime()
     LOGGER.info("current_datetime: %s" % current_datetime)
 
@@ -206,6 +205,17 @@ def conditional_starts(current_datetime):
                     ]
                 )
             )
+
+        # Check for new preprints at 20 minutes past the hour
+        conditional_start_list.append(
+            OrderedDict(
+                [
+                    ("starter_name", "starter_FindNewPreprints"),
+                    ("workflow_id", "FindNewPreprints"),
+                    ("start_seconds", 60 * 31),
+                ]
+            )
+        )
 
     elif current_time.tm_min >= 30 and current_time.tm_min <= 44:
         # Jobs to start at the half past to quarter to the hour

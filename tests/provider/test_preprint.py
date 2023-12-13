@@ -218,7 +218,7 @@ class TestBuildArticle(unittest.TestCase):
         self.assertEqual(len(article.review_articles[0].contributors), 1)
         self.assertEqual(article.review_articles[0].contributors[0].surname, "Eisen")
 
-        self.assertEqual(len(article.related_articles), 1)
+        self.assertEqual(len(article.related_articles), 0)
 
         self.assertEqual(article.review_articles[1].article_type, "referee-report")
         self.assertEqual(article.review_articles[1].doi, "10.7554/eLife.84364.2.sa3")
@@ -519,6 +519,21 @@ class TestPreprintXml(unittest.TestCase):
         # print(bytes.decode(result))
         for fragment in expected_fragments:
             self.assertTrue(fragment in result, "%s not found in result" % fragment)
+
+    @patch.object(cleaner, "sub_article_data")
+    def test_article_preprint_xml(self, fake_sub_article_data):
+        "test building an article object then generate the article XML"
+        fake_sub_article_data.return_value = sub_article_data_fixture()
+        article_id = "84364"
+        docmap_string = read_fixture("sample_docmap_for_84364.json")
+        article_xml_path = "tests/files_source/epp/data/84364/v2/84364-v2.xml"
+        article = preprint.build_article(article_id, docmap_string, article_xml_path)
+        result = preprint.preprint_xml(article, settings_mock)
+        # print(bytes.decode(result))
+        self.assertTrue(
+            b'<self-uri content-type="preprint" '
+            b'xlink:href="https://doi.org/10.1101/2022.10.17.512253"/>' in result
+        )
 
 
 class TestDownloadOriginalPreprintXml(unittest.TestCase):
