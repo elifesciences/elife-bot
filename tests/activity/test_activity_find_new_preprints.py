@@ -218,9 +218,6 @@ class TestFindNewPreprints(unittest.TestCase):
 
         result = self.activity.do_activity(self.activity_data)
         self.assertEqual(result, True)
-        print(self.activity.logger.loginfo)
-        print(self.activity.logger.logexception)
-        # self.assertTrue(False)
 
     @patch("provider.preprint.build_article")
     @patch.object(cleaner, "get_docmap")
@@ -254,3 +251,25 @@ class TestFindNewPreprints(unittest.TestCase):
 
         result = self.activity.do_activity(self.activity_data)
         self.assertEqual(result, True)
+
+
+class TestMissingSettings(unittest.TestCase):
+    def setUp(self):
+        self.epp_data_bucket = settings_mock.epp_data_bucket
+
+    def tearDown(self):
+        # reset the settings_mock value
+        settings_mock.epp_data_bucket = self.epp_data_bucket
+
+    def test_missing_settings(self):
+        "test if settings is missing a required value"
+        settings_mock.epp_data_bucket = ""
+        activity_object = activity_class(settings_mock, FakeLogger(), None, None, None)
+        # do the activity
+        result = activity_object.do_activity()
+        # check assertions
+        self.assertEqual(result, True)
+        self.assertEqual(
+            activity_object.logger.loginfo[-1],
+            "epp_data_bucket in settings is blank, skipping FindNewPreprints.",
+        )
