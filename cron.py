@@ -22,7 +22,6 @@ LOGGER = log.logger("cron.log", "INFO", IDENTITY)
 
 
 def run_cron(settings):
-
     current_datetime = get_current_datetime()
     LOGGER.info("current_datetime: %s" % current_datetime)
 
