@@ -87,6 +87,9 @@ class activity_DepositCrossrefPostedContent(Activity):
         article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
 
         crossref_config = crossref.elifecrossref_preprint_config(self.settings)
+        crossref_version_config = crossref.elifecrossref_preprint_version_config(
+            self.settings
+        )
 
         article_object_map = self.get_article_objects(article_xml_files)
 
@@ -125,7 +128,7 @@ class activity_DepositCrossrefPostedContent(Activity):
                 # generate CrossrefXML
                 crossref_object_list = crossref.build_crossref_xml(
                     {xml_file: article_version},
-                    crossref_config,
+                    crossref_version_config,
                     good_xml_files,
                     bad_xml_files,
                     submission_type="posted_content",
