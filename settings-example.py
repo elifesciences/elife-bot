@@ -158,6 +158,7 @@ class exp:
     elifecrossref_config_file = "crossref.cfg"
     elifecrossref_config_section = "elife"
     elifecrossref_preprint_config_section = "elife_preprint"
+    elifecrossref_preprint_version_config_section = "elife_preprint_version"
 
     # Crossref
     crossref_url = "http://test.crossref.org/servlet/deposit"
@@ -512,6 +513,7 @@ class dev:
     elifecrossref_config_file = "crossref.cfg"
     elifecrossref_config_section = "elife"
     elifecrossref_preprint_config_section = "elife_preprint"
+    elifecrossref_preprint_version_config_section = "elife_preprint_version"
 
     # Crossref
     crossref_url = "http://test.crossref.org/servlet/deposit"
@@ -863,6 +865,7 @@ class live:
     elifecrossref_config_file = "crossref.cfg"
     elifecrossref_config_section = "elife"
     elifecrossref_preprint_config_section = "elife_preprint"
+    elifecrossref_preprint_version_config_section = "elife_preprint_version"
 
     # Crossref
     crossref_url = "http://doi.crossref.org/servlet/deposit"

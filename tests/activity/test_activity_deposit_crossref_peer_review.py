@@ -148,7 +148,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 '<peer_review stage="pre-publication" type="referee-report">',
                 '<peer_review stage="pre-publication" type="author-comment">',
                 "<doi>10.7554/eLife.84364.2.sa0</doi>",
-                "<resource>https://elifesciences.org/reviewed-preprints/84364/reviews</resource>",
+                "<resource>https://elifesciences.org/reviewed-preprints/84364v2/reviews</resource>",
                 (
                     "<titles>\n"
                     "                <title>"

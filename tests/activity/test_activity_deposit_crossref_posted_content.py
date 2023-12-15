@@ -67,6 +67,16 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
                 "<resource>https://elifesciences.org/reviewed-preprints/84364</resource>",
                 "</posted_content>",
             ],
+            "expected_crossref_version_xml_contains": [
+                '<posted_content type="preprint">',
+                "<posted_date>",
+                "<month>02</month>",
+                "<day>13</day>",
+                "<year>2023</year>",
+                "<doi>10.7554/eLife.84364.2</doi>",
+                "<resource>https://elifesciences.org/reviewed-preprints/84364v2</resource>",
+                "</posted_content>",
+            ],
         }
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
@@ -121,6 +131,20 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
             with open(crossref_xml_filename_path, "rb") as open_file:
                 crossref_xml = open_file.read().decode("utf8")
                 for expected in test_data.get("expected_crossref_xml_contains"):
+                    self.assertTrue(
+                        expected in crossref_xml,
+                        "{expected} not found in crossref_xml {path}".format(
+                            expected=expected, path=crossref_xml_filename_path
+                        ),
+                    )
+        if file_count > 0 and test_data.get("expected_crossref_version_xml_contains"):
+            # Open the second crossref XML and check some of its contents
+            crossref_xml_filename_path = os.path.join(
+                self.tmp_dir(), sorted(os.listdir(self.tmp_dir()))[1]
+            )
+            with open(crossref_xml_filename_path, "rb") as open_file:
+                crossref_xml = open_file.read().decode("utf8")
+                for expected in test_data.get("expected_crossref_version_xml_contains"):
                     self.assertTrue(
                         expected in crossref_xml,
                         "{expected} not found in crossref_xml {path}".format(

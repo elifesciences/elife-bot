@@ -530,9 +530,16 @@ class TestPreprintXml(unittest.TestCase):
         article = preprint.build_article(article_id, docmap_string, article_xml_path)
         result = preprint.preprint_xml(article, settings_mock)
         # print(bytes.decode(result))
+        # assertions
         self.assertTrue(
             b'<self-uri content-type="preprint" '
             b'xlink:href="https://doi.org/10.1101/2022.10.17.512253"/>' in result
+        )
+        self.assertTrue(
+            b'<aff id="aff1">Swammerdam Institute for Life Sciences, '
+            b"Section of Molecular Cytology, van Leeuwenhoek Centre for "
+            b"Advanced Microscopy, University of Amsterdam, Science Park 904, "
+            b"1098 XH, Amsterdam, The Netherlands</aff>" in result
         )
 
 
