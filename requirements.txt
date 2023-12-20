@@ -1,11 +1,11 @@
-# file generated 2023-12-19 - see update-dependencies.sh
+# file generated 2023-12-20 - see update-dependencies.sh
 arrow==1.3.0
 astroid==2.15.8
 async-timeout==4.0.3
-bcrypt==4.1.1
+bcrypt==4.1.2
 beautifulsoup4==4.12.2
-boto3==1.33.12
-botocore==1.33.12
+boto3==1.34.4
+botocore==1.34.4
 cachetools==5.3.2
 certifi==2023.11.17
 cffi==1.16.0
@@ -33,21 +33,20 @@ google-auth==2.25.2
 google-cloud-bigquery==3.13.0
 google-cloud-core==2.4.1
 google-crc32c==1.5.0
-google-resumable-media==2.6.0
+google-resumable-media==2.7.0
 googleapis-common-protos==1.62.0
 grpcio==1.60.0
 grpcio-status==1.60.0
 idna==3.6
-importlib-metadata==7.0.0
 iniconfig==2.0.0
-isort==5.13.1
+isort==5.13.2
 jatsgenerator==0.10.0
 Jinja2==3.1.2
 jmespath==1.0.1
-lazy-object-proxy==1.9.0
+lazy-object-proxy==1.10.0
 letterparser==0.14.0
 linkify-it-py==2.0.2
-lxml==4.9.3
+lxml==4.9.4
 markdown-it-py==3.0.0
 MarkupSafe==2.1.3
 mccabe==0.7.0
@@ -56,7 +55,7 @@ mdurl==0.1.2
 medium @ git+https://github.com/Medium/medium-sdk-python.git@bdf34becf6dd24e3b1fc1048c36416bcba9fe0d6
 memray==1.11.0
 mock==4.0.3
-moto==4.2.11
+moto==4.2.12
 packagepoa==0.3.0
 packaging==23.2
 paramiko==3.4.0
@@ -64,8 +63,8 @@ platformdirs==4.1.0
 pluggy==1.3.0
 proto-plus==1.23.0
 protobuf==4.25.1
-psutil==5.9.6
-py-partiql-parser==0.4.2
+psutil==5.9.7
+py-partiql-parser==0.5.0
 pyasn1==0.5.1
 pyasn1-modules==0.3.0
 pycparser==2.21
@@ -87,14 +86,14 @@ requests==2.31.0
 responses==0.24.1
 rich==13.7.0
 rsa==4.9
-s3transfer==0.8.2
+s3transfer==0.9.0
 six==1.16.0
 smmap==5.0.1
 soupsieve==2.5
 tabulate==0.9.0
 testfixtures==6.18.5
 text-unidecode==1.3
-textual==0.44.1
+textual==0.46.0
 tomli==2.0.1
 tomlkit==0.12.3
 types-python-dateutil==2.8.19.14
@@ -106,4 +105,3 @@ websocket-client==1.7.0
 Werkzeug==3.0.1
 wrapt==1.13.3
 xmltodict==0.13.0
-zipp==3.17.0
