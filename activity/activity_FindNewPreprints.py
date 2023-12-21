@@ -3,6 +3,7 @@ import datetime
 import json
 import time
 import glob
+import boto3
 from activity.objects import Activity
 from provider import (
     bigquery,
@@ -51,6 +52,9 @@ class activity_FindNewPreprints(Activity):
         # Track XML files selected for pubmed XML
         self.good_xml_files = []
         self.bad_xml_files = []
+
+        # SQS client
+        self.sqs_client = None
 
     def do_activity(self, data=None):
         "Activity, do the work" ""
@@ -118,7 +122,12 @@ class activity_FindNewPreprints(Activity):
         self.generate_xml_files(new_xml_map)
         self.statuses["generate"] = bool(self.good_xml_files)
 
-        # todo!!! eventually, start a workflow for the new article version
+        # start a workflow for the new article version
+        if self.statuses.get("generate") is True:
+            for new_xml_filename, detail in new_xml_map.items():
+                self.start_post_workflow(
+                    detail.get("article_id"), detail.get("version")
+                )
 
         # upload the new preprint XML to the published bucket folder
         if self.statuses.get("generate") is True:
@@ -326,3 +335,49 @@ class activity_FindNewPreprints(Activity):
             )
 
         return True
+
+    def start_post_workflow(self, article_id, version):
+        "start a workflow after a preprint is first published"
+        # build message
+        workflow_name = "PostPreprintPublication"
+        workflow_data = {
+            "article_id": article_id,
+            "version": version,
+            "standalone": True,
+        }
+        message = {
+            "workflow_name": workflow_name,
+            "workflow_data": workflow_data,
+        }
+        self.logger.info(
+            "%s, starting a %s workflow for article_id %s, version %s",
+            self.name,
+            workflow_name,
+            article_id,
+            version,
+        )
+        # connect to the queue
+        queue_url = self.sqs_queue_url()
+        # send workflow starter message
+        self.sqs_client.send_message(
+            QueueUrl=queue_url,
+            MessageBody=json.dumps(message),
+        )
+
+    def sqs_connect(self):
+        "connect to the queue service"
+        if not self.sqs_client:
+            self.sqs_client = boto3.client(
+                "sqs",
+                aws_access_key_id=self.settings.aws_access_key_id,
+                aws_secret_access_key=self.settings.aws_secret_access_key,
+                region_name=self.settings.sqs_region,
+            )
+
+    def sqs_queue_url(self):
+        "get the queues"
+        self.sqs_connect()
+        queue_url_response = self.sqs_client.get_queue_url(
+            QueueName=self.settings.workflow_starter_queue
+        )
+        return queue_url_response.get("QueueUrl")

@@ -49,6 +49,7 @@ def start(settings):
     workflow_names.append("IngestAcceptedSubmission")
     workflow_names.append("ScheduleCrossrefPreprint")
     workflow_names.append("FindNewPreprints")
+    workflow_names.append("PostPreprintPublication")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries

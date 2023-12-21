@@ -14,7 +14,13 @@ from tests.classes_mock import (
     FakeBigQueryClient,
     FakeBigQueryRowIterator,
 )
-from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
+from tests.activity.classes_mock import (
+    FakeLogger,
+    FakeResponse,
+    FakeStorageContext,
+    FakeSQSClient,
+    FakeSQSQueue,
+)
 from tests.activity import settings_mock
 
 
@@ -30,6 +36,7 @@ class TestFindNewPreprints(unittest.TestCase):
         TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
 
+    @patch("boto3.client")
     @patch.object(cleaner, "get_docmap")
     @patch.object(bigquery, "get_client")
     @patch.object(activity_module.email_provider, "smtp_connect")
@@ -78,6 +85,7 @@ class TestFindNewPreprints(unittest.TestCase):
         fake_email_smtp_connect,
         fake_get_client,
         fake_get_docmap,
+        fake_sqs_client,
     ):
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
@@ -107,6 +115,10 @@ class TestFindNewPreprints(unittest.TestCase):
         client = FakeBigQueryClient(rows)
         fake_get_client.return_value = client
         fake_get_docmap.return_value = read_fixture("sample_docmap_for_87445.json")
+
+        # mock the SQS client and queues
+        fake_queues = {settings_mock.workflow_starter_queue: FakeSQSQueue(directory)}
+        fake_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
 
         # do the activity
         result = self.activity.do_activity(self.activity_data)
