@@ -39,6 +39,8 @@ def session_data(article_id=None, version=None):
 class TestScheduleCrossrefPreprint(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
+        # reduce the sleep time to speed up test runs
+        activity_module.SLEEP_SECONDS = 0.001
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
@@ -266,6 +268,9 @@ class TestSettingsValidation(unittest.TestCase):
 
         class FakeSettings:
             pass
+
+        # reduce the sleep time to speed up test runs
+        activity_module.SLEEP_SECONDS = 0.001
 
         settings_object = FakeSettings()
         settings_object.downstream_recipients_yaml = (

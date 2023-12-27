@@ -1,8 +1,14 @@
 import json
 import os
+import time
 from provider import outbox_provider, preprint
 from provider.execution_context import get_session
 from activity.objects import Activity
+
+# time in seconds to sleep when an XML cannot be generated
+SLEEP_SECONDS = 5
+# number of times to sleep after an XML cannot be regnerated
+GENERATE_RETRY = 24
 
 
 class activity_ScheduleCrossrefPreprint(Activity):
@@ -83,16 +89,32 @@ class activity_ScheduleCrossrefPreprint(Activity):
         xml_file_name = preprint.xml_filename(article_id, self.settings, version)
         xml_file_path = os.path.join(self.directories.get("INPUT_DIR"), xml_file_name)
 
-        # get docmap as a string
-        docmap_string = self.get_docmap_string(article_id, article_id)
-
-        try:
-            article = preprint.build_article(
-                article_id, docmap_string, article_xml_path, version
+        tries = 0
+        while tries < GENERATE_RETRY:
+            self.logger.info(
+                "%s, try number %s to generate article %s version %s"
+                % (self.name, tries, article_id, version)
             )
-        except Exception as exception:
-            # handle if article could not be built
-            self.logger.exception(exception)
+            try:
+                # get docmap as a string
+                docmap_string = self.get_docmap_string(article_id, article_id)
+                article = preprint.build_article(
+                    article_id, docmap_string, article_xml_path, version
+                )
+                break
+            except Exception as exception:
+                # handle if article could not be built
+                self.logger.exception(exception)
+                # sleep a short time
+                time.sleep(SLEEP_SECONDS)
+            finally:
+                tries += 1
+
+        if tries >= GENERATE_RETRY:
+            self.logger.info(
+                "%s, exceeded %s retries to generate article %s version %s"
+                % (self.name, GENERATE_RETRY, article_id, version)
+            )
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # continue if article could be populated
