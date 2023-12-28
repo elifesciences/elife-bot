@@ -125,9 +125,10 @@ class activity_FindNewPreprints(Activity):
         # start a workflow for the new article version
         if self.statuses.get("generate") is True:
             for new_xml_filename, detail in new_xml_map.items():
-                self.start_post_workflow(
-                    detail.get("article_id"), detail.get("version")
-                )
+                if new_xml_filename in self.good_xml_files:
+                    self.start_post_workflow(
+                        detail.get("article_id"), detail.get("version")
+                    )
 
         # upload the new preprint XML to the published bucket folder
         if self.statuses.get("generate") is True:
