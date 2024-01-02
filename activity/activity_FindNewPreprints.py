@@ -4,7 +4,7 @@ import json
 import time
 import glob
 import boto3
-from activity.objects import Activity
+from activity.objects import CleanerBaseActivity
 from provider import (
     bigquery,
     email_provider,
@@ -18,7 +18,7 @@ from provider.storage_provider import storage_context
 DAY_INTERVAL = 7
 
 
-class activity_FindNewPreprints(Activity):
+class activity_FindNewPreprints(CleanerBaseActivity):
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
         super(activity_FindNewPreprints, self).__init__(
             settings, logger, client, token, activity_task
@@ -90,6 +90,9 @@ class activity_FindNewPreprints(Activity):
             "%s, got %s preprints from BigQuery" % (self.name, len(preprints))
         )
 
+        # configure log files for the cleaner provider
+        self.start_cleaner_log()
+
         # generate preprint file names and details
         xml_filename_detail_map = self.detail_map(preprints)
         self.logger.info(
@@ -160,6 +163,8 @@ class activity_FindNewPreprints(Activity):
             )
 
         self.logger.info("%s statuses: %s" % (self.name, self.statuses))
+
+        self.end_cleaner_log(session=None)
 
         # Clean up disk
         self.clean_tmp_dir()
