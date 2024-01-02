@@ -323,14 +323,49 @@ class Activity:
         )
 
 
-class AcceptedBaseActivity(Activity):
+class CleanerBaseActivity(Activity):
+    "activity class to use cleaner provider logging"
+
+    def __init__(self, settings, logger, client=None, token=None, activity_task=None):
+        super().__init__(settings, logger, client, token, activity_task)
+        # Track logging values
+        self.activity_log_file = "cleaner.log"
+        self.log_file_path = None
+        self.cleaner_log_handers = []
+
+    def start_cleaner_log(self):
+        "configure the cleaner provider log file handler"
+        self.log_file_path = os.path.join(self.get_tmp_dir(), self.activity_log_file)
+        if self.log_file_path not in self.cleaner_log_handers:
+            self.cleaner_log_handers = cleaner.configure_activity_log_handlers(
+                self.log_file_path
+            )
+
+    def end_cleaner_log(self, session):
+        "close cleaner provider log file handler and optionally save the contents to the session"
+        # remove the log handlers
+        for log_handler in self.cleaner_log_handers:
+            cleaner.log_remove_handler(log_handler)
+
+        # read the cleaner log contents
+        with open(self.log_file_path, "r", encoding="utf8") as open_file:
+            log_contents = open_file.read()
+
+        # add the log_contents to the session variable
+        if session:
+            cleaner_log = session.get_value("cleaner_log")
+            if cleaner_log is None:
+                cleaner_log = log_contents
+            else:
+                cleaner_log += log_contents
+            session.store_value("cleaner_log", cleaner_log)
+
+
+class AcceptedBaseActivity(CleanerBaseActivity):
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
         super().__init__(settings, logger, client, token, activity_task)
         # Track some values
         self.input_file = None
-        self.activity_log_file = "cleaner.log"
-        self.log_file_path = None
-        self.cleaner_log_handers = []
         # stubs
         self.directories = {}
         self.statuses = {}
@@ -386,32 +421,6 @@ class AcceptedBaseActivity(Activity):
             % (self.name, local_file_path, s3_resource)
         )
         self.statuses["upload_xml"] = True
-
-    def start_cleaner_log(self):
-        "configure the cleaner provider log file handler"
-        self.log_file_path = os.path.join(self.get_tmp_dir(), self.activity_log_file)
-        if self.log_file_path not in self.cleaner_log_handers:
-            self.cleaner_log_handers = cleaner.configure_activity_log_handlers(
-                self.log_file_path
-            )
-
-    def end_cleaner_log(self, session):
-        "close cleaner provider log file handler and save the contents to the session"
-        # remove the log handlers
-        for log_handler in self.cleaner_log_handers:
-            cleaner.log_remove_handler(log_handler)
-
-        # read the cleaner log contents
-        with open(self.log_file_path, "r", encoding="utf8") as open_file:
-            log_contents = open_file.read()
-
-        # add the log_contents to the session variable
-        cleaner_log = session.get_value("cleaner_log")
-        if cleaner_log is None:
-            cleaner_log = log_contents
-        else:
-            cleaner_log += log_contents
-        session.store_value("cleaner_log", cleaner_log)
 
     def log_statuses(self, input_file):
         "log the statuses value"
