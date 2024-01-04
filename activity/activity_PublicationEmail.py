@@ -290,7 +290,6 @@ class activity_PublicationEmail(Activity):
         xml_file_to_doi_map = {}
 
         for article_xml_filename in article_xml_filenames:
-
             article = articlelib.create_article(self.settings, self.get_tmp_dir)
             article.parse_article_file(article_xml_filename)
             article.pdf_cover_link = pdf_cover_page.get_pdf_cover_page(
@@ -360,7 +359,6 @@ class activity_PublicationEmail(Activity):
     def send_emails_for_articles(self, articles):
         """given a list of articles, choose template, recipients, and send the email"""
         for article in articles:
-
             # Determine which email type or template to send
             email_type = choose_email_type(
                 article_type=article.article_type,
@@ -715,7 +713,6 @@ def set_related_article_internal(
     #  in the list of non_insight_doi_list (from the outbox)
     related_article_doi = article.get_article_related_insight_doi()
     if related_article_doi in non_insight_doi_list:
-
         logger.info("Article match on " + article.doi)
 
         # Set the relation on the research article to its insight article

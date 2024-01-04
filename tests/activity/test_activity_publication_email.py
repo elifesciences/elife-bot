@@ -281,7 +281,6 @@ class TestPublicationEmail(unittest.TestCase):
 
         # do_activity
         for pass_test_data in DO_ACTIVITY_PASSES:
-
             fake_outbox_key_names.return_value = pass_test_data["article_xml_filenames"]
 
             fake_storage_context.return_value = FakeStorageContext(
@@ -603,6 +602,7 @@ class TestProcessArticles(unittest.TestCase):
             "failed expected_not_published check in {comment}".format(comment=comment),
         )
 
+
 @ddt
 class TestChooseEmailType(unittest.TestCase):
     def setUp(self):
@@ -662,7 +662,6 @@ class TestGetEmailHeaders(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     def test_template_get_email_headers_00013(self):
-
         self.activity.download_templates()
 
         email_type = "author_publication_email_VOR_no_POA"
@@ -715,7 +714,6 @@ class TestGetEmailBody(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     def test_template_get_email_body_00353(self):
-
         self.activity.download_templates()
 
         email_type = "author_publication_email_Feature"
@@ -775,7 +773,6 @@ class TestGetPdfCoverPage(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     def test_get_pdf_cover_page(self):
-
         article_object = articlelib.article()
         article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
         article_object.pdf_cover_link = pdf_cover_page.get_pdf_cover_page(
@@ -928,7 +925,9 @@ class TestApproveArticles(unittest.TestCase):
             retraction_article,
             research_article,
         ]
-        approved_articles, not_published_articles = self.activity.approve_articles(articles)
+        approved_articles, not_published_articles = self.activity.approve_articles(
+            articles
+        )
         # one article will remain, the research-article
         self.assertEqual(len(approved_articles), 1)
         self.assertEqual(approved_articles[0].doi, research_article_doi)
