@@ -66,6 +66,9 @@ class activity_PublicationEmail(Activity):
         self.published_folder = outbox_provider.published_folder(
             self.s3_bucket_folder(self.name)
         )
+        self.not_published_folder = outbox_provider.not_published_folder(
+            self.s3_bucket_folder(self.name)
+        )
 
         # Track XML files selected for publication
         self.insight_articles_to_remove_from_outbox = []
@@ -107,9 +110,12 @@ class activity_PublicationEmail(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
         try:
-            approved, prepared, xml_file_to_doi_map = self.process_articles(
-                article_xml_filenames
-            )
+            (
+                approved,
+                prepared,
+                not_published_articles,
+                xml_file_to_doi_map,
+            ) = self.process_articles(article_xml_filenames)
         except Exception:
             self.logger.exception(
                 "Failed to parse, approve, and prepare all the articles"
@@ -117,7 +123,7 @@ class activity_PublicationEmail(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # return now if no articles are approved and prepared
-        if not prepared:
+        if not prepared and not not_published_articles:
             self.logger.info("No articles were approved and prepared for sending")
             self.send_admin_email(True)
             return True
@@ -137,12 +143,32 @@ class activity_PublicationEmail(Activity):
             to_folder = outbox_provider.get_to_folder_name(
                 self.published_folder, date_stamp
             )
+            # clean published files from the outbox
             outbox_provider.clean_outbox(
                 self.settings,
                 self.publish_bucket,
                 self.outbox_folder,
                 to_folder,
                 published_file_names,
+            )
+
+            # clean not_published files from the outbox
+            not_published_file_names = s3_key_names_to_clean(
+                self.outbox_folder,
+                not_published_articles,
+                xml_file_to_doi_map,
+                self.articles_do_not_remove_from_outbox,
+                [],
+            )
+            not_published_to_folder = outbox_provider.get_to_folder_name(
+                self.not_published_folder, date_stamp
+            )
+            outbox_provider.clean_outbox(
+                self.settings,
+                self.publish_bucket,
+                self.outbox_folder,
+                not_published_to_folder,
+                not_published_file_names,
             )
 
             # Send email to admins with the status
@@ -166,16 +192,19 @@ class activity_PublicationEmail(Activity):
     def process_articles(self, article_xml_filenames):
         """multi-step parsing, approving, and preparing of article files"""
         articles, xml_file_to_doi_map = self.parse_article_xml(article_xml_filenames)
-        approved = self.approve_articles(articles)
+        approved, not_published_articles = self.approve_articles(articles)
         prepared = self.prepare_articles(approved)
 
         log_info = "Total parsed articles: " + str(len(articles))
         log_info += "\n" + "Total approved articles: " + str(len(approved))
         log_info += "\n" + "Total prepared articles: " + str(len(prepared))
+        log_info += (
+            "\n" + "Total not published articles: " + str(len(not_published_articles))
+        )
         self.admin_email_content += "\n" + log_info
         self.logger.info(log_info)
 
-        return approved, prepared, xml_file_to_doi_map
+        return approved, prepared, not_published_articles, xml_file_to_doi_map
 
     def prepare_articles(self, articles):
         """
@@ -261,7 +290,6 @@ class activity_PublicationEmail(Activity):
         xml_file_to_doi_map = {}
 
         for article_xml_filename in article_xml_filenames:
-
             article = articlelib.create_article(self.settings, self.get_tmp_dir)
             article.parse_article_file(article_xml_filename)
             article.pdf_cover_link = pdf_cover_page.get_pdf_cover_page(
@@ -306,6 +334,7 @@ class activity_PublicationEmail(Activity):
 
         # Keep track of which articles to remove at the end
         remove_article_doi = []
+        not_published_articles = []
 
         for article in articles:
             # Remove based on article type
@@ -313,6 +342,7 @@ class activity_PublicationEmail(Activity):
                 log_info = "Removing based on article type " + article.doi
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
+                not_published_articles.append(article)
                 remove_article_doi.append(article.doi)
 
         # Can remove the articles now without affecting the loops using del
@@ -324,12 +354,11 @@ class activity_PublicationEmail(Activity):
                 )
                 approved_articles.append(article)
 
-        return approved_articles
+        return approved_articles, not_published_articles
 
     def send_emails_for_articles(self, articles):
         """given a list of articles, choose template, recipients, and send the email"""
         for article in articles:
-
             # Determine which email type or template to send
             email_type = choose_email_type(
                 article_type=article.article_type,
@@ -684,7 +713,6 @@ def set_related_article_internal(
     #  in the list of non_insight_doi_list (from the outbox)
     related_article_doi = article.get_article_related_insight_doi()
     if related_article_doi in non_insight_doi_list:
-
         logger.info("Article match on " + article.doi)
 
         # Set the relation on the research article to its insight article
