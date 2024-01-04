@@ -403,7 +403,7 @@ class TestPublicationEmail(unittest.TestCase):
         fake_outbox_key_names.return_value = []
         fake_download_files.return_value = True
         fake_send_admin_email.return_value = True
-        fake_process_articles.return_value = None, [0], None
+        fake_process_articles.return_value = None, [0], [0], None
         fake_send_emails.return_value = Exception("Something went wrong!")
         result = self.activity.do_activity()
         self.assertEqual(result, True)
@@ -543,6 +543,7 @@ class TestProcessArticles(unittest.TestCase):
             ["tests/test_data/elife-18753-v1.xml"],
             1,
             0,
+            0,
             {"10.7554/eLife.18753": "tests/test_data/elife-18753-v1.xml"},
         ),
         (
@@ -553,6 +554,7 @@ class TestProcessArticles(unittest.TestCase):
             ],
             2,
             1,
+            0,
             {
                 "10.7554/eLife.15747": "tests/test_data/elife-15747-v2.xml",
                 "10.7554/eLife.18753": "tests/test_data/elife-18753-v1.xml",
@@ -566,6 +568,7 @@ class TestProcessArticles(unittest.TestCase):
         xml_filenames,
         expected_approved,
         expected_prepared,
+        expected_not_published,
         expected_map,
         fake_article_versions,
         fake_download_xml,
@@ -573,9 +576,12 @@ class TestProcessArticles(unittest.TestCase):
         """edge cases for process articles where the approved and prepared count differ"""
         fake_article_versions.return_value = (200, LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3)
         fake_download_xml.return_value = False
-        approved, prepared, xml_file_to_doi_map = self.activity.process_articles(
-            xml_filenames
-        )
+        (
+            approved,
+            prepared,
+            not_published_articles,
+            xml_file_to_doi_map,
+        ) = self.activity.process_articles(xml_filenames)
         self.assertEqual(
             len(approved),
             expected_approved,
@@ -591,7 +597,11 @@ class TestProcessArticles(unittest.TestCase):
             expected_map,
             "failed expected_map check in {comment}".format(comment=comment),
         )
-
+        self.assertEqual(
+            len(not_published_articles),
+            expected_not_published,
+            "failed expected_not_published check in {comment}".format(comment=comment),
+        )
 
 @ddt
 class TestChooseEmailType(unittest.TestCase):
@@ -918,7 +928,7 @@ class TestApproveArticles(unittest.TestCase):
             retraction_article,
             research_article,
         ]
-        approved_articles = self.activity.approve_articles(articles)
+        approved_articles, not_published_articles = self.activity.approve_articles(articles)
         # one article will remain, the research-article
         self.assertEqual(len(approved_articles), 1)
         self.assertEqual(approved_articles[0].doi, research_article_doi)
