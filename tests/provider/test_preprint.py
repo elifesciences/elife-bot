@@ -561,3 +561,18 @@ class TestDownloadOriginalPreprintXml(unittest.TestCase):
         )
         self.assertEqual(result.rsplit(os.sep, 1)[-1], file_name)
         self.assertEqual(os.listdir(directory.path), [file_name])
+
+    @patch.object(download_helper, "storage_context")
+    def test_download_alternate_preprint_xml(self, fake_download_storage_context):
+        directory = TempDirectory()
+        article_id = 93405
+        version = 1
+        file_name = "article-transformed.xml"
+        fake_download_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/epp", [file_name]
+        )
+        result = preprint.download_original_preprint_xml(
+            settings_mock, directory.path, article_id, version
+        )
+        self.assertEqual(result.rsplit(os.sep, 1)[-1], file_name)
+        self.assertTrue(file_name in os.listdir(directory.path))
