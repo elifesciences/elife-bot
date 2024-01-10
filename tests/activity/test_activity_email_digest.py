@@ -9,11 +9,10 @@ from digestparser.objects import Digest
 import activity.activity_EmailDigest as activity_module
 from activity.activity_EmailDigest import activity_EmailDigest as activity_object
 from tests.activity import helpers, settings_mock, test_activity_data
-from tests.activity.classes_mock import FakeLogger
 from tests.activity.helpers import create_digest
-import tests.test_data as test_case_data
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 from tests.classes_mock import FakeSMTPServer
-from tests.activity.classes_mock import FakeStorageContext
+import tests.test_data as test_case_data
 
 
 def input_data(file_name_to_change=""):
@@ -22,8 +21,9 @@ def input_data(file_name_to_change=""):
     return activity_data
 
 
-def list_test_dir(dir_name, ignore=(".keepme")):
+def list_test_dir(dir_name):
     "list the contents of a directory ignoring the ignore files"
+    ignore = [".keepme"]
     file_names = os.listdir(dir_name)
     return [file_name for file_name in file_names if file_name not in ignore]
 
