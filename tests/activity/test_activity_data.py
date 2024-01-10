@@ -1,5 +1,4 @@
 import json
-import tests.activity.classes_mock
 import base64
 
 xml_content_for_xml_key = open(
