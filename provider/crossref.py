@@ -249,20 +249,40 @@ def set_version_doi_on_review_articles(article_object_map):
                     related_article.doi = article.version_doi
 
 
+def base_add_rel_program_tag(root, xpath):
+    "add rel:program to the xpath elemment found by in a Crossref deposit Element, if missing"
+    if not base_find_rel_program_tag(root, xpath):
+        namespaces = {"rel": "http://www.crossref.org/relations.xsd"}
+        parent_tag = root.find(xpath, namespaces)
+        if not parent_tag:
+            SubElement(parent_tag, "rel:program")
+
+
+def base_find_rel_program_tag(root, xpath):
+    "find rel:program from the xpath elemment found by in a Crossref deposit Element"
+    namespaces = {"rel": "http://www.crossref.org/relations.xsd"}
+    parent_tag = root.find(xpath, namespaces)
+    return parent_tag.find("rel:program")
+
+
 def add_rel_program_tag(root):
     "add a rel:program tag to a Crossref deposit ElementTree root, if missing"
-    if not find_rel_program_tag(root):
-        namespaces = {"rel": "http://www.crossref.org/relations.xsd"}
-        journal_article_tag = root.find("./body/journal/journal_article", namespaces)
-        if not journal_article_tag:
-            SubElement(journal_article_tag, "rel:program")
+    base_add_rel_program_tag(root, "./body/journal/journal_article")
 
 
 def find_rel_program_tag(root):
     "find the rel:program tag from Crossref deposit ElementTree root"
-    namespaces = {"rel": "http://www.crossref.org/relations.xsd"}
-    journal_article_tag = root.find("./body/journal/journal_article", namespaces)
-    return journal_article_tag.find("rel:program")
+    return base_find_rel_program_tag(root, "./body/journal/journal_article")
+
+
+def add_posted_content_rel_program_tag(root):
+    "add a rel:program tag to a posted_content Crossref deposit ElementTree root, if missing"
+    base_add_rel_program_tag(root, "./body/posted_content")
+
+
+def find_posted_content_rel_program_tag(root):
+    "find the rel:program tag from a posted_content Crossref deposit ElementTree root"
+    return base_find_rel_program_tag(root, "./body/posted_content")
 
 
 def clear_rel_program_tag(c_xml):

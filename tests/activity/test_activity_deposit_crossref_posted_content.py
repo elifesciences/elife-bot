@@ -66,6 +66,17 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
                 "<doi>10.7554/eLife.84364</doi>",
                 "<resource>https://elifesciences.org/reviewed-preprints/84364</resource>",
                 "</posted_content>",
+                (
+                    '<rel:intra_work_relation identifier-type="doi"'
+                    ' relationship-type="isVersionOf">'
+                    "10.7554/eLife.84364.1"
+                    "</rel:intra_work_relation>"
+                ),
+                (
+                    '<rel:intra_work_relation identifier-type="doi" relationship-type="isSameAs">'
+                    "10.7554/eLife.84364.2"
+                    "</rel:intra_work_relation>"
+                ),
             ],
             "expected_crossref_version_xml_contains": [
                 '<posted_content type="preprint">',
@@ -76,6 +87,12 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
                 "<doi>10.7554/eLife.84364.2</doi>",
                 "<resource>https://elifesciences.org/reviewed-preprints/84364v2</resource>",
                 "</posted_content>",
+                (
+                    '<rel:intra_work_relation identifier-type="doi"'
+                    ' relationship-type="isVersionOf">'
+                    "10.7554/eLife.84364.1"
+                    "</rel:intra_work_relation>"
+                ),
             ],
         }
         directory = TempDirectory()
