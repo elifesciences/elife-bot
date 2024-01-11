@@ -9,7 +9,12 @@ import activity.activity_PubRouterDeposit as activity_module
 from activity.activity_PubRouterDeposit import activity_PubRouterDeposit
 from tests.classes_mock import FakeSWFClient, FakeSMTPServer
 import tests.test_data as test_case_data
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+from tests.activity.classes_mock import (
+    FakeLogger,
+    FakeStorageContext,
+    FakeSQSClient,
+    FakeSQSQueue,
+)
 from tests.activity import helpers, settings_mock, test_activity_data
 
 
@@ -39,6 +44,7 @@ class TestPubRouterDeposit(unittest.TestCase):
             test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
         )
 
+    @patch("boto3.client")
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")
     @patch("boto3.client")
@@ -53,6 +59,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_client,
         fake_article_versions,
         fake_email_smtp_connect,
+        fake_sqs_client,
     ):
         directory = TempDirectory()
         fake_email_smtp_connect.return_value = FakeSMTPServer(
@@ -78,6 +85,11 @@ class TestPubRouterDeposit(unittest.TestCase):
             200,
             test_case_data.lax_article_versions_response_data,
         )
+        # mock the SQS client and queues
+        fake_queues = {settings_mock.workflow_starter_queue: FakeSQSQueue(directory)}
+        fake_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
+
+        # do the activity
         result = self.pubrouterdeposit.do_activity(activity_data)
         self.assertTrue(result)
 
@@ -263,18 +275,25 @@ class TestStartFtpArticleWorkflow(unittest.TestCase):
         self.article = article()
         self.article.doi_id = "00666"
 
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
     @patch("boto3.client")
-    def test_start_ftp_article_workflow(self, fake_client):
-        fake_client.return_value = FakeSWFClient()
+    def test_start_ftp_article_workflow(self, fake_sqs_client):
+        directory = TempDirectory()
+        fake_queues = {settings_mock.workflow_starter_queue: FakeSQSQueue(directory)}
+        fake_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
         result = self.pubrouterdeposit.start_ftp_article_workflow(self.article)
         self.assertEqual(result, True)
 
-    @patch.object(FakeSWFClient, "start_workflow_execution")
+    @patch.object(FakeSQSClient, "send_message")
     @patch("boto3.client")
-    def test_start_ftp_article_workflow_exception(self, fake_client, fake_start):
-        fake_client.return_value = FakeSWFClient()
+    def test_start_ftp_article_workflow_exception(self, fake_sqs_client, fake_send):
+        directory = TempDirectory()
+        fake_queues = {settings_mock.workflow_starter_queue: FakeSQSQueue(directory)}
+        fake_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
         exception_message = "An exception"
-        fake_start.side_effect = Exception(exception_message)
+        fake_send.side_effect = Exception(exception_message)
         result = self.pubrouterdeposit.start_ftp_article_workflow(self.article)
         self.assertEqual(result, False)
         self.assertEqual(
