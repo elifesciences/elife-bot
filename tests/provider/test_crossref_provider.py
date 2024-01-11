@@ -334,6 +334,40 @@ class TestAddRelProgramTag(unittest.TestCase):
         self.assertEqual(ElementTree.tostring(root).count(b"<rel:program />"), 1)
 
 
+class TestAddPostedContentRelProgramTag(unittest.TestCase):
+    def setUp(self):
+        ElementTree.register_namespace("rel", "http://www.crossref.org/relations.xsd")
+        self.xml_header = (
+            b'<doi_batch xmlns:rel="http://www.crossref.org/relations.xsd">'
+            b"<body><posted_content>"
+        )
+        self.xml_footer = b"</posted_content></body></doi_batch>"
+
+    def test_add_posted_content_rel_program_tag(self):
+        "test adding rel:program tag to posted_content tag"
+        xml_string = self.xml_header + self.xml_footer
+        root = ElementTree.fromstring(xml_string)
+        # check rel:program is in XML prior to the function invocation
+        self.assertTrue(b"<rel:program" not in ElementTree.tostring(root))
+        # invoke function
+        crossref.add_posted_content_rel_program_tag(root)
+        # assert rel:program tag is present
+        self.assertTrue(b"<rel:program />" in ElementTree.tostring(root))
+
+    def test_add_posted_content_rel_program_tag_already_present(self):
+        "test adding rel:program tag to posted_content tag if it is already there"
+        xml_string = self.xml_header + b"<rel:program/>" + self.xml_footer
+        root = ElementTree.fromstring(xml_string)
+        # check rel:program is in XML prior to the function invocation
+        self.assertTrue(b"<rel:program" in ElementTree.tostring(root))
+        # invoke function
+        crossref.add_posted_content_rel_program_tag(root)
+        # assert rel:program tag is present
+        self.assertTrue(b"<rel:program />" in ElementTree.tostring(root))
+        # assert only one tag is present
+        self.assertEqual(ElementTree.tostring(root).count(b"<rel:program />"), 1)
+
+
 class TestClearRelProgramTag(unittest.TestCase):
     def setUp(self):
         self.directory = TempDirectory()

@@ -156,6 +156,17 @@ class activity_DepositCrossrefPostedContent(Activity):
 
         # output CrossrefXML objects to XML files
         for article, c_xml in list(crossref_object_map.items()):
+            if article.version_doi:
+                # add rel:program tag if not present
+                crossref.add_posted_content_rel_program_tag(c_xml.root)
+                # find the rel:program tag
+                rel_program_tag = crossref.find_posted_content_rel_program_tag(
+                    c_xml.root
+                )
+                if article.version_doi:
+                    # add intra_work_relation isSameAs tag
+                    crossref.add_is_same_as_tag(rel_program_tag, article.version_doi)
+
             crossref.crossref_xml_to_disk(
                 c_xml, self.directories.get("TMP_DIR"), pretty=True
             )
