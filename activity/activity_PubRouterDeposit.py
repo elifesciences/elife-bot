@@ -24,10 +24,6 @@ PubRouterDeposit activity
 # override the default workflow timeout for PMCDeposit workflows if needed
 PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = None
 
-# override the default workflow timeout for FTPDeposit workflows if needed
-# Allow workflow 120 minutes to finish
-FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = str(60 * 120)
-
 
 class activity_PubRouterDeposit(Activity):
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
@@ -85,6 +81,9 @@ class activity_PubRouterDeposit(Activity):
 
         # journal
         self.journal = "elife"
+
+        # SQS client
+        self.sqs_client = None
 
     def do_activity(self, data=None):
         """
@@ -224,57 +223,57 @@ class activity_PubRouterDeposit(Activity):
 
         return result
 
-    def start_ftp_article_workflow(self, article):
-        """
-        In here a new FTPArticle workflow is started for the article object supplied
-        """
-        starter_status = None
+    def sqs_connect(self):
+        "connect to the queue service"
+        if not self.sqs_client:
+            self.sqs_client = boto3.client(
+                "sqs",
+                aws_access_key_id=self.settings.aws_access_key_id,
+                aws_secret_access_key=self.settings.aws_secret_access_key,
+                region_name=self.settings.sqs_region,
+            )
 
-        # Compile the workflow starter parameters
-        workflow_id = "FTPArticle_" + self.workflow + "_" + str(article.doi_id)
-        workflow_name = "FTPArticle"
-        workflow_version = "1"
-
-        # Input data
-        data = {}
-        data["workflow"] = self.workflow
-        data["elife_id"] = article.doi_id
-        input_json = {}
-        input_json["data"] = data
-        input_data = json.dumps(input_json)
-
-        kwargs = {
-            "domain": self.settings.domain,
-            "workflowId": workflow_id,
-            "workflowType": {
-                "name": workflow_name,
-                "version": workflow_version,
-            },
-            "taskList": {"name": self.settings.default_task_list},
-            "input": input_data,
-        }
-        if FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT:
-            kwargs[
-                "executionStartToCloseTimeout"
-            ] = FTP_ARTICLE_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
-
-        # Connect to SWF
-        client = boto3.client(
-            "swf",
-            aws_access_key_id=self.settings.aws_access_key_id,
-            aws_secret_access_key=self.settings.aws_secret_access_key,
-            region_name=self.settings.swf_region,
+    def sqs_queue_url(self):
+        "get the queues"
+        self.sqs_connect()
+        queue_url_response = self.sqs_client.get_queue_url(
+            QueueName=self.settings.workflow_starter_queue
         )
+        return queue_url_response.get("QueueUrl")
 
-        # Try and start a workflow
+    def start_ftp_article_workflow(self, article):
+        "In here a new FTPArticle workflow is started for the article object supplied"
+        # build message
+        workflow_name = "FTPArticle"
+        workflow_data = {
+            "workflow": self.workflow,
+            "doi_id": article.doi_id,
+        }
+        message = {
+            "workflow_name": workflow_name,
+            "workflow_data": workflow_data,
+        }
+        self.logger.info(
+            "%s, starting a %s workflow for article_id %s",
+            self.name,
+            workflow_name,
+            article.doi_id,
+        )
         try:
-            response = client.start_workflow_execution(**kwargs)
+            # connect to the queue
+            queue_url = self.sqs_queue_url()
+            # send workflow starter message
+            self.sqs_client.send_message(
+                QueueUrl=queue_url,
+                MessageBody=json.dumps(message),
+            )
             starter_status = True
         except Exception as exception:
-            # There is already a running workflow with that ID, cannot start another
-            message = "%s exception starting workflow %s: %s" % (
+            message = "%s exception starting workflow %s_%s_%s: %s" % (
                 self.name,
-                workflow_id,
+                workflow_name,
+                self.workflow,
+                article.doi_id,
                 str(exception),
             )
             if self.logger:
