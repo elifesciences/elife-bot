@@ -494,6 +494,14 @@ class AcceptedBaseActivity(CleanerBaseActivity):
             + expanded_folder
         )
         for file_transform in file_transformations:
+            if not file_transform[0].xml_name or not file_transform[1].xml_name:
+                log_message = ("%s, copying to %s, a blank value cannot be copied, old xml_name %s to new xml_name %s"
+                % (self.name, resource_prefix, file_transform[0].xml_name, file_transform[1].xml_name))
+                raise RuntimeError(log_message)
+                self.logger.exception(
+                    log_message
+                )
+                continue
             old_s3_resource = (
                 resource_prefix + "/" + asset_key_map.get(file_transform[0].xml_name)
             )
