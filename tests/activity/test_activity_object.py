@@ -5,11 +5,13 @@ import os
 import unittest
 import botocore
 from mock import patch
+from testfixtures import TempDirectory
+from elifecleaner.transform import ArticleZipFile
 import dashboard_queue
-from activity.objects import Activity
+from activity.objects import Activity, AcceptedBaseActivity
 from tests.activity import settings_mock
 from tests.classes_mock import FakeSWFClient
-from tests.activity.classes_mock import FakeLogger
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 
 
 class TestActivityInit(unittest.TestCase):
@@ -267,3 +269,66 @@ class TestSetMonitorProperty(unittest.TestCase):
             settings_mock, "666", None, None, None
         )
         self.assertIsNone(result)
+
+
+class TestRenameExpandedFolderFiles(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_rename(self):
+        "test renaming objects in the bucket folder"
+        directory = TempDirectory()
+        # add a file to the directory
+        from_file_name = "elife-87356-inf1.jpg"
+        to_file_name = "elife-87356-sa3-fig1.jpg"
+        with open(os.path.join(directory.path, from_file_name), "w") as open_file:
+            open_file.write("")
+
+        # asset map
+        asset_file_name_map = {from_file_name: "s3://bot-bucket/%s" % from_file_name}
+        expanded_folder = ""
+
+        # files to transform
+        file_transformations = []
+        from_file = ArticleZipFile(from_file_name)
+        to_file = ArticleZipFile(to_file_name)
+        file_transformations.append((from_file, to_file))
+        resources = [from_file_name]
+        storage = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        logger = FakeLogger()
+
+        # instantiate
+        activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
+        # invoke
+        result = activity_object.rename_expanded_folder_files(
+            asset_file_name_map, expanded_folder, file_transformations, storage
+        )
+        # assertions
+        self.assertEqual(result, True)
+        self.assertEqual(os.listdir(directory.path), [to_file_name])
+
+    def test_blank_value(self):
+        "test if one of the file names is blank"
+        directory = TempDirectory()
+        from_file_name = "elife-87356-inf1.jpg"
+        to_file_name = None
+        file_transformations = []
+        from_file = ArticleZipFile(from_file_name)
+        to_file = ArticleZipFile(to_file_name)
+        file_transformations.append((from_file, to_file))
+        # asset map
+        asset_file_name_map = {}
+        expanded_folder = ""
+        resources = [from_file_name]
+        storage = FakeStorageContext(directory.path, [], dest_folder=directory.path)
+        logger = FakeLogger()
+        # instantiate
+        activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
+        # invoke
+        with self.assertRaises(RuntimeError):
+            result = activity_object.rename_expanded_folder_files(
+                asset_file_name_map, expanded_folder, file_transformations, storage
+            )
+            self.assertEqual(result, activity_object.ACTIVITY_PERMANENT_FAILURE)

@@ -75,7 +75,9 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
         xml_root = cleaner.parse_article_xml(xml_file_path)
 
         file_transformations = []
-        for sub_article_root in xml_root.iterfind("./sub-article"):
+        for sub_article_index, sub_article_root in enumerate(
+            xml_root.iterfind("./sub-article")
+        ):
             # list of old file names
             previous_hrefs = cleaner.inline_graphic_hrefs(
                 sub_article_root, input_filename
@@ -84,20 +86,43 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
             # list of new file names
             current_hrefs = cleaner.graphic_hrefs(sub_article_root, input_filename)
             # add to file_transformations
+            self.logger.info(
+                "%s, sub-article %s previous_hrefs: %s"
+                % (self.name, sub_article_index, previous_hrefs)
+            )
+            self.logger.info(
+                "%s, sub-article %s current_hrefs: %s"
+                % (self.name, sub_article_index, current_hrefs)
+            )
             for index, previous_href in enumerate(previous_hrefs):
                 current_href = current_hrefs[index]
                 from_file = ArticleZipFile(previous_href)
                 to_file = ArticleZipFile(current_href)
                 file_transformations.append((from_file, to_file))
+        self.logger.info(
+            "%s, total file_transformations: %s"
+            % (self.name, len(file_transformations))
+        )
+        self.logger.info(
+            "%s, file_transformations: %s" % (self.name, file_transformations)
+        )
 
         # write the XML root to disk
         cleaner.write_xml_file(xml_root, xml_file_path, input_filename)
 
         # rewrite the XML file with the renamed files
         if file_transformations:
-            self.statuses["modify_xml"] = self.rewrite_file_tags(
-                xml_file_path, file_transformations, input_filename
-            )
+            try:
+                self.statuses["modify_xml"] = self.rewrite_file_tags(
+                    xml_file_path, file_transformations, input_filename
+                )
+            except RuntimeError as exception:
+                log_message = "%s, exception in rewrite_file_tags for file %s" % (
+                    self.name,
+                    input_filename,
+                )
+                self.logger.exception(log_message)
+                return self.ACTIVITY_PERMANENT_FAILURE
 
         # rename the files in the expanded folder
         if self.statuses["modify_xml"]:
