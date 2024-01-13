@@ -112,9 +112,15 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
 
         # rewrite the XML file with the renamed files
         if file_transformations:
+            self.statuses["modify_xml"] = self.rewrite_file_tags(
+                xml_file_path, file_transformations, input_filename
+            )
+
+        # rename the files in the expanded folder
+        if self.statuses["modify_xml"]:
             try:
-                self.statuses["modify_xml"] = self.rewrite_file_tags(
-                    xml_file_path, file_transformations, input_filename
+                self.statuses["rename_files"] = self.rename_expanded_folder_files(
+                    asset_file_name_map, expanded_folder, file_transformations, storage
                 )
             except RuntimeError as exception:
                 log_message = "%s, exception in rewrite_file_tags for file %s" % (
@@ -123,12 +129,6 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
                 )
                 self.logger.exception(log_message)
                 return self.ACTIVITY_PERMANENT_FAILURE
-
-        # rename the files in the expanded folder
-        if self.statuses["modify_xml"]:
-            self.statuses["rename_files"] = self.rename_expanded_folder_files(
-                asset_file_name_map, expanded_folder, file_transformations, storage
-            )
 
         # upload the XML to the bucket
         self.upload_xml_file_to_bucket(asset_file_name_map, expanded_folder, storage)
