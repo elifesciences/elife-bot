@@ -12,7 +12,6 @@ Amazon SWF activity base class
 
 
 class Activity:
-
     ACTIVITY_SUCCESS = "ActivitySuccess"
     ACTIVITY_TEMPORARY_FAILURE = "ActivityTemporaryFailure"
     ACTIVITY_PERMANENT_FAILURE = "ActivityPermanentFailure"
@@ -224,7 +223,6 @@ class Activity:
         return True
 
     def clean_tmp_dir(self):
-
         tmp_dir = self.get_tmp_dir()
         shutil.rmtree(tmp_dir)
         self.tmp_dir = None
@@ -315,8 +313,7 @@ class Activity:
 
         # get docmap json
         self.logger.info(
-            "%s, getting docmap_string for identifier: %s"
-            % (self.name, identifier)
+            "%s, getting docmap_string for identifier: %s" % (self.name, identifier)
         )
         return cleaner.get_docmap_by_account_id(
             docmap_url, self.settings.docmap_account_id
