@@ -12,7 +12,6 @@ Amazon SWF activity base class
 
 
 class Activity:
-
     ACTIVITY_SUCCESS = "ActivitySuccess"
     ACTIVITY_TEMPORARY_FAILURE = "ActivityTemporaryFailure"
     ACTIVITY_PERMANENT_FAILURE = "ActivityPermanentFailure"
@@ -224,7 +223,6 @@ class Activity:
         return True
 
     def clean_tmp_dir(self):
-
         tmp_dir = self.get_tmp_dir()
         shutil.rmtree(tmp_dir)
         self.tmp_dir = None
@@ -315,8 +313,7 @@ class Activity:
 
         # get docmap json
         self.logger.info(
-            "%s, getting docmap_string for identifier: %s"
-            % (self.name, identifier)
+            "%s, getting docmap_string for identifier: %s" % (self.name, identifier)
         )
         return cleaner.get_docmap_by_account_id(
             docmap_url, self.settings.docmap_account_id
@@ -494,13 +491,22 @@ class AcceptedBaseActivity(CleanerBaseActivity):
             + expanded_folder
         )
         for file_transform in file_transformations:
-            if not file_transform[0].xml_name or not file_transform[1].xml_name:
-                log_message = ("%s, copying to %s, a blank value cannot be copied, old xml_name %s to new xml_name %s"
-                % (self.name, resource_prefix, file_transform[0].xml_name, file_transform[1].xml_name))
-                raise RuntimeError(log_message)
-                self.logger.exception(
-                    log_message
+            if (
+                not file_transform[0].xml_name
+                or not file_transform[1].xml_name
+                or not asset_key_map.get(file_transform[0].xml_name)
+            ):
+                log_message = (
+                    "%s, copying to %s, a blank value cannot be copied, "
+                    "old xml_name %s to new xml_name %s"
+                ) % (
+                    self.name,
+                    resource_prefix,
+                    file_transform[0].xml_name,
+                    file_transform[1].xml_name,
                 )
+                raise RuntimeError(log_message)
+                self.logger.exception(log_message)
                 continue
             old_s3_resource = (
                 resource_prefix + "/" + asset_key_map.get(file_transform[0].xml_name)
