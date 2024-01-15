@@ -45,6 +45,35 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
         # reset the session value
         self.session.store_value("cleaner_log", None)
 
+    def add_sub_article_xml(self, filename, directory, sub_article_xml):
+        "add XML to the XML file"
+        sub_folder = filename.rsplit(".", 1)[0]
+        xml_path = os.path.join(
+            directory.path,
+            self.session.get_value("expanded_folder"),
+            sub_folder,
+            "%s.xml" % sub_folder,
+        )
+        with open(xml_path, "r", encoding="utf-8") as open_file:
+            xml_string = open_file.read()
+        with open(xml_path, "w", encoding="utf-8") as open_file:
+            xml_string = xml_string.replace(
+                "</article>", "%s</article>" % sub_article_xml
+            )
+            open_file.write(xml_string)
+
+    def copy_files(self, image_names):
+        "copy image files into the folder for testing"
+        file_details = []
+        for image_name in image_names:
+            details = {
+                "file_path": "tests/files_source/digests/outbox/99999/digest-99999.jpg",
+                "file_type": "figure",
+                "upload_file_nm": image_name,
+            }
+            file_details.append(details)
+        return file_details
+
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -108,10 +137,15 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                 "<p><bold>Review image 1.</bold></p>"
                 "<p>Caption title. Caption paragraph.</p>"
                 '<p><inline-graphic xlink:href="local2.jpg"/></p>'
+                "<p>Paragraph.</p>"
+                '<p><inline-graphic xlink:href="local3.jpg"/></p>'
+                "<p><bold>Review image 2.</bold></p>"
+                "<p>Caption title. Caption paragraph.</p>"
+                '<p><inline-graphic xlink:href="local2.jpg"/></p>'
                 "</body>"
                 "</sub-article>"
             ),
-            "image_names": ["local.jpg", "local2.jpg"],
+            "image_names": ["local.jpg", "local2.jpg", "local3.jpg"],
             "expected_result": True,
             "expected_docmap_string_status": True,
             "expected_hrefs_status": True,
@@ -142,6 +176,15 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                     "</caption>"
                     '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-fig1.jpg"/>'
                     "</fig>"
+                    '<p>Paragraph.</p><p><inline-graphic xlink:href="local3.jpg"/></p>'
+                    '<fig id="sa2fig2">'
+                    "<label>Review image 2.</label>"
+                    "<caption>"
+                    "<title>Caption title.</title>"
+                    "<p>Caption paragraph.</p>"
+                    "</caption>"
+                    '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-fig2.jpg"/>'
+                    "</fig>"
                     "</body>"
                     "</sub-article>"
                 ),
@@ -151,6 +194,12 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                     "</file>"
                     '<file file-type="figure">'
                     "<upload_file_nm>sa2-fig1.jpg</upload_file_nm>"
+                    "</file>"
+                    '<file file-type="figure">'
+                    "<upload_file_nm>local3.jpg</upload_file_nm>"
+                    "</file>"
+                    '<file file-type="figure">'
+                    "<upload_file_nm>sa2-fig2.jpg</upload_file_nm>"
                     "</file>"
                     "</files>"
                 ),
@@ -175,16 +224,10 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
         zip_sub_folder = test_data.get("filename").replace(".zip", "")
         zip_xml_file = "%s.xml" % zip_sub_folder
 
-        # create a new zip file fixtur
+        # create a new zip file fixture
         file_details = []
         if test_data.get("image_names"):
-            for image_name in test_data.get("image_names"):
-                details = {
-                    "file_path": "tests/files_source/digests/outbox/99999/digest-99999.jpg",
-                    "file_type": "figure",
-                    "upload_file_nm": image_name,
-                }
-                file_details.append(details)
+            file_details = self.copy_files(test_data.get("image_names"))
         new_zip_file_path = helpers.add_files_to_accepted_zip(
             "tests/files_source/30-01-2019-RA-eLife-45644.zip",
             directory.path,
@@ -199,20 +242,9 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
 
         # write additional XML to the XML file
         if test_data.get("sub_article_xml"):
-            sub_folder = test_data.get("filename").rsplit(".", 1)[0]
-            xml_path = os.path.join(
-                directory.path,
-                self.session.get_value("expanded_folder"),
-                sub_folder,
-                "%s.xml" % sub_folder,
+            self.add_sub_article_xml(
+                test_data.get("filename"), directory, test_data.get("sub_article_xml")
             )
-            with open(xml_path, "r", encoding="utf-8") as open_file:
-                xml_string = open_file.read()
-            with open(xml_path, "w", encoding="utf-8") as open_file:
-                xml_string = xml_string.replace(
-                    "</article>", "%s</article>" % test_data.get("sub_article_xml")
-                )
-                open_file.write(xml_string)
 
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, resources, dest_folder=directory.path
@@ -302,3 +334,137 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                     bucket_file in output_bucket_list,
                     "%s not found in bucket upload folder" % bucket_file,
                 )
+
+    @patch.object(activity_object, "copy_expanded_folder_files")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    @patch.object(cleaner, "storage_context")
+    @data(
+        {
+            "comment": "example with no label or caption content inline-graphic",
+            "filename": "30-01-2019-RA-eLife-45644.zip",
+            "sub_article_xml": (
+                '<sub-article id="sa1">'
+                "<body>"
+                "<p>First paragraph.</p>"
+                "<p><bold>Review image 1.</bold></p>"
+                "<p>Caption title. Caption paragraph.</p>"
+                '<p><inline-graphic xlink:href="local.jpg"/></p>'
+                "</body>"
+                "</sub-article>"
+            ),
+            "image_names": ["local.jpg"],
+            "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
+        },
+    )
+    def test_do_activity_copy_files_exception(
+        self,
+        test_data,
+        fake_cleaner_storage_context,
+        fake_session,
+        fake_storage_context,
+        fake_copy_files,
+    ):
+        directory = TempDirectory()
+
+        # create a new zip file fixtur
+        file_details = []
+        if test_data.get("image_names"):
+            file_details = self.copy_files(test_data.get("image_names"))
+        new_zip_file_path = helpers.add_files_to_accepted_zip(
+            "tests/files_source/30-01-2019-RA-eLife-45644.zip",
+            directory.path,
+            file_details,
+        )
+
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            new_zip_file_path,
+        )
+
+        # write additional XML to the XML file
+        if test_data.get("sub_article_xml"):
+            self.add_sub_article_xml(
+                test_data.get("filename"), directory, test_data.get("sub_article_xml")
+            )
+
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_session.return_value = self.session
+        fake_copy_files.side_effect = RuntimeError("An exception")
+
+        # do the activity
+        result = self.activity.do_activity(input_data(test_data.get("filename")))
+        self.assertEqual(result, test_data.get("expected_result"))
+
+    @patch.object(activity_object, "rename_expanded_folder_files")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    @patch.object(cleaner, "storage_context")
+    @data(
+        {
+            "comment": "example with no label or caption content inline-graphic",
+            "filename": "30-01-2019-RA-eLife-45644.zip",
+            "sub_article_xml": (
+                '<sub-article id="sa1">'
+                "<body>"
+                "<p>First paragraph.</p>"
+                "<p><bold>Review image 1.</bold></p>"
+                "<p>Caption title. Caption paragraph.</p>"
+                '<p><inline-graphic xlink:href="local.jpg"/></p>'
+                "</body>"
+                "</sub-article>"
+            ),
+            "image_names": ["local.jpg"],
+            "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
+        },
+    )
+    def test_do_activity_rename_files_exception(
+        self,
+        test_data,
+        fake_cleaner_storage_context,
+        fake_session,
+        fake_storage_context,
+        fake_rename_files,
+    ):
+        directory = TempDirectory()
+
+        # create a new zip file fixtur
+        file_details = []
+        if test_data.get("image_names"):
+            file_details = self.copy_files(test_data.get("image_names"))
+        new_zip_file_path = helpers.add_files_to_accepted_zip(
+            "tests/files_source/30-01-2019-RA-eLife-45644.zip",
+            directory.path,
+            file_details,
+        )
+
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            new_zip_file_path,
+        )
+
+        # write additional XML to the XML file
+        if test_data.get("sub_article_xml"):
+            self.add_sub_article_xml(
+                test_data.get("filename"), directory, test_data.get("sub_article_xml")
+            )
+
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_session.return_value = self.session
+        fake_rename_files.side_effect = RuntimeError("An exception")
+
+        # do the activity
+        result = self.activity.do_activity(input_data(test_data.get("filename")))
+        self.assertEqual(result, test_data.get("expected_result"))

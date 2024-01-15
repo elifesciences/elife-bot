@@ -260,6 +260,52 @@ class TestEmitMonitorEvent(unittest.TestCase):
         self.assertIsNone(result)
 
 
+class TestAddFileTags(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_add_file_tags(self):
+        "test adding file tags to XML"
+        directory = TempDirectory()
+
+        input_filename = "30-01-2019-RA-eLife-45644.zip"
+
+        # create XML file
+        xml_string = "<article><article-meta><files/></article-meta></article>"
+        xml_file_name = "30-01-2019-RA-eLife-45644.xml"
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w") as open_file:
+            open_file.write(xml_string)
+        # file transformation data
+        from_file_name = "local.jpg"
+        to_file_name = "elife-45644-sa0-fig1.jpg"
+        file_transformations = []
+        from_file = ArticleZipFile(from_file_name)
+        to_file = ArticleZipFile(to_file_name)
+        file_transformations.append((from_file, to_file))
+        logger = FakeLogger()
+
+        # instantiate
+        activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
+        # invoke
+        activity_object.add_file_tags(
+            xml_file_path, file_transformations, input_filename
+        )
+        # assertions
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
+            new_xml_string = open_file.read()
+        self.assertTrue(
+            (
+                "<files>"
+                '<file file-type="figure">'
+                "<upload_file_nm>%s</upload_file_nm>"
+                "</file>"
+                "</files>" % to_file_name
+            )
+            in new_xml_string
+        )
+
+
 class TestSetMonitorProperty(unittest.TestCase):
     @patch.object(dashboard_queue, "send_message")
     def test_set_monitor_property(self, fake_send_message):
@@ -269,6 +315,82 @@ class TestSetMonitorProperty(unittest.TestCase):
             settings_mock, "666", None, None, None
         )
         self.assertIsNone(result)
+
+
+class Testaccepted_expanded_resource_prefix(unittest.TestCase):
+    def test_accepted_expanded_resource_prefix(self):
+        expanded_folder = "expanded"
+        expected = "s3://bot_bucket/expanded"
+        # instantiate
+        activity_object = AcceptedBaseActivity(settings_mock, None, None, None, None)
+        # invoke
+        result = activity_object.accepted_expanded_resource_prefix(expanded_folder)
+        self.assertEqual(result, expected)
+
+
+class TestCopyExpandedFolderFiles(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_copy(self):
+        "test copying objects in the bucket folder"
+        directory = TempDirectory()
+        # add a file to the directory
+        from_file_name = "elife-87356-inf1.jpg"
+        to_file_name = "elife-87356-sa3-fig1.jpg"
+        with open(os.path.join(directory.path, from_file_name), "w") as open_file:
+            open_file.write("")
+
+        # asset map
+        asset_file_name_map = {from_file_name: "s3://bot-bucket/%s" % from_file_name}
+        expanded_folder = ""
+
+        # files to transform
+        file_transformations = []
+        from_file = ArticleZipFile(from_file_name)
+        to_file = ArticleZipFile(to_file_name)
+        file_transformations.append((from_file, to_file))
+        resources = [from_file_name]
+        storage = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        logger = FakeLogger()
+
+        # instantiate
+        activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
+        # invoke
+        result = activity_object.copy_expanded_folder_files(
+            asset_file_name_map, expanded_folder, file_transformations, storage
+        )
+        # assertions
+        self.assertEqual(result, True)
+        self.assertEqual(len(os.listdir(directory.path)), 2)
+        self.assertEqual(
+            sorted(os.listdir(directory.path)), [from_file_name, to_file_name]
+        )
+
+    def test_blank_value(self):
+        "test if one of the file names is blank"
+        directory = TempDirectory()
+        from_file_name = "elife-87356-inf1.jpg"
+        to_file_name = None
+        file_transformations = []
+        from_file = ArticleZipFile(from_file_name)
+        to_file = ArticleZipFile(to_file_name)
+        file_transformations.append((from_file, to_file))
+        # asset map
+        asset_file_name_map = {}
+        expanded_folder = ""
+        storage = FakeStorageContext(directory.path, [], dest_folder=directory.path)
+        logger = FakeLogger()
+        # instantiate
+        activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
+        # invoke
+        with self.assertRaises(RuntimeError):
+            result = activity_object.copy_expanded_folder_files(
+                asset_file_name_map, expanded_folder, file_transformations, storage
+            )
+            self.assertEqual(result, activity_object.ACTIVITY_PERMANENT_FAILURE)
 
 
 class TestRenameExpandedFolderFiles(unittest.TestCase):
@@ -319,10 +441,12 @@ class TestRenameExpandedFolderFiles(unittest.TestCase):
         to_file = ArticleZipFile(to_file_name)
         file_transformations.append((from_file, to_file))
         # asset map
-        asset_file_name_map = {}
+        asset_file_name_map = {from_file_name: "s3://bot-bucket/%s" % from_file_name}
         expanded_folder = ""
         resources = [from_file_name]
-        storage = FakeStorageContext(directory.path, [], dest_folder=directory.path)
+        storage = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
         logger = FakeLogger()
         # instantiate
         activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
@@ -332,3 +456,59 @@ class TestRenameExpandedFolderFiles(unittest.TestCase):
                 asset_file_name_map, expanded_folder, file_transformations, storage
             )
             self.assertEqual(result, activity_object.ACTIVITY_PERMANENT_FAILURE)
+
+
+class TestDeleteExpandedFolderFiles(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_delete(self):
+        "test deleting objects in the bucket folder"
+        directory = TempDirectory()
+        # add a file to the directory
+        from_file_name = "elife-87356-inf1.jpg"
+        with open(os.path.join(directory.path, from_file_name), "w") as open_file:
+            open_file.write("")
+
+        # asset map
+        asset_file_name_map = {from_file_name: "s3://bot-bucket/%s" % from_file_name}
+        expanded_folder = ""
+        resources = [from_file_name]
+        storage = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        logger = FakeLogger()
+        # files to delete
+        file_name_list = [from_file_name]
+
+        # instantiate
+        activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
+        # invoke
+        result = activity_object.delete_expanded_folder_files(
+            asset_file_name_map, expanded_folder, file_name_list, storage
+        )
+        # assertions
+        self.assertEqual(len(os.listdir(directory.path)), 0)
+
+    @patch.object(FakeStorageContext, "delete_resource")
+    def test_blank_value(self, fake_delete):
+        "test if the S3 object cannot be deleted"
+        fake_delete.side_effect = Exception("An exception")
+        directory = TempDirectory()
+        from_file_name = "elife-87356-inf1.jpg"
+        file_name_list = [from_file_name]
+        # asset map
+        asset_file_name_map = {from_file_name: "s3://bot-bucket/%s" % from_file_name}
+        expanded_folder = ""
+        resources = [from_file_name]
+        storage = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        logger = FakeLogger()
+        # instantiate
+        activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
+        # invoke
+        with self.assertRaises(Exception):
+            result = activity_object.delete_expanded_folder_files(
+                asset_file_name_map, expanded_folder, file_name_list, storage
+            )
