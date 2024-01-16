@@ -484,7 +484,7 @@ class TestDeleteExpandedFolderFiles(unittest.TestCase):
         # instantiate
         activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
         # invoke
-        result = activity_object.delete_expanded_folder_files(
+        activity_object.delete_expanded_folder_files(
             asset_file_name_map, expanded_folder, file_name_list, storage
         )
         # assertions
@@ -509,6 +509,6 @@ class TestDeleteExpandedFolderFiles(unittest.TestCase):
         activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
         # invoke
         with self.assertRaises(Exception):
-            result = activity_object.delete_expanded_folder_files(
+            activity_object.delete_expanded_folder_files(
                 asset_file_name_map, expanded_folder, file_name_list, storage
             )
