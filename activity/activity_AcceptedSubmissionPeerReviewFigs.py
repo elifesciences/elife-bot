@@ -110,17 +110,55 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
         # write the XML root to disk
         cleaner.write_xml_file(xml_root, xml_file_path, input_filename)
 
+        # find duplicates in file_transformations
+        copy_file_transformations = []
+        copy_delete_file_transformations = []
+        transformation_keys = []
+        for file_transformation in file_transformations:
+            if file_transformation[0].xml_name in transformation_keys:
+                # this is a duplicate key
+                copy_file_transformations.append(file_transformation)
+            else:
+                # this is a new key
+                copy_delete_file_transformations.append(file_transformation)
+                transformation_keys.append(file_transformation[0].xml_name)
+
         # rewrite the XML file with the renamed files
         if file_transformations:
             self.statuses["modify_xml"] = self.rewrite_file_tags(
-                xml_file_path, file_transformations, input_filename
+                xml_file_path, copy_delete_file_transformations, input_filename
             )
+            # add file tags for duplicate files
+            self.add_file_tags(xml_file_path, copy_file_transformations, input_filename)
+
+        # copy duplicate files in the expanded folder
+        if self.statuses["modify_xml"]:
+            try:
+                self.statuses["rename_files"] = self.copy_expanded_folder_files(
+                    asset_file_name_map,
+                    expanded_folder,
+                    copy_file_transformations,
+                    storage,
+                )
+            except RuntimeError as exception:
+                log_message = (
+                    "%s, exception in rewrite_file_tags for duplicate file %s"
+                    % (
+                        self.name,
+                        input_filename,
+                    )
+                )
+                self.logger.exception(log_message)
+                return self.ACTIVITY_PERMANENT_FAILURE
 
         # rename the files in the expanded folder
         if self.statuses["modify_xml"]:
             try:
                 self.statuses["rename_files"] = self.rename_expanded_folder_files(
-                    asset_file_name_map, expanded_folder, file_transformations, storage
+                    asset_file_name_map,
+                    expanded_folder,
+                    copy_delete_file_transformations,
+                    storage,
                 )
             except RuntimeError as exception:
                 log_message = "%s, exception in rewrite_file_tags for file %s" % (
