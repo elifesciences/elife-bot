@@ -316,7 +316,6 @@ class activity_PubRouterDeposit(Activity):
         workflow_name = "PMCDeposit"
         workflow_data = {
             "document": zip_file_name,
-            "folder": folder,
         }
         message = {
             "workflow_name": workflow_name,
