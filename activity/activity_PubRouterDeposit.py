@@ -1,5 +1,4 @@
 import os
-import uuid
 import json
 import time
 import glob
@@ -20,9 +19,6 @@ from activity.objects import Activity
 """
 PubRouterDeposit activity
 """
-
-# override the default workflow timeout for PMCDeposit workflows if needed
-PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = None
 
 
 class activity_PubRouterDeposit(Activity):
@@ -316,54 +312,36 @@ class activity_PubRouterDeposit(Activity):
         Start a PMCDeposit workflow for the article object, by looking up
         the archive zip file for the article DOI
         """
-        starter_status = None
-
-        # Compile the workflow starter parameters
-        workflow_id = "PMCDeposit_%s" % str(article.doi_id)
+        # build message
         workflow_name = "PMCDeposit"
-        workflow_version = "1"
-
-        # Input data
-        data = {}
-        data["document"] = zip_file_name
-        data["folder"] = folder
-        input_json = {}
-        input_json["run"] = str(uuid.uuid4())
-        input_json["data"] = data
-        workflow_input = json.dumps(input_json)
-
-        kwargs = {
-            "domain": self.settings.domain,
-            "workflowId": workflow_id,
-            "workflowType": {
-                "name": workflow_name,
-                "version": workflow_version,
-            },
-            "taskList": {"name": self.settings.default_task_list},
-            "input": workflow_input,
+        workflow_data = {
+            "document": zip_file_name,
+            "folder": folder,
         }
-        if PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT:
-            kwargs[
-                "executionStartToCloseTimeout"
-            ] = PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
-
-        # Connect to SWF
-        client = boto3.client(
-            "swf",
-            aws_access_key_id=self.settings.aws_access_key_id,
-            aws_secret_access_key=self.settings.aws_secret_access_key,
-            region_name=self.settings.swf_region,
+        message = {
+            "workflow_name": workflow_name,
+            "workflow_data": workflow_data,
+        }
+        self.logger.info(
+            "%s, starting a %s workflow for article_id %s",
+            self.name,
+            workflow_name,
+            article.doi_id,
         )
-
-        # Try and start a workflow
         try:
-            response = client.start_workflow_execution(**kwargs)
+            # connect to the queue
+            queue_url = self.sqs_queue_url()
+            # send workflow starter message
+            self.sqs_client.send_message(
+                QueueUrl=queue_url,
+                MessageBody=json.dumps(message),
+            )
             starter_status = True
         except Exception as exception:
-            # There is already a running workflow with that ID, cannot start another
-            message = "%s exception starting workflow %s: %s" % (
+            message = "%s exception starting workflow %s_%s: %s" % (
                 self.name,
-                workflow_id,
+                workflow_name,
+                article.doi_id,
                 str(exception),
             )
             if self.logger:
@@ -381,7 +359,6 @@ class activity_PubRouterDeposit(Activity):
         articles = []
 
         for article_xml_filename in article_xml_filenames:
-
             article = self.create_article()
             article.parse_article_file(article_xml_filename)
             if self.logger:
