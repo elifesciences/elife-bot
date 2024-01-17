@@ -330,33 +330,29 @@ class TestStartPmcDepositWorkflow(unittest.TestCase):
         self.pubrouterdeposit = activity_PubRouterDeposit(
             settings_mock, FakeLogger(), None, None, None
         )
-        self.pubrouterdeposit.workflow = "HEFCE"
-        # test overriding the workflow timeout
-        self.workflow_timeout_original = (
-            activity_module.PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT
-        )
-        activity_module.PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = 1
+        self.pubrouterdeposit.workflow = "PMCDeposit"
         self.article = article()
         self.article.doi_id = "00666"
 
     def tearDown(self):
-        # reset the workflow timeout value
-        activity_module.PMC_DEPOSIT_WORKFLOW_EXECUTION_START_TO_CLOSE_TIMEOUT = (
-            self.workflow_timeout_original
-        )
+        TempDirectory.cleanup_all()
 
     @patch("boto3.client")
-    def test_start_pmc_deposit_workflow(self, fake_client):
-        fake_client.return_value = FakeSWFClient()
+    def test_start_pmc_deposit_workflow(self, fake_sqs_client):
+        directory = TempDirectory()
+        fake_queues = {settings_mock.workflow_starter_queue: FakeSQSQueue(directory)}
+        fake_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
         result = self.pubrouterdeposit.start_pmc_deposit_workflow(self.article, "", "")
         self.assertEqual(result, True)
 
-    @patch.object(FakeSWFClient, "start_workflow_execution")
+    @patch.object(FakeSQSClient, "send_message")
     @patch("boto3.client")
-    def test_start_pmc_deposit_workflow_exception(self, fake_client, fake_start):
-        fake_client.return_value = FakeSWFClient()
+    def test_start_pmc_deposit_workflow_exception(self, fake_sqs_client, fake_send):
+        directory = TempDirectory()
+        fake_queues = {settings_mock.workflow_starter_queue: FakeSQSQueue(directory)}
+        fake_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
         exception_message = "An exception"
-        fake_start.side_effect = Exception(exception_message)
+        fake_send.side_effect = Exception(exception_message)
         result = self.pubrouterdeposit.start_pmc_deposit_workflow(self.article, "", "")
         self.assertEqual(result, False)
         self.assertEqual(
