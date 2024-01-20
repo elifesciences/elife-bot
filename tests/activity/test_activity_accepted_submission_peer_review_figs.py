@@ -14,6 +14,7 @@ from activity.activity_AcceptedSubmissionPeerReviewFigs import (
     activity_AcceptedSubmissionPeerReviewFigs as activity_object,
 )
 import tests.test_data as test_case_data
+from tests.classes_mock import FakeSMTPServer
 from tests.activity.classes_mock import (
     FakeLogger,
     FakeSession,
@@ -335,6 +336,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                     "%s not found in bucket upload folder" % bucket_file,
                 )
 
+    @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(activity_object, "copy_expanded_folder_files")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
@@ -364,6 +366,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
         fake_session,
         fake_storage_context,
         fake_copy_files,
+        fake_email_smtp_connect,
     ):
         directory = TempDirectory()
 
@@ -397,11 +400,13 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
         )
         fake_session.return_value = self.session
         fake_copy_files.side_effect = RuntimeError("An exception")
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
 
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         self.assertEqual(result, test_data.get("expected_result"))
 
+    @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(activity_object, "rename_expanded_folder_files")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
@@ -431,6 +436,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
         fake_session,
         fake_storage_context,
         fake_rename_files,
+        fake_email_smtp_connect,
     ):
         directory = TempDirectory()
 
@@ -464,6 +470,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
         )
         fake_session.return_value = self.session
         fake_rename_files.side_effect = RuntimeError("An exception")
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
 
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
