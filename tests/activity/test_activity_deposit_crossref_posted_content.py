@@ -1,17 +1,31 @@
 import os
 import time
+import json
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
-from provider import crossref, lax_provider
+from provider import cleaner, lax_provider
 import activity.activity_DepositCrossrefPostedContent as activity_module
 from activity.activity_DepositCrossrefPostedContent import (
     activity_DepositCrossrefPostedContent,
 )
+from tests import read_fixture
 from tests.classes_mock import FakeSMTPServer
 from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
 from tests.activity import helpers, settings_mock
-import tests.activity.test_activity_data as activity_test_data
+
+
+def v1_84364_docmap_fixture():
+    "modify the original docmap test fixture to only include v1 steps"
+    original_docmap_string = read_fixture("sample_docmap_for_84364.json")
+    original_docmap_json = json.loads(original_docmap_string)
+    version_1_docmap_json = {"first-step": "_:b0", "steps": {}}
+    # keep only the version 1 steps from the docmap fixture
+    for step_key, step_value in original_docmap_json.get("steps").items():
+        if step_key == "_:b3":
+            break
+        version_1_docmap_json["steps"][step_key] = step_value
+    return json.dumps(version_1_docmap_json)
 
 
 class TestDepositCrossrefPostedContent(unittest.TestCase):
@@ -32,6 +46,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         "return the tmp dir name for the activity"
         return self.activity.directories.get("TMP_DIR")
 
+    @patch.object(cleaner, "get_docmap")
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(lax_provider, "article_status_version_map")
     @patch("requests.post")
@@ -44,6 +59,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         fake_post_request,
         fake_version_map,
         fake_email_smtp_connect,
+        fake_get_docmap,
     ):
         test_data = {
             "comment": "Article 84364",
@@ -97,6 +113,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         }
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
+        fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
@@ -169,33 +186,92 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
                         ),
                     )
 
+    @patch.object(cleaner, "get_docmap")
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(lax_provider, "article_status_version_map")
     @patch("requests.post")
     @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_DepositCrossrefPostedContent, "clean_tmp_dir")
     def test_do_activity_vor_exists(
         self,
+        fake_clean_tmp_dir,
         fake_storage_context,
         fake_post_request,
         fake_version_map,
         fake_email_smtp_connect,
+        fake_get_docmap,
     ):
         "test for if a VOR version already exists"
+        directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
+        fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
         fake_version_map.return_value = {"vor": [1]}
-        fake_storage_context.return_value = FakeStorageContext(
-            self.outbox_folder, ["elife-preprint-84364-v2.xml"]
+        # fake_version_map.return_value = {}
+        resources = helpers.populate_storage(
+            from_dir=self.outbox_folder,
+            to_dir=directory.path,
+            filenames=["elife-preprint-84364-v2.xml"],
+            sub_dir="crossref_posted_content/outbox",
         )
-
-        # raise an exception on a post
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
         fake_post_request.return_value = FakeResponse(200)
-        fake_post_request.return_value = True
-        fake_post_request.return_value = FakeResponse(200)
+        # invoke
         result = self.activity.do_activity(self.activity_data)
+        # assertions
         self.assertTrue(result)
+        # only one deposit file produced, the verison DOI deposit
+        tmp_dir_list = os.listdir(self.activity.directories.get("TMP_DIR"))
+        self.assertEqual(len(tmp_dir_list), 1)
 
+    @patch.object(cleaner, "get_docmap")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(lax_provider, "article_status_version_map")
+    @patch("requests.post")
+    @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_DepositCrossrefPostedContent, "clean_tmp_dir")
+    def test_do_activity_older_preprint_version(
+        self,
+        fake_clean_tmp_dir,
+        fake_storage_context,
+        fake_post_request,
+        fake_version_map,
+        fake_email_smtp_connect,
+        fake_get_docmap,
+    ):
+        "test if the preprint version is less than the most recent version"
+        directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
+        # use the docmap with only version 1 steps in it
+        fake_get_docmap.return_value = v1_84364_docmap_fixture()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
+        fake_version_map.return_value = {}
+        # fake_version_map.return_value = {}
+        resources = helpers.populate_storage(
+            from_dir=self.outbox_folder,
+            to_dir=directory.path,
+            filenames=["elife-preprint-84364-v2.xml"],
+            sub_dir="crossref_posted_content/outbox",
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_post_request.return_value = FakeResponse(200)
+        # invoke
+        result = self.activity.do_activity(self.activity_data)
+        # assertions
+        self.assertTrue(result)
+        # only one deposit file produced, the verison DOI deposit
+        tmp_dir_list = os.listdir(self.activity.directories.get("TMP_DIR"))
+        self.assertEqual(len(tmp_dir_list), 1)
+
+    @patch.object(cleaner, "get_docmap")
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(lax_provider, "article_status_version_map")
     @patch("requests.post")
@@ -206,10 +282,12 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         fake_post_request,
         fake_version_map,
         fake_email_smtp_connect,
+        fake_get_docmap,
     ):
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
+        fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
         fake_version_map.return_value = {}
         fake_storage_context.return_value = FakeStorageContext(
             self.outbox_folder, ["elife-preprint-84364-v2.xml"]
@@ -217,8 +295,6 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
 
         # raise an exception on a post
         fake_post_request.side_effect = Exception("")
-        fake_post_request.return_value = True
-        fake_post_request.return_value = FakeResponse(200)
         result = self.activity.do_activity(self.activity_data)
         self.assertTrue(result)
 
@@ -250,31 +326,3 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
             article_object.get_date("posted_date").date,
             time.strptime("2023-02-13 UTC", "%Y-%m-%d %Z"),
         )
-
-
-ARTICLE_OBJECT_MAP = crossref.article_xml_list_parse(
-    [
-        "tests/test_data/crossref_posted_content/outbox/elife-preprint-84364-v2.xml",
-    ],
-    [],
-    activity_test_data.ExpandArticle_files_dest_folder,
-)
-
-
-class TestPrune(unittest.TestCase):
-    def setUp(self):
-        self.logger = FakeLogger()
-
-    def tearDown(self):
-        helpers.delete_files_in_folder(
-            activity_test_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
-        )
-
-    @patch.object(lax_provider, "article_status_version_map")
-    def test_prune_article_object_map_version_exists(self, fake_version_map):
-        fake_version_map.return_value = {"vor": [1]}
-
-        good_article_map = activity_module.prune_article_object_map(
-            ARTICLE_OBJECT_MAP, settings_mock, self.logger
-        )
-        self.assertEqual(len(good_article_map), 0)
