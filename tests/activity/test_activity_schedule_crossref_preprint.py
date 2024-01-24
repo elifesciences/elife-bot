@@ -74,7 +74,7 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
     ):
         directory = TempDirectory()
         fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["84364-v2.xml"]
+            "tests/files_source/epp", ["article-transformed.xml"]
         )
         fake_outbox_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
@@ -139,7 +139,7 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         "test using standalone data input instead of session"
         directory = TempDirectory()
         fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["84364-v2.xml"]
+            "tests/files_source/epp", ["article-transformed.xml"]
         )
         fake_outbox_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
@@ -226,7 +226,7 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         directory = TempDirectory()
         fake_build_article.side_effect = Exception("An exception")
         fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["84364-v2.xml"]
+            "tests/files_source/epp", ["article-transformed.xml"]
         )
         fake_session.return_value = FakeSession(
             session_data(test_data.get("article_id"), test_data.get("version"))

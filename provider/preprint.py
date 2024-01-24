@@ -16,17 +16,11 @@ from provider import cleaner, download_helper, utils
 
 CONFIG_SECTION = "elife_preprint"
 
-# path in the bucket to find preprint XML
-PREPRINT_XML_PATH_PATTERN = "data/{article_id}/v{version}"
+# path in the bucket for preprint XML
+PREPRINT_AUTOMATION_XML_PATH_PATTERN = "automation/{article_id}/v{version}"
 
 # file name of the preprint XML in the bucket
-PREPRINT_XML_FILE_NAME_PATTERN = "{article_id}-v{version}.xml"
-
-# alternate path in the bucket for preprint XML
-PREPRINT_ALTERNATE_XML_PATH_PATTERN = "automation/{article_id}/v{version}"
-
-# alternate file name of the preprint XML in the bucket
-PREPRINT_ALTERNATE_XML_FILE_NAME_PATTERN = "article-transformed.xml"
+PREPRINT_AUTOMATION_XML_FILE_NAME_PATTERN = "article-transformed.xml"
 
 
 # DOI prefix to confirm version DOI value
@@ -204,35 +198,18 @@ def preprint_xml(article, settings):
 def download_original_preprint_xml(settings, to_dir, article_id, version):
     "download the preprint server version of the XML"
     # get preprint server XML from a bucket
-    real_filename = PREPRINT_XML_FILE_NAME_PATTERN.format(
-        article_id=article_id, version=version
-    )
+    real_filename = PREPRINT_AUTOMATION_XML_FILE_NAME_PATTERN
     bucket_name = settings.epp_data_bucket
-    bucket_folder = PREPRINT_XML_PATH_PATTERN.format(
+    bucket_folder = PREPRINT_AUTOMATION_XML_PATH_PATTERN.format(
         article_id=article_id, version=version
     )
 
-    try:
-        article_xml_path = download_helper.download_file_from_s3(
-            settings,
-            real_filename,
-            bucket_name,
-            bucket_folder,
-            to_dir,
-        )
-    except:
-        # if no found in the first location try the next location
-        real_filename = PREPRINT_ALTERNATE_XML_FILE_NAME_PATTERN
-        # alternate path in the bucket for preprint XML
-        bucket_folder = PREPRINT_ALTERNATE_XML_PATH_PATTERN.format(
-            article_id=article_id, version=version
-        )
-        article_xml_path = download_helper.download_file_from_s3(
-            settings,
-            real_filename,
-            bucket_name,
-            bucket_folder,
-            to_dir,
-        )
+    article_xml_path = download_helper.download_file_from_s3(
+        settings,
+        real_filename,
+        bucket_name,
+        bucket_folder,
+        to_dir,
+    )
 
     return article_xml_path
