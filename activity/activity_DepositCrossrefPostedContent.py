@@ -6,6 +6,7 @@ import glob
 from collections import OrderedDict
 from activity.objects import Activity
 from provider import (
+    cleaner,
     crossref,
     email_provider,
     lax_provider,
@@ -93,19 +94,36 @@ class activity_DepositCrossrefPostedContent(Activity):
 
         article_object_map = self.get_article_objects(article_xml_files)
 
-        # prune files if a POA or VOR version already exists
-        generate_article_object_map = prune_article_object_map(
-            article_object_map, self.settings, self.logger
-        )
-
-        # files omitted from the pruning procedure, add them to not_published_xml_files
-        for file_name in article_object_map.keys():
-            if file_name not in generate_article_object_map.keys():
-                self.not_published_xml_files.append(file_name)
-
         # build Crossref deposit objects
         crossref_object_map = OrderedDict()
-        for xml_file, article in list(generate_article_object_map.items()):
+        for xml_file, article in list(article_object_map.items()):
+            # check for a published POA or VOR version before adding the concept DOI deposit
+            status_version_map = lax_provider.article_status_version_map(
+                article.manuscript, self.settings
+            )
+            if len(status_version_map.keys()) > 0:
+                # there is already a poa or vor, skip it
+                self.logger.info(
+                    "%s, there is already a VOR article published for article.manuscript,"
+                    " will not generate a concept DOI deposit" % self.name
+                )
+                continue
+
+            # check whether this is a less than more recent EPP version
+            docmap_string = self.get_docmap_string(
+                article.manuscript, article.manuscript
+            )
+            newest_version_doi = cleaner.version_doi_from_docmap(
+                docmap_string, article.manuscript
+            )
+            if newest_version_doi != article.version_doi:
+                self.logger.info(
+                    "%s, the article version DOI %s does not equal the docmap version DOI %s,"
+                    " will not generate a concept DOI deposit"
+                    % (self.name, article.version_doi, newest_version_doi)
+                )
+                continue
+
             crossref_object_list = crossref.build_crossref_xml(
                 {xml_file: article},
                 crossref_config,
@@ -117,7 +135,7 @@ class activity_DepositCrossrefPostedContent(Activity):
                 crossref_object_map[article] = crossref_object_list[0]
 
         # duplicate and modify the article for a version_doi deposit, set a different batch_id
-        for xml_file, article in list(generate_article_object_map.items()):
+        for xml_file, article in list(article_object_map.items()):
             if article.version_doi:
                 # track a separate list of good and bad files later to be collated
                 good_xml_files = []
@@ -347,22 +365,3 @@ class activity_DepositCrossrefPostedContent(Activity):
             )
 
         return True
-
-
-def prune_article_object_map(article_object_map, settings, logger):
-    "remove any articles from the map that should not be deposited as posted_content"
-    good_article_object_map = OrderedDict()
-    for file_name, article in article_object_map.items():
-        # check if there is any published POA or VOR version
-        status_version_map = lax_provider.article_status_version_map(
-            article.manuscript, settings
-        )
-        if len(status_version_map.keys()) > 0:
-            logger.info(
-                "Pruning article %s from Crossref posted content deposit,"
-                " a POA or VOR version is already published" % article.doi
-            )
-        else:
-            good_article_object_map[file_name] = article
-
-    return good_article_object_map
