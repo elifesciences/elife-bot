@@ -2,6 +2,7 @@
 
 import os
 import unittest
+import shutil
 import smtplib
 from collections import OrderedDict
 from testfixtures import TempDirectory
@@ -215,6 +216,33 @@ def fake_authors(activity_object, article_id=3):
     return activity_object.get_author_list(column_headings, authors, article_id)
 
 
+# author test fixture data
+EJP_ARTICLE_13_AUTHORS = (
+    [
+        "ms_no",
+        "author_seq",
+        "first_nm",
+        "last_nm",
+        "author_type_cde",
+        "dual_corr_author_ind",
+        "e_mail",
+        "primary_org",
+    ],
+    [
+        [
+            "13",
+            "1",
+            "Author",
+            "Uno",
+            "Contributing Author",
+            "",
+            "author13-01@example.com",
+            "University ",
+        ]
+    ],
+)
+
+
 class TestPublicationEmail(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
@@ -224,31 +252,6 @@ class TestPublicationEmail(unittest.TestCase):
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
-        # Basic fake data for all activity passes
-        self.ejp_article_13_authors = (
-            [
-                "ms_no",
-                "author_seq",
-                "first_nm",
-                "last_nm",
-                "author_type_cde",
-                "dual_corr_author_ind",
-                "e_mail",
-                "primary_org",
-            ],
-            [
-                [
-                    "13",
-                    "1",
-                    "Author",
-                    "Uno",
-                    "Contributing Author",
-                    "",
-                    "author13-01@example.com",
-                    "University ",
-                ]
-            ],
-        )
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
@@ -257,39 +260,31 @@ class TestPublicationEmail(unittest.TestCase):
         )
 
     @patch.object(activity_module, "get_related_article")
-    @patch("provider.article.article.download_article_xml_from_s3")
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.lax_provider.article_versions")
     @patch.object(EJP, "get_authors")
-    @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch("provider.outbox_provider.storage_context")
     def test_do_activity(
         self,
         fake_storage_context,
-        fake_outbox_key_names,
         fake_ejp_get_authors,
         fake_article_versions,
         fake_email_smtp_connect,
-        fake_download_xml,
         fake_get_related_article,
     ):
-        fake_download_xml.return_value = False
-
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
 
         # do_activity
         for pass_test_data in DO_ACTIVITY_PASSES:
-            fake_outbox_key_names.return_value = pass_test_data["article_xml_filenames"]
-
             fake_storage_context.return_value = FakeStorageContext(
                 "tests/files_source/publication_email/outbox/",
                 resources=pass_test_data["article_xml_filenames"],
             )
 
             if pass_test_data.get("article_id") != "32991":
-                fake_ejp_get_authors.return_value = self.ejp_article_13_authors
+                fake_ejp_get_authors.return_value = EJP_ARTICLE_13_AUTHORS
             else:
                 fake_ejp_get_authors.return_value = (None, None)
 
@@ -366,46 +361,54 @@ class TestPublicationEmail(unittest.TestCase):
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
     @patch.object(activity_PublicationEmail, "process_articles")
-    @patch("provider.outbox_provider.download_files_from_s3_outbox")
-    @patch("provider.outbox_provider.get_outbox_s3_key_names")
+    @patch("provider.outbox_provider.storage_context")
     @patch.object(activity_PublicationEmail, "download_templates")
     def test_do_activity_process_articles_failure(
         self,
         fake_download_templates,
-        fake_outbox_key_names,
-        fake_download_files,
         fake_process_articles,
+        fake_storage_context,
     ):
         fake_download_templates.return_value = True
-        fake_outbox_key_names.return_value = []
-        fake_download_files.return_value = True
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/publication_email/outbox/",
+            resources=[],
+        )
         fake_process_articles.side_effect = Exception("Something went wrong!")
         result = self.activity.do_activity()
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
-    @patch.object(activity_PublicationEmail, "send_admin_email")
-    @patch.object(activity_PublicationEmail, "send_emails_for_articles")
+    @patch.object(activity_PublicationEmail, "send_and_clean")
     @patch.object(activity_PublicationEmail, "process_articles")
-    @patch("provider.outbox_provider.download_files_from_s3_outbox")
-    @patch("provider.outbox_provider.get_outbox_s3_key_names")
+    @patch("provider.outbox_provider.storage_context")
     @patch.object(activity_PublicationEmail, "download_templates")
     def test_do_activity_process_send_emails_failure(
         self,
         fake_download_templates,
-        fake_outbox_key_names,
-        fake_download_files,
+        fake_storage_context,
         fake_process_articles,
-        fake_send_emails,
-        fake_send_admin_email,
+        fake_send_and_clean,
     ):
         fake_download_templates.return_value = True
-        fake_outbox_key_names.return_value = []
-        fake_download_files.return_value = True
-        fake_send_admin_email.return_value = True
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/publication_email/outbox/",
+            resources=[],
+        )
         fake_process_articles.return_value = None, [0], [0], None
-        fake_send_emails.return_value = Exception("Something went wrong!")
+        fake_send_and_clean.return_value = Exception("Something went wrong!")
         result = self.activity.do_activity()
         self.assertEqual(result, True)
+
+
+class TestDownloadTemplates(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, fake_logger, None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
 
     @patch.object(Templates, "copy_email_templates")
     def test_download_templates_failure(self, fake_copy_email_templates):
@@ -416,6 +419,63 @@ class TestPublicationEmail(unittest.TestCase):
             self.activity.logger.loginfo[-1],
             "PublicationEmail email templates did not warm successfully",
         )
+
+
+class TestSendAndClean(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, self.logger, None, None, None
+        )
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+        self.activity.clean_tmp_dir()
+
+    @patch.object(EJP, "get_authors")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch("provider.outbox_provider.storage_context")
+    def test_send_and_clean(
+        self, fake_storage_context, fake_email_smtp_connect, fake_ejp_get_authors
+    ):
+        "test sending email, cleaning the outbox, sending admin email"
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
+        article_xml_filenames = ["elife-18753-v1.xml", "elife-15747-v2.xml"]
+        # copy XML files for testing
+        storage_path = os.path.join(directory.path, "publication_email", "outbox")
+        xml_path = os.path.join("tests", "files_source", "publication_email", "outbox")
+        os.makedirs(storage_path)
+        for article_xml in article_xml_filenames:
+            copy_from = os.path.join(xml_path, article_xml)
+            copy_to = os.path.join(storage_path, article_xml)
+            shutil.copy(
+                copy_from,
+                copy_to,
+            )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path,
+            resources=article_xml_filenames,
+            dest_folder=directory.path,
+        )
+        fake_ejp_get_authors.return_value = EJP_ARTICLE_13_AUTHORS
+        # turn XML into article objects
+        article_xml_paths = [
+            os.path.join(storage_path, xml_file) for xml_file in article_xml_filenames
+        ]
+        articles, xml_file_to_doi_map = self.activity.parse_article_xml(
+            article_xml_paths
+        )
+        prepared = [articles[0]]
+        not_published_articles = articles[1:]
+        # invoke
+        self.activity.send_and_clean(
+            prepared, not_published_articles, xml_file_to_doi_map
+        )
+        # assert outbox is empty
+        self.assertEqual([], os.listdir(storage_path))
 
 
 class TestSendEmailsForArticles(unittest.TestCase):
@@ -572,7 +632,7 @@ class TestProcessArticles(unittest.TestCase):
         fake_article_versions,
         fake_download_xml,
     ):
-        """edge cases for process articles where the approved and prepared count differ"""
+        "edge cases for process articles where the approved and prepared count differ"
         fake_article_versions.return_value = (200, LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3)
         fake_download_xml.return_value = False
         (
@@ -1236,12 +1296,48 @@ class TestMergeRecipients(unittest.TestCase):
         self.assertEqual(len(merged_list), expected_count)
 
 
+class TestSendAdminEmail(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+
+        class FakeSettings:
+            def __init__(self):
+                for attr in [
+                    "domain",
+                    "downstream_recipients_yaml",
+                    "poa_packaging_bucket",
+                    "ses_poa_sender_email",
+                ]:
+                    setattr(self, attr, getattr(settings_mock, attr, None))
+
+        settings_object = FakeSettings()
+        # email recipients is a list
+        settings_object.ses_admin_email = ["one@example.org", "two@example.org"]
+
+        self.activity = activity_PublicationEmail(
+            settings_object, fake_logger, None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    def test_send_admin_email(self, fake_email_smtp_connect):
+        "test for when the email recipients is a list"
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
+        activity_status = True
+        result = self.activity.send_admin_email(activity_status)
+        self.assertEqual(result, True)
+
+
 class TestGetRelatedArticle(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
 
     def test_get_related_article_from_cache(self):
-        """get related article from existing list of related articles"""
+        "get related article from existing list of related articles"
         doi = "10.7554/eLife.15747"
         expected_doi = doi
         related_article = articlelib.article()
@@ -1253,7 +1349,7 @@ class TestGetRelatedArticle(unittest.TestCase):
 
     @patch("provider.article.create_article")
     def test_get_related_article_create_article(self, fake_create_article):
-        """get related article from creating a new article for the doi"""
+        "get related article from creating a new article for the doi"
         doi = "10.7554/eLife.15747"
         expected_doi = doi
         article_object = articlelib.article()
@@ -1317,7 +1413,7 @@ class TestS3KeyNamesToClean(unittest.TestCase):
         },
     )
     def test_s3_key_names_to_clean(self, test_case_data):
-        """get related article from existing list of related articles"""
+        "get related article from existing list of related articles"
         s3_key_names = activity_module.s3_key_names_to_clean(
             "outbox/",
             test_case_data.get("prepared"),
