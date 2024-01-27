@@ -5,7 +5,6 @@ import glob
 import smtplib
 from collections import OrderedDict
 from provider import (
-    downstream,
     ejp,
     email_provider,
     lax_provider,
@@ -129,54 +128,60 @@ class activity_PublicationEmail(Activity):
             return True
 
         try:
-            self.send_emails_for_articles(prepared)
-
-            # Clean the outbox
-            published_file_names = s3_key_names_to_clean(
-                self.outbox_folder,
-                prepared,
-                xml_file_to_doi_map,
-                self.articles_do_not_remove_from_outbox,
-                self.insight_articles_to_remove_from_outbox,
-            )
-            date_stamp = utils.set_datestamp()
-            to_folder = outbox_provider.get_to_folder_name(
-                self.published_folder, date_stamp
-            )
-            # clean published files from the outbox
-            outbox_provider.clean_outbox(
-                self.settings,
-                self.publish_bucket,
-                self.outbox_folder,
-                to_folder,
-                published_file_names,
-            )
-
-            # clean not_published files from the outbox
-            not_published_file_names = s3_key_names_to_clean(
-                self.outbox_folder,
-                not_published_articles,
-                xml_file_to_doi_map,
-                self.articles_do_not_remove_from_outbox,
-                [],
-            )
-            not_published_to_folder = outbox_provider.get_to_folder_name(
-                self.not_published_folder, date_stamp
-            )
-            outbox_provider.clean_outbox(
-                self.settings,
-                self.publish_bucket,
-                self.outbox_folder,
-                not_published_to_folder,
-                not_published_file_names,
-            )
-
-            # Send email to admins with the status
-            self.send_admin_email(True)
+            self.send_and_clean(prepared, not_published_articles, xml_file_to_doi_map)
         except Exception:
             self.logger.exception("An error occured on do_activity method.")
 
         return True
+
+    def send_and_clean(self, prepared, not_published_articles, xml_file_to_doi_map):
+        "send the emails, clean the outbox, send the admin email"
+        self.send_emails_for_articles(prepared)
+        self.clean_outbox(prepared, not_published_articles, xml_file_to_doi_map)
+        # Send email to admins with the status
+        self.send_admin_email(True)
+
+    def clean_outbox(self, prepared, not_published_articles, xml_file_to_doi_map):
+        "clean the S3 outbox of files"
+        # Clean the outbox
+        published_file_names = s3_key_names_to_clean(
+            self.outbox_folder,
+            prepared,
+            xml_file_to_doi_map,
+            self.articles_do_not_remove_from_outbox,
+            self.insight_articles_to_remove_from_outbox,
+        )
+        date_stamp = utils.set_datestamp()
+        to_folder = outbox_provider.get_to_folder_name(
+            self.published_folder, date_stamp
+        )
+        # clean published files from the outbox
+        outbox_provider.clean_outbox(
+            self.settings,
+            self.publish_bucket,
+            self.outbox_folder,
+            to_folder,
+            published_file_names,
+        )
+
+        # clean not_published files from the outbox
+        not_published_file_names = s3_key_names_to_clean(
+            self.outbox_folder,
+            not_published_articles,
+            xml_file_to_doi_map,
+            self.articles_do_not_remove_from_outbox,
+            [],
+        )
+        not_published_to_folder = outbox_provider.get_to_folder_name(
+            self.not_published_folder, date_stamp
+        )
+        outbox_provider.clean_outbox(
+            self.settings,
+            self.publish_bucket,
+            self.outbox_folder,
+            not_published_to_folder,
+            not_published_file_names,
+        )
 
     def log_cannot_find_authors(self, doi):
         log_info = (
