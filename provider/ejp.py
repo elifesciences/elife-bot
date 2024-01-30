@@ -3,7 +3,6 @@ from operator import itemgetter
 import csv
 import re
 import os
-import sys
 import io
 from ejpcsvparser.utils import entity_to_unicode
 from provider.storage_provider import storage_context
@@ -56,9 +55,13 @@ class EJP:
             document_path = os.path.join(self.tmp_dir, filename)
         except TypeError:
             document_path = None
+        # decide the encoding to use
+        encoding = "utf-8"
+        if "b" in mode:
+            encoding = None
         # write the content to the file
         try:
-            with open(document_path, mode) as open_file:
+            with open(document_path, mode, encoding=encoding) as open_file:
                 open_file.write(content)
                 # success, set the document value to return
                 document = document_path
@@ -207,7 +210,6 @@ def author_detail_list(document, doi_id=None, corresponding=None):
                     add = False
             # Check corresponding column value
             if corresponding is not None and add is True:
-
                 author_type_cde = fields[4]
                 dual_corr_author_ind = fields[5]
                 is_corr = is_corresponding_author(author_type_cde, dual_corr_author_ind)
@@ -248,13 +250,10 @@ def parse_author_data(document):
     author_rows = []
 
     # open the file and parse it
-    if sys.version_info[0] < 3:
-        handle = open(document, "rb")
-    else:
-        # https://docs.python.org/3/library/functions.html#open
-        handle = io.open(
-            document, "r", newline="", encoding="utf-8", errors="surrogateescape"
-        )
+    # https://docs.python.org/3/library/functions.html#open
+    handle = io.open(
+        document, "r", newline="", encoding="utf-8", errors="surrogateescape"
+    )
     with handle as csvfile:
         filereader = csv.reader(csvfile)
         for row in filereader:
