@@ -30,6 +30,18 @@ class TestProviderEJP(unittest.TestCase):
             "dual_corr_author_ind",
             "e_mail",
         ]
+        self.preprint_author_column_headings = [
+            "ms_no",
+            "ms_rev_no",
+            "appeal_ind",
+            "author_seq",
+            "first_nm",
+            "last_nm",
+            "author_type_cde",
+            "dual_corr_author_ind",
+            "e_mail",
+            "primary_org",
+        ]
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -237,12 +249,73 @@ class TestProviderEJP(unittest.TestCase):
         self.assertEqual(column_headings, self.author_column_headings)
         self.assertEqual(authors, expected_authors)
 
+    @patch("provider.ejp.storage_context")
+    @patch("provider.ejp.EJP.find_latest_s3_file_name")
+    @data(
+        (86939, 1, 14),
+        (86939, 2, 14),
+        (91826, 1, 5),
+        ("91826", "2", 5),
+        (91826, 3, None),
+        (91826, None, None),
+        (666, 1, None),
+    )
+    @unpack
+    def test_get_preprint_authors(
+        self,
+        doi_id,
+        version,
+        expected_author_count,
+        fake_find_latest,
+        fake_storage_context,
+    ):
+        "test getting preprint authors from a CSV file"
+        preprint_author_csv_s3_object = (
+            "ejp_query_tool_query_id_Production_data_04_-_"
+            "Reviewed_preprint_author_details_2024_01_29_eLife-rp.csv"
+        )
+        fake_find_latest.return_value = preprint_author_csv_s3_object
+        # copy the sample csv file to the temp directory
+        s3_key_name = os.path.join(self.directory.path, preprint_author_csv_s3_object)
+        shutil.copy(
+            os.path.join("tests", "test_data", "ejp_preprint_author_file.csv"),
+            s3_key_name,
+        )
+        # populate the storage provider with the CSV file
+        resources = [s3_key_name]
+        fake_storage_context.return_value = FakeStorageContext(
+            self.directory.path, resources
+        )
+        # call the function
+        (column_headings, authors) = self.ejp.get_preprint_authors(doi_id, version)
+        # assert results
+        self.assertEqual(column_headings, self.preprint_author_column_headings)
+        if authors is None:
+            self.assertEqual(
+                authors,
+                expected_author_count,
+                "failed for doi_id %s, version %s" % (doi_id, version),
+            )
+        else:
+            self.assertEqual(
+                len(authors),
+                expected_author_count,
+                "failed for doi_id %s, version %s" % (doi_id, version),
+            )
+
     @patch.object(arrow, "utcnow")
     @patch("provider.ejp.storage_context")
     @data(
         (
             "author",
             "ejp_query_tool_query_id_15a)_Accepted_Paper_Details_2019_06_10_eLife.csv",
+        ),
+        (
+            "preprint_author",
+            (
+                "ejp_query_tool_query_id_Production_data_04_-_"
+                "Reviewed_preprint_author_details_2019_06_10_eLife-rp.csv"
+            ),
         ),
         (
             "poa_manuscript",
@@ -396,7 +469,6 @@ class TestAuthorDetailList(unittest.TestCase):
 
     def test_author_detail_list_corresponding_true(self):
         corresponding = True
-        author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
         column_headings, authors = ejp.author_detail_list(
             self.author_csv_file, 13, corresponding
         )
@@ -404,7 +476,6 @@ class TestAuthorDetailList(unittest.TestCase):
 
     def test_author_detail_list_corresponding_false(self):
         corresponding = False
-        author_csv_file = os.path.join("tests", "test_data", "ejp_author_file.csv")
         column_headings, authors = ejp.author_detail_list(
             self.author_csv_file, 13, corresponding
         )
@@ -427,3 +498,49 @@ class TestParseAuthorFile(unittest.TestCase):
         (column_headings, authors) = ejp.parse_author_file(author_csv_file)
         # assert results
         self.assertEqual(column_headings, expected)
+        self.assertTrue(len(authors) > 0)
+
+
+@ddt
+class TestPreprintAuthorDetailList(unittest.TestCase):
+    def setUp(self):
+        self.author_csv_file = os.path.join(
+            "tests", "test_data", "ejp_preprint_author_file.csv"
+        )
+
+    @data(
+        {"article_id": 86939, "version": 1, "expected": 14},
+        {"article_id": 86939, "version": 2, "expected": 14},
+        {"article_id": 91826, "version": 1, "expected": 5},
+        {"article_id": 91826, "version": "2", "expected": 5},
+    )
+    def test_preprint_author_detail_list(self, test_data):
+        column_headings, authors = ejp.preprint_author_detail_list(
+            self.author_csv_file, test_data.get("article_id"), test_data.get("version")
+        )
+        self.assertEqual(len(column_headings), 10)
+        self.assertEqual(len(authors), test_data.get("expected"))
+
+
+class TestParsePreprintAuthorFile(unittest.TestCase):
+    def test_parse_preprint_author_file(self):
+        author_csv_file = os.path.join(
+            "tests", "test_data", "ejp_preprint_author_file.csv"
+        )
+        expected = [
+            "ms_no",
+            "ms_rev_no",
+            "appeal_ind",
+            "author_seq",
+            "first_nm",
+            "last_nm",
+            "author_type_cde",
+            "dual_corr_author_ind",
+            "e_mail",
+            "primary_org",
+        ]
+        # call the function
+        (column_headings, authors) = ejp.parse_preprint_author_file(author_csv_file)
+        # assert results
+        self.assertEqual(column_headings, expected)
+        self.assertTrue(len(authors) > 0)

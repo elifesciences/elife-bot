@@ -18,6 +18,9 @@ Connects to S3, discovers, downloads, and parses files exported by EJP
 #  with regular expression search
 S3_FILENAME_FRAGMENT_MAP = {
     "author": r"ejp_query_tool_query_id_15a\)_Accepted_Paper_Details",
+    "preprint_author": (
+        "ejp_query_tool_query_id_Production_data_04_-_Reviewed_preprint_author_details"
+    ),
     "poa_manuscript": "ejp_query_tool_query_id_POA_Manuscript",
     "poa_author": "ejp_query_tool_query_id_POA_Author",
     "poa_license": "ejp_query_tool_query_id_POA_License",
@@ -95,6 +98,25 @@ class EJP:
 
         return author_detail_list(document, doi_id, corresponding)
 
+    def get_preprint_authors(self, doi_id, version):
+        "get a list of authors for a preprint article"
+
+        # Find the document on S3, save the content to
+        #  the tmp_dir
+        storage = storage_context(self.settings)
+        s3_key_name = self.find_latest_s3_file_name(file_type="preprint_author")
+        s3_resource = (
+            self.settings.storage_provider
+            + "://"
+            + self.bucket_name
+            + "/"
+            + s3_key_name
+        )
+        contents = storage.get_resource_as_string(s3_resource)
+        document = self.write_content_to_file(self.author_default_filename, contents)
+
+        return preprint_author_detail_list(document, doi_id, version)
+
     def find_latest_s3_file_name(self, file_type, file_list=None):
         """
         Given the file_type, find the name of the S3 key for the object
@@ -123,7 +145,15 @@ class EJP:
         date_string = utils.set_datestamp("_")
         # remove backslashes from regular expression fragments
         clean_fn_fragment = fn_fragment[file_type].replace("\\", "")
-        file_name_to_match = "%s_%s_eLife.csv" % (clean_fn_fragment, date_string)
+        # add an extra part of file name for new CSV files
+        rp_extra = ""
+        if "Reviewed_preprint_author_details" in clean_fn_fragment:
+            rp_extra = "-rp"
+        file_name_to_match = "%s_%s_eLife%s.csv" % (
+            clean_fn_fragment,
+            date_string,
+            rp_extra,
+        )
         storage = storage_context(self.settings)
         s3_resource = (
             self.settings.storage_provider
@@ -266,6 +296,52 @@ def parse_author_data(document):
             else:
                 author_rows.append(row)
 
+    return (column_headings, author_rows)
+
+
+def preprint_author_detail_list(document, doi_id, version):
+    """
+    get preprint author details from the document as a list
+    note: CSV version column value 0 is the version 1
+    note: logic depends on a CSV file sorted by doi_id and version
+    """
+    authors = []
+
+    # Parse the author file
+    (column_headings, author_rows) = parse_preprint_author_file(document)
+
+    if not doi_id or not version:
+        return (column_headings, None)
+
+    if author_rows:
+        # keep track of if the first version starts at above 0
+        version_start = 0
+        for fields in author_rows:
+            # Check doi_id column value
+            if doi_id is not None:
+                if int(doi_id) != int(fields[0]):
+                    continue
+            # Check the version column value
+            sheet_version = int(fields[1])
+            sheet_appeal = fields[2]
+            if sheet_appeal != "":
+                version_start = 1
+            if int(sheet_version) - version_start == int(version) - 1:
+                fields = [entity_to_unicode(field) for field in fields]
+                # Finish up, add the author to the list
+                authors.append(fields)
+
+    if len(authors) <= 0:
+        authors = None
+
+    return (column_headings, authors)
+
+
+def parse_preprint_author_file(document):
+    """
+    Given a filename to a preprint author file, parse it
+    """
+    (column_headings, author_rows) = parse_author_data(document)
     return (column_headings, author_rows)
 
 
