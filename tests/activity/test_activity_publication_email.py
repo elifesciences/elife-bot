@@ -60,153 +60,6 @@ DO_ACTIVITY_PASSES.append(
     }
 )
 
-DO_ACTIVITY_PASSES.append(
-    {
-        "comment": "normal article with input_data None",
-        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-        "input_data": None,
-        "article_xml_filenames": ["elife03385.xml"],
-        "article_id": "3385",
-        "activity_success": True,
-        "admin_email_content_contains": [
-            "Parsed https://doi.org/10.7554/eLife.03385",
-            "Total prepared articles: 1",
-        ],
-    }
-)
-
-DO_ACTIVITY_PASSES.append(
-    {
-        "comment": "basic PoA article",
-        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_1,
-        "input_data": None,
-        "article_xml_filenames": ["elife_poa_e03977.xml"],
-        "article_id": "3977",
-        "activity_success": True,
-        "admin_email_content_contains": [
-            "Parsed https://doi.org/10.7554/eLife.03977",
-            "Total prepared articles: 1",
-        ],
-    }
-)
-
-DO_ACTIVITY_PASSES.append(
-    {
-        "comment": "Cannot build article",
-        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-        "input_data": None,
-        "article_xml_filenames": ["does_not_exist.xml"],
-        "article_id": None,
-        "activity_success": "ActivityPermanentFailure",
-        "admin_email_content_contains": ["PublicationEmail email templates warmed"],
-    }
-)
-
-DO_ACTIVITY_PASSES.append(
-    {
-        "comment": "article-commentary with a related article",
-        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-        "input_data": {},
-        "article_xml_filenames": ["elife-18753-v1.xml"],
-        "related_article": "tests/test_data/elife-15747-v2.xml",
-        "article_id": "18753",
-        "activity_success": True,
-        "admin_email_content_contains": [
-            "Parsed https://doi.org/10.7554/eLife.18753",
-            "Total prepared articles: 1",
-        ],
-    }
-)
-
-DO_ACTIVITY_PASSES.append(
-    {
-        "comment": "article-commentary, related article cannot be found",
-        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-        "input_data": {},
-        "article_xml_filenames": ["elife-18753-v1.xml"],
-        "related_article": None,
-        "article_id": "18753",
-        "activity_success": True,
-        "admin_email_content_contains": [
-            "Parsed https://doi.org/10.7554/eLife.18753",
-            "Could not build the article related to insight 10.7554/eLife.18753",
-            "Total prepared articles: 0",
-        ],
-    }
-)
-
-DO_ACTIVITY_PASSES.append(
-    {
-        "comment": "article-commentary plus its matching insight",
-        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-        "input_data": {},
-        "article_xml_filenames": ["elife-18753-v1.xml", "elife-15747-v2.xml"],
-        "article_id": "18753",
-        "activity_success": True,
-        "admin_email_content_contains": [
-            "Parsed https://doi.org/10.7554/eLife.18753",
-            "Parsed https://doi.org/10.7554/eLife.15747",
-            "Total parsed articles: 2",
-            "Total approved articles: 2",
-            "Total prepared articles: 1",
-        ],
-    }
-)
-
-DO_ACTIVITY_PASSES.append(
-    {
-        "comment": "feature article",
-        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-        "input_data": {},
-        "article_xml_filenames": ["elife-00353-v1.xml"],
-        "article_id": "353",
-        "activity_success": True,
-        "admin_email_content_contains": [
-            "Parsed https://doi.org/10.7554/eLife.00353",
-            "Total prepared articles: 1",
-        ],
-    }
-)
-
-DO_ACTIVITY_PASSES.append(
-    {
-        "comment": "article-commentary with no related-article tag",
-        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-        "input_data": {},
-        "article_xml_filenames": ["elife-23065-v1.xml"],
-        "article_id": "23065",
-        "activity_success": True,
-        "admin_email_content_contains": [
-            "Parsed https://doi.org/10.7554/eLife.23065",
-            "Could not build the article related to insight 10.7554/eLife.23065",
-            "Total approved articles: 1",
-            "Total prepared articles: 0",
-        ],
-    }
-)
-
-DO_ACTIVITY_PASSES.append(
-    {
-        "comment": "recipients from the article XML file",
-        "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
-        "input_data": {},
-        "article_xml_filenames": ["elife-32991-v2.xml"],
-        "article_id": "32991",
-        "activity_success": True,
-        "admin_email_content_contains": [
-            "Parsed https://doi.org/10.7554/eLife.32991",
-            "Total approved articles: 1",
-            "Total prepared articles: 1",
-            "No authors found for article doi id 32991",
-            (
-                "Sending author_publication_email_VOR_after_POA type email for "
-                "article 32991 to recipient_email alhonore@hotmail.com"
-            ),
-            "Adding alhonore@hotmail.com from additional",
-        ],
-    }
-)
-
 
 def fake_authors(activity_object, article_id=3):
     # parse author csv file or create test fixture data
@@ -259,74 +112,67 @@ class TestPublicationEmail(unittest.TestCase):
             test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
         )
 
-    @patch.object(activity_module, "get_related_article")
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch("provider.lax_provider.article_versions")
+    @patch.object(activity_PublicationEmail, "process_articles")
     @patch.object(EJP, "get_authors")
     @patch("provider.outbox_provider.storage_context")
     def test_do_activity(
         self,
         fake_storage_context,
         fake_ejp_get_authors,
-        fake_article_versions,
+        fake_process_articles,
         fake_email_smtp_connect,
-        fake_get_related_article,
     ):
+        prepared_article_xml_filenames = ["elife00013.xml", "elife03385.xml"]
+        approved_article_xml_filenames = ["elife00013.xml"]
+        not_published_article_xml_filenames = ["elife03385.xml"]
+        expected_result = True
+
         fake_email_smtp_connect.return_value = FakeSMTPServer(
             self.activity.get_tmp_dir()
         )
 
-        # do_activity
-        for pass_test_data in DO_ACTIVITY_PASSES:
-            fake_storage_context.return_value = FakeStorageContext(
-                "tests/files_source/publication_email/outbox/",
-                resources=pass_test_data["article_xml_filenames"],
-            )
+        storage_path = "tests/files_source/publication_email/outbox/"
 
-            if pass_test_data.get("article_id") != "32991":
-                fake_ejp_get_authors.return_value = EJP_ARTICLE_13_AUTHORS
-            else:
-                fake_ejp_get_authors.return_value = (None, None)
+        fake_storage_context.return_value = FakeStorageContext(
+            storage_path,
+            resources=prepared_article_xml_filenames,
+        )
 
-            # Prime the related article property for when needed
-            if pass_test_data.get("related_article"):
-                related_article = articlelib.article()
-                related_article.parse_article_file(
-                    pass_test_data.get("related_article")
-                )
-                fake_get_related_article.return_value = related_article
-            else:
-                fake_get_related_article.return_value = None
+        fake_ejp_get_authors.return_value = EJP_ARTICLE_13_AUTHORS
 
-            fake_article_versions.return_value = (
-                200,
-                pass_test_data.get("lax_article_versions_response_data"),
-            )
+        # Mock process_articles return values
+        prepared, xml_file_to_doi_map = self.activity.parse_article_xml(
+            [
+                os.path.join(storage_path, xml_file)
+                for xml_file in prepared_article_xml_filenames
+            ]
+        )
+        approved = self.activity.parse_article_xml(
+            [
+                os.path.join(storage_path, xml_file)
+                for xml_file in approved_article_xml_filenames
+            ]
+        )[0]
+        not_published_articles = self.activity.parse_article_xml(
+            [
+                os.path.join(storage_path, xml_file)
+                for xml_file in not_published_article_xml_filenames
+            ]
+        )[0]
 
-            success = self.activity.do_activity(pass_test_data["input_data"])
+        fake_process_articles.return_value = (
+            approved,
+            prepared,
+            not_published_articles,
+            xml_file_to_doi_map,
+        )
 
-            self.assertEqual(
-                success,
-                pass_test_data["activity_success"],
-                "failed success check in {comment}".format(
-                    comment=pass_test_data.get("comment")
-                ),
-            )
+        # invoke
+        success = self.activity.do_activity()
 
-            if pass_test_data.get("admin_email_content_contains"):
-                for expected in pass_test_data.get("admin_email_content_contains"):
-                    self.assertTrue(
-                        expected in self.activity.admin_email_content,
-                        "{expected} not found in admin_email_content for {comment}".format(
-                            expected=expected, comment=pass_test_data.get("comment")
-                        ),
-                    )
-
-            # reset object values
-            self.activity.related_articles = []
-            self.activity.admin_email_content = ""
-            # clean the tmp_dir between test passes
-            helpers.delete_files_in_folder(self.activity.get_tmp_dir())
+        # assert
+        self.assertEqual(success, expected_result)
 
     @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch.object(activity_PublicationEmail, "download_templates")
@@ -361,19 +207,19 @@ class TestPublicationEmail(unittest.TestCase):
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
     @patch.object(activity_PublicationEmail, "process_articles")
-    @patch("provider.outbox_provider.storage_context")
+    @patch("provider.outbox_provider.download_files_from_s3_outbox")
+    @patch("provider.outbox_provider.get_outbox_s3_key_names")
     @patch.object(activity_PublicationEmail, "download_templates")
     def test_do_activity_process_articles_failure(
         self,
         fake_download_templates,
+        fake_outbox_key_names,
+        fake_download_files,
         fake_process_articles,
-        fake_storage_context,
     ):
         fake_download_templates.return_value = True
-        fake_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/publication_email/outbox/",
-            resources=[],
-        )
+        fake_download_files.return_value = True
+        fake_outbox_key_names.return_value = ["elife00013.xml"]
         fake_process_articles.side_effect = Exception("Something went wrong!")
         result = self.activity.do_activity()
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
@@ -396,6 +242,30 @@ class TestPublicationEmail(unittest.TestCase):
         )
         fake_process_articles.return_value = None, [0], [0], None
         fake_send_and_clean.return_value = Exception("Something went wrong!")
+        result = self.activity.do_activity()
+        self.assertEqual(result, True)
+
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(activity_PublicationEmail, "process_articles")
+    @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_PublicationEmail, "download_templates")
+    def test_do_activity_not_prepared(
+        self,
+        fake_download_templates,
+        fake_storage_context,
+        fake_process_articles,
+        fake_email_smtp_connect,
+    ):
+        "test if no prepared or not published articles are produced"
+        fake_download_templates.return_value = True
+        fake_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/publication_email/outbox/",
+            resources=[],
+        )
+        fake_process_articles.return_value = [], [], [], None
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
         result = self.activity.do_activity()
         self.assertEqual(result, True)
 
@@ -471,11 +341,75 @@ class TestSendAndClean(unittest.TestCase):
         prepared = [articles[0]]
         not_published_articles = articles[1:]
         # invoke
+        self.activity.download_templates()
         self.activity.send_and_clean(
             prepared, not_published_articles, xml_file_to_doi_map
         )
         # assert outbox is empty
         self.assertEqual([], os.listdir(storage_path))
+
+    @patch.object(EJP, "get_authors")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch("provider.outbox_provider.storage_context")
+    def test_send_and_clean_no_ejp_authors(
+        self, fake_storage_context, fake_email_smtp_connect, fake_ejp_get_authors
+    ):
+        "test sending email, cleaning the outbox, sending admin email"
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(
+            self.activity.get_tmp_dir()
+        )
+        article_xml_filenames = ["elife-32991-v2.xml"]
+        # copy XML files for testing
+        storage_path = os.path.join(directory.path, "publication_email", "outbox")
+        xml_path = os.path.join("tests", "files_source", "publication_email", "outbox")
+        os.makedirs(storage_path)
+        for article_xml in article_xml_filenames:
+            copy_from = os.path.join(xml_path, article_xml)
+            copy_to = os.path.join(storage_path, article_xml)
+            shutil.copy(
+                copy_from,
+                copy_to,
+            )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path,
+            resources=article_xml_filenames,
+            dest_folder=directory.path,
+        )
+        fake_ejp_get_authors.return_value = (None, None)
+        # turn XML into article objects
+        article_xml_paths = [
+            os.path.join(storage_path, xml_file) for xml_file in article_xml_filenames
+        ]
+        articles, xml_file_to_doi_map = self.activity.parse_article_xml(
+            article_xml_paths
+        )
+        prepared = [articles[0]]
+        not_published_articles = articles[1:]
+        # invoke
+        self.activity.download_templates()
+        self.activity.send_and_clean(
+            prepared, not_published_articles, xml_file_to_doi_map
+        )
+        # assert outbox is empty
+        self.assertEqual([], os.listdir(storage_path))
+        # assert admin email content
+        admin_email_content_contains = [
+            "Parsed https://doi.org/10.7554/eLife.32991",
+            "No authors found for article doi id 32991",
+            (
+                "Sending author_publication_email_VOR_no_POA type email for "
+                "article 32991 to recipient_email alhonore@hotmail.com"
+            ),
+            "Adding alhonore@hotmail.com from additional",
+        ]
+        for expected in admin_email_content_contains:
+            self.assertTrue(
+                expected in self.activity.admin_email_content,
+                "{expected} not found in admin_email_content".format(
+                    expected=expected,
+                ),
+            )
 
 
 class TestSendEmailsForArticles(unittest.TestCase):
@@ -594,86 +528,182 @@ class TestProcessArticles(unittest.TestCase):
     def tearDown(self):
         self.activity.clean_tmp_dir()
 
+    @patch.object(EJP, "get_authors")
+    @patch.object(activity_module, "get_related_article")
     @patch("provider.article.article.download_article_xml_from_s3")
     @patch("provider.lax_provider.article_versions")
     @data(
-        (
-            "article-commentary, related article cannot be found",
-            ["tests/test_data/elife-18753-v1.xml"],
-            1,
-            0,
-            0,
-            {"10.7554/eLife.18753": "tests/test_data/elife-18753-v1.xml"},
-        ),
-        (
-            "article-commentary plus its matching insight",
-            [
-                "tests/test_data/elife-18753-v1.xml",
-                "tests/test_data/elife-15747-v2.xml",
+        {
+            "comment": "normal article example",
+            "xml_filenames": ["elife00013.xml"],
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+            "expected_approved_count": 1,
+            "expected_prepared_count": 1,
+            "expected_not_published_count": 0,
+            "admin_email_content_contains": [
+                "Parsed https://doi.org/10.7554/eLife.00013",
+                "Total prepared articles: 1",
             ],
-            2,
-            1,
-            0,
-            {
-                "10.7554/eLife.15747": "tests/test_data/elife-15747-v2.xml",
-                "10.7554/eLife.18753": "tests/test_data/elife-18753-v1.xml",
-            },
-        ),
+        },
+        {
+            "comment": "basic PoA article",
+            "xml_filenames": ["elife_poa_e03977.xml"],
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_1,
+            "expected_approved_count": 1,
+            "expected_prepared_count": 1,
+            "expected_not_published_count": 0,
+            "admin_email_content_contains": [
+                "Parsed https://doi.org/10.7554/eLife.03977",
+                "Total prepared articles: 1",
+            ],
+        },
+        {
+            "comment": "article-commentary with a related article",
+            "xml_filenames": ["elife-18753-v1.xml"],
+            "related_article": "tests/test_data/elife-15747-v2.xml",
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+            "expected_approved_count": 1,
+            "expected_prepared_count": 1,
+            "expected_not_published_count": 0,
+            "admin_email_content_contains": [
+                "Parsed https://doi.org/10.7554/eLife.18753",
+                "Total prepared articles: 1",
+            ],
+        },
+        {
+            "comment": "article-commentary, related article cannot be found",
+            "xml_filenames": ["elife-18753-v1.xml"],
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+            "expected_approved_count": 1,
+            "expected_prepared_count": 0,
+            "expected_not_published_count": 0,
+            "admin_email_content_contains": [
+                "Parsed https://doi.org/10.7554/eLife.18753",
+                "Total parsed articles: 1",
+                "Total approved articles: 1",
+                "Total prepared articles: 0",
+                "Total not published articles: 0",
+            ],
+        },
+        {
+            "comment": "article-commentary plus its matching insight",
+            "xml_filenames": [
+                "elife-18753-v1.xml",
+                "elife-15747-v2.xml",
+            ],
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+            "expected_approved_count": 2,
+            "expected_prepared_count": 1,
+            "expected_not_published_count": 0,
+            "admin_email_content_contains": [
+                "Parsed https://doi.org/10.7554/eLife.18753",
+                "Parsed https://doi.org/10.7554/eLife.15747",
+                "Total parsed articles: 2",
+                "Total approved articles: 2",
+                "Total prepared articles: 1",
+                "Total not published articles: 0",
+            ],
+        },
+        {
+            "comment": "feature article",
+            "xml_filenames": [
+                "elife-00353-v1.xml",
+            ],
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+            "expected_approved_count": 1,
+            "expected_prepared_count": 1,
+            "expected_not_published_count": 0,
+            "admin_email_content_contains": [
+                "Parsed https://doi.org/10.7554/eLife.00353",
+                "Total prepared articles: 1",
+            ],
+        },
+        {
+            "comment": "article-commentary with no related-article tag",
+            "xml_filenames": [
+                "elife-23065-v1.xml",
+            ],
+            "lax_article_versions_response_data": LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3,
+            "expected_approved_count": 1,
+            "expected_prepared_count": 0,
+            "expected_not_published_count": 0,
+            "admin_email_content_contains": [
+                "Parsed https://doi.org/10.7554/eLife.23065",
+                "Could not build the article related to insight 10.7554/eLife.23065",
+                "Total approved articles: 1",
+                "Total prepared articles: 0",
+            ],
+        },
     )
-    @unpack
     def test_process_articles(
         self,
-        comment,
-        xml_filenames,
-        expected_approved,
-        expected_prepared,
-        expected_not_published,
-        expected_map,
+        test_data,
         fake_article_versions,
         fake_download_xml,
+        fake_get_related_article,
+        fake_ejp_get_authors,
     ):
         "edge cases for process articles where the approved and prepared count differ"
-        fake_article_versions.return_value = (200, LAX_ARTICLE_VERSIONS_RESPONSE_DATA_3)
+        fake_article_versions.return_value = (
+            200,
+            test_data.get("lax_article_versions_response_data"),
+        )
         fake_download_xml.return_value = False
+
+        if test_data.get("related_article"):
+            related_article = articlelib.article()
+            related_article.parse_article_file(test_data.get("related_article"))
+            fake_get_related_article.return_value = related_article
+        else:
+            fake_get_related_article.return_value = None
+
+        fake_ejp_get_authors.return_value = EJP_ARTICLE_13_AUTHORS
+
+        xml_filename_paths = [
+            os.path.join(
+                "tests", "files_source", "publication_email", "outbox", xml_filename
+            )
+            for xml_filename in test_data.get("xml_filenames")
+        ]
         (
             approved,
             prepared,
             not_published_articles,
             xml_file_to_doi_map,
-        ) = self.activity.process_articles(xml_filenames)
+        ) = self.activity.process_articles(xml_filename_paths)
         self.assertEqual(
             len(approved),
-            expected_approved,
-            "failed expected_approved check in {comment}".format(comment=comment),
+            test_data.get("expected_approved_count"),
+            "failed expected_approved check in {comment}".format(
+                comment=test_data.get("comment")
+            ),
         )
         self.assertEqual(
             len(prepared),
-            expected_prepared,
-            "failed expected_prepared check in {comment}".format(comment=comment),
-        )
-        self.assertEqual(
-            xml_file_to_doi_map,
-            expected_map,
-            "failed expected_map check in {comment}".format(comment=comment),
+            test_data.get("expected_prepared_count"),
+            "failed expected_prepared check in {comment}".format(
+                comment=test_data.get("comment")
+            ),
         )
         self.assertEqual(
             len(not_published_articles),
-            expected_not_published,
-            "failed expected_not_published check in {comment}".format(comment=comment),
+            test_data.get("expected_not_published_count"),
+            "failed expected_not_published check in {comment}".format(
+                comment=test_data.get("comment")
+            ),
         )
+        if test_data.get("admin_email_content_contains"):
+            for expected in test_data.get("admin_email_content_contains"):
+                self.assertTrue(
+                    expected in self.activity.admin_email_content,
+                    "{expected} not found in admin_email_content for {comment}".format(
+                        expected=expected, comment=test_data.get("comment")
+                    ),
+                )
 
 
 @ddt
 class TestChooseEmailType(unittest.TestCase):
-    def setUp(self):
-        fake_logger = FakeLogger()
-        self.activity = activity_PublicationEmail(
-            settings_mock, fake_logger, None, None, None
-        )
-
-    def tearDown(self):
-        self.activity.clean_tmp_dir()
-
     @data(
         (
             "article-commentary",
@@ -823,20 +853,11 @@ class TestGetEmailBody(unittest.TestCase):
 
 
 class TestGetPdfCoverPage(unittest.TestCase):
-    def setUp(self):
-        fake_logger = FakeLogger()
-        self.activity = activity_PublicationEmail(
-            settings_mock, fake_logger, None, None, None
-        )
-
-    def tearDown(self):
-        self.activity.clean_tmp_dir()
-
     def test_get_pdf_cover_page(self):
         article_object = articlelib.article()
         article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
         article_object.pdf_cover_link = pdf_cover_page.get_pdf_cover_page(
-            article_object.doi_id, self.activity.settings, self.activity.logger
+            article_object.doi_id, settings_mock, FakeLogger()
         )
         self.assertEqual(
             article_object.pdf_cover_link,
@@ -870,7 +891,7 @@ class TestSendEmail(unittest.TestCase):
         failed_authors.append({"e_mail": None})
 
         for failed_author in failed_authors:
-            with self.assertRaises(EmailRecipientException) as exception:
+            with self.assertRaises(EmailRecipientException):
                 self.activity.send_email(None, None, failed_author, None, None)
 
     @patch("provider.templates.Templates.get_email_body")
@@ -1362,6 +1383,18 @@ class TestGetRelatedArticle(unittest.TestCase):
         self.assertEqual(return_value.doi, expected_doi)
         self.assertEqual(len(related_articles), 1)
 
+    @patch("provider.article.create_article")
+    def test_get_related_article_create_article_blank(self, fake_create_article):
+        "test when creating a related article returns None"
+        doi = "10.7554/eLife.15747"
+        expected_doi = doi
+        fake_create_article.return_value = None
+        related_articles = []
+        return_value = activity_module.get_related_article(
+            settings_mock, TempDirectory(), doi, related_articles, FakeLogger(), ""
+        )
+        self.assertEqual(return_value, None)
+
 
 class FakeArticle:
     def __init__(self, doi):
@@ -1473,7 +1506,10 @@ class TestAuthorsFromXML(unittest.TestCase):
     def test_authors_from_xml(self, test_case_data):
         article_object = articlelib.article()
         full_filename = os.path.join(
-            "tests/files_source/publication_email/outbox",
+            "tests",
+            "files_source",
+            "publication_email",
+            "outbox",
             test_case_data.get("filename"),
         )
         article_object.parse_article_file(full_filename)
