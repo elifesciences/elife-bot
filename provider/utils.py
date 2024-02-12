@@ -239,8 +239,6 @@ def create_aws_connection(service, service_creation_kwargs):
     assert isinstance(service, str), "`service` must be a string"
     assert isinstance(service_creation_kwargs, dict), "`service_creation_kwargs` must be a dictionary"
 
-    assert service == "s3", "`service` must equal 's3' for now"
-
     return boto3.client(service, **service_creation_kwargs)
 
 
@@ -248,12 +246,12 @@ def get_aws_connection(service_conn_map, service, service_creation_kwargs):
     "centralised access to AWS service connections"
     assert isinstance(service_conn_map, dict), "`service_conn_map` must be a dictionary"
     assert isinstance(service, str), "`service` must be a string"
-    assert isinstance(service_creation_kwargs, dict), "`service_createion_kwargs` must be a dictionary"
+    assert isinstance(service_creation_kwargs, dict), "`service_creation_kwargs` must be a dictionary"
 
     if service in service_conn_map:
         return service_conn_map[service]
 
-    map_key = service # perhaps incorporate `service_creation_kwargs` in future
+    map_key = service # "s3", etc. perhaps incorporate `service_creation_kwargs` in future
     service_conn_map[map_key] = create_aws_connection(service, service_creation_kwargs)
     return service_conn_map[map_key]
 

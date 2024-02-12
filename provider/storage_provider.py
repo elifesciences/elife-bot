@@ -17,8 +17,8 @@ class S3StorageContext:
         self.settings = settings
 
     def get_client(self):
-        reuse_s3_conn = os.environ.get('BOT_REUSE_S3_CONN', '0') == '1'
-        if reuse_s3_conn:
+        reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
+        if reuse_boto_conn:
             return self.settings.aws_conn('s3', {
                 'aws_access_key_id': self.settings.aws_access_key_id,
                 'aws_secret_access_key': self.settings.aws_secret_access_key,

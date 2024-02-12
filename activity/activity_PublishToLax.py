@@ -1,3 +1,4 @@
+import os
 import json
 import boto3
 import provider.lax_provider as lax_provider
@@ -65,12 +66,22 @@ class activity_PublishToLax(Activity):
                 run_type,
             )
             message_body = json.dumps(message)
-            client = boto3.client(
-                "sqs",
-                aws_access_key_id=self.settings.aws_access_key_id,
-                aws_secret_access_key=self.settings.aws_secret_access_key,
-                region_name=self.settings.sqs_region,
-            )
+
+            reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
+            if reuse_boto_conn:
+                client = self.settings.aws_conn('sqs', {
+                    'aws_access_key_id': self.settings.aws_access_key_id,
+                    'aws_secret_access_key': self.settings.aws_secret_access_key,
+                    'region_name': self.settings.sqs_region,
+                })
+            else:
+                client = boto3.client(
+                    "sqs",
+                    aws_access_key_id=self.settings.aws_access_key_id,
+                    aws_secret_access_key=self.settings.aws_secret_access_key,
+                    region_name=self.settings.sqs_region,
+                )
+            
             queue_url_response = client.get_queue_url(
                 QueueName=self.settings.xml_info_queue
             )

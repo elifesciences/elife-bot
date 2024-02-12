@@ -19,13 +19,22 @@ def decide(settings, flag, debug=False):
     logger = create_log(log_file, settings.setLevel, identity)
 
     # Simple connect
-    client = boto3.client(
-        "swf",
-        aws_access_key_id=settings.aws_access_key_id,
-        aws_secret_access_key=settings.aws_secret_access_key,
-        region_name=settings.swf_region,
-        config=Config(connect_timeout=50, read_timeout=70),
-    )
+    reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
+    if reuse_boto_conn:
+        client = settings.aws_conn('swf', {
+            'aws_access_key_id': settings.aws_access_key_id,
+            'aws_secret_access_key': settings.aws_secret_access_key,
+            'region_name': settings.swf_region,
+            'config': Config(connect_timeout=50, read_timeout=70),
+        })
+    else:
+        client = boto3.client(
+            "swf",
+            aws_access_key_id=settings.aws_access_key_id,
+            aws_secret_access_key=settings.aws_secret_access_key,
+            region_name=settings.swf_region,
+            config=Config(connect_timeout=50, read_timeout=70),
+        )
 
     token = None
 

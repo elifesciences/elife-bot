@@ -1,3 +1,4 @@
+import os
 import json
 import boto3
 from provider import lax_provider
@@ -148,12 +149,21 @@ class activity_IngestToLax(Activity):
     def write_message(self, connexion_settings, queue, message_data):
         message_body = json.dumps(message_data)
         self.logger.info("Sending message to lax: %s", message_body)
-        client = boto3.client(
-            "sqs",
-            aws_access_key_id=connexion_settings["aws_access_key_id"],
-            aws_secret_access_key=connexion_settings["aws_secret_access_key"],
-            region_name=connexion_settings["sqs_region"],
-        )
+
+        reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
+        if reuse_boto_conn:
+            client = connexion_settings.aws_conn('sqs', {
+                'aws_access_key_id': connexion_settings.aws_access_key_id,
+                'aws_secret_access_key': connexion_settings.aws_secret_access_key,
+                'region_name': connexion_settings.sqs_region,
+            })
+        else:
+            client = boto3.client(
+                "sqs",
+                aws_access_key_id=connexion_settings["aws_access_key_id"],
+                aws_secret_access_key=connexion_settings["aws_secret_access_key"],
+                region_name=connexion_settings["sqs_region"],
+            )
         queue_url_response = client.get_queue_url(QueueName=queue)
         queue_url = queue_url_response.get("QueueUrl")
         client.send_message(

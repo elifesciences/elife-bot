@@ -35,12 +35,20 @@ class Starter:
 
     def connect_to_swf(self):
         "connect to SWF"
-        self.client = boto3.client(
-            "swf",
-            aws_access_key_id=self.settings.aws_access_key_id,
-            aws_secret_access_key=self.settings.aws_secret_access_key,
-            region_name=self.settings.swf_region,
-        )
+        reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
+        if reuse_boto_conn:
+            self.client = settings.aws_conn('swf', {
+                'aws_access_key_id': settings.aws_access_key_id,
+                'aws_secret_access_key': settings.aws_secret_access_key,
+                'region_name': settings.swf_region,
+            })
+        else:
+            self.client = boto3.client(
+                "swf",
+                aws_access_key_id=self.settings.aws_access_key_id,
+                aws_secret_access_key=self.settings.aws_secret_access_key,
+                region_name=self.settings.swf_region,
+            )
 
     def start_workflow_execution(self, workflow_params):
         "start a workflow execution with exception handling and logging messages"

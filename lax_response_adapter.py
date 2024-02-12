@@ -1,3 +1,4 @@
+import os
 import json
 import boto3
 from dateutil.parser import parse
@@ -21,12 +22,22 @@ class LaxResponseAdapter:
 
     def listen(self, flag):
         self.logger.info("started")
-        client = boto3.client(
-            "sqs",
-            aws_access_key_id=self._settings.aws_access_key_id,
-            aws_secret_access_key=self._settings.aws_secret_access_key,
-            region_name=self._settings.sqs_region,
-        )
+
+        reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
+        if reuse_boto_conn:
+            client = self._settings.aws_conn('sqs', {
+                'aws_access_key_id': self._settings.aws_access_key_id,
+                'aws_secret_access_key': self._settings.aws_secret_access_key,
+                'region_name': self._settings.sqs_region,
+            })
+        else:
+            client = boto3.client(
+                "sqs",
+                aws_access_key_id=self._settings.aws_access_key_id,
+                aws_secret_access_key=self._settings.aws_secret_access_key,
+                region_name=self._settings.sqs_region,
+            )
+        
         input_queue_url_response = client.get_queue_url(
             QueueName=self._settings.lax_response_queue
         )
