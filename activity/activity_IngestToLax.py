@@ -152,7 +152,7 @@ class activity_IngestToLax(Activity):
 
         reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
         if reuse_boto_conn:
-            client = connexion_settings.aws_conn('sqs', {
+            client = self.settings.aws_conn('sqs', {
                 'aws_access_key_id': connexion_settings.aws_access_key_id,
                 'aws_secret_access_key': connexion_settings.aws_secret_access_key,
                 'region_name': connexion_settings.sqs_region,
