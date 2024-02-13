@@ -23,8 +23,7 @@ class LaxResponseAdapter:
     def listen(self, flag):
         self.logger.info("started")
 
-        reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
-        if reuse_boto_conn:
+        if utils.reuse_boto_conn():
             client = self._settings.aws_conn('sqs', {
                 'aws_access_key_id': self._settings.aws_access_key_id,
                 'aws_secret_access_key': self._settings.aws_secret_access_key,

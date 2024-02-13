@@ -276,3 +276,24 @@ def content_type_from_file_name(file_name):
         return "binary/octet-stream"
     else:
         return content_type
+
+ENVVAR_KNOWN_KEYS = {
+    'BOT_REUSE_BOTO_CONN',
+    'MOTO_ALLOW_NONEXISTENT_REGION',
+}
+
+def envvar(key, default=None):
+    """returns a value for the environment variable `key`.
+    raises an `AssertionError` if the requested environment variable is unknown."""
+    assert key in ENVVAR_KNOWN_KEYS, "programming error. unsupported environment key: %s" % key
+    return os.environ.get(key, default)
+
+def set_envvar(key, val):
+    """set a value `val` for the environment variable `key`.
+    raises an `AssertionError` if the requested environment variable is unknown."""
+    assert key in ENVVAR_KNOWN_KEYS, "programming error. unsupported environment key: %s" % key    
+    os.environ[key] = val
+
+def reuse_boto_conn():
+    "returns `True` if the `BOT_REUSE_BOTO_CONN` environment variable has been set to '1'"
+    return envvar('BOT_REUSE_BOTO_CONN', '0') == '1'

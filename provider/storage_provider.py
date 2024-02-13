@@ -1,10 +1,10 @@
+from . import utils
 import os
 import re
-from io import BytesIO
+import io
 import boto3
 import botocore
 import log
-
 
 def storage_context(*args):
     return S3StorageContext(*args)
@@ -17,8 +17,7 @@ class S3StorageContext:
         self.settings = settings
 
     def get_client(self):
-        reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
-        if reuse_boto_conn:
+        if utils.reuse_boto_conn():
             return self.settings.aws_conn('s3', {
                 'aws_access_key_id': self.settings.aws_access_key_id,
                 'aws_secret_access_key': self.settings.aws_secret_access_key,
@@ -68,7 +67,7 @@ class S3StorageContext:
     def get_resource_as_string(self, resource):
         "return resource object as bytes"
         bucket_name, s3_key = self.s3_storage_objects(resource)
-        object_buffer = BytesIO()
+        object_buffer = io.BytesIO()
         client = self.get_client_from_cache()
         client.download_fileobj(
             Bucket=bucket_name, Key=s3_key.lstrip("/"), Fileobj=object_buffer

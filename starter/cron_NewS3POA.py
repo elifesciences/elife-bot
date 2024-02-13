@@ -37,8 +37,7 @@ class cron_NewS3POA(Starter):
 
 def sqs_connect(settings):
     """connect to the queue service"""
-    reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
-    if reuse_boto_conn:
+    if utils.reuse_boto_conn():
         return settings.aws_conn('sqs', {
             'aws_access_key_id': settings.aws_access_key_id,
             'aws_secret_access_key': settings.aws_secret_access_key,

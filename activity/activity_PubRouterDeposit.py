@@ -222,8 +222,7 @@ class activity_PubRouterDeposit(Activity):
     def sqs_connect(self):
         "connect to the queue service"
         if not self.sqs_client:
-            reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
-            if reuse_boto_conn:
+            if utils.reuse_boto_conn():
                 self.sqs_client = self.settings.aws_conn('sqs', {
                     'aws_access_key_id': self.settings.aws_access_key_id,
                     'aws_secret_access_key': self.settings.aws_secret_access_key,

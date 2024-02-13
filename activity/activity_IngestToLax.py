@@ -1,7 +1,6 @@
-import os
 import json
 import boto3
-from provider import lax_provider
+from provider import utils, lax_provider
 from provider.execution_context import get_session
 from activity.objects import Activity
 
@@ -150,8 +149,7 @@ class activity_IngestToLax(Activity):
         message_body = json.dumps(message_data)
         self.logger.info("Sending message to lax: %s", message_body)
 
-        reuse_boto_conn = os.environ.get('BOT_REUSE_BOTO_CONN', '0') == '1'
-        if reuse_boto_conn:
+        if utils.reuse_boto_conn():
             client = self.settings.aws_conn('sqs', {
                 'aws_access_key_id': connexion_settings.aws_access_key_id,
                 'aws_secret_access_key': connexion_settings.aws_secret_access_key,

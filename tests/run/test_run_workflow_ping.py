@@ -17,7 +17,7 @@ from workflow.workflow_Ping import workflow_Ping as workflow_class
 class TestRunWorkflowPing(unittest.TestCase):
     @mock_swf
     def setUp(self):
-        os.environ["MOTO_ALLOW_NONEXISTENT_REGION"] = "true"
+        utils.set_envvar("MOTO_ALLOW_NONEXISTENT_REGION", "true")
 
         self.test_client = boto3.client(
             "swf",
