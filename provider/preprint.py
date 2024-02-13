@@ -61,7 +61,7 @@ def build_article(article_id, docmap_string, article_xml_path, version=None):
         version_doi = newest_version_doi
 
     # get concept DOI from the version DOI
-    doi, version = version_doi.rsplit(".", 1)
+    doi, version = utils.version_doi_parts(version_doi)
 
     # instantiate the Article
     article = Article(doi)

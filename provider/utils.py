@@ -134,6 +134,14 @@ def doi_uri_to_doi(doi_url):
     return etoolsutils.doi_uri_to_doi(doi_url)
 
 
+def version_doi_parts(version_doi):
+    """
+    split version DOI into the concept DOI and version number
+    e.g. 10.7554/eLife.84364.2 return 10.7554/eLife.84364, 1
+    """
+    return version_doi.rsplit(".", 1)
+
+
 CONSOLE_ARGUMENT_MAP = {
     "e": {
         "flags": ["-e", "--env"],

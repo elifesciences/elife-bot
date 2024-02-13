@@ -370,6 +370,7 @@ class activity_PublicationEmail(Activity):
                 is_poa=article.is_poa,
                 was_ever_poa=article.was_ever_poa,
                 feature_article=is_feature_article(article),
+                version_doi=getattr(article, "version_doi", None),
             )
 
             # Get the article author data
@@ -429,8 +430,14 @@ class activity_PublicationEmail(Activity):
 
     def article_authors(self, doi_id, article):
         """get a merged list of authors from CSV for the doi_id and from the article object"""
-        article_authors = self.get_authors(doi_id)
-
+        article_type = None
+        version = None
+        if hasattr(article, "article_type"):
+            article_type = article.article_type
+        if article_type == "preprint":
+            # get version from version DOI
+            version = utils.version_doi_parts(article.version_doi)[1]
+        article_authors = self.get_authors(doi_id, article_type, version)
         # do not get email addresses from the XML for feature articles
         if is_feature_article(article):
             xml_authors = []
@@ -591,7 +598,7 @@ class activity_PublicationEmail(Activity):
 
         return True
 
-    def get_authors(self, doi_id=None):
+    def get_authors(self, doi_id=None, article_type=None, version=None):
         """
         Using the EJP data provider, get the column headings
         and author data, and reassemble into a list of authors
@@ -601,7 +608,13 @@ class activity_PublicationEmail(Activity):
         # EJP data provider
         ejp_object = ejp.EJP(self.settings, self.get_tmp_dir())
 
-        (column_headings, authors) = ejp_object.get_authors(doi_id=doi_id)
+        if article_type == "preprint":
+            # get preprint authors
+            (column_headings, authors) = ejp_object.get_preprint_authors(
+                doi_id=doi_id, version=version
+            )
+        else:
+            (column_headings, authors) = ejp_object.get_authors(doi_id=doi_id)
         return self.get_author_list(column_headings, authors, doi_id)
 
     def get_author_list(self, column_headings, authors, doi_id):
@@ -867,7 +880,9 @@ def is_feature_article(article):
     return False
 
 
-def choose_email_type(article_type, is_poa, was_ever_poa, feature_article):
+def choose_email_type(
+    article_type, is_poa, was_ever_poa, feature_article, version_doi=None
+):
     """
     Given some article details, we can choose the
     appropriate email template
@@ -895,6 +910,15 @@ def choose_email_type(article_type, is_poa, was_ever_poa, feature_article):
             else:
                 # False or None is allowed here
                 email_type = "author_publication_email_VOR_no_POA"
+
+    elif article_type == "preprint" and version_doi:
+        # get version from version DOI
+        version = utils.version_doi_parts(version_doi)[1]
+        if version:
+            if int(version) <= 1:
+                email_type = "author_publication_email_RP_first_version"
+            else:
+                email_type = "author_publication_email_RP_revised_version"
 
     return email_type
 

@@ -69,6 +69,14 @@ def fake_authors(activity_object, article_id=3):
     return activity_object.get_author_list(column_headings, authors, article_id)
 
 
+def fake_preprint_authors(activity_object, article_id=3):
+    # parse preprint author csv file or create test fixture data
+    column_headings, authors = ejp.author_detail_list(
+        "tests/test_data/ejp_preprint_author_file.csv", article_id
+    )
+    return activity_object.get_author_list(column_headings, authors, article_id)
+
+
 # author test fixture data
 EJP_ARTICLE_13_AUTHORS = (
     [
@@ -90,6 +98,36 @@ EJP_ARTICLE_13_AUTHORS = (
             "Contributing Author",
             "",
             "author13-01@example.com",
+            "University ",
+        ]
+    ],
+)
+
+# preprint article author test fixture data
+EJP_ARTICLE_91826_AUTHORS = (
+    [
+        "ms_no",
+        "ms_rev_no",
+        "appeal_ind",
+        "author_seq",
+        "first_nm",
+        "last_nm",
+        "author_type_cde",
+        "dual_corr_author_ind",
+        "e_mail",
+        "primary_org",
+    ],
+    [
+        [
+            "91826",
+            "1",
+            "",
+            "1",
+            "Author",
+            "Uno",
+            "Contributing Author",
+            "",
+            "author91826-01@example.com",
             "University ",
         ]
     ],
@@ -634,10 +672,26 @@ class TestProcessArticles(unittest.TestCase):
                 "Total prepared articles: 0",
             ],
         },
+        {
+            "comment": "preprint article",
+            "xml_filenames": [
+                "elife-preprint-91826-v2.xml",
+            ],
+            "lax_article_versions_response_data": [{}],
+            "expected_approved_count": 1,
+            "expected_prepared_count": 1,
+            "expected_not_published_count": 0,
+            "admin_email_content_contains": [
+                "Parsed https://doi.org/10.7554/eLife.91826",
+                "Total parsed articles: 1",
+                "Total approved articles: 1",
+                "Total prepared articles: 1",
+            ],
+        },
     )
     def test_process_articles(
         self,
-        test_data,
+        test_case_data,
         fake_article_versions,
         fake_download_xml,
         fake_get_related_article,
@@ -646,13 +700,13 @@ class TestProcessArticles(unittest.TestCase):
         "edge cases for process articles where the approved and prepared count differ"
         fake_article_versions.return_value = (
             200,
-            test_data.get("lax_article_versions_response_data"),
+            test_case_data.get("lax_article_versions_response_data"),
         )
         fake_download_xml.return_value = False
 
-        if test_data.get("related_article"):
+        if test_case_data.get("related_article"):
             related_article = articlelib.article()
-            related_article.parse_article_file(test_data.get("related_article"))
+            related_article.parse_article_file(test_case_data.get("related_article"))
             fake_get_related_article.return_value = related_article
         else:
             fake_get_related_article.return_value = None
@@ -663,7 +717,7 @@ class TestProcessArticles(unittest.TestCase):
             os.path.join(
                 "tests", "files_source", "publication_email", "outbox", xml_filename
             )
-            for xml_filename in test_data.get("xml_filenames")
+            for xml_filename in test_case_data.get("xml_filenames")
         ]
         (
             approved,
@@ -673,31 +727,31 @@ class TestProcessArticles(unittest.TestCase):
         ) = self.activity.process_articles(xml_filename_paths)
         self.assertEqual(
             len(approved),
-            test_data.get("expected_approved_count"),
+            test_case_data.get("expected_approved_count"),
             "failed expected_approved check in {comment}".format(
-                comment=test_data.get("comment")
+                comment=test_case_data.get("comment")
             ),
         )
         self.assertEqual(
             len(prepared),
-            test_data.get("expected_prepared_count"),
+            test_case_data.get("expected_prepared_count"),
             "failed expected_prepared check in {comment}".format(
-                comment=test_data.get("comment")
+                comment=test_case_data.get("comment")
             ),
         )
         self.assertEqual(
             len(not_published_articles),
-            test_data.get("expected_not_published_count"),
+            test_case_data.get("expected_not_published_count"),
             "failed expected_not_published check in {comment}".format(
-                comment=test_data.get("comment")
+                comment=test_case_data.get("comment")
             ),
         )
-        if test_data.get("admin_email_content_contains"):
-            for expected in test_data.get("admin_email_content_contains"):
+        if test_case_data.get("admin_email_content_contains"):
+            for expected in test_case_data.get("admin_email_content_contains"):
                 self.assertTrue(
                     expected in self.activity.admin_email_content,
                     "{expected} not found in admin_email_content for {comment}".format(
-                        expected=expected, comment=test_data.get("comment")
+                        expected=expected, comment=test_case_data.get("comment")
                     ),
                 )
 
@@ -705,40 +759,125 @@ class TestProcessArticles(unittest.TestCase):
 @ddt
 class TestChooseEmailType(unittest.TestCase):
     @data(
-        (
-            "article-commentary",
-            None,
-            None,
-            False,
-            "author_publication_email_Insight_to_VOR",
-        ),
-        ("discussion", None, None, True, "author_publication_email_Feature"),
-        ("research-article", True, None, False, "author_publication_email_POA"),
-        ("research-article", False, None, False, "author_publication_email_VOR_no_POA"),
-        (
-            "research-article",
-            False,
-            False,
-            False,
-            "author_publication_email_VOR_no_POA",
-        ),
-        (
-            "research-article",
-            False,
-            True,
-            False,
-            "author_publication_email_VOR_after_POA",
-        ),
-        ("review-article", False, False, False, "author_publication_email_VOR_no_POA"),
+        {
+            "comment": "insight article example",
+            "article_type": "article-commentary",
+            "is_poa": None,
+            "was_ever_poa": None,
+            "feature_article": False,
+            "expected_email_type": "author_publication_email_Insight_to_VOR",
+        },
+        {
+            "comment": "feature article example",
+            "article_type": "discussion",
+            "is_poa": None,
+            "was_ever_poa": None,
+            "feature_article": True,
+            "expected_email_type": "author_publication_email_Feature",
+        },
+        {
+            "comment": "POA article example",
+            "article_type": "research-article",
+            "is_poa": True,
+            "was_ever_poa": None,
+            "feature_article": False,
+            "expected_email_type": "author_publication_email_POA",
+        },
+        {
+            "comment": "VOR article with no previous POA example",
+            "article_type": "research-article",
+            "is_poa": False,
+            "was_ever_poa": None,
+            "feature_article": False,
+            "expected_email_type": "author_publication_email_VOR_no_POA",
+        },
+        {
+            "comment": "VOR article with no POA and False was_ever_poa example",
+            "article_type": "research-article",
+            "is_poa": False,
+            "was_ever_poa": False,
+            "feature_article": False,
+            "expected_email_type": "author_publication_email_VOR_no_POA",
+        },
+        {
+            "comment": "VOR article which had a POA example",
+            "article_type": "research-article",
+            "is_poa": False,
+            "was_ever_poa": True,
+            "feature_article": False,
+            "expected_email_type": "author_publication_email_VOR_after_POA",
+        },
+        {
+            "comment": "VOR review-article which was never a POA",
+            "article_type": "review-article",
+            "is_poa": False,
+            "was_ever_poa": False,
+            "feature_article": False,
+            "expected_email_type": "author_publication_email_VOR_no_POA",
+        },
+        {
+            "comment": "First RP reviewed preprint version example",
+            "article_type": "preprint",
+            "is_poa": None,
+            "was_ever_poa": None,
+            "feature_article": False,
+            "version_doi": "10.7554/eLife.84364.1",
+            "expected_email_type": "author_publication_email_RP_first_version",
+        },
+        {
+            "comment": "Revised RP reviewed preprint version example",
+            "article_type": "preprint",
+            "is_poa": None,
+            "was_ever_poa": None,
+            "feature_article": False,
+            "version_doi": "10.7554/eLife.84364.2",
+            "expected_email_type": "author_publication_email_RP_revised_version",
+        },
     )
-    @unpack
-    def test_choose_email_type(
-        self, article_type, is_poa, was_ever_poa, feature_article, expected_email_type
-    ):
+    def test_choose_email_type(self, test_case_data):
         email_type = activity_module.choose_email_type(
-            article_type, is_poa, was_ever_poa, feature_article
+            test_case_data.get("article_type"),
+            test_case_data.get("is_poa"),
+            test_case_data.get("was_ever_poa"),
+            test_case_data.get("feature_article"),
+            test_case_data.get("version_doi"),
         )
-        self.assertEqual(email_type, expected_email_type)
+        self.assertEqual(
+            email_type,
+            test_case_data.get("expected_email_type"),
+            "{expected} not found in admin_email_content for {comment}".format(
+                expected=test_case_data.get("expected_email_type"),
+                comment=test_case_data.get("comment"),
+            ),
+        )
+
+
+class TestArticleAuthorsByArticleType(unittest.TestCase):
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, fake_logger, None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    @patch.object(EJP, "get_authors")
+    def test_article_authors_by_article_type(self, fake_ejp_get_authors):
+        "test an insight article"
+        fake_ejp_get_authors.return_value = EJP_ARTICLE_13_AUTHORS
+        expected_author_count = 1
+
+        article = articlelib.article()
+        article.doi_id = 7
+        article.article_type = "article-commentary"
+        article.related_insight_article = articlelib.article()
+        article.related_insight_article.doi_id = 13
+        article.related_insight_article.authors = []
+        # invoke
+        authors = self.activity.article_authors_by_article_type(article)
+        # assert
+        self.assertEqual(len(authors), expected_author_count)
 
 
 class TestGetEmailHeaders(unittest.TestCase):
@@ -781,6 +920,52 @@ class TestGetEmailHeaders(unittest.TestCase):
             "email_type": "author_publication_email_VOR_no_POA",
             "sender_email": "press@example.org",
             "subject": "Authoré, Your eLife paper is now online",
+        }
+
+        body = self.activity.templates.get_email_headers(
+            email_type=email_type,
+            author=author,
+            article=article_object,
+            format=email_format,
+        )
+
+        self.assertEqual(body, expected_headers)
+
+    def test_template_get_email_headers_preprint(self):
+        self.activity.download_templates()
+        article_id = 91826
+        email_type = "author_publication_email_RP_revised_version"
+
+        authors = fake_preprint_authors(self.activity, article_id)
+        article_object = articlelib.article()
+        article_object.parse_article_file(
+            "tests/files_source/publication_email/outbox/elife-preprint-91826-v2.xml"
+        )
+        article_type = article_object.article_type
+        feature_article = False
+        related_insight_article = None
+        features_email = "features_team@example.org"
+        recipient_authors = activity_module.choose_recipient_authors(
+            authors,
+            article_type,
+            feature_article,
+            related_insight_article,
+            features_email,
+        )
+        author = recipient_authors[0]
+
+        email_format = "html"
+
+        expected_headers = {
+            "format": "html",
+            "email_type": "author_publication_email_RP_revised_version",
+            "sender_email": "press@example.org",
+            "subject": (
+                "Your revised Reviewed Preprint has been published: "
+                "10.7554/eLife.91826 Ex vivo Expansion Potential of "
+                "Murine Hematopoietic Stem Cells: A Rare Property Only "
+                "Partially Predicted by Phenotype"
+            ),
         }
 
         body = self.activity.templates.get_email_headers(
@@ -1088,6 +1273,36 @@ class TestArticleAuthors(unittest.TestCase):
         all_authors = self.activity.article_authors(doi_id, article_object)
         self.assertEqual(all_authors, expected)
 
+    @patch.object(EJP, "get_preprint_authors")
+    def test_article_authors_preprint(self, fake_get_preprint_authors):
+        "test getting authors for a preprint article"
+        fake_get_preprint_authors.return_value = EJP_ARTICLE_91826_AUTHORS
+        doi_id = 91826
+        version_doi = "10.7554/eLife.91826.2"
+        article_type = "preprint"
+        expected = [
+            {
+                "ms_no": "91826",
+                "ms_rev_no": "1",
+                "appeal_ind": "",
+                "author_seq": "1",
+                "first_nm": "Author",
+                "last_nm": "Uno",
+                "author_type_cde": "Contributing Author",
+                "dual_corr_author_ind": "",
+                "e_mail": "author91826-01@example.com",
+                "primary_org": "University ",
+            },
+        ]
+
+        article_object = articlelib.article()
+        article_object.authors = []
+        article_object.article_type = article_type
+        article_object.version_doi = version_doi
+
+        all_authors = self.activity.article_authors(doi_id, article_object)
+        self.assertEqual(all_authors, expected)
+
 
 class TestGetAuthorList(unittest.TestCase):
     def setUp(self):
@@ -1387,7 +1602,6 @@ class TestGetRelatedArticle(unittest.TestCase):
     def test_get_related_article_create_article_blank(self, fake_create_article):
         "test when creating a related article returns None"
         doi = "10.7554/eLife.15747"
-        expected_doi = doi
         fake_create_article.return_value = None
         related_articles = []
         return_value = activity_module.get_related_article(
