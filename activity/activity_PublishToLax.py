@@ -1,4 +1,3 @@
-import os
 import json
 import boto3
 import provider.lax_provider as lax_provider

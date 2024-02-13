@@ -12,6 +12,7 @@ Amazon SWF register workflow or activity utility
 
 
 def start(settings):
+    # Connect to SWF to get client
     if utils.reuse_boto_conn():
         swf_client = settings.aws_conn('swf', {
             'aws_access_key_id': settings.aws_access_key_id,
@@ -19,7 +20,6 @@ def start(settings):
             'region_name': settings.swf_region,
         })
     else:
-        # Connect to SWF to get client
         swf_client = boto3.client(
             "swf",
             aws_access_key_id=settings.aws_access_key_id,
