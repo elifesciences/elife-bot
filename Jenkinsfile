@@ -11,7 +11,7 @@ elifePipeline {
             // execute and fail immediately if red, without waiting to download test artifacts
             builderCmd 'elife-bot--ci', 'cd /opt/elife-bot; ./project_tests.sh'
 
-            # temporary, while centralised connection is trialed
+            // temporary, while centralised connection is trialed
             builderCmd 'elife-bot--ci', 'cd /opt/elife-bot; BOT_REUSE_BOTO_CONN=1 ./project_tests.sh'
 
             // part of the bot test suite is a series of lettuce processes which cannot produce a single XML report
