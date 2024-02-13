@@ -251,7 +251,7 @@ def json_char_escape(string):
 def article_title_char_escape(article):
     """escape characters in article object article_title for JSON parsing"""
     if hasattr(article, "article_title"):
-        article.article_title = json_char_escape(article.article_title)
+        article.article_title = json_char_escape(article.article_title).replace("\n", "")
     if isinstance(article, dict) and "article_title" in article:
-        article["article_title"] = json_char_escape(article["article_title"])
+        article["article_title"] = json_char_escape(article["article_title"]).replace("\n", "")
     return article

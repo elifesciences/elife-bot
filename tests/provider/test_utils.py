@@ -148,6 +148,12 @@ class TestUtils(unittest.TestCase):
         doi_url = "https://doi.org/%s" % doi
         self.assertEqual(utils.doi_uri_to_doi(doi_url), doi)
 
+    def test_version_doi_parts(self):
+        doi = "10.7554/eLife.84364"
+        version = "2"
+        version_doi = "%s.%s" % (doi, version)
+        self.assertEqual(utils.version_doi_parts(version_doi), [doi, version])
+
 
 class TestSettingsEnvironment(unittest.TestCase):
     "test for utils.settings_environment()"

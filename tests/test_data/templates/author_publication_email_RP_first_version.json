@@ -1,0 +1,5 @@
+{
+  "sender_email": "press@example.org",
+  "email_type": "author_publication_email_RP_first_version",
+  "subject": "Your Reviewed Preprint has been published: {{ article.doi }} {{ article.article_title }}"
+}
