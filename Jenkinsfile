@@ -11,6 +11,9 @@ elifePipeline {
             // execute and fail immediately if red, without waiting to download test artifacts
             builderCmd 'elife-bot--ci', 'cd /opt/elife-bot; ./project_tests.sh'
 
+            # temporary, while centralised connection is trialed
+            builderCmd 'elife-bot--ci', 'cd /opt/elife-bot; BOT_REUSE_BOTO_CONN=1 ./project_tests.sh'
+
             // part of the bot test suite is a series of lettuce processes which cannot produce a single XML report
             // until there is a single test suite, we won't have XML test artifacts in the bot
             //def testArtifact = "${env.BUILD_TAG}.junit.xml"
