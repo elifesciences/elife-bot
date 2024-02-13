@@ -252,7 +252,7 @@ def get_aws_connection(service_conn_map, service, service_creation_kwargs):
     if service in service_conn_map:
         return service_conn_map[service]
 
-    map_key = service # "s3", etc. perhaps incorporate `service_creation_kwargs` in future
+    map_key = (service, service_creation_kwargs)
     service_conn_map[map_key] = create_aws_connection(service, service_creation_kwargs)
     return service_conn_map[map_key]
 

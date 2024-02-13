@@ -1,3 +1,4 @@
+from . import utils
 from datetime import datetime, timezone
 from collections import OrderedDict
 import boto3
@@ -22,7 +23,7 @@ class SWFMeta:
     def connect(self):
         # Simple connect
         if utils.reuse_boto_conn():
-            self.client = settings.aws_conn('swf', {
+            self.client = self.settings.aws_conn('swf', {
                 'aws_access_key_id': self.settings.aws_access_key_id,
                 'aws_secret_access_key': self.settings.aws_secret_access_key,
                 'region_name': self.settings.swf_region,

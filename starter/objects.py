@@ -4,7 +4,7 @@ from collections import OrderedDict
 import boto3
 import botocore
 import starter.starter_helper as helper
-
+from provider import utils
 
 LOG_FILE = "starter.log"
 
@@ -36,10 +36,10 @@ class Starter:
     def connect_to_swf(self):
         "connect to SWF"
         if utils.reuse_boto_conn():
-            self.client = settings.aws_conn('swf', {
-                'aws_access_key_id': settings.aws_access_key_id,
-                'aws_secret_access_key': settings.aws_secret_access_key,
-                'region_name': settings.swf_region,
+            self.client = self.settings.aws_conn('swf', {
+                'aws_access_key_id': self.settings.aws_access_key_id,
+                'aws_secret_access_key': self.settings.aws_secret_access_key,
+                'region_name': self.settings.swf_region,
             })
         else:
             self.client = boto3.client(

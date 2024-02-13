@@ -27,6 +27,7 @@ def work(settings, flag):
             'aws_access_key_id': settings.aws_access_key_id,
             'aws_secret_access_key': settings.aws_secret_access_key,
             'region_name': settings.swf_region,
+            'config': Config(connect_timeout=50, read_timeout=70),
         })
     else:
         client = boto3.client(
