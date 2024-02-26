@@ -95,6 +95,8 @@ class article:
 
             self.display_channel = parser.display_channel(soup)
 
+            self.version_doi = parser.version_doi(soup)
+
             return True
         except:
             return False
