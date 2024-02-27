@@ -1,3 +1,6 @@
+import boto3
+from moto import mock_aws
+
 swf_region = "antarctica"
 domain = "test_domain"
 default_task_list = "test_task_list"
@@ -107,3 +110,7 @@ mathpix_app_key = "key"
 
 # EPP settings
 epp_data_bucket = "epp_bucket"
+
+@mock_aws
+def aws_conn(service, service_creation_kwargs):
+    return boto3.client(service, **service_creation_kwargs)

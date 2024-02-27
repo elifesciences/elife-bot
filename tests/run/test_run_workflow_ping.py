@@ -2,7 +2,7 @@ import datetime
 import os
 import unittest
 from mock import patch
-from moto import mock_swf
+from moto import mock_aws as mock_swf # TODO
 from botocore.config import Config
 import boto3
 from tests import settings_mock
