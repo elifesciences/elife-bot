@@ -1,3 +1,6 @@
+import boto3
+from moto import mock_aws
+
 swf_region = ""
 domain = ""
 default_task_list = ""
@@ -258,3 +261,7 @@ epp_data_bucket = "epp_bucket"
 
 # Striking images bucket
 striking_images_bucket = "striking_images_bucket"
+
+@mock_aws
+def aws_conn(service, service_creation_kwargs):
+    return boto3.client(service, **service_creation_kwargs)

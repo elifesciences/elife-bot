@@ -151,9 +151,9 @@ class activity_IngestToLax(Activity):
 
         if utils.reuse_boto_conn():
             client = self.settings.aws_conn('sqs', {
-                'aws_access_key_id': connexion_settings.aws_access_key_id,
-                'aws_secret_access_key': connexion_settings.aws_secret_access_key,
-                'region_name': connexion_settings.sqs_region,
+                'aws_access_key_id': connexion_settings['aws_access_key_id'],
+                'aws_secret_access_key': connexion_settings['aws_secret_access_key'],
+                'region_name': connexion_settings['sqs_region'],
             })
         else:
             client = boto3.client(

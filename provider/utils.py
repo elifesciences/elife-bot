@@ -260,7 +260,12 @@ def get_aws_connection(service_conn_map, service, service_creation_kwargs):
     if service in service_conn_map:
         return service_conn_map[service]
 
-    map_key = (service, service_creation_kwargs)
+    map_key = [service]
+    for key, val in service_creation_kwargs.items():
+        map_key.append(key)
+        map_key.append(val)
+    map_key = tuple(sorted(map_key))
+
     service_conn_map[map_key] = create_aws_connection(service, service_creation_kwargs)
     return service_conn_map[map_key]
 
