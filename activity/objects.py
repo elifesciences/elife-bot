@@ -306,19 +306,6 @@ class Activity:
             workflow_name, downstream_workflow_map
         )
 
-    def get_docmap_string(self, article_id, identifier):
-        # generate docmap URL
-        docmap_url = cleaner.docmap_url(self.settings, article_id)
-        self.logger.info("%s, docmap_url: %s" % (self.name, docmap_url))
-
-        # get docmap json
-        self.logger.info(
-            "%s, getting docmap_string for identifier: %s" % (self.name, identifier)
-        )
-        return cleaner.get_docmap_by_account_id(
-            docmap_url, self.settings.docmap_account_id
-        )
-
 
 class CleanerBaseActivity(Activity):
     "activity class to use cleaner provider logging"

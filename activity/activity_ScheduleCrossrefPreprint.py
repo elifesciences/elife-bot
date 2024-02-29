@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from provider import outbox_provider, preprint
+from provider import cleaner, outbox_provider, preprint
 from provider.execution_context import get_session
 from activity.objects import Activity
 
@@ -97,7 +97,9 @@ class activity_ScheduleCrossrefPreprint(Activity):
             )
             try:
                 # get docmap as a string
-                docmap_string = self.get_docmap_string(article_id, article_id)
+                docmap_string = cleaner.get_docmap_string(
+                    self.settings, article_id, article_id, self.name, self.logger
+                )
                 article = preprint.build_article(
                     article_id, docmap_string, article_xml_path, version
                 )

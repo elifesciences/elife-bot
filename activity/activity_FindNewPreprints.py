@@ -7,6 +7,7 @@ import boto3
 from activity.objects import CleanerBaseActivity
 from provider import (
     bigquery,
+    cleaner,
     email_provider,
     outbox_provider,
     preprint,
@@ -254,8 +255,12 @@ class activity_FindNewPreprints(CleanerBaseActivity):
                 detail.get("version"),
             )
             try:
-                docmap_string = self.get_docmap_string(
-                    detail.get("article_id"), identifier
+                docmap_string = cleaner.get_docmap_string(
+                    self.settings,
+                    detail.get("article_id"),
+                    identifier,
+                    self.name,
+                    self.logger,
                 )
             except Exception as exception:
                 self.logger.exception(

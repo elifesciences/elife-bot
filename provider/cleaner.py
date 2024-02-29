@@ -464,6 +464,18 @@ def get_docmap_by_account_id(url, account_id):
                 return json.dumps(list_item)
 
 
+def get_docmap_string(settings, article_id, identifier, caller_name, logger):
+    "get a docmap string for the article from endpoint"
+    # generate docmap URL
+    docmap_endpoint_url = docmap_url(settings, article_id)
+    logger.info("%s, docmap_endpoint_url: %s" % (caller_name, docmap_endpoint_url))
+    # get docmap json
+    logger.info(
+        "%s, getting docmap_string for identifier: %s" % (caller_name, identifier)
+    )
+    return get_docmap_by_account_id(docmap_endpoint_url, settings.docmap_account_id)
+
+
 def review_date_from_docmap(docmap_string, input_filename):
     return prc.review_date_from_docmap(docmap_string, input_filename)
 
