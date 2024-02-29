@@ -67,7 +67,9 @@ class activity_AcceptedSubmissionHistory(AcceptedBaseActivity):
         xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
 
         # get docmap as a string
-        docmap_string = self.get_docmap_string(article_id, input_filename)
+        docmap_string = cleaner.get_docmap_string(
+            self.settings, article_id, input_filename, self.name, self.logger
+        )
         self.statuses["docmap_string"] = True
 
         # get the under-review date from the docmap

@@ -796,6 +796,38 @@ class TestGetDocmapByAccountId(unittest.TestCase):
         self.assertEqual(result, json.dumps(elife_docmap))
 
 
+class TestGetDocmapString(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+        self.url = "https://example.org/"
+
+    @patch("requests.get")
+    def test_get_docmap_string(self, mock_requests_get):
+        "test for non-list JSON returned"
+        article_id = 84364
+        identifier = "elife-preprint-84364-v2.xml"
+        caller_name = "ScheduleCrossrefPreprint"
+        content = b'{"foo": "bar"}'
+        status_code = 200
+        expected = content
+        mock_requests_get.return_value = FakeResponse(status_code, content=content)
+        # invoke
+        result = cleaner.get_docmap_string(
+            settings_mock, article_id, identifier, caller_name, self.logger
+        )
+        # assert
+        self.assertEqual(result, expected)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "%s, getting docmap_string for identifier: %s" % (caller_name, identifier),
+        )
+        self.assertEqual(
+            self.logger.loginfo[-2],
+            "%s, docmap_endpoint_url: %spath/get-by-manuscript-id?manuscript_id=%s"
+            % (caller_name, self.url, article_id),
+        )
+
+
 class TestFilesByExtension(unittest.TestCase):
     def test_files_by_extension(self):
         "filter the list based on the file name extension"
