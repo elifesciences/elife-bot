@@ -252,9 +252,10 @@ def create_aws_connection(service, service_creation_kwargs):
 
 
 def get_aws_connection_key(service, service_creation_kwargs):
-    sck = service_creation_kwargs
+    "returns a tuple for the given `service` that can be used in a dictionary"
+    kv = service_creation_kwargs
     # ('s3', 'us-east-1', '1234567890', Config{...})
-    return (service, sck.get('region_name'), sck.get('aws_access_key_id'), sck.get('config'))
+    return (service, kv.get('region_name'), kv.get('aws_access_key_id'), kv.get('config'))
 
 
 def get_aws_connection(service_conn_map, service, service_creation_kwargs):

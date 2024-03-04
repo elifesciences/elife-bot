@@ -178,8 +178,8 @@ class TestUtils(unittest.TestCase):
             (('s3', {'region_name': 'us-east-1', 'aws_access_key_id': '1234', 'config': config2}),
              ('s3', 'us-east-1', '1234', config2)),
         ]
-        for (service, sck), expected in cases:
-            actual = utils.get_aws_connection_key(service, sck)
+        for (service, kv), expected in cases:
+            actual = utils.get_aws_connection_key(service, kv)
             self.assertEqual(actual, expected)
             self.assertEqual({actual: 1}[actual], 1) # generated key can be used as a map key
 
