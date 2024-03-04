@@ -251,6 +251,12 @@ def create_aws_connection(service, service_creation_kwargs):
     return boto3.client(service, **service_creation_kwargs)
 
 
+def get_aws_connection_key(service, service_creation_kwargs):
+    sck = service_creation_kwargs
+    # ('s3', 'us-east-1', '1234567890', Config{...})
+    return (service, sck.get('region_name'), sck.get('aws_access_key_id'), sck.get('config'))
+
+
 def get_aws_connection(service_conn_map, service, service_creation_kwargs):
     "centralised access to AWS service connections"
     assert isinstance(service_conn_map, dict), "`service_conn_map` must be a dictionary"
@@ -260,12 +266,8 @@ def get_aws_connection(service_conn_map, service, service_creation_kwargs):
     if service in service_conn_map:
         return service_conn_map[service]
 
-    map_key = [service]
-    for key, val in service_creation_kwargs.items():
-        map_key.append(key)
-        map_key.append(val)
-    map_key = tuple(sorted(map_key))
-
+    map_key = get_aws_connection_key(service, service_creation_kwargs)
+    
     service_conn_map[map_key] = create_aws_connection(service, service_creation_kwargs)
     return service_conn_map[map_key]
 
@@ -294,6 +296,7 @@ def content_type_from_file_name(file_name):
 ENVVAR_KNOWN_KEYS = {
     'BOT_REUSE_BOTO_CONN',
     'MOTO_ALLOW_NONEXISTENT_REGION',
+    'TEST_DUMMY',
 }
 
 def envvar(key, default=None):
