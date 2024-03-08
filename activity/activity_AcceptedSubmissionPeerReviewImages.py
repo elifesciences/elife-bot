@@ -104,7 +104,11 @@ class activity_AcceptedSubmissionPeerReviewImages(AcceptedBaseActivity):
 
         # download images to the local disk
         href_to_file_name_map = download_images(
-            approved_hrefs, self.directories.get("INPUT_DIR"), self.name, self.logger
+            approved_hrefs,
+            self.directories.get("INPUT_DIR"),
+            self.name,
+            self.logger,
+            getattr(self.settings, "user_agent", None),
         )
 
         # add log messages if an external href download was not successful
@@ -215,7 +219,7 @@ class activity_AcceptedSubmissionPeerReviewImages(AcceptedBaseActivity):
         return True
 
 
-def download_images(href_list, to_dir, activity_name, logger):
+def download_images(href_list, to_dir, activity_name, logger, user_agent=None):
     href_to_file_name_map = OrderedDict()
     for href in href_list:
         file_name = href.rsplit("/", 1)[-1]
@@ -225,8 +229,9 @@ def download_images(href_list, to_dir, activity_name, logger):
             logger.info("%s, href %s was already downloaded" % (activity_name, href))
             continue
         try:
-            file_path = download_file(href, to_file)
-        except RuntimeError:
+            file_path = download_file(href, to_file, user_agent)
+        except RuntimeError as exception:
+            logger.info(str(exception))
             logger.info("%s, href %s could not be downloaded" % (activity_name, href))
             continue
         logger.info("%s, downloaded href %s to %s" % (activity_name, href, to_file))
@@ -235,8 +240,11 @@ def download_images(href_list, to_dir, activity_name, logger):
     return href_to_file_name_map
 
 
-def download_file(from_path, to_file):
-    request = requests.get(from_path, timeout=REQUESTS_TIMEOUT)
+def download_file(from_path, to_file, user_agent=None):
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
+    request = requests.get(from_path, timeout=REQUESTS_TIMEOUT, headers=headers)
     if request.status_code == 200:
         with open(to_file, "wb") as open_file:
             open_file.write(request.content)

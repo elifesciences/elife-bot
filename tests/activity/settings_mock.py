@@ -258,3 +258,6 @@ epp_data_bucket = "epp_bucket"
 
 # Striking images bucket
 striking_images_bucket = "striking_images_bucket"
+
+# user-agent for using in requests
+user_agent = "user_agent/version (https://example.org)"
