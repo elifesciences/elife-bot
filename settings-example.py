@@ -366,6 +366,9 @@ class exp:
     # Striking images bucket
     striking_images_bucket = "striking_images_bucket"
 
+    # user-agent for using in requests
+    user_agent = "user_agent/version (https://example.org)"
+
 
 class dev:
     # AWS settings
@@ -716,6 +719,9 @@ class dev:
 
     # Striking images bucket
     striking_images_bucket = "striking_images_bucket"
+
+    # user-agent for using in requests
+    user_agent = "user_agent/version (https://example.org)"
 
 
 class live:
@@ -1072,6 +1078,9 @@ class live:
 
     # Striking images bucket
     striking_images_bucket = "striking_images_bucket"
+
+    # user-agent for using in requests
+    user_agent = "user_agent/version (https://example.org)"
 
 
 def get_settings(ENV="dev"):
