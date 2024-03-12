@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import re
+import time
 from urllib.parse import urlparse
 from xml.etree.ElementTree import SubElement
 import requests
@@ -474,6 +475,45 @@ def get_docmap_string(settings, article_id, identifier, caller_name, logger):
         "%s, getting docmap_string for identifier: %s" % (caller_name, identifier)
     )
     return get_docmap_by_account_id(docmap_endpoint_url, settings.docmap_account_id)
+
+
+# time in seconds to sleep when a docmap string request is not successful
+DOCMAP_SLEEP_SECONDS = 5
+# number of times to sleep after a docmap string request is not successful
+DOCMAP_RETRY = 24
+
+
+def get_docmap_string_with_retry(settings, article_id, caller_name, logger):
+    "get a docmap string from the endpoint and retry until reaching failure"
+
+    tries = 0
+    while tries < DOCMAP_RETRY:
+        logger.info(
+            "%s, try number %s to get docmap_string for article_id %s"
+            % (caller_name, tries, article_id)
+        )
+        try:
+            # get docmap as a string
+            docmap_string = get_docmap_string(
+                settings, article_id, article_id, caller_name, logger
+            )
+            break
+        except Exception as exception:
+            # handle if a docmap string could not be found
+            logger.exception(exception)
+            # sleep a short time
+            time.sleep(DOCMAP_SLEEP_SECONDS)
+        finally:
+            tries += 1
+
+    if tries >= DOCMAP_RETRY:
+        log_message = (
+            "%s, exceeded %s retries to get docmap_string for article_id %s"
+            % (caller_name, DOCMAP_RETRY, article_id)
+        )
+        logger.info(log_message)
+        raise RuntimeError(log_message)
+    return docmap_string
 
 
 def review_date_from_docmap(docmap_string, input_filename):

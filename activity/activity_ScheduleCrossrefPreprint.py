@@ -1,14 +1,8 @@
 import json
 import os
-import time
 from provider import cleaner, outbox_provider, preprint
 from provider.execution_context import get_session
 from activity.objects import Activity
-
-# time in seconds to sleep when an XML cannot be generated
-SLEEP_SECONDS = 5
-# number of times to sleep after an XML cannot be regnerated
-GENERATE_RETRY = 24
 
 
 class activity_ScheduleCrossrefPreprint(Activity):
@@ -80,46 +74,43 @@ class activity_ScheduleCrossrefPreprint(Activity):
             )
             return self.ACTIVITY_SUCCESS
 
-        # get preprint server XML from a bucket
-        article_xml_path = preprint.download_original_preprint_xml(
-            self.settings, self.directories.get("TEMP_DIR"), article_id, version
-        )
-
-        # generate preprint XML from data sources
-        xml_file_name = preprint.xml_filename(article_id, self.settings, version)
-        xml_file_path = os.path.join(self.directories.get("INPUT_DIR"), xml_file_name)
-
-        tries = 0
-        while tries < GENERATE_RETRY:
-            self.logger.info(
-                "%s, try number %s to generate article %s version %s"
-                % (self.name, tries, article_id, version)
+        # get docmap data
+        try:
+            docmap_string = cleaner.get_docmap_string_with_retry(
+                self.settings, article_id, self.name, self.logger
             )
-            try:
-                # get docmap as a string
-                docmap_string = cleaner.get_docmap_string(
-                    self.settings, article_id, article_id, self.name, self.logger
+        except Exception:
+            self.logger.exception(
+                (
+                    "%s, exception raised to get docmap_string"
+                    " using retries for article_id %s version %s"
                 )
-                article = preprint.build_article(
-                    article_id, docmap_string, article_xml_path, version
-                )
-                break
-            except Exception as exception:
-                # handle if article could not be built
-                self.logger.exception(exception)
-                # sleep a short time
-                time.sleep(SLEEP_SECONDS)
-            finally:
-                tries += 1
+                % (self.name, article_id, version)
+            )
+            return self.ACTIVITY_PERMANENT_FAILURE
 
-        if tries >= GENERATE_RETRY:
-            self.logger.info(
-                "%s, exceeded %s retries to generate article %s version %s"
-                % (self.name, GENERATE_RETRY, article_id, version)
+        # populate the article object
+        try:
+            article = preprint.build_preprint_article(
+                self.settings,
+                article_id,
+                version,
+                docmap_string,
+                self.directories.get("TEMP_DIR"),
+                self.logger,
+            )
+        except Exception:
+            # handle if article could not be built
+            self.logger.exception(
+                "%s, exception raised when building the article object for article_id %s version %s"
+                % (self.name, article_id, version)
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # continue if article could be populated
+        # generate preprint XML from data sources
+        xml_file_name = preprint.xml_filename(article_id, self.settings, version)
+        xml_file_path = os.path.join(self.directories.get("INPUT_DIR"), xml_file_name)
         xml_string = preprint.preprint_xml(article, self.settings)
         with open(xml_file_path, "wb") as open_file:
             open_file.write(xml_string)

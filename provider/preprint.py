@@ -1,5 +1,4 @@
 "functions for generating preprint XML"
-import botocore
 from elifearticle.parse import build_article_from_xml
 from elifearticle.article import (
     Article,
@@ -7,7 +6,6 @@ from elifearticle.article import (
     Contributor,
     Event,
     License,
-    Preprint,
 )
 from jatsgenerator import generate
 from jatsgenerator.conf import raw_config, parse_raw_config
@@ -44,14 +42,12 @@ def build_article(article_id, docmap_string, article_xml_path, version=None):
         raise PreprintArticleException(
             "Could not find a newest_version_doi for article_id %s" % article_id
         )
-        return None
 
     if not newest_version_doi.startswith(DOI_PREFIX):
         raise PreprintArticleException(
             "newest_version_doi %s for article_id %s has an incorrect prefix"
             % (newest_version_doi, article_id)
         )
-        return None
 
     if version:
         # build an XML file for a specific version, using docmap data for that preprint version
@@ -213,3 +209,38 @@ def download_original_preprint_xml(settings, to_dir, article_id, version):
     )
 
     return article_xml_path
+
+
+def build_preprint_article(
+    settings, article_id, version, docmap_string, temp_dir, logger
+):
+    "download original preprint XML and with the docmap string populate an article object"
+
+    # get preprint server XML from a bucket
+    try:
+        article_xml_path = download_original_preprint_xml(
+            settings, temp_dir, article_id, version
+        )
+    except Exception as exception:
+        # handle if original preprint XML could not be downloaded
+        raise PreprintArticleException(
+            logger.exception(
+                "Exception getting preprint server XML"
+                " from the bucket for article_id %s, version %s: %s"
+                % (
+                    article_id,
+                    version,
+                    str(exception),
+                )
+            )
+        )
+
+    try:
+        article = build_article(article_id, docmap_string, article_xml_path, version)
+    except PreprintArticleException as exception:
+        # handle if article could not be built
+        logger.exception(str(exception))
+        raise
+
+    # continue if article could be populated
+    return article
