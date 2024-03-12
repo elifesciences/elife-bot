@@ -165,7 +165,9 @@ class TestBuildArticle(unittest.TestCase):
         fake_sub_article_data.return_value = sub_article_data_fixture()
         article_id = "84364"
         docmap_string = read_fixture("sample_docmap_for_84364.json")
-        article_xml_path = "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        article_xml_path = (
+            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        )
         article = preprint.build_article(article_id, docmap_string, article_xml_path)
         # assertions
         self.assertEqual(article.doi, "10.7554/eLife.84364")
@@ -241,7 +243,9 @@ class TestBuildArticle(unittest.TestCase):
         article_id = "84364"
         version = 1
         docmap_string = read_fixture("sample_docmap_for_84364.json")
-        article_xml_path = "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        article_xml_path = (
+            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        )
         article = preprint.build_article(
             article_id, docmap_string, article_xml_path, version
         )
@@ -275,7 +279,9 @@ class TestBuildArticle(unittest.TestCase):
         docmap_string = docmap_string.replace(
             b'"published": "2023-06-14T14:00:00+00:00",', b""
         )
-        article_xml_path = "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        article_xml_path = (
+            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        )
         with self.assertRaises(preprint.PreprintArticleException) as test_exception:
             preprint.build_article(article_id, docmap_string, article_xml_path)
         self.assertEqual(
@@ -524,7 +530,9 @@ class TestPreprintXml(unittest.TestCase):
         fake_sub_article_data.return_value = sub_article_data_fixture()
         article_id = "84364"
         docmap_string = read_fixture("sample_docmap_for_84364.json")
-        article_xml_path = "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        article_xml_path = (
+            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        )
         article = preprint.build_article(article_id, docmap_string, article_xml_path)
         result = preprint.preprint_xml(article, settings_mock)
         # print(bytes.decode(result))
