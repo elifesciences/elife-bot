@@ -828,6 +828,69 @@ class TestGetDocmapString(unittest.TestCase):
         )
 
 
+class TestGetDocmapStringWithRetry(unittest.TestCase):
+    "tests for cleaner.get_docmap_string_with_retry()"
+
+    def setUp(self):
+        self.logger = FakeLogger()
+        # set constants for faster testing
+        self.retry = 2
+        self.original_constants = {
+            "DOCMAP_SLEEP_SECONDS": cleaner.DOCMAP_SLEEP_SECONDS,
+            "DOCMAP_RETRY": cleaner.DOCMAP_RETRY,
+        }
+        cleaner.DOCMAP_SLEEP_SECONDS = 0.001
+        cleaner.DOCMAP_RETRY = self.retry
+
+    def tearDown(self):
+        # reset constants
+        for key, value in self.original_constants.items():
+            setattr(cleaner, key, value)
+
+    @patch.object(cleaner, "get_docmap_string")
+    def test_get_get_docmap_string_with_retry(
+        self,
+        fake_get_docmap_string,
+    ):
+        "test if an exception is raised when generating an article"
+        article_id = "84364"
+        caller_name = "ScheduleCrossrefPreprint"
+        docmap_string = "docmap"
+        fake_get_docmap_string.return_value = docmap_string
+        # invoke
+        result = cleaner.get_docmap_string_with_retry(
+            settings_mock, article_id, caller_name, self.logger
+        )
+        # check assertions
+        self.assertEqual(result, docmap_string)
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            ("%s, try number 0 to get docmap_string for article_id %s")
+            % (caller_name, article_id),
+        )
+
+    @patch.object(cleaner, "get_docmap_string")
+    def test_get_docmap_exception(
+        self,
+        fake_get_docmap_string,
+    ):
+        "test if an exception is raised when getting docmap"
+        article_id = "84364"
+        caller_name = "ScheduleCrossrefPreprint"
+        fake_get_docmap_string.side_effect = Exception("An exception")
+        # invoke
+        with self.assertRaises(RuntimeError):
+            cleaner.get_docmap_string_with_retry(
+                settings_mock, article_id, caller_name, self.logger
+            )
+        # check assertions
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            ("%s, exceeded %s retries to get docmap_string for article_id %s")
+            % (caller_name, self.retry, article_id),
+        )
+
+
 class TestFilesByExtension(unittest.TestCase):
     def test_files_by_extension(self):
         "filter the list based on the file name extension"
