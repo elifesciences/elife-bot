@@ -7,7 +7,7 @@ REQUESTS_TIMEOUT = 15
 DEFAULT_OPTIONS_JSON = {
     "math_inline_delimiters": ["$", "$"],
     "rm_spaces": True,
-    "formats": "text, data, html, latex_styled",
+    "formats": ["text", "data", "html", "latex_styled"],
     "data_options": {
         "include_mathml": True,
         "include_latex": True,
@@ -17,7 +17,7 @@ DEFAULT_OPTIONS_JSON = {
 TABLE_OPTIONS_JSON = {
     "math_inline_delimiters": ["$", "$"],
     "rm_spaces": True,
-    "formats": "data",
+    "formats": ["data"],
     "data_options": {
         "include_table_html": True,
         "include_tsv": True,
