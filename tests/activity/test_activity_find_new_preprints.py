@@ -31,6 +31,9 @@ class TestFindNewPreprints(unittest.TestCase):
         self.activity = activity_class(settings_mock, fake_logger, None, None, None)
         self.activity.make_activity_directories()
         self.activity_data = {}
+        # reset retry values
+        activity_module.cleaner.DOCMAP_SLEEP_SECONDS = 0.0001
+        activity_module.cleaner.DOCMAP_RETRY = 2
 
     def tearDown(self):
         TempDirectory.cleanup_all()
