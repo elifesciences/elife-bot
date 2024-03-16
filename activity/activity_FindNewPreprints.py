@@ -265,13 +265,23 @@ class activity_FindNewPreprints(CleanerBaseActivity):
                 self.bad_xml_files.append(new_xml_filename)
                 continue
 
-            # write the article object to XML file
-            xml_file_path = os.path.join(
-                self.directories.get("OUTPUT_DIR"), new_xml_filename
-            )
-            xml_string = preprint.preprint_xml(article_object, self.settings)
-            with open(xml_file_path, "wb") as open_file:
-                open_file.write(xml_string)
+            try:
+                # write the article object to XML file
+                xml_file_path = os.path.join(
+                    self.directories.get("OUTPUT_DIR"), new_xml_filename
+                )
+                xml_string = preprint.preprint_xml(article_object, self.settings)
+                with open(xml_file_path, "wb") as open_file:
+                    open_file.write(xml_string)
+            except Exception as exception:
+                self.logger.exception(
+                    "%s, failed to generate preprint XML"
+                    " from the article_object for article_id %s: %s"
+                    % (self.name, detail.get("article_id"), str(exception))
+                )
+                self.bad_xml_files.append(new_xml_filename)
+                continue
+
             self.good_xml_files.append(new_xml_filename)
 
     def send_admin_email(self, new_xml_filenames):
