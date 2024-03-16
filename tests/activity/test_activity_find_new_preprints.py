@@ -273,7 +273,7 @@ class TestFindNewPreprints(unittest.TestCase):
     @patch.object(bigquery, "get_client")
     @patch.object(activity_module, "storage_context")
     @patch("provider.download_helper.storage_context")
-    def test_preprint_xml_exception(
+    def test_generate_preprint_xml_exception(
         self,
         fake_download_storage_context,
         fake_storage_context,
