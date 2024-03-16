@@ -267,6 +267,42 @@ class TestFindNewPreprints(unittest.TestCase):
         result = self.activity.do_activity(self.activity_data)
         self.assertEqual(result, True)
 
+    @patch("provider.preprint.preprint_xml")
+    @patch("provider.preprint.build_article")
+    @patch.object(cleaner, "get_docmap")
+    @patch.object(bigquery, "get_client")
+    @patch.object(activity_module, "storage_context")
+    @patch("provider.download_helper.storage_context")
+    def test_generate_preprint_xml_exception(
+        self,
+        fake_download_storage_context,
+        fake_storage_context,
+        fake_get_client,
+        fake_get_docmap,
+        fake_build_article,
+        fake_preprint_xml,
+    ):
+        "test if an exception is raised generating preprint XML"
+        directory = TempDirectory()
+        rows = FakeBigQueryRowIterator(
+            bigquery_preprint_test_data.PREPRINT_QUERY_RESULT
+        )
+        client = FakeBigQueryClient(rows)
+        fake_get_client.return_value = client
+        resources = ["elife-preprint-92362-v1.xml"]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        fake_download_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/epp", ["article-transformed.xml"]
+        )
+        fake_get_docmap.return_value = read_fixture("sample_docmap_for_87445.json")
+        fake_build_article.return_value = True
+        fake_preprint_xml.side_effect = Exception("")
+
+        result = self.activity.do_activity(self.activity_data)
+        self.assertEqual(result, True)
+
 
 class TestMissingSettings(unittest.TestCase):
     def setUp(self):
