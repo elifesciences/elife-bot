@@ -105,19 +105,12 @@ def start_ping_marker(workflow_id, settings, logger):
     if execution_start_to_close_timeout:
         kwargs["executionStartToCloseTimeout"] = execution_start_to_close_timeout
 
-    if utils.reuse_boto_conn():
-        client = settings.aws_conn('swf', {
-            'aws_access_key_id': settings.aws_access_key_id,
-            'aws_secret_access_key': settings.aws_secret_access_key,
-            'region_name': settings.swf_region,
-        })
-    else:
-        client = boto3.client(
-            "swf",
-            aws_access_key_id=settings.aws_access_key_id,
-            aws_secret_access_key=settings.aws_secret_access_key,
-            region_name=settings.swf_region,
-        )
+    client = settings.aws_conn('swf', {
+        'aws_access_key_id': settings.aws_access_key_id,
+        'aws_secret_access_key': settings.aws_secret_access_key,
+        'region_name': settings.swf_region,
+    })
+
     try:
         # Try and start a workflow
         client.start_workflow_execution(**kwargs)

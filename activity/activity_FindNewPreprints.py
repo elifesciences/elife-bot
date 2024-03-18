@@ -367,19 +367,11 @@ class activity_FindNewPreprints(CleanerBaseActivity):
     def sqs_connect(self):
         "connect to the queue service"
         if not self.sqs_client:
-            if utils.reuse_boto_conn():
-                self.sqs_client = self.settings.aws_conn('sqs', {
-                    'aws_access_key_id': self.settings.aws_access_key_id,
-                    'aws_secret_access_key': self.settings.aws_secret_access_key,
-                    'region_name': self.settings.sqs_region,
-                })
-            else:
-                self.sqs_client = boto3.client(
-                    "sqs",
-                    aws_access_key_id=self.settings.aws_access_key_id,
-                    aws_secret_access_key=self.settings.aws_secret_access_key,
-                    region_name=self.settings.sqs_region,
-                )
+            self.sqs_client = self.settings.aws_conn('sqs', {
+                'aws_access_key_id': self.settings.aws_access_key_id,
+                'aws_secret_access_key': self.settings.aws_secret_access_key,
+                'region_name': self.settings.sqs_region,
+            })
 
     def sqs_queue_url(self):
         "get the queues"

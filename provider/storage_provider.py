@@ -17,17 +17,10 @@ class S3StorageContext:
         self.settings = settings
 
     def get_client(self):
-        if utils.reuse_boto_conn():
-            return self.settings.aws_conn('s3', {
-                'aws_access_key_id': self.settings.aws_access_key_id,
-                'aws_secret_access_key': self.settings.aws_secret_access_key,
-            })
-
-        return boto3.client(
-            "s3",
-            aws_access_key_id=self.settings.aws_access_key_id,
-            aws_secret_access_key=self.settings.aws_secret_access_key,
-        )
+        return self.settings.aws_conn('s3', {
+            'aws_access_key_id': self.settings.aws_access_key_id,
+            'aws_secret_access_key': self.settings.aws_secret_access_key,
+        })
 
     def get_client_from_cache(self):
         if "client" in self.context:

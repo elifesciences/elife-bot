@@ -59,20 +59,11 @@ def main(settings, flag):
 
 def connect(settings):
     "connect to the queue service"
-    if utils.reuse_boto_conn():
-        return settings.aws_conn('sqs', {
-            'aws_access_key_id': settings.aws_access_key_id,
-            'aws_secret_access_key': settings.aws_secret_access_key,
-            'region_name': settings.sqs_region,
-        })
-
-    return boto3.client(
-        "sqs",
-        aws_access_key_id=settings.aws_access_key_id,
-        aws_secret_access_key=settings.aws_secret_access_key,
-        region_name=settings.sqs_region,
-    )
-
+    return settings.aws_conn('sqs', {
+        'aws_access_key_id': settings.aws_access_key_id,
+        'aws_secret_access_key': settings.aws_secret_access_key,
+        'region_name': settings.sqs_region,
+    })
 
 def process_message(settings, logger, message):
     message_payload = {}
