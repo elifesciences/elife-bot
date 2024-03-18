@@ -5,7 +5,7 @@ import unittest
 from mock import patch
 from testfixtures import TempDirectory
 from ddt import ddt, data
-from provider import cleaner, lax_provider
+from provider import cleaner, lax_provider, preprint
 import activity.activity_ScheduleCrossrefPreprint as activity_module
 from activity.activity_ScheduleCrossrefPreprint import (
     activity_ScheduleCrossrefPreprint as activity_object,
@@ -40,8 +40,8 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
         # reduce the sleep time to speed up test runs
-        activity_module.cleaner.DOCMAP_SLEEP_SECONDS = 0.001
-        activity_module.cleaner.DOCMAP_RETRY = 2
+        cleaner.DOCMAP_SLEEP_SECONDS = 0.001
+        cleaner.DOCMAP_RETRY = 2
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
@@ -200,7 +200,7 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         )
 
     @patch.object(activity_module, "get_session")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
+    @patch.object(preprint, "generate_preprint_xml")
     @data(
         {
             "comment": "accepted submission zip file example",
@@ -209,18 +209,19 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
         },
     )
-    def test_get_docmap_exception(
+    def test_preprint_article_exception(
         self,
         test_data,
-        fake_get_docmap_string,
+        fake_generate,
         fake_session,
     ):
-        "test if an exception is raised when generating an article"
+        "test PreprintArticleException exception raised generating preprint XML"
         directory = TempDirectory()
         fake_session.return_value = FakeSession(
             session_data(test_data.get("article_id"), test_data.get("version"))
         )
-        fake_get_docmap_string.side_effect = Exception("An exception")
+        exception_message = "An exception"
+        fake_generate.side_effect = preprint.PreprintArticleException(exception_message)
 
         # do the activity
         result = self.activity.do_activity(
@@ -249,18 +250,19 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.logexception,
             (
-                "ScheduleCrossrefPreprint, exception raised to get docmap_string using"
-                " retries for article_id %s version %s"
+                "ScheduleCrossrefPreprint, exception raised generating preprint XML"
+                " for article_id %s version %s: %s"
             )
-            % (test_data.get("article_id"), test_data.get("version")),
+            % (
+                test_data.get("article_id"),
+                test_data.get("version"),
+                exception_message,
+            ),
         )
 
-    @patch("provider.preprint.build_article")
     @patch("provider.download_helper.storage_context")
-    @patch.object(lax_provider, "article_status_version_map")
     @patch.object(activity_module, "get_session")
-    @patch.object(cleaner, "get_docmap")
-    @patch("requests.get")
+    @patch.object(preprint, "generate_preprint_xml")
     @data(
         {
             "comment": "accepted submission zip file example",
@@ -269,29 +271,24 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
         },
     )
-    def test_build_article_exception(
+    def test_unhandled_exception(
         self,
         test_data,
-        fake_get,
-        fake_get_docmap,
+        fake_generate,
         fake_session,
-        fake_version_map,
         fake_download_storage_context,
-        fake_build_article,
     ):
-        "test if an exception is raised when generating an article"
+        "test Exception is raised when generating preprint XML"
         directory = TempDirectory()
-        fake_build_article.side_effect = Exception("An exception")
+        exception_message = "An exception"
+        fake_generate.side_effect = Exception(exception_message)
         fake_download_storage_context.return_value = FakeStorageContext(
             "tests/files_source/epp", ["article-transformed.xml"]
         )
         fake_session.return_value = FakeSession(
             session_data(test_data.get("article_id"), test_data.get("version"))
         )
-        fake_version_map.return_value = {"vor": [1]}
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
-        sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
-        fake_get.return_value = FakeResponse(200, content=sample_html)
+
         # do the activity
         result = self.activity.do_activity(
             input_data(test_data.get("article_id"), test_data.get("version"))
@@ -319,10 +316,15 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.logexception,
             (
-                "ScheduleCrossrefPreprint, exception raised when building the article object"
-                " for article_id %s version %s"
+                "ScheduleCrossrefPreprint, unhandled exception raised"
+                " when generating preprint XML"
+                " for article_id %s version %s: %s"
             )
-            % (test_data.get("article_id"), test_data.get("version")),
+            % (
+                test_data.get("article_id"),
+                test_data.get("version"),
+                exception_message,
+            ),
         )
 
 
@@ -334,8 +336,8 @@ class TestSettingsValidation(unittest.TestCase):
             pass
 
         # reduce the sleep time to speed up test runs
-        activity_module.cleaner.DOCMAP_SLEEP_SECONDS = 0.001
-        activity_module.cleaner.DOCMAP_RETRY = 2
+        cleaner.DOCMAP_SLEEP_SECONDS = 0.001
+        cleaner.DOCMAP_RETRY = 2
 
         settings_object = FakeSettings()
         settings_object.downstream_recipients_yaml = (

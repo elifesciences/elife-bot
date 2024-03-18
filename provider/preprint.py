@@ -1,4 +1,5 @@
 "functions for generating preprint XML"
+import os
 from elifearticle.parse import build_article_from_xml
 from elifearticle.article import (
     Article,
@@ -244,3 +245,50 @@ def build_preprint_article(
 
     # continue if article could be populated
     return article
+
+
+def generate_preprint_xml(
+    settings, article_id, version, caller_name, directories, logger
+):
+    "generate preprint XML and save it to disk"
+    # get docmap data
+    try:
+        docmap_string = cleaner.get_docmap_string_with_retry(
+            settings, article_id, caller_name, logger
+        )
+    except Exception as exception:
+        logger.exception(
+            (
+                "%s, exception raised to get docmap_string"
+                " using retries for article_id %s version %s"
+            )
+            % (caller_name, article_id, version)
+        )
+        raise PreprintArticleException(exception) from exception
+
+    # populate the article object
+    try:
+        article = build_preprint_article(
+            settings,
+            article_id,
+            version,
+            docmap_string,
+            directories.get("TEMP_DIR"),
+            logger,
+        )
+    except Exception as exception:
+        # handle if article could not be built
+        logger.exception(
+            "%s, exception raised when building the article object for article_id %s version %s"
+            % (caller_name, article_id, version)
+        )
+        raise PreprintArticleException(exception) from exception
+
+    # generate preprint XML from data sources
+    xml_file_name = xml_filename(article_id, settings, version)
+    xml_file_path = os.path.join(directories.get("INPUT_DIR"), xml_file_name)
+    xml_string = preprint_xml(article, settings)
+    with open(xml_file_path, "wb") as open_file:
+        open_file.write(xml_string)
+
+    return xml_file_path

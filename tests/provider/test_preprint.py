@@ -16,7 +16,7 @@ from elifearticle.article import (
     Role,
 )
 from tests import read_fixture, settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
 from provider import cleaner, download_helper, preprint
 
 
@@ -575,8 +575,9 @@ class TestBuildPreprintArticle(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
 
+    @patch("requests.get")
     @patch.object(download_helper, "storage_context")
-    def test_build_preprint_article(self, fake_download_storage_context):
+    def test_build_preprint_article(self, fake_download_storage_context, fake_get):
         "build an Article object from biorXiv XML and docmap string data"
         directory = TempDirectory()
         fake_logger = FakeLogger()
@@ -587,6 +588,8 @@ class TestBuildPreprintArticle(unittest.TestCase):
         article_id = 93405
         version = 1
         docmap_string = read_fixture("sample_docmap_for_84364.json")
+        sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
+        fake_get.return_value = FakeResponse(200, content=sample_html)
         # invoke
         result = preprint.build_preprint_article(
             settings_mock,
@@ -671,3 +674,126 @@ class TestBuildPreprintArticle(unittest.TestCase):
             )
         # assert
         self.assertEqual(fake_logger.logexception, exception_message)
+
+
+class TestGeneratePreprintXml(unittest.TestCase):
+    "tests for preprint.generate_preprint_xml()"
+
+    def setUp(self):
+        # reduce the sleep time to speed up test runs
+        cleaner.DOCMAP_SLEEP_SECONDS = 0.001
+        cleaner.DOCMAP_RETRY = 2
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch("requests.get")
+    @patch.object(download_helper, "storage_context")
+    @patch.object(cleaner, "get_docmap_string_with_retry")
+    def test_generate_preprint_xml(
+        self, fake_get_docmap_string, fake_download_storage_context, fake_get
+    ):
+        "test PreprintArticleException exception raised generating preprint XML"
+        directory = TempDirectory()
+        fake_logger = FakeLogger()
+
+        # set and create testing directories
+        directories = {
+            "TEMP_DIR": os.path.join(directory.path, "tmp_dir"),
+            "INPUT_DIR": os.path.join(directory.path, "input_dir"),
+        }
+        for value in directories.values():
+            os.mkdir(value)
+
+        article_id = 84364
+        version = 2
+        fake_download_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/epp", ["article-transformed.xml"]
+        )
+        fake_get_docmap_string.return_value = read_fixture(
+            "sample_docmap_for_84364.json"
+        )
+        caller_name = "ScheduleCrossrefPreprint"
+        sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
+        fake_get.return_value = FakeResponse(200, content=sample_html)
+
+        # invoke
+        xml_file_path = preprint.generate_preprint_xml(
+            settings_mock,
+            article_id,
+            version,
+            caller_name,
+            directories,
+            fake_logger,
+        )
+
+        # assert
+        self.assertTrue(xml_file_path.endswith("input_dir/elife-preprint-84364-v2.xml"))
+
+    @patch.object(cleaner, "get_docmap_string_with_retry")
+    def test_docmap_exception(self, fake_get_docmap_string):
+        "test PreprintArticleException exception raised when getting a docmap"
+        fake_logger = FakeLogger()
+        article_id = 84364
+        version = 2
+        directories = {}
+        caller_name = "ScheduleCrossrefPreprint"
+        exception_message = "An exception"
+        fake_get_docmap_string.side_effect = preprint.PreprintArticleException(
+            exception_message
+        )
+
+        # invoke
+        with self.assertRaises(preprint.PreprintArticleException):
+            preprint.generate_preprint_xml(
+                settings_mock,
+                article_id,
+                version,
+                caller_name,
+                directories,
+                fake_logger,
+            )
+        # assert
+        self.assertEqual(
+            fake_logger.logexception,
+            (
+                "%s, exception raised to get docmap_string"
+                " using retries for article_id %s version %s"
+            )
+            % (caller_name, article_id, version),
+        )
+
+    @patch.object(preprint, "build_preprint_article")
+    @patch.object(cleaner, "get_docmap_string_with_retry")
+    def test_build_article_exception(self, fake_get_docmap_string, fake_build_article):
+        "test PreprintArticleException is raised when generating an article"
+        fake_logger = FakeLogger()
+        article_id = 84364
+        version = 2
+        directories = {}
+        caller_name = "ScheduleCrossrefPreprint"
+        fake_get_docmap_string.return_value = True
+        exception_message = "An exception"
+        fake_build_article.side_effect = preprint.PreprintArticleException(
+            exception_message
+        )
+
+        # invoke
+        with self.assertRaises(preprint.PreprintArticleException):
+            preprint.generate_preprint_xml(
+                settings_mock,
+                article_id,
+                version,
+                caller_name,
+                directories,
+                fake_logger,
+            )
+        # assert
+        self.assertEqual(
+            fake_logger.logexception,
+            (
+                "%s, exception raised when building the article object"
+                " for article_id %s version %s"
+            )
+            % (caller_name, article_id, version),
+        )
