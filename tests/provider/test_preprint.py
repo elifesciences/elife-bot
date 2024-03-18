@@ -16,7 +16,7 @@ from elifearticle.article import (
     Role,
 )
 from tests import read_fixture, settings_mock
-from tests.activity.classes_mock import FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 from provider import cleaner, download_helper, preprint
 
 
@@ -165,7 +165,9 @@ class TestBuildArticle(unittest.TestCase):
         fake_sub_article_data.return_value = sub_article_data_fixture()
         article_id = "84364"
         docmap_string = read_fixture("sample_docmap_for_84364.json")
-        article_xml_path = "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        article_xml_path = (
+            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        )
         article = preprint.build_article(article_id, docmap_string, article_xml_path)
         # assertions
         self.assertEqual(article.doi, "10.7554/eLife.84364")
@@ -241,7 +243,9 @@ class TestBuildArticle(unittest.TestCase):
         article_id = "84364"
         version = 1
         docmap_string = read_fixture("sample_docmap_for_84364.json")
-        article_xml_path = "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        article_xml_path = (
+            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        )
         article = preprint.build_article(
             article_id, docmap_string, article_xml_path, version
         )
@@ -275,7 +279,9 @@ class TestBuildArticle(unittest.TestCase):
         docmap_string = docmap_string.replace(
             b'"published": "2023-06-14T14:00:00+00:00",', b""
         )
-        article_xml_path = "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        article_xml_path = (
+            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        )
         with self.assertRaises(preprint.PreprintArticleException) as test_exception:
             preprint.build_article(article_id, docmap_string, article_xml_path)
         self.assertEqual(
@@ -290,15 +296,13 @@ class TestBuildArticle(unittest.TestCase):
     def test_no_version_doi(self, fake_version_doi):
         fake_version_doi.return_value = None
         with self.assertRaises(preprint.PreprintArticleException) as test_exception:
-            result = preprint.build_article(None, None, None)
-            self.assertEqual(result, None)
+            preprint.build_article(None, None, None)
 
     @patch.object(cleaner, "version_doi_from_docmap")
     def test_incorrect_version_doi(self, fake_version_doi):
         fake_version_doi.return_value = "10.999999/unwanted.doi"
         with self.assertRaises(preprint.PreprintArticleException) as test_exception:
-            result = preprint.build_article(None, None, None)
-            self.assertEqual(result, None)
+            preprint.build_article(None, None, None)
 
 
 class TestXmlFilename(unittest.TestCase):
@@ -526,7 +530,9 @@ class TestPreprintXml(unittest.TestCase):
         fake_sub_article_data.return_value = sub_article_data_fixture()
         article_id = "84364"
         docmap_string = read_fixture("sample_docmap_for_84364.json")
-        article_xml_path = "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        article_xml_path = (
+            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+        )
         article = preprint.build_article(article_id, docmap_string, article_xml_path)
         result = preprint.preprint_xml(article, settings_mock)
         # print(bytes.decode(result))
@@ -561,3 +567,107 @@ class TestDownloadOriginalPreprintXml(unittest.TestCase):
         )
         self.assertEqual(result.rsplit(os.sep, 1)[-1], file_name)
         self.assertTrue(file_name in os.listdir(directory.path))
+
+
+class TestBuildPreprintArticle(unittest.TestCase):
+    "tests for preprint.build_preprint_article()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch.object(download_helper, "storage_context")
+    def test_build_preprint_article(self, fake_download_storage_context):
+        "build an Article object from biorXiv XML and docmap string data"
+        directory = TempDirectory()
+        fake_logger = FakeLogger()
+        file_name = "article-transformed.xml"
+        fake_download_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/epp", [file_name]
+        )
+        article_id = 93405
+        version = 1
+        docmap_string = read_fixture("sample_docmap_for_84364.json")
+        # invoke
+        result = preprint.build_preprint_article(
+            settings_mock,
+            article_id,
+            version,
+            docmap_string,
+            directory.path,
+            fake_logger,
+        )
+        # assert
+        self.assertTrue(isinstance(result, Article))
+
+    @patch.object(preprint, "download_original_preprint_xml")
+    @patch.object(download_helper, "storage_context")
+    def test_download_xml_exception(
+        self,
+        fake_download_storage_context,
+        fake_download,
+    ):
+        "test an exception raised when downloading original preprint XML"
+        directory = TempDirectory()
+        fake_logger = FakeLogger()
+        exception_message = "An exception"
+        fake_download.side_effect = preprint.PreprintArticleException(exception_message)
+        file_name = "article-transformed.xml"
+        fake_download_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/epp", [file_name]
+        )
+        article_id = 93405
+        version = 1
+        docmap_string = read_fixture("sample_docmap_for_84364.json")
+
+        # invoke
+        with self.assertRaises(preprint.PreprintArticleException):
+            preprint.build_preprint_article(
+                settings_mock,
+                article_id,
+                version,
+                docmap_string,
+                directory.path,
+                fake_logger,
+            )
+        # assert
+        self.assertEqual(
+            fake_logger.logexception,
+            (
+                "Exception getting preprint server XML"
+                " from the bucket for article_id %s, version %s: %s"
+            )
+            % (article_id, version, exception_message),
+        )
+
+    @patch.object(preprint, "build_article")
+    @patch.object(download_helper, "storage_context")
+    def test_build_article_exception(
+        self, fake_download_storage_context, fake_build_article
+    ):
+        "test an exception raised building the Article object"
+        directory = TempDirectory()
+        fake_logger = FakeLogger()
+        exception_message = "An exception"
+        fake_build_article.side_effect = preprint.PreprintArticleException(
+            exception_message
+        )
+        file_name = "article-transformed.xml"
+        fake_download_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/epp", [file_name]
+        )
+        article_id = 93405
+        version = 1
+        docmap_string = read_fixture("sample_docmap_for_84364.json")
+
+        # invoke
+        with self.assertRaises(preprint.PreprintArticleException):
+            preprint.build_preprint_article(
+                settings_mock,
+                article_id,
+                version,
+                docmap_string,
+                directory.path,
+                fake_logger,
+            )
+        # assert
+        self.assertEqual(fake_logger.logexception, exception_message)

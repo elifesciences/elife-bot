@@ -7,6 +7,7 @@ import boto3
 from activity.objects import CleanerBaseActivity
 from provider import (
     bigquery,
+    cleaner,
     email_provider,
     outbox_provider,
     preprint,
@@ -225,28 +226,6 @@ class activity_FindNewPreprints(CleanerBaseActivity):
                 )
             )
 
-            # get preprint server XML from a bucket
-            try:
-                article_xml_path = preprint.download_original_preprint_xml(
-                    self.settings,
-                    self.directories.get("TMP_DIR"),
-                    detail.get("article_id"),
-                    detail.get("version"),
-                )
-            except Exception as exception:
-                self.logger.exception(
-                    "%s, exception getting preprint server XML %s"
-                    " from the bucket for article_id %s, version %s"
-                    % (
-                        self.name,
-                        detail.get("article_id"),
-                        detail.get("version"),
-                        str(exception),
-                    )
-                )
-                self.bad_xml_files.append(new_xml_filename)
-                continue
-
             # get the docmap_string for the article
             identifier = "%s-%s-v%s" % (
                 self.name,
@@ -254,24 +233,29 @@ class activity_FindNewPreprints(CleanerBaseActivity):
                 detail.get("version"),
             )
             try:
-                docmap_string = self.get_docmap_string(
-                    detail.get("article_id"), identifier
+                docmap_string = cleaner.get_docmap_string_with_retry(
+                    self.settings,
+                    detail.get("article_id"),
+                    self.name,
+                    self.logger,
                 )
             except Exception as exception:
                 self.logger.exception(
-                    "%s, exception getting the docmap_string for article_id %s: %s"
-                    % (self.name, detail.get("article_id"), str(exception))
+                    "%s, exception getting the docmap_string for article_id %s, %s: %s"
+                    % (self.name, detail.get("article_id"), identifier, str(exception))
                 )
                 self.bad_xml_files.append(new_xml_filename)
                 continue
 
             # build the article object
             try:
-                article_object = preprint.build_article(
+                article_object = preprint.build_preprint_article(
+                    self.settings,
                     detail.get("article_id"),
+                    detail.get("version"),
                     docmap_string,
-                    article_xml_path,
-                    version=detail.get("version"),
+                    self.directories.get("TMP_DIR"),
+                    self.logger,
                 )
             except Exception as exception:
                 self.logger.exception(
@@ -281,13 +265,23 @@ class activity_FindNewPreprints(CleanerBaseActivity):
                 self.bad_xml_files.append(new_xml_filename)
                 continue
 
-            # write the article object to XML file
-            xml_file_path = os.path.join(
-                self.directories.get("OUTPUT_DIR"), new_xml_filename
-            )
-            xml_string = preprint.preprint_xml(article_object, self.settings)
-            with open(xml_file_path, "wb") as open_file:
-                open_file.write(xml_string)
+            try:
+                # write the article object to XML file
+                xml_file_path = os.path.join(
+                    self.directories.get("OUTPUT_DIR"), new_xml_filename
+                )
+                xml_string = preprint.preprint_xml(article_object, self.settings)
+                with open(xml_file_path, "wb") as open_file:
+                    open_file.write(xml_string)
+            except Exception as exception:
+                self.logger.exception(
+                    "%s, failed to generate preprint XML"
+                    " from the article_object for article_id %s: %s"
+                    % (self.name, detail.get("article_id"), str(exception))
+                )
+                self.bad_xml_files.append(new_xml_filename)
+                continue
+
             self.good_xml_files.append(new_xml_filename)
 
     def send_admin_email(self, new_xml_filenames):

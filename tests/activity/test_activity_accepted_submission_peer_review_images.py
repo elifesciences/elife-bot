@@ -203,10 +203,11 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
             "expected_upload_xml_status": None,
             "expected_bucket_upload_folder_contents": [],
             "expected_activity_log_contains": [
+                "GET request returned a 404 status code for https://i.imgur.com/vc4GR10.png",
                 (
                     "AcceptedSubmissionPeerReviewImages, href https://i.imgur.com/vc4GR10.png "
                     "could not be downloaded"
-                )
+                ),
             ],
             "expected_cleaner_log_contains": [
                 (

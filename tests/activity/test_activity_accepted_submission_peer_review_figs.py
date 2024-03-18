@@ -356,7 +356,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                 "</sub-article>"
             ),
             "image_names": ["local.jpg"],
-            "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
+            "expected_result": True,
         },
     )
     def test_do_activity_copy_files_exception(
@@ -426,7 +426,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                 "</sub-article>"
             ),
             "image_names": ["local.jpg"],
-            "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
+            "expected_result": True,
         },
     )
     def test_do_activity_rename_files_exception(

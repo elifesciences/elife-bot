@@ -110,8 +110,12 @@ class activity_DepositCrossrefPostedContent(Activity):
                 continue
 
             # check whether this is a less than more recent EPP version
-            docmap_string = self.get_docmap_string(
-                article.manuscript, article.manuscript
+            docmap_string = cleaner.get_docmap_string(
+                self.settings,
+                article.manuscript,
+                article.manuscript,
+                self.name,
+                self.logger,
             )
             newest_version_doi = cleaner.version_doi_from_docmap(
                 docmap_string, article.manuscript

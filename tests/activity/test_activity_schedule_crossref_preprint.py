@@ -40,7 +40,8 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
         # reduce the sleep time to speed up test runs
-        activity_module.SLEEP_SECONDS = 0.001
+        activity_module.cleaner.DOCMAP_SLEEP_SECONDS = 0.001
+        activity_module.cleaner.DOCMAP_RETRY = 2
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
@@ -198,6 +199,62 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
             ),
         )
 
+    @patch.object(activity_module, "get_session")
+    @patch.object(cleaner, "get_docmap_string_with_retry")
+    @data(
+        {
+            "comment": "accepted submission zip file example",
+            "article_id": "84364",
+            "version": 2,
+            "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
+        },
+    )
+    def test_get_docmap_exception(
+        self,
+        test_data,
+        fake_get_docmap_string,
+        fake_session,
+    ):
+        "test if an exception is raised when generating an article"
+        directory = TempDirectory()
+        fake_session.return_value = FakeSession(
+            session_data(test_data.get("article_id"), test_data.get("version"))
+        )
+        fake_get_docmap_string.side_effect = Exception("An exception")
+
+        # do the activity
+        result = self.activity.do_activity(
+            input_data(test_data.get("article_id"), test_data.get("version"))
+        )
+
+        # check assertions
+        self.assertEqual(
+            result,
+            test_data.get("expected_result"),
+            ("failed in {comment}, got {result}, article_id {article_id}").format(
+                comment=test_data.get("comment"),
+                result=result,
+                article_id=test_data.get("article_id"),
+            ),
+        )
+        # assert outbox folders do not exist since no XML was added to them
+        posted_content_outbox_path = os.path.join(
+            directory.path, "crossref_posted_content", "outbox"
+        )
+        self.assertEqual(os.path.exists(posted_content_outbox_path), False)
+        peer_review_outbox_path = os.path.join(
+            directory.path, "crossref_peer_review", "outbox"
+        )
+        self.assertEqual(os.path.exists(peer_review_outbox_path), False)
+        self.assertEqual(
+            self.activity.logger.logexception,
+            (
+                "ScheduleCrossrefPreprint, exception raised to get docmap_string using"
+                " retries for article_id %s version %s"
+            )
+            % (test_data.get("article_id"), test_data.get("version")),
+        )
+
     @patch("provider.preprint.build_article")
     @patch("provider.download_helper.storage_context")
     @patch.object(lax_provider, "article_status_version_map")
@@ -259,7 +316,14 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
             directory.path, "crossref_peer_review", "outbox"
         )
         self.assertEqual(os.path.exists(peer_review_outbox_path), False)
-        # todo!!! assertion on exception log message
+        self.assertEqual(
+            self.activity.logger.logexception,
+            (
+                "ScheduleCrossrefPreprint, exception raised when building the article object"
+                " for article_id %s version %s"
+            )
+            % (test_data.get("article_id"), test_data.get("version")),
+        )
 
 
 class TestSettingsValidation(unittest.TestCase):
@@ -270,7 +334,8 @@ class TestSettingsValidation(unittest.TestCase):
             pass
 
         # reduce the sleep time to speed up test runs
-        activity_module.SLEEP_SECONDS = 0.001
+        activity_module.cleaner.DOCMAP_SLEEP_SECONDS = 0.001
+        activity_module.cleaner.DOCMAP_RETRY = 2
 
         settings_object = FakeSettings()
         settings_object.downstream_recipients_yaml = (
