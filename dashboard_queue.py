@@ -10,7 +10,7 @@ def send_message(message, settings):
         sns_client = settings.aws_conn('sns', {
             'aws_access_key_id': settings.aws_access_key_id,
             'aws_secret_access_key': settings.aws_secret_access_key,
-            'region_name': settings.sns_region,
+            'region_name': settings.sqs_region,
         })
     else:
         sns_client = boto3.client(
