@@ -126,9 +126,8 @@ def main():
     if args.poa:
         is_poa = args.poa
 
-    import settings as settingsLib
-
-    settings = settingsLib.get_settings(ENV)
+    from provider import utils
+    settings = utils.get_settings(ENV)
 
     starter_object = starter_CopyGlencoeStillImages()
 

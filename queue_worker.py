@@ -38,12 +38,19 @@ class QueueWorker:
     def connect(self):
         "connect to the queue service"
         if not self.client:
-            self.client = boto3.client(
-                "sqs",
-                aws_access_key_id=self.settings.aws_access_key_id,
-                aws_secret_access_key=self.settings.aws_secret_access_key,
-                region_name=self.settings.sqs_region,
-            )
+            if utils.reuse_boto_conn():
+                self.client = self.settings.aws_conn('sqs', {
+                    'aws_access_key_id': self.settings.aws_access_key_id,
+                    'aws_secret_access_key': self.settings.aws_secret_access_key,
+                    'region_name': self.settings.sqs_region,
+                })
+            else:
+                self.client = boto3.client(
+                    "sqs",
+                    aws_access_key_id=self.settings.aws_access_key_id,
+                    aws_secret_access_key=self.settings.aws_secret_access_key,
+                    region_name=self.settings.sqs_region,
+                )
 
     def queues(self):
         "get the queues"

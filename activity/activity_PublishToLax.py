@@ -1,7 +1,7 @@
 import json
 import boto3
 import provider.lax_provider as lax_provider
-from provider.utils import base64_decode_string
+from provider import utils
 from activity.objects import Activity
 
 """
@@ -65,12 +65,21 @@ class activity_PublishToLax(Activity):
                 run_type,
             )
             message_body = json.dumps(message)
-            client = boto3.client(
-                "sqs",
-                aws_access_key_id=self.settings.aws_access_key_id,
-                aws_secret_access_key=self.settings.aws_secret_access_key,
-                region_name=self.settings.sqs_region,
-            )
+
+            if utils.reuse_boto_conn():
+                client = self.settings.aws_conn('sqs', {
+                    'aws_access_key_id': self.settings.aws_access_key_id,
+                    'aws_secret_access_key': self.settings.aws_secret_access_key,
+                    'region_name': self.settings.sqs_region,
+                })
+            else:
+                client = boto3.client(
+                    "sqs",
+                    aws_access_key_id=self.settings.aws_access_key_id,
+                    aws_secret_access_key=self.settings.aws_secret_access_key,
+                    region_name=self.settings.sqs_region,
+                )
+            
             queue_url_response = client.get_queue_url(
                 QueueName=self.settings.xml_info_queue
             )
@@ -111,7 +120,7 @@ class activity_PublishToLax(Activity):
     def get_workflow_data(self, data):
         if "publication_data" in data:
             publication_data = json.loads(
-                base64_decode_string(data["publication_data"])
+                utils.base64_decode_string(data["publication_data"])
             )
             workflow_data = publication_data["workflow_data"]
             return workflow_data

@@ -1,19 +1,26 @@
 import json
 import uuid
 import boto3
-from provider.utils import unicode_encode
+from provider import utils
 
 
 def send_message(message, settings):
 
-    sns_client = boto3.client(
-        "sns",
-        aws_access_key_id=settings.aws_access_key_id,
-        aws_secret_access_key=settings.aws_secret_access_key,
-        region_name=settings.sqs_region,
-    )
+    if utils.reuse_boto_conn():
+        sns_client = settings.aws_conn('sns', {
+            'aws_access_key_id': settings.aws_access_key_id,
+            'aws_secret_access_key': settings.aws_secret_access_key,
+            'region_name': settings.sns_region,
+        })
+    else:
+        sns_client = boto3.client(
+            "sns",
+            aws_access_key_id=settings.aws_access_key_id,
+            aws_secret_access_key=settings.aws_secret_access_key,
+            region_name=settings.sqs_region,
+        )
 
-    payload = unicode_encode(json.dumps(message))
+    payload = utils.unicode_encode(json.dumps(message))
     sns_client.publish(TopicArn=settings.event_monitor_topic, Message=payload)
 
 

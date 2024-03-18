@@ -2,7 +2,7 @@ import datetime
 import os
 import unittest
 from mock import patch
-from moto import mock_swf
+from moto import mock_aws
 from botocore.config import Config
 import boto3
 from tests import settings_mock
@@ -12,12 +12,12 @@ import decider
 import worker
 from starter.starter_Ping import starter_Ping as starter_class
 from workflow.workflow_Ping import workflow_Ping as workflow_class
-
+from provider import utils
 
 class TestRunWorkflowPing(unittest.TestCase):
-    @mock_swf
+    @mock_aws
     def setUp(self):
-        os.environ["MOTO_ALLOW_NONEXISTENT_REGION"] = "true"
+        utils.set_envvar("MOTO_ALLOW_NONEXISTENT_REGION", "true")
 
         self.test_client = boto3.client(
             "swf",
@@ -29,7 +29,7 @@ class TestRunWorkflowPing(unittest.TestCase):
 
     @patch("decider.create_log")
     @patch("worker.create_log")
-    @mock_swf
+    @mock_aws
     def test_run(self, fake_worker_log, fake_decider_log):
         "test running an SWF workflow execution using moto"
         # get the workflow name and steps

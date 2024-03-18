@@ -1,3 +1,6 @@
+import boto3
+from moto import mock_aws
+
 swf_region = ""
 domain = ""
 default_task_list = ""
@@ -261,3 +264,14 @@ striking_images_bucket = "striking_images_bucket"
 
 # user-agent for using in requests
 user_agent = "user_agent/version (https://example.org)"
+
+@mock_aws
+def aws_conn(service, service_creation_kwargs):
+    """this function is missing in the regular `settings.py` file because it is added dynamically by
+    the `provider.get_settings` function.
+
+    during testing this file is imported and used directly, bypassing `provider.get_settings` with no
+    opportunity to either add it or patch it with `@mock_aws`.
+
+    there is another mock `settings.py` file with the same function in `tests.settings_mock.py`."""
+    return boto3.client(service, **service_creation_kwargs)

@@ -22,13 +22,21 @@ def work(settings, flag):
     logger = create_log("worker.log", settings.setLevel, identity)
 
     # Simple connect
-    client = boto3.client(
-        "swf",
-        aws_access_key_id=settings.aws_access_key_id,
-        aws_secret_access_key=settings.aws_secret_access_key,
-        region_name=settings.swf_region,
-        config=Config(connect_timeout=50, read_timeout=70),
-    )
+    if utils.reuse_boto_conn():
+        client = settings.aws_conn('swf', {
+            'aws_access_key_id': settings.aws_access_key_id,
+            'aws_secret_access_key': settings.aws_secret_access_key,
+            'region_name': settings.swf_region,
+            'config': Config(connect_timeout=50, read_timeout=70),
+        })
+    else:
+        client = boto3.client(
+            "swf",
+            aws_access_key_id=settings.aws_access_key_id,
+            aws_secret_access_key=settings.aws_secret_access_key,
+            region_name=settings.swf_region,
+            config=Config(connect_timeout=50, read_timeout=70),
+        )
 
     token = None
 

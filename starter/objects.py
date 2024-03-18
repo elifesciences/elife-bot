@@ -4,7 +4,7 @@ from collections import OrderedDict
 import boto3
 import botocore
 import starter.starter_helper as helper
-
+from provider import utils
 
 LOG_FILE = "starter.log"
 
@@ -35,12 +35,19 @@ class Starter:
 
     def connect_to_swf(self):
         "connect to SWF"
-        self.client = boto3.client(
-            "swf",
-            aws_access_key_id=self.settings.aws_access_key_id,
-            aws_secret_access_key=self.settings.aws_secret_access_key,
-            region_name=self.settings.swf_region,
-        )
+        if utils.reuse_boto_conn():
+            self.client = self.settings.aws_conn('swf', {
+                'aws_access_key_id': self.settings.aws_access_key_id,
+                'aws_secret_access_key': self.settings.aws_secret_access_key,
+                'region_name': self.settings.swf_region,
+            })
+        else:
+            self.client = boto3.client(
+                "swf",
+                aws_access_key_id=self.settings.aws_access_key_id,
+                aws_secret_access_key=self.settings.aws_secret_access_key,
+                region_name=self.settings.swf_region,
+            )
 
     def start_workflow_execution(self, workflow_params):
         "start a workflow execution with exception handling and logging messages"

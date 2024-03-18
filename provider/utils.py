@@ -1,3 +1,4 @@
+import os
 import re
 import urllib
 import base64
@@ -247,21 +248,27 @@ def create_aws_connection(service, service_creation_kwargs):
     assert isinstance(service, str), "`service` must be a string"
     assert isinstance(service_creation_kwargs, dict), "`service_creation_kwargs` must be a dictionary"
 
-    assert service == "s3", "`service` must equal 's3' for now"
-
     return boto3.client(service, **service_creation_kwargs)
+
+
+def get_aws_connection_key(service, service_creation_kwargs):
+    "returns a tuple for the given `service` that can be used in a dictionary"
+    kv = service_creation_kwargs
+    # ('s3', 'us-east-1', '1234567890', Config{...})
+    return (service, kv.get('region_name'), kv.get('aws_access_key_id'), kv.get('config'))
 
 
 def get_aws_connection(service_conn_map, service, service_creation_kwargs):
     "centralised access to AWS service connections"
     assert isinstance(service_conn_map, dict), "`service_conn_map` must be a dictionary"
     assert isinstance(service, str), "`service` must be a string"
-    assert isinstance(service_creation_kwargs, dict), "`service_createion_kwargs` must be a dictionary"
+    assert isinstance(service_creation_kwargs, dict), "`service_creation_kwargs` must be a dictionary"
 
     if service in service_conn_map:
         return service_conn_map[service]
 
-    map_key = service # perhaps incorporate `service_creation_kwargs` in future
+    map_key = get_aws_connection_key(service, service_creation_kwargs)
+    
     service_conn_map[map_key] = create_aws_connection(service, service_creation_kwargs)
     return service_conn_map[map_key]
 
@@ -286,3 +293,25 @@ def content_type_from_file_name(file_name):
         return "binary/octet-stream"
     else:
         return content_type
+
+ENVVAR_KNOWN_KEYS = {
+    'BOT_REUSE_BOTO_CONN',
+    'MOTO_ALLOW_NONEXISTENT_REGION',
+    'TEST_DUMMY',
+}
+
+def envvar(key, default=None):
+    """returns a value for the environment variable `key`.
+    raises an `AssertionError` if the requested environment variable is unknown."""
+    assert key in ENVVAR_KNOWN_KEYS, "programming error. unsupported environment key: %s" % key
+    return os.environ.get(key, default)
+
+def set_envvar(key, val):
+    """set a value `val` for the environment variable `key`.
+    raises an `AssertionError` if the requested environment variable is unknown."""
+    assert key in ENVVAR_KNOWN_KEYS, "programming error. unsupported environment key: %s" % key    
+    os.environ[key] = val
+
+def reuse_boto_conn():
+    "returns `True` if the `BOT_REUSE_BOTO_CONN` environment variable has been set to '1'"
+    return envvar('BOT_REUSE_BOTO_CONN', '0') == '1'

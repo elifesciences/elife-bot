@@ -1,3 +1,6 @@
+import boto3
+from moto import mock_aws
+
 swf_region = "antarctica"
 domain = "test_domain"
 default_task_list = "test_task_list"
@@ -107,3 +110,14 @@ mathpix_app_key = "key"
 
 # EPP settings
 epp_data_bucket = "epp_bucket"
+
+@mock_aws
+def aws_conn(service, service_creation_kwargs):
+    """this function is missing in the regular `settings.py` file because it is added dynamically by
+    the `provider.get_settings` function.
+
+    during testing this file is imported and used directly, bypassing `provider.get_settings` with no
+    opportunity to either add it or patch it with `@mock_aws`.
+
+    there is another mock `settings.py` file with the same function in `tests.activity.settings_mock.py`."""
+    return boto3.client(service, **service_creation_kwargs)
