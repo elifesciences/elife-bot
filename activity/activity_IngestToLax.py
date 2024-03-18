@@ -1,6 +1,5 @@
 import json
-import boto3
-from provider import utils, lax_provider
+from provider import lax_provider
 from provider.execution_context import get_session
 from activity.objects import Activity
 

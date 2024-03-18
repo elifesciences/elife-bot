@@ -1,7 +1,5 @@
-from . import utils
 from datetime import datetime, timezone
 from collections import OrderedDict
-import boto3
 
 """
 SWFMeta data provider

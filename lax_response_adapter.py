@@ -1,5 +1,4 @@
 import json
-import boto3
 from dateutil.parser import parse
 import log
 from provider import process

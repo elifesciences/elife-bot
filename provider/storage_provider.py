@@ -1,10 +1,6 @@
-from . import utils
-import os
 import re
 import io
-import boto3
 import botocore
-import log
 
 def storage_context(*args):
     return S3StorageContext(*args)

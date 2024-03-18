@@ -1,7 +1,6 @@
 import json
 import importlib
 import os
-import boto3
 import workflow
 import activity
 from provider import utils

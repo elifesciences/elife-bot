@@ -3,7 +3,6 @@ import json
 import os
 import re
 import yaml
-import boto3
 from provider import process, utils
 import log
 from S3utility.s3_notification_info import S3NotificationInfo

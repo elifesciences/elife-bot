@@ -1,6 +1,5 @@
 import json
 import uuid
-import boto3
 from provider import utils
 
 

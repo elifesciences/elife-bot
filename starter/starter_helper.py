@@ -1,9 +1,7 @@
 import os
 import json
 import importlib
-import boto3
 import log
-from provider import utils
 
 class NullRequiredDataException(Exception):
     def __init__(self, message):

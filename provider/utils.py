@@ -295,7 +295,6 @@ def content_type_from_file_name(file_name):
         return content_type
 
 ENVVAR_KNOWN_KEYS = {
-    'BOT_REUSE_BOTO_CONN',
     'MOTO_ALLOW_NONEXISTENT_REGION',
     'TEST_DUMMY',
 }

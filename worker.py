@@ -3,7 +3,6 @@ import os
 import importlib
 import botocore
 from botocore.config import Config
-import boto3
 from log import create_log
 from provider import process, utils
 import activity

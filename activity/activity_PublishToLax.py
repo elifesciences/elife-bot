@@ -1,5 +1,4 @@
 import json
-import boto3
 import provider.lax_provider as lax_provider
 from provider import utils
 from activity.objects import Activity

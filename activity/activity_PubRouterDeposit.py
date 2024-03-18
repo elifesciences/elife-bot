@@ -2,7 +2,6 @@ import os
 import json
 import time
 import glob
-import boto3
 import provider.article as articlelib
 from provider.storage_provider import storage_context
 from provider import (

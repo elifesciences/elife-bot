@@ -3,7 +3,6 @@ import datetime
 import json
 import time
 import glob
-import boto3
 from activity.objects import CleanerBaseActivity
 from provider import (
     bigquery,

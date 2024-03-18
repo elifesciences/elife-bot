@@ -3,7 +3,6 @@ import copy
 import json
 import importlib
 from botocore.config import Config
-import boto3
 from provider import process, utils
 from log import create_log
 import workflow

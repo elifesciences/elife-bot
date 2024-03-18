@@ -1,6 +1,5 @@
 import os
 import json
-import boto3
 import log
 from provider import process, software_heritage, utils
 
