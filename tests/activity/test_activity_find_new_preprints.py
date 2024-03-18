@@ -32,15 +32,15 @@ class TestFindNewPreprints(unittest.TestCase):
         self.activity.make_activity_directories()
         self.activity_data = {}
         # reset retry values
-        activity_module.cleaner.DOCMAP_SLEEP_SECONDS = 0.0001
-        activity_module.cleaner.DOCMAP_RETRY = 2
+        cleaner.DOCMAP_SLEEP_SECONDS = 0.0001
+        cleaner.DOCMAP_RETRY = 2
 
     def tearDown(self):
         TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
 
     @patch("boto3.client")
-    @patch.object(cleaner, "get_docmap")
+    @patch.object(cleaner, "get_docmap_string_with_retry")
     @patch.object(bigquery, "get_client")
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.download_helper.storage_context")
@@ -148,7 +148,7 @@ class TestFindNewPreprints(unittest.TestCase):
                 ),
             )
         # Count XML files in the output directory
-        file_count = len(os.listdir(self.activity.directories.get("OUTPUT_DIR")))
+        file_count = len(os.listdir(self.activity.directories.get("INPUT_DIR")))
         self.assertEqual(
             file_count, test_data.get("expected_file_count"), test_data.get("comment")
         )

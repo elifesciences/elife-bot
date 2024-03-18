@@ -1,6 +1,6 @@
 import json
 import os
-from provider import cleaner, outbox_provider, preprint
+from provider import outbox_provider, preprint
 from provider.execution_context import get_session
 from activity.objects import Activity
 
@@ -74,46 +74,34 @@ class activity_ScheduleCrossrefPreprint(Activity):
             )
             return self.ACTIVITY_SUCCESS
 
-        # get docmap data
+        # generate preprint XML file
         try:
-            docmap_string = cleaner.get_docmap_string_with_retry(
-                self.settings, article_id, self.name, self.logger
-            )
-        except Exception:
-            self.logger.exception(
-                (
-                    "%s, exception raised to get docmap_string"
-                    " using retries for article_id %s version %s"
-                )
-                % (self.name, article_id, version)
-            )
-            return self.ACTIVITY_PERMANENT_FAILURE
-
-        # populate the article object
-        try:
-            article = preprint.build_preprint_article(
+            xml_file_path = preprint.generate_preprint_xml(
                 self.settings,
                 article_id,
                 version,
-                docmap_string,
-                self.directories.get("TEMP_DIR"),
+                self.name,
+                self.directories,
                 self.logger,
             )
-        except Exception:
-            # handle if article could not be built
+        except preprint.PreprintArticleException as exception:
             self.logger.exception(
-                "%s, exception raised when building the article object for article_id %s version %s"
-                % (self.name, article_id, version)
+                (
+                    "%s, exception raised generating preprint XML"
+                    " for article_id %s version %s: %s"
+                )
+                % (self.name, article_id, version, str(exception))
             )
             return self.ACTIVITY_PERMANENT_FAILURE
-
-        # continue if article could be populated
-        # generate preprint XML from data sources
-        xml_file_name = preprint.xml_filename(article_id, self.settings, version)
-        xml_file_path = os.path.join(self.directories.get("INPUT_DIR"), xml_file_name)
-        xml_string = preprint.preprint_xml(article, self.settings)
-        with open(xml_file_path, "wb") as open_file:
-            open_file.write(xml_string)
+        except Exception as exception:
+            self.logger.exception(
+                (
+                    "%s, unhandled exception raised when generating preprint XML"
+                    " for article_id %s version %s: %s"
+                )
+                % (self.name, article_id, version, str(exception))
+            )
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         # upload to the posted_content outbox folder
         self.upload_file_to_outbox_folder(
