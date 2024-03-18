@@ -1,6 +1,5 @@
 import os
 import json
-import boto3
 import log
 from provider import process, software_heritage, utils
 
@@ -35,19 +34,11 @@ class EraQueueWorker:
     def connect(self):
         "connect to the queue service"
         if not self.client:
-            if utils.reuse_boto_conn():
-                self.client = self.settings.aws_conn('sqs', {
-                    'aws_access_key_id': self.settings.aws_access_key_id,
-                    'aws_secret_access_key': self.settings.aws_secret_access_key,
-                    'region_name': self.settings.sqs_region,
-                })
-            else:
-                self.client = boto3.client(
-                    "sqs",
-                    aws_access_key_id=self.settings.aws_access_key_id,
-                    aws_secret_access_key=self.settings.aws_secret_access_key,
-                    region_name=self.settings.sqs_region,
-                )
+            self.client = self.settings.aws_conn('sqs', {
+                'aws_access_key_id': self.settings.aws_access_key_id,
+                'aws_secret_access_key': self.settings.aws_secret_access_key,
+                'region_name': self.settings.sqs_region,
+            })
 
     def queues(self):
         "get the queues"
