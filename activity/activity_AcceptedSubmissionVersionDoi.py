@@ -68,9 +68,7 @@ class activity_AcceptedSubmissionVersionDoi(AcceptedBaseActivity):
         xml_file_path = self.download_xml_file_from_bucket(asset_file_name_map)
 
         # get docmap as a string
-        docmap_string = cleaner.get_docmap_string(
-            self.settings, article_id, input_filename, self.name, self.logger
-        )
+        docmap_string = session.get_value("docmap_string")
         self.statuses["docmap_string"] = True
 
         # get latest version DOI from the docmap

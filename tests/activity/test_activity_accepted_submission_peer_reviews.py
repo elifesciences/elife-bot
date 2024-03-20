@@ -38,6 +38,7 @@ class TestAcceptedSubmissionPeerReviews(unittest.TestCase):
         # instantiate the session here so it can be wiped clean between test runs
         self.session = FakeSession(copy.copy(test_activity_data.accepted_session_example))
         self.session.store_value("prc_status", True)
+        self.session.store_value("docmap_string", read_fixture("2021.06.02.446694.docmap.json"))
         self.session.store_value(
             "preprint_url", "https://doi.org/10.1101/2021.06.02.446694"
         )
@@ -48,11 +49,11 @@ class TestAcceptedSubmissionPeerReviews(unittest.TestCase):
         shutil.rmtree(self.activity.get_tmp_dir())
         # reset the session value
         self.session.store_value("cleaner_log", None)
+        self.session.store_value("docmap_string", None)
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
-    @patch.object(cleaner, "get_docmap")
     @patch("requests.get")
     @patch.object(activity_object, "clean_tmp_dir")
     @data(
@@ -71,7 +72,6 @@ class TestAcceptedSubmissionPeerReviews(unittest.TestCase):
         test_data,
         fake_clean_tmp_dir,
         fake_get,
-        fake_get_docmap,
         fake_cleaner_storage_context,
         fake_session,
         fake_storage_context,
@@ -118,7 +118,6 @@ class TestAcceptedSubmissionPeerReviews(unittest.TestCase):
             directory.path, resources, dest_folder=directory.path
         )
         fake_session.return_value = self.session
-        fake_get_docmap.return_value = read_fixture("2021.06.02.446694.docmap.json")
         sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
         fake_get.return_value = FakeResponse(200, content=sample_html)
         # do the activity

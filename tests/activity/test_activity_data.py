@@ -1,3 +1,4 @@
+import copy
 import json
 import base64
 
@@ -50,6 +51,9 @@ accepted_session_example = {
     ),
     "article_id": "45644",
 }
+
+valid_accepted_session_example = copy.copy(accepted_session_example)
+valid_accepted_session_example["docmap_string"] = '{"foo": "bar"}'
 
 # ExpandArticle
 

@@ -31,7 +31,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_logger = FakeLogger()
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
         # instantiate the session here so it can be wiped clean between test runs
-        self.session = FakeSession(test_activity_data.accepted_session_example)
+        self.session = FakeSession(test_activity_data.valid_accepted_session_example)
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -285,14 +285,12 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
-    @patch.object(cleaner, "url_exists")
     @patch.object(cleaner, "preprint_url")
     @patch.object(cleaner, "is_prc")
     def test_do_activity_prc(
         self,
         fake_is_prc,
         fake_preprint_url,
-        fake_url_exists,
         fake_cleaner_storage_context,
         fake_session,
         fake_storage_context,
@@ -320,7 +318,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         )
         fake_is_prc.return_value = True
         fake_preprint_url.return_value = "https://doi.org/10.1101/2021.06.02.446694"
-        fake_url_exists.return_value = True
         fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # do the activity
         result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
@@ -330,14 +327,12 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
-    @patch.object(cleaner, "url_exists")
     @patch.object(cleaner, "preprint_url")
     @patch.object(cleaner, "is_prc")
     def test_do_activity_prc_sciety_failure(
         self,
         fake_is_prc,
         fake_preprint_url,
-        fake_url_exists,
         fake_cleaner_storage_context,
         fake_session,
         fake_storage_context,
@@ -347,6 +342,8 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
 
         # set a non-None session value to test string concatenation
         self.session.store_value("cleaner_log", "")
+        # empty the docmap_string value in the session
+        self.session.store_value("docmap_string", "")
         fake_session.return_value = self.session
         zip_file_path = os.path.join(
             test_activity_data.ExpandArticle_files_source_folder,
@@ -366,7 +363,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         fake_is_prc.return_value = True
         preprint_doi = "10.1101/2021.06.02.999999"
         fake_preprint_url.return_value = "https://doi.org/%s" % preprint_doi
-        fake_url_exists.return_value = False
         fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # do the activity
         result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
@@ -375,9 +371,7 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.loginfo[-2],
             (
-                "ValidateAcceptedSubmission, Request for a docmap was not successful for "
-                "URL https://example.org/path/get-by-manuscript-id?manuscript_id=%s"
-                % self.session.get_value("article_id")
+                "ValidateAcceptedSubmission, docmap_string from the session was missing or blank"
             ),
         )
 
@@ -385,14 +379,12 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
-    @patch.object(cleaner, "url_exists")
     @patch.object(cleaner, "preprint_url")
     @patch.object(cleaner, "is_prc")
     def test_do_activity_prc_no_preprint_url(
         self,
         fake_is_prc,
         fake_preprint_url,
-        fake_url_exists,
         fake_cleaner_storage_context,
         fake_session,
         fake_storage_context,
@@ -420,7 +412,6 @@ class TestValidateAcceptedSubmission(unittest.TestCase):
         )
         fake_is_prc.return_value = True
         fake_preprint_url.return_value = None
-        fake_url_exists.return_value = True
         fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # do the activity
         result = self.activity.do_activity(input_data("30-01-2019-RA-eLife-45644.zip"))
