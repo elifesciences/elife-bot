@@ -47,6 +47,7 @@ class activity_ValidateAcceptedSubmission(AcceptedBaseActivity):
         session = get_session(self.settings, data, data["run"])
 
         expanded_folder, input_filename, article_id = self.read_session(session)
+        prc_status = session.get_value("prc_status")
 
         self.make_activity_directories()
 
@@ -83,24 +84,6 @@ class activity_ValidateAcceptedSubmission(AcceptedBaseActivity):
             self.statuses["email"] = self.send_error_email(input_filename, body_content)
             self.log_statuses(input_filename)
             return self.ACTIVITY_PERMANENT_FAILURE
-
-        # check PRC status and store in the session
-        try:
-            prc_status = cleaner.is_prc(xml_file_path, input_filename)
-        except ParseError:
-            log_message = (
-                "%s, XML ParseError exception in cleaner.is_prc"
-                " parsing XML file %s for file %s"
-            ) % (
-                self.name,
-                article_processing.file_name_from_name(xml_file_path),
-                input_filename,
-            )
-            self.logger.exception(log_message)
-            cleaner.LOGGER.exception(log_message)
-            prc_status = None
-
-        session.store_value("prc_status", prc_status)
 
         # get the preprint URL from the XML if present
         try:
@@ -140,7 +123,6 @@ class activity_ValidateAcceptedSubmission(AcceptedBaseActivity):
 
         # check whether PRC preprint data is present
         if prc_status:
-
             error_email_body = ""
 
             if not preprint_url:

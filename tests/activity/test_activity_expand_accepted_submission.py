@@ -1,7 +1,9 @@
 import os
 import unittest
+from xml.etree.ElementTree import ParseError
 from mock import patch
 from testfixtures import TempDirectory
+from provider import cleaner
 from activity import activity_ExpandAcceptedSubmission as activity_module
 from activity.activity_ExpandAcceptedSubmission import (
     activity_ExpandAcceptedSubmission as activity_class,
@@ -28,7 +30,9 @@ class TestExpandAcceptedSubmission(unittest.TestCase):
         self, fake_download_storage_context, fake_storage_context, fake_session
     ):
         directory = TempDirectory()
-        fake_download_storage_context.return_value = FakeStorageContext()
+        fake_download_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
         fake_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
@@ -120,3 +124,35 @@ class TestExpandAcceptedSubmission(unittest.TestCase):
             test_case_data.ingest_accepted_submission_data
         )
         self.assertEqual(self.activity.ACTIVITY_PERMANENT_FAILURE, success)
+
+    @patch.object(activity_module, "get_session")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module.download_helper, "storage_context")
+    @patch.object(cleaner, "is_prc")
+    def test_do_activity_is_prc_exception(
+        self,
+        fake_is_prc,
+        fake_download_storage_context,
+        fake_storage_context,
+        fake_session,
+    ):
+        "test an exception getting the prc_status"
+        directory = TempDirectory()
+        fake_download_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
+        mock_session = FakeSession({})
+        fake_session.return_value = mock_session
+        fake_is_prc.side_effect = ParseError("An exception")
+        # invoke
+        result = self.activity.do_activity(
+            test_case_data.ingest_accepted_submission_data
+        )
+        self.assertEqual(True, result)
+        self.assertTrue(
+            "XML ParseError exception in cleaner.is_prc parsing XML file"
+            in self.activity.logger.logexception
+        )

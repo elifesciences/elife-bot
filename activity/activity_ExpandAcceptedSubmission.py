@@ -1,9 +1,10 @@
 import json
 import os
+from xml.etree.ElementTree import ParseError
 from S3utility.s3_notification_info import parse_activity_data
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import cleaner, download_helper
+from provider import article_processing, cleaner, download_helper
 from activity.objects import AcceptedBaseActivity
 
 
@@ -127,9 +128,28 @@ class activity_ExpandAcceptedSubmission(AcceptedBaseActivity):
                 "%s Exception when expanding accepted submission zip %s"
                 % (self.name, input_filename)
             )
-
-            return self.ACTIVITY_PERMANENT_FAILURE
-        finally:
             self.clean_tmp_dir()
+            return self.ACTIVITY_PERMANENT_FAILURE
+
+        # check PRC status and store in the session
+        xml_file_path = cleaner.article_xml_asset(asset_file_name_map)[1]
+        try:
+            prc_status = cleaner.is_prc(xml_file_path, input_filename)
+        except ParseError:
+            log_message = (
+                "%s, XML ParseError exception in cleaner.is_prc"
+                " parsing XML file %s for file %s"
+            ) % (
+                self.name,
+                article_processing.file_name_from_name(xml_file_path),
+                input_filename,
+            )
+            self.logger.exception(log_message)
+            cleaner.LOGGER.exception(log_message)
+            prc_status = None
+
+        session.store_value("prc_status", prc_status)
+
+        self.clean_tmp_dir()
 
         return True
