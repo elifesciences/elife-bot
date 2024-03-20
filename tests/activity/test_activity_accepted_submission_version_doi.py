@@ -39,6 +39,9 @@ class TestAcceptedSubmissionVersionDoi(unittest.TestCase):
         self.session = FakeSession(
             copy.copy(test_activity_data.accepted_session_example)
         )
+        self.session.store_value(
+            "docmap_string", read_fixture("sample_docmap_for_85111.json")
+        )
         self.session.store_value("prc_status", True)
         self.session.store_value(
             "preprint_url", "https://doi.org/10.1101/2021.06.02.446694"
@@ -50,11 +53,11 @@ class TestAcceptedSubmissionVersionDoi(unittest.TestCase):
         shutil.rmtree(self.activity.get_tmp_dir())
         # reset the session value
         self.session.store_value("cleaner_log", None)
+        self.session.store_value("docmap_string", None)
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
-    @patch.object(cleaner, "get_docmap")
     @patch("requests.get")
     @patch.object(activity_object, "clean_tmp_dir")
     @data(
@@ -72,7 +75,6 @@ class TestAcceptedSubmissionVersionDoi(unittest.TestCase):
         test_data,
         fake_clean_tmp_dir,
         fake_get,
-        fake_get_docmap,
         fake_cleaner_storage_context,
         fake_session,
         fake_storage_context,
@@ -97,7 +99,6 @@ class TestAcceptedSubmissionVersionDoi(unittest.TestCase):
             directory.path, resources, dest_folder=directory.path
         )
         fake_session.return_value = self.session
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_85111.json")
         sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
         fake_get.return_value = FakeResponse(200, content=sample_html)
         # do the activity
@@ -159,7 +160,6 @@ class TestAcceptedSubmissionVersionDoi(unittest.TestCase):
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
-    @patch.object(cleaner, "get_docmap")
     @patch("requests.get")
     @patch.object(activity_object, "clean_tmp_dir")
     @data(
@@ -177,7 +177,6 @@ class TestAcceptedSubmissionVersionDoi(unittest.TestCase):
         test_data,
         fake_clean_tmp_dir,
         fake_get,
-        fake_get_docmap,
         fake_cleaner_storage_context,
         fake_session,
         fake_storage_context,
@@ -201,8 +200,9 @@ class TestAcceptedSubmissionVersionDoi(unittest.TestCase):
         fake_cleaner_storage_context.return_value = FakeStorageContext(
             directory.path, resources, dest_folder=directory.path
         )
+        # set the session docmap_string value
+        self.session.store_value("docmap_string", "{}")
         fake_session.return_value = self.session
-        fake_get_docmap.return_value = "{}"
         sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
         fake_get.return_value = FakeResponse(200, content=sample_html)
         # do the activity
