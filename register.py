@@ -154,6 +154,7 @@ def start(settings):
     activity_names.append("AcceptedSubmissionVersionDoi")
     activity_names.append("AcceptedSubmissionHistory")
     activity_names.append("AcceptedSubmissionStrikingImages")
+    activity_names.append("AcceptedSubmissionDocmap")
     activity_names.append("FindNewPreprints")
 
     for activity_name in activity_names:

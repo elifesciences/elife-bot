@@ -70,7 +70,7 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
 
         # mock the session
         fake_session.return_value = FakeSession(
-            test_activity_data.accepted_session_example
+            test_activity_data.valid_accepted_session_example
         )
 
         # do the activity
@@ -195,12 +195,10 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
-    @patch.object(cleaner, "get_docmap")
     @patch.object(activity_module, "storage_context")
     def test_do_activity_prc_status(
         self,
         fake_storage_context,
-        fake_get_docmap,
         fake_cleaner_storage_context,
         fake_session,
     ):
@@ -234,14 +232,11 @@ class TestTransformAcceptedSubmission(unittest.TestCase):
             directory.path, resources
         )
 
+        docmap_string = read_fixture("sample_docmap_for_84364.json").decode("utf-8")
+        docmap_string = docmap_string.replace("RP84364", "RP45644")
         # mock the session
+        session_data["docmap_string"] = docmap_string
         fake_session.return_value = FakeSession(session_data)
-
-        docmap_content = json.dumps(
-            read_fixture("sample_docmap_for_84364.json").decode("utf-8")
-        )
-        docmap_content = docmap_content.replace("RP84364", "RP45644")
-        fake_get_docmap.return_value = json.loads(docmap_content)
 
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))

@@ -1,6 +1,5 @@
 import os
 import json
-import shutil
 import time
 from xml.etree.ElementTree import ParseError
 from provider.execution_context import get_session
@@ -148,14 +147,10 @@ class activity_ValidateAcceptedSubmission(AcceptedBaseActivity):
                 log_message = "Preprint URL was not found in the article XML"
                 self.logger.info("%s, %s" % (self.name, log_message))
 
-            # check docmap URL exists, if fails then fail the workflow
-            docmap_url = cleaner.docmap_url(
-                self.settings, session.get_value("article_id")
-            )
-            if not cleaner.url_exists(docmap_url, self.logger):
-                log_message = (
-                    "Request for a docmap was not successful for URL %s" % docmap_url
-                )
+            # check docmap string is in the session, if fails then fail the workflow
+            docmap_string = session.get_value("docmap_string")
+            if not docmap_string:
+                log_message = "docmap_string from the session was missing or blank"
                 self.logger.info("%s, %s" % (self.name, log_message))
                 error_email_body += "%s\n" % log_message
 
