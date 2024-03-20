@@ -53,7 +53,7 @@ class activity_AcceptedSubmissionDocmap(AcceptedBaseActivity):
             )
             self.statuses["docmap_string"] = True
             # save the docmap_string to the session
-            session.store_value("docmap_string", docmap_string)
+            session.store_value("docmap_string", docmap_string.decode("utf-8"))
         except Exception as exception:
             self.logger.exception(
                 "%s, exception getting a docmap for article_id %s: %s"

@@ -75,7 +75,7 @@ class TestAcceptedSubmissionDocmap(unittest.TestCase):
         self.assertEqual(result, test_data.get("expected_result"))
         self.assertEqual(
             self.session.get_value("docmap_string"),
-            read_fixture("sample_docmap_for_85111.json"),
+            read_fixture("sample_docmap_for_85111.json").decode("utf-8"),
         )
         self.assertEqual(
             self.activity.statuses.get("docmap_string"),
