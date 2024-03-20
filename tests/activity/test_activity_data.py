@@ -50,6 +50,7 @@ accepted_session_example = {
         "expanded_submissions/45644/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/expanded_files"
     ),
     "article_id": "45644",
+    "prc_status": False,
 }
 
 valid_accepted_session_example = copy.copy(accepted_session_example)
