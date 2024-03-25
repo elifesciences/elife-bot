@@ -168,3 +168,23 @@ def populate_storage(from_dir, to_dir, filenames, sub_dir=""):
         os.makedirs(os.path.dirname(to_filename), exist_ok=True)
         shutil.copy(from_filename, to_filename)
     return resources
+
+
+def expanded_article_xml_path(xml_filename, parent_folder, expanded_folder):
+    "get expanded submission test scenario XML path derived from naming convention"
+    sub_folder = xml_filename.rsplit(".", 1)[0]
+    return os.path.join(
+        parent_folder,
+        expanded_folder,
+        sub_folder,
+        xml_filename,
+    )
+
+
+def add_sub_article_xml(xml_path, sub_article_xml):
+    "add XML to the end of the XML file article tag"
+    with open(xml_path, "r", encoding="utf-8") as open_file:
+        xml_string = open_file.read()
+    with open(xml_path, "w", encoding="utf-8") as open_file:
+        xml_string = xml_string.replace("</article>", "%s</article>" % sub_article_xml)
+        open_file.write(xml_string)
