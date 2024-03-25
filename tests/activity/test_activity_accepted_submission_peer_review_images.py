@@ -242,20 +242,17 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
 
         # write additional XML to the XML file
         if test_data.get("sub_article_xml"):
-            sub_folder = test_data.get("filename").rsplit(".", 1)[0]
-            xml_path = os.path.join(
+            xml_filename = "%s.xml" % test_data.get("filename").rsplit(".", 1)[0]
+            xml_path = helpers.expanded_article_xml_path(
+                xml_filename,
                 directory.path,
                 self.session.get_value("expanded_folder"),
-                sub_folder,
-                "%s.xml" % sub_folder,
             )
-            with open(xml_path, "r", encoding="utf-8") as open_file:
-                xml_string = open_file.read()
-            with open(xml_path, "w", encoding="utf-8") as open_file:
-                xml_string = xml_string.replace(
-                    "</article>", "%s</article>" % test_data.get("sub_article_xml")
-                )
-                open_file.write(xml_string)
+            helpers.add_sub_article_xml(
+                xml_path,
+                test_data.get("sub_article_xml"),
+            )
+
         dest_folder = os.path.join(directory.path, "files_dest")
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, resources, dest_folder=dest_folder
