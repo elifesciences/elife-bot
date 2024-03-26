@@ -1,18 +1,21 @@
 import os
 import json
 import shutil
+import time
 from collections import OrderedDict
 import requests
 from provider.article_processing import file_extension
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import cleaner, utils
+from provider import cleaner, email_provider, utils
 from activity.objects import AcceptedBaseActivity
 
 
 FILE_NAME_FORMAT = "elife-%s-inf%s.%s"
 
 REQUESTS_TIMEOUT = 10
+
+FAIL_IF_NO_IMAGES_DOWNLOADED = True
 
 
 class activity_AcceptedSubmissionPeerReviewImages(AcceptedBaseActivity):
@@ -129,6 +132,17 @@ class activity_AcceptedSubmissionPeerReviewImages(AcceptedBaseActivity):
                 "%s, no images were downloaded for %s, returning True"
                 % (self.name, input_filename)
             )
+            body_content = error_email_body_content(
+                "downloading images from imgur",
+                input_filename,
+                self.name,
+            )
+            self.statuses["email"] = self.send_error_email(input_filename, body_content)
+            self.log_statuses(input_filename)
+
+            # based on the flag, fail the workflow, or allow it to continue
+            if FAIL_IF_NO_IMAGES_DOWNLOADED:
+                return self.ACTIVITY_PERMANENT_FAILURE
             return True
 
         # subfolder on disk where assets are stored
@@ -218,6 +232,33 @@ class activity_AcceptedSubmissionPeerReviewImages(AcceptedBaseActivity):
 
         return True
 
+    def send_error_email(self, output_file, body_content):
+        "email the message to the recipients"
+        success = True
+
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
+        body = email_provider.simple_email_body(datetime_string, body_content)
+        subject = error_email_subject(output_file, self.settings)
+        sender_email = self.settings.accepted_submission_sender_email
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.accepted_submission_validate_error_recipient_email
+        )
+
+        connection = email_provider.smtp_connect(self.settings, self.logger)
+        # send the emails
+        for recipient in recipient_email_list:
+            # create the email
+            email_message = email_provider.message(subject, sender_email, recipient)
+            email_provider.add_text(email_message, body)
+            # send the email
+            email_success = email_provider.smtp_send(
+                connection, sender_email, recipient, email_message, self.logger
+            )
+            if not email_success:
+                # for now any failure in sending a mail return False
+                success = False
+        return success
+
 
 def download_images(href_list, to_dir, activity_name, logger, user_agent=None):
     href_to_file_name_map = OrderedDict()
@@ -253,3 +294,26 @@ def download_file(from_path, to_file, user_agent=None):
         "GET request returned a %s status code for %s"
         % (request.status_code, from_path)
     )
+
+
+def error_email_subject(output_file, settings=None):
+    "the email subject"
+    subject_prefix = ""
+    if utils.settings_environment(settings) == "continuumtest":
+        subject_prefix = "TEST "
+    return "%sError in accepted submission peer review images: %s" % (
+        subject_prefix,
+        output_file,
+    )
+
+
+def error_email_body_content(
+    action_type,
+    input_filename,
+    activity_name,
+):
+    "body content of the error email"
+    body_content = (
+        ("An exception was raised in %s" " when %s" " processing input file %s\n\n")
+    ) % (activity_name, action_type, input_filename)
+    return body_content

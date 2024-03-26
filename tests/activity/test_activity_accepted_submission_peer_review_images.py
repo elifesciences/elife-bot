@@ -14,6 +14,7 @@ from activity.activity_AcceptedSubmissionPeerReviewImages import (
     activity_AcceptedSubmissionPeerReviewImages as activity_object,
 )
 import tests.test_data as test_case_data
+from tests.classes_mock import FakeSMTPServer
 from tests.activity.classes_mock import (
     FakeLogger,
     FakeResponse,
@@ -46,6 +47,7 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
         # reset the session value
         self.session.store_value("cleaner_log", None)
 
+    @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -196,7 +198,7 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
                 "</sub-article>"
             ),
             "status_code": 404,
-            "expected_result": True,
+            "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
             "expected_docmap_string_status": True,
             "expected_hrefs_status": True,
             "expected_external_hrefs_status": True,
@@ -215,6 +217,12 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
                     "was not downloaded successfully"
                 ),
             ],
+            "expected_email_count": 1,
+            "expected_email_subject": (
+                "Error in accepted submission peer review images: "
+                "30-01-2019-RA-eLife-45644.zip"
+            ),
+            "expected_email_from": "From: sender@example.org",
         },
     )
     def test_do_activity(
@@ -225,6 +233,7 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
         fake_cleaner_storage_context,
         fake_session,
         fake_storage_context,
+        fake_email_smtp_connect,
     ):
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
@@ -270,9 +279,15 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
             fake_response.content = open_file.read()
         fake_get.return_value = fake_response
 
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
+
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
-        self.assertEqual(result, test_data.get("expected_result"))
+        self.assertEqual(
+            result,
+            test_data.get("expected_result"),
+            "failed in {comment}".format(comment=test_data.get("comment")),
+        )
 
         temp_dir_files = glob.glob(self.activity.directories.get("TEMP_DIR") + "/*/*")
         xml_file_path = os.path.join(
@@ -351,3 +366,22 @@ class TestAcceptedSubmissionPeerReviewImages(unittest.TestCase):
                 sorted(output_bucket_list),
                 sorted(test_data.get("expected_bucket_upload_folder_contents")),
             )
+
+        # check assertions on email files and contents
+        email_files_filter = os.path.join(directory.path, "*.eml")
+        email_files = glob.glob(email_files_filter)
+        if "expected_email_count" in test_data:
+            self.assertEqual(len(email_files), test_data.get("expected_email_count"))
+            # can look at the first email for the subject and sender
+            first_email_content = None
+            with open(email_files[0], encoding="utf-8") as open_file:
+                first_email_content = open_file.read()
+            if first_email_content:
+                if test_data.get("expected_email_subject"):
+                    self.assertTrue(
+                        test_data.get("expected_email_subject") in first_email_content
+                    )
+                if test_data.get("expected_email_from"):
+                    self.assertTrue(
+                        test_data.get("expected_email_from") in first_email_content
+                    )
