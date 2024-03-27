@@ -109,7 +109,7 @@ class TestFindNewPreprints(unittest.TestCase):
         )
         os.mkdir(os.path.join(directory.path, "preprint"))
         fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["article-transformed.xml"]
+            "tests/files_source/epp", ["article-source.xml"]
         )
 
         rows = FakeBigQueryRowIterator(
@@ -227,7 +227,7 @@ class TestFindNewPreprints(unittest.TestCase):
             directory.path, resources
         )
         fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["article-transformed.xml"]
+            "tests/files_source/epp", ["article-source.xml"]
         )
         fake_get_docmap.side_effect = Exception("")
 
@@ -259,7 +259,7 @@ class TestFindNewPreprints(unittest.TestCase):
             directory.path, resources
         )
         fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["article-transformed.xml"]
+            "tests/files_source/epp", ["article-source.xml"]
         )
         fake_get_docmap.return_value = read_fixture("sample_docmap_for_87445.json")
         fake_build_article.side_effect = Exception("")
@@ -294,7 +294,7 @@ class TestFindNewPreprints(unittest.TestCase):
             directory.path, resources
         )
         fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["article-transformed.xml"]
+            "tests/files_source/epp", ["article-source.xml"]
         )
         fake_get_docmap.return_value = read_fixture("sample_docmap_for_87445.json")
         fake_build_article.return_value = True

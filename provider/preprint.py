@@ -19,7 +19,7 @@ CONFIG_SECTION = "elife_preprint"
 PREPRINT_AUTOMATION_XML_PATH_PATTERN = "automation/{article_id}/v{version}"
 
 # file name of the preprint XML in the bucket
-PREPRINT_AUTOMATION_XML_FILE_NAME_PATTERN = "article-transformed.xml"
+PREPRINT_AUTOMATION_XML_FILE_NAME_PATTERN = "article-source.xml"
 
 
 # DOI prefix to confirm version DOI value
