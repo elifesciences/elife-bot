@@ -166,7 +166,7 @@ class TestBuildArticle(unittest.TestCase):
         article_id = "84364"
         docmap_string = read_fixture("sample_docmap_for_84364.json")
         article_xml_path = (
-            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+            "tests/files_source/epp/automation/84364/v2/article-source.xml"
         )
         article = preprint.build_article(article_id, docmap_string, article_xml_path)
         # assertions
@@ -244,7 +244,7 @@ class TestBuildArticle(unittest.TestCase):
         version = 1
         docmap_string = read_fixture("sample_docmap_for_84364.json")
         article_xml_path = (
-            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+            "tests/files_source/epp/automation/84364/v2/article-source.xml"
         )
         article = preprint.build_article(
             article_id, docmap_string, article_xml_path, version
@@ -280,7 +280,7 @@ class TestBuildArticle(unittest.TestCase):
             b'"published": "2023-06-14T14:00:00+00:00",', b""
         )
         article_xml_path = (
-            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+            "tests/files_source/epp/automation/84364/v2/article-source.xml"
         )
         with self.assertRaises(preprint.PreprintArticleException) as test_exception:
             preprint.build_article(article_id, docmap_string, article_xml_path)
@@ -531,7 +531,7 @@ class TestPreprintXml(unittest.TestCase):
         article_id = "84364"
         docmap_string = read_fixture("sample_docmap_for_84364.json")
         article_xml_path = (
-            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+            "tests/files_source/epp/automation/84364/v2/article-source.xml"
         )
         article = preprint.build_article(article_id, docmap_string, article_xml_path)
         result = preprint.preprint_xml(article, settings_mock)
@@ -542,10 +542,10 @@ class TestPreprintXml(unittest.TestCase):
             b'xlink:href="https://doi.org/10.1101/2022.10.17.512253"/>' in result
         )
         self.assertTrue(
-            b'<aff id="aff1">Swammerdam Institute for Life Sciences, '
+            b'<aff id="aff1">\n<institution>Swammerdam Institute for Life Sciences, '
             b"Section of Molecular Cytology, van Leeuwenhoek Centre for "
-            b"Advanced Microscopy, University of Amsterdam, Science Park 904, "
-            b"1098 XH, Amsterdam, The Netherlands</aff>" in result
+            b"Advanced Microscopy, University of Amsterdam, Science Park 904</institution>"
+            b"\n, \n<country>The Netherlands</country>\n</aff>" in result
         )
 
 
@@ -558,7 +558,7 @@ class TestDownloadOriginalPreprintXml(unittest.TestCase):
         directory = TempDirectory()
         article_id = 93405
         version = 1
-        file_name = "article-transformed.xml"
+        file_name = "article-source.xml"
         fake_download_storage_context.return_value = FakeStorageContext(
             "tests/files_source/epp", [file_name]
         )
@@ -581,7 +581,7 @@ class TestBuildPreprintArticle(unittest.TestCase):
         "build an Article object from biorXiv XML and docmap string data"
         directory = TempDirectory()
         fake_logger = FakeLogger()
-        file_name = "article-transformed.xml"
+        file_name = "article-source.xml"
         fake_download_storage_context.return_value = FakeStorageContext(
             "tests/files_source/epp", [file_name]
         )
@@ -614,7 +614,7 @@ class TestBuildPreprintArticle(unittest.TestCase):
         fake_logger = FakeLogger()
         exception_message = "An exception"
         fake_download.side_effect = preprint.PreprintArticleException(exception_message)
-        file_name = "article-transformed.xml"
+        file_name = "article-source.xml"
         fake_download_storage_context.return_value = FakeStorageContext(
             "tests/files_source/epp", [file_name]
         )
@@ -654,7 +654,7 @@ class TestBuildPreprintArticle(unittest.TestCase):
         fake_build_article.side_effect = preprint.PreprintArticleException(
             exception_message
         )
-        file_name = "article-transformed.xml"
+        file_name = "article-source.xml"
         fake_download_storage_context.return_value = FakeStorageContext(
             "tests/files_source/epp", [file_name]
         )
@@ -708,7 +708,7 @@ class TestGeneratePreprintXml(unittest.TestCase):
         article_id = 84364
         version = 2
         fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["article-transformed.xml"]
+            "tests/files_source/epp", ["article-source.xml"]
         )
         fake_get_docmap_string.return_value = read_fixture(
             "sample_docmap_for_84364.json"
