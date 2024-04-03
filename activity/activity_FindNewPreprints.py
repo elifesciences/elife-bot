@@ -327,7 +327,7 @@ class activity_FindNewPreprints(CleanerBaseActivity):
         workflow_data = {
             "article_id": article_id,
             "version": version,
-            "standalone": True,
+            "standalone": False,
         }
         message = {
             "workflow_name": workflow_name,

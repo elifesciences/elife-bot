@@ -32,7 +32,13 @@ def input_data(article_id=None, version=None, standalone=None):
 
 
 def session_data(article_id=None, version=None):
-    return input_data(article_id, version)
+    sess_data = input_data(article_id, version)
+    sess_data["expanded_folder"] = "preprint.%s.%s/%s" % (
+        article_id,
+        version,
+        sess_data.get("run"),
+    )
+    return sess_data
 
 
 @ddt
@@ -49,47 +55,43 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
+    @patch.object(activity_module, "storage_context")
     @patch("provider.outbox_provider.storage_context")
-    @patch("provider.download_helper.storage_context")
-    @patch.object(lax_provider, "article_status_version_map")
     @patch.object(activity_module, "get_session")
-    @patch.object(cleaner, "get_docmap")
-    @patch("requests.get")
     @data(
         {
-            "comment": "accepted submission zip file example",
+            "comment": "non-standalone preprint article example",
             "article_id": "84364",
             "version": 2,
+            "standalone": False,
             "expected_result": True,
         },
     )
     def test_do_activity(
         self,
         test_data,
-        fake_get,
-        fake_get_docmap,
         fake_session,
-        fake_version_map,
-        fake_download_storage_context,
         fake_outbox_storage_context,
+        fake_storage_context,
     ):
+        "non-standalone test which uses the preprint XML from the bucket expanded folder"
         directory = TempDirectory()
-        fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["article-source.xml"]
-        )
         fake_outbox_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            resources=["elife-preprint-84364-v2.xml"], dest_folder=directory.path
         )
         fake_session.return_value = FakeSession(
             session_data(test_data.get("article_id"), test_data.get("version"))
         )
-        fake_version_map.return_value = {}
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
-        sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
-        fake_get.return_value = FakeResponse(200, content=sample_html)
         # do the activity
         result = self.activity.do_activity(
-            input_data(test_data.get("article_id"), test_data.get("version"))
+            input_data(
+                test_data.get("article_id"),
+                test_data.get("version"),
+                test_data.get("standalone"),
+            )
         )
         # check assertions
         self.assertEqual(
@@ -114,6 +116,56 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
             os.listdir(peer_review_outbox_path), ["elife-preprint-84364-v2.xml"]
         )
 
+    @patch.object(activity_module, "storage_context")
+    @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_module, "get_session")
+    @data(
+        {
+            "comment": "non-standalone preprint article example",
+            "article_id": "84364",
+            "version": 2,
+            "standalone": False,
+            "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
+        },
+    )
+    def test_no_xml_in_expanded_folder(
+        self,
+        test_data,
+        fake_session,
+        fake_outbox_storage_context,
+        fake_storage_context,
+    ):
+        "test if preprint XML was not found in the bucket expanded folder"
+        directory = TempDirectory()
+        fake_outbox_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
+        # no bucket resources
+        fake_storage_context.return_value = FakeStorageContext(
+            resources=[], dest_folder=directory.path
+        )
+        fake_session.return_value = FakeSession(
+            session_data(test_data.get("article_id"), test_data.get("version"))
+        )
+        # do the activity
+        result = self.activity.do_activity(
+            input_data(
+                test_data.get("article_id"),
+                test_data.get("version"),
+                test_data.get("standalone"),
+            )
+        )
+        # check assertions
+        self.assertEqual(
+            result,
+            test_data.get("expected_result"),
+            ("failed in {comment}, got {result}, article_id {article_id}").format(
+                comment=test_data.get("comment"),
+                result=result,
+                article_id=test_data.get("article_id"),
+            ),
+        )
+
     @patch("provider.outbox_provider.storage_context")
     @patch("provider.download_helper.storage_context")
     @patch.object(lax_provider, "article_status_version_map")
@@ -121,7 +173,7 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
     @patch("requests.get")
     @data(
         {
-            "comment": "accepted submission zip file example",
+            "comment": "standalone preprint article example",
             "article_id": "84364",
             "version": 2,
             "standalone": True,
@@ -171,9 +223,10 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
     @patch.object(activity_module, "get_session")
     @data(
         {
-            "comment": "accepted submission zip file example",
+            "comment": "non-standalone preprint article example",
             "article_id": "84364",
             "version": 2,
+            "standalone": False,
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
         },
     )
@@ -186,7 +239,11 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         fake_session.side_effect = Exception("An exception")
         # do the activity
         result = self.activity.do_activity(
-            input_data(test_data.get("article_id"), test_data.get("version"))
+            input_data(
+                test_data.get("article_id"),
+                test_data.get("version"),
+                test_data.get("standalone"),
+            )
         )
         # check assertions
         self.assertEqual(
@@ -203,9 +260,10 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
     @patch.object(preprint, "generate_preprint_xml")
     @data(
         {
-            "comment": "accepted submission zip file example",
+            "comment": "standalone preprint article example",
             "article_id": "84364",
             "version": 2,
+            "standalone": True,
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
         },
     )
@@ -225,7 +283,11 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
 
         # do the activity
         result = self.activity.do_activity(
-            input_data(test_data.get("article_id"), test_data.get("version"))
+            input_data(
+                test_data.get("article_id"),
+                test_data.get("version"),
+                test_data.get("standalone"),
+            )
         )
 
         # check assertions
@@ -265,13 +327,14 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
     @patch.object(preprint, "generate_preprint_xml")
     @data(
         {
-            "comment": "accepted submission zip file example",
+            "comment": "standalone preprint article example",
             "article_id": "84364",
             "version": 2,
+            "standalone": True,
             "expected_result": activity_object.ACTIVITY_PERMANENT_FAILURE,
         },
     )
-    def test_unhandled_exception(
+    def test_preprint_article_unhandled_exception(
         self,
         test_data,
         fake_generate,
@@ -291,7 +354,11 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
 
         # do the activity
         result = self.activity.do_activity(
-            input_data(test_data.get("article_id"), test_data.get("version"))
+            input_data(
+                test_data.get("article_id"),
+                test_data.get("version"),
+                test_data.get("standalone"),
+            )
         )
 
         # check assertions
@@ -345,9 +412,10 @@ class TestSettingsValidation(unittest.TestCase):
         )
         self.activity = activity_object(settings_object, fake_logger, None, None, None)
         self.test_data = {
-            "comment": "accepted submission zip file example",
+            "comment": "standalone preprint article example",
             "article_id": "84364",
             "version": 2,
+            "standalone": True,
             "expected_result": activity_object.ACTIVITY_SUCCESS,
         }
 
@@ -368,7 +436,11 @@ class TestSettingsValidation(unittest.TestCase):
         )
         # do the activity
         result = self.activity.do_activity(
-            input_data(self.test_data.get("article_id"), self.test_data.get("version"))
+            input_data(
+                self.test_data.get("article_id"),
+                self.test_data.get("version"),
+                self.test_data.get("standalone"),
+            )
         )
         # check assertions
         self.assertEqual(
@@ -382,7 +454,10 @@ class TestSettingsValidation(unittest.TestCase):
         )
         self.assertEqual(
             self.activity.logger.loginfo[-1],
-            "No epp_data_bucket in settings, skipping ScheduleCrossrefPreprint for article_id %s, version %s"
+            (
+                "No epp_data_bucket in settings, skipping ScheduleCrossrefPreprint"
+                " for article_id %s, version %s"
+            )
             % (self.test_data.get("article_id"), self.test_data.get("version")),
         )
 
@@ -400,7 +475,11 @@ class TestSettingsValidation(unittest.TestCase):
         )
         # do the activity
         result = self.activity.do_activity(
-            input_data(self.test_data.get("article_id"), self.test_data.get("version"))
+            input_data(
+                self.test_data.get("article_id"),
+                self.test_data.get("version"),
+                self.test_data.get("standalone"),
+            )
         )
         # check assertions
         self.assertEqual(
@@ -414,6 +493,9 @@ class TestSettingsValidation(unittest.TestCase):
         )
         self.assertEqual(
             self.activity.logger.loginfo[-1],
-            "epp_data_bucket in settings is blank, skipping ScheduleCrossrefPreprint for article_id %s, version %s"
+            (
+                "epp_data_bucket in settings is blank, skipping ScheduleCrossrefPreprint"
+                " for article_id %s, version %s"
+            )
             % (self.test_data.get("article_id"), self.test_data.get("version")),
         )
