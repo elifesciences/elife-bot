@@ -107,11 +107,11 @@ class TestGeneratePreprintXml(unittest.TestCase):
             self.activity.logger.loginfo[-1],
             (
                 "GeneratePreprintXml, copying preprint XML "
-                "%s/input_dir/elife-preprint-84364-v2.xml to "
+                "%s/elife-preprint-84364-v2.xml to "
                 "s3://origin_bucket/preprint.84364.2/"
                 "1ee54f9a-cb28-4c8e-8232-4b317cf4beda/elife-preprint-84364-v2.xml"
             )
-            % self.activity.get_tmp_dir(),
+            % self.activity.directories.get("INPUT_DIR"),
         )
 
     @patch.object(activity_module, "get_session")
