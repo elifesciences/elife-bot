@@ -55,7 +55,7 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
-    @patch.object(activity_module, "storage_context")
+    @patch("provider.preprint.storage_context")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(activity_module, "get_session")
     @data(
@@ -72,14 +72,14 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         test_data,
         fake_session,
         fake_outbox_storage_context,
-        fake_storage_context,
+        fake_preprint_storage_context,
     ):
         "non-standalone test which uses the preprint XML from the bucket expanded folder"
         directory = TempDirectory()
         fake_outbox_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
-        fake_storage_context.return_value = FakeStorageContext(
+        fake_preprint_storage_context.return_value = FakeStorageContext(
             resources=["elife-preprint-84364-v2.xml"], dest_folder=directory.path
         )
         fake_session.return_value = FakeSession(
@@ -116,7 +116,7 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
             os.listdir(peer_review_outbox_path), ["elife-preprint-84364-v2.xml"]
         )
 
-    @patch.object(activity_module, "storage_context")
+    @patch("provider.preprint.storage_context")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(activity_module, "get_session")
     @data(
@@ -133,7 +133,7 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         test_data,
         fake_session,
         fake_outbox_storage_context,
-        fake_storage_context,
+        fake_preprint_storage_context,
     ):
         "test if preprint XML was not found in the bucket expanded folder"
         directory = TempDirectory()
@@ -141,7 +141,7 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
             dest_folder=directory.path
         )
         # no bucket resources
-        fake_storage_context.return_value = FakeStorageContext(
+        fake_preprint_storage_context.return_value = FakeStorageContext(
             resources=[], dest_folder=directory.path
         )
         fake_session.return_value = FakeSession(
