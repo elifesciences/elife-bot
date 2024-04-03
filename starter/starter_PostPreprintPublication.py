@@ -1,4 +1,5 @@
 import json
+import uuid
 from argparse import ArgumentParser
 from starter.starter_helper import NullRequiredDataException
 from starter.objects import Starter, default_workflow_params
@@ -59,6 +60,9 @@ class starter_PostPreprintPublication(Starter):
         run=None,
         standalone=False,
     ):
+        if run is None:
+            run = str(uuid.uuid4())
+
         workflow_params = self.get_workflow_params(article_id, version, run, standalone)
 
         self.start_workflow_execution(workflow_params)
@@ -117,7 +121,7 @@ def main():
         settings=settings,
         article_id=article_id,
         version=version,
-        standalone=True,
+        standalone=False,
     )
 
 

@@ -34,6 +34,7 @@ class workflow_PostPreprintPublication(Workflow):
             "start": {"requirements": None},
             "steps": [
                 define_workflow_step("PingWorker", data),
+                define_workflow_step("GeneratePreprintXml", data),
                 define_workflow_step("ScheduleCrossrefPreprint", data),
 
             ],

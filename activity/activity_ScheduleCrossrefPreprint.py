@@ -2,6 +2,7 @@ import json
 import os
 from provider import outbox_provider, preprint
 from provider.execution_context import get_session
+from provider.storage_provider import storage_context
 from activity.objects import Activity
 
 
@@ -53,55 +54,103 @@ class activity_ScheduleCrossrefPreprint(Activity):
                 session = get_session(self.settings, data, run)
                 article_id = session.get_value("article_id")
                 version = session.get_value("version")
+                expanded_folder_name = session.get_value("expanded_folder")
+                expanded_bucket_name = (
+                    self.settings.publishing_buckets_prefix
+                    + self.settings.expanded_bucket
+                )
         except:
-            self.logger.exception("Error starting Schedule Crossref Preprint activity")
+            self.logger.exception("Error starting %s activity" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
 
         self.logger.info("%s, article_id: %s" % (self.name, article_id))
         self.logger.info("%s, version: %s" % (self.name, version))
 
-        # first check if required settings are available
-        if not hasattr(self.settings, "epp_data_bucket"):
-            self.logger.info(
-                "No epp_data_bucket in settings, skipping %s for article_id %s, version %s"
-                % (self.name, article_id, version)
-            )
-            return self.ACTIVITY_SUCCESS
-        if not self.settings.epp_data_bucket:
-            self.logger.info(
-                "epp_data_bucket in settings is blank, skipping %s for article_id %s, version %s"
-                % (self.name, article_id, version)
-            )
-            return self.ACTIVITY_SUCCESS
+        # generate preprint XML if standalone
+        xml_file_path = None
+        if data and "standalone" in data and data["standalone"]:
+            # first check if required settings are available
+            if not hasattr(self.settings, "epp_data_bucket"):
+                self.logger.info(
+                    "No epp_data_bucket in settings, skipping %s for article_id %s, version %s"
+                    % (self.name, article_id, version)
+                )
+                return self.ACTIVITY_SUCCESS
+            if not self.settings.epp_data_bucket:
+                self.logger.info(
+                    (
+                        "epp_data_bucket in settings is blank, skipping %s "
+                        "for article_id %s, version %s"
+                    )
+                    % (self.name, article_id, version)
+                )
+                return self.ACTIVITY_SUCCESS
 
-        # generate preprint XML file
-        try:
-            xml_file_path = preprint.generate_preprint_xml(
-                self.settings,
-                article_id,
-                version,
-                self.name,
-                self.directories,
-                self.logger,
-            )
-        except preprint.PreprintArticleException as exception:
-            self.logger.exception(
-                (
-                    "%s, exception raised generating preprint XML"
-                    " for article_id %s version %s: %s"
+            # generate preprint XML file
+            try:
+                xml_file_path = preprint.generate_preprint_xml(
+                    self.settings,
+                    article_id,
+                    version,
+                    self.name,
+                    self.directories,
+                    self.logger,
                 )
-                % (self.name, article_id, version, str(exception))
-            )
-            return self.ACTIVITY_PERMANENT_FAILURE
-        except Exception as exception:
-            self.logger.exception(
-                (
-                    "%s, unhandled exception raised when generating preprint XML"
-                    " for article_id %s version %s: %s"
+            except preprint.PreprintArticleException as exception:
+                self.logger.exception(
+                    (
+                        "%s, exception raised generating preprint XML"
+                        " for article_id %s version %s: %s"
+                    )
+                    % (self.name, article_id, version, str(exception))
                 )
-                % (self.name, article_id, version, str(exception))
+                return self.ACTIVITY_PERMANENT_FAILURE
+            except Exception as exception:
+                self.logger.exception(
+                    (
+                        "%s, unhandled exception raised when generating preprint XML"
+                        " for article_id %s version %s: %s"
+                    )
+                    % (self.name, article_id, version, str(exception))
+                )
+                return self.ACTIVITY_PERMANENT_FAILURE
+        elif run:
+            # download the preprint XML from the expanded folder
+            storage = storage_context(self.settings)
+            bucket_folder_name = expanded_folder_name.replace(os.sep, "/")
+            bucket_resource = (
+                self.settings.storage_provider
+                + "://"
+                + expanded_bucket_name
+                + "/"
+                + bucket_folder_name
             )
-            return self.ACTIVITY_PERMANENT_FAILURE
+            s3_key_names = storage.list_resources(bucket_resource)
+            # for now the only XML file is the one to download
+            xml_filename = None
+            for s3_key_name in s3_key_names:
+                if s3_key_name.endswith(".xml"):
+                    xml_filename = s3_key_name.split("/")[-1]
+                    break
+            # check if a file name was found
+            if not xml_filename:
+                self.logger.info(
+                    "%s, xml_filename is None for article %s version %s"
+                    % (self.name, article_id, version)
+                )
+                return self.ACTIVITY_PERMANENT_FAILURE
+
+            # download the XML file
+            xml_file_path = os.path.join(
+                self.directories.get("INPUT_DIR"), xml_filename
+            )
+            with open(xml_file_path, "wb") as open_file:
+                storage_resource_origin = bucket_resource + "/" + xml_filename
+                self.logger.info(
+                    "%s, downloading %s to %s"
+                    % (self.name, storage_resource_origin, xml_file_path)
+                )
+                storage.get_resource_to_file(storage_resource_origin, open_file)
 
         # upload to the posted_content outbox folder
         self.upload_file_to_outbox_folder(
