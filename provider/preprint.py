@@ -11,6 +11,7 @@ from elifearticle.article import (
 from jatsgenerator import generate
 from jatsgenerator.conf import raw_config, parse_raw_config
 from provider import cleaner, download_helper, utils
+from provider.storage_provider import storage_context
 
 
 CONFIG_SECTION = "elife_preprint"
@@ -292,3 +293,36 @@ def generate_preprint_xml(
         open_file.write(xml_string)
 
     return xml_file_path
+
+
+def expanded_folder_bucket_resource(settings, bucket_name, expanded_folder_name):
+    "path to the expanded folder in the bucket"
+    bucket_folder_name = expanded_folder_name.replace(os.sep, "/")
+    return settings.storage_provider + "://" + bucket_name + "/" + bucket_folder_name
+
+
+def find_xml_filename_in_expanded_folder(settings, bucket_resource):
+    "find the preprint XML file name in the bucket expanded folder"
+    storage = storage_context(settings)
+    s3_key_names = storage.list_resources(bucket_resource)
+    # for now the only XML file is the one to download
+    for s3_key_name in s3_key_names:
+        if s3_key_name.endswith(".xml"):
+            return s3_key_name.split("/")[-1]
+    return None
+
+
+def download_from_expanded_folder(
+    settings, directories, bucket_filename, bucket_resource, caller_name, logger
+):
+    "download the object from the bucket expanded folder"
+    storage = storage_context(settings)
+    file_path = os.path.join(directories.get("INPUT_DIR"), bucket_filename)
+    with open(file_path, "wb") as open_file:
+        storage_resource_origin = bucket_resource + "/" + bucket_filename
+        logger.info(
+            "%s, downloading %s to %s"
+            % (caller_name, storage_resource_origin, file_path)
+        )
+        storage.get_resource_to_file(storage_resource_origin, open_file)
+    return file_path

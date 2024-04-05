@@ -797,3 +797,73 @@ class TestGeneratePreprintXml(unittest.TestCase):
             )
             % (caller_name, article_id, version),
         )
+
+
+class TestExpandedFolderBucketResource(unittest.TestCase):
+    "tests for preprint.expanded_folder_bucket_resource()"
+
+    def test_expanded_folder_bucket_resource(self):
+        "test constructing the path to a bucket expanded folder"
+        bucket_name = (
+            settings_mock.publishing_buckets_prefix + settings_mock.expanded_bucket
+        )
+        folder_name = "preprint.84364.2"
+        expected = "s3://%s/%s" % (bucket_name, folder_name)
+        result = preprint.expanded_folder_bucket_resource(
+            settings_mock, bucket_name, folder_name
+        )
+        self.assertEqual(result, expected)
+
+
+class TestFindXmlFilenameInExpandedFolder(unittest.TestCase):
+    "tests for preprint.find_xml_filename_in_expanded_folder()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch("provider.preprint.storage_context")
+    def test_find_xml_filename_in_expanded_folder(self, fake_preprint_storage_context):
+        "test finding the preprint XML file in the bucket expanded folder"
+        directory = TempDirectory()
+        file_name = "elife-preprint-84364-v2.xml"
+        fake_preprint_storage_context.return_value = FakeStorageContext(
+            resources=[file_name], dest_folder=directory.path
+        )
+        bucket_resource = "s3://%s/%s/%s" % (
+            (settings_mock.publishing_buckets_prefix + settings_mock.expanded_bucket),
+            "preprint.84364.2",
+            "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
+        )
+        result = preprint.find_xml_filename_in_expanded_folder(
+            settings_mock, bucket_resource
+        )
+        self.assertEqual(result, file_name)
+
+
+class TestDownloadFromExpandedFolder(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch("provider.preprint.storage_context")
+    def test_download_from_expanded_folder(self, fake_preprint_storage_context):
+        "test downloading preprint XML file from the bucket expanded folder"
+        directory = TempDirectory()
+        file_name = "elife-preprint-84364-v2.xml"
+        fake_preprint_storage_context.return_value = FakeStorageContext(
+            resources=[file_name], dest_folder=directory.path
+        )
+        bucket_resource = "s3://%s/%s/%s" % (
+            (settings_mock.publishing_buckets_prefix + settings_mock.expanded_bucket),
+            "preprint.84364.2",
+            "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
+        )
+        directories = {"INPUT_DIR": directory.path}
+        caller_name = "ScheduleCrossrefPreprint"
+        logger = FakeLogger()
+        # invoke
+        result = preprint.download_from_expanded_folder(
+            settings_mock, directories, file_name, bucket_resource, caller_name, logger
+        )
+        # assert
+        self.assertTrue(result.endswith(file_name))
+        self.assertEqual(os.listdir(directory.path)[0], file_name)
