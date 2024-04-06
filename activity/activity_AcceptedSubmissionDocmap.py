@@ -1,6 +1,7 @@
 import json
+import time
 from provider.execution_context import get_session
-from provider import cleaner
+from provider import cleaner, utils
 from activity.objects import AcceptedBaseActivity
 
 
@@ -53,6 +54,10 @@ class activity_AcceptedSubmissionDocmap(AcceptedBaseActivity):
             )
             self.statuses["docmap_string"] = True
             # save the docmap_string to the session
+            session.store_value(
+                "docmap_datetime_string",
+                time.strftime(utils.DATE_TIME_FORMAT, time.gmtime()),
+            )
             session.store_value("docmap_string", docmap_string.decode("utf-8"))
         except Exception as exception:
             self.logger.exception(
