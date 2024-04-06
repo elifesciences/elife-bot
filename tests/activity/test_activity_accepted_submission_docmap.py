@@ -82,6 +82,7 @@ class TestAcceptedSubmissionDocmap(unittest.TestCase):
             test_data.get("expected_docmap_string_status"),
             "failed in {comment}".format(comment=test_data.get("comment")),
         )
+        self.assertIsNotNone(self.session.get_value("docmap_datetime_string"))
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "get_docmap_string_with_retry")

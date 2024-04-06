@@ -55,6 +55,7 @@ accepted_session_example = {
 
 valid_accepted_session_example = copy.copy(accepted_session_example)
 valid_accepted_session_example["docmap_string"] = '{"foo": "bar"}'
+valid_accepted_session_example["docmap_datetime_string"] = "2024-04-06T00:05:46.000Z"
 
 # ExpandArticle
 
