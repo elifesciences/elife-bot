@@ -1,7 +1,5 @@
-from . import utils
 from datetime import datetime, timezone
 from collections import OrderedDict
-import boto3
 
 """
 SWFMeta data provider
@@ -22,19 +20,11 @@ class SWFMeta:
 
     def connect(self):
         # Simple connect
-        if utils.reuse_boto_conn():
-            self.client = self.settings.aws_conn('swf', {
-                'aws_access_key_id': self.settings.aws_access_key_id,
-                'aws_secret_access_key': self.settings.aws_secret_access_key,
-                'region_name': self.settings.swf_region,
-            })
-        else:
-            self.client = boto3.client(
-                "swf",
-                aws_access_key_id=self.settings.aws_access_key_id,
-                aws_secret_access_key=self.settings.aws_secret_access_key,
-                region_name=self.settings.swf_region,
-            )
+        self.client = self.settings.aws_conn('swf', {
+            'aws_access_key_id': self.settings.aws_access_key_id,
+            'aws_secret_access_key': self.settings.aws_secret_access_key,
+            'region_name': self.settings.swf_region,
+        })
 
     def get_closed_workflow_execution_count(
         self,

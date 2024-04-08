@@ -295,7 +295,6 @@ def content_type_from_file_name(file_name):
         return content_type
 
 ENVVAR_KNOWN_KEYS = {
-    'BOT_REUSE_BOTO_CONN',
     'MOTO_ALLOW_NONEXISTENT_REGION',
     'TEST_DUMMY',
 }
@@ -311,7 +310,3 @@ def set_envvar(key, val):
     raises an `AssertionError` if the requested environment variable is unknown."""
     assert key in ENVVAR_KNOWN_KEYS, "programming error. unsupported environment key: %s" % key    
     os.environ[key] = val
-
-def reuse_boto_conn():
-    "returns `True` if the `BOT_REUSE_BOTO_CONN` environment variable has been set to '1'"
-    return envvar('BOT_REUSE_BOTO_CONN', '0') == '1'
