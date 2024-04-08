@@ -83,6 +83,15 @@ OCR_FILES_DATA = {
     "sa2-inf2.jpg": {
         "data": EXAMPLE_TABLE_RESPONSE_JSON.get("data"),
     },
+    "sa2-inf4.jpg": {
+        "error": "formats must be an array",
+        "error_info": {
+            "id": "opts_expected_array",
+            "message": "formats must be an array",
+            "option": "formats",
+            "type": "string",
+        },
+    },
 }
 
 
@@ -299,15 +308,24 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
             ],
             "expected_activity_log_contains": [
                 (
-                    "AcceptedSubmissionPeerReviewOcr, got mathml data from OCR of"
-                    " 30-01-2019-RA-eLife-45644.zip inline-graphic files:"
-                    " ['sa1-inf1.jpg', 'sa1-inf2.jpg', 'sa2-inf1.jpg']"
+                    "AcceptedSubmissionPeerReviewOcr, got mathml data from OCR of "
+                    "30-01-2019-RA-eLife-45644.zip inline graphic file: sa1-inf1.jpg"
                 ),
                 (
-                    "AcceptedSubmissionPeerReviewOcr, got TSV data from OCR of"
-                    " 30-01-2019-RA-eLife-45644.zip graphic files:"
-                    " ['sa2-inf2.jpg', 'sa2-inf3.jpg']"
+                    "AcceptedSubmissionPeerReviewOcr, got unrecognised response JSON "
+                    "when getting mathml data from OCR of 30-01-2019-RA-eLife-45644.zip "
+                    "inline graphic file: sa2-inf1.jpg"
                 ),
+                (
+                    "AcceptedSubmissionPeerReviewOcr, got TSV data from OCR of "
+                    "30-01-2019-RA-eLife-45644.zip graphic file: sa2-inf2.jpg"
+                ),
+                (
+                    "AcceptedSubmissionPeerReviewOcr, got unrecognised response JSON "
+                    "when getting TSV data from OCR of 30-01-2019-RA-eLife-45644.zip "
+                    "graphic file: sa2-inf3.jpg"
+                ),
+                ("JSON response from Mathpix for "),
             ],
         },
     )
@@ -354,20 +372,16 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
 
         # write additional XML to the XML file
         if test_data.get("sub_article_xml"):
-            sub_folder = test_data.get("filename").rsplit(".", 1)[0]
-            xml_path = os.path.join(
+            xml_filename = "%s.xml" % test_data.get("filename").rsplit(".", 1)[0]
+            xml_path = helpers.expanded_article_xml_path(
+                xml_filename,
                 directory.path,
                 self.session.get_value("expanded_folder"),
-                sub_folder,
-                "%s.xml" % sub_folder,
             )
-            with open(xml_path, "r", encoding="utf-8") as open_file:
-                xml_string = open_file.read()
-            with open(xml_path, "w", encoding="utf-8") as open_file:
-                xml_string = xml_string.replace(
-                    "</article>", "%s</article>" % test_data.get("sub_article_xml")
-                )
-                open_file.write(xml_string)
+            helpers.add_sub_article_xml(
+                xml_path,
+                test_data.get("sub_article_xml"),
+            )
 
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, resources, dest_folder=directory.path
@@ -484,6 +498,114 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
                     "%s unexpectedly found in bucket upload folder" % bucket_file,
                 )
 
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    @patch.object(cleaner, "storage_context")
+    @patch.object(activity_object, "clean_tmp_dir")
+    def test_do_activity_response_error(
+        self,
+        fake_clean_tmp_dir,
+        fake_cleaner_storage_context,
+        fake_session,
+        fake_storage_context,
+    ):
+        "example if an error is returned in the API response"
+        directory = TempDirectory()
+
+        # test data
+        filename = "30-01-2019-RA-eLife-45644.zip"
+        sub_article_xml = (
+            '<sub-article id="sa1">'
+            "<body>"
+            '<p>Next can be an image containing no formula <inline-graphic xlink:href="sa2-inf1.jpg"/>.</p>'
+            '<table-wrap id="sa2table1">'
+            "<label>Review table 1.</label>"
+            "<caption>"
+            "<title>Table title.</title>"
+            "<p>Table response will include an error.</p>"
+            "</caption>"
+            '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-inf4.jpg" />'
+            "</table-wrap>"
+            "</body>"
+            "</sub-article>"
+        )
+        image_names = [
+            "sa2-inf4.jpg",
+        ]
+        expected_result = True
+
+        expected_activity_log_contains = [
+            (
+                "JSON response from Mathpix for 30-01-2019-RA-eLife-45644.zip, "
+                "file_name sa2-inf4.jpg"
+            ),
+            'error": "formats must be an array"',
+        ]
+
+        # mocks
+        fake_clean_tmp_dir.return_value = None
+
+        # create a new zip file fixtur
+        file_details = []
+        if image_names:
+            for image_name in image_names:
+                file_path = os.path.join(directory.path, image_name)
+                shutil.copyfile(
+                    "tests/files_source/digests/outbox/99999/digest-99999.jpg",
+                    file_path,
+                )
+                details = {
+                    "file_path": file_path,
+                    "file_type": "figure",
+                    "upload_file_nm": image_name,
+                }
+                file_details.append(details)
+        new_zip_file_path = helpers.add_files_to_accepted_zip(
+            "tests/files_source/30-01-2019-RA-eLife-45644.zip",
+            directory.path,
+            file_details,
+        )
+
+        resources = helpers.expanded_folder_bucket_resources(
+            directory,
+            test_activity_data.accepted_session_example.get("expanded_folder"),
+            new_zip_file_path,
+        )
+
+        # write additional XML to the XML file
+        if sub_article_xml:
+            xml_filename = "%s.xml" % filename.rsplit(".", 1)[0]
+            xml_path = helpers.expanded_article_xml_path(
+                xml_filename,
+                directory.path,
+                self.session.get_value("expanded_folder"),
+            )
+            helpers.add_sub_article_xml(
+                xml_path,
+                sub_article_xml,
+            )
+
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_cleaner_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_session.return_value = self.session
+
+        # mock the Mathpix API requests with a mock function
+        ocr.mathpix_post_request = Mock(side_effect=mock_mathpix_post_request)
+
+        # do the activity
+        result = self.activity.do_activity(input_data(filename))
+        self.assertEqual(result, expected_result)
+
+        # assertion on activity log contents
+        for fragment in expected_activity_log_contains:
+            self.assertTrue(
+                fragment in str(self.activity.logger.loginfo),
+            )
+
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
     @patch.object(cleaner, "file_list")
@@ -518,19 +640,16 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
             "</body>"
             "</sub-article>"
         )
-        xml_path = os.path.join(
+        xml_filename = "%s.xml" % zip_file.rsplit(".", 1)[0]
+        xml_path = helpers.expanded_article_xml_path(
+            xml_filename,
             directory.path,
             session_dict.get("expanded_folder"),
-            zip_file_base,
-            "%s.xml" % zip_file_base,
         )
-        with open(xml_path, "r", encoding="utf-8") as open_file:
-            xml_string = open_file.read()
-        with open(xml_path, "w", encoding="utf-8") as open_file:
-            xml_string = xml_string.replace(
-                "</article>", "%s</article>" % sub_article_xml
-            )
-            open_file.write(xml_string)
+        helpers.add_sub_article_xml(
+            xml_path,
+            sub_article_xml,
+        )
 
         fake_cleaner_storage_context.return_value = FakeStorageContext(
             directory.path, resources

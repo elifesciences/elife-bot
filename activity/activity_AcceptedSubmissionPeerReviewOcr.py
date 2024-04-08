@@ -237,12 +237,50 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
             self.logger,
             input_filename,
         )
-        self.logger.info(
-            "%s, got mathml data from OCR of %s inline-graphic files: %s"
-            % (self.name, input_filename, list(inline_graphic_file_to_data_map.keys()))
-        )
+        #  detect error or data
+
+        good_file_to_data_map = {}
+
+        for (
+            inline_graphic_file_name,
+            response_json,
+        ) in inline_graphic_file_to_data_map.items():
+            if (
+                response_json
+                and response_json.get("data")
+                and [
+                    data_row
+                    for data_row in response_json.get("data")
+                    if data_row.get("type") == "mathml"
+                ]
+            ):
+                self.logger.info(
+                    "%s, got mathml data from OCR of %s inline graphic file: %s"
+                    % (self.name, input_filename, inline_graphic_file_name)
+                )
+                # keep this good file data
+                good_file_to_data_map[inline_graphic_file_name] = response_json
+
+            elif response_json and response_json.get("error"):
+                self.logger.info(
+                    (
+                        "%s, got an error in the response "
+                        "when getting mathml data from OCR of %s inline graphic file: %s"
+                    )
+                    % (self.name, input_filename, inline_graphic_file_name)
+                )
+
+            else:
+                self.logger.info(
+                    (
+                        "%s, got unrecognised response JSON "
+                        "when getting mathml data from OCR of %s inline graphic file: %s"
+                    )
+                    % (self.name, input_filename, inline_graphic_file_name)
+                )
+
         file_to_approved_math_data_map = self.inline_graphics_to_xml(
-            xml_root, inline_graphic_file_to_data_map, input_filename
+            xml_root, good_file_to_data_map, input_filename
         )
         return file_to_approved_math_data_map
 
@@ -284,12 +322,47 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
             self.logger,
             input_filename,
         )
-        self.logger.info(
-            "%s, got TSV data from OCR of %s graphic files: %s"
-            % (self.name, input_filename, list(graphic_file_to_data_map.keys()))
-        )
+
+        good_graphic_file_to_data_map = {}
+
+        for graphic_file_name, response_json in graphic_file_to_data_map.items():
+            if (
+                response_json
+                and response_json.get("data")
+                and [
+                    data_row
+                    for data_row in response_json.get("data")
+                    if data_row.get("type") == "tsv"
+                ]
+            ):
+                self.logger.info(
+                    "%s, got TSV data from OCR of %s graphic file: %s"
+                    % (self.name, input_filename, graphic_file_name)
+                )
+                # keep this good file data
+                good_graphic_file_to_data_map[graphic_file_name] = response_json
+
+            elif response_json and response_json.get("error"):
+                self.logger.info(
+                    (
+                        "%s, got an error in the response "
+                        "when getting TSV data from OCR of %s graphic file: %s"
+                    )
+                    % (self.name, input_filename, graphic_file_name)
+                )
+
+            else:
+                self.logger.info(
+                    (
+                        "%s, got unrecognised response JSON "
+                        "when getting TSV data from OCR of %s graphic file: %s"
+                    )
+                    % (self.name, input_filename, graphic_file_name)
+                )
+
+        # only add good files which returned TSV data
         file_to_approved_math_data_map = self.table_graphics_to_xml(
-            xml_root, graphic_file_to_data_map, input_filename
+            xml_root, good_graphic_file_to_data_map, input_filename
         )
         return file_to_approved_math_data_map
 
@@ -327,6 +400,11 @@ def ocr_files(file_to_path_map, options_type, settings, logger, identifier):
 
         # get the response.json and use that
         response_json = response.json()
+
+        logger.info(
+            "JSON response from Mathpix for %s, file_name %s, file_path %s: '%s'"
+            % (identifier, file_name, file_path, json.dumps(response_json, indent=4))
+        )
 
         # format response data
         file_to_data_map[file_name] = response_json

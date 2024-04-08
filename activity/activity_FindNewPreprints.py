@@ -6,7 +6,6 @@ import glob
 from activity.objects import CleanerBaseActivity
 from provider import (
     bigquery,
-    cleaner,
     email_provider,
     outbox_provider,
     preprint,
@@ -38,8 +37,8 @@ class activity_FindNewPreprints(CleanerBaseActivity):
 
         # Local directory settings
         self.directories = {
-            "TMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
-            "OUTPUT_DIR": os.path.join(self.get_tmp_dir(), "output_dir"),
+            "TEMP_DIR": os.path.join(self.get_tmp_dir(), "tmp_dir"),
+            "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
         }
 
         # Bucket for published files
@@ -141,7 +140,7 @@ class activity_FindNewPreprints(CleanerBaseActivity):
             )
             to_folder = self.bucket_folder
             # copy the XML files to the bucket
-            batch_file_names = glob.glob(self.directories.get("OUTPUT_DIR") + "/*.xml")
+            batch_file_names = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
             outbox_provider.upload_files_to_s3_folder(
                 self.settings,
                 self.publish_bucket,
@@ -225,58 +224,43 @@ class activity_FindNewPreprints(CleanerBaseActivity):
                 )
             )
 
-            # get the docmap_string for the article
-            identifier = "%s-%s-v%s" % (
-                self.name,
-                detail.get("article_id"),
-                detail.get("version"),
-            )
+            # generate preprint XML file
             try:
-                docmap_string = cleaner.get_docmap_string_with_retry(
-                    self.settings,
-                    detail.get("article_id"),
-                    self.name,
-                    self.logger,
-                )
-            except Exception as exception:
-                self.logger.exception(
-                    "%s, exception getting the docmap_string for article_id %s, %s: %s"
-                    % (self.name, detail.get("article_id"), identifier, str(exception))
-                )
-                self.bad_xml_files.append(new_xml_filename)
-                continue
-
-            # build the article object
-            try:
-                article_object = preprint.build_preprint_article(
+                xml_file_path = preprint.generate_preprint_xml(
                     self.settings,
                     detail.get("article_id"),
                     detail.get("version"),
-                    docmap_string,
-                    self.directories.get("TMP_DIR"),
+                    self.name,
+                    self.directories,
                     self.logger,
                 )
-            except Exception as exception:
+            except preprint.PreprintArticleException as exception:
                 self.logger.exception(
-                    "%s, failed to build the article_object for article_id %s: %s"
-                    % (self.name, detail.get("article_id"), str(exception))
+                    (
+                        "%s, exception raised generating preprint XML"
+                        " for article_id %s version %s: %s"
+                    )
+                    % (
+                        self.name,
+                        detail.get("article_id"),
+                        detail.get("version"),
+                        str(exception),
+                    )
                 )
                 self.bad_xml_files.append(new_xml_filename)
                 continue
-
-            try:
-                # write the article object to XML file
-                xml_file_path = os.path.join(
-                    self.directories.get("OUTPUT_DIR"), new_xml_filename
-                )
-                xml_string = preprint.preprint_xml(article_object, self.settings)
-                with open(xml_file_path, "wb") as open_file:
-                    open_file.write(xml_string)
             except Exception as exception:
                 self.logger.exception(
-                    "%s, failed to generate preprint XML"
-                    " from the article_object for article_id %s: %s"
-                    % (self.name, detail.get("article_id"), str(exception))
+                    (
+                        "%s, unhandled exception raised when generating preprint XML"
+                        " for article_id %s version %s: %s"
+                    )
+                    % (
+                        self.name,
+                        detail.get("article_id"),
+                        detail.get("version"),
+                        str(exception),
+                    )
                 )
                 self.bad_xml_files.append(new_xml_filename)
                 continue
@@ -342,7 +326,7 @@ class activity_FindNewPreprints(CleanerBaseActivity):
         workflow_data = {
             "article_id": article_id,
             "version": version,
-            "standalone": True,
+            "standalone": False,
         }
         message = {
             "workflow_name": workflow_name,

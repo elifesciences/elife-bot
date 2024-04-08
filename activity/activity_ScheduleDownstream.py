@@ -1,7 +1,6 @@
 import json
-from collections import OrderedDict
 from provider.storage_provider import storage_context
-from provider import downstream, lax_provider, outbox_provider, utils
+from provider import downstream, lax_provider, utils
 from activity.objects import Activity
 
 """
@@ -28,7 +27,6 @@ class activity_ScheduleDownstream(Activity):
         self.logger = logger
 
     def do_activity(self, data=None):
-
         """
         Do the work
         """
@@ -69,7 +67,9 @@ class activity_ScheduleDownstream(Activity):
                 self.settings, expanded_folder_name, expanded_bucket_name, version
             )
             xml_key_name = expanded_folder_name + "/" + xml_file_name
-            outbox_list = choose_outboxes(status, first_by_status, rules, run_type)
+            outbox_list = downstream.choose_outboxes(
+                status, first_by_status, rules, run_type
+            )
 
             for outbox in outbox_list:
                 self.rename_and_copy_to_outbox(
@@ -145,49 +145,6 @@ class activity_ScheduleDownstream(Activity):
             "ScheduleDownstream Copying %s to %s " % (orig_resource, dest_resource)
         )
         storage.copy_resource(orig_resource, dest_resource)
-
-
-def workflow_outbox(downstream_workflow_map, workflow_name):
-    "get the outbox folder for the workflow name from the map"
-    return outbox_provider.outbox_folder(
-        outbox_provider.workflow_foldername(workflow_name, downstream_workflow_map)
-    )
-
-
-def choose_outboxes(status, first_by_status, rules, run_type=None):
-    outbox_list = []
-
-    if not rules:
-        return outbox_list
-
-    downstream_workflow_map = downstream.workflow_s3_bucket_folder_map(rules)
-
-    for workflow in rules.keys():
-        workflow_rules = rules.get(workflow)
-        # check if the workflow should be scheduled by this activity
-        if not workflow_rules:
-            # no rules to check
-            continue
-        if not workflow_rules.get("schedule_downstream"):
-            # do not assess for sending by this activity
-            continue
-
-        if run_type == "silent-correction" and not workflow_rules.get(
-            "schedule_silent_correction"
-        ):
-            # do not send
-            continue
-
-        if not first_by_status and workflow_rules.get("schedule_first_version_only"):
-            # do not send
-            continue
-
-        if workflow_rules.get("schedule_article_types"):
-            if status in workflow_rules.get("schedule_article_types", []):
-                # add it to the outbox
-                outbox_list.append(workflow_outbox(downstream_workflow_map, workflow))
-
-    return outbox_list
 
 
 def new_outbox_xml_name(prefix, journal, article_id):

@@ -1,3 +1,4 @@
+import copy
 import json
 import base64
 
@@ -49,7 +50,12 @@ accepted_session_example = {
         "expanded_submissions/45644/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/expanded_files"
     ),
     "article_id": "45644",
+    "prc_status": False,
 }
+
+valid_accepted_session_example = copy.copy(accepted_session_example)
+valid_accepted_session_example["docmap_string"] = '{"foo": "bar"}'
+valid_accepted_session_example["docmap_datetime_string"] = "2024-04-06T00:05:46.000Z"
 
 # ExpandArticle
 

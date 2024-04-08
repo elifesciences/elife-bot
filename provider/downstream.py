@@ -1,5 +1,6 @@
-import yaml
 from collections import OrderedDict
+import yaml
+from provider import outbox_provider
 
 
 def load_config(settings):
@@ -9,7 +10,7 @@ def load_config(settings):
 
 def load_yaml(file_path):
     # load config from the file_path YAML file
-    with open(file_path, "r") as open_file:
+    with open(file_path, "r", encoding="utf-8") as open_file:
         return yaml.load(open_file.read(), Loader=yaml.FullLoader)
 
 
@@ -22,3 +23,46 @@ def workflow_s3_bucket_folder_map(rules):
         ):
             folder_map[workflow_name] = rules.get(workflow_name).get("s3_bucket_folder")
     return folder_map
+
+
+def workflow_outbox(downstream_workflow_map, workflow_name):
+    "get the outbox folder for the workflow name from the map"
+    return outbox_provider.outbox_folder(
+        outbox_provider.workflow_foldername(workflow_name, downstream_workflow_map)
+    )
+
+
+def choose_outboxes(status, first_by_status, rules, run_type=None):
+    outbox_list = []
+
+    if not rules:
+        return outbox_list
+
+    downstream_workflow_map = workflow_s3_bucket_folder_map(rules)
+
+    for workflow in rules.keys():
+        workflow_rules = rules.get(workflow)
+        # check if the workflow should be scheduled by this activity
+        if not workflow_rules:
+            # no rules to check
+            continue
+        if not workflow_rules.get("schedule_downstream"):
+            # do not assess for sending by this activity
+            continue
+
+        if run_type == "silent-correction" and not workflow_rules.get(
+            "schedule_silent_correction"
+        ):
+            # do not send
+            continue
+
+        if not first_by_status and workflow_rules.get("schedule_first_version_only"):
+            # do not send
+            continue
+
+        if workflow_rules.get("schedule_article_types"):
+            if status in workflow_rules.get("schedule_article_types", []):
+                # add it to the outbox
+                outbox_list.append(workflow_outbox(downstream_workflow_map, workflow))
+
+    return outbox_list

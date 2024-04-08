@@ -16,7 +16,7 @@ from elifearticle.article import (
     Role,
 )
 from tests import read_fixture, settings_mock
-from tests.activity.classes_mock import FakeLogger, FakeStorageContext
+from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
 from provider import cleaner, download_helper, preprint
 
 
@@ -166,7 +166,7 @@ class TestBuildArticle(unittest.TestCase):
         article_id = "84364"
         docmap_string = read_fixture("sample_docmap_for_84364.json")
         article_xml_path = (
-            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+            "tests/files_source/epp/automation/84364/v2/article-source.xml"
         )
         article = preprint.build_article(article_id, docmap_string, article_xml_path)
         # assertions
@@ -244,7 +244,7 @@ class TestBuildArticle(unittest.TestCase):
         version = 1
         docmap_string = read_fixture("sample_docmap_for_84364.json")
         article_xml_path = (
-            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+            "tests/files_source/epp/automation/84364/v2/article-source.xml"
         )
         article = preprint.build_article(
             article_id, docmap_string, article_xml_path, version
@@ -280,7 +280,7 @@ class TestBuildArticle(unittest.TestCase):
             b'"published": "2023-06-14T14:00:00+00:00",', b""
         )
         article_xml_path = (
-            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+            "tests/files_source/epp/automation/84364/v2/article-source.xml"
         )
         with self.assertRaises(preprint.PreprintArticleException) as test_exception:
             preprint.build_article(article_id, docmap_string, article_xml_path)
@@ -531,7 +531,7 @@ class TestPreprintXml(unittest.TestCase):
         article_id = "84364"
         docmap_string = read_fixture("sample_docmap_for_84364.json")
         article_xml_path = (
-            "tests/files_source/epp/automation/84364/v2/article-transformed.xml"
+            "tests/files_source/epp/automation/84364/v2/article-source.xml"
         )
         article = preprint.build_article(article_id, docmap_string, article_xml_path)
         result = preprint.preprint_xml(article, settings_mock)
@@ -542,10 +542,10 @@ class TestPreprintXml(unittest.TestCase):
             b'xlink:href="https://doi.org/10.1101/2022.10.17.512253"/>' in result
         )
         self.assertTrue(
-            b'<aff id="aff1">Swammerdam Institute for Life Sciences, '
+            b'<aff id="aff1">\n<institution>Swammerdam Institute for Life Sciences, '
             b"Section of Molecular Cytology, van Leeuwenhoek Centre for "
-            b"Advanced Microscopy, University of Amsterdam, Science Park 904, "
-            b"1098 XH, Amsterdam, The Netherlands</aff>" in result
+            b"Advanced Microscopy, University of Amsterdam, Science Park 904</institution>"
+            b"\n, \n<country>The Netherlands</country>\n</aff>" in result
         )
 
 
@@ -558,7 +558,7 @@ class TestDownloadOriginalPreprintXml(unittest.TestCase):
         directory = TempDirectory()
         article_id = 93405
         version = 1
-        file_name = "article-transformed.xml"
+        file_name = "article-source.xml"
         fake_download_storage_context.return_value = FakeStorageContext(
             "tests/files_source/epp", [file_name]
         )
@@ -575,18 +575,21 @@ class TestBuildPreprintArticle(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
 
+    @patch("requests.get")
     @patch.object(download_helper, "storage_context")
-    def test_build_preprint_article(self, fake_download_storage_context):
+    def test_build_preprint_article(self, fake_download_storage_context, fake_get):
         "build an Article object from biorXiv XML and docmap string data"
         directory = TempDirectory()
         fake_logger = FakeLogger()
-        file_name = "article-transformed.xml"
+        file_name = "article-source.xml"
         fake_download_storage_context.return_value = FakeStorageContext(
             "tests/files_source/epp", [file_name]
         )
         article_id = 93405
         version = 1
         docmap_string = read_fixture("sample_docmap_for_84364.json")
+        sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
+        fake_get.return_value = FakeResponse(200, content=sample_html)
         # invoke
         result = preprint.build_preprint_article(
             settings_mock,
@@ -611,7 +614,7 @@ class TestBuildPreprintArticle(unittest.TestCase):
         fake_logger = FakeLogger()
         exception_message = "An exception"
         fake_download.side_effect = preprint.PreprintArticleException(exception_message)
-        file_name = "article-transformed.xml"
+        file_name = "article-source.xml"
         fake_download_storage_context.return_value = FakeStorageContext(
             "tests/files_source/epp", [file_name]
         )
@@ -651,7 +654,7 @@ class TestBuildPreprintArticle(unittest.TestCase):
         fake_build_article.side_effect = preprint.PreprintArticleException(
             exception_message
         )
-        file_name = "article-transformed.xml"
+        file_name = "article-source.xml"
         fake_download_storage_context.return_value = FakeStorageContext(
             "tests/files_source/epp", [file_name]
         )
@@ -671,3 +674,196 @@ class TestBuildPreprintArticle(unittest.TestCase):
             )
         # assert
         self.assertEqual(fake_logger.logexception, exception_message)
+
+
+class TestGeneratePreprintXml(unittest.TestCase):
+    "tests for preprint.generate_preprint_xml()"
+
+    def setUp(self):
+        # reduce the sleep time to speed up test runs
+        cleaner.DOCMAP_SLEEP_SECONDS = 0.001
+        cleaner.DOCMAP_RETRY = 2
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch("requests.get")
+    @patch.object(download_helper, "storage_context")
+    @patch.object(cleaner, "get_docmap_string_with_retry")
+    def test_generate_preprint_xml(
+        self, fake_get_docmap_string, fake_download_storage_context, fake_get
+    ):
+        "test PreprintArticleException exception raised generating preprint XML"
+        directory = TempDirectory()
+        fake_logger = FakeLogger()
+
+        # set and create testing directories
+        directories = {
+            "TEMP_DIR": os.path.join(directory.path, "tmp_dir"),
+            "INPUT_DIR": os.path.join(directory.path, "input_dir"),
+        }
+        for value in directories.values():
+            os.mkdir(value)
+
+        article_id = 84364
+        version = 2
+        fake_download_storage_context.return_value = FakeStorageContext(
+            "tests/files_source/epp", ["article-source.xml"]
+        )
+        fake_get_docmap_string.return_value = read_fixture(
+            "sample_docmap_for_84364.json"
+        )
+        caller_name = "ScheduleCrossrefPreprint"
+        sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
+        fake_get.return_value = FakeResponse(200, content=sample_html)
+
+        # invoke
+        xml_file_path = preprint.generate_preprint_xml(
+            settings_mock,
+            article_id,
+            version,
+            caller_name,
+            directories,
+            fake_logger,
+        )
+
+        # assert
+        self.assertTrue(xml_file_path.endswith("input_dir/elife-preprint-84364-v2.xml"))
+
+    @patch.object(cleaner, "get_docmap_string_with_retry")
+    def test_docmap_exception(self, fake_get_docmap_string):
+        "test PreprintArticleException exception raised when getting a docmap"
+        fake_logger = FakeLogger()
+        article_id = 84364
+        version = 2
+        directories = {}
+        caller_name = "ScheduleCrossrefPreprint"
+        exception_message = "An exception"
+        fake_get_docmap_string.side_effect = preprint.PreprintArticleException(
+            exception_message
+        )
+
+        # invoke
+        with self.assertRaises(preprint.PreprintArticleException):
+            preprint.generate_preprint_xml(
+                settings_mock,
+                article_id,
+                version,
+                caller_name,
+                directories,
+                fake_logger,
+            )
+        # assert
+        self.assertEqual(
+            fake_logger.logexception,
+            (
+                "%s, exception raised to get docmap_string"
+                " using retries for article_id %s version %s"
+            )
+            % (caller_name, article_id, version),
+        )
+
+    @patch.object(preprint, "build_preprint_article")
+    @patch.object(cleaner, "get_docmap_string_with_retry")
+    def test_build_article_exception(self, fake_get_docmap_string, fake_build_article):
+        "test PreprintArticleException is raised when generating an article"
+        fake_logger = FakeLogger()
+        article_id = 84364
+        version = 2
+        directories = {}
+        caller_name = "ScheduleCrossrefPreprint"
+        fake_get_docmap_string.return_value = True
+        exception_message = "An exception"
+        fake_build_article.side_effect = preprint.PreprintArticleException(
+            exception_message
+        )
+
+        # invoke
+        with self.assertRaises(preprint.PreprintArticleException):
+            preprint.generate_preprint_xml(
+                settings_mock,
+                article_id,
+                version,
+                caller_name,
+                directories,
+                fake_logger,
+            )
+        # assert
+        self.assertEqual(
+            fake_logger.logexception,
+            (
+                "%s, exception raised when building the article object"
+                " for article_id %s version %s"
+            )
+            % (caller_name, article_id, version),
+        )
+
+
+class TestExpandedFolderBucketResource(unittest.TestCase):
+    "tests for preprint.expanded_folder_bucket_resource()"
+
+    def test_expanded_folder_bucket_resource(self):
+        "test constructing the path to a bucket expanded folder"
+        bucket_name = (
+            settings_mock.publishing_buckets_prefix + settings_mock.expanded_bucket
+        )
+        folder_name = "preprint.84364.2"
+        expected = "s3://%s/%s" % (bucket_name, folder_name)
+        result = preprint.expanded_folder_bucket_resource(
+            settings_mock, bucket_name, folder_name
+        )
+        self.assertEqual(result, expected)
+
+
+class TestFindXmlFilenameInExpandedFolder(unittest.TestCase):
+    "tests for preprint.find_xml_filename_in_expanded_folder()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch("provider.preprint.storage_context")
+    def test_find_xml_filename_in_expanded_folder(self, fake_preprint_storage_context):
+        "test finding the preprint XML file in the bucket expanded folder"
+        directory = TempDirectory()
+        file_name = "elife-preprint-84364-v2.xml"
+        fake_preprint_storage_context.return_value = FakeStorageContext(
+            resources=[file_name], dest_folder=directory.path
+        )
+        bucket_resource = "s3://%s/%s/%s" % (
+            (settings_mock.publishing_buckets_prefix + settings_mock.expanded_bucket),
+            "preprint.84364.2",
+            "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
+        )
+        result = preprint.find_xml_filename_in_expanded_folder(
+            settings_mock, bucket_resource
+        )
+        self.assertEqual(result, file_name)
+
+
+class TestDownloadFromExpandedFolder(unittest.TestCase):
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch("provider.preprint.storage_context")
+    def test_download_from_expanded_folder(self, fake_preprint_storage_context):
+        "test downloading preprint XML file from the bucket expanded folder"
+        directory = TempDirectory()
+        file_name = "elife-preprint-84364-v2.xml"
+        fake_preprint_storage_context.return_value = FakeStorageContext(
+            resources=[file_name], dest_folder=directory.path
+        )
+        bucket_resource = "s3://%s/%s/%s" % (
+            (settings_mock.publishing_buckets_prefix + settings_mock.expanded_bucket),
+            "preprint.84364.2",
+            "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
+        )
+        directories = {"INPUT_DIR": directory.path}
+        caller_name = "ScheduleCrossrefPreprint"
+        logger = FakeLogger()
+        # invoke
+        result = preprint.download_from_expanded_folder(
+            settings_mock, directories, file_name, bucket_resource, caller_name, logger
+        )
+        # assert
+        self.assertTrue(result.endswith(file_name))
+        self.assertEqual(os.listdir(directory.path)[0], file_name)

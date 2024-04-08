@@ -165,8 +165,7 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
                 )
                 self.log_statuses(input_filename)
 
-                # return self.ACTIVITY_PERMANENT_FAILURE
-                # March 1 2024 do not fail the workflow temporarily
+                # do not fail the workflow at this step
                 return True
 
         # rename the files in the expanded folder
@@ -194,8 +193,7 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
                 )
                 self.log_statuses(input_filename)
 
-                # return self.ACTIVITY_PERMANENT_FAILURE
-                # March 1 2024 do not fail the workflow temporarily
+                # do not fail the workflow at this step
                 return True
 
         # upload the XML to the bucket

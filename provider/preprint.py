@@ -1,4 +1,5 @@
 "functions for generating preprint XML"
+import os
 from elifearticle.parse import build_article_from_xml
 from elifearticle.article import (
     Article,
@@ -10,6 +11,7 @@ from elifearticle.article import (
 from jatsgenerator import generate
 from jatsgenerator.conf import raw_config, parse_raw_config
 from provider import cleaner, download_helper, utils
+from provider.storage_provider import storage_context
 
 
 CONFIG_SECTION = "elife_preprint"
@@ -18,7 +20,7 @@ CONFIG_SECTION = "elife_preprint"
 PREPRINT_AUTOMATION_XML_PATH_PATTERN = "automation/{article_id}/v{version}"
 
 # file name of the preprint XML in the bucket
-PREPRINT_AUTOMATION_XML_FILE_NAME_PATTERN = "article-transformed.xml"
+PREPRINT_AUTOMATION_XML_FILE_NAME_PATTERN = "article-source.xml"
 
 
 # DOI prefix to confirm version DOI value
@@ -244,3 +246,83 @@ def build_preprint_article(
 
     # continue if article could be populated
     return article
+
+
+def generate_preprint_xml(
+    settings, article_id, version, caller_name, directories, logger
+):
+    "generate preprint XML and save it to disk"
+    # get docmap data
+    try:
+        docmap_string = cleaner.get_docmap_string_with_retry(
+            settings, article_id, caller_name, logger
+        )
+    except Exception as exception:
+        logger.exception(
+            (
+                "%s, exception raised to get docmap_string"
+                " using retries for article_id %s version %s"
+            )
+            % (caller_name, article_id, version)
+        )
+        raise PreprintArticleException(exception) from exception
+
+    # populate the article object
+    try:
+        article = build_preprint_article(
+            settings,
+            article_id,
+            version,
+            docmap_string,
+            directories.get("TEMP_DIR"),
+            logger,
+        )
+    except Exception as exception:
+        # handle if article could not be built
+        logger.exception(
+            "%s, exception raised when building the article object for article_id %s version %s"
+            % (caller_name, article_id, version)
+        )
+        raise PreprintArticleException(exception) from exception
+
+    # generate preprint XML from data sources
+    xml_file_name = xml_filename(article_id, settings, version)
+    xml_file_path = os.path.join(directories.get("INPUT_DIR"), xml_file_name)
+    xml_string = preprint_xml(article, settings)
+    with open(xml_file_path, "wb") as open_file:
+        open_file.write(xml_string)
+
+    return xml_file_path
+
+
+def expanded_folder_bucket_resource(settings, bucket_name, expanded_folder_name):
+    "path to the expanded folder in the bucket"
+    bucket_folder_name = expanded_folder_name.replace(os.sep, "/")
+    return settings.storage_provider + "://" + bucket_name + "/" + bucket_folder_name
+
+
+def find_xml_filename_in_expanded_folder(settings, bucket_resource):
+    "find the preprint XML file name in the bucket expanded folder"
+    storage = storage_context(settings)
+    s3_key_names = storage.list_resources(bucket_resource)
+    # for now the only XML file is the one to download
+    for s3_key_name in s3_key_names:
+        if s3_key_name.endswith(".xml"):
+            return s3_key_name.split("/")[-1]
+    return None
+
+
+def download_from_expanded_folder(
+    settings, directories, bucket_filename, bucket_resource, caller_name, logger
+):
+    "download the object from the bucket expanded folder"
+    storage = storage_context(settings)
+    file_path = os.path.join(directories.get("INPUT_DIR"), bucket_filename)
+    with open(file_path, "wb") as open_file:
+        storage_resource_origin = bucket_resource + "/" + bucket_filename
+        logger.info(
+            "%s, downloading %s to %s"
+            % (caller_name, storage_resource_origin, file_path)
+        )
+        storage.get_resource_to_file(storage_resource_origin, open_file)
+    return file_path

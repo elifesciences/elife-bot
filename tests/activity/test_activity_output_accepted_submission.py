@@ -53,7 +53,7 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
         )
         resources = helpers.expanded_folder_bucket_resources(
             directory,
-            test_activity_data.accepted_session_example.get("expanded_folder"),
+            test_activity_data.valid_accepted_session_example.get("expanded_folder"),
             zip_file_path,
         )
         dest_folder = os.path.join(directory.path, "files_dest")
@@ -67,7 +67,7 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
 
         # mock the session
         fake_session.return_value = FakeSession(
-            test_activity_data.accepted_session_example
+            test_activity_data.valid_accepted_session_example
         )
 
         # do the activity
@@ -112,7 +112,7 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
         )
         with zipfile.ZipFile(zip_file_path, "r") as open_zipfile:
             resources = open_zipfile.namelist()
-        self.assertEqual(len(resources), 42)
+        self.assertEqual(len(resources), 43)
         self.assertEqual(
             sorted(resources),
             [
@@ -158,8 +158,14 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
                 "30-01-2019-RA-eLife-45644/Potential striking image.tif",
                 "30-01-2019-RA-eLife-45644/Table 2source data 1.xlsx",
                 "30-01-2019-RA-eLife-45644/transparent_reporting_Sakalauskaite.docx",
+                "docmap-45644_2024-04-06T00_05_46.json",
             ],
         )
+
+        # look at the docmap json file
+        with zipfile.ZipFile(zip_file_path, "r") as open_zipfile:
+            docmap_json = open_zipfile.read("docmap-45644_2024-04-06T00_05_46.json")
+        self.assertEqual(docmap_json, b'{\n    "foo": "bar"\n}')
 
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -180,7 +186,7 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
         )
         resources = helpers.expanded_folder_bucket_resources(
             directory,
-            test_activity_data.accepted_session_example.get("expanded_folder"),
+            test_activity_data.valid_accepted_session_example.get("expanded_folder"),
             zip_file_path,
         )
         fake_cleaner_storage_context.return_value = FakeStorageContext(
@@ -191,7 +197,7 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
         )
         # mock the session
         fake_session.return_value = FakeSession(
-            test_activity_data.accepted_session_example
+            test_activity_data.valid_accepted_session_example
         )
 
         fake_download.side_effect = Exception()
@@ -208,3 +214,23 @@ class TestOutputAcceptedSubmission(unittest.TestCase):
                 % zip_filename
             ),
         )
+
+
+class Testdocmap_zip_file_name(unittest.TestCase):
+    "tests for docmap_zip_file_name()"
+
+    def test_docmap_zip_file_name(self):
+        "test if all arguments are supplied"
+        article_id = 45644
+        datetime_string = "2024-04-06T00:05:46.000Z"
+        expected = "docmap-45644_2024-04-06T00_05_46.json"
+        result = activity_module.docmap_zip_file_name(article_id, datetime_string)
+        self.assertEqual(result, expected)
+
+    def test_article_id_only(self):
+        "test if only an article_id is supplied"
+        article_id = 45644
+        datetime_string = None
+        expected = "docmap-45644.json"
+        result = activity_module.docmap_zip_file_name(article_id, datetime_string)
+        self.assertEqual(result, expected)

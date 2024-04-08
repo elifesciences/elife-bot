@@ -48,6 +48,14 @@ PublicationEmail:
     - poa
     - vor
 
+PreprintPublicationEmail:
+  activity_name: PublicationEmail
+  s3_bucket_folder: publication_email
+  schedule_downstream: true
+  schedule_first_version_only: false
+  schedule_article_types:
+    - preprint
+
 Pubmed:
   activity_name: PubmedArticleDeposit
   s3_bucket_folder: pubmed

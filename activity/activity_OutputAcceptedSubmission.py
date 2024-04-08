@@ -75,6 +75,20 @@ class activity_OutputAcceptedSubmission(AcceptedBaseActivity):
             self.logger.exception(log_message)
             self.statuses["download"] = False
 
+        # add docmap JSON as a file to the zip
+        if session.get_value("docmap_string"):
+            docmap_file_name = docmap_zip_file_name(
+                article_id, session.get_value("docmap_datetime_string")
+            )
+            docmap_file_path = os.path.join(
+                self.directories.get("INPUT_DIR"), docmap_file_name
+            )
+            with open(docmap_file_path, "w", encoding="utf-8") as open_file:
+                open_file.write(
+                    json.dumps(json.loads(session.get_value("docmap_string")), indent=4)
+                )
+            asset_file_name_map[docmap_file_name] = docmap_file_path
+
         #  zip the files
         if self.statuses.get("download"):
             new_zip_file_path = cleaner.rezip(
@@ -124,3 +138,12 @@ def download_all_files_from_bucket(storage, asset_file_name_map, to_dir, logger)
     cleaner.download_asset_files_from_bucket(
         storage, s3_files, asset_file_name_map, to_dir, logger
     )
+
+
+def docmap_zip_file_name(article_id, datetime_string):
+    "name for a docmap file to save into the zip"
+    extra = ""
+    if datetime_string:
+        # format the datetime into a file name portion and chop the microseconds
+        extra = "_%s" % datetime_string.replace(":", "_").replace(".000Z", "")
+    return "docmap-%s%s.json" % (article_id, extra)

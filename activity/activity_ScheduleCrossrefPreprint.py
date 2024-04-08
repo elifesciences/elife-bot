@@ -1,6 +1,6 @@
 import json
 import os
-from provider import cleaner, outbox_provider, preprint
+from provider import outbox_provider, preprint
 from provider.execution_context import get_session
 from activity.objects import Activity
 
@@ -53,67 +53,91 @@ class activity_ScheduleCrossrefPreprint(Activity):
                 session = get_session(self.settings, data, run)
                 article_id = session.get_value("article_id")
                 version = session.get_value("version")
+                expanded_folder_name = session.get_value("expanded_folder")
+                expanded_bucket_name = (
+                    self.settings.publishing_buckets_prefix
+                    + self.settings.expanded_bucket
+                )
         except:
-            self.logger.exception("Error starting Schedule Crossref Preprint activity")
+            self.logger.exception("Error starting %s activity" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
 
         self.logger.info("%s, article_id: %s" % (self.name, article_id))
         self.logger.info("%s, version: %s" % (self.name, version))
 
-        # first check if required settings are available
-        if not hasattr(self.settings, "epp_data_bucket"):
-            self.logger.info(
-                "No epp_data_bucket in settings, skipping %s for article_id %s, version %s"
-                % (self.name, article_id, version)
-            )
-            return self.ACTIVITY_SUCCESS
-        if not self.settings.epp_data_bucket:
-            self.logger.info(
-                "epp_data_bucket in settings is blank, skipping %s for article_id %s, version %s"
-                % (self.name, article_id, version)
-            )
-            return self.ACTIVITY_SUCCESS
-
-        # get docmap data
-        try:
-            docmap_string = cleaner.get_docmap_string_with_retry(
-                self.settings, article_id, self.name, self.logger
-            )
-        except Exception:
-            self.logger.exception(
-                (
-                    "%s, exception raised to get docmap_string"
-                    " using retries for article_id %s version %s"
+        # generate preprint XML if standalone
+        xml_file_path = None
+        if data and "standalone" in data and data["standalone"]:
+            # first check if required settings are available
+            if not hasattr(self.settings, "epp_data_bucket"):
+                self.logger.info(
+                    "No epp_data_bucket in settings, skipping %s for article_id %s, version %s"
+                    % (self.name, article_id, version)
                 )
-                % (self.name, article_id, version)
-            )
-            return self.ACTIVITY_PERMANENT_FAILURE
+                return self.ACTIVITY_SUCCESS
+            if not self.settings.epp_data_bucket:
+                self.logger.info(
+                    (
+                        "epp_data_bucket in settings is blank, skipping %s "
+                        "for article_id %s, version %s"
+                    )
+                    % (self.name, article_id, version)
+                )
+                return self.ACTIVITY_SUCCESS
 
-        # populate the article object
-        try:
-            article = preprint.build_preprint_article(
+            # generate preprint XML file
+            try:
+                xml_file_path = preprint.generate_preprint_xml(
+                    self.settings,
+                    article_id,
+                    version,
+                    self.name,
+                    self.directories,
+                    self.logger,
+                )
+            except preprint.PreprintArticleException as exception:
+                self.logger.exception(
+                    (
+                        "%s, exception raised generating preprint XML"
+                        " for article_id %s version %s: %s"
+                    )
+                    % (self.name, article_id, version, str(exception))
+                )
+                return self.ACTIVITY_PERMANENT_FAILURE
+            except Exception as exception:
+                self.logger.exception(
+                    (
+                        "%s, unhandled exception raised when generating preprint XML"
+                        " for article_id %s version %s: %s"
+                    )
+                    % (self.name, article_id, version, str(exception))
+                )
+                return self.ACTIVITY_PERMANENT_FAILURE
+        elif run:
+            # download the preprint XML from the expanded folder
+            bucket_resource = preprint.expanded_folder_bucket_resource(
+                self.settings, expanded_bucket_name, expanded_folder_name
+            )
+            xml_filename = preprint.find_xml_filename_in_expanded_folder(
+                self.settings, bucket_resource
+            )
+            # check if a file name was found
+            if not xml_filename:
+                self.logger.info(
+                    "%s, xml_filename is None for article %s version %s"
+                    % (self.name, article_id, version)
+                )
+                return self.ACTIVITY_PERMANENT_FAILURE
+
+            # download the XML file
+            xml_file_path = preprint.download_from_expanded_folder(
                 self.settings,
-                article_id,
-                version,
-                docmap_string,
-                self.directories.get("TEMP_DIR"),
+                self.directories,
+                xml_filename,
+                bucket_resource,
+                self.name,
                 self.logger,
             )
-        except Exception:
-            # handle if article could not be built
-            self.logger.exception(
-                "%s, exception raised when building the article object for article_id %s version %s"
-                % (self.name, article_id, version)
-            )
-            return self.ACTIVITY_PERMANENT_FAILURE
-
-        # continue if article could be populated
-        # generate preprint XML from data sources
-        xml_file_name = preprint.xml_filename(article_id, self.settings, version)
-        xml_file_path = os.path.join(self.directories.get("INPUT_DIR"), xml_file_name)
-        xml_string = preprint.preprint_xml(article, self.settings)
-        with open(xml_file_path, "wb") as open_file:
-            open_file.write(xml_string)
 
         # upload to the posted_content outbox folder
         self.upload_file_to_outbox_folder(

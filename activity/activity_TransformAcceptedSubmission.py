@@ -90,9 +90,7 @@ class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
         # PRC XML changes
         if session.get_value("prc_status"):
             cleaner.transform_prc(xml_file_path, input_filename)
-            docmap_string = cleaner.get_docmap_string(
-                self.settings, article_id, input_filename, self.name, self.logger
-            )
+            docmap_string = session.get_value("docmap_string")
             # set the volume tag value
             self.set_volume_tag(
                 article_id, xml_file_path, input_filename, docmap_string
