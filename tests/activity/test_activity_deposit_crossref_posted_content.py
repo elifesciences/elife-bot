@@ -114,9 +114,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
         fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_version_map.return_value = {}
         resources = helpers.populate_storage(
             from_dir=self.outbox_folder,
@@ -205,9 +203,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
         fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_version_map.return_value = {"vor": [1]}
         # fake_version_map.return_value = {}
         resources = helpers.populate_storage(
@@ -248,9 +244,7 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         fake_clean_tmp_dir.return_value = None
         # use the docmap with only version 1 steps in it
         fake_get_docmap.return_value = v1_84364_docmap_fixture()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_version_map.return_value = {}
         # fake_version_map.return_value = {}
         resources = helpers.populate_storage(
@@ -284,9 +278,8 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         fake_email_smtp_connect,
         fake_get_docmap,
     ):
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
         fake_version_map.return_value = {}
         fake_storage_context.return_value = FakeStorageContext(
@@ -305,9 +298,8 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         fake_storage_context,
         fake_email_smtp_connect,
     ):
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_storage_context.return_value = FakeStorageContext(
             self.outbox_folder, ["bad.xml"]
         )

@@ -266,12 +266,10 @@ class TestPMCDeposit(unittest.TestCase):
         fake_email_smtp_connect,
         mock_article_related,
     ):
-
+        directory = TempDirectory()
         test_data = self.do_activity_passes[1]
         fake_session.return_value = FakeSession({})
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
 
         fake_storage_context.return_value = FakeStorageContext(
             directory=self.test_data_dir

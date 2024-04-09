@@ -2,6 +2,7 @@
 
 import unittest
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
 from digestparser.objects import Digest
 import activity.activity_PostDigestJATS as activity_module
@@ -27,6 +28,7 @@ class TestPostDigestJats(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
@@ -123,12 +125,11 @@ class TestPostDigestJats(unittest.TestCase):
         requests_method_mock,
         fake_email_smtp_connect,
     ):
+        directory = TempDirectory()
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
         fake_download_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # POST response
         requests_method_mock.return_value = FakeResponse(
             test_data.get("post_status_code"), None
@@ -190,11 +191,10 @@ class TestPostDigestJats(unittest.TestCase):
         fake_download_storage_context,
         fake_email_smtp_connect,
     ):
+        directory = TempDirectory()
         fake_storage_context.return_value = FakeStorageContext()
         fake_download_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         activity_data = input_data("DIGEST+99999.zip")
         fake_digest_jats.return_value = None
         result = self.activity.do_activity(activity_data)
@@ -211,11 +211,10 @@ class TestPostDigestJats(unittest.TestCase):
         fake_download_storage_context,
         fake_email_smtp_connect,
     ):
+        directory = TempDirectory()
         fake_storage_context.return_value = FakeStorageContext()
         fake_download_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         activity_data = input_data("DIGEST+99999.zip")
         fake_post_jats.side_effect = Exception("Something went wrong!")
         result = self.activity.do_activity(activity_data)
@@ -246,15 +245,15 @@ class TestEmailErrorReport(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     def test_email_error_report(self, fake_email_smtp_connect):
         """test sending an email error"""
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         digest_content = Digest()
         digest_content.doi = "10.7554/eLife.99999"
         jats_content = {}

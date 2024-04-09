@@ -115,9 +115,7 @@ class TestDepositCrossrefMinimal(unittest.TestCase):
     ):
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # populate the bucket resources and copy them to the temp directory
         resources = helpers.populate_storage(
             from_dir="tests/test_data/crossref_minimal/outbox",
@@ -190,7 +188,7 @@ class TestDepositCrossrefMinimal(unittest.TestCase):
                     )
 
         # check email files and contents
-        email_files_filter = os.path.join(self.activity.get_tmp_dir(), "*.eml")
+        email_files_filter = os.path.join(directory.path, "*.eml")
         email_files = glob.glob(email_files_filter)
         if "expected_email_count" in test_data:
             self.assertEqual(len(email_files), test_data.get("expected_email_count"))

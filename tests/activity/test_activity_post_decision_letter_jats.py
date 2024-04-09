@@ -3,6 +3,7 @@
 import os
 import unittest
 from mock import patch
+from testfixtures import TempDirectory
 import activity.activity_PostDecisionLetterJATS as activity_module
 from activity.activity_PostDecisionLetterJATS import (
     activity_PostDecisionLetterJATS as activity_object,
@@ -35,6 +36,7 @@ class TestPostDecisionLetterJats(unittest.TestCase):
         self.input_data = input_data("elife-39122.zip")
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
@@ -49,11 +51,10 @@ class TestPostDecisionLetterJats(unittest.TestCase):
         fake_email_smtp_connect,
         mock_session,
     ):
+        directory = TempDirectory()
         expected_result = activity_object.ACTIVITY_SUCCESS
         fake_download_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # mock the session
         fake_session = FakeSession(SESSION_DATA)
         mock_session.return_value = fake_session
@@ -78,11 +79,10 @@ class TestPostDecisionLetterJats(unittest.TestCase):
         fake_email_smtp_connect,
         mock_session,
     ):
+        directory = TempDirectory()
         expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
         fake_download_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # mock the session
         fake_session = FakeSession(SESSION_DATA)
         mock_session.return_value = fake_session
@@ -114,11 +114,10 @@ class TestPostDecisionLetterJats(unittest.TestCase):
         fake_email_smtp_connect,
         mock_session,
     ):
+        directory = TempDirectory() 
         expected_result = activity_object.ACTIVITY_PERMANENT_FAILURE
         fake_download_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # mock the session
         fake_session = FakeSession(SESSION_DATA)
         mock_session.return_value = fake_session

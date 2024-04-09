@@ -3,6 +3,7 @@ import os
 import glob
 import unittest
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
 import activity.activity_EmailAcceptedSubmissionOutput as activity_module
 from activity.activity_EmailAcceptedSubmissionOutput import (
@@ -21,6 +22,7 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
@@ -45,6 +47,7 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
         fake_email_smtp_connect,
         fake_session,
     ):
+        directory = TempDirectory()
         session = FakeSession(copy.copy(test_activity_data.accepted_session_example))
         # add some cleaner_log content
         session.store_value(
@@ -56,9 +59,7 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
             ),
         )
         fake_session.return_value = session
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # do the activity
         result = self.activity.do_activity(
             test_case_data.ingest_accepted_submission_data
@@ -80,7 +81,7 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
             "failed in {comment}".format(comment=test_data.get("comment")),
         )
         # check email files and contents
-        email_files_filter = os.path.join(self.activity.get_tmp_dir(), "*.eml")
+        email_files_filter = os.path.join(directory.path, "*.eml")
         email_files = glob.glob(email_files_filter)
         if "expected_email_count" in test_data:
             # assert 0 or more emails sent
@@ -113,12 +114,11 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
         fake_session,
     ):
         "test if sending an email returns false"
+        directory = TempDirectory()
         fake_session.return_value = FakeSession(
             test_activity_data.accepted_session_example
         )
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_smtp_send.return_value = False
         # do the activity
         result = self.activity.do_activity(
@@ -133,9 +133,8 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
         self, fake_email_smtp_connect, fake_smtp_send, fake_session
     ):
         "test for temporary setting to not send an email for PRC article ingestion"
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_smtp_send.return_value = True
         expected_email_status = True
         session_data = copy.copy(test_activity_data.accepted_session_example)
@@ -155,9 +154,8 @@ class TestEmailAcceptedSubmissionOutput(unittest.TestCase):
         self, fake_email_smtp_connect, fake_smtp_send, fake_session
     ):
         "test for temporary setting not to send an email for particular input file names"
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_smtp_send.return_value = True
         expected_email_status = None
         session_data = copy.copy(test_activity_data.accepted_session_example)

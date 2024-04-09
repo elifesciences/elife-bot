@@ -263,8 +263,6 @@ class TestPublishFinalPOA(unittest.TestCase):
         fake_get_pub_date_str_from_lax,
         fake_email_smtp_connect,
     ):
-
-        fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
         fake_clean_tmp_dir.return_value = None
 
         fake_next_revision_number.return_value = 1
@@ -273,6 +271,7 @@ class TestPublishFinalPOA(unittest.TestCase):
 
         for test_data in self.do_activity_passes:
             directory = TempDirectory()
+            fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
             fake_storage_context.return_value = FakeStorageContext(
                 dest_folder=directory.path
             )

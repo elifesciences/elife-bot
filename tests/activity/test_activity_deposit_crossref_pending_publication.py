@@ -71,9 +71,7 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         }
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         resources = helpers.populate_storage(
             from_dir=self.outbox_folder,
             to_dir=directory.path,
@@ -175,9 +173,8 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         fake_doi_exists,
         fake_email_smtp_connect,
     ):
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()    
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_storage_context.return_value = FakeStorageContext(
             self.outbox_folder, ["08-11-2020-FA-eLife-64719.xml"]
         )
@@ -198,9 +195,8 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         fake_storage_context,
         fake_email_smtp_connect,
     ):
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_storage_context.return_value = FakeStorageContext(
             self.outbox_folder, ["bad.xml"]
         )

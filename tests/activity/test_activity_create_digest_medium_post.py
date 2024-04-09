@@ -3,6 +3,7 @@
 import unittest
 import copy
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
 import activity.activity_CreateDigestMediumPost as activity_module
 from activity.activity_CreateDigestMediumPost import (
@@ -44,6 +45,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
@@ -106,6 +108,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         fake_post_content,
         fake_email_smtp_connect,
     ):
+        directory = TempDirectory()
         # copy files into the input directory using the storage context
         fake_emit.return_value = None
         activity_data = digest_activity_data(ACTIVITY_DATA)
@@ -119,9 +122,7 @@ class TestCreateDigestMediumPost(unittest.TestCase):
         fake_storage_context.return_value = bot_storage_context
         fake_processing_storage_context.return_value = FakeStorageContext()
         fake_post_content.return_value = None
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # lax mocking
         fake_highest_version.return_value = test_data.get("lax_highest_version")
         fake_first.return_value = test_data.get("first_vor")
@@ -217,9 +218,8 @@ class TestCreateDigestMediumPost(unittest.TestCase):
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     def test_email_notification(self, fake_email_smtp_connect):
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         return_value = self.activity.email_notification(99999)
         self.assertTrue(return_value)
         self.assertEqual(
