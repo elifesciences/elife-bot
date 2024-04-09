@@ -215,9 +215,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
         fake_check_vor.return_value = test_data.get("vor_exists")
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         resources = helpers.populate_storage(
             from_dir="tests/test_data/crossref_peer_review/outbox/",
             to_dir=directory.path,
@@ -299,9 +297,8 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         fake_check_vor,
         fake_get_client,
     ):
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_check_vor.return_value = True
         fake_storage_context.return_value = FakeStorageContext(
             "tests/test_data/crossref_peer_review/outbox/",
@@ -329,9 +326,8 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         fake_email_smtp_connect,
         fake_get_client,
     ):
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_storage_context.return_value = FakeStorageContext(
             "tests/test_data/crossref_peer_review/outbox/", ["bad.xml"]
         )

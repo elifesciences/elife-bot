@@ -221,7 +221,7 @@ class TestPackagePOA(unittest.TestCase):
         # mock things
         fake_copy_pdf_to_output_dir.return_value = None
         fake_clean_tmp_dir.return_value = None
-        fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         bucket_outbox_folder = os.path.join(directory.path, "outbox")
         bucket_list_file = os.path.join(
             "tests", "test_data", "ejp_bucket_list_new.json"
@@ -356,7 +356,7 @@ class TestPackagePOA(unittest.TestCase):
         fake_generate_xml.side_effect = ExpatError("An exception")
         fake_copy_pdf_to_output_dir.return_value = None
         fake_clean_tmp_dir.return_value = None
-        fake_email_smtp_connect.return_value = FakeSMTPServer(self.poa.get_tmp_dir())
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         bucket_outbox_folder = os.path.join(directory.path, "outbox")
         bucket_list_file = os.path.join(
             "tests", "test_data", "ejp_bucket_list_new.json"

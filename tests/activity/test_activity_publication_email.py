@@ -145,6 +145,7 @@ class TestPublicationEmail(unittest.TestCase):
         )
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder(
             test_activity_data.ExpandArticle_files_dest_folder, filter_out=[".gitkeep"]
@@ -161,14 +162,13 @@ class TestPublicationEmail(unittest.TestCase):
         fake_process_articles,
         fake_email_smtp_connect,
     ):
+        directory = TempDirectory()
         prepared_article_xml_filenames = ["elife00013.xml", "elife03385.xml"]
         approved_article_xml_filenames = ["elife00013.xml"]
         not_published_article_xml_filenames = ["elife03385.xml"]
         expected_result = True
 
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
 
         storage_path = "tests/files_source/publication_email/outbox/"
 
@@ -295,15 +295,14 @@ class TestPublicationEmail(unittest.TestCase):
         fake_email_smtp_connect,
     ):
         "test if no prepared or not published articles are produced"
+        directory = TempDirectory()
         fake_download_templates.return_value = True
         fake_storage_context.return_value = FakeStorageContext(
             "tests/files_source/publication_email/outbox/",
             resources=[],
         )
         fake_process_articles.return_value = [], [], [], None
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         result = self.activity.do_activity()
         self.assertEqual(result, True)
 
@@ -348,9 +347,7 @@ class TestSendAndClean(unittest.TestCase):
     ):
         "test sending email, cleaning the outbox, sending admin email"
         directory = TempDirectory()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         article_xml_filenames = ["elife-18753-v1.xml", "elife-15747-v2.xml"]
         # copy XML files for testing
         storage_path = os.path.join(directory.path, "publication_email", "outbox")
@@ -394,9 +391,7 @@ class TestSendAndClean(unittest.TestCase):
     ):
         "test sending email, cleaning the outbox, sending admin email"
         directory = TempDirectory()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         article_xml_filenames = ["elife-32991-v2.xml"]
         # copy XML files for testing
         storage_path = os.path.join(directory.path, "publication_email", "outbox")
@@ -1060,6 +1055,7 @@ class TestSendEmail(unittest.TestCase):
         )
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_PublicationEmail, "send_author_email")
@@ -1086,9 +1082,8 @@ class TestSendEmail(unittest.TestCase):
         self, fake_send_message, fake_email_smtp_connect, fake_get_email_body
     ):
         # self.activity.download_templates()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_get_email_body.return_value = "Body."
         fake_send_message.return_value = True
         author = {"e_mail": "author@example.org"}
@@ -1117,9 +1112,8 @@ class TestSendEmail(unittest.TestCase):
         self, fake_send_message, fake_email_smtp_connect, fake_get_email_body
     ):
         # self.activity.download_templates()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_get_email_body.return_value = "Body."
         smtp_exception = smtplib.SMTPDataError(
             454, "Throttling failure: Maximum sending rate exceeded."
@@ -1555,14 +1549,14 @@ class TestSendAdminEmail(unittest.TestCase):
         )
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     def test_send_admin_email(self, fake_email_smtp_connect):
         "test for when the email recipients is a list"
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         activity_status = True
         result = self.activity.send_admin_email(activity_status)
         self.assertEqual(result, True)

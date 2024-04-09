@@ -4,6 +4,7 @@ import os
 import glob
 import unittest
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
 import activity.activity_DecisionLetterReceipt as activity_module
 from activity.activity_DecisionLetterReceipt import (
@@ -30,6 +31,7 @@ class TestDecisionLetterReceipt(unittest.TestCase):
         )
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
@@ -47,9 +49,8 @@ class TestDecisionLetterReceipt(unittest.TestCase):
         },
     )
     def test_do_activity(self, test_data, fake_email_smtp_connect):
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         filename_used = input_data(test_data.get("filename")).get("file_name")
@@ -62,7 +63,7 @@ class TestDecisionLetterReceipt(unittest.TestCase):
             ),
         )
         # check assertions on email files and contents
-        email_files_filter = os.path.join(self.activity.get_tmp_dir(), "*.eml")
+        email_files_filter = os.path.join(directory.path, "*.eml")
         email_files = glob.glob(email_files_filter)
         if "expected_email_count" in test_data:
             self.assertEqual(len(email_files), test_data.get("expected_email_count"))
@@ -83,20 +84,19 @@ class TestDecisionLetterReceipt(unittest.TestCase):
     @patch.object(activity_module.email_provider, "simple_email_body")
     @patch.object(activity_module.email_provider, "smtp_connect")
     def test_do_activity_exception(self, fake_email_smtp_connect, fake_email_body):
+        directory = TempDirectory()
         filename = "elife-39122.zip"
         expected_result = activity_object.ACTIVITY_TEMPORARY_FAILURE
         expected_email_count = 0
         expected_exception_log_message = "Exception raised sending email in DecisionLetterReceipt for file elife-39122.zip."
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_email_body.side_effect = Exception("Some exception")
         # do the activity
         result = self.activity.do_activity(input_data(filename))
         # check result
         self.assertEqual(result, expected_result)
         # check assertions on emails
-        email_files_filter = os.path.join(self.activity.get_tmp_dir(), "*.eml")
+        email_files_filter = os.path.join(directory.path, "*.eml")
         email_files = glob.glob(email_files_filter)
         self.assertEqual(len(email_files), expected_email_count)
         self.assertEqual(self.fake_logger.logexception, expected_exception_log_message)

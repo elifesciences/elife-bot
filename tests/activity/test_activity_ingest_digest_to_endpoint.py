@@ -5,6 +5,7 @@ import copy
 import unittest
 from collections import OrderedDict
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
 from provider import article, article_processing, digest_provider, lax_provider, utils
 import activity.activity_IngestDigestToEndpoint as activity_module
@@ -60,6 +61,7 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         self.activity = activity_object(settings_mock, self.logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
@@ -269,14 +271,13 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         fake_email_smtp_connect,
     ):
         "situations where approve will be false"
+        directory = TempDirectory()
         fake_emit.return_value = True
         fake_first.return_value = test_data.get("first_vor")
         session_test_data = session_data(test_data)
         fake_session.return_value = FakeSession(session_test_data)
         fake_highest_version.return_value = test_data.get("lax_highest_version")
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
 
         activity_data = test_activity_data.data_example_before_publish
         # do the activity
@@ -404,12 +405,11 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         fake_email_smtp_connect,
     ):
         "test unable to download a digest docx file"
+        directory = TempDirectory()
         fake_emit.return_value = True
         session_test_data = session_data({})
         fake_session.return_value = FakeSession(session_test_data)
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_first.return_value = True
         fake_highest_version.return_value = 1
         named_fake_storage_context = FakeStorageContext()
@@ -444,11 +444,10 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         fake_download_article_xml,
         fake_related_from_lax,
     ):
+        directory = TempDirectory()
         fake_emit.return_value = True
         session_test_data = session_data({})
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_session.return_value = FakeSession(session_test_data)
         fake_approve.return_value = True
         fake_download.return_value = True
@@ -484,11 +483,10 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         fake_gather_digest_details,
         fake_digest_json,
     ):
+        directory = TempDirectory()
         fake_emit.return_value = True
         session_test_data = session_data({})
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_session.return_value = FakeSession(session_test_data)
         fake_approve.return_value = True
         fake_gather_digest_details.return_value = {}
@@ -523,11 +521,10 @@ class TestIngestDigestToEndpointDoActivity(unittest.TestCase):
         fake_generate_digest_content,
         fake_put_digest,
     ):
+        directory = TempDirectory()
         fake_emit.return_value = True
         session_test_data = session_data({})
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_session.return_value = FakeSession(session_test_data)
         fake_approve.return_value = True
         fake_gather_digest_details.return_value = {}

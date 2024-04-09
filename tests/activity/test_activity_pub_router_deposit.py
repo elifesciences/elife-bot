@@ -62,9 +62,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         fake_sqs_client,
     ):
         directory = TempDirectory()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.pubrouterdeposit.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         activity_data = {"data": {"workflow": "HEFCE"}}
         fake_was_ever_published.return_value = None
         resources = helpers.populate_storage(
@@ -111,7 +109,7 @@ class TestPubRouterDeposit(unittest.TestCase):
         "test not_published logic by mocking Lax does not have version data"
         directory = TempDirectory()
         tmp_dir = self.pubrouterdeposit.get_tmp_dir()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(tmp_dir)
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         activity_data = {"data": {"workflow": "HEFCE"}}
         fake_was_ever_published.return_value = None
         resources = helpers.populate_storage(
@@ -190,9 +188,7 @@ class TestPubRouterDeposit(unittest.TestCase):
     ):
         "test for PMC runs which start a different workflow"
         directory = TempDirectory()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.pubrouterdeposit.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         activity_data = {"data": {"workflow": workflow_name}}
         resources = helpers.populate_storage(
             from_dir="tests/test_data/",
@@ -235,9 +231,7 @@ class TestPubRouterDeposit(unittest.TestCase):
     ):
         "test for the the PMC starter function returns False"
         directory = TempDirectory()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.pubrouterdeposit.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         activity_data = {"data": {"workflow": workflow_name}}
         resources = helpers.populate_storage(
             from_dir="tests/test_data/",

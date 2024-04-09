@@ -4,6 +4,7 @@ import os
 import glob
 import unittest
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
 from digestparser.objects import Digest
 import activity.activity_EmailDigest as activity_module
@@ -35,6 +36,7 @@ class TestEmailDigest(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
         helpers.delete_files_in_folder(
@@ -124,12 +126,11 @@ class TestEmailDigest(unittest.TestCase):
         fake_download_storage_context,
         fake_email_smtp_connect,
     ):
+        directory = TempDirectory()
         # copy XML files into the input directory using the storage context
         fake_storage_context.return_value = FakeStorageContext()
         fake_download_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         filename_used = input_data(test_data.get("filename")).get("file_name")
@@ -196,7 +197,7 @@ class TestEmailDigest(unittest.TestCase):
                 test_data.get("expected_output_dir_files"),
             )
         # check email files and contents
-        email_files_filter = os.path.join(self.activity.get_tmp_dir(), "*.eml")
+        email_files_filter = os.path.join(directory.path, "*.eml")
         email_files = glob.glob(email_files_filter)
         if "expected_email_count" in test_data:
             # assert 0 or more emails sent

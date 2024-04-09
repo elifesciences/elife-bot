@@ -4,6 +4,7 @@ import shutil
 import copy
 from collections import OrderedDict
 from mock import patch
+from testfixtures import TempDirectory
 from tests.classes_mock import FakeSMTPServer
 import tests.activity.settings_mock as settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
@@ -43,6 +44,7 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module.email_provider, "smtp_connect")
@@ -95,13 +97,12 @@ class TestEmailVideoArticlePublished(unittest.TestCase):
         fake_email_smtp_connect,
     ):
         # mock objects
+        directory = TempDirectory()
         fake_emit.return_value = None
         fake_processing_storage_context.return_value = FakeStorageContext()
         fake_get_xml_file_name.return_value = test_data.get("xml_file")
         fake_first.return_value = test_data.get("first_vor")
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # do the activity
         success = self.activity.do_activity(test_data.get("input_data"))
         # check assertions

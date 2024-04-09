@@ -95,9 +95,7 @@ class TestFindNewPreprints(unittest.TestCase):
         fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
         sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
         fake_get.return_value = FakeResponse(200, content=sample_html)
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         resources = []
         if test_data.get("bucket_filenames"):
             resources = test_data.get("bucket_filenames")

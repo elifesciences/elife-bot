@@ -5,6 +5,7 @@ import glob
 import unittest
 from collections import OrderedDict
 from mock import patch
+from testfixtures import TempDirectory
 from ddt import ddt, data
 import activity.activity_ValidateDecisionLetterInput as activity_module
 from activity.activity_ValidateDecisionLetterInput import (
@@ -30,6 +31,7 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
@@ -72,11 +74,10 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
     def test_do_activity(
         self, test_data, fake_download_storage_context, fake_email_smtp_connect
     ):
+        directory = TempDirectory()
         # copy XML files into the input directory using the storage context
         fake_download_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         filename_used = input_data(test_data.get("filename")).get("file_name")
@@ -126,7 +127,7 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
             )
 
         # check email files and contents
-        email_files_filter = os.path.join(self.activity.get_tmp_dir(), "*.eml")
+        email_files_filter = os.path.join(directory.path, "*.eml")
         email_files = glob.glob(email_files_filter)
         if "expected_email_count" in test_data:
             self.assertEqual(len(email_files), test_data.get("expected_email_count"))
@@ -154,10 +155,9 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
         self, fake_download_storage_context, fake_email_smtp_connect, fake_unzip_zip
     ):
         "test if the unzip status is not True"
+        directory = TempDirectory()
         fake_download_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_unzip_zip.side_effect = Exception("An exception")
         result = self.activity.do_activity(input_data("elife-39122.zip"))
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
@@ -169,15 +169,14 @@ class TestValidateDecisionLetterInput(unittest.TestCase):
         self, fake_download_storage_context, fake_email_smtp_connect, fake_output_xml
     ):
         "test if there is a potential problem character in the XML"
+        directory = TempDirectory()
         fake_download_storage_context.return_value = FakeStorageContext()
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_output_xml.return_value = True, b"<article><p>\xe2\x80\xa8</p></article>"
         result = self.activity.do_activity(input_data("elife-39122.zip"))
         self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
         # check email files and contents
-        email_files_filter = os.path.join(self.activity.get_tmp_dir(), "*.eml")
+        email_files_filter = os.path.join(directory.path, "*.eml")
         email_files = glob.glob(email_files_filter)
 
         # can look at the first email for the subject and sender

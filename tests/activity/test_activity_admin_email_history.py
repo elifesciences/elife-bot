@@ -1,5 +1,6 @@
 import unittest
 from mock import patch
+from testfixtures import TempDirectory
 import provider.swfmeta as swfmetalib
 import activity.activity_AdminEmailHistory as activity_module
 from activity.activity_AdminEmailHistory import (
@@ -16,17 +17,17 @@ class TestAdminEmailHistory(unittest.TestCase):
         self.activity = activity_object(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
-
+        
     @patch.object(swfmetalib.SWFMeta, "connect")
     @patch.object(swfmetalib.SWFMeta, "get_closed_workflow_execution_count")
     @patch.object(activity_module.email_provider, "smtp_connect")
     def test_do_activity(
         self, fake_email_smtp_connect, fake_workflow_count, fake_swf_connect
     ):
-        fake_email_smtp_connect.return_value = FakeSMTPServer(
-            self.activity.get_tmp_dir()
-        )
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_swf_connect.return_value = FakeSWFClient()
         fake_workflow_count.return_value = 0
         success = self.activity.do_activity()
