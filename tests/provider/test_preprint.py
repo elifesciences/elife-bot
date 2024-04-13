@@ -40,7 +40,7 @@ def article_fixture():
     article.article_type = "preprint"
     article.manuscript = "84364"
     article.version_doi = "10.7554/eLife.84364.2"
-    article.abstract = "An abstract."
+    article.abstract = "<p>An abstract.</p>"
     # contributor
     contributor = Contributor("author", "Mahlandt", "Eike K.")
     affiliation = Affiliation()
@@ -203,12 +203,12 @@ class TestBuildArticle(unittest.TestCase):
         )
         self.assertTrue(
             article.abstract.startswith(
-                "The inner layer of blood vessels consists of endothelial cells,"
+                "<p>The inner layer of blood vessels consists of endothelial cells,"
             )
         )
         self.assertEqual(len(article.contributors), 6)
         self.assertEqual(len(article.contributors[0].affiliations), 1)
-        self.assertEqual(len(article.ref_list), 77)
+        self.assertEqual(len(article.ref_list), 0)
         # review_articles
         self.assertEqual(len(article.review_articles), 5)
 
@@ -235,6 +235,8 @@ class TestBuildArticle(unittest.TestCase):
         self.assertEqual(article.review_articles[4].id, "sa0")
         self.assertEqual(article.review_articles[4].title, "Author Response:")
         self.assertEqual(len(article.review_articles[4].contributors), 6)
+
+        # self.assertTrue(False)
 
     @patch.object(cleaner, "sub_article_data")
     def test_specific_version(self, fake_sub_article_data):
@@ -579,9 +581,11 @@ class TestBuildPreprintArticle(unittest.TestCase):
     @patch.object(download_helper, "storage_context")
     def test_build_preprint_article(self, fake_download_storage_context, fake_get):
         "build an Article object from biorXiv XML and docmap string data"
-        directory = TempDirectory()
         fake_logger = FakeLogger()
         file_name = "article-source.xml"
+        article_xml_path = (
+            "tests/files_source/epp/automation/84364/v2/article-source.xml"
+        )
         fake_download_storage_context.return_value = FakeStorageContext(
             "tests/files_source/epp", [file_name]
         )
@@ -592,55 +596,14 @@ class TestBuildPreprintArticle(unittest.TestCase):
         fake_get.return_value = FakeResponse(200, content=sample_html)
         # invoke
         result = preprint.build_preprint_article(
-            settings_mock,
             article_id,
             version,
             docmap_string,
-            directory.path,
+            article_xml_path,
             fake_logger,
         )
         # assert
         self.assertTrue(isinstance(result, Article))
-
-    @patch.object(preprint, "download_original_preprint_xml")
-    @patch.object(download_helper, "storage_context")
-    def test_download_xml_exception(
-        self,
-        fake_download_storage_context,
-        fake_download,
-    ):
-        "test an exception raised when downloading original preprint XML"
-        directory = TempDirectory()
-        fake_logger = FakeLogger()
-        exception_message = "An exception"
-        fake_download.side_effect = preprint.PreprintArticleException(exception_message)
-        file_name = "article-source.xml"
-        fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", [file_name]
-        )
-        article_id = 93405
-        version = 1
-        docmap_string = read_fixture("sample_docmap_for_84364.json")
-
-        # invoke
-        with self.assertRaises(preprint.PreprintArticleException):
-            preprint.build_preprint_article(
-                settings_mock,
-                article_id,
-                version,
-                docmap_string,
-                directory.path,
-                fake_logger,
-            )
-        # assert
-        self.assertEqual(
-            fake_logger.logexception,
-            (
-                "Exception getting preprint server XML"
-                " from the bucket for article_id %s, version %s: %s"
-            )
-            % (article_id, version, exception_message),
-        )
 
     @patch.object(preprint, "build_article")
     @patch.object(download_helper, "storage_context")
@@ -665,7 +628,6 @@ class TestBuildPreprintArticle(unittest.TestCase):
         # invoke
         with self.assertRaises(preprint.PreprintArticleException):
             preprint.build_preprint_article(
-                settings_mock,
                 article_id,
                 version,
                 docmap_string,
@@ -763,9 +725,45 @@ class TestGeneratePreprintXml(unittest.TestCase):
             % (caller_name, article_id, version),
         )
 
+    @patch.object(preprint, "download_original_preprint_xml")
+    @patch.object(cleaner, "get_docmap_string_with_retry")
+    def test_download_xml_exception(self, fake_get_docmap_string, fake_download):
+        "test PreprintArticleException exception raised when downloading original prepring XML"
+        fake_logger = FakeLogger()
+        article_id = 84364
+        version = 2
+        directories = {}
+        caller_name = "ScheduleCrossrefPreprint"
+        exception_message = "An exception"
+        fake_get_docmap_string.return_value = True
+        fake_download.side_effect = preprint.PreprintArticleException(exception_message)
+
+        # invoke
+        with self.assertRaises(preprint.PreprintArticleException):
+            preprint.generate_preprint_xml(
+                settings_mock,
+                article_id,
+                version,
+                caller_name,
+                directories,
+                fake_logger,
+            )
+        # assert
+        self.assertEqual(
+            fake_logger.logexception,
+            (
+                "%s, exception getting preprint server XML from the bucket"
+                " for article_id %s version %s"
+            )
+            % (caller_name, article_id, version),
+        )
+
+    @patch.object(preprint, "download_original_preprint_xml")
     @patch.object(preprint, "build_preprint_article")
     @patch.object(cleaner, "get_docmap_string_with_retry")
-    def test_build_article_exception(self, fake_get_docmap_string, fake_build_article):
+    def test_build_article_exception(
+        self, fake_get_docmap_string, fake_build_article, fake_download
+    ):
         "test PreprintArticleException is raised when generating an article"
         fake_logger = FakeLogger()
         article_id = 84364
@@ -773,6 +771,7 @@ class TestGeneratePreprintXml(unittest.TestCase):
         directories = {}
         caller_name = "ScheduleCrossrefPreprint"
         fake_get_docmap_string.return_value = True
+        fake_download.return_value = True
         exception_message = "An exception"
         fake_build_article.side_effect = preprint.PreprintArticleException(
             exception_message
@@ -797,6 +796,72 @@ class TestGeneratePreprintXml(unittest.TestCase):
             )
             % (caller_name, article_id, version),
         )
+
+    @patch.object(preprint, "copy_ref_list_xml")
+    @patch.object(preprint, "download_original_preprint_xml")
+    @patch.object(preprint, "build_preprint_article")
+    @patch.object(cleaner, "get_docmap_string_with_retry")
+    def test_copy_ref_list_exception(
+        self, fake_get_docmap_string, fake_build_article, fake_download, fake_copy
+    ):
+        "test PreprintArticleException is raised when generating an article"
+        directory = TempDirectory()
+        fake_logger = FakeLogger()
+        article_id = 84364
+        version = 2
+        directories = {"INPUT_DIR": directory.path}
+        caller_name = "ScheduleCrossrefPreprint"
+        fake_get_docmap_string.return_value = True
+        fake_download.return_value = True
+        fake_build_article.return_value = Article()
+        exception_message = "An exception"
+        fake_copy.side_effect = Exception(exception_message)
+
+        # invoke
+        preprint.generate_preprint_xml(
+            settings_mock,
+            article_id,
+            version,
+            caller_name,
+            directories,
+            fake_logger,
+        )
+        # assert
+        self.assertEqual(
+            fake_logger.logexception,
+            (
+                "%s, exception raised when copying ref-list XML"
+                " for article_id %s version %s"
+            )
+            % (caller_name, article_id, version),
+        )
+
+
+class TestCopyRefListXml(unittest.TestCase):
+    "tests for preprint.copy_ref_list_xml()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_copy_ref_list_xml(self):
+        "simple copy of ref-list XML"
+        article_xml_path = (
+            "tests/files_source/epp/automation/84364/v2/article-source.xml"
+        )
+        xml_string = "<root/>"
+        result = preprint.copy_ref_list_xml(article_xml_path, xml_string)
+        self.assertTrue(b"<back>" in result)
+        self.assertTrue(b"<ref-list>" in result)
+
+    def test_no_ref_list_to_copy(self):
+        "no ref-list in the article XML file"
+        directory = TempDirectory()
+        article_xml_path = os.path.join(directory.path, "article-source.xml")
+        with open(article_xml_path, "wb") as open_file:
+            open_file.write(b"<article/>")
+        xml_string = "<root/>"
+        result = preprint.copy_ref_list_xml(article_xml_path, xml_string)
+        self.assertEqual(result, b'<?xml version="1.0" encoding="utf-8"?>\n<root/>\n')
 
 
 class TestExpandedFolderBucketResource(unittest.TestCase):

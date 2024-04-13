@@ -1,5 +1,8 @@
 "functions for generating preprint XML"
 import os
+from xml.etree import ElementTree
+from xml.etree.ElementTree import Element, SubElement
+from elifetools import xmlio
 from elifearticle.parse import build_article_from_xml
 from elifearticle.article import (
     Article,
@@ -125,19 +128,9 @@ def build_article(article_id, docmap_string, article_xml_path, version=None):
     # title
     article.title = preprint_article.title
     # abstract
-    abstract = None
-    if preprint_article.abstract:
-        abstract = (
-            preprint_article.abstract.replace("<p>", " ")
-            .replace("</p>", " ")
-            .lstrip()
-            .rstrip()
-        )
-    article.abstract = abstract
+    article.abstract = preprint_article.abstract
     # contributors
     article.contributors = preprint_article.contributors
-    # references
-    article.ref_list = preprint_article.ref_list
 
     # sub-article data from docmap and Sciety web content
     external_data = cleaner.sub_article_data(
@@ -182,14 +175,14 @@ def xml_filename(article_id, settings, version=None):
     return filename
 
 
-def preprint_xml(article, settings):
+def preprint_xml(article, settings, pretty=True, indent=""):
     "generate preprint XML string from inputs"
     add_comment = True
     jats_config = jatsgenerator_config(
         CONFIG_SECTION, settings.jatsgenerator_config_file
     )
     article_xml = generate.ArticleXML(article, jats_config, add_comment)
-    xml_string = article_xml.output_xml(pretty=True, indent="")
+    xml_string = article_xml.output_xml(pretty=pretty, indent=indent)
     return xml_string
 
 
@@ -214,35 +207,15 @@ def download_original_preprint_xml(settings, to_dir, article_id, version):
 
 
 def build_preprint_article(
-    settings, article_id, version, docmap_string, temp_dir, logger
+    article_id, version, docmap_string, article_xml_path, logger
 ):
     "download original preprint XML and with the docmap string populate an article object"
-
-    # get preprint server XML from a bucket
-    try:
-        article_xml_path = download_original_preprint_xml(
-            settings, temp_dir, article_id, version
-        )
-    except Exception as exception:
-        # handle if original preprint XML could not be downloaded
-        raise PreprintArticleException(
-            logger.exception(
-                "Exception getting preprint server XML"
-                " from the bucket for article_id %s, version %s: %s"
-                % (
-                    article_id,
-                    version,
-                    str(exception),
-                )
-            )
-        )
-
     try:
         article = build_article(article_id, docmap_string, article_xml_path, version)
-    except PreprintArticleException as exception:
+    except Exception as exception:
         # handle if article could not be built
         logger.exception(str(exception))
-        raise
+        raise PreprintArticleException(exception) from exception
 
     # continue if article could be populated
     return article
@@ -267,14 +240,31 @@ def generate_preprint_xml(
         )
         raise PreprintArticleException(exception) from exception
 
+    # get preprint server XML from a bucket
+    try:
+        article_xml_path = download_original_preprint_xml(
+            settings, directories.get("TEMP_DIR"), article_id, version
+        )
+    except Exception as exception:
+        # handle if original preprint XML could not be downloaded
+        logger.exception(
+            "%s, exception getting preprint server XML"
+            " from the bucket for article_id %s version %s"
+            % (
+                caller_name,
+                article_id,
+                version,
+            )
+        )
+        raise PreprintArticleException(exception) from exception
+
     # populate the article object
     try:
         article = build_preprint_article(
-            settings,
             article_id,
             version,
             docmap_string,
-            directories.get("TEMP_DIR"),
+            article_xml_path,
             logger,
         )
     except Exception as exception:
@@ -286,13 +276,55 @@ def generate_preprint_xml(
         raise PreprintArticleException(exception) from exception
 
     # generate preprint XML from data sources
+    xml_string = preprint_xml(article, settings, pretty=False)
+
+    # copy over ref-list XML
+    try:
+        xml_string = copy_ref_list_xml(article_xml_path, xml_string)
+    except Exception as exception:
+        # handle if article could not be built
+        logger.exception(
+            "%s, exception raised when copying ref-list XML for article_id %s version %s"
+            % (caller_name, article_id, version)
+        )
+        # regenerate XML in pretty format
+        xml_string = preprint_xml(article, settings, pretty=True, indent="")
+
+    # output XML to file
     xml_file_name = xml_filename(article_id, settings, version)
     xml_file_path = os.path.join(directories.get("INPUT_DIR"), xml_file_name)
-    xml_string = preprint_xml(article, settings)
     with open(xml_file_path, "wb") as open_file:
         open_file.write(xml_string)
 
     return xml_file_path
+
+
+def copy_ref_list_xml(article_xml_path, xml_string):
+    "copy the ref-list from one XML file and add it to the XML string"
+    preprint_article_xml_root = ElementTree.fromstring(xml_string)
+
+    article_xml_ref_list_tag = None
+    with open(article_xml_path, "r", encoding="utf-8") as open_file:
+        article_xml_root = ElementTree.fromstring(open_file.read().replace("\n", ""))
+        article_xml_ref_list_tag = article_xml_root.find(".//back/ref-list")
+
+    if article_xml_ref_list_tag is not None:
+        preprint_article_xml_back = preprint_article_xml_root.find(".//back")
+        if preprint_article_xml_back is None:
+            sub_article_tag_index = xmlio.get_first_element_index(
+                preprint_article_xml_root, "sub-article"
+            )
+            if sub_article_tag_index:
+                preprint_article_xml_root.insert(sub_article_tag_index, Element("back"))
+                preprint_article_xml_back = preprint_article_xml_root.find(".//back")
+            else:
+                preprint_article_xml_back = SubElement(
+                    preprint_article_xml_root, "back"
+                )
+        # append the article_xml_path ref-list into the back tag of the xml_string root
+        preprint_article_xml_back.append(article_xml_ref_list_tag)
+
+    return utils.element_xml_string(preprint_article_xml_root, pretty=True, indent="")
 
 
 def expanded_folder_bucket_resource(settings, bucket_name, expanded_folder_name):
