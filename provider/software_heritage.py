@@ -4,8 +4,6 @@ import os
 import re
 from collections import OrderedDict
 from string import Template
-from xml.dom import minidom
-from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 import requests
 
@@ -70,17 +68,6 @@ def metadata(file_name, article):
     "generate metadata object for a deposit"
     metadata_object = MetaData(file_name, article)
     return metadata_object
-
-
-def metadata_xml(element, pretty=False, indent=""):
-    "generate string XML output from an Element object"
-    encoding = "utf-8"
-    rough_string = ElementTree.tostring(element, encoding)
-    reparsed = minidom.parseString(rough_string)
-
-    if pretty is True:
-        return reparsed.toprettyxml(indent, encoding=encoding)
-    return reparsed.toxml(encoding=encoding)
 
 
 def metadata_element(metadata_object):
