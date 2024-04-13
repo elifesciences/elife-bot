@@ -3,11 +3,13 @@ import os
 import unittest
 import time
 import sys
+from xml.etree.ElementTree import Element, SubElement
 import arrow
 from mock import patch
 from ddt import ddt, data, unpack
 import provider.utils as utils
 import botocore.config
+
 
 @ddt
 class TestUtils(unittest.TestCase):
@@ -182,6 +184,34 @@ class TestUtils(unittest.TestCase):
             actual = utils.get_aws_connection_key(service, kv)
             self.assertEqual(actual, expected)
             self.assertEqual({actual: 1}[actual], 1) # generated key can be used as a map key
+
+
+class TestElementXmlString(unittest.TestCase):
+    "tests for utils.element_xml_string()"
+
+    def test_element_xml_string(self):
+        "test for pretty XML output"
+        element = Element("root")
+        p_element = SubElement(element, "p")
+        expected_xml_string = (
+            b'<?xml version="1.0" encoding="utf-8"?>\n<root>\n    <p/>\n</root>\n'
+        )
+        metadata_xml = utils.element_xml_string(element, pretty=True, indent="    ")
+        self.assertEqual(
+            metadata_xml,
+            expected_xml_string,
+            "\n\n%s\n\nis not equal to expected\n\n%s"
+            % (
+                metadata_xml,
+                expected_xml_string,
+            ),
+        )
+
+    def test_element_xml_string_not_pretty(self):
+        "test for non-pretty XML output"
+        element = Element("root")
+        expected = b'<?xml version="1.0" encoding="utf-8"?><root/>'
+        self.assertEqual(utils.element_xml_string(element), expected)
 
 
 class TestSettingsEnvironment(unittest.TestCase):

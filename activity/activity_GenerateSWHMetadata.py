@@ -104,7 +104,7 @@ class activity_GenerateSWHMetadata(Activity):
                     "url"
                 ] = create_origin_url
             metadata_element = software_heritage.metadata_element(metadata_object)
-            metadata_xml = software_heritage.metadata_xml(
+            metadata_xml = utils.element_xml_string(
                 metadata_element, pretty=True, indent="    "
             )
             self.logger.info("Metadata XML generated for article doi %s" % article.doi)

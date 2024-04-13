@@ -2,6 +2,8 @@ import os
 import re
 import urllib
 import base64
+from xml.dom import minidom
+from xml.etree import ElementTree
 from argparse import ArgumentParser
 import arrow
 from mimetypes import guess_type
@@ -141,6 +143,17 @@ def version_doi_parts(version_doi):
     e.g. 10.7554/eLife.84364.2 return 10.7554/eLife.84364, 1
     """
     return version_doi.rsplit(".", 1)
+
+
+def element_xml_string(element, pretty=False, indent=""):
+    "generate string XML output from an Element object"
+    encoding = "utf-8"
+    rough_string = ElementTree.tostring(element, encoding)
+    reparsed = minidom.parseString(rough_string)
+
+    if pretty is True:
+        return reparsed.toprettyxml(indent, encoding=encoding)
+    return reparsed.toxml(encoding=encoding)
 
 
 CONSOLE_ARGUMENT_MAP = {

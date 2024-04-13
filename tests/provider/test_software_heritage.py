@@ -57,7 +57,7 @@ class TestSoftwareHeritageProviderMetadata(unittest.TestCase):
             "url"
         ] = create_origin_url
         metadata_element = software_heritage.metadata_element(metadata_object)
-        metadata_xml = software_heritage.metadata_xml(
+        metadata_xml = utils.element_xml_string(
             metadata_element, pretty=True, indent="    "
         )
         self.assertEqual(
@@ -69,12 +69,6 @@ class TestSoftwareHeritageProviderMetadata(unittest.TestCase):
                 pretty_string(expected_xml_string),
             ),
         )
-
-    def test_metadata_xml_not_pretty(self):
-        "test for non-pretty XML output"
-        element = Element("root")
-        expected = b'<?xml version="1.0" encoding="utf-8"?><root/>'
-        self.assertEqual(software_heritage.metadata_xml(element), expected)
 
     def test_metadata_xml_contrib_collab(self):
         "test for group authors in collab tags and group member contributors"
