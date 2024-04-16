@@ -72,7 +72,9 @@ class activity_AcceptedSubmissionVersionDoi(AcceptedBaseActivity):
         self.statuses["docmap_string"] = True
 
         # get latest version DOI from the docmap
-        version_doi = cleaner.version_doi_from_docmap(docmap_string, input_filename)
+        version_doi = cleaner.version_doi_from_docmap(
+            docmap_string, input_filename, published=True
+        )
         self.logger.info(
             "%s, %s version_doi: %s" % (self.name, input_filename, version_doi)
         )

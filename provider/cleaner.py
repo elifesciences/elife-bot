@@ -550,8 +550,10 @@ def elocation_id_from_docmap(docmap_string, input_filename):
     return prc.elocation_id_from_docmap(docmap_string, input_filename)
 
 
-def version_doi_from_docmap(docmap_string, input_filename):
-    return prc.version_doi_from_docmap(docmap_string, input_filename)
+def version_doi_from_docmap(docmap_string, input_filename, published=True):
+    return prc.version_doi_from_docmap(
+        docmap_string, input_filename, published=published
+    )
 
 
 def next_version_doi(version_doi, input_filename):
