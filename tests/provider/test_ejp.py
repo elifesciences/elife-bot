@@ -314,7 +314,7 @@ class TestProviderEJP(unittest.TestCase):
             "preprint_author",
             (
                 "ejp_query_tool_query_id_Production_data_04_-_"
-                "Reviewed_preprint_author_details_2019_06_10_eLife-rp.csv"
+                "Reviewed_preprint_author_details_2019_06_10_elife-rp.csv"
             ),
         ),
         (
