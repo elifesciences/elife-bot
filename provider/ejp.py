@@ -146,10 +146,11 @@ class EJP:
         # remove backslashes from regular expression fragments
         clean_fn_fragment = fn_fragment[file_type].replace("\\", "")
         # add an extra part of file name for new CSV files
-        rp_extra = ""
+        rp_extra = "eLife"
         if "Reviewed_preprint_author_details" in clean_fn_fragment:
-            rp_extra = "-rp"
-        file_name_to_match = "%s_%s_eLife%s.csv" % (
+            # note lower case l
+            rp_extra = "elife-rp"
+        file_name_to_match = "%s_%s_%s.csv" % (
             clean_fn_fragment,
             date_string,
             rp_extra,
