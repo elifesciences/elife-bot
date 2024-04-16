@@ -41,7 +41,9 @@ def jatsgenerator_config(config_section, config_file):
 
 def build_article(article_id, docmap_string, article_xml_path, version=None):
     "collect data from docmap and preprint XML to populate an Article object"
-    newest_version_doi = cleaner.version_doi_from_docmap(docmap_string, article_id)
+    newest_version_doi = cleaner.version_doi_from_docmap(
+        docmap_string, article_id, published=True
+    )
 
     if not newest_version_doi:
         raise PreprintArticleException(

@@ -118,7 +118,7 @@ class activity_DepositCrossrefPostedContent(Activity):
                 self.logger,
             )
             newest_version_doi = cleaner.version_doi_from_docmap(
-                docmap_string, article.manuscript
+                docmap_string, article.manuscript, published=True
             )
             if newest_version_doi != article.version_doi:
                 self.logger.info(
