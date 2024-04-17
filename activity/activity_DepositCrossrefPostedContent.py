@@ -208,14 +208,16 @@ class activity_DepositCrossrefPostedContent(Activity):
                 ) = self.deposit_files_to_endpoint(file_type, sub_dir)
             except:
                 self.logger.info(
-                    "Exception publishing files to Crossref: %s"
-                    % glob.glob(sub_dir + file_type)
+                    "%s, exception publishing files to Crossref: %s"
+                    % (self.name, glob.glob(sub_dir + file_type))
                 )
                 self.statuses["publish"] = False
 
         if self.statuses.get("publish") is True:
             # Clean up outbox
-            self.logger.info("Moving files from outbox folder to published folder")
+            self.logger.info(
+                "%s, moving files from outbox folder to published folder" % self.name
+            )
             to_folder = outbox_provider.get_to_folder_name(
                 self.published_folder, date_stamp
             )
@@ -237,7 +239,8 @@ class activity_DepositCrossrefPostedContent(Activity):
             )
             # move files if the DOI already exists to out of the outbox folder
             self.logger.info(
-                "Moving files from outbox folder to the not_published folder"
+                "%s, moving files from outbox folder to the not_published folder"
+                % self.name
             )
             not_published_to_folder = outbox_provider.get_to_folder_name(
                 self.not_published_folder, date_stamp
@@ -251,9 +254,10 @@ class activity_DepositCrossrefPostedContent(Activity):
             )
 
             self.statuses["outbox"] = True
-        else:
+        elif self.statuses.get("publish") is False:
             self.logger.info(
-                "Failed to publish all posted content deposits to Crossref"
+                "%s, failed to publish all posted content deposits to Crossref"
+                % self.name
             )
 
         # Set the activity status of this activity based on successes
@@ -270,7 +274,7 @@ class activity_DepositCrossrefPostedContent(Activity):
             )
         else:
             self.logger.info(
-                "No Crossref deposit files generated in %s. bad_xml_files: %s"
+                "%s, no Crossref deposit files generated. bad_xml_files: %s"
                 % (self.name, self.bad_xml_files)
             )
 
