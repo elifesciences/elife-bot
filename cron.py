@@ -284,7 +284,7 @@ def conditional_starts(current_datetime):
     elif current_time.tm_min >= 45 and current_time.tm_min <= 59:
         # Bottom quarter of the hour
 
-        # Author emails once per day 17:45 local time
+        # Author emails at 17:45 local time
         # (used to be set to 16:45 UTC during British Summer Time for 17:45 local UK time)
         if local_current_time.tm_hour == 17:
             conditional_start_list.append(
@@ -316,6 +316,18 @@ def conditional_starts(current_datetime):
                     [
                         ("starter_name", "starter_PubRouterDeposit"),
                         ("workflow_id", "PubRouterDeposit_Cengage"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
+
+        # Author emails at 22:45 local time
+        if local_current_time.tm_hour == 22:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_PublicationEmail"),
+                        ("workflow_id", "PublicationEmail"),
                         ("start_seconds", 60 * 31),
                     ]
                 )
