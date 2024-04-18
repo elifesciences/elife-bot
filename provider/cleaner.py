@@ -33,21 +33,6 @@ LOG_FORMAT_STRING = (
     "%(asctime)s %(levelname)s %(name)s:%(module)s:%(funcName)s: %(message)s"
 )
 
-# March 2023 temporary config to not send emails for particular test files
-PRC_INGEST_IGNORE_SEND_EMAIL = [
-    "02-28-2023-RA-RP-eLife-84747.zip",
-    "18-05-2021-RA-RP-eLife-70493.zip",
-    "22-04-2022-RA-RP-eLife-79713.zip",
-]
-
-# March 2023 for testing an article which appears in Sciety docmaps but not in Data Hub docmaps
-SCIETY_DOCMAP_URL_PATTERN = (
-    "https://sciety.org/docmaps/v1/evaluations-by/elife/{doi}.docmap.json"
-)
-
-# March 2023 for testing an article which appears in Sciety docmaps but not in Data Hub docmaps
-SCIETY_TEST_PREPRINT_DICT = {"70493": "10.1101/2021.06.02.446694"}
-
 REQUESTS_TIMEOUT = 10
 
 
@@ -366,11 +351,6 @@ def add_file_tags_to_xml(xml_file_path, file_detail_list, identifier):
 
 def docmap_url(settings, article_id):
     "URL of the preprint docmap endpoint"
-    # temporarily use a different docmap for a test test article
-    if article_id in SCIETY_TEST_PREPRINT_DICT.keys():
-        return SCIETY_DOCMAP_URL_PATTERN.format(
-            doi=SCIETY_TEST_PREPRINT_DICT.get(article_id)
-        )
     docmap_url_pattern = getattr(settings, "docmap_url_pattern", None)
     return (
         docmap_url_pattern.format(article_id=article_id) if docmap_url_pattern else None

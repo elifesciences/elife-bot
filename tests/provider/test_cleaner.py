@@ -627,12 +627,6 @@ class TestDocmapUrl(unittest.TestCase):
         expected = None
         self.assertEqual(result, expected)
 
-    def test_sciety_docmap_temporary_value(self):
-        article_id = "70493"
-        result = cleaner.docmap_url(settings_mock, article_id)
-        expected = "https://sciety.org/docmaps/v1/evaluations-by/elife/10.1101/2021.06.02.446694.docmap.json"
-        self.assertEqual(result, expected)
-
 
 class TestCleanInlineGraphicTags(unittest.TestCase):
     def test_clean_simple(self):
