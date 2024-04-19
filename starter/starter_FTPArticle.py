@@ -25,6 +25,7 @@ WORKFLOW_NAMES = [
 class starter_FTPArticle(Starter):
     def __init__(self, settings=None, logger=None):
         super(starter_FTPArticle, self).__init__(settings, logger, "FTPArticle")
+        self.execution_start_to_close_timeout = str(60 * 60 * 23)
 
     def get_workflow_params(self, workflow=None, doi_id=None):
         if workflow is None:
@@ -42,7 +43,9 @@ class starter_FTPArticle(Starter):
         workflow_params["workflow_id"] = "%s_%s_%s" % (self.name, workflow, doi_id)
         workflow_params["workflow_name"] = self.name
         workflow_params["workflow_version"] = "1"
-        workflow_params["execution_start_to_close_timeout"] = str(60 * 60 * 23)
+        workflow_params[
+            "execution_start_to_close_timeout"
+        ] = self.execution_start_to_close_timeout
 
         data = {}
         data["workflow"] = workflow
