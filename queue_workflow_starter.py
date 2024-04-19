@@ -76,12 +76,13 @@ def process_message(settings, logger, message):
     try:
         name = message_payload.get("workflow_name")
         data = message_payload.get("workflow_data")
-        start_workflow(settings, name, data)
+        execution_start_to_close_timeout = message_payload.get("execution_start_to_close_timeout")
+        start_workflow(settings, name, data, execution_start_to_close_timeout)
     except Exception:
         logger.exception("Exception while processing %s", message.get("Body"))
 
 
-def start_workflow(settings, workflow_name, workflow_data):
+def start_workflow(settings, workflow_name, workflow_data, execution_start_to_close_timeout):
     data_processor = workflow_data_processors.get(workflow_name)
     workflow_name = "starter_" + workflow_name
     if data_processor is not None:
@@ -90,6 +91,8 @@ def start_workflow(settings, workflow_name, workflow_data):
     importlib.import_module(module_name)
     full_path = "starter." + workflow_name + "." + workflow_name + "()"
     starter_object = eval(full_path)
+    if execution_start_to_close_timeout:
+        starter_object.execution_start_to_close_timeout = execution_start_to_close_timeout
     starter_object.start(settings=settings, **workflow_data)
 
 
