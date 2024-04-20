@@ -1,5 +1,5 @@
 import json
-from provider import downstream, lax_provider, outbox_provider
+from provider import lax_provider, outbox_provider
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from activity.objects import Activity

@@ -1,6 +1,6 @@
 import json
 import os
-from provider import cleaner, downstream, outbox_provider
+from provider import cleaner, outbox_provider
 from provider.execution_context import get_session
 from activity.objects import Activity
 
