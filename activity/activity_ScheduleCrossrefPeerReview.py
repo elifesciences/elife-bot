@@ -1,6 +1,6 @@
 import json
 
-from provider import crossref, downstream, lax_provider, outbox_provider, utils
+from provider import crossref, lax_provider, outbox_provider, utils
 from provider.article_processing import download_jats
 from provider.storage_provider import storage_context
 from provider.execution_context import get_session
