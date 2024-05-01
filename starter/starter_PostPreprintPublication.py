@@ -3,6 +3,7 @@ import uuid
 from argparse import ArgumentParser
 from starter.starter_helper import NullRequiredDataException
 from starter.objects import Starter, default_workflow_params
+from provider import utils
 
 
 class starter_PostPreprintPublication(Starter):
@@ -111,9 +112,7 @@ def main():
     if args.version:
         version = args.version
 
-    import settings as settingsLib
-
-    settings = settingsLib.get_settings(ENV)
+    settings = utils.get_settings(ENV)
 
     starter_object = starter_PostPreprintPublication()
 
