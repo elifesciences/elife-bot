@@ -271,9 +271,11 @@ class TestBuildArticle(unittest.TestCase):
             article.license.href, "http://creativecommons.org/licenses/by/4.0/"
         )
 
+    @patch.object(cleaner, "version_doi_from_docmap")
     @patch.object(cleaner, "sub_article_data")
-    def test_no_posted_date(self, fake_sub_article_data):
+    def test_no_posted_date(self, fake_sub_article_data, fake_version_doi):
         "test if an exception is raised due to no poasted date"
+        fake_version_doi.return_value = "10.7554/eLife.84364.2"
         fake_sub_article_data.return_value = sub_article_data_fixture()
         article_id = "84364"
         docmap_string = read_fixture("sample_docmap_for_84364.json")
