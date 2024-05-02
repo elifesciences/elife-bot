@@ -139,6 +139,13 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
                     "</date>"
                     '<self-uri content-type="preprint" xlink:href="https://doi.org/10.1101/2022.11.08.515698"/>'
                     "</event>"
+                    "<event>"
+                    "<event-desc>This manuscript was published as a reviewed preprint.</event-desc>"
+                    '<date date-type="reviewed-preprint" iso-8601-date="2023-05-10">'
+                    "<day>10</day><month>05</month><year>2023</year>"
+                    "</date>"
+                    '<self-uri content-type="reviewed-preprint" xlink:href="https://doi.org/10.7554/eLife.85111.2"/>'
+                    "</event>"
                     "</pub-history>"
                 )
             )

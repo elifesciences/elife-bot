@@ -432,7 +432,72 @@
           "doi": "10.7554/eLife.85111.1.sa4"
         }
       ],
+      "next-step": "_:b5",
       "previous-step": "_:b3"
+    },
+    "_:b5": {
+      "actions": [
+          {
+              "participants": [],
+              "outputs": [
+                  {
+                      "type": "preprint",
+                      "identifier": "85111",
+                      "doi": "10.7554/eLife.85111.2",
+                      "versionIdentifier": "2",
+                      "license": "http://creativecommons.org/licenses/by/4.0/",
+                      "published": "2023-05-10T14:00:00+00:00",
+                      "partOf": {
+                          "type": "manuscript",
+                          "doi": "10.7554/eLife.85111",
+                          "identifier": "85111",
+                          "subjectDisciplines": [
+                              "Neuroscience"
+                          ],
+                          "published": "2023-01-25T14:00:00+00:00",
+                          "volumeIdentifier": "12",
+                          "electronicArticleIdentifier": "RP85111",
+                          "complement": []
+                      }
+                  }
+              ]
+          }
+      ],
+      "assertions": [
+          {
+              "item": {
+                  "type": "preprint",
+                  "doi": "10.7554/eLife.85111.2",
+                  "versionIdentifier": "2"
+              },
+              "status": "manuscript-published"
+          }
+      ],
+      "inputs": [
+          {
+              "type": "preprint",
+              "doi": "10.1101/2022.11.08.515698",
+              "url": "https://www.biorxiv.org/content/10.1101/2022.11.08.515698v3",
+              "versionIdentifier": "3"
+          },
+          {
+              "type": "review-article",
+              "doi": "10.7554/eLife.85111.2.sa0"
+          },
+          {
+              "type": "review-article",
+              "doi": "10.7554/eLife.85111.2.sa1"
+          },
+          {
+              "type": "evaluation-summary",
+              "doi": "10.7554/eLife.85111.2.sa2"
+          },
+          {
+              "type": "reply",
+              "doi": "10.7554/eLife.85111.2.sa3"
+          }
+      ],
+      "previous-step": "_:b4"
     }
   }
 }
