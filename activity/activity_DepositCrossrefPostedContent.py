@@ -104,8 +104,9 @@ class activity_DepositCrossrefPostedContent(Activity):
             if len(status_version_map.keys()) > 0:
                 # there is already a poa or vor, skip it
                 self.logger.info(
-                    "%s, there is already a VOR article published for article.manuscript,"
-                    " will not generate a concept DOI deposit" % self.name
+                    "%s, there is already a VOR article published for %s,"
+                    " will not generate a concept DOI deposit"
+                    % (self.name, article.manuscript)
                 )
                 continue
 
