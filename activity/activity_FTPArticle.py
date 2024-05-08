@@ -5,7 +5,7 @@ import glob
 import shutil
 import re
 from elifetools import parseJATS as parser
-from provider import article_processing, downstream, utils
+from provider import article_processing, utils, yaml_provider
 from provider.storage_provider import storage_context
 from provider.sftp import SFTP
 from provider.ftp import FTP
@@ -462,7 +462,7 @@ def collect_credentials(settings, doi_id, workflow):
 
     credentials = {}
 
-    rules = downstream.load_config(settings)
+    rules = yaml_provider.load_config(settings)
     workflow_rules = rules.get(workflow)
 
     rule_name_credentials_name_map = {
@@ -498,7 +498,7 @@ def sending_details(settings, workflow):
 
     details = {}
 
-    rules = downstream.load_config(settings)
+    rules = yaml_provider.load_config(settings)
     workflow_rules = rules.get(workflow)
 
     if workflow_rules:

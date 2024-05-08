@@ -3,7 +3,7 @@ import datetime
 from mock import patch
 from ddt import ddt, data, unpack
 from testfixtures import TempDirectory
-from provider import downstream
+from provider import yaml_provider
 from provider.article import article
 import activity.activity_PubRouterDeposit as activity_module
 from activity.activity_PubRouterDeposit import activity_PubRouterDeposit
@@ -369,7 +369,7 @@ class TestApproveArticles(unittest.TestCase):
         test_article.display_channel = ["Research Article"]
         test_article.is_poa = True
         self.articles = [test_article]
-        self.rules = downstream.load_config(settings_mock)
+        self.rules = yaml_provider.load_config(settings_mock)
 
     @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
     @patch("provider.article.article.was_ever_published")

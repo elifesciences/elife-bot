@@ -3,7 +3,7 @@ import shutil
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
-from provider import downstream, outbox_provider
+from provider import downstream, outbox_provider, yaml_provider
 from tests import settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeStorageContext
 from tests.activity import helpers, test_activity_data
@@ -121,7 +121,7 @@ class TestOutboxProvider(unittest.TestCase):
 
 # get workflow map from the YAML file specified in the settings_mock test settings
 DOWNSTREAM_WORKFLOW_MAP = downstream.workflow_s3_bucket_folder_map(
-    downstream.load_config(settings_mock)
+    yaml_provider.load_config(settings_mock)
 )
 # list of workflows to test for good coverage
 DOWNSTREAM_WORKFLOWS = [

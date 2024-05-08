@@ -1,6 +1,6 @@
 import json
 import os
-from provider import downstream, outbox_provider, preprint
+from provider import downstream, preprint, yaml_provider
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -55,7 +55,7 @@ class activity_SchedulePreprintDownstream(Activity):
 
         publish_bucket_name = self.settings.poa_packaging_bucket
 
-        rules = downstream.load_config(self.settings)
+        rules = yaml_provider.load_config(self.settings)
 
         status = "preprint"
         first_by_status = bool(int(version) == 1)

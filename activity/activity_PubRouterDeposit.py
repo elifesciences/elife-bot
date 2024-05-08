@@ -6,11 +6,11 @@ import provider.article as articlelib
 from provider.storage_provider import storage_context
 from provider import (
     article_processing,
-    downstream,
     email_provider,
     lax_provider,
     outbox_provider,
     utils,
+    yaml_provider,
 )
 
 from activity.objects import Activity
@@ -120,7 +120,7 @@ class activity_PubRouterDeposit(Activity):
         self.archive_bucket_s3_keys = self.get_archive_bucket_s3_keys()
 
         # workflow rules
-        rules = downstream.load_config(self.settings)
+        rules = yaml_provider.load_config(self.settings)
         workflow_rules = rules.get(self.workflow)
 
         # Parse the XML
@@ -561,7 +561,7 @@ def get_friendly_email_recipients(settings, workflow):
     "get recipients of the friendly email from the settings via YAML rules"
     recipient_email_list = []
 
-    rules = downstream.load_config(settings)
+    rules = yaml_provider.load_config(settings)
     workflow_rules = rules.get(workflow)
     # get the name of the settings value from the rules
     settings_name = (

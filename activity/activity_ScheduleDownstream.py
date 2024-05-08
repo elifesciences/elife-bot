@@ -1,6 +1,6 @@
 import json
 from provider.storage_provider import storage_context
-from provider import downstream, lax_provider, utils
+from provider import downstream, lax_provider, utils, yaml_provider
 from activity.objects import Activity
 
 """
@@ -60,7 +60,7 @@ class activity_ScheduleDownstream(Activity):
             article_id, version, status, self.settings
         )
 
-        rules = downstream.load_config(self.settings)
+        rules = yaml_provider.load_config(self.settings)
 
         try:
             xml_file_name = lax_provider.get_xml_file_name(
