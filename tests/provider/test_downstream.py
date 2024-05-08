@@ -1,25 +1,19 @@
 import unittest
 from collections import OrderedDict
-from provider import downstream
+from provider import downstream, yaml_provider
 from tests import settings_mock
-
-
-class TestLoadConfig(unittest.TestCase):
-    def test_load_config(self):
-        rules = downstream.load_config(settings_mock)
-        self.assertTrue(isinstance(rules, dict))
 
 
 class TestFolderMap(unittest.TestCase):
     def test_workflow_s3_bucket_folder_map(self):
-        rules = downstream.load_config(settings_mock)
+        rules = yaml_provider.load_config(settings_mock)
         folder_map = downstream.workflow_s3_bucket_folder_map(rules)
         self.assertTrue(isinstance(folder_map, OrderedDict))
 
 
 class TestChooseOutboxes(unittest.TestCase):
     def setUp(self):
-        self.rules = downstream.load_config(settings_mock)
+        self.rules = yaml_provider.load_config(settings_mock)
 
     def test_empty_rules(self):
         rules = None

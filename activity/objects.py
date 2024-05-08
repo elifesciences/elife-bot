@@ -4,7 +4,7 @@ import os
 import re
 import botocore
 import dashboard_queue
-from provider import cleaner, downstream, outbox_provider, utils
+from provider import cleaner, downstream, outbox_provider, utils, yaml_provider
 
 """
 Amazon SWF activity base class
@@ -300,7 +300,7 @@ class Activity:
 
     def s3_bucket_folder(self, workflow_name):
         "get the S3 bucket folder from YAML file for outbox folders"
-        rules = downstream.load_config(self.settings)
+        rules = yaml_provider.load_config(self.settings)
         downstream_workflow_map = downstream.workflow_s3_bucket_folder_map(rules)
         return outbox_provider.workflow_foldername(
             workflow_name, downstream_workflow_map
