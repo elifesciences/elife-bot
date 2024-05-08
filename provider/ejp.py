@@ -49,6 +49,7 @@ class EJP:
 
         # Some EJP file types we expect
         self.author_default_filename = "authors.csv"
+        self.preprint_author_default_filename = "preprint_authors.csv"
 
     def write_content_to_file(self, filename, content, mode="wb"):
         "write the content to a file in the tmp_dir"
@@ -113,7 +114,9 @@ class EJP:
             + s3_key_name
         )
         contents = storage.get_resource_as_string(s3_resource)
-        document = self.write_content_to_file(self.author_default_filename, contents)
+        document = self.write_content_to_file(
+            self.preprint_author_default_filename, contents
+        )
 
         return preprint_author_detail_list(document, doi_id, version)
 
