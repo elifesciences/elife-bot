@@ -1031,14 +1031,13 @@ def email_type_from_rules(
                 return rule_data.get("email_type")
             if is_poa and rule_data.get("article_status") == "poa":
                 return rule_data.get("email_type")
-            if is_poa is None and was_ever_poa is None:
-                if version and rule_data.get("first_version") is not None:
-                    if int(version) <= 1 and rule_data.get("first_version") is True:
-                        return rule_data.get("email_type")
-                    if int(version) > 1 and rule_data.get("first_version") is False:
-                        return rule_data.get("email_type")
-                else:
+            if version and rule_data.get("first_version") is not None:
+                if int(version) <= 1 and rule_data.get("first_version") is True:
                     return rule_data.get("email_type")
+                if int(version) > 1 and rule_data.get("first_version") is False:
+                    return rule_data.get("email_type")
+            if is_poa is None and was_ever_poa is None:
+                return rule_data.get("email_type")
 
     return None
 
