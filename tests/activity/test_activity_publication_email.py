@@ -859,7 +859,7 @@ class TestChooseEmailType(unittest.TestCase):
         {
             "comment": "Revised RP reviewed preprint version example",
             "article_type": "preprint",
-            "is_poa": None,
+            "is_poa": True,
             "was_ever_poa": None,
             "version_doi": "10.7554/eLife.84364.2",
             "expected_email_type": "author_publication_email_RP_revised_version",
@@ -1837,6 +1837,36 @@ class TestEmailTypeFromRules(unittest.TestCase):
         article_type = "discussion"
         expected = "author_publication_email_Feature"
         result = activity_module.email_type_from_rules(rules, article_type)
+        self.assertEqual(result, expected)
+
+    def test_article_type_preprint_version_1(self):
+        "test preprint article_type arguments for a version 1"
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+        article_type = "preprint"
+        # currently the parser considers the XML to be POA status
+        is_poa = True
+        version = "1"
+        expected = "author_publication_email_RP_first_version"
+        result = activity_module.email_type_from_rules(
+            rules, article_type, is_poa=is_poa, version=version
+        )
+        self.assertEqual(result, expected)
+
+    def test_article_type_preprint_version_2(self):
+        "test preprint article_type arguments for a version 2"
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+        article_type = "preprint"
+        # currently the parser considers the XML to be POA status
+        is_poa = True
+        version = "2"
+        expected = "author_publication_email_RP_revised_version"
+        result = activity_module.email_type_from_rules(
+            rules, article_type, is_poa=is_poa, version=version
+        )
         self.assertEqual(result, expected)
 
     def test_no_rules(self):
