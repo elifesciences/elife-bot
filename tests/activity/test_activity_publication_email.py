@@ -787,7 +787,7 @@ class TestPrepareArticles(unittest.TestCase):
         self.assertEqual(len(result), 1)
 
     @patch.object(activity_module, "choose_email_type")
-    def test_prepare_articles(self, fake_choose_email_type):
+    def test_exception(self, fake_choose_email_type):
         "test exception"
         exception_message = "An exception"
         fake_choose_email_type.side_effect = EmailRulesException(exception_message)
