@@ -12,13 +12,11 @@ from provider import (
     pdf_cover_page,
     templates,
     utils,
+    yaml_provider,
 )
 import provider.article as articlelib
 from activity.objects import Activity
 
-
-# Article types for which not to send emails
-ARTICLE_TYPES_DO_NOT_SEND = ["editorial", "correction", "retraction"]
 
 # maximum emails to send per second
 MAX_EMAILS_PER_SECOND = 1
@@ -26,6 +24,9 @@ MAX_EMAILS_PER_SECOND = 1
 SLEEP_SECONDS = 5
 # number of times to sleep after reaching a sending exception
 SENDING_RETRY = 3
+
+
+FEATURES_RECIPIENT_NAME_DEFAULT = "Features"
 
 
 class EmailRecipientException(RuntimeError):
@@ -38,6 +39,10 @@ class EmailTemplateException(RuntimeError):
 
 class EmailSendException(RuntimeError):
     "exception to raise if sending an email cannot be completed"
+
+
+class EmailRulesException(RuntimeError):
+    "exception to raise if something in the email rules is a problem"
 
 
 class activity_PublicationEmail(Activity):
@@ -108,13 +113,17 @@ class activity_PublicationEmail(Activity):
             self.logger.exception("Failed to download files from the S3 outbox")
             return self.ACTIVITY_PERMANENT_FAILURE
 
+        rules = yaml_provider.load_config(
+            self.settings, config_type="publication_email"
+        )
+
         try:
             (
                 approved,
                 prepared,
                 not_published_articles,
                 xml_file_to_doi_map,
-            ) = self.process_articles(article_xml_filenames)
+            ) = self.process_articles(article_xml_filenames, rules)
         except Exception:
             self.logger.exception(
                 "Failed to parse, approve, and prepare all the articles"
@@ -128,15 +137,19 @@ class activity_PublicationEmail(Activity):
             return True
 
         try:
-            self.send_and_clean(prepared, not_published_articles, xml_file_to_doi_map)
+            self.send_and_clean(
+                prepared, not_published_articles, xml_file_to_doi_map, rules
+            )
         except Exception:
             self.logger.exception("An error occured on do_activity method.")
 
         return True
 
-    def send_and_clean(self, prepared, not_published_articles, xml_file_to_doi_map):
+    def send_and_clean(
+        self, prepared, not_published_articles, xml_file_to_doi_map, rules
+    ):
         "send the emails, clean the outbox, send the admin email"
-        self.send_emails_for_articles(prepared)
+        self.send_emails_for_articles(prepared, rules)
         self.clean_outbox(prepared, not_published_articles, xml_file_to_doi_map)
         # Send email to admins with the status
         self.send_admin_email(True)
@@ -194,11 +207,11 @@ class activity_PublicationEmail(Activity):
         # Make a note of this and we will not remove from the outbox, save for a later day
         self.articles_do_not_remove_from_outbox.append(doi)
 
-    def process_articles(self, article_xml_filenames):
+    def process_articles(self, article_xml_filenames, rules):
         """multi-step parsing, approving, and preparing of article files"""
         articles, xml_file_to_doi_map = self.parse_article_xml(article_xml_filenames)
-        approved, not_published_articles = self.approve_articles(articles)
-        prepared = self.prepare_articles(approved)
+        approved, not_published_articles = self.approve_articles(articles, rules)
+        prepared = self.prepare_articles(approved, rules)
 
         log_info = "Total parsed articles: " + str(len(articles))
         log_info += "\n" + "Total approved articles: " + str(len(approved))
@@ -211,7 +224,7 @@ class activity_PublicationEmail(Activity):
 
         return approved, prepared, not_published_articles, xml_file_to_doi_map
 
-    def prepare_articles(self, articles):
+    def prepare_articles(self, articles, rules):
         """
         Given a set of article objects,
         decide whether its related article should be set
@@ -242,6 +255,35 @@ class activity_PublicationEmail(Activity):
         # Can remove articles now if required
         for article in articles:
             if article.doi not in remove_article_doi:
+                # check if an email_type can be found in the rules
+                try:
+                    email_type = choose_email_type(
+                        article_type=article.article_type,
+                        is_poa=article.is_poa,
+                        was_ever_poa=article.was_ever_poa,
+                        rules=rules,
+                        version_doi=getattr(article, "version_doi", None),
+                    )
+                except EmailRulesException as exception:
+                    self.logger.info(str(exception))
+                    continue
+
+                self.logger.info(
+                    (
+                        "%s, got email_type: %s for DOI: %s, "
+                        "article_type: %s, is_poa: %s, was_ever_poa: %s, version_doi: %s"
+                    )
+                    % (
+                        self.name,
+                        email_type,
+                        article.doi,
+                        article.article_type,
+                        article.is_poa,
+                        article.was_ever_poa,
+                        getattr(article, "version_doi", None),
+                    )
+                )
+
                 prepared_articles.append(article)
 
         return prepared_articles
@@ -330,7 +372,7 @@ class activity_PublicationEmail(Activity):
         self.logger.info(log_info)
         return True
 
-    def approve_articles(self, articles):
+    def approve_articles(self, articles, rules):
         """
         Given a list of article objects, approve them for processing
         """
@@ -343,7 +385,7 @@ class activity_PublicationEmail(Activity):
 
         for article in articles:
             # Remove based on article type
-            if article.article_type in ARTICLE_TYPES_DO_NOT_SEND:
+            if article.article_type in do_not_send_article_types_from_rules(rules):
                 log_info = "Removing based on article type " + article.doi
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
@@ -361,15 +403,17 @@ class activity_PublicationEmail(Activity):
 
         return approved_articles, not_published_articles
 
-    def send_emails_for_articles(self, articles):
+    def send_emails_for_articles(self, articles, rules):
         """given a list of articles, choose template, recipients, and send the email"""
         for article in articles:
             # Determine which email type or template to send
+
+            # use the rules for choosing the email template
             email_type = choose_email_type(
                 article_type=article.article_type,
                 is_poa=article.is_poa,
                 was_ever_poa=article.was_ever_poa,
-                feature_article=is_feature_article(article),
+                rules=rules,
                 version_doi=getattr(article, "version_doi", None),
             )
 
@@ -383,6 +427,7 @@ class activity_PublicationEmail(Activity):
                 feature_article=is_feature_article(article),
                 related_insight_article=article.related_insight_article,
                 features_email=self.settings.features_publication_recipient_email,
+                rules=rules,
             )
 
             if not recipient_authors:
@@ -835,20 +880,26 @@ def get_related_article(
 
 
 def choose_recipient_authors(
-    authors, article_type, feature_article, related_insight_article, features_email
+    authors,
+    article_type,
+    feature_article,
+    related_insight_article,
+    features_email,
+    rules,
 ):
     """
     The recipients of the email will change depending on if it is a
     feature article
     """
     recipient_authors = []
+
+    recipient_types = recipients_from_rules(rules, article_type)
+    features_recipient_name = features_recipient_name_from_rules(rules, article_type)
     if (
         feature_article is True
-        or article_type == "article-commentary"
         or related_insight_article is not None
+        or "features_publication_recipient_email" in recipient_types
     ):
-        # feature article recipients
-
         recipient_email_list = []
         # Handle multiple recipients, if specified
         if isinstance(features_email, list):
@@ -859,7 +910,7 @@ def choose_recipient_authors(
 
         for recipient_email in recipient_email_list:
             feature_author = {}
-            feature_author["first_nm"] = "Features"
+            feature_author["first_nm"] = features_recipient_name
             feature_author["e_mail"] = recipient_email
             recipient_authors.append(feature_author)
 
@@ -881,46 +932,29 @@ def is_feature_article(article):
 
 
 def choose_email_type(
-    article_type, is_poa, was_ever_poa, feature_article, version_doi=None
+    article_type,
+    is_poa,
+    was_ever_poa,
+    rules,
+    version_doi=None,
 ):
     """
     Given some article details, we can choose the
     appropriate email template
     """
-    email_type = None
-
-    if article_type == "article-commentary":
-        # Insight
-        email_type = "author_publication_email_Insight_to_VOR"
-
-    elif article_type == "discussion" and feature_article is True:
-        # Feature article
-        email_type = "author_publication_email_Feature"
-
-    elif article_type in ["research-article", "review-article"]:
-        if is_poa is True:
-            # POA article
-            email_type = "author_publication_email_POA"
-
-        elif is_poa is False:
-            # VOR article, decide based on if it was ever POA
-            if was_ever_poa is True:
-                email_type = "author_publication_email_VOR_after_POA"
-
-            else:
-                # False or None is allowed here
-                email_type = "author_publication_email_VOR_no_POA"
-
-    elif article_type == "preprint" and version_doi:
+    if version_doi:
         # get version from version DOI
         version = utils.version_doi_parts(version_doi)[1]
-        if version:
-            if int(version) <= 1:
-                email_type = "author_publication_email_RP_first_version"
-            else:
-                email_type = "author_publication_email_RP_revised_version"
+    else:
+        version = None
 
-    return email_type
+    return email_type_from_rules(
+        rules,
+        article_type,
+        is_poa=is_poa,
+        was_ever_poa=was_ever_poa,
+        version=version,
+    )
 
 
 def author_data(email, surname, given_names):
@@ -956,3 +990,94 @@ def authors_from_xml(article):
                         )
                     )
     return authors
+
+
+def email_type_from_rules(
+    rules, article_type, is_poa=None, was_ever_poa=None, version=None
+):
+    "return email_type from rules which match the parameters"
+    if not rules:
+        return None
+    for rule_name in rules:
+        rule_data = rules.get(rule_name)
+        if rule_data.get(
+            "article_type"
+        ) and article_type in yaml_provider.value_as_list(
+            rule_data.get("article_type")
+        ):
+            try:
+                assert isinstance(
+                    rule_data.get("email_type"), str
+                ), "`email_type` must be a string"
+            except AssertionError as exception:
+                raise EmailRulesException(
+                    "email_type is not str in rule for article_type %s"
+                    % rule_data.get("article_type")
+                ) from exception
+            # match criteria ordered from most restrictive to most lenient comparisons
+            if (
+                not is_poa
+                and rule_data.get("article_status") == "vor"
+                and was_ever_poa
+                and rule_data.get("was_ever_poa") is True
+            ):
+                return rule_data.get("email_type")
+            if (
+                not is_poa
+                and rule_data.get("article_status") == "vor"
+                and not was_ever_poa
+                and not rule_data.get("was_ever_poa")
+            ):
+                return rule_data.get("email_type")
+            if is_poa and rule_data.get("article_status") == "poa":
+                return rule_data.get("email_type")
+            if is_poa is None and was_ever_poa is None:
+                if version and rule_data.get("first_version") is not None:
+                    if int(version) <= 1 and rule_data.get("first_version") is True:
+                        return rule_data.get("email_type")
+                    if int(version) > 1 and rule_data.get("first_version") is False:
+                        return rule_data.get("email_type")
+                else:
+                    return rule_data.get("email_type")
+
+    return None
+
+
+def recipients_from_rules(rules, article_type):
+    "get recipient types from the rules"
+    recipient_types = []
+    for rule_name in rules:
+        rule_data = rules.get(rule_name)
+        if article_type in yaml_provider.value_as_list(rule_data.get("article_type")):
+            recipient_types = yaml_provider.value_as_list(rule_data.get("recipients"))
+    return recipient_types
+
+
+def features_recipient_name_from_rules(rules, article_type):
+    "get recipient name for email sent to features team"
+    features_recipient_name = FEATURES_RECIPIENT_NAME_DEFAULT
+    for rule_name in rules:
+        rule_data = rules.get(rule_name)
+        if article_type in yaml_provider.value_as_list(rule_data.get("article_type")):
+            if rule_data.get("features_recipient_name"):
+                features_recipient_name = rule_data.get("features_recipient_name")
+    return features_recipient_name
+
+
+def do_not_send_article_types_from_rules(rules):
+    "from YAML file rules return list of article_type where do_not_send is true"
+    if not rules:
+        return []
+    article_types = set()
+    for rule_name in rules:
+        rule_data = rules.get(rule_name)
+        if (
+            rule_data.get("do_not_send")
+            and rule_data.get("do_not_send") is True
+            and rule_data.get("article_type")
+        ):
+            article_types = article_types.union(
+                yaml_provider.value_as_list(rule_data.get("article_type"))
+            )
+
+    return sorted(list(article_types))

@@ -1,0 +1,71 @@
+# Details about emails sent to authors after article publication
+# For some no email is sent, then evaluate the article status, type, other details
+# to determine who receives the email and which email template to use
+
+DoNotSend:
+  article_type:
+    - correction
+    - editorial
+    - retraction
+  do_not_send: true
+
+Insight:
+  article_type:
+    - article-commentary
+  recipients:
+    - authors
+    - features_publication_recipient_email
+  features_recipient_name: Features
+  email_type: author_publication_email_Insight_to_VOR
+
+Feature:
+  article_type:
+    - discussion
+  recipients:
+    - features_publication_recipient_email
+  features_recipient_name: Features
+  email_type: author_publication_email_Feature
+
+Poa:
+  article_status: poa
+  article_type:
+    - research-article
+    - review-article
+  recipients:
+    - authors
+  email_type: author_publication_email_POA
+
+VorAfterPoa:
+  article_status: vor
+  was_ever_poa: true
+  article_type:
+    - research-article
+    - review-article
+  recipients:
+    - authors
+  email_type: author_publication_email_VOR_after_POA
+
+Vor:
+  article_status: vor
+  article_type:
+    - research-article
+    - review-article
+  recipients:
+    - authors
+  email_type: author_publication_email_VOR_no_POA
+
+PreprintFirstVersion:
+  article_type:
+    - preprint
+  first_version: true
+  recipients:
+    - authors
+  email_type: author_publication_email_RP_first_version
+
+PreprintRevisedVersion:
+  article_type:
+    - preprint
+  first_version: false
+  recipients:
+    - authors
+  email_type: author_publication_email_RP_revised_version

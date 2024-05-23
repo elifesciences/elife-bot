@@ -8,7 +8,7 @@ from collections import OrderedDict
 from testfixtures import TempDirectory
 from mock import patch
 from ddt import ddt, data, unpack
-from provider import ejp, pdf_cover_page
+from provider import ejp, pdf_cover_page, yaml_provider
 from provider.templates import Templates
 import provider.article as articlelib
 from provider.ejp import EJP
@@ -18,6 +18,7 @@ from activity.activity_PublicationEmail import (
     EmailRecipientException,
     EmailSendException,
     EmailTemplateException,
+    EmailRulesException,
 )
 from tests import test_data
 from tests.classes_mock import FakeSMTPServer
@@ -334,6 +335,9 @@ class TestSendAndClean(unittest.TestCase):
         self.activity = activity_PublicationEmail(
             settings_mock, self.logger, None, None, None
         )
+        self.rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -378,7 +382,7 @@ class TestSendAndClean(unittest.TestCase):
         # invoke
         self.activity.download_templates()
         self.activity.send_and_clean(
-            prepared, not_published_articles, xml_file_to_doi_map
+            prepared, not_published_articles, xml_file_to_doi_map, self.rules
         )
         # assert outbox is empty
         self.assertEqual([], os.listdir(storage_path))
@@ -422,7 +426,7 @@ class TestSendAndClean(unittest.TestCase):
         # invoke
         self.activity.download_templates()
         self.activity.send_and_clean(
-            prepared, not_published_articles, xml_file_to_doi_map
+            prepared, not_published_articles, xml_file_to_doi_map, self.rules
         )
         # assert outbox is empty
         self.assertEqual([], os.listdir(storage_path))
@@ -462,6 +466,10 @@ class TestSendEmailsForArticles(unittest.TestCase):
         )
         self.articles = articles
 
+        self.rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+
     def tearDown(self):
         self.activity.clean_tmp_dir()
 
@@ -473,7 +481,7 @@ class TestSendEmailsForArticles(unittest.TestCase):
         "test if there are no recipients"
         fake_article_authors.return_value = []
         # invoke the function
-        self.activity.send_emails_for_articles(self.articles)
+        self.activity.send_emails_for_articles(self.articles, self.rules)
         # assertions
         self.assertEqual(
             self.logger.loginfo[-1],
@@ -491,7 +499,7 @@ class TestSendEmailsForArticles(unittest.TestCase):
         fake_send_email.side_effect = EmailRecipientException("An exception")
         fake_article_authors.return_value = self.authors
         # invoke the function
-        self.activity.send_emails_for_articles(self.articles)
+        self.activity.send_emails_for_articles(self.articles, self.rules)
         # assertions
         self.assertEqual(
             self.logger.loginfo[-1],
@@ -512,7 +520,7 @@ class TestSendEmailsForArticles(unittest.TestCase):
         fake_get_email_headers.side_effect = EmailTemplateException("An exception")
         fake_article_authors.return_value = self.authors
         # invoke the function
-        self.activity.send_emails_for_articles(self.articles)
+        self.activity.send_emails_for_articles(self.articles, self.rules)
         # assertions
         self.assertEqual(
             self.logger.loginfo[-1],
@@ -536,7 +544,7 @@ class TestSendEmailsForArticles(unittest.TestCase):
         fake_get_email_headers.return_value = True
         fake_article_authors.return_value = self.authors
         # invoke the function
-        self.activity.send_emails_for_articles(self.articles)
+        self.activity.send_emails_for_articles(self.articles, self.rules)
         # assertions
         self.assertEqual(
             self.logger.loginfo[-1],
@@ -556,6 +564,9 @@ class TestProcessArticles(unittest.TestCase):
         fake_logger = FakeLogger()
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
+        )
+        self.rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
         )
 
     def tearDown(self):
@@ -719,7 +730,7 @@ class TestProcessArticles(unittest.TestCase):
             prepared,
             not_published_articles,
             xml_file_to_doi_map,
-        ) = self.activity.process_articles(xml_filename_paths)
+        ) = self.activity.process_articles(xml_filename_paths, self.rules)
         self.assertEqual(
             len(approved),
             test_case_data.get("expected_approved_count"),
@@ -751,6 +762,40 @@ class TestProcessArticles(unittest.TestCase):
                 )
 
 
+class TestPrepareArticles(unittest.TestCase):
+    "tests for activity_class.prepare_articles()"
+
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_PublicationEmail(
+            settings_mock, fake_logger, None, None, None
+        )
+        article = articlelib.article()
+        article.doi = "10.7554/eLife.84364"
+        article.article_type = "research-article"
+        self.articles = [article]
+        self.rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    def test_prepare_articles(self):
+        "test good data"
+        result = self.activity.prepare_articles(self.articles, self.rules)
+        self.assertEqual(len(result), 1)
+
+    @patch.object(activity_module, "choose_email_type")
+    def test_prepare_articles(self, fake_choose_email_type):
+        "test exception"
+        exception_message = "An exception"
+        fake_choose_email_type.side_effect = EmailRulesException(exception_message)
+        result = self.activity.prepare_articles(self.articles, self.rules)
+        self.assertEqual(len(result), 0)
+        self.assertEqual(self.activity.logger.loginfo[-1], exception_message)
+
+
 @ddt
 class TestChooseEmailType(unittest.TestCase):
     @data(
@@ -759,7 +804,6 @@ class TestChooseEmailType(unittest.TestCase):
             "article_type": "article-commentary",
             "is_poa": None,
             "was_ever_poa": None,
-            "feature_article": False,
             "expected_email_type": "author_publication_email_Insight_to_VOR",
         },
         {
@@ -767,7 +811,6 @@ class TestChooseEmailType(unittest.TestCase):
             "article_type": "discussion",
             "is_poa": None,
             "was_ever_poa": None,
-            "feature_article": True,
             "expected_email_type": "author_publication_email_Feature",
         },
         {
@@ -775,7 +818,6 @@ class TestChooseEmailType(unittest.TestCase):
             "article_type": "research-article",
             "is_poa": True,
             "was_ever_poa": None,
-            "feature_article": False,
             "expected_email_type": "author_publication_email_POA",
         },
         {
@@ -783,7 +825,6 @@ class TestChooseEmailType(unittest.TestCase):
             "article_type": "research-article",
             "is_poa": False,
             "was_ever_poa": None,
-            "feature_article": False,
             "expected_email_type": "author_publication_email_VOR_no_POA",
         },
         {
@@ -791,7 +832,6 @@ class TestChooseEmailType(unittest.TestCase):
             "article_type": "research-article",
             "is_poa": False,
             "was_ever_poa": False,
-            "feature_article": False,
             "expected_email_type": "author_publication_email_VOR_no_POA",
         },
         {
@@ -799,7 +839,6 @@ class TestChooseEmailType(unittest.TestCase):
             "article_type": "research-article",
             "is_poa": False,
             "was_ever_poa": True,
-            "feature_article": False,
             "expected_email_type": "author_publication_email_VOR_after_POA",
         },
         {
@@ -807,7 +846,6 @@ class TestChooseEmailType(unittest.TestCase):
             "article_type": "review-article",
             "is_poa": False,
             "was_ever_poa": False,
-            "feature_article": False,
             "expected_email_type": "author_publication_email_VOR_no_POA",
         },
         {
@@ -815,7 +853,6 @@ class TestChooseEmailType(unittest.TestCase):
             "article_type": "preprint",
             "is_poa": None,
             "was_ever_poa": None,
-            "feature_article": False,
             "version_doi": "10.7554/eLife.84364.1",
             "expected_email_type": "author_publication_email_RP_first_version",
         },
@@ -824,17 +861,20 @@ class TestChooseEmailType(unittest.TestCase):
             "article_type": "preprint",
             "is_poa": None,
             "was_ever_poa": None,
-            "feature_article": False,
             "version_doi": "10.7554/eLife.84364.2",
             "expected_email_type": "author_publication_email_RP_revised_version",
         },
     )
     def test_choose_email_type(self, test_case_data):
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+
         email_type = activity_module.choose_email_type(
             test_case_data.get("article_type"),
             test_case_data.get("is_poa"),
             test_case_data.get("was_ever_poa"),
-            test_case_data.get("feature_article"),
+            rules,
             test_case_data.get("version_doi"),
         )
         self.assertEqual(
@@ -845,6 +885,29 @@ class TestChooseEmailType(unittest.TestCase):
                 comment=test_case_data.get("comment"),
             ),
         )
+
+    def test_email_type_exception(self):
+        "test for if the rules raise an exception, where email_type is a list"
+        rules = {
+            "Insight": {
+                "article_type": ["article-commentary"],
+                "recipients": ["authors"],
+                "email_type": ["author_publication_email_Insight_to_VOR"],
+            },
+        }
+
+        article_type = "article-commentary"
+        is_poa = None
+        was_ever_poa = None
+        expected_email_type = "author_publication_email_Insight_to_VOR"
+
+        with self.assertRaises(EmailRulesException):
+            activity_module.choose_email_type(
+                article_type,
+                is_poa,
+                was_ever_poa,
+                rules,
+            )
 
 
 class TestArticleAuthorsByArticleType(unittest.TestCase):
@@ -888,6 +951,10 @@ class TestGetEmailHeaders(unittest.TestCase):
     def test_template_get_email_headers_00013(self):
         self.activity.download_templates()
 
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+
         email_type = "author_publication_email_VOR_no_POA"
 
         authors = fake_authors(self.activity, 13)
@@ -905,6 +972,7 @@ class TestGetEmailHeaders(unittest.TestCase):
             feature_article,
             related_insight_article,
             features_email,
+            rules,
         )
         author = recipient_authors[2]
 
@@ -931,6 +999,10 @@ class TestGetEmailHeaders(unittest.TestCase):
         article_id = 91826
         email_type = "author_publication_email_RP_revised_version"
 
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+
         authors = fake_preprint_authors(self.activity, article_id)
         article_object = articlelib.article()
         article_object.parse_article_file(
@@ -946,6 +1018,7 @@ class TestGetEmailHeaders(unittest.TestCase):
             feature_article,
             related_insight_article,
             features_email,
+            rules,
         )
         author = recipient_authors[0]
 
@@ -988,6 +1061,10 @@ class TestGetEmailBody(unittest.TestCase):
 
         email_type = "author_publication_email_Feature"
 
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+
         authors = fake_authors(self.activity)
 
         article_object = articlelib.article()
@@ -1006,6 +1083,7 @@ class TestGetEmailBody(unittest.TestCase):
             feature_article,
             related_insight_article,
             features_email,
+            rules,
         )
         author = recipient_authors[0]
 
@@ -1155,6 +1233,9 @@ class TestApproveArticles(unittest.TestCase):
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
+        self.rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
@@ -1186,7 +1267,7 @@ class TestApproveArticles(unittest.TestCase):
             research_article,
         ]
         approved_articles, not_published_articles = self.activity.approve_articles(
-            articles
+            articles, self.rules
         )
         # one article will remain, the research-article
         self.assertEqual(len(approved_articles), 1)
@@ -1384,6 +1465,7 @@ class TestChooseRecipientAuthors(unittest.TestCase):
             "features_team@example.org",
             "Author",
             "author01@example.com",
+            3,
         ),
         (
             None,
@@ -1392,6 +1474,7 @@ class TestChooseRecipientAuthors(unittest.TestCase):
             "features_team@example.org",
             "Features",
             "features_team@example.org",
+            4,
         ),
         (
             None,
@@ -1400,6 +1483,7 @@ class TestChooseRecipientAuthors(unittest.TestCase):
             "features_team@example.org",
             "Features",
             "features_team@example.org",
+            4,
         ),
         (
             "article-commentary",
@@ -1408,6 +1492,7 @@ class TestChooseRecipientAuthors(unittest.TestCase):
             "features_team@example.org",
             "Features",
             "features_team@example.org",
+            4,
         ),
         (
             "article-commentary",
@@ -1416,6 +1501,16 @@ class TestChooseRecipientAuthors(unittest.TestCase):
             ["features_team@example.org"],
             "Features",
             "features_team@example.org",
+            4,
+        ),
+        (
+            "discussion",
+            None,
+            None,
+            ["features_team@example.org"],
+            "Features",
+            "features_team@example.org",
+            4,
         ),
     )
     @unpack
@@ -1427,18 +1522,24 @@ class TestChooseRecipientAuthors(unittest.TestCase):
         features_email,
         expected_0_first_nm,
         expected_0_e_mail,
+        expected_recipient_count,
     ):
         authors = fake_authors(self.activity)
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
         recipient_authors = activity_module.choose_recipient_authors(
             authors,
             article_type,
             feature_article,
             related_insight_article,
             features_email,
+            rules,
         )
         if recipient_authors:
             self.assertEqual(recipient_authors[0]["first_nm"], expected_0_first_nm)
             self.assertEqual(recipient_authors[0]["e_mail"], expected_0_e_mail)
+            self.assertEqual(len(recipient_authors), expected_recipient_count)
 
 
 class TestMergeRecipients(unittest.TestCase):
@@ -1723,3 +1824,106 @@ class TestAuthorsFromXML(unittest.TestCase):
         article_object.parse_article_file(full_filename)
         authors = activity_module.authors_from_xml(article_object)
         self.assertEqual(authors, test_case_data.get("expected"))
+
+
+class TestEmailTypeFromRules(unittest.TestCase):
+    "tests for email_type_from_rules()"
+
+    def test_article_type(self):
+        "test by article_type only"
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+        article_type = "discussion"
+        expected = "author_publication_email_Feature"
+        result = activity_module.email_type_from_rules(rules, article_type)
+        self.assertEqual(result, expected)
+
+    def test_no_rules(self):
+        "test if rules are empty"
+        rules = None
+        article_type = "research-article"
+        expected = None
+        result = activity_module.email_type_from_rules(rules, article_type)
+        self.assertEqual(result, expected)
+
+    def test_no_article_type(self):
+        "test when a rule has no article_type"
+        rules = {"rule": {"article_status": "vor"}}
+        article_type = "research-article"
+        expected = None
+        result = activity_module.email_type_from_rules(rules, article_type)
+        self.assertEqual(result, expected)
+
+
+class TestRecipientsFromRules(unittest.TestCase):
+    "tests for recipients_from_rules()"
+
+    def test_recipients_from_rules(self):
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+        article_type = "article-commentary"
+        expected = ["authors", "features_publication_recipient_email"]
+        self.assertEqual(
+            activity_module.recipients_from_rules(rules, article_type), expected
+        )
+
+
+class TestFeaturesRecipientNameFromRules(unittest.TestCase):
+    "tests for features_recipient_name_from_rules()"
+
+    def test_features_recipient_name_from_rules(self):
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+        article_type = "article-commentary"
+        expected = "Features"
+        self.assertEqual(
+            activity_module.features_recipient_name_from_rules(rules, article_type),
+            expected,
+        )
+
+
+class TestDoNotSendArticleTypesFromRules(unittest.TestCase):
+    "tests for do_not_send_article_types_from_rules()"
+
+    def test_do_not_send_article_types(self):
+        "test using rules from the YAML file"
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+        expected = ["correction", "editorial", "retraction"]
+        article_types = activity_module.do_not_send_article_types_from_rules(rules)
+        self.assertEqual(article_types, expected)
+
+    def test_multiple_rules(self):
+        "test if multiple rules have do_not_send article types"
+        rules = {
+            "DoNotSend_one": {"article_type": "correction", "do_not_send": True},
+            "DoNotSend_two": {
+                "article_type": ["correction", "editorial"],
+                "do_not_send": True,
+            },
+            "DoNotSend_three": {
+                "article_type": ["correction", "retraction"],
+                "do_not_send": True,
+            },
+        }
+        expected = ["correction", "editorial", "retraction"]
+        article_types = activity_module.do_not_send_article_types_from_rules(rules)
+        self.assertEqual(article_types, expected)
+
+    def test_no_rules(self):
+        "test if there are no rules supplied"
+        rules = None
+        expected = []
+        article_types = activity_module.do_not_send_article_types_from_rules(rules)
+        self.assertEqual(article_types, expected)
+
+    def test_string_article_type(self):
+        "test if the article_type value for the rule is a string instead of a list"
+        rules = {"DoNotSend": {"article_type": "correction", "do_not_send": True}}
+        expected = ["correction"]
+        article_types = activity_module.do_not_send_article_types_from_rules(rules)
+        self.assertEqual(article_types, expected)

@@ -348,6 +348,8 @@ class exp:
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
 
+    publication_email_yaml = "publicationEmail.yaml"
+
     docmap_url_pattern = (
         "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
     )
@@ -701,6 +703,8 @@ class dev:
     GLENCOE_FTP_CWD = ""
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
+
+    publication_email_yaml = "publicationEmail.yaml"
 
     docmap_url_pattern = (
         "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
@@ -1060,6 +1064,8 @@ class live:
     GLENCOE_FTP_CWD = ""
 
     downstream_recipients_yaml = "downstreamRecipients.yaml"
+
+    publication_email_yaml = "publicationEmail.yaml"
 
     docmap_url_pattern = (
         "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
