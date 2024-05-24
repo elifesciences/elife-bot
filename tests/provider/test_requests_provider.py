@@ -45,7 +45,7 @@ class TestRequestsProvider(unittest.TestCase):
 
 
 class TestRequestsProviderPostAs(unittest.TestCase):
-    @patch("requests.adapters.HTTPAdapter.get_connection")
+    @patch("requests.adapters.HTTPAdapter.get_connection_with_tls_context")
     def test_get_as_params(self, fake_connection):
         """test get data as params only"""
         url = "http://localhost/"
@@ -58,7 +58,7 @@ class TestRequestsProviderPostAs(unittest.TestCase):
         self.assertEqual(resp.request.url, expected_url)
         self.assertEqual(resp.request.body, expected_body)
 
-    @patch("requests.adapters.HTTPAdapter.get_connection")
+    @patch("requests.adapters.HTTPAdapter.get_connection_with_tls_context")
     def test_post_as_params(self, fake_connection):
         """test posting data as params only"""
         url = "http://localhost/"
@@ -71,7 +71,7 @@ class TestRequestsProviderPostAs(unittest.TestCase):
         self.assertEqual(resp.request.url, expected_url)
         self.assertEqual(resp.request.body, expected_body)
 
-    @patch("requests.adapters.HTTPAdapter.get_connection")
+    @patch("requests.adapters.HTTPAdapter.get_connection_with_tls_context")
     def test_post_as_data(self, fake_connection):
         """test posting data as data only"""
         url = "http://localhost/"
@@ -90,7 +90,7 @@ class TestRequestsProviderPostAs(unittest.TestCase):
         self.assertEqual(resp.request.body, expected_body)
         self.assertEqual(resp.request.headers.get("Content-Type"), content_type)
 
-    @patch("requests.adapters.HTTPAdapter.get_connection")
+    @patch("requests.adapters.HTTPAdapter.get_connection_with_tls_context")
     def test_post_as_json(self, fake_connection):
         """test posting data as data only"""
         url = "http://localhost/"
