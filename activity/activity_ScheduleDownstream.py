@@ -1,4 +1,5 @@
 import json
+from elifetools import parseJATS as parser
 from provider.storage_provider import storage_context
 from provider import downstream, lax_provider, utils, yaml_provider
 from activity.objects import Activity
@@ -31,7 +32,9 @@ class activity_ScheduleDownstream(Activity):
         Do the work
         """
         if self.logger:
-            self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
+            self.logger.info(
+                "%s, data: %s" % (self.name, json.dumps(data, sort_keys=True, indent=4))
+            )
 
         expanded_bucket_name = (
             self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
@@ -67,8 +70,26 @@ class activity_ScheduleDownstream(Activity):
                 self.settings, expanded_folder_name, expanded_bucket_name, version
             )
             xml_key_name = expanded_folder_name + "/" + xml_file_name
+            self.logger.info("%s, xml_key_name: %s" % (self.name, xml_key_name))
+
+            # profile the article for checking do_not_schedule rules
+            article_profile_type = get_article_profile_type(
+                self.settings, expanded_bucket_name, xml_key_name
+            )
+            self.logger.info(
+                "%s, article_profile_type: %s" % (self.name, article_profile_type)
+            )
+
             outbox_list = downstream.choose_outboxes(
-                status, first_by_status, rules, run_type
+                status,
+                first_by_status,
+                rules,
+                run_type,
+                article_profile_type,
+            )
+
+            self.logger.info(
+                "%s, adding %s to outboxes: %s" % (self.name, xml_key_name, outbox_list)
             )
 
             for outbox in outbox_list:
@@ -153,3 +174,31 @@ def new_outbox_xml_name(prefix, journal, article_id):
         return prefix + journal + article_id + ".xml"
     except TypeError:
         return None
+
+
+def get_article_profile_type(settings, expanded_bucket_name, xml_key_name):
+    "return the profile type based on article_type and related article status"
+    storage = storage_context(settings)
+    s3_resource = (
+        settings.storage_provider + "://" + expanded_bucket_name + "/" + xml_key_name
+    )
+    xml = storage.get_resource_as_string(s3_resource)
+
+    soup = parser.parse_xml(xml)
+
+    article_type = parser.article_type(soup)
+
+    # return retraction_of_preprint if applicable
+    if article_type != "retraction":
+        return None
+    # parse related articles
+    related_articles = parser.related_article(soup)
+    for related_article_data in related_articles:
+        # check status of the related article
+        msid = utils.msid_from_doi(related_article_data.get("xlink_href"))
+        if msid:
+            status_version_map = lax_provider.article_status_version_map(msid, settings)
+            if len(status_version_map.keys()) <= 0:
+                # if no vor or poa versions then assume it is preprint status
+                return "retraction_of_preprint"
+    return None

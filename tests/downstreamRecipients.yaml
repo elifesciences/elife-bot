@@ -34,6 +34,8 @@ PMC:
   schedule_silent_correction: true
   schedule_article_types:
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
   send_once_only: false
   send_article_types:
     - vor
@@ -47,6 +49,8 @@ PublicationEmail:
   schedule_article_types:
     - poa
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
 
 PreprintPublicationEmail:
   activity_name: PublicationEmail
@@ -63,6 +67,8 @@ Pubmed:
   schedule_article_types:
     - poa
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
 
 # FTPArticle workflows
 Cengage:
@@ -72,6 +78,8 @@ Cengage:
   schedule_silent_correction: true
   schedule_article_types:
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
   send_by_protocol: ftp
   send_once_only: true
   send_article_types:
@@ -110,6 +118,8 @@ CNKI:
   schedule_silent_correction: true
   schedule_article_types:
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
   send_by_protocol: ftp
   send_once_only: true
   send_article_types:
@@ -129,6 +139,8 @@ CNPIEC:
   schedule_silent_correction: true
   schedule_article_types:
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
   send_by_protocol: ftp
   send_once_only: true
   send_article_types:
@@ -146,6 +158,8 @@ GoOA:
   schedule_silent_correction: true
   schedule_article_types:
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
   send_by_protocol: ftp
   send_once_only: true
   send_article_types:
@@ -163,6 +177,8 @@ HEFCE:
   schedule_silent_correction: true
   schedule_article_types:
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
   send_by_protocol: sftp
   send_once_only: true
   send_article_types:
@@ -185,6 +201,8 @@ OASwitchboard:
   schedule_first_version_only: true
   schedule_article_types:
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
   send_by_protocol: sftp
   send_once_only: true
   send_article_types:
@@ -206,6 +224,8 @@ OVID:
   schedule_article_types:
     - poa
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
   send_by_protocol: ftp
   send_once_only: false
   send_article_types:
@@ -225,6 +245,8 @@ Scilit:
   schedule_article_types:
     - poa
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
   send_by_protocol: sftp
   send_once_only: false
   send_article_types:
@@ -248,6 +270,8 @@ WoS:
   schedule_silent_correction: true
   schedule_article_types:
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
   send_by_protocol: ftp
   send_once_only: true
   send_article_types:
@@ -270,6 +294,8 @@ Zendy:
   schedule_article_types:
     - poa
     - vor
+  do_not_schedule:
+    - retraction_of_preprint
   send_by_protocol: sftp
   send_once_only: false
   send_article_types:

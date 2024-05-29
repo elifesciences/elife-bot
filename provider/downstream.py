@@ -20,7 +20,13 @@ def workflow_outbox(downstream_workflow_map, workflow_name):
     )
 
 
-def choose_outboxes(status, first_by_status, rules, run_type=None):
+def choose_outboxes(
+    status,
+    first_by_status,
+    rules,
+    run_type=None,
+    article_profile_type=None,
+):
     outbox_list = []
 
     if not rules:
@@ -36,6 +42,13 @@ def choose_outboxes(status, first_by_status, rules, run_type=None):
             continue
         if not workflow_rules.get("schedule_downstream"):
             # do not assess for sending by this activity
+            continue
+        if (
+            article_profile_type
+            and workflow_rules.get("do_not_schedule")
+            and article_profile_type in workflow_rules.get("do_not_schedule")
+        ):
+            # do not schedule it for downstream delivery for the article type
             continue
 
         if run_type == "silent-correction" and not workflow_rules.get(
