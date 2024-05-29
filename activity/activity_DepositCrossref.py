@@ -150,17 +150,12 @@ class activity_DepositCrossref(Activity):
                     # add intra_work_relation isSameAs tag
                     crossref.add_is_same_as_tag(rel_program_tag, article.version_doi)
 
+                # add a isVersionOf tag for reviewed preprint versions
                 for event_object in article.publication_history:
                     if event_object.event_type == "reviewed-preprint":
                         crossref.add_is_version_of_tag(
                             rel_program_tag, event_object.doi
                         )
-                    elif (
-                        event_object.event_type == "preprint"
-                        and event_object.doi != article.preprint
-                    ):
-                        # add a hasPreprint tag for the original preprint DOI
-                        crossref.add_has_preprint_tag(rel_program_tag, event_object.doi)
 
         # output CrossrefXML objects to XML files
         for article, c_xml in list(crossref_object_map.items()):
@@ -250,19 +245,6 @@ class activity_DepositCrossref(Activity):
             crossref.set_article_version(article, self.settings)
             # set Contributor orcid_authenticated values to True
             crossref.contributor_orcid_authenticated(article, True)
-
-            # set the preprint to a different value for PRC articles
-            if article.publication_history:
-                event_list = [
-                    event_object
-                    for event_object in article.publication_history
-                    if event_object.event_type == "reviewed-preprint"
-                ]
-                if event_list:
-                    event_object = event_list[-1]
-                    preprint_object = Preprint()
-                    preprint_object.doi = event_object.doi
-                    article.preprint = preprint_object
 
         return article_object_map
 

@@ -90,16 +90,19 @@ class TestDepositCrossref(unittest.TestCase):
             "expected_crossref_xml_contains": [
                 "<doi>10.7554/eLife.1234567890</doi>",
                 (
-                    '<rel:related_item><rel:intra_work_relation identifier-type="doi" relationship-type="hasPreprint">10.7554/eLife.1234567890.3</rel:intra_work_relation>'
-                ),
-                (
                     '<rel:related_item><rel:intra_work_relation identifier-type="doi" relationship-type="hasPreprint">10.1101/2021.11.09.467796</rel:intra_work_relation></rel:related_item>'
                 ),
                 (
-                    '<rel:related_item><rel:intra_work_relation identifier-type="doi" relationship-type="isSameAs">10.7554/eLife.1234567890.4</rel:intra_work_relation>'
+                    '<rel:related_item><rel:intra_work_relation identifier-type="doi" relationship-type="isVersionOf">10.7554/eLife.1234567890.1</rel:intra_work_relation>'
                 ),
                 (
-                    '<rel:related_item><rel:intra_work_relation identifier-type="doi" relationship-type="isVersionOf">10.7554/eLife.1234567890.1</rel:intra_work_relation>'
+                    '<rel:related_item><rel:intra_work_relation identifier-type="doi" relationship-type="isVersionOf">10.7554/eLife.1234567890.2</rel:intra_work_relation>'
+                ),
+                (
+                    '<rel:related_item><rel:intra_work_relation identifier-type="doi" relationship-type="isVersionOf">10.7554/eLife.1234567890.3</rel:intra_work_relation>'
+                ),
+                (
+                    '<rel:related_item><rel:intra_work_relation identifier-type="doi" relationship-type="isSameAs">10.7554/eLife.1234567890.4</rel:intra_work_relation>'
                 ),
             ],
             "expected_email_count": 1,
