@@ -5,7 +5,7 @@ from collections import OrderedDict
 from xml.etree import ElementTree
 from mock import patch
 from testfixtures import TempDirectory
-from elifecrossref import generate
+from elifecrossref import clinical_trials, generate
 from elifearticle.article import Article, ArticleDate, Contributor
 from provider import crossref
 from tests import settings_mock
@@ -375,7 +375,12 @@ class TestClearRelProgramTag(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
 
-    def test_clear_rel_program_tag(self):
+    @patch.object(clinical_trials, "registry_name_to_doi_map")  
+    def test_clear_rel_program_tag(self, fake_clinical_trial_name_map):
+        fake_clinical_trial_name_map.return_value = {
+            "ClinicalTrials.gov": "10.18810/clinical-trials-gov",
+            "ChiCTR": "10.18810/chictr",
+        }
         xml_file = "tests/test_data/crossref_minimal/outbox/elife-1234567890-v99.xml"
         articles = crossref.parse_article_xml([xml_file], self.directory.path)
         article_object_map = OrderedDict([(xml_file, articles[0])])
@@ -471,7 +476,13 @@ class TestCrossrefXmlToDisk(unittest.TestCase):
     def tearDown(self):
         TempDirectory.cleanup_all()
 
-    def test_crossref_xml_to_disk(self):
+    @patch.object(clinical_trials, "registry_name_to_doi_map")
+    def test_crossref_xml_to_disk(self, fake_clinical_trial_name_map):
+        # mock GET response data from Crossref clinical trials endpoint
+        fake_clinical_trial_name_map.return_value = {
+            "ClinicalTrials.gov": "10.18810/clinical-trials-gov",
+            "ChiCTR": "10.18810/chictr",
+        }
         xml_file = "tests/test_data/crossref_minimal/outbox/elife-1234567890-v99.xml"
         articles = crossref.parse_article_xml([xml_file], self.directory.path)
         article_object_map = OrderedDict([(xml_file, articles[0])])
