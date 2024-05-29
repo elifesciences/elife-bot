@@ -4,6 +4,7 @@ import unittest
 from mock import patch
 from ddt import ddt, data
 from testfixtures import TempDirectory
+from elifecrossref import clinical_trials
 from provider import crossref
 import activity.activity_DepositCrossref as activity_module
 from activity.activity_DepositCrossref import activity_DepositCrossref
@@ -31,6 +32,7 @@ class TestDepositCrossref(unittest.TestCase):
         "return the tmp dir name for the activity"
         return self.activity.directories.get("TMP_DIR")
 
+    @patch.object(clinical_trials, "registry_name_to_doi_map")
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("requests.post")
     @patch("provider.outbox_provider.storage_context")
@@ -162,6 +164,7 @@ class TestDepositCrossref(unittest.TestCase):
         fake_storage_context,
         fake_request,
         fake_email_smtp_connect,
+        fake_clinical_trial_name_map,
     ):
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
@@ -178,6 +181,11 @@ class TestDepositCrossref(unittest.TestCase):
         )
         # mock the POST to endpoint
         fake_request.return_value = FakeResponse(test_data.get("post_status_code"))
+        # mock GET response data from Crossref clinical trials endpoint
+        fake_clinical_trial_name_map.return_value = {
+            "ClinicalTrials.gov": "10.18810/clinical-trials-gov",
+            "ChiCTR": "10.18810/chictr",
+        }
         # do the activity
         result = self.activity.do_activity(self.activity_data)
         # check assertions

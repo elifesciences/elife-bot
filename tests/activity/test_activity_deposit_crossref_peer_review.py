@@ -4,6 +4,7 @@ from mock import patch
 from ddt import ddt, data
 from testfixtures import TempDirectory
 from elifearticle.article import Article, Contributor
+from elifecrossref import clinical_trials
 from provider import bigquery, crossref, lax_provider
 import activity.activity_DepositCrossrefPeerReview as activity_module
 from activity.activity_DepositCrossrefPeerReview import (
@@ -38,6 +39,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         "return the tmp dir name for the activity"
         return self.activity.directories.get("TMP_DIR")
 
+    @patch.object(clinical_trials, "registry_name_to_doi_map")
     @patch.object(bigquery, "get_client")
     @patch.object(activity_module, "check_vor_is_published")
     @patch.object(activity_module.email_provider, "smtp_connect")
@@ -211,6 +213,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
         fake_email_smtp_connect,
         fake_check_vor,
         fake_get_client,
+        fake_clinical_trial_name_map,
     ):
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
@@ -232,10 +235,15 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
             rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
         client = FakeBigQueryClient(rows)
         fake_get_client.return_value = client
-
         # mock the POST to endpoint
         fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))
         fake_head_request.return_value = FakeResponse(302)
+        # mock GET response data from Crossref clinical trials endpoint
+        fake_clinical_trial_name_map.return_value = {
+            "ClinicalTrials.gov": "10.18810/clinical-trials-gov",
+            "ChiCTR": "10.18810/chictr",
+        }
+
         # do the activity
         result = self.activity.do_activity(self.activity_data)
         # check assertions
