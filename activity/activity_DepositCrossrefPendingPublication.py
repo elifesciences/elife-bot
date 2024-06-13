@@ -7,7 +7,6 @@ from collections import OrderedDict
 from activity.objects import Activity
 from provider import (
     crossref,
-    downstream,
     email_provider,
     outbox_provider,
     utils,
@@ -92,13 +91,39 @@ class activity_DepositCrossrefPendingPublication(Activity):
         crossref_config = crossref.elifecrossref_config(self.settings)
 
         article_object_map = self.get_article_objects(article_xml_files)
+        # change article title values
+        article_object_map = article_title_rewrite(article_object_map)
 
+        # duplicate and modify the article for a version DOI deposit
+        article_version_object_map = {}
+        for xml_file, article in list(article_object_map.items()):
+            if article.version_doi:
+                article_version = copy.copy(article)
+                article_version.doi = article_version.version_doi
+                article_version.version_doi = None
+                article_version_object_map[xml_file] = article_version
+
+        # check which DOIs already exist
         generate_article_object_map = prune_article_object_map(
             article_object_map, self.logger
         )
 
-        # change article title values
-        generate_article_object_map = article_title_rewrite(generate_article_object_map)
+        # check which version DOIs already exist
+        generate_article_version_object_map = prune_article_object_map(
+            article_version_object_map, self.logger
+        )
+
+        # files not to be published are those missing from both lists after pruning
+        for xml_file, article in list(article_object_map.items()):
+            if (
+                xml_file not in generate_article_object_map
+                and xml_file not in generate_article_version_object_map
+            ):
+                self.logger.info(
+                    "%s, DOI %s exists, will move file %s to the not_published folder"
+                    % (self.name, article.doi, xml_file)
+                )
+                self.not_published_xml_files.append(xml_file)
 
         # build Crossref deposit objects
         crossref_object_map = OrderedDict()
@@ -110,43 +135,37 @@ class activity_DepositCrossrefPendingPublication(Activity):
                 self.bad_xml_files,
                 submission_type="pending_publication",
             )
-            if crossref_object_list[0]:
+            if crossref_object_list and crossref_object_list[0]:
                 crossref_object_map[article] = crossref_object_list[0]
 
-        # duplicate and modify the article for a version_doi deposit, set a different batch_id
-        for xml_file, article in list(generate_article_object_map.items()):
-            if article.version_doi:
-                # track a separate list of good and bad files later to be collated
-                good_xml_files = []
-                bad_xml_files = []
-                article_version = copy.copy(article)
-                article_version.doi = article_version.version_doi
-                article_version.version_doi = None
-                # generate CrossrefXML
-                crossref_object_list = crossref.build_crossref_xml(
-                    {xml_file: article_version},
-                    crossref_config,
-                    good_xml_files,
-                    bad_xml_files,
-                    submission_type="pending_publication",
+        # build version_doi Crossef deposits, set a different batch_id
+        for xml_file, article in list(generate_article_version_object_map.items()):
+            # track a separate list of good and bad files later to be collated
+            good_xml_files = []
+            bad_xml_files = []
+            # generate CrossrefXML
+            crossref_object_list = crossref.build_crossref_xml(
+                {xml_file: article_version},
+                crossref_config,
+                good_xml_files,
+                bad_xml_files,
+                submission_type="pending_publication",
+            )
+            # collate good and bad files
+            self.good_xml_files = list(
+                set(self.good_xml_files).union(set(good_xml_files))
+            )
+            self.bad_xml_files = list(set(self.bad_xml_files).union(set(bad_xml_files)))
+            # add the CrossrefXML
+            if crossref_object_list and crossref_object_list[0]:
+                # change the batch_id
+                crossref_object_list[0].batch_id = crossref_object_list[
+                    0
+                ].batch_id.replace(
+                    "elife-crossref-pending_publication-",
+                    "elife-crossref-pending_publication-version-",
                 )
-                # collate good and bad files
-                self.good_xml_files = list(
-                    set(self.good_xml_files).union(set(good_xml_files))
-                )
-                self.bad_xml_files = list(
-                    set(self.bad_xml_files).union(set(bad_xml_files))
-                )
-                # add the CrossrefXML
-                if crossref_object_list[0]:
-                    # change the batch_id
-                    crossref_object_list[0].batch_id = crossref_object_list[
-                        0
-                    ].batch_id.replace(
-                        "elife-crossref-pending_publication-",
-                        "elife-crossref-pending_publication-version-",
-                    )
-                    crossref_object_map[article_version] = crossref_object_list[0]
+                crossref_object_map[article_version] = crossref_object_list[0]
 
         # generate status will be True if no unhandled exception was raised
         self.statuses["generate"] = True
@@ -207,15 +226,8 @@ class activity_DepositCrossrefPendingPublication(Activity):
                 self.not_published_folder, date_stamp
             )
             for file_name, article in article_object_map.items():
-                if file_name in self.good_xml_files or file_name in self.bad_xml_files:
+                if file_name in self.bad_xml_files:
                     continue
-                # check DOI exists at Crossref
-                if crossref.doi_exists(article.doi, self.logger):
-                    self.logger.info(
-                        "DOI %s exists, %s to move file %s to the not_published folder"
-                        % (article.doi, file_name, self.name)
-                    )
-                    self.not_published_xml_files.append(file_name)
             outbox_provider.clean_outbox(
                 self.settings,
                 self.publish_bucket,
