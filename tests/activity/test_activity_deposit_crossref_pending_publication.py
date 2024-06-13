@@ -15,6 +15,13 @@ from tests.activity import helpers, settings_mock
 import tests.activity.test_activity_data as activity_test_data
 
 
+def mock_doi_does_not_exists(doi, logger):
+    "return True or False for specific DOI values"
+    if doi == "10.7554/eLife.64719":
+        return False
+    return True
+
+
 class TestDepositCrossrefPendingPublication(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
@@ -33,7 +40,6 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         return self.activity.directories.get("TMP_DIR")
 
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch("provider.crossref.doi_exists")
     @patch("provider.crossref.doi_does_not_exist")
     @patch("requests.post")
     @patch("provider.outbox_provider.storage_context")
@@ -44,7 +50,6 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         fake_storage_context,
         fake_post_request,
         fake_doi_does_not_exist,
-        fake_doi_exists,
         fake_email_smtp_connect,
     ):
         test_data = {
@@ -84,7 +89,6 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         # mock the POST to endpoint
         fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))
         fake_doi_does_not_exist.return_value = True
-        fake_doi_exists.return_value = False
         # do the activity
         result = self.activity.do_activity()
         # check assertions
@@ -129,18 +133,56 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
                     )
 
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch("provider.crossref.doi_exists")
+    @patch("provider.crossref.doi_does_not_exist")
+    @patch("requests.post")
+    @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_DepositCrossrefPendingPublication, "clean_tmp_dir")
+    def test_do_activity_one_doi_exists(
+        self,
+        fake_clean_tmp_dir,
+        fake_storage_context,
+        fake_post_request,
+        fake_doi_does_not_exist,
+        fake_email_smtp_connect,
+    ):
+        "test for when the concept DOI exists and the version DOI does not exist"
+        directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
+        resources = helpers.populate_storage(
+            from_dir=self.outbox_folder,
+            to_dir=directory.path,
+            filenames=["08-11-2020-FA-eLife-64719.xml"],
+            sub_dir="crossref_pending_publication/outbox",
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_doi_does_not_exist.side_effect = mock_doi_does_not_exists
+        fake_post_request.return_value = FakeResponse(200)
+
+        result = self.activity.do_activity()
+        self.assertEqual(result, True)
+        self.assertTrue(
+            "Moving files from outbox folder to the not_published folder"
+            in self.activity.logger.loginfo
+        )
+        file_count = len(os.listdir(self.tmp_dir()))
+        # assert just one deposit file was generated
+        self.assertEqual(file_count, 1)
+
+    @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.crossref.doi_does_not_exist")
     @patch("provider.outbox_provider.storage_context")
     def test_do_activity_doi_exists(
         self,
         fake_storage_context,
         fake_doi_does_not_exist,
-        fake_doi_exists,
         fake_email_smtp_connect,
     ):
-        "test for when the DOI already exists"
+        "test for when all the DOI already exists"
         directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         resources = helpers.populate_storage(
             from_dir=self.outbox_folder,
             to_dir=directory.path,
@@ -151,29 +193,52 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
             directory.path, resources, dest_folder=directory.path
         )
         fake_doi_does_not_exist.return_value = False
-        fake_doi_exists.return_value = True
 
         result = self.activity.do_activity()
-        self.assertTrue(result)
+        self.assertEqual(result, True)
         self.assertTrue(
             "Moving files from outbox folder to the not_published folder"
             in self.activity.logger.loginfo
         )
 
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch("provider.crossref.doi_exists")
+    @patch("provider.crossref.generate.build_crossref_xml")
     @patch("provider.crossref.doi_does_not_exist")
     @patch("requests.post")
     @patch("provider.outbox_provider.storage_context")
-    def test_do_activity_crossref_exception(
+    def test_do_activity_crossref_generation_exception(
         self,
         fake_storage_context,
         fake_post_request,
         fake_doi_does_not_exist,
-        fake_doi_exists,
+        fake_build,
         fake_email_smtp_connect,
     ):
-        directory = TempDirectory()    
+        "fake a Crossref generation failure to produce a bad_xml_files list"
+        directory = TempDirectory()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
+        fake_storage_context.return_value = FakeStorageContext(
+            self.outbox_folder, ["08-11-2020-FA-eLife-64719.xml"]
+        )
+        # raise an exception on a post
+        fake_doi_does_not_exist.return_value = True
+        fake_build.side_effect = Exception("An exception")
+        fake_post_request.return_value = FakeResponse(200)
+        result = self.activity.do_activity()
+        self.assertEqual(result, True)
+
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch("provider.crossref.doi_does_not_exist")
+    @patch("requests.post")
+    @patch("provider.outbox_provider.storage_context")
+    def test_do_activity_crossref_deposit_exception(
+        self,
+        fake_storage_context,
+        fake_post_request,
+        fake_doi_does_not_exist,
+        fake_email_smtp_connect,
+    ):
+        directory = TempDirectory()
         fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_storage_context.return_value = FakeStorageContext(
             self.outbox_folder, ["08-11-2020-FA-eLife-64719.xml"]
@@ -182,11 +247,8 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         # raise an exception on a post
         fake_post_request.side_effect = Exception("")
         fake_doi_does_not_exist.return_value = True
-        fake_doi_exists.return_value = False
-        fake_post_request.return_value = True
-        fake_post_request.return_value = FakeResponse(200)
         result = self.activity.do_activity()
-        self.assertTrue(result)
+        self.assertEqual(result, True)
 
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch("provider.outbox_provider.storage_context")
@@ -202,7 +264,7 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
         )
 
         result = self.activity.do_activity()
-        self.assertTrue(result)
+        self.assertEqual(result, True)
 
     def test_get_article_objects(self):
         """test for parsing an XML file"""
