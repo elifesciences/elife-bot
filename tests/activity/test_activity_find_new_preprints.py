@@ -177,6 +177,7 @@ class TestFindNewPreprints(unittest.TestCase):
         result = self.activity.do_activity(self.activity_data)
         self.assertEqual(result, True)
 
+    @patch.object(cleaner, "get_docmap_string_with_retry")
     @patch.object(bigquery, "get_client")
     @patch.object(activity_module, "storage_context")
     @patch("provider.preprint.download_original_preprint_xml")
@@ -185,6 +186,7 @@ class TestFindNewPreprints(unittest.TestCase):
         fake_download,
         fake_storage_context,
         fake_get_client,
+        fake_get_docmap,
     ):
         "test if an exception is raised downloading preprint XML from the bucket"
         directory = TempDirectory()
@@ -197,6 +199,7 @@ class TestFindNewPreprints(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, resources
         )
+        fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
         fake_download.side_effect = Exception("")
 
         result = self.activity.do_activity(self.activity_data)
