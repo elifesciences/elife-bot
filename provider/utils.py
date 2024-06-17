@@ -270,7 +270,9 @@ def console_start_env_workflow_doi_id():
 
 def create_aws_connection(service, service_creation_kwargs):
     assert isinstance(service, str), "`service` must be a string"
-    assert isinstance(service_creation_kwargs, dict), "`service_creation_kwargs` must be a dictionary"
+    assert isinstance(
+        service_creation_kwargs, dict
+    ), "`service_creation_kwargs` must be a dictionary"
 
     return boto3.client(service, **service_creation_kwargs)
 
@@ -279,20 +281,27 @@ def get_aws_connection_key(service, service_creation_kwargs):
     "returns a tuple for the given `service` that can be used in a dictionary"
     kv = service_creation_kwargs
     # ('s3', 'us-east-1', '1234567890', Config{...})
-    return (service, kv.get('region_name'), kv.get('aws_access_key_id'), kv.get('config'))
+    return (
+        service,
+        kv.get("region_name"),
+        kv.get("aws_access_key_id"),
+        kv.get("config"),
+    )
 
 
 def get_aws_connection(service_conn_map, service, service_creation_kwargs):
     "centralised access to AWS service connections"
     assert isinstance(service_conn_map, dict), "`service_conn_map` must be a dictionary"
     assert isinstance(service, str), "`service` must be a string"
-    assert isinstance(service_creation_kwargs, dict), "`service_creation_kwargs` must be a dictionary"
+    assert isinstance(
+        service_creation_kwargs, dict
+    ), "`service_creation_kwargs` must be a dictionary"
 
     if service in service_conn_map:
         return service_conn_map[service]
 
     map_key = get_aws_connection_key(service, service_creation_kwargs)
-    
+
     service_conn_map[map_key] = create_aws_connection(service, service_creation_kwargs)
     return service_conn_map[map_key]
 
@@ -300,6 +309,7 @@ def get_aws_connection(service_conn_map, service, service_creation_kwargs):
 def get_settings(env):
     """for runtime importing of settings module"""
     import settings as settings_lib
+
     settings_inst = settings_lib.get_settings(env)
 
     settings_inst._aws_conn_map = {}
@@ -318,19 +328,26 @@ def content_type_from_file_name(file_name):
     else:
         return content_type
 
+
 ENVVAR_KNOWN_KEYS = {
-    'MOTO_ALLOW_NONEXISTENT_REGION',
-    'TEST_DUMMY',
+    "MOTO_ALLOW_NONEXISTENT_REGION",
+    "TEST_DUMMY",
 }
+
 
 def envvar(key, default=None):
     """returns a value for the environment variable `key`.
     raises an `AssertionError` if the requested environment variable is unknown."""
-    assert key in ENVVAR_KNOWN_KEYS, "programming error. unsupported environment key: %s" % key
+    assert key in ENVVAR_KNOWN_KEYS, (
+        "programming error. unsupported environment key: %s" % key
+    )
     return os.environ.get(key, default)
+
 
 def set_envvar(key, val):
     """set a value `val` for the environment variable `key`.
     raises an `AssertionError` if the requested environment variable is unknown."""
-    assert key in ENVVAR_KNOWN_KEYS, "programming error. unsupported environment key: %s" % key    
+    assert key in ENVVAR_KNOWN_KEYS, (
+        "programming error. unsupported environment key: %s" % key
+    )
     os.environ[key] = val

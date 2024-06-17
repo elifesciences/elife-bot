@@ -14,6 +14,7 @@ from starter.starter_Ping import starter_Ping as starter_class
 from workflow.workflow_Ping import workflow_Ping as workflow_class
 from provider import utils
 
+
 class TestRunWorkflowPing(unittest.TestCase):
     @mock_aws
     def setUp(self):

@@ -427,7 +427,6 @@ class Workflow(object):
 
     def check_for_failed_workflow_request(self, decision):
         try:
-
             # Traverse the array in reverse order
             # This is an optimisation since if there is a failure record it will
             # always be at the end of the array
