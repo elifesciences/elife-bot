@@ -141,6 +141,9 @@ class TestUtils(unittest.TestCase):
         expected = "2021_01_01"
         self.assertEqual(utils.set_datestamp(glue), expected)
 
+    def test_get_current_datetime(self):
+        self.assertIsNotNone(utils.get_current_datetime())
+
     def test_get_doi_url(self):
         doi_url = utils.get_doi_url("10.7554/eLife.08411")
         self.assertEqual(doi_url, "https://doi.org/10.7554/eLife.08411")
@@ -172,18 +175,41 @@ class TestUtils(unittest.TestCase):
         config1 = botocore.config.Config()
         config2 = botocore.config.Config(connect_timeout=50, read_timeout=70)
         cases = [
-            (('s3', {}), ('s3', None, None, None)),
-            (('s3', {'region_name': 'us-east-1'}), ('s3', 'us-east-1', None, None)),
-            (('s3', {'region_name': 'us-east-1', 'aws_access_key_id': '1234'}), ('s3', 'us-east-1', '1234', None)),
-            (('s3', {'region_name': 'us-east-1', 'aws_access_key_id': '1234', 'config': config1}),
-             ('s3', 'us-east-1', '1234', config1)),
-            (('s3', {'region_name': 'us-east-1', 'aws_access_key_id': '1234', 'config': config2}),
-             ('s3', 'us-east-1', '1234', config2)),
+            (("s3", {}), ("s3", None, None, None)),
+            (("s3", {"region_name": "us-east-1"}), ("s3", "us-east-1", None, None)),
+            (
+                ("s3", {"region_name": "us-east-1", "aws_access_key_id": "1234"}),
+                ("s3", "us-east-1", "1234", None),
+            ),
+            (
+                (
+                    "s3",
+                    {
+                        "region_name": "us-east-1",
+                        "aws_access_key_id": "1234",
+                        "config": config1,
+                    },
+                ),
+                ("s3", "us-east-1", "1234", config1),
+            ),
+            (
+                (
+                    "s3",
+                    {
+                        "region_name": "us-east-1",
+                        "aws_access_key_id": "1234",
+                        "config": config2,
+                    },
+                ),
+                ("s3", "us-east-1", "1234", config2),
+            ),
         ]
         for (service, kv), expected in cases:
             actual = utils.get_aws_connection_key(service, kv)
             self.assertEqual(actual, expected)
-            self.assertEqual({actual: 1}[actual], 1) # generated key can be used as a map key
+            self.assertEqual(
+                {actual: 1}[actual], 1
+            )  # generated key can be used as a map key
 
 
 class TestElementXmlString(unittest.TestCase):

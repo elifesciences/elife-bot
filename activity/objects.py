@@ -153,7 +153,7 @@ class Activity:
                 pass
 
         # Create a new directory specifically for this activity
-        dir_name = datetime.datetime.utcnow().strftime("%Y-%m-%d.%H.%M.%S")
+        dir_name = utils.get_current_datetime().strftime("%Y-%m-%d.%H.%M.%S")
         workflowId = self.get_workflowId()
         activityId = self.get_activityId()
         try:

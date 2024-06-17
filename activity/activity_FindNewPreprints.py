@@ -1,5 +1,4 @@
 import os
-import datetime
 import json
 import time
 import glob
@@ -69,7 +68,7 @@ class activity_FindNewPreprints(CleanerBaseActivity):
         # Create output directories
         self.make_activity_directories()
 
-        date_string = datetime.datetime.utcnow().strftime(utils.PUB_DATE_FORMAT)
+        date_string = utils.get_current_datetime().strftime(utils.PUB_DATE_FORMAT)
 
         # BigQuery
         try:
@@ -350,11 +349,14 @@ class activity_FindNewPreprints(CleanerBaseActivity):
     def sqs_connect(self):
         "connect to the queue service"
         if not self.sqs_client:
-            self.sqs_client = self.settings.aws_conn('sqs', {
-                'aws_access_key_id': self.settings.aws_access_key_id,
-                'aws_secret_access_key': self.settings.aws_secret_access_key,
-                'region_name': self.settings.sqs_region,
-            })
+            self.sqs_client = self.settings.aws_conn(
+                "sqs",
+                {
+                    "aws_access_key_id": self.settings.aws_access_key_id,
+                    "aws_secret_access_key": self.settings.aws_secret_access_key,
+                    "region_name": self.settings.sqs_region,
+                },
+            )
 
     def sqs_queue_url(self):
         "get the queues"
