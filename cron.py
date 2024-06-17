@@ -1,6 +1,5 @@
 import calendar
 import time
-import datetime
 import importlib
 from collections import OrderedDict
 
@@ -22,7 +21,7 @@ LOGGER = log.logger("cron.log", "INFO", IDENTITY)
 
 
 def run_cron(settings):
-    current_datetime = get_current_datetime()
+    current_datetime = utils.get_current_datetime()
     LOGGER.info("current_datetime: %s" % current_datetime)
 
     for conditional_start in conditional_starts(current_datetime):
@@ -44,11 +43,6 @@ def run_cron(settings):
                 starter_name=conditional_start.get("starter_name"),
                 workflow_id=conditional_start.get("workflow_id"),
             )
-
-
-def get_current_datetime():
-    """for easier mocking in tests wrap this call"""
-    return datetime.datetime.utcnow()
 
 
 def get_local_datetime(current_datetime, timezone_object):
