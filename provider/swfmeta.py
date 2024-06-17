@@ -1,15 +1,12 @@
 from datetime import datetime, timezone
 from collections import OrderedDict
+from provider import utils
+
 
 """
 SWFMeta data provider
 Functions to provide meta data from SWF so code is not duplicated
 """
-
-
-def utctimestamp(dt):
-    "get a timestamp for utc timezone from a datetime object"
-    return dt.replace(tzinfo=timezone.utc).timestamp()
 
 
 class SWFMeta:
@@ -151,15 +148,15 @@ class SWFMeta:
 
         latest_start_timestamp = None
 
-        start_latest_date = datetime.utcnow()
+        start_latest_date = utils.get_current_datetime()
 
         # Number of days to check in successive calls to SWF history
         days_list = [0.25, 1, 7, 90]
 
         for days in days_list:
-
-            start_oldest_date = datetime.utcfromtimestamp(
-                utctimestamp(start_latest_date) - int(60 * 60 * 24 * days)
+            start_oldest_date = datetime.fromtimestamp(
+                utils.utctimestamp(start_latest_date) - int(60 * 60 * 24 * days),
+                tz=timezone.utc,
             )
 
             close_status = "COMPLETED"
@@ -177,7 +174,7 @@ class SWFMeta:
             # Find the latest run
             for execution in infos.get("executionInfos"):
                 # convert the returned datetime.datetime object to a numeric timestamp
-                execution_timestamp = utctimestamp(execution["startTimestamp"])
+                execution_timestamp = utils.utctimestamp(execution["startTimestamp"])
                 if latest_start_timestamp is None:
                     latest_start_timestamp = execution_timestamp
                     continue
@@ -213,11 +210,11 @@ class SWFMeta:
 
         # Use now as the start_latest_date if not supplied
         if latest_date is None:
-            latest_date = datetime.utcnow()
+            latest_date = utils.get_current_datetime()
         # Use full 90 day history if start_oldest_date is not supplied
         if oldest_date is None:
-            oldest_date = datetime.utcfromtimestamp(
-                utctimestamp(latest_date) - (60 * 60 * 24 * 90)
+            oldest_date = datetime.fromtimestamp(
+                utils.utctimestamp(latest_date) - (60 * 60 * 24 * 90), tz=timezone.utc
             )
 
         close_status = None
@@ -273,9 +270,9 @@ class SWFMeta:
         is_open = None
 
         # use datetime() values for these
-        latest_date = datetime.utcnow()
-        oldest_date = datetime.utcfromtimestamp(
-            utctimestamp(latest_date) - (60 * 60 * 24 * 90)
+        latest_date = utils.get_current_datetime()
+        oldest_date = datetime.fromtimestamp(
+            utils.utctimestamp(latest_date) - (60 * 60 * 24 * 90), tz=timezone.utc
         )
 
         infos = self.get_open_workflow_executionInfos(

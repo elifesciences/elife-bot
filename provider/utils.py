@@ -1,3 +1,4 @@
+import datetime
 import os
 import re
 import urllib
@@ -110,6 +111,16 @@ def set_datestamp(glue=""):
         ]
     )
     return date_stamp
+
+
+def get_current_datetime():
+    "for easier mocking in tests wrap this call"
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+def utctimestamp(dt):
+    "get a timestamp for utc timezone from a datetime object"
+    return dt.replace(tzinfo=datetime.timezone.utc).timestamp()
 
 
 def get_activity_status_text(activity_status):

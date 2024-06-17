@@ -141,6 +141,9 @@ class TestUtils(unittest.TestCase):
         expected = "2021_01_01"
         self.assertEqual(utils.set_datestamp(glue), expected)
 
+    def test_get_current_datetime(self):
+        self.assertIsNotNone(utils.get_current_datetime())
+
     def test_get_doi_url(self):
         doi_url = utils.get_doi_url("10.7554/eLife.08411")
         self.assertEqual(doi_url, "https://doi.org/10.7554/eLife.08411")

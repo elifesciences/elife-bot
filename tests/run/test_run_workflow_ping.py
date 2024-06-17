@@ -88,10 +88,12 @@ class TestRunWorkflowPing(unittest.TestCase):
             domain=settings_mock.domain,
             startTimeFilter={
                 "oldestDate": (
-                    datetime.datetime.utcnow() - datetime.timedelta(days=365)
+                    datetime.datetime.now(datetime.timezone.utc)
+                    - datetime.timedelta(days=365)
                 ),
                 "latestDate": (
-                    datetime.datetime.utcnow() + datetime.timedelta(days=365)
+                    datetime.datetime.now(datetime.timezone.utc)
+                    + datetime.timedelta(days=365)
                 ),
             },
         )

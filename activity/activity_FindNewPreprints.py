@@ -1,5 +1,4 @@
 import os
-import datetime
 import json
 import time
 import glob
@@ -69,7 +68,7 @@ class activity_FindNewPreprints(CleanerBaseActivity):
         # Create output directories
         self.make_activity_directories()
 
-        date_string = datetime.datetime.utcnow().strftime(utils.PUB_DATE_FORMAT)
+        date_string = utils.get_current_datetime().strftime(utils.PUB_DATE_FORMAT)
 
         # BigQuery
         try:

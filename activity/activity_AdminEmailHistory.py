@@ -1,7 +1,7 @@
 import json
 import calendar
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from activity.objects import Activity
 
 import provider.swfmeta as swfmetalib
@@ -138,9 +138,9 @@ class activity_AdminEmailHistory(Activity):
         swfmeta.connect()
 
         # convert timestamp to datetime objects
-        start_latest_date = datetime.utcfromtimestamp(current_timestamp)
-        start_oldest_date = datetime.utcfromtimestamp(
-            swfmetalib.utctimestamp(start_latest_date) - time_period
+        start_latest_date = datetime.fromtimestamp(current_timestamp, tz=timezone.utc)
+        start_oldest_date = datetime.fromtimestamp(
+            utils.utctimestamp(start_latest_date) - time_period, tz=timezone.utc
         )
 
         workflow_count = {}

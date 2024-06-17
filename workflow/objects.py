@@ -1,6 +1,7 @@
 import json
-import datetime
 import time
+from provider import utils
+
 
 """
 Amazon SWF workflow base class
@@ -289,7 +290,7 @@ class Workflow(object):
         """
         Return the current time in UTC for logging
         """
-        return datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        return utils.get_current_datetime().strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def activity_status(self, decision, activityType=None, activityID=None):
         """

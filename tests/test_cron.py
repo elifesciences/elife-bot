@@ -3,6 +3,7 @@ import datetime
 from pytz import timezone
 from ddt import ddt, data
 from mock import patch
+from provider import utils
 import tests.settings_mock as settings_mock
 from tests.classes_mock import FakeSWFClient
 import cron
@@ -13,11 +14,8 @@ class TestCron(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_get_current_datetime(self):
-        self.assertIsNotNone(cron.get_current_datetime())
-
     @patch.object(cron, "start_workflow")
-    @patch.object(cron, "get_current_datetime")
+    @patch.object(utils, "get_current_datetime")
     @patch.object(cron, "workflow_conditional_start")
     @data(
         "1970-01-01 10:45:00",
