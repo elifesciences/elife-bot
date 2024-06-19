@@ -1,4 +1,5 @@
 import calendar
+import datetime
 import time
 import importlib
 from collections import OrderedDict
@@ -49,9 +50,19 @@ def get_local_datetime(current_datetime, timezone_object):
     """apply the timezone delta to the datetime and remove the tzinfo"""
     new_current_datetime = current_datetime
 
-    localized_current_datetime = timezone_object.localize(
-        current_datetime, is_dst=False
+    # create new datetime with no timezone prior to localize call
+    current_datetime_without_tz = datetime.datetime(
+        current_datetime.year,
+        current_datetime.month,
+        current_datetime.day,
+        current_datetime.hour,
+        current_datetime.minute,
+        current_datetime.second,
     )
+    localized_current_datetime = timezone_object.localize(
+        current_datetime_without_tz, is_dst=False
+    )
+
     if localized_current_datetime.utcoffset():
         new_current_datetime = current_datetime + localized_current_datetime.utcoffset()
         new_current_datetime = new_current_datetime.replace(tzinfo=None)
