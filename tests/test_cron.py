@@ -123,6 +123,13 @@ class TestGetLocalDatetime(unittest.TestCase):
         new_datetime = cron.get_local_datetime(datetime_object, pytz_timezone)
         self.assertEqual(new_datetime, expected_datetime)
 
+    def test_get_local_datetime_now_utc(self):
+        "test getting local datetime using a UTC now value"
+        pytz_timezone = timezone("Europe/London")
+        datetime_object = datetime.datetime.now(datetime.timezone.utc)
+        new_datetime = cron.get_local_datetime(datetime_object, pytz_timezone)
+        self.assertIsNotNone(new_datetime)
+
 
 @ddt
 class TestConditionalStarts(unittest.TestCase):
