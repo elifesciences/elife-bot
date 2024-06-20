@@ -391,17 +391,6 @@ def clean_inline_graphic_tags(root):
                 parent_tag.remove(tag)
 
 
-def url_exists(url, logger):
-    "check if URL exists and is successful status code"
-    exists = False
-    response = requests.get(url, timeout=REQUESTS_TIMEOUT)
-    if 200 <= response.status_code < 400:
-        exists = True
-    elif response.status_code >= 400:
-        logger.info("Status code for %s was %s" % (url, response.status_code))
-    return exists
-
-
 def get_docmap(url, user_agent=None):
     "GET request for the docmap json"
     headers = None
