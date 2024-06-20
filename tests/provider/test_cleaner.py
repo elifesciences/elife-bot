@@ -698,30 +698,6 @@ class TestCleanInlineGraphicTags(unittest.TestCase):
         self.assertEqual(ElementTree.tostring(root).decode("utf8"), expected)
 
 
-class TestUrlExists(unittest.TestCase):
-    def setUp(self):
-        self.logger = FakeLogger()
-        self.url = "https://example.org/"
-
-    @patch("requests.get")
-    def test_url_exists_200(self, mock_requests_get):
-        status_code = 200
-        mock_requests_get.return_value = FakeResponse(status_code)
-        result = cleaner.url_exists(self.url, self.logger)
-        self.assertEqual(result, True)
-
-    @patch("requests.get")
-    def test_url_exists_404(self, mock_requests_get):
-        status_code = 404
-        mock_requests_get.return_value = FakeResponse(status_code)
-        result = cleaner.url_exists(self.url, self.logger)
-        self.assertEqual(result, False)
-        self.assertEqual(
-            self.logger.loginfo[-1],
-            "Status code for %s was %s" % (self.url, status_code),
-        )
-
-
 class TestGetDocmap(unittest.TestCase):
     def setUp(self):
         self.logger = FakeLogger()
