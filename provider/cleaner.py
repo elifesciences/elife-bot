@@ -33,7 +33,7 @@ LOG_FORMAT_STRING = (
     "%(asctime)s %(levelname)s %(name)s:%(module)s:%(funcName)s: %(message)s"
 )
 
-REQUESTS_TIMEOUT = 10
+REQUESTS_TIMEOUT = (10, 60)
 
 
 def article_id_from_zip_file(zip_file):
@@ -402,9 +402,12 @@ def url_exists(url, logger):
     return exists
 
 
-def get_docmap(url):
+def get_docmap(url, user_agent=None):
     "GET request for the docmap json"
-    response = requests.get(url, timeout=REQUESTS_TIMEOUT)
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
+    response = requests.get(url, timeout=REQUESTS_TIMEOUT, headers=headers)
     LOGGER.info("Request to docmaps API: GET %s", url)
     LOGGER.info(
         "Response from docmaps API: %s\n%s", response.status_code, response.content
@@ -422,9 +425,9 @@ def get_docmap(url):
     return None
 
 
-def get_docmap_by_account_id(url, account_id):
+def get_docmap_by_account_id(url, account_id, user_agent=None):
     "GET request for the docmap json and return the eLife docmap if a list is returned"
-    content = get_docmap(url)
+    content = get_docmap(url, user_agent=user_agent)
     if content:
         LOGGER.info("Parsing docmap content as JSON for URL %s", url)
         content_json = json.loads(content)
@@ -454,7 +457,11 @@ def get_docmap_string(settings, article_id, identifier, caller_name, logger):
     logger.info(
         "%s, getting docmap_string for identifier: %s" % (caller_name, identifier)
     )
-    return get_docmap_by_account_id(docmap_endpoint_url, settings.docmap_account_id)
+    return get_docmap_by_account_id(
+        docmap_endpoint_url,
+        settings.docmap_account_id,
+        user_agent=getattr(settings, "user_agent", None),
+    )
 
 
 # time in seconds to sleep when a docmap string request is not successful
