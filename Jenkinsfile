@@ -39,6 +39,9 @@ elifePipeline {
         }
 
         stage 'Approval', {
+            // June 24, 2024: to avoid the following error (#8844):
+            // > error: pathspec 'approved' did not match any file(s) known to git.
+            sh 'git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/*'
             elifeGitMoveToBranch commit, 'approved'
         }
     }
