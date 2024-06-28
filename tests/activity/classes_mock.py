@@ -131,7 +131,7 @@ class FakeStorageContext:
             self.resources = resources
         self.dest_folder = dest_folder
 
-    def get_bucket_and_key(self, resource):
+    def s3_storage_objects(self, resource):
         p = re.compile(r"(.*?)://(.*?)(/.*)")
         match = p.match(resource)
         protocol = match.group(1)
@@ -145,18 +145,18 @@ class FakeStorageContext:
 
     def resource_exists(self, resource):
         "check if a key exists"
-        bucket, s3_key = self.get_bucket_and_key(resource)
+        bucket, s3_key = self.s3_storage_objects(resource)
         src = self.dir + s3_key
         return os.path.exists(src)
 
     def get_resource_to_file(self, resource, filelike):
-        bucket_name, s3_key = self.get_bucket_and_key(resource)
+        bucket_name, s3_key = self.s3_storage_objects(resource)
         src = self.dir + s3_key
         with open(src, "rb") as fsrc:
             filelike.write(fsrc.read())
 
     def get_resource_as_string(self, origin):
-        bucket_name, s3_key = self.get_bucket_and_key(origin)
+        bucket_name, s3_key = self.s3_storage_objects(origin)
         file_name = os.path.join(self.dir, s3_key.rsplit("/", 1)[-1])
         if os.path.exists(file_name):
             with open(file_name, "rb") as fsrc:
@@ -166,7 +166,7 @@ class FakeStorageContext:
 
     def set_resource_from_filename(self, resource, file_name, metadata=None):
         "resource name can be different than the file name"
-        bucket_name, s3_key = self.get_bucket_and_key(resource)
+        bucket_name, s3_key = self.s3_storage_objects(resource)
         origin_file_name = s3_key.lstrip("/")
         destination_path = os.path.join(self.dest_folder, origin_file_name)
         # create folders if they do not exist
@@ -174,7 +174,7 @@ class FakeStorageContext:
         copy(file_name, destination_path)
 
     def set_resource_from_string(self, resource, data, content_type=None):
-        bucket_name, s3_key = self.get_bucket_and_key(resource)
+        bucket_name, s3_key = self.s3_storage_objects(resource)
         file_name = os.path.join(self.dir, s3_key.rsplit("/", 1)[-1])
         with open(file_name, "wb") as open_file:
             try:
@@ -189,9 +189,9 @@ class FakeStorageContext:
         return self.resources
 
     def copy_resource(self, origin, destination, additional_dict_metadata=None):
-        origin_bucket_name, s3_key = self.get_bucket_and_key(origin)
+        origin_bucket_name, s3_key = self.s3_storage_objects(origin)
         origin_file_name = s3_key.lstrip("/")
-        destination_bucket_name, s3_key = self.get_bucket_and_key(destination)
+        destination_bucket_name, s3_key = self.s3_storage_objects(destination)
         destination_file_name = s3_key.lstrip("/")
         origin_path = os.path.join(self.dir, origin_file_name)
         destination_path = os.path.join(self.dest_folder, destination_file_name)
@@ -201,7 +201,7 @@ class FakeStorageContext:
 
     def delete_resource(self, resource):
         "delete from the destination folder"
-        bucket_name, s3_key = self.get_bucket_and_key(resource)
+        bucket_name, s3_key = self.s3_storage_objects(resource)
         file_name = self.dir + "/" + s3_key
         if os.path.exists(file_name):
             os.remove(file_name)
