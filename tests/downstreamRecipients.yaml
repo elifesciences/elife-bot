@@ -27,6 +27,10 @@ FindNewPreprints:
   activity_name: FindNewPreprints
   s3_bucket_folder: preprint
 
+FindNewDocmaps:
+  activity_name: FindNewDocmaps
+  s3_bucket_folder: docmaps
+
 PMC:
   activity_name: PMCDeposit
   s3_bucket_folder: pmc

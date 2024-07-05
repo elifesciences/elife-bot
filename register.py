@@ -47,6 +47,8 @@ def start(settings):
     workflow_names.append("ScheduleCrossrefPreprint")
     workflow_names.append("FindNewPreprints")
     workflow_names.append("PostPreprintPublication")
+    workflow_names.append("FindNewDocmaps")
+    workflow_names.append("IngestMeca")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries
@@ -149,6 +151,7 @@ def start(settings):
     activity_names.append("FindNewPreprints")
     activity_names.append("GeneratePreprintXml")
     activity_names.append("SchedulePreprintDownstream")
+    activity_names.append("FindNewDocmaps")
 
     for activity_name in activity_names:
         # Import the activity libraries
