@@ -245,6 +245,17 @@ class TestChangedVersionDoiList(unittest.TestCase):
         )
         self.assertEqual(result, expected)
 
+    def test_previous_json_none_no_new_json(self):
+        "test if previous JSON is None and no data in new JSON"
+        expected = []
+        docmap_index_json = {"docmaps": [ELIFE_DOCMAP]}
+        prev_docmap_index_json = None
+
+        result = docmap_provider.changed_version_doi_list(
+            docmap_index_json, prev_docmap_index_json
+        )
+        self.assertEqual(result, expected)
+
     def test_peer_review_added(self):
         "test if a peer review is added"
         expected = [
