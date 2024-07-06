@@ -445,16 +445,9 @@ class TestRunFolderNames(unittest.TestCase):
         fake_list_resources.return_value = [
             "foo/",
             "foo/bar.txt",
-            "docmaps/foo/",
             "docmaps/foo/bar.txt",
-            "docmaps/run_2024_06_26_0001/",
-            "docmaps/run_2024_06_26_0001/docmap_index/",
             "docmaps/run_2024_06_26_0001/docmap_index/docmap_index.json",
-            "docmaps/run_2024_06_26_0002/",
-            "docmaps/run_2024_06_26_0002/docmap_index/",
             "docmaps/run_2024_06_26_0002/docmap_index/docmap_index.json",
-            "docmaps/run_2024_06_27_0001/",
-            "docmaps/run_2024_06_27_0001/docmap_index/",
             "docmaps/run_2024_06_27_0001/docmap_index/docmap_index.json",
         ]
         bucket_path = "s3://poa_packaging_bucket/docmaps/"
