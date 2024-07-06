@@ -25,15 +25,10 @@ def get_docmap_index(url, logger, user_agent=None):
         headers = {"user-agent": user_agent}
     response = requests.get(url, timeout=REQUESTS_TIMEOUT, headers=headers)
     logger.info("Request to docmaps API: GET %s", url)
-    logger.info(
-        "Response from docmaps API: %s\n%s", response.status_code, response.content
-    )
+    logger.info("Response from docmaps API: %s\n", response.status_code)
     status_code = response.status_code
     if status_code not in [200]:
-        raise Exception(
-            ("Error looking up docmap URL " + url + ": %s\n%s")
-            % (status_code, response.content)
-        )
+        raise Exception(("Error looking up docmap URL " + url + ": %s\n") % status_code)
 
     return response.content
 
@@ -49,15 +44,16 @@ def get_docmap_index_by_account_id(url, account_id, logger, user_agent=None):
             logger.info("No docmaps found in docmap index for URL %s", url)
             return None
         docmaps = {"docmaps": []}
-        for list_item in content_json.get("docmaps"):
+        if content_json.get("docmaps"):
             logger.info(
                 "Multiple docmaps returned for URL %s, filtering by account_id %s",
                 url,
                 account_id,
             )
-            sciety_id = list_item.get("publisher", {}).get("account", {}).get("id")
-            if sciety_id and sciety_id == account_id:
-                docmaps["docmaps"].append(list_item)
+            for list_item in content_json.get("docmaps"):
+                sciety_id = list_item.get("publisher", {}).get("account", {}).get("id")
+                if sciety_id and sciety_id == account_id:
+                    docmaps["docmaps"].append(list_item)
     return docmaps
 
 
@@ -104,7 +100,10 @@ def docmap_profile_step_map(docmap_index_json):
     full_step_map = {}
     if docmap_index_json:
         for docmap in docmap_index_json.get("docmaps"):
-            step_map = parse.preprint_version_doi_step_map(docmap)
+            try:
+                step_map = parse.preprint_version_doi_step_map(docmap)
+            except TypeError:
+                continue
             for key, value in step_map.items():
                 full_step_map[key] = profile_docmap_steps(value)
     return full_step_map
@@ -125,9 +124,11 @@ def changed_version_doi_list(docmap_index_json, prev_docmap_index_json):
             and value.get("peer-review-count") > 0
         ):
             version_doi_list.append(key)
-        elif value.get("computer-file-count") > 0 and value.get(
-            "peer-review-count"
-        ) > prev_value.get("peer-review-count"):
+        elif (
+            prev_value
+            and value.get("computer-file-count") > 0
+            and value.get("peer-review-count") > prev_value.get("peer-review-count")
+        ):
             version_doi_list.append(key)
 
     return version_doi_list
