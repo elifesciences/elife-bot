@@ -104,6 +104,7 @@ publication_email_yaml = "tests/publicationEmail.yaml"
 
 docmap_url_pattern = "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
 docmap_account_id = "https://sciety.org/groups/elife"
+docmap_index_url = "https://example.org/path/index"
 
 # Mathpix settings
 mathpix_endpoint = "https://api.mathpix.com.example.org/v3/text"
@@ -112,6 +113,10 @@ mathpix_app_key = "key"
 
 # EPP settings
 epp_data_bucket = "epp_bucket"
+
+# user-agent for using in requests
+user_agent = "user_agent/version (https://example.org)"
+
 
 @mock_aws
 def aws_conn(service, service_creation_kwargs):

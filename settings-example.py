@@ -354,6 +354,7 @@ class exp:
         "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
     )
     docmap_account_id = "https://sciety.org/groups/elife"
+    docmap_index_url = "https://example.org/path/index"
 
     assessment_terms_yaml = "assessment_terms.yaml"
 
@@ -710,6 +711,7 @@ class dev:
         "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
     )
     docmap_account_id = "https://sciety.org/groups/elife"
+    docmap_index_url = "https://example.org/path/index"
 
     assessment_terms_yaml = "assessment_terms.yaml"
 
@@ -1071,6 +1073,7 @@ class live:
         "https://example.org/path/get-by-manuscript-id?manuscript_id={article_id}"
     )
     docmap_account_id = "https://sciety.org/groups/elife"
+    docmap_index_url = "https://example.org/path/index"
 
     assessment_terms_yaml = "assessment_terms.yaml"
 
