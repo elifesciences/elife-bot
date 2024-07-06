@@ -162,7 +162,7 @@ class activity_FindNewDocmaps(Activity):
         )
         self.statuses["generate"] = True
 
-        # queue IngestMecaFile workflows
+        # queue IngestMeca workflows
         if new_meca_version_dois:
             self.logger.info(
                 "%s, starting %s IngestMeca workflows"
@@ -268,7 +268,7 @@ class activity_FindNewDocmaps(Activity):
     def start_post_workflow(self, article_id, version):
         "start a workflow after a preprint is first published"
         # build message
-        workflow_name = "IngestMecaFile"
+        workflow_name = "IngestMeca"
         workflow_data = {
             "article_id": article_id,
             "version": version,
@@ -337,14 +337,19 @@ def run_folder_names(storage, resource):
     # full list of objects for the S3 prefix
     s3_key_names = storage.list_resources(resource)
 
-    # filter by folder names only
-    folders = [key_name for key_name in s3_key_names if key_name.endswith("/")]
-
-    # list of run folder names
     # match folder names by their start value
     starts_with = "%s%s" % (bucket_path_prefix.lstrip("/"), RUN_FOLDER_PREFIX)
-    # avoid any subfolders by matching the delimiter count
-    delimiter_count = starts_with.count("/") + 1
+
+    # filter by folder names only
+    # avoid any subfolders by splitting by the delimiter count
+    delimiter_count = starts_with.count("/")
+    folders = [
+        "/".join(key_name.split("/")[0 : delimiter_count + 1])
+        for key_name in s3_key_names
+        if key_name.count("/") > delimiter_count
+    ]
+
+    # list of run folder names
     run_folder_paths = [
         folder_path
         for folder_path in folders
