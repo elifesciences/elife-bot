@@ -168,7 +168,7 @@ class activity_FindNewDocmaps(Activity):
                 "%s, starting %s IngestMeca workflows"
                 % (self.name, len(new_meca_version_dois))
             )
-            for version_doi in new_meca_version_dois:
+            for version_doi in sorted(new_meca_version_dois):
                 doi, version = utils.version_doi_parts(version_doi)
                 article_id = utils.msid_from_doi(doi)
                 self.start_post_workflow(article_id, version)
@@ -226,7 +226,7 @@ class activity_FindNewDocmaps(Activity):
         # Report on new MECA files
         if len(new_meca_version_dois) > 0:
             body += "\nVersion DOI with MECA file to ingest:\n"
-            for version_doi in new_meca_version_dois:
+            for version_doi in sorted(new_meca_version_dois):
                 body += "%s\n" % version_doi
 
         body += email_provider.get_admin_email_body_foot(
