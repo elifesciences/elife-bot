@@ -85,7 +85,11 @@ def profile_docmap_steps(docmap_steps_list):
     for step in docmap_steps_list:
         for action in parse.step_actions(step):
             for output in parse.action_outputs(action):
-                if output.get("type") in ["evaluation-summary", "review-article"]:
+                if output.get("type") in [
+                    "evaluation-summary",
+                    "reply",
+                    "review-article",
+                ]:
                     details["peer-review-count"] += 1
         for input_dict in parse.step_inputs(step):
             if input_dict.get("type") == "preprint":
