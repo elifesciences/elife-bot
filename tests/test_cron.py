@@ -170,10 +170,12 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindNewDocmaps",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindNewDocmaps",
             ],
         }
     )
@@ -251,11 +253,13 @@ class TestConditionalStarts(unittest.TestCase):
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
                 "cron_NewS3POA",
+                "starter_FindNewDocmaps",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
                 "cron_NewS3POA",
+                "FindNewDocmaps",
             ],
         },
     )
@@ -270,11 +274,13 @@ class TestConditionalStarts(unittest.TestCase):
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
                 "cron_NewS3POA",
+                "starter_FindNewDocmaps",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
                 "cron_NewS3POA",
+                "FindNewDocmaps",
             ],
         },
     )
@@ -330,11 +336,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindNewDocmaps",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindNewDocmaps",
                 "PubRouterDeposit_PMC",
             ],
         },
@@ -370,11 +378,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindNewDocmaps",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindNewDocmaps",
                 "PubRouterDeposit_WoS",
             ],
         },
@@ -454,11 +464,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindNewDocmaps",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindNewDocmaps",
                 "PubRouterDeposit_OASwitchboard",
             ],
         },
@@ -536,11 +548,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindNewDocmaps",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindNewDocmaps",
                 "PubRouterDeposit_CNPIEC",
             ],
         },
