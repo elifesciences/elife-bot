@@ -238,6 +238,17 @@ def conditional_starts(current_datetime):
                 )
             )
 
+        # Check for new docmaps at 30 minutes past the hour
+        conditional_start_list.append(
+            OrderedDict(
+                [
+                    ("starter_name", "starter_FindNewDocmaps"),
+                    ("workflow_id", "FindNewDocmaps"),
+                    ("start_seconds", 60 * 31),
+                ]
+            )
+        )
+
         # PMC deposits once per day 20:30 UTC
         if current_time.tm_hour == 20:
             conditional_start_list.append(
@@ -434,6 +445,7 @@ def start_workflow(settings, starter_name, workflow_id=None):
         "starter_DepositCrossrefPendingPublication",
         "starter_PubmedArticleDeposit",
         "starter_FindNewPreprints",
+        "starter_FindNewDocmaps",
     ]:
         starter_object.start(settings=settings)
 
