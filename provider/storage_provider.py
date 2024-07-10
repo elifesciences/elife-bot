@@ -2,21 +2,27 @@ import re
 import io
 import botocore
 
+
+REQUESTER_PAYER = True
+
+
 def storage_context(*args):
     return S3StorageContext(*args)
 
 
 class S3StorageContext:
     def __init__(self, settings):
-
         self.context = {}
         self.settings = settings
 
     def get_client(self):
-        return self.settings.aws_conn('s3', {
-            'aws_access_key_id': self.settings.aws_access_key_id,
-            'aws_secret_access_key': self.settings.aws_secret_access_key,
-        })
+        return self.settings.aws_conn(
+            "s3",
+            {
+                "aws_access_key_id": self.settings.aws_access_key_id,
+                "aws_secret_access_key": self.settings.aws_secret_access_key,
+            },
+        )
 
     def get_client_from_cache(self):
         if "client" in self.context:
@@ -46,8 +52,14 @@ class S3StorageContext:
         if not s3_key:
             return None
         client = self.get_client_from_cache()
+        kwargs = {
+            "Bucket": bucket_name,
+            "Key": s3_key.lstrip("/"),
+        }
+        if REQUESTER_PAYER:
+            kwargs["RequestPayer"] = "requester"
         try:
-            client.head_object(Bucket=bucket_name, Key=s3_key.lstrip("/"))
+            client.head_object(**kwargs)
         except botocore.exceptions.ClientError:
             # if response is 403 or 404, or the key does not exist
             return False
@@ -58,8 +70,14 @@ class S3StorageContext:
         bucket_name, s3_key = self.s3_storage_objects(resource)
         object_buffer = io.BytesIO()
         client = self.get_client_from_cache()
+        extra_args = None
+        if REQUESTER_PAYER:
+            extra_args = {"RequestPayer": "requester"}
         client.download_fileobj(
-            Bucket=bucket_name, Key=s3_key.lstrip("/"), Fileobj=object_buffer
+            Bucket=bucket_name,
+            Key=s3_key.lstrip("/"),
+            Fileobj=object_buffer,
+            ExtraArgs=extra_args,
         )
         return object_buffer.getvalue()
 
@@ -67,15 +85,27 @@ class S3StorageContext:
         "save resource object data to file pointer"
         bucket_name, s3_key = self.s3_storage_objects(resource)
         client = self.get_client_from_cache()
+        extra_args = None
+        if REQUESTER_PAYER:
+            extra_args = {"RequestPayer": "requester"}
         client.download_fileobj(
-            Bucket=bucket_name, Key=s3_key.lstrip("/"), Fileobj=file
+            Bucket=bucket_name,
+            Key=s3_key.lstrip("/"),
+            Fileobj=file,
+            ExtraArgs=extra_args,
         )
 
     def get_resource_attributes(self, resource):
         "return dict of object attributes"
         bucket_name, s3_key = self.s3_storage_objects(resource)
         client = self.get_client_from_cache()
-        return client.head_object(Bucket=bucket_name, Key=s3_key.lstrip("/"))
+        kwargs = {
+            "Bucket": bucket_name,
+            "Key": s3_key.lstrip("/"),
+        }
+        if REQUESTER_PAYER:
+            kwargs["RequestPayer"] = "requester"
+        return client.head_object(**kwargs)
 
     def set_resource_from_filename(self, resource, file, metadata=None):
         "create object from file data, metadata can include ContentType key"
@@ -87,6 +117,10 @@ class S3StorageContext:
         }
         if metadata:
             kwargs["ExtraArgs"] = metadata
+        if REQUESTER_PAYER:
+            if not kwargs.get("ExtraArgs"):
+                kwargs["ExtraArgs"] = {}
+            kwargs["ExtraArgs"]["RequestPayer"] = "requester"
         client = self.get_client_from_cache()
         client.upload_file(**kwargs)
 
@@ -101,6 +135,8 @@ class S3StorageContext:
         }
         if content_type:
             kwargs["ContentType"] = content_type
+        if REQUESTER_PAYER:
+            kwargs["RequestPayer"] = "requester"
         client.put_object(**kwargs)
         # todo!!! optionally compare response etag to string MD5 to confirm it copied entirely
 
@@ -119,6 +155,8 @@ class S3StorageContext:
                 "Bucket": bucket_name,
                 "MaxKeys": max_keys,
             }
+            if REQUESTER_PAYER:
+                kwargs["RequestPayer"] = "requester"
             if folder:
                 kwargs["Prefix"] = folder
             # handle the continuation token
@@ -154,6 +192,8 @@ class S3StorageContext:
             "Bucket": dest_bucket_name,
             "Key": dest_s3_key.lstrip("/"),
         }
+        if REQUESTER_PAYER:
+            kwargs["RequestPayer"] = "requester"
 
         if additional_dict_metadata is not None:
             kwargs["MetadataDirective"] = "REPLACE"
@@ -169,7 +209,13 @@ class S3StorageContext:
     def delete_resource(self, resource):
         bucket_name, s3_key = self.s3_storage_objects(resource)
         client = self.get_client_from_cache()
-        client.delete_object(Bucket=bucket_name, Key=s3_key.lstrip("/"))
+        kwargs = {
+            "Bucket": bucket_name,
+            "Key": s3_key.lstrip("/"),
+        }
+        if REQUESTER_PAYER:
+            kwargs["RequestPayer"] = "requester"
+        client.delete_object(**kwargs)
 
 
 class UnsupportedResourceType(Exception):  # TODO

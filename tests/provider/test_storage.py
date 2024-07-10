@@ -37,7 +37,10 @@ class FakeS3Client:
         if kwargs.get("Filename"):
             with open(kwargs.get("Filename"), "rb") as open_file:
                 self.object.write(open_file.read())
-        self.object_metadata = kwargs.get("ExtraArgs")
+        if kwargs.get("ExtraArgs") and kwargs.get("ExtraArgs").get("ContentType"):
+            self.object_metadata = {
+                "Content-Type": kwargs.get("ExtraArgs").get("ContentType")
+            }
 
     def put_object(self, **kwargs):
         if kwargs.get("Body"):
@@ -149,6 +152,8 @@ class TestGetResourceAttributes(unittest.TestCase):
 
 
 class TestSetResourceFromFilename(unittest.TestCase):
+    "tests for set_resource_from_filename()"
+
     def tearDown(self):
         TempDirectory.cleanup_all()
 
@@ -158,6 +163,7 @@ class TestSetResourceFromFilename(unittest.TestCase):
         test_file_path = os.path.join(directory.path, "test_object")
         test_value = b"example"
         test_metadata = {"ContentType": "image/jpeg"}
+        expected_metadata = {"Content-Type": "image/jpeg"}
         with open(test_file_path, "wb") as open_file:
             open_file.write(test_value)
         s3_client = FakeS3Client()
@@ -165,7 +171,22 @@ class TestSetResourceFromFilename(unittest.TestCase):
         storage = S3StorageContext(settings_mock)
         storage.set_resource_from_filename("s3://a/1", test_file_path, test_metadata)
         self.assertEqual(s3_client.object.getvalue(), test_value)
-        self.assertEqual(s3_client.object_metadata, test_metadata)
+        self.assertEqual(s3_client.object_metadata, expected_metadata)
+
+    @patch("boto3.client")
+    def test_no_metadata(self, fake_s3_client):
+        "test if no metadata argument is passed"
+        directory = TempDirectory()
+        test_file_path = os.path.join(directory.path, "test_object")
+        test_value = b"example"
+        with open(test_file_path, "wb") as open_file:
+            open_file.write(test_value)
+        s3_client = FakeS3Client()
+        fake_s3_client.return_value = s3_client
+        storage = S3StorageContext(settings_mock)
+        storage.set_resource_from_filename("s3://a/1", test_file_path)
+        self.assertEqual(s3_client.object.getvalue(), test_value)
+        self.assertEqual(s3_client.object_metadata, None)
 
 
 class TestSetResourceFromString(unittest.TestCase):
@@ -252,8 +273,13 @@ class TestCopyResource(unittest.TestCase):
         destination = "s3://b/2"
         self.storage.copy_resource(original, destination, None)
         self.storage.context["client"].copy_object.assert_called()
-        self.assertEqual(
-            {"Bucket": "b", "CopySource": {"Bucket": "a", "Key": "1"}, "Key": "2"},
+        self.assertDictEqual(
+            {
+                "Bucket": "b",
+                "CopySource": {"Bucket": "a", "Key": "1"},
+                "Key": "2",
+                "RequestPayer": "requester",
+            },
             self.storage.context["client"].copy_object.mock_calls[0][2],
         )
 
@@ -268,7 +294,7 @@ class TestCopyResource(unittest.TestCase):
                 "Content-Disposition": "Content-Disposition: attachment; filename=2;",
             },
         )
-        self.assertEqual(
+        self.assertDictEqual(
             {
                 "CopySource": {"Bucket": "a", "Key": "1"},
                 "Bucket": "b",
@@ -276,6 +302,7 @@ class TestCopyResource(unittest.TestCase):
                 "MetadataDirective": "REPLACE",
                 "ContentType": "application/json",
                 "ContentDisposition": "Content-Disposition: attachment; filename=2;",
+                "RequestPayer": "requester",
             },
             self.storage.context["client"].copy_object.mock_calls[0][2],
         )
@@ -289,4 +316,6 @@ class TestDeleteResourceFromString(unittest.TestCase):
         storage = S3StorageContext(settings_mock)
         fake_delete_object.return_value = MagicMock()
         storage.delete_resource("s3://a/1")
-        fake_delete_object.assert_called_with(Bucket="a", Key="1")
+        fake_delete_object.assert_called_with(
+            Bucket="a", Key="1", RequestPayer="requester"
+        )
