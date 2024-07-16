@@ -1036,6 +1036,8 @@ def email_type_from_rules(
                     return rule_data.get("email_type")
                 if int(version) > 1 and rule_data.get("first_version") is False:
                     return rule_data.get("email_type")
+            if not is_poa and not was_ever_poa and not rule_data.get("article_status"):
+                return rule_data.get("email_type")
             if is_poa is None and was_ever_poa is None:
                 return rule_data.get("email_type")
 
