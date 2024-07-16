@@ -1885,6 +1885,20 @@ class TestEmailTypeFromRules(unittest.TestCase):
         result = activity_module.email_type_from_rules(rules, article_type)
         self.assertEqual(result, expected)
 
+    def test_edge_case(self):
+        "edge case where is_poa and was_ever_poa are False instead of None"
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+        article_type = "article-commentary"
+        is_poa = False
+        was_ever_poa = False
+        expected = "author_publication_email_Insight_to_VOR"
+        result = activity_module.email_type_from_rules(
+            rules, article_type, is_poa=is_poa, was_ever_poa=was_ever_poa
+        )
+        self.assertEqual(result, expected)
+
 
 class TestRecipientsFromRules(unittest.TestCase):
     "tests for recipients_from_rules()"
