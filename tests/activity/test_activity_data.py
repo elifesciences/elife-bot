@@ -2,12 +2,6 @@ import copy
 import json
 import base64
 
-xml_content_for_xml_key = open(
-    "tests/test_data/content_for_test_origin.xml", "rb"
-).read()
-
-bucket_origin_file_name = "test_origin.xml"
-bucket_dest_file_name = "test_dest.json"
 
 session_example = {
     "version": "1",
@@ -34,10 +28,6 @@ key_names = [
     "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.pdf",
     "00353.1/cf9c7e86-7355-4bb4-b48e-0bc284221251/elife-00353-v1.xml",
 ]
-
-bucket = {bucket_origin_file_name: xml_content_for_xml_key, bucket_dest_file_name: ""}
-
-run_example = "1ee54f9a-cb28-4c8e-8232-4b317cf4beda"
 
 # Accepted submission workflow
 
@@ -68,16 +58,6 @@ ExpandArticle_data = {
     "file_size": 1097506,
     "run": "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
 }
-ExpandArticle_data1 = {
-    "event_time": "2016-06-07T10:45:18.141126Z",
-    "event_name": "ObjectCreated:Put",
-    "file_name": "elife-00353-v1-20121213000000.zip",
-    "file_etag": "1e17ebb1fad6c467fce9cede16bb752f",
-    "bucket_name": "jen-elife-production-final",
-    "file_size": 1097506,
-    "run": "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
-}
-ExpandArticle_filename = "elife-00353-vor-v1-20121213000000.zip"
 ExpandArticle_path = "elife-00353-vor-v1"
 ExpandArticle_files_source_folder = "tests/files_source"
 ExpandArticle_files_dest_folder = "tests/files_dest"
