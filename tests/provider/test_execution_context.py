@@ -93,7 +93,7 @@ class TestS3Session(unittest.TestCase):
         session_key = "session_key"
         key = "foo"
         value = "bar"
-        fake_storage_context.return_value = FakeStorageContext(directory.path, [])
+        fake_storage_context.return_value = FakeStorageContext(directory.path, dest_folder=directory.path)
         s3_session_object = S3Session(settings_mock, None, session_key)
         s3_session_object.store_value(key, value)
         self.assertEqual(s3_session_object.get_value(key), value)
