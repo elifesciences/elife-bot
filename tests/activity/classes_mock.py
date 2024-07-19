@@ -157,9 +157,9 @@ class FakeStorageContext:
 
     def get_resource_as_string(self, origin):
         bucket_name, s3_key = self.s3_storage_objects(origin)
-        file_name = os.path.join(self.dir, s3_key.rsplit("/", 1)[-1])
-        if os.path.exists(file_name):
-            with open(file_name, "rb") as fsrc:
+        src = self.dir + s3_key
+        if os.path.exists(src):
+            with open(src, "rb") as fsrc:
                 return fsrc.read()
         # default used by verify glencoe tests
         return '<mock><media content-type="glencoe play-in-place height-250 width-310" id="media1" mime-subtype="wmv" mimetype="video" xlink:href="elife-00569-media1.wmv"></media></mock>'
@@ -175,8 +175,11 @@ class FakeStorageContext:
 
     def set_resource_from_string(self, resource, data, content_type=None):
         bucket_name, s3_key = self.s3_storage_objects(resource)
-        file_name = os.path.join(self.dir, s3_key.rsplit("/", 1)[-1])
-        with open(file_name, "wb") as open_file:
+        origin_file_name = s3_key.lstrip("/")
+        destination_path = os.path.join(self.dest_folder, origin_file_name)
+        # create folders if they do not exist
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+        with open(destination_path, "wb") as open_file:
             try:
                 open_file.write(data)
             except TypeError:

@@ -7,6 +7,7 @@ import activity.activity_GenerateSWHMetadata as activity_module
 from activity.activity_GenerateSWHMetadata import (
     activity_GenerateSWHMetadata as activity_object,
 )
+from provider import software_heritage
 from provider.article import article
 from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import (
@@ -63,14 +64,19 @@ class TestGenerateSWHMetadata(unittest.TestCase):
         self.assertEqual(return_value, self.activity.ACTIVITY_SUCCESS)
 
         # look at the metadata XML file contents
-        files = os.listdir(directory.path)
+        run_dir = os.path.join(
+            directory.path,
+            software_heritage.BUCKET_FOLDER,
+            testdata.SoftwareHeritageDeposit_data_example.get("run"),
+        )
+        files = os.listdir(run_dir)
         xml_files = [
             file_name
             for file_name in files
             if file_name != ".gitkeep" and file_name.endswith(".xml")
         ]
         metadata_file = xml_files[0]
-        with open(os.path.join(directory.path, metadata_file), "rb") as open_file:
+        with open(os.path.join(run_dir, metadata_file), "rb") as open_file:
             metadata_xml = open_file.read()
             self.assertTrue(
                 b"<title>Replication Study: Transcriptional amplification in tumor cells with elevated c-Myc</title>"

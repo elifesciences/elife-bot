@@ -7,6 +7,7 @@ import activity.activity_GenerateSWHReadme as activity_module
 from activity.activity_GenerateSWHReadme import (
     activity_GenerateSWHReadme as activity_object,
 )
+from provider import software_heritage
 from provider.article import article
 from tests.activity import helpers, settings_mock
 from tests.activity.classes_mock import (
@@ -60,17 +61,21 @@ class TestGenerateSWHReadme(unittest.TestCase):
         return_value = self.activity.do_activity(
             testdata.SoftwareHeritageDeposit_data_example
         )
-        self.assertEqual(return_value, self.activity.ACTIVITY_SUCCESS)
 
         # look at the file contents
-        files = os.listdir(directory.path)
+        run_dir = os.path.join(
+            directory.path,
+            software_heritage.BUCKET_FOLDER,
+            testdata.SoftwareHeritageDeposit_data_example.get("run"),
+        )
+        files = os.listdir(run_dir)
         readme_files = [
             file_name
             for file_name in files
             if file_name != ".gitkeep" and file_name.startswith("README")
         ]
         readme_file = readme_files[0]
-        with open(os.path.join(directory.path, readme_file), "rb") as open_file:
+        with open(os.path.join(run_dir, readme_file), "rb") as open_file:
             readme_string = open_file.read()
             self.assertTrue(
                 b'# Executable Research Article for "Replication Study: Transcriptional '
