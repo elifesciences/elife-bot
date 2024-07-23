@@ -4,7 +4,7 @@ import json
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
-from provider import cleaner, lax_provider
+from provider import cleaner, crossref, lax_provider
 import activity.activity_DepositCrossrefPostedContent as activity_module
 from activity.activity_DepositCrossrefPostedContent import (
     activity_DepositCrossrefPostedContent,
@@ -205,7 +205,6 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
         fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_version_map.return_value = {"vor": [1]}
-        # fake_version_map.return_value = {}
         resources = helpers.populate_storage(
             from_dir=self.outbox_folder,
             to_dir=directory.path,
@@ -246,7 +245,6 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         fake_get_docmap.return_value = v1_84364_docmap_fixture()
         fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
         fake_version_map.return_value = {}
-        # fake_version_map.return_value = {}
         resources = helpers.populate_storage(
             from_dir=self.outbox_folder,
             to_dir=directory.path,
@@ -264,6 +262,45 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
         # only one deposit file produced, the verison DOI deposit
         tmp_dir_list = os.listdir(self.activity.directories.get("TMP_DIR"))
         self.assertEqual(len(tmp_dir_list), 1)
+
+    @patch.object(crossref, "build_crossref_xml")
+    @patch.object(cleaner, "get_docmap")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(lax_provider, "article_status_version_map")
+    @patch("requests.post")
+    @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_DepositCrossrefPostedContent, "clean_tmp_dir")
+    def test_build_crossref_xml_empty(
+        self,
+        fake_clean_tmp_dir,
+        fake_storage_context,
+        fake_post_request,
+        fake_version_map,
+        fake_email_smtp_connect,
+        fake_get_docmap,
+        fake_build_crossref_xml,
+    ):
+        "test if building Crossref deposit returns an empty list"
+        directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
+        # use the docmap with only version 1 steps in it
+        fake_get_docmap.return_value = v1_84364_docmap_fixture()
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
+        fake_version_map.return_value = {}
+        resources = helpers.populate_storage(
+            from_dir=self.outbox_folder,
+            to_dir=directory.path,
+            filenames=["elife-preprint-84364-v2.xml"],
+            sub_dir="crossref_posted_content/outbox",
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_post_request.return_value = FakeResponse(200)
+        fake_build_crossref_xml.return_value = []
+        # invoke
+        result = self.activity.do_activity(self.activity_data)
+        self.assertTrue(result)
 
     @patch.object(cleaner, "get_docmap")
     @patch.object(activity_module.email_provider, "smtp_connect")
