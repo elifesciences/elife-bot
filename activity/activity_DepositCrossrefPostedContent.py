@@ -136,7 +136,7 @@ class activity_DepositCrossrefPostedContent(Activity):
                 self.bad_xml_files,
                 submission_type="posted_content",
             )
-            if crossref_object_list[0]:
+            if crossref_object_list and crossref_object_list[0]:
                 crossref_object_map[article] = crossref_object_list[0]
 
         # duplicate and modify the article for a version_doi deposit, set a different batch_id
@@ -164,7 +164,7 @@ class activity_DepositCrossrefPostedContent(Activity):
                     set(self.bad_xml_files).union(set(bad_xml_files))
                 )
                 # add the CrossrefXML
-                if crossref_object_list[0]:
+                if crossref_object_list and crossref_object_list[0]:
                     # change the batch_id
                     crossref_object_list[0].batch_id = crossref_object_list[
                         0
