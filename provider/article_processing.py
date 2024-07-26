@@ -407,3 +407,21 @@ def convert_history_event_tags(xml_file, logger):
 
     with open(xml_file, "wb") as open_file:
         open_file.write(reparsed_string)
+
+
+def zip_files(zip_file_path, folder_path, caller_name, logger):
+    "add files from folder_name to zip, preserving subfolder names"
+    with zipfile.ZipFile(
+        zip_file_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True
+    ) as open_zipfile:
+        for root, dirs, files in os.walk(folder_path):
+            for dir_file in files:
+                filename = os.path.join(root, dir_file)
+                if os.path.isfile(filename):
+                    logger.info(
+                        "%s, adding file %s to zip file %s",
+                        (caller_name, filename, zip_file_path),
+                    )
+                    # Archive file name, effectively strip the local folder name
+                    arcname = root.rsplit(folder_path, 1)[-1] + "/" + dir_file
+                    open_zipfile.write(filename, arcname)

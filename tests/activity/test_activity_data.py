@@ -1,6 +1,7 @@
 import copy
 import json
 import base64
+from tests import read_fixture
 
 
 session_example = {
@@ -46,6 +47,32 @@ accepted_session_example = {
 valid_accepted_session_example = copy.copy(accepted_session_example)
 valid_accepted_session_example["docmap_string"] = '{"foo": "bar"}'
 valid_accepted_session_example["docmap_datetime_string"] = "2024-04-06T00:05:46.000Z"
+
+# IngestMeca submission workflow
+
+ingest_meca_data = {
+    "run": "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
+    "article_id": 95901,
+    "version": "1",
+    "standalone": False,
+}
+
+
+def ingest_meca_session_example():
+    return {
+        "run": "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
+        "article_id": 95901,
+        "version": "1",
+        "expanded_folder": (
+            "expanded_meca/95901-v1/"
+            "1ee54f9a-cb28-4c8e-8232-4b317cf4beda/expanded_files"
+        ),
+        "docmap_datetime_string": "2024-06-27T00:00:00.000Z",
+        "docmap_string": read_fixture("sample_docmap_for_95901.json").decode("utf-8"),
+        "article_xml_path": "content/24301711.xml",
+        "version_doi": "10.7554/eLife.95901.1",
+    }
+
 
 # ExpandArticle
 

@@ -73,6 +73,17 @@ def get_docmap_index_json(settings, caller_name, logger):
     )
 
 
+def computer_files(step):
+    "return preprint computer-file from step input"
+    computer_file_list = []
+    for input_dict in parse.step_inputs(step):
+        if input_dict.get("type") == "preprint":
+            for input_content in input_dict.get("content", []):
+                if input_content.get("type") == "computer-file":
+                    computer_file_list.append(input_content)
+    return computer_file_list
+
+
 def profile_docmap_steps(docmap_steps_list):
     "collect data about a docmap for the purpose of comparisons"
     # count peer reviews and computer-file inputs
@@ -91,12 +102,13 @@ def profile_docmap_steps(docmap_steps_list):
                     "review-article",
                 ]:
                     details["peer-review-count"] += 1
-        for input_dict in parse.step_inputs(step):
-            if input_dict.get("type") == "preprint":
-                for input_content in input_dict.get("content", []):
-                    if input_content.get("type") == "computer-file":
-                        details["computer-file-count"] += 1
+        details["computer-file-count"] += len(computer_files(step))
     return details
+
+
+def version_doi_step_map(docmap_json):
+    "get a version DOI step map from the docmap"
+    return parse.preprint_version_doi_step_map(docmap_json)
 
 
 def docmap_profile_step_map(docmap_index_json):
@@ -105,7 +117,7 @@ def docmap_profile_step_map(docmap_index_json):
     if docmap_index_json:
         for docmap in docmap_index_json.get("docmaps"):
             try:
-                step_map = parse.preprint_version_doi_step_map(docmap)
+                step_map = version_doi_step_map(docmap)
             except TypeError:
                 continue
             for key, value in step_map.items():

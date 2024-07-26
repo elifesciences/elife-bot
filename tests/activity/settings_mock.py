@@ -268,6 +268,12 @@ striking_images_bucket = "striking_images_bucket"
 # user-agent for using in requests
 user_agent = "user_agent/version (https://example.org)"
 
+meca_xsl_endpoint = "https://example.org/xsl"
+meca_dtd_endpoint = "https://example.org/dtd"
+
+meca_bucket = "meca_bucket"
+
+
 @mock_aws
 def aws_conn(service, service_creation_kwargs):
     """this function is missing in the regular `settings.py` file because it is added dynamically by
