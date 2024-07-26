@@ -42,7 +42,7 @@ class TestOutputMeca(unittest.TestCase):
             open_zipfile.extractall(dest_folder)
 
         fake_storage_context.return_value = FakeStorageContext(
-            directory.path, resources, dest_folder=directory.path
+            dest_folder, resources, dest_folder=directory.path
         )
 
         # mock the session

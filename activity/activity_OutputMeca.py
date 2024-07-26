@@ -92,9 +92,15 @@ class activity_OutputMeca(Activity):
             local_file_path = os.path.join(self.directories.get("INPUT_DIR"), file_name)
             # create folders if they do not exist
             os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+            storage_resource_origin = (
+                self.settings.storage_provider
+                + "://"
+                + self.settings.bot_bucket
+                + "/"
+                + file_name
+            )
             try:
                 with open(local_file_path, "wb") as open_file:
-                    storage_resource_origin = storage_resource_path + "/" + file_name
                     storage.get_resource_to_file(storage_resource_origin, open_file)
             except IsADirectoryError:
                 # do not copy directories alone
