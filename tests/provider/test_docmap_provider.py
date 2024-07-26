@@ -162,6 +162,28 @@ class TestGetDocmapIndexJson(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
+class TestComputerFiles(unittest.TestCase):
+    "tests for computer_files()"
+
+    def test_computer_files(self):
+        "test get list of computer-file inputs from docmap steps"
+        docmap_json = json.loads(read_fixture("sample_docmap_for_87445.json"))
+        step_map = parse.preprint_version_doi_step_map(docmap_json)
+        docmap_steps_value = step_map.get("10.7554/eLife.87445.1")
+        step = docmap_steps_value[0]
+        expected = [
+            {
+                "type": "computer-file",
+                "url": (
+                    "s3://transfers-elife/biorxiv_Current_Content/March_2023/"
+                    "16_Mar_23_Batch_1553/8cd2942b-6c47-1014-bdbd-e77a5e155f8d.meca"
+                ),
+            }
+        ]
+        result = docmap_provider.computer_files(docmap_steps_value[0])
+        self.assertEqual(result, expected)
+
+
 class TestProfileDocmapSteps(unittest.TestCase):
     "tests for profile_docmap_steps()"
 

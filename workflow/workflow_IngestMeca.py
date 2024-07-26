@@ -35,6 +35,11 @@ class workflow_IngestMeca(Workflow):
             "start": {"requirements": None},
             "steps": [
                 define_workflow_step("PingWorker", data),
+                define_workflow_step("ExpandMeca", data),
+                define_workflow_step("MecaXslt", data),
+                define_workflow_step("ValidateJatsDtd", data),
+                define_workflow_step("OutputMeca", data),
+                define_workflow_step("EmailMecaOutput", data),
             ],
             "finish": {"requirements": None},
         }

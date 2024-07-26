@@ -41,3 +41,20 @@ def read_fixture(filename, folder_name=""):
     else:
         with open(full_filename, "rb") as file_fp:
             return file_fp.read()
+
+
+def list_files(folder_path):
+    "get list of files including those in subfolders"
+    files = []
+    with os.scandir(folder_path) as dir_iterator:
+        for entry in dir_iterator:
+            if entry.is_file():
+                files.append(entry.name)
+            elif entry.is_dir():
+                files += [
+                    "%s%s%s" % (entry.name, os.sep, subfolder_file)
+                    for subfolder_file in os.listdir(
+                        os.path.join(folder_path, entry.name)
+                    )
+                ]
+    return files

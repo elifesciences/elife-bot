@@ -1,0 +1,351 @@
+{
+    "@context": "https://w3id.org/docmaps/context.jsonld",
+    "type": "docmap",
+    "id": "https://data-hub-api.elifesciences.org/enhanced-preprints/docmaps/v2/by-publisher/elife/get-by-manuscript-id?manuscript_id=95901",
+    "created": "2024-01-08T10:20:41+00:00",
+    "updated": "2024-01-08T10:20:41+00:00",
+    "publisher": {
+        "account": {
+            "id": "https://sciety.org/groups/elife",
+            "service": "https://sciety.org"
+        },
+        "homepage": "https://elifesciences.org/",
+        "id": "https://elifesciences.org/",
+        "logo": "https://sciety.org/static/groups/elife--b560187e-f2fb-4ff9-a861-a204f3fc0fb0.png",
+        "name": "eLife"
+    },
+    "first-step": "_:b0",
+    "steps": {
+        "_:b0": {
+            "actions": [
+                {
+                    "participants": [],
+                    "outputs": [
+                        {
+                            "type": "preprint",
+                            "identifier": "95901",
+                            "doi": "10.7554/eLife.95901.1",
+                            "versionIdentifier": "1",
+                            "license": "http://creativecommons.org/licenses/by/4.0/"
+                        }
+                    ]
+                }
+            ],
+            "assertions": [
+                {
+                    "item": {
+                        "type": "preprint",
+                        "doi": "10.1101/2024.01.24.24301711",
+                        "versionIdentifier": "1"
+                    },
+                    "status": "under-review",
+                    "happened": "2024-01-19T11:17:36+00:00"
+                },
+                {
+                    "item": {
+                        "type": "preprint",
+                        "doi": "10.7554/eLife.95901.1",
+                        "versionIdentifier": "1"
+                    },
+                    "status": "draft"
+                }
+            ],
+            "inputs": [
+                {
+                    "type": "preprint",
+                    "doi": "10.1101/2024.01.24.24301711",
+                    "url": "https://www.medrxiv.org/content/10.1101/2024.01.24.24301711v1",
+                    "versionIdentifier": "1",
+                    "published": "2024-01-24",
+                    "content": [
+                        {
+                            "type": "computer-file",
+                            "url": "s3://prod-elife-epp-meca/95901-v1-meca.zip"
+                        }
+                    ]
+                }
+            ],
+            "next-step": "_:b1"
+        },
+        "_:b1": {
+            "actions": [
+                {
+                    "participants": [
+                        {
+                            "actor": {
+                                "name": "anonymous",
+                                "type": "person"
+                            },
+                            "role": "peer-reviewer"
+                        }
+                    ],
+                    "outputs": [
+                        {
+                            "type": "review-article",
+                            "published": "2024-06-18T07:02:05.100202+00:00",
+                            "doi": "10.7554/eLife.95901.1.sa0",
+                            "license": "http://creativecommons.org/licenses/by/4.0/",
+                            "url": "https://doi.org/10.7554/eLife.95901.1.sa0",
+                            "content": [
+                                {
+                                    "type": "web-page",
+                                    "url": "https://hypothes.is/a/q48KAi1AEe-ua6f3BXQ_Lw"
+                                },
+                                {
+                                    "type": "web-page",
+                                    "url": "https://sciety.org/articles/activity/10.1101/2024.01.24.24301711#hypothesis:q48KAi1AEe-ua6f3BXQ_Lw"
+                                },
+                                {
+                                    "type": "web-page",
+                                    "url": "https://sciety.org/evaluations/hypothesis:q48KAi1AEe-ua6f3BXQ_Lw/content"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "participants": [
+                        {
+                            "actor": {
+                                "name": "anonymous",
+                                "type": "person"
+                            },
+                            "role": "peer-reviewer"
+                        }
+                    ],
+                    "outputs": [
+                        {
+                            "type": "review-article",
+                            "published": "2024-06-18T07:02:05.885087+00:00",
+                            "doi": "10.7554/eLife.95901.1.sa1",
+                            "license": "http://creativecommons.org/licenses/by/4.0/",
+                            "url": "https://doi.org/10.7554/eLife.95901.1.sa1",
+                            "content": [
+                                {
+                                    "type": "web-page",
+                                    "url": "https://hypothes.is/a/rAaVQC1AEe-pM4M18XukVQ"
+                                },
+                                {
+                                    "type": "web-page",
+                                    "url": "https://sciety.org/articles/activity/10.1101/2024.01.24.24301711#hypothesis:rAaVQC1AEe-pM4M18XukVQ"
+                                },
+                                {
+                                    "type": "web-page",
+                                    "url": "https://sciety.org/evaluations/hypothesis:rAaVQC1AEe-pM4M18XukVQ/content"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "participants": [
+                        {
+                            "actor": {
+                                "type": "person",
+                                "name": "Emmanuel Lamptey",
+                                "firstName": "Emmanuel",
+                                "surname": "Lamptey",
+                                "_relatesToOrganization": "KAAF University College, Ghana",
+                                "affiliation": {
+                                    "type": "organization",
+                                    "name": "KAAF University College",
+                                    "location": "Buduburam, Ghana"
+                                }
+                            },
+                            "role": "editor"
+                        },
+                        {
+                            "actor": {
+                                "type": "person",
+                                "name": "Olujimi Ajijola",
+                                "firstName": "Olujimi",
+                                "_middleName": "A",
+                                "surname": "Ajijola",
+                                "_relatesToOrganization": "University of California, Los Angeles, United States of America",
+                                "affiliation": {
+                                    "type": "organization",
+                                    "name": "University of California, Los Angeles",
+                                    "location": "Los Angeles, United States of America"
+                                }
+                            },
+                            "role": "senior-editor"
+                        }
+                    ],
+                    "outputs": [
+                        {
+                            "type": "evaluation-summary",
+                            "published": "2024-06-18T07:02:06.697866+00:00",
+                            "doi": "10.7554/eLife.95901.1.sa2",
+                            "license": "http://creativecommons.org/licenses/by/4.0/",
+                            "url": "https://doi.org/10.7554/eLife.95901.1.sa2",
+                            "content": [
+                                {
+                                    "type": "web-page",
+                                    "url": "https://hypothes.is/a/rIJAHi1AEe-JC-diPOFH3w"
+                                },
+                                {
+                                    "type": "web-page",
+                                    "url": "https://sciety.org/articles/activity/10.1101/2024.01.24.24301711#hypothesis:rIJAHi1AEe-JC-diPOFH3w"
+                                },
+                                {
+                                    "type": "web-page",
+                                    "url": "https://sciety.org/evaluations/hypothesis:rIJAHi1AEe-JC-diPOFH3w/content"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "participants": [],
+                    "outputs": [
+                        {
+                            "type": "preprint",
+                            "identifier": "95901",
+                            "doi": "10.7554/eLife.95901.1",
+                            "versionIdentifier": "1",
+                            "license": "http://creativecommons.org/licenses/by/4.0/",
+                            "content": [
+                                {
+                                    "type": "computer-file",
+                                    "url": "s3://prod-elife-epp-meca/reviewed-preprints/95901-v1-meca.zip"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "assertions": [
+                {
+                    "item": {
+                        "type": "preprint",
+                        "doi": "10.1101/2024.01.24.24301711",
+                        "versionIdentifier": "1"
+                    },
+                    "status": "peer-reviewed"
+                }
+            ],
+            "inputs": [
+                {
+                    "type": "preprint",
+                    "doi": "10.1101/2024.01.24.24301711",
+                    "url": "https://www.medrxiv.org/content/10.1101/2024.01.24.24301711v1",
+                    "versionIdentifier": "1"
+                }
+            ],
+            "next-step": "_:b2",
+            "previous-step": "_:b0"
+        },
+        "_:b2": {
+            "actions": [
+                {
+                    "participants": [],
+                    "outputs": [
+                        {
+                            "type": "preprint",
+                            "identifier": "95901",
+                            "doi": "10.7554/eLife.95901.1",
+                            "versionIdentifier": "1",
+                            "license": "http://creativecommons.org/licenses/by/4.0/",
+                            "published": "2024-06-19T14:00:00+00:00",
+                            "partOf": {
+                                "type": "manuscript",
+                                "doi": "10.7554/eLife.95901",
+                                "identifier": "95901",
+                                "subjectDisciplines": [
+                                    "Epidemiology and Global Health"
+                                ],
+                                "published": "2024-06-19T14:00:00+00:00",
+                                "volumeIdentifier": "13",
+                                "electronicArticleIdentifier": "RP95901",
+                                "complement": []
+                            }
+                        }
+                    ]
+                }
+            ],
+            "assertions": [
+                {
+                    "item": {
+                        "type": "preprint",
+                        "doi": "10.7554/eLife.95901.1",
+                        "versionIdentifier": "1"
+                    },
+                    "status": "manuscript-published"
+                }
+            ],
+            "inputs": [
+                {
+                    "type": "preprint",
+                    "doi": "10.1101/2024.01.24.24301711",
+                    "url": "https://www.medrxiv.org/content/10.1101/2024.01.24.24301711v1",
+                    "versionIdentifier": "1"
+                },
+                {
+                    "type": "review-article",
+                    "doi": "10.7554/eLife.95901.1.sa0"
+                },
+                {
+                    "type": "review-article",
+                    "doi": "10.7554/eLife.95901.1.sa1"
+                },
+                {
+                    "type": "evaluation-summary",
+                    "doi": "10.7554/eLife.95901.1.sa2"
+                }
+            ],
+            "next-step": "_:b3",
+            "previous-step": "_:b1"
+        },
+        "_:b3": {
+            "actions": [
+                {
+                    "participants": [],
+                    "outputs": [
+                        {
+                            "type": "preprint",
+                            "identifier": "95901",
+                            "doi": "10.7554/eLife.95901.2",
+                            "versionIdentifier": "2",
+                            "license": "http://creativecommons.org/licenses/by/4.0/"
+                        }
+                    ]
+                }
+            ],
+            "assertions": [
+                {
+                    "item": {
+                        "type": "preprint",
+                        "doi": "10.1101/2024.01.24.24301711",
+                        "versionIdentifier": "2"
+                    },
+                    "status": "under-review",
+                    "happened": "2024-06-28T14:48:02+00:00"
+                },
+                {
+                    "item": {
+                        "type": "preprint",
+                        "doi": "10.7554/eLife.95901.2",
+                        "versionIdentifier": "2"
+                    },
+                    "status": "draft"
+                }
+            ],
+            "inputs": [
+                {
+                    "type": "preprint",
+                    "doi": "10.1101/2024.01.24.24301711",
+                    "url": "https://www.medrxiv.org/content/10.1101/2024.01.24.24301711v2",
+                    "versionIdentifier": "2",
+                    "published": "2024-06-27",
+                    "content": [
+                        {
+                            "type": "computer-file",
+                            "url": "s3://transfers-elife/medrxiv_Current_Content/June_2024/28_Jun_24_Batch_1338/987735e6-7099-1014-b257-93a8ba0967ff.meca"
+                        }
+                    ]
+                }
+            ],
+            "previous-step": "_:b2"
+        }
+    }
+}

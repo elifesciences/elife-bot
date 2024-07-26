@@ -117,6 +117,9 @@ epp_data_bucket = "epp_bucket"
 # user-agent for using in requests
 user_agent = "user_agent/version (https://example.org)"
 
+meca_xsl_endpoint = "https://example.org/xsl"
+meca_dtd_endpoint = "https://example.org/dtd"
+
 
 @mock_aws
 def aws_conn(service, service_creation_kwargs):

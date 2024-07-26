@@ -152,6 +152,11 @@ def start(settings):
     activity_names.append("GeneratePreprintXml")
     activity_names.append("SchedulePreprintDownstream")
     activity_names.append("FindNewDocmaps")
+    activity_names.append("ExpandMeca")
+    activity_names.append("MecaXslt")
+    activity_names.append("ValidateJatsDtd")
+    activity_names.append("OutputMeca")
+    activity_names.append("EmailMecaOutput")
 
     for activity_name in activity_names:
         # Import the activity libraries

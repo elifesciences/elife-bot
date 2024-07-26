@@ -372,6 +372,11 @@ class exp:
     # user-agent for using in requests
     user_agent = "user_agent/version (https://example.org)"
 
+    meca_xsl_endpoint = "https://example.org/xsl"
+    meca_dtd_endpoint = "https://example.org/dtd"
+
+    meca_bucket = "meca_bucket"
+
 
 class dev:
     # AWS settings
@@ -728,6 +733,11 @@ class dev:
 
     # user-agent for using in requests
     user_agent = "user_agent/version (https://example.org)"
+
+    meca_xsl_endpoint = "https://example.org/xsl"
+    meca_dtd_endpoint = "https://example.org/dtd"
+
+    meca_bucket = "meca_bucket"
 
 
 class live:
@@ -1090,6 +1100,11 @@ class live:
 
     # user-agent for using in requests
     user_agent = "user_agent/version (https://example.org)"
+
+    meca_xsl_endpoint = "https://example.org/xsl"
+    meca_dtd_endpoint = "https://example.org/dtd"
+
+    meca_bucket = "meca_bucket"
 
 
 def get_settings(ENV="dev"):
