@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import os
+import zipfile
 from xml.etree import ElementTree
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
@@ -169,31 +170,48 @@ class activity_ExpandMeca(Activity):
 
         try:
             # Download zip from S3
-            local_input_file = download_helper.download_file_from_s3(
+            self.logger.info("%s downloading %s" % (self.name, meca_filename))
+            local_meca_file = download_helper.download_file_from_s3(
                 self.settings,
                 meca_filename,
                 bucket_name,
                 bucket_folder,
                 self.directories.get("INPUT_DIR"),
             )
-            # unzip using the elife-cleaner to get set of file name paths
             self.logger.info(
-                "%s downloaded %s to %s" % (self.name, meca_filename, local_input_file)
+                "%s downloaded %s to %s" % (self.name, meca_filename, local_meca_file)
             )
 
             # extract zip contents
-            self.logger.info("%s expanding file %s" % (self.name, meca_filename))
-            asset_file_name_map = cleaner.unzip_zip(
-                local_input_file, self.directories.get("TEMP_DIR")
-            )
-            self.logger.info(
-                "%s %s asset_file_name_map: %s"
-                % (self.name, local_input_file, asset_file_name_map)
-            )
+            self.logger.info("%s expanding file %s" % (self.name, local_meca_file))
+            with zipfile.ZipFile(local_meca_file) as open_zip_file:
+                for zip_file_name in open_zip_file.namelist():
+                    open_zip_file.extract(
+                        zip_file_name, self.directories.get("TEMP_DIR")
+                    )
 
-            for asset_file_name in asset_file_name_map.items():
-                source_path = asset_file_name[1]
-                dest_path = expanded_folder + "/" + asset_file_name[0]
+            # get a list of files including the subfolder paths
+            files = []
+            with os.scandir(self.directories.get("TEMP_DIR")) as dir_iterator:
+                for entry in dir_iterator:
+                    if entry.is_file():
+                        files.append(entry.name)
+                    elif entry.is_dir():
+                        files += [
+                            "%s%s%s" % (entry.name, os.sep, subfolder_file)
+                            for subfolder_file in os.listdir(
+                                os.path.join(
+                                    self.directories.get("TEMP_DIR"), entry.name
+                                )
+                            )
+                        ]
+
+            self.logger.info("%s %s files: %s" % (self.name, local_meca_file, files))
+
+            # upload the files to the bucket
+            for file_name in files:
+                source_path = os.path.join(self.directories.get("TEMP_DIR"), file_name)
+                dest_path = expanded_folder + "/" + file_name
 
                 storage_resource_dest = (
                     self.settings.storage_provider
@@ -206,19 +224,14 @@ class activity_ExpandMeca(Activity):
                     "%s uploading %s to %s"
                     % (self.name, source_path, storage_resource_dest)
                 )
-                try:
-                    storage.set_resource_from_filename(
-                        storage_resource_dest, source_path
-                    )
-                except IsADirectoryError:
-                    # do not copy directories alone
-                    pass
+                storage.set_resource_from_filename(storage_resource_dest, source_path)
 
             session.store_value("expanded_folder", expanded_folder)
 
-        except Exception:
+        except Exception as exception:
             self.logger.exception(
-                "%s Exception when expanding MECA file %s" % (self.name, meca_filename)
+                "%s Exception when expanding MECA file %s: %s"
+                % (self.name, meca_filename, str(exception))
             )
             self.clean_tmp_dir()
             return self.ACTIVITY_PERMANENT_FAILURE
