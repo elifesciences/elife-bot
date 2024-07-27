@@ -224,7 +224,13 @@ class activity_ExpandMeca(Activity):
                     "%s uploading %s to %s"
                     % (self.name, source_path, storage_resource_dest)
                 )
-                storage.set_resource_from_filename(storage_resource_dest, source_path)
+                try:
+                    storage.set_resource_from_filename(
+                        storage_resource_dest, source_path
+                    )
+                except IsADirectoryError:
+                    # do not copy directories alone
+                    pass
 
             session.store_value("expanded_folder", expanded_folder)
 
