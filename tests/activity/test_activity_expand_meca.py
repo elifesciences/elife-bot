@@ -79,13 +79,15 @@ class TestExpandMeca(unittest.TestCase):
         )
         # collect bucket folder file names plus one folder deep file names
         files = list_files(bucket_folder_path)
-
         compare_files = [file_name for file_name in files if file_name != ".gitkeep"]
         self.assertEqual(sorted(compare_files), sorted(expected_files))
         # check session data
         self.assertDictEqual(mock_session.session_dict, expected_session_dict)
         # check logger values
-        loginfo_expected = "ExpandMeca expanding file 95901-v1-meca.zip"
+        loginfo_expected = (
+            "ExpandMeca expanding file %s/95901-v1-meca.zip"
+            % self.activity.directories.get("INPUT_DIR")
+        )
         self.assertTrue(loginfo_expected in self.logger.loginfo)
 
     @patch.object(activity_module, "get_session")
