@@ -89,7 +89,10 @@ class activity_OutputMeca(Activity):
 
         # download all the S3 bucket expanded_folder contents
         for file_name in expanded_folder_files:
-            local_file_path = os.path.join(self.directories.get("INPUT_DIR"), file_name)
+            local_file_name = file_name.rsplit(expanded_folder, 1)[-1].lstrip("/")
+            local_file_path = os.path.join(
+                self.directories.get("INPUT_DIR"), local_file_name
+            )
             # create folders if they do not exist
             os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
             storage_resource_origin = (
@@ -98,6 +101,10 @@ class activity_OutputMeca(Activity):
                 + self.settings.bot_bucket
                 + "/"
                 + file_name
+            )
+            self.logger.info(
+                "%s downloading %s to %s"
+                % (self.name, storage_resource_origin, local_file_path)
             )
             try:
                 with open(local_file_path, "wb") as open_file:

@@ -31,18 +31,30 @@ class TestOutputMeca(unittest.TestCase):
         directory = TempDirectory()
         # expand input meca file zip into the bucket expanded folder
         meca_file_path = "tests/files_source/95901-v1-meca.zip"
-        dest_folder = os.path.join(
+        resource_folder = os.path.join(
             directory.path,
             test_activity_data.ingest_meca_session_example().get("expanded_folder"),
         )
-        # create folders if they do not exist
-        os.makedirs(dest_folder, exist_ok=True)
-        with zipfile.ZipFile(meca_file_path, "r") as open_zipfile:
-            resources = open_zipfile.namelist()
-            open_zipfile.extractall(dest_folder)
 
+        # create folders if they do not exist
+        os.makedirs(resource_folder, exist_ok=True)
+        # unzip the test fixture files
+        zip_file_paths = []
+        with zipfile.ZipFile(meca_file_path, "r") as open_zipfile:
+            for zipfile_info in open_zipfile.infolist():
+                if zipfile_info.is_dir():
+                    continue
+                open_zipfile.extract(zipfile_info, resource_folder)
+                zip_file_paths.append(zipfile_info.filename)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
+            )
+            for file_path in zip_file_paths
+        ]
         fake_storage_context.return_value = FakeStorageContext(
-            dest_folder, resources, dest_folder=directory.path
+            directory.path, resources, dest_folder=directory.path
         )
 
         # mock the session
@@ -74,12 +86,9 @@ class TestOutputMeca(unittest.TestCase):
             "95901-v1-meca.zip",
         )
         with zipfile.ZipFile(zip_file_path, "r") as open_zipfile:
-            resources = open_zipfile.namelist()
-        self.assertEqual(len(resources), 12)
-
-        files = list_files(dest_folder)
-
-        self.assertEqual(sorted(resources), sorted(files))
+            output_zip_namelist = open_zipfile.namelist()
+        self.assertEqual(len(output_zip_namelist), 12)
+        self.assertEqual(sorted(zip_file_paths), sorted(output_zip_namelist))
 
 
 class TestMissingSettings(unittest.TestCase):
