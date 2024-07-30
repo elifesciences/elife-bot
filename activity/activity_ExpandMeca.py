@@ -200,12 +200,13 @@ class activity_ExpandMeca(Activity):
                     elif entry.is_dir():
                         files += [
                             "%s%s%s" % (entry.name, os.sep, subfolder_file)
-                            # listdir will by default ignore hidden files
+                            # ignore hidden files
                             for subfolder_file in os.listdir(
                                 os.path.join(
                                     self.directories.get("TEMP_DIR"), entry.name
                                 )
                             )
+                            if not subfolder_file.startswith(".")
                         ]
 
             self.logger.info("%s %s files: %s" % (self.name, local_meca_file, files))
