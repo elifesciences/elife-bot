@@ -194,11 +194,13 @@ class activity_ExpandMeca(Activity):
             files = []
             with os.scandir(self.directories.get("TEMP_DIR")) as dir_iterator:
                 for entry in dir_iterator:
-                    if entry.is_file():
+                    # will ignore hidden files and directories
+                    if not entry.name.startswith(".") and entry.is_file():
                         files.append(entry.name)
                     elif entry.is_dir():
                         files += [
                             "%s%s%s" % (entry.name, os.sep, subfolder_file)
+                            # listdir will by default ignore hidden files
                             for subfolder_file in os.listdir(
                                 os.path.join(
                                     self.directories.get("TEMP_DIR"), entry.name
