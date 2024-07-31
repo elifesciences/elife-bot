@@ -59,9 +59,14 @@ class activity_EmailMecaOutput(Activity):
         "email the message to the recipients"
         success = True
 
+        # error status from keywords in body_content:
+        error = None
+        if "ValidateJatsDtd, validation error" in body_content:
+            error = True
+
         datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
         body = email_provider.simple_email_body(datetime_string, body_content)
-        subject = meca_email_subject(version_doi, self.settings)
+        subject = meca_email_subject(version_doi, self.settings, error)
         sender_email = self.settings.ses_poa_sender_email
 
         recipient_email_list = email_provider.list_email_recipients(
@@ -84,9 +89,12 @@ class activity_EmailMecaOutput(Activity):
         return success
 
 
-def meca_email_subject(version_doi, settings=None):
+def meca_email_subject(version_doi, settings=None, error=None):
     "the email subject"
     subject_prefix = ""
     if utils.settings_environment(settings) == "continuumtest":
         subject_prefix = "TEST "
-    return "%seLife ingest MECA: %s" % (subject_prefix, version_doi)
+    extra = ""
+    if error:
+        extra = "Error in "
+    return "%seLife ingest MECA: %s%s" % (subject_prefix, extra, version_doi)
