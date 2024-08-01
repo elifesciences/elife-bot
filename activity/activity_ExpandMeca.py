@@ -192,22 +192,26 @@ class activity_ExpandMeca(Activity):
 
             # get a list of files including the subfolder paths
             files = []
-            with os.scandir(self.directories.get("TEMP_DIR")) as dir_iterator:
-                for entry in dir_iterator:
-                    # will ignore hidden files and directories
-                    if not entry.name.startswith(".") and entry.is_file():
-                        files.append(entry.name)
-                    elif entry.is_dir():
-                        files += [
-                            "%s%s%s" % (entry.name, os.sep, subfolder_file)
-                            # ignore hidden files
-                            for subfolder_file in os.listdir(
-                                os.path.join(
-                                    self.directories.get("TEMP_DIR"), entry.name
-                                )
-                            )
-                            if not subfolder_file.startswith(".")
-                        ]
+            for root, dirs, file_names in os.walk(self.directories.get("TEMP_DIR")):
+                for dir_file in file_names:
+                    # ignore hidden files and directories
+                    if root.rsplit(os.sep, 1)[-1].startswith(
+                        "."
+                    ) or dir_file.startswith("."):
+                        self.logger.info(
+                            "%s %s ignoring file: %s"
+                            % (self.name, local_meca_file, os.path.join(root, dir_file))
+                        )
+                        continue
+                    # strip the TEMP_DIR and add to list of files
+                    files.append(
+                        os.path.join(
+                            root.rsplit(self.directories.get("TEMP_DIR"), 1)[-1].lstrip(
+                                "/"
+                            ),
+                            dir_file,
+                        )
+                    )
 
             self.logger.info("%s %s files: %s" % (self.name, local_meca_file, files))
 
