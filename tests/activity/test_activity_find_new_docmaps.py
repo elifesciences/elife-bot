@@ -57,10 +57,19 @@ class TestFindNewDocmaps(unittest.TestCase):
             "2024-06-27 +0000", "%Y-%m-%d %z"
         )
 
+        # remove the published dates from JSON
+        docmap_json_for_84364 = json.loads(read_fixture("sample_docmap_for_84364.json"))
+        del docmap_json_for_84364["steps"]["_:b2"]["actions"][0]["outputs"][0][
+            "published"
+        ]
+        docmap_json_for_87445 = json.loads(read_fixture("sample_docmap_for_87445.json"))
+        del docmap_json_for_87445["steps"]["_:b5"]["actions"][0]["outputs"][0][
+            "published"
+        ]
         sample_docmap_index = {
             "docmaps": [
-                json.loads(read_fixture("sample_docmap_for_84364.json")),
-                json.loads(read_fixture("sample_docmap_for_87445.json")),
+                docmap_json_for_84364,
+                docmap_json_for_87445,
             ]
         }
 

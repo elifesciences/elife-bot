@@ -1,6 +1,8 @@
+import datetime
 import json
 import requests
 from docmaptools import parse
+from provider import utils
 
 
 REPAIR_XML = True
@@ -11,6 +13,9 @@ LOG_FORMAT_STRING = (
 )
 
 REQUESTS_TIMEOUT = (10, 60)
+
+# number of hours for published date comparisons
+PUBLISHED_DATE_HOURS_DELTA = 24
 
 
 def docmap_index_url(settings):
@@ -90,6 +95,7 @@ def profile_docmap_steps(docmap_steps_list):
     details = {
         "computer-file-count": 0,
         "peer-review-count": 0,
+        "published": None,
     }
     if not docmap_steps_list:
         return details
@@ -102,6 +108,8 @@ def profile_docmap_steps(docmap_steps_list):
                     "review-article",
                 ]:
                     details["peer-review-count"] += 1
+                elif output.get("type") == "preprint" and output.get("published"):
+                    details["published"] = output.get("published")
         details["computer-file-count"] += len(computer_files(step))
     return details
 
@@ -125,7 +133,23 @@ def docmap_profile_step_map(docmap_index_json):
     return full_step_map
 
 
-def changed_version_doi_list(docmap_index_json, prev_docmap_index_json):
+def check_published_date(datetime_string):
+    "check for a published date and how long ago it was"
+    if not datetime_string:
+        return True
+    # compare date
+    published_datetime = datetime.datetime.strptime(
+        datetime_string, "%Y-%m-%dT%H:%M:%S%z"
+    )
+    current_datetime = utils.get_current_datetime()
+    if current_datetime - published_datetime > datetime.timedelta(
+        hours=PUBLISHED_DATE_HOURS_DELTA
+    ):
+        return False
+    return True
+
+
+def changed_version_doi_list(docmap_index_json, prev_docmap_index_json, logger):
     "compare current and previous docmap lists, return version DOI that have changed"
     version_doi_list = []
     # filter docmaps by attributes compared to previous docmap
@@ -139,12 +163,24 @@ def changed_version_doi_list(docmap_index_json, prev_docmap_index_json):
             and value.get("computer-file-count") > 0
             and value.get("peer-review-count") > 0
         ):
-            version_doi_list.append(key)
+            if check_published_date(value.get("published")):
+                version_doi_list.append(key)
+            else:
+                logger.info(
+                    "DOI %s omitted, its published date %s is too far in the past"
+                    % (key, value.get("published"))
+                )
         elif (
             prev_value
             and value.get("computer-file-count") > 0
             and value.get("peer-review-count") > prev_value.get("peer-review-count")
         ):
-            version_doi_list.append(key)
+            if check_published_date(value.get("published")):
+                version_doi_list.append(key)
+            else:
+                logger.info(
+                    "DOI %s omitted, its published date %s is too far in the past"
+                    % (key, value.get("published"))
+                )
 
     return version_doi_list

@@ -155,7 +155,7 @@ class activity_FindNewDocmaps(Activity):
 
         # compare previous docmap index to new docmap index
         new_meca_version_dois = docmap_provider.changed_version_doi_list(
-            docmap_index_json, prev_docmap_index_json
+            docmap_index_json, prev_docmap_index_json, self.logger
         )
         self.logger.info(
             "%s, got new_meca_version_dois: %s" % (self.name, new_meca_version_dois)
