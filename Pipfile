@@ -41,7 +41,7 @@ GitPython = "~=3.1"
 PyYAML = "~=5.4"
 Wand = "~=0.6"
 wrapt = ">=1.11,<1.14" # version compatible with pylint and its dependency astroid
-PyGithub = "~=1.55"
+PyGithub = "~=2.3.0"
 elifecleaner = "~=0.62.0"
 
 [dev-packages]
