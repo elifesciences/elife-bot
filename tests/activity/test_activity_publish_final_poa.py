@@ -449,6 +449,7 @@ class TestDoiIdFromFilename(unittest.TestCase):
         ("elife_poa_e10727_ds.zip", 10727),
         ("elife_poa_e12029v2.xml", 12029),
         ("bad_file_name.xml", None),
+        ("elife_poa_e100061.xml", 100061),
     )
     @unpack
     def test_doi_id_from_filename(self, filename, expected):

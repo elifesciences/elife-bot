@@ -590,8 +590,8 @@ def doi_id_from_filename(filename):
     part = part.replace("elife_poa_e", "")
     # Take the next five characters as digits
     try:
-        doi_id = int(part[0:5])
-    except (IndexError, ValueError):
+        doi_id = int(re.match(r"^(\d+)\D+.*$", part)[1])
+    except (IndexError, TypeError, ValueError):
         doi_id = None
     return doi_id
 
