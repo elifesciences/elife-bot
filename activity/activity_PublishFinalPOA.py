@@ -110,7 +110,6 @@ class activity_PublishFinalPOA(Activity):
         article_filenames_map = profile_article_files(self.directories.get("INPUT_DIR"))
 
         for doi_id, filenames in list(article_filenames_map.items()):
-
             article_xml_file_name = article_xml_from_filename_map(filenames)
 
             new_filenames = create_new_filenames(doi_id, filenames)
@@ -192,7 +191,6 @@ class activity_PublishFinalPOA(Activity):
         s3_key_names = [filename.rsplit("/", 1)[-1] for filename in s3_key_names]
         max_revision_number = 0
         for key_name in s3_key_names:
-
             name_prefix = "elife-%s-%s-r" % (utils.pad_msid(doi_id), status)
             if key_name.startswith(name_prefix):
                 # Attempt to get a revision number from the matching files
@@ -633,7 +631,6 @@ def get_pub_date_str_from_lax(doi_id, settings, logger):
 
 
 def convert_xml(doi_id, xml_file, new_filenames, settings, logger):
-
     # Register namespaces
     xmlio.register_xmlns()
 
@@ -753,7 +750,6 @@ def add_volume_to_xml(doi_id, volume, root, logger):
 
 
 def pub_date_xml_element(pub_date):
-
     pub_date_tag = Element("pub-date")
     pub_date_tag.set("publication-format", "electronic")
     pub_date_tag.set("date-type", "pub")
@@ -777,7 +773,6 @@ def volume_xml_element(volume):
 
 
 def set_article_id_xml(doi_id, root):
-
     for tag in root.findall("./front/article-meta/article-id"):
         if tag.get("pub-id-type") == "publisher-id":
             # Overwrite the text with the base DOI value
@@ -811,7 +806,6 @@ def add_poa_ds_zip_to_xml(file_name, root):
 
 
 def ds_zip_xml_element(file_name):
-
     supp_tag = Element("supplementary-material")
     ext_link_tag = SubElement(supp_tag, "ext-link")
     ext_link_tag.set("xlink:href", file_name)

@@ -411,7 +411,7 @@ def check_xml_contents(xml_file, xml_file_values):
         ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
         root = ET.parse(xml_file)
     if root:
-        for (xpath, (attribute, value)) in xml_file_values[xml_file_name].items():
+        for xpath, (attribute, value) in xml_file_values[xml_file_name].items():
             matched_tags = root.findall(xpath)
             if len(matched_tags) != 1:
                 return False
