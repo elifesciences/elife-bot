@@ -156,8 +156,8 @@ class TestConditionalStarts(unittest.TestCase):
         {
             "comment": "zero hour",
             "date_time": "1970-01-01 00:00:00 UTC",
-            "expected_starter_names": ["cron_FiveMinute", "starter_DepositCrossref"],
-            "expected_workflow_ids": ["cron_FiveMinute", "DepositCrossref"],
+            "expected_starter_names": ["cron_FiveMinute"],
+            "expected_workflow_ids": ["cron_FiveMinute"],
         }
     )
     def test_conditional_starts_00_00(self, test_data):
@@ -169,12 +169,10 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 00:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_FindNewDocmaps",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "FindNewDocmaps",
             ],
         }
@@ -188,13 +186,11 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 06:20:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "cron_NewS3POA",
                 "starter_FindNewPreprints",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "cron_NewS3POA",
                 "FindNewPreprints",
             ],
@@ -209,13 +205,11 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 06:25:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "cron_NewS3POA",
                 "starter_FindNewPreprints",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "cron_NewS3POA",
                 "FindNewPreprints",
             ],
@@ -230,13 +224,11 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 10:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "PubmedArticleDeposit",
                 "AdminEmail",
             ],
@@ -251,13 +243,11 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "2019-08-19 11:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "cron_NewS3POA",
                 "starter_FindNewDocmaps",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "cron_NewS3POA",
                 "FindNewDocmaps",
             ],
@@ -272,13 +262,11 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "2019-10-27 12:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "cron_NewS3POA",
                 "starter_FindNewDocmaps",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "cron_NewS3POA",
                 "FindNewDocmaps",
             ],
@@ -293,12 +281,10 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "2019-08-19 13:00:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_PublishPOA",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "PublishPOA",
             ],
         },
@@ -312,14 +298,12 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "2019-10-27 17:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_PublicationEmail",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "PublicationEmail",
                 "PubmedArticleDeposit",
                 "AdminEmail",
@@ -335,13 +319,11 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 20:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_FindNewDocmaps",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "FindNewDocmaps",
                 "PubRouterDeposit_PMC",
             ],
@@ -356,14 +338,10 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 21:15:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
-                "starter_DepositCrossrefPendingPublication",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
-                "DepositCrossrefPendingPublication",
                 "PubRouterDeposit_Zendy",
             ],
         },
@@ -377,13 +355,11 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 21:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_FindNewDocmaps",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "FindNewDocmaps",
                 "PubRouterDeposit_WoS",
             ],
@@ -398,7 +374,6 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 21:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_PublicationEmail",
                 "starter_PubRouterDeposit",
                 "starter_PubmedArticleDeposit",
@@ -406,7 +381,6 @@ class TestConditionalStarts(unittest.TestCase):
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "PublicationEmail",
                 "PubRouterDeposit_GoOA",
                 "PubmedArticleDeposit",
@@ -423,12 +397,10 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 22:00:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "PubRouterDeposit_CLOCKSS",
             ],
         },
@@ -442,14 +414,10 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 22:15:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
-                "starter_DepositCrossrefPendingPublication",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
-                "DepositCrossrefPendingPublication",
                 "PubRouterDeposit_OVID",
             ],
         },
@@ -463,13 +431,11 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 22:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_FindNewDocmaps",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "FindNewDocmaps",
                 "PubRouterDeposit_OASwitchboard",
             ],
@@ -484,14 +450,12 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 22:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_PubRouterDeposit",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "PubRouterDeposit_Cengage",
                 "PubmedArticleDeposit",
                 "AdminEmail",
@@ -507,12 +471,10 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 23:00:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "PubRouterDeposit_CNKI",
             ],
         },
@@ -526,14 +488,10 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 23:15:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
-                "starter_DepositCrossrefPendingPublication",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
-                "DepositCrossrefPendingPublication",
                 "PubRouterDeposit_Scilit",
             ],
         },
@@ -547,13 +505,11 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 23:30:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_FindNewDocmaps",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "FindNewDocmaps",
                 "PubRouterDeposit_CNPIEC",
             ],
@@ -568,14 +524,12 @@ class TestConditionalStarts(unittest.TestCase):
             "date_time": "1970-01-01 23:45:00 UTC",
             "expected_starter_names": [
                 "cron_FiveMinute",
-                "starter_DepositCrossref",
                 "starter_PubRouterDeposit",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
-                "DepositCrossref",
                 "PubRouterDeposit_HEFCE",
                 "PubmedArticleDeposit",
                 "AdminEmail",
