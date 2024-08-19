@@ -4,46 +4,13 @@ from github import GithubException
 from mock import patch, MagicMock
 from activity.activity_UpdateRepository import activity_UpdateRepository, RetryException
 from tests.activity import settings_mock
-from tests.activity.classes_mock import FakeStorageContext, FakeLogger, FakeLaxProvider
-
-
-class FakeGithub:
-    "mock object for github.Github"
-
-    def get_user(self, login):
-        return FakeGithubNamedUser()
-
-
-class FakeGithubNamedUser:
-    "mock object for github.NamedUser.NamedUser"
-
-    def get_repo(self, full_name_or_id):
-        return FakeGithubRepository()
-
-
-class FakeGithubRepository:
-    "mock object for github.Repository.Repository"
-
-    def get_contents(self, path):
-        return FakeGithubContentFile()
-
-    def update_file(
-        self, path, message, content, sha, branch=None, committer=None, author=None
-    ):
-        pass
-
-    def create_file(
-        self, path, message, content, branch=None, committer=None, author=None
-    ):
-        pass
-
-
-class FakeGithubContentFile:
-    "mock object for github.ContentFile.ContentFile"
-
-    def __init__(self):
-        self.decoded_content = b"<article/>"
-        self.sha = "sha"
+from tests.activity.classes_mock import (
+    FakeStorageContext,
+    FakeGithub,
+    FakeGithubRepository,
+    FakeLogger,
+    FakeLaxProvider,
+)
 
 
 @patch("activity.activity_UpdateRepository.provider")
