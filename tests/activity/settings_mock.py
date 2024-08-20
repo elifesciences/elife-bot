@@ -273,6 +273,8 @@ meca_dtd_endpoint = "https://example.org/dtd"
 
 meca_bucket = "meca_bucket"
 
+preprint_issues_repo_name = "preprint-issues"
+
 
 @mock_aws
 def aws_conn(service, service_creation_kwargs):

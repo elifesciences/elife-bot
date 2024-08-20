@@ -322,6 +322,9 @@ class FakeGithubRepository:
     ):
         pass
 
+    def get_issues(self, *args, **kwargs):
+        pass
+
 
 class FakeGithubContentFile:
     "mock object for github.ContentFile.ContentFile"
@@ -329,3 +332,24 @@ class FakeGithubContentFile:
     def __init__(self):
         self.decoded_content = b"<article/>"
         self.sha = "sha"
+
+
+class FakeIssueComment:
+    "mock object for github.IssueComment.IssueComment"
+
+
+class FakeGithubIssue:
+    "mock object for github.Issue.Issue"
+
+    def __init__(self, title=None, number=None):
+        self.title = title
+        self.number = number
+
+    def __repr__(self) -> str:
+        return "{class_name}({params})".format(
+            class_name=self.__class__.__name__,
+            params=", ".join(['title="%s"' % self.title, "number=%d" % self.number]),
+        )
+
+    def create_comment(self, body):
+        return FakeIssueComment()
