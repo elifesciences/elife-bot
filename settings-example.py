@@ -377,6 +377,8 @@ class exp:
 
     meca_bucket = "meca_bucket"
 
+    preprint_issues_repo_name = "preprint-issues"
+
 
 class dev:
     # AWS settings
@@ -738,6 +740,8 @@ class dev:
     meca_dtd_endpoint = "https://example.org/dtd"
 
     meca_bucket = "meca_bucket"
+
+    preprint_issues_repo_name = "preprint-issues"
 
 
 class live:
@@ -1105,6 +1109,8 @@ class live:
     meca_dtd_endpoint = "https://example.org/dtd"
 
     meca_bucket = "meca_bucket"
+
+    preprint_issues_repo_name = "preprint-issues"
 
 
 def get_settings(ENV="dev"):
