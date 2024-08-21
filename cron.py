@@ -94,15 +94,15 @@ def conditional_starts(current_datetime):
             )
         )
 
-        # conditional_start_list.append(
-        #    OrderedDict(
-        #        [
-        #            ("starter_name", "starter_DepositCrossref"),
-        #            ("workflow_id", "DepositCrossref"),
-        #            ("start_seconds", 60 * 3),
-        #        ]
-        #    )
-        # )
+        conditional_start_list.append(
+            OrderedDict(
+                [
+                    ("starter_name", "starter_DepositCrossref"),
+                    ("workflow_id", "DepositCrossref"),
+                    ("start_seconds", 60 * 3),
+                ]
+            )
+        )
 
     # Based on the minutes of the current time, run certain starters
     if current_time.tm_min >= 0 and current_time.tm_min <= 14:
@@ -149,15 +149,15 @@ def conditional_starts(current_datetime):
         # Jobs to start at quarter past the hour
         LOGGER.info("Quarter past the hour")
 
-        # conditional_start_list.append(
-        #    OrderedDict(
-        #        [
-        #            ("starter_name", "starter_DepositCrossrefPendingPublication"),
-        #            ("workflow_id", "DepositCrossrefPendingPublication"),
-        #            ("start_seconds", 60 * 31),
-        #        ]
-        #    )
-        # )
+        conditional_start_list.append(
+            OrderedDict(
+                [
+                    ("starter_name", "starter_DepositCrossrefPendingPublication"),
+                    ("workflow_id", "DepositCrossrefPendingPublication"),
+                    ("start_seconds", 60 * 31),
+                ]
+            )
+        )
 
         # Zendy deposits once per day 21:15 UTC
         if current_time.tm_hour == 21:
