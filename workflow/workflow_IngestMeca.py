@@ -38,6 +38,7 @@ class workflow_IngestMeca(Workflow):
                 define_workflow_step("ExpandMeca", data),
                 define_workflow_step("MecaXslt", data),
                 define_workflow_step("ValidateJatsDtd", data),
+                define_workflow_step("ValidatePreprintSchematron", data),
                 define_workflow_step("OutputMeca", data),
                 define_workflow_step("EmailMecaOutput", data),
             ],
