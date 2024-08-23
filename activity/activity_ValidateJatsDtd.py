@@ -140,27 +140,7 @@ class activity_ValidateJatsDtd(Activity):
             self.logger.info(log_message)
             meca.log_to_session("\n%s" % log_message, session)
             # add as a Github issue comment
-            if (
-                hasattr(self.settings, "github_token")
-                and hasattr(self.settings, "preprint_issues_repo_name")
-                and self.settings.github_token
-                and self.settings.preprint_issues_repo_name
-            ):
-                try:
-                    issue = github_provider.find_github_issue(
-                        self.settings.github_token,
-                        self.settings.preprint_issues_repo_name,
-                        version_doi,
-                    )
-                    if issue:
-                        github_provider.add_github_comment(
-                            issue, "elife-bot workflow message:\n\n%s" % log_message
-                        )
-                except Exception as exception:
-                    self.logger.exception(
-                        (
-                            "%s, exception when adding a comment to Github "
-                            "for version DOI %s file %s. Details: %s"
-                        )
-                        % (self.name, version_doi, xml_file_path, str(exception))
-                    )
+            issue_comment = "elife-bot workflow message:\n\n%s" % log_message
+            github_provider.add_github_issue_comment(
+                self.settings, self.logger, self.name, version_doi, issue_comment
+            )

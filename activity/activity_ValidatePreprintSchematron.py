@@ -110,7 +110,10 @@ class activity_ValidatePreprintSchematron(Activity):
                 % (self.name, xml_file_path, log_message)
             )
             # add github issue comment
-            self.add_github_issue_comment(version_doi, xml_file_path, log_message)
+            issue_comment = "```\n%s\n```" % log_message
+            github_provider.add_github_issue_comment(
+                self.settings, self.logger, self.name, version_doi, issue_comment
+            )
         else:
             # failed to get a response
             log_message = (
@@ -119,7 +122,9 @@ class activity_ValidatePreprintSchematron(Activity):
             )
             self.logger.exception(log_message)
             # add github issue comment
-            self.add_github_issue_comment(version_doi, xml_file_path, log_message)
+            github_provider.add_github_issue_comment(
+                self.settings, self.logger, self.name, version_doi, log_message
+            )
 
         self.logger.info(
             "%s, statuses for version DOI %s: %s"
@@ -162,33 +167,6 @@ class activity_ValidatePreprintSchematron(Activity):
                 )
             )
         return errors, warnings
-
-    def add_github_issue_comment(self, version_doi, xml_file_path, log_message):
-        "add the message as a github preprint issue comment"
-        if (
-            hasattr(self.settings, "github_token")
-            and hasattr(self.settings, "preprint_issues_repo_name")
-            and self.settings.github_token
-            and self.settings.preprint_issues_repo_name
-        ):
-            try:
-                issue = github_provider.find_github_issue(
-                    self.settings.github_token,
-                    self.settings.preprint_issues_repo_name,
-                    version_doi,
-                )
-                if issue:
-                    github_provider.add_github_comment(
-                        issue, ("```\n%s\n```" % log_message)
-                    )
-            except Exception as exception:
-                self.logger.exception(
-                    (
-                        "%s, exception when adding a comment to Github "
-                        "for version DOI %s file %s. Details: %s"
-                    )
-                    % (self.name, version_doi, xml_file_path, str(exception))
-                )
 
 
 def compose_validation_message(errors, warnings):

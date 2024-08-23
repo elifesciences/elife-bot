@@ -38,3 +38,29 @@ def find_github_issue(token, repo_name, version_doi):
 def add_github_comment(issue, message):
     "add a github comment to the issue"
     issue.create_comment(message)
+
+
+def add_github_issue_comment(settings, logger, caller_name, version_doi, issue_comment):
+    "add the message as a github preprint issue comment"
+    if (
+        hasattr(settings, "github_token")
+        and hasattr(settings, "preprint_issues_repo_name")
+        and settings.github_token
+        and settings.preprint_issues_repo_name
+    ):
+        try:
+            issue = find_github_issue(
+                settings.github_token,
+                settings.preprint_issues_repo_name,
+                version_doi,
+            )
+            if issue:
+                add_github_comment(issue, issue_comment)
+        except Exception as exception:
+            logger.exception(
+                (
+                    "%s, exception when adding a comment to Github "
+                    "for version DOI %s - Details: %s"
+                )
+                % (caller_name, version_doi, str(exception))
+            )
