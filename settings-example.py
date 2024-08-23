@@ -374,6 +374,7 @@ class exp:
 
     meca_xsl_endpoint = "https://example.org/xsl"
     meca_dtd_endpoint = "https://example.org/dtd"
+    preprint_schematron_endpoint = "https://example.org/schematron/preprint"
 
     meca_bucket = "meca_bucket"
 
@@ -738,6 +739,7 @@ class dev:
 
     meca_xsl_endpoint = "https://example.org/xsl"
     meca_dtd_endpoint = "https://example.org/dtd"
+    preprint_schematron_endpoint = "https://example.org/schematron/preprint"
 
     meca_bucket = "meca_bucket"
 
@@ -1107,6 +1109,7 @@ class live:
 
     meca_xsl_endpoint = "https://example.org/xsl"
     meca_dtd_endpoint = "https://example.org/dtd"
+    preprint_schematron_endpoint = "https://example.org/schematron/preprint"
 
     meca_bucket = "meca_bucket"
 
