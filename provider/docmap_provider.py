@@ -149,22 +149,31 @@ def check_published_date(datetime_string):
     return True
 
 
-def changed_version_doi_list(docmap_index_json, prev_docmap_index_json, logger):
+def changed_version_doi_data(docmap_index_json, prev_docmap_index_json, logger):
     "compare current and previous docmap lists, return version DOI that have changed"
-    version_doi_list = []
+    ingest_version_doi_list = []
+    new_version_doi_list = []
+    no_computer_file_version_doi_list = []
     # filter docmaps by attributes compared to previous docmap
     current_step_map = docmap_profile_step_map(docmap_index_json)
     prev_step_map = docmap_profile_step_map(prev_docmap_index_json)
     # compare
     for key, value in current_step_map.items():
         prev_value = prev_step_map.get(key)
+        # new DOIs
+        if not prev_value:
+            new_version_doi_list.append(key)
+        # peer reviews and no computer-file
+        if value.get("computer-file-count") <= 0 and value.get("peer-review-count") > 0:
+            no_computer_file_version_doi_list.append(key)
+        # DOIs ready to ingest a MECA package
         if (
             not prev_value
             and value.get("computer-file-count") > 0
             and value.get("peer-review-count") > 0
         ):
             if check_published_date(value.get("published")):
-                version_doi_list.append(key)
+                ingest_version_doi_list.append(key)
             else:
                 logger.info(
                     "DOI %s omitted, its published date %s is too far in the past"
@@ -176,11 +185,15 @@ def changed_version_doi_list(docmap_index_json, prev_docmap_index_json, logger):
             and value.get("peer-review-count") > prev_value.get("peer-review-count")
         ):
             if check_published_date(value.get("published")):
-                version_doi_list.append(key)
+                ingest_version_doi_list.append(key)
             else:
                 logger.info(
                     "DOI %s omitted, its published date %s is too far in the past"
                     % (key, value.get("published"))
                 )
 
-    return version_doi_list
+    return {
+        "ingest_version_doi_list": ingest_version_doi_list,
+        "new_version_doi_list": new_version_doi_list,
+        "no_computer_file_version_doi_list": no_computer_file_version_doi_list,
+    }

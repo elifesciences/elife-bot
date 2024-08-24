@@ -5,7 +5,7 @@ from datetime import datetime
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
-from provider import utils
+from provider import github_provider, utils
 import activity.activity_FindNewDocmaps as activity_module
 from activity.activity_FindNewDocmaps import (
     activity_FindNewDocmaps as activity_class,
@@ -14,6 +14,7 @@ from tests.classes_mock import (
     FakeSMTPServer,
 )
 from tests.activity.classes_mock import (
+    FakeGithubIssue,
     FakeLogger,
     FakeResponse,
     FakeStorageContext,
@@ -40,10 +41,12 @@ class TestFindNewDocmaps(unittest.TestCase):
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(activity_module, "storage_context")
     @patch.object(utils, "get_current_datetime")
+    @patch.object(github_provider, "find_github_issue")
     @patch.object(activity_class, "clean_tmp_dir")
     def test_do_activity(
         self,
         fake_clean_tmp_dir,
+        fake_find_github_issue,
         fake_datetime,
         fake_storage_context,
         fake_email_smtp_connect,
@@ -52,7 +55,7 @@ class TestFindNewDocmaps(unittest.TestCase):
     ):
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
-
+        fake_find_github_issue.return_value = FakeGithubIssue()
         fake_datetime.return_value = datetime.strptime(
             "2024-06-27 +0000", "%Y-%m-%d %z"
         )
