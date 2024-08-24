@@ -5,6 +5,7 @@ import time
 from activity.objects import Activity
 from provider import (
     docmap_provider,
+    github_provider,
     email_provider,
     utils,
 )
@@ -154,21 +155,22 @@ class activity_FindNewDocmaps(Activity):
                 prev_docmap_index_json = json.loads(prev_docmap_index_json_content)
 
         # compare previous docmap index to new docmap index
-        new_meca_version_dois = docmap_provider.changed_version_doi_list(
+        docmap_data = docmap_provider.changed_version_doi_data(
             docmap_index_json, prev_docmap_index_json, self.logger
         )
+        ingest_version_doi_list = docmap_data.get("ingest_version_doi_list")
         self.logger.info(
-            "%s, got new_meca_version_dois: %s" % (self.name, new_meca_version_dois)
+            "%s, got ingest_version_doi_list: %s" % (self.name, ingest_version_doi_list)
         )
         self.statuses["generate"] = True
 
         # queue IngestMeca workflows
-        if new_meca_version_dois:
+        if ingest_version_doi_list:
             self.logger.info(
                 "%s, starting %s IngestMeca workflows"
-                % (self.name, len(new_meca_version_dois))
+                % (self.name, len(ingest_version_doi_list))
             )
-            for version_doi in sorted(new_meca_version_dois):
+            for version_doi in sorted(ingest_version_doi_list):
                 doi, version = utils.version_doi_parts(version_doi)
                 article_id = utils.msid_from_doi(doi)
                 self.start_post_workflow(article_id, version)
@@ -195,13 +197,29 @@ class activity_FindNewDocmaps(Activity):
         )
         self.statuses["upload"] = True
 
+        # add Github issue commment for docmaps with no computer-file
+        no_computer_file_version_doi_list = docmap_data.get(
+            "no_computer_file_version_doi_list"
+        )
+        self.logger.info(
+            "%s, got no_computer_file_version_doi_list: %s"
+            % (self.name, no_computer_file_version_doi_list)
+        )
+        for version_doi in no_computer_file_version_doi_list:
+            issue_comment = (
+                "No computer-file found in the docmap for version DOI %s" % version_doi
+            )
+            github_provider.add_github_issue_comment(
+                self.settings, self.logger, self.name, version_doi, issue_comment
+            )
+
         # determine the success of the activity
         self.statuses["activity"] = self.statuses.get("generate")
 
         # send email only if new XML files were generated
-        if self.statuses.get("generate") and new_meca_version_dois:
+        if self.statuses.get("generate") and ingest_version_doi_list:
             self.logger.info("%s, sending admin email" % self.name)
-            self.statuses["email"] = self.send_admin_email(new_meca_version_dois)
+            self.statuses["email"] = self.send_admin_email(ingest_version_doi_list)
         else:
             self.logger.info("%s, no new DOI versions found" % self.name)
 
@@ -212,7 +230,7 @@ class activity_FindNewDocmaps(Activity):
 
         return True
 
-    def send_admin_email(self, new_meca_version_dois):
+    def send_admin_email(self, ingest_version_doi_list):
         "after do_activity is finished, send emails to admin with the status"
         datetime_string = time.strftime("%Y-%m-%d %H:%M", time.gmtime())
         activity_status_text = utils.get_activity_status_text(
@@ -224,9 +242,9 @@ class activity_FindNewDocmaps(Activity):
         )
 
         # Report on new MECA files
-        if len(new_meca_version_dois) > 0:
+        if len(ingest_version_doi_list) > 0:
             body += "\nVersion DOI with MECA file to ingest:\n"
-            for version_doi in sorted(new_meca_version_dois):
+            for version_doi in sorted(ingest_version_doi_list):
                 body += "%s\n" % version_doi
 
         body += email_provider.get_admin_email_body_foot(
@@ -241,7 +259,7 @@ class activity_FindNewDocmaps(Activity):
             activity_status_text,
             self.name,
             self.settings.domain,
-            new_meca_version_dois,
+            ingest_version_doi_list,
         )
         sender_email = self.settings.ses_poa_sender_email
 

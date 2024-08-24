@@ -209,8 +209,8 @@ class TestProfileDocmapSteps(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-class TestChangedVersionDoiList(unittest.TestCase):
-    "tests for changed_version_doi_list()"
+class TestChangedVersionDoiData(unittest.TestCase):
+    "tests for changed_version_doi_data()"
 
     def setUp(self):
         self.logger = FakeLogger()
@@ -224,10 +224,17 @@ class TestChangedVersionDoiList(unittest.TestCase):
         )
 
     @patch.object(utils, "get_current_datetime")
-    def test_changed_version_doi_list(self, fake_get_current_datetime):
+    def test_changed_version_doi_data(self, fake_get_current_datetime):
         "test by loading some test fixture data"
         fake_get_current_datetime.return_value = self.past_date
-        expected = ["10.7554/eLife.84364.1", "10.7554/eLife.87445.2"]
+        expected = {
+            "ingest_version_doi_list": [
+                "10.7554/eLife.84364.1",
+                "10.7554/eLife.87445.2",
+            ],
+            "new_version_doi_list": ["10.7554/eLife.84364.1", "10.7554/eLife.84364.2"],
+            "no_computer_file_version_doi_list": ["10.7554/eLife.84364.2"],
+        }
         docmap_index_json = {
             "docmaps": [
                 json.loads(read_fixture("sample_docmap_for_84364.json")),
@@ -240,20 +247,29 @@ class TestChangedVersionDoiList(unittest.TestCase):
         del prev_docmap_json["steps"]["_:b4"]
         prev_docmap_index_json = {"docmaps": [prev_docmap_json]}
 
-        result = docmap_provider.changed_version_doi_list(
+        result = docmap_provider.changed_version_doi_data(
             docmap_index_json, prev_docmap_index_json, self.logger
         )
-        self.assertEqual(result, expected)
+        self.assertDictEqual(result, expected)
 
     @patch.object(utils, "get_current_datetime")
     def test_not_in_previous_list(self, fake_get_current_datetime):
         "test if the version DOI in the current list does not appear in the previous list"
         fake_get_current_datetime.return_value = self.past_date
-        expected = [
-            "10.7554/eLife.84364.1",
-            "10.7554/eLife.87445.1",
-            "10.7554/eLife.87445.2",
-        ]
+        expected = {
+            "ingest_version_doi_list": [
+                "10.7554/eLife.84364.1",
+                "10.7554/eLife.87445.1",
+                "10.7554/eLife.87445.2",
+            ],
+            "new_version_doi_list": [
+                "10.7554/eLife.84364.1",
+                "10.7554/eLife.84364.2",
+                "10.7554/eLife.87445.1",
+                "10.7554/eLife.87445.2",
+            ],
+            "no_computer_file_version_doi_list": ["10.7554/eLife.84364.2"],
+        }
         docmap_index_json = {
             "docmaps": [
                 json.loads(read_fixture("sample_docmap_for_84364.json")),
@@ -261,21 +277,29 @@ class TestChangedVersionDoiList(unittest.TestCase):
             ]
         }
         prev_docmap_index_json = {"docmaps": []}
-
-        result = docmap_provider.changed_version_doi_list(
+        result = docmap_provider.changed_version_doi_data(
             docmap_index_json, prev_docmap_index_json, self.logger
         )
-        self.assertEqual(result, expected)
+        self.assertDictEqual(result, expected)
 
     @patch.object(utils, "get_current_datetime")
     def test_previous_json_none(self, fake_get_current_datetime):
         "test if previous JSON is None"
         fake_get_current_datetime.return_value = self.past_date
-        expected = [
-            "10.7554/eLife.84364.1",
-            "10.7554/eLife.87445.1",
-            "10.7554/eLife.87445.2",
-        ]
+        expected = {
+            "ingest_version_doi_list": [
+                "10.7554/eLife.84364.1",
+                "10.7554/eLife.87445.1",
+                "10.7554/eLife.87445.2",
+            ],
+            "new_version_doi_list": [
+                "10.7554/eLife.84364.1",
+                "10.7554/eLife.84364.2",
+                "10.7554/eLife.87445.1",
+                "10.7554/eLife.87445.2",
+            ],
+            "no_computer_file_version_doi_list": ["10.7554/eLife.84364.2"],
+        }
         docmap_index_json = {
             "docmaps": [
                 json.loads(read_fixture("sample_docmap_for_84364.json")),
@@ -284,31 +308,37 @@ class TestChangedVersionDoiList(unittest.TestCase):
         }
         prev_docmap_index_json = None
 
-        result = docmap_provider.changed_version_doi_list(
+        result = docmap_provider.changed_version_doi_data(
             docmap_index_json, prev_docmap_index_json, self.logger
         )
-        self.assertEqual(result, expected)
+        self.assertDictEqual(result, expected)
 
     @patch.object(utils, "get_current_datetime")
     def test_previous_json_none_no_new_json(self, fake_get_current_datetime):
         "test if previous JSON is None and no data in new JSON"
         fake_get_current_datetime.return_value = self.past_date
-        expected = []
+        expected = {
+            "ingest_version_doi_list": [],
+            "new_version_doi_list": [],
+            "no_computer_file_version_doi_list": [],
+        }
         docmap_index_json = {"docmaps": [ELIFE_DOCMAP]}
         prev_docmap_index_json = None
 
-        result = docmap_provider.changed_version_doi_list(
+        result = docmap_provider.changed_version_doi_data(
             docmap_index_json, prev_docmap_index_json, self.logger
         )
-        self.assertEqual(result, expected)
+        self.assertDictEqual(result, expected)
 
     @patch.object(utils, "get_current_datetime")
     def test_peer_review_added(self, fake_get_current_datetime):
         "test if a peer review is added"
         fake_get_current_datetime.return_value = self.past_date
-        expected = [
-            "10.7554/eLife.84364.1",
-        ]
+        expected = {
+            "ingest_version_doi_list": ["10.7554/eLife.84364.1"],
+            "new_version_doi_list": [],
+            "no_computer_file_version_doi_list": ["10.7554/eLife.84364.2"],
+        }
         docmap_index_json = {
             "docmaps": [
                 json.loads(read_fixture("sample_docmap_for_84364.json")),
@@ -318,17 +348,20 @@ class TestChangedVersionDoiList(unittest.TestCase):
         prev_docmap_json = json.loads(read_fixture("sample_docmap_for_84364.json"))
         del prev_docmap_json["steps"]["_:b1"]["actions"][-1]
         prev_docmap_index_json = {"docmaps": [prev_docmap_json]}
-
-        result = docmap_provider.changed_version_doi_list(
+        result = docmap_provider.changed_version_doi_data(
             docmap_index_json, prev_docmap_index_json, self.logger
         )
-        self.assertEqual(result, expected)
+        self.assertDictEqual(result, expected)
 
     @patch.object(utils, "get_current_datetime")
     def test_not_changed(self, fake_get_current_datetime):
         "test if the JSON is unchanged between previous and current run"
         fake_get_current_datetime.return_value = self.past_date
-        expected = []
+        expected = {
+            "ingest_version_doi_list": [],
+            "new_version_doi_list": [],
+            "no_computer_file_version_doi_list": ["10.7554/eLife.84364.2"],
+        }
         docmap_index_json = {
             "docmaps": [
                 json.loads(read_fixture("sample_docmap_for_84364.json")),
@@ -338,32 +371,40 @@ class TestChangedVersionDoiList(unittest.TestCase):
         prev_docmap_json = json.loads(read_fixture("sample_docmap_for_84364.json"))
         prev_docmap_index_json = {"docmaps": [prev_docmap_json]}
 
-        result = docmap_provider.changed_version_doi_list(
+        result = docmap_provider.changed_version_doi_data(
             docmap_index_json, prev_docmap_index_json, self.logger
         )
-        self.assertEqual(result, expected)
+        self.assertDictEqual(result, expected)
 
     @patch.object(utils, "get_current_datetime")
     def test_no_computer_file(self, fake_get_current_datetime):
         "test if there is no computer-file"
         fake_get_current_datetime.return_value = self.past_date
-        expected = ["10.7554/eLife.87445.1"]
+        expected = {
+            "ingest_version_doi_list": ["10.7554/eLife.87445.1"],
+            "new_version_doi_list": ["10.7554/eLife.87445.1", "10.7554/eLife.87445.2"],
+            "no_computer_file_version_doi_list": ["10.7554/eLife.87445.2"],
+        }
         # delete computer-file data
         docmap_json = json.loads(read_fixture("sample_docmap_for_87445.json"))
         del docmap_json["steps"]["_:b3"]["inputs"][0]["content"]
         docmap_index_json = {"docmaps": [docmap_json]}
         prev_docmap_index_json = None
 
-        result = docmap_provider.changed_version_doi_list(
+        result = docmap_provider.changed_version_doi_data(
             docmap_index_json, prev_docmap_index_json, self.logger
         )
-        self.assertEqual(result, expected)
+        self.assertDictEqual(result, expected)
 
     @patch.object(utils, "get_current_datetime")
     def test_past_published_date(self, fake_get_current_datetime):
         "test if the published date is far in the past"
         fake_get_current_datetime.return_value = self.future_date
-        expected = []
+        expected = {
+            "ingest_version_doi_list": [],
+            "new_version_doi_list": [],
+            "no_computer_file_version_doi_list": [],
+        }
         docmap_index_json = {
             "docmaps": [
                 json.loads(read_fixture("sample_docmap_for_87445.json")),
@@ -374,10 +415,10 @@ class TestChangedVersionDoiList(unittest.TestCase):
         del prev_docmap_json["steps"]["_:b3"]
         del prev_docmap_json["steps"]["_:b4"]
         prev_docmap_index_json = {"docmaps": [prev_docmap_json]}
-        result = docmap_provider.changed_version_doi_list(
+        result = docmap_provider.changed_version_doi_data(
             docmap_index_json, prev_docmap_index_json, self.logger
         )
-        self.assertEqual(result, expected)
+        self.assertDictEqual(result, expected)
         self.assertEqual(
             self.logger.loginfo[-1],
             (
@@ -390,17 +431,21 @@ class TestChangedVersionDoiList(unittest.TestCase):
     def test_past_published_date_no_previous(self, fake_get_current_datetime):
         "test if the published date is far in the past and no previous docmap was stored"
         fake_get_current_datetime.return_value = self.future_date
-        expected = []
+        expected = {
+            "ingest_version_doi_list": [],
+            "new_version_doi_list": ["10.7554/eLife.87445.1", "10.7554/eLife.87445.2"],
+            "no_computer_file_version_doi_list": [],
+        }
         docmap_index_json = {
             "docmaps": [
                 json.loads(read_fixture("sample_docmap_for_87445.json")),
             ]
         }
         prev_docmap_index_json = None
-        result = docmap_provider.changed_version_doi_list(
+        result = docmap_provider.changed_version_doi_data(
             docmap_index_json, prev_docmap_index_json, self.logger
         )
-        self.assertEqual(result, expected)
+        self.assertDictEqual(result, expected)
         self.assertEqual(
             self.logger.loginfo[-1],
             (
