@@ -232,13 +232,12 @@ class TestValidateJatsDtd(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.logexception,
             (
-                "%s, exception when adding a comment to Github for version DOI %s "
-                "file %s/content/24301711.xml. Details: An exception"
+                "%s, exception when adding a comment to Github for version DOI %s - "
+                "Details: An exception"
             )
             % (
                 self.activity.name,
                 SESSION_DICT.get("version_doi"),
-                self.activity.directories.get("INPUT_DIR"),
             ),
         )
         self.assertEqual(
