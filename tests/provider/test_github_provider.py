@@ -105,10 +105,12 @@ class TestAddGithubIssueComment(unittest.TestCase):
         caller_name = "test"
         version_doi = "10.7554/eLife.95901.1"
         issue_comment = "Test comment."
-        result = github_provider.add_github_issue_comment(
+        github_provider.add_github_issue_comment(
             settings_mock, fake_logger, caller_name, version_doi, issue_comment
         )
-        self.assertEqual(result, None)
+        # assert
+        self.assertEqual(fake_logger.loginfo, ["First logger info"])
+        self.assertEqual(fake_logger.logexception, "First logger exception")
 
     @patch.object(FakeGithubRepository, "get_issues")
     @patch.object(github_provider, "Github")
@@ -121,10 +123,9 @@ class TestAddGithubIssueComment(unittest.TestCase):
         caller_name = "test"
         version_doi = "10.7554/eLife.95901.1"
         issue_comment = "Test comment."
-        result = github_provider.add_github_issue_comment(
+        github_provider.add_github_issue_comment(
             settings_mock, fake_logger, caller_name, version_doi, issue_comment
         )
-        self.assertEqual(result, None)
         self.assertEqual(
             fake_logger.logexception,
             (
