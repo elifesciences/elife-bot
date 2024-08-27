@@ -337,7 +337,7 @@ class TestChangedVersionDoiData(unittest.TestCase):
         expected = {
             "ingest_version_doi_list": ["10.7554/eLife.84364.1"],
             "new_version_doi_list": [],
-            "no_computer_file_version_doi_list": ["10.7554/eLife.84364.2"],
+            "no_computer_file_version_doi_list": [],
         }
         docmap_index_json = {
             "docmaps": [
@@ -360,7 +360,7 @@ class TestChangedVersionDoiData(unittest.TestCase):
         expected = {
             "ingest_version_doi_list": [],
             "new_version_doi_list": [],
-            "no_computer_file_version_doi_list": ["10.7554/eLife.84364.2"],
+            "no_computer_file_version_doi_list": [],
         }
         docmap_index_json = {
             "docmaps": [
