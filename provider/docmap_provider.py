@@ -164,7 +164,13 @@ def changed_version_doi_data(docmap_index_json, prev_docmap_index_json, logger):
         if not prev_value:
             new_version_doi_list.append(key)
         # peer reviews and no computer-file
-        if value.get("computer-file-count") <= 0 and value.get("peer-review-count") > 0:
+        if value.get("computer-file-count") <= 0 and (
+            (not prev_value and value.get("peer-review-count") > 0)
+            or (
+                prev_value
+                and value.get("peer-review-count") > prev_value.get("peer-review-count")
+            )
+        ):
             no_computer_file_version_doi_list.append(key)
         # DOIs ready to ingest a MECA package
         if (
