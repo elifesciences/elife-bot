@@ -185,10 +185,16 @@ def changed_version_doi_data(docmap_index_json, prev_docmap_index_json, logger):
                     "DOI %s omitted, its published date %s is too far in the past"
                     % (key, value.get("published"))
                 )
+        # if there was a previous docmap, either the computer-file or peer reviews changed
         elif (
             prev_value
             and value.get("computer-file-count") > 0
             and value.get("peer-review-count") > prev_value.get("peer-review-count")
+        ) or (
+            prev_value
+            and value.get("peer-review-count") > 0
+            and prev_value.get("computer-file-count") <= 0
+            and value.get("computer-file-count") > 0
         ):
             if check_published_date(value.get("published")):
                 ingest_version_doi_list.append(key)

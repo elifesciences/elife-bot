@@ -397,6 +397,27 @@ class TestChangedVersionDoiData(unittest.TestCase):
         self.assertDictEqual(result, expected)
 
     @patch.object(utils, "get_current_datetime")
+    def test_computer_file_is_added(self, fake_get_current_datetime):
+        "test if previous docmap has no computer-file and the current docmap does have one"
+        fake_get_current_datetime.return_value = self.past_date
+        expected = {
+            "ingest_version_doi_list": ["10.7554/eLife.87445.2"],
+            "new_version_doi_list": [],
+            "no_computer_file_version_doi_list": [],
+        }
+        docmap_json = json.loads(read_fixture("sample_docmap_for_87445.json"))
+        docmap_index_json = {"docmaps": [docmap_json]}
+        prev_docmap_json = json.loads(read_fixture("sample_docmap_for_87445.json"))
+        # delete computer-file data from previous docmap
+        del prev_docmap_json["steps"]["_:b3"]["inputs"][0]["content"]
+        prev_docmap_index_json = {"docmaps": [prev_docmap_json]}
+
+        result = docmap_provider.changed_version_doi_data(
+            docmap_index_json, prev_docmap_index_json, self.logger
+        )
+        self.assertDictEqual(result, expected)
+
+    @patch.object(utils, "get_current_datetime")
     def test_past_published_date(self, fake_get_current_datetime):
         "test if the published date is far in the past"
         fake_get_current_datetime.return_value = self.future_date
