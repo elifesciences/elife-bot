@@ -72,14 +72,36 @@ class activity_AcceptedSubmissionVersionDoi(AcceptedBaseActivity):
         self.statuses["docmap_string"] = True
 
         # get latest version DOI from the docmap
-        version_doi = cleaner.version_doi_from_docmap(
+        published_version_doi = cleaner.version_doi_from_docmap(
             docmap_string, input_filename, published=True
+        )
+        self.logger.info(
+            "%s, %s published_version_doi: %s"
+            % (self.name, input_filename, published_version_doi)
+        )
+        # get the latest version DOI, published or unpublished
+        version_doi = cleaner.version_doi_from_docmap(
+            docmap_string, input_filename, published=False
         )
         self.logger.info(
             "%s, %s version_doi: %s" % (self.name, input_filename, version_doi)
         )
+        # add a warning if an unpublished version DOI is used
+        if (
+            version_doi
+            and published_version_doi
+            and version_doi != published_version_doi
+        ):
+            cleaner.LOGGER.warning(
+                (
+                    "%s A publication history event for "
+                    "version DOI %s will be missing in the XML"
+                ),
+                input_filename,
+                version_doi,
+            )
 
-        # tget the next version DOI value
+        # get the next version DOI value
         next_version_doi = cleaner.next_version_doi(version_doi, input_filename)
         self.logger.info(
             "%s, %s next_version_doi: %s"
