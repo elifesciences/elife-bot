@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import copy
+import json
 import os
 import glob
 import shutil
@@ -101,6 +102,10 @@ class TestAcceptedSubmissionVersionDoi(unittest.TestCase):
         fake_session.return_value = self.session
         sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
         fake_get.return_value = FakeResponse(200, content=sample_html)
+        # modify the session docmap string to test an unpublished version DOI value
+        docmap_json = json.loads(self.session.get_value("docmap_string"))
+        del docmap_json["steps"]["_:b5"]["actions"][0]["outputs"][0]["published"]
+        self.session.store_value("docmap_string", json.dumps(docmap_json))
         # do the activity
         result = self.activity.do_activity(input_data(test_data.get("filename")))
         self.assertEqual(result, test_data.get("expected_result"))
@@ -154,6 +159,17 @@ class TestAcceptedSubmissionVersionDoi(unittest.TestCase):
                 "elifecleaner:prc:version_doi_from_docmap: "
                 "Version DOI from the docmap: 10.7554/eLife.85111.2"
             )
+            in log_contents
+        )
+        self.assertTrue(
+            (
+                (
+                    "WARNING elifecleaner:activity_AcceptedSubmissionVersionDoi:do_activity:"
+                    " %s A publication history event for version DOI 10.7554/eLife.85111.2 "
+                    "will be missing in the XML"
+                )
+            )
+            % (test_data.get("filename"))
             in log_contents
         )
 
