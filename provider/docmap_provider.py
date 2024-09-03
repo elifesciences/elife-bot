@@ -15,7 +15,7 @@ LOG_FORMAT_STRING = (
 REQUESTS_TIMEOUT = (10, 60)
 
 # number of hours for published date comparisons
-PUBLISHED_DATE_HOURS_DELTA = 24
+PUBLISHED_DATE_HOURS_DELTA = 0
 
 
 def docmap_index_url(settings):
