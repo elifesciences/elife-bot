@@ -509,7 +509,7 @@ class TestCheckPublishedDate(unittest.TestCase):
     def test_near_published_date(self, fake_get_current_datetime):
         "test for a published date that is just slightly in the past"
         fake_get_current_datetime.return_value = self.future_date + datetime.timedelta(
-            hours=5
+            hours=0
         )
         result = docmap_provider.check_published_date(self.future_date_string)
         self.assertEqual(result, True)
