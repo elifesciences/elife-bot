@@ -528,13 +528,11 @@ class TestConditionalStarts(unittest.TestCase):
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
                 "starter_DepositCrossrefPendingPublication",
-                "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
                 "DepositCrossrefPendingPublication",
-                "PubRouterDeposit_Scilit",
             ],
         },
     )
