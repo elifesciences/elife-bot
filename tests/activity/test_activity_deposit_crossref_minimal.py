@@ -102,7 +102,7 @@ class TestDepositCrossrefMinimal(unittest.TestCase):
             "expected_generate_status": True,
             "expected_publish_status": False,
             "expected_outbox_status": None,
-            "expected_email_status": True,
+            "expected_email_status": None,
             "expected_activity_status": False,
             "expected_file_count": 1,
         },

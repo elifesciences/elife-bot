@@ -182,8 +182,8 @@ class activity_DepositCrossrefPeerReview(Activity):
         )
 
         # Send email
-        # Only if there were files approved for publishing
-        if self.good_xml_files:
+        # Only if there were files approved for publishing and all were sent successfully
+        if self.good_xml_files and self.statuses.get("publish") is True:
             self.statuses["email"] = self.send_admin_email(
                 outbox_s3_key_names, http_detail_list
             )
