@@ -71,11 +71,12 @@ class activity_MecaXslt(Activity):
         )
 
         # download XML from the bucket folder
+        storage_resource_origin = orig_resource + "/" + article_xml_path
         self.logger.info(
-            "%s, downloading %s to %s" % (self.name, orig_resource, xml_file_path)
+            "%s, downloading %s to %s"
+            % (self.name, storage_resource_origin, xml_file_path)
         )
         with open(xml_file_path, "wb") as open_file:
-            storage_resource_origin = orig_resource + "/" + article_xml_path
             storage.get_resource_to_file(storage_resource_origin, open_file)
         self.statuses["download"] = True
 
