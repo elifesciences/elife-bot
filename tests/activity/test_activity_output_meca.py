@@ -12,7 +12,7 @@ from activity.activity_OutputMeca import (
 )
 from tests import list_files
 from tests.activity.classes_mock import FakeLogger, FakeSession, FakeStorageContext
-from tests.activity import settings_mock, test_activity_data
+from tests.activity import helpers, settings_mock, test_activity_data
 
 
 class TestOutputMeca(unittest.TestCase):
@@ -36,16 +36,7 @@ class TestOutputMeca(unittest.TestCase):
             test_activity_data.ingest_meca_session_example().get("expanded_folder"),
         )
 
-        # create folders if they do not exist
-        os.makedirs(resource_folder, exist_ok=True)
-        # unzip the test fixture files
-        zip_file_paths = []
-        with zipfile.ZipFile(meca_file_path, "r") as open_zipfile:
-            for zipfile_info in open_zipfile.infolist():
-                if zipfile_info.is_dir():
-                    continue
-                open_zipfile.extract(zipfile_info, resource_folder)
-                zip_file_paths.append(zipfile_info.filename)
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
         resources = [
             os.path.join(
                 test_activity_data.ingest_meca_session_example().get("expanded_folder"),
