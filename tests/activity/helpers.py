@@ -188,3 +188,18 @@ def add_sub_article_xml(xml_path, sub_article_xml):
     with open(xml_path, "w", encoding="utf-8") as open_file:
         xml_string = xml_string.replace("</article>", "%s</article>" % sub_article_xml)
         open_file.write(xml_string)
+
+
+def unzip_fixture(zip_file_path, folder_path):
+    "unzip a zip and return file names"
+    # create folders if they do not exist
+    os.makedirs(folder_path, exist_ok=True)
+    # unzip the test fixture files
+    zip_file_paths = []
+    with zipfile.ZipFile(zip_file_path, "r") as open_zipfile:
+        for zipfile_info in open_zipfile.infolist():
+            if zipfile_info.is_dir():
+                continue
+            open_zipfile.extract(zipfile_info, folder_path)
+            zip_file_paths.append(zipfile_info.filename)
+    return zip_file_paths
