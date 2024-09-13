@@ -364,11 +364,15 @@ def sub_article_data(docmap_string, article, version_doi=None, generate_dois=Tru
     )
 
 
-def add_sub_article_xml(docmap_string, article_xml, terms_yaml=None):
+def add_sub_article_xml(docmap_string, article_xml, terms_yaml=None, generate_dois=True):
     if terms_yaml:
         # set the path to the YAML file containing assessment terms data
         assessment_terms.ASSESSMENT_TERMS_YAML = terms_yaml
-    return sub_article.add_sub_article_xml(docmap_string, article_xml)
+    return sub_article.add_sub_article_xml(docmap_string, article_xml, generate_dois=generate_dois)
+
+
+def pretty_sub_article_xml(root):
+    return sub_article.pretty_sub_article_xml(root)
 
 
 def clean_inline_graphic_tags(root):
@@ -544,8 +548,8 @@ def xml_rewrite_file_tags(xml_file_path, file_transformations, identifier):
     transform.xml_rewrite_file_tags(xml_file_path, file_transformations, identifier)
 
 
-def write_xml_file(root, xml_asset_path, identifier):
-    transform.write_xml_file(root, xml_asset_path, identifier)
+def write_xml_file(root, xml_asset_path, identifier, doctype_dict=None, processing_instructions=None):
+    transform.write_xml_file(root, xml_asset_path, identifier, doctype_dict, processing_instructions)
 
 
 def bucket_asset_file_name_map(settings, bucket_name, expanded_folder):
