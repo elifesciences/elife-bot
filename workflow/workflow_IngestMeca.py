@@ -36,6 +36,7 @@ class workflow_IngestMeca(Workflow):
             "steps": [
                 define_workflow_step("PingWorker", data),
                 define_workflow_step("ExpandMeca", data),
+                define_workflow_step("MecaPeerReviews", data),
                 define_workflow_step("MecaXslt", data),
                 define_workflow_step("ValidateJatsDtd", data),
                 define_workflow_step("ValidatePreprintSchematron", data),
