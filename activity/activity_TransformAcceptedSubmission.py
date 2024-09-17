@@ -187,7 +187,7 @@ class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
     def set_volume_tag(self, article_id, xml_file_path, input_filename, docmap_string):
         "from the docmap calculate the volume value and set the volume XML tag text"
         # get volume from the docmap
-        volume = cleaner.volume_from_docmap(docmap_string, input_filename)
+        volume = cleaner.volume_from_docmap(docmap_string, identifier=input_filename)
         self.logger.info(
             "%s, from article %s docmap got volume value: %s",
             self.name,
@@ -212,8 +212,10 @@ class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
         self, article_id, xml_file_path, input_filename, docmap_string
     ):
         "from the docmap get the elocation-id value and set the elocation-id XML tag text"
-        # get volume from the docmap
-        elocation_id = cleaner.elocation_id_from_docmap(docmap_string, input_filename)
+        # get elocation-id from the docmap
+        elocation_id = cleaner.elocation_id_from_docmap(
+            docmap_string, identifier=input_filename
+        )
         self.logger.info(
             "%s, from article %s docmap got elocation_id value: %s",
             self.name,
@@ -221,7 +223,7 @@ class activity_TransformAcceptedSubmission(AcceptedBaseActivity):
             elocation_id,
         )
         if elocation_id:
-            # modify the volume tag text
+            # modify the elocation-id tag text
             root = cleaner.parse_article_xml(xml_file_path)
             elocation_id_tag = root.find("front/article-meta/elocation-id")
             if elocation_id_tag is not None:

@@ -364,11 +364,15 @@ def sub_article_data(docmap_string, article, version_doi=None, generate_dois=Tru
     )
 
 
-def add_sub_article_xml(docmap_string, article_xml, terms_yaml=None, generate_dois=True):
+def add_sub_article_xml(
+    docmap_string, article_xml, terms_yaml=None, generate_dois=True
+):
     if terms_yaml:
         # set the path to the YAML file containing assessment terms data
         assessment_terms.ASSESSMENT_TERMS_YAML = terms_yaml
-    return sub_article.add_sub_article_xml(docmap_string, article_xml, generate_dois=generate_dois)
+    return sub_article.add_sub_article_xml(
+        docmap_string, article_xml, generate_dois=generate_dois
+    )
 
 
 def pretty_sub_article_xml(root):
@@ -522,12 +526,12 @@ def add_pub_history(root, history_data, identifier):
     return prc.add_pub_history(root, history_data, identifier)
 
 
-def volume_from_docmap(docmap_string, input_filename):
-    return prc.volume_from_docmap(docmap_string, input_filename)
+def volume_from_docmap(docmap_string, identifier=None):
+    return prc.volume_from_docmap(docmap_string, identifier=identifier)
 
 
-def elocation_id_from_docmap(docmap_string, input_filename):
-    return prc.elocation_id_from_docmap(docmap_string, input_filename)
+def elocation_id_from_docmap(docmap_string, identifier=None):
+    return prc.elocation_id_from_docmap(docmap_string, identifier=identifier)
 
 
 def version_doi_from_docmap(docmap_string, input_filename, published=True):
@@ -548,8 +552,12 @@ def xml_rewrite_file_tags(xml_file_path, file_transformations, identifier):
     transform.xml_rewrite_file_tags(xml_file_path, file_transformations, identifier)
 
 
-def write_xml_file(root, xml_asset_path, identifier, doctype_dict=None, processing_instructions=None):
-    transform.write_xml_file(root, xml_asset_path, identifier, doctype_dict, processing_instructions)
+def write_xml_file(
+    root, xml_asset_path, identifier, doctype_dict=None, processing_instructions=None
+):
+    transform.write_xml_file(
+        root, xml_asset_path, identifier, doctype_dict, processing_instructions
+    )
 
 
 def bucket_asset_file_name_map(settings, bucket_name, expanded_folder):
