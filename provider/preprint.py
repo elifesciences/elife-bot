@@ -110,7 +110,7 @@ def build_article(article_id, docmap_string, article_xml_path, version=None):
     article.add_date(ArticleDate("posted_date", posted_date_struct))
 
     # volume from year of the first reviewed-preprint
-    article.volume = cleaner.volume_from_docmap(docmap_string, article_id)
+    article.volume = cleaner.volume_from_docmap(docmap_string, identifier=article_id)
 
     # license
     for history_event in pub_history_data:

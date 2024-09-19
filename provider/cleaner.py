@@ -526,12 +526,14 @@ def add_pub_history(root, history_data, identifier):
     return prc.add_pub_history(root, history_data, identifier)
 
 
-def volume_from_docmap(docmap_string, identifier=None):
-    return prc.volume_from_docmap(docmap_string, identifier=identifier)
+def volume_from_docmap(docmap_string, version_doi=None, identifier=None):
+    return prc.volume_from_docmap(
+        docmap_string, version_doi=version_doi, identifier=identifier
+    )
 
 
-def elocation_id_from_docmap(docmap_string, identifier=None):
-    return prc.elocation_id_from_docmap(docmap_string, identifier=identifier)
+def elocation_id_from_docmap(docmap_string, version_doi=None, identifier=None):
+    return prc.elocation_id_from_docmap(docmap_string, version_doi=None, identifier=identifier)
 
 
 def version_doi_from_docmap(docmap_string, input_filename, published=True):
