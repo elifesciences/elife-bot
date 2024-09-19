@@ -533,7 +533,9 @@ def volume_from_docmap(docmap_string, version_doi=None, identifier=None):
 
 
 def elocation_id_from_docmap(docmap_string, version_doi=None, identifier=None):
-    return prc.elocation_id_from_docmap(docmap_string, version_doi=None, identifier=identifier)
+    return prc.elocation_id_from_docmap(
+        docmap_string, version_doi=version_doi, identifier=identifier
+    )
 
 
 def version_doi_from_docmap(docmap_string, input_filename, published=True):
