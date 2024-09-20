@@ -119,7 +119,7 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
         self.assertTrue(
             xml_content.count(
                 (
-                    '<date date-type="sent-for-review">'
+                    '<date date-type="sent-for-review" iso-8601-date="2022-11-28">'
                     "<day>28</day><month>11</month><year>2022</year>"
                     "</date>"
                     "</history>"
