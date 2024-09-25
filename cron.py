@@ -184,16 +184,16 @@ def conditional_starts(current_datetime):
             )
 
         # Scilit deposits once per day 23:15 UTC
-        # if current_time.tm_hour == 23:
-        #    conditional_start_list.append(
-        #        OrderedDict(
-        #            [
-        #                ("starter_name", "starter_PubRouterDeposit"),
-        #                ("workflow_id", "PubRouterDeposit_Scilit"),
-        #                ("start_seconds", 60 * 31),
-        #            ]
-        #        )
-        #    )
+        if current_time.tm_hour == 23:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_PubRouterDeposit"),
+                        ("workflow_id", "PubRouterDeposit_Scilit"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
 
     elif current_time.tm_min >= 20 and current_time.tm_min <= 29:
         # Jobs to start at 20 minutes past the hour
