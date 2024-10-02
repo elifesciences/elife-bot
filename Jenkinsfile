@@ -20,17 +20,6 @@ elifePipeline {
     }
 
     elifeMainlineOnly {
-        stage 'End2end tests', {
-            elifeSpectrum(
-                deploy: [
-                    stackname: 'elife-bot--end2end',
-                    revision: commit,
-                    folder: '/opt/elife-bot',
-                ],
-                marker: 'bot'
-            )
-        }
-
         stage 'Deploy on continuumtest', {
             lock('elife-bot--continuumtest') {
                 builderDeployRevision 'elife-bot--continuumtest', commit
