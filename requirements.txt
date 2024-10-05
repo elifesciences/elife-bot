@@ -17,7 +17,7 @@ Deprecated==1.2.14
 digestparser==0.2.0
 dill==0.3.8
 docker==7.1.0
-docmaptools==0.25.0
+docmaptools==0.26.0
 ejpcsvparser==0.4.0
 elifearticle==0.20.0
 elifecleaner==0.70.0
