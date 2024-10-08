@@ -1,9 +1,13 @@
 import os
 import json
+import re
 from provider import github_provider, meca
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from activity.objects import Activity
+
+
+ENHANCE_MESSAGE = True
 
 
 class activity_ValidatePreprintSchematron(Activity):
@@ -111,7 +115,7 @@ class activity_ValidatePreprintSchematron(Activity):
                 % (self.name, xml_file_path, log_message)
             )
             # add github issue comment
-            issue_comment = "```\n%s\n```" % log_message
+            issue_comment = enhance_validation_message(log_message, enhance_message=ENHANCE_MESSAGE)
             github_provider.add_github_issue_comment(
                 self.settings, self.logger, self.name, version_doi, issue_comment
             )
@@ -180,3 +184,16 @@ def compose_validation_message(errors, warnings):
     for message in warnings:
         log_messages.append("%s: %s" % (message.get("type"), message.get("message")))
     return "\n".join(log_messages)
+
+
+def enhance_validation_message(log_message, enhance_message=False):
+    "add formatting for coloured Github issue comments"
+    if enhance_message:
+        term_map = {"error": "-", "warning": "!", "info": "+"}
+        for term, symbol in term_map.items():
+            log_message = re.sub(
+                r"^(%s: )|(\n)(%s: )" % (term, term), r"\2%s \1\3" % symbol, log_message
+            )
+        return "```%s\n%s\n```" % ("diff", log_message)
+    # default
+    return  "```\n%s\n```" % log_message
