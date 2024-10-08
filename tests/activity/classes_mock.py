@@ -337,6 +337,9 @@ class FakeGithubContentFile:
 class FakeIssueComment:
     "mock object for github.IssueComment.IssueComment"
 
+    def __init__(self, body):
+        self.body = body
+
 
 class FakeGithubIssue:
     "mock object for github.Issue.Issue"
@@ -344,6 +347,7 @@ class FakeGithubIssue:
     def __init__(self, title=None, number=None):
         self.title = title
         self.number = number
+        self.comment = None
 
     def __repr__(self) -> str:
         return "{class_name}({params})".format(
@@ -352,4 +356,5 @@ class FakeGithubIssue:
         )
 
     def create_comment(self, body):
-        return FakeIssueComment()
+        self.comment = FakeIssueComment(body)
+        return self.comment

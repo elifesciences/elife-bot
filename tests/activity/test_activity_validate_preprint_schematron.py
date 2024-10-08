@@ -82,7 +82,8 @@ class TestValidatePreprintSchematron(unittest.TestCase):
         fake_session,
     ):
         directory = TempDirectory()
-        fake_find_github_issue.return_value = FakeGithubIssue()
+        github_issue = FakeGithubIssue()
+        fake_find_github_issue.return_value = github_issue
         mock_session = FakeSession(SESSION_DICT)
         fake_session.return_value = mock_session
         destination_path = os.path.join(
@@ -105,11 +106,13 @@ class TestValidatePreprintSchematron(unittest.TestCase):
         )
         fake_post_xml_file.return_value = validation_content
         expected_result = activity_class.ACTIVITY_SUCCESS
+        expected_comment_body = "```diff\n(No schematron messages)\n```"
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # check assertions
         self.assertEqual(result, expected_result)
         self.assertEqual(self.activity.statuses.get("results"), True)
+        self.assertEqual(github_issue.comment.body, expected_comment_body)
 
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_xml_file")
@@ -369,4 +372,47 @@ class TestComposeValidationMessage(unittest.TestCase):
         warnings = []
         expected = "(No schematron messages)"
         result = activity_module.compose_validation_message(errors, warnings)
+        self.assertEqual(result, expected)
+
+
+class TestEnhanceValidationMessage(unittest.TestCase):
+    "test for enhance_validation_message()"
+
+    def test_enhance_validation_message(self):
+        "test additional formatting of errors and warnings"
+        log_message = "\n".join(
+            [
+                ("error: [journal-ref-article-title] ..."),
+                ("warning: [p-all-bold] Content of p element ..."),
+                ("info: [p-all-bold] Content of p element is entirely ..."),
+            ]
+        )
+        expected = (
+            "```diff\n"
+            "- error: [journal-ref-article-title] ...\n"
+            "! warning: [p-all-bold] Content of p element ...\n"
+            "+ info: [p-all-bold] Content of p element is entirely ...\n"
+            "```"
+        )
+        result = activity_module.enhance_validation_message(
+            log_message, enhance_message=True
+        )
+        self.assertEqual(result, expected)
+
+    def test_blank_result(self):
+        "if no errors or warnings"
+        log_message = "(No schematron messages)"
+        expected = "```diff\n(No schematron messages)\n```"
+        result = activity_module.enhance_validation_message(
+            log_message, enhance_message=True
+        )
+        self.assertEqual(result, expected)
+
+    def test_no_message_enhancement(self):
+        "test if no additional enhancement is added"
+        log_message = "(No schematron messages)"
+        expected = "```\n(No schematron messages)\n```"
+        result = activity_module.enhance_validation_message(
+            log_message, enhance_message=False
+        )
         self.assertEqual(result, expected)
