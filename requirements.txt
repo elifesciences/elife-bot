@@ -1,4 +1,4 @@
-# file generated 2024-10-04 - see update-dependencies.sh
+# file generated 2024-10-09 - see update-dependencies.sh
 arrow==1.3.0
 astroid==2.15.8
 async-timeout==4.0.3
@@ -40,7 +40,7 @@ grpcio-status==1.62.3
 idna==3.8
 iniconfig==2.0.0
 isort==5.13.2
-jatsgenerator==0.13.0
+jatsgenerator==0.14.0
 Jinja2==3.1.4
 jmespath==1.0.1
 lazy-object-proxy==1.10.0
