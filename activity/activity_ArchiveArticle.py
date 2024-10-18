@@ -2,7 +2,7 @@ import os
 import json
 import zipfile
 from datetime import datetime
-from provider import utils
+from provider import article_processing, utils
 from provider.storage_provider import storage_context
 from activity.objects import Activity
 
@@ -158,21 +158,12 @@ class activity_ArchiveArticle(Activity):
         # rename downloaded folder
         zip_path = os.path.join(self.get_tmp_dir(), zip_dir_name) + ".zip"
         # zip expanded folder
-        with zipfile.ZipFile(
-            zip_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True
-        ) as open_zip:
-            self.logger.info("Opened zip file %s", zip_path)
-            for root, dirs, files in os.walk(zip_dir_path):
-                for dir_file in files:
-                    filename = os.path.join(root, dir_file)
-                    if os.path.isfile(filename):
-                        self.logger.info(
-                            "Adding file %s to zip file %s", (filename, zip_path)
-                        )
-                        # Archive file name, effectively make the
-                        # zip_dir the root directory by stripping it from the file name f
-                        arcname = root.rstrip(zip_dir_path) + dir_file
-                        open_zip.write(filename, arcname)
+        article_processing.zip_files(
+            zip_file_path=zip_path,
+            folder_path=zip_dir_path,
+            caller_name=self.name,
+            logger=self.logger,
+        )
         return zip_path
 
     def upload_zip(self, output_bucket_name, file_name_path):
