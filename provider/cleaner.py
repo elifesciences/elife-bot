@@ -15,6 +15,7 @@ from elifecleaner import (
     fig,
     parse,
     prc,
+    pub_history,
     sub_article,
     table,
     transform,
@@ -500,8 +501,8 @@ def get_docmap_string_with_retry(settings, article_id, caller_name, logger):
     return docmap_string
 
 
-def review_date_from_docmap(docmap_string, input_filename):
-    return prc.review_date_from_docmap(docmap_string, input_filename)
+def review_date_from_docmap(docmap_string, identifier=None):
+    return prc.review_date_from_docmap(docmap_string, identifier=identifier)
 
 
 def date_struct_from_string(date_string):
@@ -522,8 +523,10 @@ def docmap_preprint_history_from_docmap(docmap_string):
     return docmap_parse.docmap_preprint_history(d_json)
 
 
-def add_pub_history(root, history_data, identifier):
-    return prc.add_pub_history(root, history_data, identifier)
+def add_pub_history(root, history_data, docmap_string=None, identifier=None):
+    return pub_history.add_pub_history(
+        root, history_data, docmap_string=docmap_string, identifier=identifier
+    )
 
 
 def volume_from_docmap(docmap_string, version_doi=None, identifier=None):
