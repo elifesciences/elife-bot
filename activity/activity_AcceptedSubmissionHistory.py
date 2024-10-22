@@ -72,7 +72,7 @@ class activity_AcceptedSubmissionHistory(AcceptedBaseActivity):
 
         # get the under-review date from the docmap
         review_date_string = cleaner.review_date_from_docmap(
-            docmap_string, input_filename
+            docmap_string, identifier=input_filename
         )
         self.logger.info(
             "%s, %s review_date_string: %s"
