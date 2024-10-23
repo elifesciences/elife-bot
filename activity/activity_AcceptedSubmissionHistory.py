@@ -103,7 +103,7 @@ class activity_AcceptedSubmissionHistory(AcceptedBaseActivity):
         if history_data:
             if xml_root is None:
                 xml_root = cleaner.parse_article_xml(xml_file_path)
-            xml_root = cleaner.add_pub_history(xml_root, history_data, input_filename)
+            xml_root = cleaner.add_pub_history(xml_root, history_data, identifier=input_filename)
             self.statuses["xml_root"] = True
 
         if self.statuses.get("xml_root"):
