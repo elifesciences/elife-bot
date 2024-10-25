@@ -358,7 +358,7 @@ def docmap_url(settings, article_id):
     )
 
 
-def sub_article_data(docmap_string, article, version_doi=None, generate_dois=True):
+def sub_article_data(docmap_string, article=None, version_doi=None, generate_dois=True):
     # add sub-article data from the docmap and get requests to the article object
     return sub_article.sub_article_data(
         docmap_string, article, version_doi, generate_dois
@@ -523,8 +523,18 @@ def docmap_preprint_history_from_docmap(docmap_string):
     return docmap_parse.docmap_preprint_history(d_json)
 
 
+def prune_history_data(history_data, doi, version):
+    return pub_history.prune_history_data(history_data, doi, version)
+
+
 def add_pub_history(root, history_data, docmap_string=None, identifier=None):
     return pub_history.add_pub_history(
+        root, history_data, docmap_string=docmap_string, identifier=identifier
+    )
+
+
+def add_pub_history_meca(root, history_data, docmap_string=None, identifier=None):
+    return pub_history.add_pub_history_meca(
         root, history_data, docmap_string=docmap_string, identifier=identifier
     )
 
@@ -535,8 +545,26 @@ def volume_from_docmap(docmap_string, version_doi=None, identifier=None):
     )
 
 
+def article_id_from_docmap(docmap_string, version_doi=None, identifier=None):
+    return prc.article_id_from_docmap(
+        docmap_string, version_doi=version_doi, identifier=identifier
+    )
+
+
+def license_from_docmap(docmap_string, version_doi=None, identifier=None):
+    return prc.license_from_docmap(
+        docmap_string, version_doi=version_doi, identifier=identifier
+    )
+
+
 def elocation_id_from_docmap(docmap_string, version_doi=None, identifier=None):
     return prc.elocation_id_from_docmap(
+        docmap_string, version_doi=version_doi, identifier=identifier
+    )
+
+
+def article_categories_from_docmap(docmap_string, version_doi=None, identifier=None):
+    return prc.article_categories_from_docmap(
         docmap_string, version_doi=version_doi, identifier=identifier
     )
 
@@ -549,6 +577,10 @@ def version_doi_from_docmap(docmap_string, input_filename, published=True):
 
 def next_version_doi(version_doi, input_filename):
     return prc.next_version_doi(version_doi, input_filename)
+
+
+def add_doi(xml_root, doi, specific_use=None, identifier=None):
+    return prc.add_doi(xml_root, doi, specific_use=specific_use, identifier=identifier)
 
 
 def add_version_doi(xml_root, version_doi, input_filename):
@@ -749,3 +781,90 @@ def production_comments_for_xml(log_content):
         and "WARNING elifecleaner:activity_AcceptedSubmissionVersionDoi:" not in line
     ]
     return production_comments("\n".join(filtered_messages))
+
+
+def set_article_id(xml_root, article_id, doi, version_doi):
+    return prc.set_article_id(xml_root, article_id, doi, version_doi)
+
+
+def set_volume(root, volume):
+    return prc.set_volume(root, volume)
+
+
+def set_elocation_id(root, elocation_id):
+    return prc.set_elocation_id(root, elocation_id)
+
+
+def set_article_categories(xml_root, display_channel=None, article_categories=None):
+    return prc.set_article_categories(xml_root, display_channel, article_categories)
+
+
+def set_permissions(xml_root, license_data_dict, copyright_year, copyright_holder):
+    return prc.set_permissions(
+        xml_root, license_data_dict, copyright_year, copyright_holder
+    )
+
+
+def editor_contributors(docmap_string, version_doi):
+    return prc.editor_contributors(docmap_string, version_doi)
+
+
+def set_editors(parent, editors):
+    return prc.set_editors(parent, editors)
+
+
+def format_article_meta_xml(xml_root):
+    "add whitespace around selected tags in XML article-meta"
+    for tag in (
+        xml_root.findall("./front/article-meta/article-id")
+        + xml_root.findall("./front/article-meta/article-categories/subj-group")
+        + xml_root.findall("./front/article-meta/article-categories/subj-group/subject")
+        + xml_root.findall("./front/article-meta/volume")
+        + xml_root.findall("./front/article-meta/history/date")
+        + xml_root.findall("./front/article-meta/history/date/day")
+        + xml_root.findall("./front/article-meta/history/date/month")
+        + xml_root.findall("./front/article-meta/history/date/year")
+        + xml_root.findall("./front/article-meta/pub-history")
+        + xml_root.findall("./front/article-meta/pub-history/event")
+        + xml_root.findall("./front/article-meta/pub-history/event/event-desc")
+        + xml_root.findall("./front/article-meta/pub-history/event/date")
+        + xml_root.findall("./front/article-meta/pub-history/event/date/day")
+        + xml_root.findall("./front/article-meta/pub-history/event/date/month")
+        + xml_root.findall("./front/article-meta/pub-history/event/date/year")
+        + xml_root.findall("./front/article-meta/permissions/copyright-statement")
+        + xml_root.findall("./front/article-meta/permissions/copyright-year")
+        + xml_root.findall("./front/article-meta/permissions/copyright-holder")
+        + xml_root.findall("./front/article-meta/permissions/license")
+        + xml_root.findall(
+            (
+                "./front/article-meta/permissions/license/"
+                "{http://www.niso.org/schemas/ali/1.0/}license_ref"
+            )
+        )
+        + xml_root.findall("./front/article-meta/permissions/license/license-p")
+        + xml_root.findall("./front/article-meta/contrib-group")
+        + xml_root.findall("./front/article-meta/contrib-group/contrib")
+        + xml_root.findall("./front/article-meta/contrib-group/contrib/name")
+        + xml_root.findall("./front/article-meta/contrib-group/contrib/name/surname")
+        + xml_root.findall(
+            "./front/article-meta/contrib-group/contrib/name/given-names"
+        )
+        + xml_root.findall("./front/article-meta/contrib-group/contrib/role")
+        + xml_root.findall("./front/article-meta/contrib-group/contrib/aff")
+        + xml_root.findall(
+            "./front/article-meta/contrib-group/contrib/aff/institution-wrap"
+        )
+        + xml_root.findall(
+            "./front/article-meta/contrib-group/contrib/aff/institution-wrap/institution"
+        )
+        + xml_root.findall("./front/article-meta/contrib-group/contrib/aff/country")
+    ):
+        sub_article.tag_new_line_wrap(tag)
+    for tag in (
+        xml_root.findall("./front/article-meta/pub-history/event/self-uri")
+        + xml_root.findall(
+            "./front/article-meta/permissions/{http://www.niso.org/schemas/ali/1.0/}free_to_read"
+        )
+        + xml_root.findall("./front/article-meta/contrib-group/contrib/aff/addr-line")
+    ):
+        sub_article.tag_new_line_wrap_tail(tag)
