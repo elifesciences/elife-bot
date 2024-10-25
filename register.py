@@ -159,6 +159,7 @@ def start(settings):
     activity_names.append("EmailMecaOutput")
     activity_names.append("ValidatePreprintSchematron")
     activity_names.append("MecaPeerReviews")
+    activity_names.append("ModifyMecaXml")
 
     for activity_name in activity_names:
         # Import the activity libraries
