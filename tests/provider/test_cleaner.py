@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import unittest
 from xml.etree import ElementTree
 from xml.etree.ElementTree import ParseError
@@ -859,6 +860,34 @@ class TestGetDocmapStringWithRetry(unittest.TestCase):
             ("%s, exceeded %s retries to get docmap_string for article_id %s")
             % (caller_name, self.retry, article_id),
         )
+
+
+class TestPublishedDateFromHistory(unittest.TestCase):
+    "tests for published_date_from_history()"
+
+    def test_published_date_from_history(self):
+        "test finding first version pub date from history data"
+        history_data = [
+            {"doi": "preprint_server_doi", "published": "2024-01-01"},
+            {"doi": "10.7554/eLife.95901.1", "published": "2024-01-02"},
+            {"doi": "10.7554/eLife.95901.2", "published": "2024-01-03"},
+        ]
+        doi = "10.7554/eLife.95901"
+        expected = time.strptime("2024-01-02 +0000", "%Y-%m-%d %z")
+        # invoke
+        result = cleaner.published_date_from_history(history_data, doi)
+        # assert
+        self.assertEqual(result, expected)
+
+    def test_no_history_data(self):
+        "test if there is no history data"
+        history_data = []
+        doi = "10.7554/eLife.95901"
+        expected = None
+        # invoke
+        result = cleaner.published_date_from_history(history_data, doi)
+        # assert
+        self.assertEqual(result, expected)
 
 
 class TestFilesByExtension(unittest.TestCase):

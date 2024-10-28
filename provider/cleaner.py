@@ -505,6 +505,20 @@ def review_date_from_docmap(docmap_string, identifier=None):
     return prc.review_date_from_docmap(docmap_string, identifier=identifier)
 
 
+def published_date_from_history(history_data, doi):
+    "get published date of version version related to doi from history data"
+    published_date = None
+    for data in history_data:
+        if (
+            data.get("doi")
+            and data.get("doi").startswith(doi)
+            and data.get("published")
+        ):
+            published_date = date_struct_from_string(data.get("published"))
+            break
+    return published_date
+
+
 def date_struct_from_string(date_string):
     return prc.date_struct_from_string(date_string)
 
