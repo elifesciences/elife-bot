@@ -109,9 +109,15 @@ class activity_ModifyMecaXml(Activity):
         if review_date_string:
             # convert the review-date to a time_struct object
             review_date_struct = cleaner.date_struct_from_string(review_date_string)
-        # copyright year, from review date, otherwise from the current datetime
-        if review_date_struct:
-            copyright_year = time.strftime("%Y", review_date_struct)
+
+        history_data = cleaner.docmap_preprint_history_from_docmap(docmap_string)
+
+        first_version_published_date = cleaner.published_date_from_history(
+            history_data, doi
+        )
+        # copyright year, from first version published, otherwise from the current datetime
+        if first_version_published_date:
+            copyright_year = time.strftime("%Y", first_version_published_date)
         else:
             copyright_year = datetime.strftime(utils.get_current_datetime(), "%Y")
 
@@ -152,7 +158,6 @@ class activity_ModifyMecaXml(Activity):
         modify_history(xml_root, review_date_struct, identifier=version_doi)
 
         # 6. add <pub-history>, with events and dates, including self-uri tags
-        history_data = cleaner.docmap_preprint_history_from_docmap(docmap_string)
         if history_data:
             # remove current version_doi data from history data
             history_data = cleaner.prune_history_data(history_data, doi, version)
