@@ -1,19 +1,11 @@
 import os
 import json
-import shutil
 import time
-from collections import OrderedDict
-import requests
-from provider.article_processing import file_extension
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import cleaner, email_provider, utils
+from provider import cleaner, email_provider, peer_review, utils
 from activity.objects import AcceptedBaseActivity
 
-
-FILE_NAME_FORMAT = "elife-%s-inf%s.%s"
-
-REQUESTS_TIMEOUT = 10
 
 FAIL_IF_NO_IMAGES_DOWNLOADED = True
 
@@ -106,7 +98,7 @@ class activity_AcceptedSubmissionPeerReviewImages(AcceptedBaseActivity):
                 )
 
         # download images to the local disk
-        href_to_file_name_map = download_images(
+        href_to_file_name_map = peer_review.download_images(
             approved_hrefs,
             self.directories.get("INPUT_DIR"),
             self.name,
@@ -155,44 +147,30 @@ class activity_AcceptedSubmissionPeerReviewImages(AcceptedBaseActivity):
         )
 
         # rename the files, in the order as remembered by the OrderedDict
-        file_name_count = 1
-        image_asset_file_name_map = {}
-        file_details_list = []
-        for href, file_name in href_to_file_name_map.items():
-            new_file_name = FILE_NAME_FORMAT % (
-                utils.pad_msid(article_id),
-                file_name_count,
-                file_extension(file_name),
-            )
-            self.logger.info(
-                "%s, for %s, file name %s changed to file name %s"
-                % (self.name, input_filename, file_name, new_file_name)
-            )
-            new_file_asset = os.path.join(temp_dir_subfolder, new_file_name)
-            self.logger.info(
-                "%s, for %s, file %s new asset value %s"
-                % (self.name, input_filename, new_file_name, new_file_asset)
-            )
-            new_file_path = os.path.join(
-                self.directories.get("TEMP_DIR"), new_file_asset
-            )
-            self.logger.info(
-                "%s, for %s, moving %s to %s"
-                % (self.name, input_filename, file_name, new_file_path)
-            )
-            # move the file on disk
-            shutil.move(file_name, new_file_path)
-
-            # change the file path in the href map
-            href_to_file_name_map[href] = new_file_name
-            # add the file path to the asset map
-            image_asset_file_name_map[new_file_asset] = new_file_path
-            # add the file details for using later to add XML file tags
-            file_details = {"file_type": "figure", "upload_file_nm": new_file_name}
-            file_details_list.append(file_details)
-
-            # increment the file name counter
-            file_name_count += 1
+        file_details_list = peer_review.generate_new_image_file_names(
+            href_to_file_name_map,
+            article_id,
+            identifier=input_filename,
+            caller_name=self.name,
+            logger=self.logger,
+        )
+        file_details_list = peer_review.generate_new_image_file_paths(
+            file_details_list,
+            content_subfolder=temp_dir_subfolder,
+            identifier=input_filename,
+            caller_name=self.name,
+            logger=self.logger,
+        )
+        href_to_file_name_map = peer_review.modify_href_to_file_name_map(
+            href_to_file_name_map, file_details_list
+        )
+        image_asset_file_name_map = peer_review.move_images(
+            file_details_list,
+            to_dir=self.directories.get("TEMP_DIR"),
+            identifier=input_filename,
+            caller_name=self.name,
+            logger=self.logger,
+        )
 
         # upload images to the bucket expanded files folder
         for upload_key, file_name in image_asset_file_name_map.items():
@@ -258,42 +236,6 @@ class activity_AcceptedSubmissionPeerReviewImages(AcceptedBaseActivity):
                 # for now any failure in sending a mail return False
                 success = False
         return success
-
-
-def download_images(href_list, to_dir, activity_name, logger, user_agent=None):
-    href_to_file_name_map = OrderedDict()
-    for href in href_list:
-        file_name = href.rsplit("/", 1)[-1]
-        to_file = os.path.join(to_dir, file_name)
-        # todo!!! improve handling of potentially duplicate file_name values
-        if href in href_to_file_name_map.keys():
-            logger.info("%s, href %s was already downloaded" % (activity_name, href))
-            continue
-        try:
-            file_path = download_file(href, to_file, user_agent)
-        except RuntimeError as exception:
-            logger.info(str(exception))
-            logger.info("%s, href %s could not be downloaded" % (activity_name, href))
-            continue
-        logger.info("%s, downloaded href %s to %s" % (activity_name, href, to_file))
-        # keep track of a map of href value to local file_name
-        href_to_file_name_map[href] = file_path
-    return href_to_file_name_map
-
-
-def download_file(from_path, to_file, user_agent=None):
-    headers = None
-    if user_agent:
-        headers = {"user-agent": user_agent}
-    request = requests.get(from_path, timeout=REQUESTS_TIMEOUT, headers=headers)
-    if request.status_code == 200:
-        with open(to_file, "wb") as open_file:
-            open_file.write(request.content)
-        return to_file
-    raise RuntimeError(
-        "GET request returned a %s status code for %s"
-        % (request.status_code, from_path)
-    )
 
 
 def error_email_subject(output_file, settings=None):
