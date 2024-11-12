@@ -2,8 +2,10 @@
 
 import os
 import unittest
+from xml.etree import ElementTree
 from mock import patch
 from testfixtures import TempDirectory
+from elifecleaner.transform import ArticleZipFile
 from tests.activity.classes_mock import FakeLogger, FakeResponse
 from provider import peer_review
 
@@ -261,7 +263,9 @@ class TestMoveImages(unittest.TestCase):
         tmp_dir = os.path.join(directory.path, "tmp")
         os.mkdir(tmp_dir)
         for file_name in ["vc4GR10.png", "FFeuydR.jpg"]:
-            with open(os.path.join(tmp_dir, file_name), "w", encoding="utf-8") as open_file:
+            with open(
+                os.path.join(tmp_dir, file_name), "w", encoding="utf-8"
+            ) as open_file:
                 open_file.write("test_fixture")
         file_details_list = [
             {
@@ -294,3 +298,109 @@ class TestMoveImages(unittest.TestCase):
             sorted(os.listdir(output_dir)),
             sorted(["elife-95901-inf1.png", "elife-95901-inf2.jpg"]),
         )
+
+
+class TestGenerateFileTransformations(unittest.TestCase):
+    "tests for generate_file_transformations()"
+
+    def test_generate_file_transformations(self):
+        "test finding inline-graphic files to be converted to fig graphics"
+        xml_root = ElementTree.fromstring(
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            '<sub-article id="sa1">'
+            "<body>"
+            "<p>First paragraph.</p>"
+            "<p><bold>Review image 1.</bold></p>"
+            "<p>Caption title. Caption paragraph.</p>"
+            '<p><inline-graphic xlink:href="local.jpg"/></p>'
+            "</body>"
+            "</sub-article>"
+            '<sub-article id="sa2">'
+            "<body>"
+            "<p>First paragraph.</p>"
+            "<p><bold>Review image 1.</bold></p>"
+            "<p>Caption title. Caption paragraph.</p>"
+            '<p><inline-graphic xlink:href="local2.jpg"/></p>'
+            "<p>Paragraph.</p>"
+            '<p><inline-graphic xlink:href="local3.jpg"/></p>'
+            "<p><bold>Review image 2.</bold></p>"
+            "<p>Caption title. Caption paragraph.</p>"
+            '<p><inline-graphic xlink:href="local2.jpg"/></p>'
+            "</body>"
+            "</sub-article>"
+            "</article>"
+        )
+        identifier = "10.7554/eLife.95901.1"
+        caller_name = "MecaPeerReviewFigs"
+        logger = FakeLogger()
+        expected = [
+            (
+                ArticleZipFile("local.jpg", "None", "None"),
+                ArticleZipFile("sa1-fig1.jpg", "None", "None"),
+            ),
+            (
+                ArticleZipFile("local2.jpg", "None", "None"),
+                ArticleZipFile("sa2-fig1.jpg", "None", "None"),
+            ),
+            (
+                ArticleZipFile("local2.jpg", "None", "None"),
+                ArticleZipFile("sa2-fig2.jpg", "None", "None"),
+            ),
+        ]
+        # invoke
+        result = peer_review.generate_file_transformations(
+            xml_root, identifier, caller_name, logger
+        )
+        # assert
+        self.assertEqual(len(result), len(expected))
+        for result_index, result_file in enumerate(result):
+            self.assertEqual(str(result_file), str(expected[result_index]))
+
+
+class TestFilterTransformations(unittest.TestCase):
+    "tests for filter_transformations()"
+
+    def test_filter_transformations(self):
+        "test filtering transformation list into copy file and rename files"
+        file_transformations = [
+            (
+                ArticleZipFile("local.jpg", "None", "None"),
+                ArticleZipFile("sa1-fig1.jpg", "None", "None"),
+            ),
+            (
+                ArticleZipFile("local2.jpg", "None", "None"),
+                ArticleZipFile("sa2-fig1.jpg", "None", "None"),
+            ),
+            (
+                ArticleZipFile("local2.jpg", "None", "None"),
+                ArticleZipFile("sa2-fig2.jpg", "None", "None"),
+            ),
+        ]
+        expected_copy = [
+            (
+                ArticleZipFile("local2.jpg", "None", "None"),
+                ArticleZipFile("sa2-fig2.jpg", "None", "None"),
+            )
+        ]
+        expected_rename = [
+            (
+                ArticleZipFile("local.jpg", "None", "None"),
+                ArticleZipFile("sa1-fig1.jpg", "None", "None"),
+            ),
+            (
+                ArticleZipFile("local2.jpg", "None", "None"),
+                ArticleZipFile("sa2-fig1.jpg", "None", "None"),
+            ),
+        ]
+        # invoke
+        (
+            copy_file_transformations,
+            rename_file_transformations,
+        ) = peer_review.filter_transformations(file_transformations)
+        # assert
+        self.assertEqual(len(copy_file_transformations), 1)
+        self.assertEqual(len(rename_file_transformations), 2)
+        for index, transformation in enumerate(copy_file_transformations):
+            self.assertEqual(str(transformation), str(expected_copy[index]))
+        for index, transformation in enumerate(rename_file_transformations):
+            self.assertEqual(str(transformation), str(expected_rename[index]))
