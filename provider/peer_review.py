@@ -2,7 +2,8 @@ import os
 import shutil
 from collections import OrderedDict
 import requests
-from provider import utils
+from elifecleaner.transform import ArticleZipFile
+from provider import cleaner, utils
 from provider.article_processing import file_extension
 
 
@@ -127,3 +128,47 @@ def move_images(file_details_list, to_dir, identifier, caller_name, logger):
         # add the file path to the asset map
         image_asset_file_name_map[detail.get("href")] = new_file_path
     return image_asset_file_name_map
+
+
+def generate_file_transformations(xml_root, identifier, caller_name, logger):
+    "collect old to new file name transformation data"
+    file_transformations = []
+    for sub_article_index, sub_article_root in enumerate(
+        xml_root.iterfind("./sub-article")
+    ):
+        # list of old file names
+        previous_hrefs = cleaner.inline_graphic_hrefs(sub_article_root, identifier)
+        cleaner.transform_fig(sub_article_root, identifier)
+        # list of new file names
+        current_hrefs = cleaner.graphic_hrefs(sub_article_root, identifier)
+        # add to file_transformations
+        logger.info(
+            "%s, sub-article %s previous_hrefs: %s"
+            % (caller_name, sub_article_index, previous_hrefs)
+        )
+        logger.info(
+            "%s, sub-article %s current_hrefs: %s"
+            % (caller_name, sub_article_index, current_hrefs)
+        )
+        for index, previous_href in enumerate(previous_hrefs):
+            current_href = current_hrefs[index]
+            from_file = ArticleZipFile(previous_href)
+            to_file = ArticleZipFile(current_href)
+            file_transformations.append((from_file, to_file))
+    return file_transformations
+
+
+def filter_transformations(file_transformations):
+    "split file transformations into duplicates to be copied or non-duplicates to be renamed"
+    copy_file_transformations = []
+    rename_file_transformations = []
+    transformation_keys = []
+    for file_transformation in file_transformations:
+        if file_transformation[0].xml_name in transformation_keys:
+            # this is a duplicate key
+            copy_file_transformations.append(file_transformation)
+        else:
+            # this is a new key
+            rename_file_transformations.append(file_transformation)
+            transformation_keys.append(file_transformation[0].xml_name)
+    return copy_file_transformations, rename_file_transformations

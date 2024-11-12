@@ -1,10 +1,9 @@
 import os
 import json
 import time
-from elifecleaner.transform import ArticleZipFile
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import cleaner, email_provider, utils
+from provider import cleaner, email_provider, peer_review, utils
 from activity.objects import AcceptedBaseActivity
 
 
@@ -80,31 +79,13 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
 
         xml_root = cleaner.parse_article_xml(xml_file_path)
 
-        file_transformations = []
-        for sub_article_index, sub_article_root in enumerate(
-            xml_root.iterfind("./sub-article")
-        ):
-            # list of old file names
-            previous_hrefs = cleaner.inline_graphic_hrefs(
-                sub_article_root, input_filename
-            )
-            cleaner.transform_fig(sub_article_root, input_filename)
-            # list of new file names
-            current_hrefs = cleaner.graphic_hrefs(sub_article_root, input_filename)
-            # add to file_transformations
-            self.logger.info(
-                "%s, sub-article %s previous_hrefs: %s"
-                % (self.name, sub_article_index, previous_hrefs)
-            )
-            self.logger.info(
-                "%s, sub-article %s current_hrefs: %s"
-                % (self.name, sub_article_index, current_hrefs)
-            )
-            for index, previous_href in enumerate(previous_hrefs):
-                current_href = current_hrefs[index]
-                from_file = ArticleZipFile(previous_href)
-                to_file = ArticleZipFile(current_href)
-                file_transformations.append((from_file, to_file))
+        file_transformations = peer_review.generate_file_transformations(
+            xml_root,
+            identifier=input_filename,
+            caller_name=self.name,
+            logger=self.logger,
+        )
+
         self.logger.info(
             "%s, total file_transformations: %s"
             % (self.name, len(file_transformations))
@@ -117,22 +98,15 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
         cleaner.write_xml_file(xml_root, xml_file_path, input_filename)
 
         # find duplicates in file_transformations
-        copy_file_transformations = []
-        copy_delete_file_transformations = []
-        transformation_keys = []
-        for file_transformation in file_transformations:
-            if file_transformation[0].xml_name in transformation_keys:
-                # this is a duplicate key
-                copy_file_transformations.append(file_transformation)
-            else:
-                # this is a new key
-                copy_delete_file_transformations.append(file_transformation)
-                transformation_keys.append(file_transformation[0].xml_name)
+        (
+            copy_file_transformations,
+            rename_file_transformations,
+        ) = peer_review.filter_transformations(file_transformations)
 
         # rewrite the XML file with the renamed files
         if file_transformations:
             self.statuses["modify_xml"] = self.rewrite_file_tags(
-                xml_file_path, copy_delete_file_transformations, input_filename
+                xml_file_path, rename_file_transformations, input_filename
             )
             # add file tags for duplicate files
             self.add_file_tags(xml_file_path, copy_file_transformations, input_filename)
@@ -174,7 +148,7 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
                 self.statuses["rename_files"] = self.rename_expanded_folder_files(
                     asset_file_name_map,
                     expanded_folder,
-                    copy_delete_file_transformations,
+                    rename_file_transformations,
                     storage,
                 )
             except RuntimeError as exception:
