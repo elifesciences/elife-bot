@@ -45,7 +45,6 @@ class workflow_PostPerfectPublication(Workflow):
                 define_workflow_step("EmailVideoArticlePublished", data),
                 define_workflow_step("PublishDigest", data),
                 define_workflow_step("CreateDigestMediumPost", data),
-                define_workflow_step("GeneratePDFCovers", data),
                 define_workflow_step("DepositDOAJ", data),
             ],
             "finish": {"requirements": None},
