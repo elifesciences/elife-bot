@@ -141,7 +141,7 @@ class activity_PublicationEmail(Activity):
                 prepared, not_published_articles, xml_file_to_doi_map, rules
             )
         except Exception:
-            self.logger.exception("An error occured on do_activity method.")
+            self.logger.exception("An error occurred on do_activity method.")
 
         return True
 
