@@ -200,12 +200,12 @@ class TestModifyMecaXml(unittest.TestCase):
                 "<copyright-year>2024</copyright-year>\n"
                 "<copyright-holder>Liang et al</copyright-holder>\n"
                 "<ali:free_to_read/>\n"
-                '<license xlink:href="http://creativecommons.org/licenses/by/4.0/">\n'
-                "<ali:license_ref>http://creativecommons.org/licenses/by/4.0/</ali:license_ref>\n"
+                '<license xlink:href="https://creativecommons.org/licenses/by/4.0/">\n'
+                "<ali:license_ref>https://creativecommons.org/licenses/by/4.0/</ali:license_ref>\n"
                 "<license-p>"
                 "This article is distributed under the terms of the"
                 ' <ext-link ext-link-type="uri"'
-                ' xlink:href="http://creativecommons.org/licenses/by/4.0/">'
+                ' xlink:href="https://creativecommons.org/licenses/by/4.0/">'
                 "Creative Commons Attribution License"
                 "</ext-link>"
                 ", which permits unrestricted use and redistribution provided that the"
@@ -390,12 +390,12 @@ class TestModifyMecaXml(unittest.TestCase):
                 "<copyright-year>2024</copyright-year>\n"
                 "<copyright-holder>Liang et al</copyright-holder>\n"
                 "<ali:free_to_read/>\n"
-                '<license xlink:href="http://creativecommons.org/licenses/by/4.0/">\n'
-                "<ali:license_ref>http://creativecommons.org/licenses/by/4.0/</ali:license_ref>\n"
+                '<license xlink:href="https://creativecommons.org/licenses/by/4.0/">\n'
+                "<ali:license_ref>https://creativecommons.org/licenses/by/4.0/</ali:license_ref>\n"
                 "<license-p>"
                 "This article is distributed under the terms of the"
                 ' <ext-link ext-link-type="uri"'
-                ' xlink:href="http://creativecommons.org/licenses/by/4.0/">'
+                ' xlink:href="https://creativecommons.org/licenses/by/4.0/">'
                 "Creative Commons Attribution License"
                 "</ext-link>"
                 ", which permits unrestricted use and redistribution provided that the"
@@ -803,7 +803,7 @@ class TestModifyPermissions(unittest.TestCase):
                 ("license_id", 1),
                 ("license_type", "open-access"),
                 ("copyright", True),
-                ("href", "http://creativecommons.org/licenses/by/4.0/"),
+                ("href", "https://creativecommons.org/licenses/by/4.0/"),
                 ("name", "Creative Commons Attribution License"),
                 ("paragraph1", "This article is distributed under the terms of the "),
                 (
@@ -827,11 +827,11 @@ class TestModifyPermissions(unittest.TestCase):
             "<copyright-year>2024</copyright-year>"
             "<copyright-holder>Liang et al</copyright-holder>"
             "<ali:free_to_read />"
-            '<license xlink:href="http://creativecommons.org/licenses/by/4.0/">'
-            "<ali:license_ref>http://creativecommons.org/licenses/by/4.0/</ali:license_ref>"
+            '<license xlink:href="https://creativecommons.org/licenses/by/4.0/">'
+            "<ali:license_ref>https://creativecommons.org/licenses/by/4.0/</ali:license_ref>"
             "<license-p>This article is distributed under the terms of the"
             ' <ext-link ext-link-type="uri"'
-            ' xlink:href="http://creativecommons.org/licenses/by/4.0/">'
+            ' xlink:href="https://creativecommons.org/licenses/by/4.0/">'
             "Creative Commons Attribution License"
             "</ext-link>"
             ", which permits unrestricted use and redistribution provided that the"
@@ -868,7 +868,7 @@ class TestModifyPermissions(unittest.TestCase):
                 ("license_id", 2),
                 ("license_type", "open-access"),
                 ("copyright", False),
-                ("href", "http://creativecommons.org/publicdomain/zero/1.0/"),
+                ("href", "https://creativecommons.org/publicdomain/zero/1.0/"),
                 ("name", "Creative Commons CC0 public domain dedication"),
                 (
                     "paragraph1",
@@ -893,14 +893,14 @@ class TestModifyPermissions(unittest.TestCase):
             "<pub-history />"
             "<permissions>"
             "<ali:free_to_read />"
-            '<license xlink:href="http://creativecommons.org/publicdomain/zero/1.0/">'
-            "<ali:license_ref>http://creativecommons.org/publicdomain/zero/1.0/</ali:license_ref>"
+            '<license xlink:href="https://creativecommons.org/publicdomain/zero/1.0/">'
+            "<ali:license_ref>https://creativecommons.org/publicdomain/zero/1.0/</ali:license_ref>"
             "<license-p>This is an open-access article, free of all copyright,"
             " and may be freely reproduced, distributed, transmitted, modified,"
             " built upon, or otherwise used by anyone for any lawful purpose."
             " The work is made available under the"
             ' <ext-link ext-link-type="uri"'
-            ' xlink:href="http://creativecommons.org/publicdomain/zero/1.0/">'
+            ' xlink:href="https://creativecommons.org/publicdomain/zero/1.0/">'
             "Creative Commons CC0 public domain dedication"
             "</ext-link>"
             "."
