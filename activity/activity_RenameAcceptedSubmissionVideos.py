@@ -48,6 +48,7 @@ class activity_RenameAcceptedSubmissionVideos(AcceptedBaseActivity):
         session = get_session(self.settings, data, data["run"])
 
         expanded_folder, input_filename, article_id = self.read_session(session)
+        resource_prefix = self.accepted_expanded_resource_prefix(expanded_folder)
 
         deposit_videos = session.get_value("deposit_videos")
 
@@ -121,7 +122,7 @@ class activity_RenameAcceptedSubmissionVideos(AcceptedBaseActivity):
         # rename the video files in the expanded folder
         if self.statuses.get("modify_xml"):
             self.statuses["rename_videos"] = self.rename_expanded_folder_files(
-                asset_file_name_map, expanded_folder, file_transformations, storage
+                asset_file_name_map, resource_prefix, file_transformations, storage
             )
 
         # upload the modified XML file to the expanded folder

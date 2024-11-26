@@ -67,6 +67,7 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
         self.start_cleaner_log()
 
         expanded_folder, input_filename, article_id = self.read_session(session)
+        resource_prefix = self.accepted_expanded_resource_prefix(expanded_folder)
 
         # get list of bucket objects from expanded folder
         asset_file_name_map = self.bucket_asset_file_name_map(expanded_folder)
@@ -150,7 +151,7 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
             self.remove_file_tags(xml_root, approved_file_name_list, input_filename)
             # delete converted graphic files from the expanded folder
             self.delete_expanded_folder_files(
-                asset_file_name_map, expanded_folder, approved_file_name_list, storage
+                asset_file_name_map, resource_prefix, approved_file_name_list, storage
             )
 
         # write the XML root to disk

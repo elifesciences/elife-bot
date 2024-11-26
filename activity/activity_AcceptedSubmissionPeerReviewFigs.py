@@ -59,6 +59,7 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
         self.start_cleaner_log()
 
         expanded_folder, input_filename, article_id = self.read_session(session)
+        resource_prefix = self.accepted_expanded_resource_prefix(expanded_folder)
 
         # get list of bucket objects from expanded folder
         asset_file_name_map = self.bucket_asset_file_name_map(expanded_folder)
@@ -116,7 +117,7 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
             try:
                 self.statuses["rename_files"] = self.copy_expanded_folder_files(
                     asset_file_name_map,
-                    expanded_folder,
+                    resource_prefix,
                     copy_file_transformations,
                     storage,
                 )
@@ -147,7 +148,7 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
             try:
                 self.statuses["rename_files"] = self.rename_expanded_folder_files(
                     asset_file_name_map,
-                    expanded_folder,
+                    resource_prefix,
                     rename_file_transformations,
                     storage,
                 )
