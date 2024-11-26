@@ -344,15 +344,131 @@ class CleanerBaseActivity(Activity):
                 cleaner_log += log_contents
             session.store_value("cleaner_log", cleaner_log)
 
+    def clean_tmp_dir(self):
+        "custom cleaning of temp directory in order to retain some files for debugging purposes"
+        keep_dirs = []
+        for dir_name, dir_path in self.directories.items():
+            if dir_name in keep_dirs or not os.path.exists(dir_path):
+                continue
+            shutil.rmtree(dir_path)
 
-class AcceptedBaseActivity(CleanerBaseActivity):
+
+class ExpandedBaseActivity(Activity):
+    "activity class which interacts with a folder of expanded files in an S3 bucket"
+
+    def __init__(self, settings, logger, client=None, token=None, activity_task=None):
+        super().__init__(settings, logger, client, token, activity_task)
+        # stubs
+        self.directories = {}
+        self.statuses = {}
+
+    def copy_expanded_folder_file(
+        self, object_path, resource_prefix, file_transformation, storage
+    ):
+        "copy one object in the S3 folder to a new name"
+        if (
+            not file_transformation[0].xml_name
+            or not file_transformation[1].xml_name
+            or not object_path
+        ):
+            log_message = (
+                "%s, copying to %s, a blank value cannot be copied, "
+                "old xml_name %s to new xml_name %s"
+            ) % (
+                self.name,
+                resource_prefix,
+                file_transformation[0].xml_name,
+                file_transformation[1].xml_name,
+            )
+            self.logger.exception(log_message)
+            raise RuntimeError(log_message)
+        old_s3_resource = resource_prefix + "/" + object_path
+        # get the subfolder of the old resource to prepend to the new resource
+        new_resource_subfolder = old_s3_resource.rsplit(resource_prefix, 1)[-1].rsplit(
+            "/", 1
+        )[0]
+        new_s3_resource = (
+            resource_prefix
+            + new_resource_subfolder
+            + "/"
+            + file_transformation[1].xml_name
+        )
+        # copy old key to new key
+        self.logger.info(
+            "%s, copying old S3 key %s to %s"
+            % (self.name, old_s3_resource, new_s3_resource)
+        )
+        storage.copy_resource(old_s3_resource, new_s3_resource)
+        return old_s3_resource
+
+    def copy_expanded_folder_files(
+        self,
+        asset_file_name_map,
+        resource_prefix,
+        file_transformations,
+        storage,
+    ):
+        "copy objects in the S3 bucket expanded folder"
+        asset_key_map = {key.rsplit("/", 1)[-1]: key for key in asset_file_name_map}
+        for file_transform in file_transformations:
+            object_path = asset_key_map.get(file_transform[0].xml_name)
+            self.copy_expanded_folder_file(
+                object_path, resource_prefix, file_transform, storage
+            )
+        return True
+
+    def rename_expanded_folder_files(
+        self,
+        asset_file_name_map,
+        resource_prefix,
+        file_transformations,
+        storage,
+    ):
+        "rename objects in the S3 bucket expanded folder"
+        asset_key_map = {key.rsplit("/", 1)[-1]: key for key in asset_file_name_map}
+        for file_transform in file_transformations:
+            # copy the object
+            object_path = asset_key_map.get(file_transform[0].xml_name)
+            old_s3_resource = self.copy_expanded_folder_file(
+                object_path, resource_prefix, file_transform, storage
+            )
+
+            # delete old key
+            self.logger.info(
+                "%s, deleting old S3 key %s" % (self.name, old_s3_resource)
+            )
+            storage.delete_resource(old_s3_resource)
+        return True
+
+    def delete_expanded_folder_files(
+        self, asset_file_name_map, resource_prefix, file_name_list, storage
+    ):
+        "delete objects from the S3 bucket expanded folder"
+        asset_key_map = {key.rsplit("/", 1)[-1]: key for key in asset_file_name_map}
+        for file_name in file_name_list:
+            try:
+                old_s3_resource = resource_prefix + "/" + asset_key_map.get(file_name)
+                # delete old key
+                self.logger.info(
+                    "%s, deleting old S3 key %s" % (self.name, old_s3_resource)
+                )
+                storage.delete_resource(old_s3_resource)
+            except Exception as exception:
+                log_message = (
+                    "%s, deleting file_name from %s could not be completed"
+                ) % (
+                    self.name,
+                    resource_prefix,
+                )
+                self.logger.exception(log_message)
+                raise
+
+
+class AcceptedBaseActivity(CleanerBaseActivity, ExpandedBaseActivity):
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
         super().__init__(settings, logger, client, token, activity_task)
         # Track some values
         self.input_file = None
-        # stubs
-        self.directories = {}
-        self.statuses = {}
 
     def read_session(self, session):
         "basic session values"
@@ -412,14 +528,6 @@ class AcceptedBaseActivity(CleanerBaseActivity):
             "%s for input_file %s statuses: %s"
             % (self.name, str(input_file), self.statuses)
         )
-
-    def clean_tmp_dir(self):
-        "custom cleaning of temp directory in order to retain some files for debugging purposes"
-        keep_dirs = []
-        for dir_name, dir_path in self.directories.items():
-            if dir_name in keep_dirs or not os.path.exists(dir_path):
-                continue
-            shutil.rmtree(dir_path)
 
     def add_file_tags(self, xml_file_path, file_transformations, input_filename):
         "add file tags to the XMLs"
@@ -487,101 +595,3 @@ class AcceptedBaseActivity(CleanerBaseActivity):
             + "/"
             + expanded_folder
         )
-
-    def copy_expanded_folder_file(
-        self, asset_key_map, resource_prefix, file_transformation, storage
-    ):
-        "copy one object in the S3 folder to a new name"
-        if (
-            not file_transformation[0].xml_name
-            or not file_transformation[1].xml_name
-            or not asset_key_map.get(file_transformation[0].xml_name)
-        ):
-            log_message = (
-                "%s, copying to %s, a blank value cannot be copied, "
-                "old xml_name %s to new xml_name %s"
-            ) % (
-                self.name,
-                resource_prefix,
-                file_transformation[0].xml_name,
-                file_transformation[1].xml_name,
-            )
-            raise RuntimeError(log_message)
-            self.logger.exception(log_message)
-            return None
-        old_s3_resource = (
-            resource_prefix + "/" + asset_key_map.get(file_transformation[0].xml_name)
-        )
-        # get the subfolder of the old resource to prepend to the new resource
-        new_resource_subfolder = old_s3_resource.rsplit(resource_prefix, 1)[-1].rsplit(
-            "/", 1
-        )[0]
-        new_s3_resource = (
-            resource_prefix
-            + new_resource_subfolder
-            + "/"
-            + file_transformation[1].xml_name
-        )
-        # copy old key to new key
-        self.logger.info(
-            "%s, copying old S3 key %s to %s"
-            % (self.name, old_s3_resource, new_s3_resource)
-        )
-        storage.copy_resource(old_s3_resource, new_s3_resource)
-        return old_s3_resource
-
-    def copy_expanded_folder_files(
-        self, asset_file_name_map, expanded_folder, file_transformations, storage
-    ):
-        "copy objects in the S3 bucket expanded folder"
-        asset_key_map = {key.rsplit("/", 1)[-1]: key for key in asset_file_name_map}
-        resource_prefix = self.accepted_expanded_resource_prefix(expanded_folder)
-        for file_transform in file_transformations:
-            self.copy_expanded_folder_file(
-                asset_key_map, resource_prefix, file_transform, storage
-            )
-        return True
-
-    def rename_expanded_folder_files(
-        self, asset_file_name_map, expanded_folder, file_transformations, storage
-    ):
-        "rename objects in the S3 bucket expanded folder"
-        # map values without folder names to match them later
-        asset_key_map = {key.rsplit("/", 1)[-1]: key for key in asset_file_name_map}
-        resource_prefix = self.accepted_expanded_resource_prefix(expanded_folder)
-        for file_transform in file_transformations:
-            # copy the object
-            old_s3_resource = self.copy_expanded_folder_file(
-                asset_key_map, resource_prefix, file_transform, storage
-            )
-
-            # delete old key
-            self.logger.info(
-                "%s, deleting old S3 key %s" % (self.name, old_s3_resource)
-            )
-            storage.delete_resource(old_s3_resource)
-        return True
-
-    def delete_expanded_folder_files(
-        self, asset_file_name_map, expanded_folder, file_name_list, storage
-    ):
-        "delete objects from the S3 bucket expanded folder"
-        asset_key_map = {key.rsplit("/", 1)[-1]: key for key in asset_file_name_map}
-        resource_prefix = self.accepted_expanded_resource_prefix(expanded_folder)
-        for file_name in file_name_list:
-            try:
-                old_s3_resource = resource_prefix + "/" + asset_key_map.get(file_name)
-                # delete old key
-                self.logger.info(
-                    "%s, deleting old S3 key %s" % (self.name, old_s3_resource)
-                )
-                storage.delete_resource(old_s3_resource)
-            except Exception as exception:
-                log_message = (
-                    "%s, deleting file_name from %s could not be completed"
-                ) % (
-                    self.name,
-                    expanded_folder,
-                )
-                self.logger.exception(log_message)
-                raise

@@ -57,6 +57,7 @@ class activity_AcceptedSubmissionStrikingImages(AcceptedBaseActivity):
         self.start_cleaner_log()
 
         expanded_folder, input_filename, article_id = self.read_session(session)
+        resource_prefix = self.accepted_expanded_resource_prefix(expanded_folder)
 
         # get list of bucket objects from expanded folder
         asset_file_name_map = self.bucket_asset_file_name_map(expanded_folder)
@@ -105,7 +106,7 @@ class activity_AcceptedSubmissionStrikingImages(AcceptedBaseActivity):
                 % (self.name, input_filename)
             )
             self.statuses["rename_files"] = self.rename_expanded_folder_files(
-                asset_file_name_map, expanded_folder, file_transformations, storage
+                asset_file_name_map, resource_prefix, file_transformations, storage
             )
 
         # upload the XML to the bucket

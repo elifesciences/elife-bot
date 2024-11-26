@@ -317,7 +317,7 @@ class TestSetMonitorProperty(unittest.TestCase):
         self.assertIsNone(result)
 
 
-class Testaccepted_expanded_resource_prefix(unittest.TestCase):
+class TestAcceptedExpandedResourcePrefix(unittest.TestCase):
     def test_accepted_expanded_resource_prefix(self):
         expanded_folder = "expanded"
         expected = "s3://bot_bucket/expanded"
@@ -342,8 +342,10 @@ class TestCopyExpandedFolderFiles(unittest.TestCase):
             open_file.write("")
 
         # asset map
-        asset_file_name_map = {from_file_name: "s3://bot-bucket/%s" % from_file_name}
-        expanded_folder = ""
+        resource_prefix = "s3://bot-bucket/"
+        asset_file_name_map = {
+            from_file_name: "%s%s" % (from_file_name, resource_prefix)
+        }
 
         # files to transform
         file_transformations = []
@@ -355,12 +357,11 @@ class TestCopyExpandedFolderFiles(unittest.TestCase):
             directory.path, resources, dest_folder=directory.path
         )
         logger = FakeLogger()
-
         # instantiate
         activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
         # invoke
         result = activity_object.copy_expanded_folder_files(
-            asset_file_name_map, expanded_folder, file_transformations, storage
+            asset_file_name_map, resource_prefix, file_transformations, storage
         )
         # assertions
         self.assertEqual(result, True)
@@ -380,7 +381,7 @@ class TestCopyExpandedFolderFiles(unittest.TestCase):
         file_transformations.append((from_file, to_file))
         # asset map
         asset_file_name_map = {}
-        expanded_folder = ""
+        resource_prefix = ""
         storage = FakeStorageContext(directory.path, [], dest_folder=directory.path)
         logger = FakeLogger()
         # instantiate
@@ -388,7 +389,7 @@ class TestCopyExpandedFolderFiles(unittest.TestCase):
         # invoke
         with self.assertRaises(RuntimeError):
             result = activity_object.copy_expanded_folder_files(
-                asset_file_name_map, expanded_folder, file_transformations, storage
+                asset_file_name_map, resource_prefix, file_transformations, storage
             )
             self.assertEqual(result, activity_object.ACTIVITY_PERMANENT_FAILURE)
 
@@ -407,8 +408,10 @@ class TestRenameExpandedFolderFiles(unittest.TestCase):
             open_file.write("")
 
         # asset map
-        asset_file_name_map = {from_file_name: "s3://bot-bucket/%s" % from_file_name}
-        expanded_folder = ""
+        resource_prefix = "s3://bot-bucket/"
+        asset_file_name_map = {
+            from_file_name: "%s%s" % (resource_prefix, from_file_name)
+        }
 
         # files to transform
         file_transformations = []
@@ -425,7 +428,7 @@ class TestRenameExpandedFolderFiles(unittest.TestCase):
         activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
         # invoke
         result = activity_object.rename_expanded_folder_files(
-            asset_file_name_map, expanded_folder, file_transformations, storage
+            asset_file_name_map, resource_prefix, file_transformations, storage
         )
         # assertions
         self.assertEqual(result, True)
@@ -441,8 +444,11 @@ class TestRenameExpandedFolderFiles(unittest.TestCase):
         to_file = ArticleZipFile(to_file_name)
         file_transformations.append((from_file, to_file))
         # asset map
-        asset_file_name_map = {from_file_name: "s3://bot-bucket/%s" % from_file_name}
-        expanded_folder = ""
+        resource_prefix = "s3://bot-bucket/"
+        asset_file_name_map = {
+            from_file_name: "%s%s" % (resource_prefix, from_file_name)
+        }
+
         resources = [from_file_name]
         storage = FakeStorageContext(
             directory.path, resources, dest_folder=directory.path
@@ -453,7 +459,7 @@ class TestRenameExpandedFolderFiles(unittest.TestCase):
         # invoke
         with self.assertRaises(RuntimeError):
             result = activity_object.rename_expanded_folder_files(
-                asset_file_name_map, expanded_folder, file_transformations, storage
+                asset_file_name_map, resource_prefix, file_transformations, storage
             )
             self.assertEqual(result, activity_object.ACTIVITY_PERMANENT_FAILURE)
 
@@ -471,8 +477,11 @@ class TestDeleteExpandedFolderFiles(unittest.TestCase):
             open_file.write("")
 
         # asset map
-        asset_file_name_map = {from_file_name: "s3://bot-bucket/%s" % from_file_name}
-        expanded_folder = ""
+        resource_prefix = "s3://bot-bucket/"
+        asset_file_name_map = {
+            from_file_name: "%s%s" % (resource_prefix, from_file_name)
+        }
+
         resources = [from_file_name]
         storage = FakeStorageContext(
             directory.path, resources, dest_folder=directory.path
@@ -485,7 +494,7 @@ class TestDeleteExpandedFolderFiles(unittest.TestCase):
         activity_object = AcceptedBaseActivity(settings_mock, logger, None, None, None)
         # invoke
         activity_object.delete_expanded_folder_files(
-            asset_file_name_map, expanded_folder, file_name_list, storage
+            asset_file_name_map, resource_prefix, file_name_list, storage
         )
         # assertions
         self.assertEqual(len(os.listdir(directory.path)), 0)
@@ -498,8 +507,10 @@ class TestDeleteExpandedFolderFiles(unittest.TestCase):
         from_file_name = "elife-87356-inf1.jpg"
         file_name_list = [from_file_name]
         # asset map
-        asset_file_name_map = {from_file_name: "s3://bot-bucket/%s" % from_file_name}
-        expanded_folder = ""
+        resource_prefix = "s3://bot-bucket/"
+        asset_file_name_map = {
+            from_file_name: "%s%s" % (resource_prefix, from_file_name)
+        }
         resources = [from_file_name]
         storage = FakeStorageContext(
             directory.path, resources, dest_folder=directory.path
@@ -510,5 +521,5 @@ class TestDeleteExpandedFolderFiles(unittest.TestCase):
         # invoke
         with self.assertRaises(Exception):
             activity_object.delete_expanded_folder_files(
-                asset_file_name_map, expanded_folder, file_name_list, storage
+                asset_file_name_map, resource_prefix, file_name_list, storage
             )
