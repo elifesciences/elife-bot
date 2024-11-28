@@ -80,7 +80,7 @@ class activity_AcceptedSubmissionPeerReviewFigs(AcceptedBaseActivity):
 
         xml_root = cleaner.parse_article_xml(xml_file_path)
 
-        file_transformations = peer_review.generate_file_transformations(
+        file_transformations = peer_review.generate_fig_file_transformations(
             xml_root,
             identifier=input_filename,
             caller_name=self.name,
