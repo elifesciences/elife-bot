@@ -44,7 +44,7 @@ class workflow_IngestAcceptedSubmission(Workflow):
                 define_workflow_step_short("ExpandAcceptedSubmission", data),
                 define_workflow_step_short("RepairAcceptedSubmission", data),
                 define_workflow_step_short("AcceptedSubmissionDocmap", data),
-                define_workflow_step_short("ValidateAcceptedSubmission", data),
+                define_workflow_step_medium("ValidateAcceptedSubmission", data),
                 define_workflow_step_short("ValidateAcceptedSubmissionVideos", data),
                 define_workflow_step_short("RenameAcceptedSubmissionVideos", data),
                 define_workflow_step_short("DepositAcceptedSubmissionVideos", data),
