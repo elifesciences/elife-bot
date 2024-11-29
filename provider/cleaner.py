@@ -303,6 +303,11 @@ def transform_table(sub_article_root, identifier):
     return table.transform_table(sub_article_root, identifier)
 
 
+def table_inline_graphic_hrefs(sub_article_root, identifier):
+    "return a list of inline-graphic tag xlink:href values"
+    return table.table_inline_graphic_hrefs(sub_article_root, identifier)
+
+
 def tsv_to_list(tsv_string):
     "parse TSV string into lists of rows"
     return table.tsv_to_list(tsv_string)

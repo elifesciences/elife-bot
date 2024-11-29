@@ -349,7 +349,7 @@ class TestGenerateFileTransformations(unittest.TestCase):
         ]
         # invoke
         result = peer_review.generate_file_transformations(
-            xml_root, identifier, caller_name, logger
+            xml_root, "fig", identifier, caller_name, logger
         )
         # assert
         self.assertEqual(len(result), len(expected))

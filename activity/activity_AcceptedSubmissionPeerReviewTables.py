@@ -1,8 +1,9 @@
 import os
 import json
+import time
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import cleaner
+from provider import cleaner, email_provider, peer_review, utils
 from activity.objects import AcceptedBaseActivity
 
 
@@ -53,6 +54,7 @@ class activity_AcceptedSubmissionPeerReviewTables(AcceptedBaseActivity):
         self.start_cleaner_log()
 
         expanded_folder, input_filename, article_id = self.read_session(session)
+        resource_prefix = self.accepted_expanded_resource_prefix(expanded_folder)
 
         # get list of bucket objects from expanded folder
         asset_file_name_map = self.bucket_asset_file_name_map(expanded_folder)
@@ -73,12 +75,96 @@ class activity_AcceptedSubmissionPeerReviewTables(AcceptedBaseActivity):
 
         xml_root = cleaner.parse_article_xml(xml_file_path)
 
-        # transform inline-graphic into table-wrap
-        for sub_article_root in xml_root.iterfind("./sub-article"):
-            sub_article_root = cleaner.transform_table(sub_article_root, input_filename)
+        file_transformations = peer_review.generate_table_file_transformations(
+            xml_root,
+            identifier=input_filename,
+            caller_name=self.name,
+            logger=self.logger,
+        )
+
+        self.logger.info(
+            "%s, total file_transformations: %s"
+            % (self.name, len(file_transformations))
+        )
+        self.logger.info(
+            "%s, file_transformations: %s" % (self.name, file_transformations)
+        )
 
         # write the XML root to disk
         cleaner.write_xml_file(xml_root, xml_file_path, input_filename)
+
+        # find duplicates in file_transformations
+        (
+            copy_file_transformations,
+            rename_file_transformations,
+        ) = peer_review.filter_transformations(file_transformations)
+
+        # rewrite the XML file with the renamed files
+        if file_transformations:
+            self.statuses["modify_xml"] = self.rewrite_file_tags(
+                xml_file_path, rename_file_transformations, input_filename
+            )
+            # add file tags for duplicate files
+            self.add_file_tags(xml_file_path, copy_file_transformations, input_filename)
+
+        # copy duplicate files in the expanded folder
+        if self.statuses["modify_xml"]:
+            try:
+                self.statuses["rename_files"] = self.copy_expanded_folder_files(
+                    asset_file_name_map,
+                    resource_prefix,
+                    copy_file_transformations,
+                    storage,
+                )
+            except RuntimeError as exception:
+                log_message = (
+                    "%s, exception in rewrite_file_tags for duplicate file %s"
+                    % (
+                        self.name,
+                        input_filename,
+                    )
+                )
+                self.logger.exception(log_message)
+                body_content = error_email_body_content(
+                    "copy_expanded_folder_files",
+                    input_filename,
+                    self.name,
+                )
+                self.statuses["email"] = self.send_error_email(
+                    input_filename, body_content
+                )
+                self.log_statuses(input_filename)
+
+                # do not fail the workflow at this step
+                return True
+
+        # rename the files in the expanded folder
+        if self.statuses["modify_xml"]:
+            try:
+                self.statuses["rename_files"] = self.rename_expanded_folder_files(
+                    asset_file_name_map,
+                    resource_prefix,
+                    rename_file_transformations,
+                    storage,
+                )
+            except RuntimeError as exception:
+                log_message = "%s, exception in rewrite_file_tags for file %s" % (
+                    self.name,
+                    input_filename,
+                )
+                self.logger.exception(log_message)
+                body_content = error_email_body_content(
+                    "rename_expanded_folder_files",
+                    input_filename,
+                    self.name,
+                )
+                self.statuses["email"] = self.send_error_email(
+                    input_filename, body_content
+                )
+                self.log_statuses(input_filename)
+
+                # do not fail the workflow at this step
+                return True
 
         # upload the XML to the bucket
         self.upload_xml_file_to_bucket(asset_file_name_map, expanded_folder, storage)
@@ -91,3 +177,53 @@ class activity_AcceptedSubmissionPeerReviewTables(AcceptedBaseActivity):
         self.clean_tmp_dir()
 
         return True
+
+    def send_error_email(self, output_file, body_content):
+        "email the message to the recipients"
+        success = True
+
+        datetime_string = time.strftime(utils.DATE_TIME_FORMAT, time.gmtime())
+        body = email_provider.simple_email_body(datetime_string, body_content)
+        subject = error_email_subject(output_file, self.settings)
+        sender_email = self.settings.accepted_submission_sender_email
+        recipient_email_list = email_provider.list_email_recipients(
+            self.settings.accepted_submission_validate_error_recipient_email
+        )
+
+        connection = email_provider.smtp_connect(self.settings, self.logger)
+        # send the emails
+        for recipient in recipient_email_list:
+            # create the email
+            email_message = email_provider.message(subject, sender_email, recipient)
+            email_provider.add_text(email_message, body)
+            # send the email
+            email_success = email_provider.smtp_send(
+                connection, sender_email, recipient, email_message, self.logger
+            )
+            if not email_success:
+                # for now any failure in sending a mail return False
+                success = False
+        return success
+
+
+def error_email_subject(output_file, settings=None):
+    "the email subject"
+    subject_prefix = ""
+    if utils.settings_environment(settings) == "continuumtest":
+        subject_prefix = "TEST "
+    return "%sError in accepted submission peer review tables: %s" % (
+        subject_prefix,
+        output_file,
+    )
+
+
+def error_email_body_content(
+    action_type,
+    input_filename,
+    activity_name,
+):
+    "body content of the error email"
+    body_content = (
+        ("An exception was raised in %s" " when %s" " processing input file %s\n\n")
+    ) % (activity_name, action_type, input_filename)
+    return body_content

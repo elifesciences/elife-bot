@@ -130,15 +130,28 @@ def move_images(file_details_list, to_dir, identifier, caller_name, logger):
     return image_asset_file_name_map
 
 
-def generate_file_transformations(xml_root, identifier, caller_name, logger):
+def generate_file_transformations(
+    xml_root, transform_type, identifier, caller_name, logger
+):
     "collect old to new file name transformation data"
+    # methods to call to transform and extract data based on the transform_type
+    if transform_type == "fig":
+        transform_method_name = "transform_fig"
+        inline_graphic_method_name = "inline_graphic_hrefs"
+    elif transform_type == "table":
+        transform_method_name = "transform_table"
+        inline_graphic_method_name = "table_inline_graphic_hrefs"
+
     file_transformations = []
     for sub_article_index, sub_article_root in enumerate(
         xml_root.iterfind("./sub-article")
     ):
         # list of old file names
-        previous_hrefs = cleaner.inline_graphic_hrefs(sub_article_root, identifier)
-        cleaner.transform_fig(sub_article_root, identifier)
+        previous_hrefs = getattr(cleaner, inline_graphic_method_name)(
+            sub_article_root, identifier
+        )
+        # invoke the transform_type from the cleaner module
+        getattr(cleaner, transform_method_name)(sub_article_root, identifier)
         # list of new file names
         current_hrefs = cleaner.graphic_hrefs(sub_article_root, identifier)
         # add to file_transformations
@@ -156,6 +169,20 @@ def generate_file_transformations(xml_root, identifier, caller_name, logger):
             to_file = ArticleZipFile(current_href)
             file_transformations.append((from_file, to_file))
     return file_transformations
+
+
+def generate_fig_file_transformations(xml_root, identifier, caller_name, logger):
+    "collect old to new file name transformation data for fig"
+    return generate_file_transformations(
+        xml_root, "fig", identifier, caller_name, logger
+    )
+
+
+def generate_table_file_transformations(xml_root, identifier, caller_name, logger):
+    "collect old to new file name transformation data for tables"
+    return generate_file_transformations(
+        xml_root, "table", identifier, caller_name, logger
+    )
 
 
 def filter_transformations(file_transformations):
