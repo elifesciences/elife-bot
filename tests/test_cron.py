@@ -313,14 +313,12 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
-                "starter_PublicationEmail",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
-                "PublicationEmail",
                 "PubmedArticleDeposit",
                 "AdminEmail",
             ],
