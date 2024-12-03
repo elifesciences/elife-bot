@@ -300,19 +300,6 @@ def conditional_starts(current_datetime):
     elif current_time.tm_min >= 45 and current_time.tm_min <= 59:
         # Bottom quarter of the hour
 
-        # Author emails at 17:45 local time
-        # (used to be set to 16:45 UTC during British Summer Time for 17:45 local UK time)
-        if local_current_time.tm_hour == 17:
-            conditional_start_list.append(
-                OrderedDict(
-                    [
-                        ("starter_name", "starter_PublicationEmail"),
-                        ("workflow_id", "PublicationEmail"),
-                        ("start_seconds", 60 * 31),
-                    ]
-                )
-            )
-
         # Pub router deposits once per day 23:45 UTC
         if current_time.tm_hour == 23:
             conditional_start_list.append(
