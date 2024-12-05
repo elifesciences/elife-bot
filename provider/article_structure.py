@@ -97,7 +97,7 @@ class ArticleInfo:
                 self.file_type = "Figure"
             elif parent_name.startswith("chem") and final_name.startswith("fig"):
                 self.file_type = "Figure"
-            elif parent_name.startswith("scheme"):
+            elif parent_name.startswith("scheme") or final_name.startswith("scheme"):
                 self.file_type = "Figure"
             elif final_name.startswith("video") or final_name.startswith("code"):
                 self.file_type = "Other"

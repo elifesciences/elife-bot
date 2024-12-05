@@ -202,6 +202,7 @@ class TestArticleStructure(unittest.TestCase):
         {"filename": "elife-00666-scheme1-fig1-v1.tif", "expected": "Figure"},
         {"filename": "elife-00666-app1-scheme1-fig1-v1.tif", "expected": "Figure"},
         {"filename": "elife-00666-scheme1-v1.tif", "expected": "Figure"},
+        {"filename": "elife-00666-app1-scheme1-v1.tif", "expected": "Figure"},
     )
     def test_get_file_type_from_zip_filename(self, filename, expected):
         self.articleinfo = ArticleInfo(filename)
