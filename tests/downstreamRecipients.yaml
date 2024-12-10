@@ -278,6 +278,7 @@ WoS:
     - retraction_of_preprint
   do_not_schedule_assessment_keywords:
     - incomplete
+    - inadequate
   send_by_protocol: ftp
   send_once_only: true
   send_article_types:
