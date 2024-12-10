@@ -276,6 +276,8 @@ WoS:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+  do_not_schedule_assessment_keywords:
+    - incomplete
   send_by_protocol: ftp
   send_once_only: true
   send_article_types:

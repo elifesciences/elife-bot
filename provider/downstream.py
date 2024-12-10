@@ -26,6 +26,7 @@ def choose_outboxes(
     rules,
     run_type=None,
     article_profile_type=None,
+    assessment_keywords=None,
 ):
     outbox_list = []
 
@@ -60,6 +61,15 @@ def choose_outboxes(
         if not first_by_status and workflow_rules.get("schedule_first_version_only"):
             # do not send
             continue
+
+        if assessment_keywords and workflow_rules.get(
+            "do_not_schedule_assessment_keywords"
+        ):
+            # compare excluded assessment keywords
+            if set(assessment_keywords).intersection(
+                set(workflow_rules.get("do_not_schedule_assessment_keywords"))
+            ):
+                continue
 
         if workflow_rules.get("schedule_article_types"):
             if status in workflow_rules.get("schedule_article_types", []):
