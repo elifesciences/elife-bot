@@ -200,3 +200,56 @@ class TestGetArticleProfileType(unittest.TestCase):
             settings_mock, self.expanded_folder_bucket, self.xml_key_name
         )
         self.assertEqual(result, expected)
+
+
+class TestGetAssessmentKeywords(unittest.TestCase):
+    "tests for get_assessment_keywords()"
+
+    def setUp(self):
+        self.xml_string = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" article-type="retraction">'
+            '<sub-article article-type="editor-report">'
+            "<front-stub>"
+            "<title-group>"
+            "<article-title>eLife assessment</article-title>"
+            "</title-group>"
+            "</front-stub>"
+            '<kwd-group kwd-group-type="claim-importance">'
+            "<kwd>Valuable</kwd>"
+            "<kwd>Useful</kwd>"
+            "</kwd-group>"
+            '<kwd-group kwd-group-type="evidence-strength">'
+            "<kwd>Compelling</kwd>"
+            "<kwd>Incomplete</kwd>"
+            "</kwd-group>"
+            "</sub-article>"
+            "</article>"
+        )
+        self.expanded_folder_bucket = "bucket"
+        self.xml_key_name = "elife00666.xml"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch.object(lax_provider, "article_status_version_map")
+    @patch.object(FakeStorageContext, "get_resource_as_string")
+    @patch.object(activity_module, "storage_context")
+    def test_get_assessment_keywords(
+        self,
+        fake_storage_context,
+        fake_string,
+        fake_version_map,
+    ):
+        "test where the retraction related article is status preprint"
+        directory = TempDirectory()
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, [], dest_folder=directory.path
+        )
+        fake_version_map.return_value = {}
+        fake_string.return_value = self.xml_string
+        expected = ["compelling", "incomplete", "useful", "valuable"]
+
+        result = activity_module.get_assessment_keywords(
+            settings_mock, self.expanded_folder_bucket, self.xml_key_name
+        )
+        self.assertEqual(result, expected)

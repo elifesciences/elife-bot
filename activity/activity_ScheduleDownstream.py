@@ -80,12 +80,18 @@ class activity_ScheduleDownstream(Activity):
                 "%s, article_profile_type: %s" % (self.name, article_profile_type)
             )
 
+            # load XML and collect assessment keywords
+            assessment_keywords = get_assessment_keywords(
+                self.settings, expanded_bucket_name, xml_key_name
+            )
+
             outbox_list = downstream.choose_outboxes(
                 status,
                 first_by_status,
                 rules,
                 run_type,
                 article_profile_type,
+                assessment_keywords,
             )
 
             self.logger.info(
@@ -202,3 +208,24 @@ def get_article_profile_type(settings, expanded_bucket_name, xml_key_name):
                 # if no vor or poa versions then assume it is preprint status
                 return "retraction_of_preprint"
     return None
+
+
+def get_assessment_keywords(settings, expanded_bucket_name, xml_key_name):
+    "download artice XML and parse keywords in the assessment"
+    assessment_keywords = []
+    storage = storage_context(settings)
+    s3_resource = (
+        settings.storage_provider + "://" + expanded_bucket_name + "/" + xml_key_name
+    )
+    xml = storage.get_resource_as_string(s3_resource)
+
+    soup = parser.parse_xml(xml)
+
+    elife_assessment_json = parser.elife_assessment(soup)
+
+    # collect keywords from the elife_assessment_json
+    for keyword_group_types in ["significance", "strength"]:
+        if elife_assessment_json.get(keyword_group_types):
+            assessment_keywords += elife_assessment_json.get(keyword_group_types)
+
+    return sorted(assessment_keywords)
