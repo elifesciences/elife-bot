@@ -262,16 +262,16 @@ def conditional_starts(current_datetime):
             )
 
         # Web of Science deposits once per day 21:30 UTC
-        # if current_time.tm_hour == 21:
-        #    conditional_start_list.append(
-        #        OrderedDict(
-        #            [
-        #                ("starter_name", "starter_PubRouterDeposit"),
-        #                ("workflow_id", "PubRouterDeposit_WoS"),
-        #                ("start_seconds", 60 * 31),
-        #            ]
-        #        )
-        #    )
+        if current_time.tm_hour == 21:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_PubRouterDeposit"),
+                        ("workflow_id", "PubRouterDeposit_WoS"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
 
         # OA Switchboard deposits once per day 22:30 UTC
         if current_time.tm_hour == 22:
