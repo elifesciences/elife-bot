@@ -91,7 +91,11 @@ class activity_MecaPeerReviews(Activity):
 
         # add sub-article XML to the ElementTree
         xml_root = cleaner.add_sub_article_xml(
-            docmap_string, xml_file_path, terms_yaml, generate_dois=False
+            docmap_string,
+            xml_file_path,
+            terms_yaml,
+            version_doi=version_doi,
+            generate_dois=False,
         )
         self.statuses["xml_root"] = True
 
