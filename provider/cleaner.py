@@ -371,13 +371,13 @@ def sub_article_data(docmap_string, article=None, version_doi=None, generate_doi
 
 
 def add_sub_article_xml(
-    docmap_string, article_xml, terms_yaml=None, generate_dois=True
+    docmap_string, article_xml, terms_yaml=None, version_doi=None, generate_dois=True
 ):
     if terms_yaml:
         # set the path to the YAML file containing assessment terms data
         assessment_terms.ASSESSMENT_TERMS_YAML = terms_yaml
     return sub_article.add_sub_article_xml(
-        docmap_string, article_xml, generate_dois=generate_dois
+        docmap_string, article_xml, version_doi=version_doi, generate_dois=generate_dois
     )
 
 
