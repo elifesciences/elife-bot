@@ -2,7 +2,6 @@ import email
 import os
 import shutil
 import zipfile
-from testfixtures import TempDirectory
 from digestparser.objects import Digest, Image
 from provider import cleaner, utils
 from provider.article import article
@@ -20,7 +19,9 @@ def delete_folder(folder, recursively=False):
         os.rmdir(folder)
 
 
-def delete_files_in_folder(folder, filter_out=[]):
+def delete_files_in_folder(folder, filter_out=None):
+    if not filter_out:
+        filter_out = []
     file_list = os.listdir(folder)
     for file_name in file_list:
         if file_name in filter_out:
@@ -34,8 +35,8 @@ def delete_files_in_folder(folder, filter_out=[]):
 
 def delete_directories_in_folder(folder):
     folder_list = os.listdir(folder)
-    for dir in folder_list:
-        dir_path = os.path.join(folder, dir)
+    for dir_name in folder_list:
+        dir_path = os.path.join(folder, dir_name)
         if os.path.isdir(dir_path):
             delete_folder(dir_path, True)
 
@@ -84,13 +85,29 @@ def create_digest_image(caption=None, file_name=None):
 
 
 def body_from_multipart_email_string(email_string):
-    """Given a multipart email string, convert to Message and return decoded body"""
+    "Given a multipart email string, convert to Message and return decoded body"
     body = None
     email_message = email.message_from_string(email_string)
     if email_message.is_multipart():
         for payload in email_message.get_payload():
             body = payload.get_payload(decode=True)
     return body
+
+
+IMAGE_FILE_PATH = "tests/files_source/digests/outbox/99999/digest-99999.jpg"
+
+def figure_image_file_data(image_names):
+    "data to add image files into a folder or meca zip for testing"
+    file_details = []
+    for image_name in image_names:
+        details = {
+            "file_path": IMAGE_FILE_PATH,
+            "file_type": "figure",
+            "upload_file_nm": image_name,
+            "href": "content/%s" % image_name,
+        }
+        file_details.append(details)
+    return file_details
 
 
 def add_files_to_accepted_zip(zip_file_path, output_dir, file_details):
@@ -103,7 +120,7 @@ def add_files_to_accepted_zip(zip_file_path, output_dir, file_details):
     new_zip_file_path = os.path.join(output_dir, zip_file_name)
     new_zip_file_name = new_zip_file_path.rsplit(os.sep, 1)[-1]
 
-    # extract the contenst of the original zip
+    # extract the contents of the original zip
     with zipfile.ZipFile(zip_file_path) as open_zip:
         open_zip.extractall(zip_temp_dir)
 

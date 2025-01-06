@@ -45,6 +45,8 @@ def read_fixture(filename, folder_name=""):
 
 def list_files(folder_path):
     "get list of files including those in subfolders"
+    if not os.path.exists(folder_path):
+        return None
     files = []
     with os.scandir(folder_path) as dir_iterator:
         for entry in dir_iterator:
