@@ -59,18 +59,6 @@ class TestAcceptedSubmissionPeerReviewTables(unittest.TestCase):
             sub_article_xml,
         )
 
-    def copy_files(self, image_names):
-        "copy image files into the folder for testing"
-        file_details = []
-        for image_name in image_names:
-            details = {
-                "file_path": "tests/files_source/digests/outbox/99999/digest-99999.jpg",
-                "file_type": "figure",
-                "upload_file_nm": image_name,
-            }
-            file_details.append(details)
-        return file_details
-
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -198,7 +186,7 @@ class TestAcceptedSubmissionPeerReviewTables(unittest.TestCase):
         # create a new zip file fixture
         file_details = []
         if test_data.get("image_names"):
-            file_details = self.copy_files(test_data.get("image_names"))
+            file_details = helpers.figure_image_file_data(test_data.get("image_names"))
         new_zip_file_path = helpers.add_files_to_accepted_zip(
             "tests/files_source/30-01-2019-RA-eLife-45644.zip",
             directory.path,
@@ -343,7 +331,7 @@ class TestAcceptedSubmissionPeerReviewTables(unittest.TestCase):
         # create a new zip file fixtur
         file_details = []
         if test_data.get("image_names"):
-            file_details = self.copy_files(test_data.get("image_names"))
+            file_details = helpers.figure_image_file_data(test_data.get("image_names"))
         new_zip_file_path = helpers.add_files_to_accepted_zip(
             "tests/files_source/30-01-2019-RA-eLife-45644.zip",
             directory.path,
@@ -413,7 +401,7 @@ class TestAcceptedSubmissionPeerReviewTables(unittest.TestCase):
         # create a new zip file fixtur
         file_details = []
         if test_data.get("image_names"):
-            file_details = self.copy_files(test_data.get("image_names"))
+            file_details = helpers.figure_image_file_data(test_data.get("image_names"))
         new_zip_file_path = helpers.add_files_to_accepted_zip(
             "tests/files_source/30-01-2019-RA-eLife-45644.zip",
             directory.path,

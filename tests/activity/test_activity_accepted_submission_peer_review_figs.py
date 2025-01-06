@@ -59,18 +59,6 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
             sub_article_xml,
         )
 
-    def copy_files(self, image_names):
-        "copy image files into the folder for testing"
-        file_details = []
-        for image_name in image_names:
-            details = {
-                "file_path": "tests/files_source/digests/outbox/99999/digest-99999.jpg",
-                "file_type": "figure",
-                "upload_file_nm": image_name,
-            }
-            file_details.append(details)
-        return file_details
-
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -114,6 +102,12 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                     "</body>"
                     "</sub-article>"
                 ),
+            ],
+            "expected_cleaner_log_contains": [
+                (
+                    "INFO elifecleaner:transform:write_xml_file: "
+                    "30-01-2019-RA-eLife-45644.zip writing xml to file tmp/"
+                )
             ],
         },
         {
@@ -205,6 +199,13 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                 "30-01-2019-RA-eLife-45644.xml",
                 "sa1-fig1.jpg",
             ],
+            "expected_cleaner_log_contains": [
+                (
+                    "30-01-2019-RA-eLife-45644.zip potential label"
+                    ' "Review image 1." in p tag 1 of id sa1'
+                ),
+                "30-01-2019-RA-eLife-45644.zip rewriting xml tags",
+            ],
         },
     )
     def test_do_activity(
@@ -224,7 +225,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
         # create a new zip file fixture
         file_details = []
         if test_data.get("image_names"):
-            file_details = self.copy_files(test_data.get("image_names"))
+            file_details = helpers.figure_image_file_data(test_data.get("image_names"))
         new_zip_file_path = helpers.add_files_to_accepted_zip(
             "tests/files_source/30-01-2019-RA-eLife-45644.zip",
             directory.path,
@@ -300,6 +301,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
             )
             with open(log_file_path, "r", encoding="utf8") as open_file:
                 log_contents = open_file.read()
+            print("TEST DEBUG log_contents: %s" % log_contents)
             for fragment in test_data.get("expected_cleaner_log_contains"):
                 self.assertTrue(
                     fragment in log_contents,
@@ -369,7 +371,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
         # create a new zip file fixtur
         file_details = []
         if test_data.get("image_names"):
-            file_details = self.copy_files(test_data.get("image_names"))
+            file_details = helpers.figure_image_file_data(test_data.get("image_names"))
         new_zip_file_path = helpers.add_files_to_accepted_zip(
             "tests/files_source/30-01-2019-RA-eLife-45644.zip",
             directory.path,
@@ -439,7 +441,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
         # create a new zip file fixtur
         file_details = []
         if test_data.get("image_names"):
-            file_details = self.copy_files(test_data.get("image_names"))
+            file_details = helpers.figure_image_file_data(test_data.get("image_names"))
         new_zip_file_path = helpers.add_files_to_accepted_zip(
             "tests/files_source/30-01-2019-RA-eLife-45644.zip",
             directory.path,
