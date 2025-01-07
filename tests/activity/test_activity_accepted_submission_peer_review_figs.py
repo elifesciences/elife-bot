@@ -301,7 +301,6 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
             )
             with open(log_file_path, "r", encoding="utf8") as open_file:
                 log_contents = open_file.read()
-            print("TEST DEBUG log_contents: %s" % log_contents)
             for fragment in test_data.get("expected_cleaner_log_contains"):
                 self.assertTrue(
                     fragment in log_contents,
