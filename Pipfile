@@ -42,7 +42,7 @@ PyYAML = "~=5.4"
 Wand = "~=0.6"
 wrapt = ">=1.11,<1.14" # version compatible with pylint and its dependency astroid
 PyGithub = "~=2.3.0"
-elifecleaner = "~=0.74.0"
+elifecleaner = "~=0.74.1"
 
 [dev-packages]
 pylint = "~=2.11"
