@@ -4,6 +4,7 @@ import logging
 import re
 import time
 from urllib.parse import urlparse
+from xml.etree import ElementTree
 from xml.etree.ElementTree import SubElement
 import requests
 from docmaptools import parse as docmap_parse
@@ -12,6 +13,7 @@ from elifecleaner import (
     assessment_terms,
     block,
     configure_logging,
+    equation,
     fig,
     parse,
     prc,
@@ -23,6 +25,7 @@ from elifecleaner import (
     video_xml,
     zip_lib,
 )
+from elifetools import xmlio
 from provider import utils
 from provider.storage_provider import storage_context
 from provider.article_processing import file_extension
@@ -224,8 +227,9 @@ def tag_xlink_hrefs(tags):
 def change_inline_graphic_xlink_hrefs(xml_file_path, href_to_file_name_map, identifier):
     "replace xlink:href values of inline-graphic tags with new values"
     # parse XML file
-    root = parse_article_xml(xml_file_path)
-
+    root, doctype_dict, processing_instructions = xmlio.parse(
+        xml_file_path, return_doctype_dict=True, return_processing_instructions=True
+    )
     for href, new_file_name in href_to_file_name_map.items():
         for inline_graphic_tag in root.findall(
             ".//inline-graphic[@{http://www.w3.org/1999/xlink}href='%s']" % href
@@ -235,7 +239,15 @@ def change_inline_graphic_xlink_hrefs(xml_file_path, href_to_file_name_map, iden
                     "{http://www.w3.org/1999/xlink}href", new_file_name
                 )
     # write XML file to disk
-    write_xml_file(root, xml_file_path, identifier)
+    encoding = "UTF-8"
+    write_xml_file(
+        root,
+        xml_file_path,
+        identifier,
+        doctype_dict=doctype_dict,
+        encoding=encoding,
+        processing_instructions=processing_instructions,
+    )
 
 
 def external_hrefs(href_list):
@@ -293,6 +305,11 @@ def graphic_hrefs(sub_article_root, identifier):
     return fig.graphic_hrefs(sub_article_root, identifier)
 
 
+def inline_formula_graphic_hrefs(sub_article_root, identifier):
+    "return a list of inline-formula inline-graphic tag xlink:href values"
+    return equation.inline_formula_graphic_hrefs(sub_article_root, identifier)
+
+
 def transform_fig(sub_article_root, identifier):
     "transform inline-graphic tags into fig tags"
     return fig.transform_fig(sub_article_root, identifier)
@@ -306,6 +323,26 @@ def transform_table(sub_article_root, identifier):
 def table_inline_graphic_hrefs(sub_article_root, identifier):
     "return a list of inline-graphic tag xlink:href values"
     return table.table_inline_graphic_hrefs(sub_article_root, identifier)
+
+
+def transform_equations(sub_article_root, identifier):
+    "transform inline-graphic tags into disp-formula tags"
+    return equation.transform_equations(sub_article_root, identifier)
+
+
+def equation_inline_graphic_hrefs(sub_article_root, identifier):
+    "get inline-graphic xlink:href values to be disp-formula"
+    return equation.equation_inline_graphic_hrefs(sub_article_root, identifier)
+
+
+def inline_equation_inline_graphic_hrefs(sub_article_root, identifier):
+    "get inline-graphic xlink:href values to be inline-formula"
+    return equation.inline_equation_inline_graphic_hrefs(sub_article_root, identifier)
+
+
+def transform_inline_equations(sub_article_root, identifier):
+    "transform inline-graphic tags into inline-formula tags"
+    return equation.transform_inline_equations(sub_article_root, identifier)
 
 
 def tsv_to_list(tsv_string):
@@ -349,10 +386,136 @@ def add_file_tags(root, file_detail_list):
 def add_file_tags_to_xml(xml_file_path, file_detail_list, identifier):
     "add file tags to the XML file"
     # parse XML file
-    root = parse_article_xml(xml_file_path)
+    root, doctype_dict, processing_instructions = xmlio.parse(
+        xml_file_path, return_doctype_dict=True, return_processing_instructions=True
+    )
     add_file_tags(root, file_detail_list)
     # write XML file to disk
-    write_xml_file(root, xml_file_path, identifier)
+    encoding = "UTF-8"
+    write_xml_file(
+        root,
+        xml_file_path,
+        identifier,
+        doctype_dict=doctype_dict,
+        encoding=encoding,
+        processing_instructions=processing_instructions,
+    )
+
+
+def populate_item_tag(parent, file_details):
+    "add attributes to an item tag with file_details"
+    if file_details.get("id"):
+        parent.set("id", file_details.get("id"))
+    if file_details.get("file_type"):
+        parent.set("type", file_details.get("file_type"))
+    if file_details.get("title"):
+        title_tag = SubElement(parent, "title")
+        title_tag.text = file_details.get("title")
+    if file_details.get("href"):
+        instance_tag = SubElement(parent, "instance")
+        instance_tag.set("href", file_details.get("href"))
+        instance_tag.set(
+            "media-type", utils.content_type_from_file_name(file_details.get("href"))
+        )
+
+
+def add_item_tag(parent, file_details):
+    "add item tag to the parent tag"
+    item_tag = SubElement(parent, "item")
+    populate_item_tag(item_tag, file_details)
+
+
+def add_item_tags(root, file_detail_list):
+    "add item tags to MECA XML root"
+    # if files tag not found, add it
+    for file_details in file_detail_list:
+        add_item_tag(root, file_details)
+
+
+def parse_manifest(xml_file_path):
+    "parse MECA manifest XML"
+    ElementTree.register_namespace("", "http://manuscriptexchange.org")
+    return xmlio.parse(
+        xml_file_path, return_doctype_dict=True, return_processing_instructions=True
+    )
+
+
+def write_manifest_xml_file(
+    root,
+    xml_asset_path,
+    identifier,
+    doctype_dict=None,
+    processing_instructions=None,
+):
+    "write manifest.xml file"
+    encoding = "UTF-8"
+    standalone = "no"
+    write_xml_file(
+        root,
+        xml_asset_path,
+        identifier,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions,
+    )
+    # support for standalone
+    with open(xml_asset_path, "rb") as open_file:
+        xml_content = open_file.read()
+    if encoding and standalone:
+        xml_content = xml_content.replace(
+            b'<?xml version="1.0" ?>',
+            b'<?xml version="1.0" encoding="%s" standalone="%s"?>'
+            % (bytes(encoding, encoding="utf-8"), bytes(standalone, encoding="utf-8")),
+        )
+    with open(xml_asset_path, "wb") as open_file:
+        open_file.write(xml_content)
+
+
+def add_item_tags_to_manifest_xml(xml_file_path, file_detail_list, identifier):
+    "add items tags to MECA XML file"
+    # parse XML file
+    root, doctype_dict, processing_instructions = parse_manifest(xml_file_path)
+    add_item_tags(root, file_detail_list)
+    # write XML file to disk
+    write_manifest_xml_file(
+        root,
+        xml_file_path,
+        identifier,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions,
+    )
+
+
+def pretty_manifest_xml(xml_file_path, identifier):
+    "add items tags to MECA XML file"
+    # parse XML file
+    root, doctype_dict, processing_instructions = parse_manifest(xml_file_path)
+    # make pretty
+    namespace = "{http://manuscriptexchange.org}"
+    sub_article.tag_new_line_wrap(root)
+    for item_tag in root.findall(".//%sitem" % namespace):
+        sub_article.tag_new_line_wrap(item_tag)
+        for tag_name in ["title"]:
+            for tag in item_tag.findall(".//%s%s" % (namespace, tag_name)):
+                sub_article.tag_new_line_wrap(tag)
+        # wrap tail only for the following tags
+        for tag_name in ["instance"]:
+            for tag in item_tag.findall(".//%s%s" % (namespace, tag_name)):
+                sub_article.tag_new_line_wrap_tail(tag)
+    # write XML file to disk
+    write_manifest_xml_file(
+        root,
+        xml_file_path,
+        identifier,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions,
+    )
+    # make pretty the XML declaration
+    with open(xml_file_path, "r", encoding="utf-8") as open_file:
+        xml_string = open_file.read()
+    xml_string = re.sub(r"\<\?xml (.*?)\?\>", r"<?xml \1?>\n", xml_string)
+    xml_string = re.sub(r"\<\!DOCTYPE (.*?)\>", r"<!DOCTYPE \1>\n", xml_string)
+    with open(xml_file_path, "w", encoding="utf-8") as open_file:
+        open_file.write(xml_string)
 
 
 def docmap_url(settings, article_id):
@@ -611,11 +774,41 @@ def xml_rewrite_file_tags(xml_file_path, file_transformations, identifier):
 
 
 def write_xml_file(
-    root, xml_asset_path, identifier, doctype_dict=None, processing_instructions=None
+    root,
+    xml_asset_path,
+    identifier,
+    doctype_dict=None,
+    encoding=None,
+    processing_instructions=None,
 ):
     transform.write_xml_file(
-        root, xml_asset_path, identifier, doctype_dict, processing_instructions
+        root,
+        xml_asset_path,
+        identifier,
+        doctype_dict=doctype_dict,
+        encoding=encoding,
+        processing_instructions=processing_instructions,
     )
+    # support for encoding
+    with open(xml_asset_path, "rb") as open_file:
+        xml_content = open_file.read()
+    if encoding:
+        # find xml attributes
+        attribute_group = re.match(rb"\<\?xml (.*?)\?\>", xml_content)
+        if attribute_group:
+            # concatenate attributes including encoding
+            new_attributes = b'%s encoding="%s" ' % (
+                attribute_group[1].rstrip(),
+                bytes(encoding, encoding="utf-8"),
+            )
+            # replace the xml attributes
+            xml_content = re.sub(
+                rb"\<\?xml .*?\?\>",
+                rb"<?xml %b?>" % new_attributes,
+                xml_content,
+            )
+    with open(xml_asset_path, "wb") as open_file:
+        open_file.write(xml_content)
 
 
 def bucket_asset_file_name_map(settings, bucket_name, expanded_folder):

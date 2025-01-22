@@ -3,8 +3,9 @@ import os
 import shutil
 import zipfile
 from digestparser.objects import Digest, Image
-from provider import cleaner, utils
+from provider import cleaner, meca, utils
 from provider.article import article
+from tests import list_files
 
 
 def create_folder(folder):
@@ -96,6 +97,7 @@ def body_from_multipart_email_string(email_string):
 
 IMAGE_FILE_PATH = "tests/files_source/digests/outbox/99999/digest-99999.jpg"
 
+
 def figure_image_file_data(image_names):
     "data to add image files into a folder or meca zip for testing"
     file_details = []
@@ -151,6 +153,99 @@ def add_files_to_accepted_zip(zip_file_path, output_dir, file_details):
     shutil.rmtree(zip_temp_dir)
 
     return new_zip_file_path
+
+
+def add_files_to_meca_zip(zip_file_path, output_dir, file_details):
+    "add files to a copy of an MECA zip file fixture"
+    # create a temporary directory for zip repackaging
+    zip_temp_dir = os.path.join(output_dir, "zip_temp_dir")
+    os.mkdir(zip_temp_dir)
+
+    zip_file_name = zip_file_path.rsplit(os.sep, 1)[-1]
+    new_zip_file_path = os.path.join(output_dir, zip_file_name)
+
+    # extract the contents of the original zip
+    with zipfile.ZipFile(zip_file_path) as open_zip:
+        open_zip.extractall(zip_temp_dir)
+
+    # zip file subfolder name and XML file path
+    zip_xml_file_path = meca.get_meca_article_xml_path(
+        zip_temp_dir, version_doi=None, caller_name=None, logger=None
+    )
+
+    zip_sub_folder = meca.meca_content_folder(zip_xml_file_path)
+
+    # copy files to the zip sub folder
+    for details in file_details:
+        shutil.copy(
+            details.get("file_path"),
+            os.path.join(zip_temp_dir, zip_sub_folder, details.get("upload_file_nm")),
+        )
+
+    # modify the manuscript XML
+    manuscript_xml_file_path = os.path.join(zip_temp_dir, "manifest.xml")
+    # add file tag to the XML
+    cleaner.add_item_tags_to_manifest_xml(
+        manuscript_xml_file_path, file_details, identifier=zip_file_name
+    )
+
+    # create a new zip file, add the files from the folder to it
+    with zipfile.ZipFile(new_zip_file_path, "w") as open_zip:
+        for file_path in list_files(os.path.join(zip_temp_dir)):
+            open_zip.write(os.path.join(zip_temp_dir, file_path), file_path)
+
+    # clean up the temporary directory
+    shutil.rmtree(zip_temp_dir)
+
+    return new_zip_file_path
+
+
+def populate_meca_test_data(meca_file_path, session_dict, test_data, temp_dir):
+    "for testing, repackage zip file and extract files into mock bucket folders"
+    populated_data = {}
+
+    # XML file paths
+    populated_data["xml_file_name"] = session_dict.get("article_xml_path")
+    populated_data["manifest_file_name"] = "manifest.xml"
+    bucket_xml_file_path = os.path.join(
+        temp_dir,
+        session_dict.get("expanded_folder"),
+        populated_data.get("xml_file_name"),
+    )
+    # create folders if they do not exist
+    resource_folder = os.path.join(
+        temp_dir,
+        session_dict.get("expanded_folder"),
+    )
+
+    # create a new zip file fixture
+    file_details = []
+    if test_data.get("image_names"):
+        file_details = figure_image_file_data(test_data.get("image_names"))
+    new_zip_file_path = add_files_to_meca_zip(
+        meca_file_path,
+        temp_dir,
+        file_details,
+    )
+
+    # unzip the test fixture files
+    zip_file_paths = unzip_fixture(new_zip_file_path, resource_folder)
+    populated_data["resources"] = [
+        os.path.join(
+            session_dict.get("expanded_folder"),
+            file_path,
+        )
+        for file_path in zip_file_paths
+    ]
+
+    # write additional XML to the XML file
+    if test_data.get("sub_article_xml"):
+        add_sub_article_xml(
+            bucket_xml_file_path,
+            test_data.get("sub_article_xml"),
+        )
+
+    return populated_data
 
 
 def expanded_folder_resources(zip_file_path, directory):

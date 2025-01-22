@@ -300,36 +300,39 @@ class TestMoveImages(unittest.TestCase):
         )
 
 
+FIG_XML = (
+    '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+    '<sub-article id="sa1">'
+    "<body>"
+    "<p>First paragraph.</p>"
+    "<p><bold>Review image 1.</bold></p>"
+    "<p>Caption title. Caption paragraph.</p>"
+    '<p><inline-graphic xlink:href="local.jpg"/></p>'
+    "</body>"
+    "</sub-article>"
+    '<sub-article id="sa2">'
+    "<body>"
+    "<p>First paragraph.</p>"
+    "<p><bold>Review image 1.</bold></p>"
+    "<p>Caption title. Caption paragraph.</p>"
+    '<p><inline-graphic xlink:href="local2.jpg"/></p>'
+    "<p>Paragraph.</p>"
+    '<p><inline-graphic xlink:href="local3.jpg"/></p>'
+    "<p><bold>Review image 2.</bold></p>"
+    "<p>Caption title. Caption paragraph.</p>"
+    '<p><inline-graphic xlink:href="local2.jpg"/></p>'
+    "</body>"
+    "</sub-article>"
+    "</article>"
+)
+
+
 class TestGenerateFileTransformations(unittest.TestCase):
     "tests for generate_file_transformations()"
 
     def test_generate_file_transformations(self):
         "test finding inline-graphic files to be converted to fig graphics"
-        xml_root = ElementTree.fromstring(
-            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
-            '<sub-article id="sa1">'
-            "<body>"
-            "<p>First paragraph.</p>"
-            "<p><bold>Review image 1.</bold></p>"
-            "<p>Caption title. Caption paragraph.</p>"
-            '<p><inline-graphic xlink:href="local.jpg"/></p>'
-            "</body>"
-            "</sub-article>"
-            '<sub-article id="sa2">'
-            "<body>"
-            "<p>First paragraph.</p>"
-            "<p><bold>Review image 1.</bold></p>"
-            "<p>Caption title. Caption paragraph.</p>"
-            '<p><inline-graphic xlink:href="local2.jpg"/></p>'
-            "<p>Paragraph.</p>"
-            '<p><inline-graphic xlink:href="local3.jpg"/></p>'
-            "<p><bold>Review image 2.</bold></p>"
-            "<p>Caption title. Caption paragraph.</p>"
-            '<p><inline-graphic xlink:href="local2.jpg"/></p>'
-            "</body>"
-            "</sub-article>"
-            "</article>"
-        )
+        xml_root = ElementTree.fromstring(FIG_XML)
         identifier = "10.7554/eLife.95901.1"
         caller_name = "MecaPeerReviewFigs"
         logger = FakeLogger()
@@ -350,6 +353,159 @@ class TestGenerateFileTransformations(unittest.TestCase):
         # invoke
         result = peer_review.generate_file_transformations(
             xml_root, "fig", identifier, caller_name, logger
+        )
+        # assert
+        self.assertEqual(len(result), len(expected))
+        for result_index, result_file in enumerate(result):
+            self.assertEqual(str(result_file), str(expected[result_index]))
+
+
+class TestGenerateFigFileTransformations(unittest.TestCase):
+    "tests for generate_fig_file_transformations()"
+
+    def test_generate_fig_file_transformations(self):
+        "test generating file transformation for fig graphics"
+        xml_root = ElementTree.fromstring(FIG_XML)
+        identifier = "10.7554/eLife.95901.1"
+        caller_name = "fig_caller"
+        logger = FakeLogger()
+        expected = [
+            (
+                ArticleZipFile("local.jpg", "None", "None"),
+                ArticleZipFile("sa1-fig1.jpg", "None", "None"),
+            ),
+            (
+                ArticleZipFile("local2.jpg", "None", "None"),
+                ArticleZipFile("sa2-fig1.jpg", "None", "None"),
+            ),
+            (
+                ArticleZipFile("local2.jpg", "None", "None"),
+                ArticleZipFile("sa2-fig2.jpg", "None", "None"),
+            ),
+        ]
+        # invoke
+        result = peer_review.generate_fig_file_transformations(
+            xml_root, identifier, caller_name, logger
+        )
+        # assert
+        self.assertEqual(len(result), len(expected))
+        for result_index, result_file in enumerate(result):
+            self.assertEqual(str(result_file), str(expected[result_index]))
+
+
+class TestGenerateTableFileTransformations(unittest.TestCase):
+    "tests for generate_table_file_transformations()"
+
+    def test_generate_table_file_transformations(self):
+        "test generating file transformation for table-wrap graphics"
+        xml_root = ElementTree.fromstring(
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            '<sub-article id="sa1">'
+            "<body>"
+            "<p>First paragraph.</p>"
+            "<p><bold>Review table 1.</bold></p>"
+            "<p>Caption title. Caption paragraph.</p>"
+            '<p><inline-graphic xlink:href="elife-95901-inf1.jpg"/></p>'
+            "</body>"
+            "</sub-article>"
+            '<sub-article id="sa2">'
+            "<body>"
+            "<p>First paragraph.</p>"
+            "<p><bold>Review table 1.</bold></p>"
+            "<p>Caption title. Caption paragraph.</p>"
+            '<p><inline-graphic xlink:href="local2.jpg"/></p>'
+            "</body>"
+            "</sub-article>"
+            "</article>"
+        )
+        identifier = "10.7554/eLife.95901.1"
+        caller_name = "table_caller"
+        logger = FakeLogger()
+        expected = [
+            (
+                ArticleZipFile("elife-95901-inf1.jpg", "None", "None"),
+                ArticleZipFile("elife-95901-sa1-table1.jpg", "None", "None"),
+            ),
+            (
+                ArticleZipFile("local2.jpg", "None", "None"),
+                ArticleZipFile("sa2-table1.jpg", "None", "None"),
+            ),
+        ]
+        # invoke
+        result = peer_review.generate_table_file_transformations(
+            xml_root, identifier, caller_name, logger
+        )
+        # assert
+        self.assertEqual(len(result), len(expected))
+        for result_index, result_file in enumerate(result):
+            self.assertEqual(str(result_file), str(expected[result_index]))
+
+
+class TestGenerateEquationFileTransformations(unittest.TestCase):
+    "tests for generate_equation_file_transformations()"
+
+    def test_generate_equation_file_transformations(self):
+        "test generating file transformation for disp-formula graphics"
+        xml_root = ElementTree.fromstring(
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            '<sub-article id="sa1">'
+            "<body>"
+            "<p>First paragraph with an inline equation"
+            ' <inline-graphic xlink:href="elife-inf1.jpg"/>.</p>'
+            "<p>Following is a display formula:</p>"
+            '<p><inline-graphic xlink:href="elife-inf2.jpg"/></p>'
+            "</body>"
+            "</sub-article>"
+            "</article>"
+        )
+        identifier = "10.7554/eLife.95901.1"
+        caller_name = "table_caller"
+        logger = FakeLogger()
+        expected = [
+            (
+                ArticleZipFile("elife-inf2.jpg", "None", "None"),
+                ArticleZipFile("elife-sa1-equ2.jpg", "None", "None"),
+            ),
+        ]
+        # invoke
+        result = peer_review.generate_equation_file_transformations(
+            xml_root, identifier, caller_name, logger
+        )
+        # assert
+        self.assertEqual(len(result), len(expected))
+        for result_index, result_file in enumerate(result):
+            self.assertEqual(str(result_file), str(expected[result_index]))
+
+
+class TestGenerateInlineEquationFileTransformations(unittest.TestCase):
+    "tests for generate_inline_equation_file_transformations()"
+
+    def test_generate_inline_equation_file_transformations(self):
+        "test generating file transformation for inline-formula graphics"
+        xml_root = ElementTree.fromstring(
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            '<sub-article id="sa1">'
+            "<body>"
+            "<p>First paragraph with an inline equation"
+            ' <inline-graphic xlink:href="elife-inf1.jpg"/>.</p>'
+            "<p>Following is a display formula:</p>"
+            '<p><inline-graphic xlink:href="elife-inf2.jpg"/></p>'
+            "</body>"
+            "</sub-article>"
+            "</article>"
+        )
+        identifier = "10.7554/eLife.95901.1"
+        caller_name = "table_caller"
+        logger = FakeLogger()
+        expected = [
+            (
+                ArticleZipFile("elife-inf1.jpg", "None", "None"),
+                ArticleZipFile("elife-sa1-equ1.jpg", "None", "None"),
+            ),
+        ]
+        # invoke
+        result = peer_review.generate_inline_equation_file_transformations(
+            xml_root, identifier, caller_name, logger
         )
         # assert
         self.assertEqual(len(result), len(expected))

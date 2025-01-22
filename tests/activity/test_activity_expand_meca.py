@@ -4,7 +4,7 @@ import os
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
-from provider import cleaner, docmap_provider, utils
+from provider import cleaner, docmap_provider, meca, utils
 from activity import activity_ExpandMeca as activity_module
 from activity.activity_ExpandMeca import (
     activity_ExpandMeca as activity_class,
@@ -268,7 +268,7 @@ class TestExpandMeca(unittest.TestCase):
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module.download_helper, "storage_context")
     @patch.object(cleaner, "get_docmap_string_with_retry")
-    @patch.object(activity_module, "get_meca_article_xml_path")
+    @patch.object(meca, "get_meca_article_xml_path")
     def test_no_article_xml_path(
         self,
         fake_get_meca_article_xml_path,
@@ -383,26 +383,3 @@ class TestComputerFileUrlFromSteps(unittest.TestCase):
             activity_module.computer_file_url_from_steps(
                 steps, self.version_doi, self.caller_name, self.logger
             )
-
-
-class TestGetMecaArticleXmlPath(unittest.TestCase):
-    "tests for get_meca_article_xml_path()"
-
-    def tearDown(self):
-        TempDirectory.cleanup_all()
-
-    def test_no_manifest(self):
-        "test if there is no manifest.xml file"
-        directory = TempDirectory()
-        caller_name = "test"
-        version_doi = "10.7554/eLife.95901.1"
-        logger = FakeLogger()
-        result = activity_module.get_meca_article_xml_path(
-            directory.path, version_doi, caller_name, logger
-        )
-        self.assertEqual(result, None)
-        self.assertEqual(
-            logger.logexception,
-            ("%s, manifest_file_path %s/manifest.xml not found for version DOI %s")
-            % (caller_name, directory.path, version_doi),
-        )

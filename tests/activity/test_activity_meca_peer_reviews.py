@@ -53,31 +53,19 @@ class TestMecaPeerReviews(unittest.TestCase):
 
         fake_session.return_value = self.session
 
-        destination_path = os.path.join(
-            directory.path,
-            SESSION_DICT.get("expanded_folder"),
-            SESSION_DICT.get("article_xml_path"),
-        )
-        # create folders if they do not exist
         meca_file_path = "tests/files_source/95901-v1-meca.zip"
-        resource_folder = os.path.join(
-            directory.path,
-            SESSION_DICT.get("expanded_folder"),
+
+        # populate the meca zip file and bucket folders for testing
+        populated_data = helpers.populate_meca_test_data(
+            meca_file_path, SESSION_DICT, {}, directory.path
         )
-        # create folders if they do not exist
-        os.makedirs(resource_folder, exist_ok=True)
-        # unzip the test fixture files
-        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
-        resources = [
-            os.path.join(
-                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
-                file_path,
-            )
-            for file_path in zip_file_paths
-        ]
+
+        dest_folder = os.path.join(directory.path, "files_dest")
+
         fake_storage_context.return_value = FakeStorageContext(
-            directory.path, resources, dest_folder=directory.path
+            directory.path, populated_data.get("resources"), dest_folder=dest_folder
         )
+
         sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
         fake_get.return_value = FakeResponse(200, content=sample_html)
         # do the activity
@@ -99,8 +87,13 @@ class TestMecaPeerReviews(unittest.TestCase):
             True,
         )
 
+        xml_file_path = os.path.join(
+            dest_folder,
+            SESSION_DICT.get("expanded_folder"),
+            populated_data.get("xml_file_name"),
+        )
         # assertions on XML content
-        with open(destination_path, "r", encoding="utf-8") as open_file:
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
             xml_string = open_file.read()
 
         self.assertTrue("<article" in xml_string)

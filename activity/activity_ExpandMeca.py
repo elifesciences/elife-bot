@@ -2,13 +2,13 @@ from datetime import datetime
 import json
 import os
 import zipfile
-from xml.etree import ElementTree
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import (
     cleaner,
     docmap_provider,
     download_helper,
+    meca,
     utils,
 )
 from activity.objects import Activity
@@ -250,7 +250,7 @@ class activity_ExpandMeca(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # find the article XML file path and save it to the session
-        article_xml_path = get_meca_article_xml_path(
+        article_xml_path = meca.get_meca_article_xml_path(
             self.directories.get("TEMP_DIR"), self.name, version_doi, self.logger
         )
         if not article_xml_path:
@@ -311,26 +311,3 @@ def computer_file_url_from_steps(steps, version_doi, caller_name, logger):
     )
 
     return computer_file.get("url")
-
-
-def get_meca_article_xml_path(folder_name, version_doi, caller_name, logger):
-    "find manifest.xml and get the article XML tag href"
-    # locate the bucket path to the manuscript XML file by reading the manifest.xml
-    manifest_file_path = os.path.join(folder_name, "manifest.xml")
-    try:
-        with open(manifest_file_path, "r", encoding="utf-8") as open_file:
-            xml_string = open_file.read()
-    except FileNotFoundError:
-        logger.exception(
-            "%s, manifest_file_path %s not found for version DOI %s"
-            % (caller_name, manifest_file_path, version_doi)
-        )
-        return None
-    xml_root = ElementTree.fromstring(xml_string)
-    article_xml_path = None
-    instance_tag = xml_root.find(
-        './/{http://manuscriptexchange.org}instance[@media-type="application/xml"]'
-    )
-    if instance_tag is not None:
-        article_xml_path = instance_tag.attrib.get("href")
-    return article_xml_path
