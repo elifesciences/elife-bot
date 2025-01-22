@@ -114,6 +114,10 @@ class activity_MecaPeerReviews(MecaBaseActivity):
             return_processing_instructions=True,
         )
 
+        # remove ext-link tag if it wraps an inline-graphic tag
+        cleaner.clean_inline_graphic_tags(xml_root)
+
+        # make XML pretty
         cleaner.pretty_sub_article_xml(xml_root)
 
         # write the XML root to disk
